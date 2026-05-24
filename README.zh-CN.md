@@ -26,6 +26,15 @@ Origo 支持创建后台 Session，并让它执行与前台 Session 完全一致
 
 ### 1）引用项目
 
+#### 方案 A：NuGet（推荐）
+
+```xml
+<PackageReference Include="Origo.Core" />
+<PackageReference Include="Origo.GodotAdapter" />
+```
+
+#### 方案 B：项目引用
+
 ```xml
 <ProjectReference Include="../Origo.Core/Origo.Core.csproj" />
 <ProjectReference Include="../Origo.GodotAdapter/Origo.GodotAdapter.csproj" />

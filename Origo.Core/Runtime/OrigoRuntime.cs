@@ -4,6 +4,7 @@ using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
+using Origo.Core.Logging;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Scheduling;
 using Origo.Core.Serialization;
@@ -26,6 +27,7 @@ public sealed class OrigoRuntime
     private readonly ActionScheduler _systemDeferredScheduler;
 
     public OrigoRuntime(
+        OrigoMeta meta,
         ILogger logger,
         ISndSceneHost sndSceneHost,
         TypeStringMapping typeStringMapping,
@@ -35,8 +37,14 @@ public sealed class OrigoRuntime
         ConsoleInputQueue? consoleInput = null,
         IConsoleOutputChannel? consoleOutputChannel = null)
     {
+        ArgumentNullException.ThrowIfNull(meta);
+        Meta = meta;
         ArgumentNullException.ThrowIfNull(logger);
         Logger = logger;
+        Logger.Log(LogLevel.Info, nameof(OrigoRuntime), new LogMessageBuilder()
+            .AddPrefix("version", meta.Version)
+            .Build($"{meta.Name} runtime constructed."));
+        Logger.Log(LogLevel.Info, nameof(OrigoRuntime), meta.Banner);
         ArgumentNullException.ThrowIfNull(sndSceneHost);
         ArgumentNullException.ThrowIfNull(typeStringMapping);
         ArgumentNullException.ThrowIfNull(converterRegistry);
@@ -59,6 +67,8 @@ public sealed class OrigoRuntime
     ///     日志服务实例，贯穿整个运行时，供所有子系统记录日志。
     /// </summary>
     public ILogger Logger { get; }
+
+    public OrigoMeta Meta { get; }
 
     /// <summary>
     ///     SND 世界实例，管理策略池、类型映射、编解码器和模板配置。

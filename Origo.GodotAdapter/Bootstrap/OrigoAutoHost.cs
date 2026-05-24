@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Godot;
+using Origo.Core;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
@@ -84,6 +85,7 @@ public partial class OrigoAutoHost : Node
             out var consoleInput, out var consoleOutputChannel);
 
         var runtime = new OrigoRuntime(
+            ResolveOrigoMeta(),
             logger,
             sndManager,
             sharedTypeMapping,
@@ -161,5 +163,12 @@ public partial class OrigoAutoHost : Node
                     break;
             }
         });
+    }
+
+    private static OrigoMeta ResolveOrigoMeta()
+    {
+        var version = typeof(OrigoRuntime).Assembly.GetName().Version?.ToString()
+                      ?? "unknown";
+        return new OrigoMeta("Origo", version, OrigoMeta.DefaultBanner);
     }
 }

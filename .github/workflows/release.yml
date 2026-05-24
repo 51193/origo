@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Origo.sln
+
+      - name: Build
+        run: dotnet build Origo.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Origo.sln --no-build --configuration Release --verbosity normal
+
+      - name: Pack Origo.Core
+        run: dotnet pack Origo.Core/Origo.Core.csproj --no-build --configuration Release --output ./artifacts
+
+      - name: Pack Origo.GodotAdapter
+        run: dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --no-build --configuration Release --output ./artifacts
+        continue-on-error: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/*.nupkg
+          generate_release_notes: true

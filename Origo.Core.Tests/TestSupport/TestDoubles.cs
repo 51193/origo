@@ -403,16 +403,18 @@ internal static class TestFactory
         ILogger? logger = null,
         ISndSceneHost? sceneHost = null,
         TypeStringMapping? tm = null,
-        IBlackboard? systemBb = null)
+        IBlackboard? systemBb = null,
+        OrigoMeta? meta = null)
     {
         logger ??= new TestLogger();
         sceneHost ??= new TestSndSceneHost();
         tm ??= new TypeStringMapping();
         systemBb ??= new Blackboard.Blackboard();
+        meta ??= new OrigoMeta("Origo", "test", string.Empty);
         var reg = CreateRegistry(tm);
         var io = CreateIoGateway(new TestFileSystem());
         return new OrigoRuntime(
-            logger, sceneHost, tm, reg, io, systemBb);
+            meta, logger, sceneHost, tm, reg, io, systemBb);
     }
 
     public static OrigoRuntime CreateRuntime(
@@ -421,12 +423,14 @@ internal static class TestFactory
         TypeStringMapping tm,
         IBlackboard systemBb,
         ConsoleInputQueue consoleInput,
-        ConsoleOutputChannel consoleOutput)
+        ConsoleOutputChannel consoleOutput,
+        OrigoMeta? meta = null)
     {
+        meta ??= new OrigoMeta("Origo", "test", string.Empty);
         var reg = CreateRegistry(tm);
         var io = CreateIoGateway(new TestFileSystem());
         return new OrigoRuntime(
-            logger, sceneHost, tm, reg, io,
+            meta, logger, sceneHost, tm, reg, io,
             systemBb, consoleInput, consoleOutput);
     }
 

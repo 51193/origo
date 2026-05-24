@@ -6,6 +6,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.0.6] - 2026-05-24
+
+### Added
+
+- **FastNoiseLite** vendored library (`Origo.Core/Addons/FastNoiseLite/`) and **`NoiseMapGenerator`** for deterministic noise map generation, enabling procedural content generation in background sessions
+- **`THIRD_PARTY_NOTICES.md`** — attribution for vendored FastNoiseLite library
+- **`IDataSourceIoGateway` / `DataSourceIoGateway`** — unified DataSource file I/O routing layer that replaces the scattered `IDataSourceCodec` injection in `SndWorld`; routes `meta.map`, save payloads, and serialization through a single abstraction
+- **`StrategyTestScenario`** fluent builder and **`StrategyTestContext`** test double for isolated entity strategy testing with configurable data, blackboards, templates, and lifecycle hooks — enables fast standalone strategy verification without spinning up a full runtime
+- **`SndContextParameters`** — sealed parameter object replacing the 8-argument `SndContext` constructor; supports optional `ISaveStorageService`, `ISavePathPolicy`, and initial-storage override via `init`-only properties
+- **`SystemParameters`** — internal record struct consolidating the 6 scattered `SystemRun` constructor parameters into a single immutable argument
+- **`ISndSceneHost.ProcessAll(double delta)`** — new interface method for unified frame-update of all alive entities; implementations that do not manage process cycles default to no-op
+- **`ISndContextAttachableSceneHost`** — interface allowing foreground `SessionRun` to bind its `SessionSndContext` into the scene host after construction
+- **`ISaveStorageService.ReadLevelPayload(string levelId)`** — internal method exposing level payload reads through the storage abstraction
+- **`Debug`** level added to `LogLevel` enum (was documented as supported but not implemented)
+- **`SndWorld.IsStrategyRegistered(string index)`** and **`SndWorld.GetRegisteredStrategyIndices()`** — diagnostics surface for debugging strategy registration failures
+- **`OrigoMeta`** record (`OrigoMeta.cs`) — lightweight metadata carrier exposing `Name`, `Version`, and `Banner` for project introspection; default banner is a simple emoticon
+- **GitHub Actions `release.yml`** — tagged-release workflow that builds, tests, packs `Origo.Core` and `Origo.GodotAdapter` NuGet packages, and creates a GitHub Release with auto-generated notes
+- **Godot adapter tests**: `GodotSndBootstrapTests`, `GodotFileSystemPathTests`, `GodotJsonConverterRegistryTests`
+- **New Core test files**: `StrategyTestScenarioTests`, `SndContextWorkflowTests`, `NullSndContextExtendedTests`, `SessionSndContextExtendedTests`, `NullLoggerTests`, `SaveGamePayloadTests`, `LevelBuilderExtendedTests`, `MemorySndEntityTests`, `EntityStrategyBaseTests`, `StateMachineStrategyBaseTests`, `BlackboardSerializerTests`, `SaveContextTests`, `SndSceneSerializerTests`, `SaveMetaMapCodecExtendedTests`, `ProgressRunSessionLoadingEdgeTests`, `ConcurrentActionQueueConcurrencyTests`, and others
+
+### Changed
+
+- **`SndContext`** constructor refactored: accepts `SndContextParameters` instead of 8 individual parameters; `RunWorkflow` pattern extracted to consolidate `BeginWorkflow`/`try`/`finally`/`EndWorkflow` across save/load operations
+- **`SystemRun`** constructor now takes `SystemParameters` record struct instead of 6 scattered parameters
+- **`SndWorld`** constructor replaced `IDataSourceCodec jsonCodec` + `IDataSourceCodec mapCodec` with a single `IDataSourceIoGateway`
+- **Save I/O**: `meta.map` read/write routed through `IDataSourceIoGateway`; `SavePayloadReader` enforces `.write_in_progress` marker detection to fail fast on interrupted saves; `ReadLevelPayload()` exposed as `internal` via `ISaveStorageService`
+- **`RandomNumberGenerator`** made stateless — all state embedded in returned seed for reproducibility; improved seed handling
+- **Strategy stateless enforcement** unified across auto-discovery and manual registration paths; extended to detect writable instance properties (not only fields)
+- **Test reorganization**: `IntegrationTests/`, `SystemRuntimeTests/`, `SessionRuntimeTests/`, `SessionManagerRuntimeTests/`, `ProgressRuntimeTests/` flattened into domain-aligned subdirectories (`Architecture/`, `Runtime/`, `Snd/`, `Save/`, etc.); deleted `Utils/KeyValueFileParser.cs` moved to `DataSource/`
+- **Code quality**: 14 implementation types correctly made `internal`; all files reformatted; functions split to meet 50-line constraint including `ConsoleCommandParser.TryParse` (66→42), `SaveStorageFacade.SnapshotCurrentToSave` (57→32), `DataSourceFactory.CreateDefaultRegistry` (55→8), `StateMachineContainer.DeserializeFromNode` (53→14), `OrigoAutoHost.CreateRuntime` (52→35)
+- **`NullSndContext`** mutation operations now throw `InvalidOperationException` instead of silently swallowing — fail-fast semantics for save/load/level-change ops
+- **`SystemRuntime`** constructor uses `ISaveStorageService` directly instead of raw file-system primitives
+- **`ProgressRun`** split into nested `SessionLifecycle` and `SaveCoordinator` to isolate mount, switch, and save orchestration
+- **`FullMemorySndSceneHost`** derives from `MemorySndSceneHost` to reduce duplication
+- **Godot adapter renames**: `GodotPathHelper` → `GodotPathResolver`, `SaveStorageCommon` → `SaveStorageGatewayFactory`
+- **README** and **README.zh-CN** rewritten as concise, synchronized integration-focused guides aligned with current architecture; XML doc caveats added for `TryGetData<T>`, `ISndSceneHost.Spawn()`, and `ProjectReference` bridge-class requirement
+
+### Removed
+
+- **`origo.active_level_id`** — consolidated into `origo.session_topology`; all session topology is now a single codec-managed key
+- **`IRandom`** abstraction — `RandomNumberGenerator` is now directly consumed
+- **`SessionManagerParameters`** — empty YAGNI record struct deleted
+- **`Origo.Core.Utils`** namespace — types relocated to `DataSource` and `Scheduling`
+- Selected redundant integration test files replaced by the reorganised test suite
+
+### Fixed
+
+- **Crash recovery**: stale `current/` directory is now deleted on startup (`ExecuteLoadMainMenuEntrySaveNow`) to prevent entity name conflicts from interrupted prior runs
+- `SndEntity.Spawn` / `Load` now tolerates null `StrategyMetaData` (uses `?.Indices`), matching the nullable declaration and avoiding a null-reference crash
+- **Transactional rollback guards** in `SessionRun`, `ProgressRun`, `SndStrategyManager`, and `StackStateMachine` prevent partial state leaks when load or acquire operations fail mid-way
+- **`DataSourceNode` lazy expansion** commits atomically — child graph is built in a local structure and assigned only on success, avoiding half-applied mutations
+- Save **write-in-progress marker** validated by `SavePayloadReader` before reading — prevents loading corrupted or half-written saves
+
+### Security
+
+- Save `.write_in_progress` marker enforcement prevents loading inadvertently corrupted saves after an interrupted write, reducing risk of irreversible data corruption
+
+---
+
 ## [0.0.5] - 2026-04-12
 
 ### Added

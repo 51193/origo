@@ -26,6 +26,15 @@ Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and p
 
 ### 1) Reference projects
 
+#### Option A: NuGet (recommended)
+
+```xml
+<PackageReference Include="Origo.Core" />
+<PackageReference Include="Origo.GodotAdapter" />
+```
+
+#### Option B: Project reference
+
 ```xml
 <ProjectReference Include="../Origo.Core/Origo.Core.csproj" />
 <ProjectReference Include="../Origo.GodotAdapter/Origo.GodotAdapter.csproj" />
