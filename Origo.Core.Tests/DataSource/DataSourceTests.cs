@@ -76,46 +76,30 @@ public class DataSourceTests
     // ── 2. Value access ──
 
     [Fact]
-    public void AsString_OnStringNode_ReturnsValue()
-    {
+    public void AsString_OnStringNode_ReturnsValue() =>
         Assert.Equal("abc", DataSourceNode.CreateString("abc").AsString());
-    }
 
     [Fact]
-    public void AsString_OnNumberNode_ReturnsStringRepresentation()
-    {
+    public void AsString_OnNumberNode_ReturnsStringRepresentation() =>
         Assert.Equal("42", DataSourceNode.CreateNumber(42).AsString());
-    }
 
     [Fact]
-    public void AsString_OnNullNode_ReturnsEmpty()
-    {
+    public void AsString_OnNullNode_ReturnsEmpty() =>
         Assert.Equal(string.Empty, DataSourceNode.CreateNull().AsString());
-    }
 
     [Fact]
-    public void AsInt_ParsesCorrectly()
-    {
-        Assert.Equal(42, DataSourceNode.CreateNumber(42).AsInt());
-    }
+    public void AsInt_ParsesCorrectly() => Assert.Equal(42, DataSourceNode.CreateNumber(42).AsInt());
 
     [Fact]
-    public void AsLong_ParsesCorrectly()
-    {
+    public void AsLong_ParsesCorrectly() =>
         Assert.Equal(9876543210L, DataSourceNode.CreateNumber(9876543210L).AsLong());
-    }
 
     [Fact]
-    public void AsFloat_ParsesCorrectly()
-    {
-        Assert.Equal(3.14f, DataSourceNode.CreateNumber(3.14f).AsFloat(), 0.001f);
-    }
+    public void AsFloat_ParsesCorrectly() => Assert.Equal(3.14f, DataSourceNode.CreateNumber(3.14f).AsFloat(), 0.001f);
 
     [Fact]
-    public void AsDouble_ParsesCorrectly()
-    {
+    public void AsDouble_ParsesCorrectly() =>
         Assert.Equal(2.718281828, DataSourceNode.CreateNumber(2.718281828).AsDouble(), 0.000001);
-    }
 
     // ── 3. Object access ──
 

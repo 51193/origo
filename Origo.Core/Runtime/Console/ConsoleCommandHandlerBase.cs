@@ -7,7 +7,7 @@ namespace Origo.Core.Runtime.Console;
 ///     控制台命令处理器基类。派生类只需声明 Name、HelpText、MinPositionalArgs、MaxPositionalArgs，
 ///     并实现 ExecuteCore 方法。基类自动处理参数数量校验与非法输入提示。
 /// </summary>
-public abstract class ConsoleCommandHandlerBase : IConsoleCommandHandler
+internal abstract class ConsoleCommandHandlerBase : IConsoleCommandHandler
 {
     public abstract string Name { get; }
     public abstract string HelpText { get; }

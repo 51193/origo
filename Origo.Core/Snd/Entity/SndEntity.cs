@@ -44,51 +44,26 @@ public sealed class SndEntity : ISndEntity
 
     public string Name { get; private set; } = string.Empty;
 
-    public void SetData<T>(string name, T value)
-    {
-        _dataManager.SetData(name, value);
-    }
+    public void SetData<T>(string name, T value) => _dataManager.SetData(name, value);
 
-    public T GetData<T>(string name)
-    {
-        return _dataManager.GetData<T>(name);
-    }
+    public T GetData<T>(string name) => _dataManager.GetData<T>(name);
 
-    public (bool found, T? value) TryGetData<T>(string name)
-    {
-        return _dataManager.TryGetData<T>(name);
-    }
+    public (bool found, T? value) TryGetData<T>(string name) => _dataManager.TryGetData<T>(name);
 
     public void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
-        Func<ISndEntity, object?, object?, bool>? filter = null)
-    {
+        Func<ISndEntity, object?, object?, bool>? filter = null) =>
         _dataManager.Subscribe(name, callback, filter);
-    }
 
-    public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback)
-    {
+    public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback) =>
         _dataManager.Unsubscribe(name, callback);
-    }
 
-    public INodeHandle GetNode(string name)
-    {
-        return _nodeHost.GetNode(name);
-    }
+    public INodeHandle GetNode(string name) => _nodeHost.GetNode(name);
 
-    public IReadOnlyCollection<string> GetNodeNames()
-    {
-        return _nodeHost.GetNodeNames();
-    }
+    public IReadOnlyCollection<string> GetNodeNames() => _nodeHost.GetNodeNames();
 
-    public void AddStrategy(string index)
-    {
-        _strategyManager.Add(this, index, _context);
-    }
+    public void AddStrategy(string index) => _strategyManager.Add(this, index, _context);
 
-    public void RemoveStrategy(string index)
-    {
-        _strategyManager.Remove(this, index, _context);
-    }
+    public void RemoveStrategy(string index) => _strategyManager.Remove(this, index, _context);
 
     public void Load(SndMetaData metaData)
     {
@@ -140,10 +115,7 @@ public sealed class SndEntity : ISndEntity
         };
     }
 
-    public void Process(double delta)
-    {
-        _strategyManager.Process(this, delta, _context);
-    }
+    public void Process(double delta) => _strategyManager.Process(this, delta, _context);
 
     private void RecoverFromMetaData(SndMetaData metaData)
     {

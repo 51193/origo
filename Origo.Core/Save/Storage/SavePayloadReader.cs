@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Origo.Core.Abstractions;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
+using Origo.Core.Logging;
 
 namespace Origo.Core.Save.Storage;
 
@@ -484,13 +484,8 @@ internal static class SavePayloadReader
                 CreateLevelFile(fileSystem, sessionStateMachinesRel, sessionStateMachinesAbs));
         }
 
-        private static LevelFile CreateLevelFile(
-            IFileSystem fileSystem,
-            string relativePath,
-            string absolutePath)
-        {
-            return new LevelFile(relativePath, absolutePath, fileSystem.Exists(absolutePath));
-        }
+        private static LevelFile CreateLevelFile(IFileSystem fileSystem, string relativePath, string absolutePath) =>
+            new(relativePath, absolutePath, fileSystem.Exists(absolutePath));
     }
 
     private sealed record LevelFile(string RelativePath, string AbsolutePath, bool Exists);

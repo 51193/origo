@@ -45,10 +45,7 @@ internal sealed class DataObserverManager
         }
     }
 
-    public void Clear()
-    {
-        _subscriptions.Clear();
-    }
+    public void Clear() => _subscriptions.Clear();
 
     private sealed class Subscription
     {

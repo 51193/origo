@@ -1,6 +1,6 @@
 using Origo.Core.Abstractions.Logging;
 
-namespace Origo.Core.Abstractions;
+namespace Origo.Core.Logging;
 
 /// <summary>
 ///     无输出日志实现，用于测试或不需要日志的调用方。

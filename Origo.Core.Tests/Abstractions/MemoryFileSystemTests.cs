@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
-using Origo.Core.Abstractions;
+using Origo.Core.DataSource;
 using Xunit;
 
 namespace Origo.Core.Tests;

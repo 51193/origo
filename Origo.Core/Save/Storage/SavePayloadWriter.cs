@@ -75,10 +75,8 @@ internal static class SavePayloadWriter
         IFileSystem fileSystem,
         IDataSourceIoGateway dataSourceIo,
         string saveRootPath,
-        SaveGamePayload payload)
-    {
+        SaveGamePayload payload) =>
         WriteToCurrent(fileSystem, dataSourceIo, saveRootPath, payload, new DefaultSavePathPolicy());
-    }
 
     public static void WriteToCurrent(
         IFileSystem fileSystem,
@@ -112,18 +110,7 @@ internal static class SavePayloadWriter
             payload.ProgressStateMachinesNode,
             pathPolicy);
 
-        var customMetaRel = pathPolicy.GetCustomMetaFile(currentRel);
-        var customMetaAbs = fileSystem.CombinePath(saveRootPath, customMetaRel);
-        if (payload.CustomMeta is not null && payload.CustomMeta.Count > 0)
-        {
-            var mapNode = BuildStringMapNode(payload.CustomMeta);
-            SavePathResolver.EnsureParentDirectory(fileSystem, customMetaAbs);
-            dataSourceIo.WriteTree(customMetaAbs, mapNode);
-        }
-        else if (fileSystem.Exists(customMetaAbs))
-        {
-            fileSystem.Delete(customMetaAbs);
-        }
+        WriteCustomMetaToCurrent(fileSystem, dataSourceIo, saveRootPath, currentRel, payload.CustomMeta, pathPolicy);
 
         if (!payload.Levels.TryGetValue(payload.ActiveLevelId, out _))
             throw new InvalidOperationException(
@@ -166,10 +153,8 @@ internal static class SavePayloadWriter
         string baseDirectoryRel,
         LevelPayload level,
         ISavePathPolicy pathPolicy,
-        bool overwrite = true)
-    {
+        bool overwrite = true) =>
         WriteLevelPayload(fileSystem, dataSourceIo, saveRootPath, baseDirectoryRel, level, overwrite, pathPolicy);
-    }
 
     private static void WriteLevelPayload(
         IFileSystem fileSystem,
@@ -217,6 +202,28 @@ internal static class SavePayloadWriter
             throw new InvalidOperationException("Missing required ProgressNode (strict mode).");
         if (progressStateMachinesNode.IsNull)
             throw new InvalidOperationException("Missing required ProgressStateMachinesNode (strict mode).");
+    }
+
+    private static void WriteCustomMetaToCurrent(
+        IFileSystem fileSystem,
+        IDataSourceIoGateway dataSourceIo,
+        string saveRootPath,
+        string currentRel,
+        IReadOnlyDictionary<string, string>? customMeta,
+        ISavePathPolicy pathPolicy)
+    {
+        var customMetaRel = pathPolicy.GetCustomMetaFile(currentRel);
+        var customMetaAbs = fileSystem.CombinePath(saveRootPath, customMetaRel);
+        if (customMeta is not null && customMeta.Count > 0)
+        {
+            var mapNode = BuildStringMapNode(customMeta);
+            SavePathResolver.EnsureParentDirectory(fileSystem, customMetaAbs);
+            dataSourceIo.WriteTree(customMetaAbs, mapNode);
+        }
+        else if (fileSystem.Exists(customMetaAbs))
+        {
+            fileSystem.Delete(customMetaAbs);
+        }
     }
 
     private static DataSourceNode BuildStringMapNode(IReadOnlyDictionary<string, string> map)

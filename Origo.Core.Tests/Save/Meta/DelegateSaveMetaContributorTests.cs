@@ -30,10 +30,8 @@ public class DelegateSaveMetaContributorTests
     }
 
     [Fact]
-    public void DelegateSaveMetaContributor_Constructor_ThrowsOnNull()
-    {
+    public void DelegateSaveMetaContributor_Constructor_ThrowsOnNull() =>
         Assert.Throws<ArgumentNullException>(() => new DelegateSaveMetaContributor(null!));
-    }
 }
 
 // ── SaveContext ─────────────────────────────────────────────────────────

@@ -29,42 +29,51 @@ internal static class KeyValueFileParser
             var line = rawLine.Trim();
             if (line.Length == 0 || line.StartsWith('#'))
                 continue;
-
-            var parts = line.Split(':', 2, StringSplitOptions.TrimEntries);
-            if (parts.Length != 2)
-            {
-                if (strict)
-                    throw new FormatException(
-                        $"Invalid line '{line}' in '{sourceName}'. Expected 'key: value'.");
-
-                logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
-                    new LogMessageBuilder().AddSuffix("filePath", sourceName)
-                        .Build($"Invalid line '{line}'. Expected 'key: value'."));
-                continue;
-            }
-
-            var key = parts[0];
-            var value = parts[1];
-            if (key.Length == 0 || value.Length == 0)
-            {
-                if (strict)
-                    throw new FormatException(
-                        $"Invalid line '{line}' in '{sourceName}'. Empty key or value.");
-
-                logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
-                    new LogMessageBuilder().AddSuffix("filePath", sourceName)
-                        .Build($"Invalid line '{line}'. Empty key or value."));
-                continue;
-            }
-
-            if (result.ContainsKey(key))
-                logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
-                    new LogMessageBuilder().AddSuffix("filePath", sourceName).AddSuffix("key", key)
-                        .Build($"Duplicate key '{key}' in '{sourceName}'; later value wins."));
-
-            result[key] = value;
+            ProcessLine(line, sourceName, strict, logger, result);
         }
 
         return result;
+    }
+
+    private static void ProcessLine(
+        string line,
+        string sourceName,
+        bool strict,
+        ILogger logger,
+        Dictionary<string, string> result)
+    {
+        var parts = line.Split(':', 2, StringSplitOptions.TrimEntries);
+        if (parts.Length != 2)
+        {
+            if (strict)
+                throw new FormatException(
+                    $"Invalid line '{line}' in '{sourceName}'. Expected 'key: value'.");
+
+            logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
+                new LogMessageBuilder().AddSuffix("filePath", sourceName)
+                    .Build($"Invalid line '{line}'. Expected 'key: value'."));
+            return;
+        }
+
+        var key = parts[0];
+        var value = parts[1];
+        if (key.Length == 0 || value.Length == 0)
+        {
+            if (strict)
+                throw new FormatException(
+                    $"Invalid line '{line}' in '{sourceName}'. Empty key or value.");
+
+            logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
+                new LogMessageBuilder().AddSuffix("filePath", sourceName)
+                    .Build($"Invalid line '{line}'. Empty key or value."));
+            return;
+        }
+
+        if (result.ContainsKey(key))
+            logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
+                new LogMessageBuilder().AddSuffix("filePath", sourceName).AddSuffix("key", key)
+                    .Build($"Duplicate key '{key}' in '{sourceName}'; later value wins."));
+
+        result[key] = value;
     }
 }

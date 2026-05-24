@@ -477,10 +477,7 @@ public class FastNoiseLite
     /// <remarks>
     ///     Default: 1337
     /// </remarks>
-    public void SetSeed(int seed)
-    {
-        mSeed = seed;
-    }
+    public void SetSeed(int seed) => mSeed = seed;
 
     /// <summary>
     ///     Sets frequency for all noise types
@@ -488,10 +485,7 @@ public class FastNoiseLite
     /// <remarks>
     ///     Default: 0.01
     /// </remarks>
-    public void SetFrequency(float frequency)
-    {
-        mFrequency = frequency;
-    }
+    public void SetFrequency(float frequency) => mFrequency = frequency;
 
     /// <summary>
     ///     Sets noise algorithm used for GetNoise(...)
@@ -526,10 +520,7 @@ public class FastNoiseLite
     ///     Default: None
     ///     Note: FractalType.DomainWarp... only affects DomainWarp(...)
     /// </remarks>
-    public void SetFractalType(FractalType fractalType)
-    {
-        mFractalType = fractalType;
-    }
+    public void SetFractalType(FractalType fractalType) => mFractalType = fractalType;
 
     /// <summary>
     ///     Sets octave count for all fractal noise types
@@ -549,10 +540,7 @@ public class FastNoiseLite
     /// <remarks>
     ///     Default: 2.0
     /// </remarks>
-    public void SetFractalLacunarity(float lacunarity)
-    {
-        mLacunarity = lacunarity;
-    }
+    public void SetFractalLacunarity(float lacunarity) => mLacunarity = lacunarity;
 
     /// <summary>
     ///     Sets octave gain for all fractal noise types
@@ -573,10 +561,7 @@ public class FastNoiseLite
     ///     Default: 0.0
     ///     Note: Keep between 0...1 to maintain -1...1 output bounding
     /// </remarks>
-    public void SetFractalWeightedStrength(float weightedStrength)
-    {
-        mWeightedStrength = weightedStrength;
-    }
+    public void SetFractalWeightedStrength(float weightedStrength) => mWeightedStrength = weightedStrength;
 
     /// <summary>
     ///     Sets strength of the fractal ping pong effect
@@ -584,10 +569,7 @@ public class FastNoiseLite
     /// <remarks>
     ///     Default: 2.0
     /// </remarks>
-    public void SetFractalPingPongStrength(float pingPongStrength)
-    {
-        mPingPongStrength = pingPongStrength;
-    }
+    public void SetFractalPingPongStrength(float pingPongStrength) => mPingPongStrength = pingPongStrength;
 
 
     /// <summary>
@@ -596,10 +578,8 @@ public class FastNoiseLite
     /// <remarks>
     ///     Default: Distance
     /// </remarks>
-    public void SetCellularDistanceFunction(CellularDistanceFunction cellularDistanceFunction)
-    {
+    public void SetCellularDistanceFunction(CellularDistanceFunction cellularDistanceFunction) =>
         mCellularDistanceFunction = cellularDistanceFunction;
-    }
 
     /// <summary>
     ///     Sets return type from cellular noise calculations
@@ -607,10 +587,8 @@ public class FastNoiseLite
     /// <remarks>
     ///     Default: EuclideanSq
     /// </remarks>
-    public void SetCellularReturnType(CellularReturnType cellularReturnType)
-    {
+    public void SetCellularReturnType(CellularReturnType cellularReturnType) =>
         mCellularReturnType = cellularReturnType;
-    }
 
     /// <summary>
     ///     Sets the maximum distance a cellular point can move from it's grid position
@@ -619,10 +597,7 @@ public class FastNoiseLite
     ///     Default: 1.0
     ///     Note: Setting this higher than 1 will cause artifacts
     /// </remarks>
-    public void SetCellularJitter(float cellularJitter)
-    {
-        mCellularJitterModifier = cellularJitter;
-    }
+    public void SetCellularJitter(float cellularJitter) => mCellularJitterModifier = cellularJitter;
 
 
     /// <summary>
@@ -644,10 +619,7 @@ public class FastNoiseLite
     /// <remarks>
     ///     Default: 1.0
     /// </remarks>
-    public void SetDomainWarpAmp(float domainWarpAmp)
-    {
-        mDomainWarpAmp = domainWarpAmp;
-    }
+    public void SetDomainWarpAmp(float domainWarpAmp) => mDomainWarpAmp = domainWarpAmp;
 
 
     /// <summary>
@@ -751,58 +723,31 @@ public class FastNoiseLite
 
 
     [MethodImpl(INLINE)]
-    private static float FastMin(float a, float b)
-    {
-        return a < b ? a : b;
-    }
+    private static float FastMin(float a, float b) => a < b ? a : b;
 
     [MethodImpl(INLINE)]
-    private static float FastMax(float a, float b)
-    {
-        return a > b ? a : b;
-    }
+    private static float FastMax(float a, float b) => a > b ? a : b;
 
     [MethodImpl(INLINE)]
-    private static float FastAbs(float f)
-    {
-        return f < 0 ? -f : f;
-    }
+    private static float FastAbs(float f) => f < 0 ? -f : f;
 
     [MethodImpl(INLINE)]
-    private static float FastSqrt(float f)
-    {
-        return (float)Math.Sqrt(f);
-    }
+    private static float FastSqrt(float f) => (float)Math.Sqrt(f);
 
     [MethodImpl(INLINE)]
-    private static int FastFloor(FNLfloat f)
-    {
-        return f >= 0 ? (int)f : (int)f - 1;
-    }
+    private static int FastFloor(FNLfloat f) => f >= 0 ? (int)f : (int)f - 1;
 
     [MethodImpl(INLINE)]
-    private static int FastRound(FNLfloat f)
-    {
-        return f >= 0 ? (int)(f + 0.5f) : (int)(f - 0.5f);
-    }
+    private static int FastRound(FNLfloat f) => f >= 0 ? (int)(f + 0.5f) : (int)(f - 0.5f);
 
     [MethodImpl(INLINE)]
-    private static float Lerp(float a, float b, float t)
-    {
-        return a + t * (b - a);
-    }
+    private static float Lerp(float a, float b, float t) => a + t * (b - a);
 
     [MethodImpl(INLINE)]
-    private static float InterpHermite(float t)
-    {
-        return t * t * (3 - 2 * t);
-    }
+    private static float InterpHermite(float t) => t * t * (3 - 2 * t);
 
     [MethodImpl(INLINE)]
-    private static float InterpQuintic(float t)
-    {
-        return t * t * t * (t * (t * 6 - 15) + 10);
-    }
+    private static float InterpQuintic(float t) => t * t * t * (t * (t * 6 - 15) + 10);
 
     [MethodImpl(INLINE)]
     private static float CubicLerp(float a, float b, float c, float d, float t)

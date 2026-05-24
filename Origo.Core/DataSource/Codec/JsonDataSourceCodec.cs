@@ -16,10 +16,7 @@ internal sealed class JsonDataSourceCodec : IDataSourceCodec
         _writeIndented = writeIndented;
     }
 
-    public DataSourceNode Decode(string rawText)
-    {
-        return DataSourceNode.CreateLazy(rawText, ExpandOneLevel);
-    }
+    public DataSourceNode Decode(string rawText) => DataSourceNode.CreateLazy(rawText, ExpandOneLevel);
 
     public string Encode(DataSourceNode node)
     {

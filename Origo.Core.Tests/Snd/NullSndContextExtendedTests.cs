@@ -11,34 +11,21 @@ namespace Origo.Core.Tests;
 public class NullSndContextExtendedTests
 {
     [Fact]
-    public void ListSaves_ReturnsEmpty()
-    {
-        Assert.Empty(NullSndContext.Instance.ListSaves());
-    }
+    public void ListSaves_ReturnsEmpty() => Assert.Empty(NullSndContext.Instance.ListSaves());
 
     [Fact]
-    public void RequestSaveGameAuto_Throws()
-    {
+    public void RequestSaveGameAuto_Throws() =>
         Assert.Throws<InvalidOperationException>(() => NullSndContext.Instance.RequestSaveGameAuto());
-    }
 
     [Fact]
-    public void RequestSaveGameAuto_WithValue_Throws()
-    {
+    public void RequestSaveGameAuto_WithValue_Throws() =>
         Assert.Throws<InvalidOperationException>(() => NullSndContext.Instance.RequestSaveGameAuto("my_save"));
-    }
 
     [Fact]
-    public void HasContinueData_ReturnsFalse()
-    {
-        Assert.False(NullSndContext.Instance.HasContinueData());
-    }
+    public void HasContinueData_ReturnsFalse() => Assert.False(NullSndContext.Instance.HasContinueData());
 
     [Fact]
-    public void RequestContinueGame_ReturnsFalse()
-    {
-        Assert.False(NullSndContext.Instance.RequestContinueGame());
-    }
+    public void RequestContinueGame_ReturnsFalse() => Assert.False(NullSndContext.Instance.RequestContinueGame());
 
     [Fact]
     public void MutationOperations_ThrowInvalidOperationException()

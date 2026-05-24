@@ -160,10 +160,8 @@ public class SessionManagerTests
     // ── Background level IDs in progress blackboard ───────────────────
 
     [Fact]
-    public void SessionTopology_WellKnownKey_Exists()
-    {
+    public void SessionTopology_WellKnownKey_Exists() =>
         Assert.Equal("origo.session_topology", WellKnownKeys.SessionTopology);
-    }
 
     // ── Helpers ─────────────────────────────────────────────────────
 

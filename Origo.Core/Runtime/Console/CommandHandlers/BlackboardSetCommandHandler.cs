@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Origo.Core.Abstractions.Console;
 
-namespace Origo.Core.Runtime.Console.CommandImpl;
+namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
 ///     <c>bb_set</c> 命令：向黑板写入一个字符串值。

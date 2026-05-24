@@ -18,18 +18,13 @@ internal static class SessionTopologyCodec
     /// <summary>
     ///     Serializes a single topology entry into the canonical string form.
     /// </summary>
-    public static string Serialize(string key, string levelId, bool syncProcess)
-    {
-        return $"{key}{FieldSeparator}{levelId}{FieldSeparator}{(syncProcess ? "true" : "false")}";
-    }
+    public static string Serialize(string key, string levelId, bool syncProcess) =>
+        $"{key}{FieldSeparator}{levelId}{FieldSeparator}{(syncProcess ? "true" : "false")}";
 
     /// <summary>
     ///     Joins multiple serialized entries into a single topology string.
     /// </summary>
-    public static string Join(IEnumerable<string> entries)
-    {
-        return string.Join(EntrySeparator, entries);
-    }
+    public static string Join(IEnumerable<string> entries) => string.Join(EntrySeparator, entries);
 
     /// <summary>
     ///     Parses a topology string into a list of <see cref="SessionDescriptor" />.

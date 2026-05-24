@@ -1,7 +1,7 @@
 using System;
 using Origo.Core.Abstractions.Console;
 
-namespace Origo.Core.Runtime.Console.CommandImpl;
+namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
 ///     <c>bb_get</c> 命令：读取黑板中指定键的值。

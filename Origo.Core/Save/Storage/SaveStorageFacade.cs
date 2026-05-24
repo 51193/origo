@@ -20,10 +20,8 @@ internal static class SaveStorageFacade
     /// <summary>
     ///     枚举存档根目录下所有合法的存档槽 ID，按字典序排序返回。
     /// </summary>
-    public static IReadOnlyList<string> EnumerateSaveIds(IFileSystem fileSystem, string saveRootPath)
-    {
-        return EnumerateSaveIds(fileSystem, saveRootPath, new DefaultSavePathPolicy());
-    }
+    public static IReadOnlyList<string> EnumerateSaveIds(IFileSystem fileSystem, string saveRootPath) =>
+        EnumerateSaveIds(fileSystem, saveRootPath, new DefaultSavePathPolicy());
 
     /// <summary>
     ///     枚举存档根目录下所有合法的存档槽 ID，按字典序排序返回（策略感知）。
@@ -59,10 +57,8 @@ internal static class SaveStorageFacade
     ///     枚举所有存档槽并读取各自的展示元数据（meta.map）。
     /// </summary>
     public static IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData(IFileSystem fileSystem,
-        string saveRootPath)
-    {
-        return EnumerateSavesWithMetaData(fileSystem, saveRootPath, new DefaultSavePathPolicy());
-    }
+        string saveRootPath) =>
+        EnumerateSavesWithMetaData(fileSystem, saveRootPath, new DefaultSavePathPolicy());
 
     /// <summary>
     ///     枚举所有存档槽并读取各自的展示元数据（meta.map）（策略感知）。
@@ -103,10 +99,8 @@ internal static class SaveStorageFacade
 
     public static void
         WriteSavePayloadToCurrent(IFileSystem fileSystem, IDataSourceIoGateway dataSourceIo, string saveRootPath,
-            SaveGamePayload payload)
-    {
+            SaveGamePayload payload) =>
         SavePayloadWriter.WriteToCurrent(fileSystem, dataSourceIo, saveRootPath, payload);
-    }
 
     /// <summary>
     ///     将存档 payload 写入 <c>current/</c> 活动目录（策略感知）。
@@ -114,10 +108,8 @@ internal static class SaveStorageFacade
     public static void
         WriteSavePayloadToCurrent(IFileSystem fileSystem, IDataSourceIoGateway dataSourceIo, string saveRootPath,
             SaveGamePayload payload,
-            ISavePathPolicy pathPolicy)
-    {
+            ISavePathPolicy pathPolicy) =>
         SavePayloadWriter.WriteToCurrent(fileSystem, dataSourceIo, saveRootPath, payload, pathPolicy);
-    }
 
     /// <summary>
     ///     将存档 payload 写入 <c>current/</c> 后，再将 <c>current/</c> 快照复制到 <c>save_{newSaveId}/</c>。
@@ -176,7 +168,7 @@ internal static class SaveStorageFacade
 
         try
         {
-            SnapshotCurrentToSave(fileSystem, saveRootPath, newSaveId, pathPolicy);
+            SnapshotCurrentToSave(fileSystem, saveRootPath, newSaveId, pathPolicy, logger);
         }
         catch (InvalidOperationException ex)
         {
@@ -244,10 +236,8 @@ internal static class SaveStorageFacade
         string saveRootPath,
         string saveId,
         string activeLevelId,
-        ILogger? logger = null)
-    {
-        return SavePayloadReader.ReadFromCurrent(fileSystem, dataSourceIo, saveRootPath, saveId, activeLevelId, logger);
-    }
+        ILogger? logger = null) =>
+        SavePayloadReader.ReadFromCurrent(fileSystem, dataSourceIo, saveRootPath, saveId, activeLevelId, logger);
 
     /// <summary>
     ///     从 <c>current/</c> 活动目录读取完整的存档 payload（策略感知）。
@@ -285,10 +275,8 @@ internal static class SaveStorageFacade
         IDataSourceIoGateway dataSourceIo,
         string saveRootPath,
         string saveId,
-        string activeLevelId)
-    {
-        return SavePayloadReader.ReadFromSnapshot(fileSystem, dataSourceIo, saveRootPath, saveId, activeLevelId);
-    }
+        string activeLevelId) =>
+        SavePayloadReader.ReadFromSnapshot(fileSystem, dataSourceIo, saveRootPath, saveId, activeLevelId);
 
     /// <summary>
     ///     从指定存档槽的快照目录读取完整的存档 payload（策略感知）。
@@ -322,10 +310,8 @@ internal static class SaveStorageFacade
         IFileSystem fileSystem,
         IDataSourceIoGateway dataSourceIo,
         string saveRootPath,
-        string saveId)
-    {
-        return SavePayloadReader.ReadProgressNodeFromSnapshot(fileSystem, dataSourceIo, saveRootPath, saveId);
-    }
+        string saveId) =>
+        SavePayloadReader.ReadProgressNodeFromSnapshot(fileSystem, dataSourceIo, saveRootPath, saveId);
 
     /// <summary>
     ///     从指定存档槽的快照目录中仅读取 Progress 黑板 JSON（策略感知）。
@@ -347,10 +333,9 @@ internal static class SaveStorageFacade
     public static void SnapshotCurrentToSave(
         IFileSystem fileSystem,
         string saveRootPath,
-        string newSaveId)
-    {
-        SnapshotCurrentToSave(fileSystem, saveRootPath, newSaveId, new DefaultSavePathPolicy());
-    }
+        string newSaveId,
+        ILogger? logger = null) =>
+        SnapshotCurrentToSave(fileSystem, saveRootPath, newSaveId, new DefaultSavePathPolicy(), logger);
 
     /// <summary>
     ///     将 <c>current/</c> 目录完整复制为指定存档槽的快照（策略感知）。
@@ -359,7 +344,8 @@ internal static class SaveStorageFacade
         IFileSystem fileSystem,
         string saveRootPath,
         string newSaveId,
-        ISavePathPolicy pathPolicy)
+        ISavePathPolicy pathPolicy,
+        ILogger? logger = null)
     {
         ArgumentNullException.ThrowIfNull(fileSystem);
         ArgumentNullException.ThrowIfNull(pathPolicy);
@@ -382,7 +368,7 @@ internal static class SaveStorageFacade
             fileSystem.DeleteDirectory(tempAbs);
 
         fileSystem.CreateDirectory(tempAbs);
-        CopyCurrentToTempDirectory(fileSystem, saveRootPath, currentRel, tempRel);
+        CopyCurrentToTempDirectory(fileSystem, saveRootPath, currentRel, tempRel, logger);
 
         if (fileSystem.DirectoryExists(saveAbs))
             fileSystem.DeleteDirectory(saveAbs);
@@ -391,7 +377,8 @@ internal static class SaveStorageFacade
     }
 
     private static void CopyCurrentToTempDirectory(
-        IFileSystem fileSystem, string saveRootPath, string currentRel, string tempRel)
+        IFileSystem fileSystem, string saveRootPath, string currentRel, string tempRel,
+        ILogger? logger = null)
     {
         try
         {
@@ -413,9 +400,13 @@ internal static class SaveStorageFacade
             {
                 fileSystem.DeleteDirectory(tempAbs);
             }
-            catch
+            catch (Exception cleanupEx)
             {
-                /* best-effort cleanup */
+                logger?.Log(LogLevel.Warning, nameof(SaveStorageFacade),
+                    new LogMessageBuilder()
+                        .AddSuffix("tempPath", tempAbs)
+                        .Build(
+                            $"Snapshot temp directory cleanup failed: {cleanupEx.Message}"));
             }
 
             throw new InvalidOperationException(

@@ -35,10 +35,8 @@ public class SaveMetaMapCodecExtendedTests
     }
 
     [Fact]
-    public void SaveMetaMapCodec_Serialize_NullMap_ReturnsEmpty()
-    {
+    public void SaveMetaMapCodec_Serialize_NullMap_ReturnsEmpty() =>
         Assert.Equal(string.Empty, SaveMetaMapCodec.Serialize(null));
-    }
 
     [Fact]
     public void SaveMetaMapCodec_Serialize_EmptyMap_ReturnsEmpty()

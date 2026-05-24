@@ -57,32 +57,20 @@ public sealed class SndRuntime
     /// <summary>
     ///     序列化当前场景中所有实体的元数据列表。
     /// </summary>
-    public IReadOnlyList<SndMetaData> SerializeMetaList()
-    {
-        return SceneHost.SerializeMetaList();
-    }
+    public IReadOnlyList<SndMetaData> SerializeMetaList() => SceneHost.SerializeMetaList();
 
     /// <summary>
     ///     清除场景中所有 SND 实体。
     /// </summary>
-    public void ClearAll()
-    {
-        SceneHost.ClearAll();
-    }
+    public void ClearAll() => SceneHost.ClearAll();
 
     /// <summary>
     ///     获取场景中所有 SND 实体集合。
     /// </summary>
-    public IReadOnlyCollection<ISndEntity> GetEntities()
-    {
-        return SceneHost.GetEntities();
-    }
+    public IReadOnlyCollection<ISndEntity> GetEntities() => SceneHost.GetEntities();
 
     /// <summary>
     ///     按名称查找 SND 实体，未找到时返回 null。
     /// </summary>
-    public ISndEntity? FindByName(string name)
-    {
-        return SceneHost.FindByName(name);
-    }
+    public ISndEntity? FindByName(string name) => SceneHost.FindByName(name);
 }

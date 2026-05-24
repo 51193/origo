@@ -8,15 +8,9 @@ namespace Origo.GodotAdapter.FileSystem;
 
 internal static class GodotDirectoryOperations
 {
-    public static bool Exists(string path)
-    {
-        return DirAccess.DirExistsAbsolute(path);
-    }
+    public static bool Exists(string path) => DirAccess.DirExistsAbsolute(path);
 
-    public static void Create(string directoryPath)
-    {
-        DirAccess.MakeDirRecursiveAbsolute(directoryPath);
-    }
+    public static void Create(string directoryPath) => DirAccess.MakeDirRecursiveAbsolute(directoryPath);
 
     public static IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
     {

@@ -19,15 +19,9 @@ internal sealed class EmptySessionManager : ISessionManager
 
     public IReadOnlyCollection<string> Keys => Array.Empty<string>();
 
-    public ISessionRun? TryGet(string key)
-    {
-        return null;
-    }
+    public ISessionRun? TryGet(string key) => null;
 
-    public bool Contains(string key)
-    {
-        return false;
-    }
+    public bool Contains(string key) => false;
 
     public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false)
     {

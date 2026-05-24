@@ -13,8 +13,6 @@ internal sealed class DelegateSaveMetaContributor : ISaveMetaContributor
         _contribute = contribute;
     }
 
-    public void Contribute(in SaveMetaBuildContext context, IDictionary<string, string> target)
-    {
+    public void Contribute(in SaveMetaBuildContext context, IDictionary<string, string> target) =>
         _contribute(context, target);
-    }
 }

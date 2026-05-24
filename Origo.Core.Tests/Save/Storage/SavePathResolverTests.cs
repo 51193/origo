@@ -68,22 +68,16 @@ public class SavePathResolverTests
     }
 
     [Fact]
-    public void SavePathResolver_GetLeafDirectoryName_ReturnsLastSegment()
-    {
+    public void SavePathResolver_GetLeafDirectoryName_ReturnsLastSegment() =>
         Assert.Equal("child", SavePathResolver.GetLeafDirectoryName("root/parent/child"));
-    }
 
     [Fact]
-    public void SavePathResolver_GetLeafDirectoryName_SingleSegment()
-    {
+    public void SavePathResolver_GetLeafDirectoryName_SingleSegment() =>
         Assert.Equal("single", SavePathResolver.GetLeafDirectoryName("single"));
-    }
 
     [Fact]
-    public void SavePathResolver_GetLeafDirectoryName_TrailingSlash()
-    {
+    public void SavePathResolver_GetLeafDirectoryName_TrailingSlash() =>
         Assert.Equal("child", SavePathResolver.GetLeafDirectoryName("root/child/"));
-    }
 
     [Fact]
     public void SavePathResolver_GetLeafDirectoryName_EmptyOrWhitespace_ReturnsEmpty()

@@ -31,22 +31,14 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
     }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<ISndEntity> GetEntities()
-    {
-        return _entities;
-    }
+    public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
 
     /// <inheritdoc />
-    public ISndEntity? FindByName(string name)
-    {
-        return _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
-    }
+    public ISndEntity? FindByName(string name) =>
+        _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
 
     /// <inheritdoc />
-    public IReadOnlyList<SndMetaData> SerializeMetaList()
-    {
-        return _metaList.ToArray();
-    }
+    public IReadOnlyList<SndMetaData> SerializeMetaList() => _metaList.ToArray();
 
     /// <inheritdoc />
     public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
@@ -93,15 +85,17 @@ internal sealed class MemorySndEntity : ISndEntity
     public string Name { get; }
 
     /// <inheritdoc />
-    public void SetData<T>(string name, T value)
-    {
-        _data[name] = value;
-    }
+    public void SetData<T>(string name, T value) => _data[name] = value;
 
     /// <inheritdoc />
     public T GetData<T>(string name)
     {
-        return _data.TryGetValue(name, out var value) && value is T cast ? cast : default!;
+        if (!_data.TryGetValue(name, out var value))
+            throw new KeyNotFoundException($"Data key '{name}' not found in MemorySndSceneHost.");
+        if (value is T cast)
+            return cast;
+        throw new InvalidCastException(
+            $"Data key '{name}' is of type '{value?.GetType().Name ?? "null"}' but requested as '{typeof(T).Name}'.");
     }
 
     /// <inheritdoc />
@@ -133,10 +127,7 @@ internal sealed class MemorySndEntity : ISndEntity
     }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<string> GetNodeNames()
-    {
-        return Array.Empty<string>();
-    }
+    public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
 
     /// <inheritdoc />
     public void AddStrategy(string index)

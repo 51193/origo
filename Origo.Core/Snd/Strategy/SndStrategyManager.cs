@@ -21,6 +21,7 @@ internal sealed class SndStrategyManager
 
     public SndStrategyManager(SndStrategyPool pool, ILogger logger)
     {
+        ArgumentNullException.ThrowIfNull(pool);
         _pool = pool;
         ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;

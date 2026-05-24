@@ -263,10 +263,7 @@ public class SessionDecouplingTests
     {
         internal static List<string?>? ObservedMarkers { get; set; }
 
-        public static void Reset()
-        {
-            ObservedMarkers = new List<string?>();
-        }
+        public static void Reset() => ObservedMarkers = new List<string?>();
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -286,10 +283,7 @@ public class SessionDecouplingTests
     {
         internal static List<List<string>>? ObservedEntityNames { get; set; }
 
-        public static void Reset()
-        {
-            ObservedEntityNames = new List<List<string>>();
-        }
+        public static void Reset() => ObservedEntityNames = new List<List<string>>();
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -317,55 +311,28 @@ public class SessionDecouplingTests
             _prefix = prefix;
         }
 
-        public string GetCurrentDirectory()
-        {
-            return $"{_prefix}current";
-        }
+        public string GetCurrentDirectory() => $"{_prefix}current";
 
-        public string GetSaveDirectory(string saveId)
-        {
-            return $"{_prefix}save_{saveId}";
-        }
+        public string GetSaveDirectory(string saveId) => $"{_prefix}save_{saveId}";
 
-        public string GetProgressFile(string baseDirectory)
-        {
-            return $"{baseDirectory}/{_prefix}progress.json";
-        }
+        public string GetProgressFile(string baseDirectory) => $"{baseDirectory}/{_prefix}progress.json";
 
-        public string GetProgressStateMachinesFile(string baseDirectory)
-        {
-            return $"{baseDirectory}/{_prefix}progress_state_machines.json";
-        }
+        public string GetProgressStateMachinesFile(string baseDirectory) =>
+            $"{baseDirectory}/{_prefix}progress_state_machines.json";
 
-        public string GetCustomMetaFile(string baseDirectory)
-        {
-            return $"{baseDirectory}/{_prefix}meta.map";
-        }
+        public string GetCustomMetaFile(string baseDirectory) => $"{baseDirectory}/{_prefix}meta.map";
 
-        public string GetLevelDirectory(string baseDirectory, string levelId)
-        {
-            return $"{baseDirectory}/{_prefix}level_{levelId}";
-        }
+        public string GetLevelDirectory(string baseDirectory, string levelId) =>
+            $"{baseDirectory}/{_prefix}level_{levelId}";
 
-        public string GetLevelSndSceneFile(string levelDirectory)
-        {
-            return $"{levelDirectory}/snd_scene.json";
-        }
+        public string GetLevelSndSceneFile(string levelDirectory) => $"{levelDirectory}/snd_scene.json";
 
-        public string GetLevelSessionFile(string levelDirectory)
-        {
-            return $"{levelDirectory}/session.json";
-        }
+        public string GetLevelSessionFile(string levelDirectory) => $"{levelDirectory}/session.json";
 
-        public string GetLevelSessionStateMachinesFile(string levelDirectory)
-        {
-            return $"{levelDirectory}/session_state_machines.json";
-        }
+        public string GetLevelSessionStateMachinesFile(string levelDirectory) =>
+            $"{levelDirectory}/session_state_machines.json";
 
-        public string GetWriteInProgressMarker(string baseDirectory)
-        {
-            return $"{baseDirectory}/{_prefix}.write_in_progress";
-        }
+        public string GetWriteInProgressMarker(string baseDirectory) => $"{baseDirectory}/{_prefix}.write_in_progress";
     }
 
     // ── Tracking wrapper for ISaveStorageService ──
@@ -382,27 +349,16 @@ public class SessionDecouplingTests
         public int WriteLevelPayloadOnlyCalls { get; private set; }
         public LevelPayload? LastWrittenPayload { get; private set; }
 
-        public IReadOnlyList<string> EnumerateSaveIds()
-        {
-            return _inner.EnumerateSaveIds();
-        }
+        public IReadOnlyList<string> EnumerateSaveIds() => _inner.EnumerateSaveIds();
 
-        public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData()
-        {
-            return _inner.EnumerateSavesWithMetaData();
-        }
+        public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData() => _inner.EnumerateSavesWithMetaData();
 
-        public void WriteSavePayloadToCurrent(SaveGamePayload payload)
-        {
-            _inner.WriteSavePayloadToCurrent(payload);
-        }
+        public void WriteSavePayloadToCurrent(SaveGamePayload payload) => _inner.WriteSavePayloadToCurrent(payload);
 
         public void WriteSavePayloadToCurrentThenSnapshot(
             SaveGamePayload payload, string newSaveId,
-            ILogger logger)
-        {
+            ILogger logger) =>
             _inner.WriteSavePayloadToCurrentThenSnapshot(payload, newSaveId, logger);
-        }
 
         public void WriteLevelPayloadOnly(string baseDirectoryRel, LevelPayload levelPayload, bool overwrite = true)
         {
@@ -419,50 +375,30 @@ public class SessionDecouplingTests
         }
 
         public void WriteProgressOnlyToCurrent(DataSourceNode progressNode, DataSourceNode progressStateMachinesNode,
-            bool overwrite = true)
-        {
+            bool overwrite = true) =>
             _inner.WriteProgressOnlyToCurrent(progressNode, progressStateMachinesNode, overwrite);
-        }
 
         public SaveGamePayload ReadSavePayloadFromCurrent(string saveId, string activeLevelId,
-            ILogger? logger = null)
-        {
-            return _inner.ReadSavePayloadFromCurrent(saveId, activeLevelId, logger);
-        }
+            ILogger? logger = null) =>
+            _inner.ReadSavePayloadFromCurrent(saveId, activeLevelId, logger);
 
-        public SaveGamePayload ReadSavePayloadFromSnapshot(string saveId, string activeLevelId)
-        {
-            return _inner.ReadSavePayloadFromSnapshot(saveId, activeLevelId);
-        }
+        public SaveGamePayload ReadSavePayloadFromSnapshot(string saveId, string activeLevelId) =>
+            _inner.ReadSavePayloadFromSnapshot(saveId, activeLevelId);
 
-        public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId)
-        {
-            return _inner.ReadProgressNodeFromSnapshot(saveId);
-        }
+        public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId) =>
+            _inner.ReadProgressNodeFromSnapshot(saveId);
 
-        public LevelPayload? TryReadLevelPayloadFromCurrent(string levelId)
-        {
-            return _inner.TryReadLevelPayloadFromCurrent(levelId);
-        }
+        public LevelPayload? TryReadLevelPayloadFromCurrent(string levelId) =>
+            _inner.TryReadLevelPayloadFromCurrent(levelId);
 
-        public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId)
-        {
-            return _inner.TryReadLevelPayloadFromSnapshot(saveId, levelId);
-        }
+        public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId) =>
+            _inner.TryReadLevelPayloadFromSnapshot(saveId, levelId);
 
-        public LevelPayload? ResolveLevelPayload(string saveId, string levelId)
-        {
-            return _inner.ResolveLevelPayload(saveId, levelId);
-        }
+        public LevelPayload? ResolveLevelPayload(string saveId, string levelId) =>
+            _inner.ResolveLevelPayload(saveId, levelId);
 
-        public void SnapshotCurrentToSave(string newSaveId)
-        {
-            _inner.SnapshotCurrentToSave(newSaveId);
-        }
+        public void SnapshotCurrentToSave(string newSaveId) => _inner.SnapshotCurrentToSave(newSaveId);
 
-        public void DeleteCurrentDirectory()
-        {
-            _inner.DeleteCurrentDirectory();
-        }
+        public void DeleteCurrentDirectory() => _inner.DeleteCurrentDirectory();
     }
 }

@@ -31,20 +31,12 @@ public sealed class Blackboard : IBlackboard
         return (false, default!);
     }
 
-    public void Clear()
-    {
-        _data.Clear();
-    }
+    public void Clear() => _data.Clear();
 
-    public IReadOnlyCollection<string> GetKeys()
-    {
-        return _data.Keys;
-    }
+    public IReadOnlyCollection<string> GetKeys() => _data.Keys;
 
-    public IReadOnlyDictionary<string, TypedData> SerializeAll()
-    {
-        return new Dictionary<string, TypedData>(_data, StringComparer.Ordinal);
-    }
+    public IReadOnlyDictionary<string, TypedData> SerializeAll() =>
+        new Dictionary<string, TypedData>(_data, StringComparer.Ordinal);
 
     public void DeserializeAll(IReadOnlyDictionary<string, TypedData> data)
     {

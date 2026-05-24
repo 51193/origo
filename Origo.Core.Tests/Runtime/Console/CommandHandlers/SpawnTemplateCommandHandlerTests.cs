@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Runtime.Console;
-using Origo.Core.Runtime.Console.CommandImpl;
+using Origo.Core.Runtime.Console.CommandHandlers;
 using Xunit;
 
 namespace Origo.Core.Tests;

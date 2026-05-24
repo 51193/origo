@@ -63,10 +63,7 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
     }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<ISndEntity> GetEntities()
-    {
-        return _entries.Select(e => (ISndEntity)e.Entity).ToArray();
-    }
+    public IReadOnlyCollection<ISndEntity> GetEntities() => _entries.Select(e => (ISndEntity)e.Entity).ToArray();
 
     /// <inheritdoc />
     public ISndEntity? FindByName(string name)
@@ -101,10 +98,7 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
     }
 
     /// <inheritdoc />
-    public void ClearAll()
-    {
-        QuitAll();
-    }
+    public void ClearAll() => QuitAll();
 
     /// <summary>
     ///     对所有存活实体执行 Process 帧更新。

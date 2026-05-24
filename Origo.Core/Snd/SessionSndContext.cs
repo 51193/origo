@@ -29,98 +29,42 @@ internal sealed class SessionSndContext : ISndContext
     public ISessionRun? CurrentSession { get; }
     public bool IsFrontSession => CurrentSession?.IsFrontSession ?? false;
 
-    public void EnqueueBusinessDeferred(Action action)
-    {
-        _global.EnqueueBusinessDeferred(action);
-    }
+    public void EnqueueBusinessDeferred(Action action) => _global.EnqueueBusinessDeferred(action);
 
-    public void FlushDeferredActionsForCurrentFrame()
-    {
-        _global.FlushDeferredActionsForCurrentFrame();
-    }
+    public void FlushDeferredActionsForCurrentFrame() => _global.FlushDeferredActionsForCurrentFrame();
 
-    public int GetPendingPersistenceRequestCount()
-    {
-        return _global.GetPendingPersistenceRequestCount();
-    }
+    public int GetPendingPersistenceRequestCount() => _global.GetPendingPersistenceRequestCount();
 
-    public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
-    {
-        return _global.CloneTemplate(templateKey, overrideName);
-    }
+    public SndMetaData CloneTemplate(string templateKey, string? overrideName = null) =>
+        _global.CloneTemplate(templateKey, overrideName);
 
-    public bool TrySubmitConsoleCommand(string commandLine)
-    {
-        return _global.TrySubmitConsoleCommand(commandLine);
-    }
+    public bool TrySubmitConsoleCommand(string commandLine) => _global.TrySubmitConsoleCommand(commandLine);
 
-    public void ProcessConsolePending()
-    {
-        _global.ProcessConsolePending();
-    }
+    public void ProcessConsolePending() => _global.ProcessConsolePending();
 
-    public long SubscribeConsoleOutput(Action<string> onLine)
-    {
-        return _global.SubscribeConsoleOutput(onLine);
-    }
+    public long SubscribeConsoleOutput(Action<string> onLine) => _global.SubscribeConsoleOutput(onLine);
 
-    public void UnsubscribeConsoleOutput(long subscriptionId)
-    {
-        _global.UnsubscribeConsoleOutput(subscriptionId);
-    }
+    public void UnsubscribeConsoleOutput(long subscriptionId) => _global.UnsubscribeConsoleOutput(subscriptionId);
 
-    public StateMachineContainer? GetProgressStateMachines()
-    {
-        return _global.GetProgressStateMachines();
-    }
+    public StateMachineContainer? GetProgressStateMachines() => _global.GetProgressStateMachines();
 
-    public IReadOnlyList<string> ListSaves()
-    {
-        return _global.ListSaves();
-    }
+    public IReadOnlyList<string> ListSaves() => _global.ListSaves();
 
-    public void RequestLoadGame(string saveId)
-    {
-        _global.RequestLoadGame(saveId);
-    }
+    public void RequestLoadGame(string saveId) => _global.RequestLoadGame(saveId);
 
-    public void RequestSaveGame(string newSaveId)
-    {
-        _global.RequestSaveGame(newSaveId);
-    }
+    public void RequestSaveGame(string newSaveId) => _global.RequestSaveGame(newSaveId);
 
-    public string RequestSaveGameAuto(string? newSaveId = null)
-    {
-        return _global.RequestSaveGameAuto(newSaveId);
-    }
+    public string RequestSaveGameAuto(string? newSaveId = null) => _global.RequestSaveGameAuto(newSaveId);
 
-    public void SetContinueTarget(string saveId)
-    {
-        _global.SetContinueTarget(saveId);
-    }
+    public void SetContinueTarget(string saveId) => _global.SetContinueTarget(saveId);
 
-    public void RequestSwitchForegroundLevel(string newLevelId)
-    {
-        _global.RequestSwitchForegroundLevel(newLevelId);
-    }
+    public void RequestSwitchForegroundLevel(string newLevelId) => _global.RequestSwitchForegroundLevel(newLevelId);
 
-    public bool HasContinueData()
-    {
-        return _global.HasContinueData();
-    }
+    public bool HasContinueData() => _global.HasContinueData();
 
-    public bool RequestContinueGame()
-    {
-        return _global.RequestContinueGame();
-    }
+    public bool RequestContinueGame() => _global.RequestContinueGame();
 
-    public void RequestLoadInitialSave()
-    {
-        _global.RequestLoadInitialSave();
-    }
+    public void RequestLoadInitialSave() => _global.RequestLoadInitialSave();
 
-    public void RequestLoadMainMenuEntrySave()
-    {
-        _global.RequestLoadMainMenuEntrySave();
-    }
+    public void RequestLoadMainMenuEntrySave() => _global.RequestLoadMainMenuEntrySave();
 }

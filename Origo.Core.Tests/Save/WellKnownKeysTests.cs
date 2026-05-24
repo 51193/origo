@@ -8,16 +8,12 @@ namespace Origo.Core.Tests;
 public class WellKnownKeysTests
 {
     [Fact]
-    public void WellKnownKeys_ActiveSaveId_HasExpectedValue()
-    {
+    public void WellKnownKeys_ActiveSaveId_HasExpectedValue() =>
         Assert.Equal("origo.active_save_id", WellKnownKeys.ActiveSaveId);
-    }
 
     [Fact]
-    public void WellKnownKeys_SessionTopology_HasExpectedValue()
-    {
+    public void WellKnownKeys_SessionTopology_HasExpectedValue() =>
         Assert.Equal("origo.session_topology", WellKnownKeys.SessionTopology);
-    }
 }
 
 // ── TestFileSystem coverage ────────────────────────────────────────────

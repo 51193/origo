@@ -168,8 +168,6 @@ internal sealed class SndMappings
         return list;
     }
 
-    private static bool IsExplicitResourcePath(string id)
-    {
-        return id.Contains(UriLikeSchemeSeparator, StringComparison.Ordinal);
-    }
+    private static bool IsExplicitResourcePath(string id) =>
+        id.Contains(UriLikeSchemeSeparator, StringComparison.Ordinal);
 }

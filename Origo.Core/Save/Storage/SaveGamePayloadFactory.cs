@@ -47,15 +47,7 @@ internal sealed class SaveGamePayloadFactory
         ArgumentNullException.ThrowIfNull(progressStateMachinesNode);
         ArgumentNullException.ThrowIfNull(sessionStateMachinesNode);
 
-        var (foundTopology, rawTopology) = _progress.TryGet<string>(WellKnownKeys.SessionTopology);
-        if (!foundTopology || string.IsNullOrWhiteSpace(rawTopology))
-            throw new InvalidOperationException(
-                $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}' before building save payload.");
-
-        var progressActiveLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
-        if (!string.Equals(progressActiveLevelId, currentLevelId, StringComparison.Ordinal))
-            throw new InvalidOperationException(
-                $"Progress '{WellKnownKeys.SessionTopology}' foreground ('{progressActiveLevelId}') does not match currentLevelId ('{currentLevelId}').");
+        ValidateTopologyConsistency(currentLevelId);
 
         var progressNode = _blackboardSerializer.Serialize(_progress);
         var sessionNode = _blackboardSerializer.Serialize(_session);
@@ -80,5 +72,18 @@ internal sealed class SaveGamePayloadFactory
                 : new Dictionary<string, string>(customMeta, StringComparer.Ordinal),
             Levels = new Dictionary<string, LevelPayload> { [currentLevelId] = levelPayload }
         };
+    }
+
+    private void ValidateTopologyConsistency(string currentLevelId)
+    {
+        var (foundTopology, rawTopology) = _progress.TryGet<string>(WellKnownKeys.SessionTopology);
+        if (!foundTopology || string.IsNullOrWhiteSpace(rawTopology))
+            throw new InvalidOperationException(
+                $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}' before building save payload.");
+
+        var progressActiveLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
+        if (!string.Equals(progressActiveLevelId, currentLevelId, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                $"Progress '{WellKnownKeys.SessionTopology}' foreground ('{progressActiveLevelId}') does not match currentLevelId ('{currentLevelId}').");
     }
 }

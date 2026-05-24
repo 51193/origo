@@ -52,55 +52,8 @@ public static class OrigoAutoInitializer
             if (ShouldSkipAssembly(assembly, skipPrefixes))
                 continue;
 
-            Type[] types;
-            try
-            {
-                types = assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                var wrapped = new InvalidOperationException(
-                    $"Failed to enumerate types from assembly '{assembly.FullName}'.", ex);
-                logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
-                    .AddSuffix("filePath", assembly.FullName)
-                    .Build($"Discover strategy types failed: {wrapped.Message}"));
-                throw wrapped;
-            }
-
-            foreach (var type in types)
-            {
-                if (type.IsAbstract || !baseType.IsAssignableFrom(type))
-                    continue;
-                if (type.GetConstructor(Type.EmptyTypes) is null)
-                {
-                    var ex = new InvalidOperationException(
-                        $"Strategy type '{type.FullName}' must declare a public parameterless constructor.");
-                    logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
-                        .Build($"Invalid strategy constructor: {ex.Message}"));
-                    throw ex;
-                }
-
-                if (!SndStrategyPool.ValidateStrategyType(type, out var invalidMembers))
-                {
-                    var ex = new InvalidOperationException(
-                        $"Strategy type '{type.FullName}' declares invalid instance members ({invalidMembers}); " +
-                        "shared pooled strategies must be stateless.");
-                    logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
-                        .Build($"Strategy state validation failed: {ex.Message}"));
-                    throw ex;
-                }
-
-                var index = ResolveStrategyIndex(type);
-                var capturedType = type;
-
-                pool.Register(capturedType, () => (BaseStrategy)Activator.CreateInstance(capturedType)!);
-                registered++;
-
-                logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
-                    .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                    .AddSuffix("strategyIndex", index)
-                    .Build("Strategy auto-registered."));
-            }
+            var types = GetAssemblyTypes(assembly, logger);
+            registered += RegisterStrategyTypes(types, baseType, pool, logger, watch);
         }
 
         watch.Stop();
@@ -145,19 +98,7 @@ public static class OrigoAutoInitializer
             throw ex;
         }
 
-        DataSourceNode root;
-        try
-        {
-            root = dataSourceIo.ReadTree(filePath);
-        }
-        catch (Exception ex) when (ex is KeyNotFoundException or FileNotFoundException or DirectoryNotFoundException)
-        {
-            var notFound = new InvalidOperationException($"Config file '{filePath}' not found.", ex);
-            logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
-                .AddSuffix("filePath", filePath)
-                .Build($"Config file not found: {notFound.Message}"));
-            throw notFound;
-        }
+        var root = ReadConfigFile(filePath, dataSourceIo, logger);
 
         using (root)
         {
@@ -170,16 +111,107 @@ public static class OrigoAutoInitializer
                 throw ex;
             }
 
-            var metaList = snd.World.ResolveMetaListFromJsonArray(root);
-            snd.SpawnMany(metaList);
+            return SpawnFromJsonArray(root, snd, filePath, logger, watch);
+        }
+    }
 
-            watch.Stop();
+    private static Type[] GetAssemblyTypes(Assembly assembly, ILogger logger)
+    {
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            var wrapped = new InvalidOperationException(
+                $"Failed to enumerate types from assembly '{assembly.FullName}'.", ex);
+            logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+                .AddSuffix("filePath", assembly.FullName)
+                .Build($"Discover strategy types failed: {wrapped.Message}"));
+            throw wrapped;
+        }
+    }
+
+    private static int RegisterStrategyTypes(
+        Type[] types,
+        Type baseType,
+        SndStrategyPool pool,
+        ILogger logger,
+        Stopwatch watch)
+    {
+        var registered = 0;
+        foreach (var type in types)
+        {
+            if (type.IsAbstract || !baseType.IsAssignableFrom(type))
+                continue;
+            if (type.GetConstructor(Type.EmptyTypes) is null)
+            {
+                var ex = new InvalidOperationException(
+                    $"Strategy type '{type.FullName}' must declare a public parameterless constructor.");
+                logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+                    .Build($"Invalid strategy constructor: {ex.Message}"));
+                throw ex;
+            }
+
+            if (!SndStrategyPool.ValidateStrategyType(type, out var invalidMembers))
+            {
+                var ex = new InvalidOperationException(
+                    $"Strategy type '{type.FullName}' declares invalid instance members ({invalidMembers}); " +
+                    "shared pooled strategies must be stateless.");
+                logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+                    .Build($"Strategy state validation failed: {ex.Message}"));
+                throw ex;
+            }
+
+            var index = ResolveStrategyIndex(type);
+            var capturedType = type;
+            pool.Register(capturedType, () => (BaseStrategy)Activator.CreateInstance(capturedType)!);
+            registered++;
+
             logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                .AddSuffix("filePath", filePath)
-                .Build($"Spawned entities from config: {metaList.Count}."));
-            return metaList.Count;
+                .AddSuffix("strategyIndex", index)
+                .Build("Strategy auto-registered."));
         }
+
+        return registered;
+    }
+
+    private static DataSourceNode ReadConfigFile(
+        string filePath,
+        IDataSourceIoGateway dataSourceIo,
+        ILogger logger)
+    {
+        try
+        {
+            return dataSourceIo.ReadTree(filePath);
+        }
+        catch (Exception ex) when (ex is KeyNotFoundException or FileNotFoundException or DirectoryNotFoundException)
+        {
+            var notFound = new InvalidOperationException($"Config file '{filePath}' not found.", ex);
+            logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+                .AddSuffix("filePath", filePath)
+                .Build($"Config file not found: {notFound.Message}"));
+            throw notFound;
+        }
+    }
+
+    private static int SpawnFromJsonArray(
+        DataSourceNode root,
+        SndRuntime snd,
+        string filePath,
+        ILogger logger,
+        Stopwatch watch)
+    {
+        var metaList = snd.World.ResolveMetaListFromJsonArray(root);
+        snd.SpawnMany(metaList);
+
+        watch.Stop();
+        logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
+            .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+            .AddSuffix("filePath", filePath)
+            .Build($"Spawned entities from config: {metaList.Count}."));
+        return metaList.Count;
     }
 
     private static bool ShouldSkipAssembly(Assembly assembly, string[] skipPrefixes)
@@ -195,10 +227,8 @@ public static class OrigoAutoInitializer
         return false;
     }
 
-    internal static bool IsStatelessStrategyType(Type strategyType, out string mutableFieldNames)
-    {
-        return SndStrategyPool.ValidateStrategyType(strategyType, out mutableFieldNames);
-    }
+    internal static bool IsStatelessStrategyType(Type strategyType, out string mutableFieldNames) =>
+        SndStrategyPool.ValidateStrategyType(strategyType, out mutableFieldNames);
 
     private static string ResolveStrategyIndex(Type strategyType)
     {

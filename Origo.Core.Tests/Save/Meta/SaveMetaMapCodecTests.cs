@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Origo.Core.Abstractions;
+using Origo.Core.Logging;
 using Origo.Core.Save.Meta;
 using Xunit;
 

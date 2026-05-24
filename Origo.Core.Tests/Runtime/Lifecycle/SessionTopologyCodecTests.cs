@@ -44,10 +44,8 @@ public class SessionTopologyCodecTests
 
     [Theory]
     [MemberData(nameof(Parse_MalformedOrEmptyKeyOrLevel_Data))]
-    public void Parse_MalformedOrEmptyKeyOrLevel_ThrowsInvalidOperation(string raw)
-    {
+    public void Parse_MalformedOrEmptyKeyOrLevel_ThrowsInvalidOperation(string raw) =>
         Assert.Throws<InvalidOperationException>(() => SessionTopologyCodec.Parse(raw));
-    }
 
     [Fact]
     public void Parse_LevelIdContainsExtraSeparator_UsesSecondFieldAsLevelId()

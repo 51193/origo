@@ -31,20 +31,14 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         _ioGateway = SaveStorageGatewayFactory.CreateIoGateway(fileSystem);
     }
 
-    public IReadOnlyList<string> EnumerateSaveIds()
-    {
-        return SaveStorageFacade.EnumerateSaveIds(_fileSystem, _saveRootPath, _pathPolicy);
-    }
+    public IReadOnlyList<string> EnumerateSaveIds() =>
+        SaveStorageFacade.EnumerateSaveIds(_fileSystem, _saveRootPath, _pathPolicy);
 
-    public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData()
-    {
-        return SaveStorageFacade.EnumerateSavesWithMetaData(_fileSystem, _saveRootPath, _pathPolicy);
-    }
+    public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData() =>
+        SaveStorageFacade.EnumerateSavesWithMetaData(_fileSystem, _saveRootPath, _pathPolicy);
 
-    public void WriteSavePayloadToCurrent(SaveGamePayload payload)
-    {
+    public void WriteSavePayloadToCurrent(SaveGamePayload payload) =>
         SavePayloadWriter.WriteToCurrent(_fileSystem, _ioGateway, _saveRootPath, payload, _pathPolicy);
-    }
 
     public void WriteSavePayloadToCurrentThenSnapshot(
         SaveGamePayload payload,
@@ -123,10 +117,8 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         return TryReadLevelPayloadFromSnapshot(saveId, levelId);
     }
 
-    public void SnapshotCurrentToSave(string newSaveId)
-    {
+    public void SnapshotCurrentToSave(string newSaveId) =>
         SaveStorageFacade.SnapshotCurrentToSave(_fileSystem, _saveRootPath, newSaveId, _pathPolicy);
-    }
 
     public void DeleteCurrentDirectory()
     {

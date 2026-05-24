@@ -85,20 +85,11 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         }
     }
 
-    public void ClearAll()
-    {
-        QuitAll();
-    }
+    public void ClearAll() => QuitAll();
 
-    public ISndEntity Spawn(SndMetaData metaData)
-    {
-        return SpawnFromMeta(metaData);
-    }
+    public ISndEntity Spawn(SndMetaData metaData) => SpawnFromMeta(metaData);
 
-    public IReadOnlyCollection<ISndEntity> GetEntities()
-    {
-        return _entityView ??= new EntityView(_entities);
-    }
+    public IReadOnlyCollection<ISndEntity> GetEntities() => _entityView ??= new EntityView(_entities);
 
     public ISndEntity? FindByName(string name)
     {
@@ -169,10 +160,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         snd.DeadFromManager();
     }
 
-    public override void _Ready()
-    {
-        SetProcess(true);
-    }
+    public override void _Ready() => SetProcess(true);
 
     public override void _Process(double delta)
     {
@@ -235,9 +223,6 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
                 yield return inner[i];
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

@@ -60,10 +60,8 @@ public sealed class SndWorld
     /// </summary>
     internal SndMappings Mappings { get; }
 
-    public void RegisterStrategy<TStrategy>(Func<TStrategy> factory) where TStrategy : BaseStrategy
-    {
+    public void RegisterStrategy<TStrategy>(Func<TStrategy> factory) where TStrategy : BaseStrategy =>
         StrategyPool.Register(factory);
-    }
 
     public void RegisterTypeMappings(Action<TypeStringMapping> registerMappings)
     {
@@ -71,10 +69,7 @@ public sealed class SndWorld
         registerMappings(TypeMapping);
     }
 
-    public SndMetaData ResolveTemplate(string alias)
-    {
-        return Mappings.ResolveTemplate(alias);
-    }
+    public SndMetaData ResolveTemplate(string alias) => Mappings.ResolveTemplate(alias);
 
     /// <summary>
     ///     克隆 SND 元数据（与模板解析路径一致，便于将来统一替换实现）。
@@ -85,10 +80,8 @@ public sealed class SndWorld
         return meta.DeepClone();
     }
 
-    public void LoadSceneAliases(IFileSystem fileSystem, string mapFilePath, ILogger logger)
-    {
+    public void LoadSceneAliases(IFileSystem fileSystem, string mapFilePath, ILogger logger) =>
         Mappings.LoadSceneAliases(fileSystem, mapFilePath, logger);
-    }
 
     public void LoadTemplates(IFileSystem fileSystem, string mapFilePath, ILogger logger)
     {
@@ -100,10 +93,8 @@ public sealed class SndWorld
             logger);
     }
 
-    public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root)
-    {
-        return Mappings.ResolveMetaListFromJsonArray(root, ConverterRegistry);
-    }
+    public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root) =>
+        Mappings.ResolveMetaListFromJsonArray(root, ConverterRegistry);
 
     public IReadOnlyDictionary<string, TypedData> ReadTypedDataMap(DataSourceNode node)
     {
@@ -120,10 +111,7 @@ public sealed class SndWorld
         return new SndEntity(nodeFactory, StrategyPool, Mappings, context, logger);
     }
 
-    public DataSourceNode WriteMetaNode(SndMetaData metaData)
-    {
-        return ConverterRegistry.Write(metaData);
-    }
+    public DataSourceNode WriteMetaNode(SndMetaData metaData) => ConverterRegistry.Write(metaData);
 
     public SndMetaData ReadMetaNode(DataSourceNode node)
     {

@@ -100,19 +100,13 @@ public sealed class OrigoRuntime
     ///     将一个业务逻辑延迟动作加入队列，在下次 FlushEndOfFrameDeferred() 时执行。
     ///     适用于需要延迟到帧末执行的游戏逻辑。
     /// </summary>
-    public void EnqueueBusinessDeferred(Action action)
-    {
-        _businessDeferredScheduler.Enqueue(action);
-    }
+    public void EnqueueBusinessDeferred(Action action) => _businessDeferredScheduler.Enqueue(action);
 
     /// <summary>
     ///     将一个系统级延迟动作加入队列，在下次 FlushEndOfFrameDeferred() 时执行（在业务队列之后）。
     ///     适用于存档、关卡切换等系统编排操作。
     /// </summary>
-    public void EnqueueSystemDeferred(Action action)
-    {
-        _systemDeferredScheduler.Enqueue(action);
-    }
+    public void EnqueueSystemDeferred(Action action) => _systemDeferredScheduler.Enqueue(action);
 
     /// <summary>
     ///     依次执行业务延迟队列和系统延迟队列中的所有待执行动作。
@@ -128,8 +122,5 @@ public sealed class OrigoRuntime
     ///     重置控制台状态：清空待执行输入队列。
     ///     输出已改为发布-订阅模型，不在 Core 中保留历史。
     /// </summary>
-    public void ResetConsoleState()
-    {
-        ConsoleInput?.Clear();
-    }
+    public void ResetConsoleState() => ConsoleInput?.Clear();
 }

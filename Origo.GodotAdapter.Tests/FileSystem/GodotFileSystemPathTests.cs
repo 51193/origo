@@ -22,10 +22,8 @@ public class GodotFileSystemPathTests
 
     [Theory]
     [MemberData(nameof(GodotPathResolver_Combine_WithTraversal_Data))]
-    public void GodotPathResolver_Combine_WithTraversal_Throws(string relativePath)
-    {
+    public void GodotPathResolver_Combine_WithTraversal_Throws(string relativePath) =>
         Assert.Throws<ArgumentException>(() => GodotPathResolver.Combine("res://root", relativePath));
-    }
 
     [Fact]
     public void GodotPathResolver_GetParentDirectory_HandlesTrailingSlash()

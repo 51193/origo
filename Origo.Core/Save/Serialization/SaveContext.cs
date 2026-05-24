@@ -53,10 +53,7 @@ internal sealed class SaveContext
     /// <summary>
     ///     将 Progress 黑板序列化为文本（使用 TypedData 保留类型信息）。
     /// </summary>
-    public DataSourceNode SerializeProgress()
-    {
-        return _blackboardSerializer.Serialize(Progress);
-    }
+    public DataSourceNode SerializeProgress() => _blackboardSerializer.Serialize(Progress);
 
     /// <summary>
     ///     将序列化文本恢复到 Progress 黑板。
@@ -70,10 +67,7 @@ internal sealed class SaveContext
     /// <summary>
     ///     将 Session 黑板序列化为文本（使用 TypedData 保留类型信息）。
     /// </summary>
-    public DataSourceNode SerializeSession()
-    {
-        return _blackboardSerializer.Serialize(Session);
-    }
+    public DataSourceNode SerializeSession() => _blackboardSerializer.Serialize(Session);
 
     /// <summary>
     ///     将序列化文本恢复到 Session 黑板。
@@ -87,10 +81,7 @@ internal sealed class SaveContext
     /// <summary>
     ///     将指定 SND 场景序列化为文本字符串。
     /// </summary>
-    public DataSourceNode SerializeSndScene(ISndSceneAccess sceneAccess)
-    {
-        return _sceneSerializer.Serialize(sceneAccess);
-    }
+    public DataSourceNode SerializeSndScene(ISndSceneAccess sceneAccess) => _sceneSerializer.Serialize(sceneAccess);
 
     /// <summary>
     ///     将序列化文本恢复到 SND 场景。
@@ -98,10 +89,8 @@ internal sealed class SaveContext
     ///     与入口配置保持一致，统一通过 SndMappings.ResolveMetaListFromJsonArray 解析。
     /// </summary>
     public void DeserializeSndScene(ISndSceneAccess sceneAccess, DataSourceNode serializedNode,
-        bool clearBeforeLoad = true)
-    {
+        bool clearBeforeLoad = true) =>
         _sceneSerializer.DeserializeInto(sceneAccess, serializedNode, clearBeforeLoad);
-    }
 
     /// <summary>
     ///     收集当前存档所需的全部数据，生成完整的 <see cref="SaveGamePayload" />。

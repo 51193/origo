@@ -1,23 +1,23 @@
 using System;
 using Origo.Core.Abstractions.Console;
 
-namespace Origo.Core.Runtime.Console.CommandImpl;
+namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
-///     <c>clear_entities</c> 命令：销毁所有已生成的 SND 实体。
+///     <c>snd_count</c> 命令：显示当前 SND 实体数量。
 /// </summary>
-internal sealed class ClearEntitiesCommandHandler : ConsoleCommandHandlerBase
+internal sealed class SndCountCommandHandler : ConsoleCommandHandlerBase
 {
     private readonly OrigoRuntime _runtime;
 
-    public ClearEntitiesCommandHandler(OrigoRuntime runtime)
+    public SndCountCommandHandler(OrigoRuntime runtime)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         _runtime = runtime;
     }
 
-    public override string Name => "clear_entities";
-    public override string HelpText => "clear_entities — 销毁所有已生成的 SND 实体。";
+    public override string Name => "snd_count";
+    public override string HelpText => "snd_count — 显示当前 SND 实体数量。";
     public override int MinPositionalArgs => 0;
     public override int MaxPositionalArgs => 0;
 
@@ -27,8 +27,9 @@ internal sealed class ClearEntitiesCommandHandler : ConsoleCommandHandlerBase
         out string? errorMessage)
     {
         var count = _runtime.Snd.GetEntities().Count;
-        _runtime.Snd.ClearAll();
-        outputChannel.Publish($"Cleared {count} entities.");
+        var msg = $"Snd count: {count}.";
+
+        outputChannel.Publish(msg);
         errorMessage = null;
         return true;
     }

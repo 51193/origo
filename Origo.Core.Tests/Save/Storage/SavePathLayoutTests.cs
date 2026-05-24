@@ -25,79 +25,55 @@ public class SavePathLayoutTests
     };
 
     [Fact]
-    public void SavePathLayout_GetCurrentDirectory_ReturnsCurrent()
-    {
+    public void SavePathLayout_GetCurrentDirectory_ReturnsCurrent() =>
         Assert.Equal("current", SavePathLayout.GetCurrentDirectory());
-    }
 
     [Fact]
-    public void SavePathLayout_CurrentDirectoryName_Constant()
-    {
+    public void SavePathLayout_CurrentDirectoryName_Constant() =>
         Assert.Equal("current", SavePathLayout.CurrentDirectoryName);
-    }
 
     [Theory]
     [MemberData(nameof(GetSaveDirectory_FormatsCorrectly_Data))]
-    public void SavePathLayout_GetSaveDirectory_FormatsCorrectly(string saveId, string expected)
-    {
+    public void SavePathLayout_GetSaveDirectory_FormatsCorrectly(string saveId, string expected) =>
         Assert.Equal(expected, SavePathLayout.GetSaveDirectory(saveId));
-    }
 
     [Theory]
     [MemberData(nameof(GetSaveDirectory_ThrowsOnInvalidId_Data))]
-    public void SavePathLayout_GetSaveDirectory_ThrowsOnInvalidId(string? saveId)
-    {
+    public void SavePathLayout_GetSaveDirectory_ThrowsOnInvalidId(string? saveId) =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetSaveDirectory(saveId!));
-    }
 
     [Fact]
-    public void SavePathLayout_GetProgressFile_CombinesCorrectly()
-    {
+    public void SavePathLayout_GetProgressFile_CombinesCorrectly() =>
         Assert.Equal("mybase/progress.json", SavePathLayout.GetProgressFile("mybase"));
-    }
 
     [Fact]
-    public void SavePathLayout_GetProgressFile_ThrowsOnEmpty()
-    {
+    public void SavePathLayout_GetProgressFile_ThrowsOnEmpty() =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetProgressFile(""));
-    }
 
     [Fact]
-    public void SavePathLayout_GetProgressStateMachinesFile_CombinesCorrectly()
-    {
+    public void SavePathLayout_GetProgressStateMachinesFile_CombinesCorrectly() =>
         Assert.Equal("base/progress_state_machines.json", SavePathLayout.GetProgressStateMachinesFile("base"));
-    }
 
     [Fact]
-    public void SavePathLayout_GetProgressStateMachinesFile_ThrowsOnWhitespace()
-    {
+    public void SavePathLayout_GetProgressStateMachinesFile_ThrowsOnWhitespace() =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetProgressStateMachinesFile("  "));
-    }
 
     [Fact]
-    public void SavePathLayout_GetCustomMetaFile_CombinesCorrectly()
-    {
+    public void SavePathLayout_GetCustomMetaFile_CombinesCorrectly() =>
         Assert.Equal("base/meta.map", SavePathLayout.GetCustomMetaFile("base"));
-    }
 
     [Fact]
-    public void SavePathLayout_GetCustomMetaFile_ThrowsOnNull()
-    {
+    public void SavePathLayout_GetCustomMetaFile_ThrowsOnNull() =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetCustomMetaFile(null!));
-    }
 
     [Fact]
-    public void SavePathLayout_GetLevelDirectory_CombinesCorrectly()
-    {
+    public void SavePathLayout_GetLevelDirectory_CombinesCorrectly() =>
         Assert.Equal("base/level_town", SavePathLayout.GetLevelDirectory("base", "town"));
-    }
 
     [Theory]
     [MemberData(nameof(GetLevelDirectory_ThrowsOnInvalidArgs_Data))]
-    public void SavePathLayout_GetLevelDirectory_ThrowsOnInvalidArgs(string baseDir, string levelId)
-    {
+    public void SavePathLayout_GetLevelDirectory_ThrowsOnInvalidArgs(string baseDir, string levelId) =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetLevelDirectory(baseDir, levelId));
-    }
 
     [Fact]
     public void SavePathLayout_GetLevelSndSceneFile_CombinesCorrectly()
@@ -107,10 +83,8 @@ public class SavePathLayoutTests
     }
 
     [Fact]
-    public void SavePathLayout_GetLevelSndSceneFile_ThrowsOnEmpty()
-    {
+    public void SavePathLayout_GetLevelSndSceneFile_ThrowsOnEmpty() =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetLevelSndSceneFile(""));
-    }
 
     [Fact]
     public void SavePathLayout_GetLevelSessionFile_CombinesCorrectly()
@@ -120,10 +94,8 @@ public class SavePathLayoutTests
     }
 
     [Fact]
-    public void SavePathLayout_GetLevelSessionFile_ThrowsOnWhitespace()
-    {
+    public void SavePathLayout_GetLevelSessionFile_ThrowsOnWhitespace() =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetLevelSessionFile("   "));
-    }
 
     [Fact]
     public void SavePathLayout_GetLevelSessionStateMachinesFile_CombinesCorrectly()
@@ -133,10 +105,8 @@ public class SavePathLayoutTests
     }
 
     [Fact]
-    public void SavePathLayout_GetLevelSessionStateMachinesFile_ThrowsOnNull()
-    {
+    public void SavePathLayout_GetLevelSessionStateMachinesFile_ThrowsOnNull() =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetLevelSessionStateMachinesFile(null!));
-    }
 
     [Fact]
     public void SavePathLayout_GetWriteInProgressMarker_CombinesCorrectly()
@@ -146,16 +116,12 @@ public class SavePathLayoutTests
     }
 
     [Fact]
-    public void SavePathLayout_GetWriteInProgressMarker_ThrowsOnEmpty()
-    {
+    public void SavePathLayout_GetWriteInProgressMarker_ThrowsOnEmpty() =>
         Assert.Throws<ArgumentException>(() => SavePathLayout.GetWriteInProgressMarker(""));
-    }
 
     [Fact]
-    public void SavePathLayout_WriteInProgressMarkerName_Constant()
-    {
+    public void SavePathLayout_WriteInProgressMarkerName_Constant() =>
         Assert.Equal(".write_in_progress", SavePathLayout.WriteInProgressMarkerName);
-    }
 
     private static TheoryData<string?> CreateInvalidSaveIds()
     {

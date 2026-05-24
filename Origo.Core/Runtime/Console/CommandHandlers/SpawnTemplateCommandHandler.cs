@@ -2,7 +2,7 @@ using System;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Snd;
 
-namespace Origo.Core.Runtime.Console.CommandImpl;
+namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
 ///     <c>spawn</c> 命令：仅支持 template 模式（name + template 别名）。
@@ -56,32 +56,7 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
         templateKey = string.Empty;
 
         if (invocation.NamedArgs.Count > 0)
-        {
-            if (invocation.PositionalArgs.Count > 0)
-            {
-                error = "Cannot mix named and positional arguments for 'spawn'.";
-                return false;
-            }
-
-            if (!invocation.NamedArgs.TryGetValue("name", out var n) ||
-                string.IsNullOrWhiteSpace(n))
-            {
-                error = "Missing or invalid 'name=' for 'spawn'.";
-                return false;
-            }
-
-            if (!invocation.NamedArgs.TryGetValue("template", out var t) ||
-                string.IsNullOrWhiteSpace(t))
-            {
-                error = "Missing or invalid 'template=' for 'spawn'.";
-                return false;
-            }
-
-            entityName = n.Trim();
-            templateKey = t.Trim();
-            error = null;
-            return true;
-        }
+            return TryParseNamedSpawnArgs(invocation, out entityName, out templateKey, out error);
 
         if (invocation.PositionalArgs.Count != 2)
         {
@@ -89,6 +64,53 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
             return false;
         }
 
+        return TryParsePositionalSpawnArgs(invocation, out entityName, out templateKey, out error);
+    }
+
+    private static bool TryParseNamedSpawnArgs(
+        CommandInvocation invocation,
+        out string entityName,
+        out string templateKey,
+        out string? error)
+    {
+        if (invocation.PositionalArgs.Count > 0)
+        {
+            entityName = string.Empty;
+            templateKey = string.Empty;
+            error = "Cannot mix named and positional arguments for 'spawn'.";
+            return false;
+        }
+
+        if (!invocation.NamedArgs.TryGetValue("name", out var n) ||
+            string.IsNullOrWhiteSpace(n))
+        {
+            entityName = string.Empty;
+            templateKey = string.Empty;
+            error = "Missing or invalid 'name=' for 'spawn'.";
+            return false;
+        }
+
+        if (!invocation.NamedArgs.TryGetValue("template", out var t) ||
+            string.IsNullOrWhiteSpace(t))
+        {
+            entityName = string.Empty;
+            templateKey = string.Empty;
+            error = "Missing or invalid 'template=' for 'spawn'.";
+            return false;
+        }
+
+        entityName = n.Trim();
+        templateKey = t.Trim();
+        error = null;
+        return true;
+    }
+
+    private static bool TryParsePositionalSpawnArgs(
+        CommandInvocation invocation,
+        out string entityName,
+        out string templateKey,
+        out string? error)
+    {
         entityName = invocation.PositionalArgs[0].Trim();
         templateKey = invocation.PositionalArgs[1].Trim();
 

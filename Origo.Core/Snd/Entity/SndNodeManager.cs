@@ -35,10 +35,7 @@ internal sealed class SndNodeManager : INodeHost
         throw new InvalidOperationException($"Node '{name}' not found.");
     }
 
-    public IReadOnlyCollection<string> GetNodeNames()
-    {
-        return _nodes.Keys;
-    }
+    public IReadOnlyCollection<string> GetNodeNames() => _nodes.Keys;
 
     public void Recover(NodeMetaData metaData)
     {

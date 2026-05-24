@@ -72,15 +72,10 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     /// <inheritdoc />
     public bool IsFrontSession => CurrentSession?.IsFrontSession ?? false;
 
-    public int GetPendingPersistenceRequestCount()
-    {
-        return Interlocked.CompareExchange(ref _pendingPersistenceRequests, 0, 0);
-    }
+    public int GetPendingPersistenceRequestCount() =>
+        Interlocked.CompareExchange(ref _pendingPersistenceRequests, 0, 0);
 
-    public void FlushDeferredActionsForCurrentFrame()
-    {
-        Runtime.FlushEndOfFrameDeferred();
-    }
+    public void FlushDeferredActionsForCurrentFrame() => Runtime.FlushEndOfFrameDeferred();
 
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
     {
@@ -100,10 +95,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         return Runtime.ConsoleInput is not null;
     }
 
-    public void ProcessConsolePending()
-    {
-        Runtime.Console?.ProcessPending();
-    }
+    public void ProcessConsolePending() => Runtime.Console?.ProcessPending();
 
     public long SubscribeConsoleOutput(Action<string> onLine)
     {
@@ -120,17 +112,11 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         Runtime.ConsoleOutputChannel?.Unsubscribe(subscriptionId);
     }
 
-    public StateMachineContainer? GetProgressStateMachines()
-    {
-        return _progressRun?.GetProgressStateMachines();
-    }
+    public StateMachineContainer? GetProgressStateMachines() => _progressRun?.GetProgressStateMachines();
 
     // ── Entry point ─────────────────────────────────────────────────────
 
-    public IReadOnlyList<string> ListSaves()
-    {
-        return StorageService.EnumerateSaveIds();
-    }
+    public IReadOnlyList<string> ListSaves() => StorageService.EnumerateSaveIds();
 
     public void RequestLoadGame(string saveId)
     {
@@ -172,10 +158,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         return effectiveNewSaveId;
     }
 
-    public void SetContinueTarget(string saveId)
-    {
-        _systemRun.SetActiveSaveSlot(saveId);
-    }
+    public void SetContinueTarget(string saveId) => _systemRun.SetActiveSaveSlot(saveId);
 
     public void RequestSwitchForegroundLevel(string newLevelId)
     {
@@ -200,15 +183,9 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         return true;
     }
 
-    public void RequestLoadInitialSave()
-    {
-        EnqueueSystemDeferred(ExecuteLoadInitialSaveNow);
-    }
+    public void RequestLoadInitialSave() => EnqueueSystemDeferred(ExecuteLoadInitialSaveNow);
 
-    public void RequestLoadMainMenuEntrySave()
-    {
-        EnqueueSystemDeferred(ExecuteLoadMainMenuEntrySaveNow);
-    }
+    public void RequestLoadMainMenuEntrySave() => EnqueueSystemDeferred(ExecuteLoadMainMenuEntrySaveNow);
 
     public IBlackboard SystemBlackboard => _systemRun.SystemBlackboard;
     public IBlackboard? ProgressBlackboard => _progressRun?.ProgressBlackboard;
@@ -219,10 +196,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
 
     // ── Public API ─────────────────────────────────────────────────────
 
-    public void EnqueueBusinessDeferred(Action action)
-    {
-        Runtime.EnqueueBusinessDeferred(action);
-    }
+    public void EnqueueBusinessDeferred(Action action) => Runtime.EnqueueBusinessDeferred(action);
 
     // ── Internal helpers ──────────────────────────────────────────────
 
@@ -232,10 +206,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             "No active ProgressRun. Call RequestLoadMainMenuEntrySave first.");
     }
 
-    internal void SetProgressRun(ProgressRun? progressRun)
-    {
-        _progressRun = progressRun;
-    }
+    internal void SetProgressRun(ProgressRun? progressRun) => _progressRun = progressRun;
 
     internal void BeginWorkflow()
     {
@@ -246,10 +217,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         _workflowInProgress = true;
     }
 
-    internal void EndWorkflow()
-    {
-        _workflowInProgress = false;
-    }
+    internal void EndWorkflow() => _workflowInProgress = false;
 
     internal void ShutdownCurrentProgressAndScene()
     {
@@ -267,10 +235,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             this);
     }
 
-    internal void EnqueueSystemDeferred(Action action)
-    {
-        Runtime.EnqueueSystemDeferred(action);
-    }
+    internal void EnqueueSystemDeferred(Action action) => Runtime.EnqueueSystemDeferred(action);
 
     private void EnqueueTrackedSystemDeferred(Action action)
     {

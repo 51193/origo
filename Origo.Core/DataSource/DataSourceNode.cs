@@ -258,70 +258,39 @@ public sealed class DataSourceNode : IDisposable
 
     // ── Factory methods ──
 
-    public static DataSourceNode CreateObject()
-    {
-        return new DataSourceNode(DataSourceNodeKind.Object);
-    }
+    public static DataSourceNode CreateObject() => new(DataSourceNodeKind.Object);
 
-    public static DataSourceNode CreateArray()
-    {
-        return new DataSourceNode(DataSourceNodeKind.Array);
-    }
+    public static DataSourceNode CreateArray() => new(DataSourceNodeKind.Array);
 
-    public static DataSourceNode CreateString(string value)
-    {
-        return new DataSourceNode(DataSourceNodeKind.String, value);
-    }
+    public static DataSourceNode CreateString(string value) => new(DataSourceNodeKind.String, value);
 
-    public static DataSourceNode CreateNumber(string value)
-    {
-        return new DataSourceNode(DataSourceNodeKind.Number, value);
-    }
+    public static DataSourceNode CreateNumber(string value) => new(DataSourceNodeKind.Number, value);
 
-    public static DataSourceNode CreateNumber(int value)
-    {
-        return new DataSourceNode(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
-    }
+    public static DataSourceNode CreateNumber(int value) =>
+        new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
-    public static DataSourceNode CreateNumber(long value)
-    {
-        return new DataSourceNode(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
-    }
+    public static DataSourceNode CreateNumber(long value) =>
+        new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
-    public static DataSourceNode CreateNumber(float value)
-    {
-        return new DataSourceNode(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
-    }
+    public static DataSourceNode CreateNumber(float value) =>
+        new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
-    public static DataSourceNode CreateNumber(double value)
-    {
-        return new DataSourceNode(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
-    }
+    public static DataSourceNode CreateNumber(double value) =>
+        new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
-    public static DataSourceNode CreateBoolean(bool value)
-    {
-        return new DataSourceNode(DataSourceNodeKind.Boolean, value ? "true" : "false");
-    }
+    public static DataSourceNode CreateBoolean(bool value) => new(DataSourceNodeKind.Boolean, value ? "true" : "false");
 
-    public static DataSourceNode CreateNull()
-    {
-        return new DataSourceNode(DataSourceNodeKind.Null);
-    }
+    public static DataSourceNode CreateNull() => new(DataSourceNodeKind.Null);
 
     /// <summary>
     ///     创建延迟展开节点，仅供编解码器内部使用。
     /// </summary>
-    internal static DataSourceNode CreateLazy(string rawText, Func<string, DataSourceNode> expander)
-    {
-        return new DataSourceNode(rawText, expander);
-    }
+    internal static DataSourceNode CreateLazy(string rawText, Func<string, DataSourceNode> expander) =>
+        new(rawText, expander);
 
     // ── Private ──
 
-    private void EnsureNotDisposed()
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-    }
+    private void EnsureNotDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
 
     private void EnsureExpanded()
     {

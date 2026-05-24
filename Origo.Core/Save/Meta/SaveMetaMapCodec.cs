@@ -14,10 +14,8 @@ internal static class SaveMetaMapCodec
     public static IReadOnlyDictionary<string, string> Parse(
         string? content,
         ILogger logger,
-        string? sourceName = null)
-    {
-        return KeyValueFileParser.Parse(content, sourceName ?? "unknown", false, logger);
-    }
+        string? sourceName = null) =>
+        KeyValueFileParser.Parse(content, sourceName ?? "unknown", false, logger);
 
     public static string Serialize(IReadOnlyDictionary<string, string>? map)
     {

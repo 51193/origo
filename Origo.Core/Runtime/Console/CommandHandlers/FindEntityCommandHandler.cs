@@ -1,7 +1,7 @@
 using System;
 using Origo.Core.Abstractions.Console;
 
-namespace Origo.Core.Runtime.Console.CommandImpl;
+namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
 ///     <c>find_entity</c> 命令：按名称查找 SND 实体并显示其数据键。

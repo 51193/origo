@@ -25,15 +25,9 @@ public sealed class DataSourceConverterRegistry
             $"No DataSourceConverter registered for type '{typeof(T).FullName}'.");
     }
 
-    public T Read<T>(DataSourceNode node)
-    {
-        return Get<T>().Read(node);
-    }
+    public T Read<T>(DataSourceNode node) => Get<T>().Read(node);
 
-    public DataSourceNode Write<T>(T value)
-    {
-        return Get<T>().Write(value);
-    }
+    public DataSourceNode Write<T>(T value) => Get<T>().Write(value);
 
     public object? Read(Type type, DataSourceNode node)
     {

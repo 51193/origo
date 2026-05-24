@@ -395,55 +395,28 @@ public class SavePathPolicyContractTests
             _prefix = prefix;
         }
 
-        public string GetCurrentDirectory()
-        {
-            return $"{_prefix}current";
-        }
+        public string GetCurrentDirectory() => $"{_prefix}current";
 
-        public string GetSaveDirectory(string saveId)
-        {
-            return $"{_prefix}save_{saveId}";
-        }
+        public string GetSaveDirectory(string saveId) => $"{_prefix}save_{saveId}";
 
-        public string GetProgressFile(string baseDirectory)
-        {
-            return $"{baseDirectory}/{_prefix}progress.json";
-        }
+        public string GetProgressFile(string baseDirectory) => $"{baseDirectory}/{_prefix}progress.json";
 
-        public string GetProgressStateMachinesFile(string baseDirectory)
-        {
-            return $"{baseDirectory}/{_prefix}progress_state_machines.json";
-        }
+        public string GetProgressStateMachinesFile(string baseDirectory) =>
+            $"{baseDirectory}/{_prefix}progress_state_machines.json";
 
-        public string GetCustomMetaFile(string baseDirectory)
-        {
-            return $"{baseDirectory}/{_prefix}meta.map";
-        }
+        public string GetCustomMetaFile(string baseDirectory) => $"{baseDirectory}/{_prefix}meta.map";
 
-        public string GetLevelDirectory(string baseDirectory, string levelId)
-        {
-            return $"{baseDirectory}/{_prefix}level_{levelId}";
-        }
+        public string GetLevelDirectory(string baseDirectory, string levelId) =>
+            $"{baseDirectory}/{_prefix}level_{levelId}";
 
-        public string GetLevelSndSceneFile(string levelDirectory)
-        {
-            return $"{levelDirectory}/snd_scene.json";
-        }
+        public string GetLevelSndSceneFile(string levelDirectory) => $"{levelDirectory}/snd_scene.json";
 
-        public string GetLevelSessionFile(string levelDirectory)
-        {
-            return $"{levelDirectory}/session.json";
-        }
+        public string GetLevelSessionFile(string levelDirectory) => $"{levelDirectory}/session.json";
 
-        public string GetLevelSessionStateMachinesFile(string levelDirectory)
-        {
-            return $"{levelDirectory}/session_state_machines.json";
-        }
+        public string GetLevelSessionStateMachinesFile(string levelDirectory) =>
+            $"{levelDirectory}/session_state_machines.json";
 
-        public string GetWriteInProgressMarker(string baseDirectory)
-        {
-            return $"{baseDirectory}/{_prefix}.write_in_progress";
-        }
+        public string GetWriteInProgressMarker(string baseDirectory) => $"{baseDirectory}/{_prefix}.write_in_progress";
     }
 
     // ── Test strategies ────────────────────────────────────────────────
@@ -453,10 +426,7 @@ public class SavePathPolicyContractTests
     {
         internal static List<List<string>>? ObservedScenes { get; set; }
 
-        public static void Reset()
-        {
-            ObservedScenes = new List<List<string>>();
-        }
+        public static void Reset() => ObservedScenes = new List<List<string>>();
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -473,10 +443,7 @@ public class SavePathPolicyContractTests
     {
         internal static List<string?>? ObservedValues { get; set; }
 
-        public static void Reset()
-        {
-            ObservedValues = new List<string?>();
-        }
+        public static void Reset() => ObservedValues = new List<string?>();
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {

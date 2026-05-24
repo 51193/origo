@@ -16,10 +16,7 @@ internal sealed class GodotNodeHandle : INodeHandle
 
     public object Native => _node;
 
-    public void Free()
-    {
-        _node.Free();
-    }
+    public void Free() => _node.Free();
 
     public void SetVisible(bool visible)
     {

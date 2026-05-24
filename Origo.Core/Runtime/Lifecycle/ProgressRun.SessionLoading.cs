@@ -9,20 +9,11 @@ namespace Origo.Core.Runtime.Lifecycle;
 
 public sealed partial class ProgressRun
 {
-    internal void LoadFromPayload(SaveGamePayload payload)
-    {
-        _sessionLifecycle.LoadFromPayload(payload);
-    }
+    internal void LoadFromPayload(SaveGamePayload payload) => _sessionLifecycle.LoadFromPayload(payload);
 
-    internal ISessionRun LoadAndMountForeground(string levelId)
-    {
-        return _sessionLifecycle.LoadAndMountForeground(levelId);
-    }
+    internal ISessionRun LoadAndMountForeground(string levelId) => _sessionLifecycle.LoadAndMountForeground(levelId);
 
-    internal void SwitchForeground(string newLevelId)
-    {
-        _sessionLifecycle.SwitchForeground(newLevelId);
-    }
+    internal void SwitchForeground(string newLevelId) => _sessionLifecycle.SwitchForeground(newLevelId);
 
     private sealed class SessionLifecycle
     {

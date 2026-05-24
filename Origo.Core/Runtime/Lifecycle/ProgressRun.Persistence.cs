@@ -9,22 +9,14 @@ namespace Origo.Core.Runtime.Lifecycle;
 
 public sealed partial class ProgressRun
 {
-    internal SaveMetaBuildContext BuildSaveMetaContext(string saveId)
-    {
-        return _saveCoordinator.BuildSaveMetaContext(saveId);
-    }
+    internal SaveMetaBuildContext BuildSaveMetaContext(string saveId) => _saveCoordinator.BuildSaveMetaContext(saveId);
 
     internal SaveGamePayload BuildSavePayload(
         string newSaveId,
-        IReadOnlyDictionary<string, string>? mergedMeta = null)
-    {
-        return _saveCoordinator.BuildSavePayload(newSaveId, mergedMeta);
-    }
+        IReadOnlyDictionary<string, string>? mergedMeta = null) =>
+        _saveCoordinator.BuildSavePayload(newSaveId, mergedMeta);
 
-    internal void PersistProgress()
-    {
-        _saveCoordinator.PersistProgress();
-    }
+    internal void PersistProgress() => _saveCoordinator.PersistProgress();
 
     private sealed class SaveCoordinator
     {
@@ -94,10 +86,9 @@ public sealed partial class ProgressRun
             _owner._progressRuntime.StorageService.WriteProgressOnlyToCurrent(progressNode, smNode);
         }
 
-        private ISessionRun RequireForegroundSession()
-        {
-            return _owner.ForegroundSession ?? throw new InvalidOperationException("No active foreground session.");
-        }
+        private ISessionRun RequireForegroundSession() => _owner.ForegroundSession ??
+                                                          throw new InvalidOperationException(
+                                                              "No active foreground session.");
 
         private List<string> BuildSessionTopology(
             ISessionRun fgSession,

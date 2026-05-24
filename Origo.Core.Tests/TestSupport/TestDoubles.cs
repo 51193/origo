@@ -56,15 +56,9 @@ internal sealed class TestNodeHandle : INodeHandle
     public string Name { get; }
     public object Native { get; }
 
-    public void Free()
-    {
-        FreeCount++;
-    }
+    public void Free() => FreeCount++;
 
-    public void SetVisible(bool visible)
-    {
-        IsVisible = visible;
-    }
+    public void SetVisible(bool visible) => IsVisible = visible;
 }
 
 internal sealed class TestNodeFactory : INodeFactory
@@ -100,10 +94,7 @@ internal sealed class TestFileSystem : IFileSystem
 
     public int ReadAllTextCallCount { get; private set; }
 
-    public bool Exists(string path)
-    {
-        return _files.ContainsKey(Normalize(path));
-    }
+    public bool Exists(string path) => _files.ContainsKey(Normalize(path));
 
     public bool DirectoryExists(string path)
     {
@@ -180,10 +171,8 @@ internal sealed class TestFileSystem : IFileSystem
         _files.Remove(normalized);
     }
 
-    public string CombinePath(string basePath, string relativePath)
-    {
-        return Normalize($"{Normalize(basePath).TrimEnd('/')}/{relativePath}");
-    }
+    public string CombinePath(string basePath, string relativePath) =>
+        Normalize($"{Normalize(basePath).TrimEnd('/')}/{relativePath}");
 
     public string GetParentDirectory(string path)
     {
@@ -275,10 +264,7 @@ internal sealed class TestFileSystem : IFileSystem
         EnsureParents(normalized);
     }
 
-    private static string Normalize(string path)
-    {
-        return path.Replace('\\', '/').Trim();
-    }
+    private static string Normalize(string path) => path.Replace('\\', '/').Trim();
 
     private void EnsureParents(string filePath)
     {
@@ -307,20 +293,11 @@ internal sealed class TestSndSceneHost : ISndSceneHost
         return entity;
     }
 
-    public IReadOnlyCollection<ISndEntity> GetEntities()
-    {
-        return _entities;
-    }
+    public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
 
-    public ISndEntity? FindByName(string name)
-    {
-        return _entities.FirstOrDefault(e => e.Name == name);
-    }
+    public ISndEntity? FindByName(string name) => _entities.FirstOrDefault(e => e.Name == name);
 
-    public IReadOnlyList<SndMetaData> SerializeMetaList()
-    {
-        return _metaList.ToArray();
-    }
+    public IReadOnlyList<SndMetaData> SerializeMetaList() => _metaList.ToArray();
 
     public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
     {
@@ -353,15 +330,9 @@ internal sealed class DummySndEntity : ISndEntity
 
     public string Name => EntityName;
 
-    public void SetData<T>(string name, T value)
-    {
-        _data[name] = value;
-    }
+    public void SetData<T>(string name, T value) => _data[name] = value;
 
-    public T GetData<T>(string name)
-    {
-        return _data.TryGetValue(name, out var value) && value is T cast ? cast : default!;
-    }
+    public T GetData<T>(string name) => _data.TryGetValue(name, out var value) && value is T cast ? cast : default!;
 
     public (bool found, T? value) TryGetData<T>(string name)
     {
@@ -379,15 +350,9 @@ internal sealed class DummySndEntity : ISndEntity
     {
     }
 
-    public INodeHandle GetNode(string name)
-    {
-        throw new InvalidOperationException($"Node '{name}' not found.");
-    }
+    public INodeHandle GetNode(string name) => throw new InvalidOperationException($"Node '{name}' not found.");
 
-    public IReadOnlyCollection<string> GetNodeNames()
-    {
-        return Array.Empty<string>();
-    }
+    public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
 
     public void AddStrategy(string index)
     {
@@ -403,25 +368,13 @@ internal sealed class DummySndEntity : ISndEntity
 /// </summary>
 internal static class TestFactory
 {
-    public static JsonDataSourceCodec CreateJsonCodec()
-    {
-        return new JsonDataSourceCodec();
-    }
+    public static JsonDataSourceCodec CreateJsonCodec() => new();
 
-    public static MapDataSourceCodec CreateMapCodec()
-    {
-        return new MapDataSourceCodec();
-    }
+    public static MapDataSourceCodec CreateMapCodec() => new();
 
-    public static DataSourceNode NodeFromJson(string json)
-    {
-        return CreateJsonCodec().Decode(json);
-    }
+    public static DataSourceNode NodeFromJson(string json) => CreateJsonCodec().Decode(json);
 
-    public static string JsonFromNode(DataSourceNode node)
-    {
-        return CreateJsonCodec().Encode(node);
-    }
+    public static string JsonFromNode(DataSourceNode node) => CreateJsonCodec().Encode(node);
 
     public static DataSourceConverterRegistry CreateRegistry()
     {
@@ -430,15 +383,11 @@ internal static class TestFactory
     }
 
     public static DataSourceConverterRegistry CreateRegistry(
-        TypeStringMapping tm)
-    {
-        return DataSourceFactory.CreateDefaultRegistry(tm);
-    }
+        TypeStringMapping tm) =>
+        DataSourceFactory.CreateDefaultRegistry(tm);
 
-    public static IDataSourceIoGateway CreateIoGateway(IFileSystem fileSystem)
-    {
-        return DataSourceFactory.CreateDefaultIoGateway(fileSystem);
-    }
+    public static IDataSourceIoGateway CreateIoGateway(IFileSystem fileSystem) =>
+        DataSourceFactory.CreateDefaultIoGateway(fileSystem);
 
     public static SndWorld CreateSndWorld(
         TypeStringMapping? tm = null,

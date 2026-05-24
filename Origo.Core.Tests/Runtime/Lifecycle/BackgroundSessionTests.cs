@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Origo.Core.Abstractions;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Runtime.Lifecycle;
@@ -780,15 +779,10 @@ public class BackgroundSessionTests
     ///     <see cref="ISessionRun" />. Only used for concrete-type-specific methods
     ///     (<c>ProcessAll</c>, <c>DeadByName</c>) that are not part of <see cref="ISndSceneHost" />.
     /// </summary>
-    private static FullMemorySndSceneHost GetSceneHost(ISessionRun session)
-    {
-        return (FullMemorySndSceneHost)session.SceneHost;
-    }
+    private static FullMemorySndSceneHost GetSceneHost(ISessionRun session) =>
+        (FullMemorySndSceneHost)session.SceneHost;
 
-    private static SessionRun AsSessionRun(ISessionRun session)
-    {
-        return (SessionRun)session;
-    }
+    private static SessionRun AsSessionRun(ISessionRun session) => (SessionRun)session;
 
     private static (SndContext ctx, TestFileSystem fs) CreateForegroundContext(
         Action<SndWorld>? configureWorld = null)
@@ -860,45 +854,27 @@ public class BackgroundSessionTests
     {
         private static ICollection<string>? EventSink { get; set; }
 
-        public static void Bind(ICollection<string> events)
-        {
-            EventSink = events;
-        }
+        public static void Bind(ICollection<string> events) => EventSink = events;
 
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
-        {
+        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) =>
             EventSink?.Add($"AfterSpawn:{entity.Name}");
-        }
 
-        public override void AfterLoad(ISndEntity entity, ISndContext ctx)
-        {
+        public override void AfterLoad(ISndEntity entity, ISndContext ctx) =>
             EventSink?.Add($"AfterLoad:{entity.Name}");
-        }
 
-        public override void AfterAdd(ISndEntity entity, ISndContext ctx)
-        {
-            EventSink?.Add($"AfterAdd:{entity.Name}");
-        }
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx) => EventSink?.Add($"AfterAdd:{entity.Name}");
 
-        public override void BeforeRemove(ISndEntity entity, ISndContext ctx)
-        {
+        public override void BeforeRemove(ISndEntity entity, ISndContext ctx) =>
             EventSink?.Add($"BeforeRemove:{entity.Name}");
-        }
 
-        public override void BeforeSave(ISndEntity entity, ISndContext ctx)
-        {
+        public override void BeforeSave(ISndEntity entity, ISndContext ctx) =>
             EventSink?.Add($"BeforeSave:{entity.Name}");
-        }
 
-        public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
-        {
+        public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
             EventSink?.Add($"BeforeQuit:{entity.Name}");
-        }
 
-        public override void BeforeDead(ISndEntity entity, ISndContext ctx)
-        {
+        public override void BeforeDead(ISndEntity entity, ISndContext ctx) =>
             EventSink?.Add($"BeforeDead:{entity.Name}");
-        }
     }
 
     [StrategyIndex(ProcessStrategyIndex)]
@@ -906,15 +882,9 @@ public class BackgroundSessionTests
     {
         private static Action? ProcessCallback { get; set; }
 
-        public static void Bind(Action onProcess)
-        {
-            ProcessCallback = onProcess;
-        }
+        public static void Bind(Action onProcess) => ProcessCallback = onProcess;
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            ProcessCallback?.Invoke();
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ProcessCallback?.Invoke();
     }
 
     [StrategyIndex(SessionContextStrategyIndex)]
@@ -922,10 +892,7 @@ public class BackgroundSessionTests
     {
         private static ICollection<string>? SeenSink { get; set; }
 
-        public static void Bind(ICollection<string> seen)
-        {
-            SeenSink = seen;
-        }
+        public static void Bind(ICollection<string> seen) => SeenSink = seen;
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {

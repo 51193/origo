@@ -41,8 +41,5 @@ internal sealed class SessionStateMachineContext : IStateMachineContext
     public ISndSceneAccess SceneAccess { get; }
 
     /// <inheritdoc />
-    public void EnqueueBusinessDeferred(Action action)
-    {
-        _global.EnqueueBusinessDeferred(action);
-    }
+    public void EnqueueBusinessDeferred(Action action) => _global.EnqueueBusinessDeferred(action);
 }

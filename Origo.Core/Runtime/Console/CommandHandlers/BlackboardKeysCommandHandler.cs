@@ -1,7 +1,7 @@
 using System;
 using Origo.Core.Abstractions.Console;
 
-namespace Origo.Core.Runtime.Console.CommandImpl;
+namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
 ///     <c>bb_keys</c> 命令：列出指定黑板层的全部键。

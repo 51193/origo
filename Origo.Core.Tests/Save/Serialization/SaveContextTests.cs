@@ -12,10 +12,7 @@ namespace Origo.Core.Tests;
 
 public class SaveContextTests
 {
-    private static SndWorld CreateWorld()
-    {
-        return TestFactory.CreateSndWorld();
-    }
+    private static SndWorld CreateWorld() => TestFactory.CreateSndWorld();
 
     [Fact]
     public void SaveContext_SerializeProgress_And_DeserializeProgress_RoundTrip()

@@ -39,10 +39,10 @@ public class CoreArchitectureGuardrailTests
         Assert.DoesNotContain("Origo.Core.Runtime.Lifecycle.EmptySessionManager", exportedNames);
 
         // Console command handler implementations are internal.
-        Assert.DoesNotContain("Origo.Core.Runtime.Console.CommandImpl.AutoSaveCommandHandler", exportedNames);
-        Assert.DoesNotContain("Origo.Core.Runtime.Console.CommandImpl.SaveGameCommandHandler", exportedNames);
-        Assert.DoesNotContain("Origo.Core.Runtime.Console.CommandImpl.LoadGameCommandHandler", exportedNames);
-        Assert.DoesNotContain("Origo.Core.Runtime.Console.CommandImpl.ChangeLevelCommandHandler", exportedNames);
+        Assert.DoesNotContain("Origo.Core.Runtime.Console.CommandHandlers.AutoSaveCommandHandler", exportedNames);
+        Assert.DoesNotContain("Origo.Core.Runtime.Console.CommandHandlers.SaveGameCommandHandler", exportedNames);
+        Assert.DoesNotContain("Origo.Core.Runtime.Console.CommandHandlers.LoadGameCommandHandler", exportedNames);
+        Assert.DoesNotContain("Origo.Core.Runtime.Console.CommandHandlers.ChangeLevelCommandHandler", exportedNames);
 
         // Save infrastructure utilities are internal.
         Assert.DoesNotContain("Origo.Core.Save.Meta.SaveMetaMerger", exportedNames);

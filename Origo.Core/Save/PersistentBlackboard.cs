@@ -31,11 +31,14 @@ public sealed class PersistentBlackboard : IBlackboard
         DataSourceConverterRegistry registry,
         IBlackboard inner)
     {
+        ArgumentNullException.ThrowIfNull(fileSystem);
         _fileSystem = fileSystem;
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
         _filePath = filePath;
         ArgumentNullException.ThrowIfNull(dataSourceIo);
-        ArgumentNullException.ThrowIfNull(registry);
         _dataSourceIo = dataSourceIo;
+        ArgumentNullException.ThrowIfNull(registry);
         _registry = registry;
         ArgumentNullException.ThrowIfNull(inner);
         _inner = inner;

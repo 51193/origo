@@ -7,10 +7,7 @@ namespace Origo.GodotAdapter.FileSystem;
 
 internal static class GodotFileOperations
 {
-    public static bool Exists(string path)
-    {
-        return FileAccess.FileExists(path);
-    }
+    public static bool Exists(string path) => FileAccess.FileExists(path);
 
     public static string ReadAllText(string path)
     {

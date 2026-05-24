@@ -26,95 +26,55 @@ internal sealed class NullSndContext : ISndContext
     public ISessionRun? CurrentSession => null;
     public bool IsFrontSession => false;
 
-    public void EnqueueBusinessDeferred(Action action)
-    {
-        action();
-    }
+    public void EnqueueBusinessDeferred(Action action) => action();
 
     public void FlushDeferredActionsForCurrentFrame()
     {
     }
 
-    public int GetPendingPersistenceRequestCount()
-    {
-        return 0;
-    }
+    public int GetPendingPersistenceRequestCount() => 0;
 
-    public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
-    {
+    public SndMetaData CloneTemplate(string templateKey, string? overrideName = null) =>
         throw new InvalidOperationException("NullSndContext does not support templates.");
-    }
 
-    public bool TrySubmitConsoleCommand(string commandLine)
-    {
-        return false;
-    }
+    public bool TrySubmitConsoleCommand(string commandLine) => false;
 
     public void ProcessConsolePending()
     {
     }
 
-    public long SubscribeConsoleOutput(Action<string> onLine)
-    {
-        return 0;
-    }
+    public long SubscribeConsoleOutput(Action<string> onLine) => 0;
 
     public void UnsubscribeConsoleOutput(long subscriptionId)
     {
     }
 
-    public StateMachineContainer? GetProgressStateMachines()
-    {
-        return null;
-    }
+    public StateMachineContainer? GetProgressStateMachines() => null;
 
-    public IReadOnlyList<string> ListSaves()
-    {
-        return Array.Empty<string>();
-    }
+    public IReadOnlyList<string> ListSaves() => Array.Empty<string>();
 
-    public void RequestLoadGame(string saveId)
-    {
+    public void RequestLoadGame(string saveId) =>
         throw new InvalidOperationException("NullSndContext does not support load operations.");
-    }
 
-    public void RequestSaveGame(string newSaveId)
-    {
+    public void RequestSaveGame(string newSaveId) =>
         throw new InvalidOperationException("NullSndContext does not support save operations.");
-    }
 
-    public string RequestSaveGameAuto(string? newSaveId = null)
-    {
+    public string RequestSaveGameAuto(string? newSaveId = null) =>
         throw new InvalidOperationException("NullSndContext does not support save operations.");
-    }
 
-    public void SetContinueTarget(string saveId)
-    {
+    public void SetContinueTarget(string saveId) =>
         throw new InvalidOperationException("NullSndContext does not support continue target operations.");
-    }
 
-    public void RequestSwitchForegroundLevel(string newLevelId)
-    {
+    public void RequestSwitchForegroundLevel(string newLevelId) =>
         throw new InvalidOperationException("NullSndContext does not support level switching.");
-    }
 
-    public bool HasContinueData()
-    {
-        return false;
-    }
+    public bool HasContinueData() => false;
 
-    public bool RequestContinueGame()
-    {
-        return false;
-    }
+    public bool RequestContinueGame() => false;
 
-    public void RequestLoadInitialSave()
-    {
+    public void RequestLoadInitialSave() =>
         throw new InvalidOperationException("NullSndContext does not support load operations.");
-    }
 
-    public void RequestLoadMainMenuEntrySave()
-    {
+    public void RequestLoadMainMenuEntrySave() =>
         throw new InvalidOperationException("NullSndContext does not support load operations.");
-    }
 }

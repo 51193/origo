@@ -312,10 +312,8 @@ public class ForegroundBackgroundContractTests
     {
         internal static List<string>? Events { get; set; }
 
-        public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
-        {
+        public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) =>
             Events?.Add($"push:{context.BeforeTop ?? "null"}->{context.AfterTop ?? "null"}");
-        }
     }
 
     [StrategyIndex("contract.pop")]

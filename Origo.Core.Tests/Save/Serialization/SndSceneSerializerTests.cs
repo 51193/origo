@@ -10,10 +10,7 @@ namespace Origo.Core.Tests;
 
 public class SndSceneSerializerTests
 {
-    private static SndWorld CreateWorld()
-    {
-        return TestFactory.CreateSndWorld();
-    }
+    private static SndWorld CreateWorld() => TestFactory.CreateSndWorld();
 
     [Fact]
     public void SndSceneSerializer_Serialize_EmptyScene()
@@ -84,10 +81,8 @@ public class SndSceneSerializerTests
     }
 
     [Fact]
-    public void SndSceneSerializer_Constructor_ThrowsOnNullWorld()
-    {
+    public void SndSceneSerializer_Constructor_ThrowsOnNullWorld() =>
         Assert.Throws<ArgumentNullException>(() => new SndSceneSerializer(null!));
-    }
 }
 
 // ── TypeStringMapping additional tests ─────────────────────────────────

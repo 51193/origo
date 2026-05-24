@@ -54,10 +54,8 @@ public sealed class StateMachineContainer
     }
 
     /// <summary>按 key 查找已有的状态机实例。</summary>
-    public bool TryGet(string machineKey, out StackStateMachine? machine)
-    {
-        return _machines.TryGetValue(machineKey, out machine);
-    }
+    public bool TryGet(string machineKey, out StackStateMachine? machine) =>
+        _machines.TryGetValue(machineKey, out machine);
 
     /// <summary>按 key 移除并释放一个状态机。</summary>
     public void Remove(string machineKey)

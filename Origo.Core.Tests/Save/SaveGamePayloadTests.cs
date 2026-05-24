@@ -8,10 +8,7 @@ namespace Origo.Core.Tests;
 public class SaveGamePayloadTests
 {
     [Fact]
-    public void SaveGamePayload_CurrentFormatVersion_IsOne()
-    {
-        Assert.Equal(1, SaveGamePayload.CurrentFormatVersion);
-    }
+    public void SaveGamePayload_CurrentFormatVersion_IsOne() => Assert.Equal(1, SaveGamePayload.CurrentFormatVersion);
 
     [Fact]
     public void SaveGamePayload_DefaultValues()

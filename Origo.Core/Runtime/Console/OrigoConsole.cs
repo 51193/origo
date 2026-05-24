@@ -1,6 +1,6 @@
 using System;
 using Origo.Core.Abstractions.Console;
-using Origo.Core.Runtime.Console.CommandImpl;
+using Origo.Core.Runtime.Console.CommandHandlers;
 
 namespace Origo.Core.Runtime.Console;
 
@@ -34,10 +34,7 @@ public sealed class OrigoConsole
     /// <summary>
     ///     注册额外的控制台命令处理器（供 <see cref="Snd.SndContext" /> 等延迟创建的组件使用）。
     /// </summary>
-    public void RegisterHandler(IConsoleCommandHandler handler)
-    {
-        _router.Register(handler);
-    }
+    public void RegisterHandler(IConsoleCommandHandler handler) => _router.Register(handler);
 
     /// <summary>
     ///     处理当前队列中的全部待执行命令（通常每帧或提交时调用一次）。

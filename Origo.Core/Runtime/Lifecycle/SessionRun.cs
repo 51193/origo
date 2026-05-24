@@ -208,10 +208,7 @@ public sealed class SessionRun : ISessionRun
     /// <summary>
     ///     Internal persistence that does not check disposed flag (called from Dispose).
     /// </summary>
-    private void PersistLevelStateInternal()
-    {
-        _storageService.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload());
-    }
+    private void PersistLevelStateInternal() => _storageService.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload());
 
     private LevelPayload BuildLevelPayload()
     {
@@ -240,8 +237,5 @@ public sealed class SessionRun : ISessionRun
         }
     }
 
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-    }
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
 }

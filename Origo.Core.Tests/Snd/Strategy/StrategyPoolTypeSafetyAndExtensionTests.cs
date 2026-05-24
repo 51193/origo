@@ -1,5 +1,5 @@
 using System;
-using Origo.Core.Abstractions;
+using Origo.Core.Logging;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 using Origo.Core.StateMachine;
@@ -73,10 +73,7 @@ public class StrategyPoolTypeSafetyAndExtensionTests
     [StrategyIndex("ext.domain.probe")]
     private sealed class ExtensionDomainConcreteStrategy : ExtensionDomainStrategyBase
     {
-        public override string ProbeValue()
-        {
-            return "ok";
-        }
+        public override string ProbeValue() => "ok";
     }
 
     [StrategyIndex("pool.entity")]

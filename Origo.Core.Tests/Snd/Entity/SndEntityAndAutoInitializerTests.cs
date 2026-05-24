@@ -212,35 +212,17 @@ public class SndEntityAndAutoInitializerTests
     {
         private static ICollection<string>? EventSink { get; set; }
 
-        public static void Bind(ICollection<string> events)
-        {
-            EventSink = events;
-        }
+        public static void Bind(ICollection<string> events) => EventSink = events;
 
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
-        {
-            EventSink?.Add("AfterSpawn");
-        }
+        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => EventSink?.Add("AfterSpawn");
 
-        public override void AfterAdd(ISndEntity entity, ISndContext ctx)
-        {
-            EventSink?.Add("AfterAdd");
-        }
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx) => EventSink?.Add("AfterAdd");
 
-        public override void BeforeRemove(ISndEntity entity, ISndContext ctx)
-        {
-            EventSink?.Add("BeforeRemove");
-        }
+        public override void BeforeRemove(ISndEntity entity, ISndContext ctx) => EventSink?.Add("BeforeRemove");
 
-        public override void BeforeSave(ISndEntity entity, ISndContext ctx)
-        {
-            EventSink?.Add("BeforeSave");
-        }
+        public override void BeforeSave(ISndEntity entity, ISndContext ctx) => EventSink?.Add("BeforeSave");
 
-        public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
-        {
-            EventSink?.Add("BeforeQuit");
-        }
+        public override void BeforeQuit(ISndEntity entity, ISndContext ctx) => EventSink?.Add("BeforeQuit");
     }
 }
 
@@ -262,8 +244,5 @@ public abstract class StatefulAutoInitStrategy : EntityStrategyBase
     public const string IndexConst = "auto.init.stateful";
     private int _counter;
 
-    public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-    {
-        _counter++;
-    }
+    public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _counter++;
 }

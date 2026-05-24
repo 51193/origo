@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Snd.Scene;
 using Xunit;
 
@@ -11,10 +12,8 @@ namespace Origo.Core.Tests;
 public class MemorySndEntityTests
 {
     [Fact]
-    public void Constructor_ThrowsOnNullName()
-    {
+    public void Constructor_ThrowsOnNullName() =>
         Assert.Throws<ArgumentNullException>(() => new MemorySndEntity(null!));
-    }
 
     [Fact]
     public void Name_ReturnsConstructedName()
@@ -32,11 +31,18 @@ public class MemorySndEntityTests
     }
 
     [Fact]
-    public void GetData_ReturnsDefault_WhenMissing()
+    public void GetData_ThrowsKeyNotFound_WhenMissing()
     {
         var entity = new MemorySndEntity("e");
-        Assert.Equal(0, entity.GetData<int>("missing"));
-        Assert.Null(entity.GetData<string>("missing"));
+        Assert.Throws<KeyNotFoundException>(() => entity.GetData<int>("missing"));
+    }
+
+    [Fact]
+    public void GetData_ThrowsInvalidCast_OnTypeMismatch()
+    {
+        var entity = new MemorySndEntity("e");
+        entity.SetData("val", "string_value");
+        Assert.Throws<InvalidCastException>(() => entity.GetData<int>("val"));
     }
 
     [Fact]

@@ -17,13 +17,7 @@ public abstract class DataSourceConverter<T> : DataSourceConverterBase
     public abstract T Read(DataSourceNode node);
     public abstract DataSourceNode Write(T value);
 
-    internal override object? ReadObject(DataSourceNode node)
-    {
-        return Read(node);
-    }
+    internal override object? ReadObject(DataSourceNode node) => Read(node);
 
-    internal override DataSourceNode WriteObject(object? value)
-    {
-        return Write((T)value!);
-    }
+    internal override DataSourceNode WriteObject(object? value) => Write((T)value!);
 }

@@ -65,10 +65,8 @@ public class ConcurrentActionQueueTests
     }
 
     [Fact]
-    public void ConcurrentActionQueue_Constructor_ThrowsOnNullLogger()
-    {
+    public void ConcurrentActionQueue_Constructor_ThrowsOnNullLogger() =>
         Assert.Throws<ArgumentNullException>(() => new ConcurrentActionQueue(null!));
-    }
 
     [Fact]
     public void ConcurrentActionQueue_ExecuteAll_PropagatesException()

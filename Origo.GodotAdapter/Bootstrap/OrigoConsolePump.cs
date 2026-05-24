@@ -11,10 +11,7 @@ public partial class OrigoConsolePump : Node
 {
     public OrigoRuntime? Runtime { get; set; }
 
-    public override void _Ready()
-    {
-        SetProcess(true);
-    }
+    public override void _Ready() => SetProcess(true);
 
     public override void _Process(double delta)
     {

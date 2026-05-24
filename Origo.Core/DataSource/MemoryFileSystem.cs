@@ -4,22 +4,19 @@ using System.IO;
 using System.Linq;
 using Origo.Core.Abstractions.FileSystem;
 
-namespace Origo.Core.Abstractions;
+namespace Origo.Core.DataSource;
 
 /// <summary>
 ///     纯内存 <see cref="IFileSystem" /> 实现，不依赖任何物理文件系统或引擎 API。
 ///     用于后台关卡等 Core 层内存运行场景，以及单元测试。
 /// </summary>
-public sealed class MemoryFileSystem : IFileSystem
+internal sealed class MemoryFileSystem : IFileSystem
 {
     private readonly HashSet<string> _directories = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _files = new(StringComparer.Ordinal);
 
     /// <inheritdoc />
-    public bool Exists(string path)
-    {
-        return _files.ContainsKey(Normalize(path));
-    }
+    public bool Exists(string path) => _files.ContainsKey(Normalize(path));
 
     /// <inheritdoc />
     public bool DirectoryExists(string path)
@@ -106,10 +103,8 @@ public sealed class MemoryFileSystem : IFileSystem
     }
 
     /// <inheritdoc />
-    public string CombinePath(string basePath, string relativePath)
-    {
-        return Normalize($"{Normalize(basePath).TrimEnd('/')}/{relativePath}");
-    }
+    public string CombinePath(string basePath, string relativePath) =>
+        Normalize($"{Normalize(basePath).TrimEnd('/')}/{relativePath}");
 
     /// <inheritdoc />
     public string GetParentDirectory(string path)
@@ -201,10 +196,7 @@ public sealed class MemoryFileSystem : IFileSystem
             _directories.Remove(dir);
     }
 
-    private static string Normalize(string path)
-    {
-        return path.Replace('\\', '/').Trim();
-    }
+    private static string Normalize(string path) => path.Replace('\\', '/').Trim();
 
     private void EnsureParents(string filePath)
     {

@@ -90,8 +90,6 @@ public static class DataSourceFactory
         return new DataSourceIoGateway(fileSystem, BuildDefaultIoOptions(), writeIndented);
     }
 
-    public static IDataSourceIoGateway CreateDefaultIoGateway(IFileSystem fileSystem, bool writeIndented = true)
-    {
-        return CreateIoGateway(fileSystem, writeIndented);
-    }
+    public static IDataSourceIoGateway CreateDefaultIoGateway(IFileSystem fileSystem, bool writeIndented = true) =>
+        CreateIoGateway(fileSystem, writeIndented);
 }
