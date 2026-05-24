@@ -63,6 +63,22 @@ public sealed class SndWorld
     public void RegisterStrategy<TStrategy>(Func<TStrategy> factory) where TStrategy : BaseStrategy =>
         StrategyPool.Register(factory);
 
+    /// <summary>
+    ///     检查指定索引的策略是否已注册。
+    /// </summary>
+    public bool IsStrategyRegistered(string index)
+    {
+        if (string.IsNullOrWhiteSpace(index))
+            throw new ArgumentException("Strategy index cannot be null or whitespace.", nameof(index));
+        return StrategyPool.IsRegistered(index);
+    }
+
+    /// <summary>
+    ///     获取所有已注册的策略索引集合（只读）。
+    /// </summary>
+    public IReadOnlyCollection<string> GetRegisteredStrategyIndices() =>
+        StrategyPool.EnumerateRegisteredIndices();
+
     public void RegisterTypeMappings(Action<TypeStringMapping> registerMappings)
     {
         ArgumentNullException.ThrowIfNull(registerMappings);

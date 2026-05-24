@@ -13,6 +13,11 @@ public interface ISndSceneHost : ISndSceneAccess
     /// <summary>
     ///     从一份元数据生成并加入一个实体，返回该实体的抽象接口。
     ///     具体的节点创建与挂载由实现负责。
+    ///     <para>
+    ///         注意：此方法不执行重名校验。需要重名保护时应通过
+    ///         <see cref="Origo.Core.Snd.Scene.SndRuntime.Spawn" /> 调用，
+    ///         该方法会在委托到此方法前先检查名称是否已被占用。
+    ///     </para>
     /// </summary>
     ISndEntity Spawn(SndMetaData metaData);
 

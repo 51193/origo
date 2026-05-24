@@ -306,6 +306,12 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     {
         RunWorkflow(() =>
         {
+            // 确保 current/ 目录干净：上次非正常退出可能遗留僵尸存档，
+            // 若后续 LoadAndMountForeground 从残留数据恢复实体，则 entry.json
+            // 的 Spawn 会因重名冲突抛异常。
+            // 此清理与 ExecuteLoadInitialSaveNow 中的模式一致。
+            StorageService.DeleteCurrentDirectory();
+
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
             SetProgressRun(progressRun);
             progressRun.LoadAndMountForeground(SndDefaults.MainMenuLevelId);

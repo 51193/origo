@@ -68,9 +68,8 @@ public sealed class SndEntity : ISndEntity
     public void Load(SndMetaData metaData)
     {
         RecoverFromMetaData(metaData);
-        var strategyMeta = metaData.StrategyMetaData ??
-                           throw new InvalidOperationException("StrategyMetaData is required.");
-        _strategyManager.Load(strategyMeta.Indices ?? Enumerable.Empty<string>(), this, _context);
+        _strategyManager.Load(
+            metaData.StrategyMetaData?.Indices ?? Enumerable.Empty<string>(), this, _context);
         _logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity loaded."));
     }
@@ -78,9 +77,8 @@ public sealed class SndEntity : ISndEntity
     public void Spawn(SndMetaData metaData)
     {
         RecoverFromMetaData(metaData);
-        var strategyMeta = metaData.StrategyMetaData ??
-                           throw new InvalidOperationException("StrategyMetaData is required.");
-        _strategyManager.Spawn(strategyMeta.Indices ?? Enumerable.Empty<string>(), this, _context);
+        _strategyManager.Spawn(
+            metaData.StrategyMetaData?.Indices ?? Enumerable.Empty<string>(), this, _context);
         _logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity spawned."));
     }

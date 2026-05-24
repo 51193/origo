@@ -51,6 +51,18 @@ Attach `OrigoDefaultEntry` to your startup scene, then set:
 - `SaveRootPath`
 - `InitialSaveRootPath`
 
+> **Using ProjectReference**: If you reference Origo source via `<ProjectReference>` +
+> symlink (instead of NuGet or compiled DLL), Godot resolves `[GlobalClass]` by script
+> resource path and may fail to locate `OrigoDefaultEntry`. Workaround: create a bridge
+> class in your project:
+>
+> ```csharp
+> [GlobalClass]
+> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> ```
+>
+> Then point your `.tscn` node script to `MyOrigoEntry` instead.
+
 ### 4) Write one strategy
 
 ```csharp

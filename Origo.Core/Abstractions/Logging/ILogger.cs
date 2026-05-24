@@ -2,6 +2,7 @@ namespace Origo.Core.Abstractions.Logging;
 
 public enum LogLevel
 {
+    Debug,
     Info,
     Warning,
     Error

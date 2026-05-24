@@ -51,6 +51,17 @@ res://origo/
 - `SaveRootPath`
 - `InitialSaveRootPath`
 
+> **使用 ProjectReference 时**：若以 `<ProjectReference>` + symlink 方式引用 Origo 源码
+> （非 NuGet 包或编译 DLL），Godot 按脚本资源路径解析 `[GlobalClass]`，可能找不到
+> `OrigoDefaultEntry` 类。解决方案：在你的项目中创建桥接节点：
+>
+> ```csharp
+> [GlobalClass]
+> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> ```
+>
+> 然后将 `.tscn` 中的节点脚本指向你的桥接类。
+
 ### 4）编写一个策略
 
 ```csharp

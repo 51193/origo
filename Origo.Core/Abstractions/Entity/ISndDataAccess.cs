@@ -11,6 +11,15 @@ public interface ISndDataAccess
 
     T GetData<T>(string name);
 
+    /// <summary>
+    ///     安全读取数据，返回 <c>(是否找到, 值)</c>。
+    ///     <para>
+    ///         使用约束：始终先判断 <c>found</c>，再使用 <c>value</c>。
+    ///         C# 泛型中 <c>T?</c> 对值类型（如 <c>int</c>、<c>float</c>）退化为非 nullable T，
+    ///         未找到时 <c>value</c> 为 <c>default(T)</c>（如 0），不可通过 <c>??</c> 兜底。
+    ///         对引用类型（如 <c>string</c>），未找到时 <c>value</c> 为 <c>null</c>。
+    ///     </para>
+    /// </summary>
     (bool found, T? value) TryGetData<T>(string name);
 
     /// <summary>
