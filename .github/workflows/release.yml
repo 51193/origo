@@ -36,7 +36,7 @@ jobs:
         continue-on-error: true
 
       - name: Copy NuGet config to artifacts
-        run: cp nuget.config ./artifacts/
+        run: cp nuget.config.example ./artifacts/nuget.config
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

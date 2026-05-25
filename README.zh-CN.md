@@ -35,8 +35,8 @@ Origo 支持创建后台 Session，并让它执行与前台 Session 完全一致
 
 > **NuGet 包通过 GitHub Releases 发布**。请从
 > [最新 Release](https://github.com/51193/origo.stable/releases/latest) 下载
-> `.nupkg` 文件，放入本地目录，并配置 `nuget.config` 添加本地包源。
-> 仓库根目录已提供 [nuget.config](nuget.config) 模板。
+> `.nupkg` 文件，放入本地目录，并配置 `nuget.config` 添加本地包源（Release
+> 附件中已包含 `nuget.config` 模板）。
 >
 > ```xml
 > <?xml version="1.0" encoding="utf-8"?>

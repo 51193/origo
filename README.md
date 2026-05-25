@@ -36,7 +36,7 @@ Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and p
 > **NuGet packages are published via GitHub Releases.** Download the `.nupkg` files
 > from the [latest release](https://github.com/51193/origo.stable/releases/latest),
 > place them in a local directory, and configure `nuget.config` to add the local
-> package source. A sample [nuget.config](nuget.config) is provided in the repository root.
+> package source (a sample `nuget.config` is included in the release assets).
 >
 > ```xml
 > <?xml version="1.0" encoding="utf-8"?>
