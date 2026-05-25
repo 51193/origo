@@ -35,7 +35,7 @@ Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and p
 
 > **NuGet packages are published via GitHub Releases.** Download the `.nupkg` files
 > from the [latest release](https://github.com/51193/origo.stable/releases/latest),
-> place them in a local directory, and configure `nuget.config` to add the local
+> place them in `./packages/origo/`, and configure `nuget.config` to add the local
 > package source (a sample `nuget.config` is included in the release assets).
 >
 > ```xml
@@ -47,6 +47,10 @@ Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and p
 >   </packageSources>
 > </configuration>
 > ```
+>
+> Commit `nuget.config` to your repository so all contributors share the same
+> package source. Add `packages/` to your `.gitignore` — `.nupkg` binaries should
+> not be tracked by version control.
 
 #### Option B: Project reference
 
