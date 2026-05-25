@@ -58,6 +58,17 @@ Origo 支持创建后台 Session，并让它执行与前台 Session 完全一致
 <ProjectReference Include="../Origo.GodotAdapter/Origo.GodotAdapter.csproj" />
 ```
 
+> **Godot `[GlobalClass]` 解析问题**：无论使用 NuGet 还是 ProjectReference，
+> Godot 按脚本资源路径解析 `[GlobalClass]` 时都可能找不到 `OrigoDefaultEntry`。
+> 解决方案：在你的项目中创建桥接类：
+>
+> ```csharp
+> [GlobalClass]
+> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> ```
+>
+> 然后将 `.tscn` 中的节点脚本指向你的桥接类。
+
 ### 2）最小目录结构
 
 ```text
@@ -77,17 +88,6 @@ res://origo/
 - `SndTemplateMapPath`
 - `SaveRootPath`
 - `InitialSaveRootPath`
-
-> **使用 ProjectReference 时**：若以 `<ProjectReference>` + symlink 方式引用 Origo 源码
-> （非 NuGet 包或编译 DLL），Godot 按脚本资源路径解析 `[GlobalClass]`，可能找不到
-> `OrigoDefaultEntry` 类。解决方案：在你的项目中创建桥接节点：
->
-> ```csharp
-> [GlobalClass]
-> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
-> ```
->
-> 然后将 `.tscn` 中的节点脚本指向你的桥接类。
 
 ### 4）编写一个策略
 

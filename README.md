@@ -59,6 +59,18 @@ Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and p
 <ProjectReference Include="../Origo.GodotAdapter/Origo.GodotAdapter.csproj" />
 ```
 
+> **Godot `[GlobalClass]` resolution**: Godot resolves `[GlobalClass]` by script
+> resource path and may fail to locate `OrigoDefaultEntry` regardless of which
+> option you chose above (NuGet or ProjectReference). Workaround: create a bridge
+> class in your project:
+>
+> ```csharp
+> [GlobalClass]
+> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> ```
+>
+> Then point your `.tscn` node script to `MyOrigoEntry` instead.
+
 ### 2) Minimal folder layout
 
 ```text
@@ -78,18 +90,6 @@ Attach `OrigoDefaultEntry` to your startup scene, then set:
 - `SndTemplateMapPath`
 - `SaveRootPath`
 - `InitialSaveRootPath`
-
-> **Using ProjectReference**: If you reference Origo source via `<ProjectReference>` +
-> symlink (instead of NuGet or compiled DLL), Godot resolves `[GlobalClass]` by script
-> resource path and may fail to locate `OrigoDefaultEntry`. Workaround: create a bridge
-> class in your project:
->
-> ```csharp
-> [GlobalClass]
-> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
-> ```
->
-> Then point your `.tscn` node script to `MyOrigoEntry` instead.
 
 ### 4) Write one strategy
 
