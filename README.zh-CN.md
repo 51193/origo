@@ -33,6 +33,21 @@ Origo 支持创建后台 Session，并让它执行与前台 Session 完全一致
 <PackageReference Include="Origo.GodotAdapter" />
 ```
 
+> **NuGet 包通过 GitHub Releases 发布**。请从
+> [最新 Release](https://github.com/51193/origo.stable/releases/latest) 下载
+> `.nupkg` 文件，放入本地目录，并配置 `nuget.config` 添加本地包源。
+> 仓库根目录已提供 [nuget.config](nuget.config) 模板。
+>
+> ```xml
+> <?xml version="1.0" encoding="utf-8"?>
+> <!-- nuget.config（放在你的 Godot 项目根目录） -->
+> <configuration>
+>   <packageSources>
+>     <add key="origo-local" value="./packages/origo/" />
+>   </packageSources>
+> </configuration>
+> ```
+
 #### 方案 B：项目引用
 
 ```xml

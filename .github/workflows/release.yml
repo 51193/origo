@@ -35,8 +35,11 @@ jobs:
         run: dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --no-build --configuration Release --output ./artifacts
         continue-on-error: true
 
+      - name: Copy NuGet config to artifacts
+        run: cp nuget.config ./artifacts/
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./artifacts/*.nupkg
+          files: ./artifacts/*
           generate_release_notes: true

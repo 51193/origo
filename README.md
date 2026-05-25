@@ -33,6 +33,21 @@ Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and p
 <PackageReference Include="Origo.GodotAdapter" />
 ```
 
+> **NuGet packages are published via GitHub Releases.** Download the `.nupkg` files
+> from the [latest release](https://github.com/51193/origo.stable/releases/latest),
+> place them in a local directory, and configure `nuget.config` to add the local
+> package source. A sample [nuget.config](nuget.config) is provided in the repository root.
+>
+> ```xml
+> <?xml version="1.0" encoding="utf-8"?>
+> <!-- nuget.config (place in your Godot project root) -->
+> <configuration>
+>   <packageSources>
+>     <add key="origo-local" value="./packages/origo/" />
+>   </packageSources>
+> </configuration>
+> ```
+
 #### Option B: Project reference
 
 ```xml

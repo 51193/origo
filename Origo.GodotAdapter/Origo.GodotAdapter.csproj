@@ -2,6 +2,8 @@
 
     <PropertyGroup>
         <EnableDynamicLoading>true</EnableDynamicLoading>
+        <Description>Origo Godot 4 Adapter — bootstrap and runtime integration for Origo.Core. Built against Godot.NET.Sdk/4.6.1.</Description>
+        <PackageTags>godot;godot-4.6;game;framework;csharp;origo;adapter;snd;entity</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>

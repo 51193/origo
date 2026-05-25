@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <PropertyGroup>
+        <Description>Origo Core — a lightweight, platform-agnostic C# game framework using the SND (Strategy-Node-Data) model.</Description>
+        <PackageTags>game;framework;csharp;snd;entity;strategy;dotnet;origo</PackageTags>
+    </PropertyGroup>
+
     <ItemGroup>
         <InternalsVisibleTo Include="Origo.Core.Tests"/>
     </ItemGroup>
