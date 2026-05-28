@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.0.7-dev] - 2026-05-27
+
+### Added
+
+- **Strategy Priority** (`StrategyIndexAttribute.Priority`, default 6205): all lifecycle hooks (Process, AfterSpawn, AfterLoad, BeforeRemove, BeforeSave, BeforeQuit, BeforeDead) execute in ascending priority order; same priority uses FIFO insertion order.
+- `SndStrategyPool.GetPriority(string index)` — query a registered strategy's priority.
+- `SndStrategyManager.InsertSorted` — insertion sort keeps `_strategies` always ordered by priority.
+
+### Changed
+
+- `SndStrategyManager.Add()` and `Recover()` now use insertion sort instead of append, keeping the list always ordered by ascending priority.
+- All lifecycle hook snapshots (Process / AfterSpawn / BeforeQuit etc.) inherit priority ordering.
+- `SerializeIndices` returns indices in priority order; ordering is preserved across Save/Load roundtrips.
+
+---
+
 ## [0.0.6] - 2026-05-24
 
 ### Added

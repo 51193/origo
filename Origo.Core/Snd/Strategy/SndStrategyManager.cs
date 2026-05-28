@@ -54,8 +54,9 @@ internal sealed class SndStrategyManager
     public void Add(ISndEntity entity, string index, ISndContext ctx)
     {
         var strategy = _pool.GetStrategy<EntityStrategyBase>(index);
+        var entry = new StrategyEntry { Index = index, Strategy = strategy };
 
-        _strategies.Add(new StrategyEntry { Index = index, Strategy = strategy });
+        InsertSorted(entry);
         strategy.AfterAdd(entity, ctx);
         _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
             .AddSuffix("entityName", entity.Name)
@@ -86,7 +87,7 @@ internal sealed class SndStrategyManager
 
     public void Process(ISndEntity entity, double delta, ISndContext ctx)
     {
-        // 允许策略在 Process 中通过实体接口增删策略，因此基于快照进行迭代（复用缓冲以减少每帧数组分配）。
+        // 策略按优先级升序排列（同优先级按插入顺序）。Process 中可通过实体接口增删策略，因此基于快照迭代。
         _processBuffer.Clear();
         _processBuffer.AddRange(_strategies);
         foreach (var entry in _processBuffer)
@@ -99,7 +100,7 @@ internal sealed class SndStrategyManager
         try
         {
             foreach (var index in indices)
-                _strategies.Add(new StrategyEntry
+                InsertSorted(new StrategyEntry
                     { Index = index, Strategy = _pool.GetStrategy<EntityStrategyBase>(index) });
         }
         catch
@@ -117,6 +118,20 @@ internal sealed class SndStrategyManager
         foreach (var entry in _strategies) _pool.ReleaseStrategy(entry.Index);
 
         _strategies.Clear();
+    }
+
+    private void InsertSorted(StrategyEntry entry)
+    {
+        var priority = _pool.GetPriority(entry.Index);
+        var insertIndex = _strategies.Count;
+        for (var i = 0; i < _strategies.Count; i++)
+            if (_pool.GetPriority(_strategies[i].Index) > priority)
+            {
+                insertIndex = i;
+                break;
+            }
+
+        _strategies.Insert(insertIndex, entry);
     }
 
     private void TriggerAfterSpawn(ISndEntity entity, ISndContext ctx)

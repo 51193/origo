@@ -97,7 +97,7 @@ Attach `OrigoDefaultEntry` to your startup scene, then set:
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 
-[StrategyIndex("game.player_move")]
+[StrategyIndex("game.player_move", Priority = 100)]
 public sealed class PlayerMoveStrategy : EntityStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -108,6 +108,10 @@ public sealed class PlayerMoveStrategy : EntityStrategyBase
     }
 }
 ```
+
+> **Priority**: Strategy priority (default 6205). Process and all lifecycle hooks
+> execute in ascending priority order; same priority uses insertion order (FIFO).
+> Lower values execute first.
 
 ### 5) Define one entity
 

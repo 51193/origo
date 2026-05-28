@@ -17,6 +17,7 @@ internal sealed class SndStrategyPool
     private readonly Dictionary<string, Func<BaseStrategy>> _factories = new();
     private readonly ILogger _logger;
     private readonly Dictionary<string, BaseStrategy> _pool = new();
+    private readonly Dictionary<string, int> _priorities = new();
     private readonly Dictionary<string, int> _refCounts = new();
 
     public SndStrategyPool(ILogger logger)
@@ -36,6 +37,7 @@ internal sealed class SndStrategyPool
         var index = ResolveRequiredIndex(strategyType);
         ArgumentNullException.ThrowIfNull(factory);
         _factories[index] = factory;
+        _priorities[index] = ResolvePriority(strategyType);
     }
 
     public void Register<TStrategy>(Func<TStrategy> factory) where TStrategy : BaseStrategy
@@ -107,6 +109,9 @@ internal sealed class SndStrategyPool
         }
     }
 
+    internal int GetPriority(string index) =>
+        _priorities.TryGetValue(index, out var priority) ? priority : 0;
+
     private static string ResolveRequiredIndex(Type strategyType)
     {
         var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>();
@@ -144,5 +149,11 @@ internal sealed class SndStrategyPool
 
         invalidMembers = string.Join(", ", names);
         return names.Count == 0;
+    }
+
+    private static int ResolvePriority(Type strategyType)
+    {
+        var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>();
+        return attr?.Priority ?? 6205;
     }
 }

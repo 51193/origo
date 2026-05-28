@@ -15,4 +15,6 @@ public sealed class StrategyIndexAttribute : Attribute
     }
 
     public string Index { get; }
+
+    public int Priority { get; set; } = 6205;
 }

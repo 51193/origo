@@ -95,7 +95,7 @@ res://origo/
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 
-[StrategyIndex("game.player_move")]
+[StrategyIndex("game.player_move", Priority = 100)]
 public sealed class PlayerMoveStrategy : EntityStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -106,6 +106,9 @@ public sealed class PlayerMoveStrategy : EntityStrategyBase
     }
 }
 ```
+
+> **Priority**：策略优先级（默认 6205）。Process 等生命周期回调按优先级升序执行；
+> 同优先级按插入顺序（FIFO）。优先级越小，越先执行。
 
 ### 5）定义一个实体
 
