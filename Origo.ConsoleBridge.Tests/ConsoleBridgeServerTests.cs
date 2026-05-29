@@ -286,9 +286,6 @@ public class ConsoleBridgeServerTests
 
         output.Publish("hello from console");
 
-        writer.WriteLine("trigger");
-        writer.Flush();
-
         var line = ReadLineWithTimeout(reader, OutputTimeoutMs);
         Assert.NotNull(line);
         Assert.Equal("hello from console", line);
@@ -310,9 +307,6 @@ public class ConsoleBridgeServerTests
         output.Publish("line1");
         output.Publish("line2");
         output.Publish("line3");
-
-        writer.WriteLine("trigger");
-        writer.Flush();
 
         var received = new List<string>();
         for (var i = 0; i < 3; i++)
@@ -343,9 +337,6 @@ public class ConsoleBridgeServerTests
 
         output.Publish(null!);
 
-        writer.WriteLine("trigger");
-        writer.Flush();
-
         var line = ReadLineWithTimeout(reader, OutputTimeoutMs);
         Assert.NotNull(line);
         Assert.Equal(string.Empty, line);
@@ -366,9 +357,6 @@ public class ConsoleBridgeServerTests
 
         for (var i = 0; i < StressCommandCount; i++)
             output.Publish($"out_{i}");
-
-        writer.WriteLine("trigger");
-        writer.Flush();
 
         var count = 0;
         for (var i = 0; i < StressCommandCount; i++)
@@ -408,9 +396,6 @@ public class ConsoleBridgeServerTests
         }
 
         Task.WaitAll(tasks);
-
-        writer.WriteLine("trigger");
-        writer.Flush();
 
         var received = new List<string>();
         string? line;
@@ -641,32 +626,259 @@ public class ConsoleBridgeServerTests
         using var reader = new StreamReader(client.GetStream());
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
-        // Phase 1: Send command, publish response, trigger drain
+        // Send command, publish response, read it immediately
         writer.WriteLine("cmd1");
         SpinUntil(() => input.TryDequeueCommand(out var l) && l == "cmd1", CommandTimeoutMs);
         output.Publish("response1");
+
+        var response1 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        Assert.NotNull(response1);
+        Assert.Equal("response1", response1);
 
         writer.WriteLine("cmd2");
         SpinUntil(() => input.TryDequeueCommand(out var l) && l == "cmd2", CommandTimeoutMs);
         output.Publish("response2");
 
-        // Send trigger to flush
-        writer.WriteLine("cmd3");
-
-        // Responses should arrive before "cmd3" is dequeued from input
-        // The handle thread drains output before reading
-        // So cmd1→response1→cmd2→response2→cmd3 should be enqueued in order
-        var response1 = ReadLineWithTimeout(reader, OutputTimeoutMs);
         var response2 = ReadLineWithTimeout(reader, OutputTimeoutMs);
-        Assert.NotNull(response1);
         Assert.NotNull(response2);
-        Assert.Equal("response1", response1);
         Assert.Equal("response2", response2);
 
-        // cmd3 should be enqueued
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "cmd3", CommandTimeoutMs);
+        server.Dispose();
+    }
+
+    // ── Agent workflow integration ───────────────────────────────────────
+
+    [Fact]
+    public void AgentLoop_OutputArrivesDuringReadWait()
+    {
+        var (server, (input, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        // Agent sends a command
+        writer.WriteLine("help");
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "help", CommandTimeoutMs);
+
+        // Game processes the command and publishes output
+        // Agent starts reading — output should arrive without agent sending anything else
+        var readTask = Task.Run(() => ReadLineWithTimeout(reader, OutputTimeoutMs));
+
+        // Small delay to ensure readTask is blocked on ReadLine
+        Thread.Sleep(50);
+
+        // Now publish the response — agent should receive it immediately
+        output.Publish("command result here");
+
+        var response = readTask.Result;
+        Assert.NotNull(response);
+        Assert.Equal("command result here", response);
 
         server.Dispose();
+    }
+
+    [Fact]
+    public void AgentLoop_SendRead_SendRead_NoTriggerNeeded()
+    {
+        var (server, (input, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        for (var round = 1; round <= 5; round++)
+        {
+            writer.WriteLine($"cmd_{round}");
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == $"cmd_{round}", CommandTimeoutMs);
+
+            output.Publish($"result_{round}");
+
+            var response = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            Assert.NotNull(response);
+            Assert.Equal($"result_{round}", response);
+        }
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void AgentLoop_MultipleOutputLines_PerCommand()
+    {
+        var (server, (input, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        writer.WriteLine("list");
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "list", CommandTimeoutMs);
+
+        output.Publish("entity_1");
+        output.Publish("entity_2");
+        output.Publish("entity_3");
+
+        var r1 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var r2 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var r3 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        Assert.Equal("entity_1", r1);
+        Assert.Equal("entity_2", r2);
+        Assert.Equal("entity_3", r3);
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void AgentLoop_OutputBeforeConnect_DeliveredOnConnect()
+    {
+        var (server, (_, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        // Game produces output before any agent connects
+        output.Publish("startup log 1");
+        output.Publish("startup log 2");
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+
+        var r1 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var r2 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        Assert.Equal("startup log 1", r1);
+        Assert.Equal("startup log 2", r2);
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void AgentLoop_Disconnect_Reconnect_FullFlow()
+    {
+        var (server, (input, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        // Session 1: connect, send command, read output, disconnect
+        using (var client = new TcpClient())
+        {
+            client.Connect(IPAddress.Loopback, port);
+            using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+            using var reader = new StreamReader(client.GetStream());
+
+            writer.WriteLine("session1_cmd");
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == "session1_cmd", CommandTimeoutMs);
+            output.Publish("session1_result");
+
+            var response = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            Assert.Equal("session1_result", response);
+        }
+
+        Thread.Sleep(DisconnectDelayMs);
+
+        // Session 2: reconnect, send new command, read output
+        using (var client = new TcpClient())
+        {
+            client.Connect(IPAddress.Loopback, port);
+            using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+            using var reader = new StreamReader(client.GetStream());
+
+            writer.WriteLine("session2_cmd");
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == "session2_cmd", CommandTimeoutMs);
+            output.Publish("session2_result");
+
+            var response = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            Assert.Equal("session2_result", response);
+        }
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void AgentLoop_ConcurrentPublish_DuringReadWait()
+    {
+        var (server, (_, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+
+        // Start reading in background — simulate agent waiting for output
+        var readTask = Task.Run(() =>
+        {
+            var lines = new List<string>();
+            string? line;
+            while ((line = ReadLineWithTimeout(reader, OutputTimeoutMs)) is not null)
+                lines.Add(line);
+            return lines;
+        });
+
+        // Simulate game producing output from multiple sources while agent waits
+        Thread.Sleep(30);
+        output.Publish("log_a");
+        Thread.Sleep(10);
+        output.Publish("log_b");
+        Thread.Sleep(10);
+        output.Publish("log_c");
+
+        var result = readTask.Result;
+        Assert.Contains("log_a", result);
+        Assert.Contains("log_b", result);
+        Assert.Contains("log_c", result);
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void AgentLoop_Stress_50Rounds_NoDeadlock()
+    {
+        var (server, (input, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        for (var round = 0; round < 50; round++)
+        {
+            writer.WriteLine($"stress_{round}");
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == $"stress_{round}", CommandTimeoutMs);
+            output.Publish($"pong_{round}");
+
+            var response = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            Assert.NotNull(response);
+            Assert.Equal($"pong_{round}", response);
+        }
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void AgentLoop_Dispose_WhileAgentWaitingForOutput()
+    {
+        var (server, _) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+
+        // Agent starts waiting for output — will block until dispose closes the connection
+        var readTask = Task.Run(() =>
+        {
+            using var reader = new StreamReader(client.GetStream());
+            reader.ReadLine(); // Returns null when connection closes
+        });
+
+        Thread.Sleep(50);
+        server.Dispose();
+
+        var completed = readTask.Wait(TimeSpan.FromMilliseconds(3000));
+        Assert.True(completed, "Read should return (null) after Dispose closes the connection");
     }
 
     // ── Helpers ──

@@ -11,8 +11,8 @@ namespace Origo.ConsoleBridge;
 
 /// <summary>
 ///     TCP 控制台桥接服务器。
-///     单连接模式：Accept 线程接受连接，Handle 线程处理 I/O，
-///     通过 Subscribe 回调接收控制台输出。
+///     单连接模式：Accept 线程接受连接，Handle 线程读入命令，
+///     控制台输出通过 Subscribe 回调直接写入 TCP 连接。
 /// </summary>
 public sealed class ConsoleBridgeServer : IDisposable
 {
@@ -21,8 +21,9 @@ public sealed class ConsoleBridgeServer : IDisposable
     private readonly ConsoleBridgeOptions _options;
     private readonly IConsoleOutputChannel _output;
 
-    private readonly Queue<string> _sendQueue = new();
-    private readonly object _sendQueueLock = new();
+    private readonly object _writerLock = new();
+    private StreamWriter? _writer;
+    private readonly List<string> _pendingOutput = new();
 
     private Thread? _acceptThread;
     private volatile bool _disposed;
@@ -52,6 +53,21 @@ public sealed class ConsoleBridgeServer : IDisposable
             return;
 
         _disposed = true;
+
+        lock (_writerLock)
+        {
+            try
+            {
+                _writer?.Dispose();
+            }
+            catch
+            {
+                /* ignore */
+            }
+
+            _writer = null;
+        }
+
         try
         {
             _serverSocket?.Close();
@@ -103,9 +119,23 @@ public sealed class ConsoleBridgeServer : IDisposable
 
     private void OnConsoleOutput(string line)
     {
-        lock (_sendQueueLock)
+        lock (_writerLock)
         {
-            _sendQueue.Enqueue(line);
+            if (_writer is not null)
+                try
+                {
+                    _writer.WriteLine(line);
+                }
+                catch (IOException)
+                {
+                    /* client disconnected */
+                }
+                catch (ObjectDisposedException)
+                {
+                    /* stream disposed */
+                }
+            else
+                _pendingOutput.Add(line);
         }
     }
 
@@ -173,10 +203,15 @@ public sealed class ConsoleBridgeServer : IDisposable
             using var reader = new StreamReader(stream);
             using var writer = new StreamWriter(stream) { AutoFlush = true };
 
+            lock (_writerLock)
+            {
+                _writer = writer;
+            }
+
+            FlushPendingOutput(writer);
+
             while (!_disposed)
             {
-                DrainSendQueue(writer);
-
                 string? line;
                 try
                 {
@@ -200,6 +235,11 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
         finally
         {
+            lock (_writerLock)
+            {
+                _writer = null;
+            }
+
             try
             {
                 client.Close();
@@ -213,19 +253,19 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
     }
 
-    private void DrainSendQueue(StreamWriter writer)
+    private void FlushPendingOutput(StreamWriter writer)
     {
         List<string> pending;
-        lock (_sendQueueLock)
+        lock (_writerLock)
         {
-            if (_sendQueue.Count == 0)
+            if (_pendingOutput.Count == 0)
                 return;
-
-            pending = new List<string>(_sendQueue);
-            _sendQueue.Clear();
+            pending = new List<string>(_pendingOutput);
+            _pendingOutput.Clear();
         }
 
         foreach (var line in pending)
+        {
             try
             {
                 writer.WriteLine(line);
@@ -234,5 +274,6 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 break;
             }
+        }
     }
 }
