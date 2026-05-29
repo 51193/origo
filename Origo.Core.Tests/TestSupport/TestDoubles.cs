@@ -21,6 +21,7 @@ namespace Origo.Core.Tests;
 
 internal sealed class TestLogger : ILogger
 {
+    public readonly List<string> Debugs = new();
     public readonly List<string> Errors = new();
     public readonly List<string> Infos = new();
     public readonly List<string> Warnings = new();
@@ -29,6 +30,9 @@ internal sealed class TestLogger : ILogger
     {
         switch (level)
         {
+            case LogLevel.Debug:
+                Debugs.Add($"{tag}: {message}");
+                break;
             case LogLevel.Warning:
                 Warnings.Add($"{tag}: {message}");
                 break;

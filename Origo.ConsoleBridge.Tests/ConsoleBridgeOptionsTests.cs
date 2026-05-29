@@ -1,4 +1,3 @@
-using Origo.Core.Abstractions.Logging;
 using Xunit;
 
 namespace Origo.ConsoleBridge.Tests;
@@ -13,7 +12,6 @@ public class ConsoleBridgeOptionsTests
     {
         var options = new ConsoleBridgeOptions();
         Assert.Equal(ConsoleBridgeOptions.DefaultPort, options.Port);
-        Assert.Equal(LogLevel.Info, options.MinLogLevel);
     }
 
     [Fact]
@@ -21,12 +19,5 @@ public class ConsoleBridgeOptionsTests
     {
         var options = new ConsoleBridgeOptions { Port = 5555 };
         Assert.Equal(5555, options.Port);
-    }
-
-    [Fact]
-    public void Options_CustomMinLogLevel_Assigned()
-    {
-        var options = new ConsoleBridgeOptions { MinLogLevel = LogLevel.Error };
-        Assert.Equal(LogLevel.Error, options.MinLogLevel);
     }
 }

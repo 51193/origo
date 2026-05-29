@@ -14,6 +14,7 @@
 - **前后台 Session 同构能力**：后台 Session 与前台 Session 走同一套策略逻辑与生命周期。
 - **内置存档流程**：`current/` 工作区 + `save_xxx/` 快照。
 - **官方 Godot 4 适配器**：`Origo.GodotAdapter` 负责引导和运行时接入。
+- **TCP 远程控制台**：`Origo.ConsoleBridge` 用于 Agent 驱动开发，通过网络连接执行控制台命令。
 
 ## 特殊能力：Background Session
 
@@ -21,6 +22,17 @@ Origo 支持创建后台 Session，并让它执行与前台 Session 完全一致
 这使你可以在内存中进行 AI 仿真、程序化生成或离屏世界更新，同时保持同一套策略行为与数据契约。
 
 可通过 `ctx.SessionManager.CreateBackgroundSession(key, levelId)` 创建，并接入相同的 Session 处理管线。
+
+## 控制台桥接
+
+`Origo.ConsoleBridge` 提供一个基于 TCP 协议的远程控制台，用于 Agent 驱动开发。外部工具（如 AI 编程 Agent）可通过 TCP 连接发送控制台命令并接收命令输出，实现自动化玩法测试与运行时检查。
+
+```bash
+# 通过任意 TCP 客户端连接
+nc localhost 9876
+```
+
+> **注意**：控制台桥接仅承载控制台 I/O——命令输入与命令输出。运行时日志由引擎/日志系统独立处理，不会通过桥接传输。
 
 ## 5 分钟上手（Godot 4）
 
@@ -31,6 +43,7 @@ Origo 支持创建后台 Session，并让它执行与前台 Session 完全一致
 ```xml
 <PackageReference Include="Origo.Core" />
 <PackageReference Include="Origo.GodotAdapter" />
+<PackageReference Include="Origo.ConsoleBridge" />
 ```
 
 > **NuGet 包通过 GitHub Releases 发布**。请从
@@ -133,8 +146,10 @@ public sealed class PlayerMoveStrategy : EntityStrategyBase
 
 ```text
 Origo.Core/
+Origo.ConsoleBridge/
 Origo.GodotAdapter/
 Origo.Core.Tests/
+Origo.ConsoleBridge.Tests/
 Origo.GodotAdapter.Tests/
 scripts/
 Origo.sln

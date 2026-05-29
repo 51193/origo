@@ -14,6 +14,7 @@ It uses the **SND (Strategy-Node-Data)** model and isolates engine code through 
 - **Foreground/Background Session Parity**: background sessions run the same strategy logic and lifecycle as foreground sessions.
 - **Built-in Save Flow**: current workspace + snapshot slots.
 - **Official Godot 4 Adapter**: `Origo.GodotAdapter` for bootstrap and runtime integration.
+- **TCP Remote Console**: `Origo.ConsoleBridge` for agent-driven development over a network connection.
 
 ## Special Capability: Background Session
 
@@ -21,6 +22,19 @@ Origo supports creating background sessions that execute the same gameplay logic
 This means you can run AI simulation, procedural generation, or long-running world updates in memory while keeping exactly the same strategy behavior and data contracts.
 
 Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and process it through the same session pipeline.
+
+## Console Bridge
+
+`Origo.ConsoleBridge` provides a TCP-based remote console for agent-driven development. External tools (e.g., AI coding agents) can send console commands and receive command output over a TCP connection, enabling automated gameplay testing and runtime inspection.
+
+```bash
+# Connect via any TCP client
+nc localhost 9876
+```
+
+> **Note**: The Console Bridge only carries console I/O — command input and command
+> output. Runtime logs are handled by the engine/logger independently and do not
+> travel through the bridge.
 
 ## 5-Minute Setup (Godot 4)
 
@@ -31,6 +45,7 @@ Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and p
 ```xml
 <PackageReference Include="Origo.Core" />
 <PackageReference Include="Origo.GodotAdapter" />
+<PackageReference Include="Origo.ConsoleBridge" />
 ```
 
 > **NuGet packages are published via GitHub Releases.** Download the `.nupkg` files
@@ -136,8 +151,10 @@ public sealed class PlayerMoveStrategy : EntityStrategyBase
 
 ```text
 Origo.Core/
+Origo.ConsoleBridge/
 Origo.GodotAdapter/
 Origo.Core.Tests/
+Origo.ConsoleBridge.Tests/
 Origo.GodotAdapter.Tests/
 scripts/
 Origo.sln
