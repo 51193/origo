@@ -36,7 +36,7 @@ public partial class OrigoAutoHost : Node
     public ConsoleInputQueue? ConsoleInput { get; private set; }
 
     /// <summary>
-    ///     控制台输出发布通道；UI/策略可按生命周期订阅并消费输出。
+    ///     控制台输出发布通道；外部消费者（ConsoleBridge、UI）通过 Subscribe 订阅接收输出。
     /// </summary>
     public IConsoleOutputChannel? ConsoleOutputChannel { get; private set; }
 
@@ -71,6 +71,8 @@ public partial class OrigoAutoHost : Node
         }
     }
 
+    public override void _Process(double delta) => Runtime?.Console?.ProcessPending();
+
     private OrigoRuntime CreateRuntime()
     {
         var createWatch = Stopwatch.StartNew();
@@ -100,9 +102,6 @@ public partial class OrigoAutoHost : Node
 
         ConsoleInput = consoleInput;
         ConsoleOutputChannel = consoleOutputChannel;
-
-        var consolePump = new OrigoConsolePump { Runtime = runtime };
-        AddChild(consolePump);
 
         var systemBbPath = fileSystem.CombinePath(SystemBlackboardSaveRoot, "system.json");
         createWatch.Stop();

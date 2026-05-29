@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
+        <RollForward>LatestMajor</RollForward>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <UseAppHost>true</UseAppHost>

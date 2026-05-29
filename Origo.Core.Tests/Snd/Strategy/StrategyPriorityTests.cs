@@ -534,9 +534,9 @@ internal static class Rec
 {
     private static readonly List<string> _log = new();
 
-    public static void Add(string tag) => _log.Add(tag);
-
     public static IReadOnlyList<string> Log => _log;
+
+    public static void Add(string tag) => _log.Add(tag);
 
     public static void Reset() => _log.Clear();
 }

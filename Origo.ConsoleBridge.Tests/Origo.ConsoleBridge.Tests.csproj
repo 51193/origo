@@ -6,16 +6,8 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <UseAppHost>true</UseAppHost>
-        <GodotProjectDir>$(MSBuildThisFileDirectory)../../..</GodotProjectDir>
-        <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
-        <!-- Test methods use underscore naming convention by design. -->
-        <NoWarn>$(NoWarn);CA1707</NoWarn>
+        <NoWarn>$(NoWarn);CA1707;CA1861;CA1845</NoWarn>
     </PropertyGroup>
-
-    <ItemGroup>
-        <CompilerVisibleProperty Include="GodotDisabledSourceGenerators"/>
-        <CompilerVisibleProperty Include="GodotProjectDir"/>
-    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
@@ -27,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Origo.GodotAdapter\Origo.GodotAdapter.csproj"/>
+        <ProjectReference Include="..\Origo.ConsoleBridge\Origo.ConsoleBridge.csproj"/>
     </ItemGroup>
 
 </Project>

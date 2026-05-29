@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Origo Console Bridge — TCP-based remote console for agent-driven development.</Description>
+        <PackageTags>origo;console;tcp;remote;agent;bridge</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>
+    </ItemGroup>
+
+</Project>
