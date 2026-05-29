@@ -1,5 +1,6 @@
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
+using Origo.GodotAdapter.Console;
 
 namespace Origo.GodotAdapter.Bootstrap;
 
@@ -8,6 +9,8 @@ public partial class OrigoDefaultEntry
     public override void _Ready()
     {
         base._Ready();
+
+        RegisterConsoleCommandHandlers();
 
         if (AutoDiscoverStrategies)
             OrigoAutoInitializer.DiscoverAndRegisterStrategies(
@@ -31,4 +34,7 @@ public partial class OrigoDefaultEntry
         _sndContext.RequestLoadMainMenuEntrySave();
         _sndContext.FlushDeferredActionsForCurrentFrame();
     }
+
+    private void RegisterConsoleCommandHandlers() =>
+        Runtime.Console!.RegisterHandler(new PressButtonCommandHandler(Runtime));
 }
