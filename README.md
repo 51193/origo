@@ -49,7 +49,7 @@ nc localhost 9876
 ```
 
 > **NuGet packages are published via GitHub Releases.** Download the `.nupkg` files
-> from the [latest release](https://github.com/51193/origo.stable/releases/latest),
+> from the [latest release](https://github.com/51193/origo/releases/latest),
 > place them in `./packages/origo/`, and configure `nuget.config` to add the local
 > package source (a sample `nuget.config` is included in the release assets).
 >

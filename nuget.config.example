@@ -3,7 +3,7 @@
   <packageSources>
     <!--
       Download the .nupkg files from the latest GitHub Release:
-      https://github.com/51193/origo.stable/releases/latest
+      https://github.com/51193/origo/releases/latest
       Place them in the directory below (or change the path).
     -->
     <add key="origo-local" value="./packages/origo/" />

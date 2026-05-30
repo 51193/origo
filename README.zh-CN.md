@@ -47,7 +47,7 @@ nc localhost 9876
 ```
 
 > **NuGet 包通过 GitHub Releases 发布**。请从
-> [最新 Release](https://github.com/51193/origo.stable/releases/latest) 下载
+> [最新 Release](https://github.com/51193/origo/releases/latest) 下载
 > `.nupkg` 文件，放入 `./packages/origo/` 目录，并配置 `nuget.config` 添加
 > 本地包源（Release 附件中已包含 `nuget.config` 模板）。
 >
