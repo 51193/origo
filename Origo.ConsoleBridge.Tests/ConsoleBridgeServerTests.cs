@@ -62,7 +62,7 @@ public class ConsoleBridgeServerTests
     }
 
     [Fact]
-    public void Dispose_WhileClientConnected_NoHang()
+    public async Task Dispose_WhileClientConnected_NoHang()
     {
         var (server, _) = CreateStartedServer();
         var port = server.ActualPort;
@@ -70,15 +70,14 @@ public class ConsoleBridgeServerTests
         using var client = new TcpClient();
         client.Connect(IPAddress.Loopback, port);
 
-        // Dispose while Handle Thread is blocking on ReadLine
         var disposed = false;
         var disposeTask = Task.Run(() =>
         {
             server.Dispose();
             disposed = true;
-        });
+        }, TestContext.Current.CancellationToken);
 
-        Assert.True(disposeTask.Wait(TimeSpan.FromMilliseconds(3000)), "Dispose should complete within timeout");
+        await disposeTask.WaitAsync(TimeSpan.FromMilliseconds(3000), TestContext.Current.CancellationToken);
         Assert.True(disposed);
     }
 
@@ -373,7 +372,7 @@ public class ConsoleBridgeServerTests
     }
 
     [Fact]
-    public void OutputChannel_ConcurrentPublish_AllDelivered()
+    public async Task OutputChannel_ConcurrentPublish_AllDelivered()
     {
         var (server, (_, output)) = CreateStartedServer();
         var port = server.ActualPort;
@@ -392,10 +391,10 @@ public class ConsoleBridgeServerTests
             {
                 for (var i = 0; i < 10; i++)
                     output.Publish($"t{prefix}_{i}");
-            });
+            }, TestContext.Current.CancellationToken);
         }
 
-        Task.WaitAll(tasks);
+        await Task.WhenAll(tasks);
 
         var received = new List<string>();
         string? line;
@@ -592,14 +591,14 @@ public class ConsoleBridgeServerTests
             }
 
             pubDone.Set();
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Meanwhile, send commands from client
         for (var i = 0; i < 20; i++)
             writer.WriteLine($"cmd_{i}");
 
         // Wait for publisher to finish
-        Assert.True(pubDone.Wait(CommandTimeoutMs), "Publisher should complete");
+        Assert.True(pubDone.Wait(CommandTimeoutMs, TestContext.Current.CancellationToken), "Publisher should complete");
 
         // All commands should arrive
         SpinUntil(() =>
@@ -649,7 +648,7 @@ public class ConsoleBridgeServerTests
     // ── Agent workflow integration ───────────────────────────────────────
 
     [Fact]
-    public void AgentLoop_OutputArrivesDuringReadWait()
+    public async Task AgentLoop_OutputArrivesDuringReadWait()
     {
         var (server, (input, output)) = CreateStartedServer();
         var port = server.ActualPort;
@@ -659,21 +658,17 @@ public class ConsoleBridgeServerTests
         using var reader = new StreamReader(client.GetStream());
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
-        // Agent sends a command
         writer.WriteLine("help");
         SpinUntil(() => input.TryDequeueCommand(out var l) && l == "help", CommandTimeoutMs);
 
-        // Game processes the command and publishes output
-        // Agent starts reading — output should arrive without agent sending anything else
-        var readTask = Task.Run(() => ReadLineWithTimeout(reader, OutputTimeoutMs));
+        var readTask = Task.Run(() => ReadLineWithTimeout(reader, OutputTimeoutMs),
+            TestContext.Current.CancellationToken);
 
-        // Small delay to ensure readTask is blocked on ReadLine
         Thread.Sleep(50);
 
-        // Now publish the response — agent should receive it immediately
         output.Publish("command result here");
 
-        var response = readTask.Result;
+        var response = await readTask;
         Assert.NotNull(response);
         Assert.Equal("command result here", response);
 
@@ -798,7 +793,7 @@ public class ConsoleBridgeServerTests
     }
 
     [Fact]
-    public void AgentLoop_ConcurrentPublish_DuringReadWait()
+    public async Task AgentLoop_ConcurrentPublish_DuringReadWait()
     {
         var (server, (_, output)) = CreateStartedServer();
         var port = server.ActualPort;
@@ -807,7 +802,6 @@ public class ConsoleBridgeServerTests
         client.Connect(IPAddress.Loopback, port);
         using var reader = new StreamReader(client.GetStream());
 
-        // Start reading in background — simulate agent waiting for output
         var readTask = Task.Run(() =>
         {
             var lines = new List<string>();
@@ -815,9 +809,8 @@ public class ConsoleBridgeServerTests
             while ((line = ReadLineWithTimeout(reader, OutputTimeoutMs)) is not null)
                 lines.Add(line);
             return lines;
-        });
+        }, TestContext.Current.CancellationToken);
 
-        // Simulate game producing output from multiple sources while agent waits
         Thread.Sleep(30);
         output.Publish("log_a");
         Thread.Sleep(10);
@@ -825,7 +818,7 @@ public class ConsoleBridgeServerTests
         Thread.Sleep(10);
         output.Publish("log_c");
 
-        var result = readTask.Result;
+        var result = await readTask;
         Assert.Contains("log_a", result);
         Assert.Contains("log_b", result);
         Assert.Contains("log_c", result);
@@ -859,7 +852,7 @@ public class ConsoleBridgeServerTests
     }
 
     [Fact]
-    public void AgentLoop_Dispose_WhileAgentWaitingForOutput()
+    public async Task AgentLoop_Dispose_WhileAgentWaitingForOutput()
     {
         var (server, _) = CreateStartedServer();
         var port = server.ActualPort;
@@ -867,18 +860,16 @@ public class ConsoleBridgeServerTests
         using var client = new TcpClient();
         client.Connect(IPAddress.Loopback, port);
 
-        // Agent starts waiting for output — will block until dispose closes the connection
         var readTask = Task.Run(() =>
         {
             using var reader = new StreamReader(client.GetStream());
-            reader.ReadLine(); // Returns null when connection closes
-        });
+            reader.ReadLine();
+        }, TestContext.Current.CancellationToken);
 
         Thread.Sleep(50);
         server.Dispose();
 
-        var completed = readTask.Wait(TimeSpan.FromMilliseconds(3000));
-        Assert.True(completed, "Read should return (null) after Dispose closes the connection");
+        await readTask.WaitAsync(TimeSpan.FromMilliseconds(3000), TestContext.Current.CancellationToken);
     }
 
     // ── Helpers ──

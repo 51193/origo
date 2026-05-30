@@ -114,7 +114,7 @@ public partial class OrigoAutoHost : Node
     }
 
     private GodotSndManager CreateAndSetupSndManager(
-        IFileSystem fileSystem,
+        GodotFileSystem fileSystem,
         GodotLogger logger,
         out TypeStringMapping sharedTypeMapping,
         out DataSourceConverterRegistry converterRegistry,
