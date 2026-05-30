@@ -35,6 +35,9 @@ jobs:
         run: dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --no-build --configuration Release --output ./artifacts
         continue-on-error: true
 
+      - name: Pack Origo.ConsoleBridge
+        run: dotnet pack Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --no-build --configuration Release --output ./artifacts
+
       - name: Copy NuGet config to artifacts
         run: cp nuget.config.example ./artifacts/nuget.config
 
