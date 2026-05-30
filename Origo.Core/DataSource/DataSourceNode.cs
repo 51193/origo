@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Origo.Core.DataSource;
 
@@ -238,6 +241,19 @@ public sealed class DataSourceNode : IDisposable
         return bool.Parse(_value!);
     }
 
+    /// <summary>
+    ///     计算整个节点树的 SHA-256 哈希（十六进制小写）。
+    ///     用于写入幂等性校验——同一数据树产生相同 hash。
+    /// </summary>
+    public string ComputeSha256Hash()
+    {
+        EnsureExpanded();
+        var canonical = BuildCanonicalString();
+        var bytes = Encoding.UTF8.GetBytes(canonical);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
     // ── Builder methods ──
 
     public DataSourceNode Add(string key, DataSourceNode child)
@@ -291,6 +307,29 @@ public sealed class DataSourceNode : IDisposable
     // ── Private ──
 
     private void EnsureNotDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
+
+    private string BuildCanonicalString()
+    {
+        return _kind switch
+        {
+            DataSourceNodeKind.Object => "O{" + string.Join(",",
+                _orderedKeys.OrderBy(k => k, StringComparer.Ordinal)
+                    .Select(k => k + "=" + _objectChildren[k].BuildCanonicalString())) + "}",
+            DataSourceNodeKind.Array => "A[" + string.Join(",",
+                _arrayChildren.Select(c => c.BuildCanonicalString())) + "]",
+            DataSourceNodeKind.String => "S\"" + EscapeCanonical(_value) + "\"",
+            DataSourceNodeKind.Number => "N" + _value,
+            DataSourceNodeKind.Boolean => "B" + _value,
+            DataSourceNodeKind.Null => "X",
+            _ => "X"
+        };
+    }
+
+    private static string EscapeCanonical(string? value)
+    {
+        if (value is null) return string.Empty;
+        return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+    }
 
     private void EnsureExpanded()
     {

@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 
@@ -121,6 +124,8 @@ internal static class SavePayloadWriter
             WriteLevelPayload(fileSystem, dataSourceIo, saveRootPath, currentRel, level, true, pathPolicy);
 
         fileSystem.Delete(markerAbs);
+
+        WritePayloadShaFile(fileSystem, saveRootPath, currentRel, payload, pathPolicy);
     }
 
     public static void WriteLevelPayloadOnly(
@@ -232,5 +237,56 @@ internal static class SavePayloadWriter
         foreach (var pair in map)
             root.Add(pair.Key, DataSourceNode.CreateString(pair.Value));
         return root;
+    }
+
+    /// <summary>
+    ///     计算 SaveGamePayload 的内容 SHA-256 摘要（十六进制小写）。
+    ///     将各节点树的哈希、CustomMeta 中的键值对、以及关卡顺序组合后做最终哈希。
+    ///     用于写入幂等性去重判断。
+    /// </summary>
+    internal static string ComputePayloadHash(SaveGamePayload payload)
+    {
+        using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+
+        void Feed(DataSourceNode node)
+        {
+            sha.AppendData(Encoding.UTF8.GetBytes(node.ComputeSha256Hash()));
+        }
+
+        void FeedString(string s)
+        {
+            sha.AppendData(Encoding.UTF8.GetBytes(s));
+        }
+
+        Feed(payload.ProgressNode);
+        Feed(payload.ProgressStateMachinesNode);
+
+        if (payload.CustomMeta is not null)
+            foreach (var kv in payload.CustomMeta.OrderBy(x => x.Key, StringComparer.Ordinal))
+                FeedString($"M:{kv.Key}={kv.Value}");
+
+        foreach (var kv in payload.Levels.OrderBy(x => x.Key, StringComparer.Ordinal))
+        {
+            FeedString($"L:{kv.Key}");
+            Feed(kv.Value.SndSceneNode);
+            Feed(kv.Value.SessionNode);
+            Feed(kv.Value.SessionStateMachinesNode);
+        }
+
+        return Convert.ToHexString(sha.GetHashAndReset()).ToLowerInvariant();
+    }
+
+    private static void WritePayloadShaFile(
+        IFileSystem fileSystem,
+        string saveRootPath,
+        string currentRel,
+        SaveGamePayload payload,
+        ISavePathPolicy pathPolicy)
+    {
+        var hash = ComputePayloadHash(payload);
+        var shaRel = pathPolicy.GetPayloadShaFile(currentRel);
+        var shaAbs = fileSystem.CombinePath(saveRootPath, shaRel);
+        SavePathResolver.EnsureParentDirectory(fileSystem, shaAbs);
+        fileSystem.WriteAllText(shaAbs, hash, true);
     }
 }

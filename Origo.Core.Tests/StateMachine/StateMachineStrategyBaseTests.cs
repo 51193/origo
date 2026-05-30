@@ -45,6 +45,15 @@ public class StateMachineStrategyBaseTests
             EnqueueCount++;
             action();
         }
+
+        public void FlushDeferredActionsForCurrentFrame()
+        {
+        }
+
+        public int GetPendingPersistenceRequestCount()
+        {
+            return 0;
+        }
     }
 }
 

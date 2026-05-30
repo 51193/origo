@@ -1429,8 +1429,10 @@ public class DataSourceTests
             new Dictionary<string, string> { ["a"] = "1", ["b"] = "2" });
         var boxed = (object)dict;
 
+#pragma warning disable CA2263
         var node = registry.Write(typeof(ReadOnlyDictionary<string, string>), boxed);
         var result = registry.Read(typeof(IReadOnlyDictionary<string, string>), node);
+#pragma warning restore CA2263
         var castResult = Assert.IsAssignableFrom<IReadOnlyDictionary<string, string>>(result);
 
         Assert.Equal(2, castResult.Count);
@@ -1444,10 +1446,10 @@ public class DataSourceTests
         var tm = new TypeStringMapping();
         var registry = TestFactory.CreateRegistry(tm);
 
-        var node = registry.Write(typeof(int), 42);
-        var result = registry.Read(typeof(int), node);
+        var node = registry.Write(42);
+        var result = registry.Read<int>(node);
 
-        Assert.Equal(42, (int)result!);
+        Assert.Equal(42, result);
     }
 
     // ── 27. ReadOnlyDictionary blackboard round-trip ──

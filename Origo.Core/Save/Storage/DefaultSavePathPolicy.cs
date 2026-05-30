@@ -28,4 +28,9 @@ internal sealed class DefaultSavePathPolicy : ISavePathPolicy
 
     public string GetWriteInProgressMarker(string baseDirectory) =>
         SavePathLayout.GetWriteInProgressMarker(baseDirectory);
+
+    public string GetPayloadShaFile(string baseDirectory)
+    {
+        return SavePathLayout.GetPayloadShaFile(baseDirectory);
+    }
 }

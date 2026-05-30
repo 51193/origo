@@ -14,6 +14,9 @@ internal static class SavePathLayout
     /// <summary>写入进行中标记文件的名称常量。</summary>
     public const string WriteInProgressMarkerName = ".write_in_progress";
 
+    /// <summary>Payload SHA 摘要文件的名称常量。</summary>
+    public const string PayloadShaFileName = ".payload.sha";
+
     /// <summary>关卡目录名称前缀常量。</summary>
     public const string LevelDirectoryPrefix = "level_";
 
@@ -121,6 +124,17 @@ internal static class SavePathLayout
             throw new ArgumentException("Base directory cannot be null or whitespace.", nameof(baseDirectory));
 
         return Combine(baseDirectory, WriteInProgressMarkerName);
+    }
+
+    /// <summary>
+    ///     获取 Payload SHA 摘要文件的相对路径。
+    /// </summary>
+    public static string GetPayloadShaFile(string baseDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(baseDirectory))
+            throw new ArgumentException("Base directory cannot be null or whitespace.", nameof(baseDirectory));
+
+        return Combine(baseDirectory, PayloadShaFileName);
     }
 
     private static string Combine(string left, string right)

@@ -154,6 +154,34 @@ internal static class SaveStorageFacade
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(pathPolicy);
 
+        // 幂等性去重：若目标快照已存在且内容 hash 未变，直接返回。
+        var snapshotDirRel = pathPolicy.GetSaveDirectory(newSaveId);
+        var snapshotShaRel = pathPolicy.GetPayloadShaFile(snapshotDirRel);
+        var snapshotShaAbs = fileSystem.CombinePath(saveRootPath, snapshotShaRel);
+        if (fileSystem.Exists(snapshotShaAbs))
+        {
+            string existingHash;
+            try
+            {
+                existingHash = fileSystem.ReadAllText(snapshotShaAbs).Trim();
+            }
+            catch (Exception ex)
+            {
+                logger.Log(LogLevel.Warning, nameof(SaveStorageFacade),
+                    $"Failed to read existing payload SHA for save '{newSaveId}'; will overwrite. {ex.Message}");
+                existingHash = string.Empty;
+            }
+
+            var newHash = SavePayloadWriter.ComputePayloadHash(payload);
+            if (existingHash.Length > 0
+                && string.Equals(existingHash, newHash, StringComparison.Ordinal))
+            {
+                logger.Log(LogLevel.Info, nameof(SaveStorageFacade),
+                    $"Idempotent save skip: payload hash unchanged for save '{newSaveId}'.");
+                return;
+            }
+        }
+
         var currentRel = pathPolicy.GetCurrentDirectory();
         var markerRel = pathPolicy.GetWriteInProgressMarker(currentRel);
         var markerAbs = fileSystem.CombinePath(saveRootPath, markerRel);

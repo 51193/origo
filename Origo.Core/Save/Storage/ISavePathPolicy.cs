@@ -35,4 +35,7 @@ public interface ISavePathPolicy
 
     /// <summary>获取写入进行中标记文件的相对路径。</summary>
     string GetWriteInProgressMarker(string baseDirectory);
+
+    /// <summary>获取 Payload SHA 摘要文件的相对路径。</summary>
+    string GetPayloadShaFile(string baseDirectory);
 }

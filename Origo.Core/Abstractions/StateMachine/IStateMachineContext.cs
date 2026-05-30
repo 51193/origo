@@ -1,6 +1,6 @@
-using System;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Abstractions.Snd;
 
 namespace Origo.Core.Abstractions.StateMachine;
 
@@ -27,21 +27,17 @@ namespace Origo.Core.Abstractions.StateMachine;
 ///         </list>
 ///     </para>
 ///     后台或测试场景可自行提供替代实现，从而与具体前台上下文彻底解耦。
+///     <para>
+///         <strong>接口继承：</strong>
+///         继承 <see cref="ISndBlackboardAccess" /> 提供系统/流程黑板访问，
+///         继承 <see cref="ISndDeferredActions" /> 提供延迟动作队列。
+///     </para>
 /// </summary>
-public interface IStateMachineContext
+public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredActions
 {
-    /// <summary>系统级黑板。</summary>
-    IBlackboard SystemBlackboard { get; }
-
-    /// <summary>当前流程级黑板；无活动流程时为 null。</summary>
-    IBlackboard? ProgressBlackboard { get; }
-
     /// <summary>当前会话黑板；无活动会话时为 null。</summary>
     IBlackboard? SessionBlackboard { get; }
 
     /// <summary>当前会话的 SND 场景访问；前后台会话各自返回自身的场景宿主。</summary>
     ISndSceneAccess SceneAccess { get; }
-
-    /// <summary>将业务逻辑延迟动作加入队列。</summary>
-    void EnqueueBusinessDeferred(Action action);
 }
