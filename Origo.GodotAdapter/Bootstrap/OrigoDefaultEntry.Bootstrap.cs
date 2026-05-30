@@ -35,6 +35,9 @@ public partial class OrigoDefaultEntry
         _sndContext.FlushDeferredActionsForCurrentFrame();
     }
 
-    private void RegisterConsoleCommandHandlers() =>
+    private void RegisterConsoleCommandHandlers()
+    {
         Runtime.Console!.RegisterHandler(new PressButtonCommandHandler(Runtime));
+        Runtime.Console!.RegisterHandler(new TreeDebugCommandHandler(Runtime));
+    }
 }
