@@ -17,7 +17,21 @@
         <CompilerVisibleProperty Include="GodotProjectDir"/>
     </ItemGroup>
 
+    <PropertyGroup>
+        <CollectCoverage>true</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <Include>[Origo.GodotAdapter]*</Include>
+        <ExcludeByFile>**/Godot.SourceGenerators/**,**/Snd/GodotSndManager.cs,**/Snd/GodotSndEntity.cs,**/Snd/GodotNodeHandle.cs,**/Snd/GodotPackedSceneNodeFactory.cs,**/FileSystem/GodotFileOperations.cs,**/FileSystem/GodotDirectoryOperations.cs,**/Bootstrap/OrigoAutoHost.cs,**/Bootstrap/OrigoDefaultEntry.cs,**/Bootstrap/OrigoDefaultEntry.Bootstrap.cs,**/Console/TreeDebugCommandHandler.cs</ExcludeByFile>
+        <Threshold>85</Threshold>
+        <ThresholdType>line</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+    </PropertyGroup>
+
     <ItemGroup>
+        <PackageReference Include="coverlet.msbuild" Version="6.0.2">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
         <PackageReference Include="xunit.v3" Version="3.2.2"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">

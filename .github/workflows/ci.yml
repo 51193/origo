@@ -18,6 +18,10 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # scripts/ci.sh: restore + build + dotnet test; Origo.Core.Tests runs Coverlet (line >= 90% gate).
-      - name: CI — build, tests, Origo.Core line coverage (>=90% via Coverlet)
+      # scripts/ci.sh: restore + build + dotnet test; all three test projects run Coverlet.
+      # Coverage gates:
+      #   Origo.Core          >= 90% line
+      #   Origo.ConsoleBridge >= 80% line
+      #   Origo.GodotAdapter  >= 85% line (testable subset, engine-dependent code excluded)
+      - name: CI — build, tests, line coverage gates (Core >= 90%, ConsoleBridge >= 80%, GodotAdapter >= 85%)
         run: bash scripts/ci.sh

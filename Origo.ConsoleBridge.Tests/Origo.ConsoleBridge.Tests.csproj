@@ -9,7 +9,20 @@
         <NoWarn>$(NoWarn);CA1707;CA1861;CA1845</NoWarn>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <CollectCoverage>true</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <Include>[Origo.ConsoleBridge]*</Include>
+        <Threshold>80</Threshold>
+        <ThresholdType>line</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+    </PropertyGroup>
+
     <ItemGroup>
+        <PackageReference Include="coverlet.msbuild" Version="6.0.2">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
         <PackageReference Include="xunit.v3" Version="3.2.2"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">

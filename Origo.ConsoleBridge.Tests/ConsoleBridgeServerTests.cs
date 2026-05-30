@@ -872,6 +872,90 @@ public class ConsoleBridgeServerTests
         await readTask.WaitAsync(TimeSpan.FromMilliseconds(3000), TestContext.Current.CancellationToken);
     }
 
+    // ── Constructor guards ─────────────────────────────────────────────
+
+    [Fact]
+    public void Constructor_NullInput_Throws()
+    {
+        var output = new ConsoleOutputChannel();
+
+        Assert.Throws<ArgumentNullException>(() =>
+            new ConsoleBridgeServer(null!, output));
+    }
+
+    [Fact]
+    public void Constructor_NullOutput_Throws()
+    {
+        var input = new ConsoleInputQueue();
+
+        Assert.Throws<ArgumentNullException>(() =>
+            new ConsoleBridgeServer(input, null!));
+    }
+
+    [Fact]
+    public void Constructor_DefaultOptions_HasExpectedPort()
+    {
+        var input = new ConsoleInputQueue();
+        var output = new ConsoleOutputChannel();
+
+        var server = new ConsoleBridgeServer(input, output);
+        server.Start();
+        Assert.True(server.ActualPort > 0);
+        server.Dispose();
+    }
+
+    [Fact]
+    public void Constructor_CustomPort_StoredInOptions()
+    {
+        var input = new ConsoleInputQueue();
+        var output = new ConsoleOutputChannel();
+        var options = new ConsoleBridgeOptions { Port = 9876 };
+
+        var server = new ConsoleBridgeServer(input, output, options);
+        server.Start();
+        Assert.Equal(9876, server.ActualPort);
+        server.Dispose();
+    }
+
+    // ── Start idempotency ─────────────────────────────────────────────
+
+    [Fact]
+    public void Start_CalledTwice_DoesNotThrow()
+    {
+        var input = new ConsoleInputQueue();
+        var output = new ConsoleOutputChannel();
+        var server = new ConsoleBridgeServer(input, output);
+        server.Start();
+        server.Start(); // second call should be a no-op
+        server.Dispose();
+    }
+
+    [Fact]
+    public void Start_CalledTwice_PortRemainsSame()
+    {
+        var input = new ConsoleInputQueue();
+        var output = new ConsoleOutputChannel();
+        var server = new ConsoleBridgeServer(input, output);
+        server.Start();
+        var port1 = server.ActualPort;
+        server.Start(); // second call should be a no-op
+        var port2 = server.ActualPort;
+        Assert.Equal(port1, port2);
+        server.Dispose();
+    }
+
+    [Fact]
+    public void Dispose_BeforeStart_DoesNotThrow()
+    {
+        var input = new ConsoleInputQueue();
+        var output = new ConsoleOutputChannel();
+        var server = new ConsoleBridgeServer(input, output);
+
+        var ex = Record.Exception(() => server.Dispose());
+
+        Assert.Null(ex);
+    }
+
     // ── Helpers ──
 
     private static (ConsoleBridgeServer server, (ConsoleInputQueue input, ConsoleOutputChannel output) queues)
