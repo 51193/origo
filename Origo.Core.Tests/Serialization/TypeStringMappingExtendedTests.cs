@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -76,6 +78,20 @@ public class TypeStringMappingExtendedTests
         mapping.RegisterType<Guid>("Guid");
         Assert.Equal(typeof(Guid), mapping.GetTypeByName("Guid"));
         Assert.Equal("Guid", mapping.GetNameByType(typeof(Guid)));
+    }
+
+    [Fact]
+    public void TypeStringMapping_ReadOnlyDictionaryTypes_Preregistered()
+    {
+        var mapping = new TypeStringMapping();
+        Assert.Equal(typeof(IReadOnlyDictionary<string, string>),
+            mapping.GetTypeByName(BclTypeNames.IReadOnlyDictionaryStringString));
+        Assert.Equal(typeof(ReadOnlyDictionary<string, string>),
+            mapping.GetTypeByName(BclTypeNames.ReadOnlyDictionaryStringString));
+        Assert.Equal(BclTypeNames.ReadOnlyDictionaryStringString,
+            mapping.GetNameByType(typeof(ReadOnlyDictionary<string, string>)));
+        Assert.Equal(BclTypeNames.IReadOnlyDictionaryStringString,
+            mapping.GetNameByType(typeof(IReadOnlyDictionary<string, string>)));
     }
 }
 

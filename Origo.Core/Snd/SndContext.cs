@@ -167,6 +167,11 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         EnqueueBusinessDeferred(() => { EnsureProgressRun().SwitchForeground(newLevelId); });
     }
 
+    public void RequestClearEntities()
+    {
+        EnqueueBusinessDeferred(() => Runtime.Snd.ClearAll());
+    }
+
     public bool HasContinueData()
     {
         var (found, saveId) = SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);

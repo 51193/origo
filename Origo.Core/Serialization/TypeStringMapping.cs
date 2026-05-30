@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Origo.Core.Serialization;
 
@@ -45,6 +46,10 @@ public sealed class TypeStringMapping
         RegisterType<bool[]>(BclTypeNames.ArrayBoolean);
         RegisterType<char[]>(BclTypeNames.ArrayChar);
         RegisterType<string[]>(BclTypeNames.ArrayString);
+
+        // Immutable collection types
+        RegisterType<IReadOnlyDictionary<string, string>>(BclTypeNames.IReadOnlyDictionaryStringString);
+        RegisterType<ReadOnlyDictionary<string, string>>(BclTypeNames.ReadOnlyDictionaryStringString);
     }
 
     public void RegisterType<T>(string typeName)

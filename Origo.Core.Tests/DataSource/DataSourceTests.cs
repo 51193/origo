@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Origo.Core.DataSource;
 using Origo.Core.DataSource.Converters;
@@ -1414,5 +1415,75 @@ public class DataSourceTests
 
         Assert.Equal(DataSourceNodeKind.Object, node.Kind);
         Assert.Empty(node.Keys);
+    }
+
+    // ── 26. DataSourceConverterRegistry type hierarchy fallback ──
+
+    [Fact]
+    public void ConverterRegistry_TypeHierarchyFallback_FindsInterfaceConverterForConcreteType()
+    {
+        var tm = new TypeStringMapping();
+        var registry = TestFactory.CreateRegistry(tm);
+
+        var dict = new ReadOnlyDictionary<string, string>(
+            new Dictionary<string, string> { ["a"] = "1", ["b"] = "2" });
+        var boxed = (object)dict;
+
+        var node = registry.Write(typeof(ReadOnlyDictionary<string, string>), boxed);
+        var result = registry.Read(typeof(IReadOnlyDictionary<string, string>), node);
+        var castResult = Assert.IsAssignableFrom<IReadOnlyDictionary<string, string>>(result);
+
+        Assert.Equal(2, castResult.Count);
+        Assert.Equal("1", castResult["a"]);
+        Assert.Equal("2", castResult["b"]);
+    }
+
+    [Fact]
+    public void ConverterRegistry_TypeHierarchyFallback_ExactTypeMatchStillWorks()
+    {
+        var tm = new TypeStringMapping();
+        var registry = TestFactory.CreateRegistry(tm);
+
+        var node = registry.Write(typeof(int), 42);
+        var result = registry.Read(typeof(int), node);
+
+        Assert.Equal(42, (int)result!);
+    }
+
+    // ── 27. ReadOnlyDictionary blackboard round-trip ──
+
+    [Fact]
+    public void ReadOnlyDictionary_BlackboardRoundTrip_SurvivesSerialization()
+    {
+        var tm = new TypeStringMapping();
+        var registry = TestFactory.CreateRegistry(tm);
+
+        var original = new Blackboard.Blackboard();
+        original.Set<IReadOnlyDictionary<string, string>>("map", new ReadOnlyDictionary<string, string>(
+            new Dictionary<string, string> { ["x"] = "10", ["y"] = "20" }));
+
+        var serialized = original.SerializeAll();
+        var node = registry.Write(serialized);
+        var restoredDict = registry.Read<IReadOnlyDictionary<string, TypedData>>(node);
+        var restored = new Blackboard.Blackboard();
+        restored.DeserializeAll(restoredDict);
+
+        var (found, value) = restored.TryGet<IReadOnlyDictionary<string, string>>("map");
+        Assert.True(found);
+        Assert.NotNull(value);
+        Assert.Equal(2, value!.Count);
+        Assert.Equal("10", value["x"]);
+        Assert.Equal("20", value["y"]);
+    }
+
+    [Fact]
+    public void TypeStringMapping_RegistersReadOnlyDictionary()
+    {
+        var tm = new TypeStringMapping();
+
+        Assert.Equal(typeof(ReadOnlyDictionary<string, string>),
+            tm.GetTypeByName(BclTypeNames.ReadOnlyDictionaryStringString));
+        Assert.Equal(typeof(IReadOnlyDictionary<string, string>),
+            tm.GetTypeByName(BclTypeNames.IReadOnlyDictionaryStringString));
     }
 }

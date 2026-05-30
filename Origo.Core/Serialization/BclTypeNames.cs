@@ -35,4 +35,8 @@ internal static class BclTypeNames
     internal const string ArrayBoolean = "ArrayBoolean";
     internal const string ArrayChar = "ArrayChar";
     internal const string ArrayString = "ArrayString";
+
+    // Immutable collection types
+    internal const string ReadOnlyDictionaryStringString = "ReadOnlyDictionaryStringString";
+    internal const string IReadOnlyDictionaryStringString = "IReadOnlyDictionaryStringString";
 }

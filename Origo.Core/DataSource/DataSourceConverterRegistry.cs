@@ -32,12 +32,7 @@ public sealed class DataSourceConverterRegistry
     public object? Read(Type type, DataSourceNode node)
     {
         ArgumentNullException.ThrowIfNull(type);
-
-        if (!_converters.TryGetValue(type, out var converter))
-            throw new InvalidOperationException(
-                $"No DataSourceConverter registered for type '{type.FullName}'.");
-
-        return converter.ReadObject(node);
+        return FindConverter(type).ReadObject(node);
     }
 
     public DataSourceNode Write(Type type, object? value)
@@ -47,10 +42,23 @@ public sealed class DataSourceConverterRegistry
         if (value is null)
             return DataSourceNode.CreateNull();
 
-        if (!_converters.TryGetValue(type, out var converter))
-            throw new InvalidOperationException(
-                $"No DataSourceConverter registered for type '{type.FullName}'.");
+        return FindConverter(type).WriteObject(value);
+    }
 
-        return converter.WriteObject(value);
+    private DataSourceConverterBase FindConverter(Type type)
+    {
+        if (_converters.TryGetValue(type, out var converter))
+            return converter;
+
+        for (var t = type.BaseType; t is not null; t = t.BaseType)
+            if (_converters.TryGetValue(t, out converter))
+                return converter;
+
+        foreach (var iface in type.GetInterfaces())
+            if (_converters.TryGetValue(iface, out converter))
+                return converter;
+
+        throw new InvalidOperationException(
+            $"No DataSourceConverter registered for type '{type.FullName}'.");
     }
 }

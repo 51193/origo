@@ -66,6 +66,14 @@ public class SessionSndContextExtendedTests
     }
 
     [Fact]
+    public void RequestClearEntities_DelegatesToGlobal()
+    {
+        var (ctx, global) = Create();
+        ctx.RequestClearEntities();
+        Assert.True(global.CallCount > 0);
+    }
+
+    [Fact]
     public void HasContinueData_DelegatesToGlobal()
     {
         var (ctx, global) = Create();
@@ -184,6 +192,11 @@ public class SessionSndContextExtendedTests
         public void SetContinueTarget(string saveId) => CallCount++;
 
         public void RequestSwitchForegroundLevel(string newLevelId) => CallCount++;
+
+        public void RequestClearEntities()
+        {
+            CallCount++;
+        }
 
         public bool HasContinueData()
         {

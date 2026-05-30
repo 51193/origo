@@ -70,18 +70,18 @@ public class ConsoleCommandExtendedTests
         Assert.Contains("参数数量不合法", messages[0]);
     }
 
-    // ── clear_entities ──
+    // ── request_clear_entities ──
 
     [Fact]
     public void ClearEntitiesCommand_ClearsAll()
     {
         var (runtime, input, _, messages) = CreateConsoleRuntime();
 
-        input.Enqueue("clear_entities");
+        input.Enqueue("request_clear_entities");
         runtime.Console!.ProcessPending();
 
         Assert.Single(messages);
-        Assert.Contains("Cleared 0 entities", messages[0]);
+        Assert.Contains("Requested clear of 0 entities (deferred to end of frame).", messages[0]);
     }
 
     // ── bb_set / bb_get / bb_keys ──

@@ -133,6 +133,11 @@ public class ContextBoundaryTests
 
         public void RequestSwitchForegroundLevel(string newLevelId) => CallCount++;
 
+        public void RequestClearEntities()
+        {
+            CallCount++;
+        }
+
         public bool HasContinueData()
         {
             CallCount++;

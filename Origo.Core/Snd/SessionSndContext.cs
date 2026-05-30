@@ -60,6 +60,11 @@ internal sealed class SessionSndContext : ISndContext
 
     public void RequestSwitchForegroundLevel(string newLevelId) => _global.RequestSwitchForegroundLevel(newLevelId);
 
+    public void RequestClearEntities()
+    {
+        _global.RequestClearEntities();
+    }
+
     public bool HasContinueData() => _global.HasContinueData();
 
     public bool RequestContinueGame() => _global.RequestContinueGame();

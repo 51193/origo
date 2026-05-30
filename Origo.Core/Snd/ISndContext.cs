@@ -121,6 +121,9 @@ public interface ISndContext
     /// <summary>请求切换前台关卡。</summary>
     void RequestSwitchForegroundLevel(string newLevelId);
 
+    /// <summary>请求清理当前场景中所有实体（帧末延迟执行，与 RequestSaveGame / RequestSwitchForegroundLevel 等对齐）。</summary>
+    void RequestClearEntities();
+
     // ── Session lifecycle ──────────────────────────────────────────────
 
     /// <summary>是否存在可继续游戏的目标存档。</summary>

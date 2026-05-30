@@ -36,6 +36,7 @@ public class NullSndContextExtendedTests
         Assert.Throws<InvalidOperationException>(() => ctx.RequestSaveGame("any"));
         Assert.Throws<InvalidOperationException>(() => ctx.SetContinueTarget("any"));
         Assert.Throws<InvalidOperationException>(() => ctx.RequestSwitchForegroundLevel("level"));
+        Assert.Throws<InvalidOperationException>(() => ctx.RequestClearEntities());
         Assert.Throws<InvalidOperationException>(() => ctx.RequestLoadInitialSave());
         Assert.Throws<InvalidOperationException>(() => ctx.RequestLoadMainMenuEntrySave());
 

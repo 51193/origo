@@ -112,6 +112,15 @@ internal sealed class StrategyTestContext : ISndContext
 
     public void RequestSwitchForegroundLevel(string newLevelId) => LevelSwitchRequests.Add(newLevelId);
 
+    public void RequestClearEntities()
+    {
+        EnqueueBusinessDeferred(() =>
+        {
+            if (CurrentSession?.SceneHost is ISndSceneHost host)
+                host.ClearAll();
+        });
+    }
+
     public bool HasContinueData() => false;
 
     public bool RequestContinueGame() => false;
