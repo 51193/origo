@@ -37,7 +37,11 @@ public sealed class SndMetaData
                 },
             StrategyMetaData = StrategyMetaData is null
                 ? null
-                : new StrategyMetaData { Indices = new List<string>(StrategyMetaData.Indices) },
+                : new StrategyMetaData
+                {
+                    EntityIndices = new List<string>(StrategyMetaData.EntityIndices),
+                    ActiveIndices = new List<string>(StrategyMetaData.ActiveIndices)
+                },
             DataMetaData = DataMetaData is null
                 ? null
                 : new DataMetaData

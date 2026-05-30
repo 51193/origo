@@ -35,21 +35,30 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
     {
         var meta = new StrategyMetaData();
 
-        if (node.TryGetValue("indices", out var indicesNode) && indicesNode is not null && !indicesNode.IsNull)
-            foreach (var element in indicesNode.Elements)
-                meta.Indices.Add(element.AsString());
+        if (node.TryGetValue("entity_indices", out var entityNode) && entityNode is not null && !entityNode.IsNull)
+            foreach (var element in entityNode.Elements)
+                meta.EntityIndices.Add(element.AsString());
+
+        if (node.TryGetValue("active_indices", out var activeNode) && activeNode is not null && !activeNode.IsNull)
+            foreach (var element in activeNode.Elements)
+                meta.ActiveIndices.Add(element.AsString());
 
         return meta;
     }
 
     public override DataSourceNode Write(StrategyMetaData value)
     {
-        var indices = DataSourceNode.CreateArray();
-        foreach (var index in value.Indices)
-            indices.Add(DataSourceNode.CreateString(index));
+        var entityIndices = DataSourceNode.CreateArray();
+        foreach (var index in value.EntityIndices)
+            entityIndices.Add(DataSourceNode.CreateString(index));
+
+        var activeIndices = DataSourceNode.CreateArray();
+        foreach (var index in value.ActiveIndices)
+            activeIndices.Add(DataSourceNode.CreateString(index));
 
         return DataSourceNode.CreateObject()
-            .Add("indices", indices);
+            .Add("entity_indices", entityIndices)
+            .Add("active_indices", activeIndices);
     }
 }
 

@@ -16,6 +16,7 @@ namespace Origo.Core.Snd.Entity;
 public sealed class SndEntity : ISndEntity
 {
     private const string LogTag = nameof(SndEntity);
+    private readonly ActiveStrategyManager _activeStrategyManager;
     private readonly ISndContext _context;
     private readonly SndDataManager _dataManager;
     private readonly ILogger _logger;
@@ -40,6 +41,7 @@ public sealed class SndEntity : ISndEntity
         _dataManager = new SndDataManager(this, logger);
         _nodeHost = new SndNodeManager(nodeFactory, mappings, logger);
         _strategyManager = new SndStrategyManager(strategyPool, logger);
+        _activeStrategyManager = new ActiveStrategyManager(strategyPool);
     }
 
     public string Name { get; private set; } = string.Empty;
@@ -65,11 +67,28 @@ public sealed class SndEntity : ISndEntity
 
     public void RemoveStrategy(string index) => _strategyManager.Remove(this, index, _context);
 
+    public void AddActiveStrategy(string index)
+    {
+        _activeStrategyManager.Add(index);
+    }
+
+    public void RemoveActiveStrategy(string index)
+    {
+        _activeStrategyManager.Remove(index);
+    }
+
+    public object? InvokeStrategy(string strategyIndex, object? input = null)
+    {
+        return _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
+    }
+
     public void Load(SndMetaData metaData)
     {
         RecoverFromMetaData(metaData);
         _strategyManager.Load(
-            metaData.StrategyMetaData?.Indices ?? Enumerable.Empty<string>(), this, _context);
+            metaData.StrategyMetaData?.EntityIndices ?? Enumerable.Empty<string>(), this, _context);
+        _activeStrategyManager.Recover(
+            metaData.StrategyMetaData?.ActiveIndices ?? Enumerable.Empty<string>());
         _logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity loaded."));
     }
@@ -78,13 +97,16 @@ public sealed class SndEntity : ISndEntity
     {
         RecoverFromMetaData(metaData);
         _strategyManager.Spawn(
-            metaData.StrategyMetaData?.Indices ?? Enumerable.Empty<string>(), this, _context);
+            metaData.StrategyMetaData?.EntityIndices ?? Enumerable.Empty<string>(), this, _context);
+        _activeStrategyManager.Recover(
+            metaData.StrategyMetaData?.ActiveIndices ?? Enumerable.Empty<string>());
         _logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity spawned."));
     }
 
     public void Quit()
     {
+        _activeStrategyManager.ReleaseAll();
         _strategyManager.Quit(this, _context);
         Teardown();
         _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity quit."));
@@ -92,6 +114,7 @@ public sealed class SndEntity : ISndEntity
 
     public void Dead()
     {
+        _activeStrategyManager.ReleaseAll();
         _strategyManager.Dead(this, _context);
         Teardown();
         _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity dead."));
@@ -99,7 +122,8 @@ public sealed class SndEntity : ISndEntity
 
     public SndMetaData SerializeMetaData()
     {
-        var strategyIndices = _strategyManager.SerializeIndices(this, _context);
+        var entityIndices = _strategyManager.SerializeIndices(this, _context);
+        var activeIndices = _activeStrategyManager.SerializeIndices();
 
         return new SndMetaData
         {
@@ -107,7 +131,8 @@ public sealed class SndEntity : ISndEntity
             NodeMetaData = _nodeHost.SerializeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                Indices = new List<string>(strategyIndices)
+                EntityIndices = new List<string>(entityIndices),
+                ActiveIndices = new List<string>(activeIndices)
             },
             DataMetaData = _dataManager.SerializeMeta()
         };

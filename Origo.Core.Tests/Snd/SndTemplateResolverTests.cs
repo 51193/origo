@@ -17,7 +17,7 @@ public class SndTemplateResolverTests
             """
             {
               "name": "EnemyTemplate",
-              "strategy": { "indices": [ "enemy.ai" ] },
+              "strategy": { "entity_indices": [ "enemy.ai" ] },
               "node": { "pairs": { "root": "enemy" } },
               "data": { "pairs": { "hp": { "type": "Int32", "data": 50 } } }
             }

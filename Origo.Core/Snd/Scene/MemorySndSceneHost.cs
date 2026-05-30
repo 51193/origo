@@ -140,4 +140,22 @@ internal sealed class MemorySndEntity : ISndEntity
     {
         // No-op in memory entity.
     }
+
+    /// <inheritdoc />
+    public void AddActiveStrategy(string index)
+    {
+        // No-op in memory entity.
+    }
+
+    /// <inheritdoc />
+    public void RemoveActiveStrategy(string index)
+    {
+        // No-op in memory entity.
+    }
+
+    /// <inheritdoc />
+    public object? InvokeStrategy(string strategyIndex, object? input = null)
+    {
+        return null;
+    }
 }

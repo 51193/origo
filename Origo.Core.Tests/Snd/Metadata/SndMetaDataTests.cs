@@ -35,11 +35,11 @@ public class SndMetaDataTests
         var meta = new SndMetaData
         {
             Name = "entity",
-            StrategyMetaData = new StrategyMetaData { Indices = new List<string> { "strat1", "strat2" } }
+            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string> { "strat1", "strat2" } }
         };
         var clone = meta.DeepClone();
-        Assert.NotSame(meta.StrategyMetaData!.Indices, clone.StrategyMetaData!.Indices);
-        Assert.Equal(2, clone.StrategyMetaData.Indices.Count);
+        Assert.NotSame(meta.StrategyMetaData!.EntityIndices, clone.StrategyMetaData!.EntityIndices);
+        Assert.Equal(2, clone.StrategyMetaData.EntityIndices.Count);
     }
 
     [Fact]

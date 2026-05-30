@@ -20,7 +20,7 @@ public class SndContextEntryFlowTests
               {
                 "name": "EntryNpc",
                 "node": { "pairs": {} },
-                "strategy": { "indices": [] },
+                "strategy": { "entity_indices": [] },
                 "data": { "pairs": {} }
               }
             ]

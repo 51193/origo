@@ -103,6 +103,24 @@ public partial class GodotSndEntity : Node, ISndEntity
         _entity!.RemoveStrategy(index);
     }
 
+    public void AddActiveStrategy(string index)
+    {
+        EnsureEntity();
+        _entity!.AddActiveStrategy(index);
+    }
+
+    public void RemoveActiveStrategy(string index)
+    {
+        EnsureEntity();
+        _entity!.RemoveActiveStrategy(index);
+    }
+
+    public object? InvokeStrategy(string strategyIndex, object? input = null)
+    {
+        EnsureEntity();
+        return _entity!.InvokeStrategy(strategyIndex, input);
+    }
+
     public TNode? GetNodeFromSnd<TNode>(string name) where TNode : Node
     {
         var handle = GetNode(name);

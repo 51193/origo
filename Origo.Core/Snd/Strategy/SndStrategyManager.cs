@@ -100,8 +100,14 @@ internal sealed class SndStrategyManager
         try
         {
             foreach (var index in indices)
-                InsertSorted(new StrategyEntry
-                    { Index = index, Strategy = _pool.GetStrategy<EntityStrategyBase>(index) });
+            {
+                var strategy = _pool.GetStrategy<BaseStrategy>(index);
+                if (strategy is EntityStrategyBase entityStrategy)
+                    InsertSorted(new StrategyEntry
+                        { Index = index, Strategy = entityStrategy });
+                else
+                    _pool.ReleaseStrategy(index);
+            }
         }
         catch
         {

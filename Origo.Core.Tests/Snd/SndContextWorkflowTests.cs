@@ -286,7 +286,7 @@ public class SndContextWorkflowTests
               {
                 "name": "{{name}}",
                 "node": { "pairs": {} },
-                "strategy": { "indices": [] },
+                "strategy": { "entity_indices": [] },
                 "data": { "pairs": {} }
               }
               """);

@@ -48,6 +48,19 @@ public class PressButtonCommandHandlerTests
         public void RemoveStrategy(string index)
         {
         }
+
+        public void AddActiveStrategy(string index)
+        {
+        }
+
+        public void RemoveActiveStrategy(string index)
+        {
+        }
+
+        public object? InvokeStrategy(string strategyIndex, object? input = null)
+        {
+            return null;
+        }
     }
 
     private static CommandInvocation MakeInvocation(string entityName, string buttonPath)

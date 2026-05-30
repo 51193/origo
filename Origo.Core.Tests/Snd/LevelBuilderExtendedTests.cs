@@ -133,7 +133,7 @@ public class LevelBuilderExtendedTests
             {
               "name": "TemplateEntity",
               "node": { "pairs": {} },
-              "strategy": { "indices": [] },
+              "strategy": { "entity_indices": [] },
               "data": { "pairs": {} }
             }
             """);

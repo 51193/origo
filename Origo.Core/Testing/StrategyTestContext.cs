@@ -179,6 +179,20 @@ internal sealed class MinimalTestEntity : ISndEntity
     public void RemoveStrategy(string index)
     {
     }
+
+    public void AddActiveStrategy(string index)
+    {
+    }
+
+    public void RemoveActiveStrategy(string index)
+    {
+    }
+
+    public object? InvokeStrategy(string strategyIndex, object? input = null)
+    {
+        throw new InvalidOperationException(
+            "InvokeStrategy with test doubles is not supported; use ActiveStrategyTestScenario instead.");
+    }
 }
 
 internal sealed class TestSessionManager : ISessionManager

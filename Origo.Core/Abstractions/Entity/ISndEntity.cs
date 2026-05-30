@@ -5,7 +5,7 @@ namespace Origo.Core.Abstractions.Entity;
 ///     继承 <see cref="ISndDataAccess" />、<see cref="ISndNodeAccess" /> 和
 ///     <see cref="ISndStrategyAccess" /> 以保持向后兼容。
 /// </summary>
-public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess
+public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess, ISndActiveStrategyAccess
 {
     /// <summary>
     ///     稳定的实体名（对应 <see cref="Snd.Metadata.SndMetaData.Name" />），可用于场景内查找与跨系统引用。

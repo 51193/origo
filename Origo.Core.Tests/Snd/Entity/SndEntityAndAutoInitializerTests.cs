@@ -29,7 +29,7 @@ public class SndEntityAndAutoInitializerTests
             Name = "Player",
             NodeMetaData = new NodeMetaData
                 { Pairs = new Dictionary<string, string> { ["root"] = "res://player.tscn" } },
-            StrategyMetaData = new StrategyMetaData { Indices = new List<string> { LifecycleStrategyIndex } },
+            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string> { LifecycleStrategyIndex } },
             DataMetaData = new DataMetaData
             {
                 Pairs = new Dictionary<string, TypedData> { ["hp"] = new(typeof(int), 10) }
@@ -74,7 +74,7 @@ public class SndEntityAndAutoInitializerTests
         {
             Name = "E",
             NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string> { ["root"] = "res://e.tscn" } },
-            StrategyMetaData = new StrategyMetaData { Indices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string>() },
             DataMetaData = new DataMetaData()
         });
 
@@ -98,10 +98,10 @@ public class SndEntityAndAutoInitializerTests
             { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 
         entity.AddStrategy(LifecycleStrategyIndex);
-        Assert.Contains(LifecycleStrategyIndex, entity.SerializeMetaData().StrategyMetaData!.Indices);
+        Assert.Contains(LifecycleStrategyIndex, entity.SerializeMetaData().StrategyMetaData!.EntityIndices);
 
         entity.RemoveStrategy(LifecycleStrategyIndex);
-        Assert.DoesNotContain(LifecycleStrategyIndex, entity.SerializeMetaData().StrategyMetaData!.Indices);
+        Assert.DoesNotContain(LifecycleStrategyIndex, entity.SerializeMetaData().StrategyMetaData!.EntityIndices);
 
         // Removing a missing strategy should not throw.
         entity.RemoveStrategy(LifecycleStrategyIndex);
@@ -134,7 +134,7 @@ public class SndEntityAndAutoInitializerTests
               {
                 "name": "BootEntity",
                 "node": { "pairs": { "root": "res://boot.tscn" } },
-                "strategy": { "indices": [] },
+                "strategy": { "entity_indices": [] },
                 "data": { "pairs": { "ready": { "type": "Boolean", "data": true } } }
               }
             ]
