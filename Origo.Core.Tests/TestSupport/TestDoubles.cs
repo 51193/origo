@@ -319,6 +319,16 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     public void ProcessAll(double delta)
     {
     }
+
+    public void DeadByName(string name)
+    {
+        var entity = _entities.FirstOrDefault(e => e.Name == name);
+        if (entity is not null)
+        {
+            entity.Kill();
+            _entities.Remove(entity);
+        }
+    }
 }
 
 internal sealed class DummySndEntity : ISndEntity
@@ -376,7 +386,11 @@ internal sealed class DummySndEntity : ISndEntity
 
     public object? InvokeStrategy(string strategyIndex, object? input = null)
     {
-        return null;
+        throw new InvalidOperationException("InvokeStrategy not supported on DummySndEntity.");
+    }
+
+    public void Kill()
+    {
     }
 }
 

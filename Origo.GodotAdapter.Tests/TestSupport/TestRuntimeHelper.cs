@@ -37,6 +37,15 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     }
 
     public void AddEntity(ISndEntity entity) => _entities[entity.Name] = entity;
+
+    public void DeadByName(string name)
+    {
+        if (_entities.TryGetValue(name, out var entity))
+        {
+            entity.Kill();
+            _entities.Remove(name);
+        }
+    }
 }
 
 internal sealed class TestLogger : ILogger

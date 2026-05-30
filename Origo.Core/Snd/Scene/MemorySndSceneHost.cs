@@ -65,6 +65,19 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
     {
         // No-op: MemorySndSceneHost does not support process updates.
     }
+
+    /// <inheritdoc />
+    public void DeadByName(string name)
+    {
+        var index = _entities.FindIndex(e => string.Equals(e.Name, name, StringComparison.Ordinal));
+        if (index < 0)
+            return;
+
+        var entity = _entities[index];
+        entity.Kill();
+        _entities.RemoveAt(index);
+        _metaList.RemoveAt(index);
+    }
 }
 
 /// <summary>
@@ -157,5 +170,10 @@ internal sealed class MemorySndEntity : ISndEntity
     public object? InvokeStrategy(string strategyIndex, object? input = null)
     {
         return null;
+    }
+
+    public void Kill()
+    {
+        // No-op in memory entity.
     }
 }

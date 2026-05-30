@@ -121,6 +121,15 @@ internal sealed class StrategyTestContext : ISndContext
         });
     }
 
+    public void RequestKillEntity(string entityName)
+    {
+        EnqueueBusinessDeferred(() =>
+        {
+            if (CurrentSession?.SceneHost is ISndSceneHost host)
+                host.DeadByName(entityName);
+        });
+    }
+
     public bool HasContinueData() => false;
 
     public bool RequestContinueGame() => false;
@@ -192,6 +201,11 @@ internal sealed class MinimalTestEntity : ISndEntity
     {
         throw new InvalidOperationException(
             "InvokeStrategy with test doubles is not supported; use ActiveStrategyTestScenario instead.");
+    }
+
+    public void Kill()
+    {
+        throw new InvalidOperationException("Kill with test doubles is not supported; use integration tests instead.");
     }
 }
 
@@ -273,4 +287,11 @@ internal sealed class TestSceneHost : ISndSceneHost
     }
 
     public void ClearAll() => _entities.Clear();
+
+    public void DeadByName(string name)
+    {
+        var entity = _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
+        if (entity is not null)
+            _entities.Remove(entity);
+    }
 }

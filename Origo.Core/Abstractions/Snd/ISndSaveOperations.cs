@@ -30,4 +30,10 @@ public interface ISndSaveOperations
     ///     与 RequestSaveGame / RequestSwitchForegroundLevel 等对齐）。
     /// </summary>
     void RequestClearEntities();
+
+    /// <summary>
+    ///     请求按名称销毁单个实体（帧末延迟执行）。
+    ///     若实体不存在则静默忽略。
+    /// </summary>
+    void RequestKillEntity(string entityName);
 }

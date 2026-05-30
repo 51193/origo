@@ -172,6 +172,13 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         EnqueueBusinessDeferred(() => Runtime.Snd.ClearAll());
     }
 
+    public void RequestKillEntity(string entityName)
+    {
+        if (string.IsNullOrWhiteSpace(entityName))
+            throw new ArgumentException("Entity name cannot be null or whitespace.", nameof(entityName));
+        EnqueueBusinessDeferred(() => Runtime.Snd.SceneHost.DeadByName(entityName));
+    }
+
     public bool HasContinueData()
     {
         var (found, saveId) = SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);

@@ -61,6 +61,10 @@ public class PressButtonCommandHandlerTests
         {
             return null;
         }
+
+        public void Kill()
+        {
+        }
     }
 
     private static CommandInvocation MakeInvocation(string entityName, string buttonPath)

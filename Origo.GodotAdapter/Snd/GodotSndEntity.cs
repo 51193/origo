@@ -121,6 +121,12 @@ public partial class GodotSndEntity : Node, ISndEntity
         return _entity!.InvokeStrategy(strategyIndex, input);
     }
 
+    public void Kill()
+    {
+        EnsureEntity();
+        _entity!.Kill();
+    }
+
     public TNode? GetNodeFromSnd<TNode>(string name) where TNode : Node
     {
         var handle = GetNode(name);
@@ -179,7 +185,7 @@ public partial class GodotSndEntity : Node, ISndEntity
         _releasedFromManager = true;
         if (_entity is not null)
         {
-            _entity.Dead();
+            _entity.Kill();
             _entity = null;
         }
 

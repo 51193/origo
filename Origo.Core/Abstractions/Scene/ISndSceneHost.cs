@@ -37,4 +37,10 @@ public interface ISndSceneHost : ISndSceneAccess
     /// </summary>
     /// <param name="delta">帧间隔时间（秒）。</param>
     void ProcessAll(double delta);
+
+    /// <summary>
+    ///     按名称销毁单个实体。若实体不存在则静默忽略。
+    ///     实现负责从内部集合中移除实体并触发适当的清理逻辑。
+    /// </summary>
+    void DeadByName(string name);
 }

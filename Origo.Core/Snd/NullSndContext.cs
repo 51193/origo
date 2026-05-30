@@ -73,6 +73,11 @@ internal sealed class NullSndContext : ISndContext
         throw new InvalidOperationException("NullSndContext does not support clear operations.");
     }
 
+    public void RequestKillEntity(string entityName)
+    {
+        throw new InvalidOperationException("NullSndContext does not support entity operations.");
+    }
+
     public bool HasContinueData() => false;
 
     public bool RequestContinueGame() => false;

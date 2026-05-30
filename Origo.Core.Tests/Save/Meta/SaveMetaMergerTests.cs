@@ -98,5 +98,9 @@ public class SaveMetaMergerTests
         public void ProcessAll(double delta)
         {
         }
+
+        public void DeadByName(string name)
+        {
+        }
     }
 }

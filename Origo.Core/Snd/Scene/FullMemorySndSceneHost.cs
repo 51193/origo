@@ -135,7 +135,7 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
 
         var entry = _entries[index];
         _entries.RemoveAt(index);
-        entry.Entity.Dead();
+        entry.Entity.Kill();
     }
 
     private void QuitAll()

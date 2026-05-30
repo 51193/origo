@@ -138,6 +138,11 @@ public class ContextBoundaryTests
             CallCount++;
         }
 
+        public void RequestKillEntity(string entityName)
+        {
+            CallCount++;
+        }
+
         public bool HasContinueData()
         {
             CallCount++;
