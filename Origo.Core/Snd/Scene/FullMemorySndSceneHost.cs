@@ -57,8 +57,9 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
         ArgumentNullException.ThrowIfNull(metaData);
         EnsureReady();
         var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger);
-        entity.Spawn(metaData);
+        entity.Name = metaData.Name;
         _entries.Add(new MemoryEntityEntry(entity));
+        entity.Spawn(metaData);
         return entity;
     }
 
@@ -92,8 +93,9 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
         foreach (var meta in metaList)
         {
             var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger);
-            entity.Load(meta);
+            entity.Name = meta.Name;
             _entries.Add(new MemoryEntityEntry(entity));
+            entity.Load(meta);
         }
     }
 

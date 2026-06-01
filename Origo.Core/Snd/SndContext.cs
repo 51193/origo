@@ -164,7 +164,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     {
         if (string.IsNullOrWhiteSpace(newLevelId))
             throw new ArgumentException("New level id cannot be null or whitespace.", nameof(newLevelId));
-        EnqueueBusinessDeferred(() => { EnsureProgressRun().SwitchForeground(newLevelId); });
+        EnqueueSystemDeferred(() => { EnsureProgressRun().SwitchForeground(newLevelId); });
     }
 
     public void RequestKillAll()

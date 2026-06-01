@@ -112,8 +112,20 @@ public sealed partial class ProgressRun
         private void WriteForegroundTopology(string levelId)
         {
             ValidateLevelId(levelId, nameof(levelId), "Level id cannot be null or whitespace.");
+
+            var bgSessions = _owner._sessionManager.GetBackgroundSessions();
+            var topologyItems = new List<string>
+            {
+                SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, levelId, false)
+            };
+            foreach (var kvp in bgSessions)
+            {
+                var syncProcess = _owner._sessionManager.GetSyncProcess(kvp.Key);
+                topologyItems.Add(SessionTopologyCodec.Serialize(kvp.Key, kvp.Value.LevelId, syncProcess));
+            }
+
             _owner.ProgressBlackboard.Set(WellKnownKeys.SessionTopology,
-                SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, levelId, false));
+                SessionTopologyCodec.Join(topologyItems));
         }
 
         private void VerifyProgressActiveLevelInvariant(string expectedActiveLevelId)

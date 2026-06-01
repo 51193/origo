@@ -73,9 +73,12 @@ public sealed partial class ProgressRun
         {
             var fgSession = _owner.ForegroundSession;
             if (fgSession is not null)
-                _owner.ProgressBlackboard.Set(
-                    WellKnownKeys.SessionTopology,
-                    SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, fgSession.LevelId, false));
+            {
+                var bgSessions = _owner._sessionManager.GetBackgroundSessions();
+                var topologyItems = BuildSessionTopology(fgSession, bgSessions);
+                _owner.ProgressBlackboard.Set(WellKnownKeys.SessionTopology,
+                    SessionTopologyCodec.Join(topologyItems));
+            }
 
             var sessionBb = fgSession?.SessionBlackboard ?? new Blackboard.Blackboard();
 

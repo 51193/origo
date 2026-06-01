@@ -306,7 +306,12 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         _metaList.Clear();
-        _metaList.AddRange(metaList);
+        _entities.Clear();
+        foreach (var meta in metaList)
+        {
+            _metaList.Add(meta);
+            _entities.Add(new DummySndEntity(meta.Name));
+        }
     }
 
     public void ClearAll()

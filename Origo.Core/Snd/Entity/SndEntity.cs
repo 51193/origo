@@ -44,7 +44,7 @@ public sealed class SndEntity : ISndEntity
         _activeStrategyManager = new ActiveStrategyManager(strategyPool);
     }
 
-    public string Name { get; private set; } = string.Empty;
+    public string Name { get; internal set; } = string.Empty;
 
     public void SetData<T>(string name, T value) => _dataManager.SetData(name, value);
 
