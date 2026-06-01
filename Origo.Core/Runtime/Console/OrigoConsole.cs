@@ -29,7 +29,7 @@ public sealed class OrigoConsole
         _router.Register(new SndCountCommandHandler(runtime));
         _router.Register(new HelpCommandHandler(_router));
         _router.Register(new FindEntityCommandHandler(runtime));
-        _router.Register(new ClearEntitiesCommandHandler(runtime));
+        _router.Register(new KillAllCommandHandler(runtime));
         _router.Register(new BlackboardGetCommandHandler(runtime));
         _router.Register(new BlackboardSetCommandHandler(runtime));
         _router.Register(new BlackboardKeysCommandHandler(runtime));

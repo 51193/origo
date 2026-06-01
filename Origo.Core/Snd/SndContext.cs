@@ -167,16 +167,21 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         EnqueueBusinessDeferred(() => { EnsureProgressRun().SwitchForeground(newLevelId); });
     }
 
-    public void RequestClearEntities()
+    public void RequestKillAll()
     {
-        EnqueueBusinessDeferred(() => Runtime.Snd.ClearAll());
+        foreach (var entity in Runtime.Snd.SceneHost.GetEntities())
+        {
+            if (entity.IsPendingKill)
+                continue;
+            Runtime.Snd.SceneHost.RequestKillEntity(entity.Name);
+        }
     }
 
     public void RequestKillEntity(string entityName)
     {
         if (string.IsNullOrWhiteSpace(entityName))
             throw new ArgumentException("Entity name cannot be null or whitespace.", nameof(entityName));
-        EnqueueBusinessDeferred(() => Runtime.Snd.SceneHost.DeadByName(entityName));
+        Runtime.Snd.SceneHost.RequestKillEntity(entityName);
     }
 
     public bool HasContinueData()
@@ -235,7 +240,6 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     {
         _progressRun?.Dispose();
         _progressRun = null;
-        Runtime.Snd.ClearAll();
     }
 
     private ProgressRun CreateProgressRun(string saveId)

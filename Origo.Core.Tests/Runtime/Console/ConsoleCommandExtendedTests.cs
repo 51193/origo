@@ -77,11 +77,11 @@ public class ConsoleCommandExtendedTests
     {
         var (runtime, input, _, messages) = CreateConsoleRuntime();
 
-        input.Enqueue("request_clear_entities");
+        input.Enqueue("kill_all");
         runtime.Console!.ProcessPending();
 
         Assert.Single(messages);
-        Assert.Contains("Requested clear of 0 entities (deferred to end of frame).", messages[0]);
+        Assert.Contains("Marked 0 of 0 entities for kill (deferred to end of frame).", messages[0]);
     }
 
     // ── bb_set / bb_get / bb_keys ──

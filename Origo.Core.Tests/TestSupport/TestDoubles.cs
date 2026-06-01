@@ -324,10 +324,17 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     {
         var entity = _entities.FirstOrDefault(e => e.Name == name);
         if (entity is not null)
-        {
-            entity.Kill();
             _entities.Remove(entity);
-        }
+    }
+
+    public void RequestKillEntity(string name)
+    {
+        var entity = _entities.FirstOrDefault(e => e.Name == name);
+        if (entity is not DummySndEntity testEntity)
+            throw new InvalidOperationException($"No entity with name '{name}'.");
+        if (testEntity.IsPendingKill)
+            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
+        testEntity.IsPendingKill = true;
     }
 }
 
@@ -343,6 +350,8 @@ internal sealed class DummySndEntity : ISndEntity
     }
 
     public string Name => EntityName;
+
+    public bool IsPendingKill { get; set; }
 
     public void SetData<T>(string name, T value) => _data[name] = value;
 
@@ -388,15 +397,7 @@ internal sealed class DummySndEntity : ISndEntity
     {
         throw new InvalidOperationException("InvokeStrategy not supported on DummySndEntity.");
     }
-
-    public void Kill()
-    {
-    }
 }
-
-/// <summary>
-///     Centralized factory for test infrastructure objects with the new DataSource-based constructors.
-/// </summary>
 internal static class TestFactory
 {
     public static JsonDataSourceCodec CreateJsonCodec() => new();

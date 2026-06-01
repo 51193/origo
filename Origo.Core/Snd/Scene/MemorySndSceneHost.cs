@@ -74,9 +74,21 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
             return;
 
         var entity = _entities[index];
-        entity.Kill();
         _entities.RemoveAt(index);
         _metaList.RemoveAt(index);
+        if (entity is MemorySndEntity memEntity)
+            memEntity.Dead();
+    }
+
+    /// <inheritdoc />
+    public void RequestKillEntity(string name)
+    {
+        var entity = _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
+        if (entity is not MemorySndEntity memEntity)
+            throw new InvalidOperationException($"No entity with name '{name}'.");
+        if (memEntity.IsPendingKill)
+            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
+        memEntity.IsPendingKill = true;
     }
 }
 
@@ -172,7 +184,10 @@ internal sealed class MemorySndEntity : ISndEntity
         return null;
     }
 
-    public void Kill()
+    /// <inheritdoc />
+    public bool IsPendingKill { get; set; }
+
+    internal void Dead()
     {
         // No-op in memory entity.
     }

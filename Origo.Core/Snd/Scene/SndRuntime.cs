@@ -73,4 +73,19 @@ public sealed class SndRuntime
     ///     按名称查找 SND 实体，未找到时返回 null。
     /// </summary>
     public ISndEntity? FindByName(string name) => SceneHost.FindByName(name);
+
+    /// <summary>
+    ///     统一销毁所有已标记为 <see cref="ISndEntity.IsPendingKill" /> 的实体。
+    ///     在帧末业务延迟队列执行完毕后、系统延迟队列执行前调用。
+    /// </summary>
+    public void KillPendingEntities()
+    {
+        var entities = SceneHost.GetEntities();
+        var pendingNames = new List<string>();
+        foreach (var e in entities)
+            if (e.IsPendingKill)
+                pendingNames.Add(e.Name);
+        foreach (var name in pendingNames)
+            SceneHost.DeadByName(name);
+    }
 }

@@ -66,10 +66,10 @@ public class SessionSndContextExtendedTests
     }
 
     [Fact]
-    public void RequestClearEntities_DelegatesToGlobal()
+    public void RequestKillAll_DelegatesToGlobal()
     {
         var (ctx, global) = Create();
-        ctx.RequestClearEntities();
+        ctx.RequestKillAll();
         Assert.True(global.CallCount > 0);
     }
 
@@ -193,7 +193,7 @@ public class SessionSndContextExtendedTests
 
         public void RequestSwitchForegroundLevel(string newLevelId) => CallCount++;
 
-        public void RequestClearEntities()
+        public void RequestKillAll()
         {
             CallCount++;
         }

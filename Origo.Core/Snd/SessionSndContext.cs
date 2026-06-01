@@ -60,10 +60,7 @@ internal sealed class SessionSndContext : ISndContext
 
     public void RequestSwitchForegroundLevel(string newLevelId) => _global.RequestSwitchForegroundLevel(newLevelId);
 
-    public void RequestClearEntities()
-    {
-        _global.RequestClearEntities();
-    }
+    public void RequestKillAll() => _global.RequestKillAll();
 
     public void RequestKillEntity(string entityName)
     {

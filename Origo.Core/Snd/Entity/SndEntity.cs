@@ -140,12 +140,7 @@ public sealed class SndEntity : ISndEntity
 
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);
 
-    public void Kill()
-    {
-        _activeStrategyManager.ReleaseAll();
-        _strategyManager.Dead(this, _context);
-        Teardown();
-    }
+    public bool IsPendingKill { get; internal set; }
 
     private void RecoverFromMetaData(SndMetaData metaData)
     {

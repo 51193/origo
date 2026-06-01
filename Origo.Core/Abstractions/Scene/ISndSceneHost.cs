@@ -39,8 +39,21 @@ public interface ISndSceneHost : ISndSceneAccess
     void ProcessAll(double delta);
 
     /// <summary>
-    ///     按名称销毁单个实体。若实体不存在则静默忽略。
-    ///     实现负责从内部集合中移除实体并触发适当的清理逻辑。
+    ///     立即将指定实体标记为待销毁状态。
+    ///     实体在帧末统一销毁（业务延迟队列之后、系统延迟队列之前）。
+    /// </summary>
+    /// <exception cref="InvalidOperationException">若实体不存在或已标记为待销毁。</exception>
+    void RequestKillEntity(string name);
+
+    /// <summary>
+    ///     按名称销毁单个实体（立即执行，从集合移除并触发清理逻辑）。
+    ///     仅由框架统一 Kill 步骤调用，业务代码应使用 <see cref="RequestKillEntity" />。
     /// </summary>
     void DeadByName(string name);
+
+    /// <summary>
+    ///     清除场景中所有实体（触发 Quit 流程）。
+    ///     仅由框架在生命周期切换时内部调用。
+    /// </summary>
+    void ClearAll();
 }

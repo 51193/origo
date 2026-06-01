@@ -88,9 +88,9 @@ internal sealed class SaveContext
     ///     支持两种形式：完整的 SndMetaData 对象，或 { "sndName": "...", "templateKey": "..." } 简写，
     ///     与入口配置保持一致，统一通过 SndMappings.ResolveMetaListFromJsonArray 解析。
     /// </summary>
-    public void DeserializeSndScene(ISndSceneAccess sceneAccess, DataSourceNode serializedNode,
+    public void DeserializeSndScene(ISndSceneHost sceneHost, DataSourceNode serializedNode,
         bool clearBeforeLoad = true) =>
-        _sceneSerializer.DeserializeInto(sceneAccess, serializedNode, clearBeforeLoad);
+        _sceneSerializer.DeserializeInto(sceneHost, serializedNode, clearBeforeLoad);
 
     /// <summary>
     ///     收集当前存档所需的全部数据，生成完整的 <see cref="SaveGamePayload" />。

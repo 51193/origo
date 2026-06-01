@@ -68,7 +68,7 @@ internal sealed class NullSndContext : ISndContext
     public void RequestSwitchForegroundLevel(string newLevelId) =>
         throw new InvalidOperationException("NullSndContext does not support level switching.");
 
-    public void RequestClearEntities()
+    public void RequestKillAll()
     {
         throw new InvalidOperationException("NullSndContext does not support clear operations.");
     }

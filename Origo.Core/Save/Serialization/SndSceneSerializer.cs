@@ -22,9 +22,9 @@ internal sealed class SndSceneSerializer
         return _world.WriteMetaListNode(metaList);
     }
 
-    public void DeserializeInto(ISndSceneAccess sceneAccess, DataSourceNode serializedNode, bool clearBeforeLoad)
+    public void DeserializeInto(ISndSceneHost sceneHost, DataSourceNode serializedNode, bool clearBeforeLoad)
     {
-        ArgumentNullException.ThrowIfNull(sceneAccess);
+        ArgumentNullException.ThrowIfNull(sceneHost);
         ArgumentNullException.ThrowIfNull(serializedNode);
 
         if (serializedNode.Kind != DataSourceNodeKind.Array)
@@ -35,7 +35,7 @@ internal sealed class SndSceneSerializer
             _world.ConverterRegistry);
 
         if (clearBeforeLoad)
-            sceneAccess.ClearAll();
-        sceneAccess.LoadFromMetaList(metaList);
+            sceneHost.ClearAll();
+        sceneHost.LoadFromMetaList(metaList);
     }
 }

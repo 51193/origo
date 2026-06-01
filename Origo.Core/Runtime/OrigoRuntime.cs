@@ -125,6 +125,7 @@ public sealed class OrigoRuntime
     public void FlushEndOfFrameDeferred()
     {
         _businessDeferredScheduler.Tick();
+        Snd.KillPendingEntities();
         _systemDeferredScheduler.Tick();
     }
 

@@ -26,14 +26,16 @@ public interface ISndSaveOperations
     void RequestSwitchForegroundLevel(string newLevelId);
 
     /// <summary>
-    ///     请求清理当前场景中所有实体（帧末延迟执行，
-    ///     与 RequestSaveGame / RequestSwitchForegroundLevel 等对齐）。
+    ///     立即将当前场景中所有实体标记为待销毁。
+    ///     实体的物理销毁在帧末统一执行（业务延迟队列之后、系统延迟队列之前）。
+    ///     已标记为待销毁的实体会被跳过，不会重复标记。
     /// </summary>
-    void RequestClearEntities();
+    void RequestKillAll();
 
     /// <summary>
-    ///     请求按名称销毁单个实体（帧末延迟执行）。
-    ///     若实体不存在则静默忽略。
+    ///     立即将指定实体标记为待销毁。
+    ///     实体的物理销毁在帧末统一执行（业务延迟队列之后、系统延迟队列之前）。
     /// </summary>
+    /// <exception cref="InvalidOperationException">若实体不存在或已标记为待销毁。</exception>
     void RequestKillEntity(string entityName);
 }

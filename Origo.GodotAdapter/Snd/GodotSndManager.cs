@@ -160,6 +160,18 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         snd.DeadFromManager();
     }
 
+    public void RequestKillEntity(string name)
+    {
+        var snd = _entities.FirstOrDefault(s => s.StableName == name);
+        if (snd is null)
+            throw new InvalidOperationException($"No entity with StableName '{name}'.");
+
+        if (snd.IsPendingKill)
+            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
+
+        snd.MarkPendingKill();
+    }
+
     public override void _Ready() => SetProcess(true);
 
     public override void _Process(double delta)

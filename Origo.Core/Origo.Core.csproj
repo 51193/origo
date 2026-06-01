@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Origo.Core.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter"/>
     </ItemGroup>
 
 </Project>

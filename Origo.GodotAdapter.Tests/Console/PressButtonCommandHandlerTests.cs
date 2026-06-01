@@ -62,9 +62,7 @@ public class PressButtonCommandHandlerTests
             return null;
         }
 
-        public void Kill()
-        {
-        }
+        public bool IsPendingKill { get; set; }
     }
 
     private static CommandInvocation MakeInvocation(string entityName, string buttonPath)

@@ -42,9 +42,17 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     {
         if (_entities.TryGetValue(name, out var entity))
         {
-            entity.Kill();
             _entities.Remove(name);
         }
+    }
+
+    public void RequestKillEntity(string name)
+    {
+        if (!_entities.TryGetValue(name, out var entity))
+            throw new InvalidOperationException($"No entity with name '{name}'.");
+        if (entity.IsPendingKill)
+            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
+        ((dynamic)entity).IsPendingKill = true;
     }
 }
 

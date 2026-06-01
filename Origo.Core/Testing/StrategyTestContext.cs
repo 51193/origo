@@ -112,22 +112,19 @@ internal sealed class StrategyTestContext : ISndContext
 
     public void RequestSwitchForegroundLevel(string newLevelId) => LevelSwitchRequests.Add(newLevelId);
 
-    public void RequestClearEntities()
+    public void RequestKillAll()
     {
-        EnqueueBusinessDeferred(() =>
+        foreach (var entity in CurrentSession?.SceneHost?.GetEntities() ?? Array.Empty<ISndEntity>())
         {
-            if (CurrentSession?.SceneHost is ISndSceneHost host)
-                host.ClearAll();
-        });
+            if (entity.IsPendingKill)
+                continue;
+            RequestKillEntity(entity.Name);
+        }
     }
 
     public void RequestKillEntity(string entityName)
     {
-        EnqueueBusinessDeferred(() =>
-        {
-            if (CurrentSession?.SceneHost is ISndSceneHost host)
-                host.DeadByName(entityName);
-        });
+        if (CurrentSession?.SceneHost is ISndSceneHost host) host.RequestKillEntity(entityName);
     }
 
     public bool HasContinueData() => false;
@@ -203,10 +200,7 @@ internal sealed class MinimalTestEntity : ISndEntity
             "InvokeStrategy with test doubles is not supported; use ActiveStrategyTestScenario instead.");
     }
 
-    public void Kill()
-    {
-        throw new InvalidOperationException("Kill with test doubles is not supported; use integration tests instead.");
-    }
+    public bool IsPendingKill { get; set; }
 }
 
 internal sealed class TestSessionManager : ISessionManager
@@ -293,5 +287,15 @@ internal sealed class TestSceneHost : ISndSceneHost
         var entity = _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
         if (entity is not null)
             _entities.Remove(entity);
+    }
+
+    public void RequestKillEntity(string name)
+    {
+        var entity = _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
+        if (entity is not MinimalTestEntity testEntity)
+            throw new InvalidOperationException($"No entity with name '{name}'.");
+        if (testEntity.IsPendingKill)
+            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
+        testEntity.IsPendingKill = true;
     }
 }

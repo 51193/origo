@@ -196,7 +196,7 @@ public class CoreArchitectureGuardrailTests
         Assert.Contains("RequestSaveGameAuto", methodNames);
         Assert.Contains("SetContinueTarget", methodNames);
         Assert.Contains("RequestSwitchForegroundLevel", methodNames);
-        Assert.Contains("RequestClearEntities", methodNames);
+        Assert.Contains("RequestKillAll", methodNames);
         Assert.Contains("RequestKillEntity", methodNames);
         Assert.Contains("HasContinueData", methodNames);
         Assert.Contains("RequestContinueGame", methodNames);

@@ -102,5 +102,9 @@ public class SaveMetaMergerTests
         public void DeadByName(string name)
         {
         }
+
+        public void RequestKillEntity(string name)
+        {
+        }
     }
 }

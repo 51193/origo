@@ -14,8 +14,8 @@ public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess
     string Name { get; }
 
     /// <summary>
-    ///     销毁实体，触发 BeforeDead 钩子并释放数据、节点与策略。
-    ///     需由场景宿主在从集合移除前调用此方法。
+    ///     标记为待销毁状态。框架在帧末统一执行销毁（业务延迟队列之后、系统延迟队列之前）。
+    ///     策略应在操作实体前通过此标志位判断实体是否仍然存活。
     /// </summary>
-    void Kill();
+    bool IsPendingKill { get; }
 }

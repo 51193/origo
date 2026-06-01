@@ -11,6 +11,4 @@ public interface ISndSceneAccess
     IReadOnlyList<SndMetaData> SerializeMetaList();
 
     void LoadFromMetaList(IEnumerable<SndMetaData> metaList);
-
-    void ClearAll();
 }

@@ -100,6 +100,45 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
     /// <inheritdoc />
     public void ClearAll() => QuitAll();
 
+    /// <inheritdoc />
+    public void DeadByName(string name)
+    {
+        var index = _entries.FindIndex(e =>
+            string.Equals(e.Entity.Name, name, StringComparison.Ordinal));
+        if (index < 0)
+            throw new InvalidOperationException($"No entity with name '{name}'.");
+
+        var entry = _entries[index];
+        _entries.RemoveAt(index);
+        entry.Entity.Dead();
+    }
+
+    /// <inheritdoc />
+    public void RequestKillEntity(string name)
+    {
+        var index = _entries.FindIndex(e =>
+            string.Equals(e.Entity.Name, name, StringComparison.Ordinal));
+        if (index < 0)
+            throw new InvalidOperationException($"No entity with name '{name}'.");
+
+        var entry = _entries[index];
+        if (entry.Entity.IsPendingKill)
+            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
+
+        entry.Entity.IsPendingKill = true;
+    }
+
+    private void QuitAll()
+    {
+        // 反向退出以匹配 LIFO 语义。
+        for (var i = _entries.Count - 1; i >= 0; i--)
+        {
+            var entry = _entries[i];
+            _entries.RemoveAt(i);
+            entry.Entity.Quit();
+        }
+    }
+
     /// <summary>
     ///     对所有存活实体执行 Process 帧更新。
     /// </summary>
@@ -120,33 +159,6 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
     {
         ArgumentNullException.ThrowIfNull(world);
         _world = world;
-    }
-
-    /// <summary>
-    ///     按名称销毁一个实体，触发 <see cref="SndEntity.Dead" /> 钩子（BeforeDead）。
-    /// </summary>
-    /// <exception cref="InvalidOperationException">若指定名称的实体不存在。</exception>
-    public void DeadByName(string name)
-    {
-        var index = _entries.FindIndex(e =>
-            string.Equals(e.Entity.Name, name, StringComparison.Ordinal));
-        if (index < 0)
-            throw new InvalidOperationException($"No entity with name '{name}'.");
-
-        var entry = _entries[index];
-        _entries.RemoveAt(index);
-        entry.Entity.Kill();
-    }
-
-    private void QuitAll()
-    {
-        // 反向退出以匹配 LIFO 语义。
-        for (var i = _entries.Count - 1; i >= 0; i--)
-        {
-            var entry = _entries[i];
-            _entries.RemoveAt(i);
-            entry.Entity.Quit();
-        }
     }
 
     private void EnsureReady()

@@ -121,10 +121,14 @@ public partial class GodotSndEntity : Node, ISndEntity
         return _entity!.InvokeStrategy(strategyIndex, input);
     }
 
-    public void Kill()
+    public bool IsPendingKill => _entity?.IsPendingKill ?? false;
+
+    internal void MarkPendingKill()
     {
         EnsureEntity();
-        _entity!.Kill();
+        if (_entity!.IsPendingKill)
+            throw new InvalidOperationException($"Entity '{StableName}' is already pending kill.");
+        _entity!.IsPendingKill = true;
     }
 
     public TNode? GetNodeFromSnd<TNode>(string name) where TNode : Node
@@ -185,7 +189,7 @@ public partial class GodotSndEntity : Node, ISndEntity
         _releasedFromManager = true;
         if (_entity is not null)
         {
-            _entity.Kill();
+            _entity.Dead();
             _entity = null;
         }
 
