@@ -265,7 +265,7 @@ public class ForegroundBackgroundContractTests
         var payload = ((SessionRun)bg1).SerializeToPayload();
 
         // 另一个后台反序列化
-        using var bg2 = ctx.SessionManager.CreateBackgroundSession("bg2", "level_a");
+        using var bg2 = ctx.SessionManager.CreateBackgroundSession("bg2", "level_b");
         ((SessionManager)ctx.SessionManager).LoadSessionFromPayload("bg2", payload);
         var (found, val) = bg2.SessionBlackboard.TryGet<int>("data");
         Assert.True(found);

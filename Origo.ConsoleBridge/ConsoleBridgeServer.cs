@@ -103,6 +103,7 @@ public sealed class ConsoleBridgeServer : IDisposable
             return;
 
         _listener = new TcpListener(IPAddress.Loopback, _options.Port);
+        _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         _listener.Start();
         _serverSocket = _listener.Server;
         ActualPort = ((IPEndPoint)_listener.LocalEndpoint).Port;

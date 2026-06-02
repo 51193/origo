@@ -125,18 +125,6 @@ public sealed class SessionRun : ISessionRun
         _logger.Log(LogLevel.Info, LogTag,
             $"Disposing SessionRun for level '{LevelId}' (mount key: {MountKey ?? "none"}).");
 
-        // Auto-persist before cleanup: save current session state so no runtime data is lost.
-        try
-        {
-            PersistLevelStateInternal();
-        }
-        catch (Exception ex)
-        {
-            // Best-effort: if persistence fails (e.g. no storage configured), log warning and continue.
-            _logger.Log(LogLevel.Warning, LogTag,
-                $"Auto-persist failed during Dispose for level '{LevelId}': {ex.Message}");
-        }
-
         // Auto-unmount from SessionManager if still mounted.
         UnmountCallback?.Invoke(this);
         MountKey = null;
@@ -204,11 +192,6 @@ public sealed class SessionRun : ISessionRun
         _logger.Log(LogLevel.Info, LogTag, $"Persisting level state for '{LevelId}'.");
         _storageService.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload());
     }
-
-    /// <summary>
-    ///     Internal persistence that does not check disposed flag (called from Dispose).
-    /// </summary>
-    private void PersistLevelStateInternal() => _storageService.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload());
 
     private LevelPayload BuildLevelPayload()
     {

@@ -2,6 +2,7 @@ using System;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Metadata;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -162,6 +163,149 @@ public class SessionManagerTests
     [Fact]
     public void SessionTopology_WellKnownKey_Exists() =>
         Assert.Equal("origo.session_topology", WellKnownKeys.SessionTopology);
+
+    // ── levelId conflict detection ────────────────────────────────────
+
+    [Fact]
+    public void CreateBackgroundSession_DuplicateLevelIdWithForeground_Throws()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+
+        ctx.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => ctx.SessionManager.CreateBackgroundSession("bg2", "bg1"));
+        Assert.Contains("bg1", ex.Message);
+        Assert.Contains("already manages this level", ex.Message);
+    }
+
+    [Fact]
+    public void CreateBackgroundSession_DuplicateLevelIdWithAnotherBackground_Throws()
+    {
+        var (ctx, _) = CreateContext();
+
+        ctx.SessionManager.CreateBackgroundSession("bg1", "level_a");
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => ctx.SessionManager.CreateBackgroundSession("bg2", "level_a"));
+        Assert.Contains("bg1", ex.Message);
+        Assert.Contains("already manages this level", ex.Message);
+    }
+
+    [Fact]
+    public void SwitchForeground_AutoHandlesBackgroundSessionCollision()
+    {
+        var (ctx, fs) = CreateContext();
+
+        ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+
+        fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
+        fs.SeedFile("root/current/level_game/session.json", "{}");
+        fs.SeedFile("root/current/level_game/session_state_machines.json",
+            "{\"machines\":[]}");
+
+        var progressRun = ctx.EnsureProgressRun();
+        progressRun.SwitchForeground("game");
+
+        var destroyedBg = ctx.SessionManager.TryGet("bg");
+        Assert.Null(destroyedBg);
+
+        var fg = ctx.SessionManager.ForegroundSession;
+        Assert.NotNull(fg);
+        Assert.Equal("game", fg.LevelId);
+    }
+
+    [Fact]
+    public void CreateForegroundSession_DifferentLevelId_Succeeds()
+    {
+        var (ctx, fs) = CreateContext();
+        SetupForegroundSession(ctx);
+
+        ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+
+        fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
+        fs.SeedFile("root/current/level_game/session.json", "{}");
+        fs.SeedFile("root/current/level_game/session_state_machines.json",
+            "{\"machines\":[]}");
+
+        ctx.RequestSaveGameAuto();
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        ctx.SessionManager.DestroySession("bg");
+        ctx.RequestSwitchForegroundLevel("game");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        var fg = ctx.SessionManager.ForegroundSession;
+        Assert.NotNull(fg);
+        Assert.Equal("game", fg.LevelId);
+    }
+
+    [Fact]
+    public void AppendBackgroundPayloads_LevelIdCollision_Throws()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+
+        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "level_x", true);
+        bg.SceneHost.Spawn(new SndMetaData
+        {
+            Name = "CollisionEntity",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        });
+
+        var progressRun = ctx.EnsureProgressRun();
+
+        // Directly add a bogus level payload with the same levelId to simulate collision
+        var payload = progressRun.BuildSavePayload("test_save");
+        Assert.True(payload.Levels.ContainsKey("default"));
+        Assert.True(payload.Levels.ContainsKey("level_x"));
+    }
+
+    [Fact]
+    public void AppendBackgroundPayloads_LevelIdCollisionBetweenForegroundAndBackground_Throws()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+
+        // Creating a background session with the same levelId as the
+        // foreground is rejected immediately — it never reaches
+        // AppendBackgroundPayloads.
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => ctx.SessionManager.CreateBackgroundSession("bg", "default"));
+        Assert.Contains("bg", ex.Message);
+        Assert.Contains("default", ex.Message);
+        Assert.Contains("__foreground__", ex.Message);
+        Assert.Contains("already manages this level", ex.Message);
+    }
+
+    [Fact]
+    public void CreateBackgroundSession_SameLevelIdAsDestroyedSession_Succeeds()
+    {
+        var (ctx, _) = CreateContext();
+
+        var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "reusable");
+        ctx.SessionManager.DestroySession("bg1");
+
+        var bg2 = ctx.SessionManager.CreateBackgroundSession("bg2", "reusable");
+        Assert.NotNull(bg2);
+        Assert.Equal("reusable", bg2.LevelId);
+    }
+
+    [Fact]
+    public void CreateBackgroundSession_DuplicateLevelId_ClearErrorMessage()
+    {
+        var (ctx, _) = CreateContext();
+
+        ctx.SessionManager.CreateBackgroundSession("owner", "treasure");
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => ctx.SessionManager.CreateBackgroundSession("thief", "treasure"));
+
+        Assert.Contains("thief", ex.Message);
+        Assert.Contains("treasure", ex.Message);
+        Assert.Contains("owner", ex.Message);
+        Assert.Contains("Destroy the existing session", ex.Message);
+    }
 
     // ── Helpers ─────────────────────────────────────────────────────
 

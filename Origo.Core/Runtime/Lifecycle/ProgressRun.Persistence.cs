@@ -117,8 +117,19 @@ public sealed partial class ProgressRun
         {
             var bgPayloads = _owner._sessionManager.SerializeBackgroundSessions();
             foreach (var kvp in bgSessions)
-                if (bgPayloads.TryGetValue(kvp.Key, out var bgPayload))
-                    payload.Levels[kvp.Value.LevelId] = bgPayload;
+            {
+                if (!bgPayloads.TryGetValue(kvp.Key, out var bgPayload))
+                    continue;
+
+                if (payload.Levels.ContainsKey(kvp.Value.LevelId))
+                    throw new InvalidOperationException(
+                        $"Cannot persist background session '{kvp.Key}': " +
+                        $"levelId '{kvp.Value.LevelId}' is already present in the save payload " +
+                        "(another session already manages this level). " +
+                        "Destroy the conflicting session or use a different levelId.");
+
+                payload.Levels[kvp.Value.LevelId] = bgPayload;
+            }
         }
 
         private void EnsureActiveLevelInvariant(ISessionRun fgSession)

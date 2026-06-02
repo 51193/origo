@@ -79,9 +79,32 @@ public sealed partial class ProgressRun
         {
             ValidateLevelId(newLevelId, nameof(newLevelId), "New level id cannot be null or whitespace.");
 
-            _owner.PersistProgress();
+            PersistForegroundLevelState();
+            PersistAndDestroyBackgroundIfExists(newLevelId);
             ResetForeground(true);
             LoadAndMountForeground(newLevelId);
+            _owner.PersistProgress();
+        }
+
+        private void PersistForegroundLevelState()
+        {
+            var fg = _owner.ForegroundSession;
+            if (fg is not null)
+                _owner._sessionManager.PersistSession(ISessionManager.ForegroundKey);
+        }
+
+        private void PersistAndDestroyBackgroundIfExists(string levelId)
+        {
+            var bgSessions = _owner._sessionManager.GetBackgroundSessions();
+            foreach (var kvp in bgSessions)
+            {
+                if (string.Equals(kvp.Value.LevelId, levelId, StringComparison.Ordinal))
+                {
+                    _owner._sessionManager.PersistSession(kvp.Key);
+                    _owner._sessionManager.DestroySession(kvp.Key);
+                    return;
+                }
+            }
         }
 
         private ISessionRun MountForegroundFromPayload(string levelId, LevelPayload levelPayload)

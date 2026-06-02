@@ -196,9 +196,13 @@ internal sealed class MinimalTestEntity : ISndEntity
 
     public object? InvokeStrategy(string strategyIndex, object? input = null)
     {
+        if (InvokeStrategyHandler is not null)
+            return InvokeStrategyHandler(strategyIndex, input);
         throw new InvalidOperationException(
-            "InvokeStrategy with test doubles is not supported; use ActiveStrategyTestScenario instead.");
+            "InvokeStrategy is not configured. Use StrategyTestScenario.ForActive<T>(...) to test ActiveStrategy subclasses.");
     }
+
+    internal Func<string, object?, object?>? InvokeStrategyHandler { get; set; }
 
     public bool IsPendingKill { get; set; }
 }

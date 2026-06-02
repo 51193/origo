@@ -432,4 +432,80 @@ public class LifecycleRunsTests
 
         Assert.Contains(logger.Infos, msg => msg.Contains("Mounted session") && msg.Contains("bg1"));
     }
+
+    // ── Edge cases for new Dispose semantics ──────────────────────────
+
+    [Fact]
+    public void SessionManager_Clear_EmptiesAllSessions()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestFileSystem();
+        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        sndContext.SetProgressRun(progressRun);
+        progressRun.LoadAndMountForeground("default");
+
+        sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        sndContext.SessionManager.CreateBackgroundSession("bg2", "bg2", true);
+
+        Assert.True(sndContext.SessionManager.Contains("bg1"));
+        Assert.True(sndContext.SessionManager.Contains("bg2"));
+        Assert.NotNull(sndContext.SessionManager.ForegroundSession);
+
+        ((SessionManager)sndContext.SessionManager).Clear();
+
+        Assert.Empty(sndContext.SessionManager.Keys);
+        Assert.Null(sndContext.SessionManager.ForegroundSession);
+    }
+
+    [Fact]
+    public void LoadAndMountForeground_WithEmptyLevelId_Throws()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestFileSystem();
+        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        sndContext.SetProgressRun(progressRun);
+
+        Assert.Throws<ArgumentException>(() => progressRun.LoadAndMountForeground(""));
+        Assert.Throws<ArgumentException>(() => progressRun.LoadAndMountForeground("   "));
+    }
+
+    [Fact]
+    public void SwitchForeground_WithEmptyLevelId_Throws()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestFileSystem();
+        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        sndContext.SetProgressRun(progressRun);
+        progressRun.LoadAndMountForeground("default");
+
+        Assert.Throws<ArgumentException>(() => progressRun.SwitchForeground(""));
+        Assert.Throws<ArgumentException>(() => progressRun.SwitchForeground("   "));
+    }
+
+    [Fact]
+    public void BuildSavePayload_WithoutTopologySet_Throws()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestFileSystem();
+        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        sndContext.SetProgressRun(progressRun);
+        progressRun.LoadAndMountForeground("default");
+
+        // Manually clear the topology from progress blackboard to simulate a missing entry
+        progressRun.ProgressBlackboard.Set(WellKnownKeys.SessionTopology, string.Empty);
+
+        Assert.Throws<InvalidOperationException>(() => progressRun.BuildSavePayload("no_topology"));
+    }
 }

@@ -65,6 +65,7 @@ internal sealed class SessionManager : ISessionManager
     public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false)
     {
         ValidateKey(key);
+        ValidateLevelIdUnique(levelId, key);
         var session = CreateBackgroundSessionCore(levelId);
         session.GetSessionStateMachines().FlushAllAfterLoad();
         MountInternal(key, session, syncProcess);
@@ -109,6 +110,8 @@ internal sealed class SessionManager : ISessionManager
         if (string.IsNullOrWhiteSpace(levelId))
             throw new ArgumentException("Level id cannot be null or whitespace.", nameof(levelId));
         ArgumentNullException.ThrowIfNull(sceneHost);
+
+        ValidateLevelIdUnique(levelId, ISessionManager.ForegroundKey);
 
         var sessionParams = new SessionParameters(levelId, new Blackboard.Blackboard(), sceneHost, true);
         var session = new SessionRun(_managerRuntime, sessionParams);
@@ -225,6 +228,18 @@ internal sealed class SessionManager : ISessionManager
             throw new ArgumentException("Session key cannot be null or whitespace.", nameof(key));
         if (TryGetMountedSession(key) is not null)
             throw new InvalidOperationException($"A session with key '{key}' is already mounted.");
+    }
+
+    private void ValidateLevelIdUnique(string levelId, string newSessionKey)
+    {
+        foreach (var (existingKey, mounted) in _sessions)
+        {
+            if (string.Equals(mounted.Session.LevelId, levelId, StringComparison.Ordinal))
+                throw new InvalidOperationException(
+                    $"Cannot create session '{newSessionKey}' with levelId '{levelId}': " +
+                    $"session '{existingKey}' already manages this level. " +
+                    "Destroy the existing session before reusing its levelId.");
+        }
     }
 
     private void MountInternal(string key, SessionRun session, bool syncProcess)
