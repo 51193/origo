@@ -10,6 +10,7 @@ using Origo.Core.Save.Serialization;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
@@ -74,7 +75,7 @@ public sealed class SessionRun : ISessionRun
 
     internal string? MountKey { get; set; }
 
-    internal Action<SessionRun>? UnmountCallback { get; set; }
+    internal event Action? Disposing;
 
     public IBlackboard SessionBlackboard
     {
@@ -104,6 +105,8 @@ public sealed class SessionRun : ISessionRun
         return _sessionScope.StateMachines;
     }
 
+    IStateMachineContainer ISessionRun.GetSessionStateMachines() => GetSessionStateMachines();
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -111,20 +114,13 @@ public sealed class SessionRun : ISessionRun
         _logger.Log(LogLevel.Info, LogTag,
             $"Disposing SessionRun for level '{LevelId}' (mount key: {MountKey ?? "none"}).");
 
-        UnmountCallback?.Invoke(this);
+        Disposing?.Invoke();
         MountKey = null;
-        UnmountCallback = null;
 
         _sessionScope.StateMachines.PopAllOnQuit();
         _sessionScope.StateMachines.Clear();
 
-        foreach (var entity in _sceneHost.GetEntities())
-            if (entity is IEntityLifecycle lifecycle)
-            {
-                lifecycle.FireBeforeQuitHooks();
-                lifecycle.ReleaseStrategiesOnly();
-                lifecycle.TeardownOnly();
-            }
+        ReleaseAllEntitiesAndClear(true);
 
         _sceneHost.RemoveAllEntities();
         _sessionScope.Blackboard.Clear();
@@ -196,14 +192,7 @@ public sealed class SessionRun : ISessionRun
         try
         {
             _sessionScope.StateMachines.Clear();
-
-            foreach (var entity in _sceneHost.GetEntities())
-                if (entity is IEntityLifecycle lifecycle)
-                {
-                    lifecycle.ReleaseStrategiesOnly();
-                    lifecycle.TeardownOnly();
-                }
-
+            ReleaseAllEntitiesAndClear(false);
             _sceneHost.RemoveAllEntities();
             _sessionScope.Blackboard.Clear();
         }
@@ -212,6 +201,18 @@ public sealed class SessionRun : ISessionRun
             _logger.Log(LogLevel.Warning, LogTag,
                 $"Failed to reset session state after load failure for level '{LevelId}': {ex.Message}");
         }
+    }
+
+    private void ReleaseAllEntitiesAndClear(bool fireQuitHooks)
+    {
+        foreach (var entity in _sceneHost.GetEntities())
+            if (entity is IEntityLifecycle lifecycle)
+            {
+                if (fireQuitHooks)
+                    lifecycle.FireBeforeQuitHooks();
+                lifecycle.ReleaseStrategiesOnly();
+                lifecycle.TeardownOnly();
+            }
     }
 
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);

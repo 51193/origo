@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using Origo.Core.Abstractions.Console;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
@@ -34,27 +33,14 @@ internal sealed class BlackboardSetCommandHandler : ConsoleCommandHandlerBase
         var key = invocation.PositionalArgs[1].Trim();
         var raw = invocation.PositionalArgs[2].Trim();
 
-        var bb = layer switch
-        {
-            "system" => _runtime.SystemBlackboard,
-            _ => null
-        };
-
+        var bb = ConsoleCommandHelper.ResolveBlackboardLayer(_runtime, layer);
         if (bb is null)
         {
             errorMessage = $"Unknown or unavailable blackboard layer '{layer}'. Use: system";
             return false;
         }
 
-        // Type inference
-        if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
-            bb.Set(key, iv);
-        else if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var fv))
-            bb.Set(key, fv);
-        else if (bool.TryParse(raw, out var bv))
-            bb.Set(key, bv);
-        else
-            bb.Set(key, raw);
+        ConsoleCommandHelper.SetBlackboardWithTypeInference(bb, key, raw);
 
         outputChannel.Publish($"[{layer}] {key} = {raw}");
         errorMessage = null;

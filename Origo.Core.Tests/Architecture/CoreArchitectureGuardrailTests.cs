@@ -5,6 +5,7 @@ using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
 using Xunit;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Tests;
 

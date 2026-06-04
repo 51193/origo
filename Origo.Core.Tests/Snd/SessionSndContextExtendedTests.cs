@@ -7,6 +7,8 @@ using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Xunit;
+using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.StateMachine;
 
 namespace Origo.Core.Tests;
 
@@ -221,7 +223,7 @@ public class SessionSndContextExtendedTests
         public string LevelId { get; } = levelId;
         public bool IsFrontSession => false;
 
-        public StateMachineContainer GetSessionStateMachines() => throw new NotImplementedException();
+        public IStateMachineContainer GetSessionStateMachines() => throw new NotImplementedException();
 
         public void Dispose()
         {
@@ -230,5 +232,5 @@ public class SessionSndContextExtendedTests
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. MemorySndSceneHost + MemorySndEntity
+// 4. StubSndSceneHost + StubSndEntity
 // ─────────────────────────────────────────────────────────────────────────────

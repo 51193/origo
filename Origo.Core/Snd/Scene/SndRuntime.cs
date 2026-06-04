@@ -34,10 +34,7 @@ public sealed class SndRuntime
         if (SceneHost.FindByName(metaData.Name) is not null)
             throw new InvalidOperationException($"Snd entity name '{metaData.Name}' already exists.");
 
-        var entity = SceneHost.CreateEntity(metaData);
-        if (entity is IEntityLifecycle lifecycle)
-            lifecycle.FireAfterSpawnHooks();
-        return entity;
+        return SpawnCore(SceneHost, metaData);
     }
 
     public void SpawnMany(IEnumerable<SndMetaData> metaList)
@@ -52,9 +49,22 @@ public sealed class SndRuntime
                 throw new InvalidOperationException($"Snd entity name '{meta.Name}' already exists.");
         }
 
+        SpawnManyCore(SceneHost, metaList);
+    }
+
+    internal static ISndEntity SpawnCore(ISndSceneHost host, SndMetaData meta)
+    {
+        var entity = host.CreateEntity(meta);
+        if (entity is IEntityLifecycle lifecycle)
+            lifecycle.FireAfterSpawnHooks();
+        return entity;
+    }
+
+    internal static void SpawnManyCore(ISndSceneHost host, IEnumerable<SndMetaData> metaList)
+    {
         var staged = new List<ISndEntity>();
         foreach (var meta in metaList)
-            staged.Add(SceneHost.CreateEntity(meta));
+            staged.Add(host.CreateEntity(meta));
 
         foreach (var entity in staged)
             if (entity is IEntityLifecycle lifecycle)

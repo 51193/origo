@@ -10,6 +10,8 @@ using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.StateMachine;
 
 namespace Origo.Core.Testing;
 
@@ -252,6 +254,8 @@ internal sealed class TestSessionRun : ISessionRun
         throw new NotSupportedException(
             "GetSessionStateMachines is not supported in strategy unit tests. " +
             "Use StateMachineStrategyTestScenario for state machine strategy testing.");
+
+    IStateMachineContainer ISessionRun.GetSessionStateMachines() => GetSessionStateMachines();
 
     public void Dispose()
     {

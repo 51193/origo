@@ -15,7 +15,7 @@ public class EntityStrategyBaseTests
     public void DefaultHooks_DoNotMutateEntityData()
     {
         var strategy = new TestEntityStrategy();
-        var entity = new MemorySndEntity("e");
+        var entity = new StubSndEntity("e");
         entity.SetData("score", 7);
         ISndContext ctx = NullSndContext.Instance;
 

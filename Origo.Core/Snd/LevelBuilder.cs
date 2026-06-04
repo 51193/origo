@@ -13,7 +13,7 @@ namespace Origo.Core.Snd;
 
 /// <summary>
 ///     结构化关卡构建器，提供流式 API 在 Core 层离线构建关卡场景。
-///     使用 <see cref="MemorySndSceneHost" /> 作为内存场景宿主，
+///     使用 <see cref="StubSndSceneHost" /> 作为内存场景宿主，
 ///     支持添加实体、设置会话黑板键值对，最终通过 <see cref="Build" /> 生成
 ///     <see cref="LevelPayload" /> 或通过 <see cref="Commit" /> 直接持久化到磁盘。
 ///     <para>
@@ -23,7 +23,7 @@ namespace Origo.Core.Snd;
 /// </summary>
 internal sealed class LevelBuilder
 {
-    private readonly MemorySndSceneHost _sceneHost = new();
+    private readonly StubSndSceneHost _sceneHost = new();
     private readonly Blackboard.Blackboard _sessionBlackboard = new();
     private readonly SndWorld _sndWorld;
     private readonly ISaveStorageService _storageService;

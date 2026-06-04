@@ -11,7 +11,7 @@ namespace Origo.Core.Snd;
 ///         仅暴露策略钩子与游戏逻辑可合理调用的能力。
 ///     </para>
 ///     <para>
-///         遵循接口隔离原则（ISP），本接口按职责拆分为 8 个角色接口：
+///         遵循接口隔离原则（ISP），本接口按职责拆分为 9 个角色接口：
 ///         <see cref="ISndBlackboardAccess" />（黑板访问）、
 ///         <see cref="ISndSessionAccess" />（会话管理）、
 ///         <see cref="ISndDeferredActions" />（延迟动作队列）、
@@ -19,11 +19,13 @@ namespace Origo.Core.Snd;
 ///         <see cref="ISndConsoleAccess" />（控制台）、
 ///         <see cref="ISndStateMachineAccess" />（状态机）、
 ///         <see cref="ISndSaveOperations" />（存档/关卡操作）、
-///         <see cref="ISndLifecycleOperations" />（生命周期入口）。
+///         <see cref="ISndLifecycleOperations" />（生命周期入口）、
+///         <see cref="ISndEntityOperations" />（实体操作）。
 ///         消费者可按需依赖窄接口，策略钩子保持全量 <c>ISndContext ctx</c> 参数。
 ///     </para>
 /// </summary>
 public interface ISndContext : ISndBlackboardAccess, ISndSessionAccess, ISndDeferredActions,
-    ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations, ISndLifecycleOperations
+    ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
+    ISndLifecycleOperations, ISndEntityOperations
 {
 }

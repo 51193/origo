@@ -31,11 +31,7 @@ internal sealed class BlackboardGetCommandHandler : ConsoleCommandHandlerBase
         var layer = invocation.PositionalArgs[0].Trim().ToLowerInvariant();
         var key = invocation.PositionalArgs[1].Trim();
 
-        var bb = layer switch
-        {
-            "system" => _runtime.SystemBlackboard,
-            _ => null
-        };
+        var bb = ConsoleCommandHelper.ResolveBlackboardLayer(_runtime, layer);
 
         if (bb is null)
         {

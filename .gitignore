@@ -35,3 +35,4 @@ TestResults/
 # OS
 .DS_Store
 Thumbs.db
+artifacts/

@@ -1,6 +1,7 @@
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Tests;
 

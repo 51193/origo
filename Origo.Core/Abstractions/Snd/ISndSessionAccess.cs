@@ -1,4 +1,4 @@
-using Origo.Core.Runtime.Lifecycle;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Abstractions.Snd;
 

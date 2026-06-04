@@ -77,14 +77,6 @@ internal sealed class SndStrategyPool
         throw new InvalidOperationException($"Strategy factory for '{index}' not found.");
     }
 
-    private static TBase CastOrThrow<TBase>(BaseStrategy strategy, string index) where TBase : BaseStrategy
-    {
-        if (strategy is TBase typed) return typed;
-
-        throw new InvalidOperationException(
-            $"Strategy '{index}' instance type '{strategy.GetType().FullName}' is not assignable to '{typeof(TBase).FullName}'.");
-    }
-
     public void ReleaseStrategy(string index)
     {
         if (!_refCounts.TryGetValue(index, out var count))

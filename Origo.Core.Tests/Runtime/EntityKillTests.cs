@@ -332,9 +332,9 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void MemorySndSceneHost_DeadByName_RemovesEntity()
+    public void StubSndSceneHost_DeadByName_RemovesEntity()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(new SndMetaData { Name = "E" });
         Assert.NotNull(host.FindByName("E"));
 
@@ -343,19 +343,19 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void MemorySndSceneHost_DeadByName_MissingEntity_NoError()
+    public void StubSndSceneHost_DeadByName_MissingEntity_NoError()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         var ex = Record.Exception(() => host.RemoveEntity("not.exist"));
         Assert.Null(ex);
     }
 
-    // ── MemorySndSceneHost RequestKillEntity ───────────────────────────
+    // ── StubSndSceneHost RequestKillEntity ───────────────────────────
 
     [Fact]
-    public void MemorySndSceneHost_RequestKillEntity_MarksPendingKill()
+    public void StubSndSceneHost_RequestKillEntity_MarksPendingKill()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(new SndMetaData { Name = "E" });
 
         var entity = host.FindByName("E");
@@ -369,16 +369,16 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void MemorySndSceneHost_RequestKillEntity_Missing_Throws()
+    public void StubSndSceneHost_RequestKillEntity_Missing_Throws()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         Assert.Throws<InvalidOperationException>(() => host.RequestKillEntity("not.exist"));
     }
 
     [Fact]
-    public void MemorySndSceneHost_RequestKillEntity_AlreadyPending_Throws()
+    public void StubSndSceneHost_RequestKillEntity_AlreadyPending_Throws()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(new SndMetaData { Name = "E" });
         host.RequestKillEntity("E");
 
@@ -390,7 +390,7 @@ public class EntityKillTests
     [Fact]
     public void IsPendingKill_DefaultFalse()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(new SndMetaData { Name = "E" });
 
         Assert.False(host.FindByName("E")!.IsPendingKill);
@@ -464,7 +464,7 @@ public class EntityKillTests
     public void KillAllCommand_MarksAllEntities()
     {
         var logger = new TestLogger();
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(new SndMetaData { Name = "A" });
         host.CreateEntity(new SndMetaData { Name = "B" });
 
@@ -480,7 +480,7 @@ public class EntityKillTests
     public void KillAllCommand_SkipsAlreadyPending()
     {
         var logger = new TestLogger();
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(new SndMetaData { Name = "A" });
         host.CreateEntity(new SndMetaData { Name = "B" });
         host.RequestKillEntity("A");

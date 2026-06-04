@@ -824,7 +824,7 @@ public class SndEntityLifecycleBatchTests
     [Fact]
     public void SndRuntime_Spawn_WithNonLifecycleEntity_DoesNotThrow()
     {
-        var memoryHost = new MemorySndSceneHost();
+        var memoryHost = new StubSndSceneHost();
         var runtime = new SndRuntime(TestFactory.CreateSndWorld(), memoryHost);
 
         var entity = runtime.Spawn(new SndMetaData { Name = "E" });
@@ -836,7 +836,7 @@ public class SndEntityLifecycleBatchTests
     [Fact]
     public void SndRuntime_SpawnMany_WithNonLifecycleEntity_DoesNotThrow()
     {
-        var memoryHost = new MemorySndSceneHost();
+        var memoryHost = new StubSndSceneHost();
         var runtime = new SndRuntime(TestFactory.CreateSndWorld(), memoryHost);
 
         runtime.SpawnMany(new[]

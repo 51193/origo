@@ -1,7 +1,5 @@
 using System;
-using System.Globalization;
 using Origo.Core.Abstractions.Console;
-using Origo.Core.Abstractions.Entity;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
@@ -33,59 +31,13 @@ internal sealed class SetEntityDataCommandHandler : ConsoleCommandHandlerBase
         var key = invocation.PositionalArgs[1].Trim();
         var raw = invocation.PositionalArgs[2].Trim();
 
-        var entity = _runtime.Snd.FindByName(entityName);
-        if (entity is null)
-        {
-            errorMessage = $"Entity '{entityName}' not found.";
+        if (!ConsoleCommandHelper.TryFindEntity(_runtime, entityName, out var entity, out errorMessage))
             return false;
-        }
 
-        var (existing, existingObj) = entity.TryGetData<object>(key);
-        if (existing && existingObj != null)
-            SetByType(entity, key, raw, existingObj.GetType());
-        else if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
-            entity.SetData(key, iv);
-        else if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var fv))
-            entity.SetData(key, fv);
-        else if (bool.TryParse(raw, out var bv))
-            entity.SetData(key, bv);
-        else
-            entity.SetData(key, raw);
+        ConsoleCommandHelper.SetDataPreservingExistingType(entity!, key, raw);
 
         outputChannel.Publish($"[{entityName}] {key} = {raw}");
         errorMessage = null;
         return true;
-    }
-
-    private static void SetByType(ISndEntity entity, string key, string raw, Type targetType)
-    {
-        if (targetType == typeof(int))
-        {
-            if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
-                entity.SetData(key, iv);
-            return;
-        }
-
-        if (targetType == typeof(float))
-        {
-            if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var fv))
-                entity.SetData(key, fv);
-            return;
-        }
-
-        if (targetType == typeof(bool))
-        {
-            if (bool.TryParse(raw, out var bv))
-                entity.SetData(key, bv);
-            return;
-        }
-
-        if (targetType == typeof(string))
-        {
-            entity.SetData(key, raw);
-            return;
-        }
-
-        entity.SetData(key, raw);
     }
 }

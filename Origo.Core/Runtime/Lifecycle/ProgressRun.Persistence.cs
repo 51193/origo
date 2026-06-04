@@ -1,9 +1,11 @@
+using Origo.Core.Runtime.StateMachine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Origo.Core.Save;
 using Origo.Core.Save.Meta;
 using Origo.Core.Save.Serialization;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
@@ -29,7 +31,7 @@ public sealed partial class ProgressRun
 
         internal SaveMetaBuildContext BuildSaveMetaContext(string saveId)
         {
-            var fgSession = RequireForegroundSession();
+            var fgSession = _owner.RequireForegroundSession();
             return new SaveMetaBuildContext(
                 saveId,
                 fgSession.LevelId,
@@ -42,11 +44,11 @@ public sealed partial class ProgressRun
             string newSaveId,
             IReadOnlyDictionary<string, string>? mergedMeta)
         {
-            var fgSession = RequireForegroundSession();
-            EnsureActiveLevelInvariant(fgSession);
+            var fgSession = _owner.RequireForegroundSession();
+            _owner.EnsureActiveLevelInvariant();
 
             var bgSessions = _owner._sessionManager.GetBackgroundSessions();
-            var topologyItems = BuildSessionTopology(fgSession, bgSessions);
+            var topologyItems = _owner.BuildSessionTopology();
             _owner.ProgressBlackboard.Set(WellKnownKeys.SessionTopology, SessionTopologyCodec.Join(topologyItems));
 
             var saveContext = new SaveContext(
@@ -54,7 +56,7 @@ public sealed partial class ProgressRun
 
             var progressSmNode =
                 _owner.ProgressScope.StateMachines.SerializeToNode(_owner._progressRuntime.ConverterRegistry);
-            var sessionSmNode = fgSession.GetSessionStateMachines()
+            var sessionSmNode = ((StateMachineContainer)fgSession.GetSessionStateMachines())
                 .SerializeToNode(_owner._progressRuntime.ConverterRegistry);
 
             var payload = saveContext.SaveGame(
@@ -74,8 +76,7 @@ public sealed partial class ProgressRun
             var fgSession = _owner.ForegroundSession;
             if (fgSession is not null)
             {
-                var bgSessions = _owner._sessionManager.GetBackgroundSessions();
-                var topologyItems = BuildSessionTopology(fgSession, bgSessions);
+                var topologyItems = _owner.BuildSessionTopology();
                 _owner.ProgressBlackboard.Set(WellKnownKeys.SessionTopology,
                     SessionTopologyCodec.Join(topologyItems));
             }
@@ -87,28 +88,6 @@ public sealed partial class ProgressRun
             var smNode = _owner.ProgressScope.StateMachines.SerializeToNode(_owner._progressRuntime.ConverterRegistry);
 
             _owner._progressRuntime.StorageService.WriteProgressOnlyToCurrent(progressNode, smNode);
-        }
-
-        private ISessionRun RequireForegroundSession() => _owner.ForegroundSession ??
-                                                          throw new InvalidOperationException(
-                                                              "No active foreground session.");
-
-        private List<string> BuildSessionTopology(
-            ISessionRun fgSession,
-            IReadOnlyList<KeyValuePair<string, ISessionRun>> bgSessions)
-        {
-            var topologyItems = new List<string>
-            {
-                SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, fgSession.LevelId, false)
-            };
-
-            topologyItems.AddRange(bgSessions.Select(kvp =>
-            {
-                var syncProcess = _owner._sessionManager.GetSyncProcess(kvp.Key);
-                return SessionTopologyCodec.Serialize(kvp.Key, kvp.Value.LevelId, syncProcess);
-            }));
-
-            return topologyItems;
         }
 
         private void AppendBackgroundPayloads(
@@ -130,19 +109,6 @@ public sealed partial class ProgressRun
 
                 payload.Levels[kvp.Value.LevelId] = bgPayload;
             }
-        }
-
-        private void EnsureActiveLevelInvariant(ISessionRun fgSession)
-        {
-            var (found, rawTopology) = _owner.ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
-            if (!found || string.IsNullOrWhiteSpace(rawTopology))
-                throw new InvalidOperationException(
-                    $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}' before save (save id: '{_owner.SaveId}').");
-
-            var topologyActiveLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
-            if (!string.Equals(topologyActiveLevelId, fgSession.LevelId, StringComparison.Ordinal))
-                throw new InvalidOperationException(
-                    $"Progress '{WellKnownKeys.SessionTopology}' foreground ('{topologyActiveLevelId}') does not match foreground level '{fgSession.LevelId}' (save id: '{_owner.SaveId}').");
         }
     }
 }

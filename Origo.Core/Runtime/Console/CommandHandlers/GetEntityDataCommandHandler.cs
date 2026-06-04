@@ -30,14 +30,10 @@ internal sealed class GetEntityDataCommandHandler : ConsoleCommandHandlerBase
         var entityName = invocation.PositionalArgs[0].Trim();
         var key = invocation.PositionalArgs[1].Trim();
 
-        var entity = _runtime.Snd.FindByName(entityName);
-        if (entity is null)
-        {
-            errorMessage = $"Entity '{entityName}' not found.";
+        if (!ConsoleCommandHelper.TryFindEntity(_runtime, entityName, out var entity, out errorMessage))
             return false;
-        }
 
-        var (found, value) = entity.TryGetData<object>(key);
+        var (found, value) = entity!.TryGetData<object>(key);
         if (found)
         {
             var typeName = value?.GetType().Name ?? "null";

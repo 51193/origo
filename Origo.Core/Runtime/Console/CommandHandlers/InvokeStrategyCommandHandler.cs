@@ -36,17 +36,13 @@ internal sealed class InvokeStrategyCommandHandler : ConsoleCommandHandlerBase
             ? invocation.PositionalArgs[2].Trim()
             : null;
 
-        var entity = _runtime.Snd.FindByName(entityName);
-        if (entity is null)
-        {
-            errorMessage = $"Entity '{entityName}' not found.";
+        if (!ConsoleCommandHelper.TryFindEntity(_runtime, entityName, out var entity, out errorMessage))
             return false;
-        }
 
         object? result;
         try
         {
-            result = entity.InvokeStrategy(strategyIndex, input);
+            result = entity!.InvokeStrategy(strategyIndex, input);
         }
         catch (InvalidOperationException ex)
         {

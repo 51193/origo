@@ -14,16 +14,20 @@ internal sealed class SndNodeManager : INodeHost
 {
     private readonly INodeFactory _factory;
     private readonly ILogger _logger;
-    private readonly SndMappings _mappings;
     private readonly Dictionary<string, INodeHandle> _nodes = new();
     private Dictionary<string, string> _resources = new();
+    private Func<string, string> _resolveSceneAlias = static s => s;
 
-    public SndNodeManager(INodeFactory factory, SndMappings mappings, ILogger logger)
+    public SndNodeManager(INodeFactory factory, ILogger logger)
     {
         _factory = factory;
-        _mappings = mappings;
         ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
+    }
+
+    public void SetSceneAliasResolver(Func<string, string> resolveSceneAlias)
+    {
+        _resolveSceneAlias = resolveSceneAlias ?? (static s => s);
     }
 
     public INodeHandle GetNode(string name)
@@ -44,7 +48,7 @@ internal sealed class SndNodeManager : INodeHost
 
         foreach (var pair in _resources)
         {
-            var resourceId = _mappings.ResolveSceneAlias(pair.Value);
+            var resourceId = _resolveSceneAlias(pair.Value);
             try
             {
                 _nodes[pair.Key] = _factory.Create(pair.Key, resourceId);

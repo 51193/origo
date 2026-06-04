@@ -16,7 +16,8 @@ internal static class KeyValueFileParser
         string? content,
         string sourceName,
         bool strict,
-        ILogger logger)
+        ILogger logger,
+        bool allowEmptyValues = false)
     {
         ArgumentNullException.ThrowIfNull(logger);
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -29,7 +30,7 @@ internal static class KeyValueFileParser
             var line = rawLine.Trim();
             if (line.Length == 0 || line.StartsWith('#'))
                 continue;
-            ProcessLine(line, sourceName, strict, logger, result);
+            ProcessLine(line, sourceName, strict, allowEmptyValues, logger, result);
         }
 
         return result;
@@ -39,6 +40,7 @@ internal static class KeyValueFileParser
         string line,
         string sourceName,
         bool strict,
+        bool allowEmptyValues,
         ILogger logger,
         Dictionary<string, string> result)
     {
@@ -57,7 +59,10 @@ internal static class KeyValueFileParser
 
         var key = parts[0];
         var value = parts[1];
-        if (key.Length == 0 || value.Length == 0)
+        var invalidEmptyKey = key.Length == 0;
+        var invalidEmptyValue = value.Length == 0 && !allowEmptyValues;
+
+        if (invalidEmptyKey || invalidEmptyValue)
         {
             if (strict)
                 throw new FormatException(

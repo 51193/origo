@@ -40,7 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`OrigoMeta`** record (`OrigoMeta.cs`) — lightweight metadata carrier exposing `Name`, `Version`, and `Banner` for project introspection; default banner is a simple emoticon
 - **GitHub Actions `release.yml`** — tagged-release workflow that builds, tests, packs `Origo.Core` and `Origo.GodotAdapter` NuGet packages, and creates a GitHub Release with auto-generated notes
 - **Godot adapter tests**: `GodotSndBootstrapTests`, `GodotFileSystemPathTests`, `GodotJsonConverterRegistryTests`
-- **New Core test files**: `StrategyTestScenarioTests`, `SndContextWorkflowTests`, `NullSndContextExtendedTests`, `SessionSndContextExtendedTests`, `NullLoggerTests`, `SaveGamePayloadTests`, `LevelBuilderExtendedTests`, `MemorySndEntityTests`, `EntityStrategyBaseTests`, `StateMachineStrategyBaseTests`, `BlackboardSerializerTests`, `SaveContextTests`, `SndSceneSerializerTests`, `SaveMetaMapCodecExtendedTests`, `ProgressRunSessionLoadingEdgeTests`, `ConcurrentActionQueueConcurrencyTests`, and others
+- **New Core test files**: `StrategyTestScenarioTests`, `SndContextWorkflowTests`, `NullSndContextExtendedTests`, `SessionSndContextExtendedTests`, `NullLoggerTests`, `SaveGamePayloadTests`, `LevelBuilderExtendedTests`, `StubSndEntityTests`, `EntityStrategyBaseTests`, `StateMachineStrategyBaseTests`, `BlackboardSerializerTests`, `SaveContextTests`, `SndSceneSerializerTests`, `SaveMetaMapCodecExtendedTests`, `ProgressRunSessionLoadingEdgeTests`, `ConcurrentActionQueueConcurrencyTests`, and others
 
 ### Changed
 
@@ -55,7 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`NullSndContext`** mutation operations now throw `InvalidOperationException` instead of silently swallowing — fail-fast semantics for save/load/level-change ops
 - **`SystemRuntime`** constructor uses `ISaveStorageService` directly instead of raw file-system primitives
 - **`ProgressRun`** split into nested `SessionLifecycle` and `SaveCoordinator` to isolate mount, switch, and save orchestration
-- **`FullMemorySndSceneHost`** derives from `MemorySndSceneHost` to reduce duplication
+- **`FullMemorySndSceneHost`** derives from `StubSndSceneHost` to reduce duplication
 - **Godot adapter renames**: `GodotPathHelper` → `GodotPathResolver`, `SaveStorageCommon` → `SaveStorageGatewayFactory`
 - **README** and **README.zh-CN** rewritten as concise, synchronized integration-focused guides aligned with current architecture; XML doc caveats added for `TryGetData<T>`, `ISndSceneHost.Spawn()`, and `ProjectReference` bridge-class requirement
 
@@ -159,12 +159,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`ISndContext`** — comprehensive facade interface for strategy hooks and game logic: three-tier blackboard access, session management, save/load/auto-save, level change, console registration, deferred action scheduling, and state machine access; does not expose internal framework details
 - **`SndContext`** — full `ISndContext` implementation; orchestrates `OrigoRuntime`, `SystemRun` / `ProgressRun` / `SessionRun` lifecycles, `SndWorld`, and all built-in console commands; handles `ContinueGame`, `LoadGame`, `SaveGame`, `ChangeLevel`, `ClearEntities`
 - **`SndRuntime`** — lightweight facade combining `SndWorld` and an `ISndSceneHost`; provides `Spawn`, `SpawnMany`, `SerializeMetaList`, `ClearAll`, and `FindByName` over the scene host
-- **`LevelBuilder`** — fluent API for offline level construction using `MemorySndSceneHost`; supports adding entities and session blackboard key-value pairs; produces a `LevelPayload` via `Build()` or commits directly to disk via `Commit()`; decoupled from concrete storage via `ISaveStorageService`
+- **`LevelBuilder`** — fluent API for offline level construction using `StubSndSceneHost`; supports adding entities and session blackboard key-value pairs; produces a `LevelPayload` via `Build()` or commits directly to disk via `Commit()`; decoupled from concrete storage via `ISaveStorageService`
 - **`StateMachineContainer`** — manages multiple named `StackStateMachine` instances keyed by string; lifecycle aligned with strategy pool reference counts; uses `IStateMachineContext` to remain compatible with both foreground and background sessions
 - **`IStateMachineContext`** — minimal context interface exposing system/progress/session blackboards, scene access, and deferred schedulers for state machine strategy hooks; carries no foreground/background semantics
 - **`SessionStateMachineContext`** — session-level adapter that binds an `IStateMachineContext` global with a specific session's `IBlackboard` and `ISndSceneAccess`; ensures foreground and background sessions have identical state machine hook semantics
 - **In-memory scene infrastructure**:
-  - `MemorySndSceneHost` — pure in-memory `ISndSceneHost`; used by `LevelBuilder` and unit tests
+  - `StubSndSceneHost` — pure in-memory `ISndSceneHost`; used by `LevelBuilder` and unit tests
   - `FullMemorySndSceneHost` — full-featured in-memory scene host creating real `SndEntity` instances via `SndWorld`; complete strategy lifecycle, data subscription, and `Process` support; used for background sessions created via `SndContext.CreateBackgroundSession`
   - `NullNodeFactory` — engine-free `INodeFactory` producing `NullNodeHandle` placeholders; used internally by `FullMemorySndSceneHost`
 - **`MemoryFileSystem`** — pure in-memory `IFileSystem` implementation with full directory and file emulation; used for background levels, `LevelBuilder`, and unit tests

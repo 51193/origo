@@ -28,14 +28,13 @@ internal sealed class FindEntityCommandHandler : ConsoleCommandHandlerBase
         out string? errorMessage)
     {
         var name = invocation.PositionalArgs[0].Trim();
-        var entity = _runtime.Snd.FindByName(name);
-        if (entity is null)
+        if (!ConsoleCommandHelper.TryFindEntity(_runtime, name, out var entity, out _))
         {
             outputChannel.Publish($"Entity '{name}' not found.");
         }
         else
         {
-            var nodeNames = entity.GetNodeNames();
+            var nodeNames = entity!.GetNodeNames();
             outputChannel.Publish($"Entity '{name}' found. Nodes: [{string.Join(", ", nodeNames)}]");
         }
 

@@ -6,6 +6,7 @@ using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Save;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
@@ -257,12 +258,11 @@ internal sealed class SessionManager : ISessionManager
         _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
             $"Mounted session '{key}' (level: {session.LevelId}, syncProcess: {syncProcess}).");
 
-        // Track mount key on the session for auto-unmount on Dispose.
         session.MountKey = key;
-        session.UnmountCallback = run =>
+        session.Disposing += () =>
         {
-            if (run.MountKey is not null && TryGetMountedSession(run.MountKey) is not null)
-                _sessions.Remove(run.MountKey);
+            if (session.MountKey is not null)
+                _sessions.Remove(session.MountKey);
         };
     }
 
@@ -288,7 +288,6 @@ internal sealed class SessionManager : ISessionManager
             $"Destroying session '{key}' (level: {mounted.Session.LevelId}).");
 
         mounted.Session.MountKey = null;
-        mounted.Session.UnmountCallback = null;
         mounted.Session.Dispose();
     }
 

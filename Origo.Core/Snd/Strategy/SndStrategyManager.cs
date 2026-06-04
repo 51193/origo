@@ -56,28 +56,26 @@ internal sealed class SndStrategyManager
     }
 
     internal void TriggerAfterSpawn(ISndEntity entity, ISndContext ctx)
-    {
-        foreach (var s in _strategies.ToArray()) s.Strategy.AfterSpawn(entity, ctx);
-    }
+        => TriggerAll((s, e, c) => s.AfterSpawn(e, c), entity, ctx);
 
     internal void TriggerAfterLoad(ISndEntity entity, ISndContext ctx)
-    {
-        foreach (var s in _strategies.ToArray()) s.Strategy.AfterLoad(entity, ctx);
-    }
+        => TriggerAll((s, e, c) => s.AfterLoad(e, c), entity, ctx);
 
     internal void TriggerBeforeSave(ISndEntity entity, ISndContext ctx)
-    {
-        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeSave(entity, ctx);
-    }
+        => TriggerAll((s, e, c) => s.BeforeSave(e, c), entity, ctx);
 
     internal void TriggerBeforeQuit(ISndEntity entity, ISndContext ctx)
-    {
-        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeQuit(entity, ctx);
-    }
+        => TriggerAll((s, e, c) => s.BeforeQuit(e, c), entity, ctx);
 
     internal void TriggerBeforeDead(ISndEntity entity, ISndContext ctx)
+        => TriggerAll((s, e, c) => s.BeforeDead(e, c), entity, ctx);
+
+    private void TriggerAll(
+        Action<EntityStrategyBase, ISndEntity, ISndContext> hook,
+        ISndEntity entity,
+        ISndContext ctx)
     {
-        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeDead(entity, ctx);
+        foreach (var s in _strategies.ToArray()) hook(s.Strategy, entity, ctx);
     }
 
     internal IReadOnlyCollection<string> GetStrategyIndices() => _strategies.Select(s => s.Index).ToArray();

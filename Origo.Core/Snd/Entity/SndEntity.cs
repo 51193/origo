@@ -39,7 +39,9 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle
         _logger = logger;
 
         _dataManager = new SndDataManager(this, logger);
-        _nodeHost = new SndNodeManager(nodeFactory, mappings, logger);
+        var nodeHost = new SndNodeManager(nodeFactory, logger);
+        nodeHost.SetSceneAliasResolver(mappings.ResolveSceneAlias);
+        _nodeHost = nodeHost;
         _strategyManager = new SndStrategyManager(strategyPool, logger);
         _activeStrategyManager = new ActiveStrategyManager(strategyPool);
     }

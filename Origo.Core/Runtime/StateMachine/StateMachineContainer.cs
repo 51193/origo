@@ -12,7 +12,7 @@ namespace Origo.Core.Runtime.StateMachine;
 ///     按字符串 key 管理多个 <see cref="StackStateMachine" />，生命周期与策略池引用计数对齐。
 ///     依赖 <see cref="IStateMachineContext" /> 而非具体上下文类型，确保前后台可共用同一状态机语义。
 /// </summary>
-public sealed class StateMachineContainer
+public sealed class StateMachineContainer : IStateMachineContainer
 {
     private readonly IStateMachineContext _ctx;
     private readonly List<string> _machineOrder = new();
@@ -78,29 +78,20 @@ public sealed class StateMachineContainer
 
     /// <summary>读档恢复后，按插入顺序对所有状态机执行 <see cref="StackStateMachine.FlushAfterLoad" />。</summary>
     public void FlushAllAfterLoad()
-    {
-        foreach (var sm in EnumerateMachinesInInsertionOrder())
-            sm.FlushAfterLoad();
-    }
+        => ForEachMachine(sm => sm.FlushAfterLoad());
 
     /// <summary>运行时逐个弹空所有状态机栈。</summary>
     public void PopAllRuntime()
-    {
-        foreach (var sm in EnumerateMachinesInInsertionOrder())
-            while (sm.TryPopRuntime(out _))
-            {
-                // Let-it-crash: any hook/state error should surface immediately.
-            }
-    }
+        => ForEachMachine(sm => { while (sm.TryPopRuntime(out _)) { } });
 
     /// <summary>退出流程逐个弹空所有状态机栈。</summary>
     public void PopAllOnQuit()
+        => ForEachMachine(sm => { while (sm.TryPopOnQuit(out _)) { } });
+
+    private void ForEachMachine(Action<StackStateMachine> action)
     {
         foreach (var sm in EnumerateMachinesInInsertionOrder())
-            while (sm.TryPopOnQuit(out _))
-            {
-                // Let-it-crash: any hook/state error should surface immediately.
-            }
+            action(sm);
     }
 
     /// <summary>将所有状态机序列化为 DataSource 节点。</summary>
@@ -203,5 +194,15 @@ public sealed class StateMachineContainer
                 throw new InvalidOperationException($"StateMachineContainer order contains missing key '{key}'.");
             yield return sm;
         }
+    }
+
+    IStateMachine IStateMachineContainer.CreateOrGet(string machineKey, string pushStrategyIndex, string popStrategyIndex)
+        => CreateOrGet(machineKey, pushStrategyIndex, popStrategyIndex);
+
+    bool IStateMachineContainer.TryGet(string machineKey, out IStateMachine? machine)
+    {
+        var result = _machines.TryGetValue(machineKey, out var sm);
+        machine = sm;
+        return result;
     }
 }

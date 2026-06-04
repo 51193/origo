@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Runtime.StateMachine;
+using Origo.Core.Save;
 using Origo.Core.Snd;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
@@ -67,7 +71,6 @@ public sealed partial class ProgressRun : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        // Set flag first to prevent recursive Dispose calls (e.g. from cleanup callbacks).
         _disposed = true;
         _progressRuntime.Logger.Log(LogLevel.Info, "ProgressRun",
             $"Disposing ProgressRun (saveId: '{SaveId}').");
@@ -97,7 +100,6 @@ public sealed partial class ProgressRun : IDisposable
         ProgressBlackboard.Clear();
     }
 
-    /// <inheritdoc />
     public StateMachineContainer GetProgressStateMachines() => ProgressScope.StateMachines;
 
     internal void SetSaveId(string saveId)
@@ -105,5 +107,41 @@ public sealed partial class ProgressRun : IDisposable
         if (string.IsNullOrWhiteSpace(saveId))
             throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
         SaveId = saveId;
+    }
+
+    internal ISessionRun RequireForegroundSession() => ForegroundSession ??
+        throw new InvalidOperationException("No active foreground session.");
+
+    internal List<string> BuildSessionTopology()
+    {
+        var fgSession = RequireForegroundSession();
+        var bgSessions = _sessionManager.GetBackgroundSessions();
+
+        var topologyItems = new List<string>
+        {
+            SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, fgSession.LevelId, false)
+        };
+
+        topologyItems.AddRange(bgSessions.Select(kvp =>
+        {
+            var syncProcess = _sessionManager.GetSyncProcess(kvp.Key);
+            return SessionTopologyCodec.Serialize(kvp.Key, kvp.Value.LevelId, syncProcess);
+        }));
+
+        return topologyItems;
+    }
+
+    internal void EnsureActiveLevelInvariant()
+    {
+        var fgSession = RequireForegroundSession();
+        var (found, rawTopology) = ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
+        if (!found || string.IsNullOrWhiteSpace(rawTopology))
+            throw new InvalidOperationException(
+                $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}' (save id: '{SaveId}').");
+
+        var topologyActiveLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
+        if (!string.Equals(topologyActiveLevelId, fgSession.LevelId, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                $"Progress '{WellKnownKeys.SessionTopology}' foreground ('{topologyActiveLevelId}') does not match foreground level '{fgSession.LevelId}' (save id: '{SaveId}').");
     }
 }

@@ -13,7 +13,7 @@ namespace Origo.Core.Snd.Scene;
 ///     用于 <see cref="LevelBuilder" /> 等 Core 层离线构建关卡场景，
 ///     以及单元测试中需要完全内存化的场景宿主。
 /// </summary>
-internal sealed class MemorySndSceneHost : ISndSceneHost
+internal sealed class StubSndSceneHost : ISndSceneHost
 {
     private readonly List<ISndEntity> _entities = new();
     private readonly List<SndMetaData> _metaList = new();
@@ -22,7 +22,7 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
     {
         ArgumentNullException.ThrowIfNull(metaData);
         _metaList.Add(metaData);
-        var entity = new MemorySndEntity(metaData.Name);
+        var entity = new StubSndEntity(metaData.Name);
         _entities.Add(entity);
         return entity;
     }
@@ -42,7 +42,7 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
         foreach (var meta in metaList)
         {
             _metaList.Add(meta);
-            _entities.Add(new MemorySndEntity(meta.Name));
+            _entities.Add(new StubSndEntity(meta.Name));
         }
     }
 
@@ -65,14 +65,14 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
         var entity = _entities[index];
         _entities.RemoveAt(index);
         _metaList.RemoveAt(index);
-        if (entity is MemorySndEntity memEntity)
+        if (entity is StubSndEntity memEntity)
             memEntity.Dead();
     }
 
     public void RequestKillEntity(string name)
     {
         var entity = _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
-        if (entity is not MemorySndEntity memEntity)
+        if (entity is not StubSndEntity memEntity)
             throw new InvalidOperationException($"No entity with name '{name}'.");
         if (memEntity.IsPendingKill)
             throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
@@ -80,11 +80,11 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
     }
 }
 
-internal sealed class MemorySndEntity : ISndEntity
+internal sealed class StubSndEntity : ISndEntity
 {
     private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
 
-    public MemorySndEntity(string name)
+    public StubSndEntity(string name)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         _data["name"] = name;
@@ -97,7 +97,7 @@ internal sealed class MemorySndEntity : ISndEntity
     public T GetData<T>(string name)
     {
         if (!_data.TryGetValue(name, out var value))
-            throw new KeyNotFoundException($"Data key '{name}' not found in MemorySndSceneHost.");
+            throw new KeyNotFoundException($"Data key '{name}' not found in StubSndSceneHost.");
         if (value is T cast)
             return cast;
         throw new InvalidCastException(
@@ -123,7 +123,7 @@ internal sealed class MemorySndEntity : ISndEntity
     public INodeHandle GetNode(string name)
     {
         throw new InvalidOperationException(
-            $"MemorySndEntity does not support node access. Node '{name}' requested.");
+            $"StubSndEntity does not support node access. Node '{name}' requested.");
     }
 
     public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();

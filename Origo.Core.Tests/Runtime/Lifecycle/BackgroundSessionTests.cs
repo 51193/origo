@@ -9,6 +9,7 @@ using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
 using Origo.Core.Snd.Strategy;
 using Xunit;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Tests;
 

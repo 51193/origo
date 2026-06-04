@@ -10,7 +10,7 @@ namespace Origo.Core.DataSource;
 ///     纯内存 <see cref="IFileSystem" /> 实现，不依赖任何物理文件系统或引擎 API。
 ///     用于后台关卡等 Core 层内存运行场景，以及单元测试。
 /// </summary>
-internal sealed class MemoryFileSystem : IFileSystem
+public sealed class MemoryFileSystem : IFileSystem
 {
     private readonly HashSet<string> _directories = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _files = new(StringComparer.Ordinal);

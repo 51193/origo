@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Runtime.Lifecycle;
 using Xunit;
 

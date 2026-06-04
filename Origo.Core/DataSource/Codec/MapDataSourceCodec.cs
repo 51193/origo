@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Text;
+using Origo.Core.Logging;
 
 namespace Origo.Core.DataSource;
 
@@ -12,27 +13,10 @@ internal sealed class MapDataSourceCodec : IDataSourceCodec
 {
     public DataSourceNode Decode(string rawText)
     {
+        var pairs = KeyValueFileParser.Parse(rawText, "<map>", false, NullLogger.Instance, allowEmptyValues: true);
         var node = DataSourceNode.CreateObject();
-        var lines = rawText.Split('\n');
-
-        foreach (var line in lines)
-        {
-            var trimmed = line.Trim();
-
-            if (trimmed.Length == 0 || trimmed.StartsWith('#'))
-                continue;
-
-            var separatorIndex = trimmed.IndexOf(':');
-            if (separatorIndex < 0)
-                continue;
-
-            var key = trimmed[..separatorIndex].Trim();
-            var value = trimmed[(separatorIndex + 1)..].Trim();
-
-            if (key.Length > 0)
-                node.Add(key, DataSourceNode.CreateString(value));
-        }
-
+        foreach (var (key, value) in pairs)
+            node.Add(key, DataSourceNode.CreateString(value));
         return node;
     }
 

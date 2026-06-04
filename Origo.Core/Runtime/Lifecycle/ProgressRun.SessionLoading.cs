@@ -1,9 +1,11 @@
+using Origo.Core.Runtime.StateMachine;
 using System;
 using System.Collections.Generic;
 using Origo.Core.DataSource;
 using Origo.Core.Save;
 using Origo.Core.Save.Serialization;
 using Origo.Core.StateMachine;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
@@ -58,7 +60,7 @@ public sealed partial class ProgressRun
 
             var fg = _owner.ForegroundSession
                      ?? throw new InvalidOperationException("No active foreground session after topology restore.");
-            VerifyProgressActiveLevelInvariant(fg.LevelId);
+            _owner.EnsureActiveLevelInvariant();
         }
 
         internal ISessionRun LoadAndMountForeground(string levelId)
@@ -134,45 +136,14 @@ public sealed partial class ProgressRun
         {
             ValidateLevelId(levelId, nameof(levelId), "Level id cannot be null or whitespace.");
 
-            var bgSessions = _owner._sessionManager.GetBackgroundSessions();
-            var topologyItems = new List<string>
-            {
-                SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, levelId, false)
-            };
-            foreach (var kvp in bgSessions)
-            {
-                var syncProcess = _owner._sessionManager.GetSyncProcess(kvp.Key);
-                topologyItems.Add(SessionTopologyCodec.Serialize(kvp.Key, kvp.Value.LevelId, syncProcess));
-            }
-
             _owner.ProgressBlackboard.Set(WellKnownKeys.SessionTopology,
-                SessionTopologyCodec.Join(topologyItems));
-        }
-
-        private void VerifyProgressActiveLevelInvariant(string expectedActiveLevelId)
-        {
-            var fg = _owner.ForegroundSession
-                     ?? throw new InvalidOperationException("No active foreground session after load.");
-
-            if (!string.Equals(fg.LevelId, expectedActiveLevelId, StringComparison.Ordinal))
-                throw new InvalidOperationException(
-                    $"Foreground session level '{fg.LevelId}' does not match expected active level '{expectedActiveLevelId}'.");
-
-            var (found, rawTopology) = _owner.ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
-            if (!found || string.IsNullOrWhiteSpace(rawTopology))
-                throw new InvalidOperationException(
-                    $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}': expected foreground '{expectedActiveLevelId}'.");
-
-            var topologyActiveLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
-            if (!string.Equals(topologyActiveLevelId, expectedActiveLevelId, StringComparison.Ordinal))
-                throw new InvalidOperationException(
-                    $"Progress '{WellKnownKeys.SessionTopology}' foreground ('{topologyActiveLevelId}') does not match expected active level '{expectedActiveLevelId}'.");
+                SessionTopologyCodec.Join(_owner.BuildSessionTopology()));
         }
 
         private void FlushStateMachinesAfterSceneReady()
         {
             _owner.ProgressScope.StateMachines.FlushAllAfterLoad();
-            _owner.ForegroundSession?.GetSessionStateMachines().FlushAllAfterLoad();
+            ((StateMachineContainer?)_owner.ForegroundSession?.GetSessionStateMachines())?.FlushAllAfterLoad();
         }
 
         private void ResetForeground(bool clearScene)

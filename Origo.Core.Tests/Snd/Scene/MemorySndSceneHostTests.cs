@@ -9,12 +9,12 @@ namespace Origo.Core.Tests;
 // 1. SndContext save / load / continue workflows
 // ─────────────────────────────────────────────────────────────────────────────
 
-public class MemorySndSceneHostTests
+public class StubSndSceneHostTests
 {
     [Fact]
     public void Spawn_AddsEntityAndMeta()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         var meta = MakeMeta("e1");
         var entity = host.CreateEntity(meta);
 
@@ -26,14 +26,14 @@ public class MemorySndSceneHostTests
     [Fact]
     public void Spawn_ThrowsOnNull()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         Assert.Throws<ArgumentNullException>(() => host.CreateEntity(null!));
     }
 
     [Fact]
     public void FindByName_ReturnsEntity()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(MakeMeta("abc"));
         Assert.NotNull(host.FindByName("abc"));
         Assert.Null(host.FindByName("nonexistent"));
@@ -42,7 +42,7 @@ public class MemorySndSceneHostTests
     [Fact]
     public void LoadFromMetaList_ReplacesExisting()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(MakeMeta("old"));
         Assert.Single(host.GetEntities());
 
@@ -56,14 +56,14 @@ public class MemorySndSceneHostTests
     [Fact]
     public void LoadFromMetaList_ThrowsOnNull()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         Assert.Throws<ArgumentNullException>(() => host.RecoverFromMetaList(null!));
     }
 
     [Fact]
     public void ClearAll_RemovesEntitiesAndMeta()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(MakeMeta("x"));
         host.RemoveAllEntities();
         Assert.Empty(host.GetEntities());
@@ -73,7 +73,7 @@ public class MemorySndSceneHostTests
     [Fact]
     public void SerializeMetaList_ReturnsCorrectData()
     {
-        var host = new MemorySndSceneHost();
+        var host = new StubSndSceneHost();
         host.CreateEntity(MakeMeta("a"));
         host.CreateEntity(MakeMeta("b"));
         var list = host.BuildMetaList();
