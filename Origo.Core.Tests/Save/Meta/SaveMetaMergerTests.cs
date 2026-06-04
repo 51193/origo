@@ -79,17 +79,17 @@ public class SaveMetaMergerTests
 
     private sealed class NullSceneHost : ISndSceneHost
     {
-        public IReadOnlyList<SndMetaData> SerializeMetaList() => Array.Empty<SndMetaData>();
+        public IReadOnlyList<SndMetaData> BuildMetaList() => Array.Empty<SndMetaData>();
 
-        public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
+        public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
         {
         }
 
-        public void ClearAll()
+        public void RemoveAllEntities()
         {
         }
 
-        public ISndEntity Spawn(SndMetaData metaData) => throw new NotSupportedException();
+        public ISndEntity SpawnEntity(SndMetaData metaData) => throw new NotSupportedException();
 
         public IReadOnlyCollection<ISndEntity> GetEntities() => Array.Empty<ISndEntity>();
 
@@ -99,7 +99,7 @@ public class SaveMetaMergerTests
         {
         }
 
-        public void DeadByName(string name)
+        public void TeardownEntity(string name)
         {
         }
 

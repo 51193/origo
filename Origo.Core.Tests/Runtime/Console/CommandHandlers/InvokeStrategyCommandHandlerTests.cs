@@ -99,7 +99,7 @@ public class InvokeStrategyCommandHandlerTests
 
     private static void LoadEntities(ISndSceneHost host, string[] activeIndices)
     {
-        host.LoadFromMetaList(new[]
+        host.RecoverFromMetaList(new[]
         {
             new SndMetaData
             {

@@ -7,10 +7,6 @@ using Origo.Core.Logging;
 
 namespace Origo.Core.Snd.Strategy;
 
-/// <summary>
-///     管理单个实体上的策略集合以及其生命周期回调。
-///     仅作为 Core 内部实现细节，对程序集外不可见。
-/// </summary>
 internal sealed class SndStrategyManager
 {
     private const string LogTag = nameof(SndStrategyManager);
@@ -27,29 +23,64 @@ internal sealed class SndStrategyManager
         _logger = logger;
     }
 
-    public void Load(IEnumerable<string> indices, ISndEntity entity, ISndContext ctx)
+    internal void RecoverStrategiesOnly(IEnumerable<string> indices)
     {
-        Recover(indices);
-        TriggerAfterLoad(entity, ctx);
+        ReleaseStrategiesOnly();
+        try
+        {
+            foreach (var index in indices)
+            {
+                var strategy = _pool.GetStrategy<BaseStrategy>(index);
+                if (strategy is EntityStrategyBase entityStrategy)
+                    InsertSorted(new StrategyEntry
+                        { Index = index, Strategy = entityStrategy });
+                else
+                    _pool.ReleaseStrategy(index);
+            }
+        }
+        catch
+        {
+            ReleaseStrategiesOnly();
+            throw;
+        }
+
+        _logger.Log(LogLevel.Info, LogTag,
+            new LogMessageBuilder().Build($"Strategies recovered: {_strategies.Count}."));
     }
 
-    public void Spawn(IEnumerable<string> indices, ISndEntity entity, ISndContext ctx)
+    internal void ReleaseStrategiesOnly()
     {
-        Recover(indices);
-        TriggerAfterSpawn(entity, ctx);
+        foreach (var entry in _strategies) _pool.ReleaseStrategy(entry.Index);
+
+        _strategies.Clear();
     }
 
-    public void Quit(ISndEntity entity, ISndContext ctx)
+    internal void TriggerAfterSpawn(ISndEntity entity, ISndContext ctx)
     {
-        TriggerBeforeQuit(entity, ctx);
-        Release();
+        foreach (var s in _strategies.ToArray()) s.Strategy.AfterSpawn(entity, ctx);
     }
 
-    public void Dead(ISndEntity entity, ISndContext ctx)
+    internal void TriggerAfterLoad(ISndEntity entity, ISndContext ctx)
     {
-        TriggerBeforeDead(entity, ctx);
-        Release();
+        foreach (var s in _strategies.ToArray()) s.Strategy.AfterLoad(entity, ctx);
     }
+
+    internal void TriggerBeforeSave(ISndEntity entity, ISndContext ctx)
+    {
+        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeSave(entity, ctx);
+    }
+
+    internal void TriggerBeforeQuit(ISndEntity entity, ISndContext ctx)
+    {
+        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeQuit(entity, ctx);
+    }
+
+    internal void TriggerBeforeDead(ISndEntity entity, ISndContext ctx)
+    {
+        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeDead(entity, ctx);
+    }
+
+    internal IReadOnlyCollection<string> GetStrategyIndices() => _strategies.Select(s => s.Index).ToArray();
 
     public void Add(ISndEntity entity, string index, ISndContext ctx)
     {
@@ -79,51 +110,12 @@ internal sealed class SndStrategyManager
             .Build("Strategy removed."));
     }
 
-    public IReadOnlyCollection<string> SerializeIndices(ISndEntity entity, ISndContext ctx)
-    {
-        TriggerBeforeSave(entity, ctx);
-        return _strategies.Select(s => s.Index).ToArray();
-    }
-
     public void Process(ISndEntity entity, double delta, ISndContext ctx)
     {
-        // 策略按优先级升序排列（同优先级按插入顺序）。Process 中可通过实体接口增删策略，因此基于快照迭代。
         _processBuffer.Clear();
         _processBuffer.AddRange(_strategies);
         foreach (var entry in _processBuffer)
             entry.Strategy.Process(entity, delta, ctx);
-    }
-
-    private void Recover(IEnumerable<string> indices)
-    {
-        Release();
-        try
-        {
-            foreach (var index in indices)
-            {
-                var strategy = _pool.GetStrategy<BaseStrategy>(index);
-                if (strategy is EntityStrategyBase entityStrategy)
-                    InsertSorted(new StrategyEntry
-                        { Index = index, Strategy = entityStrategy });
-                else
-                    _pool.ReleaseStrategy(index);
-            }
-        }
-        catch
-        {
-            Release();
-            throw;
-        }
-
-        _logger.Log(LogLevel.Info, LogTag,
-            new LogMessageBuilder().Build($"Strategies recovered: {_strategies.Count}."));
-    }
-
-    private void Release()
-    {
-        foreach (var entry in _strategies) _pool.ReleaseStrategy(entry.Index);
-
-        _strategies.Clear();
     }
 
     private void InsertSorted(StrategyEntry entry)
@@ -138,36 +130,6 @@ internal sealed class SndStrategyManager
             }
 
         _strategies.Insert(insertIndex, entry);
-    }
-
-    private void TriggerAfterSpawn(ISndEntity entity, ISndContext ctx)
-    {
-        // 允许 AfterSpawn 中增删策略/清场等导致集合变化，因此对快照迭代。
-        foreach (var s in _strategies.ToArray()) s.Strategy.AfterSpawn(entity, ctx);
-    }
-
-    private void TriggerAfterLoad(ISndEntity entity, ISndContext ctx)
-    {
-        // 允许 AfterLoad 中增删策略/清场等导致集合变化，因此对快照迭代。
-        foreach (var s in _strategies.ToArray()) s.Strategy.AfterLoad(entity, ctx);
-    }
-
-    private void TriggerBeforeSave(ISndEntity entity, ISndContext ctx)
-    {
-        // 允许 BeforeSave 中增删策略，因此对快照迭代。
-        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeSave(entity, ctx);
-    }
-
-    private void TriggerBeforeQuit(ISndEntity entity, ISndContext ctx)
-    {
-        // 允许 BeforeQuit 中触发清场/销毁导致集合变化，因此对快照迭代。
-        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeQuit(entity, ctx);
-    }
-
-    private void TriggerBeforeDead(ISndEntity entity, ISndContext ctx)
-    {
-        // 允许 BeforeDead 中触发销毁导致集合变化，因此对快照迭代。
-        foreach (var s in _strategies.ToArray()) s.Strategy.BeforeDead(entity, ctx);
     }
 
     private sealed class StrategyEntry

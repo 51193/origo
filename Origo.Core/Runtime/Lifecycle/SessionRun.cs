@@ -1,5 +1,6 @@
 using System;
 using Origo.Core.Abstractions.Blackboard;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
@@ -62,10 +63,6 @@ public sealed class SessionRun : ISessionRun
         _logger.Log(LogLevel.Info, LogTag, $"Created SessionRun for level '{sessionParams.LevelId}'.");
     }
 
-    /// <summary>
-    ///     内部使用的完整 RunStateScope，包含黑板与状态机。
-    ///     不在 <see cref="ISessionRun" /> 接口上暴露，仅供 ProgressRun / SessionManager 等内部代码使用。
-    /// </summary>
     internal RunStateScope SessionScope
     {
         get
@@ -75,16 +72,8 @@ public sealed class SessionRun : ISessionRun
         }
     }
 
-    /// <summary>
-    ///     当前会话在 <see cref="ISessionManager" /> 中的挂载键；未挂载时为 null。
-    ///     由 SessionManager 在创建/销毁时自动维护，外部不应直接设置。
-    /// </summary>
     internal string? MountKey { get; set; }
 
-    /// <summary>
-    ///     在 SessionRun 被 Dispose 时需要自动从 SessionManager 卸载的回调。
-    ///     由 SessionManager 在创建时注入。
-    /// </summary>
     internal Action<SessionRun>? UnmountCallback { get; set; }
 
     public IBlackboard SessionBlackboard
@@ -107,10 +96,8 @@ public sealed class SessionRun : ISessionRun
 
     public string LevelId { get; }
 
-    /// <inheritdoc />
     public bool IsFrontSession { get; }
 
-    /// <inheritdoc />
     public StateMachineContainer GetSessionStateMachines()
     {
         ThrowIfDisposed();
@@ -120,36 +107,35 @@ public sealed class SessionRun : ISessionRun
     public void Dispose()
     {
         if (_disposed) return;
-        // Set flag first to prevent recursive Dispose calls (e.g. from cleanup callbacks).
         _disposed = true;
         _logger.Log(LogLevel.Info, LogTag,
             $"Disposing SessionRun for level '{LevelId}' (mount key: {MountKey ?? "none"}).");
 
-        // Auto-unmount from SessionManager if still mounted.
         UnmountCallback?.Invoke(this);
         MountKey = null;
         UnmountCallback = null;
 
         _sessionScope.StateMachines.PopAllOnQuit();
         _sessionScope.StateMachines.Clear();
-        _sceneHost.ClearAll();
+
+        foreach (var entity in _sceneHost.GetEntities())
+            if (entity is IEntityLifecycle lifecycle)
+            {
+                lifecycle.FireBeforeQuitHooks();
+                lifecycle.ReleaseStrategiesOnly();
+                lifecycle.TeardownOnly();
+            }
+
+        _sceneHost.RemoveAllEntities();
         _sessionScope.Blackboard.Clear();
     }
 
-    /// <summary>
-    ///     将当前会话状态序列化为 <see cref="LevelPayload" />（不执行任何磁盘 I/O）。
-    ///     仅由 <see cref="SessionManager" /> 调用，不在 <see cref="ISessionRun" /> 接口暴露。
-    /// </summary>
     internal LevelPayload SerializeToPayload()
     {
         ThrowIfDisposed();
         return BuildLevelPayload();
     }
 
-    /// <summary>
-    ///     从 <see cref="LevelPayload" /> 恢复会话状态（黑板、状态机、场景实体）。
-    ///     仅由 <see cref="SessionManager" /> 调用，不在 <see cref="ISessionRun" /> 接口暴露。
-    /// </summary>
     internal void LoadFromPayload(LevelPayload payload)
     {
         ThrowIfDisposed();
@@ -158,21 +144,21 @@ public sealed class SessionRun : ISessionRun
 
         try
         {
-            // 1. 恢复会话黑板
             if (!payload.SessionNode.IsNull)
                 _saveContext.DeserializeSession(payload.SessionNode);
 
-            // 2. 恢复状态机（不触发钩子，等场景加载完毕后统一 Flush）
             if (!payload.SessionStateMachinesNode.IsNull)
                 _sessionScope.StateMachines.DeserializeFromNode(
                     payload.SessionStateMachinesNode,
                     _saveContext.SndWorld.ConverterRegistry);
 
-            // 3. 恢复 SND 场景实体
             if (!payload.SndSceneNode.IsNull)
-                _saveContext.DeserializeSndScene(_sceneHost, payload.SndSceneNode);
+                _saveContext.RecoverSndScene(_sceneHost, payload.SndSceneNode);
 
-            // 4. 统一触发 AfterLoad 钩子
+            foreach (var entity in _sceneHost.GetEntities())
+                if (entity is IEntityLifecycle lifecycle)
+                    lifecycle.FireAfterLoadHooks();
+
             _sessionScope.StateMachines.FlushAllAfterLoad();
         }
         catch
@@ -182,10 +168,6 @@ public sealed class SessionRun : ISessionRun
         }
     }
 
-    /// <summary>
-    ///     将会话状态序列化并持久化到 current/ 目录。
-    ///     仅由 <see cref="SessionManager" /> 调用，不在 <see cref="ISessionRun" /> 接口暴露。
-    /// </summary>
     internal void PersistLevelState()
     {
         ThrowIfDisposed();
@@ -195,10 +177,14 @@ public sealed class SessionRun : ISessionRun
 
     private LevelPayload BuildLevelPayload()
     {
+        foreach (var entity in _sceneHost.GetEntities())
+            if (entity is IEntityLifecycle lifecycle)
+                lifecycle.FireBeforeSaveHooks();
+
         return new LevelPayload
         {
             LevelId = LevelId,
-            SndSceneNode = _saveContext.SerializeSndScene(_sceneHost),
+            SndSceneNode = _saveContext.BuildSndScene(_sceneHost),
             SessionNode = _saveContext.SerializeSession(),
             SessionStateMachinesNode =
                 _sessionScope.StateMachines.SerializeToNode(_saveContext.SndWorld.ConverterRegistry)
@@ -210,7 +196,15 @@ public sealed class SessionRun : ISessionRun
         try
         {
             _sessionScope.StateMachines.Clear();
-            _sceneHost.ClearAll();
+
+            foreach (var entity in _sceneHost.GetEntities())
+                if (entity is IEntityLifecycle lifecycle)
+                {
+                    lifecycle.ReleaseStrategiesOnly();
+                    lifecycle.TeardownOnly();
+                }
+
+            _sceneHost.RemoveAllEntities();
             _sessionScope.Blackboard.Clear();
         }
         catch (Exception ex)

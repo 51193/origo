@@ -10,6 +10,7 @@ namespace Origo.Core.Snd.Scene;
 ///     面向上层的 SND 运行时门面。
 ///     将 SndWorld（策略池与 JSON 配置）与具体场景宿主 ISndSceneHost 组合在一起，
 ///     提供统一的 Spawn / 导出入口。
+///     负责编排实体策略生命周期钩子的两阶段触发。
 /// </summary>
 public sealed class SndRuntime
 {
@@ -21,19 +22,10 @@ public sealed class SndRuntime
         SceneHost = sceneHost;
     }
 
-    /// <summary>
-    ///     SND 世界实例，包含策略池、类型映射、编解码器和模板配置。
-    /// </summary>
     public SndWorld World { get; }
 
-    /// <summary>
-    ///     SND 场景宿主，由具体引擎适配层实现。负责实体的物理创建、挂载与管理。
-    /// </summary>
     public ISndSceneHost SceneHost { get; }
 
-    /// <summary>
-    ///     按元数据在场景中生成一个 SND 实体。若名称已存在则抛出异常。
-    /// </summary>
     public ISndEntity Spawn(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
@@ -42,50 +34,64 @@ public sealed class SndRuntime
         if (SceneHost.FindByName(metaData.Name) is not null)
             throw new InvalidOperationException($"Snd entity name '{metaData.Name}' already exists.");
 
-        return SceneHost.Spawn(metaData);
+        var entity = SceneHost.SpawnEntity(metaData);
+        if (entity is IEntityLifecycle lifecycle)
+            lifecycle.FireAfterSpawnHooks();
+        return entity;
     }
 
-    /// <summary>
-    ///     批量生成多个 SND 实体，逐个调用 Spawn。
-    /// </summary>
     public void SpawnMany(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
-        foreach (var meta in metaList) Spawn(meta);
+
+        var staged = new List<ISndEntity>();
+        foreach (var meta in metaList)
+        {
+            if (string.IsNullOrWhiteSpace(meta.Name))
+                throw new ArgumentException("SndMetaData.Name cannot be null or whitespace.", nameof(metaList));
+            if (SceneHost.FindByName(meta.Name) is not null)
+                throw new InvalidOperationException($"Snd entity name '{meta.Name}' already exists.");
+
+            staged.Add(SceneHost.SpawnEntity(meta));
+        }
+
+        foreach (var entity in staged)
+            if (entity is IEntityLifecycle lifecycle)
+                lifecycle.FireAfterSpawnHooks();
     }
 
-    /// <summary>
-    ///     序列化当前场景中所有实体的元数据列表。
-    /// </summary>
-    public IReadOnlyList<SndMetaData> SerializeMetaList() => SceneHost.SerializeMetaList();
+    public IReadOnlyList<SndMetaData> BuildMetaList() => SceneHost.BuildMetaList();
 
-    /// <summary>
-    ///     清除场景中所有 SND 实体。
-    /// </summary>
-    public void ClearAll() => SceneHost.ClearAll();
+    public void ClearAll()
+    {
+        foreach (var entity in GetEntities())
+            if (entity is IEntityLifecycle lifecycle)
+            {
+                lifecycle.FireBeforeQuitHooks();
+                lifecycle.ReleaseStrategiesOnly();
+                lifecycle.TeardownOnly();
+            }
 
-    /// <summary>
-    ///     获取场景中所有 SND 实体集合。
-    /// </summary>
+        SceneHost.RemoveAllEntities();
+    }
+
     public IReadOnlyCollection<ISndEntity> GetEntities() => SceneHost.GetEntities();
 
-    /// <summary>
-    ///     按名称查找 SND 实体，未找到时返回 null。
-    /// </summary>
     public ISndEntity? FindByName(string name) => SceneHost.FindByName(name);
 
-    /// <summary>
-    ///     统一销毁所有已标记为 <see cref="ISndEntity.IsPendingKill" /> 的实体。
-    ///     在帧末业务延迟队列执行完毕后、系统延迟队列执行前调用。
-    /// </summary>
     public void KillPendingEntities()
     {
         var entities = SceneHost.GetEntities();
-        var pendingNames = new List<string>();
+        var pending = new List<ISndEntity>();
         foreach (var e in entities)
             if (e.IsPendingKill)
-                pendingNames.Add(e.Name);
-        foreach (var name in pendingNames)
-            SceneHost.DeadByName(name);
+                pending.Add(e);
+
+        foreach (var e in pending)
+            if (e is IEntityLifecycle lifecycle)
+                lifecycle.FireBeforeDeadHooks();
+
+        foreach (var e in pending)
+            SceneHost.TeardownEntity(e.Name);
     }
 }

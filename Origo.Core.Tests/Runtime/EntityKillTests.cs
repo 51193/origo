@@ -100,7 +100,10 @@ public class EntityKillTests
             Assert.True(host.FindByName("E")!.IsPendingKill);
             Assert.DoesNotContain("before_dead", KillProbeStrategy.Events); // not triggered yet
 
-            host.DeadByName("E");
+            var entity = host.FindByName("E");
+            if (entity is IEntityLifecycle lc)
+                lc.FireBeforeDeadHooks();
+            host.TeardownEntity("E");
             Assert.Contains("before_dead", KillProbeStrategy.Events);
         }
         finally
@@ -119,12 +122,12 @@ public class EntityKillTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var host = ctx.CurrentSession!.SceneHost;
-        host.Spawn(new SndMetaData
+        host.SpawnEntity(new SndMetaData
         {
             Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
-        host.Spawn(new SndMetaData
+        host.SpawnEntity(new SndMetaData
         {
             Name = "B", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
@@ -145,7 +148,7 @@ public class EntityKillTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var host = ctx.CurrentSession!.SceneHost;
-        host.Spawn(new SndMetaData
+        host.SpawnEntity(new SndMetaData
         {
             Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
@@ -167,12 +170,12 @@ public class EntityKillTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var host = ctx.CurrentSession!.SceneHost;
-        host.Spawn(new SndMetaData
+        host.SpawnEntity(new SndMetaData
         {
             Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
-        host.Spawn(new SndMetaData
+        host.SpawnEntity(new SndMetaData
         {
             Name = "B", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
@@ -194,7 +197,7 @@ public class EntityKillTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var host = ctx.CurrentSession!.SceneHost;
-        host.ClearAll(); // remove all
+        host.RemoveAllEntities(); // remove all
 
         var ex = Record.Exception(() => ctx.RequestKillAll());
         Assert.Null(ex);
@@ -300,13 +303,15 @@ public class EntityKillTests
     {
         var logger = new TestLogger();
         var host = CreateFullMemoryHostWithEntity(logger);
-        var entity = host.FindByName("E");
-        Assert.NotNull(entity);
+        Assert.NotNull(host.FindByName("E"));
 
         KillProbeStrategy.Events = new List<string>();
         try
         {
-            host.DeadByName("E");
+            var entity = host.FindByName("E");
+            if (entity is IEntityLifecycle lc)
+                lc.FireBeforeDeadHooks();
+            host.TeardownEntity("E");
 
             Assert.Contains("before_dead", KillProbeStrategy.Events);
         }
@@ -322,7 +327,7 @@ public class EntityKillTests
         var logger = new TestLogger();
         var host = CreateFullMemoryHostWithEntity(logger);
 
-        host.DeadByName("E");
+        host.TeardownEntity("E");
         Assert.Null(host.FindByName("E"));
     }
 
@@ -330,10 +335,10 @@ public class EntityKillTests
     public void MemorySndSceneHost_DeadByName_RemovesEntity()
     {
         var host = new MemorySndSceneHost();
-        host.Spawn(new SndMetaData { Name = "E" });
+        host.SpawnEntity(new SndMetaData { Name = "E" });
         Assert.NotNull(host.FindByName("E"));
 
-        host.DeadByName("E");
+        host.TeardownEntity("E");
         Assert.Null(host.FindByName("E"));
     }
 
@@ -341,7 +346,7 @@ public class EntityKillTests
     public void MemorySndSceneHost_DeadByName_MissingEntity_NoError()
     {
         var host = new MemorySndSceneHost();
-        var ex = Record.Exception(() => host.DeadByName("not.exist"));
+        var ex = Record.Exception(() => host.TeardownEntity("not.exist"));
         Assert.Null(ex);
     }
 
@@ -351,7 +356,7 @@ public class EntityKillTests
     public void MemorySndSceneHost_RequestKillEntity_MarksPendingKill()
     {
         var host = new MemorySndSceneHost();
-        host.Spawn(new SndMetaData { Name = "E" });
+        host.SpawnEntity(new SndMetaData { Name = "E" });
 
         var entity = host.FindByName("E");
         Assert.NotNull(entity);
@@ -374,7 +379,7 @@ public class EntityKillTests
     public void MemorySndSceneHost_RequestKillEntity_AlreadyPending_Throws()
     {
         var host = new MemorySndSceneHost();
-        host.Spawn(new SndMetaData { Name = "E" });
+        host.SpawnEntity(new SndMetaData { Name = "E" });
         host.RequestKillEntity("E");
 
         Assert.Throws<InvalidOperationException>(() => host.RequestKillEntity("E"));
@@ -386,7 +391,7 @@ public class EntityKillTests
     public void IsPendingKill_DefaultFalse()
     {
         var host = new MemorySndSceneHost();
-        host.Spawn(new SndMetaData { Name = "E" });
+        host.SpawnEntity(new SndMetaData { Name = "E" });
 
         Assert.False(host.FindByName("E")!.IsPendingKill);
     }
@@ -421,7 +426,7 @@ public class EntityKillTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
         host.BindContext(ctx);
-        host.LoadFromMetaList(new[]
+        host.RecoverFromMetaList(new[]
         {
             new SndMetaData
             {
@@ -435,7 +440,15 @@ public class EntityKillTests
 
         try
         {
-            host.ClearAll();
+            foreach (var e in host.GetEntities())
+                if (e is IEntityLifecycle lc)
+                {
+                    lc.FireBeforeQuitHooks();
+                    lc.ReleaseStrategiesOnly();
+                    lc.TeardownOnly();
+                }
+
+            host.RemoveAllEntities();
             Assert.Contains("before_quit", events);
             Assert.Null(host.FindByName("E"));
         }
@@ -452,8 +465,8 @@ public class EntityKillTests
     {
         var logger = new TestLogger();
         var host = new MemorySndSceneHost();
-        host.Spawn(new SndMetaData { Name = "A" });
-        host.Spawn(new SndMetaData { Name = "B" });
+        host.SpawnEntity(new SndMetaData { Name = "A" });
+        host.SpawnEntity(new SndMetaData { Name = "B" });
 
         var runtime = CreateRuntimeWithConsole(logger, host);
         runtime.ConsoleInput!.Enqueue("kill_all");
@@ -468,8 +481,8 @@ public class EntityKillTests
     {
         var logger = new TestLogger();
         var host = new MemorySndSceneHost();
-        host.Spawn(new SndMetaData { Name = "A" });
-        host.Spawn(new SndMetaData { Name = "B" });
+        host.SpawnEntity(new SndMetaData { Name = "A" });
+        host.SpawnEntity(new SndMetaData { Name = "B" });
         host.RequestKillEntity("A");
 
         var runtime = CreateRuntimeWithConsole(logger, host);
@@ -554,7 +567,7 @@ public class EntityKillTests
             DataMetaData = new DataMetaData()
         }).ToArray();
 
-        host.LoadFromMetaList(metas);
+        host.RecoverFromMetaList(metas);
         return host;
     }
 

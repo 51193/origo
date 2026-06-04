@@ -104,22 +104,22 @@ public class AdapterArchitectureGuardrailTests
         private readonly List<ISndEntity> _entities = new();
         public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
         public ISndEntity? FindByName(string name) => null;
-        public IReadOnlyList<SndMetaData> SerializeMetaList() => Array.Empty<SndMetaData>();
+        public IReadOnlyList<SndMetaData> BuildMetaList() => Array.Empty<SndMetaData>();
 
-        public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
+        public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
         {
             _entities.Clear();
             foreach (var _ in metaList)
                 _entities.Add(new InMemorySndEntity("loaded"));
         }
 
-        public void ClearAll() => _entities.Clear();
+        public void RemoveAllEntities() => _entities.Clear();
 
         public void ProcessAll(double delta)
         {
         }
 
-        public void DeadByName(string name)
+        public void TeardownEntity(string name)
         {
         }
 
@@ -127,7 +127,7 @@ public class AdapterArchitectureGuardrailTests
         {
         }
 
-        public ISndEntity Spawn(SndMetaData metaData)
+        public ISndEntity SpawnEntity(SndMetaData metaData)
         {
             var entity = new InMemorySndEntity(metaData.Name ?? "unnamed");
             _entities.Add(entity);

@@ -41,7 +41,7 @@ public class SndEntityAfterLoadTests
             var meta = registry.Read<SndMetaData>(node);
 
             var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger);
-            entity.Load(meta);
+            entity.LoadSingle(meta);
 
             Assert.Equal(new[] { "afterload:a", "afterload:b" }, AfterLoadProbeAStrategy.Events);
         }

@@ -25,18 +25,18 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     {
     }
 
-    public ISndEntity Spawn(SndMetaData metaData) =>
+    public ISndEntity SpawnEntity(SndMetaData metaData) =>
         throw new NotSupportedException("Spawn not supported in test scene host.");
 
-    public void ClearAll() => _entities.Clear();
+    public void RemoveAllEntities() => _entities.Clear();
 
-    public IReadOnlyList<SndMetaData> SerializeMetaList() => Array.Empty<SndMetaData>();
+    public IReadOnlyList<SndMetaData> BuildMetaList() => Array.Empty<SndMetaData>();
 
-    public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
+    public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
     }
 
-    public void DeadByName(string name)
+    public void TeardownEntity(string name)
     {
         if (_entities.TryGetValue(name, out var entity)) _entities.Remove(name);
     }

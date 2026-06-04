@@ -44,13 +44,13 @@ public class SndEntityAndAutoInitializerTests
             Assert.Equal(20, Assert.IsType<int>(newValue));
         });
 
-        entity.Spawn(meta);
+        entity.SpawnSingle(meta);
         entity.SetData("hp", 20);
         entity.SetData("hp", 20);
         entity.AddStrategy(LifecycleStrategyIndex);
         entity.RemoveStrategy(LifecycleStrategyIndex);
-        _ = entity.SerializeMetaData();
-        entity.Quit();
+        _ = entity.SaveSingle();
+        entity.QuitSingle();
 
         Assert.Equal(1, callbackCount);
         Assert.Contains("AfterSpawn", events);
@@ -70,7 +70,7 @@ public class SndEntityAndAutoInitializerTests
         var nodeFactory = new TestNodeFactory();
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger);
 
-        entity.Spawn(new SndMetaData
+        entity.SpawnSingle(new SndMetaData
         {
             Name = "E",
             NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string> { ["root"] = "res://e.tscn" } },
@@ -94,14 +94,14 @@ public class SndEntityAndAutoInitializerTests
         context.Runtime.SndWorld.RegisterStrategy(() => new LifecycleStrategy());
 
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger);
-        entity.Spawn(new SndMetaData
+        entity.SpawnSingle(new SndMetaData
             { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 
         entity.AddStrategy(LifecycleStrategyIndex);
-        Assert.Contains(LifecycleStrategyIndex, entity.SerializeMetaData().StrategyMetaData!.EntityIndices);
+        Assert.Contains(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.EntityIndices);
 
         entity.RemoveStrategy(LifecycleStrategyIndex);
-        Assert.DoesNotContain(LifecycleStrategyIndex, entity.SerializeMetaData().StrategyMetaData!.EntityIndices);
+        Assert.DoesNotContain(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.EntityIndices);
 
         // Removing a missing strategy should not throw.
         entity.RemoveStrategy(LifecycleStrategyIndex);
@@ -114,7 +114,7 @@ public class SndEntityAndAutoInitializerTests
         var context = CreateContext(logger);
         var nodeFactory = new TestNodeFactory();
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger);
-        entity.Spawn(new SndMetaData
+        entity.SpawnSingle(new SndMetaData
             { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 
         Assert.Throws<InvalidOperationException>(() => entity.GetData<int>("missing"));
@@ -143,8 +143,8 @@ public class SndEntityAndAutoInitializerTests
         var loaded = OrigoAutoInitializer.LoadAndSpawnFromFile("config/entry.json", runtime.Snd, io, logger);
 
         Assert.Equal(1, loaded);
-        Assert.Single(runtime.Snd.SerializeMetaList());
-        Assert.Equal("BootEntity", runtime.Snd.SerializeMetaList()[0].Name);
+        Assert.Single(runtime.Snd.BuildMetaList());
+        Assert.Equal("BootEntity", runtime.Snd.BuildMetaList()[0].Name);
     }
 
     [Fact]

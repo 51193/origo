@@ -65,8 +65,8 @@ public class ConsoleTests
         input.Enqueue("spawn Boss1 enemy_template");
         runtime.Console!.ProcessPending();
 
-        Assert.Single(sceneHost.SerializeMetaList());
-        Assert.Equal("Boss1", sceneHost.SerializeMetaList()[0].Name);
+        Assert.Single(sceneHost.BuildMetaList());
+        Assert.Equal("Boss1", sceneHost.BuildMetaList()[0].Name);
         Assert.Contains(messages, m => m.Contains("Spawned 'Boss1'", StringComparison.Ordinal));
     }
 
@@ -94,7 +94,7 @@ public class ConsoleTests
         input.Enqueue("spawn X missing_tpl");
         runtime.Console!.ProcessPending();
 
-        Assert.Empty(sceneHost.SerializeMetaList());
+        Assert.Empty(sceneHost.BuildMetaList());
         Assert.Contains(messages,
             l => l.StartsWith("Command failed:", StringComparison.Ordinal)
                  && (l.Contains("empty", StringComparison.OrdinalIgnoreCase)
@@ -136,7 +136,7 @@ public class ConsoleTests
         input.Enqueue("spawn Dup enemy_template");
         runtime.Console!.ProcessPending();
 
-        Assert.Single(sceneHost.SerializeMetaList());
+        Assert.Single(sceneHost.BuildMetaList());
         Assert.Contains(messages, l => l.Contains("already exists", StringComparison.OrdinalIgnoreCase));
     }
 }

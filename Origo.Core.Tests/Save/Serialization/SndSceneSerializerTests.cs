@@ -19,7 +19,7 @@ public class SndSceneSerializerTests
         var serializer = new SndSceneSerializer(world);
         var host = new TestSndSceneHost();
 
-        using var node = serializer.Serialize(host);
+        using var node = serializer.Build(host);
         var json = TestFactory.JsonFromNode(node);
         Assert.NotNull(node);
         Assert.Contains("[", json);
@@ -32,14 +32,14 @@ public class SndSceneSerializerTests
         var serializer = new SndSceneSerializer(world);
 
         var host1 = new TestSndSceneHost();
-        host1.Spawn(new SndMetaData { Name = "entity1" });
+        host1.SpawnEntity(new SndMetaData { Name = "entity1" });
 
-        using var node = serializer.Serialize(host1);
+        using var node = serializer.Build(host1);
 
         var host2 = new TestSndSceneHost();
-        serializer.DeserializeInto(host2, node, true);
+        serializer.RecoverInto(host2, node);
 
-        var metaList = host2.SerializeMetaList();
+        var metaList = host2.BuildMetaList();
         Assert.Single(metaList);
         Assert.Equal("entity1", metaList[0].Name);
     }
@@ -50,11 +50,11 @@ public class SndSceneSerializerTests
         var world = CreateWorld();
         var serializer = new SndSceneSerializer(world);
         var host = new TestSndSceneHost();
-        host.Spawn(new SndMetaData { Name = "existing" });
+        host.SpawnEntity(new SndMetaData { Name = "existing" });
 
         using var node = TestFactory.NodeFromJson("[]");
-        serializer.DeserializeInto(host, node, true);
-        Assert.Equal(1, host.ClearAllCount);
+        serializer.RecoverInto(host, node);
+        Assert.Equal(0, host.ClearAllCount);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class SndSceneSerializerTests
         var host = new TestSndSceneHost();
 
         using var node = TestFactory.NodeFromJson("[]");
-        serializer.DeserializeInto(host, node, false);
+        serializer.RecoverInto(host, node);
         Assert.Equal(0, host.ClearAllCount);
     }
 
@@ -77,7 +77,7 @@ public class SndSceneSerializerTests
         var host = new TestSndSceneHost();
 
         using var node = TestFactory.NodeFromJson("{}");
-        Assert.ThrowsAny<Exception>(() => serializer.DeserializeInto(host, node, true));
+        Assert.ThrowsAny<Exception>(() => serializer.RecoverInto(host, node));
     }
 
     [Fact]

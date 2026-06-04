@@ -29,7 +29,7 @@ public class DisposeSemanticsTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        bg.SceneHost.Spawn(CreateMeta("Entity"));
+        bg.SceneHost.SpawnEntity(CreateMeta("Entity"));
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.PersistProgress();
@@ -51,7 +51,7 @@ public class DisposeSemanticsTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        bg.SceneHost.Spawn(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
+        bg.SceneHost.SpawnEntity(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
 
         events.Clear();
         bg.Dispose();
@@ -70,7 +70,7 @@ public class DisposeSemanticsTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        bg.SceneHost.Spawn(CreateMetaWithIndex("Entity", BeforeQuitStrategyIndex));
+        bg.SceneHost.SpawnEntity(CreateMetaWithIndex("Entity", BeforeQuitStrategyIndex));
 
         events.Clear();
         bg.Dispose();
@@ -84,7 +84,7 @@ public class DisposeSemanticsTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        bg.SceneHost.Spawn(CreateMeta("Entity"));
+        bg.SceneHost.SpawnEntity(CreateMeta("Entity"));
 
         AsSessionRun(bg).PersistLevelState();
         Assert.True(fs.Exists("root/current/level_bg_level/snd_scene.json"));
@@ -108,7 +108,7 @@ public class DisposeSemanticsTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        bg.SceneHost.Spawn(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
+        bg.SceneHost.SpawnEntity(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
 
         events.Clear();
         AsSessionRun(bg).PersistLevelState();
@@ -335,7 +335,7 @@ public class DisposeSemanticsTests
         var fg = ctx.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
 
-        fg.SceneHost.Spawn(CreateMeta("SavedEntity"));
+        fg.SceneHost.SpawnEntity(CreateMeta("SavedEntity"));
         fg.SessionBlackboard.Set("save_key", "save_value");
 
         ctx.RequestSaveGame("test_001");
@@ -400,7 +400,7 @@ public class DisposeSemanticsTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", true);
-        bg.SceneHost.Spawn(CreateMeta("GameEntity"));
+        bg.SceneHost.SpawnEntity(CreateMeta("GameEntity"));
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -428,8 +428,8 @@ public class DisposeSemanticsTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", true);
-        bg.SceneHost.Spawn(CreateMeta("GameEntity1"));
-        bg.SceneHost.Spawn(CreateMeta("GameEntity2"));
+        bg.SceneHost.SpawnEntity(CreateMeta("GameEntity1"));
+        bg.SceneHost.SpawnEntity(CreateMeta("GameEntity2"));
         bg.SessionBlackboard.Set("map_seed", 42);
 
         ctx.RequestSaveGameAuto();
@@ -475,7 +475,7 @@ public class DisposeSemanticsTests
         var oldFg = ctx.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
         oldFg.SessionBlackboard.Set("old_data", "old_value");
-        oldFg.SceneHost.Spawn(CreateMeta("OldEntity"));
+        oldFg.SceneHost.SpawnEntity(CreateMeta("OldEntity"));
 
         fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_game/session.json", "{}");

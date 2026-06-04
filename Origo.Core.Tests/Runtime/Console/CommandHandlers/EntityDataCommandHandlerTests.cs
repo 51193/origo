@@ -31,7 +31,7 @@ public class EntityDataCommandHandlerTests
     }
 
     private static DummySndEntity CreateEntity(TestSndSceneHost host, string name) =>
-        (DummySndEntity)host.Spawn(new SndMetaData { Name = name });
+        (DummySndEntity)host.SpawnEntity(new SndMetaData { Name = name });
 
     // ── entity_set_data ──
 

@@ -18,10 +18,7 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
     private readonly List<ISndEntity> _entities = new();
     private readonly List<SndMetaData> _metaList = new();
 
-    /// <summary>
-    ///     按元数据生成一个内存实体并加入场景。
-    /// </summary>
-    public ISndEntity Spawn(SndMetaData metaData)
+    public ISndEntity SpawnEntity(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
         _metaList.Add(metaData);
@@ -30,18 +27,14 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
         return entity;
     }
 
-    /// <inheritdoc />
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
 
-    /// <inheritdoc />
     public ISndEntity? FindByName(string name) =>
         _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
 
-    /// <inheritdoc />
-    public IReadOnlyList<SndMetaData> SerializeMetaList() => _metaList.ToArray();
+    public IReadOnlyList<SndMetaData> BuildMetaList() => _metaList.ToArray();
 
-    /// <inheritdoc />
-    public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
+    public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
         _metaList.Clear();
@@ -53,21 +46,17 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
         }
     }
 
-    /// <inheritdoc />
-    public void ClearAll()
+    public void RemoveAllEntities()
     {
         _metaList.Clear();
         _entities.Clear();
     }
 
-    /// <inheritdoc />
     public void ProcessAll(double delta)
     {
-        // No-op: MemorySndSceneHost does not support process updates.
     }
 
-    /// <inheritdoc />
-    public void DeadByName(string name)
+    public void TeardownEntity(string name)
     {
         var index = _entities.FindIndex(e => string.Equals(e.Name, name, StringComparison.Ordinal));
         if (index < 0)
@@ -80,7 +69,6 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
             memEntity.Dead();
     }
 
-    /// <inheritdoc />
     public void RequestKillEntity(string name)
     {
         var entity = _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
@@ -92,10 +80,6 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
     }
 }
 
-/// <summary>
-///     纯内存 <see cref="ISndEntity" /> 实现，用于 <see cref="MemorySndSceneHost" />。
-///     支持基本的键值数据存取，不绑定任何引擎节点。
-/// </summary>
 internal sealed class MemorySndEntity : ISndEntity
 {
     private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
@@ -106,13 +90,10 @@ internal sealed class MemorySndEntity : ISndEntity
         _data["name"] = name;
     }
 
-    /// <inheritdoc />
     public string Name { get; }
 
-    /// <inheritdoc />
     public void SetData<T>(string name, T value) => _data[name] = value;
 
-    /// <inheritdoc />
     public T GetData<T>(string name)
     {
         if (!_data.TryGetValue(name, out var value))
@@ -123,7 +104,6 @@ internal sealed class MemorySndEntity : ISndEntity
             $"Data key '{name}' is of type '{value?.GetType().Name ?? "null"}' but requested as '{typeof(T).Name}'.");
     }
 
-    /// <inheritdoc />
     public (bool found, T? value) TryGetData<T>(string name)
     {
         if (_data.TryGetValue(name, out var value) && value is T cast)
@@ -131,61 +111,44 @@ internal sealed class MemorySndEntity : ISndEntity
         return (false, default);
     }
 
-    /// <inheritdoc />
     public void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
         Func<ISndEntity, object?, object?, bool>? filter = null)
     {
-        // No-op in memory entity.
     }
 
-    /// <inheritdoc />
     public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback)
     {
-        // No-op in memory entity.
     }
 
-    /// <inheritdoc />
     public INodeHandle GetNode(string name)
     {
         throw new InvalidOperationException(
             $"MemorySndEntity does not support node access. Node '{name}' requested.");
     }
 
-    /// <inheritdoc />
     public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
 
-    /// <inheritdoc />
     public void AddStrategy(string index)
     {
-        // No-op in memory entity.
     }
 
-    /// <inheritdoc />
     public void RemoveStrategy(string index)
     {
-        // No-op in memory entity.
     }
 
-    /// <inheritdoc />
     public void AddActiveStrategy(string index)
     {
-        // No-op in memory entity.
     }
 
-    /// <inheritdoc />
     public void RemoveActiveStrategy(string index)
     {
-        // No-op in memory entity.
     }
 
-    /// <inheritdoc />
     public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
 
-    /// <inheritdoc />
     public bool IsPendingKill { get; set; }
 
     internal void Dead()
     {
-        // No-op in memory entity.
     }
 }

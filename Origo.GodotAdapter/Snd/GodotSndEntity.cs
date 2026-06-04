@@ -10,12 +10,8 @@ using Origo.Core.Snd.Metadata;
 
 namespace Origo.GodotAdapter.Snd;
 
-/// <summary>
-///     将 Core 的 SndEntity 绑定到 Godot Node 生命周期。
-///     所有依赖通过构造函数注入。
-/// </summary>
 [GlobalClass]
-public partial class GodotSndEntity : Node, ISndEntity
+public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle
 {
     private readonly ISndContext _context;
     private readonly ILogger _logger;
@@ -40,10 +36,6 @@ public partial class GodotSndEntity : Node, ISndEntity
         _nodeFactoryCreator = nodeFactoryCreator;
     }
 
-    /// <summary>
-    ///     稳定的实体名（用于 Core 查找 key）。
-    ///     注意：Godot Node 的 Name 可能因同名冲突而被自动重命名，因此 FindByName 不应依赖 Name。
-    /// </summary>
     internal string StableName { get; private set; } = string.Empty;
 
     string ISndEntity.Name => StableName;
@@ -137,69 +129,108 @@ public partial class GodotSndEntity : Node, ISndEntity
         return handle?.Native as TNode;
     }
 
-    public void Load(SndMetaData metaData)
+    void IEntityLifecycle.RecoverForLifecycle(SndMetaData metaData)
     {
         ThrowIfReleasedFromManager();
         ArgumentNullException.ThrowIfNull(metaData);
-        // Name 是 FindByName 的 key；必须在触发 AfterLoad 之前可见（Let-it-crash 语义下更应 fail-fast）。
         StableName = metaData.Name;
         Name = metaData.Name;
         EnsureEntity();
-        _entity!.Load(metaData);
+        ((IEntityLifecycle)_entity!).RecoverForLifecycle(metaData);
         StableName = _entity.Name;
         Name = _entity.Name;
     }
 
-    public void Spawn(SndMetaData metaData)
+    internal void RecoverForLifecycle(SndMetaData metaData) => ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
+
+    void IEntityLifecycle.FireAfterSpawnHooks() => ((IEntityLifecycle)_entity!).FireAfterSpawnHooks();
+
+    void IEntityLifecycle.FireAfterLoadHooks() => ((IEntityLifecycle)_entity!).FireAfterLoadHooks();
+
+    void IEntityLifecycle.FireBeforeSaveHooks() => ((IEntityLifecycle)_entity!).FireBeforeSaveHooks();
+
+    void IEntityLifecycle.FireBeforeQuitHooks() => ((IEntityLifecycle)_entity!).FireBeforeQuitHooks();
+
+    void IEntityLifecycle.FireBeforeDeadHooks() => ((IEntityLifecycle)_entity!).FireBeforeDeadHooks();
+
+    void IEntityLifecycle.ReleaseStrategiesOnly() => ((IEntityLifecycle)_entity!).ReleaseStrategiesOnly();
+
+    void IEntityLifecycle.TeardownOnly() => ((IEntityLifecycle)_entity!).TeardownOnly();
+
+    SndMetaData IEntityLifecycle.BuildMetaData()
+    {
+        EnsureEntity();
+        return ((IEntityLifecycle)_entity!).BuildMetaData();
+    }
+
+    public void SpawnSingle(SndMetaData metaData)
     {
         ThrowIfReleasedFromManager();
         ArgumentNullException.ThrowIfNull(metaData);
-        // Name 是 FindByName 的 key；必须在触发 AfterSpawn 之前可见。
         StableName = metaData.Name;
         Name = metaData.Name;
         EnsureEntity();
-        _entity!.Spawn(metaData);
+        _entity!.SpawnSingle(metaData);
         StableName = _entity.Name;
         Name = _entity.Name;
     }
 
-    /// <summary>
-    ///     仅由 <see cref="GodotSndManager" /> 调用：从管理列表移除后再释放节点，避免集合与节点生命周期不同步。
-    /// </summary>
+    public void LoadSingle(SndMetaData metaData)
+    {
+        ThrowIfReleasedFromManager();
+        ArgumentNullException.ThrowIfNull(metaData);
+        StableName = metaData.Name;
+        Name = metaData.Name;
+        EnsureEntity();
+        _entity!.LoadSingle(metaData);
+        StableName = _entity.Name;
+        Name = _entity.Name;
+    }
+
     internal void QuitFromManager()
     {
         if (_releasedFromManager) return;
         _releasedFromManager = true;
         if (_entity is not null)
         {
-            _entity.Quit();
+            _entity.QuitSingle();
             _entity = null;
         }
 
-        // Core 已有显式生命周期编排，直接使用 Free（即时释放）；详见 README 中 GodotSndEntity 生命周期说明。
         Free();
     }
 
-    /// <summary>
-    ///     仅由 <see cref="GodotSndManager" /> 调用。
-    /// </summary>
     internal void DeadFromManager()
     {
         if (_releasedFromManager) return;
         _releasedFromManager = true;
         if (_entity is not null)
         {
-            _entity.Dead();
+            _entity.DeadSingle();
             _entity = null;
         }
 
         Free();
     }
 
-    public SndMetaData SerializeMetaData()
+    internal void TeardownFromManager()
+    {
+        if (_releasedFromManager) return;
+        _releasedFromManager = true;
+        if (_entity is not null)
+        {
+            ((IEntityLifecycle)_entity).ReleaseStrategiesOnly();
+            ((IEntityLifecycle)_entity).TeardownOnly();
+            _entity = null;
+        }
+
+        Free();
+    }
+
+    public SndMetaData SaveSingle()
     {
         EnsureEntity();
-        return _entity!.SerializeMetaData();
+        return _entity!.SaveSingle();
     }
 
     public void ProcessSnd(double delta) => _entity?.Process(delta);

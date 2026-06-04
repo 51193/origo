@@ -54,7 +54,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p200", NoCtx);
         mgr.Add(e, "s.p50", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p50", "s.p100", "s.p200" }, indices);
     }
 
@@ -70,7 +70,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.b", NoCtx);
         mgr.Add(e, "s.c", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.a", "s.b", "s.c" }, indices);
     }
 
@@ -90,7 +90,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p10b", NoCtx);
         mgr.Add(e, "s.p10c", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p5", "s.p10a", "s.p10b", "s.p10c", "s.p20" }, indices);
     }
 
@@ -108,7 +108,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p20", NoCtx);
         mgr.Add(e, "s.p15", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p10a", "s.p10b", "s.p15", "s.p20" }, indices);
     }
 
@@ -160,7 +160,8 @@ public class StrategyPriorityTests
         pool.Register(() => new S10());
         pool.Register(() => new S20());
 
-        mgr.Spawn(new[] { "s.p30", "s.p10", "s.p20" }, e, NoCtx);
+        mgr.RecoverStrategiesOnly(new[] { "s.p30", "s.p10", "s.p20" });
+        mgr.TriggerAfterSpawn(e, NoCtx);
 
         Rec.Reset();
         mgr.Process(e, 0.016, NoCtx);
@@ -176,7 +177,8 @@ public class StrategyPriorityTests
         pool.Register(() => new SB());
         pool.Register(() => new SC());
 
-        mgr.Spawn(new[] { "s.a", "s.b", "s.c" }, e, NoCtx);
+        mgr.RecoverStrategiesOnly(new[] { "s.a", "s.b", "s.c" });
+        mgr.TriggerAfterSpawn(e, NoCtx);
 
         Rec.Reset();
         mgr.Process(e, 0.016, NoCtx);
@@ -192,7 +194,8 @@ public class StrategyPriorityTests
         pool.Register(() => new SP50());
         pool.Register(() => new SP200());
 
-        mgr.Load(new[] { "s.p200", "s.p100", "s.p50" }, e, NoCtx);
+        mgr.RecoverStrategiesOnly(new[] { "s.p200", "s.p100", "s.p50" });
+        mgr.TriggerAfterLoad(e, NoCtx);
 
         Rec.Reset();
         mgr.Process(e, 0.016, NoCtx);
@@ -214,7 +217,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p50", NoCtx);
         mgr.Add(e, "s.p100", NoCtx);
 
-        var saved = mgr.SerializeIndices(e, NoCtx);
+        var saved = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p50", "s.p100", "s.p200" }, saved);
     }
 
@@ -232,11 +235,12 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p100", NoCtx);
         mgr.Add(e, "s.p200", NoCtx);
 
-        var savedIndices = mgr.SerializeIndices(e, NoCtx);
+        var savedIndices = mgr.GetStrategyIndices();
 
         var mgr2 = new SndStrategyManager(pool, NoLog);
         var e2 = new DummySndEntity("e2");
-        mgr2.Load(savedIndices, e2, NoCtx);
+        mgr2.RecoverStrategiesOnly(savedIndices);
+        mgr2.TriggerAfterLoad(e2, NoCtx);
 
         Rec.Reset();
         mgr2.Process(e2, 0.016, NoCtx);
@@ -255,7 +259,8 @@ public class StrategyPriorityTests
         pool.Register(() => new LC30());
 
         Rec.Reset();
-        mgr.Spawn(new[] { "s.lc30", "s.lc20", "s.lc10" }, e, NoCtx);
+        mgr.RecoverStrategiesOnly(new[] { "s.lc30", "s.lc20", "s.lc10" });
+        mgr.TriggerAfterSpawn(e, NoCtx);
 
         Assert.Equal(new[] { "s.lc10", "s.lc20", "s.lc30" }, Rec.Log);
     }
@@ -268,10 +273,11 @@ public class StrategyPriorityTests
         pool.Register(() => new Q20());
         pool.Register(() => new Q30());
 
-        mgr.Spawn(new[] { "s.qv30", "s.qv10", "s.qv20" }, e, NoCtx);
+        mgr.RecoverStrategiesOnly(new[] { "s.qv30", "s.qv10", "s.qv20" });
+        mgr.TriggerAfterSpawn(e, NoCtx);
 
         Rec.Reset();
-        mgr.Quit(e, NoCtx);
+        mgr.TriggerBeforeQuit(e, NoCtx);
 
         Assert.Equal(new[] { "s.qv10", "s.qv20", "s.qv30" }, Rec.Log);
     }
@@ -285,7 +291,8 @@ public class StrategyPriorityTests
         pool.Register(() => new LD30());
 
         Rec.Reset();
-        mgr.Load(new[] { "s.ld30", "s.ld10", "s.ld20" }, e, NoCtx);
+        mgr.RecoverStrategiesOnly(new[] { "s.ld30", "s.ld10", "s.ld20" });
+        mgr.TriggerAfterLoad(e, NoCtx);
 
         Assert.Equal(new[] { "s.ld10", "s.ld20", "s.ld30" }, Rec.Log);
     }
@@ -305,7 +312,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p30", NoCtx);
         mgr.Remove(e, "s.p20", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p10", "s.p30" }, indices);
     }
 
@@ -322,7 +329,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p30", NoCtx);
         mgr.Remove(e, "s.p10", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p20", "s.p30" }, indices);
     }
 
@@ -339,7 +346,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p30", NoCtx);
         mgr.Remove(e, "s.p30", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p10", "s.p20" }, indices);
     }
 
@@ -358,7 +365,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p20", NoCtx);
         mgr.Add(e, "s.p25", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p10", "s.p20", "s.p25" }, indices);
     }
 
@@ -371,7 +378,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p50", NoCtx);
         mgr.Remove(e, "nonexistent", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p50" }, indices);
     }
 
@@ -385,7 +392,7 @@ public class StrategyPriorityTests
 
         mgr.Add(e, "s.p100", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p100" }, indices);
     }
 
@@ -406,7 +413,7 @@ public class StrategyPriorityTests
         var mgr = new SndStrategyManager(pool, NoLog);
         var e = new DummySndEntity("empty");
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Empty(indices);
     }
 
@@ -422,7 +429,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.b", NoCtx);
         mgr.Add(e, "s.a", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.demo", "s.b", "s.a" }, indices);
     }
 
@@ -440,7 +447,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.n10", NoCtx);
         mgr.Add(e, "s.n5", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.n10", "s.n5", "s.n0", "s.p50" }, indices);
     }
 
@@ -456,7 +463,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.max", NoCtx);
         mgr.Add(e, "s.min", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.min", "s.zero", "s.max" }, indices);
     }
 
@@ -476,7 +483,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p40", NoCtx);
         mgr.Add(e, "s.p20", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p20", "s.p40", "s.p60", "s.p80", "s.p100" }, indices);
     }
 
@@ -496,7 +503,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p80", NoCtx);
         mgr.Add(e, "s.p100", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p20", "s.p40", "s.p60", "s.p80", "s.p100" }, indices);
     }
 
@@ -514,7 +521,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p200", NoCtx);
         mgr.Add(e, "s.p50", NoCtx);
 
-        var indices = mgr.SerializeIndices(e, NoCtx);
+        var indices = mgr.GetStrategyIndices();
         Assert.Equal(new[] { "s.p10", "s.p50", "s.p100", "s.p200" }, indices);
     }
 

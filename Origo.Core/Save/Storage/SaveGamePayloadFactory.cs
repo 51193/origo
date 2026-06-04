@@ -51,7 +51,7 @@ internal sealed class SaveGamePayloadFactory
 
         var progressNode = _blackboardSerializer.Serialize(_progress);
         var sessionNode = _blackboardSerializer.Serialize(_session);
-        var sndSceneNode = _sceneSerializer.Serialize(sceneAccess);
+        var sndSceneNode = _sceneSerializer.Build(sceneAccess);
 
         var levelPayload = new LevelPayload
         {

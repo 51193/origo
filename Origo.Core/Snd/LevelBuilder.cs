@@ -77,7 +77,7 @@ internal sealed class LevelBuilder
         if (_sceneHost.FindByName(metaData.Name) is not null)
             throw new InvalidOperationException($"Entity '{metaData.Name}' already exists in this level builder.");
 
-        _sceneHost.Spawn(metaData);
+        _sceneHost.SpawnEntity(metaData);
         return this;
     }
 
@@ -136,7 +136,7 @@ internal sealed class LevelBuilder
         return new LevelPayload
         {
             LevelId = LevelId,
-            SndSceneNode = sceneSerializer.Serialize(_sceneHost),
+            SndSceneNode = sceneSerializer.Build(_sceneHost),
             SessionNode = blackboardSerializer.Serialize(_sessionBlackboard),
             SessionStateMachinesNode = emptyStateMachinesNode
         };

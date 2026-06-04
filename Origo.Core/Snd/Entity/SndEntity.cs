@@ -13,7 +13,7 @@ namespace Origo.Core.Snd.Entity;
 /// <summary>
 ///     SND 聚合实体。封装数据、节点与策略生命周期，保持 Core 与引擎解耦。
 /// </summary>
-public sealed class SndEntity : ISndEntity
+public sealed class SndEntity : ISndEntity, IEntityLifecycle
 {
     private const string LogTag = nameof(SndEntity);
     private readonly ActiveStrategyManager _activeStrategyManager;
@@ -76,47 +76,56 @@ public sealed class SndEntity : ISndEntity
 
     public bool IsPendingKill { get; internal set; }
 
-    public void Load(SndMetaData metaData)
+    public void Process(double delta) => _strategyManager.Process(this, delta, _context);
+
+    void IEntityLifecycle.RecoverForLifecycle(SndMetaData metaData)
     {
-        RecoverFromMetaData(metaData);
-        _strategyManager.Load(
-            metaData.StrategyMetaData?.EntityIndices ?? Enumerable.Empty<string>(), this, _context);
+        Name = metaData.Name;
+        _dataManager.Recover(metaData.DataMetaData ??
+                             throw new InvalidOperationException("DataMetaData is required."));
+        _nodeHost.Recover(metaData.NodeMetaData ??
+                          throw new InvalidOperationException("NodeMetaData is required."));
+        _strategyManager.RecoverStrategiesOnly(
+            metaData.StrategyMetaData?.EntityIndices ?? Enumerable.Empty<string>());
         _activeStrategyManager.Recover(
             metaData.StrategyMetaData?.ActiveIndices ?? Enumerable.Empty<string>());
-        _logger.Log(LogLevel.Info, LogTag,
-            new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity loaded."));
     }
 
-    public void Spawn(SndMetaData metaData)
+    void IEntityLifecycle.FireAfterSpawnHooks()
     {
-        RecoverFromMetaData(metaData);
-        _strategyManager.Spawn(
-            metaData.StrategyMetaData?.EntityIndices ?? Enumerable.Empty<string>(), this, _context);
-        _activeStrategyManager.Recover(
-            metaData.StrategyMetaData?.ActiveIndices ?? Enumerable.Empty<string>());
+        _strategyManager.TriggerAfterSpawn(this, _context);
         _logger.Log(LogLevel.Info, LogTag,
-            new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity spawned."));
+            new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity spawned (hooks)."));
     }
 
-    public void Quit()
+    void IEntityLifecycle.FireAfterLoadHooks()
+    {
+        _strategyManager.TriggerAfterLoad(this, _context);
+        _logger.Log(LogLevel.Info, LogTag,
+            new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity loaded (hooks)."));
+    }
+
+    void IEntityLifecycle.FireBeforeSaveHooks() => _strategyManager.TriggerBeforeSave(this, _context);
+
+    void IEntityLifecycle.FireBeforeQuitHooks() => _strategyManager.TriggerBeforeQuit(this, _context);
+
+    void IEntityLifecycle.FireBeforeDeadHooks() => _strategyManager.TriggerBeforeDead(this, _context);
+
+    void IEntityLifecycle.ReleaseStrategiesOnly()
     {
         _activeStrategyManager.ReleaseAll();
-        _strategyManager.Quit(this, _context);
-        Teardown();
-        _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity quit."));
+        _strategyManager.ReleaseStrategiesOnly();
     }
 
-    public void Dead()
+    void IEntityLifecycle.TeardownOnly()
     {
-        _activeStrategyManager.ReleaseAll();
-        _strategyManager.Dead(this, _context);
-        Teardown();
-        _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity dead."));
+        _nodeHost.Release();
+        _dataManager.Release();
     }
 
-    public SndMetaData SerializeMetaData()
+    SndMetaData IEntityLifecycle.BuildMetaData()
     {
-        var entityIndices = _strategyManager.SerializeIndices(this, _context);
+        var entityIndices = _strategyManager.GetStrategyIndices();
         var activeIndices = _activeStrategyManager.SerializeIndices();
 
         return new SndMetaData
@@ -132,20 +141,37 @@ public sealed class SndEntity : ISndEntity
         };
     }
 
-    public void Process(double delta) => _strategyManager.Process(this, delta, _context);
-
-    private void RecoverFromMetaData(SndMetaData metaData)
+    public void SpawnSingle(SndMetaData metaData)
     {
-        Name = metaData.Name;
-        _dataManager.Recover(metaData.DataMetaData ??
-                             throw new InvalidOperationException("DataMetaData is required."));
-        _nodeHost.Recover(metaData.NodeMetaData ??
-                          throw new InvalidOperationException("NodeMetaData is required."));
+        ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
+        ((IEntityLifecycle)this).FireAfterSpawnHooks();
     }
 
-    private void Teardown()
+    public void LoadSingle(SndMetaData metaData)
     {
-        _nodeHost.Release();
-        _dataManager.Release();
+        ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
+        ((IEntityLifecycle)this).FireAfterLoadHooks();
+    }
+
+    public void QuitSingle()
+    {
+        ((IEntityLifecycle)this).FireBeforeQuitHooks();
+        ((IEntityLifecycle)this).ReleaseStrategiesOnly();
+        ((IEntityLifecycle)this).TeardownOnly();
+        _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity quit."));
+    }
+
+    public void DeadSingle()
+    {
+        ((IEntityLifecycle)this).FireBeforeDeadHooks();
+        ((IEntityLifecycle)this).ReleaseStrategiesOnly();
+        ((IEntityLifecycle)this).TeardownOnly();
+        _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity dead."));
+    }
+
+    public SndMetaData SaveSingle()
+    {
+        ((IEntityLifecycle)this).FireBeforeSaveHooks();
+        return ((IEntityLifecycle)this).BuildMetaData();
     }
 }

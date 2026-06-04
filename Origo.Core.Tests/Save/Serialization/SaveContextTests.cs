@@ -57,21 +57,21 @@ public class SaveContextTests
         var ctx = new SaveContext(new Blackboard.Blackboard(), new Blackboard.Blackboard(), world);
         var host = new TestSndSceneHost();
 
-        using var node = ctx.SerializeSndScene(host);
+        using var node = ctx.BuildSndScene(host);
         Assert.NotNull(node);
     }
 
     [Fact]
-    public void SaveContext_DeserializeSndScene_ClearsAndLoads()
+    public void SaveContext_RecoverSndScene_LoadsEntities()
     {
         var world = CreateWorld();
         var ctx = new SaveContext(new Blackboard.Blackboard(), new Blackboard.Blackboard(), world);
         var host = new TestSndSceneHost();
-        host.Spawn(new SndMetaData { Name = "old" });
+        host.SpawnEntity(new SndMetaData { Name = "old" });
 
-        using var node = TestFactory.NodeFromJson("[]");
-        ctx.DeserializeSndScene(host, node);
-        Assert.Equal(1, host.ClearAllCount);
+        using var node = TestFactory.NodeFromJson("""[{"name": "new_entity"}]""");
+        ctx.RecoverSndScene(host, node);
+        Assert.Contains(host.GetEntities(), e => e.Name == "new_entity");
     }
 
     [Fact]

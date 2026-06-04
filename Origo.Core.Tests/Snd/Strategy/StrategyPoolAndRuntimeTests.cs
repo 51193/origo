@@ -63,8 +63,11 @@ public class StrategyPoolAndRuntimeTests
         var manager = new SndStrategyManager(pool, NullLogger.Instance);
 
         Assert.Throws<InvalidOperationException>(() =>
-            manager.Spawn(new[] { "recover.safe", "recover.missing" }, new DummySndEntity("dummy"),
-                NullSndContext.Instance));
+        {
+            manager.RecoverStrategiesOnly(new[] { "recover.safe", "recover.missing" });
+            manager.TriggerAfterSpawn(new DummySndEntity("dummy"),
+                NullSndContext.Instance);
+        });
 
         var first = pool.GetStrategy<EntityStrategyBase>("recover.safe");
         pool.ReleaseStrategy("recover.safe");
@@ -86,7 +89,7 @@ public class StrategyPoolAndRuntimeTests
         runtime.SpawnMany(new[] { metaB });
 
         Assert.Equal(2, runtime.GetEntities().Count);
-        Assert.Equal(2, runtime.SerializeMetaList().Count);
+        Assert.Equal(2, runtime.BuildMetaList().Count);
 
         runtime.ClearAll();
         Assert.Empty(runtime.GetEntities());

@@ -26,7 +26,7 @@ public class LifecycleRunsTests
         run.Dispose();
 
         // Scene should have been cleared during Dispose.
-        Assert.Empty(host.SerializeMetaList());
+        Assert.Empty(host.BuildMetaList());
 
         // After Dispose, all property access should throw ObjectDisposedException.
         Assert.Throws<ObjectDisposedException>(() => run.SessionBlackboard);
@@ -146,13 +146,13 @@ public class LifecycleRunsTests
         progressRun.LoadAndMountForeground("a");
 
         // Missing target level payload in current/ → enter empty session and clear scene (README contract).
-        runtime.Snd.SceneHost.Spawn(new SndMetaData
+        runtime.Snd.SceneHost.SpawnEntity(new SndMetaData
             { Name = "Temp", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
-        Assert.NotEmpty(runtime.Snd.SerializeMetaList());
+        Assert.NotEmpty(runtime.Snd.BuildMetaList());
 
         progressRun.SwitchForeground("b");
 
-        Assert.Empty(runtime.Snd.SerializeMetaList());
+        Assert.Empty(runtime.Snd.BuildMetaList());
         Assert.Equal("b", progressRun.ForegroundSession?.LevelId);
         Assert.NotNull(progressRun.ForegroundSession);
         Assert.Equal("b", progressRun.ForegroundSession!.LevelId);
@@ -245,7 +245,7 @@ public class LifecycleRunsTests
         var run = new SessionRun(managerRuntime, new SessionParameters("level1", new Blackboard.Blackboard(), host));
 
         run.SessionBlackboard.Set("before", 1);
-        host.Spawn(new SndMetaData
+        host.SpawnEntity(new SndMetaData
         {
             Name = "temp",
             NodeMetaData = new NodeMetaData(),
@@ -261,7 +261,7 @@ public class LifecycleRunsTests
         };
 
         Assert.ThrowsAny<Exception>(() => run.LoadFromPayload(payload));
-        Assert.Empty(host.SerializeMetaList());
+        Assert.Empty(host.BuildMetaList());
         Assert.False(run.SessionBlackboard.TryGet<int>("before").found);
         Assert.False(run.SessionBlackboard.TryGet<int>("after").found);
     }

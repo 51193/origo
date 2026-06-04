@@ -12,11 +12,6 @@ using Origo.Core.Snd.Scene;
 
 namespace Origo.GodotAdapter.Snd;
 
-/// <summary>
-///     管理场景内 GodotSndEntity 集合的适配层管理器。
-///     同时实现 ISndSceneHost，供 Core 层的 SndRuntime 以抽象方式进行实体操作。
-///     使用内部 List 维护实体集合，避免每帧通过 Group 查询造成 GC 压力。
-/// </summary>
 [GlobalClass]
 public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachableSceneHost
 {
@@ -33,10 +28,6 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
     public int ProcessTickCount { get; private set; }
     public double ProcessDeltaSum { get; private set; }
 
-    /// <summary>
-    ///     绑定存档/生命周期门面。
-    ///     支持在生命周期切换时重新绑定会话上下文。
-    /// </summary>
     public void BindContext(ISndContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -46,15 +37,15 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         Context = context;
     }
 
-    public IReadOnlyList<SndMetaData> SerializeMetaList()
+    public IReadOnlyList<SndMetaData> BuildMetaList()
     {
         var list = new List<SndMetaData>(_entities.Count);
         for (var i = 0; i < _entities.Count; i++)
-            list.Add(_entities[i].SerializeMetaData());
+            list.Add(((IEntityLifecycle)_entities[i]).BuildMetaData());
         return list;
     }
 
-    public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
+    public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
         var staged = new List<GodotSndEntity>();
@@ -67,7 +58,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
                 AddChild(snd);
                 _entities.Add(snd);
                 staged.Add(snd);
-                snd.Load(meta);
+                snd.RecoverForLifecycle(meta);
             }
             catch
             {
@@ -85,9 +76,11 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         }
     }
 
-    public void ClearAll() => QuitAll();
+    public void RemoveAllEntities()
+    {
+    }
 
-    public ISndEntity Spawn(SndMetaData metaData) => SpawnFromMeta(metaData);
+    public ISndEntity SpawnEntity(SndMetaData metaData) => SpawnFromMeta(metaData);
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entityView ??= new EntityView(_entities);
 
@@ -99,20 +92,19 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
 
     public void ProcessAll(double delta)
     {
-        // Delegate to the Godot _Process-equivalent logic for non-Godot callers (e.g. background session ticking).
         var snapshot = _entities.ToArray();
         foreach (var entity in snapshot)
             entity.ProcessSnd(delta);
     }
 
-    public void DeadByName(string name)
+    public void TeardownEntity(string name)
     {
         var snd = _entities.FirstOrDefault(s => s.StableName == name);
         if (snd is null)
             throw new InvalidOperationException($"No entity with StableName '{name}'.");
 
         _entities.Remove(snd);
-        snd.DeadFromManager();
+        snd.TeardownFromManager();
     }
 
     public void RequestKillEntity(string name)
@@ -136,7 +128,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
             AddChild(snd);
             _entities.Add(snd);
             staged.Add(snd);
-            snd.Spawn(metaData);
+            ((IEntityLifecycle)snd).RecoverForLifecycle(metaData);
             return snd;
         }
         catch
@@ -146,9 +138,6 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         }
     }
 
-    /// <summary>
-    ///     绑定与 Core 运行时共享的 SndWorld 与日志（由 <see cref="Bootstrap.OrigoAutoHost" /> 调用一次）。
-    /// </summary>
     public void BindRuntimeDependencies(SndWorld world, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(world);
@@ -159,17 +148,6 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         SharedWorld = world;
         SharedLogger = logger;
         _runtimeDepsBound = true;
-    }
-
-    public void QuitAll()
-    {
-        // 严格栈语义：如果栈 push 顺序与实体 load/spawn 顺序一致，则退出顺序应当反向以匹配 LIFO。
-        for (var i = _entities.Count - 1; i >= 0; i--)
-        {
-            var snd = _entities[i];
-            _entities.RemoveAt(i);
-            snd.QuitFromManager();
-        }
     }
 
     public override void _Ready() => SetProcess(true);

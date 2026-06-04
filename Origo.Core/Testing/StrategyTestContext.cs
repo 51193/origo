@@ -262,7 +262,7 @@ internal sealed class TestSceneHost : ISndSceneHost
 {
     private readonly List<ISndEntity> _entities = new();
 
-    public ISndEntity Spawn(SndMetaData metaData)
+    public ISndEntity SpawnEntity(SndMetaData metaData)
     {
         var entity = new MinimalTestEntity { Name = metaData.Name };
         _entities.Add(entity);
@@ -278,15 +278,15 @@ internal sealed class TestSceneHost : ISndSceneHost
     {
     }
 
-    public IReadOnlyList<SndMetaData> SerializeMetaList() => Array.Empty<SndMetaData>();
+    public IReadOnlyList<SndMetaData> BuildMetaList() => Array.Empty<SndMetaData>();
 
-    public void LoadFromMetaList(IEnumerable<SndMetaData> metaList)
+    public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
     }
 
-    public void ClearAll() => _entities.Clear();
+    public void RemoveAllEntities() => _entities.Clear();
 
-    public void DeadByName(string name)
+    public void TeardownEntity(string name)
     {
         var entity = _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
         if (entity is not null)
