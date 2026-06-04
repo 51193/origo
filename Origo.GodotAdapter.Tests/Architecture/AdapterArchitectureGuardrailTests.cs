@@ -226,7 +226,7 @@ public class AdapterArchitectureGuardrailTests
             foreach (var f in _files.Keys.Where(f => f.StartsWith(sp, StringComparison.Ordinal) || f == Normalize(s))
                          .ToArray())
             {
-                _files[Normalize(d) + f.Substring(Normalize(s).Length)] = _files[f];
+                _files[string.Concat(Normalize(d), f.AsSpan(Normalize(s).Length))] = _files[f];
                 _files.Remove(f);
             }
         }

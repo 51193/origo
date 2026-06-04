@@ -31,7 +31,7 @@ public class InvokeStrategyCommandHandlerTests
 
         Assert.True(ok);
         Assert.Null(errorMessage);
-        Assert.Contains(output.Entries, e => e.Contains("E"));
+        Assert.Contains(output.Entries, e => e.Contains('E'));
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class InvokeStrategyCommandHandlerTests
 
         Assert.True(ok);
         Assert.Null(errorMessage);
-        Assert.Contains(output.Entries, e => e.Contains("x") && e.Contains("z"));
+        Assert.Contains(output.Entries, e => e.Contains('x') && e.Contains('z'));
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class InvokeStrategyCommandHandlerTests
     public void InvokeStrategy_NotActiveStrategy_OutputsError()
     {
         var (runtime, host, output) = Setup();
-        LoadEntities(host, new string[0]);
+        LoadEntities(host, Array.Empty<string>());
         var handler = new InvokeStrategyCommandHandler(runtime);
 
         var ok = handler.TryExecute(CreateInvocation("E", "not.exist"),

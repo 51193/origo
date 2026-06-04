@@ -12,10 +12,8 @@ namespace Origo.GodotAdapter.Bootstrap;
 public partial class OrigoDefaultEntry : OrigoAutoHost
 {
     private static readonly string[] GodotSkipPrefixes = ["Godot", "GodotSharp"];
-    // CA1859 suppressed: intentionally using the interface type for decoupling.
-#pragma warning disable CA1859
-    private ISndContext? _sndContext;
-#pragma warning restore CA1859
+
+    private SndContext? _sndContext;
 
     [Export] public string ConfigPath { get; set; } = "res://origo/entry/entry.json";
     [Export] public string SceneAliasMapPath { get; set; } = "res://origo/maps/scene_aliases.map";
