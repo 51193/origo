@@ -143,21 +143,55 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle
 
     internal void RecoverForLifecycle(SndMetaData metaData) => ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
 
-    void IEntityLifecycle.FireAfterSpawnHooks() => ((IEntityLifecycle)_entity!).FireAfterSpawnHooks();
+    void IEntityLifecycle.FireAfterSpawnHooks()
+    {
+        EnsureEntity();
+        ((IEntityLifecycle)_entity!).FireAfterSpawnHooks();
+    }
 
-    void IEntityLifecycle.FireAfterLoadHooks() => ((IEntityLifecycle)_entity!).FireAfterLoadHooks();
+    void IEntityLifecycle.FireAfterLoadHooks()
+    {
+        EnsureEntity();
+        ((IEntityLifecycle)_entity!).FireAfterLoadHooks();
+    }
 
-    void IEntityLifecycle.FireBeforeSaveHooks() => ((IEntityLifecycle)_entity!).FireBeforeSaveHooks();
+    void IEntityLifecycle.FireBeforeSaveHooks()
+    {
+        EnsureEntity();
+        ((IEntityLifecycle)_entity!).FireBeforeSaveHooks();
+    }
 
-    void IEntityLifecycle.FireBeforeQuitHooks() => ((IEntityLifecycle)_entity!).FireBeforeQuitHooks();
+    void IEntityLifecycle.FireBeforeQuitHooks()
+    {
+        EnsureEntity();
+        ((IEntityLifecycle)_entity!).FireBeforeQuitHooks();
+    }
 
-    void IEntityLifecycle.FireBeforeDeadHooks() => ((IEntityLifecycle)_entity!).FireBeforeDeadHooks();
+    void IEntityLifecycle.FireBeforeDeadHooks()
+    {
+        EnsureEntity();
+        ((IEntityLifecycle)_entity!).FireBeforeDeadHooks();
+    }
 
-    void IEntityLifecycle.ReleaseStrategiesOnly() => ((IEntityLifecycle)_entity!).ReleaseStrategiesOnly();
+    void IEntityLifecycle.ReleaseStrategiesOnly()
+    {
+        EnsureEntity();
+        ((IEntityLifecycle)_entity!).ReleaseStrategiesOnly();
+    }
 
-    void IEntityLifecycle.TeardownOnly() => ((IEntityLifecycle)_entity!).TeardownOnly();
+    void IEntityLifecycle.TeardownOnly()
+    {
+        EnsureEntity();
+        ((IEntityLifecycle)_entity!).TeardownOnly();
+    }
 
     SndMetaData IEntityLifecycle.BuildMetaData()
+    {
+        EnsureEntity();
+        return ((IEntityLifecycle)_entity!).BuildMetaData();
+    }
+
+    internal SndMetaData BuildSndMetaData()
     {
         EnsureEntity();
         return ((IEntityLifecycle)_entity!).BuildMetaData();
@@ -187,43 +221,11 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle
         Name = _entity.Name;
     }
 
-    internal void QuitFromManager()
+    internal void DetachFromManager()
     {
         if (_releasedFromManager) return;
         _releasedFromManager = true;
-        if (_entity is not null)
-        {
-            _entity.QuitSingle();
-            _entity = null;
-        }
-
-        Free();
-    }
-
-    internal void DeadFromManager()
-    {
-        if (_releasedFromManager) return;
-        _releasedFromManager = true;
-        if (_entity is not null)
-        {
-            _entity.DeadSingle();
-            _entity = null;
-        }
-
-        Free();
-    }
-
-    internal void TeardownFromManager()
-    {
-        if (_releasedFromManager) return;
-        _releasedFromManager = true;
-        if (_entity is not null)
-        {
-            ((IEntityLifecycle)_entity).ReleaseStrategiesOnly();
-            ((IEntityLifecycle)_entity).TeardownOnly();
-            _entity = null;
-        }
-
+        _entity = null;
         Free();
     }
 

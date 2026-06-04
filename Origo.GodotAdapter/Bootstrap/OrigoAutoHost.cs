@@ -71,7 +71,11 @@ public partial class OrigoAutoHost : Node
         }
     }
 
-    public override void _Process(double delta) => Runtime?.Console?.ProcessPending();
+    public override void _Process(double delta)
+    {
+        Runtime?.FlushEndOfFrameDeferred();
+        Runtime?.Console?.ProcessPending();
+    }
 
     private OrigoRuntime CreateRuntime()
     {

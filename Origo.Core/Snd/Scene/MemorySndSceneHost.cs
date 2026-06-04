@@ -18,20 +18,13 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
     private readonly List<ISndEntity> _entities = new();
     private readonly List<SndMetaData> _metaList = new();
 
-    public ISndEntity Spawn(SndMetaData metaData)
+    public ISndEntity CreateEntity(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
         _metaList.Add(metaData);
         var entity = new MemorySndEntity(metaData.Name);
         _entities.Add(entity);
         return entity;
-    }
-
-    public void SpawnMany(IEnumerable<SndMetaData> metaList)
-    {
-        ArgumentNullException.ThrowIfNull(metaList);
-        foreach (var meta in metaList)
-            Spawn(meta);
     }
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
@@ -63,7 +56,7 @@ internal sealed class MemorySndSceneHost : ISndSceneHost
     {
     }
 
-    public void TeardownEntity(string name)
+    public void RemoveEntity(string name)
     {
         var index = _entities.FindIndex(e => string.Equals(e.Name, name, StringComparison.Ordinal));
         if (index < 0)

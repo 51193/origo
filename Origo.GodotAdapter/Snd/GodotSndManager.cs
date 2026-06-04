@@ -41,7 +41,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
     {
         var list = new List<SndMetaData>(_entities.Count);
         for (var i = 0; i < _entities.Count; i++)
-            list.Add(((IEntityLifecycle)_entities[i]).BuildMetaData());
+            list.Add(_entities[i].BuildSndMetaData());
         return list;
     }
 
@@ -81,21 +81,23 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         _entities.Clear();
     }
 
-    public ISndEntity Spawn(SndMetaData metaData)
-    {
-        var snd = SpawnRecoverOnly(metaData);
-        ((IEntityLifecycle)snd).FireAfterSpawnHooks();
-        return snd;
-    }
-
-    public void SpawnMany(IEnumerable<SndMetaData> metaList)
+    public ISndEntity CreateEntity(SndMetaData metaData)
     {
         var staged = new List<GodotSndEntity>();
-        foreach (var meta in metaList)
-            staged.Add(SpawnRecoverOnly(meta));
-
-        foreach (var snd in staged)
-            ((IEntityLifecycle)snd).FireAfterSpawnHooks();
+        try
+        {
+            var snd = CreateSndEntity();
+            AddChild(snd);
+            _entities.Add(snd);
+            staged.Add(snd);
+            snd.RecoverForLifecycle(metaData);
+            return snd;
+        }
+        catch
+        {
+            RollbackPartialLoad(staged);
+            throw;
+        }
     }
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entityView ??= new EntityView(_entities);
@@ -113,14 +115,14 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
             entity.ProcessSnd(delta);
     }
 
-    public void TeardownEntity(string name)
+    public void RemoveEntity(string name)
     {
         var snd = _entities.FirstOrDefault(s => s.StableName == name);
         if (snd is null)
             throw new InvalidOperationException($"No entity with StableName '{name}'.");
 
         _entities.Remove(snd);
-        snd.TeardownFromManager();
+        snd.DetachFromManager();
     }
 
     public void RequestKillEntity(string name)
@@ -133,25 +135,6 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
             throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
 
         snd.MarkPendingKill();
-    }
-
-    private GodotSndEntity SpawnRecoverOnly(SndMetaData metaData)
-    {
-        var staged = new List<GodotSndEntity>();
-        try
-        {
-            var snd = CreateSndEntity();
-            AddChild(snd);
-            _entities.Add(snd);
-            staged.Add(snd);
-            ((IEntityLifecycle)snd).RecoverForLifecycle(metaData);
-            return snd;
-        }
-        catch
-        {
-            RollbackPartialLoad(staged);
-            throw;
-        }
     }
 
     public void BindRuntimeDependencies(SndWorld world, ILogger logger)
@@ -182,7 +165,6 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
             _processBuffer.AddRange(_entities);
             for (var i = 0; i < _processBuffer.Count; i++)
                 _processBuffer[i].ProcessSnd(delta);
-            Context?.FlushDeferredActionsForCurrentFrame();
         }
         finally
         {

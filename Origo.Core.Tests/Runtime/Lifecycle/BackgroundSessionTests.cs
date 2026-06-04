@@ -98,7 +98,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        var entity = bg.SceneHost.Spawn(CreateMetaWithStrategy("bg_entity"));
+        var entity = bg.SceneHost.CreateEntity(CreateMetaWithStrategy("bg_entity"));
         if (entity is IEntityLifecycle lc)
             lc.FireAfterSpawnHooks();
 
@@ -116,7 +116,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg_ctx", "bg_ctx");
-        bg.SceneHost.Spawn(CreateMetaWithIndices("spy", SessionContextStrategyIndex));
+        bg.SceneHost.CreateEntity(CreateMetaWithIndices("spy", SessionContextStrategyIndex));
         GetSceneHost(bg).ProcessAll(0.016);
 
         Assert.Contains("bg_ctx", seenSessionLevelIds);
@@ -144,7 +144,7 @@ public class BackgroundSessionTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        bg.SceneHost.Spawn(CreateMeta("bg_entity"));
+        bg.SceneHost.CreateEntity(CreateMeta("bg_entity"));
 
         Assert.Null(ctx.SndRuntime.FindByName("bg_entity"));
         Assert.NotNull(bg.SceneHost.FindByName("bg_entity"));
@@ -159,7 +159,7 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = bg.SceneHost;
-        var entity = host.Spawn(CreateMeta("npc"));
+        var entity = host.CreateEntity(CreateMeta("npc"));
 
         Assert.Equal("npc", entity.Name);
         Assert.Single(host.GetEntities());
@@ -174,7 +174,7 @@ public class BackgroundSessionTests
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = bg.SceneHost;
         foreach (var meta in new[] { CreateMeta("a"), CreateMeta("b"), CreateMeta("c") })
-            host.Spawn(meta);
+            host.CreateEntity(meta);
 
         Assert.Equal(3, host.GetEntities().Count);
     }
@@ -203,12 +203,12 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = GetSceneHost(bg);
-        host.Spawn(CreateMetaWithStrategy("npc"));
+        host.CreateEntity(CreateMetaWithStrategy("npc"));
 
         var npc = host.FindByName("npc");
         if (npc is IEntityLifecycle lc)
             lc.FireBeforeDeadHooks();
-        host.TeardownEntity("npc");
+        host.RemoveEntity("npc");
 
         Assert.Contains("BeforeDead:npc", events);
         Assert.Empty(host.GetEntities());
@@ -226,8 +226,8 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = GetSceneHost(bg);
-        host.Spawn(CreateMetaWithStrategy("a"));
-        host.Spawn(CreateMetaWithStrategy("b"));
+        host.CreateEntity(CreateMetaWithStrategy("a"));
+        host.CreateEntity(CreateMetaWithStrategy("b"));
 
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
@@ -257,7 +257,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        GetSceneHost(bg).Spawn(CreateMetaWithIndices("npc", ProcessStrategyIndex));
+        GetSceneHost(bg).CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
 
         GetSceneHost(bg).ProcessAll(0.016);
 
@@ -273,8 +273,8 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = bg.SceneHost;
-        host.Spawn(CreateMeta("a"));
-        host.Spawn(CreateMeta("b"));
+        host.CreateEntity(CreateMeta("a"));
+        host.CreateEntity(CreateMeta("b"));
 
         var list = bg.SceneHost.BuildMetaList();
 
@@ -289,7 +289,7 @@ public class BackgroundSessionTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("dungeon", "dungeon");
-        bg.SceneHost.Spawn(CreateMeta("boss"));
+        bg.SceneHost.CreateEntity(CreateMeta("boss"));
         bg.SessionBlackboard.Set("difficulty", "hard");
 
         AsSessionRun(bg).PersistLevelState();
@@ -312,7 +312,7 @@ public class BackgroundSessionTests
         });
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        bg.SceneHost.Spawn(CreateMetaWithStrategy("npc"));
+        bg.SceneHost.CreateEntity(CreateMetaWithStrategy("npc"));
         bg.Dispose();
 
         Assert.Contains("BeforeQuit:npc", events);
@@ -360,10 +360,10 @@ public class BackgroundSessionTests
         var host = GetSceneHost(bg);
 
         // Populate with entities.
-        var guard01 = host.Spawn(CreateMetaWithIndices("guard_01", TrackingStrategyIndex, ProcessStrategyIndex));
+        var guard01 = host.CreateEntity(CreateMetaWithIndices("guard_01", TrackingStrategyIndex, ProcessStrategyIndex));
         if (guard01 is IEntityLifecycle lc1)
             lc1.FireAfterSpawnHooks();
-        var guard02 = host.Spawn(CreateMetaWithIndices("guard_02", TrackingStrategyIndex));
+        var guard02 = host.CreateEntity(CreateMetaWithIndices("guard_02", TrackingStrategyIndex));
         if (guard02 is IEntityLifecycle lc2)
             lc2.FireAfterSpawnHooks();
         Assert.Contains("AfterSpawn:guard_01", events);
@@ -404,7 +404,7 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg_level", "bg_level");
         var host = bg.SceneHost;
-        host.Spawn(CreateMeta("soldier_01"));
+        host.CreateEntity(CreateMeta("soldier_01"));
         bg.SessionBlackboard.Set("hp", 100);
 
         var payload = AsSessionRun(bg).SerializeToPayload();
@@ -435,7 +435,7 @@ public class BackgroundSessionTests
         using (var source = ctx.SessionManager.CreateBackgroundSession("src_level", "src_level"))
         {
             var srcHost = source.SceneHost;
-            srcHost.Spawn(CreateMetaWithStrategy("guard_01"));
+            srcHost.CreateEntity(CreateMetaWithStrategy("guard_01"));
             source.SessionBlackboard.Set("alert", 5);
             payload = AsSessionRun(source).SerializeToPayload();
         }
@@ -459,8 +459,8 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = bg.SceneHost;
-        host.Spawn(CreateMeta("unit_a"));
-        host.Spawn(CreateMeta("unit_b"));
+        host.CreateEntity(CreateMeta("unit_a"));
+        host.CreateEntity(CreateMeta("unit_b"));
         bg.SessionBlackboard.Set("score", 42);
 
         var payload = AsSessionRun(bg).SerializeToPayload();
@@ -514,7 +514,7 @@ public class BackgroundSessionTests
         using (var source = ctx.SessionManager.CreateBackgroundSession("src", "src"))
         {
             var srcHost = source.SceneHost;
-            srcHost.Spawn(CreateMetaWithStrategy("npc_a"));
+            srcHost.CreateEntity(CreateMetaWithStrategy("npc_a"));
             source.SessionBlackboard.Set("difficulty", "hard");
             payload = AsSessionRun(source).SerializeToPayload();
         }
@@ -555,7 +555,7 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = GetSceneHost(bg);
-        host.Spawn(CreateMetaWithIndices("npc", ProcessStrategyIndex));
+        host.CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
 
         host.ProcessAll(0.016);
 
@@ -574,7 +574,7 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = GetSceneHost(bg);
-        host.Spawn(CreateMetaWithStrategy("old_entity"));
+        host.CreateEntity(CreateMetaWithStrategy("old_entity"));
         events.Clear();
 
         host.RemoveAllEntities();
@@ -618,7 +618,7 @@ public class BackgroundSessionTests
         // Create and mount a background session with data.
         var bg = ctx.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
         bg.SessionBlackboard.Set("sim_round", 10);
-        bg.SceneHost.Spawn(CreateMeta("BgEntity"));
+        bg.SceneHost.CreateEntity(CreateMeta("BgEntity"));
 
         // Build and write the save payload.
         var progressRun = ctx.EnsureProgressRun();
@@ -729,7 +729,7 @@ public class BackgroundSessionTests
         // Create a background session with data.
         var bg = ctx.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
         bg.SessionBlackboard.Set("sim_round", 10);
-        bg.SceneHost.Spawn(CreateMeta("BgEntity"));
+        bg.SceneHost.CreateEntity(CreateMeta("BgEntity"));
 
         // Save to disk (both current/ and snapshot).
         var progressRun = ctx.EnsureProgressRun();

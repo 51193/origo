@@ -29,26 +29,11 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
         _context = context;
     }
 
-    public ISndEntity Spawn(SndMetaData metaData)
+    public ISndEntity CreateEntity(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
         EnsureReady();
-        var entity = CreateAndRecover(metaData);
-        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
-        return entity;
-    }
-
-    public void SpawnMany(IEnumerable<SndMetaData> metaList)
-    {
-        ArgumentNullException.ThrowIfNull(metaList);
-        EnsureReady();
-
-        var staged = new List<SndEntity>();
-        foreach (var meta in metaList)
-            staged.Add(CreateAndRecover(meta));
-
-        foreach (var entity in staged)
-            ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+        return CreateAndRecover(metaData);
     }
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entries.Select(e => (ISndEntity)e.Entity).ToArray();
@@ -78,17 +63,14 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
 
     public void RemoveAllEntities() => _entries.Clear();
 
-    public void TeardownEntity(string name)
+    public void RemoveEntity(string name)
     {
         var index = _entries.FindIndex(e =>
             string.Equals(e.Entity.Name, name, StringComparison.Ordinal));
         if (index < 0)
             throw new InvalidOperationException($"No entity with name '{name}'.");
 
-        var entry = _entries[index];
         _entries.RemoveAt(index);
-        ((IEntityLifecycle)entry.Entity).ReleaseStrategiesOnly();
-        ((IEntityLifecycle)entry.Entity).TeardownOnly();
     }
 
     public void RequestKillEntity(string name)

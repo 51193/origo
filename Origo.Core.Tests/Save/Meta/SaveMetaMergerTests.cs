@@ -89,8 +89,7 @@ public class SaveMetaMergerTests
         {
         }
 
-        public ISndEntity Spawn(SndMetaData metaData) => throw new NotSupportedException();
-        public void SpawnMany(IEnumerable<SndMetaData> metaList) => throw new NotSupportedException();
+        public ISndEntity CreateEntity(SndMetaData metaData) => throw new NotSupportedException();
 
         public IReadOnlyCollection<ISndEntity> GetEntities() => Array.Empty<ISndEntity>();
 
@@ -100,7 +99,7 @@ public class SaveMetaMergerTests
         {
         }
 
-        public void TeardownEntity(string name)
+        public void RemoveEntity(string name)
         {
         }
 

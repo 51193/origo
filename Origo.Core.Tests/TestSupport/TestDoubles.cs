@@ -289,18 +289,12 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     private readonly List<SndMetaData> _metaList = new();
     public int ClearAllCount { get; private set; }
 
-    public ISndEntity Spawn(SndMetaData metaData)
+    public ISndEntity CreateEntity(SndMetaData metaData)
     {
         _metaList.Add(metaData);
         var entity = new DummySndEntity(metaData.Name);
         _entities.Add(entity);
         return entity;
-    }
-
-    public void SpawnMany(IEnumerable<SndMetaData> metaList)
-    {
-        foreach (var meta in metaList)
-            Spawn(meta);
     }
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
@@ -331,7 +325,7 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     {
     }
 
-    public void TeardownEntity(string name)
+    public void RemoveEntity(string name)
     {
         var entity = _entities.FirstOrDefault(e => e.Name == name);
         if (entity is not null)

@@ -32,7 +32,6 @@ public partial class OrigoDefaultEntry
         Runtime.SndWorld.LoadTemplates(SharedFileSystem, SndTemplateMapPath, Runtime.Logger);
 
         _sndContext.RequestLoadMainMenuEntrySave();
-        _sndContext.FlushDeferredActionsForCurrentFrame();
     }
 
     private void RegisterConsoleCommandHandlers()

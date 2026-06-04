@@ -9,9 +9,8 @@ namespace Origo.Core.Snd.Scene;
 /// <summary>
 ///     面向上层的 SND 运行时门面。
 ///     将 SndWorld（策略池与 JSON 配置）与具体场景宿主 ISndSceneHost 组合在一起，
-///     提供统一的 Spawn / 导出入口。
-///     Spawn/SpawnMany 委托给 SceneHost（宿主内部完成钩子触发），
-///     KillPendingEntities/ClearAll 则在此编排两阶段批处理。
+///     提供统一的 Spawn / 导出入口，并在此统一编排所有策略生命周期钩子。
+///     SceneHost 仅提供容器能力（创建/查找/移除），不参与钩子触发。
 /// </summary>
 public sealed class SndRuntime
 {
@@ -35,7 +34,10 @@ public sealed class SndRuntime
         if (SceneHost.FindByName(metaData.Name) is not null)
             throw new InvalidOperationException($"Snd entity name '{metaData.Name}' already exists.");
 
-        return SceneHost.Spawn(metaData);
+        var entity = SceneHost.CreateEntity(metaData);
+        if (entity is IEntityLifecycle lifecycle)
+            lifecycle.FireAfterSpawnHooks();
+        return entity;
     }
 
     public void SpawnMany(IEnumerable<SndMetaData> metaList)
@@ -50,7 +52,13 @@ public sealed class SndRuntime
                 throw new InvalidOperationException($"Snd entity name '{meta.Name}' already exists.");
         }
 
-        SceneHost.SpawnMany(metaList);
+        var staged = new List<ISndEntity>();
+        foreach (var meta in metaList)
+            staged.Add(SceneHost.CreateEntity(meta));
+
+        foreach (var entity in staged)
+            if (entity is IEntityLifecycle lifecycle)
+                lifecycle.FireAfterSpawnHooks();
     }
 
     public IReadOnlyList<SndMetaData> BuildMetaList() => SceneHost.BuildMetaList();
@@ -85,6 +93,19 @@ public sealed class SndRuntime
                 lifecycle.FireBeforeDeadHooks();
 
         foreach (var e in pending)
-            SceneHost.TeardownEntity(e.Name);
+        {
+            if (e is IEntityLifecycle lifecycle)
+            {
+                lifecycle.ReleaseStrategiesOnly();
+                lifecycle.TeardownOnly();
+            }
+
+            SceneHost.RemoveEntity(e.Name);
+        }
+    }
+
+    public void ProcessAll(double delta)
+    {
+        SceneHost.ProcessAll(delta);
     }
 }

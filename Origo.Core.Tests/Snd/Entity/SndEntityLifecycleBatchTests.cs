@@ -337,12 +337,12 @@ public class SndEntityLifecycleBatchTests
         ProbeStrategy.Events = new List<string>();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
 
-        host.SpawnMany(new[]
-        {
-            CreateMeta("A", new[] { ProbeIdx }),
-            CreateMeta("B", new[] { ProbeIdx }),
-            CreateMeta("C", new[] { ProbeIdx }),
-        });
+        var es1 = host.CreateEntity(CreateMeta("A", new[] { ProbeIdx }));
+        var es2 = host.CreateEntity(CreateMeta("B", new[] { ProbeIdx }));
+        var es3 = host.CreateEntity(CreateMeta("C", new[] { ProbeIdx }));
+        ((IEntityLifecycle)es1).FireAfterSpawnHooks();
+        ((IEntityLifecycle)es2).FireAfterSpawnHooks();
+        ((IEntityLifecycle)es3).FireAfterSpawnHooks();
 
         Assert.Equal(new[] { "after_spawn:A", "after_spawn:B", "after_spawn:C" }, ProbeStrategy.Events);
     }
@@ -362,12 +362,11 @@ public class SndEntityLifecycleBatchTests
         });
         QueryActiveProxy.Host = host;
 
-        host.SpawnMany(new[]
-        {
-            CreateMeta("A", new[] { ActiveQueryIdx }),
-            CreateMeta("Peer", new[] { ProbeIdx },
-                new[] { "batch.active.simple" }),
-        });
+        var se1 = host.CreateEntity(CreateMeta("A", new[] { ActiveQueryIdx }));
+        var se2 = host.CreateEntity(CreateMeta("Peer", new[] { ProbeIdx },
+            new[] { "batch.active.simple" }));
+        ((IEntityLifecycle)se1).FireAfterSpawnHooks();
+        ((IEntityLifecycle)se2).FireAfterSpawnHooks();
 
         Assert.Contains("invoke_ok:hello_from:Peer", QueryActiveProxy.Events);
     }
@@ -518,7 +517,7 @@ public class SndEntityLifecycleBatchTests
         Assert.Equal(new[] { "before_dead:A", "before_dead:B" }, ProbeStrategy.Events);
 
         foreach (var e in entities)
-            host.TeardownEntity(e.Name);
+            host.RemoveEntity(e.Name);
 
         Assert.Empty(host.GetEntities());
     }
@@ -634,8 +633,9 @@ public class SndEntityLifecycleBatchTests
         host.BindContext(ctx);
         QueryActiveProxy.Host = host;
 
-        var entity = host.Spawn(CreateMeta("SelfSpawn", new[] { ActiveQueryIdx },
+        var entity = host.CreateEntity(CreateMeta("SelfSpawn", new[] { ActiveQueryIdx },
             new[] { "batch.active.simple" }));
+        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Contains("invoke_ok:hello_from:SelfSpawn", QueryActiveProxy.Events);
     }
@@ -746,5 +746,204 @@ public class SndEntityLifecycleBatchTests
         Assert.Contains("before_dead:A", ProbeStrategy.Events);
         Assert.Contains("before_dead:B", ProbeStrategy.Events);
         Assert.Empty(host.GetEntities());
+    }
+
+    // ── Boundary: SndRuntime orchestrates hooks, SceneHost is pure container ─
+
+    [Fact]
+    public void SndRuntime_Spawn_CallsCreateEntityThenFiresAfterSpawn()
+    {
+        ProbeStrategy.Events = new List<string>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        var entity = runtime.Spawn(CreateMeta("E", new[] { ProbeIdx }));
+
+        Assert.NotNull(entity);
+        Assert.Contains("after_spawn:E", ProbeStrategy.Events);
+    }
+
+    [Fact]
+    public void SndRuntime_SpawnMany_EntitiesVisibleInAfterSpawn()
+    {
+        ProbeStrategy.Events = new List<string>();
+        var host = CreateHost(w =>
+        {
+            w.RegisterStrategy(() => new ProbeStrategy());
+            w.RegisterStrategy(() => new SimpleActiveStrategy());
+        });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.SpawnMany(new[]
+        {
+            CreateMeta("A", new[] { ProbeIdx }),
+            CreateMeta("B", new[] { ProbeIdx })
+        });
+
+        Assert.Equal(new[] { "after_spawn:A", "after_spawn:B" }, ProbeStrategy.Events);
+        Assert.Equal(2, host.GetEntities().Count);
+    }
+
+    [Fact]
+    public void CreateEntity_DoesNotFireAfterSpawnHooks()
+    {
+        ProbeStrategy.Events = new List<string>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+
+        host.CreateEntity(CreateMeta("E", new[] { ProbeIdx }));
+
+        Assert.Empty(ProbeStrategy.Events);
+        Assert.NotNull(host.FindByName("E"));
+    }
+
+    [Fact]
+    public void RemoveEntity_DoesNotFireBeforeDeadHooks()
+    {
+        ProbeStrategy.Events = new List<string>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+        var entity = host.CreateEntity(CreateMeta("E", new[] { ProbeIdx }));
+
+        host.RemoveEntity("E");
+
+        Assert.DoesNotContain("before_dead:E", ProbeStrategy.Events);
+        Assert.Null(host.FindByName("E"));
+    }
+
+    [Fact]
+    public void SndRuntime_Spawn_WithNonLifecycleEntity_DoesNotThrow()
+    {
+        var memoryHost = new MemorySndSceneHost();
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), memoryHost);
+
+        var entity = runtime.Spawn(new SndMetaData { Name = "E" });
+
+        Assert.NotNull(entity);
+        Assert.NotNull(runtime.FindByName("E"));
+    }
+
+    [Fact]
+    public void SndRuntime_SpawnMany_WithNonLifecycleEntity_DoesNotThrow()
+    {
+        var memoryHost = new MemorySndSceneHost();
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), memoryHost);
+
+        runtime.SpawnMany(new[]
+        {
+            new SndMetaData { Name = "A" },
+            new SndMetaData { Name = "B" }
+        });
+
+        Assert.Equal(2, runtime.GetEntities().Count);
+    }
+
+    [Fact]
+    public void SndRuntime_ProcessAll_DoesNotThrowForEmptyScene()
+    {
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.ProcessAll(0.016);
+    }
+
+    // ── SndEntityFactory tests ──────────────────────────────────────────
+
+    [Fact]
+    public void SndEntityFactory_Spawn_CreatesEntityAndFiresAfterSpawn()
+    {
+        ProbeStrategy.Events = new List<string>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+
+        var entity = SndEntityFactory.Spawn(host, CreateMeta("E", new[] { ProbeIdx }));
+
+        Assert.NotNull(entity);
+        Assert.Contains("after_spawn:E", ProbeStrategy.Events);
+    }
+
+    [Fact]
+    public void SndEntityFactory_SpawnMany_BatchCreatesAllThenFiresHooks()
+    {
+        ProbeStrategy.Events = new List<string>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+
+        SndEntityFactory.SpawnMany(host,
+            CreateMeta("A", new[] { ProbeIdx }),
+            CreateMeta("B", new[] { ProbeIdx }),
+            CreateMeta("C", new[] { ProbeIdx }));
+
+        Assert.Equal(new[] { "after_spawn:A", "after_spawn:B", "after_spawn:C" }, ProbeStrategy.Events);
+    }
+
+    [Fact]
+    public void SndEntityFactory_SpawnMany_EntitiesVisibleDuringAfterSpawn()
+    {
+        CrossRefStrategy.Events = new List<string>();
+        CrossRefStrategy.Host = null;
+        var host = CreateHost(w => { w.RegisterStrategy(() => new CrossRefStrategy()); });
+        CrossRefStrategy.Host = host;
+        CrossRefStrategy.TargetNames = new[] { "A", "B" };
+
+        SndEntityFactory.SpawnMany(host,
+            CreateMeta("A", new[] { CrossRefIdx }),
+            CreateMeta("B", new[] { CrossRefIdx }));
+
+        Assert.Contains("found:A", CrossRefStrategy.Events);
+        Assert.Contains("found:B", CrossRefStrategy.Events);
+    }
+
+    // ── KillPendingEntities full lifecycle ───────────────────────────────
+
+    [Fact]
+    public void SndRuntime_KillPendingEntities_RemovesEntityAndClearsStrategies()
+    {
+        ProbeStrategy.Events = new List<string>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.SpawnMany(new[]
+        {
+            CreateMeta("A", new[] { ProbeIdx }),
+            CreateMeta("B", new[] { ProbeIdx })
+        });
+        ProbeStrategy.Events.Clear();
+
+        host.RequestKillEntity("A");
+        host.RequestKillEntity("B");
+        runtime.KillPendingEntities();
+
+        Assert.Empty(host.GetEntities());
+        Assert.Null(host.FindByName("A"));
+        Assert.Null(host.FindByName("B"));
+    }
+
+    [Fact]
+    public void SndRuntime_KillPendingEntities_StrategiesCanBeReusedAfterKill()
+    {
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.Spawn(CreateMeta("Old", new[] { ProbeIdx }));
+        host.RequestKillEntity("Old");
+        runtime.KillPendingEntities();
+
+        ProbeStrategy.Events = new List<string>();
+        runtime.Spawn(CreateMeta("New", new[] { ProbeIdx }));
+
+        Assert.Contains("after_spawn:New", ProbeStrategy.Events);
+        Assert.Single(host.GetEntities());
+    }
+
+    // ── RemoveEntity boundary verification ───────────────────────────────
+
+    [Fact]
+    public void FullMemorySndSceneHost_RemoveEntity_ClearsCollectionOnly()
+    {
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
+        var entity = host.CreateEntity(CreateMeta("E", new[] { ProbeIdx }));
+
+        host.RemoveEntity("E");
+
+        Assert.Null(host.FindByName("E"));
+        Assert.Empty(host.GetEntities());
+        Assert.Throws<InvalidOperationException>(() => host.RemoveEntity("E"));
     }
 }

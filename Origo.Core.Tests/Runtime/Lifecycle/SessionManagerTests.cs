@@ -246,7 +246,7 @@ public class SessionManagerTests
         SetupForegroundSession(ctx);
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg", "level_x", true);
-        bg.SceneHost.Spawn(new SndMetaData
+        bg.SceneHost.CreateEntity(new SndMetaData
         {
             Name = "CollisionEntity",
             NodeMetaData = new NodeMetaData(),
