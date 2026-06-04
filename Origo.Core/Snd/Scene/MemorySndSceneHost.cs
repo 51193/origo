@@ -148,7 +148,9 @@ internal sealed class MemorySndEntity : ISndEntity
 
     public bool IsPendingKill { get; set; }
 
+#pragma warning disable CA1822
     internal void Dead()
     {
     }
+#pragma warning restore CA1822
 }

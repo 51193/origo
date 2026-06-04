@@ -84,6 +84,18 @@ public class SndEntityLifecycleBatchTests
             }
         }
 
+        public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
+        {
+            var h = Host ?? ctx.CurrentSession?.SceneHost;
+            foreach (var target in TargetNames)
+            {
+                var sibling = h?.FindByName(target);
+                Events.Add(sibling is not null
+                    ? $"found:{target}"
+                    : $"missing:{target}");
+            }
+        }
+
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
         {
             var h = Host ?? ctx.CurrentSession?.SceneHost;
@@ -235,7 +247,7 @@ public class SndEntityLifecycleBatchTests
 
         var distinct = CrossRefStrategy.Events.Distinct().ToList();
         Assert.Equal(4, distinct.Count);
-        Assert.DoesNotContain(distinct, s => s.StartsWith("missing:"));
+        Assert.DoesNotContain(distinct, s => s.StartsWith("missing:", StringComparison.Ordinal));
         Assert.Contains("found:A", distinct);
         Assert.Contains("found:D", distinct);
     }
