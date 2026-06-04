@@ -146,7 +146,7 @@ public class LifecycleRunsTests
         progressRun.LoadAndMountForeground("a");
 
         // Missing target level payload in current/ → enter empty session and clear scene (README contract).
-        runtime.Snd.SceneHost.SpawnEntity(new SndMetaData
+        runtime.Snd.SceneHost.Spawn(new SndMetaData
             { Name = "Temp", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
         Assert.NotEmpty(runtime.Snd.BuildMetaList());
 
@@ -245,7 +245,7 @@ public class LifecycleRunsTests
         var run = new SessionRun(managerRuntime, new SessionParameters("level1", new Blackboard.Blackboard(), host));
 
         run.SessionBlackboard.Set("before", 1);
-        host.SpawnEntity(new SndMetaData
+        host.Spawn(new SndMetaData
         {
             Name = "temp",
             NodeMetaData = new NodeMetaData(),

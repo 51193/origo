@@ -10,7 +10,8 @@ namespace Origo.Core.Snd.Scene;
 ///     面向上层的 SND 运行时门面。
 ///     将 SndWorld（策略池与 JSON 配置）与具体场景宿主 ISndSceneHost 组合在一起，
 ///     提供统一的 Spawn / 导出入口。
-///     负责编排实体策略生命周期钩子的两阶段触发。
+///     Spawn/SpawnMany 委托给 SceneHost（宿主内部完成钩子触发），
+///     KillPendingEntities/ClearAll 则在此编排两阶段批处理。
 /// </summary>
 public sealed class SndRuntime
 {
@@ -34,30 +35,22 @@ public sealed class SndRuntime
         if (SceneHost.FindByName(metaData.Name) is not null)
             throw new InvalidOperationException($"Snd entity name '{metaData.Name}' already exists.");
 
-        var entity = SceneHost.SpawnEntity(metaData);
-        if (entity is IEntityLifecycle lifecycle)
-            lifecycle.FireAfterSpawnHooks();
-        return entity;
+        return SceneHost.Spawn(metaData);
     }
 
     public void SpawnMany(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
 
-        var staged = new List<ISndEntity>();
         foreach (var meta in metaList)
         {
             if (string.IsNullOrWhiteSpace(meta.Name))
                 throw new ArgumentException("SndMetaData.Name cannot be null or whitespace.", nameof(metaList));
             if (SceneHost.FindByName(meta.Name) is not null)
                 throw new InvalidOperationException($"Snd entity name '{meta.Name}' already exists.");
-
-            staged.Add(SceneHost.SpawnEntity(meta));
         }
 
-        foreach (var entity in staged)
-            if (entity is IEntityLifecycle lifecycle)
-                lifecycle.FireAfterSpawnHooks();
+        SceneHost.SpawnMany(metaList);
     }
 
     public IReadOnlyList<SndMetaData> BuildMetaList() => SceneHost.BuildMetaList();

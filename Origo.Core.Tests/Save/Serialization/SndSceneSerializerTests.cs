@@ -32,7 +32,7 @@ public class SndSceneSerializerTests
         var serializer = new SndSceneSerializer(world);
 
         var host1 = new TestSndSceneHost();
-        host1.SpawnEntity(new SndMetaData { Name = "entity1" });
+        host1.Spawn(new SndMetaData { Name = "entity1" });
 
         using var node = serializer.Build(host1);
 
@@ -50,7 +50,7 @@ public class SndSceneSerializerTests
         var world = CreateWorld();
         var serializer = new SndSceneSerializer(world);
         var host = new TestSndSceneHost();
-        host.SpawnEntity(new SndMetaData { Name = "existing" });
+        host.Spawn(new SndMetaData { Name = "existing" });
 
         using var node = TestFactory.NodeFromJson("[]");
         serializer.RecoverInto(host, node);

@@ -6,21 +6,31 @@ namespace Origo.Core.Abstractions.Scene;
 
 /// <summary>
 ///     面向 Core 的 SND 场景宿主抽象。
-///     负责实体的容器管理（创建/查找/移除），不负责策略生命周期钩子触发。
-///     钩子触发由 <see cref="Origo.Core.Snd.Scene.SndRuntime" /> 和会话生命周期统一编排。
+///     负责实体的容器管理（创建/查找/移除）及单实体/批量的 Spawn 钩子编排。
+///     Load/Save/Quit/Dead 的钩子编排由 <see cref="Origo.Core.Snd.Scene.SndRuntime" />
+///     和会话生命周期统一处理。
 /// </summary>
 public interface ISndSceneHost : ISndSceneAccess
 {
     /// <summary>
-    ///     从一份元数据在场景中创建并恢复一个实体，返回该实体的抽象接口。
-    ///     仅执行实体的创建和数据/策略恢复，不触发 AfterSpawn 钩子。
-    ///     钩子应由调用方（SndRuntime.Spawn）在返回后触发。
+    ///     从一份元数据在场景中创建实体，恢复数据/策略/节点，并触发 AfterSpawn 钩子。
+    ///     单实体 spawn：等效于 Recover + AfterSpawn。
     ///     <para>
     ///         注意：此方法不执行重名校验。需要重名保护时应通过
     ///         <see cref="Origo.Core.Snd.Scene.SndRuntime.Spawn" /> 调用。
     ///     </para>
     /// </summary>
-    ISndEntity SpawnEntity(SndMetaData metaData);
+    ISndEntity Spawn(SndMetaData metaData);
+
+    /// <summary>
+    ///     批量生成多个 SND 实体：先全部恢复数据/策略/节点，再统一触发 AfterSpawn 钩子。
+    ///     所有实体在钩子触发前已全部注册到查找集合，实现加载顺序无关的跨实体互操作。
+    ///     <para>
+    ///         注意：此方法不执行重名校验。需要重名保护时应通过
+    ///         <see cref="Origo.Core.Snd.Scene.SndRuntime.SpawnMany" /> 调用。
+    ///     </para>
+    /// </summary>
+    void SpawnMany(IEnumerable<SndMetaData> metaList);
 
     /// <summary>
     ///     获取当前场景中所有仍然存活的实体视图。

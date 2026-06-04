@@ -78,9 +78,25 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
 
     public void RemoveAllEntities()
     {
+        _entities.Clear();
     }
 
-    public ISndEntity SpawnEntity(SndMetaData metaData) => SpawnFromMeta(metaData);
+    public ISndEntity Spawn(SndMetaData metaData)
+    {
+        var snd = SpawnRecoverOnly(metaData);
+        ((IEntityLifecycle)snd).FireAfterSpawnHooks();
+        return snd;
+    }
+
+    public void SpawnMany(IEnumerable<SndMetaData> metaList)
+    {
+        var staged = new List<GodotSndEntity>();
+        foreach (var meta in metaList)
+            staged.Add(SpawnRecoverOnly(meta));
+
+        foreach (var snd in staged)
+            ((IEntityLifecycle)snd).FireAfterSpawnHooks();
+    }
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entityView ??= new EntityView(_entities);
 
@@ -119,7 +135,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         snd.MarkPendingKill();
     }
 
-    public GodotSndEntity SpawnFromMeta(SndMetaData metaData)
+    private GodotSndEntity SpawnRecoverOnly(SndMetaData metaData)
     {
         var staged = new List<GodotSndEntity>();
         try

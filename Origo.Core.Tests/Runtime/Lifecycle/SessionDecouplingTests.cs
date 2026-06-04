@@ -84,9 +84,9 @@ public class SessionDecouplingTests
 
             // Spawn a unique entity in each session's scene so we can distinguish them.
             // Foreground uses TestSndSceneHost (simple meta OK).
-            fg.SceneHost.SpawnEntity(new SndMetaData { Name = "fg_entity" });
+            fg.SceneHost.Spawn(new SndMetaData { Name = "fg_entity" });
             // Background uses FullMemorySndSceneHost (needs full meta).
-            bg.SceneHost.SpawnEntity(CreateFullMeta("bg_entity"));
+            bg.SceneHost.Spawn(CreateFullMeta("bg_entity"));
 
             // Push triggers the hook which reads ctx.SceneAccess.
             var fgMachine = fg.GetSessionStateMachines().CreateOrGet(
@@ -129,9 +129,9 @@ public class SessionDecouplingTests
         var bgHost = bg.SceneHost;
 
         // Foreground uses TestSndSceneHost (simple meta).
-        var fgEntity = fgHost.SpawnEntity(new SndMetaData { Name = "fg_test" });
+        var fgEntity = fgHost.Spawn(new SndMetaData { Name = "fg_test" });
         // Background uses FullMemorySndSceneHost (needs full meta).
-        var bgEntity = bgHost.SpawnEntity(CreateFullMeta("bg_test"));
+        var bgEntity = bgHost.Spawn(CreateFullMeta("bg_test"));
 
         Assert.NotNull(fgHost.FindByName("fg_test"));
         Assert.NotNull(bgHost.FindByName("bg_test"));
@@ -149,7 +149,7 @@ public class SessionDecouplingTests
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
         // Directly use SceneHost (typed as ISndSceneHost) – no cast needed.
-        var spawned = bg.SceneHost.SpawnEntity(CreateFullMeta("soldier"));
+        var spawned = bg.SceneHost.Spawn(CreateFullMeta("soldier"));
         Assert.NotNull(spawned);
         Assert.Equal("soldier", spawned.Name);
 

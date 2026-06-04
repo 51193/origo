@@ -16,7 +16,7 @@ public class MemorySndSceneHostTests
     {
         var host = new MemorySndSceneHost();
         var meta = MakeMeta("e1");
-        var entity = host.SpawnEntity(meta);
+        var entity = host.Spawn(meta);
 
         Assert.Equal("e1", entity.Name);
         Assert.Single(host.GetEntities());
@@ -27,14 +27,14 @@ public class MemorySndSceneHostTests
     public void Spawn_ThrowsOnNull()
     {
         var host = new MemorySndSceneHost();
-        Assert.Throws<ArgumentNullException>(() => host.SpawnEntity(null!));
+        Assert.Throws<ArgumentNullException>(() => host.Spawn(null!));
     }
 
     [Fact]
     public void FindByName_ReturnsEntity()
     {
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(MakeMeta("abc"));
+        host.Spawn(MakeMeta("abc"));
         Assert.NotNull(host.FindByName("abc"));
         Assert.Null(host.FindByName("nonexistent"));
     }
@@ -43,7 +43,7 @@ public class MemorySndSceneHostTests
     public void LoadFromMetaList_ReplacesExisting()
     {
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(MakeMeta("old"));
+        host.Spawn(MakeMeta("old"));
         Assert.Single(host.GetEntities());
 
         host.RecoverFromMetaList(new[] { MakeMeta("new1"), MakeMeta("new2") });
@@ -64,7 +64,7 @@ public class MemorySndSceneHostTests
     public void ClearAll_RemovesEntitiesAndMeta()
     {
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(MakeMeta("x"));
+        host.Spawn(MakeMeta("x"));
         host.RemoveAllEntities();
         Assert.Empty(host.GetEntities());
         Assert.Empty(host.BuildMetaList());
@@ -74,8 +74,8 @@ public class MemorySndSceneHostTests
     public void SerializeMetaList_ReturnsCorrectData()
     {
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(MakeMeta("a"));
-        host.SpawnEntity(MakeMeta("b"));
+        host.Spawn(MakeMeta("a"));
+        host.Spawn(MakeMeta("b"));
         var list = host.BuildMetaList();
         Assert.Equal(2, list.Count);
     }

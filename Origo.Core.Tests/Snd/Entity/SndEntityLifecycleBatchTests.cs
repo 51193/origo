@@ -332,27 +332,23 @@ public class SndEntityLifecycleBatchTests
     // ── Batch AfterSpawn ────────────────────────────────────────────────
 
     [Fact]
-    public void BatchSpawn_AfterSpawn_FiresAfterAllEntitiesRecovered()
+    public void SpawnMany_AfterSpawn_FiresOnAllEntities()
     {
         ProbeStrategy.Events = new List<string>();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
 
-        var staged = new List<ISndEntity>();
-        staged.Add(host.SpawnEntity(CreateMeta("A", new[] { ProbeIdx })));
-        staged.Add(host.SpawnEntity(CreateMeta("B", new[] { ProbeIdx })));
-        staged.Add(host.SpawnEntity(CreateMeta("C", new[] { ProbeIdx })));
-
-        Assert.Empty(ProbeStrategy.Events);
-
-        foreach (var e in staged)
-            if (e is IEntityLifecycle lc)
-                lc.FireAfterSpawnHooks();
+        host.SpawnMany(new[]
+        {
+            CreateMeta("A", new[] { ProbeIdx }),
+            CreateMeta("B", new[] { ProbeIdx }),
+            CreateMeta("C", new[] { ProbeIdx }),
+        });
 
         Assert.Equal(new[] { "after_spawn:A", "after_spawn:B", "after_spawn:C" }, ProbeStrategy.Events);
     }
 
     [Fact]
-    public void BatchSpawn_CrossEntity_ActiveStrategyAvailableDuringAfterSpawn()
+    public void SpawnMany_CrossEntity_ActiveStrategyAvailableDuringAfterSpawn()
     {
         QueryActiveProxy.Events = new List<string>();
         QueryActiveProxy.InvokeTarget = "Peer";
@@ -366,14 +362,12 @@ public class SndEntityLifecycleBatchTests
         });
         QueryActiveProxy.Host = host;
 
-        var staged = new List<ISndEntity>();
-        staged.Add(host.SpawnEntity(CreateMeta("A", new[] { ActiveQueryIdx })));
-        staged.Add(host.SpawnEntity(CreateMeta("Peer", new[] { ProbeIdx },
-            new[] { "batch.active.simple" })));
-
-        foreach (var e in staged)
-            if (e is IEntityLifecycle lc)
-                lc.FireAfterSpawnHooks();
+        host.SpawnMany(new[]
+        {
+            CreateMeta("A", new[] { ActiveQueryIdx }),
+            CreateMeta("Peer", new[] { ProbeIdx },
+                new[] { "batch.active.simple" }),
+        });
 
         Assert.Contains("invoke_ok:hello_from:Peer", QueryActiveProxy.Events);
     }
@@ -640,10 +634,8 @@ public class SndEntityLifecycleBatchTests
         host.BindContext(ctx);
         QueryActiveProxy.Host = host;
 
-        var entity = host.SpawnEntity(CreateMeta("SelfSpawn", new[] { ActiveQueryIdx },
+        var entity = host.Spawn(CreateMeta("SelfSpawn", new[] { ActiveQueryIdx },
             new[] { "batch.active.simple" }));
-        if (entity is IEntityLifecycle lc)
-            lc.FireAfterSpawnHooks();
 
         Assert.Contains("invoke_ok:hello_from:SelfSpawn", QueryActiveProxy.Events);
     }

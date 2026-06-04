@@ -25,8 +25,11 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     {
     }
 
-    public ISndEntity SpawnEntity(SndMetaData metaData) =>
+    public ISndEntity Spawn(SndMetaData metaData) =>
         throw new NotSupportedException("Spawn not supported in test scene host.");
+
+    public void SpawnMany(IEnumerable<SndMetaData> metaList) =>
+        throw new NotSupportedException("SpawnMany not supported in test scene host.");
 
     public void RemoveAllEntities() => _entities.Clear();
 

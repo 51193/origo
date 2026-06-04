@@ -5,15 +5,13 @@ namespace Origo.Core.Abstractions.Entity;
 /// <summary>
 ///     实体生命周期管理接口。
 ///     供框架内部编排实体创建/加载/保存/销毁的两阶段批处理流程。
-///     实现者：<see cref="Origo.Core.Snd.Entity.SndEntity" />（Core 内存实体）、
-///     GodotSndEntity（Godot 适配层实体，委托给内部 SndEntity）。
+///     此接口为 internal，业务代码不可访问。
 ///     <para>
-///         此接口的方法对应实体生命周期中的独立阶段。
-///         业务代码不应直接调用此接口的方法，
-///         应通过 <see cref="Origo.Core.Snd.Scene.SndRuntime" /> 或会话生命周期来触发。
+///         实现者：<see cref="Origo.Core.Snd.Entity.SndEntity" />（Core 内存实体）、
+///         GodotSndEntity（Godot 适配层实体，委托给内部 SndEntity）。
 ///     </para>
 /// </summary>
-public interface IEntityLifecycle
+internal interface IEntityLifecycle
 {
     /// <summary>
     ///     Phase 1：从元数据恢复实体的数据、节点和所有策略（EntityStrategy + ActiveStrategy），不触发任何钩子。
@@ -47,19 +45,16 @@ public interface IEntityLifecycle
 
     /// <summary>
     ///     Phase 3：仅释放实体策略和主动策略的引用，不触发钩子。
-    ///     配合 <see cref="FireBeforeQuitHooks" /> / <see cref="FireBeforeDeadHooks" /> 使用。
     /// </summary>
     void ReleaseStrategiesOnly();
 
     /// <summary>
     ///     Phase 3：仅释放节点和数据资源，不触发钩子。
-    ///     配合 <see cref="FireBeforeQuitHooks" /> / <see cref="FireBeforeDeadHooks" /> 使用。
     /// </summary>
     void TeardownOnly();
 
     /// <summary>
     ///     构建实体元数据，不触发 BeforeSave 钩子。
-    ///     配合 <see cref="FireBeforeSaveHooks" /> 使用（先批量触发钩子，再批量构建元数据）。
     /// </summary>
     SndMetaData BuildMetaData();
 }

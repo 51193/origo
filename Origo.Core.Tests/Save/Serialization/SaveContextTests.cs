@@ -67,7 +67,7 @@ public class SaveContextTests
         var world = CreateWorld();
         var ctx = new SaveContext(new Blackboard.Blackboard(), new Blackboard.Blackboard(), world);
         var host = new TestSndSceneHost();
-        host.SpawnEntity(new SndMetaData { Name = "old" });
+        host.Spawn(new SndMetaData { Name = "old" });
 
         using var node = TestFactory.NodeFromJson("""[{"name": "new_entity"}]""");
         ctx.RecoverSndScene(host, node);

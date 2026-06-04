@@ -262,11 +262,17 @@ internal sealed class TestSceneHost : ISndSceneHost
 {
     private readonly List<ISndEntity> _entities = new();
 
-    public ISndEntity SpawnEntity(SndMetaData metaData)
+    public ISndEntity Spawn(SndMetaData metaData)
     {
         var entity = new MinimalTestEntity { Name = metaData.Name };
         _entities.Add(entity);
         return entity;
+    }
+
+    public void SpawnMany(IEnumerable<SndMetaData> metaList)
+    {
+        foreach (var meta in metaList)
+            Spawn(meta);
     }
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;

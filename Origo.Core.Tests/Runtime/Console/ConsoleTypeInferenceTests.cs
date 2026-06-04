@@ -248,7 +248,7 @@ public class ConsoleTypeInferenceTests
     private static OrigoRuntime CreateRuntimeWithConsoleAndEntity(string entityName)
     {
         var runtime = CreateRuntimeWithConsole();
-        runtime.Snd.SceneHost.SpawnEntity(new SndMetaData
+        runtime.Snd.SceneHost.Spawn(new SndMetaData
         {
             Name = entityName,
             NodeMetaData = new NodeMetaData(),

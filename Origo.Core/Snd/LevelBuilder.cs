@@ -77,7 +77,7 @@ internal sealed class LevelBuilder
         if (_sceneHost.FindByName(metaData.Name) is not null)
             throw new InvalidOperationException($"Entity '{metaData.Name}' already exists in this level builder.");
 
-        _sceneHost.SpawnEntity(metaData);
+        _sceneHost.Spawn(metaData);
         return this;
     }
 

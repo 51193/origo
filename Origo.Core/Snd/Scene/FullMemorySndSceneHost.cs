@@ -9,19 +9,6 @@ using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Snd.Scene;
 
-/// <summary>
-///     功能完整的纯内存 <see cref="ISndSceneHost" /> 实现。
-///     通过 <see cref="SndWorld.CreateEntity" /> 创建真正的 <see cref="SndEntity" />，
-///     具备完整的策略生命周期能力（所有 Hook）、数据订阅与 Process 能力。
-///     不依赖任何引擎适配层，节点创建由 <see cref="NullNodeFactory" /> 提供空操作实现。
-///     <para>
-///         此宿主用于后台关卡等需要完整 Core 逻辑但不需要引擎节点的场景。
-///      </para>
-///     <para>
-///         注意：策略生命周期钩子（AfterLoad/AfterSpawn/BeforeSave/BeforeQuit/BeforeDead）
-///         不由本类直接触发，而是由 SndRuntime / SessionRun 通过 IEntityLifecycle 接口统一编排。
-///     </para>
-/// </summary>
 internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttachableSceneHost
 {
     private readonly List<MemoryEntityEntry> _entries = new();
@@ -42,15 +29,26 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
         _context = context;
     }
 
-    public ISndEntity SpawnEntity(SndMetaData metaData)
+    public ISndEntity Spawn(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
         EnsureReady();
-        var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger);
-        entity.Name = metaData.Name;
-        _entries.Add(new MemoryEntityEntry(entity));
-        ((IEntityLifecycle)entity).RecoverForLifecycle(metaData);
+        var entity = CreateAndRecover(metaData);
+        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         return entity;
+    }
+
+    public void SpawnMany(IEnumerable<SndMetaData> metaList)
+    {
+        ArgumentNullException.ThrowIfNull(metaList);
+        EnsureReady();
+
+        var staged = new List<SndEntity>();
+        foreach (var meta in metaList)
+            staged.Add(CreateAndRecover(meta));
+
+        foreach (var entity in staged)
+            ((IEntityLifecycle)entity).FireAfterSpawnHooks();
     }
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entries.Select(e => (ISndEntity)e.Entity).ToArray();
@@ -75,12 +73,7 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
         EnsureReady();
 
         foreach (var meta in metaList)
-        {
-            var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger);
-            entity.Name = meta.Name;
-            _entries.Add(new MemoryEntityEntry(entity));
-            ((IEntityLifecycle)entity).RecoverForLifecycle(meta);
-        }
+            CreateAndRecover(meta);
     }
 
     public void RemoveAllEntities() => _entries.Clear();
@@ -123,6 +116,15 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
     {
         ArgumentNullException.ThrowIfNull(world);
         _world = world;
+    }
+
+    private SndEntity CreateAndRecover(SndMetaData metaData)
+    {
+        var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger);
+        entity.Name = metaData.Name;
+        _entries.Add(new MemoryEntityEntry(entity));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(metaData);
+        return entity;
     }
 
     private void EnsureReady()

@@ -37,7 +37,7 @@ public class SaveAndSwitchForegroundTests
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)bg.SceneHost;
 
-        var entityA = host.SpawnEntity(CreateMetaWithStrategy("EntityA",
+        var entityA = host.Spawn(CreateMetaWithStrategy("EntityA",
             new[] { FindByNameStrategyIndex }));
         if (entityA is IEntityLifecycle lc)
             lc.FireAfterSpawnHooks();
@@ -59,8 +59,8 @@ public class SaveAndSwitchForegroundTests
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)bg.SceneHost;
 
-        host.SpawnEntity(CreateMetaWithStrategy("EntityA"));
-        var entityB = host.SpawnEntity(CreateMetaWithStrategy("EntityB",
+        host.Spawn(CreateMetaWithStrategy("EntityA"));
+        var entityB = host.Spawn(CreateMetaWithStrategy("EntityB",
             new[] { FindByNameStrategyIndex }));
         if (entityB is IEntityLifecycle lc)
             lc.FireAfterSpawnHooks();
@@ -126,8 +126,8 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("BgEntity1"));
-        bg.SceneHost.SpawnEntity(CreateMeta("BgEntity2"));
+        bg.SceneHost.Spawn(CreateMeta("BgEntity1"));
+        bg.SceneHost.Spawn(CreateMeta("BgEntity2"));
         bg.SessionBlackboard.Set("bg_value", 42);
 
         ctx.RequestSaveGameAuto();
@@ -153,7 +153,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("BgEntity"));
+        bg.SceneHost.Spawn(CreateMeta("BgEntity"));
         bg.SessionBlackboard.Set("key_int", 100);
         bg.SessionBlackboard.Set("key_str", "hello");
 
@@ -182,7 +182,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("BgEntity"));
+        bg.SceneHost.Spawn(CreateMeta("BgEntity"));
         bg.SessionBlackboard.Set("bg_only", 99);
 
         ctx.RequestSaveGameAuto();
@@ -293,7 +293,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("DiskEntity"));
+        bg.SceneHost.Spawn(CreateMeta("DiskEntity"));
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -317,7 +317,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("Entity"));
+        bg.SceneHost.Spawn(CreateMeta("Entity"));
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -342,8 +342,8 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("Entity1"));
-        bg.SceneHost.SpawnEntity(CreateMeta("Entity2"));
+        bg.SceneHost.Spawn(CreateMeta("Entity1"));
+        bg.SceneHost.Spawn(CreateMeta("Entity2"));
         bg.SessionBlackboard.Set("round_key", "round_value");
 
         ctx.RequestSaveGameAuto();
@@ -394,7 +394,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("DirectEntity"));
+        bg.SceneHost.Spawn(CreateMeta("DirectEntity"));
         bg.SessionBlackboard.Set("direct_key", 77);
 
         ctx.RequestSaveGameAuto();
@@ -420,7 +420,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("DirectEntity"));
+        bg.SceneHost.Spawn(CreateMeta("DirectEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("missing_level");
@@ -442,7 +442,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("QueueEntity"));
+        bg.SceneHost.Spawn(CreateMeta("QueueEntity"));
         bg.SessionBlackboard.Set("queue_val", 123);
 
         ctx.RequestSaveGameAuto();
@@ -477,7 +477,7 @@ public class SaveAndSwitchForegroundTests
 
         var fgBefore = ctx.EnsureProgressRun().ForegroundSession;
         Assert.NotNull(fgBefore);
-        fgBefore.SceneHost.SpawnEntity(CreateMeta("OldFgEntity"));
+        fgBefore.SceneHost.Spawn(CreateMeta("OldFgEntity"));
         fgBefore.SessionBlackboard.Set("old_key", "old_value");
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
@@ -500,8 +500,8 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("BgSurvivor1"));
-        bg.SceneHost.SpawnEntity(CreateMeta("BgSurvivor2"));
+        bg.SceneHost.Spawn(CreateMeta("BgSurvivor1"));
+        bg.SceneHost.Spawn(CreateMeta("BgSurvivor2"));
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_new/session.json", "{}");
@@ -616,7 +616,7 @@ public class SaveAndSwitchForegroundTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "massive", true);
         for (var i = 0; i < EntityCount; i++)
-            bg.SceneHost.SpawnEntity(CreateMeta($"Entity_{i:D3}"));
+            bg.SceneHost.Spawn(CreateMeta($"Entity_{i:D3}"));
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -642,7 +642,7 @@ public class SaveAndSwitchForegroundTests
 
         var oldFg = ctx.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        oldFg.SceneHost.SpawnEntity(CreateMeta("OldEntity"));
+        oldFg.SceneHost.Spawn(CreateMeta("OldEntity"));
         oldFg.SessionBlackboard.Set("old_key", "old_value");
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
@@ -669,7 +669,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("BgEntity"));
+        bg.SceneHost.Spawn(CreateMeta("BgEntity"));
         bg.SessionBlackboard.Set("bg_key", "bg_value");
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
@@ -692,7 +692,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("BgEntity"));
+        bg.SceneHost.Spawn(CreateMeta("BgEntity"));
         bg.SessionBlackboard.Set("bg_key", "bg_value");
 
         // Explicitly persist background session before switch
@@ -736,7 +736,7 @@ public class SaveAndSwitchForegroundTests
 
         var oldFg = ctx.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        oldFg.SceneHost.SpawnEntity(CreateMeta("SameEntity"));
+        oldFg.SceneHost.Spawn(CreateMeta("SameEntity"));
         oldFg.SessionBlackboard.Set("same_level_data", 42);
 
         var progressRun = ctx.EnsureProgressRun();
@@ -781,7 +781,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("BgEntity"));
+        bg.SceneHost.Spawn(CreateMeta("BgEntity"));
         bg.SessionBlackboard.Set("auto_key", 42);
 
         fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
@@ -805,7 +805,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
-        bg.SceneHost.SpawnEntity(CreateMeta("PreservedEntity"));
+        bg.SceneHost.Spawn(CreateMeta("PreservedEntity"));
         bg.SessionBlackboard.Set("preserved_int", 123);
         bg.SessionBlackboard.Set("preserved_str", "data");
 
@@ -837,7 +837,7 @@ public class SaveAndSwitchForegroundTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "massive", true);
         for (var i = 0; i < EntityCount; i++)
-            bg.SceneHost.SpawnEntity(CreateMeta($"Entity_{i:D3}"));
+            bg.SceneHost.Spawn(CreateMeta($"Entity_{i:D3}"));
         bg.SessionBlackboard.Set("count", EntityCount);
 
         var progressRun = ctx.EnsureProgressRun();
@@ -879,9 +879,9 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
-        target.SceneHost.SpawnEntity(CreateMeta("TargetEntity"));
+        target.SceneHost.Spawn(CreateMeta("TargetEntity"));
         using var survivor = ctx.SessionManager.CreateBackgroundSession("survivor", "other_level", true);
-        survivor.SceneHost.SpawnEntity(CreateMeta("SurvivorEntity"));
+        survivor.SceneHost.Spawn(CreateMeta("SurvivorEntity"));
         survivor.SessionBlackboard.Set("survivor_data", 999);
 
         var progressRun = ctx.EnsureProgressRun();
@@ -906,7 +906,7 @@ public class SaveAndSwitchForegroundTests
 
         using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
         using var survivor = ctx.SessionManager.CreateBackgroundSession("survivor", "other_level");
-        target.SceneHost.SpawnEntity(CreateMeta("TargetEntity"));
+        target.SceneHost.Spawn(CreateMeta("TargetEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("game");
@@ -926,11 +926,11 @@ public class SaveAndSwitchForegroundTests
 
         var oldFg = ctx.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        oldFg.SceneHost.SpawnEntity(CreateMeta("OldFgEntity"));
+        oldFg.SceneHost.Spawn(CreateMeta("OldFgEntity"));
         oldFg.SessionBlackboard.Set("old_fg_data", "preserved");
 
         using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
-        target.SceneHost.SpawnEntity(CreateMeta("TargetEntity"));
+        target.SceneHost.Spawn(CreateMeta("TargetEntity"));
         target.SessionBlackboard.Set("target_data", "from_bg");
 
         var progressRun = ctx.EnsureProgressRun();
@@ -959,7 +959,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
-        target.SceneHost.SpawnEntity(CreateMeta("TargetEntity"));
+        target.SceneHost.Spawn(CreateMeta("TargetEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("game");
@@ -979,12 +979,12 @@ public class SaveAndSwitchForegroundTests
 
         var oldFg = ctx.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        oldFg.SceneHost.SpawnEntity(CreateMeta("OldFgEntity"));
+        oldFg.SceneHost.Spawn(CreateMeta("OldFgEntity"));
         oldFg.SessionBlackboard.Set("fg_key", "fg_value");
 
         using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
-        target.SceneHost.SpawnEntity(CreateMeta("TargetEntity1"));
-        target.SceneHost.SpawnEntity(CreateMeta("TargetEntity2"));
+        target.SceneHost.Spawn(CreateMeta("TargetEntity1"));
+        target.SceneHost.Spawn(CreateMeta("TargetEntity2"));
         target.SessionBlackboard.Set("bg_key", "bg_value");
 
         var progressRun = ctx.EnsureProgressRun();
@@ -1039,7 +1039,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
-        target.SceneHost.SpawnEntity(CreateMeta("DeferredEntity"));
+        target.SceneHost.Spawn(CreateMeta("DeferredEntity"));
         target.SessionBlackboard.Set("deferred_key", 55);
 
         ctx.RequestSwitchForegroundLevel("game");
@@ -1066,11 +1066,11 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg1 = ctx.SessionManager.CreateBackgroundSession("bg1", "level_a", true);
-        bg1.SceneHost.SpawnEntity(CreateMeta("EntityA"));
+        bg1.SceneHost.Spawn(CreateMeta("EntityA"));
         bg1.SessionBlackboard.Set("which", "a");
 
         using var bg2 = ctx.SessionManager.CreateBackgroundSession("bg2", "level_b", true);
-        bg2.SceneHost.SpawnEntity(CreateMeta("EntityB"));
+        bg2.SceneHost.Spawn(CreateMeta("EntityB"));
         bg2.SessionBlackboard.Set("which", "b");
 
         var progressRun = ctx.EnsureProgressRun();

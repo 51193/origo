@@ -89,7 +89,8 @@ public class SaveMetaMergerTests
         {
         }
 
-        public ISndEntity SpawnEntity(SndMetaData metaData) => throw new NotSupportedException();
+        public ISndEntity Spawn(SndMetaData metaData) => throw new NotSupportedException();
+        public void SpawnMany(IEnumerable<SndMetaData> metaList) => throw new NotSupportedException();
 
         public IReadOnlyCollection<ISndEntity> GetEntities() => Array.Empty<ISndEntity>();
 

@@ -258,8 +258,8 @@ public class SavePathPolicyContractTests
             using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
             // Seed each scene with a distinguishing entity.
-            fg.SceneHost.SpawnEntity(new SndMetaData { Name = "fg_marker" });
-            bg.SceneHost.SpawnEntity(CreateFullMeta("bg_marker"));
+            fg.SceneHost.Spawn(new SndMetaData { Name = "fg_marker" });
+            bg.SceneHost.Spawn(CreateFullMeta("bg_marker"));
 
             // Push triggers the strategy hook in each session's state machine.
             var fgMachine = fg.GetSessionStateMachines().CreateOrGet(

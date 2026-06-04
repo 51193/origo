@@ -122,12 +122,12 @@ public class EntityKillTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var host = ctx.CurrentSession!.SceneHost;
-        host.SpawnEntity(new SndMetaData
+        host.Spawn(new SndMetaData
         {
             Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
-        host.SpawnEntity(new SndMetaData
+        host.Spawn(new SndMetaData
         {
             Name = "B", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
@@ -148,7 +148,7 @@ public class EntityKillTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var host = ctx.CurrentSession!.SceneHost;
-        host.SpawnEntity(new SndMetaData
+        host.Spawn(new SndMetaData
         {
             Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
@@ -170,12 +170,12 @@ public class EntityKillTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var host = ctx.CurrentSession!.SceneHost;
-        host.SpawnEntity(new SndMetaData
+        host.Spawn(new SndMetaData
         {
             Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
-        host.SpawnEntity(new SndMetaData
+        host.Spawn(new SndMetaData
         {
             Name = "B", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
@@ -335,7 +335,7 @@ public class EntityKillTests
     public void MemorySndSceneHost_DeadByName_RemovesEntity()
     {
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(new SndMetaData { Name = "E" });
+        host.Spawn(new SndMetaData { Name = "E" });
         Assert.NotNull(host.FindByName("E"));
 
         host.TeardownEntity("E");
@@ -356,7 +356,7 @@ public class EntityKillTests
     public void MemorySndSceneHost_RequestKillEntity_MarksPendingKill()
     {
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(new SndMetaData { Name = "E" });
+        host.Spawn(new SndMetaData { Name = "E" });
 
         var entity = host.FindByName("E");
         Assert.NotNull(entity);
@@ -379,7 +379,7 @@ public class EntityKillTests
     public void MemorySndSceneHost_RequestKillEntity_AlreadyPending_Throws()
     {
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(new SndMetaData { Name = "E" });
+        host.Spawn(new SndMetaData { Name = "E" });
         host.RequestKillEntity("E");
 
         Assert.Throws<InvalidOperationException>(() => host.RequestKillEntity("E"));
@@ -391,7 +391,7 @@ public class EntityKillTests
     public void IsPendingKill_DefaultFalse()
     {
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(new SndMetaData { Name = "E" });
+        host.Spawn(new SndMetaData { Name = "E" });
 
         Assert.False(host.FindByName("E")!.IsPendingKill);
     }
@@ -465,8 +465,8 @@ public class EntityKillTests
     {
         var logger = new TestLogger();
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(new SndMetaData { Name = "A" });
-        host.SpawnEntity(new SndMetaData { Name = "B" });
+        host.Spawn(new SndMetaData { Name = "A" });
+        host.Spawn(new SndMetaData { Name = "B" });
 
         var runtime = CreateRuntimeWithConsole(logger, host);
         runtime.ConsoleInput!.Enqueue("kill_all");
@@ -481,8 +481,8 @@ public class EntityKillTests
     {
         var logger = new TestLogger();
         var host = new MemorySndSceneHost();
-        host.SpawnEntity(new SndMetaData { Name = "A" });
-        host.SpawnEntity(new SndMetaData { Name = "B" });
+        host.Spawn(new SndMetaData { Name = "A" });
+        host.Spawn(new SndMetaData { Name = "B" });
         host.RequestKillEntity("A");
 
         var runtime = CreateRuntimeWithConsole(logger, host);
