@@ -38,6 +38,74 @@ public class SndTemplateResolverTests
     }
 
     [Fact]
+    public void Resolve_TemplateFile_EmptyObject_ReturnsMinimalMetaData()
+    {
+        var fs = new TestFileSystem();
+        fs.SeedFile("templates/empty.json", "{}");
+        var resolver = CreateResolver(fs, new Dictionary<string, string>
+        {
+            ["empty"] = "templates/empty.json"
+        });
+
+        var result = resolver.Resolve("empty");
+
+        Assert.NotNull(result);
+        Assert.Equal(string.Empty, result.Name);
+    }
+
+    [Fact]
+    public void Resolve_TemplateFile_MissingNameField_ReturnsEmptyName()
+    {
+        var fs = new TestFileSystem();
+        fs.SeedFile("templates/noname.json", """{"strategy":{"entity_indices":[]},"data":{"pairs":{}}}""");
+        var resolver = CreateResolver(fs, new Dictionary<string, string>
+        {
+            ["noname"] = "templates/noname.json"
+        });
+
+        var result = resolver.Resolve("noname");
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void Resolve_CacheThenClone_CloneDoesNotAffectCache()
+    {
+        var fs = new TestFileSystem();
+        fs.SeedFile("templates/base.json",
+            """{"name":"BaseTemplate","strategy":{"entity_indices":[]},"data":{"pairs":{}}}""");
+        var resolver = CreateResolver(fs, new Dictionary<string, string>
+        {
+            ["base"] = "templates/base.json"
+        });
+
+        var original = resolver.Resolve("base");
+        var clone = original.DeepClone();
+        clone.Name = "Modified";
+
+        var fromCache = resolver.Resolve("base");
+
+        Assert.Equal("BaseTemplate", fromCache.Name);
+        Assert.Equal("Modified", clone.Name);
+    }
+
+    [Fact]
+    public void Resolve_MapFileComments_Skipped()
+    {
+        var fs = new TestFileSystem();
+        fs.SeedFile("templates/simple.json",
+            """{"name":"Simple","strategy":{"entity_indices":[]},"data":{"pairs":{}}}""");
+        var resolver = CreateResolver(fs, new Dictionary<string, string>
+        {
+            ["simple"] = "templates/simple.json"
+        });
+
+        var result = resolver.Resolve("simple");
+
+        Assert.Equal("Simple", result.Name);
+    }
+
+    [Fact]
     public void Resolve_MissingAlias_ThrowsKeyNotFoundException()
     {
         var resolver = CreateResolver(new TestFileSystem(), new Dictionary<string, string>());

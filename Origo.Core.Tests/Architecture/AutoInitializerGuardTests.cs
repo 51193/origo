@@ -20,27 +20,17 @@ public class AutoInitializerGuardTests
     }
 
     [Fact]
-    public void IsStatelessStrategyType_WithInvalidInstanceMembers_ReturnsFalse_AndReportsMemberNames()
+    public void SndWorld_RegisterStrategy_WithStatefulInstanceField_Throws()
     {
-        var ok = OrigoAutoInitializer.IsStatelessStrategyType(
-            typeof(StatefulAutoInitStrategy), out var mutableFieldNames);
+        var world = TestFactory.CreateSndWorld();
 
-        Assert.False(ok);
-        Assert.Contains("_counter", mutableFieldNames, StringComparison.Ordinal);
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            world.RegisterStrategy(() => new StatefulFieldAutoInitStrategy()));
+        Assert.Contains("invalid instance members", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void IsStatelessStrategyType_WithWritableInstanceProperty_ReturnsFalse()
-    {
-        var ok = OrigoAutoInitializer.IsStatelessStrategyType(
-            typeof(PropertyStatefulAutoInitStrategy), out var invalidMembers);
-
-        Assert.False(ok);
-        Assert.Contains("Counter", invalidMembers, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void SndWorld_RegisterStrategy_WithInvalidInstanceMembers_Throws()
+    public void SndWorld_RegisterStrategy_WithWritableInstanceProperty_Throws()
     {
         var world = TestFactory.CreateSndWorld();
 
@@ -50,13 +40,14 @@ public class AutoInitializerGuardTests
     }
 
     [Fact]
-    public void IsStatelessStrategyType_WithOnlyStaticFields_ReturnsTrue()
+    public void SndWorld_RegisterStrategy_WithOnlyStaticFields_Succeeds()
     {
-        var ok = OrigoAutoInitializer.IsStatelessStrategyType(
-            typeof(StatelessAutoInitStrategy), out var mutableFieldNames);
+        var world = TestFactory.CreateSndWorld();
 
-        Assert.True(ok);
-        Assert.Equal(string.Empty, mutableFieldNames);
+        world.RegisterStrategy(() => new StatelessAutoInitStrategy());
+
+        var strategy = world.StrategyPool.GetStrategy<EntityStrategyBase>("auto.init.stateless.local");
+        Assert.NotNull(strategy);
     }
 
     [Fact]
@@ -77,10 +68,8 @@ public class AutoInitializerGuardTests
         public const string IndexConst = "annotated.strategy";
     }
 
-    private sealed class MissingAttrStrategy : EntityStrategyBase;
-
     [StrategyIndex(IndexConst)]
-    private abstract class StatefulAutoInitStrategy : EntityStrategyBase
+    private sealed class StatefulFieldAutoInitStrategy : EntityStrategyBase
     {
         public const string IndexConst = "auto.init.stateful.local";
         private int _counter;

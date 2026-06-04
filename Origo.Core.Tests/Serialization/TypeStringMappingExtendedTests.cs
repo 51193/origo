@@ -93,6 +93,47 @@ public class TypeStringMappingExtendedTests
         Assert.Equal(BclTypeNames.IReadOnlyDictionaryStringString,
             mapping.GetNameByType(typeof(IReadOnlyDictionary<string, string>)));
     }
+
+    [Fact]
+    public void TypeStringMapping_RegisterManyCustomTypes_AllResolvable()
+    {
+        var mapping = new TypeStringMapping();
+        mapping.RegisterType<DateTime>("DateTime");
+        mapping.RegisterType<Uri>("Uri");
+        mapping.RegisterType<Version>("Version");
+        mapping.RegisterType<TimeSpan>("TimeSpan");
+
+        Assert.Equal(typeof(DateTime), mapping.GetTypeByName("DateTime"));
+        Assert.Equal(typeof(Uri), mapping.GetTypeByName("Uri"));
+        Assert.Equal(typeof(Version), mapping.GetTypeByName("Version"));
+        Assert.Equal(typeof(TimeSpan), mapping.GetTypeByName("TimeSpan"));
+
+        Assert.Equal("DateTime", mapping.GetNameByType(typeof(DateTime)));
+        Assert.Equal("Uri", mapping.GetNameByType(typeof(Uri)));
+        Assert.Equal("Version", mapping.GetNameByType(typeof(Version)));
+        Assert.Equal("TimeSpan", mapping.GetNameByType(typeof(TimeSpan)));
+    }
+
+    [Fact]
+    public void TypeStringMapping_RegisterType_NullName_Throws()
+    {
+        var mapping = new TypeStringMapping();
+        Assert.Throws<ArgumentNullException>(() => mapping.RegisterType<Guid>(null!));
+    }
+
+    [Fact]
+    public void TypeStringMapping_GetTypeByName_NullName_Throws()
+    {
+        var mapping = new TypeStringMapping();
+        Assert.Throws<ArgumentNullException>(() => mapping.GetTypeByName(null!));
+    }
+
+    [Fact]
+    public void TypeStringMapping_GetNameByType_NullType_Throws()
+    {
+        var mapping = new TypeStringMapping();
+        Assert.Throws<ArgumentNullException>(() => mapping.GetNameByType(null!));
+    }
 }
 
 // ── RandomNumberGenerator additional tests ─────────────────────────────

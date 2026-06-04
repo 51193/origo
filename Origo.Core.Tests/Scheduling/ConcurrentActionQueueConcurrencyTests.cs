@@ -55,4 +55,20 @@ public class ConcurrentActionQueueConcurrencyTests
         Assert.Equal(0, queue.ExecuteAll());
         Assert.Equal(0, queue.Count);
     }
+
+    [Fact]
+    public void ExecuteAll_AfterClear_DoesNotExecuteClearedActions()
+    {
+        var queue = new ConcurrentActionQueue(new TestLogger());
+        var callCount = 0;
+        queue.Enqueue(() => callCount++);
+        queue.Enqueue(() => callCount++);
+        queue.Clear();
+
+        var executed = queue.ExecuteAll();
+
+        Assert.Equal(0, executed);
+        Assert.Equal(0, callCount);
+        Assert.Equal(0, queue.Count);
+    }
 }

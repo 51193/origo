@@ -59,6 +59,89 @@ public class SndMetaDataTests
         Assert.Null(meta.StrategyMetaData);
         Assert.NotNull(meta.DataMetaData);
     }
+
+    [Fact]
+    public void SndMetaData_DeepClone_CopiesDataMetaData()
+    {
+        var meta = new SndMetaData
+        {
+            Name = "entity",
+            DataMetaData = new DataMetaData
+            {
+                Pairs = new Dictionary<string, TypedData>
+                {
+                    ["hp"] = new(typeof(int), 100),
+                    ["name"] = new(typeof(string), "hero")
+                }
+            }
+        };
+        var clone = meta.DeepClone();
+        Assert.NotSame(meta.DataMetaData, clone.DataMetaData);
+        Assert.NotNull(clone.DataMetaData);
+        Assert.Equal(100, clone.DataMetaData!.Pairs["hp"].Data);
+        Assert.Equal("hero", clone.DataMetaData.Pairs["name"].Data);
+    }
+
+    [Fact]
+    public void SndMetaData_DeepClone_ModifyCloneDoesNotAffectOriginal()
+    {
+        var meta = new SndMetaData
+        {
+            Name = "original",
+            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string> { "strategy_a" } }
+        };
+        var clone = meta.DeepClone();
+        clone.Name = "modified";
+        clone.StrategyMetaData!.EntityIndices.Add("strategy_b");
+
+        Assert.Equal("original", meta.Name);
+        Assert.Single(meta.StrategyMetaData.EntityIndices);
+        Assert.Equal("strategy_a", meta.StrategyMetaData.EntityIndices[0]);
+    }
+
+    [Fact]
+    public void SndMetaData_WithActiveStrategyIndices_DeepClones()
+    {
+        var meta = new SndMetaData
+        {
+            Name = "e",
+            StrategyMetaData = new StrategyMetaData
+            {
+                EntityIndices = new List<string> { "idle" },
+                ActiveIndices = new List<string> { "invoke_handler" }
+            }
+        };
+        var clone = meta.DeepClone();
+        Assert.NotSame(meta.StrategyMetaData!.ActiveIndices, clone.StrategyMetaData!.ActiveIndices);
+        Assert.Single(clone.StrategyMetaData.ActiveIndices!);
+        Assert.Equal("invoke_handler", clone.StrategyMetaData.ActiveIndices![0]);
+    }
+
+    [Fact]
+    public void SndMetaData_DeepClone_EmptyNodePairs_CopiesCorrectly()
+    {
+        var meta = new SndMetaData
+        {
+            Name = "e",
+            NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string>() }
+        };
+        var clone = meta.DeepClone();
+        Assert.NotNull(clone.NodeMetaData);
+        Assert.Empty(clone.NodeMetaData!.Pairs);
+    }
+
+    [Fact]
+    public void SndMetaData_DeepClone_EmptyDataPairs_CopiesCorrectly()
+    {
+        var meta = new SndMetaData
+        {
+            Name = "e",
+            DataMetaData = new DataMetaData { Pairs = new Dictionary<string, TypedData>() }
+        };
+        var clone = meta.DeepClone();
+        Assert.NotNull(clone.DataMetaData);
+        Assert.Empty(clone.DataMetaData!.Pairs);
+    }
 }
 
 // ── OrigoRuntime integration ───────────────────────────────────────────
