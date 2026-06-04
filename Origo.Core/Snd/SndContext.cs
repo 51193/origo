@@ -72,11 +72,6 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     /// <inheritdoc />
     public bool IsFrontSession => CurrentSession?.IsFrontSession ?? false;
 
-    public int GetPendingPersistenceRequestCount() =>
-        Interlocked.CompareExchange(ref _pendingPersistenceRequests, 0, 0);
-
-    public void FlushDeferredActionsForCurrentFrame() => Runtime.FlushEndOfFrameDeferred();
-
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
     {
         var template = Runtime.SndWorld.ResolveTemplate(templateKey);
@@ -203,6 +198,11 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     public void RequestLoadInitialSave() => EnqueueSystemDeferred(ExecuteLoadInitialSaveNow);
 
     public void RequestLoadMainMenuEntrySave() => EnqueueSystemDeferred(ExecuteLoadMainMenuEntrySaveNow);
+
+    public int GetPendingPersistenceRequestCount() =>
+        Interlocked.CompareExchange(ref _pendingPersistenceRequests, 0, 0);
+
+    public void FlushDeferredActionsForCurrentFrame() => Runtime.FlushEndOfFrameDeferred();
 
     public IBlackboard SystemBlackboard => _systemRun.SystemBlackboard;
     public IBlackboard? ProgressBlackboard => _progressRun?.ProgressBlackboard;

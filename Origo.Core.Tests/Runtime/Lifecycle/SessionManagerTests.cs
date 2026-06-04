@@ -173,8 +173,8 @@ public class SessionManagerTests
         SetupForegroundSession(ctx);
 
         ctx.SessionManager.CreateBackgroundSession("bg1", "bg1");
-        var ex = Assert.Throws<InvalidOperationException>(
-            () => ctx.SessionManager.CreateBackgroundSession("bg2", "bg1"));
+        var ex =
+            Assert.Throws<InvalidOperationException>(() => ctx.SessionManager.CreateBackgroundSession("bg2", "bg1"));
         Assert.Contains("bg1", ex.Message);
         Assert.Contains("already manages this level", ex.Message);
     }
@@ -185,8 +185,8 @@ public class SessionManagerTests
         var (ctx, _) = CreateContext();
 
         ctx.SessionManager.CreateBackgroundSession("bg1", "level_a");
-        var ex = Assert.Throws<InvalidOperationException>(
-            () => ctx.SessionManager.CreateBackgroundSession("bg2", "level_a"));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ctx.SessionManager.CreateBackgroundSession("bg2", "level_a"));
         Assert.Contains("bg1", ex.Message);
         Assert.Contains("already manages this level", ex.Message);
     }
@@ -271,8 +271,8 @@ public class SessionManagerTests
         // Creating a background session with the same levelId as the
         // foreground is rejected immediately — it never reaches
         // AppendBackgroundPayloads.
-        var ex = Assert.Throws<InvalidOperationException>(
-            () => ctx.SessionManager.CreateBackgroundSession("bg", "default"));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ctx.SessionManager.CreateBackgroundSession("bg", "default"));
         Assert.Contains("bg", ex.Message);
         Assert.Contains("default", ex.Message);
         Assert.Contains("__foreground__", ex.Message);
@@ -298,8 +298,8 @@ public class SessionManagerTests
         var (ctx, _) = CreateContext();
 
         ctx.SessionManager.CreateBackgroundSession("owner", "treasure");
-        var ex = Assert.Throws<InvalidOperationException>(
-            () => ctx.SessionManager.CreateBackgroundSession("thief", "treasure"));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ctx.SessionManager.CreateBackgroundSession("thief", "treasure"));
 
         Assert.Contains("thief", ex.Message);
         Assert.Contains("treasure", ex.Message);

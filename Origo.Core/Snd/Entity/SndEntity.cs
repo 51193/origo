@@ -67,20 +67,14 @@ public sealed class SndEntity : ISndEntity
 
     public void RemoveStrategy(string index) => _strategyManager.Remove(this, index, _context);
 
-    public void AddActiveStrategy(string index)
-    {
-        _activeStrategyManager.Add(index);
-    }
+    public void AddActiveStrategy(string index) => _activeStrategyManager.Add(index);
 
-    public void RemoveActiveStrategy(string index)
-    {
-        _activeStrategyManager.Remove(index);
-    }
+    public void RemoveActiveStrategy(string index) => _activeStrategyManager.Remove(index);
 
-    public object? InvokeStrategy(string strategyIndex, object? input = null)
-    {
-        return _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
-    }
+    public object? InvokeStrategy(string strategyIndex, object? input = null) =>
+        _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
+
+    public bool IsPendingKill { get; internal set; }
 
     public void Load(SndMetaData metaData)
     {
@@ -139,8 +133,6 @@ public sealed class SndEntity : ISndEntity
     }
 
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);
-
-    public bool IsPendingKill { get; internal set; }
 
     private void RecoverFromMetaData(SndMetaData metaData)
     {

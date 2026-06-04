@@ -60,10 +60,7 @@ internal sealed class ActiveStrategyManager
     }
 
     /// <summary>序列化当前持有的全部主动策略索引。</summary>
-    public IReadOnlyCollection<string> SerializeIndices()
-    {
-        return _active.Keys;
-    }
+    public IReadOnlyCollection<string> SerializeIndices() => _active.Keys;
 
     /// <summary>释放全部主动策略（Quit/Dead 时调用）。</summary>
     public void ReleaseAll()

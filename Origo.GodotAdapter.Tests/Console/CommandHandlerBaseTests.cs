@@ -11,29 +11,6 @@ namespace Origo.GodotAdapter.Tests.Console;
 
 public class CommandHandlerBaseTests
 {
-    private sealed class TestHandler : CommandHandlerBase
-    {
-        public TestHandler(OrigoRuntime runtime, int min, int max) : base(runtime)
-        {
-            MinPositionalArgs = min;
-            MaxPositionalArgs = max;
-        }
-
-        public override string Name => "test";
-        public override string HelpText => "test — test handler";
-        public override int MinPositionalArgs { get; }
-
-        public override int MaxPositionalArgs { get; }
-
-        protected override bool ExecuteCore(CommandInvocation invocation, IConsoleOutputChannel outputChannel,
-            out string? errorMessage)
-        {
-            outputChannel.Publish("ok");
-            errorMessage = null;
-            return true;
-        }
-    }
-
     private static CommandInvocation MakeInvocation(params string[] args)
     {
         return new CommandInvocation
@@ -131,5 +108,28 @@ public class CommandHandlerBaseTests
         Assert.True(ok);
         Assert.Null(error);
         Assert.Contains("ok", messages);
+    }
+
+    private sealed class TestHandler : CommandHandlerBase
+    {
+        public TestHandler(OrigoRuntime runtime, int min, int max) : base(runtime)
+        {
+            MinPositionalArgs = min;
+            MaxPositionalArgs = max;
+        }
+
+        public override string Name => "test";
+        public override string HelpText => "test — test handler";
+        public override int MinPositionalArgs { get; }
+
+        public override int MaxPositionalArgs { get; }
+
+        protected override bool ExecuteCore(CommandInvocation invocation, IConsoleOutputChannel outputChannel,
+            out string? errorMessage)
+        {
+            outputChannel.Publish("ok");
+            errorMessage = null;
+            return true;
+        }
     }
 }

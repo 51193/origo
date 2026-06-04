@@ -20,10 +20,9 @@ public sealed class ConsoleBridgeServer : IDisposable
     private readonly ConsoleInputQueue _input;
     private readonly ConsoleBridgeOptions _options;
     private readonly IConsoleOutputChannel _output;
+    private readonly List<string> _pendingOutput = new();
 
     private readonly object _writerLock = new();
-    private StreamWriter? _writer;
-    private readonly List<string> _pendingOutput = new();
 
     private Thread? _acceptThread;
     private volatile bool _disposed;
@@ -32,6 +31,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private TcpListener? _listener;
     private long _outputSubId;
     private Socket? _serverSocket;
+    private StreamWriter? _writer;
 
     public ConsoleBridgeServer(
         ConsoleInputQueue input,
@@ -266,7 +266,6 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
 
         foreach (var line in pending)
-        {
             try
             {
                 writer.WriteLine(line);
@@ -275,6 +274,5 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 break;
             }
-        }
     }
 }

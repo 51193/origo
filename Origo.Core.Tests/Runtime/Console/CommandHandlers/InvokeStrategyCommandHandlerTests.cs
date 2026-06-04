@@ -134,19 +134,13 @@ public class InvokeStrategyCommandHandlerTests
     [StrategyIndex(QueryNameIndex)]
     private sealed class QueryNameStrategy : ActiveStrategyBase
     {
-        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
-        {
-            return entity.Name;
-        }
+        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => entity.Name;
     }
 
     [StrategyIndex(CmdWithInputIndex)]
     private sealed class CmdWithInputStrategy : ActiveStrategyBase
     {
-        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
-        {
-            return $"received input: {input}";
-        }
+        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => $"received input: {input}";
     }
 
     // ── Test output channel ────────────────────────────────────────────
@@ -157,19 +151,10 @@ public class InvokeStrategyCommandHandlerTests
 
         public IReadOnlyList<string> Entries => _entries;
 
-        public long Subscribe(Action<string> onLine)
-        {
-            return 0;
-        }
+        public long Subscribe(Action<string> onLine) => 0;
 
-        public bool Unsubscribe(long subscriptionId)
-        {
-            return false;
-        }
+        public bool Unsubscribe(long subscriptionId) => false;
 
-        public void Publish(string line)
-        {
-            _entries.Add(line);
-        }
+        public void Publish(string line) => _entries.Add(line);
     }
 }

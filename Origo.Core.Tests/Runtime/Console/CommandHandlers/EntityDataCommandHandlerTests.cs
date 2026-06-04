@@ -30,10 +30,8 @@ public class EntityDataCommandHandlerTests
         return (runtime, sceneHost, consoleInput, consoleOutput, messages);
     }
 
-    private static DummySndEntity CreateEntity(TestSndSceneHost host, string name)
-    {
-        return (DummySndEntity)host.Spawn(new SndMetaData { Name = name });
-    }
+    private static DummySndEntity CreateEntity(TestSndSceneHost host, string name) =>
+        (DummySndEntity)host.Spawn(new SndMetaData { Name = name });
 
     // ── entity_set_data ──
 

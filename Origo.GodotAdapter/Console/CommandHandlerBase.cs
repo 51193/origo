@@ -7,13 +7,13 @@ namespace Origo.GodotAdapter.Console;
 
 internal abstract class CommandHandlerBase : IConsoleCommandHandler
 {
-    protected OrigoRuntime Runtime { get; }
-
     protected CommandHandlerBase(OrigoRuntime runtime)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         Runtime = runtime;
     }
+
+    protected OrigoRuntime Runtime { get; }
 
     public abstract string Name { get; }
     public abstract string HelpText { get; }

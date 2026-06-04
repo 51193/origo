@@ -58,7 +58,7 @@ public class ActiveStrategyTestScenarioTests
             .ForActive<EchoInputStrategy>(InputStrategyIndex)
             .Build();
 
-        var result = harness.Invoke(null);
+        var result = harness.Invoke();
 
         Assert.Null(result);
     }
@@ -501,7 +501,7 @@ public class ActiveStrategyTestScenarioTests
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
         {
             var (found, count) = entity.TryGetData<int>("invoke_count");
-            entity.SetData("invoke_count", (found ? count + 1 : 1));
+            entity.SetData("invoke_count", found ? count + 1 : 1);
             entity.SetData("invoke_status", "ok");
             return null;
         }

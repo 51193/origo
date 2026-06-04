@@ -133,15 +133,9 @@ public class ContextBoundaryTests
 
         public void RequestSwitchForegroundLevel(string newLevelId) => CallCount++;
 
-        public void RequestKillAll()
-        {
-            CallCount++;
-        }
+        public void RequestKillAll() => CallCount++;
 
-        public void RequestKillEntity(string entityName)
-        {
-            CallCount++;
-        }
+        public void RequestKillEntity(string entityName) => CallCount++;
 
         public bool HasContinueData()
         {

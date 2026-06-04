@@ -62,10 +62,7 @@ internal sealed class SessionSndContext : ISndContext
 
     public void RequestKillAll() => _global.RequestKillAll();
 
-    public void RequestKillEntity(string entityName)
-    {
-        _global.RequestKillEntity(entityName);
-    }
+    public void RequestKillEntity(string entityName) => _global.RequestKillEntity(entityName);
 
     public bool HasContinueData() => _global.HasContinueData();
 

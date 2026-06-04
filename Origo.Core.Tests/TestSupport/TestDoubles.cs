@@ -398,11 +398,10 @@ internal sealed class DummySndEntity : ISndEntity
     {
     }
 
-    public object? InvokeStrategy(string strategyIndex, object? input = null)
-    {
+    public object? InvokeStrategy(string strategyIndex, object? input = null) =>
         throw new InvalidOperationException("InvokeStrategy not supported on DummySndEntity.");
-    }
 }
+
 internal static class TestFactory
 {
     public static JsonDataSourceCodec CreateJsonCodec() => new();

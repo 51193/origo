@@ -179,10 +179,7 @@ internal sealed class MemorySndEntity : ISndEntity
     }
 
     /// <inheritdoc />
-    public object? InvokeStrategy(string strategyIndex, object? input = null)
-    {
-        return null;
-    }
+    public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
 
     /// <inheritdoc />
     public bool IsPendingKill { get; set; }

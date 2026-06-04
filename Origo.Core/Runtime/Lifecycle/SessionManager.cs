@@ -233,13 +233,11 @@ internal sealed class SessionManager : ISessionManager
     private void ValidateLevelIdUnique(string levelId, string newSessionKey)
     {
         foreach (var (existingKey, mounted) in _sessions)
-        {
             if (string.Equals(mounted.Session.LevelId, levelId, StringComparison.Ordinal))
                 throw new InvalidOperationException(
                     $"Cannot create session '{newSessionKey}' with levelId '{levelId}': " +
                     $"session '{existingKey}' already manages this level. " +
                     "Destroy the existing session before reusing its levelId.");
-        }
     }
 
     private void MountInternal(string key, SessionRun session, bool syncProcess)

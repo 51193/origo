@@ -97,14 +97,12 @@ public sealed partial class ProgressRun
         {
             var bgSessions = _owner._sessionManager.GetBackgroundSessions();
             foreach (var kvp in bgSessions)
-            {
                 if (string.Equals(kvp.Value.LevelId, levelId, StringComparison.Ordinal))
                 {
                     _owner._sessionManager.PersistSession(kvp.Key);
                     _owner._sessionManager.DestroySession(kvp.Key);
                     return;
                 }
-            }
         }
 
         private ISessionRun MountForegroundFromPayload(string levelId, LevelPayload levelPayload)

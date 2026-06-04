@@ -43,10 +43,7 @@ public class EntityKillTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Throws<InvalidOperationException>(() =>
-        {
-            ctx.RequestKillEntity("not.exist");
-        });
+        Assert.Throws<InvalidOperationException>(() => { ctx.RequestKillEntity("not.exist"); });
     }
 
     [Fact]
@@ -531,7 +528,8 @@ public class EntityKillTests
         return (ctx, logger);
     }
 
-    private static FullMemorySndSceneHost CreateFullMemoryHostWithEntity(TestLogger logger) => CreateFullMemoryHostWithMultiple(logger, "E");
+    private static FullMemorySndSceneHost CreateFullMemoryHostWithEntity(TestLogger logger) =>
+        CreateFullMemoryHostWithMultiple(logger, "E");
 
     private static FullMemorySndSceneHost CreateFullMemoryHostWithMultiple(TestLogger logger, params string[] names)
     {
@@ -584,10 +582,7 @@ public class EntityKillTests
     {
         public static List<string>? Events { get; set; }
 
-        public override void BeforeDead(ISndEntity entity, ISndContext ctx)
-        {
-            Events?.Add("before_dead");
-        }
+        public override void BeforeDead(ISndEntity entity, ISndContext ctx) => Events?.Add("before_dead");
     }
 
     [StrategyIndex("quit.test.probe")]

@@ -130,17 +130,6 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
         entry.Entity.IsPendingKill = true;
     }
 
-    private void QuitAll()
-    {
-        // 反向退出以匹配 LIFO 语义。
-        for (var i = _entries.Count - 1; i >= 0; i--)
-        {
-            var entry = _entries[i];
-            _entries.RemoveAt(i);
-            entry.Entity.Quit();
-        }
-    }
-
     /// <summary>
     ///     对所有存活实体执行 Process 帧更新。
     /// </summary>
@@ -151,6 +140,17 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
         var snapshot = _entries.ToArray();
         foreach (var entry in snapshot)
             entry.Entity.Process(delta);
+    }
+
+    private void QuitAll()
+    {
+        // 反向退出以匹配 LIFO 语义。
+        for (var i = _entries.Count - 1; i >= 0; i--)
+        {
+            var entry = _entries[i];
+            _entries.RemoveAt(i);
+            entry.Entity.Quit();
+        }
     }
 
     /// <summary>

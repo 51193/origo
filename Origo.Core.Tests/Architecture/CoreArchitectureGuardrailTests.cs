@@ -225,5 +225,3 @@ public class CoreArchitectureGuardrailTests
         bg.Dispose();
     }
 }
-
-

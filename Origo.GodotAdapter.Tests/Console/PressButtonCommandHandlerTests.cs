@@ -11,60 +11,6 @@ namespace Origo.GodotAdapter.Tests.Console;
 
 public class PressButtonCommandHandlerTests
 {
-    private sealed class DummyEntity : ISndEntity
-    {
-        public DummyEntity(string name)
-        {
-            Name = name;
-        }
-
-        public string Name { get; }
-
-        public void SetData<T>(string name, T value)
-        {
-        }
-
-        public T GetData<T>(string name) => default!;
-        public (bool found, T? value) TryGetData<T>(string name) => (false, default);
-
-        public void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
-            Func<ISndEntity, object?, object?, bool>? filter = null)
-        {
-        }
-
-        public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback)
-        {
-        }
-
-        public INodeHandle GetNode(string name) =>
-            throw new InvalidOperationException($"Node '{name}' not found.");
-
-        public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
-
-        public void AddStrategy(string index)
-        {
-        }
-
-        public void RemoveStrategy(string index)
-        {
-        }
-
-        public void AddActiveStrategy(string index)
-        {
-        }
-
-        public void RemoveActiveStrategy(string index)
-        {
-        }
-
-        public object? InvokeStrategy(string strategyIndex, object? input = null)
-        {
-            return null;
-        }
-
-        public bool IsPendingKill { get; set; }
-    }
-
     private static CommandInvocation MakeInvocation(string entityName, string buttonPath)
     {
         return new CommandInvocation
@@ -138,5 +84,56 @@ public class PressButtonCommandHandlerTests
         Assert.False(ok);
         Assert.NotNull(error);
         Assert.Contains("is not a Godot entity", error);
+    }
+
+    private sealed class DummyEntity : ISndEntity
+    {
+        public DummyEntity(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; }
+
+        public void SetData<T>(string name, T value)
+        {
+        }
+
+        public T GetData<T>(string name) => default!;
+        public (bool found, T? value) TryGetData<T>(string name) => (false, default);
+
+        public void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
+            Func<ISndEntity, object?, object?, bool>? filter = null)
+        {
+        }
+
+        public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback)
+        {
+        }
+
+        public INodeHandle GetNode(string name) =>
+            throw new InvalidOperationException($"Node '{name}' not found.");
+
+        public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
+
+        public void AddStrategy(string index)
+        {
+        }
+
+        public void RemoveStrategy(string index)
+        {
+        }
+
+        public void AddActiveStrategy(string index)
+        {
+        }
+
+        public void RemoveActiveStrategy(string index)
+        {
+        }
+
+        public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
+
+        public bool IsPendingKill { get; set; }
     }
 }

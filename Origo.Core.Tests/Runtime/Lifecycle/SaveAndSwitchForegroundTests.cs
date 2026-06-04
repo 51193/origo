@@ -710,8 +710,8 @@ public class SaveAndSwitchForegroundTests
 
         // CreateBackgroundSession with the same levelId as foreground is rejected immediately,
         // so it never reaches AppendBackgroundPayloads
-        var ex = Assert.Throws<InvalidOperationException>(
-            () => ctx.SessionManager.CreateBackgroundSession("bg", "test_level", true));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ctx.SessionManager.CreateBackgroundSession("bg", "test_level", true));
         Assert.Contains("bg", ex.Message);
         Assert.Contains("test_level", ex.Message);
         Assert.Contains("already manages this level", ex.Message);
@@ -760,8 +760,7 @@ public class SaveAndSwitchForegroundTests
             "no_fg", logger, fs, "root", runtime, ctx);
         ctx.SetProgressRun(progressRun);
 
-        Assert.Throws<InvalidOperationException>(
-            () => progressRun.BuildSavePayload("no_fg"));
+        Assert.Throws<InvalidOperationException>(() => progressRun.BuildSavePayload("no_fg"));
     }
 
     // ── Auto-handle background session collision during switch ───────────
@@ -896,7 +895,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
-        using var survivor = ctx.SessionManager.CreateBackgroundSession("survivor", "other_level", false);
+        using var survivor = ctx.SessionManager.CreateBackgroundSession("survivor", "other_level");
         target.SceneHost.Spawn(CreateMeta("TargetEntity"));
 
         var progressRun = ctx.EnsureProgressRun();

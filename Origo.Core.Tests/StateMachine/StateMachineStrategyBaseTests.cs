@@ -50,10 +50,7 @@ public class StateMachineStrategyBaseTests
         {
         }
 
-        public int GetPendingPersistenceRequestCount()
-        {
-            return 0;
-        }
+        public int GetPendingPersistenceRequestCount() => 0;
     }
 }
 

@@ -105,6 +105,28 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
             entity.ProcessSnd(delta);
     }
 
+    public void DeadByName(string name)
+    {
+        var snd = _entities.FirstOrDefault(s => s.StableName == name);
+        if (snd is null)
+            throw new InvalidOperationException($"No entity with StableName '{name}'.");
+
+        _entities.Remove(snd);
+        snd.DeadFromManager();
+    }
+
+    public void RequestKillEntity(string name)
+    {
+        var snd = _entities.FirstOrDefault(s => s.StableName == name);
+        if (snd is null)
+            throw new InvalidOperationException($"No entity with StableName '{name}'.");
+
+        if (snd.IsPendingKill)
+            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
+
+        snd.MarkPendingKill();
+    }
+
     public GodotSndEntity SpawnFromMeta(SndMetaData metaData)
     {
         var staged = new List<GodotSndEntity>();
@@ -148,28 +170,6 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
             _entities.RemoveAt(i);
             snd.QuitFromManager();
         }
-    }
-
-    public void DeadByName(string name)
-    {
-        var snd = _entities.FirstOrDefault(s => s.StableName == name);
-        if (snd is null)
-            throw new InvalidOperationException($"No entity with StableName '{name}'.");
-
-        _entities.Remove(snd);
-        snd.DeadFromManager();
-    }
-
-    public void RequestKillEntity(string name)
-    {
-        var snd = _entities.FirstOrDefault(s => s.StableName == name);
-        if (snd is null)
-            throw new InvalidOperationException($"No entity with StableName '{name}'.");
-
-        if (snd.IsPendingKill)
-            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
-
-        snd.MarkPendingKill();
     }
 
     public override void _Ready() => SetProcess(true);

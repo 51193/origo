@@ -36,14 +36,9 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     {
     }
 
-    public void AddEntity(ISndEntity entity) => _entities[entity.Name] = entity;
-
     public void DeadByName(string name)
     {
-        if (_entities.TryGetValue(name, out var entity))
-        {
-            _entities.Remove(name);
-        }
+        if (_entities.TryGetValue(name, out var entity)) _entities.Remove(name);
     }
 
     public void RequestKillEntity(string name)
@@ -54,14 +49,16 @@ internal sealed class TestSndSceneHost : ISndSceneHost
             throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
         ((dynamic)entity).IsPendingKill = true;
     }
+
+    public void AddEntity(ISndEntity entity) => _entities[entity.Name] = entity;
 }
 
 internal sealed class TestLogger : ILogger
 {
+    public readonly List<string> Debugs = new();
+    public readonly List<string> Errors = new();
     public readonly List<string> Infos = new();
     public readonly List<string> Warnings = new();
-    public readonly List<string> Errors = new();
-    public readonly List<string> Debugs = new();
 
     public void Log(LogLevel level, string tag, string message)
     {

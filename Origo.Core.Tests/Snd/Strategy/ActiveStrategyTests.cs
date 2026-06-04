@@ -307,10 +307,8 @@ public class ActiveStrategyTests
         };
     }
 
-    private static SndMetaData CreateMetaWithActive(string[] activeIndices)
-    {
-        return CreateMeta(Array.Empty<string>(), activeIndices);
-    }
+    private static SndMetaData CreateMetaWithActive(string[] activeIndices) =>
+        CreateMeta(Array.Empty<string>(), activeIndices);
 
     // ── Test strategies ────────────────────────────────────────────────
 
@@ -345,10 +343,7 @@ public class ActiveStrategyTests
     {
         private int _counter;
 
-        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
-        {
-            return _counter++;
-        }
+        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => _counter++;
     }
 
     [StrategyIndex(IndexConst)]
@@ -356,17 +351,11 @@ public class ActiveStrategyTests
     {
         public const string IndexConst = "active.stateless.auto";
 
-        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
-        {
-            return null;
-        }
+        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => null;
     }
 
     private sealed class UnannotatedActiveStrategy : ActiveStrategyBase
     {
-        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
-        {
-            return null;
-        }
+        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => null;
     }
 }

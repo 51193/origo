@@ -146,6 +146,8 @@ internal sealed class MinimalTestEntity : ISndEntity
 {
     private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
 
+    internal Func<string, object?, object?>? InvokeStrategyHandler { get; set; }
+
     public string Name { get; set; } = string.Empty;
 
     public void SetData<T>(string name, T value) => _data[name] = value;
@@ -201,8 +203,6 @@ internal sealed class MinimalTestEntity : ISndEntity
         throw new InvalidOperationException(
             "InvokeStrategy is not configured. Use StrategyTestScenario.ForActive<T>(...) to test ActiveStrategy subclasses.");
     }
-
-    internal Func<string, object?, object?>? InvokeStrategyHandler { get; set; }
 
     public bool IsPendingKill { get; set; }
 }
