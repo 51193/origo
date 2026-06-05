@@ -58,26 +58,26 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     public (bool found, T? value) TryGetData<T>(string name) => _dataManager.TryGetData<T>(name);
 
-    public void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
-        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+    public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
     {
         SubscribeDataInternal((ISndEntity)this, name, callback, filter);
     }
 
-    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback)
+    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
     {
         UnobserveData((ISndEntity)this, name, callback);
     }
 
     public void ObserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, object?, object?> callback,
-        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
     {
         SubscribeDataInternal(target, dataName, callback, filter);
     }
 
     public void UnobserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, object?, object?> callback)
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
     {
         for (var i = _outgoingDataSubs.Count - 1; i >= 0; i--)
         {
@@ -137,13 +137,13 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);
 
-    void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, object?, object?> callback,
-        Func<ISndEntity, object?, object?, bool>? filter)
+    void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, TypedData, TypedData, bool>? filter)
     {
         _dataManager.Subscribe(name, callback, filter);
     }
 
-    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, object?, object?> callback)
+    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback)
     {
         _dataManager.Unsubscribe(name, callback);
     }
@@ -279,15 +279,15 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     }
 
     private void SubscribeDataInternal(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, object?, object?> callback,
-        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter)
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataName);
         ArgumentNullException.ThrowIfNull(callback);
 
         var self = (ISndEntity)this;
-        Action<ISndEntity, object?, object?> wrappedCb = (t, o, n) => callback(t, self, o, n);
-        Func<ISndEntity, object?, object?, bool>? wrappedFilter = filter is null
+        Action<ISndEntity, TypedData, TypedData> wrappedCb = (t, o, n) => callback(t, self, o, n);
+        Func<ISndEntity, TypedData, TypedData, bool>? wrappedFilter = filter is null
             ? null
             : (t, o, n) => filter(t, self, o, n);
 
@@ -330,8 +330,8 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     {
         public ISndEntity Target;
         public string DataName;
-        public Action<ISndEntity, ISndEntity, object?, object?> OriginalCallback;
-        public Action<ISndEntity, object?, object?> WrappedCallback;
+        public Action<ISndEntity, ISndEntity, TypedData, TypedData> OriginalCallback;
+        public Action<ISndEntity, TypedData, TypedData> WrappedCallback;
     }
 
     private struct OutgoingLifecycleSub

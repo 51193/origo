@@ -40,8 +40,8 @@ public class SndEntityAndAutoInitializerTests
         entity.Subscribe("hp", (_, __, oldValue, newValue) =>
         {
             callbackCount++;
-            Assert.Equal(10, Assert.IsType<int>(oldValue));
-            Assert.Equal(20, Assert.IsType<int>(newValue));
+            Assert.Equal(10, oldValue.AsInt32());
+            Assert.Equal(20, newValue.AsInt32());
         });
 
         entity.SpawnSingle(meta);

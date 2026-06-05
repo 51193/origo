@@ -1,5 +1,6 @@
 using System;
 using Origo.Core.Snd.Entity;
+using Origo.Core.Snd.Metadata;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -12,7 +13,7 @@ public class DataObserverManagerTests
         var mgr = new DataObserverManager();
         var callCount = 0;
         mgr.Subscribe("hp", (_, _) => callCount++);
-        mgr.NotifyObservers("hp", 100, 50);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
 
         Assert.Equal(1, callCount);
     }
@@ -21,8 +22,8 @@ public class DataObserverManagerTests
     public void Notify_PassesCorrectOldAndNewValues()
     {
         var mgr = new DataObserverManager();
-        object? capturedOld = null;
-        object? capturedNew = null;
+        TypedData capturedOld = default;
+        TypedData capturedNew = default;
 
         mgr.Subscribe("hp", (old, @new) =>
         {
@@ -30,10 +31,10 @@ public class DataObserverManagerTests
             capturedNew = @new;
         });
 
-        mgr.NotifyObservers("hp", 100, 50);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
 
-        Assert.Equal(100, capturedOld);
-        Assert.Equal(50, capturedNew);
+        Assert.Equal(100, capturedOld.AsInt32());
+        Assert.Equal(50, capturedNew.AsInt32());
     }
 
     [Fact]
@@ -42,7 +43,7 @@ public class DataObserverManagerTests
         var mgr = new DataObserverManager();
         var hpCallCount = 0;
         mgr.Subscribe("hp", (_, _) => hpCallCount++);
-        mgr.NotifyObservers("mp", 50, 40);
+        mgr.NotifyObservers("mp", (TypedData)50, (TypedData)40);
 
         Assert.Equal(0, hpCallCount);
     }
@@ -52,10 +53,10 @@ public class DataObserverManagerTests
     {
         var mgr = new DataObserverManager();
         var callCount = 0;
-        Action<object?, object?> cb = (_, _) => callCount++;
+        Action<TypedData, TypedData> cb = (_, _) => callCount++;
         mgr.Subscribe("hp", cb);
         mgr.Unsubscribe("hp", cb);
-        mgr.NotifyObservers("hp", 100, 50);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
 
         Assert.Equal(0, callCount);
     }
@@ -72,7 +73,7 @@ public class DataObserverManagerTests
         mgr.Subscribe("hp", (_, _) => callCount2++);
         mgr.Subscribe("hp", (_, _) => callCount3++);
 
-        mgr.NotifyObservers("hp", 100, 50);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
 
         Assert.Equal(1, callCount1);
         Assert.Equal(1, callCount2);
@@ -89,7 +90,7 @@ public class DataObserverManagerTests
         mgr.Subscribe("hp", (_, _) => hpCalled = true);
         mgr.Subscribe("mp", (_, _) => mpCalled = true);
 
-        mgr.NotifyObservers("hp", 100, 50);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
 
         Assert.True(hpCalled);
         Assert.False(mpCalled);
@@ -100,7 +101,7 @@ public class DataObserverManagerTests
     {
         var mgr = new DataObserverManager();
 
-        var ex = Record.Exception(() => mgr.NotifyObservers("nonexistent", 1, 2));
+        var ex = Record.Exception(() => mgr.NotifyObservers("nonexistent", (TypedData)1, (TypedData)2));
         Assert.Null(ex);
     }
 
@@ -109,15 +110,15 @@ public class DataObserverManagerTests
     {
         var mgr = new DataObserverManager();
         var callCount = 0;
-        Action<object?, object?> cb = null!;
+        Action<TypedData, TypedData> cb = null!;
         cb = (_, _) =>
         {
             callCount++;
             mgr.Unsubscribe("key", cb);
         };
         mgr.Subscribe("key", cb);
-        mgr.NotifyObservers("key", 1, 2);
-        mgr.NotifyObservers("key", 2, 3);
+        mgr.NotifyObservers("key", (TypedData)1, (TypedData)2);
+        mgr.NotifyObservers("key", (TypedData)2, (TypedData)3);
 
         Assert.Equal(1, callCount);
     }
@@ -130,7 +131,7 @@ public class DataObserverManagerTests
 
         mgr.Subscribe("a", (_, _) => { mgr.Subscribe("b", (_, _) => newSubCalled = true); });
 
-        mgr.NotifyObservers("a", 1, 2);
+        mgr.NotifyObservers("a", (TypedData)1, (TypedData)2);
 
         Assert.False(newSubCalled);
     }
@@ -142,9 +143,9 @@ public class DataObserverManagerTests
         var callCount = 0;
         mgr.Subscribe("hp", (_, _) => callCount++);
 
-        mgr.NotifyObservers("hp", 100, 75);
-        mgr.NotifyObservers("hp", 75, 50);
-        mgr.NotifyObservers("hp", 50, 0);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)75);
+        mgr.NotifyObservers("hp", (TypedData)75, (TypedData)50);
+        mgr.NotifyObservers("hp", (TypedData)50, (TypedData)0);
 
         Assert.Equal(3, callCount);
     }
@@ -156,13 +157,13 @@ public class DataObserverManagerTests
         var cb1Called = false;
         var cb2Called = false;
 
-        Action<object?, object?> cb1 = (_, _) => cb1Called = true;
-        Action<object?, object?> cb2 = (_, _) => cb2Called = true;
+        Action<TypedData, TypedData> cb1 = (_, _) => cb1Called = true;
+        Action<TypedData, TypedData> cb2 = (_, _) => cb2Called = true;
 
         mgr.Subscribe("hp", cb1);
         mgr.Subscribe("hp", cb2);
         mgr.Unsubscribe("hp", cb1);
-        mgr.NotifyObservers("hp", 100, 50);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
 
         Assert.False(cb1Called);
         Assert.True(cb2Called);

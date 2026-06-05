@@ -1,5 +1,6 @@
 using System;
 using Origo.Core.Snd.Entity;
+using Origo.Core.Snd.Metadata;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -12,16 +13,16 @@ public class DataObserverManagerExtendedTests
     public void DataObserverManager_Subscribe_And_Notify()
     {
         var mgr = new DataObserverManager();
-        object? receivedOld = null, receivedNew = null;
+        TypedData receivedOld = default, receivedNew = default;
         mgr.Subscribe("hp", (o, n) =>
         {
             receivedOld = o;
             receivedNew = n;
         });
 
-        mgr.NotifyObservers("hp", 100, 80);
-        Assert.Equal(100, receivedOld);
-        Assert.Equal(80, receivedNew);
+        mgr.NotifyObservers("hp", (TypedData)100, (TypedData)80);
+        Assert.Equal(100, receivedOld.AsInt32());
+        Assert.Equal(80, receivedNew.AsInt32());
     }
 
     [Fact]
@@ -29,14 +30,14 @@ public class DataObserverManagerExtendedTests
     {
         var mgr = new DataObserverManager();
         var callCount = 0;
-        Action<object?, object?> callback = (_, _) => callCount++;
+        Action<TypedData, TypedData> callback = (_, _) => callCount++;
 
         mgr.Subscribe("hp", callback);
-        mgr.NotifyObservers("hp", null, null);
+        mgr.NotifyObservers("hp", default, default);
         Assert.Equal(1, callCount);
 
         mgr.Unsubscribe("hp", callback);
-        mgr.NotifyObservers("hp", null, null);
+        mgr.NotifyObservers("hp", default, default);
         Assert.Equal(1, callCount);
     }
 
@@ -45,12 +46,12 @@ public class DataObserverManagerExtendedTests
     {
         var mgr = new DataObserverManager();
         var callCount = 0;
-        mgr.Subscribe("hp", (_, _) => callCount++, (o, n) => (int)n! > 50);
+        mgr.Subscribe("hp", (_, _) => callCount++, (o, n) => n.AsInt32() > 50);
 
-        mgr.NotifyObservers("hp", 0, 80);
+        mgr.NotifyObservers("hp", (TypedData)0, (TypedData)80);
         Assert.Equal(1, callCount);
 
-        mgr.NotifyObservers("hp", 0, 30);
+        mgr.NotifyObservers("hp", (TypedData)0, (TypedData)30);
         Assert.Equal(1, callCount);
     }
 
@@ -61,7 +62,7 @@ public class DataObserverManagerExtendedTests
         var callCount = 0;
         mgr.Subscribe("hp", (_, _) => callCount++);
         mgr.Clear();
-        mgr.NotifyObservers("hp", null, null);
+        mgr.NotifyObservers("hp", default, default);
         Assert.Equal(0, callCount);
     }
 
@@ -74,7 +75,7 @@ public class DataObserverManagerExtendedTests
         mgr.Subscribe("hp", (_, _) => count1++);
         mgr.Subscribe("hp", (_, _) => count2++);
 
-        mgr.NotifyObservers("hp", null, null);
+        mgr.NotifyObservers("hp", default, default);
         Assert.Equal(1, count1);
         Assert.Equal(1, count2);
     }

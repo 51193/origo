@@ -111,12 +111,12 @@ internal sealed class StubSndEntity : ISndEntity
         return (false, default);
     }
 
-    public void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
-        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+    public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
     {
     }
 
-    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback)
+    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
     {
     }
 
@@ -129,13 +129,13 @@ internal sealed class StubSndEntity : ISndEntity
     }
 
     public void ObserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, object?, object?> callback,
-        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
     {
     }
 
     public void UnobserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, object?, object?> callback)
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
     {
     }
 

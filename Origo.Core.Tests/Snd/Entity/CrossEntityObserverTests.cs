@@ -67,15 +67,15 @@ public class CrossEntityObserverTests
         Assert.Equal(6, events.Count);
         Assert.Contains("target=E", events);
         Assert.Contains("observer=E", events);
-        Assert.Contains("old=0->new=100", events);
-        Assert.Contains("old=100->new=50", events);
+        Assert.Contains("old=null->new=(Int32)100", events);
+        Assert.Contains("old=(Int32)100->new=(Int32)50", events);
     }
 
     [Fact]
     public void Unsubscribe_Self_StopsNotification()
     {
         var callCount = 0;
-        Action<ISndEntity, ISndEntity, object?, object?> callback = (_, _, _, _) => callCount++;
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback = (_, _, _, _) => callCount++;
         var host = CreateHost(w => { w.RegisterStrategy(() => new RecordStrategy()); });
         var entity = host.CreateEntity(CreateMeta("E", new[] { RecordIdx }));
         ((IEntityLifecycle)entity).FireAfterSpawnHooks();
@@ -98,7 +98,7 @@ public class CrossEntityObserverTests
         ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         entity.Subscribe("hp", (_, _, _, _) => callCount++,
-            (_, _, _, newVal) => (int)newVal! > 50);
+            (_, _, _, newVal) => newVal.AsInt32() > 50);
 
         entity.SetData("hp", 30);
         Assert.Equal(0, callCount);
@@ -192,15 +192,15 @@ public class CrossEntityObserverTests
         Assert.Equal(6, events.Count);
         Assert.Contains("target=target", events);
         Assert.Contains("observer=observer", events);
-        Assert.Contains("old=0->new=100", events);
-        Assert.Contains("old=100->new=50", events);
+        Assert.Contains("old=null->new=(Int32)100", events);
+        Assert.Contains("old=(Int32)100->new=(Int32)50", events);
     }
 
     [Fact]
     public void UnobserveData_CrossEntity_StopsNotification()
     {
         var callCount = 0;
-        Action<ISndEntity, ISndEntity, object?, object?> callback = (_, _, _, _) => callCount++;
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback = (_, _, _, _) => callCount++;
         var host = CreateHost(w => { w.RegisterStrategy(() => new ObserverProbeStrategy()); });
         var observer = host.CreateEntity(CreateMeta("observer", new[] { ObserverProbeIdx }));
         var target = host.CreateEntity(CreateMeta("target"));
@@ -616,7 +616,7 @@ public class CrossEntityObserverTests
         ((IEntityLifecycle)target).FireAfterSpawnHooks();
 
         observer.ObserveData(target, "hp", (_, _, _, _) => callCount++,
-            (_, _, _, newVal) => (int)newVal! > 50);
+            (_, _, _, newVal) => newVal.AsInt32() > 50);
 
         target.SetData("hp", 30);
         Assert.Equal(0, callCount);
@@ -641,7 +641,7 @@ public class CrossEntityObserverTests
         Assert.Equal(1, callCount);
         return;
 
-        void OnDataChanged(ISndEntity t, ISndEntity o, object? oldV, object? newV) => callCount++;
+        void OnDataChanged(ISndEntity t, ISndEntity o, TypedData oldV, TypedData newV) => callCount++;
     }
 
     [Fact]
@@ -650,7 +650,7 @@ public class CrossEntityObserverTests
         var dataEvents = new List<string>();
         var lifecycleEvents = new List<string>();
 
-        void OnData(ISndEntity t, ISndEntity o, object? oldV, object? newV) =>
+        void OnData(ISndEntity t, ISndEntity o, TypedData oldV, TypedData newV) =>
             dataEvents.Add($"data:{t.Name}");
         void OnLifecycle(ISndEntity t, ISndEntity o, EntityLifecycleEvent evt) =>
             lifecycleEvents.Add(evt.ToString());

@@ -3,11 +3,23 @@
     <PropertyGroup>
         <Description>Origo Core — a lightweight, platform-agnostic C# game framework using the SND (Strategy-Node-Data) model.</Description>
         <PackageTags>game;framework;csharp;snd;entity;strategy;dotnet;origo</PackageTags>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="SourceGeneration/**/*.cs"/>
+        <None Include="SourceGeneration/**/*.cs"/>
+    </ItemGroup>
 
     <ItemGroup>
         <InternalsVisibleTo Include="Origo.Core.Tests"/>
         <InternalsVisibleTo Include="Origo.GodotAdapter"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="SourceGeneration/Origo.Core.SourceGeneration.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
 </Project>

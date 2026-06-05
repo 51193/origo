@@ -604,9 +604,16 @@ public class ActiveStrategyTestScenarioTests
 
         private static void AppendFromBb(IBlackboard bb, List<string> parts, string key)
         {
-            var (found, value) = bb.TryGet<object>(key);
+            var (found, value) = bb.TryGet<string>(key);
             if (found && value is not null)
+            {
                 parts.Add($"{key}={value}");
+                return;
+            }
+
+            var (intFound, intValue) = bb.TryGet<int>(key);
+            if (intFound)
+                parts.Add($"{key}={intValue}");
         }
     }
 

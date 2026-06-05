@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Snd.Entity;
 
@@ -11,7 +12,8 @@ internal sealed class DataObserverManager
 {
     private readonly Dictionary<string, List<Subscription>> _subscriptions = new();
 
-    public void Subscribe(string name, Action<object?, object?> callback, Func<object?, object?, bool>? filter = null)
+    public void Subscribe(string name, Action<TypedData, TypedData> callback,
+        Func<TypedData, TypedData, bool>? filter = null)
     {
         if (!_subscriptions.TryGetValue(name, out var list))
         {
@@ -26,7 +28,7 @@ internal sealed class DataObserverManager
         });
     }
 
-    public void Unsubscribe(string name, Action<object?, object?> callback)
+    public void Unsubscribe(string name, Action<TypedData, TypedData> callback)
     {
         if (!_subscriptions.TryGetValue(name, out var list)) return;
 
@@ -34,7 +36,7 @@ internal sealed class DataObserverManager
         if (list.Count == 0) _subscriptions.Remove(name);
     }
 
-    public void NotifyObservers(string name, object? oldValue, object? newValue)
+    public void NotifyObservers(string name, TypedData oldValue, TypedData newValue)
     {
         if (!_subscriptions.TryGetValue(name, out var list)) return;
 
@@ -49,8 +51,8 @@ internal sealed class DataObserverManager
 
     private sealed class Subscription
     {
-        public required Action<object?, object?> Callback { get; init; }
+        public required Action<TypedData, TypedData> Callback { get; init; }
 
-        public Func<object?, object?, bool>? Filter { get; init; }
+        public Func<TypedData, TypedData, bool>? Filter { get; init; }
     }
 }

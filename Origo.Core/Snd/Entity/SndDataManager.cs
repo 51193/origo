@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Logging;
@@ -29,17 +30,18 @@ internal sealed class SndDataManager
         _logger = logger;
     }
 
-    public void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
-        Func<ISndEntity, object?, object?, bool>? filter)
+    public void Subscribe(string name, Action<ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, TypedData, TypedData, bool>? filter)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(callback);
 
-        var wrappedCallback = new Action<object?, object?>((oldValue, newValue) =>
+        var wrappedCallback = new Action<TypedData, TypedData>((oldValue, newValue) =>
             callback(_target, oldValue, newValue));
         var wrappedFilter = filter is null
             ? null
-            : new Func<object?, object?, bool>((oldValue, newValue) => filter(_target, oldValue, newValue));
+            : new Func<TypedData, TypedData, bool>((oldValue, newValue) =>
+                filter(_target, oldValue, newValue));
 
         _observerManager.Subscribe(
             name,
@@ -59,7 +61,7 @@ internal sealed class SndDataManager
         });
     }
 
-    public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback)
+    public void Unsubscribe(string name, Action<ISndEntity, TypedData, TypedData> callback)
     {
         if (!_subscriptionMap.TryGetValue(name, out var list)) return;
 
@@ -77,17 +79,20 @@ internal sealed class SndDataManager
 
     public void SetData<T>(string name, T value)
     {
-        var (isFine, oldValue) = TryGetData<T>(name);
+        ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(_data, name, out var exists);
+        var newValue = TypedDataFactory<T>.Create(value);
 
-        if (isFine && EqualityComparer<T>.Default.Equals(oldValue, value)) return;
+        if (exists && slot.Equals(newValue)) return;
 
-        _data[name] = new TypedData(typeof(T), value);
-        _observerManager.NotifyObservers(name, oldValue, value);
+        var oldValue = slot;
+        slot = newValue;
+        _observerManager.NotifyObservers(name, oldValue, newValue);
     }
 
     public (bool, T?) TryGetData<T>(string name)
     {
-        if (_data.TryGetValue(name, out var typedData) && typedData.Data is T value) return (true, value);
+        if (_data.TryGetValue(name, out var td) && TypedDataFactory<T>.TryExtract(td, out var value))
+            return (true, value);
         return (false, default);
     }
 
@@ -95,7 +100,8 @@ internal sealed class SndDataManager
 
     public T GetRequiredData<T>(string name)
     {
-        if (_data.TryGetValue(name, out var typedData) && typedData.Data is T value) return value;
+        if (_data.TryGetValue(name, out var td) && TypedDataFactory<T>.TryExtract(td, out var value))
+            return value;
         var message = $"Data with name '{name}' not found or is not of type '{typeof(T).Name}'.";
         _logger.Log(LogLevel.Error, nameof(SndDataManager), new LogMessageBuilder().Build(message));
         throw new InvalidOperationException(message);
@@ -125,7 +131,7 @@ internal sealed class SndDataManager
 
     private sealed class SubscriptionPair
     {
-        public required Action<ISndEntity, object?, object?> OriginalCallback { get; init; }
-        public required Action<object?, object?> WrappedCallback { get; init; }
+        public required Action<ISndEntity, TypedData, TypedData> OriginalCallback { get; init; }
+        public required Action<TypedData, TypedData> WrappedCallback { get; init; }
     }
 }

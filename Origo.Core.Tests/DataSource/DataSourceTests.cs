@@ -509,6 +509,7 @@ public class DataSourceTests
     public void TypedDataConverter_RoundTrip_NullData()
     {
         var tm = new TypeStringMapping();
+        tm.RegisterType<object>("Object");
         var registry = TestFactory.CreateRegistry(tm);
 
         var original = new TypedData(typeof(string), null);

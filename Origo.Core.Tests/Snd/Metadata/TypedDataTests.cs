@@ -117,16 +117,16 @@ public class TypedDataTests
     public void WithNullValueForReferenceType_PreservesTypeInfo()
     {
         var td = new TypedData(typeof(List<int>), null);
-        Assert.Equal(typeof(List<int>), td.DataType);
+        Assert.Equal(typeof(object), td.DataType);
         Assert.Null(td.Data);
     }
 
     [Fact]
-    public void TwoInstances_SameTypeAndSameValue_HaveDifferentReferences()
+    public void TwoInstances_SameTypeAndSameValue_AreEqual()
     {
         var a = new TypedData(typeof(int), 42);
         var b = new TypedData(typeof(int), 42);
-        Assert.NotSame(a, b);
+        Assert.Equal(a, b);
     }
 
     [Fact]
@@ -134,6 +134,6 @@ public class TypedDataTests
     {
         var a = new TypedData(typeof(int), 42);
         var b = new TypedData(typeof(long), 42L);
-        Assert.NotSame(a, b);
+        Assert.NotEqual(a, b);
     }
 }

@@ -58,14 +58,14 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         return _entity!.TryGetData<T>(name);
     }
 
-    public void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
-        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+    public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
     {
         EnsureEntity();
         _entity!.Subscribe(name, callback, filter);
     }
 
-    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback)
+    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
     {
         EnsureEntity();
         _entity!.Unsubscribe(name, callback);
@@ -84,15 +84,15 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     }
 
     public void ObserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, object?, object?> callback,
-        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
     {
         EnsureEntity();
         _entity!.ObserveData(target, dataName, callback, filter);
     }
 
     public void UnobserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, object?, object?> callback)
+        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
     {
         EnsureEntity();
         _entity!.UnobserveData(target, dataName, callback);
@@ -112,14 +112,14 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         _entity!.UnobserveLifecycle(target, callback);
     }
 
-    void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, object?, object?> callback,
-        Func<ISndEntity, object?, object?, bool>? filter)
+    void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, TypedData, TypedData, bool>? filter)
     {
         EnsureEntity();
         ((ISndEntityRawSubscription)_entity!).SubscribeDataRaw(name, callback, filter);
     }
 
-    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, object?, object?> callback)
+    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback)
     {
         EnsureEntity();
         ((ISndEntityRawSubscription)_entity!).UnsubscribeDataRaw(name, callback);

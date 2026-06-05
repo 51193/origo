@@ -17,7 +17,7 @@ public sealed class Blackboard : IBlackboard
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
 
-        _data[key] = new TypedData(typeof(T), value);
+        _data[key] = TypedDataFactory<T>.Create(value);
     }
 
     public (bool found, T value) TryGet<T>(string key)
@@ -25,7 +25,7 @@ public sealed class Blackboard : IBlackboard
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Blackboard key cannot be null or whitespace.", nameof(key));
 
-        if (_data.TryGetValue(key, out var typedData) && typedData.Data is T value)
+        if (_data.TryGetValue(key, out var td) && TypedDataFactory<T>.TryExtract(td, out var value))
             return (true, value);
 
         return (false, default!);

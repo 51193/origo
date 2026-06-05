@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Abstractions.Entity;
 
@@ -35,12 +36,12 @@ public interface ISndDataAccess
     ///         退订时须传入与订阅时相同的委托实例（方法引用），lambda 表达式每次编译产生不同实例，会导致退订失败。
     ///     </para>
     /// </summary>
-    void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
-        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null);
+    void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null);
 
     /// <summary>
     ///     取消订阅指定键的数据变更通知。
     ///     <c>callback</c> 必须与 <see cref="Subscribe" /> 调用时的委托实例相同（方法引用）。
     /// </summary>
-    void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback);
+    void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback);
 }
