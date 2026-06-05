@@ -11,6 +11,7 @@ using Origo.Core.Runtime;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save;
+using Origo.Core.Save.Meta;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
@@ -28,6 +29,7 @@ namespace Origo.Core.Snd;
 public sealed class SndContext : IStateMachineContext, ISndContext
 {
     private readonly SystemRun _systemRun;
+    private readonly List<ISaveMetaContributor> _saveMetaContributors = new();
     private int _pendingPersistenceRequests;
     private ProgressRun? _progressRun;
     private bool _workflowInProgress;
@@ -112,6 +114,18 @@ public sealed class SndContext : IStateMachineContext, ISndContext
 
     // ── Entry point ─────────────────────────────────────────────────────
 
+    public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)
+    {
+        ArgumentNullException.ThrowIfNull(contributor);
+        _saveMetaContributors.Add(contributor);
+    }
+
+    public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute)
+    {
+        ArgumentNullException.ThrowIfNull(contribute);
+        _saveMetaContributors.Add(new DelegateSaveMetaContributor(contribute));
+    }
+
     public IReadOnlyList<string> ListSaves() => StorageService.EnumerateSaveIds();
 
     public void RequestLoadGame(string saveId)
@@ -133,7 +147,9 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             try
             {
                 var progressRun = EnsureProgressRun();
-                var payload = progressRun.BuildSavePayload(newSaveId);
+                var metaContext = progressRun.BuildSaveMetaContext(newSaveId);
+                var mergedMeta = SaveMetaMerger.Merge(_saveMetaContributors, in metaContext, null);
+                var payload = progressRun.BuildSavePayload(newSaveId, mergedMeta);
                 StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, newSaveId, Runtime.Logger);
                 progressRun.SetSaveId(newSaveId);
                 _systemRun.SetActiveSaveSlot(newSaveId);

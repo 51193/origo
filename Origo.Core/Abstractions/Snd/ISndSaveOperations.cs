@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Origo.Core.Save.Meta;
 
 namespace Origo.Core.Abstractions.Snd;
 
@@ -24,4 +26,14 @@ public interface ISndSaveOperations
 
     /// <summary>请求切换前台关卡。</summary>
     void RequestSwitchForegroundLevel(string newLevelId);
+
+    /// <summary>
+    ///     注册展示用 <c>meta.map</c> 的贡献者，在每次 <see cref="RequestSaveGame" /> 时执行。
+    /// </summary>
+    void RegisterSaveMetaContributor(ISaveMetaContributor contributor);
+
+    /// <summary>
+    ///     通过委托注册展示用 <c>meta.map</c> 的贡献者。
+    /// </summary>
+    void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute);
 }

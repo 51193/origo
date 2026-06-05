@@ -24,7 +24,10 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
 
     /// <summary>
     ///     在 <see cref="SndContext" /> 创建并绑定到 <see cref="GodotSndManager" /> 之后调用；
-    ///     子类可覆写并在其中调用 <c>context.RegisterSaveMetaContributor(...)</c> 注册展示用 <c>meta.map</c> 贡献者。
+    ///     子类可覆写并在其中通过
+    ///     <c>context.RegisterSaveMetaContributor(ISaveMetaContributor)</c> 或
+    ///     <c>context.RegisterSaveMetaContributor(Action&lt;...&gt;)</c>
+    ///     注册展示用 <c>meta.map</c> 贡献者。
     /// </summary>
     protected virtual void ConfigureSaveMetadataContributors(ISndContext context)
     {

@@ -4,6 +4,7 @@ using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
+using Origo.Core.Save.Meta;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Xunit;
@@ -214,6 +215,11 @@ public class SessionSndContextExtendedTests
         public void RequestLoadInitialSave() => CallCount++;
 
         public void RequestLoadMainMenuEntrySave() => CallCount++;
+
+        public void RegisterSaveMetaContributor(ISaveMetaContributor contributor) => CallCount++;
+
+        public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute) =>
+            CallCount++;
     }
 
     private sealed class StubSessionRun(string levelId) : ISessionRun

@@ -8,6 +8,7 @@ using Origo.Core.Abstractions.Node;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
+using Origo.Core.Save.Meta;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Abstractions.Lifecycle;
@@ -138,6 +139,14 @@ internal sealed class StrategyTestContext : ISndContext
     }
 
     public void RequestLoadMainMenuEntrySave()
+    {
+    }
+
+    public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)
+    {
+    }
+
+    public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute)
     {
     }
 

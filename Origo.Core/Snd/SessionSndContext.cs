@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
+using Origo.Core.Save.Meta;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Abstractions.Lifecycle;
 
@@ -72,4 +73,10 @@ internal sealed class SessionSndContext : ISndContext
     public void RequestLoadInitialSave() => _global.RequestLoadInitialSave();
 
     public void RequestLoadMainMenuEntrySave() => _global.RequestLoadMainMenuEntrySave();
+
+    public void RegisterSaveMetaContributor(ISaveMetaContributor contributor) =>
+        _global.RegisterSaveMetaContributor(contributor);
+
+    public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute) =>
+        _global.RegisterSaveMetaContributor(contribute);
 }
