@@ -11,9 +11,17 @@ namespace Origo.Core.Snd.Metadata;
 public sealed class SndInlineTypesAttribute : Attribute
 {
     public Type[] Types { get; }
+    public int StartKind { get; }
 
     public SndInlineTypesAttribute(params Type[] types)
     {
         Types = types;
+        StartKind = 1;
+    }
+
+    public SndInlineTypesAttribute(int startKind, params Type[] types)
+    {
+        Types = types;
+        StartKind = startKind;
     }
 }

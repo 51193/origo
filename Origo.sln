@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.ConsoleBridge", "Orig
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.ConsoleBridge.Tests", "Origo.ConsoleBridge.Tests\Origo.ConsoleBridge.Tests.csproj", "{AF821203-9DEE-44A9-8A02-0A3CB7E54718}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.SourceGeneration", "Origo.SourceGeneration\Origo.SourceGeneration.csproj", "{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,6 +96,18 @@ Global
 		{AF821203-9DEE-44A9-8A02-0A3CB7E54718}.Release|x64.Build.0 = Release|Any CPU
 		{AF821203-9DEE-44A9-8A02-0A3CB7E54718}.Release|x86.ActiveCfg = Release|Any CPU
 		{AF821203-9DEE-44A9-8A02-0A3CB7E54718}.Release|x86.Build.0 = Release|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Debug|x64.Build.0 = Debug|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Debug|x86.Build.0 = Debug|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Release|x64.ActiveCfg = Release|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Release|x64.Build.0 = Release|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Release|x86.ActiveCfg = Release|Any CPU
+		{C1A7E3F8-D4B2-4E5A-9C6D-8F0B1A3E5D7C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

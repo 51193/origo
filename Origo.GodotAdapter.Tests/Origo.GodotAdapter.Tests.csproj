@@ -21,7 +21,7 @@
         <CollectCoverage>true</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <Include>[Origo.GodotAdapter]*</Include>
-        <ExcludeByFile>**/Godot.SourceGenerators/**,**/Snd/GodotSndManager.cs,**/Snd/GodotSndEntity.cs,**/Snd/GodotNodeHandle.cs,**/Snd/GodotPackedSceneNodeFactory.cs,**/FileSystem/GodotFileOperations.cs,**/FileSystem/GodotDirectoryOperations.cs,**/Bootstrap/OrigoAutoHost.cs,**/Bootstrap/OrigoDefaultEntry.cs,**/Bootstrap/OrigoDefaultEntry.Bootstrap.cs,**/Console/TreeDebugCommandHandler.cs</ExcludeByFile>
+        <ExcludeByFile>**/Godot.SourceGenerators/**,**/Snd/GodotSndManager.cs,**/Snd/GodotSndEntity.cs,**/Snd/GodotNodeHandle.cs,**/Snd/GodotPackedSceneNodeFactory.cs,**/FileSystem/GodotFileOperations.cs,**/FileSystem/GodotDirectoryOperations.cs,**/Bootstrap/OrigoAutoHost.cs,**/Bootstrap/OrigoDefaultEntry.cs,**/Bootstrap/OrigoDefaultEntry.Bootstrap.cs,**/Console/TreeDebugCommandHandler.cs,**/Snd/TypedDataInitializer.cs,**/*.g.cs</ExcludeByFile>
         <Threshold>85</Threshold>
         <ThresholdType>line</ThresholdType>
         <ThresholdStat>total</ThresholdStat>

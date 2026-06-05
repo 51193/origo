@@ -6,6 +6,7 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IsRoslynComponent>true</IsRoslynComponent>
         <IsPackable>false</IsPackable>
+        <RootNamespace>Origo.SourceGeneration</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

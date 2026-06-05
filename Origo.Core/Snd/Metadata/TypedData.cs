@@ -46,6 +46,13 @@ public readonly partial struct TypedData : IEquatable<TypedData>
     public static TypedData Null => default;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void RegisterKind(byte kind, Type type)
+    {
+        if (kind == 0) return;
+        KindTypeMap[kind] = type ?? typeof(object);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(TypedData other)
     {
         if (_kind != other._kind) return false;

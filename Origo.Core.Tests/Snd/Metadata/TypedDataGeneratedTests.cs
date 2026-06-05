@@ -268,4 +268,183 @@ public class TypedDataGeneratedTests
         Assert.NotEqual((byte)0, TypedDataTypeMap.GetKindForType(typeof(string)));
         Assert.Equal((byte)0, TypedDataTypeMap.GetKindForType(typeof(Guid)));
     }
+
+    [Fact]
+    public void RegisterKind_Manual_CanBeRetrieved()
+    {
+        TypedData.RegisterKind(200, typeof(Guid));
+
+        Assert.Equal(typeof(Guid), TypedData.KindTypeMap[200]);
+    }
+
+    [Fact]
+    public void LayeredKindResolver_IsInvoked_ForUnknownType()
+    {
+        TypedDataLayeredRegistry.RegisterKindResolver(t => t == typeof(DateTime) ? (byte)201 : (byte)0);
+
+        var kind = TypedDataTypeMap.GetKindForType(typeof(DateTime));
+        Assert.Equal((byte)201, kind);
+        Assert.Equal((byte)0, TypedDataTypeMap.GetKindForType(typeof(Guid)));
+    }
+
+    [Fact]
+    public void ObjectConverterFallback_ToObject_IsInvoked()
+    {
+        TypedData.RegisterKind(202, typeof(DateTime));
+        var now = DateTime.UtcNow;
+        var td = new TypedData(202, 0, now);
+
+        var obj = TypedDataObjectConverter.ToObject(td);
+        Assert.Equal(now, obj);
+    }
+
+    [Fact]
+    public void ObjectConverterFallback_FromObject_IsInvoked()
+    {
+        TypedData.RegisterKind(203, typeof(Guid));
+        var guid = Guid.NewGuid();
+
+        var (inlineBits, refValue) = TypedDataObjectConverter.FromObject(203, guid);
+        Assert.Equal(0L, inlineBits);
+        Assert.Equal(guid, refValue);
+    }
+
+    [Fact]
+    public void TypedDataFactory_Create_Fallback_CallsObjectConverter()
+    {
+        TypedData.RegisterKind(204, typeof(TimeSpan));
+        TypedDataLayeredRegistry.RegisterKindResolver(t => t == typeof(TimeSpan) ? (byte)204 : (byte)0);
+
+        var ts = TimeSpan.FromSeconds(42);
+        var td = TypedDataFactory<TimeSpan>.Create(ts);
+
+        Assert.Equal(typeof(TimeSpan), td.DataType);
+        Assert.Equal(ts, td.Data);
+    }
+
+    [Fact]
+    public void TypedDataFactory_TryExtract_Fallback_Works()
+    {
+        TypedData.RegisterKind(205, typeof(DateTimeOffset));
+        TypedDataLayeredRegistry.RegisterKindResolver(t => t == typeof(DateTimeOffset) ? (byte)205 : (byte)0);
+
+        var dto = DateTimeOffset.UtcNow;
+        var td = TypedDataFactory<DateTimeOffset>.Create(dto);
+
+        Assert.True(TypedDataFactory<DateTimeOffset>.TryExtract(td, out var extracted));
+        Assert.Equal(dto, extracted);
+    }
+
+    [Fact]
+    public void FromObject_Dispatch_Fallback()
+    {
+        TypedData.RegisterKind(206, typeof(Uri));
+        TypedDataLayeredRegistry.RegisterKindResolver(t => t == typeof(Uri) ? (byte)206 : (byte)0);
+
+        var uri = new Uri("https://example.com");
+        var td = TypedData.FromObject(typeof(Uri), uri);
+
+        Assert.Equal(typeof(Uri), td.DataType);
+        Assert.Equal(uri, td.Data);
+    }
+
+    [Fact]
+    public void DataType_ForRegisteredKind_ReturnsCorrectType()
+    {
+        TypedData.RegisterKind(207, typeof(Version));
+        var version = new Version(1, 2, 3);
+        var td = new TypedData(207, 0, version);
+
+        Assert.Equal(typeof(Version), td.DataType);
+    }
+
+    [Fact]
+    public void DataType_ForUnregisteredKind_FallsBackToRefType()
+    {
+        var version = new Version(1, 0);
+        var td = new TypedData(255, 0, version);
+
+        Assert.Equal(typeof(Version), td.DataType);
+    }
+
+    [Fact]
+    public void Data_ForInlineType_NoBoxingAllocation()
+    {
+        var td = (TypedData)42;
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var unused = td.Data;
+        var after = GC.GetAllocatedBytesForCurrentThread();
+
+        Assert.Equal(42, td.Data);
+        Assert.True(after - before < 1024,
+            $"Data access for inline type should produce near-zero allocation, got {after - before} bytes");
+    }
+
+    [Fact]
+    public void Data_ForRegisteredRefType_UsesRefField()
+    {
+        TypedData.RegisterKind(208, typeof(Version));
+        var version = new Version(3, 0);
+        var td = new TypedData(208, 0, version);
+
+        Assert.Same(version, td.Data);
+    }
+
+    [Fact]
+    public void MultiLayer_ResolverChain_FirstNonZeroWins()
+    {
+        TypedDataLayeredRegistry.RegisterKindResolver(t => t == typeof(Version) ? (byte)209 : (byte)0);
+        TypedDataLayeredRegistry.RegisterKindResolver(t => t == typeof(Version) ? (byte)210 : (byte)0);
+
+        var kind = TypedDataTypeMap.GetKindForType(typeof(Version));
+        Assert.Equal((byte)209, kind);
+    }
+
+    [Fact]
+    public void MultiLayer_FromObjectFallback_ChainIterates()
+    {
+        TypedDataLayeredRegistry.RegisterFromObjectFallback((k, v) => null);
+        TypedDataLayeredRegistry.RegisterFromObjectFallback((k, v) =>
+            k == 211 ? ((long inlineBits, object? refValue)?)(42L, null) : null);
+
+        var result = TypedDataObjectConverter.FromObject(211, "ignored");
+        Assert.Equal(42L, result.inlineBits);
+        Assert.Null(result.refValue);
+    }
+
+    [Fact]
+    public void MultiLayer_ToObjectFallback_ChainIterates()
+    {
+        TypedDataLayeredRegistry.RegisterToObjectFallback(_ => null);
+        TypedDataLayeredRegistry.RegisterToObjectFallback(td =>
+            td._kind == 212 ? "matched" : null);
+
+        var td = new TypedData(212, 0, null);
+        var obj = TypedDataObjectConverter.ToObject(td);
+        Assert.Equal("matched", obj);
+    }
+
+    [Fact]
+    public void NullSentinel_StillHasKindZero_AfterRegistrations()
+    {
+        TypedData.RegisterKind(213, typeof(Version));
+
+        var td = default(TypedData);
+        Assert.True(td.IsNull);
+        Assert.False(td.TryGetInt32(out _));
+        Assert.Equal((byte)0, td._kind);
+    }
+
+    [Fact]
+    public void ObjectConverter_ToObject_UnregisteredKind_ReturnsRef()
+    {
+        var version = new Version(2, 5);
+        var td = new TypedData(200, 0, version);
+
+        var obj = TypedDataObjectConverter.ToObject(td);
+        Assert.Same(version, obj);
+    }
 }

@@ -7,19 +7,23 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Remove="SourceGeneration/**/*.cs"/>
-        <None Include="SourceGeneration/**/*.cs"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <InternalsVisibleTo Include="Origo.Core.Tests"/>
         <InternalsVisibleTo Include="Origo.GodotAdapter"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Tests"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="SourceGeneration/Origo.Core.SourceGeneration.csproj"
+        <ProjectReference Include="..\Origo.SourceGeneration\Origo.SourceGeneration.csproj"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"/>
     </ItemGroup>
+
+    <Target Name="IncludeSourceGeneratorInPackage" BeforeTargets="_GetPackageFiles">
+        <ItemGroup>
+            <_PackageFiles Include="..\Origo.SourceGeneration\bin\$(Configuration)\netstandard2.0\Origo.SourceGeneration.dll">
+                <PackagePath>analyzers/dotnet/cs</PackagePath>
+            </_PackageFiles>
+        </ItemGroup>
+    </Target>
 
 </Project>
