@@ -15,7 +15,7 @@
         <CollectCoverage>true</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <!-- Reflection-heavy bootstrap: excluded from line % gate; covered indirectly via LoadAndSpawnFromFile / guard tests. -->
-        <ExcludeByFile>**/Runtime/OrigoAutoInitializer.cs,**/Addons/FastNoiseLite/FastNoiseLite.cs</ExcludeByFile>
+        <ExcludeByFile>**/Runtime/OrigoAutoInitializer.cs,**/Addons/FastNoiseLite/FastNoiseLite.cs,**/*.g.cs</ExcludeByFile>
         <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
         <Threshold>90</Threshold>
         <ThresholdType>line</ThresholdType>

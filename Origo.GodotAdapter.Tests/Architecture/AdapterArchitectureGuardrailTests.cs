@@ -153,12 +153,12 @@ public class AdapterArchitectureGuardrailTests
         public (bool found, T? value) TryGetData<T>(string name) =>
             _data.TryGetValue(name, out var v) && v is T c ? (true, c) : (false, default);
 
-        public void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> cb,
-            Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+        public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> cb,
+            Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
         {
         }
 
-        public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> cb)
+        public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> cb)
         {
         }
 
@@ -171,13 +171,13 @@ public class AdapterArchitectureGuardrailTests
         }
 
         public void ObserveData(ISndEntity target, string dataName,
-            Action<ISndEntity, ISndEntity, object?, object?> callback,
-            Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+            Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+            Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
         {
         }
 
         public void UnobserveData(ISndEntity target, string dataName,
-            Action<ISndEntity, ISndEntity, object?, object?> callback)
+            Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
         {
         }
 

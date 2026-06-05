@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Runtime.Console;
+using Origo.Core.Snd.Metadata;
 using Origo.GodotAdapter.Console;
 using Origo.GodotAdapter.Tests.TestSupport;
 using Xunit;
@@ -102,12 +103,12 @@ public class PressButtonCommandHandlerTests
         public T GetData<T>(string name) => default!;
         public (bool found, T? value) TryGetData<T>(string name) => (false, default);
 
-        public void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
-            Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+        public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+            Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
         {
         }
 
-        public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback)
+        public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
         {
         }
 
@@ -120,13 +121,13 @@ public class PressButtonCommandHandlerTests
         }
 
         public void ObserveData(ISndEntity target, string dataName,
-            Action<ISndEntity, ISndEntity, object?, object?> callback,
-            Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+            Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
+            Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
         {
         }
 
         public void UnobserveData(ISndEntity target, string dataName,
-            Action<ISndEntity, ISndEntity, object?, object?> callback)
+            Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
         {
         }
 
