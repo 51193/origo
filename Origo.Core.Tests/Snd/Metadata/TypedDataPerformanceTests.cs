@@ -11,8 +11,14 @@ namespace Origo.Core.Tests;
 ///     against an old-style boxed TypedData reference approach.
 ///     Each test measures allocation volume and relative throughput.
 /// </summary>
+[Collection("TypedData")]
 public class TypedDataPerformanceTests
 {
+    public TypedDataPerformanceTests()
+    {
+        TypedData.ResetForTesting();
+    }
+
     private const int WriteCount = 1_000_000;
     private const int ReadCount = 1_000_000;
     private const int NotificationRounds = 10_000;

@@ -7,8 +7,14 @@ using Xunit;
 
 namespace Origo.Core.Tests.Snd.Metadata;
 
+[Collection("TypedData")]
 public class TypedDataDispatchPerformanceTests
 {
+    public TypedDataDispatchPerformanceTests()
+    {
+        TypedData.ResetForTesting();
+    }
+
     private const int ReadCount = 1_000_000;
 
     [Fact]

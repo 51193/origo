@@ -39,6 +39,13 @@ internal static class TypedDataLayeredRegistry
             : (Func<TypedData, object?>)Delegate.Combine(_toObjectChain, fallback);
     }
 
+    internal static void Reset()
+    {
+        _kindResolverChain = null;
+        _fromObjectChain = null;
+        _toObjectChain = null;
+    }
+
     internal static byte ResolveKind(Type type)
     {
         if (_kindResolverChain is null) return 0;

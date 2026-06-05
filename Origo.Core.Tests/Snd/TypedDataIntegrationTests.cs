@@ -10,8 +10,14 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
+[Collection("TypedData")]
 public class TypedDataIntegrationTests
 {
+    public TypedDataIntegrationTests()
+    {
+        TypedData.ResetForTesting();
+    }
+
     [Fact]
     public void Entity_SetData_GetData_RoundTrip_AllRegisteredTypes()
     {

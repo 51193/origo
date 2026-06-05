@@ -12,8 +12,14 @@ namespace Origo.Core.Tests;
 ///     Verifies that the Source Generator produces correct TypedData members
 ///     for all types registered via [assembly: SndInlineTypes].
 /// </summary>
+[Collection("TypedData")]
 public class TypedDataGeneratedTests
 {
+    public TypedDataGeneratedTests()
+    {
+        TypedData.ResetForTesting();
+    }
+
     [Fact]
     public void ImplicitConversion_Int32_RoundTrip()
     {

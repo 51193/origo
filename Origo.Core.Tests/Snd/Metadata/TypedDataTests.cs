@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
+[Collection("TypedData")]
 public class TypedDataTests
 {
+    public TypedDataTests()
+    {
+        TypedData.ResetForTesting();
+    }
+
     [Fact]
     public void Constructor_StoresTypeAndValue()
     {

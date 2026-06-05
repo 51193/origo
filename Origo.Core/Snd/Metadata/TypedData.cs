@@ -52,6 +52,13 @@ public readonly partial struct TypedData : IEquatable<TypedData>
         KindTypeMap[kind] = type ?? typeof(object);
     }
 
+    internal static void ResetForTesting()
+    {
+        Array.Clear(KindTypeMap, 0, KindTypeMap.Length);
+        TypedDataLayeredRegistry.Reset();
+        TypedDataHomeKindRegistration.Initialize();
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(TypedData other)
     {
