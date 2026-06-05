@@ -11,7 +11,7 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.GodotAdapter.Snd;
 
 [GlobalClass]
-public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle
+public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEntityRawSubscription
 {
     private readonly ISndContext _context;
     private readonly ILogger _logger;
@@ -58,17 +58,83 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle
         return _entity!.TryGetData<T>(name);
     }
 
-    public void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
-        Func<ISndEntity, object?, object?, bool>? filter = null)
+    public void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
+        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
     {
         EnsureEntity();
         _entity!.Subscribe(name, callback, filter);
     }
 
-    public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback)
+    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback)
     {
         EnsureEntity();
         _entity!.Unsubscribe(name, callback);
+    }
+
+    public void SubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        EnsureEntity();
+        _entity!.SubscribeLifecycle(callback);
+    }
+
+    public void UnsubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        EnsureEntity();
+        _entity!.UnsubscribeLifecycle(callback);
+    }
+
+    public void ObserveData(ISndEntity target, string dataName,
+        Action<ISndEntity, ISndEntity, object?, object?> callback,
+        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+    {
+        EnsureEntity();
+        _entity!.ObserveData(target, dataName, callback, filter);
+    }
+
+    public void UnobserveData(ISndEntity target, string dataName,
+        Action<ISndEntity, ISndEntity, object?, object?> callback)
+    {
+        EnsureEntity();
+        _entity!.UnobserveData(target, dataName, callback);
+    }
+
+    public void ObserveLifecycle(ISndEntity target,
+        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        EnsureEntity();
+        _entity!.ObserveLifecycle(target, callback);
+    }
+
+    public void UnobserveLifecycle(ISndEntity target,
+        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        EnsureEntity();
+        _entity!.UnobserveLifecycle(target, callback);
+    }
+
+    void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, object?, object?> callback,
+        Func<ISndEntity, object?, object?, bool>? filter)
+    {
+        EnsureEntity();
+        ((ISndEntityRawSubscription)_entity!).SubscribeDataRaw(name, callback, filter);
+    }
+
+    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, object?, object?> callback)
+    {
+        EnsureEntity();
+        ((ISndEntityRawSubscription)_entity!).UnsubscribeDataRaw(name, callback);
+    }
+
+    void ISndEntityRawSubscription.SubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback)
+    {
+        EnsureEntity();
+        ((ISndEntityRawSubscription)_entity!).SubscribeLifecycleRaw(callback);
+    }
+
+    void ISndEntityRawSubscription.UnsubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback)
+    {
+        EnsureEntity();
+        ((ISndEntityRawSubscription)_entity!).UnsubscribeLifecycleRaw(callback);
     }
 
     public INodeHandle GetNode(string name)

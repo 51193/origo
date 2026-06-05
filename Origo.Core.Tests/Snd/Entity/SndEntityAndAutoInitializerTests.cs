@@ -37,7 +37,7 @@ public class SndEntityAndAutoInitializerTests
         };
 
         var callbackCount = 0;
-        entity.Subscribe("hp", (_, oldValue, newValue) =>
+        entity.Subscribe("hp", (_, __, oldValue, newValue) =>
         {
             callbackCount++;
             Assert.Equal(10, Assert.IsType<int>(oldValue));

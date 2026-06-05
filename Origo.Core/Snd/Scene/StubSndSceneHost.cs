@@ -111,12 +111,41 @@ internal sealed class StubSndEntity : ISndEntity
         return (false, default);
     }
 
-    public void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
-        Func<ISndEntity, object?, object?, bool>? filter = null)
+    public void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
+        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
     {
     }
 
-    public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback)
+    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback)
+    {
+    }
+
+    public void SubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+    }
+
+    public void UnsubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+    }
+
+    public void ObserveData(ISndEntity target, string dataName,
+        Action<ISndEntity, ISndEntity, object?, object?> callback,
+        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+    {
+    }
+
+    public void UnobserveData(ISndEntity target, string dataName,
+        Action<ISndEntity, ISndEntity, object?, object?> callback)
+    {
+    }
+
+    public void ObserveLifecycle(ISndEntity target,
+        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+    }
+
+    public void UnobserveLifecycle(ISndEntity target,
+        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
     {
     }
 

@@ -190,7 +190,7 @@ public class SndEntityLifecycleBatchTests
             var target = h?.FindByName("target");
             if (target is not null)
             {
-                target.Subscribe("hp", (_, oldVal, newVal) =>
+                target.Subscribe("hp", (_, __, oldVal, newVal) =>
                 {
                     Interlocked.Increment(ref _subCount);
                     Events.Add($"sub:{oldVal}->{newVal}");

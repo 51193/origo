@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd.Scene;
 using Xunit;
 
@@ -77,7 +78,7 @@ public class StubSndEntityTests
     {
         var entity = new StubSndEntity("e");
         entity.SetData("hp", 10);
-        Action<object?, object?, object?> callback = (_, _, _) => { };
+        Action<ISndEntity, ISndEntity, object?, object?> callback = (_, _, _, _) => { };
 
         var ex = Record.Exception(() =>
         {

@@ -4,6 +4,11 @@ namespace Origo.Core.Abstractions.Entity;
 
 /// <summary>
 ///     数据存取与订阅能力，从 <see cref="ISndEntity" /> 中拆分，遵循接口隔离原则。
+///     <para>
+///         订阅回调统一为 <c>(target, observer, oldValue, newValue)</c> —— 自订阅时 target == observer，
+///         跨实体观察时 <c>observer</c> 为发起 <c>ObserveData</c> 的实体。
+///         <see cref="Subscribe" /> 等价于 <c>ObserveData(this, ...)</c>，统一内部链路。
+///     </para>
 /// </summary>
 public interface ISndDataAccess
 {
@@ -23,13 +28,19 @@ public interface ISndDataAccess
     (bool found, T? value) TryGetData<T>(string name);
 
     /// <summary>
-    ///     订阅指定键的数据变更通知。
+    ///     订阅本实体指定键的数据变更通知。
+    ///     <para>
+    ///         等价于 <c>ObserveData(this, name, callback, filter)</c>，走统一内部链路。
+    ///         回调签名 <c>(target, observer, oldValue, newValue)</c>。
+    ///         退订时须传入与订阅时相同的委托实例（方法引用），lambda 表达式每次编译产生不同实例，会导致退订失败。
+    ///     </para>
     /// </summary>
-    void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
-        Func<ISndEntity, object?, object?, bool>? filter = null);
+    void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
+        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null);
 
     /// <summary>
     ///     取消订阅指定键的数据变更通知。
+    ///     <c>callback</c> 必须与 <see cref="Subscribe" /> 调用时的委托实例相同（方法引用）。
     /// </summary>
-    void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback);
+    void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback);
 }

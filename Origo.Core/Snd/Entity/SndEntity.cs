@@ -13,7 +13,7 @@ namespace Origo.Core.Snd.Entity;
 /// <summary>
 ///     SND 聚合实体。封装数据、节点与策略生命周期，保持 Core 与引擎解耦。
 /// </summary>
-public sealed class SndEntity : ISndEntity, IEntityLifecycle
+public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubscription
 {
     private const string LogTag = nameof(SndEntity);
     private readonly ActiveStrategyManager _activeStrategyManager;
@@ -22,6 +22,10 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle
     private readonly ILogger _logger;
     private readonly SndNodeManager _nodeHost;
     private readonly SndStrategyManager _strategyManager;
+
+    private readonly List<Action<ISndEntity, EntityLifecycleEvent>> _lifecycleObservers = new();
+    private readonly List<OutgoingDataSub> _outgoingDataSubs = new();
+    private readonly List<OutgoingLifecycleSub> _outgoingLifecycleSubs = new();
 
     internal SndEntity(
         INodeFactory nodeFactory,
@@ -54,12 +58,65 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle
 
     public (bool found, T? value) TryGetData<T>(string name) => _dataManager.TryGetData<T>(name);
 
-    public void Subscribe(string name, Action<ISndEntity, object?, object?> callback,
-        Func<ISndEntity, object?, object?, bool>? filter = null) =>
-        _dataManager.Subscribe(name, callback, filter);
+    public void Subscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback,
+        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+    {
+        SubscribeDataInternal((ISndEntity)this, name, callback, filter);
+    }
 
-    public void Unsubscribe(string name, Action<ISndEntity, object?, object?> callback) =>
-        _dataManager.Unsubscribe(name, callback);
+    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, object?, object?> callback)
+    {
+        UnobserveData((ISndEntity)this, name, callback);
+    }
+
+    public void ObserveData(ISndEntity target, string dataName,
+        Action<ISndEntity, ISndEntity, object?, object?> callback,
+        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter = null)
+    {
+        SubscribeDataInternal(target, dataName, callback, filter);
+    }
+
+    public void UnobserveData(ISndEntity target, string dataName,
+        Action<ISndEntity, ISndEntity, object?, object?> callback)
+    {
+        for (var i = _outgoingDataSubs.Count - 1; i >= 0; i--)
+        {
+            var sub = _outgoingDataSubs[i];
+            if (sub.Target != target || sub.DataName != dataName || sub.OriginalCallback != callback)
+                continue;
+            ((ISndEntityRawSubscription)target).UnsubscribeDataRaw(dataName, sub.WrappedCallback);
+            _outgoingDataSubs.RemoveAt(i);
+        }
+    }
+
+    public void SubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        SubscribeLifecycleInternal((ISndEntity)this, callback);
+    }
+
+    public void UnsubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        UnobserveLifecycle((ISndEntity)this, callback);
+    }
+
+    public void ObserveLifecycle(ISndEntity target,
+        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        SubscribeLifecycleInternal(target, callback);
+    }
+
+    public void UnobserveLifecycle(ISndEntity target,
+        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        for (var i = _outgoingLifecycleSubs.Count - 1; i >= 0; i--)
+        {
+            var sub = _outgoingLifecycleSubs[i];
+            if (sub.Target != target || sub.OriginalCallback != callback)
+                continue;
+            ((ISndEntityRawSubscription)target).UnsubscribeLifecycleRaw(sub.WrappedCallback);
+            _outgoingLifecycleSubs.RemoveAt(i);
+        }
+    }
 
     public INodeHandle GetNode(string name) => _nodeHost.GetNode(name);
 
@@ -80,6 +137,27 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle
 
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);
 
+    void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, object?, object?> callback,
+        Func<ISndEntity, object?, object?, bool>? filter)
+    {
+        _dataManager.Subscribe(name, callback, filter);
+    }
+
+    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, object?, object?> callback)
+    {
+        _dataManager.Unsubscribe(name, callback);
+    }
+
+    void ISndEntityRawSubscription.SubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback)
+    {
+        _lifecycleObservers.Add(callback);
+    }
+
+    void ISndEntityRawSubscription.UnsubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback)
+    {
+        _lifecycleObservers.Remove(callback);
+    }
+
     void IEntityLifecycle.RecoverForLifecycle(SndMetaData metaData)
     {
         Name = metaData.Name;
@@ -95,6 +173,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle
 
     void IEntityLifecycle.FireAfterSpawnHooks()
     {
+        NotifyLifecycleObservers(EntityLifecycleEvent.AfterSpawn);
         _strategyManager.TriggerAfterSpawn(this, _context);
         _logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity spawned (hooks)."));
@@ -102,16 +181,29 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle
 
     void IEntityLifecycle.FireAfterLoadHooks()
     {
+        NotifyLifecycleObservers(EntityLifecycleEvent.AfterLoad);
         _strategyManager.TriggerAfterLoad(this, _context);
         _logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity loaded (hooks)."));
     }
 
-    void IEntityLifecycle.FireBeforeSaveHooks() => _strategyManager.TriggerBeforeSave(this, _context);
+    void IEntityLifecycle.FireBeforeSaveHooks()
+    {
+        NotifyLifecycleObservers(EntityLifecycleEvent.BeforeSave);
+        _strategyManager.TriggerBeforeSave(this, _context);
+    }
 
-    void IEntityLifecycle.FireBeforeQuitHooks() => _strategyManager.TriggerBeforeQuit(this, _context);
+    void IEntityLifecycle.FireBeforeQuitHooks()
+    {
+        NotifyLifecycleObservers(EntityLifecycleEvent.BeforeQuit);
+        _strategyManager.TriggerBeforeQuit(this, _context);
+    }
 
-    void IEntityLifecycle.FireBeforeDeadHooks() => _strategyManager.TriggerBeforeDead(this, _context);
+    void IEntityLifecycle.FireBeforeDeadHooks()
+    {
+        NotifyLifecycleObservers(EntityLifecycleEvent.BeforeDead);
+        _strategyManager.TriggerBeforeDead(this, _context);
+    }
 
     void IEntityLifecycle.ReleaseStrategiesOnly()
     {
@@ -121,6 +213,15 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle
 
     void IEntityLifecycle.TeardownOnly()
     {
+        foreach (var sub in _outgoingDataSubs)
+            ((ISndEntityRawSubscription)sub.Target).UnsubscribeDataRaw(sub.DataName, sub.WrappedCallback);
+        _outgoingDataSubs.Clear();
+
+        foreach (var sub in _outgoingLifecycleSubs)
+            ((ISndEntityRawSubscription)sub.Target).UnsubscribeLifecycleRaw(sub.WrappedCallback);
+        _outgoingLifecycleSubs.Clear();
+
+        _lifecycleObservers.Clear();
         _nodeHost.Release();
         _dataManager.Release();
     }
@@ -175,5 +276,68 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle
     {
         ((IEntityLifecycle)this).FireBeforeSaveHooks();
         return ((IEntityLifecycle)this).BuildMetaData();
+    }
+
+    private void SubscribeDataInternal(ISndEntity target, string dataName,
+        Action<ISndEntity, ISndEntity, object?, object?> callback,
+        Func<ISndEntity, ISndEntity, object?, object?, bool>? filter)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(dataName);
+        ArgumentNullException.ThrowIfNull(callback);
+
+        var self = (ISndEntity)this;
+        Action<ISndEntity, object?, object?> wrappedCb = (t, o, n) => callback(t, self, o, n);
+        Func<ISndEntity, object?, object?, bool>? wrappedFilter = filter is null
+            ? null
+            : (t, o, n) => filter(t, self, o, n);
+
+        ((ISndEntityRawSubscription)target).SubscribeDataRaw(dataName, wrappedCb, wrappedFilter);
+
+        _outgoingDataSubs.Add(new OutgoingDataSub
+        {
+            Target = target,
+            DataName = dataName,
+            OriginalCallback = callback,
+            WrappedCallback = wrappedCb
+        });
+    }
+
+    private void SubscribeLifecycleInternal(ISndEntity target,
+        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        var self = (ISndEntity)this;
+        Action<ISndEntity, EntityLifecycleEvent> wrappedCb = (t, evt) => callback(t, self, evt);
+
+        ((ISndEntityRawSubscription)target).SubscribeLifecycleRaw(wrappedCb);
+
+        _outgoingLifecycleSubs.Add(new OutgoingLifecycleSub
+        {
+            Target = target,
+            OriginalCallback = callback,
+            WrappedCallback = wrappedCb
+        });
+    }
+
+    private void NotifyLifecycleObservers(EntityLifecycleEvent evt)
+    {
+        foreach (var observer in _lifecycleObservers.ToArray())
+            observer(this, evt);
+    }
+
+    private struct OutgoingDataSub
+    {
+        public ISndEntity Target;
+        public string DataName;
+        public Action<ISndEntity, ISndEntity, object?, object?> OriginalCallback;
+        public Action<ISndEntity, object?, object?> WrappedCallback;
+    }
+
+    private struct OutgoingLifecycleSub
+    {
+        public ISndEntity Target;
+        public Action<ISndEntity, ISndEntity, EntityLifecycleEvent> OriginalCallback;
+        public Action<ISndEntity, EntityLifecycleEvent> WrappedCallback;
     }
 }
