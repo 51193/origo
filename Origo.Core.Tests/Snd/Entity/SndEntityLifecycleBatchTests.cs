@@ -12,6 +12,7 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
+[Collection("StrategyStateTests")]
 public class SndEntityLifecycleBatchTests
 {
     private const string ProbeIdx = "batch.probe";

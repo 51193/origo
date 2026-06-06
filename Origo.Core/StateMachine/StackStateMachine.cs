@@ -88,27 +88,20 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
     public bool TryPopRuntime(out string? popped)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-
-        popped = null;
-        if (_stack.Count == 0) return false;
-
-        var beforeTop = PeekTopOrNull();
-        var willPop = _stack[^1];
-        var afterTop = _stack.Count > 1 ? _stack[^2] : null;
-
-        var context = new StateMachineStrategyContext(MachineKey, beforeTop, afterTop);
-        _popStrategy.OnPopRuntime(context, _ctx);
-
-        _stack.RemoveAt(_stack.Count - 1);
-        popped = willPop;
-        return true;
+        return TryPopCore(out popped, (c) => _popStrategy.OnPopRuntime(c, _ctx));
     }
 
     /// <summary>退出流程出栈：调用 Pop 策略的 <see cref="StateMachineStrategyBase.OnPopBeforeQuit" />，然后移除栈顶。</summary>
     public bool TryPopOnQuit(out string? popped)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        return TryPopCore(out popped, (c) => _popStrategy.OnPopBeforeQuit(c, _ctx));
+    }
 
+    private bool TryPopCore(
+        out string? popped,
+        Action<StateMachineStrategyContext> popAction)
+    {
         popped = null;
         if (_stack.Count == 0) return false;
 
@@ -117,7 +110,7 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
         var afterTop = _stack.Count > 1 ? _stack[^2] : null;
 
         var context = new StateMachineStrategyContext(MachineKey, beforeTop, afterTop);
-        _popStrategy.OnPopBeforeQuit(context, _ctx);
+        popAction(context);
 
         _stack.RemoveAt(_stack.Count - 1);
         popped = willPop;

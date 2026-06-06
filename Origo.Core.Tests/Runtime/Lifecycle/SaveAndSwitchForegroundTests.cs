@@ -17,6 +17,7 @@ namespace Origo.Core.Tests;
 ///     Comprehensive tests for the save-then-switch foreground flow,
 ///     FullMemorySndSceneHost entity lookup during hooks, and topology persistence integrity.
 /// </summary>
+[Collection("StrategyStateTests")]
 public class SaveAndSwitchForegroundTests
 {
     private const string FindByNameStrategyIndex = "test.find_by_name";

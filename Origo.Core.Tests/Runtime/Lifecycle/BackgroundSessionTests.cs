@@ -21,6 +21,7 @@ namespace Origo.Core.Tests;
 ///     <see cref="FullMemorySndSceneHost" /> is only used where its extra methods
 ///     (ProcessAll, DeadByName) are under test.
 /// </summary>
+[Collection("StrategyStateTests")]
 public class BackgroundSessionTests
 {
     private const string TrackingStrategyIndex = "test.tracking";
