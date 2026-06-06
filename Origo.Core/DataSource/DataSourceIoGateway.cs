@@ -6,6 +6,7 @@ namespace Origo.Core.DataSource;
 
 /// <summary>
 ///     DataSource 文件 I/O 中间层默认实现。
+///     编解码器通过构造器注入，支持注册自定义格式。
 /// </summary>
 internal sealed class DataSourceIoGateway : IDataSourceIoGateway
 {
@@ -16,17 +17,14 @@ internal sealed class DataSourceIoGateway : IDataSourceIoGateway
     public DataSourceIoGateway(
         IFileSystem fileSystem,
         DataSourceIoOptions options,
-        bool writeIndented = true)
+        IReadOnlyDictionary<DataSourceCodecKind, IDataSourceCodec> codecs)
     {
         ArgumentNullException.ThrowIfNull(fileSystem);
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(codecs);
         _fileSystem = fileSystem;
         _options = options;
-        _codecs = new Dictionary<DataSourceCodecKind, IDataSourceCodec>
-        {
-            [DataSourceCodecKind.Json] = new JsonDataSourceCodec(writeIndented),
-            [DataSourceCodecKind.Map] = new MapDataSourceCodec()
-        };
+        _codecs = new Dictionary<DataSourceCodecKind, IDataSourceCodec>(codecs);
     }
 
     public bool Exists(string filePath)

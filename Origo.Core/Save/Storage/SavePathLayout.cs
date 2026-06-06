@@ -8,6 +8,8 @@ namespace Origo.Core.Save.Storage;
 /// </summary>
 internal static class SavePathLayout
 {
+    internal const char PathSeparator = '/';
+
     /// <summary>活动存档目录名称常量。</summary>
     public const string CurrentDirectoryName = "current";
 
@@ -137,12 +139,12 @@ internal static class SavePathLayout
         return Combine(baseDirectory, PayloadShaFileName);
     }
 
-    private static string Combine(string left, string right)
+    internal static string Combine(string left, string right)
     {
         if (string.IsNullOrEmpty(left))
             return right;
         if (string.IsNullOrEmpty(right))
             return left;
-        return $"{left}/{right}";
+        return $"{left}{PathSeparator}{right}";
     }
 }

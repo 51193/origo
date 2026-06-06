@@ -13,20 +13,19 @@ public class DelegateSaveMetaContributorTests
     public void DelegateSaveMetaContributor_Contribute_InvokesDelegate()
     {
         var invoked = false;
-        var contributor = new DelegateSaveMetaContributor((ctx, meta) =>
+        var contributor = new DelegateSaveMetaContributor(ctx =>
         {
             invoked = true;
-            meta["custom_key"] = "custom_value";
+            return new Dictionary<string, string> { ["custom_key"] = "custom_value" };
         });
 
         var bb = new Blackboard.Blackboard();
         var host = new TestSndSceneHost();
         var context = new SaveMetaBuildContext("save1", "level1", bb, bb, host);
-        var dict = new Dictionary<string, string>();
 
-        contributor.Contribute(context, dict);
+        var result = contributor.Contribute(context);
         Assert.True(invoked);
-        Assert.Equal("custom_value", dict["custom_key"]);
+        Assert.Equal("custom_value", result["custom_key"]);
     }
 
     [Fact]

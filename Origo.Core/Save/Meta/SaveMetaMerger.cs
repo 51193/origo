@@ -22,7 +22,14 @@ internal static class SaveMetaMerger
         foreach (var c in contributors)
         {
             ArgumentNullException.ThrowIfNull(c);
-            c.Contribute(in context, merged);
+            var contributed = c.Contribute(in context);
+            if (contributed is null) continue;
+            foreach (var kv in contributed)
+            {
+                if (string.IsNullOrEmpty(kv.Key) || kv.Value is null)
+                    continue;
+                merged[kv.Key] = kv.Value;
+            }
         }
 
         ApplyOverrides(merged, overrides);

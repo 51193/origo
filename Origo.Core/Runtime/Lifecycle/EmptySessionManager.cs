@@ -6,7 +6,8 @@ namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
 ///     空会话管理器（Null Object 模式），在 ProgressRun 尚未建立时作为占位实例返回。
-///     不持有任何会话，所有创建操作均抛出 <see cref="InvalidOperationException" />。
+///     不持有任何会话。调用方应先检查 <see cref="CanCreateSessions" />，
+///     在无活动 ProgressRun 时创建会话将返回 null。
 /// </summary>
 internal sealed class EmptySessionManager : ISessionManager
 {
@@ -15,6 +16,8 @@ internal sealed class EmptySessionManager : ISessionManager
     private EmptySessionManager()
     {
     }
+
+    public bool CanCreateSessions => false;
 
     public ISessionRun? ForegroundSession => null;
 

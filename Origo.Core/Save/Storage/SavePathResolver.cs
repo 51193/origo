@@ -17,9 +17,11 @@ internal static class SavePathResolver
         if (string.IsNullOrEmpty(baseDirectory) || string.IsNullOrEmpty(fullPath))
             return fullPath;
 
+        var sep = SavePathLayout.PathSeparator;
+
         // Normalize to "baseDir/" to avoid false positives: "/a/b1" should not match base "/a/b".
-        var baseDir = baseDirectory.TrimEnd('/');
-        var basePrefix = baseDir.Length == 0 ? "/" : $"{baseDir}/";
+        var baseDir = baseDirectory.TrimEnd(sep, '\\');
+        var basePrefix = baseDir.Length == 0 ? $"{sep}" : $"{baseDir}{sep}";
 
         if (fullPath.StartsWith(basePrefix, StringComparison.Ordinal))
         {
@@ -39,8 +41,9 @@ internal static class SavePathResolver
         if (string.IsNullOrWhiteSpace(path))
             return string.Empty;
 
-        var trimmed = path.TrimEnd('/', '\\');
-        var slashIndex = trimmed.LastIndexOf('/');
+        var sep = SavePathLayout.PathSeparator;
+        var trimmed = path.TrimEnd(sep, '\\');
+        var slashIndex = trimmed.LastIndexOf(sep);
         var backslashIndex = trimmed.LastIndexOf('\\');
         var lastSeparator = Math.Max(slashIndex, backslashIndex);
         return lastSeparator < 0 ? trimmed : trimmed.Substring(lastSeparator + 1);
