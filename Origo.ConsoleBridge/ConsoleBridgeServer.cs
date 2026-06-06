@@ -16,6 +16,10 @@ namespace Origo.ConsoleBridge;
 /// </summary>
 public sealed class ConsoleBridgeServer : IDisposable
 {
+    private const int MaxPendingOutputLines = 1000;
+    private const int ReadTimeoutMs = 30000;
+    private const int DisposeJoinTimeoutMs = 3000;
+
     private readonly object _acceptLock = new();
     private readonly ConsoleInputQueue _input;
     private readonly ConsoleBridgeOptions _options;
@@ -23,9 +27,9 @@ public sealed class ConsoleBridgeServer : IDisposable
     private readonly List<string> _pendingOutput = new();
 
     private readonly object _writerLock = new();
+    private readonly CancellationTokenSource _cts = new();
 
     private Thread? _acceptThread;
-    private volatile bool _disposed;
     private Thread? _handleThread;
     private volatile bool _hasActiveClient;
     private TcpListener? _listener;
@@ -49,10 +53,10 @@ public sealed class ConsoleBridgeServer : IDisposable
 
     public void Dispose()
     {
-        if (_disposed)
+        if (_cts.IsCancellationRequested)
             return;
 
-        _disposed = true;
+        _cts.Cancel();
 
         lock (_writerLock)
         {
@@ -60,9 +64,9 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 _writer?.Dispose();
             }
-            catch
+            catch (Exception)
             {
-                /* ignore */
+                /* best-effort cleanup */
             }
 
             _writer = null;
@@ -72,33 +76,38 @@ public sealed class ConsoleBridgeServer : IDisposable
         {
             _serverSocket?.Close();
         }
-        catch
+        catch (Exception)
         {
-            /* ignore */
+            /* best-effort cleanup */
         }
 
         try
         {
             _listener?.Stop();
         }
-        catch
+        catch (Exception)
         {
-            /* ignore */
+            /* best-effort cleanup */
         }
 
         try
         {
             _output.Unsubscribe(_outputSubId);
         }
-        catch
+        catch (Exception)
         {
-            /* ignore */
+            /* best-effort cleanup */
         }
+
+        _acceptThread?.Join(DisposeJoinTimeoutMs);
+        _handleThread?.Join(DisposeJoinTimeoutMs);
+
+        _cts.Dispose();
     }
 
     public void Start()
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        ObjectDisposedException.ThrowIf(_cts.IsCancellationRequested, this);
         if (_acceptThread is not null)
             return;
 
@@ -123,6 +132,7 @@ public sealed class ConsoleBridgeServer : IDisposable
         lock (_writerLock)
         {
             if (_writer is not null)
+            {
                 try
                 {
                     _writer.WriteLine(line);
@@ -135,8 +145,12 @@ public sealed class ConsoleBridgeServer : IDisposable
                 {
                     /* stream disposed */
                 }
+            }
             else
-                _pendingOutput.Add(line);
+            {
+                if (_pendingOutput.Count < MaxPendingOutputLines)
+                    _pendingOutput.Add(line);
+            }
         }
     }
 
@@ -144,25 +158,32 @@ public sealed class ConsoleBridgeServer : IDisposable
     {
         try
         {
-            while (!_disposed)
+            while (!_cts.IsCancellationRequested)
             {
                 TcpClient? client = null;
                 try
                 {
                     client = _listener!.AcceptTcpClient();
                 }
-                catch (SocketException) when (_disposed)
+                catch (SocketException) when (_cts.IsCancellationRequested)
                 {
                     break;
                 }
-                catch (ObjectDisposedException) when (_disposed)
+                catch (ObjectDisposedException) when (_cts.IsCancellationRequested)
                 {
                     break;
                 }
-                catch (Exception)
+                catch (SocketException)
                 {
+                    break;
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+
+                if (client is null)
                     continue;
-                }
 
                 lock (_acceptLock)
                 {
@@ -189,9 +210,9 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 _listener?.Stop();
             }
-            catch
+            catch (Exception)
             {
-                /* ignore */
+                /* best-effort cleanup */
             }
         }
     }
@@ -200,7 +221,9 @@ public sealed class ConsoleBridgeServer : IDisposable
     {
         try
         {
+            client.ReceiveTimeout = ReadTimeoutMs;
             using var stream = client.GetStream();
+            stream.ReadTimeout = ReadTimeoutMs;
             using var reader = new StreamReader(stream);
             using var writer = new StreamWriter(stream) { AutoFlush = true };
 
@@ -211,7 +234,7 @@ public sealed class ConsoleBridgeServer : IDisposable
 
             FlushPendingOutput(writer);
 
-            while (!_disposed)
+            while (!_cts.IsCancellationRequested)
             {
                 string? line;
                 try
@@ -245,12 +268,15 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 client.Close();
             }
-            catch
+            catch (Exception)
             {
-                /* ignore */
+                /* best-effort cleanup */
             }
 
-            _hasActiveClient = false;
+            lock (_acceptLock)
+            {
+                _hasActiveClient = false;
+            }
         }
     }
 

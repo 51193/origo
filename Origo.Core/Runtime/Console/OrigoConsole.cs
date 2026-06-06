@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Logging;
@@ -16,26 +17,55 @@ public sealed class OrigoConsole
     private readonly IConsoleOutputChannel _output;
     private readonly ConsoleCommandRouter _router = new();
 
+    internal static IReadOnlyList<IConsoleCommandHandler> CreateHandlers(OrigoRuntime runtime, ConsoleCommandRouter router)
+    {
+        return new List<IConsoleCommandHandler>
+        {
+            new SpawnTemplateCommandHandler(runtime),
+            new SndCountCommandHandler(runtime),
+            new FindEntityCommandHandler(runtime),
+            new KillAllCommandHandler(runtime),
+            new BlackboardGetCommandHandler(runtime),
+            new BlackboardSetCommandHandler(runtime),
+            new BlackboardKeysCommandHandler(runtime),
+            new GetEntityDataCommandHandler(runtime),
+            new SetEntityDataCommandHandler(runtime),
+            new InvokeStrategyCommandHandler(runtime),
+            new HelpCommandHandler(router)
+        };
+    }
+
     public OrigoConsole(IConsoleInputSource input, IConsoleOutputChannel output, OrigoRuntime runtime)
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(runtime);
         _input = input;
         _output = output;
-        ArgumentNullException.ThrowIfNull(runtime);
         _logger = runtime.Logger;
 
-        _router.Register(new SpawnTemplateCommandHandler(runtime));
-        _router.Register(new SndCountCommandHandler(runtime));
-        _router.Register(new HelpCommandHandler(_router));
-        _router.Register(new FindEntityCommandHandler(runtime));
-        _router.Register(new KillAllCommandHandler(runtime));
-        _router.Register(new BlackboardGetCommandHandler(runtime));
-        _router.Register(new BlackboardSetCommandHandler(runtime));
-        _router.Register(new BlackboardKeysCommandHandler(runtime));
-        _router.Register(new GetEntityDataCommandHandler(runtime));
-        _router.Register(new SetEntityDataCommandHandler(runtime));
-        _router.Register(new InvokeStrategyCommandHandler(runtime));
+        var handlers = CreateHandlers(runtime, _router);
+        foreach (var h in handlers)
+            _router.Register(h);
+    }
+
+    public OrigoConsole(IConsoleInputSource input, IConsoleOutputChannel output, OrigoRuntime runtime,
+        IEnumerable<IConsoleCommandHandler> extraHandlers)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(runtime);
+        ArgumentNullException.ThrowIfNull(extraHandlers);
+        _input = input;
+        _output = output;
+        _logger = runtime.Logger;
+
+        var handlers = CreateHandlers(runtime, _router);
+        foreach (var h in handlers)
+            _router.Register(h);
+
+        foreach (var h in extraHandlers)
+            _router.Register(h);
     }
 
     /// <summary>
