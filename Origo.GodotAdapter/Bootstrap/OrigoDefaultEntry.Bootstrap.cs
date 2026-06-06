@@ -12,26 +12,24 @@ public partial class OrigoDefaultEntry
 
         RegisterConsoleCommandHandlers();
 
-        if (AutoDiscoverStrategies)
-            OrigoAutoInitializer.DiscoverAndRegisterStrategies(
-                Runtime.SndWorld, Runtime.Logger, GodotSkipPrefixes);
-
         _sndContext = new SndContext(new SndContextParameters(
             Runtime,
             SharedFileSystem,
             SaveRootPath,
             InitialSaveRootPath,
-            ConfigPath));
+            ConfigPath)
+        {
+            AutoDiscoverStrategies = AutoDiscoverStrategies,
+            DiscoverySkipPrefixes = AutoDiscoverStrategies ? GodotSkipPrefixes : null,
+            SceneAliasMapPath = SceneAliasMapPath,
+            SndTemplateMapPath = SndTemplateMapPath
+        });
 
-        // Runtime dependencies are already bound in OrigoAutoHost.CreateRuntime(); only bind lifecycle context here.
         SndManager.BindContext(_sndContext);
-
         ConfigureSaveMetadataContributors(_sndContext);
 
-        Runtime.SndWorld.LoadSceneAliases(SharedFileSystem, SceneAliasMapPath, Runtime.Logger);
-        Runtime.SndWorld.LoadTemplates(SharedFileSystem, SndTemplateMapPath, Runtime.Logger);
-
-        _sndContext.RequestLoadMainMenuEntrySave();
+        // 委托 Core 执行完整启动流程：策略发现 → 别名/模板加载 → 入口存档
+        _sndContext.Bootstrap();
     }
 
     private void RegisterConsoleCommandHandlers()

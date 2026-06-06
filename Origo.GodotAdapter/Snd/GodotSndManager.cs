@@ -16,9 +16,7 @@ namespace Origo.GodotAdapter.Snd;
 public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachableSceneHost
 {
     private readonly List<GodotSndEntity> _entities = new();
-    private readonly List<GodotSndEntity> _processBuffer = new();
     private EntityView? _entityView;
-    private bool _inProcess;
 
     private bool _runtimeDepsBound;
 
@@ -110,6 +108,8 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
 
     public void ProcessAll(double delta)
     {
+        ProcessTickCount++;
+        ProcessDeltaSum += delta;
         var snapshot = _entities.ToArray();
         foreach (var entity in snapshot)
             entity.ProcessSnd(delta);
@@ -147,29 +147,6 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         SharedWorld = world;
         SharedLogger = logger;
         _runtimeDepsBound = true;
-    }
-
-    public override void _Ready() => SetProcess(true);
-
-    public override void _Process(double delta)
-    {
-        if (_inProcess)
-            throw new InvalidOperationException("GodotSndManager._Process re-entrancy is not allowed.");
-
-        _inProcess = true;
-        try
-        {
-            ProcessTickCount++;
-            ProcessDeltaSum += delta;
-            _processBuffer.Clear();
-            _processBuffer.AddRange(_entities);
-            for (var i = 0; i < _processBuffer.Count; i++)
-                _processBuffer[i].ProcessSnd(delta);
-        }
-        finally
-        {
-            _inProcess = false;
-        }
     }
 
     private void RollbackPartialLoad(List<GodotSndEntity> staged)

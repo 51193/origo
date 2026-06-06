@@ -2,6 +2,7 @@ using System;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Logging;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -21,7 +22,7 @@ namespace Origo.Core.Runtime;
 ///         应在宿主主线程（或单线程游戏主循环）上调用，与 <see cref="FlushEndOfFrameDeferred" /> 成对使用。
 ///     </para>
 /// </summary>
-public sealed class OrigoRuntime
+public sealed class OrigoRuntime : IOrigoFrameDriver
 {
     private readonly ActionScheduler _businessDeferredScheduler;
     private readonly ActionScheduler _systemDeferredScheduler;
@@ -127,6 +128,19 @@ public sealed class OrigoRuntime
         _businessDeferredScheduler.Tick();
         Snd.KillPendingEntities();
         _systemDeferredScheduler.Tick();
+    }
+
+    /// <summary>
+    ///     由宿主环境的帧边界触发。Core 内部按固定顺序驱动：
+    ///     实体帧处理 → 业务延迟队列 → 清理待杀实体 → 系统延迟队列 → 控制台 pump。
+    ///     Adapter 不应直接调用 FlushEndOfFrameDeferred、ProcessAll 或 ProcessPending，
+    ///     只应调用此方法将帧控制权移交给 Core。
+    /// </summary>
+    void IOrigoFrameDriver.DriveFrame(double delta)
+    {
+        Snd.ProcessAll(delta);
+        FlushEndOfFrameDeferred();
+        Console?.ProcessPending();
     }
 
     /// <summary>

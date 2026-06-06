@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Runtime;
 using Origo.Core.Save.Storage;
@@ -34,6 +35,18 @@ public sealed class SndContextParameters
     public ISaveStorageService? StorageService { get; init; }
     public ISaveStorageService? InitialStorageService { get; init; }
     public ISavePathPolicy? SavePathPolicy { get; init; }
+
+    /// <summary>是否自动发现并注册程序集中的策略类型。</summary>
+    public bool AutoDiscoverStrategies { get; init; } = true;
+
+    /// <summary>策略自动发现时跳过的程序集名前缀。</summary>
+    public IReadOnlyList<string>? DiscoverySkipPrefixes { get; init; }
+
+    /// <summary>场景别名映射文件路径。若设置则 Bootstrap 时自动加载。</summary>
+    public string? SceneAliasMapPath { get; init; }
+
+    /// <summary>SND 模板映射文件路径。若设置则 Bootstrap 时自动加载。</summary>
+    public string? SndTemplateMapPath { get; init; }
 
     private static string RequireText(string value, string paramName, string message)
     {
