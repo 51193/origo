@@ -5,13 +5,13 @@ namespace Origo.Core.Abstractions.Entity;
 /// <summary>
 ///     实体生命周期管理接口。
 ///     供框架内部编排实体创建/加载/保存/销毁的两阶段批处理流程。
-///     此接口为 internal，业务代码不可访问。
+///     业务代码不可直接调用此接口。
 ///     <para>
 ///         实现者：<see cref="Origo.Core.Snd.Entity.SndEntity" />（Core 内存实体）、
-///         GodotSndEntity（Godot 适配层实体，委托给内部 SndEntity）。
+///         适配层实体（委托给内部 SndEntity）。
 ///     </para>
 /// </summary>
-internal interface IEntityLifecycle
+public interface IEntityLifecycle
 {
     /// <summary>
     ///     Phase 1：从元数据恢复实体的数据、节点和所有策略（EntityStrategy + ActiveStrategy），不触发任何钩子。

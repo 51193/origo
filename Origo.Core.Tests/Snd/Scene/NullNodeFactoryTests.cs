@@ -12,7 +12,6 @@ public class NullNodeFactoryTests
         var handle = factory.Create("test_node", "res://test.tscn");
 
         Assert.Equal("test_node", handle.Name);
-        Assert.NotNull(handle.Native);
 
         // Free and SetVisible are no-ops.
         handle.Free();

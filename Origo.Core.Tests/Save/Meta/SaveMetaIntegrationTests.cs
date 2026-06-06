@@ -39,7 +39,7 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
-        ctx.RegisterSaveMetaContributor((_, dict) => dict["dkey"] = "dval");
+        ctx.RegisterSaveMetaContributor(_ => new Dictionary<string, string> { ["dkey"] = "dval" });
 
         ctx.RequestSaveGame("slot_02");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -63,7 +63,7 @@ public class SaveMetaContributorRegistrationTests
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
         Assert.Throws<ArgumentNullException>(
-            () => ctx.RegisterSaveMetaContributor((Action<SaveMetaBuildContext, IDictionary<string, string>>)null!));
+            () => ctx.RegisterSaveMetaContributor((Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>>)null!));
     }
 
     [Fact]
@@ -125,12 +125,13 @@ public class SaveMetaContributorRegistrationTests
         bool hasProgress = false;
         bool hasSession = false;
 
-        ctx.RegisterSaveMetaContributor((context, _) =>
+        ctx.RegisterSaveMetaContributor(context =>
         {
             receivedSaveId = context.SaveId;
             receivedLevelId = context.CurrentLevelId;
             hasProgress = context.Progress is not null;
             hasSession = context.Session is not null;
+            return new Dictionary<string, string>();
         });
 
         ctx.RequestSaveGame("slot_ctx");
@@ -165,9 +166,9 @@ public class SaveMetaContributorRegistrationTests
 
     private sealed class KeyValueContributor(string key, string value) : ISaveMetaContributor
     {
-        public void Contribute(in SaveMetaBuildContext context, IDictionary<string, string> target)
+        public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context)
         {
-            target[key] = value;
+            return new Dictionary<string, string> { [key] = value };
         }
     }
 }
@@ -181,7 +182,7 @@ public class SaveMetaNullAndSessionContextTests
         Assert.Throws<InvalidOperationException>(
             () => ctx.RegisterSaveMetaContributor(new StubContributor()));
         Assert.Throws<InvalidOperationException>(
-            () => ctx.RegisterSaveMetaContributor((_, _) => { }));
+            () => ctx.RegisterSaveMetaContributor(_ => new Dictionary<string, string>()));
     }
 
     [Fact]
@@ -195,21 +196,22 @@ public class SaveMetaNullAndSessionContextTests
         ctx.RegisterSaveMetaContributor(contributor);
         Assert.Same(contributor, global.LastContributor);
 
-        ctx.RegisterSaveMetaContributor((_, _) => { });
+        ctx.RegisterSaveMetaContributor(_ => new Dictionary<string, string>());
         Assert.NotNull(global.LastDelegate);
     }
 
     private sealed class StubContributor : ISaveMetaContributor
     {
-        public void Contribute(in SaveMetaBuildContext context, IDictionary<string, string> target)
+        public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context)
         {
+            return new Dictionary<string, string>();
         }
     }
 
     private sealed class TrackingContext : ISndContext
     {
         public ISaveMetaContributor? LastContributor { get; private set; }
-        public Action<SaveMetaBuildContext, IDictionary<string, string>>? LastDelegate { get; private set; }
+        public Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>>? LastDelegate { get; private set; }
 
         public IBlackboard SystemBlackboard => new Blackboard.Blackboard();
         public IBlackboard? ProgressBlackboard => null;
@@ -225,7 +227,7 @@ public class SaveMetaNullAndSessionContextTests
         public void ProcessConsolePending() { }
         public long SubscribeConsoleOutput(Action<string> onLine) => 0;
         public void UnsubscribeConsoleOutput(long subscriptionId) { }
-        public StateMachineContainer? GetProgressStateMachines() => null;
+        public IStateMachineContainer? GetProgressStateMachines() => null;
         public IReadOnlyList<string> ListSaves() => Array.Empty<string>();
         public void RequestLoadGame(string saveId) { }
         public void RequestSaveGame(string newSaveId) { }
@@ -244,7 +246,7 @@ public class SaveMetaNullAndSessionContextTests
             LastContributor = contributor;
         }
 
-        public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute)
+        public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
         {
             LastDelegate = contribute;
         }

@@ -29,9 +29,6 @@ internal sealed class NullNodeHandle : INodeHandle
     public string Name { get; }
 
     /// <inheritdoc />
-    public object Native => this;
-
-    /// <inheritdoc />
     public void Free()
     {
         // No-op in memory.

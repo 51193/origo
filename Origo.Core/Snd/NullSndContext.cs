@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Runtime.Lifecycle;
-using Origo.Core.Runtime.StateMachine;
+using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Save.Meta;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Abstractions.Lifecycle;
@@ -51,7 +51,7 @@ internal sealed class NullSndContext : ISndContext
     {
     }
 
-    public StateMachineContainer? GetProgressStateMachines() => null;
+    public IStateMachineContainer? GetProgressStateMachines() => null;
 
     public IReadOnlyList<string> ListSaves() => Array.Empty<string>();
 
@@ -89,6 +89,6 @@ internal sealed class NullSndContext : ISndContext
     public void RegisterSaveMetaContributor(ISaveMetaContributor contributor) =>
         throw new InvalidOperationException("NullSndContext does not support save meta registration.");
 
-    public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute) =>
+    public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute) =>
         throw new InvalidOperationException("NullSndContext does not support save meta registration.");
 }

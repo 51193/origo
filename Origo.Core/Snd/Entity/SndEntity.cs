@@ -30,13 +30,13 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     internal SndEntity(
         INodeFactory nodeFactory,
         SndStrategyPool strategyPool,
-        SndMappings mappings,
+        Func<string, string> sceneAliasResolver,
         ISndContext context,
         ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(nodeFactory);
         ArgumentNullException.ThrowIfNull(strategyPool);
-        ArgumentNullException.ThrowIfNull(mappings);
+        ArgumentNullException.ThrowIfNull(sceneAliasResolver);
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
         _context = context;
@@ -44,7 +44,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
         _dataManager = new SndDataManager(this, logger);
         var nodeHost = new SndNodeManager(nodeFactory, logger);
-        nodeHost.SetSceneAliasResolver(mappings.ResolveSceneAlias);
+        nodeHost.SetSceneAliasResolver(sceneAliasResolver);
         _nodeHost = nodeHost;
         _strategyManager = new SndStrategyManager(strategyPool, logger);
         _activeStrategyManager = new ActiveStrategyManager(strategyPool);
@@ -133,7 +133,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     public object? InvokeStrategy(string strategyIndex, object? input = null) =>
         _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
 
-    public bool IsPendingKill { get; internal set; }
+    public bool IsPendingKill { get; set; }
 
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);
 

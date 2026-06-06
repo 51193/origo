@@ -54,6 +54,28 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             Runtime.Logger, FileSystem, SaveRootPath, StorageService, SavePathPolicy);
         var systemRuntime = new SystemRuntime(Runtime, systemParams);
         _systemRun = new SystemRun(systemRuntime);
+        _parameters = parameters;
+    }
+
+    private readonly SndContextParameters _parameters;
+
+    /// <summary>
+    ///     执行框架启动流程：策略发现 → 场景别名/模板加载 → 入口存档加载。
+    ///     Adapter 层在创建 SndContext 并绑定场景宿主后仅需调用此方法一次。
+    /// </summary>
+    public void Bootstrap()
+    {
+        if (_parameters.AutoDiscoverStrategies)
+            OrigoAutoInitializer.DiscoverAndRegisterStrategies(
+                Runtime.SndWorld, Runtime.Logger, _parameters.DiscoverySkipPrefixes);
+
+        if (_parameters.SceneAliasMapPath is not null)
+            Runtime.SndWorld.LoadSceneAliases(FileSystem, _parameters.SceneAliasMapPath, Runtime.Logger);
+
+        if (_parameters.SndTemplateMapPath is not null)
+            Runtime.SndWorld.LoadTemplates(FileSystem, _parameters.SndTemplateMapPath, Runtime.Logger);
+
+        RequestLoadMainMenuEntrySave();
     }
 
     internal OrigoRuntime Runtime { get; }
@@ -65,7 +87,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     internal ISaveStorageService InitialStorageService { get; }
     internal ISavePathPolicy SavePathPolicy { get; }
 
-    public SndRuntime SndRuntime => Runtime.Snd;
+    internal SndRuntime SndRuntime => Runtime.Snd;
 
     public ISessionManager SessionManager => _progressRun?.SessionManager ?? EmptySessionManager.Instance;
 
@@ -110,7 +132,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         Runtime.ConsoleOutputChannel?.Unsubscribe(subscriptionId);
     }
 
-    public StateMachineContainer? GetProgressStateMachines() => _progressRun?.GetProgressStateMachines();
+    public IStateMachineContainer? GetProgressStateMachines() => _progressRun?.GetProgressStateMachines();
 
     // ── Entry point ─────────────────────────────────────────────────────
 
@@ -120,7 +142,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         _saveMetaContributors.Add(contributor);
     }
 
-    public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute)
+    public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
     {
         ArgumentNullException.ThrowIfNull(contribute);
         _saveMetaContributors.Add(new DelegateSaveMetaContributor(contribute));

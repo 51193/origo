@@ -49,17 +49,15 @@ internal sealed class TestLogger : ILogger
 
 internal sealed class TestNodeHandle : INodeHandle
 {
-    public TestNodeHandle(string name, object? native = null)
+    public TestNodeHandle(string name)
     {
         Name = name;
-        Native = native ?? new object();
     }
 
     public bool IsVisible { get; private set; } = true;
     public int FreeCount { get; private set; }
 
     public string Name { get; }
-    public object Native { get; }
 
     public void Free() => FreeCount++;
 
@@ -86,7 +84,7 @@ internal sealed class TestNodeFactory : INodeFactory
         if (_resourceIdsThatFail.Contains(resourceId))
             throw new InvalidOperationException($"Simulated node creation failure for resourceId='{resourceId}'.");
 
-        var handle = new TestNodeHandle(logicalName, resourceId);
+        var handle = new TestNodeHandle(logicalName);
         CreatedHandles.Add(handle);
         return handle;
     }

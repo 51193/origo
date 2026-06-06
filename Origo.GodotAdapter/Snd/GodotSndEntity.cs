@@ -184,15 +184,15 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     internal void MarkPendingKill()
     {
         EnsureEntity();
-        if (_entity!.IsPendingKill)
-            throw new InvalidOperationException($"Entity '{StableName}' is already pending kill.");
         _entity!.IsPendingKill = true;
     }
 
     public TNode? GetNodeFromSnd<TNode>(string name) where TNode : Node
     {
         var handle = GetNode(name);
-        return handle?.Native as TNode;
+        if (handle is GodotNodeHandle godotHandle)
+            return godotHandle.UnsafeGetNode() as TNode;
+        return null;
     }
 
     void IEntityLifecycle.RecoverForLifecycle(SndMetaData metaData)
