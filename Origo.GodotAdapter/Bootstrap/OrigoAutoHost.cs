@@ -5,6 +5,7 @@ using Origo.Core;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Blackboard;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -73,8 +74,7 @@ public partial class OrigoAutoHost : Node
 
     public override void _Process(double delta)
     {
-        Runtime?.FlushEndOfFrameDeferred();
-        Runtime?.Console?.ProcessPending();
+        ((IOrigoFrameDriver?)Runtime)?.DriveFrame(delta);
     }
 
     private OrigoRuntime CreateRuntime()

@@ -94,7 +94,7 @@ internal sealed class StrategyTestContext : ISndContext
     {
     }
 
-    public StateMachineContainer? GetProgressStateMachines() => null;
+    public IStateMachineContainer? GetProgressStateMachines() => null;
 
     public IReadOnlyList<string> ListSaves() => Array.Empty<string>();
 
@@ -146,7 +146,7 @@ internal sealed class StrategyTestContext : ISndContext
     {
     }
 
-    public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute)
+    public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
     {
     }
 
@@ -256,6 +256,8 @@ internal sealed class TestSessionManager : ISessionManager
         ArgumentNullException.ThrowIfNull(foregroundSession);
         _sessions[ISessionManager.ForegroundKey] = foregroundSession;
     }
+
+    public bool CanCreateSessions => true;
 
     public ISessionRun? ForegroundSession => TryGet(ISessionManager.ForegroundKey);
 

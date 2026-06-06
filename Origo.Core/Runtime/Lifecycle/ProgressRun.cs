@@ -100,7 +100,7 @@ public sealed partial class ProgressRun : IDisposable
         ProgressBlackboard.Clear();
     }
 
-    public StateMachineContainer GetProgressStateMachines() => ProgressScope.StateMachines;
+    public IStateMachineContainer GetProgressStateMachines() => ProgressScope.StateMachines;
 
     internal void SetSaveId(string saveId)
     {

@@ -1,4 +1,4 @@
-using Origo.Core.Runtime.StateMachine;
+using Origo.Core.Abstractions.StateMachine;
 
 namespace Origo.Core.Abstractions.Snd;
 
@@ -8,5 +8,5 @@ namespace Origo.Core.Abstractions.Snd;
 public interface ISndStateMachineAccess
 {
     /// <summary>流程级字符串栈状态机容器；无活动流程时为 null。</summary>
-    StateMachineContainer? GetProgressStateMachines();
+    IStateMachineContainer? GetProgressStateMachines();
 }

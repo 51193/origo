@@ -7,8 +7,6 @@ public interface INodeHandle
 {
     string Name { get; }
 
-    object Native { get; }
-
     void Free();
 
     void SetVisible(bool visible);

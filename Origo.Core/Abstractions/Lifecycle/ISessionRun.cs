@@ -11,6 +11,8 @@ namespace Origo.Core.Abstractions.Lifecycle;
 ///     生命周期（创建 / 销毁）与序列化 / 反序列化均由 <see cref="ISessionManager" /> 统一管理。
 ///     前台和后台关卡均为同一接口，区别仅在于注入的 <see cref="ISndSceneHost" /> 实现
 ///     以及 <see cref="IsFrontSession" /> 标志。
+///     <see cref="IDisposable.Dispose" /> 仅供框架内部通过 <see cref="ISessionManager" /> 调用，
+///     策略代码应通过 <see cref="ISessionManager.DestroySession" /> 销毁会话。
 /// </summary>
 public interface ISessionRun : IDisposable
 {

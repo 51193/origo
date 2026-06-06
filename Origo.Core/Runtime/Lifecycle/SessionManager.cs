@@ -40,6 +40,9 @@ internal sealed class SessionManager : ISessionManager
             .Select(kvp => kvp.Key).ToArray();
 
     /// <inheritdoc />
+    public bool CanCreateSessions => true;
+
+    /// <inheritdoc />
     public ISessionRun? ForegroundSession =>
         _sessions.TryGetValue(ISessionManager.ForegroundKey, out var mounted) ? mounted.Session : null;
 

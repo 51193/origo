@@ -17,6 +17,7 @@ namespace Origo.Core.Tests;
 ///     does NOT trigger BeforeSave hooks, properly deletes current/ directory,
 ///     and handles edge cases correctly.
 /// </summary>
+[Collection("StrategyStateTests")]
 public class DisposeSemanticsTests
 {
     private const string BeforeSaveStrategyIndex = "dispose_sem.before_save";

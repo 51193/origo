@@ -1,9 +1,10 @@
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Runtime.Console;
 using Xunit;
 
 namespace Origo.Core.Tests;
 
-// ── BlackboardSerializer ───────────────────────────────────────────
+// ── OrigoRuntime basic behavior ──────────────────────────────────
 
 public class OrigoRuntimeBasicTests
 {
@@ -75,5 +76,24 @@ public class OrigoRuntimeBasicTests
 
         Assert.True(businessRan);
         Assert.True(systemRan);
+    }
+
+    [Fact]
+    public void OrigoRuntime_DriveFrame_DelegatesToFlushAndConsole()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var inputQueue = new ConsoleInputQueue();
+        inputQueue.Enqueue("help");
+        var outputChannel = new ConsoleOutputChannel();
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),
+            new Blackboard.Blackboard(), inputQueue, outputChannel);
+
+        var businessRan = false;
+        runtime.EnqueueBusinessDeferred(() => businessRan = true);
+        ((IOrigoFrameDriver)runtime).DriveFrame(0.016);
+
+        Assert.True(businessRan, "Business deferred should execute during DriveFrame");
+        Assert.False(inputQueue.TryDequeueCommand(out _), "Console should have processed the 'help' command");
     }
 }

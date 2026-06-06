@@ -4,7 +4,7 @@ using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Snd.Entity;
 
-internal interface ISndEntityRawSubscription
+public interface ISndEntityRawSubscription
 {
     void SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
         Func<ISndEntity, TypedData, TypedData, bool>? filter);

@@ -120,40 +120,40 @@ public sealed class ActiveStrategyTestHarness : BaseStrategyTestHarness
 
 public abstract class BaseStrategyTestScenarioBuilder
 {
-    private protected readonly List<Action<ISndEntity>> EntitySetup = new();
-    private protected readonly List<Action<IBlackboard>> ProgressSetup = new();
-    private protected readonly List<Action<IBlackboard>> SessionSetup = new();
-    private protected readonly string StrategyIndex;
-    private protected readonly List<Action<IBlackboard>> SystemSetup = new();
-    private protected readonly Dictionary<string, SndMetaData> Templates = new(StringComparer.Ordinal);
-    private protected string EntityName = "__test_entity__";
+    private protected readonly List<Action<ISndEntity>> _entitySetup = new();
+    private protected readonly List<Action<IBlackboard>> _progressSetup = new();
+    private protected readonly List<Action<IBlackboard>> _sessionSetup = new();
+    private protected readonly string _strategyIndex;
+    private protected readonly List<Action<IBlackboard>> _systemSetup = new();
+    private protected readonly Dictionary<string, SndMetaData> _templates = new(StringComparer.Ordinal);
+    private protected string _entityName = "__test_entity__";
 
     private protected BaseStrategyTestScenarioBuilder(string strategyIndex)
     {
-        StrategyIndex = strategyIndex;
+        _strategyIndex = strategyIndex;
     }
 
     private protected void ApplySetup(StrategyTestContext context)
     {
-        foreach (var setup in SystemSetup)
+        foreach (var setup in _systemSetup)
             setup(context.SystemBlackboard);
-        foreach (var setup in ProgressSetup)
+        foreach (var setup in _progressSetup)
             setup(context.ProgressBlackboard);
-        foreach (var setup in SessionSetup)
+        foreach (var setup in _sessionSetup)
         {
             var sessionBb = context.CurrentSession?.SessionBlackboard
                             ?? throw new InvalidOperationException("Session blackboard is not available.");
             setup(sessionBb);
         }
 
-        foreach (var (key, template) in Templates)
+        foreach (var (key, template) in _templates)
             context.RegisterTemplate(key, template);
     }
 
     private protected MinimalTestEntity CreateEntity()
     {
-        var entity = new MinimalTestEntity { Name = EntityName };
-        foreach (var setup in EntitySetup)
+        var entity = new MinimalTestEntity { Name = _entityName };
+        foreach (var setup in _entitySetup)
             setup(entity);
         return entity;
     }
@@ -167,38 +167,38 @@ public sealed class StrategyTestScenarioBuilder<T> : BaseStrategyTestScenarioBui
 
     public StrategyTestScenarioBuilder<T> WithEntityName(string name)
     {
-        EntityName = string.IsNullOrWhiteSpace(name) ? "__test_entity__" : name;
+        _entityName = string.IsNullOrWhiteSpace(name) ? "__test_entity__" : name;
         return this;
     }
 
     public StrategyTestScenarioBuilder<T> WithData<TValue>(string key, TValue value)
     {
-        EntitySetup.Add(e => e.SetData(key, value));
+        _entitySetup.Add(e => e.SetData(key, value));
         return this;
     }
 
     public StrategyTestScenarioBuilder<T> WithSystemConfig<TValue>(string key, TValue value)
     {
-        SystemSetup.Add(bb => bb.Set(key, value));
+        _systemSetup.Add(bb => bb.Set(key, value));
         return this;
     }
 
     public StrategyTestScenarioBuilder<T> WithProgressConfig<TValue>(string key, TValue value)
     {
-        ProgressSetup.Add(bb => bb.Set(key, value));
+        _progressSetup.Add(bb => bb.Set(key, value));
         return this;
     }
 
     public StrategyTestScenarioBuilder<T> WithSessionConfig<TValue>(string key, TValue value)
     {
-        SessionSetup.Add(bb => bb.Set(key, value));
+        _sessionSetup.Add(bb => bb.Set(key, value));
         return this;
     }
 
     public StrategyTestScenarioBuilder<T> WithTemplate(string key, SndMetaData template)
     {
         ArgumentNullException.ThrowIfNull(template);
-        Templates[key] = template;
+        _templates[key] = template;
         return this;
     }
 
@@ -224,38 +224,38 @@ public sealed class ActiveStrategyTestScenarioBuilder<T> : BaseStrategyTestScena
 
     public ActiveStrategyTestScenarioBuilder<T> WithEntityName(string name)
     {
-        EntityName = string.IsNullOrWhiteSpace(name) ? "__test_entity__" : name;
+        _entityName = string.IsNullOrWhiteSpace(name) ? "__test_entity__" : name;
         return this;
     }
 
     public ActiveStrategyTestScenarioBuilder<T> WithData<TValue>(string key, TValue value)
     {
-        EntitySetup.Add(e => e.SetData(key, value));
+        _entitySetup.Add(e => e.SetData(key, value));
         return this;
     }
 
     public ActiveStrategyTestScenarioBuilder<T> WithSystemConfig<TValue>(string key, TValue value)
     {
-        SystemSetup.Add(bb => bb.Set(key, value));
+        _systemSetup.Add(bb => bb.Set(key, value));
         return this;
     }
 
     public ActiveStrategyTestScenarioBuilder<T> WithProgressConfig<TValue>(string key, TValue value)
     {
-        ProgressSetup.Add(bb => bb.Set(key, value));
+        _progressSetup.Add(bb => bb.Set(key, value));
         return this;
     }
 
     public ActiveStrategyTestScenarioBuilder<T> WithSessionConfig<TValue>(string key, TValue value)
     {
-        SessionSetup.Add(bb => bb.Set(key, value));
+        _sessionSetup.Add(bb => bb.Set(key, value));
         return this;
     }
 
     public ActiveStrategyTestScenarioBuilder<T> WithTemplate(string key, SndMetaData template)
     {
         ArgumentNullException.ThrowIfNull(template);
-        Templates[key] = template;
+        _templates[key] = template;
         return this;
     }
 
@@ -269,6 +269,6 @@ public sealed class ActiveStrategyTestScenarioBuilder<T> : BaseStrategyTestScena
         var strategy = new T();
         entity.InvokeStrategyHandler = (index, input) => strategy.Invoke(entity, context, input);
 
-        return new ActiveStrategyTestHarness(strategy, entity, context, StrategyIndex);
+        return new ActiveStrategyTestHarness(strategy, entity, context, _strategyIndex);
     }
 }

@@ -23,8 +23,8 @@ public class SaveMetaMergerTests
     {
         var contributors = new ISaveMetaContributor[]
         {
-            new FuncContributor((_, d) => d["a"] = "1"),
-            new FuncContributor((_, d) => d["b"] = "2")
+            new FuncContributor(_ => new Dictionary<string, string> { ["a"] = "1" }),
+            new FuncContributor(_ => new Dictionary<string, string> { ["b"] = "2" })
         };
         var overrides = new Dictionary<string, string> { ["a"] = "override", ["c"] = "3" };
         var merged = SaveMetaMerger.Merge(contributors, DummyContext(), overrides);
@@ -39,8 +39,8 @@ public class SaveMetaMergerTests
     {
         var contributors = new ISaveMetaContributor[]
         {
-            new FuncContributor((_, d) => d["k"] = "first"),
-            new FuncContributor((_, d) => d["k"] = "second")
+            new FuncContributor(_ => new Dictionary<string, string> { ["k"] = "first" }),
+            new FuncContributor(_ => new Dictionary<string, string> { ["k"] = "second" })
         };
         var merged = SaveMetaMerger.Merge(contributors, DummyContext(), null);
         Assert.NotNull(merged);
@@ -57,7 +57,7 @@ public class SaveMetaMergerTests
     [Fact]
     public void Merge_SkipsNullOverrideValues()
     {
-        var contributors = new ISaveMetaContributor[] { new FuncContributor((_, d) => d["x"] = "keep") };
+        var contributors = new ISaveMetaContributor[] { new FuncContributor(_ => new Dictionary<string, string> { ["x"] = "keep" }) };
         var overrides = new Dictionary<string, string> { ["x"] = null! };
         var merged = SaveMetaMerger.Merge(contributors, DummyContext(), overrides);
         Assert.NotNull(merged);
@@ -66,15 +66,15 @@ public class SaveMetaMergerTests
 
     private sealed class FuncContributor : ISaveMetaContributor
     {
-        private readonly Action<SaveMetaBuildContext, IDictionary<string, string>> _action;
+        private readonly Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> _func;
 
-        public FuncContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> action)
+        public FuncContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> func)
         {
-            _action = action;
+            _func = func;
         }
 
-        public void Contribute(in SaveMetaBuildContext context, IDictionary<string, string> target) =>
-            _action(context, target);
+        public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context) =>
+            _func(context);
     }
 
     private sealed class NullSceneHost : ISndSceneHost

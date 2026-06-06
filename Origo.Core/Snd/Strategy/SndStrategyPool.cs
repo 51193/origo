@@ -146,6 +146,6 @@ internal sealed class SndStrategyPool
     private static int ResolvePriority(Type strategyType)
     {
         var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>();
-        return attr?.Priority ?? 6205;
+        return attr?.Priority ?? StrategyIndexAttribute.DefaultPriority;
     }
 }

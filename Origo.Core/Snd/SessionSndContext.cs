@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Runtime.Lifecycle;
-using Origo.Core.Runtime.StateMachine;
+using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Save.Meta;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Abstractions.Lifecycle;
@@ -48,7 +48,7 @@ internal sealed class SessionSndContext : ISndContext
 
     public void UnsubscribeConsoleOutput(long subscriptionId) => _global.UnsubscribeConsoleOutput(subscriptionId);
 
-    public StateMachineContainer? GetProgressStateMachines() => _global.GetProgressStateMachines();
+    public IStateMachineContainer? GetProgressStateMachines() => _global.GetProgressStateMachines();
 
     public IReadOnlyList<string> ListSaves() => _global.ListSaves();
 
@@ -77,6 +77,6 @@ internal sealed class SessionSndContext : ISndContext
     public void RegisterSaveMetaContributor(ISaveMetaContributor contributor) =>
         _global.RegisterSaveMetaContributor(contributor);
 
-    public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute) =>
+    public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute) =>
         _global.RegisterSaveMetaContributor(contribute);
 }

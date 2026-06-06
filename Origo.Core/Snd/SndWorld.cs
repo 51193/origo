@@ -124,7 +124,7 @@ public sealed class SndWorld
         ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
-        return new SndEntity(nodeFactory, StrategyPool, Mappings, context, logger);
+        return new SndEntity(nodeFactory, StrategyPool, Mappings.ResolveSceneAlias, context, logger);
     }
 
     public DataSourceNode WriteMetaNode(SndMetaData metaData) => ConverterRegistry.Write(metaData);

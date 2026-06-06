@@ -35,5 +35,5 @@ public interface ISndSaveOperations
     /// <summary>
     ///     通过委托注册展示用 <c>meta.map</c> 的贡献者。
     /// </summary>
-    void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute);
+    void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute);
 }

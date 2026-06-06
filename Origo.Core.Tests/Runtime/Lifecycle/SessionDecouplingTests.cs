@@ -21,6 +21,7 @@ namespace Origo.Core.Tests;
 ///     after the refactoring to session-bound IStateMachineContext, ISndSceneHost-based SceneHost,
 ///     injectable ISavePathPolicy, and ISaveStorageService-based LevelBuilder.
 /// </summary>
+[Collection("StrategyStateTests")]
 public class SessionDecouplingTests
 {
     // ── 1. SessionStateMachineContext binds SessionBlackboard per session ──

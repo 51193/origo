@@ -10,6 +10,9 @@ public interface ISessionManager
     /// <summary>前台会话在管理器中的保留键。</summary>
     const string ForegroundKey = "__foreground__";
 
+    /// <summary>当前是否可以创建会话。Empty Session Manager 返回 false。</summary>
+    bool CanCreateSessions { get; }
+
     /// <summary>当前前台会话；无活动前台会话时为 null。</summary>
     ISessionRun? ForegroundSession { get; }
 
@@ -24,7 +27,7 @@ public interface ISessionManager
 
     /// <summary>
     ///     创建后台关卡会话并自动挂载到管理器。
-    ///     使用 FullMemorySndSceneHost 作为场景宿主。
+    ///     使用纯内存场景宿主实现，不依赖引擎适配层。
     /// </summary>
     ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false);
 

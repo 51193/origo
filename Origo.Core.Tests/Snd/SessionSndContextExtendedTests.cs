@@ -170,7 +170,7 @@ public class SessionSndContextExtendedTests
 
         public void UnsubscribeConsoleOutput(long subscriptionId) => CallCount++;
 
-        public StateMachineContainer? GetProgressStateMachines()
+        public IStateMachineContainer? GetProgressStateMachines()
         {
             CallCount++;
             return null;
@@ -218,7 +218,7 @@ public class SessionSndContextExtendedTests
 
         public void RegisterSaveMetaContributor(ISaveMetaContributor contributor) => CallCount++;
 
-        public void RegisterSaveMetaContributor(Action<SaveMetaBuildContext, IDictionary<string, string>> contribute) =>
+        public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute) =>
             CallCount++;
     }
 

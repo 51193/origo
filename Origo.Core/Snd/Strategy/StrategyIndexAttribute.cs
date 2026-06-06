@@ -14,7 +14,9 @@ public sealed class StrategyIndexAttribute : Attribute
         Index = index;
     }
 
+    public const int DefaultPriority = 6205;
+
     public string Index { get; }
 
-    public int Priority { get; set; } = 6205;
+    public int Priority { get; set; } = DefaultPriority;
 }
