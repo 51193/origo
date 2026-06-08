@@ -110,6 +110,13 @@ public class BlackboardTests
         var bb = new Blackboard.Blackboard();
         Assert.Throws<ArgumentException>(() => bb.Set("  ", 1));
     }
+
+    [Fact]
+    public void Blackboard_DeserializeAll_Null_Throws()
+    {
+        var bb = new Blackboard.Blackboard();
+        Assert.ThrowsAny<Exception>(() => bb.DeserializeAll(null!));
+    }
 }
 
 // ── DataObserverManager ────────────────────────────────────────────────

@@ -5,17 +5,23 @@ using Godot;
 using Origo.Core.Snd.Metadata;
 using Origo.GodotAdapter.Snd;
 using Xunit;
-using SysConsole = System.Console;
+using Xunit;
 
 namespace Origo.GodotAdapter.Tests.Serialization;
 
 public class GodotTypedDataPerformanceTests
 {
     private const int Iterations = 200_000;
+    private readonly ITestOutputHelper _output;
 
     static GodotTypedDataPerformanceTests()
     {
         _ = TypedDataInitializer.IsLoaded;
+    }
+
+    public GodotTypedDataPerformanceTests(ITestOutputHelper output)
+    {
+        _output = output;
     }
 
     [Fact]
@@ -242,20 +248,20 @@ public class GodotTypedDataPerformanceTests
             (int)totalOps, sw.Elapsed, totalAlloc);
     }
 
-    private static void PrintReport(string title, int iterations, TimeSpan elapsed, long allocated)
+    private void PrintReport(string title, int iterations, TimeSpan elapsed, long allocated)
     {
         var opsPerSec = iterations / elapsed.TotalSeconds;
         var separator = new string('-', 60);
-        SysConsole.WriteLine();
-        SysConsole.WriteLine($"  === {title} ===");
-        SysConsole.WriteLine($"  {separator}");
-        SysConsole.WriteLine($"  Iterations: {iterations:N0} | Time: {elapsed.TotalMilliseconds:F2} ms | " +
+        _output.WriteLine("");
+        _output.WriteLine($"  === {title} ===");
+        _output.WriteLine($"  {separator}");
+        _output.WriteLine($"  Iterations: {iterations:N0} | Time: {elapsed.TotalMilliseconds:F2} ms | " +
                           $"Ops/s: {opsPerSec / 1_000_000:F2} M | " +
                           $"Alloc: {allocated / 1024.0:F2} KB");
-        SysConsole.WriteLine($"  {separator}");
+        _output.WriteLine($"  {separator}");
     }
 
-    private static void PrintCompare(string title,
+    private void PrintCompare(string title,
         string nameA, int itersA, TimeSpan timeA, long allocA,
         string nameB, int itersB, TimeSpan timeB, long allocB)
     {
@@ -266,15 +272,15 @@ public class GodotTypedDataPerformanceTests
 
         var separator = new string('-', 60);
 
-        SysConsole.WriteLine();
-        SysConsole.WriteLine($"  === {title} ===");
-        SysConsole.WriteLine($"  {separator}");
-        SysConsole.WriteLine($"  Method                        Time         Alloc");
-        SysConsole.WriteLine($"  {separator}");
-        SysConsole.WriteLine($"  {nameA,-30} {timeA.TotalMilliseconds,-12:F2} ms {(allocA / 1024.0),-12:F2} KB");
-        SysConsole.WriteLine($"  {nameB,-30} {timeB.TotalMilliseconds,-12:F2} ms {(allocB / 1024.0),-12:F2} KB");
-        SysConsole.WriteLine($"  {separator}");
-        SysConsole.WriteLine($"  '{faster}' is {ratio:F2}x faster");
-        SysConsole.WriteLine($"  {separator}");
+        _output.WriteLine("");
+        _output.WriteLine($"  === {title} ===");
+        _output.WriteLine($"  {separator}");
+        _output.WriteLine($"  Method                        Time         Alloc");
+        _output.WriteLine($"  {separator}");
+        _output.WriteLine($"  {nameA,-30} {timeA.TotalMilliseconds,-12:F2} ms {(allocA / 1024.0),-12:F2} KB");
+        _output.WriteLine($"  {nameB,-30} {timeB.TotalMilliseconds,-12:F2} ms {(allocB / 1024.0),-12:F2} KB");
+        _output.WriteLine($"  {separator}");
+        _output.WriteLine($"  '{faster}' is {ratio:F2}x faster");
+        _output.WriteLine($"  {separator}");
     }
 }

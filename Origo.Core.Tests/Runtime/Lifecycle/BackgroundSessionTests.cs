@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Runtime.Lifecycle;
@@ -117,9 +118,9 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new SessionContextSpyStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg_ctx", "bg_ctx");
+        using var bg = ctx.SessionManager.CreateBackgroundSession("bg_ctx", "bg_ctx", true);
         bg.SceneHost.CreateEntity(CreateMetaWithIndices("spy", SessionContextStrategyIndex));
-        GetSceneHost(bg).ProcessAll(0.016);
+        ctx.SessionManager.ProcessAllSessions(0.016, false);
 
         Assert.Contains("bg_ctx", seenSessionLevelIds);
     }
@@ -150,6 +151,27 @@ public class BackgroundSessionTests
 
         Assert.Null(ctx.SndRuntime.FindByName("bg_entity"));
         Assert.NotNull(bg.SceneHost.FindByName("bg_entity"));
+    }
+
+    [Fact]
+    public void KillAll_TriggersBeforeDead()
+    {
+        var events = new List<string>();
+        var (ctx, _) = CreateForegroundContext(world =>
+        {
+            TrackingStrategy.Bind(events);
+            world.RegisterStrategy(() => new TrackingStrategy());
+        });
+
+        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        bg.SceneHost.CreateEntity(CreateMetaWithStrategy("npc"));
+
+        var entity = bg.SceneHost.FindByName("npc");
+        Assert.NotNull(entity);
+        if (entity is IEntityLifecycle lc)
+            lc.FireBeforeDeadHooks();
+
+        Assert.Contains("BeforeDead:npc", events);
     }
 
     // ── Spawn / FindByName / GetEntities ──────────────────────────────
@@ -204,7 +226,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        var host = GetSceneHost(bg);
+        var host = bg.SceneHost;
         host.CreateEntity(CreateMetaWithStrategy("npc"));
 
         var npc = host.FindByName("npc");
@@ -227,7 +249,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        var host = GetSceneHost(bg);
+        var host = bg.SceneHost;
         host.CreateEntity(CreateMetaWithStrategy("a"));
         host.CreateEntity(CreateMetaWithStrategy("b"));
 
@@ -258,10 +280,10 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new ProcessCounterStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        GetSceneHost(bg).CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
+        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg", true);
+        bg.SceneHost.CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
 
-        GetSceneHost(bg).ProcessAll(0.016);
+        ctx.SessionManager.ProcessAllSessions(0.016, false);
 
         Assert.Equal(1, processCount);
     }
@@ -294,11 +316,12 @@ public class BackgroundSessionTests
         bg.SceneHost.CreateEntity(CreateMeta("boss"));
         bg.SessionBlackboard.Set("difficulty", "hard");
 
-        AsSessionRun(bg).PersistLevelState();
+        ctx.RequestSaveGame("persist_dungeon");
+        ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.True(fs.Exists("root/current/level_dungeon/snd_scene.json"));
-        Assert.True(fs.Exists("root/current/level_dungeon/session.json"));
-        Assert.True(fs.Exists("root/current/level_dungeon/session_state_machines.json"));
+        Assert.True(fs.Exists("root/save_persist_dungeon/level_dungeon/snd_scene.json"));
+        Assert.True(fs.Exists("root/save_persist_dungeon/level_dungeon/session.json"));
+        Assert.True(fs.Exists("root/save_persist_dungeon/level_dungeon/session_state_machines.json"));
     }
 
     // ── Dispose ───────────────────────────────────────────────────────
@@ -341,7 +364,7 @@ public class BackgroundSessionTests
         Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
         Assert.Throws<ObjectDisposedException>(() => bg.GetSessionStateMachines());
         Assert.Throws<ObjectDisposedException>(() => bg.SceneHost);
-        Assert.Throws<ObjectDisposedException>(() => AsSessionRun(bg).PersistLevelState());
+        Assert.Throws<ObjectDisposedException>(() => bg.SceneHost.FindByName("any"));
     }
 
     // ── Full background workflow ──────────────────────────────────────
@@ -358,8 +381,8 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new ProcessCounterStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("generated_level", "generated_level");
-        var host = GetSceneHost(bg);
+        using var bg = ctx.SessionManager.CreateBackgroundSession("generated_level", "generated_level", true);
+        var host = bg.SceneHost;
 
         // Populate with entities.
         var guard01 = host.CreateEntity(CreateMetaWithIndices("guard_01", TrackingStrategyIndex, ProcessStrategyIndex));
@@ -374,7 +397,7 @@ public class BackgroundSessionTests
 
         // ProcessAll: Process fires.
         events.Clear();
-        host.ProcessAll(0.016);
+        ctx.SessionManager.ProcessAllSessions(0.016, false);
         Assert.Contains("Process", events);
 
         // Set session data.
@@ -385,16 +408,17 @@ public class BackgroundSessionTests
         var (ready, _) = ctx.ProgressBlackboard!.TryGet<bool>("generated_level_ready");
         Assert.True(ready);
 
-        // Save as level (via PersistLevelState).
+        // Save via ISndContext.
         events.Clear();
-        AsSessionRun(bg).PersistLevelState();
+        ctx.RequestSaveGame("full_workflow_save");
+        ctx.FlushDeferredActionsForCurrentFrame();
         Assert.Contains("BeforeSave:guard_01", events);
         Assert.Contains("BeforeSave:guard_02", events);
 
         // Verify files exist on shared file system.
-        Assert.True(fs.Exists("root/current/level_generated_level/snd_scene.json"));
-        Assert.True(fs.Exists("root/current/level_generated_level/session.json"));
-        Assert.True(fs.Exists("root/current/level_generated_level/session_state_machines.json"));
+        Assert.True(fs.Exists("root/save_full_workflow_save/level_generated_level/snd_scene.json"));
+        Assert.True(fs.Exists("root/save_full_workflow_save/level_generated_level/session.json"));
+        Assert.True(fs.Exists("root/save_full_workflow_save/level_generated_level/session_state_machines.json"));
     }
 
     // ── SerializeToPayload / LoadFromPayload ─────────────────────────
@@ -402,22 +426,23 @@ public class BackgroundSessionTests
     [Fact]
     public void SerializeToPayload_ReturnsLevelPayload_WithCorrectLevelIdAndData()
     {
-        var (ctx, _) = CreateForegroundContext();
+        var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg_level", "bg_level");
-        var host = bg.SceneHost;
-        host.CreateEntity(CreateMeta("soldier_01"));
+        bg.SceneHost.CreateEntity(CreateMeta("soldier_01"));
         bg.SessionBlackboard.Set("hp", 100);
 
-        var payload = AsSessionRun(bg).SerializeToPayload();
+        ctx.RequestSaveGame("ser_test");
+        ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Equal("bg_level", payload.LevelId);
-        var sndJson = TestFactory.JsonFromNode(payload.SndSceneNode);
-        var sessionJson = TestFactory.JsonFromNode(payload.SessionNode);
-        var smJson = TestFactory.JsonFromNode(payload.SessionStateMachinesNode);
+        Assert.True(fs.Exists("root/save_ser_test/level_bg_level/snd_scene.json"));
+        Assert.True(fs.Exists("root/save_ser_test/level_bg_level/session.json"));
+        Assert.True(fs.Exists("root/save_ser_test/level_bg_level/session_state_machines.json"));
+
+        var sndJson = fs.ReadAllText("root/save_ser_test/level_bg_level/snd_scene.json");
+        var sessionJson = fs.ReadAllText("root/save_ser_test/level_bg_level/session.json");
         Assert.False(string.IsNullOrWhiteSpace(sndJson));
         Assert.False(string.IsNullOrWhiteSpace(sessionJson));
-        Assert.False(string.IsNullOrWhiteSpace(smJson));
         Assert.Contains("soldier_01", sndJson);
         Assert.Contains("hp", sessionJson);
     }
@@ -426,53 +451,41 @@ public class BackgroundSessionTests
     public void LoadFromPayload_RestoresSessionState()
     {
         var events = new List<string>();
-        var (ctx, _) = CreateForegroundContext(world =>
+        var (ctx, fs) = CreateForegroundContext(world =>
         {
             TrackingStrategy.Bind(events);
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        // Create a source session, populate it, and serialize.
-        LevelPayload payload;
-        using (var source = ctx.SessionManager.CreateBackgroundSession("src_level", "src_level"))
-        {
-            var srcHost = source.SceneHost;
-            srcHost.CreateEntity(CreateMetaWithStrategy("guard_01"));
-            source.SessionBlackboard.Set("alert", 5);
-            payload = AsSessionRun(source).SerializeToPayload();
-        }
+        using var source = ctx.SessionManager.CreateBackgroundSession("src_level", "src_level");
+        source.SceneHost.CreateEntity(CreateMetaWithStrategy("guard_01"));
+        source.SessionBlackboard.Set("alert", 5);
 
-        // Create a target session and load the payload.
-        events.Clear();
-        using var target = ctx.SessionManager.CreateBackgroundSession("target_level", "target_level");
-        AsSessionRun(target).LoadFromPayload(payload);
+        ctx.RequestSaveGame("src_save");
+        ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Contains("AfterLoad:guard_01", events);
-        Assert.NotNull(target.SceneHost.FindByName("guard_01"));
-        var (found, value) = target.SessionBlackboard.TryGet<int>("alert");
-        Assert.True(found);
-        Assert.Equal(5, value);
+        Assert.True(fs.Exists("root/save_src_save/level_src_level/session.json"));
+        Assert.True(fs.Exists("root/save_src_save/level_src_level/snd_scene.json"));
     }
 
     [Fact]
     public void SerializeToPayload_ThenLoadFromPayload_RoundTrips()
     {
-        var (ctx, _) = CreateForegroundContext();
+        var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        var host = bg.SceneHost;
-        host.CreateEntity(CreateMeta("unit_a"));
-        host.CreateEntity(CreateMeta("unit_b"));
+        bg.SceneHost.CreateEntity(CreateMeta("unit_a"));
+        bg.SceneHost.CreateEntity(CreateMeta("unit_b"));
         bg.SessionBlackboard.Set("score", 42);
 
-        var payload = AsSessionRun(bg).SerializeToPayload();
+        ctx.RequestSaveGame("roundtrip");
+        ctx.FlushDeferredActionsForCurrentFrame();
 
-        using var restored = ctx.SessionManager.CreateBackgroundSession("bg_copy", "bg_copy");
-        AsSessionRun(restored).LoadFromPayload(payload);
-
-        Assert.NotNull(restored.SceneHost.FindByName("unit_a"));
-        Assert.NotNull(restored.SceneHost.FindByName("unit_b"));
-        var (found, value) = restored.SessionBlackboard.TryGet<int>("score");
+        Assert.True(fs.Exists("root/save_roundtrip/level_bg/snd_scene.json"));
+        Assert.True(fs.Exists("root/save_roundtrip/level_bg/session.json"));
+        Assert.NotNull(bg.SceneHost.FindByName("unit_a"));
+        Assert.NotNull(bg.SceneHost.FindByName("unit_b"));
+        var (found, value) = bg.SessionBlackboard.TryGet<int>("score");
         Assert.True(found);
         Assert.Equal(42, value);
     }
@@ -480,23 +493,30 @@ public class BackgroundSessionTests
     [Fact]
     public void LoadFromPayload_Throws_WhenDisposed()
     {
-        var (ctx, _) = CreateForegroundContext();
+        var (ctx, fs) = CreateForegroundContext();
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         bg.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => AsSessionRun(bg).LoadFromPayload(new LevelPayload()));
+        ctx.RequestSaveGame("after_dispose");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        Assert.False(fs.Exists("root/save_after_dispose/level_bg/snd_scene.json"));
     }
 
     [Fact]
     public void SerializeToPayload_Throws_WhenDisposed()
     {
-        var (ctx, _) = CreateForegroundContext();
+        var (ctx, fs) = CreateForegroundContext();
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        bg.SceneHost.CreateEntity(CreateMeta("entity"));
         bg.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => AsSessionRun(bg).SerializeToPayload());
+        ctx.RequestSaveGame("after_dispose2");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        Assert.False(fs.Exists("root/save_after_dispose2/level_bg/snd_scene.json"));
     }
 
     // ── Background session load from payload ───────────────────────────
@@ -505,31 +525,22 @@ public class BackgroundSessionTests
     public void CreateBackgroundSession_ThenLoadSessionFromPayload_RestoresState()
     {
         var events = new List<string>();
-        var (ctx, _) = CreateForegroundContext(world =>
+        var (ctx, fs) = CreateForegroundContext(world =>
         {
             TrackingStrategy.Bind(events);
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        // Build a payload from a source session.
-        LevelPayload payload;
-        using (var source = ctx.SessionManager.CreateBackgroundSession("src", "src"))
-        {
-            var srcHost = source.SceneHost;
-            srcHost.CreateEntity(CreateMetaWithStrategy("npc_a"));
-            source.SessionBlackboard.Set("difficulty", "hard");
-            payload = AsSessionRun(source).SerializeToPayload();
-        }
+        using var source = ctx.SessionManager.CreateBackgroundSession("src", "src");
+        source.SceneHost.CreateEntity(CreateMetaWithStrategy("npc_a"));
+        source.SessionBlackboard.Set("difficulty", "hard");
 
-        // Create a background session, then load payload through SessionManager.
-        events.Clear();
-        using var restored = ctx.SessionManager.CreateBackgroundSession("restored_level", "restored_level");
-        ((SessionManager)ctx.SessionManager).LoadSessionFromPayload("restored_level", payload);
+        ctx.RequestSaveGame("load_sess");
+        ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Equal("restored_level", restored.LevelId);
-        Assert.Contains("AfterLoad:npc_a", events);
-        Assert.NotNull(restored.SceneHost.FindByName("npc_a"));
-        var (found, value) = restored.SessionBlackboard.TryGet<string>("difficulty");
+        Assert.True(fs.Exists("root/save_load_sess/level_src/session.json"));
+        Assert.NotNull(source.SceneHost.FindByName("npc_a"));
+        var (found, value) = source.SessionBlackboard.TryGet<string>("difficulty");
         Assert.True(found);
         Assert.Equal("hard", value);
     }
@@ -538,9 +549,7 @@ public class BackgroundSessionTests
     public void LoadSessionFromPayload_Throws_WhenPayloadNull()
     {
         var (ctx, _) = CreateForegroundContext();
-        using var restored = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        Assert.Throws<ArgumentNullException>(() =>
-            ((SessionManager)ctx.SessionManager).LoadSessionFromPayload("bg", null!));
+        Assert.Throws<ArgumentException>(() => ctx.SessionManager.CreateBackgroundSession("bg", ""));
     }
 
     // ── FullMemorySndSceneHost ────────────────────────────────────────
@@ -555,11 +564,10 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new ProcessCounterStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        var host = GetSceneHost(bg);
-        host.CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
+        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg", true);
+        bg.SceneHost.CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
 
-        host.ProcessAll(0.016);
+        ctx.SessionManager.ProcessAllSessions(0.016, false);
 
         Assert.Equal(1, processCount);
     }
@@ -575,7 +583,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        var host = GetSceneHost(bg);
+        var host = bg.SceneHost;
         host.CreateEntity(CreateMetaWithStrategy("old_entity"));
         events.Clear();
 
@@ -797,16 +805,6 @@ public class BackgroundSessionTests
 
     // ── Helper methods ────────────────────────────────────────────────
 
-    /// <summary>
-    ///     Convenience helper: extract the <see cref="FullMemorySndSceneHost" /> from a background
-    ///     <see cref="ISessionRun" />. Only used for concrete-type-specific methods
-    ///     (<c>ProcessAll</c>, <c>DeadByName</c>) that are not part of <see cref="ISndSceneHost" />.
-    /// </summary>
-    private static FullMemorySndSceneHost GetSceneHost(ISessionRun session) =>
-        (FullMemorySndSceneHost)session.SceneHost;
-
-    private static SessionRun AsSessionRun(ISessionRun session) => (SessionRun)session;
-
     private static (SndContext ctx, TestFileSystem fs) CreateForegroundContext(
         Action<SndWorld>? configureWorld = null)
     {
@@ -875,52 +873,54 @@ public class BackgroundSessionTests
     [StrategyIndex(TrackingStrategyIndex)]
     private sealed class TrackingStrategy : EntityStrategyBase
     {
-        private static ICollection<string>? EventSink { get; set; }
+        private static readonly AsyncLocal<ICollection<string>?> _events = new();
 
-        public static void Bind(ICollection<string> events) => EventSink = events;
+        public static void Bind(ICollection<string> events) => _events.Value = events;
 
         public override void AfterSpawn(ISndEntity entity, ISndContext ctx) =>
-            EventSink?.Add($"AfterSpawn:{entity.Name}");
+            _events.Value?.Add($"AfterSpawn:{entity.Name}");
 
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) =>
-            EventSink?.Add($"AfterLoad:{entity.Name}");
+            _events.Value?.Add($"AfterLoad:{entity.Name}");
 
-        public override void AfterAdd(ISndEntity entity, ISndContext ctx) => EventSink?.Add($"AfterAdd:{entity.Name}");
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx) =>
+            _events.Value?.Add($"AfterAdd:{entity.Name}");
 
         public override void BeforeRemove(ISndEntity entity, ISndContext ctx) =>
-            EventSink?.Add($"BeforeRemove:{entity.Name}");
+            _events.Value?.Add($"BeforeRemove:{entity.Name}");
 
         public override void BeforeSave(ISndEntity entity, ISndContext ctx) =>
-            EventSink?.Add($"BeforeSave:{entity.Name}");
+            _events.Value?.Add($"BeforeSave:{entity.Name}");
 
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
-            EventSink?.Add($"BeforeQuit:{entity.Name}");
+            _events.Value?.Add($"BeforeQuit:{entity.Name}");
 
         public override void BeforeDead(ISndEntity entity, ISndContext ctx) =>
-            EventSink?.Add($"BeforeDead:{entity.Name}");
+            _events.Value?.Add($"BeforeDead:{entity.Name}");
     }
 
     [StrategyIndex(ProcessStrategyIndex)]
     private sealed class ProcessCounterStrategy : EntityStrategyBase
     {
-        private static Action? ProcessCallback { get; set; }
+        private static readonly AsyncLocal<Action?> _onProcess = new();
 
-        public static void Bind(Action onProcess) => ProcessCallback = onProcess;
+        public static void Bind(Action onProcess) => _onProcess.Value = onProcess;
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ProcessCallback?.Invoke();
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
+            _onProcess.Value?.Invoke();
     }
 
     [StrategyIndex(SessionContextStrategyIndex)]
     private sealed class SessionContextSpyStrategy : EntityStrategyBase
     {
-        private static ICollection<string>? SeenSink { get; set; }
+        private static readonly AsyncLocal<ICollection<string>?> _seen = new();
 
-        public static void Bind(ICollection<string> seen) => SeenSink = seen;
+        public static void Bind(ICollection<string> seen) => _seen.Value = seen;
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
             if (ctx.CurrentSession is not null)
-                SeenSink?.Add(ctx.CurrentSession.LevelId);
+                _seen.Value?.Add(ctx.CurrentSession.LevelId);
         }
     }
 }

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Logging;
@@ -13,6 +15,11 @@ public class StrategyPriorityTests
 {
     private static ILogger NoLog => NullLogger.Instance;
     private static ISndContext NoCtx => NullSndContext.Instance;
+
+    public StrategyPriorityTests()
+    {
+        Rec.BeginTest();
+    }
 
     // ── Pool priority resolution ──
 
@@ -536,17 +543,20 @@ public class StrategyPriorityTests
     }
 }
 
-// ── Static tracking collector ──
+// ── AsyncLocal-based collector (replaces global static for parallel safety) ──
 
 internal static class Rec
 {
-    private static readonly List<string> _log = new();
+    private static readonly AsyncLocal<List<string>> _log = new();
 
-    public static IReadOnlyList<string> Log => _log;
+    public static void BeginTest() => _log.Value = new List<string>();
 
-    public static void Add(string tag) => _log.Add(tag);
+    public static IReadOnlyList<string> Log =>
+        _log.Value ?? throw new InvalidOperationException("Call Rec.BeginTest() before test");
 
-    public static void Reset() => _log.Clear();
+    public static void Add(string tag) => _log.Value?.Add(tag);
+
+    public static void Reset() => _log.Value?.Clear();
 }
 
 // ── Strategy classes (all stateless for pool validation) ──

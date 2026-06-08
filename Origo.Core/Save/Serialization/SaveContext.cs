@@ -42,7 +42,16 @@ internal sealed class SaveContext
     public void DeserializeProgress(DataSourceNode serializedNode)
     {
         ArgumentNullException.ThrowIfNull(serializedNode);
-        _blackboardSerializer.DeserializeInto(Progress, serializedNode);
+        var snapshot = Progress.SerializeAll();
+        try
+        {
+            _blackboardSerializer.DeserializeInto(Progress, serializedNode);
+        }
+        catch
+        {
+            Progress.DeserializeAll(snapshot);
+            throw;
+        }
     }
 
     public DataSourceNode SerializeSession() => _blackboardSerializer.Serialize(Session);
@@ -50,7 +59,16 @@ internal sealed class SaveContext
     public void DeserializeSession(DataSourceNode serializedNode)
     {
         ArgumentNullException.ThrowIfNull(serializedNode);
-        _blackboardSerializer.DeserializeInto(Session, serializedNode);
+        var snapshot = Session.SerializeAll();
+        try
+        {
+            _blackboardSerializer.DeserializeInto(Session, serializedNode);
+        }
+        catch
+        {
+            Session.DeserializeAll(snapshot);
+            throw;
+        }
     }
 
     public DataSourceNode BuildSndScene(ISndSceneAccess sceneAccess) => _sceneSerializer.Build(sceneAccess);

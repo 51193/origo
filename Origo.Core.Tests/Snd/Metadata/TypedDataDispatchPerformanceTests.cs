@@ -4,14 +4,18 @@ using System.Diagnostics;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Tests.TestSupport;
 using Xunit;
+using Xunit;
 
 namespace Origo.Core.Tests.Snd.Metadata;
 
 [Collection("TypedData")]
 public class TypedDataDispatchPerformanceTests
 {
-    public TypedDataDispatchPerformanceTests()
+    private readonly PerfReporter _perf;
+
+    public TypedDataDispatchPerformanceTests(ITestOutputHelper output)
     {
+        _perf = PerfReporter.ForTest(output);
         TypedData.ResetForTesting();
     }
 
@@ -56,7 +60,7 @@ public class TypedDataDispatchPerformanceTests
 
         Assert.Equal(sumKind, sumIsT);
 
-        PerfReporter.ToConsole.Compare(
+        _perf.Compare(
             "Int32 Read: Kind-based TryGet vs 'is T' pattern",
             "TryGetInt32 (kind)", ReadCount, timeKind, allocKind,
             "Data is int (is T)", ReadCount, timeIsT, allocIsT);
@@ -100,7 +104,7 @@ public class TypedDataDispatchPerformanceTests
         Assert.Equal(ReadCount * 42, sumFactory);
         Assert.Equal(sumFactory, sumIsT);
 
-        PerfReporter.ToConsole.Compare(
+        _perf.Compare(
             "Int32 Extract: TypedDataFactory<T>.TryExtract vs 'is T' pattern",
             "Factory.TryExtract (kind)", ReadCount, timeFactory, allocFactory,
             "Data is int (is T)", ReadCount, timeIsT, allocIsT);
@@ -133,7 +137,7 @@ public class TypedDataDispatchPerformanceTests
         long allocData = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
         var timeData = sw.Elapsed;
 
-        PerfReporter.ToConsole.Compare(
+        _perf.Compare(
             "ToObject: Switch-based dispatch vs generic Data property",
             "ToObject (switch)", ReadCount, timeSwitch, allocSwitch,
             "Data property", ReadCount, timeData, allocData);
@@ -166,7 +170,7 @@ public class TypedDataDispatchPerformanceTests
         long allocClass = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
         var timeClass = sw.Elapsed;
 
-        PerfReporter.ToConsole.Compare(
+        _perf.Compare(
             "Write: TypedData struct vs OldTypedData class",
             "TypedData struct", count, timeStruct, allocStruct,
             "OldTypedData class", count, timeClass, allocClass);
@@ -232,7 +236,7 @@ public class TypedDataDispatchPerformanceTests
         long allocIsT = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
         var timeIsT = sw.Elapsed;
 
-        PerfReporter.ToConsole.Compare(
+        _perf.Compare(
             "Mixed Dispatch (int/float/bool/string/double): Kind-based vs is T",
             "Kind-based (TryGet)", iterations * 5, timeKind, allocKind,
             "is T pattern", iterations * 5, timeIsT, allocIsT);

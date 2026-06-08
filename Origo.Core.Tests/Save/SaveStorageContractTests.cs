@@ -376,6 +376,58 @@ public class SaveStorageContractTests
         Assert.Null(ex);
     }
 
+    // ── Stale write marker recovery ─────────────────────────────────
+
+    [Fact]
+    public void StaleWriteMarker_AfterDeleteCurrentDirectory_WriteThenSucceeds()
+    {
+        var (ctx, fs) = CreateForegroundContext();
+        ctx.ProgressBlackboard!.Set(WellKnownKeys.SessionTopology,
+            @"__foreground__=test_level=false");
+
+        ctx.StorageService.WriteSavePayloadToCurrent(
+            BuildPayload("test_level", "stale_test"));
+
+        fs.SeedFile("root/current/.write_in_progress", "");
+        Assert.True(fs.Exists("root/current/.write_in_progress"));
+
+        ctx.StorageService.DeleteCurrentDirectory();
+        Assert.False(fs.Exists("root/current/.write_in_progress"));
+
+        ctx.ProgressBlackboard!.Set(WellKnownKeys.SessionTopology,
+            @"__foreground__=test_level=false");
+        var ex = Record.Exception(() =>
+            ctx.StorageService.WriteSavePayloadToCurrent(
+                BuildPayload("test_level", "stale_test")));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public void RecoverFromStaleWriteMarker_CleanStateAfterRecovery()
+    {
+        var (ctx, fs) = CreateForegroundContext();
+        ctx.ProgressBlackboard!.Set(WellKnownKeys.SessionTopology,
+            @"__foreground__=test_level=false");
+
+        ctx.StorageService.WriteSavePayloadToCurrent(
+            BuildPayload("test_level", "recovery_test"));
+
+        fs.SeedFile("root/current/.write_in_progress", "");
+
+        ctx.StorageService.DeleteCurrentDirectory();
+
+        ctx.ProgressBlackboard!.Set(WellKnownKeys.SessionTopology,
+            @"__foreground__=test_level=false");
+        ctx.StorageService.WriteSavePayloadToCurrent(
+            BuildPayload("test_level", "recovery_test"));
+
+        Assert.False(fs.Exists("root/current/.write_in_progress"));
+        Assert.True(fs.Exists("root/current/progress.json"));
+
+        var payload = ctx.StorageService.ReadSavePayloadFromCurrent("slot", "test_level");
+        Assert.NotNull(payload);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────
 
     private static (SndContext ctx, TestFileSystem fs) CreateForegroundContext()

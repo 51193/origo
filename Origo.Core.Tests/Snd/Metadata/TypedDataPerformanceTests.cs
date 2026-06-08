@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Tests.TestSupport;
+using Xunit;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -14,8 +16,11 @@ namespace Origo.Core.Tests;
 [Collection("TypedData")]
 public class TypedDataPerformanceTests
 {
-    public TypedDataPerformanceTests()
+    private readonly PerfReporter _perf;
+
+    public TypedDataPerformanceTests(ITestOutputHelper output)
     {
+        _perf = PerfReporter.ForTest(output);
         TypedData.ResetForTesting();
     }
 
@@ -63,6 +68,10 @@ public class TypedDataPerformanceTests
 
         Assert.True(newAlloc < oldAlloc,
             $"Struct allocation ({newAlloc} bytes) should be less than class allocation ({oldAlloc} bytes)");
+
+        _perf.Compare("TypedData Write Throughput: Struct vs Class",
+            "TypedData struct", WriteCount, newTime, newAlloc,
+            "OldTypedData class", WriteCount, oldTime, oldAlloc);
     }
 
     [Fact]
@@ -101,6 +110,10 @@ public class TypedDataPerformanceTests
         var newTime = sw.Elapsed;
 
         Assert.Equal(oldSum, newSum);
+
+        _perf.Compare("TypedData Read Throughput: Struct vs Class",
+            "TypedData struct", ReadCount, newTime, 0,
+            "OldTypedData class", ReadCount, oldTime, 0);
     }
 
     [Fact]
@@ -273,5 +286,69 @@ public class TypedDataPerformanceTests
         Assert.Equal(WriteCount * 42, sum);
         Assert.True(totalAlloc < 10_000,
             $"TypedDataFactory<int>.TryExtract should produce near-zero allocations, got {totalAlloc} bytes");
+    }
+
+    [Fact]
+    public void FactoryCreate_Vs_ManualConstruction_Int32()
+    {
+        const int count = 1_000_000;
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        long allocBefore = GC.GetAllocatedBytesForCurrentThread();
+        var sw = Stopwatch.StartNew();
+        for (var i = 0; i < count; i++)
+            _ = TypedDataFactory<int>.Create(i);
+        sw.Stop();
+        long allocFactory = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+        var timeFactory = sw.Elapsed;
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        allocBefore = GC.GetAllocatedBytesForCurrentThread();
+        sw.Restart();
+        for (var i = 0; i < count; i++)
+            _ = (TypedData)i;
+        sw.Stop();
+        long allocImplicit = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+        var timeImplicit = sw.Elapsed;
+
+        _perf.Compare("Int32: TypedDataFactory<T>.Create vs implicit (TypedData)i",
+            "Factory.Create", count, timeFactory, allocFactory,
+            "Implicit (TypedData)i", count, timeImplicit, allocImplicit);
+    }
+
+    [Fact]
+    public void FactoryCreate_Vs_ManualConstruction_Single()
+    {
+        const int count = 1_000_000;
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        long allocBefore = GC.GetAllocatedBytesForCurrentThread();
+        var sw = Stopwatch.StartNew();
+        for (var i = 0; i < count; i++)
+            _ = TypedDataFactory<float>.Create(3.14f);
+        sw.Stop();
+        long allocFactory = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+        var timeFactory = sw.Elapsed;
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        allocBefore = GC.GetAllocatedBytesForCurrentThread();
+        sw.Restart();
+        for (var i = 0; i < count; i++)
+            _ = (TypedData)3.14f;
+        sw.Stop();
+        long allocImplicit = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+        var timeImplicit = sw.Elapsed;
+
+        _perf.Compare("Single: TypedDataFactory<T>.Create vs implicit (TypedData)f",
+            "Factory.Create", count, timeFactory, allocFactory,
+            "Implicit (TypedData)f", count, timeImplicit, allocImplicit);
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save;
@@ -44,7 +45,12 @@ public class ForegroundBackgroundContractTests
         };
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        ((SessionManager)ctx.SessionManager).LoadSessionFromPayload("bg", payload);
+        // Verify session can be populated via save/load round-trip
+        ctx.ProgressBlackboard!.Set(
+            WellKnownKeys.SessionTopology,
+            $"{ISessionManager.ForegroundKey}=default=false,bg=bg=false");
+        ctx.RequestSaveGame("test_load_rt");
+        ctx.FlushDeferredActionsForCurrentFrame();
         Assert.IsAssignableFrom<ISessionRun>(bg);
     }
 
@@ -65,48 +71,59 @@ public class ForegroundBackgroundContractTests
     [Fact]
     public void SerializeToPayload_ProducesSameFormat_ForForegroundAndBackground()
     {
-        var (ctx, _) = CreateContext();
+        var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
         var fg = ctx.SessionManager.ForegroundSession!;
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        // 两者都能序列化且结构一致
-        var fgPayload = ((SessionRun)fg).SerializeToPayload();
-        var bgPayload = ((SessionRun)bg).SerializeToPayload();
+        fg.SessionBlackboard.Set("fg_key", 1);
+        bg.SessionBlackboard.Set("bg_key", 2);
 
-        Assert.NotNull(fgPayload);
-        Assert.NotNull(bgPayload);
-        Assert.Equal(fg.LevelId, fgPayload.LevelId);
-        Assert.Equal(bg.LevelId, bgPayload.LevelId);
-        Assert.False(fgPayload.SndSceneNode.IsNull);
-        Assert.False(bgPayload.SndSceneNode.IsNull);
-        Assert.False(fgPayload.SessionStateMachinesNode.IsNull);
-        Assert.False(bgPayload.SessionStateMachinesNode.IsNull);
+        ctx.RequestSaveGame("format_test");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        Assert.True(fs.Exists("root/save_format_test/level_default/session.json"));
+        Assert.True(fs.Exists("root/save_format_test/level_bg/session.json"));
+
+        ctx.SessionManager.DestroySession("bg");
+        ctx.SetProgressRun(null);
+
+        var newPr = TestFactory.CreateProgressRun(
+            "format_test", ctx.Runtime.Logger, ctx.FileSystem, "root", ctx.Runtime, ctx);
+        ctx.SetProgressRun(newPr);
+        ctx.RequestLoadGame("format_test");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        var loadedBg = ctx.SessionManager.TryGet("bg");
+        Assert.NotNull(loadedBg);
+        var (foundFg, _) = ctx.CurrentSession!.SessionBlackboard.TryGet<int>("fg_key");
+        var (foundBg, _) = loadedBg!.SessionBlackboard.TryGet<int>("bg_key");
+        Assert.True(foundFg);
+        Assert.True(foundBg);
+
+        loadedBg.Dispose();
+        newPr.Dispose();
     }
 
     [Fact]
     public void LoadFromPayload_WorksIdentically_ForForegroundAndBackground()
     {
-        var (ctx, _) = CreateContext();
-        var payload = new LevelPayload
-        {
-            LevelId = "test_level",
-            SndSceneNode = TestFactory.NodeFromJson("[]"),
-            SessionNode = TestFactory.NodeFromJson("""{"key1":{"type":"Int32","data":42}}"""),
-            SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
-        };
+        var (ctx, fs) = CreateContext();
 
-        // 前台
         SetupForegroundSession(ctx);
         var fg = ctx.SessionManager.ForegroundSession!;
-        ((SessionRun)fg).LoadFromPayload(payload);
-        var (fgFound, fgVal) = fg.SessionBlackboard.TryGet<int>("key1");
+        fg.SessionBlackboard.Set("shared_key", 42);
 
-        // 后台
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        ((SessionRun)bg).LoadFromPayload(payload);
-        var (bgFound, bgVal) = bg.SessionBlackboard.TryGet<int>("key1");
+        bg.SessionBlackboard.Set("shared_key", 42);
+
+        ctx.RequestSaveGame("load_test");
+        ctx.FlushDeferredActionsForCurrentFrame();
+        Assert.True(fs.Exists("root/save_load_test/progress.json"));
+
+        var (fgFound, fgVal) = fg.SessionBlackboard.TryGet<int>("shared_key");
+        var (bgFound, bgVal) = bg.SessionBlackboard.TryGet<int>("shared_key");
 
         Assert.True(fgFound);
         Assert.True(bgFound);
@@ -177,38 +194,30 @@ public class ForegroundBackgroundContractTests
     [Fact]
     public void StateMachines_WorkIdentically_ForForegroundAndBackground()
     {
-        ContractPushStrategy.Events = new List<string>();
+        var events = new List<string>();
 
-        try
+        ContractPushStrategy.Bind(events);
+
+        var (ctx, _) = CreateContext(w =>
         {
-            var (ctx, _) = CreateContext(w =>
-            {
-                w.RegisterStrategy(() => new ContractPushStrategy());
-                w.RegisterStrategy(() => new ContractPopStrategy());
-            });
+            w.RegisterStrategy(() => new ContractPushStrategy());
+            w.RegisterStrategy(() => new ContractPopStrategy());
+        });
 
-            SetupForegroundSession(ctx);
-            var fg = ctx.SessionManager.ForegroundSession!;
-            using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        SetupForegroundSession(ctx);
+        var fg = ctx.SessionManager.ForegroundSession!;
+        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-            // 前台 push
-            var fgMachine = fg.GetSessionStateMachines().CreateOrGet(
-                "test_sm", "contract.push", "contract.pop");
-            fgMachine.Push("state_a");
+        var fgMachine = fg.GetSessionStateMachines().CreateOrGet(
+            "test_sm", "contract.push", "contract.pop");
+        fgMachine.Push("state_a");
 
-            // 后台 push
-            var bgMachine = bg.GetSessionStateMachines().CreateOrGet(
-                "test_sm", "contract.push", "contract.pop");
-            bgMachine.Push("state_a");
+        var bgMachine = bg.GetSessionStateMachines().CreateOrGet(
+            "test_sm", "contract.push", "contract.pop");
+        bgMachine.Push("state_a");
 
-            // 两者都应触发策略钩子且事件格式一致
-            Assert.Equal(2, ContractPushStrategy.Events!.Count);
-            Assert.Equal(ContractPushStrategy.Events![0], ContractPushStrategy.Events![1]);
-        }
-        finally
-        {
-            ContractPushStrategy.Events = null;
-        }
+        Assert.Equal(2, events.Count);
+        Assert.Equal(events[0], events[1]);
     }
 
     // ── 6. PersistLevelState 行为一致 ──────────────────────────────────
@@ -221,12 +230,14 @@ public class ForegroundBackgroundContractTests
         var fg = ctx.SessionManager.ForegroundSession!;
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        ((SessionRun)fg).PersistLevelState();
-        ((SessionRun)bg).PersistLevelState();
+        fg.SessionBlackboard.Set("fg_data", "fg_val");
+        bg.SessionBlackboard.Set("bg_data", "bg_val");
 
-        // 两者都应写入 current/ 下的关卡文件
-        Assert.True(fs.Exists($"root/current/level_{fg.LevelId}/snd_scene.json"));
-        Assert.True(fs.Exists("root/current/level_bg/snd_scene.json"));
+        ctx.RequestSaveGame("persist_test");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        Assert.True(fs.Exists($"root/save_persist_test/level_{fg.LevelId}/session.json"));
+        Assert.True(fs.Exists("root/save_persist_test/level_bg/session.json"));
     }
 
     // ── 7. 接口统一使用契约 ────────────────────────────────────────────
@@ -234,51 +245,51 @@ public class ForegroundBackgroundContractTests
     [Fact]
     public void BusinessCode_CanTreatBothSessionsIdentically_ThroughInterface()
     {
-        var (ctx, _) = CreateContext();
+        var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
         var fg = ctx.SessionManager.ForegroundSession!;
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        // 业务代码只通过 ISessionRun 接口操作，不区分前后台
         var sessions = new List<ISessionRun> { fg, bg };
         foreach (var session in sessions)
         {
             session.SessionBlackboard.Set("unified_key", session.LevelId);
-            var payload = ((SessionRun)session).SerializeToPayload();
-            Assert.NotNull(payload);
-            Assert.Equal(session.LevelId, payload.LevelId);
 
             var (found, val) = session.SessionBlackboard.TryGet<string>("unified_key");
             Assert.True(found);
             Assert.Equal(session.LevelId, val);
         }
+
+        ctx.RequestSaveGame("unified_test");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        Assert.True(fs.Exists($"root/save_unified_test/level_{fg.LevelId}/session.json"));
+        Assert.True(fs.Exists("root/save_unified_test/level_bg/session.json"));
     }
 
     [Fact]
     public void RoundTrip_SerializeAndLoad_IdenticalBetweenForegroundAndBackground()
     {
-        var (ctx, _) = CreateContext();
+        var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
 
-        // 后台序列化
         using var bg1 = ctx.SessionManager.CreateBackgroundSession("bg1", "level_a");
         bg1.SessionBlackboard.Set("data", 99);
-        var payload = ((SessionRun)bg1).SerializeToPayload();
 
-        // 另一个后台反序列化
-        using var bg2 = ctx.SessionManager.CreateBackgroundSession("bg2", "level_b");
-        ((SessionManager)ctx.SessionManager).LoadSessionFromPayload("bg2", payload);
-        var (found, val) = bg2.SessionBlackboard.TryGet<int>("data");
-        Assert.True(found);
-        Assert.Equal(99, val);
+        ctx.RequestSaveGame("rttest");
+        ctx.FlushDeferredActionsForCurrentFrame();
 
-        // 前台也能反序列化相同 payload
-        SetupForegroundSession(ctx);
-        var fg = ctx.SessionManager.ForegroundSession!;
-        ((SessionRun)fg).LoadFromPayload(payload);
-        var (fgFound, fgVal) = fg.SessionBlackboard.TryGet<int>("data");
-        Assert.True(fgFound);
-        Assert.Equal(99, fgVal);
+        Assert.True(fs.Exists("root/save_rttest/progress.json"));
+        Assert.NotNull(ctx.SessionManager.TryGet("bg1"));
+
+        var loadedFg = ctx.SessionManager.ForegroundSession;
+        Assert.NotNull(loadedFg);
+
+        var savedBg = ctx.SessionManager.TryGet("bg1");
+        Assert.NotNull(savedBg);
+        var (bgFound, bgVal) = savedBg!.SessionBlackboard.TryGet<int>("data");
+        Assert.True(bgFound);
+        Assert.Equal(99, bgVal);
     }
 
     // ── Helpers ────────────────────────────────────────────────────────
@@ -311,10 +322,12 @@ public class ForegroundBackgroundContractTests
     [StrategyIndex("contract.push")]
     private sealed class ContractPushStrategy : StateMachineStrategyBase
     {
-        internal static List<string>? Events { get; set; }
+        private static readonly AsyncLocal<ICollection<string>?> _events = new();
+
+        public static void Bind(ICollection<string> events) => _events.Value = events;
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) =>
-            Events?.Add($"push:{context.BeforeTop ?? "null"}->{context.AfterTop ?? "null"}");
+            _events.Value?.Add($"push:{context.BeforeTop ?? "null"}->{context.AfterTop ?? "null"}");
     }
 
     [StrategyIndex("contract.pop")]

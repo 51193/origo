@@ -243,6 +243,43 @@ public class ActiveStrategyTests
         Assert.Empty(meta.StrategyMetaData!.ActiveIndices);
     }
 
+    // ── Mixed strategy type on same entity ─────────────────────────────
+
+    [Fact]
+    public void SameEntity_HasBothTypeStrategies()
+    {
+        var (entity, _, _) = Setup();
+        entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
+
+        var processEx = Record.Exception(() => entity.Process(0.016));
+        Assert.Null(processEx);
+
+        var result = entity.InvokeStrategy(QueryHpIndex);
+        Assert.Equal(100, (int)result!);
+    }
+
+    [Fact]
+    public void RemoveEntityStrategy_LeavesActiveStrategy()
+    {
+        var (entity, _, _) = Setup();
+        entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
+        entity.RemoveStrategy(EntityOnlyIndex);
+
+        var result = entity.InvokeStrategy(QueryHpIndex);
+        Assert.Equal(100, (int)result!);
+    }
+
+    [Fact]
+    public void RemoveActiveStrategy_LeavesEntityStrategy()
+    {
+        var (entity, _, _) = Setup();
+        entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
+        entity.RemoveActiveStrategy(QueryHpIndex);
+
+        var ex = Record.Exception(() => entity.Process(0.016));
+        Assert.Null(ex);
+    }
+
     // ── Registration enforcement ───────────────────────────────────────
 
     [Fact]

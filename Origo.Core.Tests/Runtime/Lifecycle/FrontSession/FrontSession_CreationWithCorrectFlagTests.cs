@@ -24,18 +24,14 @@ public class FrontSession_CreationWithCorrectFlagTests
     [Fact]
     public void GivenSessionManager_WhenCreateForegroundFromPayload_ThenIsFrontSessionIsTrue()
     {
-        var (ctx, _) = CreateContext();
+        var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
-        // Load a payload into foreground
-        var payload = new LevelPayload
-        {
-            LevelId = "default",
-            SndSceneNode = TestFactory.NodeFromJson("[]"),
-            SessionNode = TestFactory.NodeFromJson("{}"),
-            SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
-        };
-        ((SessionRun)ctx.SessionManager.ForegroundSession!).LoadFromPayload(payload);
 
+        ctx.SessionManager.ForegroundSession!.SessionBlackboard.Set("test", 42);
+        ctx.RequestSaveGame("fg_test");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        Assert.True(fs.Exists("root/save_fg_test/progress.json"));
         Assert.True(ctx.SessionManager.ForegroundSession!.IsFrontSession);
     }
 

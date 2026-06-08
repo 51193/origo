@@ -71,6 +71,13 @@ public class SndContextWorkflowTests
     }
 
     [Fact]
+    public void RequestSaveGame_ThrowsOnNullId()
+    {
+        var ctx = CreateContext(out _, out _);
+        Assert.Throws<ArgumentException>(() => ctx.RequestSaveGame(null!));
+    }
+
+    [Fact]
     public void RequestSaveGame_PersistsAndSetsActiveSaveSlot()
     {
         var ctx = CreateContext(out var fs, out _);
@@ -132,6 +139,13 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContext(out _, out _);
         Assert.Throws<ArgumentException>(() => ctx.RequestLoadGame(""));
+    }
+
+    [Fact]
+    public void RequestLoadGame_ThrowsOnNullId()
+    {
+        var ctx = CreateContext(out _, out _);
+        Assert.Throws<ArgumentException>(() => ctx.RequestLoadGame(null!));
     }
 
     [Fact]

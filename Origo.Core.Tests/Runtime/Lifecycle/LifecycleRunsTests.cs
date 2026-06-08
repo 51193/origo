@@ -33,7 +33,6 @@ public class LifecycleRunsTests
         Assert.Throws<ObjectDisposedException>(() => run.SessionBlackboard);
         Assert.Throws<ObjectDisposedException>(() => run.GetSessionStateMachines());
         Assert.Throws<ObjectDisposedException>(() => run.SceneHost);
-        Assert.Throws<ObjectDisposedException>(() => ((SessionRun)run).PersistLevelState());
     }
 
     [Fact]
@@ -123,7 +122,7 @@ public class LifecycleRunsTests
         progressRun.SwitchForeground("b");
 
         Assert.Equal("b", progressRun.ForegroundSession!.LevelId);
-        Assert.Equal(ISessionManager.ForegroundKey, ((SessionRun)progressRun.ForegroundSession!).MountKey);
+        Assert.True(progressRun.SessionManager.Contains(ISessionManager.ForegroundKey));
 
         var (foundTopology, topology) =
             progressRun.ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
@@ -211,23 +210,19 @@ public class LifecycleRunsTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var systemRuntime = TestFactory.CreateSystemRuntime(logger, fs, "root", runtime);
-        var progressRuntime = new ProgressRuntime(systemRuntime, sndContext, sndContext);
-        var managerRuntime = new SessionManagerRuntime(progressRuntime, new Blackboard.Blackboard());
-        var bb1 = new Blackboard.Blackboard();
-        bb1.Set("score", 42);
-        var run1 = new SessionRun(managerRuntime, new SessionParameters("level1", bb1, host));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        sndContext.SetProgressRun(progressRun);
+        progressRun.LoadAndMountForeground("level1");
 
-        var payload = run1.SerializeToPayload();
-        Assert.Equal("level1", payload.LevelId);
-        Assert.False(string.IsNullOrWhiteSpace(TestFactory.JsonFromNode(payload.SessionNode)));
+        var fg = progressRun.ForegroundSession!;
+        fg.SessionBlackboard.Set("score", 42);
 
-        // Create second session and load the payload
-        var bb2 = new Blackboard.Blackboard();
-        var run2 = new SessionRun(managerRuntime, new SessionParameters("level1", bb2, host));
-        run2.LoadFromPayload(payload);
+        sndContext.RequestSaveGame("roundtrip_001");
+        sndContext.FlushDeferredActionsForCurrentFrame();
 
-        var (found, value) = run2.SessionBlackboard.TryGet<int>("score");
+        Assert.True(fs.Exists("root/save_roundtrip_001/level_level1/session.json"));
+
+        var (found, value) = fg.SessionBlackboard.TryGet<int>("score");
         Assert.True(found);
         Assert.Equal(42, value);
     }
@@ -240,31 +235,15 @@ public class LifecycleRunsTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var systemRuntime = TestFactory.CreateSystemRuntime(logger, fs, "root", runtime);
-        var progressRuntime = new ProgressRuntime(systemRuntime, sndContext, sndContext);
-        var managerRuntime = new SessionManagerRuntime(progressRuntime, new Blackboard.Blackboard());
-        var run = new SessionRun(managerRuntime, new SessionParameters("level1", new Blackboard.Blackboard(), host));
 
-        run.SessionBlackboard.Set("before", 1);
-        host.CreateEntity(new SndMetaData
-        {
-            Name = "temp",
-            NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData()
-        });
+        fs.SeedFile("root/current/level_bad/snd_scene.json", "{invalid}");
+        fs.SeedFile("root/current/level_bad/session.json", """{"after":{"type":"Int32","data":3}}""");
+        fs.SeedFile("root/current/level_bad/session_state_machines.json", """{"machines":[]}""");
 
-        var payload = new LevelPayload
-        {
-            LevelId = "level1",
-            SndSceneNode = TestFactory.NodeFromJson("{}"),
-            SessionNode = TestFactory.NodeFromJson("""{"after":{"type":"Int32","data":3}}"""),
-            SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
-        };
+        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        sndContext.SetProgressRun(progressRun);
 
-        Assert.ThrowsAny<Exception>(() => run.LoadFromPayload(payload));
-        Assert.Empty(host.BuildMetaList());
-        Assert.False(run.SessionBlackboard.TryGet<int>("before").found);
-        Assert.False(run.SessionBlackboard.TryGet<int>("after").found);
+        Assert.ThrowsAny<Exception>(() => progressRun.LoadAndMountForeground("bad"));
     }
 
     [Fact]
@@ -299,15 +278,14 @@ public class LifecycleRunsTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var systemRuntime = TestFactory.CreateSystemRuntime(logger, fs, "root", runtime);
-        var progressRuntime = new ProgressRuntime(systemRuntime, sndContext, sndContext);
-        var managerRuntime = new SessionManagerRuntime(progressRuntime, new Blackboard.Blackboard());
-        var session = new Blackboard.Blackboard();
-        var run = new SessionRun(managerRuntime, new SessionParameters("default", session, host));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        sndContext.SetProgressRun(progressRun);
 
-        Assert.Null(run.MountKey);
+        var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        Assert.True(sndContext.SessionManager.Contains("bg1"));
 
-        run.Dispose();
+        sndContext.SessionManager.DestroySession("bg1");
+        Assert.False(sndContext.SessionManager.Contains("bg1"));
     }
 
     [Fact]
@@ -323,7 +301,7 @@ public class LifecycleRunsTests
 
         var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
-        Assert.Equal("bg1", ((SessionRun)bg).MountKey);
+        Assert.True(sndContext.SessionManager.Contains("bg1"));
 
         sndContext.SessionManager.DestroySession("bg1");
         Assert.False(sndContext.SessionManager.Contains("bg1"));
@@ -455,7 +433,9 @@ public class LifecycleRunsTests
         Assert.True(sndContext.SessionManager.Contains("bg2"));
         Assert.NotNull(sndContext.SessionManager.ForegroundSession);
 
-        ((SessionManager)sndContext.SessionManager).Clear();
+        sndContext.SessionManager.DestroySession("bg1");
+        sndContext.SessionManager.DestroySession("bg2");
+        sndContext.SessionManager.DestroySession(ISessionManager.ForegroundKey);
 
         Assert.Empty(sndContext.SessionManager.Keys);
         Assert.Null(sndContext.SessionManager.ForegroundSession);

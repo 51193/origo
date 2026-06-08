@@ -136,6 +136,66 @@ public class SaveContextTests
         Assert.Same(session, ctx.Session);
         Assert.Same(world, ctx.SndWorld);
     }
+
+    [Fact]
+    public void DeserializeProgress_ThenVerify_BlackboardDataUpdated()
+    {
+        var world = CreateWorld();
+        var progress = new Blackboard.Blackboard();
+        progress.Set("gold", 100);
+
+        var ctx = new SaveContext(progress, new Blackboard.Blackboard(), world);
+
+        var source = new Blackboard.Blackboard();
+        source.Set("gold", 999);
+        source.Set("level", 5);
+        var sourceCtx = new SaveContext(source, new Blackboard.Blackboard(), world);
+        using var node = sourceCtx.SerializeProgress();
+
+        ctx.DeserializeProgress(node);
+
+        var (goldFound, gold) = progress.TryGet<int>("gold");
+        Assert.True(goldFound);
+        Assert.Equal(999, gold);
+        var (levelFound, level) = progress.TryGet<int>("level");
+        Assert.True(levelFound);
+        Assert.Equal(5, level);
+    }
+
+    [Fact]
+    public void DeserializeSession_ThenVerify_BlackboardDataUpdated()
+    {
+        var world = CreateWorld();
+        var session = new Blackboard.Blackboard();
+        session.Set("hp", 80);
+
+        var ctx = new SaveContext(new Blackboard.Blackboard(), session, world);
+
+        var source = new Blackboard.Blackboard();
+        source.Set("hp", 200);
+        source.Set("mana", 50);
+        var sourceCtx = new SaveContext(new Blackboard.Blackboard(), source, world);
+        using var node = sourceCtx.SerializeSession();
+
+        ctx.DeserializeSession(node);
+
+        var (hpFound, hp) = session.TryGet<int>("hp");
+        Assert.True(hpFound);
+        Assert.Equal(200, hp);
+        var (manaFound, mana) = session.TryGet<int>("mana");
+        Assert.True(manaFound);
+        Assert.Equal(50, mana);
+    }
+
+    [Fact]
+    public void DeserializeProgress_NullNode_ThrowsArgumentNullException()
+    {
+        var world = CreateWorld();
+        var progress = new Blackboard.Blackboard();
+        var ctx = new SaveContext(progress, new Blackboard.Blackboard(), world);
+
+        Assert.Throws<ArgumentNullException>(() => ctx.DeserializeProgress(null!));
+    }
 }
 
 // ── SaveMetaBuildContext ────────────────────────────────────────────────

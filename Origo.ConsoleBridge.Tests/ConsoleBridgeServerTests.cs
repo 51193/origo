@@ -567,6 +567,59 @@ public class ConsoleBridgeServerTests
         server.Dispose();
     }
 
+    [Fact]
+    public void MidSession_ClientHardDisconnect_ServerRecovers()
+    {
+        var (server, (input, _)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        writer.WriteLine("in_session");
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "in_session", CommandTimeoutMs);
+
+        client.Client.Dispose();
+
+        Thread.Sleep(DisconnectDelayMs);
+
+        using var client2 = new TcpClient();
+        client2.Connect(IPAddress.Loopback, port);
+        using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
+        writer2.WriteLine("after_hard_disconnect");
+
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_hard_disconnect", CommandTimeoutMs);
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void MidSession_ClientAbort_NextConnectionAccepted()
+    {
+        var (server, (input, _)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        using (var client = new TcpClient())
+        {
+            client.Connect(IPAddress.Loopback, port);
+            using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+            writer.WriteLine("before_abort");
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == "before_abort", CommandTimeoutMs);
+        }
+
+        Thread.Sleep(DisconnectDelayMs);
+
+        using var client2 = new TcpClient();
+        client2.Connect(IPAddress.Loopback, port);
+        using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
+        writer2.WriteLine("after_abort");
+
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_abort", CommandTimeoutMs);
+
+        server.Dispose();
+    }
+
     // ── Thread safety ───────────────────────────────────────────────────
 
     [Fact]

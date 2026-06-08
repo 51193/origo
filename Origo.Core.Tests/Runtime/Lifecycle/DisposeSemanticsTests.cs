@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save;
@@ -87,16 +88,16 @@ public class DisposeSemanticsTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.SceneHost.CreateEntity(CreateMeta("Entity"));
+        bg.SessionBlackboard.Set("data", 42);
 
-        AsSessionRun(bg).PersistLevelState();
-        Assert.True(fs.Exists("root/current/level_bg_level/snd_scene.json"));
-        Assert.True(fs.Exists("root/current/level_bg_level/session.json"));
-        Assert.True(fs.Exists("root/current/level_bg_level/session_state_machines.json"));
+        ctx.RequestSaveGame("explicit1");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        Assert.True(fs.Exists("root/save_explicit1/level_bg_level/snd_scene.json"));
+        Assert.True(fs.Exists("root/save_explicit1/level_bg_level/session.json"));
+        Assert.True(fs.Exists("root/save_explicit1/level_bg_level/session_state_machines.json"));
 
         bg.Dispose();
-
-        // Files survive Dispose because Dispose no longer deletes current/
-        Assert.True(fs.Exists("root/current/level_bg_level/snd_scene.json"));
     }
 
     [Fact]
@@ -113,7 +114,8 @@ public class DisposeSemanticsTests
         bg.SceneHost.CreateEntity(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
 
         events.Clear();
-        AsSessionRun(bg).PersistLevelState();
+        ctx.RequestSaveGame("before_save_test");
+        ctx.FlushDeferredActionsForCurrentFrame();
 
         Assert.Contains("BeforeSave:Entity", events);
     }
@@ -192,37 +194,35 @@ public class DisposeSemanticsTests
     // ── ObjectDisposed after dispose ────────────────────────────────────
 
     [Fact]
-    public void SessionRun_AfterDispose_SerializeToPayload_ThrowsObjectDisposed()
+    public void SessionRun_AfterDispose_SaveDoesNotPersistSessionData()
     {
-        var (ctx, _) = CreateForegroundContext();
+        var (ctx, fs) = CreateForegroundContext();
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.SceneHost.CreateEntity(CreateMeta("DisposedEntity"));
+        bg.SessionBlackboard.Set("disposed_key", "disposed_val");
         bg.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => AsSessionRun(bg).SerializeToPayload());
+        ctx.RequestSaveGame("after_dispose_save");
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        Assert.False(fs.Exists("root/save_after_dispose_save/level_bg_level/snd_scene.json"));
     }
 
     [Fact]
-    public void SessionRun_AfterDispose_LoadFromPayload_ThrowsObjectDisposed()
+    public void SessionRun_AfterDispose_SaveExcludesDisposedSession()
     {
-        var (ctx, _) = CreateForegroundContext();
+        var (ctx, fs) = CreateForegroundContext();
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.SessionBlackboard.Set("data", 42);
+        bg.SceneHost.CreateEntity(CreateMeta("DisposedEntity"));
         bg.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() =>
-            AsSessionRun(bg).LoadFromPayload(new LevelPayload()));
-    }
+        ctx.RequestSaveGame("exclude_disposed");
+        ctx.FlushDeferredActionsForCurrentFrame();
 
-    [Fact]
-    public void SessionRun_AfterDispose_PersistLevelState_ThrowsObjectDisposed()
-    {
-        var (ctx, _) = CreateForegroundContext();
-
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        bg.Dispose();
-
-        Assert.Throws<ObjectDisposedException>(() => AsSessionRun(bg).PersistLevelState());
+        Assert.False(fs.Exists("root/save_exclude_disposed/level_bg_level/snd_scene.json"));
     }
 
     [Fact]
@@ -516,8 +516,6 @@ public class DisposeSemanticsTests
         return (ctx, fs);
     }
 
-    private static SessionRun AsSessionRun(ISessionRun session) => (SessionRun)session;
-
     private static SndMetaData CreateMeta(string name) =>
         new()
         {
@@ -541,22 +539,22 @@ public class DisposeSemanticsTests
     [StrategyIndex(BeforeSaveStrategyIndex)]
     private sealed class BeforeSaveSpyStrategy : EntityStrategyBase
     {
-        private static ICollection<string>? EventSink { get; set; }
+        private static readonly AsyncLocal<ICollection<string>?> _events = new();
 
-        public static void Bind(ICollection<string> events) => EventSink = events;
+        public static void Bind(ICollection<string> events) => _events.Value = events;
 
         public override void BeforeSave(ISndEntity entity, ISndContext ctx) =>
-            EventSink?.Add($"BeforeSave:{entity.Name}");
+            _events.Value?.Add($"BeforeSave:{entity.Name}");
     }
 
     [StrategyIndex(BeforeQuitStrategyIndex)]
     private sealed class BeforeQuitSpyStrategy : EntityStrategyBase
     {
-        private static ICollection<string>? EventSink { get; set; }
+        private static readonly AsyncLocal<ICollection<string>?> _events = new();
 
-        public static void Bind(ICollection<string> events) => EventSink = events;
+        public static void Bind(ICollection<string> events) => _events.Value = events;
 
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
-            EventSink?.Add($"BeforeQuit:{entity.Name}");
+            _events.Value?.Add($"BeforeQuit:{entity.Name}");
     }
 }

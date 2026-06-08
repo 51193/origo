@@ -92,6 +92,13 @@ public class DataSourceTests
     public void AsInt_ParsesCorrectly() => Assert.Equal(42, DataSourceNode.CreateNumber(42).AsInt());
 
     [Fact]
+    public void AsInt_OnNonNumericString_Throws()
+    {
+        var node = DataSourceNode.CreateString("hello");
+        Assert.Throws<FormatException>(() => node.AsInt());
+    }
+
+    [Fact]
     public void AsLong_ParsesCorrectly() =>
         Assert.Equal(9876543210L, DataSourceNode.CreateNumber(9876543210L).AsLong());
 
