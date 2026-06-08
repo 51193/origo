@@ -50,6 +50,9 @@ public class AdapterArchitectureGuardrailTests
 
         ISndConsoleAccess console = ctx;
         Assert.False(console.TrySubmitConsoleCommand(""));
+
+        ISndFileAccess fileAccess = ctx;
+        Assert.False(fileAccess.FileExists("nonexistent.json"));
     }
 
     [Fact]

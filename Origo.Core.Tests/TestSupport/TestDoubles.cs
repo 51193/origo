@@ -498,6 +498,21 @@ internal static class TestFactory
             systemBb, consoleInput, consoleOutput);
     }
 
+    public static OrigoRuntime CreateRuntime(
+        ILogger logger,
+        ISndSceneHost sceneHost,
+        TypeStringMapping tm,
+        IBlackboard systemBb,
+        IFileSystem sharedFileSystem,
+        OrigoMeta? meta = null)
+    {
+        meta ??= new OrigoMeta("Origo", "test", string.Empty);
+        var reg = CreateRegistry(tm);
+        var io = CreateIoGateway(sharedFileSystem);
+        return new OrigoRuntime(
+            meta, logger, sceneHost, tm, reg, io, systemBb);
+    }
+
     // ── Lifecycle helpers for tests ────────────────────────────────────
 
     public static SystemRuntime CreateSystemRuntime(

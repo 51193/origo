@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Abstractions.Snd;
+using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save.Meta;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Xunit;
-using Origo.Core.Abstractions.Lifecycle;
-using Origo.Core.Abstractions.StateMachine;
 
 namespace Origo.Core.Tests;
 
@@ -160,6 +162,28 @@ public class ContextBoundaryTests
 
         public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute) =>
             CallCount++;
+
+        DataSourceNode ISndFileAccess.ReadFile(string path)
+        {
+            CallCount++;
+            throw new InvalidOperationException("FakeSndContext does not support file access.");
+        }
+
+        void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite) => CallCount++;
+
+        bool ISndFileAccess.FileExists(string path)
+        {
+            CallCount++;
+            return false;
+        }
+
+        T ISndFileAccess.ReadObject<T>(string path)
+        {
+            CallCount++;
+            throw new InvalidOperationException("FakeSndContext does not support file access.");
+        }
+
+        void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) => CallCount++;
     }
 
     private sealed class FakeSessionRun(string levelId) : ISessionRun

@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
 using Xunit;
@@ -45,6 +46,7 @@ public class CoreArchitectureGuardrailTests
         Assert.Contains(typeof(ISndSaveOperations), interfaces);
         Assert.Contains(typeof(ISndLifecycleOperations), interfaces);
         Assert.Contains(typeof(ISndEntityOperations), interfaces);
+        Assert.Contains(typeof(ISndFileAccess), interfaces);
     }
 
     [Fact]
@@ -123,6 +125,15 @@ public class CoreArchitectureGuardrailTests
         ISndEntityOperations entityOps = ctx;
         entityOps.RequestKillAll();
         ctx.FlushDeferredActionsForCurrentFrame();
+
+        ISndFileAccess fileAccess = ctx;
+        Assert.False(fileAccess.FileExists("nonexistent.json"));
+        var writeNode = DataSourceNode.CreateObject();
+        writeNode.Add("test_key", DataSourceNode.CreateString("hello"));
+        fileAccess.WriteFile("test.json", writeNode);
+        Assert.True(fileAccess.FileExists("test.json"));
+        var readNode = fileAccess.ReadFile("test.json");
+        Assert.Equal("hello", readNode["test_key"].AsString());
     }
 
     [Fact]

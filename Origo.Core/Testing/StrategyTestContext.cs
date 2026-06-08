@@ -4,15 +4,19 @@ using System.Globalization;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Abstractions.Snd;
+using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save.Meta;
+using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
-using Origo.Core.Abstractions.Lifecycle;
-using Origo.Core.Abstractions.StateMachine;
 
 namespace Origo.Core.Testing;
 
@@ -22,11 +26,18 @@ internal sealed class StrategyTestContext : ISndContext
     private readonly List<string> _consoleOutput = new();
     private readonly Queue<Action> _deferred = new();
     private readonly Dictionary<string, SndMetaData> _templates = new(StringComparer.Ordinal);
+    private readonly IFileSystem _fileSystem;
+    private readonly IDataSourceIoGateway _dataSourceIo;
+    private readonly DataSourceConverterRegistry _converterRegistry;
 
     public StrategyTestContext()
     {
         var session = new TestSessionRun();
         SessionManager = new TestSessionManager(session);
+
+        _fileSystem = new MemoryFileSystem();
+        _dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(_fileSystem);
+        _converterRegistry = DataSourceFactory.CreateDefaultRegistry(new TypeStringMapping());
     }
 
     public List<string> SaveRequests { get; } = new();
@@ -151,6 +162,25 @@ internal sealed class StrategyTestContext : ISndContext
     }
 
     public void RegisterTemplate(string key, SndMetaData template) => _templates[key] = template;
+
+    DataSourceNode ISndFileAccess.ReadFile(string path) => _dataSourceIo.ReadTree(path);
+
+    void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite)
+        => _dataSourceIo.WriteTree(path, node, overwrite);
+
+    bool ISndFileAccess.FileExists(string path) => _dataSourceIo.Exists(path);
+
+    T ISndFileAccess.ReadObject<T>(string path)
+    {
+        var node = _dataSourceIo.ReadTree(path);
+        return _converterRegistry.Read<T>(node);
+    }
+
+    void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite)
+    {
+        var node = _converterRegistry.Write(value);
+        _dataSourceIo.WriteTree(path, node, overwrite);
+    }
 }
 
 internal sealed class MinimalTestEntity : ISndEntity

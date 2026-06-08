@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
-using Origo.Core.Runtime.Lifecycle;
+using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
+using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save.Meta;
 using Origo.Core.Snd.Metadata;
-using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Snd;
 
@@ -79,4 +81,19 @@ internal sealed class SessionSndContext : ISndContext
 
     public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute) =>
         _global.RegisterSaveMetaContributor(contribute);
+
+    DataSourceNode ISndFileAccess.ReadFile(string path) =>
+        ((ISndFileAccess)_global).ReadFile(path);
+
+    void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite) =>
+        ((ISndFileAccess)_global).WriteFile(path, node, overwrite);
+
+    bool ISndFileAccess.FileExists(string path) =>
+        ((ISndFileAccess)_global).FileExists(path);
+
+    T ISndFileAccess.ReadObject<T>(string path) =>
+        ((ISndFileAccess)_global).ReadObject<T>(path);
+
+    void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) =>
+        ((ISndFileAccess)_global).WriteObject<T>(path, value, overwrite);
 }

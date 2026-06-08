@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
-using Origo.Core.Runtime.Lifecycle;
+using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
+using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save.Meta;
 using Origo.Core.Snd.Metadata;
-using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Snd;
 
@@ -91,4 +93,18 @@ internal sealed class NullSndContext : ISndContext
 
     public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute) =>
         throw new InvalidOperationException("NullSndContext does not support save meta registration.");
+
+    DataSourceNode ISndFileAccess.ReadFile(string path) =>
+        throw new InvalidOperationException("NullSndContext does not support file access.");
+
+    void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite) =>
+        throw new InvalidOperationException("NullSndContext does not support file access.");
+
+    bool ISndFileAccess.FileExists(string path) => false;
+
+    T ISndFileAccess.ReadObject<T>(string path) =>
+        throw new InvalidOperationException("NullSndContext does not support file access.");
+
+    void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) =>
+        throw new InvalidOperationException("NullSndContext does not support file access.");
 }

@@ -26,6 +26,6 @@ namespace Origo.Core.Snd;
 /// </summary>
 public interface ISndContext : ISndBlackboardAccess, ISndSessionAccess, ISndDeferredActions,
     ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
-    ISndLifecycleOperations, ISndEntityOperations
+    ISndLifecycleOperations, ISndEntityOperations, ISndFileAccess
 {
 }

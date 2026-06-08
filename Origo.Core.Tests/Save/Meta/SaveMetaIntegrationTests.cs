@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Abstractions.Snd;
+using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save;
@@ -10,8 +14,6 @@ using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Xunit;
-using Origo.Core.Abstractions.Lifecycle;
-using Origo.Core.Abstractions.StateMachine;
 
 using static Origo.Core.Snd.SndDefaults;
 
@@ -256,6 +258,18 @@ public class SaveMetaNullAndSessionContextTests
         {
             LastDelegate = contribute;
         }
+
+        DataSourceNode ISndFileAccess.ReadFile(string path) =>
+            throw new NotSupportedException("TrackingContext does not support file access.");
+
+        void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite) { }
+
+        bool ISndFileAccess.FileExists(string path) => false;
+
+        T ISndFileAccess.ReadObject<T>(string path) =>
+            throw new NotSupportedException("TrackingContext does not support file access.");
+
+        void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) { }
     }
 
     private sealed class SessionSndContextSession : ISessionRun

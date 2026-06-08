@@ -5,8 +5,10 @@ using System.Threading;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
@@ -407,5 +409,28 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         {
             EndWorkflow();
         }
+    }
+
+    // ── ISndFileAccess ─────────────────────────────────────────────────
+
+    DataSourceNode ISndFileAccess.ReadFile(string path)
+        => Runtime.SndWorld.DataSourceIo.ReadTree(path);
+
+    void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite)
+        => Runtime.SndWorld.DataSourceIo.WriteTree(path, node, overwrite);
+
+    bool ISndFileAccess.FileExists(string path)
+        => Runtime.SndWorld.DataSourceIo.Exists(path);
+
+    T ISndFileAccess.ReadObject<T>(string path)
+    {
+        var node = Runtime.SndWorld.DataSourceIo.ReadTree(path);
+        return Runtime.SndWorld.ConverterRegistry.Read<T>(node);
+    }
+
+    void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite)
+    {
+        var node = Runtime.SndWorld.ConverterRegistry.Write(value);
+        Runtime.SndWorld.DataSourceIo.WriteTree(path, node, overwrite);
     }
 }
