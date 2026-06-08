@@ -20,6 +20,9 @@ public class SndEntityLifecycleBatchTests
     private const string ActiveQueryIdx = "batch.active.query";
     private const string P50Idx = "s.batch.p50";
     private const string P100Idx = "s.batch.p100";
+    private const string PerfProcessIdx = "batch.perf.process";
+    private const string AddDuringProcessIdx = "batch.perf.add_during";
+    private const string SelfRemoveIdx = "batch.perf.self_remove";
 
     private static FullMemorySndSceneHost CreateHost(Action<SndWorld> configureWorld)
     {
@@ -198,6 +201,52 @@ public class SndEntityLifecycleBatchTests
                 });
                 Events.Add("subscribed");
             }
+        }
+    }
+
+    [StrategyIndex(PerfProcessIdx)]
+    private sealed class ProcessRecordingStrategy : EntityStrategyBase
+    {
+        public static List<(string Name, double Delta)> ProcessCalls { get; set; } = null!;
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            ProcessCalls.Add((entity.Name, delta));
+        }
+    }
+
+    [StrategyIndex(AddDuringProcessIdx)]
+    private sealed class AddDuringProcessStrategy : EntityStrategyBase
+    {
+        public static List<string> ProcessCalls { get; set; } = null!;
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            ProcessCalls.Add($"add_during_process:{entity.Name}");
+            entity.AddStrategy(PerfProcessIdx);
+        }
+    }
+
+    [StrategyIndex(SelfRemoveIdx)]
+    private sealed class SelfRemoveRecordingStrategy : EntityStrategyBase
+    {
+        public static List<string> ProcessCalls { get; set; } = null!;
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            ProcessCalls.Add($"self_remove:{entity.Name}");
+        }
+    }
+
+    [StrategyIndex("batch.perf.remove_self")]
+    private sealed class RemoveSelfDuringProcessStrategy : EntityStrategyBase
+    {
+        public static List<string> ProcessCalls { get; set; } = null!;
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            ProcessCalls.Add($"remove_self:{entity.Name}");
+            entity.RemoveStrategy("batch.perf.remove_self");
         }
     }
 
@@ -856,6 +905,107 @@ public class SndEntityLifecycleBatchTests
         var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
 
         runtime.ProcessAll(0.016);
+    }
+
+    // ── ProcessAll — frame processing with entities ─────────────────────
+
+    [Fact]
+    public void ProcessAll_SingleEntity_CallsProcessOnStrategy()
+    {
+        ProcessRecordingStrategy.ProcessCalls = new List<(string, double)>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProcessRecordingStrategy()); });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.Spawn(CreateMeta("E", new[] { PerfProcessIdx }));
+        ProcessRecordingStrategy.ProcessCalls.Clear();
+
+        runtime.ProcessAll(0.016);
+
+        var calls = ProcessRecordingStrategy.ProcessCalls;
+        Assert.Single(calls);
+        Assert.Equal("E", calls[0].Item1);
+        Assert.Equal(0.016, calls[0].Item2, 0.001);
+    }
+
+    [Fact]
+    public void ProcessAll_MultipleEntities_AllProcessed()
+    {
+        ProcessRecordingStrategy.ProcessCalls = new List<(string, double)>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProcessRecordingStrategy()); });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.SpawnMany(new[]
+        {
+            CreateMeta("A", new[] { PerfProcessIdx }),
+            CreateMeta("B", new[] { PerfProcessIdx }),
+            CreateMeta("C", new[] { PerfProcessIdx })
+        });
+        ProcessRecordingStrategy.ProcessCalls.Clear();
+
+        runtime.ProcessAll(0.016);
+
+        var names = ProcessRecordingStrategy.ProcessCalls.Select(c => c.Item1).ToArray();
+        Assert.Equal(new[] { "A", "B", "C" }, names);
+    }
+
+    [Fact]
+    public void ProcessAll_DeltaPropagatesToStrategy()
+    {
+        ProcessRecordingStrategy.ProcessCalls = new List<(string, double)>();
+        var host = CreateHost(w => { w.RegisterStrategy(() => new ProcessRecordingStrategy()); });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.Spawn(CreateMeta("E", new[] { PerfProcessIdx }));
+        ProcessRecordingStrategy.ProcessCalls.Clear();
+
+        runtime.ProcessAll(0.033);
+
+        Assert.Equal(0.033, ProcessRecordingStrategy.ProcessCalls[0].Item2, 0.001);
+    }
+
+    [Fact]
+    public void ProcessAll_ProcessAddsStrategy_NewStrategyNotExecutedThisFrame()
+    {
+        AddDuringProcessStrategy.ProcessCalls = new List<string>();
+        ProcessRecordingStrategy.ProcessCalls = new List<(string, double)>();
+        var host = CreateHost(w =>
+        {
+            w.RegisterStrategy(() => new AddDuringProcessStrategy());
+            w.RegisterStrategy(() => new ProcessRecordingStrategy());
+        });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.Spawn(CreateMeta("E", new[] { AddDuringProcessIdx }));
+        AddDuringProcessStrategy.ProcessCalls.Clear();
+        ProcessRecordingStrategy.ProcessCalls.Clear();
+
+        runtime.ProcessAll(0.016);
+
+        Assert.Equal(new[] { "add_during_process:E" }, AddDuringProcessStrategy.ProcessCalls);
+        Assert.Empty(ProcessRecordingStrategy.ProcessCalls);
+    }
+
+    [Fact]
+    public void ProcessAll_ProcessRemovesStrategy_RemainingStrategiesStillExecuted()
+    {
+        RemoveSelfDuringProcessStrategy.ProcessCalls = new List<string>();
+        ProcessRecordingStrategy.ProcessCalls = new List<(string, double)>();
+        var host = CreateHost(w =>
+        {
+            w.RegisterStrategy(() => new RemoveSelfDuringProcessStrategy());
+            w.RegisterStrategy(() => new ProcessRecordingStrategy());
+        });
+        var runtime = new SndRuntime(TestFactory.CreateSndWorld(), host);
+
+        runtime.Spawn(CreateMeta("E", new[] { "batch.perf.remove_self", PerfProcessIdx }));
+
+        RemoveSelfDuringProcessStrategy.ProcessCalls.Clear();
+        ProcessRecordingStrategy.ProcessCalls.Clear();
+        runtime.ProcessAll(0.016);
+
+        Assert.Single(RemoveSelfDuringProcessStrategy.ProcessCalls);
+        Assert.Single(ProcessRecordingStrategy.ProcessCalls);
+        Assert.Equal("E", ProcessRecordingStrategy.ProcessCalls[0].Item1);
     }
 
     // ── SndEntityFactory tests ──────────────────────────────────────────

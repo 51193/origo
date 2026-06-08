@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Scene;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
@@ -63,6 +66,53 @@ public class EntityStrategyBaseTests
     }
 
     [Fact]
+    public void Process_KillsOtherEntity_MarksTargetEntity()
+    {
+        var host = new StubSndSceneHost();
+        var metaA = new SndMetaData { Name = "A" };
+        var metaB = new SndMetaData { Name = "B" };
+        var entityA = host.CreateEntity(metaA);
+        host.CreateEntity(metaB);
+        var logger = new TestLogger();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestFileSystem();
+        fs.SeedFile("entry.json", "[]");
+        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+
+        var strategy = new TestEntityStrategyKillOther();
+        strategy.Process(entityA, 0.016, ctx);
+
+        Assert.False(entityA.IsPendingKill);
+        var entityB = host.FindByName("B");
+        Assert.NotNull(entityB);
+        Assert.True(entityB.IsPendingKill);
+    }
+
+    [Fact]
+    public void Process_RequestKillDuringProcess_RemainingStrategiesStillExecuted()
+    {
+        KillSelfRecordingStrategy.ProcessCalls = new List<string>();
+        var host = CreateHost(w =>
+        {
+            w.RegisterStrategy(() => new KillSelfRecordingStrategy());
+            w.RegisterStrategy(() => new ProcessCalledStrategy());
+        });
+
+        var entity = host.CreateEntity(CreateMeta("E", new[] { KillSelfIdx, ProcessCalledIdx }));
+        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+        KillSelfRecordingStrategy.ProcessCalls.Clear();
+        ProcessCalledStrategy.Called = false;
+
+        host.ProcessAll(0.016);
+
+        Assert.Single(KillSelfRecordingStrategy.ProcessCalls);
+        Assert.True(ProcessCalledStrategy.Called);
+    }
+
+    private const string KillSelfIdx = "test.kill_self";
+    private const string ProcessCalledIdx = "test.process_called";
+
+    [Fact]
     public void Remove_NonexistentStrategy_DoesNotThrow()
     {
         var entity = new StubSndEntity("e");
@@ -90,6 +140,64 @@ public class EntityStrategyBaseTests
             ctx.RequestKillEntity(entity.Name);
         }
     }
+
+    private sealed class TestEntityStrategyKillOther : EntityStrategyBase
+    {
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            ctx.RequestKillEntity("B");
+        }
+    }
+
+    [StrategyIndex(KillSelfIdx)]
+    private sealed class KillSelfRecordingStrategy : EntityStrategyBase
+    {
+        public static List<string> ProcessCalls { get; set; } = null!;
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            ProcessCalls.Add($"kill_self:{entity.Name}");
+            ctx.RequestKillEntity(entity.Name);
+        }
+    }
+
+    [StrategyIndex(ProcessCalledIdx)]
+    private sealed class ProcessCalledStrategy : EntityStrategyBase
+    {
+        public static bool Called { get; set; }
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            Called = true;
+        }
+    }
+
+    private static FullMemorySndSceneHost CreateHost(Action<SndWorld> configureWorld)
+    {
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        configureWorld(world);
+        host.BindWorld(world);
+        var fs = new TestFileSystem();
+        fs.SeedFile("res://entry/entry.json", "[]");
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+            "res://entry/entry.json"));
+        host.BindContext(ctx);
+        return host;
+    }
+
+    private static SndMetaData CreateMeta(string name, string[]? entityIndices = null) => new()
+    {
+        Name = name,
+        NodeMetaData = new NodeMetaData(),
+        StrategyMetaData = new StrategyMetaData
+        {
+            EntityIndices = new List<string>(entityIndices ?? Array.Empty<string>())
+        },
+        DataMetaData = new DataMetaData()
+    };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
