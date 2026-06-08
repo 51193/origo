@@ -4,7 +4,8 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Abstractions.Entity;
 
 /// <summary>
-///     数据存取与订阅能力，从 <see cref="ISndEntity" /> 中拆分，遵循接口隔离原则。
+///     <see cref="ISndEntity" /> 的组成接口，提供数据存取与订阅能力。
+///     外部代码应通过 <see cref="ISndEntity" /> 使用，无需直接依赖此接口。
 ///     <para>
 ///         订阅回调统一为 <c>(target, observer, oldValue, newValue)</c> —— 自订阅时 target == observer，
 ///         跨实体观察时 <c>observer</c> 为发起 <c>ObserveData</c> 的实体。

@@ -21,7 +21,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private const int DisposeJoinTimeoutMs = 3000;
 
     private readonly object _acceptLock = new();
-    private readonly ConsoleInputQueue _input;
+    private readonly IConsoleInputSource _input;
     private readonly ConsoleBridgeOptions _options;
     private readonly IConsoleOutputChannel _output;
     private readonly List<string> _pendingOutput = new();
@@ -38,7 +38,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private StreamWriter? _writer;
 
     public ConsoleBridgeServer(
-        ConsoleInputQueue input,
+        IConsoleInputSource input,
         IConsoleOutputChannel output,
         ConsoleBridgeOptions? options = null)
     {

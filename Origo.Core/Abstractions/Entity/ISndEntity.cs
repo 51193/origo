@@ -1,10 +1,8 @@
 namespace Origo.Core.Abstractions.Entity;
 
 /// <summary>
-///     抽象 SND 实体的最小接口，使策略与数据层不依赖具体引擎节点类型。
-///     继承 <see cref="ISndDataAccess" />、<see cref="ISndNodeAccess" />、
-///     <see cref="ISndStrategyAccess" />、<see cref="ISndActiveStrategyAccess" />、
-///     <see cref="ISndEntityLifecycleAccess" /> 和 <see cref="ISndObservation" />。
+///     SND 实体的完整聚合接口，组合了数据存取、节点管理、策略控制、生命周期订阅与跨实体观察能力。
+///     外部代码仅依赖此接口即可操作实体的全部公共功能。
 /// </summary>
 public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess, ISndActiveStrategyAccess,
     ISndEntityLifecycleAccess, ISndObservation

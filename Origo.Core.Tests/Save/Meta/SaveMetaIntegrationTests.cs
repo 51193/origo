@@ -24,12 +24,13 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
+        var handle = new SaveFileHandle(fs, "root");
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("key_a", "val_a"));
 
         ctx.RequestSaveGame("slot_01");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(fs, "root", "slot_01", MainMenuLevelId);
+        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_01", MainMenuLevelId);
         Assert.NotNull(payload.CustomMeta);
         Assert.Equal("val_a", payload.CustomMeta!["key_a"]);
     }
@@ -39,12 +40,13 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
+        var handle = new SaveFileHandle(fs, "root");
         ctx.RegisterSaveMetaContributor(_ => new Dictionary<string, string> { ["dkey"] = "dval" });
 
         ctx.RequestSaveGame("slot_02");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(fs, "root", "slot_02", MainMenuLevelId);
+        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_02", MainMenuLevelId);
         Assert.NotNull(payload.CustomMeta);
         Assert.Equal("dval", payload.CustomMeta!["dkey"]);
     }
@@ -71,13 +73,14 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
+        var handle = new SaveFileHandle(fs, "root");
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("same", "first"));
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("same", "second"));
 
         ctx.RequestSaveGame("slot_03");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(fs, "root", "slot_03", MainMenuLevelId);
+        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_03", MainMenuLevelId);
         Assert.NotNull(payload.CustomMeta);
         Assert.Equal("second", payload.CustomMeta!["same"]);
     }
@@ -87,6 +90,7 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
+        var handle = new SaveFileHandle(fs, "root");
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("a", "1"));
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("b", "2"));
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("c", "3"));
@@ -94,7 +98,7 @@ public class SaveMetaContributorRegistrationTests
         ctx.RequestSaveGame("slot_04");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(fs, "root", "slot_04", MainMenuLevelId);
+        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_04", MainMenuLevelId);
         Assert.NotNull(payload.CustomMeta);
         Assert.Equal(3, payload.CustomMeta!.Count);
         Assert.Equal("1", payload.CustomMeta["a"]);
@@ -107,11 +111,12 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
+        var handle = new SaveFileHandle(fs, "root");
 
         ctx.RequestSaveGame("slot_05");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(fs, "root", "slot_05", MainMenuLevelId);
+        var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_05", MainMenuLevelId);
         Assert.Null(payload.CustomMeta);
     }
 
@@ -148,19 +153,20 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
+        var handle = new SaveFileHandle(fs, "root");
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("ts", "1"));
 
         ctx.RequestSaveGame("slot_a");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var payload1 = SaveStorageFacade.ReadSavePayloadFromCurrent(fs, "root", "slot_a", MainMenuLevelId);
+        var payload1 = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_a", MainMenuLevelId);
         Assert.Equal("1", payload1.CustomMeta!["ts"]);
 
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("ts", "2"));
         ctx.RequestSaveGame("slot_b");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var payload2 = SaveStorageFacade.ReadSavePayloadFromCurrent(fs, "root", "slot_b", MainMenuLevelId);
+        var payload2 = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_b", MainMenuLevelId);
         Assert.Equal("2", payload2.CustomMeta!["ts"]);
     }
 

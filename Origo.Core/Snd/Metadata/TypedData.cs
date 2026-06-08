@@ -12,6 +12,8 @@ public readonly partial struct TypedData : IEquatable<TypedData>
 {
     internal static readonly Type?[] KindTypeMap = new Type?[256];
 
+    public const byte UnregisteredKind = 255;
+
     internal readonly byte _kind;
     internal readonly long _inlineBits;
     internal readonly object? _ref;
@@ -33,7 +35,7 @@ public readonly partial struct TypedData : IEquatable<TypedData>
     {
         get
         {
-            if (_kind == 255) return _ref?.GetType() ?? typeof(object);
+            if (_kind == UnregisteredKind) return _ref?.GetType() ?? typeof(object);
             return KindTypeMap[_kind] ?? typeof(object);
         }
     }
@@ -95,12 +97,12 @@ public readonly partial struct TypedData : IEquatable<TypedData>
             var nullKind = TypedDataTypeMap.GetKindForType(type);
             if (nullKind != 0)
                 return new TypedData(nullKind, 0, null);
-            return new TypedData(255, 0, null);
+            return new TypedData(UnregisteredKind, 0, null);
         }
 
         var kind = TypedDataTypeMap.GetKindForType(type);
         if (kind == 0)
-            return new TypedData(255, 0, value);
+            return new TypedData(UnregisteredKind, 0, value);
 
         var boxed = TypedDataObjectConverter.FromObject(kind, value);
         return new TypedData(kind, boxed.inlineBits, boxed.refValue);

@@ -97,9 +97,9 @@ public class SaveIdempotencyTests
         var fs = new TestFileSystem();
         var payload = CreateMinimalPayload("001", "default");
         var policy = new DefaultSavePathPolicy();
+        var handle = new SaveFileHandle(fs, "root", policy);
 
-        SavePayloadWriter.WriteToCurrent(fs,
-            DataSourceFactory.CreateDefaultIoGateway(fs), "root", payload, policy);
+        SavePayloadWriter.WriteToCurrent(handle, payload);
 
         var shaRel = policy.GetPayloadShaFile(policy.GetCurrentDirectory());
         var shaAbs = fs.CombinePath("root", shaRel);
@@ -114,14 +114,15 @@ public class SaveIdempotencyTests
         var fs = new TestFileSystem();
         var logger = new TestLogger();
         var payload = CreateMinimalPayload("001", "default");
+        var policy = new DefaultSavePathPolicy();
+        var handle = new SaveFileHandle(fs, "root", policy);
 
         // First write — must succeed.
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
         var firstWriteTime = fs.ReadAllText("root/current/progress.json");
 
         // Modify the file system to track if any file content changes happen on second write.
         // Seed the snapshot with existing .sha from the first write.
-        var policy = new DefaultSavePathPolicy();
         var existingShaAbs = fs.CombinePath("root",
             policy.GetPayloadShaFile(policy.GetSaveDirectory("001")));
         Assert.True(fs.Exists(existingShaAbs));
@@ -130,7 +131,7 @@ public class SaveIdempotencyTests
         fs.DeleteDirectory(fs.CombinePath("root", policy.GetCurrentDirectory()));
 
         // Second write with same payload — should skip.
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
 
         // The current/ directory should NOT have been recreated (because the entire method returned early).
         Assert.False(fs.DirectoryExists(fs.CombinePath("root", policy.GetCurrentDirectory())));
@@ -145,15 +146,16 @@ public class SaveIdempotencyTests
     {
         var fs = new TestFileSystem();
         var logger = new TestLogger();
+        var handle = new SaveFileHandle(fs, "root", new DefaultSavePathPolicy());
         var payload = CreateMinimalPayload("001", "default");
 
         // First write.
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
 
         // Second write with different payload — should write.
         var modified = CreateMinimalPayload("001", "default");
         modified.ProgressNode = TestFactory.NodeFromJson("""{"counter":999}""");
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", modified, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, modified, "001", logger);
 
         // The current/ directory must exist (write happened).
         Assert.True(fs.DirectoryExists(fs.CombinePath("root", "current")));
@@ -167,9 +169,10 @@ public class SaveIdempotencyTests
     {
         var fs = new TestFileSystem();
         var logger = new TestLogger();
+        var handle = new SaveFileHandle(fs, "root", new DefaultSavePathPolicy());
         var payload = CreateMinimalPayload("new_save", "default");
 
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "new_save", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "new_save", logger);
 
         Assert.True(fs.DirectoryExists(fs.CombinePath("root", "save_new_save")));
         Assert.DoesNotContain(logger.Infos, e => e.Contains("idempotent", StringComparison.OrdinalIgnoreCase));
@@ -181,6 +184,7 @@ public class SaveIdempotencyTests
         var fs = new TestFileSystem();
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
+        var handle = new SaveFileHandle(fs, "root", policy);
 
         // Pre-seed a snapshot directory without .payload.sha
         fs.CreateDirectory(fs.CombinePath("root", policy.GetSaveDirectory("001")));
@@ -190,7 +194,7 @@ public class SaveIdempotencyTests
         Assert.False(fs.Exists(shaAbs));
 
         var payload = CreateMinimalPayload("001", "default");
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
 
         // .payload.sha must have been created in snapshot.
         Assert.True(fs.Exists(shaAbs));
@@ -202,6 +206,7 @@ public class SaveIdempotencyTests
         var fs = new TestFileSystem();
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
+        var handle = new SaveFileHandle(fs, "root", policy);
 
         // Pre-seed a snapshot with corrupted .payload.sha (empty content).
         var snapshotRel = policy.GetSaveDirectory("001");
@@ -209,7 +214,7 @@ public class SaveIdempotencyTests
         fs.SeedFile(shaAbs, string.Empty);
 
         var payload = CreateMinimalPayload("001", "default");
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
 
         // .payload.sha should be overwritten with correct hash.
         var hash = fs.ReadAllText(shaAbs).Trim();
@@ -221,6 +226,7 @@ public class SaveIdempotencyTests
     {
         var fs = new TestFileSystem();
         var policy = new DefaultSavePathPolicy();
+        var handle = new SaveFileHandle(fs, "root", policy);
         var currentRel = policy.GetCurrentDirectory();
 
         // Seed current/ with .payload.sha
@@ -236,7 +242,7 @@ public class SaveIdempotencyTests
         fs.SeedFile(fs.CombinePath("root", policy.GetPayloadShaFile(currentRel)),
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
-        SaveStorageFacade.SnapshotCurrentToSave(fs, "root", "001", policy);
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
 
         var snapshotShaAbs = fs.CombinePath("root",
             policy.GetPayloadShaFile(policy.GetSaveDirectory("001")));
@@ -251,6 +257,7 @@ public class SaveIdempotencyTests
         var fs = new TestFileSystem();
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
+        var handle = new SaveFileHandle(fs, "root", policy);
 
         // Pre-seed snapshot with matching .payload.sha to try triggering the idempotent path,
         // then seed a .write_in_progress marker to verify the idempotent check does NOT bypass
@@ -275,7 +282,7 @@ public class SaveIdempotencyTests
 
         // This should proceed through (hash mismatch), write to current, and clean up normally.
         var ex = Record.Exception(() =>
-            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "001", logger));
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger));
         Assert.Null(ex);
 
         // Current should exist and marker should be gone.
@@ -326,12 +333,13 @@ public class SaveIdempotencyTests
         var fs = new TestFileSystem();
         var logger = new TestLogger();
         var payload = CreateMinimalPayload("001", "default");
+        var policy = new DefaultSavePathPolicy();
+        var handle = new SaveFileHandle(fs, "root", policy);
 
         // First write creates the snapshot.
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
 
         // Read the original snapshot files.
-        var policy = new DefaultSavePathPolicy();
         var snapshotRel = policy.GetSaveDirectory("001");
         var origProgress = fs.ReadAllText(
             fs.CombinePath("root", policy.GetProgressFile(snapshotRel)));
@@ -340,7 +348,7 @@ public class SaveIdempotencyTests
         fs.DeleteDirectory(fs.CombinePath("root", policy.GetCurrentDirectory()));
 
         // Second write — should skip.
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
 
         // Snapshot must be unchanged.
         var progressAfter = fs.ReadAllText(

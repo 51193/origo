@@ -44,6 +44,7 @@ public class CoreArchitectureGuardrailTests
         Assert.Contains(typeof(ISndStateMachineAccess), interfaces);
         Assert.Contains(typeof(ISndSaveOperations), interfaces);
         Assert.Contains(typeof(ISndLifecycleOperations), interfaces);
+        Assert.Contains(typeof(ISndEntityOperations), interfaces);
     }
 
     [Fact]
@@ -118,6 +119,10 @@ public class CoreArchitectureGuardrailTests
 
         ISndConsoleAccess console = ctx;
         Assert.False(console.TrySubmitConsoleCommand(""));
+
+        ISndEntityOperations entityOps = ctx;
+        entityOps.RequestKillAll();
+        ctx.FlushDeferredActionsForCurrentFrame();
     }
 
     [Fact]

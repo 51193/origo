@@ -32,9 +32,9 @@ public partial class OrigoAutoHost : Node
     public GodotSndManager SndManager { get; private set; } = null!;
 
     /// <summary>
-    ///     控制台命令输入队列；UI 将提交的行通过 <see cref="ConsoleInputQueue.Enqueue" /> 投递。
+    ///     控制台命令输入队列；UI 将提交的行通过 <see cref="IConsoleInputSource.Enqueue" /> 投递。
     /// </summary>
-    public ConsoleInputQueue? ConsoleInput { get; private set; }
+    public IConsoleInputSource? ConsoleInput { get; private set; }
 
     /// <summary>
     ///     控制台输出发布通道；外部消费者（ConsoleBridge、UI）通过 Subscribe 订阅接收输出。
@@ -124,7 +124,7 @@ public partial class OrigoAutoHost : Node
         out DataSourceConverterRegistry converterRegistry,
         out IDataSourceIoGateway dataSourceIo,
         out PersistentBlackboard persistentBb,
-        out ConsoleInputQueue consoleInput,
+        out IConsoleInputSource consoleInput,
         out ConsoleOutputChannel consoleOutputChannel)
     {
         var sndManager = new GodotSndManager();

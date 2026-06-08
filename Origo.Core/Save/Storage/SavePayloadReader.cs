@@ -10,51 +10,17 @@ namespace Origo.Core.Save.Storage;
 internal static class SavePayloadReader
 {
     public static SaveGamePayload ReadFromCurrent(
-        IFileSystem fileSystem,
-        string saveRootPath,
+        SaveFileHandle handle,
         string saveId,
         string activeLevelId,
         ILogger? logger = null)
     {
-        return ReadFromCurrent(
-            fileSystem,
-            SaveStorageGatewayFactory.CreateIoGateway(fileSystem),
-            saveRootPath,
-            saveId,
-            activeLevelId,
-            logger);
-    }
+        ArgumentNullException.ThrowIfNull(handle);
+        var baseRel = handle.PathPolicy.GetCurrentDirectory();
 
-    public static SaveGamePayload ReadFromCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string saveId,
-        string activeLevelId,
-        ILogger? logger = null)
-    {
-        return ReadFromCurrent(fileSystem, dataSourceIo, saveRootPath, saveId, activeLevelId,
-            new DefaultSavePathPolicy(),
-            logger);
-    }
-
-    public static SaveGamePayload ReadFromCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string saveId,
-        string activeLevelId,
-        ISavePathPolicy pathPolicy,
-        ILogger? logger = null)
-    {
-        ValidateSaveRoot(fileSystem, saveRootPath);
-        ArgumentNullException.ThrowIfNull(dataSourceIo);
-        ArgumentNullException.ThrowIfNull(pathPolicy);
-        var baseRel = pathPolicy.GetCurrentDirectory();
-
-        var markerRel = pathPolicy.GetWriteInProgressMarker(baseRel);
-        var markerAbs = fileSystem.CombinePath(saveRootPath, markerRel);
-        if (fileSystem.Exists(markerAbs))
+        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(baseRel);
+        var markerAbs = handle.GetAbsolutePath(markerRel);
+        if (handle.FileSystem.Exists(markerAbs))
         {
             var ex = new InvalidOperationException(
                 $"Detected write-in-progress marker at '{markerRel}' in current/; interrupted save write must be handled before loading.");
@@ -65,19 +31,16 @@ internal static class SavePayloadReader
             throw ex;
         }
 
-        var progressRel = pathPolicy.GetProgressFile(baseRel);
-        var progressSmRel = pathPolicy.GetProgressStateMachinesFile(baseRel);
+        var progressRel = handle.PathPolicy.GetProgressFile(baseRel);
+        var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseRel);
         var (progressNode, progressStateMachinesNode, customMeta) = ReadProgressAndCustomMeta(
-            fileSystem,
-            dataSourceIo,
-            saveRootPath,
+            handle,
             baseRel,
-            pathPolicy,
             $"Missing required progress.json in current (path='{progressRel}').",
             $"Missing required progress_state_machines.json in current (path='{progressSmRel}').");
 
-        var levels = CreateLevelPayloadMap(fileSystem, dataSourceIo, saveRootPath, baseRel, activeLevelId, pathPolicy);
-        ReadRemainingLevelPayloads(fileSystem, dataSourceIo, saveRootPath, baseRel, levels, pathPolicy);
+        var levels = CreateLevelPayloadMap(handle, baseRel, activeLevelId);
+        ReadRemainingLevelPayloads(handle, baseRel, levels);
 
         return CreateSavePayload(
             saveId,
@@ -89,51 +52,22 @@ internal static class SavePayloadReader
     }
 
     public static SaveGamePayload ReadFromSnapshot(
-        IFileSystem fileSystem,
-        string saveRootPath,
+        SaveFileHandle handle,
         string saveId,
         string activeLevelId)
     {
-        return ReadFromSnapshot(fileSystem, SaveStorageGatewayFactory.CreateIoGateway(fileSystem), saveRootPath, saveId,
-            activeLevelId);
-    }
-
-    public static SaveGamePayload ReadFromSnapshot(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string saveId,
-        string activeLevelId)
-    {
-        return ReadFromSnapshot(fileSystem, dataSourceIo, saveRootPath, saveId, activeLevelId,
-            new DefaultSavePathPolicy());
-    }
-
-    public static SaveGamePayload ReadFromSnapshot(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string saveId,
-        string activeLevelId,
-        ISavePathPolicy pathPolicy)
-    {
-        ValidateSaveRoot(fileSystem, saveRootPath);
-        ArgumentNullException.ThrowIfNull(dataSourceIo);
-        ArgumentNullException.ThrowIfNull(pathPolicy);
-        var baseRel = pathPolicy.GetSaveDirectory(saveId);
-        var progressRel = pathPolicy.GetProgressFile(baseRel);
-        var progressSmRel = pathPolicy.GetProgressStateMachinesFile(baseRel);
+        ArgumentNullException.ThrowIfNull(handle);
+        var baseRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        var progressRel = handle.PathPolicy.GetProgressFile(baseRel);
+        var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseRel);
         var (progressNode, progressStateMachinesNode, customMeta) = ReadProgressAndCustomMeta(
-            fileSystem,
-            dataSourceIo,
-            saveRootPath,
+            handle,
             baseRel,
-            pathPolicy,
             $"Missing required progress.json in save '{saveId}' (path='{progressRel}').",
             $"Missing required progress_state_machines.json in save '{saveId}' (path='{progressSmRel}').");
 
-        var levels = CreateLevelPayloadMap(fileSystem, dataSourceIo, saveRootPath, baseRel, activeLevelId, pathPolicy);
-        ReadRemainingLevelPayloads(fileSystem, dataSourceIo, saveRootPath, baseRel, levels, pathPolicy);
+        var levels = CreateLevelPayloadMap(handle, baseRel, activeLevelId);
+        ReadRemainingLevelPayloads(handle, baseRel, levels);
 
         return CreateSavePayload(
             saveId,
@@ -144,15 +78,72 @@ internal static class SavePayloadReader
             levels);
     }
 
-    private static Dictionary<string, LevelPayload> CreateLevelPayloadMap(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string baseRel,
-        string activeLevelId,
-        ISavePathPolicy pathPolicy)
+    public static DataSourceNode? ReadProgressNodeFromSnapshot(
+        SaveFileHandle handle,
+        string saveId)
     {
-        var level = ReadLevelPayload(fileSystem, dataSourceIo, saveRootPath, baseRel, activeLevelId, pathPolicy);
+        ArgumentNullException.ThrowIfNull(handle);
+
+        var saveRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        var progressRel = handle.PathPolicy.GetProgressFile(saveRel);
+        var progressAbs = handle.GetAbsolutePath(progressRel);
+
+        return handle.FileSystem.Exists(progressAbs) ? handle.IoGateway.ReadTree(progressAbs) : null;
+    }
+
+    public static LevelPayload? TryReadLevelPayloadFromCurrent(
+        SaveFileHandle handle,
+        string levelId)
+    {
+        ArgumentNullException.ThrowIfNull(handle);
+
+        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+        ThrowIfWriteInProgressMarkerExists(handle, currentRel);
+        return TryReadLevelPayload(handle, currentRel, levelId);
+    }
+
+    public static LevelPayload? TryReadLevelPayloadFromSnapshot(
+        SaveFileHandle handle,
+        string saveId,
+        string levelId)
+    {
+        ArgumentNullException.ThrowIfNull(handle);
+
+        var saveRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        return TryReadLevelPayload(handle, saveRel, levelId);
+    }
+
+    internal static IReadOnlyDictionary<string, string>? TryReadStringMap(
+        SaveFileHandle handle,
+        string mapFileAbs)
+    {
+        if (!handle.FileSystem.Exists(mapFileAbs))
+            return null;
+
+        using var root = handle.IoGateway.ReadTree(mapFileAbs);
+        if (root.Kind != DataSourceNodeKind.Object)
+            throw new InvalidOperationException(
+                $"Expected map file '{mapFileAbs}' to decode as object node.");
+
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var key in root.Keys)
+        {
+            var valueNode = root[key];
+            if (valueNode.Kind is DataSourceNodeKind.Object or DataSourceNodeKind.Array)
+                throw new InvalidOperationException(
+                    $"Map file '{mapFileAbs}' key '{key}' must be scalar.");
+            result[key] = valueNode.AsString();
+        }
+
+        return result;
+    }
+
+    private static Dictionary<string, LevelPayload> CreateLevelPayloadMap(
+        SaveFileHandle handle,
+        string baseRel,
+        string activeLevelId)
+    {
+        var level = ReadLevelPayload(handle, baseRel, activeLevelId);
         return new Dictionary<string, LevelPayload> { [activeLevelId] = level };
     }
 
@@ -175,194 +166,40 @@ internal static class SavePayloadReader
         };
     }
 
-    private static void ValidateSaveRoot(IFileSystem fileSystem, string saveRootPath)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        SaveStorageGatewayFactory.ValidateRootPath(saveRootPath, nameof(saveRootPath),
-            "Save root path cannot be null or whitespace.");
-    }
-
     private static (DataSourceNode ProgressNode, DataSourceNode ProgressStateMachinesNode,
         IReadOnlyDictionary<string, string>?
         CustomMeta)
         ReadProgressAndCustomMeta(
-            IFileSystem fileSystem,
-            IDataSourceIoGateway dataSourceIo,
-            string saveRootPath,
+            SaveFileHandle handle,
             string baseDirectoryRel,
-            ISavePathPolicy pathPolicy,
             string missingProgressMessage,
             string missingProgressStateMachinesMessage)
     {
-        var progressRel = pathPolicy.GetProgressFile(baseDirectoryRel);
-        var progressAbs = fileSystem.CombinePath(saveRootPath, progressRel);
-        if (!fileSystem.Exists(progressAbs))
+        var progressRel = handle.PathPolicy.GetProgressFile(baseDirectoryRel);
+        var progressAbs = handle.GetAbsolutePath(progressRel);
+        if (!handle.FileSystem.Exists(progressAbs))
             throw new InvalidOperationException(missingProgressMessage);
-        var progressNode = dataSourceIo.ReadTree(progressAbs);
+        var progressNode = handle.IoGateway.ReadTree(progressAbs);
 
-        var progressSmRel = pathPolicy.GetProgressStateMachinesFile(baseDirectoryRel);
-        var progressSmAbs = fileSystem.CombinePath(saveRootPath, progressSmRel);
-        if (!fileSystem.Exists(progressSmAbs))
+        var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseDirectoryRel);
+        var progressSmAbs = handle.GetAbsolutePath(progressSmRel);
+        if (!handle.FileSystem.Exists(progressSmAbs))
             throw new InvalidOperationException(missingProgressStateMachinesMessage);
-        var progressStateMachinesNode = dataSourceIo.ReadTree(progressSmAbs);
+        var progressStateMachinesNode = handle.IoGateway.ReadTree(progressSmAbs);
 
-        var customMetaRel = pathPolicy.GetCustomMetaFile(baseDirectoryRel);
-        var customMetaAbs = fileSystem.CombinePath(saveRootPath, customMetaRel);
-        var customMeta = TryReadStringMap(fileSystem, dataSourceIo, customMetaAbs);
+        var customMetaRel = handle.PathPolicy.GetCustomMetaFile(baseDirectoryRel);
+        var customMetaAbs = handle.GetAbsolutePath(customMetaRel);
+        var customMeta = TryReadStringMap(handle, customMetaAbs);
 
         return (progressNode, progressStateMachinesNode, customMeta);
     }
 
-    internal static IReadOnlyDictionary<string, string>? TryReadStringMap(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string mapFileAbs)
-    {
-        if (!fileSystem.Exists(mapFileAbs))
-            return null;
-
-        using var root = dataSourceIo.ReadTree(mapFileAbs);
-        if (root.Kind != DataSourceNodeKind.Object)
-            throw new InvalidOperationException(
-                $"Expected map file '{mapFileAbs}' to decode as object node.");
-
-        var result = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var key in root.Keys)
-        {
-            var valueNode = root[key];
-            if (valueNode.Kind is DataSourceNodeKind.Object or DataSourceNodeKind.Array)
-                throw new InvalidOperationException(
-                    $"Map file '{mapFileAbs}' key '{key}' must be scalar.");
-            result[key] = valueNode.AsString();
-        }
-
-        return result;
-    }
-
-    public static DataSourceNode? ReadProgressNodeFromSnapshot(
-        IFileSystem fileSystem,
-        string saveRootPath,
-        string saveId)
-    {
-        return ReadProgressNodeFromSnapshot(fileSystem, SaveStorageGatewayFactory.CreateIoGateway(fileSystem),
-            saveRootPath,
-            saveId);
-    }
-
-    public static DataSourceNode? ReadProgressNodeFromSnapshot(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string saveId)
-    {
-        return ReadProgressNodeFromSnapshot(fileSystem, dataSourceIo, saveRootPath, saveId,
-            new DefaultSavePathPolicy());
-    }
-
-    public static DataSourceNode? ReadProgressNodeFromSnapshot(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string saveId,
-        ISavePathPolicy pathPolicy)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        ArgumentNullException.ThrowIfNull(dataSourceIo);
-        ArgumentNullException.ThrowIfNull(pathPolicy);
-        SaveStorageGatewayFactory.ValidateRootPath(saveRootPath, nameof(saveRootPath),
-            "Save root path cannot be null or whitespace.");
-
-        var saveRel = pathPolicy.GetSaveDirectory(saveId);
-        var progressRel = pathPolicy.GetProgressFile(saveRel);
-        var progressAbs = fileSystem.CombinePath(saveRootPath, progressRel);
-
-        return fileSystem.Exists(progressAbs) ? dataSourceIo.ReadTree(progressAbs) : null;
-    }
-
-    public static LevelPayload? TryReadLevelPayloadFromCurrent(
-        IFileSystem fileSystem,
-        string saveRootPath,
-        string levelId)
-    {
-        return TryReadLevelPayloadFromCurrent(fileSystem, SaveStorageGatewayFactory.CreateIoGateway(fileSystem),
-            saveRootPath,
-            levelId);
-    }
-
-    public static LevelPayload? TryReadLevelPayloadFromCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string levelId)
-    {
-        return TryReadLevelPayloadFromCurrent(fileSystem, dataSourceIo, saveRootPath, levelId,
-            new DefaultSavePathPolicy());
-    }
-
-    public static LevelPayload? TryReadLevelPayloadFromCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string levelId,
-        ISavePathPolicy pathPolicy)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        ArgumentNullException.ThrowIfNull(pathPolicy);
-        SaveStorageGatewayFactory.ValidateRootPath(saveRootPath, nameof(saveRootPath),
-            "Save root path cannot be null or whitespace.");
-
-        var currentRel = pathPolicy.GetCurrentDirectory();
-        ThrowIfWriteInProgressMarkerExists(fileSystem, saveRootPath, currentRel, pathPolicy);
-        return TryReadLevelPayload(fileSystem, dataSourceIo, saveRootPath, currentRel, levelId, pathPolicy);
-    }
-
-    public static LevelPayload? TryReadLevelPayloadFromSnapshot(
-        IFileSystem fileSystem,
-        string snapshotRootPath,
-        string saveId,
-        string levelId)
-    {
-        return TryReadLevelPayloadFromSnapshot(fileSystem, SaveStorageGatewayFactory.CreateIoGateway(fileSystem),
-            snapshotRootPath, saveId, levelId);
-    }
-
-    public static LevelPayload? TryReadLevelPayloadFromSnapshot(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string snapshotRootPath,
-        string saveId,
-        string levelId)
-    {
-        return TryReadLevelPayloadFromSnapshot(fileSystem, dataSourceIo, snapshotRootPath, saveId, levelId,
-            new DefaultSavePathPolicy());
-    }
-
-    public static LevelPayload? TryReadLevelPayloadFromSnapshot(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string snapshotRootPath,
-        string saveId,
-        string levelId,
-        ISavePathPolicy pathPolicy)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        ArgumentNullException.ThrowIfNull(pathPolicy);
-        SaveStorageGatewayFactory.ValidateRootPath(snapshotRootPath, nameof(snapshotRootPath),
-            "Snapshot root path cannot be null or whitespace.");
-
-        var saveRel = pathPolicy.GetSaveDirectory(saveId);
-        return TryReadLevelPayload(fileSystem, dataSourceIo, snapshotRootPath, saveRel, levelId, pathPolicy);
-    }
-
     private static LevelPayload? TryReadLevelPayload(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string rootPath,
+        SaveFileHandle handle,
         string baseDirectoryRel,
-        string levelId,
-        ISavePathPolicy pathPolicy)
+        string levelId)
     {
-        var files = LevelFiles.Create(fileSystem, rootPath, baseDirectoryRel, levelId, pathPolicy);
+        var files = LevelFiles.Create(handle, baseDirectoryRel, levelId);
         if (files.AllMissing)
             return null;
         ValidateRequiredLevelFiles(files);
@@ -370,9 +207,9 @@ internal static class SavePayloadReader
         return new LevelPayload
         {
             LevelId = levelId,
-            SndSceneNode = dataSourceIo.ReadTree(files.SndScene.AbsolutePath),
-            SessionNode = dataSourceIo.ReadTree(files.Session.AbsolutePath),
-            SessionStateMachinesNode = dataSourceIo.ReadTree(files.SessionStateMachines.AbsolutePath)
+            SndSceneNode = handle.IoGateway.ReadTree(files.SndScene.AbsolutePath),
+            SessionNode = handle.IoGateway.ReadTree(files.Session.AbsolutePath),
+            SessionStateMachinesNode = handle.IoGateway.ReadTree(files.SessionStateMachines.AbsolutePath)
         };
     }
 
@@ -390,54 +227,41 @@ internal static class SavePayloadReader
     }
 
     private static LevelPayload ReadLevelPayload(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
+        SaveFileHandle handle,
         string baseDirectoryRel,
-        string levelId,
-        ISavePathPolicy pathPolicy)
+        string levelId)
     {
-        return TryReadLevelPayload(fileSystem, dataSourceIo, saveRootPath, baseDirectoryRel, levelId, pathPolicy)
+        return TryReadLevelPayload(handle, baseDirectoryRel, levelId)
                ?? throw new InvalidOperationException($"Missing level '{levelId}'.");
     }
 
     private static void ThrowIfWriteInProgressMarkerExists(
-        IFileSystem fileSystem,
-        string saveRootPath,
-        string baseRel,
-        ISavePathPolicy pathPolicy)
+        SaveFileHandle handle,
+        string baseRel)
     {
-        var markerRel = pathPolicy.GetWriteInProgressMarker(baseRel);
-        var markerAbs = fileSystem.CombinePath(saveRootPath, markerRel);
-        if (fileSystem.Exists(markerAbs))
+        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(baseRel);
+        var markerAbs = handle.GetAbsolutePath(markerRel);
+        if (handle.FileSystem.Exists(markerAbs))
             throw new InvalidOperationException(
                 $"Detected write-in-progress marker at '{markerRel}' in current/; interrupted save write must be handled before loading.");
     }
 
-    /// <summary>
-    ///     枚举基目录下所有 level_* 子目录，读取尚未包含在 <paramref name="levels" /> 中的关卡 payload。
-    ///     用于在读取活跃关卡后补充读取后台会话关卡。
-    /// </summary>
     private static void ReadRemainingLevelPayloads(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
+        SaveFileHandle handle,
         string baseDirectoryRel,
-        Dictionary<string, LevelPayload> levels,
-        ISavePathPolicy pathPolicy)
+        Dictionary<string, LevelPayload> levels)
     {
-        var baseAbs = fileSystem.CombinePath(saveRootPath, baseDirectoryRel);
-        if (!fileSystem.DirectoryExists(baseAbs))
+        var baseAbs = handle.GetAbsolutePath(baseDirectoryRel);
+        if (!handle.FileSystem.DirectoryExists(baseAbs))
             return;
 
-        foreach (var dirAbs in fileSystem.EnumerateDirectories(baseAbs))
+        foreach (var dirAbs in handle.FileSystem.EnumerateDirectories(baseAbs))
         {
             var levelId = TryExtractLevelId(dirAbs);
             if (levelId is null || levels.ContainsKey(levelId))
                 continue;
 
-            var levelPayload = TryReadLevelPayload(fileSystem, dataSourceIo, saveRootPath, baseDirectoryRel, levelId,
-                pathPolicy);
+            var levelPayload = TryReadLevelPayload(handle, baseDirectoryRel, levelId);
             if (levelPayload is not null)
                 levels[levelId] = levelPayload;
         }
@@ -445,7 +269,7 @@ internal static class SavePayloadReader
 
     private static string? TryExtractLevelId(string directoryPath)
     {
-        var leaf = SavePathResolver.GetLeafDirectoryName(directoryPath);
+        var leaf = SaveFileHandle.GetLeafDirectoryName(directoryPath);
         if (!leaf.StartsWith(SavePathLayout.LevelDirectoryPrefix, StringComparison.Ordinal))
             return null;
 
@@ -462,26 +286,25 @@ internal static class SavePayloadReader
         internal bool AllMissing => !SndScene.Exists && !Session.Exists && !SessionStateMachines.Exists;
 
         internal static LevelFiles Create(
-            IFileSystem fileSystem,
-            string rootPath,
+            SaveFileHandle handle,
             string baseDirectoryRel,
-            string levelId,
-            ISavePathPolicy pathPolicy)
+            string levelId)
         {
+            var pathPolicy = handle.PathPolicy;
             var levelDirRel = pathPolicy.GetLevelDirectory(baseDirectoryRel, levelId);
             var sndSceneRel = pathPolicy.GetLevelSndSceneFile(levelDirRel);
             var sessionRel = pathPolicy.GetLevelSessionFile(levelDirRel);
             var sessionStateMachinesRel = pathPolicy.GetLevelSessionStateMachinesFile(levelDirRel);
 
-            var sndSceneAbs = fileSystem.CombinePath(rootPath, sndSceneRel);
-            var sessionAbs = fileSystem.CombinePath(rootPath, sessionRel);
-            var sessionStateMachinesAbs = fileSystem.CombinePath(rootPath, sessionStateMachinesRel);
+            var sndSceneAbs = handle.GetAbsolutePath(sndSceneRel);
+            var sessionAbs = handle.GetAbsolutePath(sessionRel);
+            var sessionStateMachinesAbs = handle.GetAbsolutePath(sessionStateMachinesRel);
 
             return new LevelFiles(
                 levelId,
-                CreateLevelFile(fileSystem, sndSceneRel, sndSceneAbs),
-                CreateLevelFile(fileSystem, sessionRel, sessionAbs),
-                CreateLevelFile(fileSystem, sessionStateMachinesRel, sessionStateMachinesAbs));
+                CreateLevelFile(handle.FileSystem, sndSceneRel, sndSceneAbs),
+                CreateLevelFile(handle.FileSystem, sessionRel, sessionAbs),
+                CreateLevelFile(handle.FileSystem, sessionStateMachinesRel, sessionStateMachinesAbs));
         }
 
         private static LevelFile CreateLevelFile(IFileSystem fileSystem, string relativePath, string absolutePath) =>

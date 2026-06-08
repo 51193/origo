@@ -12,7 +12,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
 ///     <see cref="ISessionManager" /> 的默认实现。
-///     构造时接收 <see cref="ProgressRuntime" /> 与 <see cref="SessionManagerParameters" />，
+///     构造时接收 <see cref="ProgressRuntime" /> 与 <see cref="IBlackboard" />，
 ///     内部构建 <see cref="SessionManagerRuntime" /> 作为本层唯一运行时容器。
 ///     全权管理所有 <see cref="ISessionRun" /> 的生命周期：创建、持有、序列化/反序列化、销毁。
 /// </summary>

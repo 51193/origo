@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 
 namespace Origo.Core.Save.Storage;
@@ -11,174 +10,93 @@ namespace Origo.Core.Save.Storage;
 internal static class SavePayloadWriter
 {
     public static void WriteProgressOnlyToCurrent(
-        IFileSystem fileSystem,
-        string saveRootPath,
+        SaveFileHandle handle,
         DataSourceNode progressNode,
         DataSourceNode progressStateMachinesNode,
         bool overwrite = true)
     {
-        WriteProgressOnlyToCurrent(fileSystem, SaveStorageGatewayFactory.CreateIoGateway(fileSystem),
-            saveRootPath,
-            progressNode, progressStateMachinesNode, overwrite);
-    }
-
-    public static void WriteProgressOnlyToCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        DataSourceNode progressNode,
-        DataSourceNode progressStateMachinesNode,
-        bool overwrite = true)
-    {
-        WriteProgressOnlyToCurrent(fileSystem, dataSourceIo, saveRootPath, progressNode, progressStateMachinesNode,
-            new DefaultSavePathPolicy(), overwrite);
-    }
-
-    public static void WriteProgressOnlyToCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        DataSourceNode progressNode,
-        DataSourceNode progressStateMachinesNode,
-        ISavePathPolicy pathPolicy,
-        bool overwrite = true)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        ArgumentNullException.ThrowIfNull(dataSourceIo);
-        ArgumentNullException.ThrowIfNull(pathPolicy);
-        SaveStorageGatewayFactory.ValidateRootPath(saveRootPath, nameof(saveRootPath),
+        ArgumentNullException.ThrowIfNull(handle);
+        SaveFileHandle.ValidateRootPath(handle.SaveRootPath, nameof(handle.SaveRootPath),
             "Save root path cannot be null or whitespace.");
         ValidateStrictProgressPayload(progressNode, progressStateMachinesNode);
 
-        var currentRel = pathPolicy.GetCurrentDirectory();
-        var currentAbs = fileSystem.CombinePath(saveRootPath, currentRel);
-        fileSystem.CreateDirectory(currentAbs);
+        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+        var currentAbs = handle.GetAbsolutePath(currentRel);
+        handle.FileSystem.CreateDirectory(currentAbs);
 
-        var progressRel = pathPolicy.GetProgressFile(currentRel);
-        var progressAbs = fileSystem.CombinePath(saveRootPath, progressRel);
-        SavePathResolver.EnsureParentDirectory(fileSystem, progressAbs);
-        dataSourceIo.WriteTree(progressAbs, progressNode, overwrite);
+        var progressRel = handle.PathPolicy.GetProgressFile(currentRel);
+        var progressAbs = handle.GetAbsolutePath(progressRel);
+        handle.EnsureParentDirectory(progressRel);
+        handle.IoGateway.WriteTree(progressAbs, progressNode, overwrite);
 
-        var progressSmRel = pathPolicy.GetProgressStateMachinesFile(currentRel);
-        var progressSmAbs = fileSystem.CombinePath(saveRootPath, progressSmRel);
-        SavePathResolver.EnsureParentDirectory(fileSystem, progressSmAbs);
-        dataSourceIo.WriteTree(progressSmAbs, progressStateMachinesNode, overwrite);
+        var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(currentRel);
+        var progressSmAbs = handle.GetAbsolutePath(progressSmRel);
+        handle.EnsureParentDirectory(progressSmRel);
+        handle.IoGateway.WriteTree(progressSmAbs, progressStateMachinesNode, overwrite);
     }
 
     public static void WriteToCurrent(
-        IFileSystem fileSystem,
-        string saveRootPath,
+        SaveFileHandle handle,
         SaveGamePayload payload)
     {
-        WriteToCurrent(fileSystem, SaveStorageGatewayFactory.CreateIoGateway(fileSystem), saveRootPath, payload,
-            new DefaultSavePathPolicy());
-    }
-
-    public static void WriteToCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        SaveGamePayload payload) =>
-        WriteToCurrent(fileSystem, dataSourceIo, saveRootPath, payload, new DefaultSavePathPolicy());
-
-    public static void WriteToCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        SaveGamePayload payload,
-        ISavePathPolicy pathPolicy)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        ArgumentNullException.ThrowIfNull(dataSourceIo);
+        ArgumentNullException.ThrowIfNull(handle);
         ArgumentNullException.ThrowIfNull(payload);
-        ArgumentNullException.ThrowIfNull(pathPolicy);
-        SaveStorageGatewayFactory.ValidateRootPath(saveRootPath, nameof(saveRootPath),
-            "Save root path cannot be null or whitespace.");
 
+        SaveFileHandle.ValidateRootPath(handle.SaveRootPath, nameof(handle.SaveRootPath),
+            "Save root path cannot be null or whitespace.");
         ValidateStrictProgressPayload(payload.ProgressNode, payload.ProgressStateMachinesNode);
 
-        var currentRel = pathPolicy.GetCurrentDirectory();
-        var currentAbs = fileSystem.CombinePath(saveRootPath, currentRel);
-        fileSystem.CreateDirectory(currentAbs);
+        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+        var currentAbs = handle.GetAbsolutePath(currentRel);
+        handle.FileSystem.CreateDirectory(currentAbs);
 
-        var markerRel = pathPolicy.GetWriteInProgressMarker(currentRel);
-        var markerAbs = fileSystem.CombinePath(saveRootPath, markerRel);
-        fileSystem.WriteAllText(markerAbs, "", true);
+        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
+        var markerAbs = handle.GetAbsolutePath(markerRel);
+        handle.FileSystem.WriteAllText(markerAbs, "", true);
 
         WriteProgressOnlyToCurrent(
-            fileSystem,
-            dataSourceIo,
-            saveRootPath,
+            handle,
             payload.ProgressNode,
-            payload.ProgressStateMachinesNode,
-            pathPolicy);
+            payload.ProgressStateMachinesNode);
 
-        WriteCustomMetaToCurrent(fileSystem, dataSourceIo, saveRootPath, currentRel, payload.CustomMeta, pathPolicy);
+        WriteCustomMetaToCurrent(handle, currentRel, payload.CustomMeta);
 
         if (!payload.Levels.TryGetValue(payload.ActiveLevelId, out _))
             throw new InvalidOperationException(
                 $"Active level '{payload.ActiveLevelId}' not found in SaveGamePayload.");
 
-        // Write all level payloads (foreground + background sessions).
         foreach (var level in payload.Levels.Values)
-            WriteLevelPayload(fileSystem, dataSourceIo, saveRootPath, currentRel, level, true, pathPolicy);
+            WriteLevelPayload(handle, currentRel, level, true);
 
-        fileSystem.Delete(markerAbs);
+        handle.FileSystem.Delete(markerAbs);
 
-        WritePayloadShaFile(fileSystem, saveRootPath, currentRel, payload, pathPolicy);
+        WritePayloadShaFile(handle, currentRel, payload);
     }
 
     public static void WriteLevelPayloadOnly(
-        IFileSystem fileSystem,
-        string saveRootPath,
+        SaveFileHandle handle,
         string baseDirectoryRel,
         LevelPayload level,
         bool overwrite = true)
     {
-        WriteLevelPayloadOnly(fileSystem, SaveStorageGatewayFactory.CreateIoGateway(fileSystem), saveRootPath,
-            baseDirectoryRel, level, overwrite);
+        WriteLevelPayload(handle, baseDirectoryRel, level, overwrite);
     }
-
-    public static void WriteLevelPayloadOnly(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string baseDirectoryRel,
-        LevelPayload level,
-        bool overwrite = true)
-    {
-        WriteLevelPayload(fileSystem, dataSourceIo, saveRootPath, baseDirectoryRel, level, overwrite,
-            new DefaultSavePathPolicy());
-    }
-
-    public static void WriteLevelPayloadOnly(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
-        string baseDirectoryRel,
-        LevelPayload level,
-        ISavePathPolicy pathPolicy,
-        bool overwrite = true) =>
-        WriteLevelPayload(fileSystem, dataSourceIo, saveRootPath, baseDirectoryRel, level, overwrite, pathPolicy);
 
     private static void WriteLevelPayload(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
+        SaveFileHandle handle,
         string baseDirectoryRel,
         LevelPayload level,
-        bool overwrite,
-        ISavePathPolicy pathPolicy)
+        bool overwrite)
     {
-        var levelDirRel = pathPolicy.GetLevelDirectory(baseDirectoryRel, level.LevelId);
-        var levelDirAbs = fileSystem.CombinePath(saveRootPath, levelDirRel);
-        fileSystem.CreateDirectory(levelDirAbs);
+        var levelDirRel = handle.PathPolicy.GetLevelDirectory(baseDirectoryRel, level.LevelId);
+        var levelDirAbs = handle.GetAbsolutePath(levelDirRel);
+        handle.FileSystem.CreateDirectory(levelDirAbs);
 
-        var sndSceneRel = pathPolicy.GetLevelSndSceneFile(levelDirRel);
-        var sessionRel = pathPolicy.GetLevelSessionFile(levelDirRel);
+        var sndSceneRel = handle.PathPolicy.GetLevelSndSceneFile(levelDirRel);
+        var sessionRel = handle.PathPolicy.GetLevelSessionFile(levelDirRel);
 
-        var sndSceneAbs = fileSystem.CombinePath(saveRootPath, sndSceneRel);
-        var sessionAbs = fileSystem.CombinePath(saveRootPath, sessionRel);
+        var sndSceneAbs = handle.GetAbsolutePath(sndSceneRel);
+        var sessionAbs = handle.GetAbsolutePath(sessionRel);
 
         if (level.SndSceneNode.IsNull)
             throw new InvalidOperationException(
@@ -186,16 +104,16 @@ internal static class SavePayloadWriter
         if (level.SessionNode.IsNull)
             throw new InvalidOperationException(
                 $"Level payload '{level.LevelId}' missing required SessionNode (strict mode).");
-        dataSourceIo.WriteTree(sndSceneAbs, level.SndSceneNode, overwrite);
-        dataSourceIo.WriteTree(sessionAbs, level.SessionNode, overwrite);
+        handle.IoGateway.WriteTree(sndSceneAbs, level.SndSceneNode, overwrite);
+        handle.IoGateway.WriteTree(sessionAbs, level.SessionNode, overwrite);
 
-        var sessionSmRel = pathPolicy.GetLevelSessionStateMachinesFile(levelDirRel);
-        var sessionSmAbs = fileSystem.CombinePath(saveRootPath, sessionSmRel);
-        SavePathResolver.EnsureParentDirectory(fileSystem, sessionSmAbs);
+        var sessionSmRel = handle.PathPolicy.GetLevelSessionStateMachinesFile(levelDirRel);
+        var sessionSmAbs = handle.GetAbsolutePath(sessionSmRel);
+        handle.EnsureParentDirectory(sessionSmRel);
         if (level.SessionStateMachinesNode.IsNull)
             throw new InvalidOperationException(
                 $"Level payload '{level.LevelId}' missing required SessionStateMachinesNode (strict mode).");
-        dataSourceIo.WriteTree(sessionSmAbs, level.SessionStateMachinesNode, overwrite);
+        handle.IoGateway.WriteTree(sessionSmAbs, level.SessionStateMachinesNode, overwrite);
     }
 
     private static void ValidateStrictProgressPayload(DataSourceNode progressNode,
@@ -210,24 +128,21 @@ internal static class SavePayloadWriter
     }
 
     private static void WriteCustomMetaToCurrent(
-        IFileSystem fileSystem,
-        IDataSourceIoGateway dataSourceIo,
-        string saveRootPath,
+        SaveFileHandle handle,
         string currentRel,
-        IReadOnlyDictionary<string, string>? customMeta,
-        ISavePathPolicy pathPolicy)
+        IReadOnlyDictionary<string, string>? customMeta)
     {
-        var customMetaRel = pathPolicy.GetCustomMetaFile(currentRel);
-        var customMetaAbs = fileSystem.CombinePath(saveRootPath, customMetaRel);
+        var customMetaRel = handle.PathPolicy.GetCustomMetaFile(currentRel);
+        var customMetaAbs = handle.GetAbsolutePath(customMetaRel);
         if (customMeta is not null && customMeta.Count > 0)
         {
             var mapNode = BuildStringMapNode(customMeta);
-            SavePathResolver.EnsureParentDirectory(fileSystem, customMetaAbs);
-            dataSourceIo.WriteTree(customMetaAbs, mapNode);
+            handle.EnsureParentDirectory(customMetaRel);
+            handle.IoGateway.WriteTree(customMetaAbs, mapNode);
         }
-        else if (fileSystem.Exists(customMetaAbs))
+        else if (handle.FileSystem.Exists(customMetaAbs))
         {
-            fileSystem.Delete(customMetaAbs);
+            handle.FileSystem.Delete(customMetaAbs);
         }
     }
 
@@ -277,16 +192,14 @@ internal static class SavePayloadWriter
     }
 
     private static void WritePayloadShaFile(
-        IFileSystem fileSystem,
-        string saveRootPath,
+        SaveFileHandle handle,
         string currentRel,
-        SaveGamePayload payload,
-        ISavePathPolicy pathPolicy)
+        SaveGamePayload payload)
     {
         var hash = ComputePayloadHash(payload);
-        var shaRel = pathPolicy.GetPayloadShaFile(currentRel);
-        var shaAbs = fileSystem.CombinePath(saveRootPath, shaRel);
-        SavePathResolver.EnsureParentDirectory(fileSystem, shaAbs);
-        fileSystem.WriteAllText(shaAbs, hash, true);
+        var shaRel = handle.PathPolicy.GetPayloadShaFile(currentRel);
+        var shaAbs = handle.GetAbsolutePath(shaRel);
+        handle.EnsureParentDirectory(shaRel);
+        handle.FileSystem.WriteAllText(shaAbs, hash, true);
     }
 }

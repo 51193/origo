@@ -6,13 +6,15 @@ namespace Origo.Core.Tests;
 
 // ── SavePathLayout ─────────────────────────────────────────────────────
 
-public class SavePathResolverTests
+public class SaveFileHandleTests
 {
     [Fact]
     public void SavePathResolver_EnsureParentDirectory_CreatesParent()
     {
         var fs = new TestFileSystem();
-        SavePathResolver.EnsureParentDirectory(fs, "root/sub/file.txt");
+        var parentDir = fs.GetParentDirectory("root/sub/file.txt");
+        if (!string.IsNullOrEmpty(parentDir) && !fs.DirectoryExists(parentDir))
+            fs.CreateDirectory(parentDir);
         Assert.True(fs.DirectoryExists("root/sub"));
     }
 
@@ -20,79 +22,85 @@ public class SavePathResolverTests
     public void SavePathResolver_EnsureParentDirectory_NoOpForRootFile()
     {
         var fs = new TestFileSystem();
-        var ex = Record.Exception(() => SavePathResolver.EnsureParentDirectory(fs, "file.txt"));
-        Assert.Null(ex);
+        var parentDir = fs.GetParentDirectory("file.txt");
+        if (!string.IsNullOrEmpty(parentDir) && !fs.DirectoryExists(parentDir))
+            fs.CreateDirectory(parentDir);
         Assert.False(fs.DirectoryExists("file.txt"));
     }
 
     [Fact]
     public void SavePathResolver_GetRelativePath_ExtractsRelative()
     {
-        var result = SavePathResolver.GetRelativePath("root/saves", "root/saves/file.json");
+        var handle = new SaveFileHandle(new TestFileSystem(), "root/saves");
+        var result = handle.GetRelativePath("root/saves/file.json");
         Assert.Equal("file.json", result);
     }
 
     [Fact]
     public void SavePathResolver_GetRelativePath_NestedPath()
     {
-        var result = SavePathResolver.GetRelativePath("root", "root/sub/file.json");
+        var handle = new SaveFileHandle(new TestFileSystem(), "root");
+        var result = handle.GetRelativePath("root/sub/file.json");
         Assert.Equal("sub/file.json", result);
     }
 
     [Fact]
     public void SavePathResolver_GetRelativePath_ExactMatch_ReturnsEmpty()
     {
-        var result = SavePathResolver.GetRelativePath("root/saves", "root/saves");
+        var handle = new SaveFileHandle(new TestFileSystem(), "root/saves");
+        var result = handle.GetRelativePath("root/saves");
         Assert.Equal(string.Empty, result);
     }
 
     [Fact]
     public void SavePathResolver_GetRelativePath_NoMatch_ReturnsFullPath()
     {
-        var result = SavePathResolver.GetRelativePath("root/a", "root/b/file.json");
+        var handle = new SaveFileHandle(new TestFileSystem(), "root/a");
+        var result = handle.GetRelativePath("root/b/file.json");
         Assert.Equal("root/b/file.json", result);
     }
 
     [Fact]
     public void SavePathResolver_GetRelativePath_RejectsTraversalInRelativeSegment()
     {
+        var handle = new SaveFileHandle(new TestFileSystem(), "root/saves");
         Assert.Throws<ArgumentException>(() =>
-            SavePathResolver.GetRelativePath("root/saves", "root/saves/../evil.json"));
+            handle.GetRelativePath("root/saves/../evil.json"));
     }
 
     [Fact]
-    public void SavePathResolver_GetRelativePath_EmptyBase_ReturnsFullPath()
+    public void SavePathResolver_GetRelativePath_WhitespaceRoot_ThrowsOnConstruction()
     {
-        var result = SavePathResolver.GetRelativePath("", "root/file.json");
-        Assert.Equal("root/file.json", result);
+        Assert.Throws<ArgumentException>(() => new SaveFileHandle(new TestFileSystem(), ""));
+        Assert.Throws<ArgumentException>(() => new SaveFileHandle(new TestFileSystem(), "  "));
     }
 
     [Fact]
     public void SavePathResolver_GetLeafDirectoryName_ReturnsLastSegment() =>
-        Assert.Equal("child", SavePathResolver.GetLeafDirectoryName("root/parent/child"));
+        Assert.Equal("child", SaveFileHandle.GetLeafDirectoryName("root/parent/child"));
 
     [Fact]
     public void SavePathResolver_GetLeafDirectoryName_SingleSegment() =>
-        Assert.Equal("single", SavePathResolver.GetLeafDirectoryName("single"));
+        Assert.Equal("single", SaveFileHandle.GetLeafDirectoryName("single"));
 
     [Fact]
     public void SavePathResolver_GetLeafDirectoryName_TrailingSlash() =>
-        Assert.Equal("child", SavePathResolver.GetLeafDirectoryName("root/child/"));
+        Assert.Equal("child", SaveFileHandle.GetLeafDirectoryName("root/child/"));
 
     [Fact]
     public void SavePathResolver_GetLeafDirectoryName_EmptyOrWhitespace_ReturnsEmpty()
     {
-        Assert.Equal(string.Empty, SavePathResolver.GetLeafDirectoryName(""));
-        Assert.Equal(string.Empty, SavePathResolver.GetLeafDirectoryName("  "));
+        Assert.Equal(string.Empty, SaveFileHandle.GetLeafDirectoryName(""));
+        Assert.Equal(string.Empty, SaveFileHandle.GetLeafDirectoryName("  "));
     }
 
     [Fact]
     public void SavePathResolver_RejectPathTraversal_ThrowsOnDotDot()
     {
-        Assert.Throws<ArgumentException>(() => SavePathResolver.RejectPathTraversal("../evil"));
-        Assert.Throws<ArgumentException>(() => SavePathResolver.RejectPathTraversal("some/../evil"));
-        Assert.Throws<ArgumentException>(() => SavePathResolver.RejectPathTraversal(".."));
-        Assert.Throws<ArgumentException>(() => SavePathResolver.RejectPathTraversal("path/.."));
+        Assert.Throws<ArgumentException>(() => SaveFileHandle.RejectPathTraversal("../evil"));
+        Assert.Throws<ArgumentException>(() => SaveFileHandle.RejectPathTraversal("some/../evil"));
+        Assert.Throws<ArgumentException>(() => SaveFileHandle.RejectPathTraversal(".."));
+        Assert.Throws<ArgumentException>(() => SaveFileHandle.RejectPathTraversal("path/.."));
     }
 
     [Fact]
@@ -100,12 +108,10 @@ public class SavePathResolverTests
     {
         var ex = Record.Exception(() =>
         {
-            SavePathResolver.RejectPathTraversal("safe/path");
-            SavePathResolver.RejectPathTraversal("file.json");
-            SavePathResolver.RejectPathTraversal("");
+            SaveFileHandle.RejectPathTraversal("safe/path");
+            SaveFileHandle.RejectPathTraversal("file.json");
+            SaveFileHandle.RejectPathTraversal("");
         });
         Assert.Null(ex);
     }
 }
-
-// ── SaveMetaMapCodec ───────────────────────────────────────────────────

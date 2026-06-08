@@ -35,7 +35,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
         DataSourceConverterRegistry converterRegistry,
         IDataSourceIoGateway dataSourceIo,
         IBlackboard? systemBlackboard = null,
-        ConsoleInputQueue? consoleInput = null,
+        IConsoleInputSource? consoleInput = null,
         IConsoleOutputChannel? consoleOutputChannel = null)
     {
         ArgumentNullException.ThrowIfNull(meta);
@@ -93,7 +93,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     ///     控制台输入队列，若启动时未注入则为 null。线程安全。
     ///     适配层通过 Enqueue 投递命令行，Core 通过 Console.ProcessPending() 消费。
     /// </summary>
-    public ConsoleInputQueue? ConsoleInput { get; }
+    public IConsoleInputSource? ConsoleInput { get; }
 
     /// <summary>
     ///     控制台输出发布通道，若启动时未注入则为 null。

@@ -166,66 +166,77 @@ public sealed class DataSourceNode : IDisposable
     public byte AsByte()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return byte.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public sbyte AsSByte()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return sbyte.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public short AsShort()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return short.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public ushort AsUShort()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return ushort.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public int AsInt()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return int.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public uint AsUInt()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return uint.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public long AsLong()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return long.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public ulong AsULong()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return ulong.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public float AsFloat()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return float.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public double AsDouble()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return double.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
     public decimal AsDecimal()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return decimal.Parse(_value!, CultureInfo.InvariantCulture);
     }
 
@@ -238,7 +249,15 @@ public sealed class DataSourceNode : IDisposable
     public bool AsBool()
     {
         EnsureExpanded();
+        ThrowIfValueMissing();
         return bool.Parse(_value!);
+    }
+
+    private void ThrowIfValueMissing()
+    {
+        if (_value is null)
+            throw new InvalidOperationException(
+                $"Cannot parse value of DataSourceNode (Kind={Kind}): node resolved to null.");
     }
 
     /// <summary>

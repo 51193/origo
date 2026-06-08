@@ -13,6 +13,7 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_WriteAndReadCurrent_RoundTrip()
     {
         var fs = new TestFileSystem();
+        var handle = new SaveFileHandle(fs, "user://origo_saves");
         var progressSm = """{"machines":[]}""";
         var sessionSm = """{"machines":[]}""";
         var payload = new SaveGamePayload
@@ -33,8 +34,8 @@ public class SaveStorageAndPayloadTests
             }
         };
 
-        SaveStorageFacade.WriteSavePayloadToCurrent(fs, "user://origo_saves", payload);
-        var loaded = SaveStorageFacade.ReadSavePayloadFromCurrent(fs, "user://origo_saves", "001", "default");
+        SaveStorageFacade.WriteSavePayloadToCurrent(handle, payload);
+        var loaded = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "001", "default");
 
         Assert.Equal("001", loaded.SaveId);
         Assert.Equal("default", loaded.ActiveLevelId);
@@ -55,43 +56,45 @@ public class SaveStorageAndPayloadTests
 
     [Fact]
     public void SaveStorageFacade_EnumerateSaveIds_NullFileSystem_Throws() =>
-        Assert.Throws<ArgumentNullException>(() => SaveStorageFacade.EnumerateSaveIds(null!, "root"));
+        Assert.Throws<ArgumentNullException>(() => SaveStorageFacade.EnumerateSaveIds(null!));
 
     [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_WhitespaceSaveRoot_Throws()
     {
         var fs = new TestFileSystem();
-        Assert.Throws<ArgumentException>(() => SaveStorageFacade.SnapshotCurrentToSave(fs, "  ", "b"));
+        Assert.Throws<ArgumentException>(() => new SaveFileHandle(fs, "  "));
     }
 
     [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_WhitespaceNewSaveId_Throws()
     {
         var fs = new TestFileSystem();
-        Assert.Throws<ArgumentException>(() => SaveStorageFacade.SnapshotCurrentToSave(fs, "root", "  "));
+        var handle = new SaveFileHandle(fs, "root");
+        Assert.Throws<ArgumentException>(() => SaveStorageFacade.SnapshotCurrentToSave(handle, "  "));
     }
 
     [Fact]
     public void SaveStorageFacade_ReadSavePayloadFromSnapshot_WhitespaceSaveRoot_Throws()
     {
         var fs = new TestFileSystem();
-        Assert.Throws<ArgumentException>(() =>
-            SaveStorageFacade.ReadSavePayloadFromSnapshot(fs, " ", "1", "level"));
+        Assert.Throws<ArgumentException>(() => new SaveFileHandle(fs, " "));
     }
 
     [Fact]
     public void SaveStorageFacade_ReadProgressNodeFromSnapshot_Missing_ReturnsNull()
     {
         var fs = new TestFileSystem();
-        Assert.Null(SaveStorageFacade.ReadProgressNodeFromSnapshot(fs, "root", "missing"));
+        var handle = new SaveFileHandle(fs, "root");
+        Assert.Null(SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "missing"));
     }
 
     [Fact]
     public void SaveStorageFacade_ReadProgressNodeFromSnapshot_WhenPresent_ReturnsContent()
     {
         var fs = new TestFileSystem();
+        var handle = new SaveFileHandle(fs, "root");
         fs.SeedFile("root/save_042/progress.json", """{"k":1}""");
-        using var node = SaveStorageFacade.ReadProgressNodeFromSnapshot(fs, "root", "042");
+        using var node = SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "042");
         var json = TestFactory.JsonFromNode(node!);
         Assert.Contains("\"k\"", json, StringComparison.Ordinal);
     }
@@ -100,8 +103,9 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_EnumerateSavesWithMetaData_SlotWithoutMetaMap_StillListed()
     {
         var fs = new TestFileSystem();
+        var handle = new SaveFileHandle(fs, "root");
         fs.CreateDirectory("root/save_007");
-        var entries = SaveStorageFacade.EnumerateSavesWithMetaData(fs, "root");
+        var entries = SaveStorageFacade.EnumerateSavesWithMetaData(handle);
         Assert.Single(entries);
         Assert.Equal("007", entries[0].SaveId);
         Assert.Empty(entries[0].MetaData);
@@ -112,6 +116,7 @@ public class SaveStorageAndPayloadTests
     {
         var fs = new TestFileSystem();
         var root = "root";
+        var handle = new SaveFileHandle(fs, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         var progressAbs = fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel));
         var sndSceneAbs = fs.CombinePath(root,
@@ -127,7 +132,7 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile(sessionSmAbs, """{"machines":[]}""");
 
         Assert.Throws<InvalidOperationException>(() =>
-            SaveStorageFacade.ReadSavePayloadFromCurrent(fs, root, "001", "default"));
+            SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "001", "default"));
     }
 
     [Fact]
@@ -135,6 +140,7 @@ public class SaveStorageAndPayloadTests
     {
         var fs = new TestFileSystem();
         var root = "root";
+        var handle = new SaveFileHandle(fs, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         var progressAbs = fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel));
         var progressSmAbs = fs.CombinePath(root, SavePathLayout.GetProgressStateMachinesFile(currentRel));
@@ -149,13 +155,14 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile(sessionAbs, "{}");
 
         Assert.Throws<InvalidOperationException>(() =>
-            SaveStorageFacade.ReadSavePayloadFromCurrent(fs, root, "001", "default"));
+            SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "001", "default"));
     }
 
     [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_AndEnumerateSaveIds_Works()
     {
         var fs = new TestFileSystem();
+        var handle = new SaveFileHandle(fs, "root");
         var payload = new SaveGamePayload
         {
             SaveId = "001",
@@ -173,10 +180,10 @@ public class SaveStorageAndPayloadTests
                 }
             }
         };
-        SaveStorageFacade.WriteSavePayloadToCurrent(fs, "root", payload);
+        SaveStorageFacade.WriteSavePayloadToCurrent(handle, payload);
 
-        SaveStorageFacade.SnapshotCurrentToSave(fs, "root", "001");
-        var ids = SaveStorageFacade.EnumerateSaveIds(fs, "root");
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
 
         Assert.Contains("001", ids);
     }
@@ -185,12 +192,13 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_SnapshotCurrentToSave_UsesTempDirectoryThenRename()
     {
         var fs = new TestFileSystem();
+        var handle = new SaveFileHandle(fs, "root");
         fs.SeedFile("root/current/progress.json", "{}");
         fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
         fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_default/session.json", """{"k":"v"}""");
 
-        SaveStorageFacade.SnapshotCurrentToSave(fs, "root", "001");
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
 
         // No leftover .tmp directory.
         Assert.False(fs.DirectoryExists("root/save_001.tmp"));
@@ -211,6 +219,7 @@ public class SaveStorageAndPayloadTests
     {
         var fs = new TestFileSystem();
         var root = "root";
+        var handle = new SaveFileHandle(fs, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel)), "{}");
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressStateMachinesFile(currentRel)),
@@ -219,7 +228,7 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetLevelSndSceneFile(levelDir)), "[]");
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            SaveStorageFacade.ReadSavePayloadFromCurrent(fs, root, "001", "default"));
+            SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "001", "default"));
         Assert.Contains("session.json", ex.Message, StringComparison.Ordinal);
     }
 
@@ -228,6 +237,7 @@ public class SaveStorageAndPayloadTests
     {
         var fs = new TestFileSystem();
         var root = "root";
+        var handle = new SaveFileHandle(fs, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel)), "{}");
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressStateMachinesFile(currentRel)),
@@ -243,7 +253,7 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetLevelSessionFile(bgDir)), "{}");
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            SaveStorageFacade.ReadSavePayloadFromCurrent(fs, root, "001", "default"));
+            SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "001", "default"));
         Assert.Contains("session_state_machines.json", ex.Message, StringComparison.Ordinal);
         Assert.Contains("bg", ex.Message, StringComparison.Ordinal);
     }
@@ -253,6 +263,7 @@ public class SaveStorageAndPayloadTests
     {
         var fs = new TestFileSystem();
         var root = "root";
+        var handle = new SaveFileHandle(fs, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel)), "{}");
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressStateMachinesFile(currentRel)),
@@ -265,7 +276,7 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetWriteInProgressMarker(currentRel)), string.Empty);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            SaveStorageFacade.ReadSavePayloadFromCurrent(fs, root, "001", "default"));
+            SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "001", "default"));
         Assert.Contains("write-in-progress marker", ex.Message, StringComparison.Ordinal);
     }
 
@@ -273,16 +284,18 @@ public class SaveStorageAndPayloadTests
     public void SavePayloadReader_TryReadLevelPayloadFromCurrent_AllFilesAbsent_ReturnsNull()
     {
         var fs = new TestFileSystem();
+        var handle = new SaveFileHandle(fs, "root");
         fs.SeedFile("root/current/progress.json", "{}");
         fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
 
-        Assert.Null(SavePayloadReader.TryReadLevelPayloadFromCurrent(fs, "root", "no_such_level"));
+        Assert.Null(SavePayloadReader.TryReadLevelPayloadFromCurrent(handle, "no_such_level"));
     }
 
     [Fact]
     public void SavePayloadReader_TryReadLevelPayloadFromCurrent_WhenWriteMarkerExists_Throws()
     {
         var fs = new TestFileSystem();
+        var handle = new SaveFileHandle(fs, "root");
         fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_default/session.json", "{}");
         fs.SeedFile("root/current/level_default/session_state_machines.json", """{"machines":[]}""");
@@ -290,7 +303,7 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile(fs.CombinePath("root", markerRel), string.Empty);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            SavePayloadReader.TryReadLevelPayloadFromCurrent(fs, "root", "default"));
+            SavePayloadReader.TryReadLevelPayloadFromCurrent(handle, "default"));
         Assert.Contains("write-in-progress marker", ex.Message, StringComparison.Ordinal);
     }
 
@@ -316,6 +329,7 @@ public class SaveStorageAndPayloadTests
     public void WriteSavePayloadToCurrentThenSnapshot_NullLogger_Throws()
     {
         var fs = new TestFileSystem();
+        var handle = new SaveFileHandle(fs, "root");
         var payload = new SaveGamePayload
         {
             SaveId = "1",
@@ -334,13 +348,14 @@ public class SaveStorageAndPayloadTests
             }
         };
         Assert.Throws<ArgumentNullException>(() =>
-            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "1", null!));
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "1", null!));
     }
 
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_WhenSnapshotFails_LogsError_LeavesMarkerAndUpdatedCurrent()
     {
         var fs = new FailOnCopyFileSystem("save_new.tmp");
+        var handle = new SaveFileHandle(fs, "root");
         var logger = new TestLogger();
         var progressSm = """{"machines":[]}""";
         var payload = new SaveGamePayload
@@ -362,7 +377,7 @@ public class SaveStorageAndPayloadTests
         };
 
         Assert.Throws<InvalidOperationException>(() =>
-            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(fs, "root", payload, "new", logger));
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "new", logger));
 
         Assert.NotNull(logger.Errors.Find(e => e.Contains("Snapshot failed", StringComparison.Ordinal)));
         Assert.True(fs.Exists("root/current/progress.json"));
@@ -376,11 +391,12 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure()
     {
         var fs = new FailOnCopyFileSystem("save_001.tmp");
+        var handle = new SaveFileHandle(fs, "root");
         fs.SeedFile("root/current/progress.json", "{}");
         fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
 
         Assert.ThrowsAny<Exception>(() =>
-            SaveStorageFacade.SnapshotCurrentToSave(fs, "root", "001"));
+            SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
 
         // The incomplete .tmp directory must be cleaned up.
         Assert.False(fs.DirectoryExists("root/save_001.tmp"));

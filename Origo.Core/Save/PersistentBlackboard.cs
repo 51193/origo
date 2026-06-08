@@ -132,7 +132,9 @@ public sealed class PersistentBlackboard : IBlackboard
 
     private void Persist()
     {
-        SavePathResolver.EnsureParentDirectory(_fileSystem, _filePath);
+        var parentDir = _fileSystem.GetParentDirectory(_filePath);
+        if (!string.IsNullOrEmpty(parentDir) && !_fileSystem.DirectoryExists(parentDir))
+            _fileSystem.CreateDirectory(parentDir);
 
         var data = _inner.SerializeAll();
         using var node = _registry.Write<IReadOnlyDictionary<string, TypedData>>(data);

@@ -189,18 +189,55 @@ public sealed class SessionRun : ISessionRun
 
     private void ResetAfterLoadFailure()
     {
+        Exception? firstError = null;
         try
         {
             _sessionScope.StateMachines.Clear();
+        }
+        catch (Exception ex)
+        {
+            firstError ??= ex;
+            _logger.Log(LogLevel.Warning, LogTag,
+                $"Failed to clear state machines during load-failure reset for level '{LevelId}': {ex.Message}");
+        }
+
+        try
+        {
             ReleaseAllEntitiesAndClear(false);
+        }
+        catch (Exception ex)
+        {
+            firstError ??= ex;
+            _logger.Log(LogLevel.Warning, LogTag,
+                $"Failed to release entities during load-failure reset for level '{LevelId}': {ex.Message}");
+        }
+
+        try
+        {
             _sceneHost.RemoveAllEntities();
+        }
+        catch (Exception ex)
+        {
+            firstError ??= ex;
+            _logger.Log(LogLevel.Warning, LogTag,
+                $"Failed to remove entities from scene during load-failure reset for level '{LevelId}': {ex.Message}");
+        }
+
+        try
+        {
             _sessionScope.Blackboard.Clear();
         }
         catch (Exception ex)
         {
+            firstError ??= ex;
             _logger.Log(LogLevel.Warning, LogTag,
-                $"Failed to reset session state after load failure for level '{LevelId}': {ex.Message}");
+                $"Failed to clear blackboard during load-failure reset for level '{LevelId}': {ex.Message}");
         }
+
+        if (firstError is not null)
+            throw new InvalidOperationException(
+                $"Session reset failed for level '{LevelId}' after load failure; session may be in an inconsistent state.",
+                firstError);
     }
 
     private void ReleaseAllEntitiesAndClear(bool fireQuitHooks)

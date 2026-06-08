@@ -855,7 +855,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("            var result = TypedDataObjectConverter.FromObject(kind, value!);");
         sb.AppendLine("            return new TypedData(kind, result.inlineBits, result.refValue);");
         sb.AppendLine("        }");
-        sb.AppendLine("        return new TypedData(255, 0, value);");
+        sb.AppendLine("        return new TypedData(TypedData.UnregisteredKind, 0, value);");
         sb.AppendLine("    }");
         sb.AppendLine();
 
@@ -886,7 +886,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             sb.AppendLine("        }");
         }
 
-        sb.AppendLine("        if (source._kind != 0 && source._kind != 255)");
+        sb.AppendLine("        if (source._kind != 0 && source._kind != TypedData.UnregisteredKind)");
         sb.AppendLine("        {");
         sb.AppendLine("            var obj = TypedDataObjectConverter.ToObject(source);");
         sb.AppendLine("            if (obj is T t1) { value = t1; return true; }");

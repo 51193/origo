@@ -52,7 +52,12 @@ public sealed partial class ProgressRun : IDisposable
             _progressRuntime,
             ProgressScope.Blackboard);
         _sessionLifecycle = new SessionLifecycle(this);
-        _saveCoordinator = new SaveCoordinator(this);
+        _saveCoordinator = new SaveCoordinator(
+            _sessionManager,
+            ProgressScope.Blackboard,
+            ProgressScope.StateMachines,
+            _progressRuntime,
+            progressParams.SaveId);
 
         _progressRuntime.Logger.Log(LogLevel.Info, "ProgressRun",
             $"Created ProgressRun (saveId: '{progressParams.SaveId}').");
