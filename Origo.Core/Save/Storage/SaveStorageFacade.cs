@@ -230,4 +230,47 @@ internal static class SaveStorageFacade
                 "Snapshot from current/ to temp directory failed during copy phase.", ex);
         }
     }
+
+    /// <summary>
+    ///     从指定 save_* 快照中复制一个子目录到 current/ 对应位置。
+    ///     若源子目录不存在则静默返回（无错误）。
+    /// </summary>
+    public static void CopyDirectoryFromSnapshot(
+        SaveFileHandle handle,
+        string saveId,
+        string relativeDirName,
+        ILogger? logger = null)
+    {
+        ArgumentNullException.ThrowIfNull(handle);
+        if (string.IsNullOrWhiteSpace(saveId))
+            throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
+        if (string.IsNullOrWhiteSpace(relativeDirName))
+            throw new ArgumentException("Relative directory name cannot be null or whitespace.", nameof(relativeDirName));
+
+        var saveRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        var srcRel = SavePathLayout.Combine(saveRel, relativeDirName);
+        var srcAbs = handle.GetAbsolutePath(srcRel);
+
+        if (!handle.FileSystem.DirectoryExists(srcAbs))
+            return;
+
+        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+        var destRel = SavePathLayout.Combine(currentRel, relativeDirName);
+        var destAbs = handle.GetAbsolutePath(destRel);
+
+        handle.FileSystem.CreateDirectory(destAbs);
+
+        foreach (var srcFileAbs in handle.FileSystem.EnumerateFiles(srcAbs, "*", true))
+        {
+            var relFromRoot = handle.GetRelativePath(srcFileAbs);
+            var prefix = srcRel + "/";
+            var relFromSrc = relFromRoot.StartsWith(prefix, StringComparison.Ordinal)
+                ? relFromRoot.Substring(prefix.Length)
+                : relFromRoot;
+            var destFileRel = $"{destRel}/{relFromSrc}";
+            var destFileAbs = handle.GetAbsolutePath(destFileRel);
+            handle.EnsureParentDirectory(destFileRel);
+            handle.FileSystem.Copy(srcFileAbs, destFileAbs, true);
+        }
+    }
 }

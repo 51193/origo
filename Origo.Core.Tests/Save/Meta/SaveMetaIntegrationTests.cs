@@ -270,6 +270,20 @@ public class SaveMetaNullAndSessionContextTests
             throw new NotSupportedException("TrackingContext does not support file access.");
 
         void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) { }
+
+        DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath) =>
+            throw new NotSupportedException("TrackingContext does not support archive file access.");
+
+        void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite) { }
+
+        bool ISndArchiveFileAccess.FileExists(string relativePath) => false;
+
+        T ISndArchiveFileAccess.ReadObject<T>(string relativePath) =>
+            throw new NotSupportedException("TrackingContext does not support archive file access.");
+
+        void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite) { }
+
+        void ISndArchiveFileAccess.DeleteFile(string relativePath) { }
     }
 
     private sealed class SessionSndContextSession : ISessionRun

@@ -96,4 +96,22 @@ internal sealed class SessionSndContext : ISndContext
 
     void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) =>
         ((ISndFileAccess)_global).WriteObject<T>(path, value, overwrite);
+
+    DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath) =>
+        ((ISndArchiveFileAccess)_global).ReadFile(relativePath);
+
+    void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite) =>
+        ((ISndArchiveFileAccess)_global).WriteFile(relativePath, node, overwrite);
+
+    bool ISndArchiveFileAccess.FileExists(string relativePath) =>
+        ((ISndArchiveFileAccess)_global).FileExists(relativePath);
+
+    T ISndArchiveFileAccess.ReadObject<T>(string relativePath) =>
+        ((ISndArchiveFileAccess)_global).ReadObject<T>(relativePath);
+
+    void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite) =>
+        ((ISndArchiveFileAccess)_global).WriteObject<T>(relativePath, value, overwrite);
+
+    void ISndArchiveFileAccess.DeleteFile(string relativePath) =>
+        ((ISndArchiveFileAccess)_global).DeleteFile(relativePath);
 }

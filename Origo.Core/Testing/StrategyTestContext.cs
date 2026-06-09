@@ -181,6 +181,42 @@ internal sealed class StrategyTestContext : ISndContext
         var node = _converterRegistry.Write(value);
         _dataSourceIo.WriteTree(path, node, overwrite);
     }
+
+    DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath)
+        => _dataSourceIo.ReadTree(ResolveExtraTestPath(relativePath));
+
+    void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite)
+        => _dataSourceIo.WriteTree(ResolveExtraTestPath(relativePath), node, overwrite);
+
+    bool ISndArchiveFileAccess.FileExists(string relativePath)
+        => _dataSourceIo.Exists(ResolveExtraTestPath(relativePath));
+
+    T ISndArchiveFileAccess.ReadObject<T>(string relativePath)
+    {
+        var node = _dataSourceIo.ReadTree(ResolveExtraTestPath(relativePath));
+        return _converterRegistry.Read<T>(node);
+    }
+
+    void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite)
+    {
+        var node = _converterRegistry.Write(value);
+        _dataSourceIo.WriteTree(ResolveExtraTestPath(relativePath), node, overwrite);
+    }
+
+    void ISndArchiveFileAccess.DeleteFile(string relativePath)
+    {
+        var resolved = ResolveExtraTestPath(relativePath);
+        if (!_dataSourceIo.Exists(resolved))
+            throw new InvalidOperationException($"File not found in archive: '{relativePath}'.");
+        _fileSystem.Delete(resolved);
+    }
+
+    private static string ResolveExtraTestPath(string relativePath)
+    {
+        if (relativePath.Contains(".."))
+            throw new ArgumentException("Path traversal '..' is not allowed.", nameof(relativePath));
+        return $"extra/{relativePath}";
+    }
 }
 
 internal sealed class MinimalTestEntity : ISndEntity

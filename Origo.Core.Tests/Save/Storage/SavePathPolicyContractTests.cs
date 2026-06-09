@@ -420,6 +420,8 @@ public class SavePathPolicyContractTests
         public string GetWriteInProgressMarker(string baseDirectory) => $"{baseDirectory}/{_prefix}.write_in_progress";
 
         public string GetPayloadShaFile(string baseDirectory) => $"{baseDirectory}/{_prefix}.payload.sha";
+
+        public string GetExtraDirectory(string baseDirectory) => $"{baseDirectory}/{_prefix}extra";
     }
 
     // ── Test strategies ────────────────────────────────────────────────

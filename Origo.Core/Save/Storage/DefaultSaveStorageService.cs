@@ -112,4 +112,10 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         if (_handle.FileSystem.DirectoryExists(currentAbs))
             _handle.FileSystem.DeleteDirectory(currentAbs);
     }
+
+    public void RestoreExtraFilesFromSnapshot(string saveId)
+    {
+        SaveStorageFacade.CopyDirectoryFromSnapshot(
+            _handle, saveId, SavePathLayout.ExtraDirectoryName);
+    }
 }

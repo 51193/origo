@@ -84,4 +84,12 @@ public interface ISaveStorageService
     ///     实现应是幂等的：若目录不存在则不抛异常。
     /// </summary>
     void DeleteCurrentDirectory();
+
+    /// <summary>
+    ///     从指定 save_* 快照中回拷 extra/ 子目录到 current/。
+    ///     用于 load 时恢复策略通过 ISndArchiveFileAccess 写入的文件。
+    ///     此操作与 <see cref="WriteSavePayloadToCurrent" /> 互为对称。
+    ///     若快照中不存在 extra/ 目录则静默跳过。
+    /// </summary>
+    void RestoreExtraFilesFromSnapshot(string saveId);
 }

@@ -22,6 +22,9 @@ internal static class SavePathLayout
     /// <summary>关卡目录名称前缀常量。</summary>
     public const string LevelDirectoryPrefix = "level_";
 
+    /// <summary>策略/二次开发者自定义数据子目录名称常量。</summary>
+    public const string ExtraDirectoryName = "extra";
+
     /// <summary>
     ///     获取活动存档目录的相对路径（即 <c>current</c>）。
     /// </summary>
@@ -137,6 +140,17 @@ internal static class SavePathLayout
             throw new ArgumentException("Base directory cannot be null or whitespace.", nameof(baseDirectory));
 
         return Combine(baseDirectory, PayloadShaFileName);
+    }
+
+    /// <summary>
+    ///     获取策略/二次开发者自定义数据子目录的相对路径。
+    /// </summary>
+    public static string GetExtraDirectory(string baseDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(baseDirectory))
+            throw new ArgumentException("Base directory cannot be null or whitespace.", nameof(baseDirectory));
+
+        return Combine(baseDirectory, ExtraDirectoryName);
     }
 
     internal static string Combine(string left, string right)

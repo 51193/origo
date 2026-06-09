@@ -30,4 +30,6 @@ internal sealed class DefaultSavePathPolicy : ISavePathPolicy
         SavePathLayout.GetWriteInProgressMarker(baseDirectory);
 
     public string GetPayloadShaFile(string baseDirectory) => SavePathLayout.GetPayloadShaFile(baseDirectory);
+
+    public string GetExtraDirectory(string baseDirectory) => SavePathLayout.GetExtraDirectory(baseDirectory);
 }

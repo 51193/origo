@@ -107,4 +107,21 @@ internal sealed class NullSndContext : ISndContext
 
     void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) =>
         throw new InvalidOperationException("NullSndContext does not support file access.");
+
+    DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath) =>
+        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+
+    void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite) =>
+        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+
+    bool ISndArchiveFileAccess.FileExists(string relativePath) => false;
+
+    T ISndArchiveFileAccess.ReadObject<T>(string relativePath) =>
+        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+
+    void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite) =>
+        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+
+    void ISndArchiveFileAccess.DeleteFile(string relativePath) =>
+        throw new InvalidOperationException("NullSndContext does not support archive file access.");
 }

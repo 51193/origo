@@ -47,6 +47,7 @@ public class CoreArchitectureGuardrailTests
         Assert.Contains(typeof(ISndLifecycleOperations), interfaces);
         Assert.Contains(typeof(ISndEntityOperations), interfaces);
         Assert.Contains(typeof(ISndFileAccess), interfaces);
+        Assert.Contains(typeof(ISndArchiveFileAccess), interfaces);
     }
 
     [Fact]
@@ -134,6 +135,15 @@ public class CoreArchitectureGuardrailTests
         Assert.True(fileAccess.FileExists("test.json"));
         var readNode = fileAccess.ReadFile("test.json");
         Assert.Equal("hello", readNode["test_key"].AsString());
+
+        ISndArchiveFileAccess archiveFileAccess = ctx;
+        Assert.False(archiveFileAccess.FileExists("nonexistent.json"));
+        var archiveNode = DataSourceNode.CreateObject();
+        archiveNode.Add("archive_key", DataSourceNode.CreateString("world"));
+        archiveFileAccess.WriteFile("archive_test.json", archiveNode);
+        Assert.True(archiveFileAccess.FileExists("archive_test.json"));
+        var archiveReadNode = archiveFileAccess.ReadFile("archive_test.json");
+        Assert.Equal("world", archiveReadNode["archive_key"].AsString());
     }
 
     [Fact]

@@ -67,6 +67,8 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     /// </summary>
     public void Bootstrap()
     {
+        _parameters.ConfigureConverters?.Invoke(Runtime.SndWorld.ConverterRegistry);
+
         if (_parameters.AutoDiscoverStrategies)
             OrigoAutoInitializer.DiscoverAndRegisterStrategies(
                 Runtime.SndWorld, Runtime.Logger, _parameters.DiscoverySkipPrefixes);
@@ -331,6 +333,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             var payload = StorageService.ReadSavePayloadFromSnapshot(saveId, activeLevelId);
             StorageService.DeleteCurrentDirectory();
             StorageService.WriteSavePayloadToCurrent(payload);
+            StorageService.RestoreExtraFilesFromSnapshot(saveId);
 
             var progressRun = CreateProgressRun(saveId);
             SetProgressRun(progressRun);
@@ -351,6 +354,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
 
             StorageService.DeleteCurrentDirectory();
             StorageService.WriteSavePayloadToCurrent(payload);
+            StorageService.RestoreExtraFilesFromSnapshot(SndDefaults.InitialSaveId);
 
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
             SetProgressRun(progressRun);
@@ -432,5 +436,62 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     {
         var node = Runtime.SndWorld.ConverterRegistry.Write(value);
         Runtime.SndWorld.DataSourceIo.WriteTree(path, node, overwrite);
+    }
+
+    // ── ISndArchiveFileAccess ──────────────────────────────────────────
+
+    private static void RejectPathTraversal(string path)
+    {
+        if (path.Contains(".."))
+            throw new ArgumentException("Path traversal '..' is not allowed.", nameof(path));
+    }
+
+    private string ResolveExtraPath(string relativePath)
+    {
+        var currentRel = SavePathPolicy.GetCurrentDirectory();
+        var extraRel = SavePathPolicy.GetExtraDirectory(currentRel);
+        var fileRel = SavePathLayout.Combine(extraRel, relativePath);
+        return FileSystem.CombinePath(SaveRootPath, fileRel);
+    }
+
+    DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath)
+    {
+        RejectPathTraversal(relativePath);
+        return Runtime.SndWorld.DataSourceIo.ReadTree(ResolveExtraPath(relativePath));
+    }
+
+    void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite)
+    {
+        RejectPathTraversal(relativePath);
+        Runtime.SndWorld.DataSourceIo.WriteTree(ResolveExtraPath(relativePath), node, overwrite);
+    }
+
+    bool ISndArchiveFileAccess.FileExists(string relativePath)
+    {
+        RejectPathTraversal(relativePath);
+        return Runtime.SndWorld.DataSourceIo.Exists(ResolveExtraPath(relativePath));
+    }
+
+    T ISndArchiveFileAccess.ReadObject<T>(string relativePath)
+    {
+        RejectPathTraversal(relativePath);
+        var node = Runtime.SndWorld.DataSourceIo.ReadTree(ResolveExtraPath(relativePath));
+        return Runtime.SndWorld.ConverterRegistry.Read<T>(node);
+    }
+
+    void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite)
+    {
+        RejectPathTraversal(relativePath);
+        var node = Runtime.SndWorld.ConverterRegistry.Write(value);
+        Runtime.SndWorld.DataSourceIo.WriteTree(ResolveExtraPath(relativePath), node, overwrite);
+    }
+
+    void ISndArchiveFileAccess.DeleteFile(string relativePath)
+    {
+        RejectPathTraversal(relativePath);
+        var absPath = ResolveExtraPath(relativePath);
+        if (!FileSystem.Exists(absPath))
+            throw new InvalidOperationException($"File not found in archive: '{relativePath}'.");
+        FileSystem.Delete(absPath);
     }
 }

@@ -506,5 +506,7 @@ public class SaveStorageContractTests
         public string GetWriteInProgressMarker(string baseDirectory) => $"{baseDirectory}/.write_in_progress";
 
         public string GetPayloadShaFile(string baseDirectory) => $"{baseDirectory}/payload.sha";
+
+        public string GetExtraDirectory(string baseDirectory) => $"{baseDirectory}/extra";
     }
 }

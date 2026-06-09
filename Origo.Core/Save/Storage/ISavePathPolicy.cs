@@ -38,4 +38,7 @@ public interface ISavePathPolicy
 
     /// <summary>获取 Payload SHA 摘要文件的相对路径。</summary>
     string GetPayloadShaFile(string baseDirectory);
+
+    /// <summary>获取策略/二次开发者自定义数据子目录的相对路径（如 current/extra）。</summary>
+    string GetExtraDirectory(string baseDirectory);
 }

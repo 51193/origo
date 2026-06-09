@@ -53,6 +53,9 @@ public class AdapterArchitectureGuardrailTests
 
         ISndFileAccess fileAccess = ctx;
         Assert.False(fileAccess.FileExists("nonexistent.json"));
+
+        ISndArchiveFileAccess archiveFileAccess = ctx;
+        Assert.False(archiveFileAccess.FileExists("nonexistent.json"));
     }
 
     [Fact]

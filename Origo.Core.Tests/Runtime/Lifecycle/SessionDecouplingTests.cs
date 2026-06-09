@@ -337,6 +337,8 @@ public class SessionDecouplingTests
         public string GetWriteInProgressMarker(string baseDirectory) => $"{baseDirectory}/{_prefix}.write_in_progress";
 
         public string GetPayloadShaFile(string baseDirectory) => $"{baseDirectory}/{_prefix}.payload.sha";
+
+        public string GetExtraDirectory(string baseDirectory) => $"{baseDirectory}/{_prefix}extra";
     }
 
     // ── Tracking wrapper for ISaveStorageService ──
@@ -404,5 +406,7 @@ public class SessionDecouplingTests
         public void SnapshotCurrentToSave(string newSaveId) => _inner.SnapshotCurrentToSave(newSaveId);
 
         public void DeleteCurrentDirectory() => _inner.DeleteCurrentDirectory();
+
+        public void RestoreExtraFilesFromSnapshot(string saveId) { }
     }
 }

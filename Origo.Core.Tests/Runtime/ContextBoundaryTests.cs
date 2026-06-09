@@ -184,6 +184,30 @@ public class ContextBoundaryTests
         }
 
         void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) => CallCount++;
+
+        DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath)
+        {
+            CallCount++;
+            throw new InvalidOperationException("FakeSndContext does not support archive file access.");
+        }
+
+        void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite) => CallCount++;
+
+        bool ISndArchiveFileAccess.FileExists(string relativePath)
+        {
+            CallCount++;
+            return false;
+        }
+
+        T ISndArchiveFileAccess.ReadObject<T>(string relativePath)
+        {
+            CallCount++;
+            throw new InvalidOperationException("FakeSndContext does not support archive file access.");
+        }
+
+        void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite) => CallCount++;
+
+        void ISndArchiveFileAccess.DeleteFile(string relativePath) => CallCount++;
     }
 
     private sealed class FakeSessionRun(string levelId) : ISessionRun

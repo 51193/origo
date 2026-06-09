@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime;
 using Origo.Core.Save.Storage;
 
@@ -47,6 +48,13 @@ public sealed class SndContextParameters
 
     /// <summary>SND 模板映射文件路径。若设置则 Bootstrap 时自动加载。</summary>
     public string? SndTemplateMapPath { get; init; }
+
+    /// <summary>
+    ///     Bootstrap 前调用的 Converter 注册回调。
+    ///     二次开发者可在此注册自定义 <see cref="DataSourceConverter{T}" />，
+    ///     确保自定义类型在策略自动发现、模板加载和入口存档加载之前可用。
+    /// </summary>
+    public Action<DataSourceConverterRegistry>? ConfigureConverters { get; init; }
 
     private static string RequireText(string value, string paramName, string message)
     {

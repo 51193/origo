@@ -22,7 +22,8 @@ public partial class OrigoDefaultEntry
             AutoDiscoverStrategies = AutoDiscoverStrategies,
             DiscoverySkipPrefixes = AutoDiscoverStrategies ? GodotSkipPrefixes : null,
             SceneAliasMapPath = SceneAliasMapPath,
-            SndTemplateMapPath = SndTemplateMapPath
+            SndTemplateMapPath = SndTemplateMapPath,
+            ConfigureConverters = RegisterCustomConverters,
         });
 
         SndManager.BindContext(_sndContext);

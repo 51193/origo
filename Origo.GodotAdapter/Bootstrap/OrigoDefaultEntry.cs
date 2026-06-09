@@ -1,4 +1,5 @@
 using Godot;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 
 namespace Origo.GodotAdapter.Bootstrap;
@@ -30,6 +31,15 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     ///     注册展示用 <c>meta.map</c> 贡献者。
     /// </summary>
     protected virtual void ConfigureSaveMetadataContributors(ISndContext context)
+    {
+    }
+
+    /// <summary>
+    ///     自定义类型转换器注册钩子。在 <see cref="SndContext.Bootstrap" /> 之前调用。
+    ///     Override 此方法以注册自定义 <see cref="DataSourceConverter{T}" />，
+    ///     确保自定义类型在策略自动发现、模板加载和入口存档加载之前可用。
+    /// </summary>
+    protected virtual void RegisterCustomConverters(DataSourceConverterRegistry registry)
     {
     }
 }
