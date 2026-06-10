@@ -19,10 +19,31 @@ public static class NoiseMapGenerator
     public static float[] GenerateSimplexWorleyBlendMap(int size, int seed = DefaultSeed,
         float frequency = DefaultFrequency)
     {
+        return GenerateSimplexWorleyBlendMap(size, seed, frequency, 1, 2f, 0.5f, 1f);
+    }
+
+    /// <summary>
+    ///     生成 Simplex + Worley(70/30) 混合噪声图（扩展参数版本）。
+    /// </summary>
+    /// <param name="size">网格边长</param>
+    /// <param name="seed">随机种子</param>
+    /// <param name="frequency">噪声频率</param>
+    /// <param name="octaves">分形叠加层数</param>
+    /// <param name="lacunarity">分形间隙系数</param>
+    /// <param name="gain">分形增益系数</param>
+    /// <param name="worleyFrequencyMultiplier">Worley 噪声频率倍率（相对 simplex frequency）</param>
+    public static float[] GenerateSimplexWorleyBlendMap(int size, int seed, float frequency,
+        int octaves, float lacunarity, float gain, float worleyFrequencyMultiplier)
+    {
         if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size), size, "Size must be greater than 0.");
 
         var simplex = CreateSimplexNoise(seed, frequency);
-        var worley = CreateWorleyNoise(seed, frequency);
+        simplex.SetFractalType(FastNoiseLite.FractalType.FBm);
+        simplex.SetFractalOctaves(octaves);
+        simplex.SetFractalLacunarity(lacunarity);
+        simplex.SetFractalGain(gain);
+
+        var worley = CreateWorleyNoise(seed, frequency * worleyFrequencyMultiplier);
         var map = new float[size * size];
 
         for (var y = 0; y < size; y++)

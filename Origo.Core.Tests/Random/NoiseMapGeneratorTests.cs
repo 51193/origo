@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Origo.Core.Random;
 using Xunit;
 
@@ -39,5 +40,40 @@ public class NoiseMapGeneratorTests
             NoiseMapGenerator.GenerateSimplexWorleyBlendMap(size));
 
         Assert.Equal("size", exception.ParamName);
+    }
+
+    [Fact]
+    public void ExtendedOverload_ProducesValidRange()
+    {
+        const int size = 32;
+        var map = NoiseMapGenerator.GenerateSimplexWorleyBlendMap(
+            size, 42, 0.05f, 5, 2.0f, 0.5f, 2f);
+
+        Assert.Equal(size * size, map.Length);
+        Assert.All(map, value => Assert.InRange(value, 0f, 1f));
+    }
+
+    [Fact]
+    public void ExtendedOverload_WithDifferentOctaves_ProducesDifferentResult()
+    {
+        const int size = 16;
+        var map1 = NoiseMapGenerator.GenerateSimplexWorleyBlendMap(
+            size, 42, 0.05f, 1, 2.0f, 0.5f, 1f);
+        var map2 = NoiseMapGenerator.GenerateSimplexWorleyBlendMap(
+            size, 42, 0.05f, 5, 2.0f, 0.5f, 1f);
+
+        Assert.True(map1.Zip(map2, (a, b) => Math.Abs(a - b)).Sum() > 0.01f);
+    }
+
+    [Fact]
+    public void ExtendedOverload_SameParams_SameResult()
+    {
+        const int size = 16;
+        var map1 = NoiseMapGenerator.GenerateSimplexWorleyBlendMap(
+            size, 99, 0.03f, 3, 2.5f, 0.7f, 1.5f);
+        var map2 = NoiseMapGenerator.GenerateSimplexWorleyBlendMap(
+            size, 99, 0.03f, 3, 2.5f, 0.7f, 1.5f);
+
+        Assert.True(map1.SequenceEqual(map2));
     }
 }
