@@ -117,24 +117,8 @@ public sealed partial class ProgressRun : IDisposable
     internal ISessionRun RequireForegroundSession() => ForegroundSession ??
         throw new InvalidOperationException("No active foreground session.");
 
-    internal List<string> BuildSessionTopology()
-    {
-        var fgSession = RequireForegroundSession();
-        var bgSessions = _sessionManager.GetBackgroundSessions();
-
-        var topologyItems = new List<string>
-        {
-            SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, fgSession.LevelId, false)
-        };
-
-        topologyItems.AddRange(bgSessions.Select(kvp =>
-        {
-            var syncProcess = _sessionManager.GetSyncProcess(kvp.Key);
-            return SessionTopologyCodec.Serialize(kvp.Key, kvp.Value.LevelId, syncProcess);
-        }));
-
-        return topologyItems;
-    }
+    internal List<string> BuildSessionTopology() =>
+        _saveCoordinator.BuildSessionTopology(RequireForegroundSession());
 
     internal void EnsureActiveLevelInvariant()
     {

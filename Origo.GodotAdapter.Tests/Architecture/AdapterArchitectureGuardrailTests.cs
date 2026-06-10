@@ -279,3 +279,15 @@ public class AdapterArchitectureGuardrailTests
         private static string Normalize(string p) => p.Replace('\\', '/').Trim();
     }
 }
+
+public class CommandHandlerBaseVisibilityTests
+{
+    [Fact]
+    public void CommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt()
+    {
+        var type = typeof(Origo.GodotAdapter.Console.CommandHandlerBase);
+        Assert.True(type.IsPublic || type.IsNestedPublic,
+            "CommandHandlerBase must be public so external projects " +
+            "(such as origo.demo) can derive custom adapter console command handlers.");
+    }
+}

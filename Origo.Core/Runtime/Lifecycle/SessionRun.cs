@@ -157,9 +157,20 @@ public sealed class SessionRun : ISessionRun
 
             _sessionScope.StateMachines.FlushAllAfterLoad();
         }
-        catch
+        catch (Exception ex)
         {
-            ResetAfterLoadFailure();
+            try
+            {
+                ResetAfterLoadFailure();
+            }
+            catch (Exception resetEx)
+            {
+                throw new AggregateException(
+                    $"Session load failed for level '{LevelId}', and cleanup also failed. " +
+                    "See inner exceptions for details.",
+                    ex, resetEx);
+            }
+
             throw;
         }
     }

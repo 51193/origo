@@ -103,7 +103,7 @@ internal sealed class SaveCoordinator
         _sessionManager.ForegroundSession
         ?? throw new InvalidOperationException("No active foreground session.");
 
-    private List<string> BuildSessionTopology(ISessionRun fgSession)
+    internal List<string> BuildSessionTopology(ISessionRun fgSession)
     {
         var bgSessions = _sessionManager.GetBackgroundSessions();
 

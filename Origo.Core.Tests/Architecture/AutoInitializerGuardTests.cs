@@ -92,4 +92,27 @@ public class AutoInitializerGuardTests
         public const string IndexConst = "auto.init.stateful.property.local";
         public int Counter { get; set; }
     }
+
+    [Fact]
+    public void SndWorld_RegisterStrategy_WithReadonlyInstanceField_Succeeds()
+    {
+        var world = TestFactory.CreateSndWorld();
+
+        world.RegisterStrategy(() => new ReadonlyFieldStrategy());
+
+        var strategy = world.StrategyPool.GetStrategy<EntityStrategyBase>("auto.init.readonly.local");
+        Assert.NotNull(strategy);
+    }
+
+    [StrategyIndex(IndexConst)]
+    private sealed class ReadonlyFieldStrategy : EntityStrategyBase
+    {
+        public const string IndexConst = "auto.init.readonly.local";
+        private readonly int _readonlyValue = 42;
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            _ = _readonlyValue;
+        }
+    }
 }

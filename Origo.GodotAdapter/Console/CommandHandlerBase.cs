@@ -5,7 +5,7 @@ using Origo.Core.Runtime.Console;
 
 namespace Origo.GodotAdapter.Console;
 
-internal abstract class CommandHandlerBase : IConsoleCommandHandler
+public abstract class CommandHandlerBase : IConsoleCommandHandler
 {
     protected CommandHandlerBase(OrigoRuntime runtime)
     {

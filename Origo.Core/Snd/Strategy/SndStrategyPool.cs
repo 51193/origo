@@ -126,7 +126,7 @@ internal sealed class SndStrategyPool
         {
             var fields = current.GetFields(
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
-                .Where(f => !f.IsStatic)
+                .Where(f => !f.IsStatic && !f.IsInitOnly)
                 .Select(f => $"{current.Name}.{f.Name}");
             names.AddRange(fields);
 

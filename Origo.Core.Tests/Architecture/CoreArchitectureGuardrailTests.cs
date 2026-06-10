@@ -251,4 +251,13 @@ public class CoreArchitectureGuardrailTests
 
         bg.Dispose();
     }
+
+    [Fact]
+    public void ConsoleCommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt()
+    {
+        var type = typeof(Origo.Core.Runtime.Console.ConsoleCommandHandlerBase);
+        Assert.True(type.IsPublic || type.IsNestedPublic,
+            "ConsoleCommandHandlerBase must be public so external projects " +
+            "(such as origo.demo) can derive custom console command handlers.");
+    }
 }
