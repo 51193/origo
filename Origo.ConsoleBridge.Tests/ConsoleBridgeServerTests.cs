@@ -939,7 +939,7 @@ public class ConsoleBridgeServerTests
     [Fact]
     public void Constructor_NullOutput_Throws()
     {
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
 
         Assert.Throws<ArgumentNullException>(() =>
             new ConsoleBridgeServer(input, null!));
@@ -948,7 +948,7 @@ public class ConsoleBridgeServerTests
     [Fact]
     public void Constructor_DefaultOptions_HasExpectedPort()
     {
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
 
         var server = new ConsoleBridgeServer(input, output);
@@ -960,7 +960,7 @@ public class ConsoleBridgeServerTests
     [Fact]
     public void Constructor_CustomPort_StoredInOptions()
     {
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var options = new ConsoleBridgeOptions { Port = 9876 };
 
@@ -975,7 +975,7 @@ public class ConsoleBridgeServerTests
     [Fact]
     public void Start_CalledTwice_DoesNotThrow()
     {
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var server = new ConsoleBridgeServer(input, output);
         server.Start();
@@ -986,7 +986,7 @@ public class ConsoleBridgeServerTests
     [Fact]
     public void Start_CalledTwice_PortRemainsSame()
     {
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var server = new ConsoleBridgeServer(input, output);
         server.Start();
@@ -1000,7 +1000,7 @@ public class ConsoleBridgeServerTests
     [Fact]
     public void Dispose_BeforeStart_DoesNotThrow()
     {
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var server = new ConsoleBridgeServer(input, output);
 
@@ -1011,10 +1011,10 @@ public class ConsoleBridgeServerTests
 
     // ── Helpers ──
 
-    private static (ConsoleBridgeServer server, (ConsoleInputQueue input, ConsoleOutputChannel output) queues)
+    private static (ConsoleBridgeServer server, (ConsoleInputBuffer input, ConsoleOutputChannel output) queues)
         CreateStartedServer(int port = 0)
     {
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var options = new ConsoleBridgeOptions { Port = port };
         var server = new ConsoleBridgeServer(input, output, options);

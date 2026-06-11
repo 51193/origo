@@ -18,7 +18,7 @@ public class PersistentBlackboardTests
         var path = "user://origo/system.json";
         var board = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
 
-        board.Set("n", 7);
+        board.SetValue("n", 7);
         var loaded = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
         loaded.LoadFromDisk();
         var (found, n) = loaded.TryGet<int>("n");
@@ -37,11 +37,11 @@ public class PersistentBlackboardTests
         var registry = TestFactory.CreateRegistry();
         var path = "user://origo/system.json";
         var board = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
-        board.Set("x", 1);
+        board.SetValue("x", 1);
         board.Clear();
 
         using var node = dataSourceIo.ReadTree(path);
-        Assert.Equal(DataSourceNodeKind.Object, node.Kind);
+        Assert.Equal(DataSourceNodeKind.Map, node.Kind);
         Assert.Empty(node.Keys);
     }
 }

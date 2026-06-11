@@ -24,7 +24,7 @@ public static class SndArchetypeLoader
             return false;
 
         var node = fileAccess.ReadFile(path);
-        if (node.Kind != DataSourceNodeKind.Object)
+        if (node.Kind != DataSourceNodeKind.Map)
             return false;
 
         foreach (var key in node.Keys)

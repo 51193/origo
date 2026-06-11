@@ -33,7 +33,7 @@ public class AdapterArchitectureGuardrailTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         ISndBlackboardAccess bb = ctx;
-        bb.SystemBlackboard.Set("k", 1);
+        bb.SystemBlackboard.SetValue("k", 1);
         Assert.Equal(1, bb.SystemBlackboard.TryGet<int>("k").value);
 
         ISndDeferredActions def = ctx;
@@ -77,7 +77,7 @@ public class AdapterArchitectureGuardrailTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg_sess", "bg_level");
-        bg.SessionBlackboard.Set("bg_data", "bg_value");
+        bg.SessionBlackboard.SetValue("bg_data", "bg_value");
 
         var (found, val) = bg.SessionBlackboard.TryGet<string>("bg_data");
         Assert.True(found);

@@ -125,7 +125,7 @@ public class StrategyPoolAndRuntimeTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(),
             input, output);

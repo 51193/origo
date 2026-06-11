@@ -90,7 +90,7 @@ public class DisposeSemanticsTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.SceneHost.CreateEntity(CreateMeta("Entity"));
-        bg.SessionBlackboard.Set("data", 42);
+        bg.SessionBlackboard.SetValue("data", 42);
 
         ctx.RequestSaveGame("explicit1");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -129,7 +129,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        ctx.ProgressBlackboard!.Set("test_key", 42);
+        ctx.ProgressBlackboard!.SetValue("test_key", 42);
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.Dispose();
@@ -202,7 +202,7 @@ public class DisposeSemanticsTests
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.SceneHost.CreateEntity(CreateMeta("DisposedEntity"));
-        bg.SessionBlackboard.Set("disposed_key", "disposed_val");
+        bg.SessionBlackboard.SetValue("disposed_key", "disposed_val");
         bg.Dispose();
 
         ctx.RequestSaveGame("after_dispose_save");
@@ -217,7 +217,7 @@ public class DisposeSemanticsTests
         var (ctx, fs) = CreateForegroundContext();
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        bg.SessionBlackboard.Set("data", 42);
+        bg.SessionBlackboard.SetValue("data", 42);
         bg.SceneHost.CreateEntity(CreateMeta("DisposedEntity"));
         bg.Dispose();
 
@@ -293,7 +293,7 @@ public class DisposeSemanticsTests
     public void ProgressRun_AfterDispose_ProgressBlackboard_IsCleared()
     {
         var (ctx, _) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.Set("key", "value");
+        ctx.ProgressBlackboard!.SetValue("key", "value");
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.Dispose();
@@ -340,7 +340,7 @@ public class DisposeSemanticsTests
         Assert.NotNull(fg);
 
         fg.SceneHost.CreateEntity(CreateMeta("SavedEntity"));
-        fg.SessionBlackboard.Set("save_key", "save_value");
+        fg.SessionBlackboard.SetValue("save_key", "save_value");
 
         ctx.RequestSaveGame("test_001");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -376,7 +376,7 @@ public class DisposeSemanticsTests
     public void Save_ThenDispose_ThenContinue_ProgressBlackboardPreserved()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.Set("global_score", 9001);
+        ctx.ProgressBlackboard!.SetValue("global_score", 9001);
 
         ctx.RequestSaveGame("score_save");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -434,7 +434,7 @@ public class DisposeSemanticsTests
         using var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", true);
         bg.SceneHost.CreateEntity(CreateMeta("GameEntity1"));
         bg.SceneHost.CreateEntity(CreateMeta("GameEntity2"));
-        bg.SessionBlackboard.Set("map_seed", 42);
+        bg.SessionBlackboard.SetValue("map_seed", 42);
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -478,7 +478,7 @@ public class DisposeSemanticsTests
 
         var oldFg = ctx.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        oldFg.SessionBlackboard.Set("old_data", "old_value");
+        oldFg.SessionBlackboard.SetValue("old_data", "old_value");
         oldFg.SceneHost.CreateEntity(CreateMeta("OldEntity"));
 
         fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
@@ -546,9 +546,9 @@ public class DisposeSemanticsTests
     [StrategyIndex(BeforeSaveStrategyIndex)]
     private sealed class BeforeSaveSpyStrategy : EntityStrategyBase
     {
-        private static readonly AsyncLocal<ICollection<string>?> _events = new();
+        private static readonly AsyncLocal<List<string>?> _events = new();
 
-        public static void Bind(ICollection<string> events) => _events.Value = events;
+        public static void Bind(List<string> events) => _events.Value = events;
 
         public override void BeforeSave(ISndEntity entity, ISndContext ctx) =>
             _events.Value?.Add($"BeforeSave:{entity.Name}");
@@ -557,9 +557,9 @@ public class DisposeSemanticsTests
     [StrategyIndex(BeforeQuitStrategyIndex)]
     private sealed class BeforeQuitSpyStrategy : EntityStrategyBase
     {
-        private static readonly AsyncLocal<ICollection<string>?> _events = new();
+        private static readonly AsyncLocal<List<string>?> _events = new();
 
-        public static void Bind(ICollection<string> events) => _events.Value = events;
+        public static void Bind(List<string> events) => _events.Value = events;
 
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
             _events.Value?.Add($"BeforeQuit:{entity.Name}");

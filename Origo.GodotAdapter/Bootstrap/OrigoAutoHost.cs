@@ -154,7 +154,7 @@ public partial class OrigoAutoHost : Node
             new Blackboard());
         persistentBb.LoadFromDisk();
 
-        consoleInput = new ConsoleInputQueue();
+        consoleInput = new ConsoleInputBuffer();
         consoleOutputChannel = new ConsoleOutputChannel();
 
         return sndManager;

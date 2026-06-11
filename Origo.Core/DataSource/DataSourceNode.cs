@@ -155,9 +155,9 @@ public sealed class DataSourceNode : IDisposable
         EnsureExpanded();
         return _kind switch
         {
-            DataSourceNodeKind.String => _value ?? string.Empty,
+            DataSourceNodeKind.Text => _value ?? string.Empty,
             DataSourceNodeKind.Number => _value ?? string.Empty,
-            DataSourceNodeKind.Boolean => _value ?? string.Empty,
+            DataSourceNodeKind.Bool => _value ?? string.Empty,
             DataSourceNodeKind.Null => string.Empty,
             _ => _value ?? string.Empty
         };
@@ -293,11 +293,11 @@ public sealed class DataSourceNode : IDisposable
 
     // ── Factory methods ──
 
-    public static DataSourceNode CreateObject() => new(DataSourceNodeKind.Object);
+    public static DataSourceNode CreateObject() => new(DataSourceNodeKind.Map);
 
     public static DataSourceNode CreateArray() => new(DataSourceNodeKind.Array);
 
-    public static DataSourceNode CreateString(string value) => new(DataSourceNodeKind.String, value);
+    public static DataSourceNode CreateString(string value) => new(DataSourceNodeKind.Text, value);
 
     public static DataSourceNode CreateNumber(string value) => new(DataSourceNodeKind.Number, value);
 
@@ -313,7 +313,7 @@ public sealed class DataSourceNode : IDisposable
     public static DataSourceNode CreateNumber(double value) =>
         new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
-    public static DataSourceNode CreateBoolean(bool value) => new(DataSourceNodeKind.Boolean, value ? "true" : "false");
+    public static DataSourceNode CreateBoolean(bool value) => new(DataSourceNodeKind.Bool, value ? "true" : "false");
 
     public static DataSourceNode CreateNull() => new(DataSourceNodeKind.Null);
 
@@ -331,14 +331,14 @@ public sealed class DataSourceNode : IDisposable
     {
         return _kind switch
         {
-            DataSourceNodeKind.Object => "O{" + string.Join(",",
+            DataSourceNodeKind.Map => "O{" + string.Join(",",
                 _orderedKeys.OrderBy(k => k, StringComparer.Ordinal)
                     .Select(k => k + "=" + _objectChildren[k].BuildCanonicalString())) + "}",
             DataSourceNodeKind.Array => "A[" + string.Join(",",
                 _arrayChildren.Select(c => c.BuildCanonicalString())) + "]",
-            DataSourceNodeKind.String => "S\"" + EscapeCanonical(_value) + "\"",
+            DataSourceNodeKind.Text => "S\"" + EscapeCanonical(_value) + "\"",
             DataSourceNodeKind.Number => "N" + _value,
-            DataSourceNodeKind.Boolean => "B" + _value,
+            DataSourceNodeKind.Bool => "B" + _value,
             DataSourceNodeKind.Null => "X",
             _ => "X"
         };

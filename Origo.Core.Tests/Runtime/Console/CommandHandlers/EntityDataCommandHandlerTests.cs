@@ -11,7 +11,7 @@ public class EntityDataCommandHandlerTests
     private static (
         OrigoRuntime runtime,
         TestSndSceneHost sceneHost,
-        ConsoleInputQueue input,
+        ConsoleInputBuffer input,
         ConsoleOutputChannel output,
         List<string> messages) CreateConsoleRuntime()
     {
@@ -19,7 +19,7 @@ public class EntityDataCommandHandlerTests
         var sceneHost = new TestSndSceneHost();
         var tm = new TypeStringMapping();
         var bb = new Blackboard.Blackboard();
-        var consoleInput = new ConsoleInputQueue();
+        var consoleInput = new ConsoleInputBuffer();
         var consoleOutput = new ConsoleOutputChannel();
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, tm, bb, consoleInput, consoleOutput);

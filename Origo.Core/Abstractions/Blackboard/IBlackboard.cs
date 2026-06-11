@@ -9,9 +9,7 @@ namespace Origo.Core.Abstractions.Blackboard;
 /// </summary>
 public interface IBlackboard
 {
-#pragma warning disable CA1716 // Identifiers should not match keywords — Set is an intentional API name for this blackboard
-    void Set<T>(string key, T value);
-#pragma warning restore CA1716
+    void SetValue<T>(string key, T value);
 
     (bool found, T value) TryGet<T>(string key);
 

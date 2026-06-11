@@ -9,14 +9,14 @@ namespace Origo.Core.Tests;
 
 public class ConsoleCommandExtendedTests
 {
-    private static (OrigoRuntime runtime, ConsoleInputQueue input, ConsoleOutputChannel output, List<string> messages)
+    private static (OrigoRuntime runtime, ConsoleInputBuffer input, ConsoleOutputChannel output, List<string> messages)
         CreateConsoleRuntime()
     {
         var logger = new TestLogger();
         var sceneHost = new TestSndSceneHost();
         var tm = new TypeStringMapping();
         var bb = new Blackboard.Blackboard();
-        var consoleInput = new ConsoleInputQueue();
+        var consoleInput = new ConsoleInputBuffer();
         var consoleOutput = new ConsoleOutputChannel();
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, tm, bb, consoleInput, consoleOutput);
@@ -380,7 +380,7 @@ public class ConsoleCommandExtendedTests
         var sceneHost = new TestSndSceneHost();
         var tm = new TypeStringMapping();
         var bb = new Blackboard.Blackboard();
-        var consoleInput = new ConsoleInputQueue();
+        var consoleInput = new ConsoleInputBuffer();
         var consoleOutput = new ConsoleOutputChannel();
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, tm, bb,
             consoleInput, consoleOutput, TestFactory.CreateIoGateway(fs));

@@ -136,7 +136,7 @@ public sealed partial class ProgressRun
         {
             ValidateLevelId(levelId, nameof(levelId), "Level id cannot be null or whitespace.");
 
-            _owner.ProgressBlackboard.Set(WellKnownKeys.SessionTopology,
+            _owner.ProgressBlackboard.SetValue(WellKnownKeys.SessionTopology,
                 SessionTopologyCodec.Join(_owner.BuildSessionTopology()));
         }
 

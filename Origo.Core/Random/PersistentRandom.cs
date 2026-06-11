@@ -28,8 +28,8 @@ public sealed class PersistentRandom
     public bool InitSeed(string seed)
     {
         var (s0, s1) = RandomNumberGenerator.CreateStateFromSeed(seed);
-        _blackboard.Set(_state1Key, s0);
-        _blackboard.Set(_state2Key, s1);
+        _blackboard.SetValue(_state1Key, s0);
+        _blackboard.SetValue(_state2Key, s1);
         return true;
     }
 
@@ -42,8 +42,8 @@ public sealed class PersistentRandom
             return false;
 
         var (rand, ns1, ns2) = RandomNumberGenerator.NextInt32(s1, s2);
-        _blackboard.Set(_state1Key, ns1);
-        _blackboard.Set(_state2Key, ns2);
+        _blackboard.SetValue(_state1Key, ns1);
+        _blackboard.SetValue(_state2Key, ns2);
         value = rand;
         return true;
     }

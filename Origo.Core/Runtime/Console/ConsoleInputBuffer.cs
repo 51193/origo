@@ -8,9 +8,7 @@ namespace Origo.Core.Runtime.Console;
 ///     线程安全的内存命令队列；适配层通过 <see cref="Enqueue" /> 投递，Core 通过
 ///     <see cref="TryDequeueCommand" /> 消费。
 /// </summary>
-#pragma warning disable CA1711 // Identifiers should not have incorrect suffix — this type is intentionally a queue
-public sealed class ConsoleInputQueue : IConsoleInputSource
-#pragma warning restore CA1711
+public sealed class ConsoleInputBuffer : IConsoleInputSource
 {
     private readonly object _lock = new();
     private readonly Queue<string> _queue = new();

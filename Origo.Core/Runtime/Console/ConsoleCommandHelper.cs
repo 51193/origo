@@ -57,13 +57,13 @@ internal static class ConsoleCommandHelper
     public static void SetBlackboardWithTypeInference(IBlackboard bb, string key, string raw)
     {
         if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
-            bb.Set(key, iv);
+            bb.SetValue(key, iv);
         else if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var fv))
-            bb.Set(key, fv);
+            bb.SetValue(key, fv);
         else if (bool.TryParse(raw, out var bv))
-            bb.Set(key, bv);
+            bb.SetValue(key, bv);
         else
-            bb.Set(key, raw);
+            bb.SetValue(key, raw);
     }
 
     private static void SetByExistingType(ISndEntity entity, string key, string raw, Type targetType)

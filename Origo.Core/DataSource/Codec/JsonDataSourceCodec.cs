@@ -97,7 +97,7 @@ internal sealed class JsonDataSourceCodec : IDataSourceCodec
     {
         switch (node.Kind)
         {
-            case DataSourceNodeKind.Object:
+            case DataSourceNodeKind.Map:
                 writer.WriteStartObject();
                 foreach (var key in node.Keys)
                     WriteProperty(writer, key, node[key]);
@@ -111,7 +111,7 @@ internal sealed class JsonDataSourceCodec : IDataSourceCodec
                 writer.WriteEndArray();
                 break;
 
-            case DataSourceNodeKind.String:
+            case DataSourceNodeKind.Text:
                 writer.WriteStringValue(node.AsString());
                 break;
 
@@ -119,7 +119,7 @@ internal sealed class JsonDataSourceCodec : IDataSourceCodec
                 writer.WriteRawValue(node.AsString());
                 break;
 
-            case DataSourceNodeKind.Boolean:
+            case DataSourceNodeKind.Bool:
                 writer.WriteBooleanValue(node.AsBool());
                 break;
 
@@ -133,7 +133,7 @@ internal sealed class JsonDataSourceCodec : IDataSourceCodec
     {
         switch (node.Kind)
         {
-            case DataSourceNodeKind.Object:
+            case DataSourceNodeKind.Map:
                 writer.WriteStartObject(key);
                 foreach (var childKey in node.Keys)
                     WriteProperty(writer, childKey, node[childKey]);
@@ -147,7 +147,7 @@ internal sealed class JsonDataSourceCodec : IDataSourceCodec
                 writer.WriteEndArray();
                 break;
 
-            case DataSourceNodeKind.String:
+            case DataSourceNodeKind.Text:
                 writer.WriteString(key, node.AsString());
                 break;
 
@@ -156,7 +156,7 @@ internal sealed class JsonDataSourceCodec : IDataSourceCodec
                 writer.WriteRawValue(node.AsString());
                 break;
 
-            case DataSourceNodeKind.Boolean:
+            case DataSourceNodeKind.Bool:
                 writer.WriteBoolean(key, node.AsBool());
                 break;
 

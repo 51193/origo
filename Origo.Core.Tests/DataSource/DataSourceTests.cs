@@ -19,7 +19,7 @@ public class DataSourceTests
     {
         var node = DataSourceNode.CreateObject();
 
-        Assert.Equal(DataSourceNodeKind.Object, node.Kind);
+        Assert.Equal(DataSourceNodeKind.Map, node.Kind);
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class DataSourceTests
     {
         var node = DataSourceNode.CreateString("hello");
 
-        Assert.Equal(DataSourceNodeKind.String, node.Kind);
+        Assert.Equal(DataSourceNodeKind.Text, node.Kind);
         Assert.Equal("hello", node.AsString());
     }
 
@@ -59,9 +59,9 @@ public class DataSourceTests
         var t = DataSourceNode.CreateBoolean(true);
         var f = DataSourceNode.CreateBoolean(false);
 
-        Assert.Equal(DataSourceNodeKind.Boolean, t.Kind);
+        Assert.Equal(DataSourceNodeKind.Bool, t.Kind);
         Assert.True(t.AsBool());
-        Assert.Equal(DataSourceNodeKind.Boolean, f.Kind);
+        Assert.Equal(DataSourceNodeKind.Bool, f.Kind);
         Assert.False(f.AsBool());
     }
 
@@ -332,9 +332,9 @@ public class DataSourceTests
 
         var root = codec.Decode(json);
 
-        Assert.Equal(DataSourceNodeKind.String, root["str"].Kind);
+        Assert.Equal(DataSourceNodeKind.Text, root["str"].Kind);
         Assert.Equal(DataSourceNodeKind.Number, root["num"].Kind);
-        Assert.Equal(DataSourceNodeKind.Boolean, root["bool"].Kind);
+        Assert.Equal(DataSourceNodeKind.Bool, root["bool"].Kind);
         Assert.Equal(DataSourceNodeKind.Null, root["nil"].Kind);
     }
 
@@ -748,7 +748,7 @@ public class DataSourceTests
         var json = codec.Encode(original);
         var decoded = codec.Decode(json);
 
-        Assert.Equal(DataSourceNodeKind.Object, decoded.Kind);
+        Assert.Equal(DataSourceNodeKind.Map, decoded.Kind);
         Assert.Empty(decoded.Keys);
     }
 
@@ -1366,7 +1366,7 @@ public class DataSourceTests
         Assert.Throws<InvalidOperationException>(() => lazyNode.Kind);
 
         // Second access should succeed because node stayed in lazy state
-        Assert.Equal(DataSourceNodeKind.String, lazyNode.Kind);
+        Assert.Equal(DataSourceNodeKind.Text, lazyNode.Kind);
         Assert.Equal("hello", lazyNode.AsString());
         Assert.Equal(2, callCount);
     }
@@ -1417,7 +1417,7 @@ public class DataSourceTests
         var text = "# comment\n\n  # another comment\n   ";
         var node = codec.Decode(text);
 
-        Assert.Equal(DataSourceNodeKind.Object, node.Kind);
+        Assert.Equal(DataSourceNodeKind.Map, node.Kind);
         Assert.Empty(node.Keys);
     }
 
@@ -1465,7 +1465,7 @@ public class DataSourceTests
         var registry = TestFactory.CreateRegistry(tm);
 
         var original = new Blackboard.Blackboard();
-        original.Set<IReadOnlyDictionary<string, string>>("map", new ReadOnlyDictionary<string, string>(
+        original.SetValue<IReadOnlyDictionary<string, string>>("map", new ReadOnlyDictionary<string, string>(
             new Dictionary<string, string> { ["x"] = "10", ["y"] = "20" }));
 
         var serialized = original.SerializeAll();

@@ -239,7 +239,7 @@ public class ConsoleTypeInferenceTests
         var host = new TestSndSceneHost();
         var tm = new TypeStringMapping();
         var systemBb = new Blackboard.Blackboard();
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
 
         return TestFactory.CreateRuntime(logger, host, tm, systemBb, input, output);

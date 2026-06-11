@@ -118,4 +118,4 @@ public class ConsoleCommandRouterTests
     }
 }
 
-// ── ConsoleInputQueue ──────────────────────────────────────────────────
+// ── ConsoleInputBuffer ──────────────────────────────────────────────────

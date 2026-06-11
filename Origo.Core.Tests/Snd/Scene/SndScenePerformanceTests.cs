@@ -56,7 +56,7 @@ public class SndScenePerformanceTests
         DataMetaData = new DataMetaData()
     };
 
-    private void SpawnNEntities(FullMemorySndSceneHost host, int count, string idx)
+    private static void SpawnNEntities(FullMemorySndSceneHost host, int count, string idx)
     {
         var metaList = new List<SndMetaData>(count);
         for (var i = 0; i < count; i++)

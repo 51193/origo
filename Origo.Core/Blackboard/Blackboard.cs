@@ -12,7 +12,7 @@ public sealed class Blackboard : IBlackboard
 {
     private readonly Dictionary<string, TypedData> _data = new(StringComparer.Ordinal);
 
-    public void Set<T>(string key, T value)
+    public void SetValue<T>(string key, T value)
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));

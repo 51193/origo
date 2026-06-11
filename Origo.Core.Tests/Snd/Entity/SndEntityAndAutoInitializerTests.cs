@@ -214,9 +214,9 @@ public class SndEntityAndAutoInitializerTests
     [StrategyIndex(LifecycleStrategyIndex)]
     private sealed class LifecycleStrategy : EntityStrategyBase
     {
-        private static ICollection<string>? EventSink { get; set; }
+        private static List<string>? EventSink { get; set; }
 
-        public static void Bind(ICollection<string> events) => EventSink = events;
+        public static void Bind(List<string> events) => EventSink = events;
 
         public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => EventSink?.Add("AfterSpawn");
 

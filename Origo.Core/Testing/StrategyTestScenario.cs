@@ -179,19 +179,19 @@ public sealed class StrategyTestScenarioBuilder<T> : BaseStrategyTestScenarioBui
 
     public StrategyTestScenarioBuilder<T> WithSystemConfig<TValue>(string key, TValue value)
     {
-        _systemSetup.Add(bb => bb.Set(key, value));
+        _systemSetup.Add(bb => bb.SetValue(key, value));
         return this;
     }
 
     public StrategyTestScenarioBuilder<T> WithProgressConfig<TValue>(string key, TValue value)
     {
-        _progressSetup.Add(bb => bb.Set(key, value));
+        _progressSetup.Add(bb => bb.SetValue(key, value));
         return this;
     }
 
     public StrategyTestScenarioBuilder<T> WithSessionConfig<TValue>(string key, TValue value)
     {
-        _sessionSetup.Add(bb => bb.Set(key, value));
+        _sessionSetup.Add(bb => bb.SetValue(key, value));
         return this;
     }
 
@@ -236,19 +236,19 @@ public sealed class ActiveStrategyTestScenarioBuilder<T> : BaseStrategyTestScena
 
     public ActiveStrategyTestScenarioBuilder<T> WithSystemConfig<TValue>(string key, TValue value)
     {
-        _systemSetup.Add(bb => bb.Set(key, value));
+        _systemSetup.Add(bb => bb.SetValue(key, value));
         return this;
     }
 
     public ActiveStrategyTestScenarioBuilder<T> WithProgressConfig<TValue>(string key, TValue value)
     {
-        _progressSetup.Add(bb => bb.Set(key, value));
+        _progressSetup.Add(bb => bb.SetValue(key, value));
         return this;
     }
 
     public ActiveStrategyTestScenarioBuilder<T> WithSessionConfig<TValue>(string key, TValue value)
     {
-        _sessionSetup.Add(bb => bb.Set(key, value));
+        _sessionSetup.Add(bb => bb.SetValue(key, value));
         return this;
     }
 

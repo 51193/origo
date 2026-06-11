@@ -528,7 +528,7 @@ public class SndContextWorkflowTests
     {
         logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         output = new ConsoleOutputChannel();
         var bb = new Blackboard.Blackboard();
         var tm = new TypeStringMapping();

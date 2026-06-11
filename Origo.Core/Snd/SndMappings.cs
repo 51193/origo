@@ -128,7 +128,7 @@ internal sealed class SndMappings
         var sndMetaConverter = registry.Get<SndMetaData>();
 
         foreach (var item in root.Elements)
-            if (item.Kind == DataSourceNodeKind.Object && item.ContainsKey(TemplateKeyField))
+            if (item.Kind == DataSourceNodeKind.Map && item.ContainsKey(TemplateKeyField))
             {
                 var templateKey = item[TemplateKeyField].AsString();
                 if (string.IsNullOrWhiteSpace(templateKey))

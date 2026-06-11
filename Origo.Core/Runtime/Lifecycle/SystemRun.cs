@@ -26,6 +26,6 @@ internal sealed class SystemRun
         if (string.IsNullOrWhiteSpace(saveId))
             throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
 
-        SystemBlackboard.Set(WellKnownKeys.ActiveSaveId, saveId);
+        SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, saveId);
     }
 }

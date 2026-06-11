@@ -3,12 +3,12 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
-public class ConsoleInputQueueTests
+public class ConsoleInputBufferTests
 {
     [Fact]
-    public void ConsoleInputQueue_Enqueue_And_TryDequeue()
+    public void ConsoleInputBuffer_Enqueue_And_TryDequeue()
     {
-        var queue = new ConsoleInputQueue();
+        var queue = new ConsoleInputBuffer();
         queue.Enqueue("help");
 
         var ok = queue.TryDequeueCommand(out var line);
@@ -17,18 +17,18 @@ public class ConsoleInputQueueTests
     }
 
     [Fact]
-    public void ConsoleInputQueue_TryDequeue_EmptyQueue_ReturnsFalse()
+    public void ConsoleInputBuffer_TryDequeue_EmptyQueue_ReturnsFalse()
     {
-        var queue = new ConsoleInputQueue();
+        var queue = new ConsoleInputBuffer();
         var ok = queue.TryDequeueCommand(out var line);
         Assert.False(ok);
         Assert.Null(line);
     }
 
     [Fact]
-    public void ConsoleInputQueue_Enqueue_WhitespaceIgnored()
+    public void ConsoleInputBuffer_Enqueue_WhitespaceIgnored()
     {
-        var queue = new ConsoleInputQueue();
+        var queue = new ConsoleInputBuffer();
         queue.Enqueue("  ");
         queue.Enqueue("");
 
@@ -37,9 +37,9 @@ public class ConsoleInputQueueTests
     }
 
     [Fact]
-    public void ConsoleInputQueue_Enqueue_TrimsInput()
+    public void ConsoleInputBuffer_Enqueue_TrimsInput()
     {
-        var queue = new ConsoleInputQueue();
+        var queue = new ConsoleInputBuffer();
         queue.Enqueue("  hello  ");
 
         queue.TryDequeueCommand(out var line);
@@ -47,9 +47,9 @@ public class ConsoleInputQueueTests
     }
 
     [Fact]
-    public void ConsoleInputQueue_FIFO_Order()
+    public void ConsoleInputBuffer_FIFO_Order()
     {
-        var queue = new ConsoleInputQueue();
+        var queue = new ConsoleInputBuffer();
         queue.Enqueue("first");
         queue.Enqueue("second");
 
@@ -60,9 +60,9 @@ public class ConsoleInputQueueTests
     }
 
     [Fact]
-    public void ConsoleInputQueue_Clear_EmptiesQueue()
+    public void ConsoleInputBuffer_Clear_EmptiesQueue()
     {
-        var queue = new ConsoleInputQueue();
+        var queue = new ConsoleInputBuffer();
         queue.Enqueue("a");
         queue.Enqueue("b");
         queue.Clear();

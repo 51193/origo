@@ -10,7 +10,7 @@ namespace Origo.Core.Tests;
 /// </summary>
 public class ConsoleInputSourceContractTests
 {
-    private static IConsoleInputSource CreateSut() => new ConsoleInputQueue();
+    private static IConsoleInputSource CreateSut() => new ConsoleInputBuffer();
 
     [Fact]
     public void Enqueue_And_TryDequeue_RoundTrip()

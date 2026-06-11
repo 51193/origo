@@ -20,7 +20,7 @@ public class SaveContextTests
         var world = CreateWorld();
         var progress = new Blackboard.Blackboard();
         var session = new Blackboard.Blackboard();
-        progress.Set("stage", 3);
+        progress.SetValue("stage", 3);
 
         var ctx = new SaveContext(progress, session, world);
         using var node = ctx.SerializeProgress();
@@ -38,7 +38,7 @@ public class SaveContextTests
         var world = CreateWorld();
         var progress = new Blackboard.Blackboard();
         var session = new Blackboard.Blackboard();
-        session.Set("hp", 100);
+        session.SetValue("hp", 100);
 
         var ctx = new SaveContext(progress, session, world);
         using var node = ctx.SerializeSession();
@@ -80,8 +80,8 @@ public class SaveContextTests
         var world = CreateWorld();
         var progress = new Blackboard.Blackboard();
         var session = new Blackboard.Blackboard();
-        progress.Set("gold", 500);
-        progress.Set(WellKnownKeys.SessionTopology, "__foreground__=level1=false");
+        progress.SetValue("gold", 500);
+        progress.SetValue(WellKnownKeys.SessionTopology, "__foreground__=level1=false");
 
         var ctx = new SaveContext(progress, session, world);
         var host = new TestSndSceneHost();
@@ -101,7 +101,7 @@ public class SaveContextTests
     {
         var world = CreateWorld();
         var progress = new Blackboard.Blackboard();
-        progress.Set(WellKnownKeys.SessionTopology, "__foreground__=level1=false");
+        progress.SetValue(WellKnownKeys.SessionTopology, "__foreground__=level1=false");
         var ctx = new SaveContext(progress, new Blackboard.Blackboard(), world);
         var host = new TestSndSceneHost();
         var meta = new Dictionary<string, string> { ["display"] = "Save 1" };
@@ -142,13 +142,13 @@ public class SaveContextTests
     {
         var world = CreateWorld();
         var progress = new Blackboard.Blackboard();
-        progress.Set("gold", 100);
+        progress.SetValue("gold", 100);
 
         var ctx = new SaveContext(progress, new Blackboard.Blackboard(), world);
 
         var source = new Blackboard.Blackboard();
-        source.Set("gold", 999);
-        source.Set("level", 5);
+        source.SetValue("gold", 999);
+        source.SetValue("level", 5);
         var sourceCtx = new SaveContext(source, new Blackboard.Blackboard(), world);
         using var node = sourceCtx.SerializeProgress();
 
@@ -167,13 +167,13 @@ public class SaveContextTests
     {
         var world = CreateWorld();
         var session = new Blackboard.Blackboard();
-        session.Set("hp", 80);
+        session.SetValue("hp", 80);
 
         var ctx = new SaveContext(new Blackboard.Blackboard(), session, world);
 
         var source = new Blackboard.Blackboard();
-        source.Set("hp", 200);
-        source.Set("mana", 50);
+        source.SetValue("hp", 200);
+        source.SetValue("mana", 50);
         var sourceCtx = new SaveContext(new Blackboard.Blackboard(), source, world);
         using var node = sourceCtx.SerializeSession();
 

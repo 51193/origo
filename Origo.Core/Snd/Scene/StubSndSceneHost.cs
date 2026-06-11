@@ -62,11 +62,8 @@ internal sealed class StubSndSceneHost : ISndSceneHost
         if (index < 0)
             return;
 
-        var entity = _entities[index];
         _entities.RemoveAt(index);
         _metaList.RemoveAt(index);
-        if (entity is StubSndEntity memEntity)
-            memEntity.Dead();
     }
 
     public void RequestKillEntity(string name)
@@ -176,10 +173,4 @@ internal sealed class StubSndEntity : ISndEntity
     public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
 
     public bool IsPendingKill { get; set; }
-
-#pragma warning disable CA1822
-    internal void Dead()
-    {
-    }
-#pragma warning restore CA1822
 }

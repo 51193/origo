@@ -116,7 +116,7 @@ internal sealed class LevelBuilder
     public LevelBuilder SetSessionData<T>(string key, T value)
     {
         ThrowIfBuilt();
-        _sessionBlackboard.Set(key, value);
+        _sessionBlackboard.SetValue(key, value);
         return this;
     }
 

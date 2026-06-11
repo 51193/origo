@@ -51,11 +51,11 @@ public sealed class PersistentBlackboard : IBlackboard
     /// <summary>
     ///     设置键值并自动持久化到磁盘。
     /// </summary>
-    public void Set<T>(string key, T value)
+    public void SetValue<T>(string key, T value)
     {
         lock (_lock)
         {
-            _inner.Set(key, value);
+            _inner.SetValue(key, value);
             Persist();
         }
     }

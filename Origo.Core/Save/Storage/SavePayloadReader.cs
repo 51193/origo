@@ -120,7 +120,7 @@ internal static class SavePayloadReader
             return null;
 
         using var root = handle.IoGateway.ReadTree(mapFileAbs);
-        if (root.Kind != DataSourceNodeKind.Object)
+        if (root.Kind != DataSourceNodeKind.Map)
             throw new InvalidOperationException(
                 $"Expected map file '{mapFileAbs}' to decode as object node.");
 
@@ -128,7 +128,7 @@ internal static class SavePayloadReader
         foreach (var key in root.Keys)
         {
             var valueNode = root[key];
-            if (valueNode.Kind is DataSourceNodeKind.Object or DataSourceNodeKind.Array)
+            if (valueNode.Kind is DataSourceNodeKind.Map or DataSourceNodeKind.Array)
                 throw new InvalidOperationException(
                     $"Map file '{mapFileAbs}' key '{key}' must be scalar.");
             result[key] = valueNode.AsString();

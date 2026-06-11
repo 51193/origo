@@ -58,7 +58,7 @@ internal sealed class SaveCoordinator
 
         var bgSessions = _sessionManager.GetBackgroundSessions();
         var topologyItems = BuildSessionTopology(fgSession);
-        _progressBlackboard.Set(WellKnownKeys.SessionTopology, SessionTopologyCodec.Join(topologyItems));
+        _progressBlackboard.SetValue(WellKnownKeys.SessionTopology, SessionTopologyCodec.Join(topologyItems));
 
         var saveContext = new SaveContext(
             _progressBlackboard, fgSession.SessionBlackboard, _progressRuntime.SndWorld);
@@ -86,7 +86,7 @@ internal sealed class SaveCoordinator
         if (fgSession is not null)
         {
             var topologyItems = BuildSessionTopology(fgSession);
-            _progressBlackboard.Set(WellKnownKeys.SessionTopology,
+            _progressBlackboard.SetValue(WellKnownKeys.SessionTopology,
                 SessionTopologyCodec.Join(topologyItems));
         }
 

@@ -29,7 +29,7 @@ public class FrontSession_CreationWithCorrectFlagTests
         var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
 
-        ctx.SessionManager.ForegroundSession!.SessionBlackboard.Set("test", 42);
+        ctx.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("test", 42);
         ctx.RequestSaveGame("fg_test");
         ctx.FlushDeferredActionsForCurrentFrame();
 

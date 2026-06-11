@@ -85,7 +85,7 @@ public class CoreArchitectureGuardrailTests
 
         var fg = ctx.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
-        fg.SessionBlackboard.Set("test_key", "test_value");
+        fg.SessionBlackboard.SetValue("test_key", "test_value");
 
         ctx.RequestSaveGame("slot_01");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -107,7 +107,7 @@ public class CoreArchitectureGuardrailTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         ISndBlackboardAccess bb = ctx;
-        bb.SystemBlackboard.Set("consumer_key", "consumer_value");
+        bb.SystemBlackboard.SetValue("consumer_key", "consumer_value");
         var (found, val) = bb.SystemBlackboard.TryGet<string>("consumer_key");
         Assert.True(found);
         Assert.Equal("consumer_value", val);
@@ -170,7 +170,7 @@ public class CoreArchitectureGuardrailTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
-        bg.SessionBlackboard.Set("bg_key", "bg_value");
+        bg.SessionBlackboard.SetValue("bg_key", "bg_value");
 
         Assert.True(ctx.SessionManager.Contains("bg1"));
         Assert.NotNull(ctx.SessionManager.TryGet("bg1"));
@@ -196,8 +196,8 @@ public class CoreArchitectureGuardrailTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.ProgressBlackboard!.Set("score", 99);
-        ctx.CurrentSession!.SessionBlackboard.Set("level_data", "xyz");
+        ctx.ProgressBlackboard!.SetValue("score", 99);
+        ctx.CurrentSession!.SessionBlackboard.SetValue("level_data", "xyz");
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -228,7 +228,7 @@ public class CoreArchitectureGuardrailTests
 
         var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
 
-        bg.SessionBlackboard.Set("item", "sword");
+        bg.SessionBlackboard.SetValue("item", "sword");
         var (found, value) = bg.SessionBlackboard.TryGet<string>("item");
         Assert.True(found);
         Assert.Equal("sword", value);

@@ -82,7 +82,7 @@ public class OrigoConsoleLoggingTests
         var logger = new TestLogger();
         var sceneHost = new TestSndSceneHost();
         var typeMapping = new TypeStringMapping();
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
             new Blackboard.Blackboard(), input, output,
@@ -300,13 +300,13 @@ public class OrigoConsoleLoggingTests
 
     // ── Helpers ──
 
-    private static (OrigoRuntime runtime, TestLogger logger, ConsoleInputQueue input, ConsoleOutputChannel output)
+    private static (OrigoRuntime runtime, TestLogger logger, ConsoleInputBuffer input, ConsoleOutputChannel output)
         CreateTestHarness()
     {
         var logger = new TestLogger();
         var sceneHost = new TestSndSceneHost();
         var typeMapping = new TypeStringMapping();
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
             new Blackboard.Blackboard(), input, output);

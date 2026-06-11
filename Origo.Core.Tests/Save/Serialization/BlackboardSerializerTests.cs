@@ -16,8 +16,8 @@ public class BlackboardSerializerTests
         var world = CreateWorld();
         var serializer = new BlackboardSerializer(world.ConverterRegistry);
         var bb = new Blackboard.Blackboard();
-        bb.Set("intKey", 42);
-        bb.Set("strKey", "hello");
+        bb.SetValue("intKey", 42);
+        bb.SetValue("strKey", "hello");
 
         using var node = serializer.Serialize(bb);
         var bb2 = new Blackboard.Blackboard();
@@ -46,11 +46,11 @@ public class BlackboardSerializerTests
         var world = CreateWorld();
         var serializer = new BlackboardSerializer(world.ConverterRegistry);
         var bb = new Blackboard.Blackboard();
-        bb.Set("key1", "old");
-        bb.Set("key2", "keep");
+        bb.SetValue("key1", "old");
+        bb.SetValue("key2", "keep");
 
         var source = new Blackboard.Blackboard();
-        source.Set("key1", "new");
+        source.SetValue("key1", "new");
         using var node = serializer.Serialize(source);
         serializer.DeserializeInto(bb, node);
 

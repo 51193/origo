@@ -586,7 +586,7 @@ public class EntityKillTests
 
     private static OrigoRuntime CreateRuntimeWithConsole(ILogger logger, ISndSceneHost host)
     {
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         return new OrigoRuntime(
             new OrigoMeta("Origo", "test", string.Empty),

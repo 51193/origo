@@ -89,11 +89,11 @@ public class TypedDataIntegrationTests
     public void Blackboard_Set_TryGet_RoundTrip_AllTypes()
     {
         var bb = new Origo.Core.Blackboard.Blackboard();
-        bb.Set("intVal", 42);
-        bb.Set("floatVal", 3.14f);
-        bb.Set("stringVal", "hello");
-        bb.Set("boolVal", true);
-        bb.Set("doubleVal", 2.718281828);
+        bb.SetValue("intVal", 42);
+        bb.SetValue("floatVal", 3.14f);
+        bb.SetValue("stringVal", "hello");
+        bb.SetValue("boolVal", true);
+        bb.SetValue("doubleVal", 2.718281828);
 
         (bool fi, int iv) = bb.TryGet<int>("intVal");
         Assert.True(fi);
@@ -120,9 +120,9 @@ public class TypedDataIntegrationTests
     public void Blackboard_SerializeAll_DeserializeAll_RoundTrip()
     {
         var bb1 = new Origo.Core.Blackboard.Blackboard();
-        bb1.Set("hp", 100);
-        bb1.Set("name", "player");
-        bb1.Set("alive", true);
+        bb1.SetValue("hp", 100);
+        bb1.SetValue("name", "player");
+        bb1.SetValue("alive", true);
 
         var serialized = bb1.SerializeAll();
 

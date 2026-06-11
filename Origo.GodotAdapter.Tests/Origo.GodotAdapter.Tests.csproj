@@ -9,6 +9,7 @@
         <GodotProjectDir>$(MSBuildThisFileDirectory)../../..</GodotProjectDir>
         <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
         <!-- Test methods use underscore naming convention by design. -->
+        <!-- CA1707: test method underscores; CA1859: intentional interface-typed variables in architecture tests -->
         <NoWarn>$(NoWarn);CA1707;CA1859</NoWarn>
     </PropertyGroup>
 

@@ -6,7 +6,7 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <UseAppHost>true</UseAppHost>
-        <NoWarn>$(NoWarn);CA1707;CA1861;CA1845</NoWarn>
+        <NoWarn>$(NoWarn);CA1707</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup>

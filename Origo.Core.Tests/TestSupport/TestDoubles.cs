@@ -210,7 +210,7 @@ internal sealed class TestFileSystem : IFileSystem
             var rest = file.Substring(prefix.Length);
             var slash = rest.IndexOf('/');
             if (slash > 0)
-                children.Add(prefix + rest.Substring(0, slash));
+                children.Add(string.Concat(prefix.AsSpan(), rest.AsSpan(0, slash)));
         }
 
         return children;
@@ -227,7 +227,7 @@ internal sealed class TestFileSystem : IFileSystem
             .ToList();
         foreach (var file in filesToMove)
         {
-            var newPath = dst + file.Substring(src.Length);
+            var newPath = string.Concat(dst.AsSpan(), file.AsSpan(src.Length));
             _files[newPath] = _files[file];
             _files.Remove(file);
             EnsureParents(newPath);
@@ -238,7 +238,7 @@ internal sealed class TestFileSystem : IFileSystem
             .ToList();
         foreach (var dir in dirsToMove)
         {
-            var newDir = dst + dir.Substring(src.Length);
+            var newDir = string.Concat(dst.AsSpan(), dir.AsSpan(src.Length));
             _directories.Remove(dir);
             _directories.Add(newDir);
         }

@@ -68,7 +68,7 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        ctx.ProgressBlackboard!.Set("shared_key", 42);
+        ctx.ProgressBlackboard!.SetValue("shared_key", 42);
 
         // Background session shares the same ProgressBlackboard via SndContext.
         var (found, value) = ctx.ProgressBlackboard!.TryGet<int>("shared_key");
@@ -82,7 +82,7 @@ public class BackgroundSessionTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        ctx.ProgressBlackboard!.Set("from_bg", "hello");
+        ctx.ProgressBlackboard!.SetValue("from_bg", "hello");
 
         var (found, value) = ctx.ProgressBlackboard!.TryGet<string>("from_bg");
         Assert.True(found);
@@ -134,7 +134,7 @@ public class BackgroundSessionTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        bg.SessionBlackboard.Set("bg_only", 99);
+        bg.SessionBlackboard.SetValue("bg_only", 99);
 
         var (found, _) = ctx.SessionManager.ForegroundSession?.SessionBlackboard!.TryGet<int>("bg_only") ?? (false, 0);
         Assert.False(found);
@@ -315,7 +315,7 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("dungeon", "dungeon");
         bg.SceneHost.CreateEntity(CreateMeta("boss"));
-        bg.SessionBlackboard.Set("difficulty", "hard");
+        bg.SessionBlackboard.SetValue("difficulty", "hard");
 
         ctx.RequestSaveGame("persist_dungeon");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -402,10 +402,10 @@ public class BackgroundSessionTests
         Assert.Contains("Process", events);
 
         // Set session data.
-        bg.SessionBlackboard.Set("patrol_route", "north");
+        bg.SessionBlackboard.SetValue("patrol_route", "north");
 
         // Write to ProgressBlackboard (shared with foreground).
-        ctx.ProgressBlackboard!.Set("generated_level_ready", true);
+        ctx.ProgressBlackboard!.SetValue("generated_level_ready", true);
         var (ready, _) = ctx.ProgressBlackboard!.TryGet<bool>("generated_level_ready");
         Assert.True(ready);
 
@@ -431,7 +431,7 @@ public class BackgroundSessionTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg_level", "bg_level");
         bg.SceneHost.CreateEntity(CreateMeta("soldier_01"));
-        bg.SessionBlackboard.Set("hp", 100);
+        bg.SessionBlackboard.SetValue("hp", 100);
 
         ctx.RequestSaveGame("ser_test");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -460,7 +460,7 @@ public class BackgroundSessionTests
 
         using var source = ctx.SessionManager.CreateBackgroundSession("src_level", "src_level");
         source.SceneHost.CreateEntity(CreateMetaWithStrategy("guard_01"));
-        source.SessionBlackboard.Set("alert", 5);
+        source.SessionBlackboard.SetValue("alert", 5);
 
         ctx.RequestSaveGame("src_save");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -477,7 +477,7 @@ public class BackgroundSessionTests
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         bg.SceneHost.CreateEntity(CreateMeta("unit_a"));
         bg.SceneHost.CreateEntity(CreateMeta("unit_b"));
-        bg.SessionBlackboard.Set("score", 42);
+        bg.SessionBlackboard.SetValue("score", 42);
 
         ctx.RequestSaveGame("roundtrip");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -534,7 +534,7 @@ public class BackgroundSessionTests
 
         using var source = ctx.SessionManager.CreateBackgroundSession("src", "src");
         source.SceneHost.CreateEntity(CreateMetaWithStrategy("npc_a"));
-        source.SessionBlackboard.Set("difficulty", "hard");
+        source.SessionBlackboard.SetValue("difficulty", "hard");
 
         ctx.RequestSaveGame("load_sess");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -606,7 +606,7 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
         var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
-        bg.SessionBlackboard.Set("bg_key", 42);
+        bg.SessionBlackboard.SetValue("bg_key", 42);
 
         var progressRun = ctx.EnsureProgressRun();
         var payload = progressRun.BuildSavePayload("save001");
@@ -628,7 +628,7 @@ public class BackgroundSessionTests
 
         // Create and mount a background session with data.
         var bg = ctx.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
-        bg.SessionBlackboard.Set("sim_round", 10);
+        bg.SessionBlackboard.SetValue("sim_round", 10);
         bg.SceneHost.CreateEntity(CreateMeta("BgEntity"));
 
         // Build and write the save payload.
@@ -666,7 +666,7 @@ public class BackgroundSessionTests
         var (ctx, _) = CreateForegroundContext();
 
         // Set a stale but valid topology value (includes foreground + stale background).
-        ctx.ProgressBlackboard!.Set(
+        ctx.ProgressBlackboard!.SetValue(
             WellKnownKeys.SessionTopology,
             $"{ISessionManager.ForegroundKey}=test_level=false,stale=old=false");
 
@@ -739,7 +739,7 @@ public class BackgroundSessionTests
 
         // Create a background session with data.
         var bg = ctx.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
-        bg.SessionBlackboard.Set("sim_round", 10);
+        bg.SessionBlackboard.SetValue("sim_round", 10);
         bg.SceneHost.CreateEntity(CreateMeta("BgEntity"));
 
         // Save to disk (both current/ and snapshot).
@@ -786,7 +786,7 @@ public class BackgroundSessionTests
 
         // Create a background session.
         var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg_level");
-        bg.SessionBlackboard.Set("val", 99);
+        bg.SessionBlackboard.SetValue("val", 99);
 
         // Build payload and write to current/.
         var progressRun = ctx.EnsureProgressRun();
@@ -879,9 +879,9 @@ public class BackgroundSessionTests
     [StrategyIndex(TrackingStrategyIndex)]
     private sealed class TrackingStrategy : EntityStrategyBase
     {
-        private static readonly AsyncLocal<ICollection<string>?> _events = new();
+        private static readonly AsyncLocal<List<string>?> _events = new();
 
-        public static void Bind(ICollection<string> events) => _events.Value = events;
+        public static void Bind(List<string> events) => _events.Value = events;
 
         public override void AfterSpawn(ISndEntity entity, ISndContext ctx) =>
             _events.Value?.Add($"AfterSpawn:{entity.Name}");
@@ -919,9 +919,9 @@ public class BackgroundSessionTests
     [StrategyIndex(SessionContextStrategyIndex)]
     private sealed class SessionContextSpyStrategy : EntityStrategyBase
     {
-        private static readonly AsyncLocal<ICollection<string>?> _seen = new();
+        private static readonly AsyncLocal<List<string>?> _seen = new();
 
-        public static void Bind(ICollection<string> seen) => _seen.Value = seen;
+        public static void Bind(List<string> seen) => _seen.Value = seen;
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {

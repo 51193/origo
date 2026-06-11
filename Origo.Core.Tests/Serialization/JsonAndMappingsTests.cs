@@ -156,7 +156,7 @@ public class JsonAndMappingsTests
     public void Blackboard_SerializeAll_ReturnsDetachedCopy()
     {
         var bb = new Blackboard.Blackboard();
-        bb.Set("k", 1);
+        bb.SetValue("k", 1);
 
         var exported = bb.SerializeAll();
         Assert.Single(exported);

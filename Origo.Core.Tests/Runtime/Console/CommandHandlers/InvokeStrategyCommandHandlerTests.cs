@@ -81,7 +81,7 @@ public class InvokeStrategyCommandHandlerTests
 
     // ── Helpers ────────────────────────────────────────────────────────
 
-    private (OrigoRuntime runtime, ISndSceneHost host, CollectingConsoleOutputChannel output) Setup()
+    private static (OrigoRuntime runtime, ISndSceneHost host, CollectingConsoleOutputChannel output) Setup()
     {
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);

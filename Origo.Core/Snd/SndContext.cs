@@ -363,7 +363,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
             SetProgressRun(progressRun);
             progressRun.LoadFromPayload(payload);
-            SystemBlackboard.Set(WellKnownKeys.ActiveSaveId, string.Empty);
+            SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
         });
     }
 

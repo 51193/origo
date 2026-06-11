@@ -44,8 +44,8 @@ public class SessionDecouplingTests
             using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
             // Seed each session's blackboard with a unique marker.
-            fg.SessionBlackboard.Set("marker", "foreground");
-            bg.SessionBlackboard.Set("marker", "background");
+            fg.SessionBlackboard.SetValue("marker", "foreground");
+            bg.SessionBlackboard.SetValue("marker", "background");
 
             // Push into each session's state machine – the strategy hook reads ctx.SessionBlackboard.
             var fgMachine = fg.GetSessionStateMachines().CreateOrGet(
@@ -354,9 +354,9 @@ public class SessionDecouplingTests
 
     private sealed class TrackingSaveStorageService : ISaveStorageService
     {
-        private readonly ISaveStorageService _inner;
+        private readonly DefaultSaveStorageService _inner;
 
-        public TrackingSaveStorageService(ISaveStorageService inner)
+        public TrackingSaveStorageService(DefaultSaveStorageService inner)
         {
             _inner = inner;
         }

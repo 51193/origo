@@ -137,7 +137,7 @@ public class SndEntityLifecycleBatchTests
         public static string InvokeIndex { get; set; } = string.Empty;
         public static ISndSceneHost? Host { get; set; }
 
-        private void TryInvoke(ISndEntity entity, ISndContext ctx)
+        private static void TryInvoke(ISndEntity entity, ISndContext ctx)
         {
             var h = Host ?? ctx.CurrentSession?.SceneHost;
             var target = h?.FindByName(InvokeTarget);

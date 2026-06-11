@@ -7,7 +7,8 @@
         <IsTestProject>true</IsTestProject>
         <UseAppHost>true</UseAppHost>
         <!-- Test methods use underscore naming convention by design. -->
-        <NoWarn>$(NoWarn);CA1707;CA1861;CA1845;CA1859;CA1822</NoWarn>
+        <!-- CA1707: test method underscores; CA1861: inline arrays in assertions; CA1859: intentional interface-typed variables in architecture/contract tests -->
+        <NoWarn>$(NoWarn);CA1707;CA1861;CA1859</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup>

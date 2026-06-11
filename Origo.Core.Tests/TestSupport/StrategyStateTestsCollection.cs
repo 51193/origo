@@ -8,6 +8,6 @@ namespace Origo.Core.Tests;
 ///     因此测试策略通过静态字段共享事件接收器。这些测试类必须在串行集合中运行。
 /// </summary>
 [CollectionDefinition("StrategyStateTests", DisableParallelization = true)]
-public class StrategyStateTestsCollection
+public class StrategyStateTestsDefinition
 {
 }

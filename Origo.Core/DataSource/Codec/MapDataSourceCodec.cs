@@ -22,7 +22,7 @@ internal sealed class MapDataSourceCodec : IDataSourceCodec
 
     public string Encode(DataSourceNode node)
     {
-        if (node.Kind != DataSourceNodeKind.Object)
+        if (node.Kind != DataSourceNodeKind.Map)
             throw new InvalidOperationException("MapDataSourceCodec can only encode Object nodes.");
 
         var sb = new StringBuilder();

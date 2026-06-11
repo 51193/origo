@@ -317,8 +317,8 @@ public class SavePathPolicyContractTests
             var fg = ctx.SessionManager.ForegroundSession!;
             using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-            fg.SessionBlackboard.Set("who", "foreground");
-            bg.SessionBlackboard.Set("who", "background");
+            fg.SessionBlackboard.SetValue("who", "foreground");
+            bg.SessionBlackboard.SetValue("who", "background");
 
             var fgMachine = fg.GetSessionStateMachines().CreateOrGet(
                 "bb_sm", "contract.bb_access", "contract.noop_pop");

@@ -26,7 +26,7 @@ public class LifecycleRunsTests
         var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         var run = progressRun.LoadAndMountForeground("default");
-        run.SessionBlackboard.Set("foo", 1);
+        run.SessionBlackboard.SetValue("foo", 1);
 
         run.Dispose();
 
@@ -217,7 +217,7 @@ public class LifecycleRunsTests
         var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         progressRun.LoadAndMountForeground("alpha");
-        progressRun.ProgressBlackboard.Set(WellKnownKeys.SessionTopology, "__foreground__=wrong=false");
+        progressRun.ProgressBlackboard.SetValue(WellKnownKeys.SessionTopology, "__foreground__=wrong=false");
 
         Assert.Throws<InvalidOperationException>(() => progressRun.BuildSavePayload("new-save-01"));
     }
@@ -240,7 +240,7 @@ public class LifecycleRunsTests
         progressRun.LoadAndMountForeground("level1");
 
         var fg = progressRun.ForegroundSession!;
-        fg.SessionBlackboard.Set("score", 42);
+        fg.SessionBlackboard.SetValue("score", 42);
 
         sndContext.RequestSaveGame("roundtrip_001");
         sndContext.FlushDeferredActionsForCurrentFrame();
@@ -552,7 +552,7 @@ public class LifecycleRunsTests
         progressRun.LoadAndMountForeground("default");
 
         // Manually clear the topology from progress blackboard to simulate a missing entry
-        progressRun.ProgressBlackboard.Set(WellKnownKeys.SessionTopology, string.Empty);
+        progressRun.ProgressBlackboard.SetValue(WellKnownKeys.SessionTopology, string.Empty);
 
         Assert.Throws<InvalidOperationException>(() => progressRun.BuildSavePayload("no_topology"));
     }

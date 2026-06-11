@@ -4,7 +4,6 @@ using System.Diagnostics;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Tests.TestSupport;
 using Xunit;
-using Xunit;
 
 namespace Origo.Core.Tests;
 

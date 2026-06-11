@@ -16,7 +16,7 @@ public class SndCountCommandHandlerTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var bb = new Blackboard.Blackboard();
         var tm = new TypeStringMapping();
@@ -52,7 +52,7 @@ public class SndCountCommandHandlerTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var input = new ConsoleInputQueue();
+        var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var bb = new Blackboard.Blackboard();
         var tm = new TypeStringMapping();

@@ -48,7 +48,7 @@ public class ForegroundBackgroundContractTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
         // Verify session can be populated via save/load round-trip
-        ctx.ProgressBlackboard!.Set(
+        ctx.ProgressBlackboard!.SetValue(
             WellKnownKeys.SessionTopology,
             $"{ISessionManager.ForegroundKey}=default=false,bg=bg=false");
         ctx.RequestSaveGame("test_load_rt");
@@ -79,8 +79,8 @@ public class ForegroundBackgroundContractTests
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        fg.SessionBlackboard.Set("fg_key", 1);
-        bg.SessionBlackboard.Set("bg_key", 2);
+        fg.SessionBlackboard.SetValue("fg_key", 1);
+        bg.SessionBlackboard.SetValue("bg_key", 2);
 
         ctx.RequestSaveGame("format_test");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -115,10 +115,10 @@ public class ForegroundBackgroundContractTests
 
         SetupForegroundSession(ctx);
         var fg = ctx.SessionManager.ForegroundSession!;
-        fg.SessionBlackboard.Set("shared_key", 42);
+        fg.SessionBlackboard.SetValue("shared_key", 42);
 
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
-        bg.SessionBlackboard.Set("shared_key", 42);
+        bg.SessionBlackboard.SetValue("shared_key", 42);
 
         ctx.RequestSaveGame("load_test");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -143,8 +143,8 @@ public class ForegroundBackgroundContractTests
         var fg = ctx.SessionManager.ForegroundSession!;
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        fg.SessionBlackboard.Set("x", "hello");
-        bg.SessionBlackboard.Set("x", "world");
+        fg.SessionBlackboard.SetValue("x", "hello");
+        bg.SessionBlackboard.SetValue("x", "world");
 
         var (fgOk, fgVal) = fg.SessionBlackboard.TryGet<string>("x");
         var (bgOk, bgVal) = bg.SessionBlackboard.TryGet<string>("x");
@@ -163,8 +163,8 @@ public class ForegroundBackgroundContractTests
         var fg = ctx.SessionManager.ForegroundSession!;
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        fg.SessionBlackboard.Set("only_fg", 1);
-        bg.SessionBlackboard.Set("only_bg", 2);
+        fg.SessionBlackboard.SetValue("only_fg", 1);
+        bg.SessionBlackboard.SetValue("only_bg", 2);
 
         Assert.False(bg.SessionBlackboard.TryGet<int>("only_fg").found);
         Assert.False(fg.SessionBlackboard.TryGet<int>("only_bg").found);
@@ -232,8 +232,8 @@ public class ForegroundBackgroundContractTests
         var fg = ctx.SessionManager.ForegroundSession!;
         using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        fg.SessionBlackboard.Set("fg_data", "fg_val");
-        bg.SessionBlackboard.Set("bg_data", "bg_val");
+        fg.SessionBlackboard.SetValue("fg_data", "fg_val");
+        bg.SessionBlackboard.SetValue("bg_data", "bg_val");
 
         ctx.RequestSaveGame("persist_test");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -255,7 +255,7 @@ public class ForegroundBackgroundContractTests
         var sessions = new List<ISessionRun> { fg, bg };
         foreach (var session in sessions)
         {
-            session.SessionBlackboard.Set("unified_key", session.LevelId);
+            session.SessionBlackboard.SetValue("unified_key", session.LevelId);
 
             var (found, val) = session.SessionBlackboard.TryGet<string>("unified_key");
             Assert.True(found);
@@ -276,7 +276,7 @@ public class ForegroundBackgroundContractTests
         SetupForegroundSession(ctx);
 
         using var bg1 = ctx.SessionManager.CreateBackgroundSession("bg1", "level_a");
-        bg1.SessionBlackboard.Set("data", 99);
+        bg1.SessionBlackboard.SetValue("data", 99);
 
         ctx.RequestSaveGame("rttest");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -326,9 +326,9 @@ public class ForegroundBackgroundContractTests
     [StrategyIndex("contract.push")]
     private sealed class ContractPushStrategy : StateMachineStrategyBase
     {
-        private static readonly AsyncLocal<ICollection<string>?> _events = new();
+        private static readonly AsyncLocal<List<string>?> _events = new();
 
-        public static void Bind(ICollection<string> events) => _events.Value = events;
+        public static void Bind(List<string> events) => _events.Value = events;
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) =>
             _events.Value?.Add($"push:{context.BeforeTop ?? "null"}->{context.AfterTop ?? "null"}");

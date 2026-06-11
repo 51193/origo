@@ -20,7 +20,7 @@ public class OrigoRuntimeBasicTests
     }
 
     [Fact]
-    public void OrigoRuntime_ConsoleInputQueue_NullWithoutInjection()
+    public void OrigoRuntime_ConsoleInputBuffer_NullWithoutInjection()
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
@@ -36,7 +36,7 @@ public class OrigoRuntimeBasicTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var inputQueue = new ConsoleInputQueue();
+        var inputQueue = new ConsoleInputBuffer();
         var outputChannel = new ConsoleOutputChannel();
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),
             new Blackboard.Blackboard(), inputQueue, outputChannel);
@@ -51,7 +51,7 @@ public class OrigoRuntimeBasicTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var inputQueue = new ConsoleInputQueue();
+        var inputQueue = new ConsoleInputBuffer();
         inputQueue.Enqueue("test");
         var outputChannel = new ConsoleOutputChannel();
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),
@@ -83,7 +83,7 @@ public class OrigoRuntimeBasicTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var inputQueue = new ConsoleInputQueue();
+        var inputQueue = new ConsoleInputBuffer();
         inputQueue.Enqueue("help");
         var outputChannel = new ConsoleOutputChannel();
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),

@@ -53,7 +53,7 @@ public class ConsoleTests
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
             new Blackboard.Blackboard(),
-            new ConsoleInputQueue(), new ConsoleOutputChannel(),
+            new ConsoleInputBuffer(), new ConsoleOutputChannel(),
             TestFactory.CreateIoGateway(fs));
 
         runtime.SndWorld.LoadTemplates("maps/templates.map", logger);
@@ -83,7 +83,7 @@ public class ConsoleTests
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
             new Blackboard.Blackboard(),
-            new ConsoleInputQueue(), new ConsoleOutputChannel(),
+            new ConsoleInputBuffer(), new ConsoleOutputChannel(),
             TestFactory.CreateIoGateway(fs));
 
         runtime.SndWorld.LoadTemplates("maps/empty.map", logger);
@@ -126,7 +126,7 @@ public class ConsoleTests
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
             new Blackboard.Blackboard(),
-            new ConsoleInputQueue(), new ConsoleOutputChannel(),
+            new ConsoleInputBuffer(), new ConsoleOutputChannel(),
             TestFactory.CreateIoGateway(fs));
 
         runtime.SndWorld.LoadTemplates("maps/templates.map", logger);

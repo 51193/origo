@@ -5,7 +5,6 @@ using Godot;
 using Origo.Core.Snd.Metadata;
 using Origo.GodotAdapter.Snd;
 using Xunit;
-using Xunit;
 
 namespace Origo.GodotAdapter.Tests.Serialization;
 

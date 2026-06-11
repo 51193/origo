@@ -96,12 +96,12 @@ public class PlayStopPlayRoundTripTests
         pr1.LoadAndMountForeground("level_a");
 
         var fg1 = ctx1.SessionManager.ForegroundSession!;
-        fg1.SessionBlackboard.Set("marker", "fg_data_42");
-        fg1.SessionBlackboard.Set("fg_only", 100);
+        fg1.SessionBlackboard.SetValue("marker", "fg_data_42");
+        fg1.SessionBlackboard.SetValue("fg_only", 100);
 
         var bg1 = ctx1.SessionManager.CreateBackgroundSession("bg1", "bg_level");
-        bg1.SessionBlackboard.Set("marker", "bg_data_99");
-        bg1.SessionBlackboard.Set("bg_only", 200);
+        bg1.SessionBlackboard.SetValue("marker", "bg_data_99");
+        bg1.SessionBlackboard.SetValue("bg_only", 200);
 
         // Verify isolation before serialize.
         Assert.False(fg1.SessionBlackboard.TryGet<int>("bg_only").found);
@@ -153,7 +153,7 @@ public class PlayStopPlayRoundTripTests
         var (ctx1, fs) = CreateContext();
         var pr1 = SetupProgressRun(ctx1, fs);
         pr1.LoadAndMountForeground("level_a");
-        pr1.ProgressBlackboard.Set("global_flag", "hello_world");
+        pr1.ProgressBlackboard.SetValue("global_flag", "hello_world");
 
         ctx1.SessionManager.CreateBackgroundSession("bg1", "bg_level");
 
@@ -184,15 +184,15 @@ public class PlayStopPlayRoundTripTests
         pr1.LoadAndMountForeground("main_level");
 
         var fg1 = ctx1.SessionManager.ForegroundSession!;
-        fg1.SessionBlackboard.Set("score", 42);
+        fg1.SessionBlackboard.SetValue("score", 42);
 
         // Tickable background.
         var bgTick = ctx1.SessionManager.CreateBackgroundSession("sim", "sim_level", true);
-        bgTick.SessionBlackboard.Set("step", 7);
+        bgTick.SessionBlackboard.SetValue("step", 7);
 
         // Non-tickable background.
         var bgStore = ctx1.SessionManager.CreateBackgroundSession("cache", "cache_level");
-        bgStore.SessionBlackboard.Set("cached", true);
+        bgStore.SessionBlackboard.SetValue("cached", true);
 
         // Verify state before serialization.
         Assert.True(fg1.IsFrontSession);
@@ -276,7 +276,7 @@ public class PlayStopPlayRoundTripTests
         var (ctx1, fs) = CreateContext();
         var pr1 = SetupProgressRun(ctx1, fs);
         pr1.LoadAndMountForeground("level_x");
-        pr1.ProgressBlackboard.Set("user_data", "important");
+        pr1.ProgressBlackboard.SetValue("user_data", "important");
 
         ctx1.SessionManager.CreateBackgroundSession("bg_sim", "sim_level", true);
 
@@ -318,13 +318,13 @@ public class PlayStopPlayRoundTripTests
         var (ctx, fs) = CreateContext();
         var pr = SetupProgressRun(ctx, fs);
         pr.LoadAndMountForeground("first_level");
-        pr.ProgressBlackboard.Set("first_data", "A");
+        pr.ProgressBlackboard.SetValue("first_data", "A");
 
         var payload1 = pr.BuildSavePayload("save-1");
 
         // Create second state.
         pr.SwitchForeground("second_level");
-        pr.ProgressBlackboard.Set("second_data", "B");
+        pr.ProgressBlackboard.SetValue("second_data", "B");
         ctx.SessionManager.CreateBackgroundSession("bg2", "bg2_level", true);
 
         var payload2 = pr.BuildSavePayload("save-2");
