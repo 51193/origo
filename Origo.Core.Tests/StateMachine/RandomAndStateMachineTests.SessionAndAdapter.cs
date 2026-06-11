@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.StateMachine;
 using Xunit;
@@ -15,7 +16,10 @@ public partial class RandomAndStateMachineTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         var pool = runtime.SndWorld.StrategyPool;
         pool.Register(() => new SmPushStrategy());
@@ -28,7 +32,7 @@ public partial class RandomAndStateMachineTests
 
         try
         {
-            var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, ctx);
+            var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, ctx);
             ctx.SetProgressRun(progressRun);
             progressRun.LoadAndMountForeground("default");
 

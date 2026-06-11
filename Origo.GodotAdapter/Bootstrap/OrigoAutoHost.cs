@@ -42,9 +42,19 @@ public partial class OrigoAutoHost : Node
     public IConsoleOutputChannel? ConsoleOutputChannel { get; private set; }
 
     /// <summary>
-    ///     与 <see cref="Runtime" /> 同一次引导创建的 <see cref="GodotFileSystem" />，供子类（如 <see cref="OrigoDefaultEntry" />）复用。
+    ///     文件元数据访问接口（与当前运行时同源）。
     /// </summary>
-    protected IFileSystem SharedFileSystem { get; private set; } = null!;
+    protected IFileMetaAccess SharedMetaAccess { get; private set; } = null!;
+
+    /// <summary>
+    ///     路径解析接口（与当前运行时同源）。
+    /// </summary>
+    protected IPathResolver SharedPathResolver { get; private set; } = null!;
+
+    /// <summary>
+    ///     DataSource I/O 网关（与当前运行时同源）。
+    /// </summary>
+    protected IDataSourceIoGateway SharedDataSourceIo { get; private set; } = null!;
 
     public OrigoRuntime Runtime { get; private set; } = null!;
 
@@ -85,9 +95,12 @@ public partial class OrigoAutoHost : Node
             new LogMessageBuilder().Build("CreateRuntime begin."));
 
         var fileSystem = new GodotFileSystem();
-        SharedFileSystem = fileSystem;
+        SharedDataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem);
+        SharedMetaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
+        SharedPathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
+
         var sndManager = CreateAndSetupSndManager(fileSystem, logger, out var sharedTypeMapping,
-            out var converterRegistry, out var dataSourceIo, out var persistentBb,
+            out var converterRegistry, out var persistentBb,
             out var consoleInput, out var consoleOutputChannel);
 
         var runtime = new OrigoRuntime(
@@ -96,7 +109,7 @@ public partial class OrigoAutoHost : Node
             sndManager,
             sharedTypeMapping,
             converterRegistry,
-            dataSourceIo,
+            SharedDataSourceIo,
             persistentBb,
             consoleInput,
             consoleOutputChannel
@@ -107,7 +120,7 @@ public partial class OrigoAutoHost : Node
         ConsoleInput = consoleInput;
         ConsoleOutputChannel = consoleOutputChannel;
 
-        var systemBbPath = fileSystem.CombinePath(SystemBlackboardSaveRoot, "system.json");
+        var systemBbPath = SharedPathResolver.CombinePath(SystemBlackboardSaveRoot, "system.json");
         createWatch.Stop();
         logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder()
@@ -122,7 +135,6 @@ public partial class OrigoAutoHost : Node
         GodotLogger logger,
         out TypeStringMapping sharedTypeMapping,
         out DataSourceConverterRegistry converterRegistry,
-        out IDataSourceIoGateway dataSourceIo,
         out PersistentBlackboard persistentBb,
         out IConsoleInputSource consoleInput,
         out ConsoleOutputChannel consoleOutputChannel)
@@ -131,15 +143,14 @@ public partial class OrigoAutoHost : Node
         AddChild(sndManager);
         SndManager = sndManager;
 
-        var systemBbPath = fileSystem.CombinePath(SystemBlackboardSaveRoot, "system.json");
+        var systemBbPath = SharedPathResolver.CombinePath(SystemBlackboardSaveRoot, "system.json");
         sharedTypeMapping = new TypeStringMapping();
         GodotJsonConverterRegistry.RegisterTypeMappings(sharedTypeMapping);
 
         converterRegistry = DataSourceFactory.CreateDefaultRegistry(sharedTypeMapping);
         GodotJsonConverterRegistry.RegisterDataSourceConverters(converterRegistry);
-        dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem);
 
-        persistentBb = new PersistentBlackboard(fileSystem, systemBbPath, dataSourceIo, converterRegistry,
+        persistentBb = new PersistentBlackboard(SharedMetaAccess, SharedPathResolver, systemBbPath, SharedDataSourceIo, converterRegistry,
             new Blackboard());
         persistentBb.LoadFromDisk();
 

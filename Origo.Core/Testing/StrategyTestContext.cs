@@ -26,8 +26,9 @@ internal sealed class StrategyTestContext : ISndContext
     private readonly List<string> _consoleOutput = new();
     private readonly Queue<Action> _deferred = new();
     private readonly Dictionary<string, SndMetaData> _templates = new(StringComparer.Ordinal);
-    private readonly IFileSystem _fileSystem;
+    private readonly IFileMetaAccess _metaAccess;
     private readonly IDataSourceIoGateway _dataSourceIo;
+    private readonly IPathResolver _pathResolver;
     private readonly DataSourceConverterRegistry _converterRegistry;
 
     public StrategyTestContext()
@@ -35,8 +36,10 @@ internal sealed class StrategyTestContext : ISndContext
         var session = new TestSessionRun();
         SessionManager = new TestSessionManager(session);
 
-        _fileSystem = new MemoryFileSystem();
-        _dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(_fileSystem);
+        var fileSystem = new MemoryFileSystem();
+        _metaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
+        _dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem);
+        _pathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
         _converterRegistry = DataSourceFactory.CreateDefaultRegistry(new TypeStringMapping());
     }
 
@@ -168,7 +171,7 @@ internal sealed class StrategyTestContext : ISndContext
     void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite)
         => _dataSourceIo.WriteTree(path, node, overwrite);
 
-    bool ISndFileAccess.FileExists(string path) => _dataSourceIo.Exists(path);
+    bool ISndFileAccess.FileExists(string path) => _metaAccess.FileExists(path);
 
     T ISndFileAccess.ReadObject<T>(string path)
     {
@@ -189,7 +192,7 @@ internal sealed class StrategyTestContext : ISndContext
         => _dataSourceIo.WriteTree(ResolveExtraTestPath(relativePath), node, overwrite);
 
     bool ISndArchiveFileAccess.FileExists(string relativePath)
-        => _dataSourceIo.Exists(ResolveExtraTestPath(relativePath));
+        => _metaAccess.FileExists(ResolveExtraTestPath(relativePath));
 
     T ISndArchiveFileAccess.ReadObject<T>(string relativePath)
     {
@@ -206,9 +209,9 @@ internal sealed class StrategyTestContext : ISndContext
     void ISndArchiveFileAccess.DeleteFile(string relativePath)
     {
         var resolved = ResolveExtraTestPath(relativePath);
-        if (!_dataSourceIo.Exists(resolved))
+        if (!_metaAccess.FileExists(resolved))
             throw new InvalidOperationException($"File not found in archive: '{relativePath}'.");
-        _fileSystem.Delete(resolved);
+        _metaAccess.Delete(resolved);
     }
 
     private static string ResolveExtraTestPath(string relativePath)

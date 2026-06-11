@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 using Origo.Core.StateMachine;
@@ -14,7 +15,10 @@ public class StackStateMachineTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var pool = runtime.SndWorld.StrategyPool;
         pool.Register(() => new SmPushStub());
         pool.Register(() => new SmPopStub());

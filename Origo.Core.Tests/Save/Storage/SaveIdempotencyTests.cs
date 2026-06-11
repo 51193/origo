@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 using Origo.Core.Save;
 using Origo.Core.Save.Storage;
@@ -95,9 +96,10 @@ public class SaveIdempotencyTests
     public void WriteToCurrent_CreatesPayloadShaFile()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var payload = CreateMinimalPayload("001", "default");
         var policy = new DefaultSavePathPolicy();
-        var handle = new SaveFileHandle(fs, "root", policy);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         SavePayloadWriter.WriteToCurrent(handle, payload);
 
@@ -112,10 +114,11 @@ public class SaveIdempotencyTests
     public void WriteSavePayloadToCurrentThenSnapshot_SamePayloadTwice_SecondSkips()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var payload = CreateMinimalPayload("001", "default");
         var policy = new DefaultSavePathPolicy();
-        var handle = new SaveFileHandle(fs, "root", policy);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // First write — must succeed.
         SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
@@ -145,8 +148,9 @@ public class SaveIdempotencyTests
     public void WriteSavePayloadToCurrentThenSnapshot_DifferentPayload_Overwrites()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
-        var handle = new SaveFileHandle(fs, "root", new DefaultSavePathPolicy());
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", new DefaultSavePathPolicy());
         var payload = CreateMinimalPayload("001", "default");
 
         // First write.
@@ -168,8 +172,9 @@ public class SaveIdempotencyTests
     public void WriteSavePayloadToCurrentThenSnapshot_NewSaveId_AlwaysWrites()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
-        var handle = new SaveFileHandle(fs, "root", new DefaultSavePathPolicy());
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", new DefaultSavePathPolicy());
         var payload = CreateMinimalPayload("new_save", "default");
 
         SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "new_save", logger);
@@ -182,9 +187,10 @@ public class SaveIdempotencyTests
     public void WriteSavePayloadToCurrentThenSnapshot_ExistingSaveNoSha_WritesAndCreatesSha()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
-        var handle = new SaveFileHandle(fs, "root", policy);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // Pre-seed a snapshot directory without .payload.sha
         fs.CreateDirectory(fs.CombinePath("root", policy.GetSaveDirectory("001")));
@@ -204,9 +210,10 @@ public class SaveIdempotencyTests
     public void WriteSavePayloadToCurrentThenSnapshot_CorruptedShaFile_WritesAndOverwrites()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
-        var handle = new SaveFileHandle(fs, "root", policy);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // Pre-seed a snapshot with corrupted .payload.sha (empty content).
         var snapshotRel = policy.GetSaveDirectory("001");
@@ -225,8 +232,9 @@ public class SaveIdempotencyTests
     public void SnapshotCurrentToSave_CopiesPayloadShaFile()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new DefaultSavePathPolicy();
-        var handle = new SaveFileHandle(fs, "root", policy);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
         var currentRel = policy.GetCurrentDirectory();
 
         // Seed current/ with .payload.sha
@@ -255,9 +263,10 @@ public class SaveIdempotencyTests
     public void WriteSavePayloadToCurrentThenSnapshot_WhenWriteMarkerExists_StillThrows()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
-        var handle = new SaveFileHandle(fs, "root", policy);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // Pre-seed snapshot with matching .payload.sha to try triggering the idempotent path,
         // then seed a .write_in_progress marker to verify the idempotent check does NOT bypass
@@ -331,10 +340,11 @@ public class SaveIdempotencyTests
     public void WriteSavePayloadToCurrentThenSnapshot_IdempotentSkip_PreservesExistingSnapshot()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var payload = CreateMinimalPayload("001", "default");
         var policy = new DefaultSavePathPolicy();
-        var handle = new SaveFileHandle(fs, "root", policy);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // First write creates the snapshot.
         SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
@@ -383,4 +393,10 @@ public class SaveIdempotencyTests
             SessionStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}""")
         };
     }
+
+    private static (IFileMetaAccess MetaAccess, IDataSourceIoGateway DataSourceIo, IPathResolver PathResolver)
+        CreateGateways(IFileSystem fs) =>
+        (DataSourceFactory.CreateFileMetaAccess(fs),
+         DataSourceFactory.CreateDefaultIoGateway(fs),
+         DataSourceFactory.CreatePathResolver(fs));
 }

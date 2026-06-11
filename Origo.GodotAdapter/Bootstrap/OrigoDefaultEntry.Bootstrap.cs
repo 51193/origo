@@ -14,7 +14,9 @@ public partial class OrigoDefaultEntry
 
         _sndContext = new SndContext(new SndContextParameters(
             Runtime,
-            SharedFileSystem,
+            SharedDataSourceIo,
+            SharedMetaAccess,
+            SharedPathResolver,
             SaveRootPath,
             InitialSaveRootPath,
             ConfigPath)

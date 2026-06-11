@@ -5,37 +5,44 @@ using Origo.Core.DataSource;
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
-///     统一的存档 I/O 操作句柄，封装 <see cref="IFileSystem" />、<see cref="IDataSourceIoGateway" />、
-///     保存根路径和 <see cref="ISavePathPolicy" />，并合并了路径解析与网关创建的辅助逻辑。
-///     消除了 SavePayloadReader/Writer/Facade 中的三级重载链。
+///     统一的存档 I/O 操作句柄，封装 <see cref="IFileMetaAccess" />、<see cref="IDataSourceIoGateway" />、
+///     <see cref="IPathResolver" />、保存根路径和 <see cref="ISavePathPolicy" />，
+///     并合并了路径解析的辅助逻辑。
 /// </summary>
 internal sealed class SaveFileHandle
 {
-    public IFileSystem FileSystem { get; }
+    public IFileMetaAccess MetaAccess { get; }
     public IDataSourceIoGateway IoGateway { get; }
+    public IPathResolver PathResolver { get; }
     public string SaveRootPath { get; }
     public ISavePathPolicy PathPolicy { get; }
 
-    public SaveFileHandle(IFileSystem fileSystem, string saveRootPath, ISavePathPolicy? pathPolicy = null)
+    public SaveFileHandle(
+        IFileMetaAccess metaAccess,
+        IDataSourceIoGateway ioGateway,
+        IPathResolver pathResolver,
+        string saveRootPath,
+        ISavePathPolicy? pathPolicy = null)
     {
-        FileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+        MetaAccess = metaAccess ?? throw new ArgumentNullException(nameof(metaAccess));
+        IoGateway = ioGateway ?? throw new ArgumentNullException(nameof(ioGateway));
+        PathResolver = pathResolver ?? throw new ArgumentNullException(nameof(pathResolver));
         SaveRootPath = saveRootPath ?? throw new ArgumentNullException(nameof(saveRootPath));
         ValidateRootPath(saveRootPath, nameof(saveRootPath), "Save root path cannot be null or whitespace.");
         PathPolicy = pathPolicy ?? new DefaultSavePathPolicy();
-        IoGateway = DataSourceFactory.CreateDefaultIoGateway(fileSystem, false);
     }
 
     public string GetAbsolutePath(string relativePath)
     {
-        return FileSystem.CombinePath(SaveRootPath, relativePath);
+        return PathResolver.CombinePath(SaveRootPath, relativePath);
     }
 
     public void EnsureParentDirectory(string filePath)
     {
         var absPath = GetAbsolutePath(filePath);
-        var parentDir = FileSystem.GetParentDirectory(absPath);
-        if (!string.IsNullOrEmpty(parentDir) && !FileSystem.DirectoryExists(parentDir))
-            FileSystem.CreateDirectory(parentDir);
+        var parentDir = PathResolver.GetParentDirectory(absPath);
+        if (!string.IsNullOrEmpty(parentDir) && !MetaAccess.DirectoryExists(parentDir))
+            MetaAccess.CreateDirectory(parentDir);
     }
 
     public string GetRelativePath(string fullPath)

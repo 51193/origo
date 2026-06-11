@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
@@ -21,7 +22,10 @@ public class SndEntityAfterLoadTests
         runtime.SndWorld.RegisterStrategy(() => new AfterLoadProbeBStrategy());
 
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var nodeFactory = new TestNodeFactory();
 
         AfterLoadProbeAStrategy.Events = new List<string>();

@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save;
 using Origo.Core.Snd;
@@ -314,15 +315,16 @@ public class SessionManagerTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
-        // Set up a progress run so ctx.SessionManager returns a per-instance manager
-        // (avoids cross-test contamination via the static fallback).
         var progressRun = TestFactory.CreateProgressRun(
-            "001", logger, fs, "root", runtime, ctx);
+            "001", logger, metaAccess, pathResolver, "root", runtime, ctx, sharedDataSourceIo: dataSourceIo);
         ctx.SetProgressRun(progressRun);
         return (ctx, fs);
     }
@@ -330,7 +332,7 @@ public class SessionManagerTests
     private static void SetupForegroundSession(SndContext ctx)
     {
         var progressRun = TestFactory.CreateProgressRun(
-            "001", ctx.Runtime.Logger, ctx.FileSystem, "root", ctx.Runtime, ctx);
+            "001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
     }

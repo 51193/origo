@@ -6,7 +6,8 @@ namespace Origo.Core.DataSource;
 
 /// <summary>
 ///     DataSource 文件 I/O 中间层默认实现。
-///     编解码器通过构造器注入，支持注册自定义格式。
+///     所有文件内容的读写均通过后缀路由到对应的 <see cref="IDataSourceCodec" />，
+///     编码/解码异常统一包装为 <see cref="InvalidOperationException" />（含文件路径与后缀信息）。
 /// </summary>
 internal sealed class DataSourceIoGateway : IDataSourceIoGateway
 {
@@ -25,13 +26,6 @@ internal sealed class DataSourceIoGateway : IDataSourceIoGateway
         _fileSystem = fileSystem;
         _options = options;
         _codecs = new Dictionary<DataSourceCodecKind, IDataSourceCodec>(codecs);
-    }
-
-    public bool Exists(string filePath)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentException("DataSource file path cannot be null or whitespace.", nameof(filePath));
-        return _fileSystem.Exists(filePath);
     }
 
     public DataSourceNode ReadTree(string filePath)

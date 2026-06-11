@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save;
 using Origo.Core.Save.Storage;
@@ -17,10 +18,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         var run = progressRun.LoadAndMountForeground("default");
         run.SessionBlackboard.Set("foo", 1);
 
@@ -40,10 +44,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
         var payload = new SaveGamePayload
         {
@@ -76,10 +83,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
         var payload = new SaveGamePayload
         {
@@ -108,10 +118,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         progressRun.LoadAndMountForeground("a");
 
         // Seed target level payload into current/, as SwitchForeground is strict.
@@ -139,10 +152,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         progressRun.LoadAndMountForeground("a");
 
         // Missing target level payload in current/ → enter empty session and clear scene (README contract).
@@ -171,10 +187,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         Assert.False(progressRun.ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology).found);
 
         progressRun.LoadAndMountForeground("dungeon");
@@ -190,10 +209,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         progressRun.LoadAndMountForeground("alpha");
         progressRun.ProgressBlackboard.Set(WellKnownKeys.SessionTopology, "__foreground__=wrong=false");
 
@@ -207,10 +229,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("level1");
 
@@ -232,15 +257,18 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
 
         fs.SeedFile("root/current/level_bad/snd_scene.json", "{invalid}");
         fs.SeedFile("root/current/level_bad/session.json", """{"after":{"type":"Int32","data":3}}""");
         fs.SeedFile("root/current/level_bad/session_state_machines.json", """{"machines":[]}""");
 
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
         Assert.ThrowsAny<Exception>(() => progressRun.LoadAndMountForeground("bad"));
@@ -251,10 +279,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
         var payload = new SaveGamePayload
         {
@@ -275,10 +306,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
         var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
@@ -293,10 +327,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
         var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
@@ -312,10 +349,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
         var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
@@ -334,10 +374,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
         // No data seeded — should mount empty session.
@@ -354,7 +397,10 @@ public class LifecycleRunsTests
     public void ResolveLevelPayload_ReturnsNull_WhenNoData()
     {
         var fs = new TestFileSystem();
-        var service = new DefaultSaveStorageService(fs, "root");
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
 
         var result = service.ResolveLevelPayload("001", "nonexistent");
 
@@ -368,10 +414,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
         var run = progressRun.LoadAndMountForeground("test_level");
 
@@ -385,11 +434,14 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
 
-        var progressRun = TestFactory.CreateProgressRun("test_save", logger, fs, "root", runtime, sndContext);
+        var progressRun = TestFactory.CreateProgressRun("test_save", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
         Assert.Contains(logger.Infos, msg => msg.Contains("Created ProgressRun") && msg.Contains("test_save"));
 
@@ -401,10 +453,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
         using var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
@@ -419,10 +474,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
 
@@ -446,10 +504,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
         Assert.Throws<ArgumentException>(() => progressRun.LoadAndMountForeground(""));
@@ -461,10 +522,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
 
@@ -477,10 +541,13 @@ public class LifecycleRunsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
 

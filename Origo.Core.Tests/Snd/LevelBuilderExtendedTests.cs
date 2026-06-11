@@ -1,4 +1,6 @@
 using System;
+using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.DataSource;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -17,7 +19,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
 
         builder.AddEntity(MakeMeta("entity_a"));
@@ -36,7 +39,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
         builder.Build();
 
@@ -50,7 +54,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
         builder.AddEntity(MakeMeta("e1"));
 
@@ -64,7 +69,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
         builder.AddEntity(MakeMeta("dup"));
 
@@ -76,7 +82,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
 
         Assert.Throws<ArgumentNullException>(() => builder.AddEntity(null!));
@@ -87,7 +94,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
 
         Assert.Throws<ArgumentException>(() => builder.AddEntity(new SndMetaData
@@ -104,7 +112,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
 
         builder.AddEntities(new[] { MakeMeta("a"), MakeMeta("b"), MakeMeta("c") });
@@ -116,7 +125,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
 
         Assert.Throws<ArgumentNullException>(() => builder.AddEntities(null!));
@@ -127,6 +137,7 @@ public class LevelBuilderExtendedTests
     {
         var logger = new TestLogger();
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("maps/templates.map", "tmpl: templates/tmpl.json");
         fs.SeedFile("templates/tmpl.json",
             """
@@ -137,10 +148,10 @@ public class LevelBuilderExtendedTests
               "data": { "pairs": {} }
             }
             """);
-        var sndWorld = TestFactory.CreateSndWorld(logger: logger);
-        sndWorld.LoadTemplates(fs, "maps/templates.map", logger);
+        var sndWorld = TestFactory.CreateSndWorld(logger: logger, fileSystem: fs);
+        sndWorld.LoadTemplates("maps/templates.map", logger);
 
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
 
         builder.AddEntityFromTemplate("tmpl", "overridden");
@@ -152,7 +163,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
 
         Assert.Throws<ArgumentException>(() => builder.AddEntityFromTemplate(""));
@@ -163,7 +175,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         Assert.Throws<ArgumentException>(() => new LevelBuilder("", sndWorld, storage));
     }
 
@@ -171,7 +184,8 @@ public class LevelBuilderExtendedTests
     public void Constructor_NullSndWorld_Throws()
     {
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         Assert.Throws<ArgumentNullException>(() => new LevelBuilder("lvl", null!, storage));
     }
 
@@ -187,7 +201,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
         builder.SetSessionData("key", 42);
 
@@ -201,7 +216,8 @@ public class LevelBuilderExtendedTests
     {
         var sndWorld = TestFactory.CreateSndWorld();
         var fs = new TestFileSystem();
-        var storage = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("my_level", sndWorld, storage);
         Assert.Equal("my_level", builder.LevelId);
     }
@@ -216,6 +232,12 @@ public class LevelBuilderExtendedTests
             DataMetaData = new DataMetaData()
         };
     }
+
+    private static (IFileMetaAccess MetaAccess, IDataSourceIoGateway DataSourceIo, IPathResolver PathResolver)
+        CreateGateways(IFileSystem fs) =>
+        (DataSourceFactory.CreateFileMetaAccess(fs),
+         DataSourceFactory.CreateDefaultIoGateway(fs),
+         DataSourceFactory.CreatePathResolver(fs));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

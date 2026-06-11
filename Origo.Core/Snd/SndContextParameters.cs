@@ -11,16 +11,22 @@ public sealed class SndContextParameters
 {
     public SndContextParameters(
         OrigoRuntime runtime,
-        IFileSystem fileSystem,
+        IDataSourceIoGateway dataSourceIo,
+        IFileMetaAccess metaAccess,
+        IPathResolver pathResolver,
         string saveRootPath,
         string initialSaveRootPath,
         string entryConfigPath)
     {
         ArgumentNullException.ThrowIfNull(runtime);
-        ArgumentNullException.ThrowIfNull(fileSystem);
+        ArgumentNullException.ThrowIfNull(dataSourceIo);
+        ArgumentNullException.ThrowIfNull(metaAccess);
+        ArgumentNullException.ThrowIfNull(pathResolver);
 
         Runtime = runtime;
-        FileSystem = fileSystem;
+        DataSourceIo = dataSourceIo;
+        MetaAccess = metaAccess;
+        PathResolver = pathResolver;
         SaveRootPath = RequireText(saveRootPath, nameof(saveRootPath), "Save root path cannot be null or whitespace.");
         InitialSaveRootPath = RequireText(initialSaveRootPath, nameof(initialSaveRootPath),
             "Initial save root path cannot be null or whitespace.");
@@ -29,7 +35,9 @@ public sealed class SndContextParameters
     }
 
     public OrigoRuntime Runtime { get; }
-    public IFileSystem FileSystem { get; }
+    public IDataSourceIoGateway DataSourceIo { get; }
+    public IFileMetaAccess MetaAccess { get; }
+    public IPathResolver PathResolver { get; }
     public string SaveRootPath { get; }
     public string InitialSaveRootPath { get; }
     public string EntryConfigPath { get; }

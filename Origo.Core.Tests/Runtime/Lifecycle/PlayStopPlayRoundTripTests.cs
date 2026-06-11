@@ -2,6 +2,8 @@ using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
 using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.DataSource;
 
 namespace Origo.Core.Tests;
 
@@ -248,9 +250,16 @@ public class PlayStopPlayRoundTripTests
         // ProgressRun always creates its own blank blackboard internally.
         // No external blackboard injection is supported.
         var progressRun = TestFactory.CreateProgressRun(
-            "001", new TestLogger(), new TestFileSystem(), "root",
+            "001", new TestLogger(),
+            DataSourceFactory.CreateFileMetaAccess(new TestFileSystem()),
+            DataSourceFactory.CreatePathResolver(new TestFileSystem()),
+            "root",
             TestFactory.CreateRuntime(),
-            new SndContext(new SndContextParameters(TestFactory.CreateRuntime(), new TestFileSystem(), "root",
+            new SndContext(new SndContextParameters(TestFactory.CreateRuntime(),
+                DataSourceFactory.CreateDefaultIoGateway(new TestFileSystem()),
+                DataSourceFactory.CreateFileMetaAccess(new TestFileSystem()),
+                DataSourceFactory.CreatePathResolver(new TestFileSystem()),
+                "root",
                 "initial", "entry.json")));
 
         Assert.Null(progressRun.SessionManager.ForegroundSession);
@@ -347,10 +356,13 @@ public class PlayStopPlayRoundTripTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         return (ctx, fs);
     }
@@ -358,7 +370,7 @@ public class PlayStopPlayRoundTripTests
     private static ProgressRun SetupProgressRun(SndContext ctx, TestFileSystem fs)
     {
         var progressRun = TestFactory.CreateProgressRun(
-            "001", ctx.Runtime.Logger, fs, "root", ctx.Runtime, ctx);
+            "001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
         ctx.SetProgressRun(progressRun);
         return progressRun;
     }

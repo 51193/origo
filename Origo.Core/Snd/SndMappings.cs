@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -32,20 +31,18 @@ internal sealed class SndMappings
     ///     从指定文本文件加载场景资源别名映射。
     ///     文件格式为按行的 <c>key: value</c>，忽略空行与以 # 开头的注释行。
     /// </summary>
-    public void LoadSceneAliases(IFileSystem fileSystem, string mapFilePath, ILogger logger)
+    public void LoadSceneAliases(IDataSourceIoGateway dataSourceIo, string mapFilePath, ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(fileSystem);
+        ArgumentNullException.ThrowIfNull(dataSourceIo);
         ArgumentNullException.ThrowIfNull(logger);
         _sceneAliases.Clear();
 
         if (string.IsNullOrWhiteSpace(mapFilePath))
             throw new ArgumentException("Scene alias map file path cannot be null or whitespace.", nameof(mapFilePath));
-        if (!fileSystem.Exists(mapFilePath))
-            throw new InvalidOperationException($"Scene resource alias map file '{mapFilePath}' not found.");
 
-        foreach (var kv in KeyValueFileParser.Parse(fileSystem.ReadAllText(mapFilePath), mapFilePath, true,
-                     logger))
-            _sceneAliases[kv.Key] = kv.Value;
+        var node = dataSourceIo.ReadTree(mapFilePath);
+        foreach (var key in node.Keys)
+            _sceneAliases[key] = node[key].AsString();
         logger.Log(LogLevel.Info, nameof(SndMappings),
             new LogMessageBuilder().AddSuffix("filePath", mapFilePath)
                 .Build($"Loaded {_sceneAliases.Count} scene resource aliases."));
@@ -70,16 +67,14 @@ internal sealed class SndMappings
     }
 
     /// <summary>
-    ///     从映射文件加载模板别名到 JSON 文件路径的映射，并配置内部使用的文件系统与编解码器。
+    ///     从映射文件加载模板别名到 JSON 文件路径的映射，并配置内部使用的编解码器。
     /// </summary>
     public void LoadTemplates(
-        IFileSystem fileSystem,
-        string mapFilePath,
         IDataSourceIoGateway dataSourceIo,
+        string mapFilePath,
         DataSourceConverterRegistry registry,
         ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(fileSystem);
         ArgumentNullException.ThrowIfNull(dataSourceIo);
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(logger);
@@ -90,12 +85,10 @@ internal sealed class SndMappings
         if (string.IsNullOrWhiteSpace(mapFilePath))
             throw new ArgumentException("Snd template alias map file path cannot be null or whitespace.",
                 nameof(mapFilePath));
-        if (!fileSystem.Exists(mapFilePath))
-            throw new InvalidOperationException($"Snd template alias map file '{mapFilePath}' not found.");
 
-        foreach (var kv in KeyValueFileParser.Parse(fileSystem.ReadAllText(mapFilePath), mapFilePath, true,
-                     logger))
-            _templatePaths[kv.Key] = kv.Value;
+        var node = dataSourceIo.ReadTree(mapFilePath);
+        foreach (var key in node.Keys)
+            _templatePaths[key] = node[key].AsString();
 
         var sndMetaConverter = registry.Get<SndMetaData>();
         _templateResolver = new SndTemplateResolver(dataSourceIo, sndMetaConverter, _templatePaths);

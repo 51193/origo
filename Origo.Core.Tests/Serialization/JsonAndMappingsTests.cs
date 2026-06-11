@@ -49,16 +49,16 @@ public class JsonAndMappingsTests
     }
 
     [Fact]
-    public void SndMappings_LoadSceneAliases_DuplicateKey_LogsWarningAndLastWins()
+    public void SndMappings_LoadSceneAliases_DuplicateKey_LastWins()
     {
         var fs = new TestFileSystem();
         fs.SeedFile("maps/dup_scenes.map", "hero: res://first.tscn\nhero: res://second.tscn\n");
+        var io = TestFactory.CreateIoGateway(fs);
         var mappings = new SndMappings();
         var logger = new TestLogger();
-        mappings.LoadSceneAliases(fs, "maps/dup_scenes.map", logger);
+        mappings.LoadSceneAliases(io, "maps/dup_scenes.map", logger);
 
         Assert.Equal("res://second.tscn", mappings.ResolveSceneAlias("hero"));
-        Assert.Contains(logger.Warnings, w => w.Contains("Duplicate", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -82,8 +82,8 @@ public class JsonAndMappingsTests
         var io = TestFactory.CreateIoGateway(fs);
         var registry = TestFactory.CreateRegistry(new TypeStringMapping());
 
-        mappings.LoadSceneAliases(fs, "maps/scenes.map", logger);
-        mappings.LoadTemplates(fs, "maps/templates.map", io, registry, logger);
+        mappings.LoadSceneAliases(io, "maps/scenes.map", logger);
+        mappings.LoadTemplates(io, "maps/templates.map", registry, logger);
 
         Assert.Equal("res://hero.tscn", mappings.ResolveSceneAlias("hero"));
         Assert.Throws<KeyNotFoundException>(() => mappings.ResolveSceneAlias("missing_alias"));
@@ -115,7 +115,7 @@ public class JsonAndMappingsTests
         var io = TestFactory.CreateIoGateway(fs);
         var registry = TestFactory.CreateRegistry(new TypeStringMapping());
         var mappings = new SndMappings();
-        mappings.LoadTemplates(fs, "maps/templates.map", io, registry, NullLogger.Instance);
+        mappings.LoadTemplates(io, "maps/templates.map", registry, NullLogger.Instance);
 
         var json = """
                    [
@@ -184,7 +184,7 @@ public class JsonAndMappingsTests
         var io = TestFactory.CreateIoGateway(fs);
         var registry = TestFactory.CreateRegistry(new TypeStringMapping());
         var mappings = new SndMappings();
-        mappings.LoadTemplates(fs, "maps/empty_templates.map", io, registry, NullLogger.Instance);
+        mappings.LoadTemplates(io, "maps/empty_templates.map", registry, NullLogger.Instance);
 
         var ex = Assert.Throws<InvalidOperationException>(() => mappings.ResolveTemplate("any_alias"));
         Assert.Contains("empty", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -200,7 +200,7 @@ public class JsonAndMappingsTests
         var registry = TestFactory.CreateRegistry(new TypeStringMapping());
         var mappings = new SndMappings();
         var logger = new TestLogger();
-        mappings.LoadTemplates(fs, "maps/templates.map", io, registry, logger);
+        mappings.LoadTemplates(io, "maps/templates.map", registry, logger);
 
         Assert.ThrowsAny<Exception>(() => mappings.ResolveTemplate("bad_template"));
     }

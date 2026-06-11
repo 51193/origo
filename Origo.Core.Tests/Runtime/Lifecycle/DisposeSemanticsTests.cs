@@ -10,6 +10,8 @@ using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Xunit;
 using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.DataSource;
 
 namespace Origo.Core.Tests;
 
@@ -353,7 +355,7 @@ public class DisposeSemanticsTests
         // Simulate Continue: LoadOrContinueStrict equivalent
         var payload = ctx.StorageService.ReadSavePayloadFromSnapshot("test_001", "test_level");
         var newPr = TestFactory.CreateProgressRun(
-            "test_001", ctx.Runtime.Logger, fs, "root", ctx.Runtime, ctx);
+            "test_001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
         ctx.SetProgressRun(newPr);
 
         newPr.LoadFromPayload(payload);
@@ -385,7 +387,7 @@ public class DisposeSemanticsTests
 
         var payload = ctx.StorageService.ReadSavePayloadFromSnapshot("score_save", "test_level");
         var newPr = TestFactory.CreateProgressRun(
-            "score_save", ctx.Runtime.Logger, fs, "root", ctx.Runtime, ctx);
+            "score_save", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
         ctx.SetProgressRun(newPr);
         newPr.LoadFromPayload(payload);
 
@@ -455,7 +457,7 @@ public class DisposeSemanticsTests
 
         var payload = ctx.StorageService.ReadSavePayloadFromSnapshot(saveId, "game");
         var newPr = TestFactory.CreateProgressRun(
-            saveId, ctx.Runtime.Logger, fs, "root", ctx.Runtime, ctx);
+            saveId, ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
         ctx.SetProgressRun(newPr);
         newPr.LoadFromPayload(payload);
 
@@ -500,16 +502,21 @@ public class DisposeSemanticsTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
-        configureWorld?.Invoke(runtime.SndWorld);
-
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var tm = new TypeStringMapping();
+        var systemBb = new Blackboard.Blackboard();
+        var runtime = TestFactory.CreateRuntime(logger, host, tm, systemBb, dataSourceIo);
+        configureWorld?.Invoke(runtime.SndWorld);
+
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
 
         var progressRun = TestFactory.CreateProgressRun(
-            "test_save", logger, fs, "root", runtime, ctx);
+            "test_save", logger, metaAccess, pathResolver, "root", runtime, ctx, sharedDataSourceIo: dataSourceIo);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("test_level");
 

@@ -1391,16 +1391,12 @@ public class DataSourceTests
     // ── MapDataSourceCodec edge cases ──
 
     [Fact]
-    public void MapCodec_Decode_LineWithoutColon_SkipsLine()
+    public void MapCodec_Decode_LineWithoutColon_Throws()
     {
         var codec = TestFactory.CreateMapCodec();
         var text = "validkey: value\nno_colon_here\nanotherkey: value2";
-        var node = codec.Decode(text);
 
-        Assert.True(node.ContainsKey("validkey"));
-        Assert.True(node.ContainsKey("anotherkey"));
-        Assert.Equal("value", node["validkey"].AsString());
-        Assert.Equal("value2", node["anotherkey"].AsString());
+        Assert.Throws<FormatException>(() => codec.Decode(text));
     }
 
     [Fact]

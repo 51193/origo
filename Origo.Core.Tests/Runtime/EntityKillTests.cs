@@ -424,8 +424,11 @@ public class EntityKillTests
         world.RegisterStrategy(() => new QuitProbeStrategy());
         host.BindWorld(world);
         var fs = new TestFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
         host.RecoverFromMetaList(new[]
         {
@@ -538,7 +541,10 @@ public class EntityKillTests
                         ]
                         """;
         fs.SeedFile("entry.json", entryJson);
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         return (ctx, logger);
     }
 
@@ -552,8 +558,11 @@ public class EntityKillTests
         world.RegisterStrategy(() => new KillProbeStrategy());
         host.BindWorld(world);
         var fs = new TestFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
 
         var metas = names.Select(n => new SndMetaData

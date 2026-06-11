@@ -1,5 +1,6 @@
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
+using Origo.Core.DataSource;
 using Origo.Core.Save.Storage;
 
 namespace Origo.Core.Runtime.Lifecycle;
@@ -10,7 +11,8 @@ namespace Origo.Core.Runtime.Lifecycle;
 /// </summary>
 internal readonly record struct SystemParameters(
     ILogger Logger,
-    IFileSystem FileSystem,
+    IFileMetaAccess MetaAccess,
+    IPathResolver PathResolver,
     string SaveRootPath,
     ISaveStorageService StorageService,
     ISavePathPolicy SavePathPolicy);

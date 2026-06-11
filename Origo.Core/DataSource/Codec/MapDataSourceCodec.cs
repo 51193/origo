@@ -13,7 +13,7 @@ internal sealed class MapDataSourceCodec : IDataSourceCodec
 {
     public DataSourceNode Decode(string rawText)
     {
-        var pairs = KeyValueFileParser.Parse(rawText, "<map>", false, NullLogger.Instance, allowEmptyValues: true);
+        var pairs = KeyValueFileParser.Parse(rawText, "<map>", true, NullLogger.Instance, allowEmptyValues: true);
         var node = DataSourceNode.CreateObject();
         foreach (var (key, value) in pairs)
             node.Add(key, DataSourceNode.CreateString(value));

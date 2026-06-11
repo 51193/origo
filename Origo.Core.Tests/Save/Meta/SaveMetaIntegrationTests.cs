@@ -26,7 +26,10 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
-        var handle = new SaveFileHandle(fs, "root");
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("key_a", "val_a"));
 
         ctx.RequestSaveGame("slot_01");
@@ -42,7 +45,10 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
-        var handle = new SaveFileHandle(fs, "root");
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         ctx.RegisterSaveMetaContributor(_ => new Dictionary<string, string> { ["dkey"] = "dval" });
 
         ctx.RequestSaveGame("slot_02");
@@ -75,7 +81,10 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
-        var handle = new SaveFileHandle(fs, "root");
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("same", "first"));
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("same", "second"));
 
@@ -92,7 +101,10 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
-        var handle = new SaveFileHandle(fs, "root");
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("a", "1"));
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("b", "2"));
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("c", "3"));
@@ -113,7 +125,10 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
-        var handle = new SaveFileHandle(fs, "root");
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
         ctx.RequestSaveGame("slot_05");
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -155,7 +170,10 @@ public class SaveMetaContributorRegistrationTests
     {
         var ctx = SndContextTestHelper.Create(out var fs);
         SndContextTestHelper.SetupProgressRun(ctx, fs);
-        var handle = new SaveFileHandle(fs, "root");
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         ctx.RegisterSaveMetaContributor(new KeyValueContributor("ts", "1"));
 
         ctx.RequestSaveGame("slot_a");
@@ -308,7 +326,10 @@ internal static class SndContextTestHelper
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         fs = new TestFileSystem();
-        return new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        return new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
     }
 
     public static void SetupProgressRun(SndContext ctx, TestFileSystem fs)

@@ -17,11 +17,16 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
 {
     private readonly SaveFileHandle _handle;
 
-    public DefaultSaveStorageService(IFileSystem fileSystem, string saveRootPath, ISavePathPolicy? pathPolicy = null)
+    public DefaultSaveStorageService(
+        IFileMetaAccess metaAccess,
+        IDataSourceIoGateway ioGateway,
+        IPathResolver pathResolver,
+        string saveRootPath,
+        ISavePathPolicy? pathPolicy = null)
     {
         SaveFileHandle.ValidateRootPath(saveRootPath, nameof(saveRootPath),
             "Save root path cannot be null or whitespace.");
-        _handle = new SaveFileHandle(fileSystem, saveRootPath, pathPolicy);
+        _handle = new SaveFileHandle(metaAccess, ioGateway, pathResolver, saveRootPath, pathPolicy);
     }
 
     public IReadOnlyList<string> EnumerateSaveIds() =>
@@ -109,8 +114,8 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     {
         var currentRel = _handle.PathPolicy.GetCurrentDirectory();
         var currentAbs = _handle.GetAbsolutePath(currentRel);
-        if (_handle.FileSystem.DirectoryExists(currentAbs))
-            _handle.FileSystem.DeleteDirectory(currentAbs);
+        if (_handle.MetaAccess.DirectoryExists(currentAbs))
+            _handle.MetaAccess.DeleteDirectory(currentAbs);
     }
 
     public void RestoreExtraFilesFromSnapshot(string saveId)

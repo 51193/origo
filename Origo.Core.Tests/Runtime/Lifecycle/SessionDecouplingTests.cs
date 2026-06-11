@@ -4,6 +4,7 @@ using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
+using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Save;
 using Origo.Core.Save.Meta;
 using Origo.Core.Save.Storage;
@@ -169,8 +170,11 @@ public class SessionDecouplingTests
     public void DefaultSaveStorageService_Uses_Injected_PathPolicy()
     {
         var fs = new TestFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var customPolicy = new PrefixedSavePathPolicy("custom_");
-        var storage = new DefaultSaveStorageService(fs, "root", customPolicy);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", customPolicy);
 
         var payload = new LevelPayload
         {
@@ -202,9 +206,12 @@ public class SessionDecouplingTests
     public void LevelBuilder_Commit_UsesStorageService()
     {
         var fs = new TestFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var sndWorld = TestFactory.CreateSndWorld();
         var trackingStorage = new TrackingSaveStorageService(
-            new DefaultSaveStorageService(fs, "root"));
+            new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root"));
 
         var builder = new LevelBuilder("my_level", sndWorld, trackingStorage);
         builder.AddEntity(new SndMetaData { Name = "npc" });
@@ -226,12 +233,14 @@ public class SessionDecouplingTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
-        configureWorld?.Invoke(runtime.SndWorld);
-
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        configureWorld?.Invoke(runtime.SndWorld);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         return (ctx, fs);
     }
@@ -239,7 +248,7 @@ public class SessionDecouplingTests
     private static void SetupForegroundSession(SndContext ctx)
     {
         var progressRun = TestFactory.CreateProgressRun(
-            "001", ctx.Runtime.Logger, ctx.FileSystem, "root", ctx.Runtime, ctx);
+            "001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
     }

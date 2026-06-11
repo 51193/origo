@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
 using Origo.Core.Save;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
@@ -9,7 +12,6 @@ using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Origo.Core.StateMachine;
 using Xunit;
-using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Tests;
 
@@ -31,11 +33,12 @@ public class SavePathPolicyContractTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("res://entry/entry.json", "[]");
         var customPolicy = new TestPrefixedPathPolicy("cx_");
 
         var ctx = new SndContext(new SndContextParameters(
-            runtime, fs, "root", "res://initial", "res://entry/entry.json")
+            runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json")
         {
             SavePathPolicy = customPolicy
         });
@@ -68,11 +71,12 @@ public class SavePathPolicyContractTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("res://entry/entry.json", "[]");
         var customPolicy = new TestPrefixedPathPolicy("ix_");
 
         var ctx = new SndContext(new SndContextParameters(
-            runtime, fs, "root", "res://initial", "res://entry/entry.json")
+            runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json")
         {
             SavePathPolicy = customPolicy
         });
@@ -103,10 +107,11 @@ public class SavePathPolicyContractTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var customPolicy = new TestPrefixedPathPolicy("rf_");
 
-        var systemRuntime = TestFactory.CreateSystemRuntime(logger, fs, "root", runtime,
-            savePathPolicy: customPolicy);
+        var systemRuntime = TestFactory.CreateSystemRuntime(logger, metaAccess, pathResolver, "root", runtime,
+            savePathPolicy: customPolicy, sharedDataSourceIo: dataSourceIo);
 
         // Act: write through the system runtime's storage service
         var payload = new LevelPayload
@@ -132,8 +137,9 @@ public class SavePathPolicyContractTests
     public void DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("p_");
-        var storage = new DefaultSaveStorageService(fs, "root", policy);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // Seed a save directory that looks like a valid save
         fs.CreateDirectory("root/save_001");
@@ -148,8 +154,9 @@ public class SavePathPolicyContractTests
     public void DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("p_");
-        var storage = new DefaultSaveStorageService(fs, "root", policy);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // Seed a save directory with meta at the custom policy path
         fs.CreateDirectory("root/save_002");
@@ -167,8 +174,9 @@ public class SavePathPolicyContractTests
     public void DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_Uses_PathPolicy()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("ws_");
-        var storage = new DefaultSaveStorageService(fs, "root", policy);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
         var logger = new TestLogger();
 
         var payload = CreateFullSaveGamePayload("default");
@@ -191,8 +199,9 @@ public class SavePathPolicyContractTests
     public void DefaultSaveStorageService_SnapshotCurrentToSave_Uses_PathPolicy()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("sn_");
-        var storage = new DefaultSaveStorageService(fs, "root", policy);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // Seed current with a file at custom-policy path
         var currentRel = policy.GetCurrentDirectory();
@@ -213,8 +222,9 @@ public class SavePathPolicyContractTests
     public void DefaultSaveStorageService_WriteSavePayloadToCurrent_Uses_PathPolicy()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("wc_");
-        var storage = new DefaultSaveStorageService(fs, "root", policy);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         var payload = CreateFullSaveGamePayload("level1");
         storage.WriteSavePayloadToCurrent(payload);
@@ -229,8 +239,9 @@ public class SavePathPolicyContractTests
     public void DefaultSaveStorageService_ReadWriteRoundTrip_Uses_PathPolicy()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("rt_");
-        var storage = new DefaultSaveStorageService(fs, "root", policy);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         var payload = CreateFullSaveGamePayload("dungeon");
         storage.WriteSavePayloadToCurrent(payload);
@@ -338,8 +349,9 @@ public class SavePathPolicyContractTests
         configureWorld?.Invoke(runtime.SndWorld);
 
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         return (ctx, fs);
     }
@@ -347,7 +359,7 @@ public class SavePathPolicyContractTests
     private static void SetupForegroundSession(SndContext ctx)
     {
         var progressRun = TestFactory.CreateProgressRun(
-            "001", ctx.Runtime.Logger, ctx.FileSystem, "root", ctx.Runtime, ctx);
+            "001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
     }
@@ -467,4 +479,10 @@ public class SavePathPolicyContractTests
     private sealed class NoOpPopContractStrategy : StateMachineStrategyBase
     {
     }
+
+    private static (IFileMetaAccess MetaAccess, IDataSourceIoGateway DataSourceIo, IPathResolver PathResolver)
+        CreateGateways(IFileSystem fs) =>
+        (DataSourceFactory.CreateFileMetaAccess(fs),
+         DataSourceFactory.CreateDefaultIoGateway(fs),
+         DataSourceFactory.CreatePathResolver(fs));
 }

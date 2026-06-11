@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Runtime.Console.CommandHandlers;
@@ -89,8 +91,11 @@ public class InvokeStrategyCommandHandlerTests
         host.BindWorld(world);
 
         var fs = new TestFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
 
         var output = new CollectingConsoleOutputChannel();

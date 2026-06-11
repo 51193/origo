@@ -22,7 +22,7 @@ internal static class SavePayloadWriter
 
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
         var currentAbs = handle.GetAbsolutePath(currentRel);
-        handle.FileSystem.CreateDirectory(currentAbs);
+        handle.MetaAccess.CreateDirectory(currentAbs);
 
         var progressRel = handle.PathPolicy.GetProgressFile(currentRel);
         var progressAbs = handle.GetAbsolutePath(progressRel);
@@ -48,11 +48,11 @@ internal static class SavePayloadWriter
 
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
         var currentAbs = handle.GetAbsolutePath(currentRel);
-        handle.FileSystem.CreateDirectory(currentAbs);
+        handle.MetaAccess.CreateDirectory(currentAbs);
 
         var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
         var markerAbs = handle.GetAbsolutePath(markerRel);
-        handle.FileSystem.WriteAllText(markerAbs, "", true);
+        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
 
         WriteProgressOnlyToCurrent(
             handle,
@@ -68,7 +68,7 @@ internal static class SavePayloadWriter
         foreach (var level in payload.Levels.Values)
             WriteLevelPayload(handle, currentRel, level, true);
 
-        handle.FileSystem.Delete(markerAbs);
+        handle.MetaAccess.Delete(markerAbs);
 
         WritePayloadShaFile(handle, currentRel, payload);
     }
@@ -90,7 +90,7 @@ internal static class SavePayloadWriter
     {
         var levelDirRel = handle.PathPolicy.GetLevelDirectory(baseDirectoryRel, level.LevelId);
         var levelDirAbs = handle.GetAbsolutePath(levelDirRel);
-        handle.FileSystem.CreateDirectory(levelDirAbs);
+        handle.MetaAccess.CreateDirectory(levelDirAbs);
 
         var sndSceneRel = handle.PathPolicy.GetLevelSndSceneFile(levelDirRel);
         var sessionRel = handle.PathPolicy.GetLevelSessionFile(levelDirRel);
@@ -140,9 +140,9 @@ internal static class SavePayloadWriter
             handle.EnsureParentDirectory(customMetaRel);
             handle.IoGateway.WriteTree(customMetaAbs, mapNode);
         }
-        else if (handle.FileSystem.Exists(customMetaAbs))
+        else if (handle.MetaAccess.FileExists(customMetaAbs))
         {
-            handle.FileSystem.Delete(customMetaAbs);
+            handle.MetaAccess.Delete(customMetaAbs);
         }
     }
 
@@ -200,6 +200,6 @@ internal static class SavePayloadWriter
         var shaRel = handle.PathPolicy.GetPayloadShaFile(currentRel);
         var shaAbs = handle.GetAbsolutePath(shaRel);
         handle.EnsureParentDirectory(shaRel);
-        handle.FileSystem.WriteAllText(shaAbs, hash, true);
+        handle.IoGateway.WriteTree(shaAbs, DataSourceNode.CreateString(hash));
     }
 }

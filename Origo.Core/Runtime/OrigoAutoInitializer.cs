@@ -71,16 +71,6 @@ public static class OrigoAutoInitializer
     public static int LoadAndSpawnFromFile(
         string filePath,
         SndRuntime snd,
-        IFileSystem fileSystem,
-        ILogger logger)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        return LoadAndSpawnFromFile(filePath, snd, DataSourceFactory.CreateDefaultIoGateway(fileSystem), logger);
-    }
-
-    public static int LoadAndSpawnFromFile(
-        string filePath,
-        SndRuntime snd,
         IDataSourceIoGateway dataSourceIo,
         ILogger logger)
     {

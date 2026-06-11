@@ -16,7 +16,8 @@ public sealed class PersistentBlackboard : IBlackboard
 {
     private readonly IDataSourceIoGateway _dataSourceIo;
     private readonly string _filePath;
-    private readonly IFileSystem _fileSystem;
+    private readonly IFileMetaAccess _metaAccess;
+    private readonly IPathResolver _pathResolver;
     private readonly IBlackboard _inner;
     private readonly object _lock = new();
     private readonly DataSourceConverterRegistry _registry;
@@ -25,14 +26,17 @@ public sealed class PersistentBlackboard : IBlackboard
     ///     创建持久化黑板实例，包装指定的内部黑板并绑定到磁盘文件路径。
     /// </summary>
     public PersistentBlackboard(
-        IFileSystem fileSystem,
+        IFileMetaAccess metaAccess,
+        IPathResolver pathResolver,
         string filePath,
         IDataSourceIoGateway dataSourceIo,
         DataSourceConverterRegistry registry,
         IBlackboard inner)
     {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        _fileSystem = fileSystem;
+        ArgumentNullException.ThrowIfNull(metaAccess);
+        _metaAccess = metaAccess;
+        ArgumentNullException.ThrowIfNull(pathResolver);
+        _pathResolver = pathResolver;
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
         _filePath = filePath;
@@ -120,7 +124,7 @@ public sealed class PersistentBlackboard : IBlackboard
     {
         lock (_lock)
         {
-            if (!_dataSourceIo.Exists(_filePath))
+            if (!_metaAccess.FileExists(_filePath))
                 return;
 
             using var node = _dataSourceIo.ReadTree(_filePath);
@@ -132,9 +136,9 @@ public sealed class PersistentBlackboard : IBlackboard
 
     private void Persist()
     {
-        var parentDir = _fileSystem.GetParentDirectory(_filePath);
-        if (!string.IsNullOrEmpty(parentDir) && !_fileSystem.DirectoryExists(parentDir))
-            _fileSystem.CreateDirectory(parentDir);
+        var parentDir = _pathResolver.GetParentDirectory(_filePath);
+        if (!string.IsNullOrEmpty(parentDir) && !_metaAccess.DirectoryExists(parentDir))
+            _metaAccess.CreateDirectory(parentDir);
 
         var data = _inner.SerializeAll();
         using var node = _registry.Write<IReadOnlyDictionary<string, TypedData>>(data);

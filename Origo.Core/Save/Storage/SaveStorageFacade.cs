@@ -19,11 +19,11 @@ internal static class SaveStorageFacade
     {
         ArgumentNullException.ThrowIfNull(handle);
 
-        if (!handle.FileSystem.DirectoryExists(handle.SaveRootPath))
+        if (!handle.MetaAccess.DirectoryExists(handle.SaveRootPath))
             return Array.Empty<string>();
 
         var result = new List<string>();
-        foreach (var dir in handle.FileSystem.EnumerateDirectories(handle.SaveRootPath))
+        foreach (var dir in handle.MetaAccess.EnumerateDirectories(handle.SaveRootPath))
         {
             var leaf = SaveFileHandle.GetLeafDirectoryName(dir);
             if (!leaf.StartsWith(SaveDirectoryPrefix, StringComparison.Ordinal))
@@ -73,12 +73,12 @@ internal static class SaveStorageFacade
         var snapshotDirRel = handle.PathPolicy.GetSaveDirectory(newSaveId);
         var snapshotShaRel = handle.PathPolicy.GetPayloadShaFile(snapshotDirRel);
         var snapshotShaAbs = handle.GetAbsolutePath(snapshotShaRel);
-        if (handle.FileSystem.Exists(snapshotShaAbs))
+        if (handle.MetaAccess.FileExists(snapshotShaAbs))
         {
             string existingHash;
             try
             {
-                existingHash = handle.FileSystem.ReadAllText(snapshotShaAbs).Trim();
+                existingHash = handle.IoGateway.ReadTree(snapshotShaAbs).AsString().Trim();
             }
             catch (Exception ex)
             {
@@ -101,12 +101,12 @@ internal static class SaveStorageFacade
         var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
         var markerAbs = handle.GetAbsolutePath(markerRel);
         var currentAbs = handle.GetAbsolutePath(currentRel);
-        handle.FileSystem.CreateDirectory(currentAbs);
-        handle.FileSystem.WriteAllText(markerAbs, "", true);
+        handle.MetaAccess.CreateDirectory(currentAbs);
+        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
 
         SavePayloadWriter.WriteToCurrent(handle, payload);
 
-        handle.FileSystem.WriteAllText(markerAbs, "", true);
+        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
 
         try
         {
@@ -123,7 +123,7 @@ internal static class SaveStorageFacade
             throw;
         }
 
-        handle.FileSystem.Delete(markerAbs);
+        handle.MetaAccess.Delete(markerAbs);
     }
 
     public static void WriteLevelPayloadOnly(
@@ -170,7 +170,7 @@ internal static class SaveStorageFacade
 
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
         var currentAbs = handle.GetAbsolutePath(currentRel);
-        if (!handle.FileSystem.DirectoryExists(currentAbs))
+        if (!handle.MetaAccess.DirectoryExists(currentAbs))
             throw new InvalidOperationException("Missing required current/ directory.");
 
         var saveRel = handle.PathPolicy.GetSaveDirectory(newSaveId);
@@ -178,16 +178,16 @@ internal static class SaveStorageFacade
         var tempRel = $"{saveRel}.tmp";
         var tempAbs = handle.GetAbsolutePath(tempRel);
 
-        if (handle.FileSystem.DirectoryExists(tempAbs))
-            handle.FileSystem.DeleteDirectory(tempAbs);
+        if (handle.MetaAccess.DirectoryExists(tempAbs))
+            handle.MetaAccess.DeleteDirectory(tempAbs);
 
-        handle.FileSystem.CreateDirectory(tempAbs);
+        handle.MetaAccess.CreateDirectory(tempAbs);
         CopyCurrentToTempDirectory(handle, currentRel, tempRel, logger);
 
-        if (handle.FileSystem.DirectoryExists(saveAbs))
-            handle.FileSystem.DeleteDirectory(saveAbs);
+        if (handle.MetaAccess.DirectoryExists(saveAbs))
+            handle.MetaAccess.DeleteDirectory(saveAbs);
 
-        handle.FileSystem.Rename(tempAbs, saveAbs);
+        handle.MetaAccess.Rename(tempAbs, saveAbs);
     }
 
     private static void CopyCurrentToTempDirectory(
@@ -197,7 +197,7 @@ internal static class SaveStorageFacade
         try
         {
             var currentAbs = handle.GetAbsolutePath(currentRel);
-            foreach (var srcAbs in handle.FileSystem.EnumerateFiles(currentAbs, "*", true))
+            foreach (var srcAbs in handle.MetaAccess.EnumerateFiles(currentAbs, "*", true))
             {
                 var relFromRoot = handle.GetRelativePath(srcAbs);
                 var prefix = currentRel + "/";
@@ -207,7 +207,7 @@ internal static class SaveStorageFacade
                 var destRel = $"{tempRel}/{relFromCurrent}";
                 var destAbs = handle.GetAbsolutePath(destRel);
                 handle.EnsureParentDirectory(destRel);
-                handle.FileSystem.Copy(srcAbs, destAbs, true);
+                handle.MetaAccess.Copy(srcAbs, destAbs, true);
             }
         }
         catch (Exception ex)
@@ -215,7 +215,7 @@ internal static class SaveStorageFacade
             var tempAbs = handle.GetAbsolutePath(tempRel);
             try
             {
-                handle.FileSystem.DeleteDirectory(tempAbs);
+                handle.MetaAccess.DeleteDirectory(tempAbs);
             }
             catch (Exception cleanupEx)
             {
@@ -251,16 +251,16 @@ internal static class SaveStorageFacade
         var srcRel = SavePathLayout.Combine(saveRel, relativeDirName);
         var srcAbs = handle.GetAbsolutePath(srcRel);
 
-        if (!handle.FileSystem.DirectoryExists(srcAbs))
+        if (!handle.MetaAccess.DirectoryExists(srcAbs))
             return;
 
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
         var destRel = SavePathLayout.Combine(currentRel, relativeDirName);
         var destAbs = handle.GetAbsolutePath(destRel);
 
-        handle.FileSystem.CreateDirectory(destAbs);
+        handle.MetaAccess.CreateDirectory(destAbs);
 
-        foreach (var srcFileAbs in handle.FileSystem.EnumerateFiles(srcAbs, "*", true))
+        foreach (var srcFileAbs in handle.MetaAccess.EnumerateFiles(srcAbs, "*", true))
         {
             var relFromRoot = handle.GetRelativePath(srcFileAbs);
             var prefix = srcRel + "/";
@@ -270,7 +270,7 @@ internal static class SaveStorageFacade
             var destFileRel = $"{destRel}/{relFromSrc}";
             var destFileAbs = handle.GetAbsolutePath(destFileRel);
             handle.EnsureParentDirectory(destFileRel);
-            handle.FileSystem.Copy(srcFileAbs, destFileAbs, true);
+            handle.MetaAccess.Copy(srcFileAbs, destFileAbs, true);
         }
     }
 }

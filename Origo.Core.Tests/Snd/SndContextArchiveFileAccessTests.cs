@@ -23,8 +23,11 @@ public class SndContextArchiveFileAccessTests
         var tm = new TypeStringMapping();
         var bb = new Blackboard.Blackboard();
         fs = new TestFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
         var runtime = TestFactory.CreateRuntime(logger, host, tm, bb, fs);
-        return new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        return new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
     }
 
     private static ISndArchiveFileAccess AsFileAccess(SndContext ctx) => ctx;

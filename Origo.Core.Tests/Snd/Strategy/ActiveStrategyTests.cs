@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
@@ -322,7 +323,10 @@ public class ActiveStrategyTests
         runtime.SndWorld.RegisterStrategy(() => new CmdDamageStrategy());
         runtime.SndWorld.RegisterStrategy(() => new EntityOnlyStrategy());
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var nodeFactory = new TestNodeFactory();
         var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger);
         return (entity, ctx, logger);

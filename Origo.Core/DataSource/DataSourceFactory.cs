@@ -82,7 +82,9 @@ public static class DataSourceFactory
     {
         return new DataSourceIoOptions()
             .RegisterSuffix(".json", DataSourceCodecKind.Json)
-            .RegisterSuffix(".map", DataSourceCodecKind.Map);
+            .RegisterSuffix(".map", DataSourceCodecKind.Map)
+            .RegisterSuffix(".sha", DataSourceCodecKind.RawString)
+            .RegisterSuffix(".write_in_progress", DataSourceCodecKind.RawString);
     }
 
     internal static IReadOnlyDictionary<DataSourceCodecKind, IDataSourceCodec> BuildDefaultCodecs(bool writeIndented = true)
@@ -90,7 +92,8 @@ public static class DataSourceFactory
         return new Dictionary<DataSourceCodecKind, IDataSourceCodec>
         {
             [DataSourceCodecKind.Json] = new JsonDataSourceCodec(writeIndented),
-            [DataSourceCodecKind.Map] = new MapDataSourceCodec()
+            [DataSourceCodecKind.Map] = new MapDataSourceCodec(),
+            [DataSourceCodecKind.RawString] = new RawStringDataSourceCodec()
         };
     }
 
@@ -113,4 +116,16 @@ public static class DataSourceFactory
 
     public static IDataSourceIoGateway CreateDefaultIoGateway(IFileSystem fileSystem, bool writeIndented = true)
         => CreateIoGateway(fileSystem, writeIndented);
+
+    public static IFileMetaAccess CreateFileMetaAccess(IFileSystem fileSystem)
+    {
+        ArgumentNullException.ThrowIfNull(fileSystem);
+        return new FileMetaAccess(fileSystem);
+    }
+
+    public static IPathResolver CreatePathResolver(IFileSystem fileSystem)
+    {
+        ArgumentNullException.ThrowIfNull(fileSystem);
+        return new PathResolver(fileSystem);
+    }
 }

@@ -74,7 +74,10 @@ public class CoreArchitectureGuardrailTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
         ctx.RequestLoadMainMenuEntrySave();
@@ -95,9 +98,13 @@ public class CoreArchitectureGuardrailTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),
+            new Blackboard.Blackboard(), fs);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         ISndBlackboardAccess bb = ctx;
         bb.SystemBlackboard.Set("consumer_key", "consumer_value");
@@ -153,7 +160,10 @@ public class CoreArchitectureGuardrailTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
         ctx.RequestLoadMainMenuEntrySave();
@@ -177,7 +187,10 @@ public class CoreArchitectureGuardrailTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
         ctx.RequestLoadMainMenuEntrySave();
@@ -204,7 +217,10 @@ public class CoreArchitectureGuardrailTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
         ctx.RequestLoadMainMenuEntrySave();
@@ -232,7 +248,10 @@ public class CoreArchitectureGuardrailTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
         ctx.RequestLoadMainMenuEntrySave();

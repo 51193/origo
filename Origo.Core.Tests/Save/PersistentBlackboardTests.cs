@@ -1,3 +1,4 @@
+using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 using Origo.Core.Save;
 using Xunit;
@@ -10,13 +11,15 @@ public class PersistentBlackboardTests
     public void PersistentBlackboard_SetAndLoadFromDisk_Works()
     {
         var fs = new TestFileSystem();
-        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var dataSourceIo = TestFactory.CreateIoGateway(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var registry = TestFactory.CreateRegistry();
         var path = "user://origo/system.json";
-        var board = new PersistentBlackboard(fs, path, io, registry, new Blackboard.Blackboard());
+        var board = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
 
         board.Set("n", 7);
-        var loaded = new PersistentBlackboard(fs, path, io, registry, new Blackboard.Blackboard());
+        var loaded = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
         loaded.LoadFromDisk();
         var (found, n) = loaded.TryGet<int>("n");
 
@@ -28,14 +31,16 @@ public class PersistentBlackboardTests
     public void PersistentBlackboard_Clear_PersistsEmptyData()
     {
         var fs = new TestFileSystem();
-        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var dataSourceIo = TestFactory.CreateIoGateway(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var registry = TestFactory.CreateRegistry();
         var path = "user://origo/system.json";
-        var board = new PersistentBlackboard(fs, path, io, registry, new Blackboard.Blackboard());
+        var board = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
         board.Set("x", 1);
         board.Clear();
 
-        using var node = io.ReadTree(path);
+        using var node = dataSourceIo.ReadTree(path);
         Assert.Equal(DataSourceNodeKind.Object, node.Kind);
         Assert.Empty(node.Keys);
     }

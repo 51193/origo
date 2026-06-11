@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
@@ -19,7 +20,10 @@ public class FullMemorySndSceneHostTests
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         host.BindContext(ctx);
         return host;

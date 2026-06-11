@@ -1,5 +1,7 @@
 using Origo.Core.Snd;
 using Xunit;
+using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.DataSource;
 
 namespace Origo.Core.Tests;
 
@@ -48,7 +50,10 @@ public class FrontSession_StrategyContextReceivesFrontFlagTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         return (ctx, fs);
     }
@@ -56,7 +61,7 @@ public class FrontSession_StrategyContextReceivesFrontFlagTests
     private static void SetupForegroundSession(SndContext ctx)
     {
         var progressRun = TestFactory.CreateProgressRun(
-            "001", ctx.Runtime.Logger, ctx.FileSystem, "root", ctx.Runtime, ctx);
+            "001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
     }

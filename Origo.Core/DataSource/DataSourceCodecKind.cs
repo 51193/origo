@@ -6,5 +6,6 @@ namespace Origo.Core.DataSource;
 internal enum DataSourceCodecKind
 {
     Json,
-    Map
+    Map,
+    RawString
 }

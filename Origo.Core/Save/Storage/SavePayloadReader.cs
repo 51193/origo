@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -20,7 +19,7 @@ internal static class SavePayloadReader
 
         var markerRel = handle.PathPolicy.GetWriteInProgressMarker(baseRel);
         var markerAbs = handle.GetAbsolutePath(markerRel);
-        if (handle.FileSystem.Exists(markerAbs))
+        if (handle.MetaAccess.FileExists(markerAbs))
         {
             var ex = new InvalidOperationException(
                 $"Detected write-in-progress marker at '{markerRel}' in current/; interrupted save write must be handled before loading.");
@@ -88,7 +87,7 @@ internal static class SavePayloadReader
         var progressRel = handle.PathPolicy.GetProgressFile(saveRel);
         var progressAbs = handle.GetAbsolutePath(progressRel);
 
-        return handle.FileSystem.Exists(progressAbs) ? handle.IoGateway.ReadTree(progressAbs) : null;
+        return handle.MetaAccess.FileExists(progressAbs) ? handle.IoGateway.ReadTree(progressAbs) : null;
     }
 
     public static LevelPayload? TryReadLevelPayloadFromCurrent(
@@ -117,7 +116,7 @@ internal static class SavePayloadReader
         SaveFileHandle handle,
         string mapFileAbs)
     {
-        if (!handle.FileSystem.Exists(mapFileAbs))
+        if (!handle.MetaAccess.FileExists(mapFileAbs))
             return null;
 
         using var root = handle.IoGateway.ReadTree(mapFileAbs);
@@ -177,13 +176,13 @@ internal static class SavePayloadReader
     {
         var progressRel = handle.PathPolicy.GetProgressFile(baseDirectoryRel);
         var progressAbs = handle.GetAbsolutePath(progressRel);
-        if (!handle.FileSystem.Exists(progressAbs))
+        if (!handle.MetaAccess.FileExists(progressAbs))
             throw new InvalidOperationException(missingProgressMessage);
         var progressNode = handle.IoGateway.ReadTree(progressAbs);
 
         var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseDirectoryRel);
         var progressSmAbs = handle.GetAbsolutePath(progressSmRel);
-        if (!handle.FileSystem.Exists(progressSmAbs))
+        if (!handle.MetaAccess.FileExists(progressSmAbs))
             throw new InvalidOperationException(missingProgressStateMachinesMessage);
         var progressStateMachinesNode = handle.IoGateway.ReadTree(progressSmAbs);
 
@@ -241,7 +240,7 @@ internal static class SavePayloadReader
     {
         var markerRel = handle.PathPolicy.GetWriteInProgressMarker(baseRel);
         var markerAbs = handle.GetAbsolutePath(markerRel);
-        if (handle.FileSystem.Exists(markerAbs))
+        if (handle.MetaAccess.FileExists(markerAbs))
             throw new InvalidOperationException(
                 $"Detected write-in-progress marker at '{markerRel}' in current/; interrupted save write must be handled before loading.");
     }
@@ -252,10 +251,10 @@ internal static class SavePayloadReader
         Dictionary<string, LevelPayload> levels)
     {
         var baseAbs = handle.GetAbsolutePath(baseDirectoryRel);
-        if (!handle.FileSystem.DirectoryExists(baseAbs))
+        if (!handle.MetaAccess.DirectoryExists(baseAbs))
             return;
 
-        foreach (var dirAbs in handle.FileSystem.EnumerateDirectories(baseAbs))
+        foreach (var dirAbs in handle.MetaAccess.EnumerateDirectories(baseAbs))
         {
             var levelId = TryExtractLevelId(dirAbs);
             if (levelId is null || levels.ContainsKey(levelId))
@@ -302,13 +301,13 @@ internal static class SavePayloadReader
 
             return new LevelFiles(
                 levelId,
-                CreateLevelFile(handle.FileSystem, sndSceneRel, sndSceneAbs),
-                CreateLevelFile(handle.FileSystem, sessionRel, sessionAbs),
-                CreateLevelFile(handle.FileSystem, sessionStateMachinesRel, sessionStateMachinesAbs));
+                CreateLevelFile(handle.MetaAccess, sndSceneRel, sndSceneAbs),
+                CreateLevelFile(handle.MetaAccess, sessionRel, sessionAbs),
+                CreateLevelFile(handle.MetaAccess, sessionStateMachinesRel, sessionStateMachinesAbs));
         }
 
-        private static LevelFile CreateLevelFile(IFileSystem fileSystem, string relativePath, string absolutePath) =>
-            new(relativePath, absolutePath, fileSystem.Exists(absolutePath));
+        private static LevelFile CreateLevelFile(IFileMetaAccess metaAccess, string relativePath, string absolutePath) =>
+            new(relativePath, absolutePath, metaAccess.FileExists(absolutePath));
     }
 
     private sealed record LevelFile(string RelativePath, string AbsolutePath, bool Exists);

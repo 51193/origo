@@ -3,6 +3,7 @@ using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.DataSource;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
@@ -23,14 +24,16 @@ internal sealed class SystemRuntime
     {
         ArgumentNullException.ThrowIfNull(runtime);
         ArgumentNullException.ThrowIfNull(systemParams.Logger);
-        ArgumentNullException.ThrowIfNull(systemParams.FileSystem);
+        ArgumentNullException.ThrowIfNull(systemParams.MetaAccess);
+        ArgumentNullException.ThrowIfNull(systemParams.PathResolver);
         if (string.IsNullOrWhiteSpace(systemParams.SaveRootPath))
             throw new ArgumentException("Save root path cannot be null or whitespace.", nameof(systemParams));
         ArgumentNullException.ThrowIfNull(systemParams.StorageService);
         ArgumentNullException.ThrowIfNull(systemParams.SavePathPolicy);
 
         Logger = systemParams.Logger;
-        FileSystem = systemParams.FileSystem;
+        MetaAccess = systemParams.MetaAccess;
+        PathResolver = systemParams.PathResolver;
         SaveRootPath = systemParams.SaveRootPath;
         Runtime = runtime;
         StorageService = systemParams.StorageService;
@@ -38,7 +41,8 @@ internal sealed class SystemRuntime
     }
 
     internal ILogger Logger { get; }
-    internal IFileSystem FileSystem { get; }
+    internal IFileMetaAccess MetaAccess { get; }
+    internal IPathResolver PathResolver { get; }
     internal string SaveRootPath { get; }
     internal OrigoRuntime Runtime { get; }
     internal ISaveStorageService StorageService { get; }

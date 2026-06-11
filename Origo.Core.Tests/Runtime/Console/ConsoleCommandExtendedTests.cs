@@ -364,7 +364,6 @@ public class ConsoleCommandExtendedTests
     [Fact]
     public void SpawnCommand_NamedArgs_SpawnsEntity()
     {
-        var (runtime, input, _, messages) = CreateConsoleRuntime();
         var fs = new TestFileSystem();
         fs.SeedFile("maps/t.map", "tpl: templates/x.json");
         fs.SeedFile("templates/x.json",
@@ -376,9 +375,22 @@ public class ConsoleCommandExtendedTests
               "data": { "pairs": {} }
             }
             """);
-        runtime.SndWorld.LoadTemplates(fs, "maps/t.map", new TestLogger());
 
-        input.Enqueue("spawn name=Ent1 template=tpl");
+        var logger = new TestLogger();
+        var sceneHost = new TestSndSceneHost();
+        var tm = new TypeStringMapping();
+        var bb = new Blackboard.Blackboard();
+        var consoleInput = new ConsoleInputQueue();
+        var consoleOutput = new ConsoleOutputChannel();
+        var runtime = TestFactory.CreateRuntime(logger, sceneHost, tm, bb,
+            consoleInput, consoleOutput, TestFactory.CreateIoGateway(fs));
+
+        var messages = new List<string>();
+        consoleOutput.Subscribe(messages.Add);
+
+        runtime.SndWorld.LoadTemplates("maps/t.map", logger);
+
+        consoleInput.Enqueue("spawn name=Ent1 template=tpl");
         runtime.Console!.ProcessPending();
 
         Assert.Contains(messages, m => m.Contains("Spawned 'Ent1'", StringComparison.Ordinal));

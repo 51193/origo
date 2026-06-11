@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.StateMachine;
 using Xunit;
@@ -15,7 +16,10 @@ public partial class RandomAndStateMachineTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var pool = runtime.SndWorld.StrategyPool;
         pool.Register(() => new SmPushStrategy());
         pool.Register(() => new SmPopStrategy());
@@ -43,7 +47,10 @@ public partial class RandomAndStateMachineTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var pool = runtime.SndWorld.StrategyPool;
         pool.Register(() => new SmPushStrategy());
         pool.Register(() => new SmPopStrategy());
@@ -89,7 +96,10 @@ public partial class RandomAndStateMachineTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
 
         Assert.Throws<InvalidOperationException>(() =>
             new StackStateMachine("m1", "sm.push.missing", "sm.pop.missing", runtime.SndWorld.StrategyPool, ctx));
@@ -102,7 +112,10 @@ public partial class RandomAndStateMachineTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var pool = runtime.SndWorld.StrategyPool;
         pool.Register(() => new SmPushStrategy());
         pool.Register(() => new SmPopStrategy());
@@ -150,7 +163,10 @@ public partial class RandomAndStateMachineTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var pool = runtime.SndWorld.StrategyPool;
         pool.Register(() => new SmPushStrategy());
         pool.Register(() => new SmPopStrategy());

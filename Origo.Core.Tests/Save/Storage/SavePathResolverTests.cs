@@ -1,4 +1,6 @@
 using System;
+using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.DataSource;
 using Origo.Core.Save.Storage;
 using Xunit;
 
@@ -31,7 +33,7 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_GetRelativePath_ExtractsRelative()
     {
-        var handle = new SaveFileHandle(new TestFileSystem(), "root/saves");
+        var handle = CreateHandle("root/saves");
         var result = handle.GetRelativePath("root/saves/file.json");
         Assert.Equal("file.json", result);
     }
@@ -39,7 +41,7 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_GetRelativePath_NestedPath()
     {
-        var handle = new SaveFileHandle(new TestFileSystem(), "root");
+        var handle = CreateHandle("root");
         var result = handle.GetRelativePath("root/sub/file.json");
         Assert.Equal("sub/file.json", result);
     }
@@ -47,7 +49,7 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_GetRelativePath_ExactMatch_ReturnsEmpty()
     {
-        var handle = new SaveFileHandle(new TestFileSystem(), "root/saves");
+        var handle = CreateHandle("root/saves");
         var result = handle.GetRelativePath("root/saves");
         Assert.Equal(string.Empty, result);
     }
@@ -55,7 +57,7 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_GetRelativePath_NoMatch_ReturnsFullPath()
     {
-        var handle = new SaveFileHandle(new TestFileSystem(), "root/a");
+        var handle = CreateHandle("root/a");
         var result = handle.GetRelativePath("root/b/file.json");
         Assert.Equal("root/b/file.json", result);
     }
@@ -63,7 +65,7 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_GetRelativePath_RejectsTraversalInRelativeSegment()
     {
-        var handle = new SaveFileHandle(new TestFileSystem(), "root/saves");
+        var handle = CreateHandle("root/saves");
         Assert.Throws<ArgumentException>(() =>
             handle.GetRelativePath("root/saves/../evil.json"));
     }
@@ -71,8 +73,8 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_GetRelativePath_WhitespaceRoot_ThrowsOnConstruction()
     {
-        Assert.Throws<ArgumentException>(() => new SaveFileHandle(new TestFileSystem(), ""));
-        Assert.Throws<ArgumentException>(() => new SaveFileHandle(new TestFileSystem(), "  "));
+        Assert.Throws<ArgumentException>(() => CreateHandle(""));
+        Assert.Throws<ArgumentException>(() => CreateHandle("  "));
     }
 
     [Fact]
@@ -113,5 +115,14 @@ public class SaveFileHandleTests
             SaveFileHandle.RejectPathTraversal("");
         });
         Assert.Null(ex);
+    }
+
+    private static SaveFileHandle CreateHandle(string saveRootPath)
+    {
+        var fs = new TestFileSystem();
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        return new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, saveRootPath);
     }
 }

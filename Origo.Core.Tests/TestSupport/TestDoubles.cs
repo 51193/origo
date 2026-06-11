@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
+using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
@@ -453,14 +454,21 @@ internal static class TestFactory
     public static IDataSourceIoGateway CreateIoGateway(IFileSystem fileSystem) =>
         DataSourceFactory.CreateDefaultIoGateway(fileSystem);
 
+    public static IFileMetaAccess CreateFileMetaAccess(IFileSystem fileSystem) =>
+        DataSourceFactory.CreateFileMetaAccess(fileSystem);
+
+    public static IPathResolver CreatePathResolver(IFileSystem fileSystem) =>
+        DataSourceFactory.CreatePathResolver(fileSystem);
+
     public static SndWorld CreateSndWorld(
         TypeStringMapping? tm = null,
-        ILogger? logger = null)
+        ILogger? logger = null,
+        IFileSystem? fileSystem = null)
     {
         tm ??= new TypeStringMapping();
         logger ??= new TestLogger();
         var reg = CreateRegistry(tm);
-        return new SndWorld(tm, logger, reg, CreateIoGateway(new TestFileSystem()));
+        return new SndWorld(tm, logger, reg, CreateIoGateway(fileSystem ?? new TestFileSystem()));
     }
 
     public static OrigoRuntime CreateRuntime(
@@ -486,16 +494,13 @@ internal static class TestFactory
         ISndSceneHost sceneHost,
         TypeStringMapping tm,
         IBlackboard systemBb,
-        ConsoleInputQueue consoleInput,
-        ConsoleOutputChannel consoleOutput,
+        IDataSourceIoGateway sharedDataSourceIo,
         OrigoMeta? meta = null)
     {
         meta ??= new OrigoMeta("Origo", "test", string.Empty);
         var reg = CreateRegistry(tm);
-        var io = CreateIoGateway(new TestFileSystem());
         return new OrigoRuntime(
-            meta, logger, sceneHost, tm, reg, io,
-            systemBb, consoleInput, consoleOutput);
+            meta, logger, sceneHost, tm, reg, sharedDataSourceIo, systemBb);
     }
 
     public static OrigoRuntime CreateRuntime(
@@ -513,34 +518,67 @@ internal static class TestFactory
             meta, logger, sceneHost, tm, reg, io, systemBb);
     }
 
+    public static OrigoRuntime CreateRuntime(
+        ILogger logger,
+        ISndSceneHost sceneHost,
+        TypeStringMapping tm,
+        IBlackboard systemBb,
+        IConsoleInputSource consoleInput,
+        IConsoleOutputChannel consoleOutput,
+        IDataSourceIoGateway? sharedDataSourceIo = null,
+        OrigoMeta? meta = null)
+    {
+        meta ??= new OrigoMeta("Origo", "test", string.Empty);
+        var reg = CreateRegistry(tm);
+        var io = sharedDataSourceIo ?? CreateIoGateway(new TestFileSystem());
+        return new OrigoRuntime(
+            meta, logger, sceneHost, tm, reg, io, systemBb, consoleInput, consoleOutput);
+    }
+
     // ── Lifecycle helpers for tests ────────────────────────────────────
 
     public static SystemRuntime CreateSystemRuntime(
         ILogger logger,
-        IFileSystem fileSystem,
+        IFileMetaAccess metaAccess,
+        IPathResolver pathResolver,
         string saveRootPath,
         OrigoRuntime runtime,
         ISaveStorageService? storageService = null,
-        ISavePathPolicy? savePathPolicy = null)
+        ISavePathPolicy? savePathPolicy = null,
+        IDataSourceIoGateway? sharedDataSourceIo = null)
     {
         savePathPolicy ??= new DefaultSavePathPolicy();
-        storageService ??= new DefaultSaveStorageService(fileSystem, saveRootPath, savePathPolicy);
+        storageService ??= CreateDefaultSaveStorageServiceForTests(metaAccess, runtime, pathResolver, saveRootPath, savePathPolicy, sharedDataSourceIo);
         return new SystemRuntime(runtime,
-            new SystemParameters(logger, fileSystem, saveRootPath, storageService, savePathPolicy));
+            new SystemParameters(logger, metaAccess, pathResolver, saveRootPath, storageService, savePathPolicy));
+    }
+
+    private static DefaultSaveStorageService CreateDefaultSaveStorageServiceForTests(
+        IFileMetaAccess metaAccess, OrigoRuntime runtime, IPathResolver pathResolver,
+        string saveRootPath, ISavePathPolicy savePathPolicy,
+        IDataSourceIoGateway? sharedDataSourceIo = null)
+    {
+        return new DefaultSaveStorageService(metaAccess,
+            sharedDataSourceIo ?? runtime.SndWorld.DataSourceIo,
+            pathResolver,
+            saveRootPath,
+            savePathPolicy);
     }
 
     public static ProgressRun CreateProgressRun(
         string saveId,
         ILogger logger,
-        IFileSystem fileSystem,
+        IFileMetaAccess metaAccess,
+        IPathResolver pathResolver,
         string saveRootPath,
         OrigoRuntime runtime,
         ISndContext sndContext,
         ISaveStorageService? storageService = null,
-        ISavePathPolicy? savePathPolicy = null)
+        ISavePathPolicy? savePathPolicy = null,
+        IDataSourceIoGateway? sharedDataSourceIo = null)
     {
         var systemRuntime = CreateSystemRuntime(
-            logger, fileSystem, saveRootPath, runtime, storageService, savePathPolicy);
+            logger, metaAccess, pathResolver, saveRootPath, runtime, storageService, savePathPolicy, sharedDataSourceIo);
         return new ProgressRun(
             systemRuntime,
             new ProgressParameters(saveId),

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
+using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save;
@@ -84,10 +86,11 @@ public class SaveCoordinatorTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var storageService = new DefaultSaveStorageService(fs, "root");
-        var systemParams = new SystemParameters(logger, fs, "root", storageService, new DefaultSavePathPolicy());
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+        var systemParams = new SystemParameters(logger, metaAccess, pathResolver, "root", storageService, new DefaultSavePathPolicy());
         var systemRuntime = new SystemRuntime(runtime, systemParams);
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
         var progressRuntime = new ProgressRuntime(systemRuntime, new TestStateMachineContext(), ctx);
         return new SessionManager(progressRuntime, bb);
     }
@@ -98,10 +101,11 @@ public class SaveCoordinatorTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var storageService = new DefaultSaveStorageService(fs, "root");
-        var systemParams = new SystemParameters(logger, fs, "root", storageService, new DefaultSavePathPolicy());
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+        var systemParams = new SystemParameters(logger, metaAccess, pathResolver, "root", storageService, new DefaultSavePathPolicy());
         var systemRuntime = new SystemRuntime(runtime, systemParams);
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
         return new ProgressRuntime(systemRuntime, new TestStateMachineContext(), ctx);
     }
 
@@ -124,4 +128,10 @@ public class SaveCoordinatorTests
             Array.Empty<SndMetaData>();
         public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList) { }
     }
+
+    private static (IFileMetaAccess MetaAccess, IDataSourceIoGateway DataSourceIo, IPathResolver PathResolver)
+        CreateGateways(IFileSystem fs) =>
+        (DataSourceFactory.CreateFileMetaAccess(fs),
+         DataSourceFactory.CreateDefaultIoGateway(fs),
+         DataSourceFactory.CreatePathResolver(fs));
 }

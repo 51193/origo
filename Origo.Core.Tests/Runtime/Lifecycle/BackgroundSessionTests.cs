@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save;
 using Origo.Core.Snd;
@@ -642,7 +643,7 @@ public class BackgroundSessionTests
 
         // Reload from saved snapshot.
         var newProgressRun = TestFactory.CreateProgressRun(
-            "save_bg_test", ctx.Runtime.Logger, ctx.FileSystem, "root", ctx.Runtime, ctx);
+            "save_bg_test", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
         ctx.SetProgressRun(newProgressRun);
         newProgressRun.LoadFromPayload(payload);
 
@@ -713,7 +714,7 @@ public class BackgroundSessionTests
         ctx.SetProgressRun(null);
 
         var newProgressRun = TestFactory.CreateProgressRun(
-            "save_sync_rt", ctx.Runtime.Logger, ctx.FileSystem, "root", ctx.Runtime, ctx);
+            "save_sync_rt", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
         ctx.SetProgressRun(newProgressRun);
         newProgressRun.LoadFromPayload(payload);
 
@@ -761,7 +762,7 @@ public class BackgroundSessionTests
 
         // Load from the disk-read payload.
         var newProgressRun = TestFactory.CreateProgressRun(
-            "save_disk_test", ctx.Runtime.Logger, ctx.FileSystem, "root", ctx.Runtime, ctx);
+            "save_disk_test", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
         ctx.SetProgressRun(newProgressRun);
         newProgressRun.LoadFromPayload(readPayload);
 
@@ -810,16 +811,21 @@ public class BackgroundSessionTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
-        configureWorld?.Invoke(runtime.SndWorld);
-
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var tm = new TypeStringMapping();
+        var systemBb = new Blackboard.Blackboard();
+        var runtime = TestFactory.CreateRuntime(logger, host, tm, systemBb, dataSourceIo);
+        configureWorld?.Invoke(runtime.SndWorld);
+
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
 
         var progressRun = TestFactory.CreateProgressRun(
-            "test_save", logger, fs, "root", runtime, ctx);
+            "test_save", logger, metaAccess, pathResolver, "root", runtime, ctx, sharedDataSourceIo: dataSourceIo);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("test_level");
 

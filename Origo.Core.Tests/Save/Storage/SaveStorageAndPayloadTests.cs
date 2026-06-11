@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.DataSource;
 using Origo.Core.Save;
 using Origo.Core.Save.Storage;
 using Xunit;
@@ -13,7 +14,8 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_WriteAndReadCurrent_RoundTrip()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "user://origo_saves");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "user://origo_saves");
         var progressSm = """{"machines":[]}""";
         var sessionSm = """{"machines":[]}""";
         var payload = new SaveGamePayload
@@ -62,14 +64,16 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_SnapshotCurrentToSave_WhitespaceSaveRoot_Throws()
     {
         var fs = new TestFileSystem();
-        Assert.Throws<ArgumentException>(() => new SaveFileHandle(fs, "  "));
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        Assert.Throws<ArgumentException>(() => new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "  "));
     }
 
     [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_WhitespaceNewSaveId_Throws()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         Assert.Throws<ArgumentException>(() => SaveStorageFacade.SnapshotCurrentToSave(handle, "  "));
     }
 
@@ -77,14 +81,16 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_ReadSavePayloadFromSnapshot_WhitespaceSaveRoot_Throws()
     {
         var fs = new TestFileSystem();
-        Assert.Throws<ArgumentException>(() => new SaveFileHandle(fs, " "));
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        Assert.Throws<ArgumentException>(() => new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, " "));
     }
 
     [Fact]
     public void SaveStorageFacade_ReadProgressNodeFromSnapshot_Missing_ReturnsNull()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         Assert.Null(SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "missing"));
     }
 
@@ -92,7 +98,8 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_ReadProgressNodeFromSnapshot_WhenPresent_ReturnsContent()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/save_042/progress.json", """{"k":1}""");
         using var node = SaveStorageFacade.ReadProgressNodeFromSnapshot(handle, "042");
         var json = TestFactory.JsonFromNode(node!);
@@ -103,7 +110,8 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_EnumerateSavesWithMetaData_SlotWithoutMetaMap_StillListed()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.CreateDirectory("root/save_007");
         var entries = SaveStorageFacade.EnumerateSavesWithMetaData(handle);
         Assert.Single(entries);
@@ -115,8 +123,9 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_ReadCurrent_MissingProgressStateMachines_Throws()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var root = "root";
-        var handle = new SaveFileHandle(fs, root);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         var progressAbs = fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel));
         var sndSceneAbs = fs.CombinePath(root,
@@ -139,8 +148,9 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_ReadCurrent_MissingSessionStateMachines_Throws()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var root = "root";
-        var handle = new SaveFileHandle(fs, root);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         var progressAbs = fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel));
         var progressSmAbs = fs.CombinePath(root, SavePathLayout.GetProgressStateMachinesFile(currentRel));
@@ -162,7 +172,8 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_SnapshotCurrentToSave_AndEnumerateSaveIds_Works()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         var payload = new SaveGamePayload
         {
             SaveId = "001",
@@ -192,7 +203,8 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_SnapshotCurrentToSave_UsesTempDirectoryThenRename()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/progress.json", "{}");
         fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
         fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
@@ -218,8 +230,9 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_ReadCurrent_ActiveLevelPartial_MissingSession_Throws()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var root = "root";
-        var handle = new SaveFileHandle(fs, root);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel)), "{}");
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressStateMachinesFile(currentRel)),
@@ -236,8 +249,9 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_ReadCurrent_BackgroundLevelPartial_MissingStateMachines_Throws()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var root = "root";
-        var handle = new SaveFileHandle(fs, root);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel)), "{}");
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressStateMachinesFile(currentRel)),
@@ -262,8 +276,9 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_ReadCurrent_WhenWriteMarkerExists_Throws()
     {
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var root = "root";
-        var handle = new SaveFileHandle(fs, root);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, root);
         var currentRel = SavePathLayout.GetCurrentDirectory();
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressFile(currentRel)), "{}");
         fs.SeedFile(fs.CombinePath(root, SavePathLayout.GetProgressStateMachinesFile(currentRel)),
@@ -284,7 +299,8 @@ public class SaveStorageAndPayloadTests
     public void SavePayloadReader_TryReadLevelPayloadFromCurrent_AllFilesAbsent_ReturnsNull()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/progress.json", "{}");
         fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
 
@@ -295,7 +311,8 @@ public class SaveStorageAndPayloadTests
     public void SavePayloadReader_TryReadLevelPayloadFromCurrent_WhenWriteMarkerExists_Throws()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_default/session.json", "{}");
         fs.SeedFile("root/current/level_default/session_state_machines.json", """{"machines":[]}""");
@@ -311,7 +328,8 @@ public class SaveStorageAndPayloadTests
     public void DefaultSaveStorageService_ResolveLevelPayload_WhenWriteMarkerExists_Throws()
     {
         var fs = new TestFileSystem();
-        var service = new DefaultSaveStorageService(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var service = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_default/session.json", "{}");
         fs.SeedFile("root/current/level_default/session_state_machines.json", """{"machines":[]}""");
@@ -329,7 +347,8 @@ public class SaveStorageAndPayloadTests
     public void WriteSavePayloadToCurrentThenSnapshot_NullLogger_Throws()
     {
         var fs = new TestFileSystem();
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         var payload = new SaveGamePayload
         {
             SaveId = "1",
@@ -355,7 +374,8 @@ public class SaveStorageAndPayloadTests
     public void WriteSavePayloadToCurrentThenSnapshot_WhenSnapshotFails_LogsError_LeavesMarkerAndUpdatedCurrent()
     {
         var fs = new FailOnCopyFileSystem("save_new.tmp");
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         var logger = new TestLogger();
         var progressSm = """{"machines":[]}""";
         var payload = new SaveGamePayload
@@ -391,7 +411,8 @@ public class SaveStorageAndPayloadTests
     public void SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure()
     {
         var fs = new FailOnCopyFileSystem("save_001.tmp");
-        var handle = new SaveFileHandle(fs, "root");
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/progress.json", "{}");
         fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
 
@@ -401,6 +422,12 @@ public class SaveStorageAndPayloadTests
         // The incomplete .tmp directory must be cleaned up.
         Assert.False(fs.DirectoryExists("root/save_001.tmp"));
     }
+
+    private static (IFileMetaAccess MetaAccess, IDataSourceIoGateway DataSourceIo, IPathResolver PathResolver)
+        CreateGateways(IFileSystem fs) =>
+        (DataSourceFactory.CreateFileMetaAccess(fs),
+         DataSourceFactory.CreateDefaultIoGateway(fs),
+         DataSourceFactory.CreatePathResolver(fs));
 
     /// <summary>
     ///     A file system that delegates to <see cref="TestFileSystem" /> but throws on

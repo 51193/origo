@@ -27,7 +27,10 @@ public class AdapterArchitectureGuardrailTests
         var runtime = CreateSimpleOrigoRuntime();
         var fs = new InMemoryFileSystem();
 
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         ISndBlackboardAccess bb = ctx;
         bb.SystemBlackboard.Set("k", 1);
@@ -65,7 +68,10 @@ public class AdapterArchitectureGuardrailTests
         var fs = new InMemoryFileSystem();
 
         fs.SeedFile("entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();

@@ -53,9 +53,10 @@ public class ConsoleTests
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
             new Blackboard.Blackboard(),
-            new ConsoleInputQueue(), new ConsoleOutputChannel());
+            new ConsoleInputQueue(), new ConsoleOutputChannel(),
+            TestFactory.CreateIoGateway(fs));
 
-        runtime.SndWorld.LoadTemplates(fs, "maps/templates.map", logger);
+        runtime.SndWorld.LoadTemplates("maps/templates.map", logger);
 
         var input = runtime.ConsoleInput!;
         var output = (ConsoleOutputChannel)runtime.ConsoleOutputChannel!;
@@ -82,9 +83,10 @@ public class ConsoleTests
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
             new Blackboard.Blackboard(),
-            new ConsoleInputQueue(), new ConsoleOutputChannel());
+            new ConsoleInputQueue(), new ConsoleOutputChannel(),
+            TestFactory.CreateIoGateway(fs));
 
-        runtime.SndWorld.LoadTemplates(fs, "maps/empty.map", logger);
+        runtime.SndWorld.LoadTemplates("maps/empty.map", logger);
 
         var input = runtime.ConsoleInput!;
         var output = (ConsoleOutputChannel)runtime.ConsoleOutputChannel!;
@@ -124,9 +126,10 @@ public class ConsoleTests
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
             new Blackboard.Blackboard(),
-            new ConsoleInputQueue(), new ConsoleOutputChannel());
+            new ConsoleInputQueue(), new ConsoleOutputChannel(),
+            TestFactory.CreateIoGateway(fs));
 
-        runtime.SndWorld.LoadTemplates(fs, "maps/templates.map", logger);
+        runtime.SndWorld.LoadTemplates("maps/templates.map", logger);
         var input = runtime.ConsoleInput!;
         var output = (ConsoleOutputChannel)runtime.ConsoleOutputChannel!;
         var messages = new List<string>();

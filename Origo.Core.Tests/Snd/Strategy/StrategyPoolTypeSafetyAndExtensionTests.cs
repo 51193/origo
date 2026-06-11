@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
@@ -42,7 +43,10 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         pool.Register(() => new PoolStateMachineStrategy());
         var runtime = TestFactory.CreateRuntime();
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var sndContext = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
 
         Assert.Throws<InvalidOperationException>(() =>
             new StackStateMachine("machine", "pool.sm", "missing.pop", pool, sndContext));

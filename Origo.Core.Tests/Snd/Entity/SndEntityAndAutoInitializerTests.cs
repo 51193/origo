@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Runtime;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
@@ -203,7 +204,10 @@ public class SndEntityAndAutoInitializerTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        return new SndContext(new SndContextParameters(runtime, fs, "user://saveRoot", "res://initial",
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        return new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "user://saveRoot", "res://initial",
             "res://entry/entry.json"));
     }
 

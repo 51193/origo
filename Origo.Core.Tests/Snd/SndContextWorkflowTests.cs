@@ -266,12 +266,16 @@ public class SndContextWorkflowTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         SeedTemplate(fs, "tmpl_a", "OriginalName");
-        runtime.SndWorld.LoadTemplates(fs, "maps/templates.map", logger);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),
+            new Blackboard.Blackboard(), fs);
+        runtime.SndWorld.LoadTemplates("maps/templates.map", logger);
 
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
         var cloned = ctx.CloneTemplate("tmpl_a", "NewName");
 
         Assert.Equal("NewName", cloned.Name);
@@ -282,12 +286,16 @@ public class SndContextWorkflowTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         SeedTemplate(fs, "tmpl_b", "KeepMe");
-        runtime.SndWorld.LoadTemplates(fs, "maps/templates.map", logger);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),
+            new Blackboard.Blackboard(), fs);
+        runtime.SndWorld.LoadTemplates("maps/templates.map", logger);
 
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
         var cloned = ctx.CloneTemplate("tmpl_b");
         Assert.Equal("KeepMe", cloned.Name);
     }
@@ -413,16 +421,22 @@ public class SndContextWorkflowTests
     public void Constructor_ThrowsOnNullRuntime()
     {
         var fs = new TestFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
         Assert.Throws<ArgumentNullException>(() =>
-            new SndContext(new SndContextParameters(null!, fs, "root", "init", "e.json")));
+            new SndContext(new SndContextParameters(null!, io, metaAccess, pathResolver, "root", "init", "e.json")));
     }
 
     [Fact]
     public void Constructor_ThrowsOnNullFileSystem()
     {
         var runtime = TestFactory.CreateRuntime();
+        var fs = new TestFileSystem();
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
         Assert.Throws<ArgumentNullException>(() =>
-            new SndContext(new SndContextParameters(runtime, null!, "root", "init", "e.json")));
+            new SndContext(new SndContextParameters(runtime, null!, metaAccess, pathResolver, "root", "init", "e.json")));
     }
 
     [Fact]
@@ -430,8 +444,11 @@ public class SndContextWorkflowTests
     {
         var runtime = TestFactory.CreateRuntime();
         var fs = new TestFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
         Assert.Throws<ArgumentException>(() =>
-            new SndContext(new SndContextParameters(runtime, fs, "", "init", "e.json")));
+            new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "", "init", "e.json")));
     }
 
     [Fact]
@@ -439,8 +456,11 @@ public class SndContextWorkflowTests
     {
         var runtime = TestFactory.CreateRuntime();
         var fs = new TestFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
         Assert.Throws<ArgumentException>(() =>
-            new SndContext(new SndContextParameters(runtime, fs, "root", "", "e.json")));
+            new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "", "e.json")));
     }
 
     [Fact]
@@ -448,8 +468,11 @@ public class SndContextWorkflowTests
     {
         var runtime = TestFactory.CreateRuntime();
         var fs = new TestFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
         Assert.Throws<ArgumentException>(() =>
-            new SndContext(new SndContextParameters(runtime, fs, "root", "init", "")));
+            new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "init", "")));
     }
 
     // ── SndContext initial state ──
@@ -492,7 +515,10 @@ public class SndContextWorkflowTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         fs = new TestFileSystem();
-        return new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        return new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
     }
 
     private static SndContext CreateContextWithConsole(
@@ -508,7 +534,10 @@ public class SndContextWorkflowTests
         var tm = new TypeStringMapping();
         var runtime = TestFactory.CreateRuntime(logger, host, tm, bb, input, output);
         fs = new TestFileSystem();
-        return new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial", "entry.json"));
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        return new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
     }
 
     private static void SetupProgressRun(SndContext ctx, TestFileSystem fs)

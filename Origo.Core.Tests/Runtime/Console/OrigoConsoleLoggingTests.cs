@@ -85,8 +85,9 @@ public class OrigoConsoleLoggingTests
         var input = new ConsoleInputQueue();
         var output = new ConsoleOutputChannel();
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, typeMapping,
-            new Blackboard.Blackboard(), input, output);
-        runtime.SndWorld.LoadTemplates(fs, "maps/templates.map", logger);
+            new Blackboard.Blackboard(), input, output,
+            TestFactory.CreateIoGateway(fs));
+        runtime.SndWorld.LoadTemplates("maps/templates.map", logger);
 
         input.Enqueue("spawn name=test_entity template=enemy");
         runtime.Console!.ProcessPending();

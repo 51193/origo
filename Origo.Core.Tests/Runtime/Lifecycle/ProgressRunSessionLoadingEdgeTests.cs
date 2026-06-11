@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save;
 using Origo.Core.Snd;
+using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.DataSource;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -51,10 +53,13 @@ public class ProgressRunSessionLoadingEdgeTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, sndContext.MetaAccess, sndContext.PathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
         fs.SeedFile("root/current/level_target/snd_scene.json", " ");
         fs.SeedFile("root/current/level_target/session.json", "{}");
@@ -69,10 +74,13 @@ public class ProgressRunSessionLoadingEdgeTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, sndContext.MetaAccess, sndContext.PathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
         fs.SeedFile("root/current/level_target/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_target/session.json", "{}");
@@ -120,9 +128,12 @@ public class ProgressRunSessionLoadingEdgeTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        var sndContext = new SndContext(new SndContextParameters(runtime, fs, "root", "initial", "entry.json"));
-        return TestFactory.CreateProgressRun("001", logger, fs, "root", runtime, sndContext);
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        return TestFactory.CreateProgressRun("001", logger, sndContext.MetaAccess, sndContext.PathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
     }
 }

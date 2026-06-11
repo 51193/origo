@@ -1,5 +1,6 @@
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.DataSource;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -26,7 +27,10 @@ public class SndContextEntryFlowTests
             ]
             """);
 
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -44,7 +48,10 @@ public class SndContextEntryFlowTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
 
         runtime.Snd.Spawn(new SndMetaData

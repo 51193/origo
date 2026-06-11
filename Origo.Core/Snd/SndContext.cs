@@ -40,20 +40,22 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     {
         ArgumentNullException.ThrowIfNull(parameters);
         Runtime = parameters.Runtime;
-        FileSystem = parameters.FileSystem;
+        DataSourceIo = parameters.DataSourceIo;
+        MetaAccess = parameters.MetaAccess;
+        PathResolver = parameters.PathResolver;
         SaveRootPath = parameters.SaveRootPath;
         InitialSaveRootPath = parameters.InitialSaveRootPath;
         EntryConfigPath = parameters.EntryConfigPath;
 
         SavePathPolicy = parameters.SavePathPolicy ?? new DefaultSavePathPolicy();
         StorageService =
-            parameters.StorageService ?? new DefaultSaveStorageService(FileSystem, SaveRootPath, SavePathPolicy);
+            parameters.StorageService ?? new DefaultSaveStorageService(MetaAccess, DataSourceIo, PathResolver, SaveRootPath, SavePathPolicy);
         InitialStorageService =
             parameters.InitialStorageService ??
-            new DefaultSaveStorageService(FileSystem, InitialSaveRootPath, SavePathPolicy);
+            new DefaultSaveStorageService(MetaAccess, DataSourceIo, PathResolver, InitialSaveRootPath, SavePathPolicy);
 
         var systemParams = new SystemParameters(
-            Runtime.Logger, FileSystem, SaveRootPath, StorageService, SavePathPolicy);
+            Runtime.Logger, MetaAccess, PathResolver, SaveRootPath, StorageService, SavePathPolicy);
         var systemRuntime = new SystemRuntime(Runtime, systemParams);
         _systemRun = new SystemRun(systemRuntime);
         _parameters = parameters;
@@ -74,16 +76,18 @@ public sealed class SndContext : IStateMachineContext, ISndContext
                 Runtime.SndWorld, Runtime.Logger, _parameters.DiscoverySkipPrefixes);
 
         if (_parameters.SceneAliasMapPath is not null)
-            Runtime.SndWorld.LoadSceneAliases(FileSystem, _parameters.SceneAliasMapPath, Runtime.Logger);
+            Runtime.SndWorld.LoadSceneAliases(_parameters.SceneAliasMapPath, Runtime.Logger);
 
         if (_parameters.SndTemplateMapPath is not null)
-            Runtime.SndWorld.LoadTemplates(FileSystem, _parameters.SndTemplateMapPath, Runtime.Logger);
+            Runtime.SndWorld.LoadTemplates(_parameters.SndTemplateMapPath, Runtime.Logger);
 
         RequestLoadMainMenuEntrySave();
     }
 
     internal OrigoRuntime Runtime { get; }
-    internal IFileSystem FileSystem { get; }
+    internal IDataSourceIoGateway DataSourceIo { get; }
+    internal IFileMetaAccess MetaAccess { get; }
+    internal IPathResolver PathResolver { get; }
     public string SaveRootPath { get; }
     public string InitialSaveRootPath { get; }
     public string EntryConfigPath { get; }
@@ -380,7 +384,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             OrigoAutoInitializer.LoadAndSpawnFromFile(
                 EntryConfigPath,
                 Runtime.Snd,
-                FileSystem,
+                DataSourceIo,
                 Runtime.Logger);
         });
     }
@@ -424,7 +428,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         => Runtime.SndWorld.DataSourceIo.WriteTree(path, node, overwrite);
 
     bool ISndFileAccess.FileExists(string path)
-        => Runtime.SndWorld.DataSourceIo.Exists(path);
+        => MetaAccess.FileExists(path);
 
     T ISndFileAccess.ReadObject<T>(string path)
     {
@@ -451,7 +455,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         var currentRel = SavePathPolicy.GetCurrentDirectory();
         var extraRel = SavePathPolicy.GetExtraDirectory(currentRel);
         var fileRel = SavePathLayout.Combine(extraRel, relativePath);
-        return FileSystem.CombinePath(SaveRootPath, fileRel);
+        return PathResolver.CombinePath(SaveRootPath, fileRel);
     }
 
     DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath)
@@ -469,7 +473,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     bool ISndArchiveFileAccess.FileExists(string relativePath)
     {
         RejectPathTraversal(relativePath);
-        return Runtime.SndWorld.DataSourceIo.Exists(ResolveExtraPath(relativePath));
+        return MetaAccess.FileExists(ResolveExtraPath(relativePath));
     }
 
     T ISndArchiveFileAccess.ReadObject<T>(string relativePath)
@@ -490,8 +494,8 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     {
         RejectPathTraversal(relativePath);
         var absPath = ResolveExtraPath(relativePath);
-        if (!FileSystem.Exists(absPath))
+        if (!MetaAccess.FileExists(absPath))
             throw new InvalidOperationException($"File not found in archive: '{relativePath}'.");
-        FileSystem.Delete(absPath);
+        MetaAccess.Delete(absPath);
     }
 }

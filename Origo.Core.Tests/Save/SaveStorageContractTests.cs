@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Save;
@@ -292,7 +293,8 @@ public class SaveStorageContractTests
     {
         var policy = new CustomSavePathPolicy();
         var fs = new TestFileSystem();
-        var storageService = new DefaultSaveStorageService(fs, "custom_root", policy);
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "custom_root", policy);
 
         var payload = new SaveGamePayload
         {
@@ -436,16 +438,17 @@ public class SaveStorageContractTests
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("entry.json", "[]");
 
-        var storageService = new DefaultSaveStorageService(fs, "root");
-        var ctx = new SndContext(new SndContextParameters(runtime, fs, "root", "res://initial",
+        var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "entry.json")
         {
             StorageService = storageService
         });
 
-        var progressRun = TestFactory.CreateProgressRun("test_save", logger, fs, "root", runtime, ctx,
+        var progressRun = TestFactory.CreateProgressRun("test_save", logger, metaAccess, pathResolver, "root", runtime, ctx,
             storageService);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("test_level");
@@ -509,4 +512,10 @@ public class SaveStorageContractTests
 
         public string GetExtraDirectory(string baseDirectory) => $"{baseDirectory}/extra";
     }
+
+    private static (IFileMetaAccess MetaAccess, IDataSourceIoGateway DataSourceIo, IPathResolver PathResolver)
+        CreateGateways(IFileSystem fs) =>
+        (DataSourceFactory.CreateFileMetaAccess(fs),
+         DataSourceFactory.CreateDefaultIoGateway(fs),
+         DataSourceFactory.CreatePathResolver(fs));
 }
