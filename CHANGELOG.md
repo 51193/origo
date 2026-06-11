@@ -6,19 +6,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.0.7-dev] - 2026-05-27
+## [0.0.7] - 2026-06-11
 
 ### Added
 
-- **Strategy Priority** (`StrategyIndexAttribute.Priority`, default 6205): all lifecycle hooks (Process, AfterSpawn, AfterLoad, BeforeRemove, BeforeSave, BeforeQuit, BeforeDead) execute in ascending priority order; same priority uses FIFO insertion order.
-- `SndStrategyPool.GetPriority(string index)` — query a registered strategy's priority.
-- `SndStrategyManager.InsertSorted` — insertion sort keeps `_strategies` always ordered by priority.
+- **`Origo.ConsoleBridge`** module — TCP remote console server (`ConsoleBridgeServer`) for external agent interaction; single-connection model with Accept + Handle threads; configurable via `ConsoleBridgeOptions` (default port 9876)
+- **`Origo.SourceGeneration`** module — Roslyn incremental source generator for TypedData inline types; dual-mode architecture (Home / Adapter) via `SndInlineTypesAttribute`; generates `KindMap`, `AsXxx`/`TryGetXxx` accessors, `TypedDataFactory<T>`, and `ModuleInitializer` registration
+- **`ISndFileAccess`** — role interface for strategy-scoped structured file I/O (5 members: `ReadFile`, `WriteFile`, `FileExists`, `ReadObject<T>`, `WriteObject<T>`)
+- **`ISndArchiveFileAccess`** — archive-scoped file I/O role interface (6 members: adds `DeleteFile`); paths relative to archive's `extra/` subdirectory
+- **`SndMetaFluentBuilder`** — fluent API for constructing `SndMetaData` with typed setters (`SetInt`, `SetFloat`, `SetDouble`, `SetLong`, `SetBool`, `SetString`, `SetBytes`, `SetNode`, `AddEntityStrategy`, `AddActiveStrategy`) and `From(SndMetaData)` factory
+- **`SndArchetypeLoader`** — `.map`-based archetype loading with type inference order (int → float → bool → string); `TryLoad(ISndFileAccess, string)` and `ApplyAttributes(ISndEntity, Dictionary<string, string>)`
+- **`GridCoordinateSystem`** — grid↔world coordinate conversion utilities (`GridToWorld`, `WorldToGrid` with `outOfBounds` detection)
+- **`PersistentRandom`** — entity-scoped deterministic RNG with blackboard persistence; `InitSeed`, `TryNextInt32`, `NextInt32(min, max)`, `NextFloat`; customizable state key names
+- **Generic `InvokeStrategy<TInput, TOutput>`** extension methods on `ISndEntity` — type-safe active strategy invocation eliminating manual JSON serialization boilerplate
+- **`TryGetNumericExtensions`** — cross-numeric-type entity data reading (`TryGetNumeric`, `GetNumeric`); fallback order: float → int → long → double
+- **`SndEntityNodeExtensions`** — adapter-layer Godot node access: `GetNativeNode(INodeHandle)` and `GetNodeFromSnd<TNode>(ISndEntity, string)`
+- **`ISndEntityOperations`** — entity destruction API: `RequestKillEntity(string entityName)`, `RequestKillAll()`; entity marked immediately (`IsPendingKill = true`), physically destroyed at end-of-frame
+- **Dynamic strategy management** — `ISndStrategyAccess.AddStrategy` / `RemoveStrategy` (passive) and `ISndActiveStrategyAccess.AddActiveStrategy` / `RemoveActiveStrategy` (active) with `AfterAdd` / `BeforeRemove` lifecycle hooks
+- **Entity lifecycle batch orchestration** — `SpawnMany` interface for bulk entity spawning
+- **TypedData generation for `Origo.GodotAdapter`** — adapter-layer inline type registration (`Vector2`, `Vector3`, `Transform2D`, `Transform3D`, `Color`, etc.) and converter/TypeMap registration via source-generated `ModuleInitializer`
+- **`ISaveMetaContributor` registration** via `ISndSaveOperations.RegisterSaveMetaContributor` — supports both `ISaveMetaContributor` interface instances and `Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>>` delegate overloads
+- **Console commands**: `entity_get_data <entity> <key>`, `entity_set_data <entity> <key> <value>` (with type inference preserving existing key type), `tree_debug <entity>` (Godot scene tree visualization)
+- **`CommandHandlerBase`** / **`PressButtonCommandHandler`** — adapter-layer console command infrastructure with tests
+- **Strategy Priority** (`StrategyIndexAttribute.Priority`, default 6205): all lifecycle hooks (Process, AfterSpawn, AfterLoad, BeforeRemove, BeforeSave, BeforeQuit, BeforeDead) execute in ascending priority order; same priority uses FIFO insertion order; `SndStrategyPool.GetPriority(string index)` query API; `SndStrategyManager.InsertSorted` maintains sorted order
+- **Extended `NoiseMapGenerator`** capabilities for procedural content generation
+- **Deferred entity cleanup** — end-of-frame entity destruction with extended type mapping support
+- **Extensive new test coverage**: SND hot-path functional and performance tests, TypedData integration and performance tests, save metadata contributor integration tests, coverage gap elimination, internal type downcast removal, static state isolation
 
 ### Changed
 
-- `SndStrategyManager.Add()` and `Recover()` now use insertion sort instead of append, keeping the list always ordered by ascending priority.
-- All lifecycle hook snapshots (Process / AfterSpawn / BeforeQuit etc.) inherit priority ordering.
-- `SerializeIndices` returns indices in priority order; ordering is preserved across Save/Load roundtrips.
+- **`IFileSystem` eliminated from public API** — all file content I/O routed exclusively through `IDataSourceIoGateway` (`ReadTree` / `WriteTree`); zero-bypass Gateway enforcement; `MemoryFileSystem` remains public for tests/adapters
+- **`INodeHandle.Native` removed** — DIP enforced in `ISndStateMachineAccess`; adapter-layer node access migrated to `SndEntityNodeExtensions`
+- **`ISaveMetaContributor.Contribute`** return type changed to `IReadOnlyDictionary<string, string>` (immutable contract)
+- **`ISndEntity` subscription methods redesigned** — improved `Subscribe` / `Unsubscribe` API with lifecycle observation support
+- **Frame control, entity processing, and bootstrap delegated from adapter to Core** — `GodotSndManager` thinned to pure Godot scene-tree binding; `OrigoAutoHost` delegates orchestration to Core
+- **Session lifecycle overhauled** — collision detection and session switch semantics redesigned; topology builder deduplicated
+- **ConsoleBridge pipeline simplified** — thread safety hardened with bounded buffers; `OrigoConsole` refactored for Open/Closed Principle
+- **Save subsystem I/O streamlined** — public interface contract tightened; runtime error handling hardened with transactional rollback guards
+- **Adapter/Core layer boundary solidified** — strict SOLID principle enforcement; hook firing made internal; constants extracted and code deduplicated
+- **`ISndContext` interface redesigned** — SHA-based duplicate save detection; deferred entity cleanup integration
+- **`SndStrategyManager.Add()` and `Recover()`** use insertion sort; all lifecycle hook snapshots inherit priority ordering; `SerializeIndices` returns indices in priority order preserved across Save/Load roundtrips
+- **API renames** to resolve analyzer warnings and remove suppressions (e.g., `SetValue` → renamed, `ConsoleInputBuffer` alignment, `DataSourceNodeKind` alignment)
+
+### Fixed
+
+- **ConsoleBridge deadlock** resolved — thread synchronization rewritten to prevent blocking on concurrent read/write
+- **Entity discoverability during hooks** — entities now visible to queries during lifecycle callbacks; session topology integrity preserved across concurrent operations
+- **Command handler base classes** made `public` (were incorrectly `internal`, preventing adapter-layer extension)
+- **Original load error preserved** — framework no longer swallows the root-cause exception during failed save loads
+- **Readonly field validation relaxed** — strategy stateless enforcement no longer rejects `readonly` fields (only writable instance fields flagged)
+- **Duplicate Godot entry** in bootstrap pipeline fixed
+- **Assembly version format** corrected for nightly builds (`0.0.7.0` instead of malformed format)
 
 ---
 
