@@ -32,6 +32,7 @@ public sealed class SessionRun : ISessionRun
     private readonly SessionSndContext _sessionContext;
     private readonly RunStateScope _sessionScope;
     private readonly ISaveStorageService _storageService;
+    private bool _disposing;
     private bool _disposed;
 
     internal SessionRun(SessionManagerRuntime managerRuntime, SessionParameters sessionParams)
@@ -109,8 +110,8 @@ public sealed class SessionRun : ISessionRun
 
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
+        if (_disposed || _disposing) return;
+        _disposing = true;
         _logger.Log(LogLevel.Info, LogTag,
             $"Disposing SessionRun for level '{LevelId}' (mount key: {MountKey ?? "none"}).");
 
@@ -120,10 +121,17 @@ public sealed class SessionRun : ISessionRun
         _sessionScope.StateMachines.PopAllOnQuit();
         _sessionScope.StateMachines.Clear();
 
-        ReleaseAllEntitiesAndClear(true);
-
-        _sceneHost.RemoveAllEntities();
-        _sessionScope.Blackboard.Clear();
+        try
+        {
+            ReleaseAllEntitiesAndClear(true);
+        }
+        finally
+        {
+            _sceneHost.RemoveAllEntities();
+            _sessionScope.Blackboard.Clear();
+            _disposed = true;
+            _disposing = false;
+        }
     }
 
     internal LevelPayload SerializeToPayload()

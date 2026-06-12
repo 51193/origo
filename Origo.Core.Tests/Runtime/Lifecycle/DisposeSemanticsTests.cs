@@ -495,6 +495,66 @@ public class DisposeSemanticsTests
         Assert.True(fs.Exists("root/current/level_test_level/session_state_machines.json"));
     }
 
+    // ── BeforeQuit session access safety ──────────────────────────────────
+
+    private const string SessionAccessStrategyIndex = "dispose_sem.session_access";
+    private const string ThrowingQuitStrategyIndex = "dispose_sem.throwing_quit";
+
+    [Fact]
+    public void SessionRun_Dispose_BeforeQuit_CanAccessSceneHost()
+    {
+        var events = new List<string>();
+        var (ctx, _) = CreateForegroundContext(world =>
+        {
+            SessionAccessQuitStrategy.Bind(events);
+            world.RegisterStrategy(() => new SessionAccessQuitStrategy());
+        });
+
+        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.SceneHost.CreateEntity(CreateMetaWithIndex("Entity", SessionAccessStrategyIndex));
+
+        events.Clear();
+        var ex = Record.Exception(() => bg.Dispose());
+
+        Assert.Null(ex);
+        Assert.Contains("SceneHostAccess:OK", events);
+        Assert.Contains("BlackboardAccess:OK", events);
+    }
+
+    [Fact]
+    public void SessionRun_Dispose_BeforeQuitThrows_EntitiesStillRemoved()
+    {
+        var (ctx, _) = CreateForegroundContext(world =>
+        {
+            world.RegisterStrategy(() => new ThrowingQuitStrategy());
+        });
+
+        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.SceneHost.CreateEntity(CreateMetaWithIndex("Entity", ThrowingQuitStrategyIndex));
+
+        var ex = Record.Exception(() => bg.Dispose());
+
+        Assert.NotNull(ex);
+        Assert.Throws<ObjectDisposedException>(() => bg.SceneHost);
+    }
+
+    [Fact]
+    public void SessionRun_Dispose_BeforeQuitThrows_DoubleDisposeStillIdempotent()
+    {
+        var (ctx, _) = CreateForegroundContext(world =>
+        {
+            world.RegisterStrategy(() => new ThrowingQuitStrategy());
+        });
+
+        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.SceneHost.CreateEntity(CreateMetaWithIndex("Entity", ThrowingQuitStrategyIndex));
+
+        Record.Exception(() => bg.Dispose());
+
+        var ex2 = Record.Exception(() => bg.Dispose());
+        Assert.Null(ex2);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
 
     private static (SndContext ctx, TestFileSystem fs) CreateForegroundContext(
@@ -563,5 +623,46 @@ public class DisposeSemanticsTests
 
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
             _events.Value?.Add($"BeforeQuit:{entity.Name}");
+    }
+
+    [StrategyIndex(SessionAccessStrategyIndex)]
+    private sealed class SessionAccessQuitStrategy : EntityStrategyBase
+    {
+        private static readonly AsyncLocal<List<string>?> _events = new();
+
+        public static void Bind(List<string> events) => _events.Value = events;
+
+        public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
+        {
+            var session = ctx.CurrentSession;
+            if (session == null) return;
+
+            try
+            {
+                var _ = session.SceneHost;
+                _events.Value?.Add("SceneHostAccess:OK");
+            }
+            catch (ObjectDisposedException)
+            {
+                _events.Value?.Add("SceneHostAccess:DISPOSED");
+            }
+
+            try
+            {
+                var _ = session.SessionBlackboard;
+                _events.Value?.Add("BlackboardAccess:OK");
+            }
+            catch (ObjectDisposedException)
+            {
+                _events.Value?.Add("BlackboardAccess:DISPOSED");
+            }
+        }
+    }
+
+    [StrategyIndex(ThrowingQuitStrategyIndex)]
+    private sealed class ThrowingQuitStrategy : EntityStrategyBase
+    {
+        public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
+            throw new InvalidOperationException("Intentional BeforeQuit failure for testing.");
     }
 }

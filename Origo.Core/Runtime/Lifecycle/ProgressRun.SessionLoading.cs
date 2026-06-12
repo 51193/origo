@@ -150,7 +150,7 @@ public sealed partial class ProgressRun
         {
             _owner._sessionManager.DestroyForeground();
             if (clearScene)
-                _owner._progressRuntime.SndRuntime.ClearAll();
+                _owner._progressRuntime.SndRuntime.SceneHost.RemoveAllEntities();
         }
 
         private static void ValidateLevelId(string levelId, string paramName, string message)
