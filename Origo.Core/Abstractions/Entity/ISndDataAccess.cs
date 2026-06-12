@@ -16,8 +16,6 @@ public interface ISndDataAccess
 {
     void SetData<T>(string name, T value);
 
-    T GetData<T>(string name);
-
     /// <summary>
     ///     安全读取数据，返回 <c>(是否找到, 值)</c>。
     ///     <para>

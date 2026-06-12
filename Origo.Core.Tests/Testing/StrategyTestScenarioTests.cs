@@ -282,7 +282,8 @@ public class StrategyTestScenarioTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            var hp = entity.GetData<int>("hp");
+            var (foundHp, hp) = entity.TryGetData<int>("hp");
+            if (!foundHp) return;
             var dps = entity.TryGetData<double>("dps").value;
             hp -= (int)(dps * delta);
             entity.SetData("hp", hp);
@@ -307,8 +308,8 @@ public class StrategyTestScenarioTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            var hp = entity.GetData<int>("hp");
-            var dps = entity.GetData<int>("dps");
+            var (_, hp) = entity.TryGetData<int>("hp");
+            var (_, dps) = entity.TryGetData<int>("dps");
             hp -= dps;
             entity.SetData("hp", hp);
             if (hp <= 0)

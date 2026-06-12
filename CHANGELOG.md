@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **`ISndDataAccess.GetData<T>`** — removed from interface. Use `TryGetData<T>` (returns `(bool found, T? value)`) or `TryGetNumeric` (for numeric cross-type coercion) instead. The concrete `SndEntity` retains the method for framework-internal use, but it is no longer accessible through `ISndEntity`.
+- **`SndStrategyPool`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
+
 ### Fixed
 
 - **`SessionRun.Dispose`** — BeforeQuit hooks can now safely access `ctx.CurrentSession.SceneHost` and `ctx.CurrentSession.SessionBlackboard` during session teardown. Previously, the disposed flag was set before hooks fired, causing `ObjectDisposedException`. Now uses two-phase flag (`_disposing` for re-entrancy guard, `_disposed` set only after cleanup completes) with `try/finally` to guarantee entity removal even if hooks throw.

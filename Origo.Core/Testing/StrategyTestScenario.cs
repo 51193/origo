@@ -52,7 +52,14 @@ public abstract class BaseStrategyTestHarness
 
     public IReadOnlyList<string> ConsoleCommands => Context.ConsoleCommands;
 
-    public TValue GetEntityData<TValue>(string key) => Entity.GetData<TValue>(key);
+    public TValue GetEntityData<TValue>(string key)
+    {
+        var (found, value) = Entity.TryGetData<TValue>(key);
+        if (!found)
+            throw new InvalidOperationException(
+                $"[StrategyTestScenario] Data key '{key}' not found on entity '{Entity.Name}'.");
+        return value!;
+    }
 
     public (bool found, TValue? value) TryGetEntityData<TValue>(string key) => Entity.TryGetData<TValue>(key);
 }

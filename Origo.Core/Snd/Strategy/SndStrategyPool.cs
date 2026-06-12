@@ -29,6 +29,10 @@ internal sealed class SndStrategyPool
     public void Register(Type strategyType, Func<BaseStrategy> factory)
     {
         ArgumentNullException.ThrowIfNull(strategyType);
+        if (!strategyType.IsAbstract && !strategyType.IsSealed)
+            throw new InvalidOperationException(
+                $"Strategy type '{strategyType.FullName}' must be sealed. " +
+                "Shared pooled strategies are singletons and must not be inheritable.");
         ValidateStrategyType(strategyType, out var invalidMembers);
         if (invalidMembers.Length > 0)
             throw new InvalidOperationException(
