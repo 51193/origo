@@ -15,6 +15,17 @@ It uses the **SND (Strategy-Node-Data)** model and isolates engine code through 
 - **Built-in Save Flow**: current workspace + snapshot slots.
 - **Official Godot 4 Adapter**: `Origo.GodotAdapter` for bootstrap and runtime integration.
 - **TCP Remote Console**: `Origo.ConsoleBridge` for agent-driven development over a network connection.
+- **Source Generation**: `Origo.SourceGeneration` generates strongly-typed `TypedData` accessors at compile time via Roslyn incremental generator.
+- **Active Strategy**: type-safe inter-entity service invocation via `InvokeStrategy<TInput, TOutput>`.
+- **Dynamic Strategy Management**: add/remove strategies at runtime with full lifecycle hooks (`AfterAdd`/`BeforeRemove`).
+
+## Documentation
+
+Full documentation: **[origo.manual](https://github.com/51193/origo.manual)**
+
+> **Note**: Documentation is written entirely in Chinese due to its scale.
+> If you need to use it, feed the repository as a knowledge base to an AI agent
+> and query the agent for answers.
 
 ## Special Capability: Background Session
 
@@ -151,6 +162,7 @@ public sealed class PlayerMoveStrategy : EntityStrategyBase
 
 ```text
 Origo.Core/
+Origo.SourceGeneration/
 Origo.ConsoleBridge/
 Origo.GodotAdapter/
 Origo.Core.Tests/

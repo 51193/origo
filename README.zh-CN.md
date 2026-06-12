@@ -15,6 +15,13 @@
 - **内置存档流程**：`current/` 工作区 + `save_xxx/` 快照。
 - **官方 Godot 4 适配器**：`Origo.GodotAdapter` 负责引导和运行时接入。
 - **TCP 远程控制台**：`Origo.ConsoleBridge` 用于 Agent 驱动开发，通过网络连接执行控制台命令。
+- **源码生成**：`Origo.SourceGeneration` 通过 Roslyn 增量生成器在编译期生成强类型 `TypedData` 访问器。
+- **主动策略（Active Strategy）**：类型安全的实体间服务调用，通过 `InvokeStrategy<TInput, TOutput>` 实现。
+- **动态策略管理**：运行时增删策略，完整生命周期钩子支持（`AfterAdd`/`BeforeRemove`）。
+
+## 文档
+
+完整文档见 **[origo.manual](https://github.com/51193/origo.manual)**。
 
 ## 特殊能力：Background Session
 
@@ -146,6 +153,7 @@ public sealed class PlayerMoveStrategy : EntityStrategyBase
 
 ```text
 Origo.Core/
+Origo.SourceGeneration/
 Origo.ConsoleBridge/
 Origo.GodotAdapter/
 Origo.Core.Tests/
