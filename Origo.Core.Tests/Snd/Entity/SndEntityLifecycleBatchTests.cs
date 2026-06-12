@@ -337,6 +337,7 @@ public class SndEntityLifecycleBatchTests
     public void BatchLoad_CrossEntity_ActiveStrategyAvailableDuringAfterLoad()
     {
         QueryActiveProxy.Events = new List<string>();
+        ProbeStrategy.Events = new List<string>();
         QueryActiveProxy.InvokeTarget = "Peer";
         QueryActiveProxy.InvokeIndex = "batch.active.simple";
         QueryActiveProxy.Host = null;
@@ -417,6 +418,7 @@ public class SndEntityLifecycleBatchTests
     public void SpawnMany_CrossEntity_ActiveStrategyAvailableDuringAfterSpawn()
     {
         QueryActiveProxy.Events = new List<string>();
+        ProbeStrategy.Events = new List<string>();
         QueryActiveProxy.InvokeTarget = "Peer";
         QueryActiveProxy.InvokeIndex = "batch.active.simple";
         QueryActiveProxy.Host = null;
@@ -752,6 +754,7 @@ public class SndEntityLifecycleBatchTests
     [Fact]
     public void BatchLoad_HookThrows_EntitiesCleanedUp()
     {
+        ProbeStrategy.Events = new List<string>();
         var host = CreateHost(w =>
         {
             w.RegisterStrategy(() => new FailingStrategy());
