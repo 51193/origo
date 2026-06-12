@@ -23,4 +23,21 @@ public static class GridCoordinateSystem
         outOfBounds = gridCoord < 0 || gridCoord >= gridSize;
         return gridCoord;
     }
+
+    public static (float X, float Z) GridToWorld(GridPos pos, float cellSize, int gridSize)
+    {
+        return (
+            GridToWorld(pos.X, cellSize, gridSize),
+            GridToWorld(pos.Z, cellSize, gridSize)
+        );
+    }
+
+    public static GridPos WorldToGrid(float worldX, float worldZ, float cellSize, int gridSize,
+        out bool outOfBounds)
+    {
+        var gx = WorldToGrid(worldX, cellSize, gridSize, out var oobX);
+        var gz = WorldToGrid(worldZ, cellSize, gridSize, out var oobZ);
+        outOfBounds = oobX || oobZ;
+        return new GridPos((int)gx, (int)gz);
+    }
 }

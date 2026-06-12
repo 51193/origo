@@ -34,4 +34,15 @@ public static class ActiveStrategyExtensions
         var resultJson = result is string s ? s : JsonSerializer.Serialize(result, DefaultOptions);
         return JsonSerializer.Deserialize<TOutput>(resultJson, DefaultOptions);
     }
+
+    public static bool EnsureStrategy(this ISndEntity entity, string dataKey, string strategyIndex)
+    {
+        var (found, current) = entity.TryGetData<string>(dataKey);
+        if (found && !string.IsNullOrWhiteSpace(current))
+            return false;
+
+        entity.SetData(dataKey, strategyIndex);
+        entity.AddStrategy(strategyIndex);
+        return true;
+    }
 }
