@@ -175,16 +175,16 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     {
         NotifyLifecycleObservers(EntityLifecycleEvent.AfterSpawn);
         _strategyManager.TriggerAfterSpawn(this, _context);
-        _logger.Log(LogLevel.Info, LogTag,
-            new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity spawned (hooks)."));
+        _logger.Log(LogLevel.Debug, LogTag,
+            new LogMessageBuilder().AddContext("entityName", Name).Build("Entity spawned (hooks)."));
     }
 
     void IEntityLifecycle.FireAfterLoadHooks()
     {
         NotifyLifecycleObservers(EntityLifecycleEvent.AfterLoad);
         _strategyManager.TriggerAfterLoad(this, _context);
-        _logger.Log(LogLevel.Info, LogTag,
-            new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity loaded (hooks)."));
+        _logger.Log(LogLevel.Debug, LogTag,
+            new LogMessageBuilder().AddContext("entityName", Name).Build("Entity loaded (hooks)."));
     }
 
     void IEntityLifecycle.FireBeforeSaveHooks()
@@ -261,7 +261,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         ((IEntityLifecycle)this).FireBeforeQuitHooks();
         ((IEntityLifecycle)this).ReleaseStrategiesOnly();
         ((IEntityLifecycle)this).TeardownOnly();
-        _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity quit."));
+        _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity quit."));
     }
 
     public void DeadSingle()
@@ -269,7 +269,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         ((IEntityLifecycle)this).FireBeforeDeadHooks();
         ((IEntityLifecycle)this).ReleaseStrategiesOnly();
         ((IEntityLifecycle)this).TeardownOnly();
-        _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().AddSuffix("entityName", Name).Build("Entity dead."));
+        _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity dead."));
     }
 
     public SndMetaData SaveSingle()

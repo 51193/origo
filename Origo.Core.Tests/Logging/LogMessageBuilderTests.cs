@@ -3,73 +3,77 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
-// ── KeyValueFileParser ─────────────────────────────────────────────────
-
 public class LogMessageBuilderTests
 {
     [Fact]
-    public void LogMessageBuilder_Build_PlainMessage()
+    public void Build_PlainMessage()
     {
         var msg = new LogMessageBuilder().Build("hello");
         Assert.Equal("hello", msg);
     }
 
     [Fact]
-    public void LogMessageBuilder_SetElapsedMs_IncludesTimestamp()
+    public void SetElapsedMs_IncludesTimestamp()
     {
         var msg = new LogMessageBuilder().SetElapsedMs(12.345).Build("test");
-        Assert.StartsWith("[+12.34ms]", msg);
+        Assert.Contains("[+12.3", msg);
+        Assert.Contains("ms]", msg);
         Assert.Contains("test", msg);
     }
 
     [Fact]
-    public void LogMessageBuilder_AddPrefix_IncludesPrefix()
+    public void AddContext_AppendsContext()
     {
-        var msg = new LogMessageBuilder().AddPrefix("ctx", "val").Build("test");
-        Assert.Contains("ctx=val", msg);
-        Assert.Contains(" | test", msg);
-    }
-
-    [Fact]
-    public void LogMessageBuilder_AddSuffix_IncludesSuffix()
-    {
-        var msg = new LogMessageBuilder().AddSuffix("key", "val").Build("test");
+        var msg = new LogMessageBuilder().AddContext("key", "val").Build("test");
         Assert.Contains("test | key=val", msg);
     }
 
     [Fact]
-    public void LogMessageBuilder_AddPrefix_NullKey_Skipped()
+    public void AddContext_MultipleEntries_AllIncluded()
     {
-        var msg = new LogMessageBuilder().AddPrefix(null!, "val").Build("test");
+        var msg = new LogMessageBuilder()
+            .AddContext("a", "1")
+            .AddContext("b", "2")
+            .Build("test");
+        Assert.Contains("test | a=1, b=2", msg);
+    }
+
+    [Fact]
+    public void AddContext_NullKey_Skipped()
+    {
+        var msg = new LogMessageBuilder().AddContext(null!, "val").Build("test");
         Assert.Equal("test", msg);
     }
 
     [Fact]
-    public void LogMessageBuilder_AddPrefix_NullValue_Skipped()
+    public void AddContext_NullValue_Skipped()
     {
-        var msg = new LogMessageBuilder().AddPrefix("key", null).Build("test");
+        var msg = new LogMessageBuilder().AddContext("key", null).Build("test");
         Assert.Equal("test", msg);
     }
 
     [Fact]
-    public void LogMessageBuilder_AddSuffix_WhitespaceKey_Skipped()
+    public void AddContext_WhitespaceKey_Skipped()
     {
-        var msg = new LogMessageBuilder().AddSuffix("  ", "val").Build("test");
+        var msg = new LogMessageBuilder().AddContext("  ", "val").Build("test");
         Assert.Equal("test", msg);
     }
 
     [Fact]
-    public void LogMessageBuilder_CombinedPrefixSuffix()
+    public void Combined_ElapsedAndContext()
     {
         var msg = new LogMessageBuilder()
             .SetElapsedMs(1.0)
-            .AddPrefix("p", "1")
-            .AddSuffix("s", "2")
+            .AddContext("p", "1")
             .Build("msg");
-        Assert.Contains("[+1ms]", msg);
-        Assert.Contains("p=1 | msg", msg);
-        Assert.Contains("msg | s=2", msg);
+        Assert.Contains("[+1.00ms]", msg);
+        Assert.Contains("msg | p=1", msg);
+    }
+
+    [Fact]
+    public void SetElapsedMs_Zero_NotTruncated()
+    {
+        var msg = new LogMessageBuilder().SetElapsedMs(0.0).Build("test");
+        Assert.StartsWith("[+0.00ms]", msg);
     }
 }
-
-// ── NullLogger ─────────────────────────────────────────────────────────

@@ -87,9 +87,9 @@ internal sealed class SndStrategyManager
 
         InsertSorted(entry);
         strategy.AfterAdd(entity, ctx);
-        _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
-            .AddSuffix("entityName", entity.Name)
-            .AddSuffix("strategyIndex", index)
+        _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder()
+            .AddContext("entityName", entity.Name)
+            .AddContext("strategyIndex", index)
             .Build("Strategy added."));
     }
 
@@ -102,9 +102,9 @@ internal sealed class SndStrategyManager
         entry.Strategy.BeforeRemove(entity, ctx);
         _strategies.RemoveAt(i);
         _pool.ReleaseStrategy(index);
-        _logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
-            .AddSuffix("entityName", entity.Name)
-            .AddSuffix("strategyIndex", index)
+        _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder()
+            .AddContext("entityName", entity.Name)
+            .AddContext("strategyIndex", index)
             .Build("Strategy removed."));
     }
 

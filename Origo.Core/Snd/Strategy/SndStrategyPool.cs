@@ -73,8 +73,8 @@ internal sealed class SndStrategyPool
                     $"Strategy '{index}' instance type '{strategy.GetType().FullName}' is not assignable to '{typeof(TBase).FullName}'.");
             _pool[index] = strategy;
             _refCounts[index] = 1;
-            _logger.Log(LogLevel.Info, nameof(SndStrategyPool),
-                new LogMessageBuilder().AddSuffix("strategyIndex", index).Build("Created new strategy instance."));
+            _logger.Log(LogLevel.Debug, nameof(SndStrategyPool),
+                new LogMessageBuilder().AddContext("strategyIndex", index).Build("Created new strategy instance."));
             return typed;
         }
 
@@ -96,8 +96,8 @@ internal sealed class SndStrategyPool
         {
             _pool.Remove(index);
             _refCounts.Remove(index);
-            _logger.Log(LogLevel.Info, nameof(SndStrategyPool),
-                new LogMessageBuilder().AddSuffix("strategyIndex", index).Build("Released strategy instance."));
+            _logger.Log(LogLevel.Debug, nameof(SndStrategyPool),
+                new LogMessageBuilder().AddContext("strategyIndex", index).Build("Released strategy instance."));
         }
         else
         {

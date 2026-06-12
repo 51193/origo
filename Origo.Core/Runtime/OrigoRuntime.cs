@@ -43,9 +43,9 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
         ArgumentNullException.ThrowIfNull(logger);
         Logger = logger;
         Logger.Log(LogLevel.Info, nameof(OrigoRuntime), new LogMessageBuilder()
-            .AddPrefix("version", meta.Version)
+            .AddContext("version", meta.Version)
             .Build($"{meta.Name} runtime constructed."));
-        Logger.Log(LogLevel.Info, nameof(OrigoRuntime), meta.Banner);
+        Logger.Log(LogLevel.Debug, nameof(OrigoRuntime), meta.Banner);
         ArgumentNullException.ThrowIfNull(sndSceneHost);
         ArgumentNullException.ThrowIfNull(typeStringMapping);
         ArgumentNullException.ThrowIfNull(converterRegistry);

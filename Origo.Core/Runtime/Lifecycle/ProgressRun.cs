@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.Logging;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save;
 using Origo.Core.Snd;
@@ -34,6 +36,7 @@ public sealed partial class ProgressRun : IDisposable
         IStateMachineContext stateMachineContext,
         ISndContext sndContext)
     {
+        var watch = Stopwatch.StartNew();
         ArgumentNullException.ThrowIfNull(systemRuntime);
         ArgumentNullException.ThrowIfNull(stateMachineContext);
         ArgumentNullException.ThrowIfNull(sndContext);
@@ -59,8 +62,10 @@ public sealed partial class ProgressRun : IDisposable
             _progressRuntime,
             progressParams.SaveId);
 
-        _progressRuntime.Logger.Log(LogLevel.Info, "ProgressRun",
-            $"Created ProgressRun (saveId: '{progressParams.SaveId}').");
+        _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Created ProgressRun (saveId: '{progressParams.SaveId}')."));
     }
 
     internal RunStateScope ProgressScope { get; }
@@ -77,7 +82,8 @@ public sealed partial class ProgressRun : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        _progressRuntime.Logger.Log(LogLevel.Info, "ProgressRun",
+        var watch = Stopwatch.StartNew();
+        _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
             $"Disposing ProgressRun (saveId: '{SaveId}').");
 
         try
@@ -86,7 +92,7 @@ public sealed partial class ProgressRun : IDisposable
         }
         catch (Exception ex)
         {
-            _progressRuntime.Logger.Log(LogLevel.Warning, "ProgressRun",
+            _progressRuntime.Logger.Log(LogLevel.Warning, nameof(ProgressRun),
                 $"Session clear failed during Dispose (saveId: '{SaveId}'): {ex.Message}");
         }
 
@@ -96,13 +102,17 @@ public sealed partial class ProgressRun : IDisposable
         }
         catch (Exception ex)
         {
-            _progressRuntime.Logger.Log(LogLevel.Warning, "ProgressRun",
+            _progressRuntime.Logger.Log(LogLevel.Warning, nameof(ProgressRun),
                 $"Delete current directory failed during Dispose (saveId: '{SaveId}'): {ex.Message}");
         }
 
         ProgressScope.StateMachines.PopAllOnQuit();
         ProgressScope.StateMachines.Clear();
         ProgressBlackboard.Clear();
+        _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
     }
 
     public IStateMachineContainer GetProgressStateMachines() => ProgressScope.StateMachines;

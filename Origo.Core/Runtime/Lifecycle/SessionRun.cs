@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.Logging;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save;
 using Origo.Core.Save.Serialization;
@@ -25,7 +27,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 /// </summary>
 public sealed class SessionRun : ISessionRun
 {
-    private const string LogTag = "SessionRun";
+    private const string LogTag = nameof(SessionRun);
     private readonly ILogger _logger;
     private readonly SaveContext _saveContext;
     private readonly ISndSceneHost _sceneHost;
@@ -37,6 +39,7 @@ public sealed class SessionRun : ISessionRun
 
     internal SessionRun(SessionManagerRuntime managerRuntime, SessionParameters sessionParams)
     {
+        var watch = Stopwatch.StartNew();
         ArgumentNullException.ThrowIfNull(managerRuntime);
         if (string.IsNullOrWhiteSpace(sessionParams.LevelId))
             throw new ArgumentException("Level id cannot be null or whitespace.");
@@ -62,7 +65,10 @@ public sealed class SessionRun : ISessionRun
         _sessionContext = new SessionSndContext(effectiveContext, this);
         if (_sceneHost is ISndContextAttachableSceneHost contextAttachable)
             contextAttachable.BindContext(_sessionContext);
-        _logger.Log(LogLevel.Info, LogTag, $"Created SessionRun for level '{sessionParams.LevelId}'.");
+        _logger.Log(LogLevel.Info, LogTag,
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Created SessionRun for level '{sessionParams.LevelId}'."));
     }
 
     internal RunStateScope SessionScope
@@ -112,6 +118,7 @@ public sealed class SessionRun : ISessionRun
     {
         if (_disposed || _disposing) return;
         _disposing = true;
+        var watch = Stopwatch.StartNew();
         _logger.Log(LogLevel.Info, LogTag,
             $"Disposing SessionRun for level '{LevelId}' (mount key: {MountKey ?? "none"}).");
 
@@ -131,6 +138,10 @@ public sealed class SessionRun : ISessionRun
             _sessionScope.Blackboard.Clear();
             _disposed = true;
             _disposing = false;
+            _logger.Log(LogLevel.Info, LogTag,
+                new LogMessageBuilder()
+                    .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                    .Build($"Disposed SessionRun for level '{LevelId}'."));
         }
     }
 
@@ -144,6 +155,7 @@ public sealed class SessionRun : ISessionRun
     {
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(payload);
+        var watch = Stopwatch.StartNew();
         _logger.Log(LogLevel.Info, LogTag, $"Loading payload for level '{LevelId}'.");
 
         try
@@ -164,6 +176,11 @@ public sealed class SessionRun : ISessionRun
                     lifecycle.FireAfterLoadHooks();
 
             _sessionScope.StateMachines.FlushAllAfterLoad();
+
+            _logger.Log(LogLevel.Info, LogTag,
+                new LogMessageBuilder()
+                    .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                    .Build($"Payload loaded for level '{LevelId}'."));
         }
         catch (Exception ex)
         {
@@ -186,8 +203,13 @@ public sealed class SessionRun : ISessionRun
     internal void PersistLevelState()
     {
         ThrowIfDisposed();
+        var watch = Stopwatch.StartNew();
         _logger.Log(LogLevel.Info, LogTag, $"Persisting level state for '{LevelId}'.");
         _storageService.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload());
+        _logger.Log(LogLevel.Info, LogTag,
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Level state persisted for '{LevelId}'."));
     }
 
     private LevelPayload BuildLevelPayload()

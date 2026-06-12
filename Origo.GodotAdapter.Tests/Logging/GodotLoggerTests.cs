@@ -61,4 +61,61 @@ public class GodotLoggerTests
 
         Assert.Null(ex);
     }
+
+    // ── Minimum level filtering ──
+
+    [Fact]
+    public void MinimumLevel_DefaultInfo_SuppressesDebug()
+    {
+        var invoked = false;
+        var logger = new GodotLogger((_, _, _) => invoked = true);
+
+        logger.Log(LogLevel.Debug, "tag", "msg");
+
+        Assert.False(invoked);
+    }
+
+    [Fact]
+    public void MinimumLevel_DefaultInfo_AllowsInfo()
+    {
+        var invoked = false;
+        var logger = new GodotLogger((_, _, _) => invoked = true);
+
+        logger.Log(LogLevel.Info, "tag", "msg");
+
+        Assert.True(invoked);
+    }
+
+    [Fact]
+    public void MinimumLevel_ExplicitDebug_AllowsDebug()
+    {
+        var invoked = false;
+        var logger = new GodotLogger((_, _, _) => invoked = true, LogLevel.Debug);
+
+        logger.Log(LogLevel.Debug, "tag", "msg");
+
+        Assert.True(invoked);
+    }
+
+    [Fact]
+    public void MinimumLevel_Error_SuppressesWarning()
+    {
+        var invoked = false;
+        var logger = new GodotLogger((_, _, _) => invoked = true, LogLevel.Error);
+
+        logger.Log(LogLevel.Warning, "tag", "msg");
+
+        Assert.False(invoked);
+    }
+
+    [Fact]
+    public void MinimumLevel_Error_AllowsError()
+    {
+        var invoked = false;
+        var logger = new GodotLogger((_, _, _) => invoked = true, LogLevel.Error);
+
+        logger.Log(LogLevel.Error, "tag", "msg");
+
+        Assert.True(invoked);
+    }
 }

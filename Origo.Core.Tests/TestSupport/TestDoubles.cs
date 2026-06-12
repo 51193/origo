@@ -28,8 +28,11 @@ internal sealed class TestLogger : ILogger
     public readonly List<string> Infos = new();
     public readonly List<string> Warnings = new();
 
+    public LogLevel MinimumLevel { get; set; } = LogLevel.Debug;
+
     public void Log(LogLevel level, string tag, string message)
     {
+        if (level < MinimumLevel) return;
         switch (level)
         {
             case LogLevel.Debug:
@@ -45,6 +48,14 @@ internal sealed class TestLogger : ILogger
                 Infos.Add($"{tag}: {message}");
                 break;
         }
+    }
+
+    public void Clear()
+    {
+        Debugs.Clear();
+        Infos.Clear();
+        Warnings.Clear();
+        Errors.Clear();
     }
 }
 

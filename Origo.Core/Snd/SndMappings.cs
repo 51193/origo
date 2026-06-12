@@ -44,7 +44,7 @@ internal sealed class SndMappings
         foreach (var key in node.Keys)
             _sceneAliases[key] = node[key].AsString();
         logger.Log(LogLevel.Info, nameof(SndMappings),
-            new LogMessageBuilder().AddSuffix("filePath", mapFilePath)
+            new LogMessageBuilder().AddContext("filePath", mapFilePath)
                 .Build($"Loaded {_sceneAliases.Count} scene resource aliases."));
     }
 
@@ -93,7 +93,7 @@ internal sealed class SndMappings
         var sndMetaConverter = registry.Get<SndMetaData>();
         _templateResolver = new SndTemplateResolver(dataSourceIo, sndMetaConverter, _templatePaths);
         logger.Log(LogLevel.Info, nameof(SndMappings),
-            new LogMessageBuilder().AddSuffix("filePath", mapFilePath)
+            new LogMessageBuilder().AddContext("filePath", mapFilePath)
                 .Build($"Loaded {_templatePaths.Count} Snd templates."));
     }
 

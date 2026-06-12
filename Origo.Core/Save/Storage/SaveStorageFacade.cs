@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -69,6 +70,7 @@ internal static class SaveStorageFacade
         ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
+        var watch = Stopwatch.StartNew();
 
         var snapshotDirRel = handle.PathPolicy.GetSaveDirectory(newSaveId);
         var snapshotShaRel = handle.PathPolicy.GetPayloadShaFile(snapshotDirRel);
@@ -92,7 +94,9 @@ internal static class SaveStorageFacade
                 && string.Equals(existingHash, newHash, StringComparison.Ordinal))
             {
                 logger.Log(LogLevel.Info, nameof(SaveStorageFacade),
-                    $"Idempotent save skip: payload hash unchanged for save '{newSaveId}'.");
+                    new LogMessageBuilder()
+                        .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                        .Build($"Idempotent save skip: payload hash unchanged for save '{newSaveId}'."));
                 return;
             }
         }
@@ -116,14 +120,19 @@ internal static class SaveStorageFacade
         {
             logger.Log(LogLevel.Error, nameof(SaveStorageFacade),
                 new LogMessageBuilder()
-                    .AddSuffix("saveRootPath", handle.SaveRootPath)
-                    .AddSuffix("newSaveId", newSaveId)
+                    .AddContext("saveRootPath", handle.SaveRootPath)
+                    .AddContext("newSaveId", newSaveId)
+                    .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
                     .Build(
                         $"Snapshot failed after current/ was written; save index and disk may be inconsistent. {ex.Message}"));
             throw;
         }
 
         handle.MetaAccess.Delete(markerAbs);
+        logger.Log(LogLevel.Info, nameof(SaveStorageFacade),
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Save payload written and snapshotted for '{newSaveId}'."));
     }
 
     public static void WriteLevelPayloadOnly(
@@ -168,6 +177,7 @@ internal static class SaveStorageFacade
         if (string.IsNullOrWhiteSpace(newSaveId))
             throw new ArgumentException("New save id cannot be null or whitespace.", nameof(newSaveId));
 
+        var watch = Stopwatch.StartNew();
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
         var currentAbs = handle.GetAbsolutePath(currentRel);
         if (!handle.MetaAccess.DirectoryExists(currentAbs))
@@ -188,6 +198,10 @@ internal static class SaveStorageFacade
             handle.MetaAccess.DeleteDirectory(saveAbs);
 
         handle.MetaAccess.Rename(tempAbs, saveAbs);
+        logger?.Log(LogLevel.Info, nameof(SaveStorageFacade),
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Snapshot completed from current/ to save '{newSaveId}'."));
     }
 
     private static void CopyCurrentToTempDirectory(
@@ -221,7 +235,7 @@ internal static class SaveStorageFacade
             {
                 logger?.Log(LogLevel.Warning, nameof(SaveStorageFacade),
                     new LogMessageBuilder()
-                        .AddSuffix("tempPath", tempAbs)
+                        .AddContext("tempPath", tempAbs)
                         .Build(
                             $"Snapshot temp directory cleanup failed: {cleanupEx.Message}"));
             }

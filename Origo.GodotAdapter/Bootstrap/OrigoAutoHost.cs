@@ -125,7 +125,7 @@ public partial class OrigoAutoHost : Node
         logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder()
                 .SetElapsedMs(createWatch.Elapsed.TotalMilliseconds)
-                .AddSuffix("filePath", systemBbPath)
+                .AddContext("filePath", systemBbPath)
                 .Build("CreateRuntime completed."));
         return runtime;
     }

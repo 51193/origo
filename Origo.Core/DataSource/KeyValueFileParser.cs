@@ -52,7 +52,7 @@ internal static class KeyValueFileParser
                     $"Invalid line '{line}' in '{sourceName}'. Expected 'key: value'.");
 
             logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
-                new LogMessageBuilder().AddSuffix("filePath", sourceName)
+                new LogMessageBuilder().AddContext("filePath", sourceName)
                     .Build($"Invalid line '{line}'. Expected 'key: value'."));
             return;
         }
@@ -69,14 +69,14 @@ internal static class KeyValueFileParser
                     $"Invalid line '{line}' in '{sourceName}'. Empty key or value.");
 
             logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
-                new LogMessageBuilder().AddSuffix("filePath", sourceName)
+                new LogMessageBuilder().AddContext("filePath", sourceName)
                     .Build($"Invalid line '{line}'. Empty key or value."));
             return;
         }
 
         if (result.ContainsKey(key))
             logger.Log(LogLevel.Warning, nameof(KeyValueFileParser),
-                new LogMessageBuilder().AddSuffix("filePath", sourceName).AddSuffix("key", key)
+                new LogMessageBuilder().AddContext("filePath", sourceName).AddContext("key", key)
                     .Build($"Duplicate key '{key}' in '{sourceName}'; later value wins."));
 
         result[key] = value;

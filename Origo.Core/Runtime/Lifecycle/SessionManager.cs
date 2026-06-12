@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Logging;
 using Origo.Core.Save;
 using Origo.Core.Snd.Scene;
 using Origo.Core.Abstractions.Lifecycle;
@@ -18,7 +20,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 /// </summary>
 internal sealed class SessionManager : ISessionManager
 {
-    private const string LogTag = "SessionManager";
+    private const string LogTag = nameof(SessionManager);
     private readonly SessionManagerRuntime _managerRuntime;
     private readonly Dictionary<string, MountedSession> _sessions = new(StringComparer.Ordinal);
 
@@ -249,6 +251,8 @@ internal sealed class SessionManager : ISessionManager
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Session key cannot be null or whitespace.", nameof(key));
 
+        var watch = Stopwatch.StartNew();
+
         // If mounting foreground and old foreground exists, destroy old first.
         if (string.Equals(key, ISessionManager.ForegroundKey, StringComparison.Ordinal)
             && TryGetMountedSession(key) is not null)
@@ -259,7 +263,9 @@ internal sealed class SessionManager : ISessionManager
 
         _sessions[key] = new MountedSession(session, syncProcess);
         _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
-            $"Mounted session '{key}' (level: {session.LevelId}, syncProcess: {syncProcess}).");
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Mounted session '{key}' (level: {session.LevelId}, syncProcess: {syncProcess})."));
 
         session.MountKey = key;
         session.Disposing += () =>
@@ -287,11 +293,16 @@ internal sealed class SessionManager : ISessionManager
 
     private void DisposeMountedSession(string key, MountedSession mounted)
     {
+        var watch = Stopwatch.StartNew();
         _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
             $"Destroying session '{key}' (level: {mounted.Session.LevelId}).");
 
         mounted.Session.MountKey = null;
         mounted.Session.Dispose();
+        _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Destroyed session '{key}'."));
     }
 
     private sealed record MountedSession(SessionRun Session, bool SyncProcess);

@@ -20,6 +20,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`Astar`** — generic A* pathfinding on grid maps; accepts `Func<GridPos, bool>` blocked-cell predicate for maximum flexibility
 - **`GridParser`** — coordinate string parser supporting `"x,z"` format and `JsonElement` input; returns `(int X, int Z)?`
 - **`ISndEntity.EnsureStrategy()`** extension method — lazy strategy attachment with idempotency guard; checks a data key and only adds the strategy if no value is already set
+- **Logger minimum level filtering** — `GodotLogger` and `TestLogger` accept a `MinimumLevel` parameter (default `Info`) to suppress `Debug`-level messages in production. `TestLogger` also exposes a settable `MinimumLevel` property for tests.
+
+### Changed
+
+- **`LogMessageBuilder` format simplified** — `AddPrefix`/`AddSuffix` replaced by unified `AddContext`; output format changed from `[+ms] prefix=val | msg | suffix=val` to `[+ms] msg | key=val, key=val`
+- **Log tags standardized** — all components use `nameof(ClassName)` consistently instead of mixed string literals
+- **High-frequency log messages downgraded to `Debug`** — strategy pool create/release, entity lifecycle hooks (spawn/load/quit/dead), strategy manager add/remove, and per-strategy auto-registration messages no longer appear at `Info` level
+- **`OrigoRuntime` banner downgraded to `Debug`** — no longer outputs the multi-line banner at `Info` level
+- **Performance timing added to key operations** — `OrigoConsole` command processing, `SessionRun` create/dispose/load/persist, `ProgressRun` create/dispose, `SaveStorageFacade` write/snapshot, and `SessionManager` mount/destroy now include elapsed milliseconds in log output
+
+### Fixed
+
+- **Demo log overflow** — excessive `Info`-level messages from strategy lifecycle and entity operations reduced through level adjustments and filtering
+- **Test compliance** — `OrigoConsoleLoggingTests` refactored to verify logging behavior (level correctness, message ordering, tag correctness) rather than exact format strings; other format-coupled assertions cleaned up to match project test conventions
 
 ### Fixed
 

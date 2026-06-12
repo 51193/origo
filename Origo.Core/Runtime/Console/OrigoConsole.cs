@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Logging;
+using Origo.Core.Logging;
 using Origo.Core.Runtime.Console.CommandHandlers;
 
 namespace Origo.Core.Runtime.Console;
@@ -83,6 +85,8 @@ public sealed class OrigoConsole
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
+            var cmdWatch = Stopwatch.StartNew();
+
             _logger.Log(LogLevel.Debug, nameof(OrigoConsole), $"Received command: \"{line}\"");
 
             if (!ConsoleCommandParser.TryParse(line!, out var invocation, out var parseError))
@@ -112,12 +116,16 @@ public sealed class OrigoConsole
                 if (_router.TryExecute(invocation, _output, out var execError))
                 {
                     _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
-                        $"Command \"{invocation.Command}\" executed successfully.");
+                        new LogMessageBuilder()
+                            .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
+                            .Build($"Command \"{invocation.Command}\" executed successfully."));
                 }
                 else
                 {
                     _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
-                        $"Command \"{invocation.Command}\" failed: {execError}");
+                        new LogMessageBuilder()
+                            .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
+                            .Build($"Command \"{invocation.Command}\" failed: {execError}"));
                     if (!string.IsNullOrEmpty(execError))
                         _output.Publish(execError);
                 }
@@ -125,7 +133,9 @@ public sealed class OrigoConsole
             catch (Exception ex)
             {
                 _logger.Log(LogLevel.Warning, nameof(OrigoConsole),
-                    $"Command \"{invocation.Command}\" threw exception: {ex.Message}");
+                    new LogMessageBuilder()
+                        .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
+                        .Build($"Command \"{invocation.Command}\" threw exception: {ex.Message}"));
                 _output.Publish($"Command failed: {ex.Message}");
             }
         }

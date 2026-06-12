@@ -83,7 +83,7 @@ public static class OrigoAutoInitializer
         {
             var ex = new ArgumentException("Config file path cannot be null or whitespace.", nameof(filePath));
             logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
-                .AddSuffix("filePath", filePath)
+                .AddContext("filePath", filePath)
                 .Build($"Invalid config path: {ex.Message}"));
             throw ex;
         }
@@ -96,7 +96,7 @@ public static class OrigoAutoInitializer
             {
                 var ex = new InvalidOperationException($"Config file '{filePath}' must be a JSON array.");
                 logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
-                    .AddSuffix("filePath", filePath)
+                    .AddContext("filePath", filePath)
                     .Build($"Config json root is not array: {ex.Message}"));
                 throw ex;
             }
@@ -116,7 +116,7 @@ public static class OrigoAutoInitializer
             var wrapped = new InvalidOperationException(
                 $"Failed to enumerate types from assembly '{assembly.FullName}'.", ex);
             logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
-                .AddSuffix("filePath", assembly.FullName)
+                .AddContext("filePath", assembly.FullName)
                 .Build($"Discover strategy types failed: {wrapped.Message}"));
             throw wrapped;
         }
@@ -158,9 +158,9 @@ public static class OrigoAutoInitializer
             pool.Register(capturedType, () => (BaseStrategy)Activator.CreateInstance(capturedType)!);
             registered++;
 
-            logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
+            logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                .AddSuffix("strategyIndex", index)
+                .AddContext("strategyIndex", index)
                 .Build("Strategy auto-registered."));
         }
 
@@ -180,7 +180,7 @@ public static class OrigoAutoInitializer
         {
             var notFound = new InvalidOperationException($"Config file '{filePath}' not found.", ex);
             logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
-                .AddSuffix("filePath", filePath)
+                .AddContext("filePath", filePath)
                 .Build($"Config file not found: {notFound.Message}"));
             throw notFound;
         }
@@ -199,7 +199,7 @@ public static class OrigoAutoInitializer
         watch.Stop();
         logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
             .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-            .AddSuffix("filePath", filePath)
+            .AddContext("filePath", filePath)
             .Build($"Spawned entities from config: {metaList.Count}."));
         return metaList.Count;
     }

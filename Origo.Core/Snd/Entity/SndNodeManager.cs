@@ -35,7 +35,7 @@ internal sealed class SndNodeManager : INodeHost
         if (_nodes.TryGetValue(name, out var node)) return node;
 
         _logger.Log(LogLevel.Error, nameof(SndNodeManager),
-            new LogMessageBuilder().AddSuffix("nodeName", name).Build("Node not found."));
+            new LogMessageBuilder().AddContext("nodeName", name).Build("Node not found."));
         throw new InvalidOperationException($"Node '{name}' not found.");
     }
 

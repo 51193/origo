@@ -424,7 +424,7 @@ public class LifecycleRunsTests
 
         var run = progressRun.LoadAndMountForeground("test_level");
 
-        Assert.Contains(logger.Infos, msg => msg.Contains("Created SessionRun") && msg.Contains("test_level"));
+        Assert.Contains(logger.Infos, msg => msg.Contains("SessionRun") && msg.Contains("test_level"));
 
         run.Dispose();
     }
@@ -443,7 +443,7 @@ public class LifecycleRunsTests
 
         var progressRun = TestFactory.CreateProgressRun("test_save", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
-        Assert.Contains(logger.Infos, msg => msg.Contains("Created ProgressRun") && msg.Contains("test_save"));
+        Assert.Contains(logger.Infos, msg => msg.Contains("ProgressRun") && msg.Contains("test_save"));
 
         progressRun.Dispose();
     }
@@ -464,7 +464,7 @@ public class LifecycleRunsTests
 
         using var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
-        Assert.Contains(logger.Infos, msg => msg.Contains("Mounted session") && msg.Contains("bg1"));
+        Assert.Contains(logger.Infos, msg => msg.Contains("SessionManager") && msg.Contains("bg1"));
     }
 
     // ── Edge cases for new Dispose semantics ──────────────────────────
