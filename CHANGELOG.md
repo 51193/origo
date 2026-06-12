@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **`ISndDataAccess.GetData<T>`** — removed from interface. Use `TryGetData<T>` (returns `(bool found, T? value)`) or `TryGetNumeric` (for numeric cross-type coercion) instead. The concrete `SndEntity` retains the method for framework-internal use, but it is no longer accessible through `ISndEntity`.
+- **`SndStrategyPool`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
+
 ### Added
 
 - **`GridPos`** — `readonly record struct` representing 2D integer grid coordinates in `Origo.Core.Grid`
@@ -15,15 +20,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`Astar`** — generic A* pathfinding on grid maps; accepts `Func<GridPos, bool>` blocked-cell predicate for maximum flexibility
 - **`GridParser`** — coordinate string parser supporting `"x,z"` format and `JsonElement` input; returns `(int X, int Z)?`
 - **`ISndEntity.EnsureStrategy()`** extension method — lazy strategy attachment with idempotency guard; checks a data key and only adds the strategy if no value is already set
-
----
-
-## [0.0.8-nightly.20260612] - 2026-06-12
-
-### Breaking Changes
-
-- **`ISndDataAccess.GetData<T>`** — removed from interface. Use `TryGetData<T>` (returns `(bool found, T? value)`) or `TryGetNumeric` (for numeric cross-type coercion) instead. The concrete `SndEntity` retains the method for framework-internal use, but it is no longer accessible through `ISndEntity`.
-- **`SndStrategyPool`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
 
 ### Fixed
 
