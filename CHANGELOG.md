@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`GridParser`** — coordinate string parser supporting `"x,z"` format and `JsonElement` input; returns `(int X, int Z)?`
 - **`ISndEntity.EnsureStrategy()`** extension method — lazy strategy attachment with idempotency guard; checks a data key and only adds the strategy if no value is already set
 - **Logger minimum level filtering** — `GodotLogger` and `TestLogger` accept a `MinimumLevel` parameter (default `Info`) to suppress `Debug`-level messages in production. `TestLogger` also exposes a settable `MinimumLevel` property for tests.
+- **`PlanExecutionStrategyBase`** — intent-driven entity-level plan execution base class in `Origo.Core.Planning`. Manages subscription wiring, action strategy plug/unplug, plan advancement, and idle timing automatically. Users provide only `ResolveNextStep(intent, currentStep, failed, entity)` and `StepToActionIndex(stepType)`. Reduces AI scheduling boilerplate from ~250 lines to ~70.
+- **`ISndEntity.EnsureReplaceableStrategy()`** extension method — supports the `*_impl` replaceable-strategy pattern. Reads a configured override from entity data, falling back to a default strategy index, with idempotency guard.
 
 ### Changed
 
