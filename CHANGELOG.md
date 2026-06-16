@@ -36,9 +36,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Demo log overflow** — excessive `Info`-level messages from strategy lifecycle and entity operations reduced through level adjustments and filtering
 - **Test compliance** — `OrigoConsoleLoggingTests` refactored to verify logging behavior (level correctness, message ordering, tag correctness) rather than exact format strings; other format-coupled assertions cleaned up to match project test conventions
-
-### Fixed
-
 - **`SessionRun.Dispose`** — BeforeQuit hooks can now safely access `ctx.CurrentSession.SceneHost` and `ctx.CurrentSession.SessionBlackboard` during session teardown. Previously, the disposed flag was set before hooks fired, causing `ObjectDisposedException`. Now uses two-phase flag (`_disposing` for re-entrancy guard, `_disposed` set only after cleanup completes) with `try/finally` to guarantee entity removal even if hooks throw.
 - **`ProgressRun.SessionLoading.ResetForeground`** — removed redundant `SndRuntime.ClearAll()` call after `DestroyForeground()`. The dispose already cleans all entities via `ReleaseAllEntitiesAndClear` + `RemoveAllEntities`. The redundant call could cause double BeforeQuit trigger on partially-cleaned entities if the first cleanup threw an exception.
 

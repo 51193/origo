@@ -5,7 +5,7 @@
         <LangVersion>latest</LangVersion>
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AnalysisLevel>latest-recommended</AnalysisLevel>
-        <Version>0.0.8-nightly.20260614</Version>
+        <Version>0.0.8-nightly.20260616</Version>
         <AssemblyVersion>0.0.8.0</AssemblyVersion>
         <FileVersion>0.0.8.0</FileVersion>
         <Authors>51193</Authors>
