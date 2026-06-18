@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Godot;
 using Origo.Core;
 using Origo.Core.Abstractions.Console;
@@ -87,6 +88,7 @@ public partial class OrigoAutoHost : Node
         ((IOrigoFrameDriver?)Runtime)?.DriveFrame(delta);
     }
 
+    [MemberNotNull(nameof(SndManager), nameof(SharedMetaAccess), nameof(SharedPathResolver), nameof(SharedDataSourceIo), nameof(Runtime))]
     private OrigoRuntime CreateRuntime()
     {
         var createWatch = Stopwatch.StartNew();

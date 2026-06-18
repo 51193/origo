@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Godot;
 using Origo.Core.Abstractions.Entity;
@@ -137,6 +138,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         snd.MarkPendingKill();
     }
 
+    [MemberNotNull(nameof(SharedWorld), nameof(SharedLogger))]
     public void BindRuntimeDependencies(SndWorld world, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(world);
