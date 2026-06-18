@@ -8,14 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Breaking Changes
-
-- **`ISndDataAccess.GetData<T>`** — removed from interface. Use `TryGetData<T>` (returns `(bool found, T? value)`) or `TryGetNumeric` (for numeric cross-type coercion) instead. The concrete `SndEntity` retains the method for framework-internal use, but it is no longer accessible through `ISndEntity`.
-- **`SndStrategyPool`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
-- **`ISndObservation`** — removed. The old cross-entity ObserveData/ObserveLifecycle API has been replaced by `ISndObserverStrategyAccess.MountObserverStrategy` / `UnmountObserverStrategy` with ObserverStrategy as a first-class strategy type.
-- **`ISndEntityLifecycleAccess`** — removed. Lifecycle subscriptions via SubscribeLifecycle/UnsubscribeLifecycle on ISndEntity are no longer supported. Use ObserverStrategy with OnMounted/OnUnmounted instead.
-- **`ISndDataAccess.Subscribe` / `Unsubscribe`** — removed. Self-data subscriptions must now use MountObserverStrategy with the entity's own name as the target.
-
 ### Added
 
 - **`ObserverStrategyBase`** — new first-class strategy base class (alongside EntityStrategyBase and ActiveStrategyBase). Provides three virtual hooks: `OnMounted`, `OnDataChanged`, `OnUnmounted`. Observer strategies are stateless, pooled, and auto-persisted across save/load.
@@ -32,11 +24,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **BREAKING: `SndStrategyPool`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
 - **`LogMessageBuilder` format simplified** — `AddPrefix`/`AddSuffix` replaced by unified `AddContext`; output format changed from `[+ms] prefix=val | msg | suffix=val` to `[+ms] msg | key=val, key=val`
 - **Log tags standardized** — all components use `nameof(ClassName)` consistently instead of mixed string literals
 - **High-frequency log messages downgraded to `Debug`** — strategy pool create/release, entity lifecycle hooks (spawn/load/quit/dead), strategy manager add/remove, and per-strategy auto-registration messages no longer appear at `Info` level
 - **`OrigoRuntime` banner downgraded to `Debug`** — no longer outputs the multi-line banner at `Info` level
 - **Performance timing added to key operations** — `OrigoConsole` command processing, `SessionRun` create/dispose/load/persist, `ProgressRun` create/dispose, `SaveStorageFacade` write/snapshot, and `SessionManager` mount/destroy now include elapsed milliseconds in log output
+
+### Removed
+
+- **`ISndDataAccess.GetData<T>`** — removed from interface. Use `TryGetData<T>` (returns `(bool found, T? value)`) or `TryGetNumeric` (for numeric cross-type coercion) instead. The concrete `SndEntity` retains the method for framework-internal use, but it is no longer accessible through `ISndEntity`.
+- **`ISndObservation`** — removed. The old cross-entity ObserveData/ObserveLifecycle API has been replaced by `ISndObserverStrategyAccess.MountObserverStrategy` / `UnmountObserverStrategy` with ObserverStrategy as a first-class strategy type.
+- **`ISndEntityLifecycleAccess`** — removed. Lifecycle subscriptions via SubscribeLifecycle/UnsubscribeLifecycle on ISndEntity are no longer supported. Use ObserverStrategy with OnMounted/OnUnmounted instead.
+- **`ISndDataAccess.Subscribe` / `Unsubscribe`** — removed. Self-data subscriptions must now use MountObserverStrategy with the entity's own name as the target.
 
 ### Fixed
 

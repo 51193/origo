@@ -59,6 +59,8 @@
 | `Fixed` | 对 bug 的修复 |
 | `Security` | 对安全性的改进 |
 
+> **破坏性变更不另立分类。** 破坏性变更按其性质归入 `Changed`（行为变更）或 `Removed`（API 移除），并在条目开头加 `BREAKING:` 前缀。不使用独立的 `Breaking Changes` 分类。
+
 ---
 
 ## 测试
