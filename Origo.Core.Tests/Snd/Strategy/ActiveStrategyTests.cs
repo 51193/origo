@@ -375,7 +375,7 @@ public class ActiveStrategyTests
     }
 
     [StrategyIndex(EntityOnlyIndex)]
-    private sealed class EntityOnlyStrategy : EntityStrategyBase
+    private sealed class EntityOnlyStrategy : LifecycleStrategyBase
     {
     }
 

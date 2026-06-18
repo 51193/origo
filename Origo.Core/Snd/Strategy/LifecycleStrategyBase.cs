@@ -3,9 +3,9 @@ using Origo.Core.Abstractions.Entity;
 namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
-///     挂载在 SND 实体上的策略基类，提供实体生命周期钩子。
+///     挂载在 SND 实体上的生命周期策略基类，提供实体生命周期钩子。
 /// </summary>
-public abstract class EntityStrategyBase : BaseStrategy
+public abstract class LifecycleStrategyBase : BaseStrategy
 {
     public virtual void Process(ISndEntity entity, double delta, ISndContext ctx)
     {

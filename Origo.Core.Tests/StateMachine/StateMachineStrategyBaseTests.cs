@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.Runtime.StateMachine;
+using Origo.Core.Snd.Strategy;
 using Origo.Core.StateMachine;
 using Xunit;
 
@@ -26,6 +29,174 @@ public class StateMachineStrategyBaseTests
         strategy.OnPopBeforeQuit(smCtx, ctx);
 
         Assert.Equal(0, ctx.EnqueueCount);
+    }
+
+    // ── Integration: StackStateMachine with strategy hooks ──────────
+
+    private const string SmPushIdx = "test.sm.push";
+    private const string SmPopIdx = "test.sm.pop";
+
+    [StrategyIndex(SmPushIdx)]
+    private sealed class TrackingPushStrategy : StateMachineStrategyBase
+    {
+        public static List<string> PushRuntimeCalls { get; set; } = new();
+        public static List<string> PushAfterLoadCalls { get; set; } = new();
+
+        public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
+        {
+            PushRuntimeCalls.Add(context.AfterTop ?? "");
+        }
+
+        public override void OnPushAfterLoad(StateMachineStrategyContext context, IStateMachineContext ctx)
+        {
+            PushAfterLoadCalls.Add(context.AfterTop ?? "");
+        }
+    }
+
+    [StrategyIndex(SmPopIdx)]
+    private sealed class TrackingPopStrategy : StateMachineStrategyBase
+    {
+        public static List<string> PopRuntimeCalls { get; set; } = new();
+        public static List<string> PopBeforeQuitCalls { get; set; } = new();
+
+        public override void OnPopRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
+        {
+            PopRuntimeCalls.Add(context.BeforeTop ?? "");
+        }
+
+        public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx)
+        {
+            PopBeforeQuitCalls.Add(context.BeforeTop ?? "");
+        }
+    }
+
+    [Fact]
+    public void Push_TriggersOnPushRuntime()
+    {
+        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
+        TrackingPushStrategy.PushAfterLoadCalls = new List<string>();
+        TrackingPopStrategy.PopRuntimeCalls = new List<string>();
+        TrackingPopStrategy.PopBeforeQuitCalls = new List<string>();
+
+        var logger = new TestLogger();
+        var pool = new SndStrategyPool(logger);
+        pool.Register(() => new TrackingPushStrategy());
+        pool.Register(() => new TrackingPopStrategy());
+
+        var ctx = new StubStateMachineContext();
+        var sm = new StackStateMachine("machine1", SmPushIdx, SmPopIdx, pool, ctx);
+
+        sm.Push("state_a");
+
+        Assert.Single(TrackingPushStrategy.PushRuntimeCalls);
+        Assert.Equal("state_a", TrackingPushStrategy.PushRuntimeCalls[0]);
+        Assert.Empty(TrackingPushStrategy.PushAfterLoadCalls);
+
+        sm.Dispose();
+    }
+
+    [Fact]
+    public void Pop_TriggersOnPopRuntime()
+    {
+        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
+        TrackingPopStrategy.PopRuntimeCalls = new List<string>();
+        TrackingPopStrategy.PopBeforeQuitCalls = new List<string>();
+
+        var logger = new TestLogger();
+        var pool = new SndStrategyPool(logger);
+        pool.Register(() => new TrackingPushStrategy());
+        pool.Register(() => new TrackingPopStrategy());
+
+        var ctx = new StubStateMachineContext();
+        var sm = new StackStateMachine("machine1", SmPushIdx, SmPopIdx, pool, ctx);
+
+        sm.Push("state_a");
+        var result = sm.TryPopRuntime(out _);
+
+        Assert.True(result);
+        Assert.Single(TrackingPopStrategy.PopRuntimeCalls);
+        Assert.Equal("state_a", TrackingPopStrategy.PopRuntimeCalls[0]);
+
+        sm.Dispose();
+    }
+
+    [Fact]
+    public void Quit_PopTriggersOnPopBeforeQuit()
+    {
+        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
+        TrackingPopStrategy.PopBeforeQuitCalls = new List<string>();
+
+        var logger = new TestLogger();
+        var pool = new SndStrategyPool(logger);
+        pool.Register(() => new TrackingPushStrategy());
+        pool.Register(() => new TrackingPopStrategy());
+
+        var ctx = new StubStateMachineContext();
+        var sm = new StackStateMachine("machine1", SmPushIdx, SmPopIdx, pool, ctx);
+
+        sm.Push("state_a");
+        sm.TryPopOnQuit(out _);
+
+        Assert.Single(TrackingPopStrategy.PopBeforeQuitCalls);
+        Assert.Equal("state_a", TrackingPopStrategy.PopBeforeQuitCalls[0]);
+
+        sm.Dispose();
+    }
+
+    [Fact]
+    public void AfterLoad_TriggersOnPushAfterLoad_BottomToTop()
+    {
+        TrackingPushStrategy.PushAfterLoadCalls = new List<string>();
+        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
+
+        var logger = new TestLogger();
+        var pool = new SndStrategyPool(logger);
+        pool.Register(() => new TrackingPushStrategy());
+        pool.Register(() => new TrackingPopStrategy());
+
+        var ctx = new StubStateMachineContext();
+        var sm = new StackStateMachine("machine1", SmPushIdx, SmPopIdx, pool, ctx);
+
+        sm.Push("state_bottom");
+        sm.Push("state_top");
+
+        TrackingPushStrategy.PushRuntimeCalls.Clear();
+
+        sm.FlushAfterLoad();
+
+        Assert.Equal(2, TrackingPushStrategy.PushAfterLoadCalls.Count);
+        Assert.Equal("state_bottom", TrackingPushStrategy.PushAfterLoadCalls[0]);
+        Assert.Equal("state_top", TrackingPushStrategy.PushAfterLoadCalls[1]);
+
+        sm.Dispose();
+    }
+
+    [Fact]
+    public void Container_PopAllOnQuit_TriggersPopBeforeQuit_OnAllMachines()
+    {
+        TrackingPopStrategy.PopBeforeQuitCalls = new List<string>();
+        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
+
+        var logger = new TestLogger();
+        var pool = new SndStrategyPool(logger);
+        pool.Register(() => new TrackingPushStrategy());
+        pool.Register(() => new TrackingPopStrategy());
+
+        var ctx = new StubStateMachineContext();
+        var container = new StateMachineContainer(pool, ctx);
+        container.CreateOrGet("machine_a", SmPushIdx, SmPopIdx);
+        container.CreateOrGet("machine_b", SmPushIdx, SmPopIdx);
+
+        container.TryGet("machine_a", out var smA);
+        container.TryGet("machine_b", out var smB);
+        smA!.Push("state_a");
+        smB!.Push("state_b");
+
+        container.PopAllOnQuit();
+
+        Assert.Equal(2, TrackingPopStrategy.PopBeforeQuitCalls.Count);
+        Assert.Contains("state_a", TrackingPopStrategy.PopBeforeQuitCalls);
+        Assert.Contains("state_b", TrackingPopStrategy.PopBeforeQuitCalls);
     }
 
     private sealed class TestSmStrategy : StateMachineStrategyBase

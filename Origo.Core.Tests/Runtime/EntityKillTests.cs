@@ -601,7 +601,7 @@ public class EntityKillTests
     }
 
     [StrategyIndex("kill.test.lifecycle")]
-    private sealed class KillProbeStrategy : EntityStrategyBase
+    private sealed class KillProbeStrategy : LifecycleStrategyBase
     {
         public static List<string>? Events { get; set; }
 
@@ -609,7 +609,7 @@ public class EntityKillTests
     }
 
     [StrategyIndex("quit.test.probe")]
-    private sealed class QuitProbeStrategy : EntityStrategyBase
+    private sealed class QuitProbeStrategy : LifecycleStrategyBase
     {
         public static List<string>? Events { get; set; }
 

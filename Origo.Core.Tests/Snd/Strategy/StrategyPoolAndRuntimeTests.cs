@@ -18,18 +18,18 @@ public class StrategyPoolAndRuntimeTests
         var pool = new SndStrategyPool(NullLogger.Instance);
         pool.Register(() => new DemoStrategy());
 
-        var first = pool.GetStrategy<EntityStrategyBase>("demo");
-        var second = pool.GetStrategy<EntityStrategyBase>("demo");
+        var first = pool.GetStrategy<LifecycleStrategyBase>("demo");
+        var second = pool.GetStrategy<LifecycleStrategyBase>("demo");
         Assert.NotNull(first);
         Assert.Same(first, second);
 
         pool.ReleaseStrategy("demo");
-        var stillSame = pool.GetStrategy<EntityStrategyBase>("demo");
+        var stillSame = pool.GetStrategy<LifecycleStrategyBase>("demo");
         Assert.Same(first, stillSame);
 
         pool.ReleaseStrategy("demo");
         pool.ReleaseStrategy("demo");
-        var recreated = pool.GetStrategy<EntityStrategyBase>("demo");
+        var recreated = pool.GetStrategy<LifecycleStrategyBase>("demo");
         Assert.NotSame(first, recreated);
     }
 
@@ -39,7 +39,7 @@ public class StrategyPoolAndRuntimeTests
         var logger = new TestLogger();
         var pool = new SndStrategyPool(logger);
 
-        Assert.Throws<InvalidOperationException>(() => pool.GetStrategy<EntityStrategyBase>("missing"));
+        Assert.Throws<InvalidOperationException>(() => pool.GetStrategy<LifecycleStrategyBase>("missing"));
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class StrategyPoolAndRuntimeTests
 
         Assert.Throws<InvalidOperationException>(() => pool.ReleaseStrategy("demo"));
 
-        pool.GetStrategy<EntityStrategyBase>("demo");
+        pool.GetStrategy<LifecycleStrategyBase>("demo");
         pool.ReleaseStrategy("demo");
         Assert.Throws<InvalidOperationException>(() => pool.ReleaseStrategy("demo"));
     }
@@ -69,9 +69,9 @@ public class StrategyPoolAndRuntimeTests
                 NullSndContext.Instance);
         });
 
-        var first = pool.GetStrategy<EntityStrategyBase>("recover.safe");
+        var first = pool.GetStrategy<LifecycleStrategyBase>("recover.safe");
         pool.ReleaseStrategy("recover.safe");
-        var second = pool.GetStrategy<EntityStrategyBase>("recover.safe");
+        var second = pool.GetStrategy<LifecycleStrategyBase>("recover.safe");
 
         Assert.NotSame(first, second);
     }
@@ -143,12 +143,12 @@ public class StrategyPoolAndRuntimeTests
     }
 
     [StrategyIndex("demo")]
-    private sealed class DemoStrategy : EntityStrategyBase
+    private sealed class DemoStrategy : LifecycleStrategyBase
     {
     }
 
     [StrategyIndex("recover.safe")]
-    private sealed class RecoverSafeStrategy : EntityStrategyBase
+    private sealed class RecoverSafeStrategy : LifecycleStrategyBase
     {
     }
 }

@@ -46,7 +46,7 @@ public class AutoInitializerGuardTests
 
         world.RegisterStrategy(() => new StatelessAutoInitStrategy());
 
-        var strategy = world.StrategyPool.GetStrategy<EntityStrategyBase>("auto.init.stateless.local");
+        var strategy = world.StrategyPool.GetStrategy<LifecycleStrategyBase>("auto.init.stateless.local");
         Assert.NotNull(strategy);
     }
 
@@ -63,13 +63,13 @@ public class AutoInitializerGuardTests
     }
 
     [StrategyIndex(IndexConst)]
-    private sealed class AnnotatedStrategy : EntityStrategyBase
+    private sealed class AnnotatedStrategy : LifecycleStrategyBase
     {
         public const string IndexConst = "annotated.strategy";
     }
 
     [StrategyIndex(IndexConst)]
-    private sealed class StatefulFieldAutoInitStrategy : EntityStrategyBase
+    private sealed class StatefulFieldAutoInitStrategy : LifecycleStrategyBase
     {
         public const string IndexConst = "auto.init.stateful.local";
         private int _counter;
@@ -78,7 +78,7 @@ public class AutoInitializerGuardTests
     }
 
     [StrategyIndex(IndexConst)]
-    private sealed class StatelessAutoInitStrategy : EntityStrategyBase
+    private sealed class StatelessAutoInitStrategy : LifecycleStrategyBase
     {
         public const string IndexConst = "auto.init.stateless.local";
         private static int _counter;
@@ -87,7 +87,7 @@ public class AutoInitializerGuardTests
     }
 
     [StrategyIndex(IndexConst)]
-    private sealed class PropertyStatefulAutoInitStrategy : EntityStrategyBase
+    private sealed class PropertyStatefulAutoInitStrategy : LifecycleStrategyBase
     {
         public const string IndexConst = "auto.init.stateful.property.local";
         public int Counter { get; set; }
@@ -100,12 +100,12 @@ public class AutoInitializerGuardTests
 
         world.RegisterStrategy(() => new ReadonlyFieldStrategy());
 
-        var strategy = world.StrategyPool.GetStrategy<EntityStrategyBase>("auto.init.readonly.local");
+        var strategy = world.StrategyPool.GetStrategy<LifecycleStrategyBase>("auto.init.readonly.local");
         Assert.NotNull(strategy);
     }
 
     [StrategyIndex(IndexConst)]
-    private sealed class ReadonlyFieldStrategy : EntityStrategyBase
+    private sealed class ReadonlyFieldStrategy : LifecycleStrategyBase
     {
         public const string IndexConst = "auto.init.readonly.local";
         private readonly int _readonlyValue = 42;

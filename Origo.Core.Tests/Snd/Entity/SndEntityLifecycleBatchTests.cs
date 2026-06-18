@@ -58,7 +58,7 @@ public class SndEntityLifecycleBatchTests
     };
 
     [StrategyIndex(ProbeIdx)]
-    private sealed class ProbeStrategy : EntityStrategyBase
+    private sealed class ProbeStrategy : LifecycleStrategyBase
     {
         public static List<string> Events { get; set; } = null!;
 
@@ -74,7 +74,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [StrategyIndex(CrossRefIdx)]
-    private sealed class CrossRefStrategy : EntityStrategyBase
+    private sealed class CrossRefStrategy : LifecycleStrategyBase
     {
         public static List<string> Events { get; set; } = null!;
         public static string[] TargetNames { get; set; } = Array.Empty<string>();
@@ -130,7 +130,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [StrategyIndex(ActiveQueryIdx)]
-    private sealed class QueryActiveProxy : EntityStrategyBase
+    private sealed class QueryActiveProxy : LifecycleStrategyBase
     {
         public static List<string> Events { get; set; } = null!;
         public static string InvokeTarget { get; set; } = string.Empty;
@@ -164,21 +164,21 @@ public class SndEntityLifecycleBatchTests
     }
 
     [StrategyIndex(P50Idx, Priority = 50)]
-    private sealed class SP50 : EntityStrategyBase
+    private sealed class SP50 : LifecycleStrategyBase
     {
         public static List<string> Events { get; set; } = null!;
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) => Events.Add("p50:" + entity.Name);
     }
 
     [StrategyIndex(P100Idx, Priority = 100)]
-    private sealed class SP100 : EntityStrategyBase
+    private sealed class SP100 : LifecycleStrategyBase
     {
         public static List<string> Events { get; set; } = null!;
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) => Events.Add("p100:" + entity.Name);
     }
 
     [StrategyIndex("batch.failing")]
-    private sealed class FailingStrategy : EntityStrategyBase
+    private sealed class FailingStrategy : LifecycleStrategyBase
     {
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) =>
             throw new InvalidOperationException("simulated hook failure");
@@ -187,7 +187,7 @@ public class SndEntityLifecycleBatchTests
     private static int _subCount;
 
     [StrategyIndex("batch.subscribe")]
-    private sealed class SubscribeStrategy : EntityStrategyBase
+    private sealed class SubscribeStrategy : LifecycleStrategyBase
     {
         public static List<string> Events { get; set; } = null!;
         public static ISndSceneHost? Host { get; set; }
@@ -210,7 +210,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [StrategyIndex(PerfProcessIdx)]
-    private sealed class ProcessRecordingStrategy : EntityStrategyBase
+    private sealed class ProcessRecordingStrategy : LifecycleStrategyBase
     {
         public static List<(string Name, double Delta)> ProcessCalls { get; set; } = null!;
 
@@ -221,7 +221,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [StrategyIndex(AddDuringProcessIdx)]
-    private sealed class AddDuringProcessStrategy : EntityStrategyBase
+    private sealed class AddDuringProcessStrategy : LifecycleStrategyBase
     {
         public static List<string> ProcessCalls { get; set; } = null!;
 
@@ -233,7 +233,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [StrategyIndex(SelfRemoveIdx)]
-    private sealed class SelfRemoveRecordingStrategy : EntityStrategyBase
+    private sealed class SelfRemoveRecordingStrategy : LifecycleStrategyBase
     {
         public static List<string> ProcessCalls { get; set; } = null!;
 
@@ -244,7 +244,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [StrategyIndex("batch.perf.remove_self")]
-    private sealed class RemoveSelfDuringProcessStrategy : EntityStrategyBase
+    private sealed class RemoveSelfDuringProcessStrategy : LifecycleStrategyBase
     {
         public static List<string> ProcessCalls { get; set; } = null!;
 

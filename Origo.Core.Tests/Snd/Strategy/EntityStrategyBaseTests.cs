@@ -128,11 +128,11 @@ public class EntityStrategyBaseTests
         Assert.Null(ex);
     }
 
-    private sealed class TestEntityStrategy : EntityStrategyBase
+    private sealed class TestEntityStrategy : LifecycleStrategyBase
     {
     }
 
-    private sealed class TestEntityStrategyWithAdd : EntityStrategyBase
+    private sealed class TestEntityStrategyWithAdd : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -140,7 +140,7 @@ public class EntityStrategyBaseTests
         }
     }
 
-    private sealed class TestEntityStrategyKillSelf : EntityStrategyBase
+    private sealed class TestEntityStrategyKillSelf : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -148,7 +148,7 @@ public class EntityStrategyBaseTests
         }
     }
 
-    private sealed class TestEntityStrategyKillOther : EntityStrategyBase
+    private sealed class TestEntityStrategyKillOther : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -157,7 +157,7 @@ public class EntityStrategyBaseTests
     }
 
     [StrategyIndex(KillSelfIdx)]
-    private sealed class KillSelfRecordingStrategy : EntityStrategyBase
+    private sealed class KillSelfRecordingStrategy : LifecycleStrategyBase
     {
         public static List<string> ProcessCalls { get; set; } = null!;
 
@@ -169,7 +169,7 @@ public class EntityStrategyBaseTests
     }
 
     [StrategyIndex(ProcessCalledIdx)]
-    private sealed class ProcessCalledStrategy : EntityStrategyBase
+    private sealed class ProcessCalledStrategy : LifecycleStrategyBase
     {
         public static bool Called { get; set; }
 

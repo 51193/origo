@@ -687,17 +687,17 @@ public class CrossEntityObserverTests
     // ── Test strategies ──────────────────────────────────────────────────
 
     [StrategyIndex(ObserverProbeIdx)]
-    private sealed class ObserverProbeStrategy : EntityStrategyBase
+    private sealed class ObserverProbeStrategy : LifecycleStrategyBase
     {
     }
 
     [StrategyIndex(RecordIdx)]
-    private sealed class RecordStrategy : EntityStrategyBase
+    private sealed class RecordStrategy : LifecycleStrategyBase
     {
     }
 
     [StrategyIndex("observer.recording")]
-    private sealed class RecordingStrategy : EntityStrategyBase
+    private sealed class RecordingStrategy : LifecycleStrategyBase
     {
         public static Action<ISndEntity, ISndContext, EntityLifecycleEvent>? Record { get; set; }
 
@@ -712,7 +712,7 @@ public class CrossEntityObserverTests
     }
 
     [StrategyIndex("observer.ordered")]
-    private sealed class OrderedLifecycleStrategy : EntityStrategyBase
+    private sealed class OrderedLifecycleStrategy : LifecycleStrategyBase
     {
         public static List<string>? Events { get; set; }
 

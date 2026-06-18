@@ -31,9 +31,9 @@ internal sealed class SndStrategyManager
             foreach (var index in indices)
             {
                 var strategy = _pool.GetStrategy<BaseStrategy>(index);
-                if (strategy is EntityStrategyBase entityStrategy)
+                if (strategy is LifecycleStrategyBase lifecycleStrategy)
                     InsertSorted(new StrategyEntry
-                        { Index = index, Strategy = entityStrategy });
+                        { Index = index, Strategy = lifecycleStrategy });
                 else
                     _pool.ReleaseStrategy(index);
             }
@@ -71,7 +71,7 @@ internal sealed class SndStrategyManager
         => TriggerAll((s, e, c) => s.BeforeDead(e, c), entity, ctx);
 
     private void TriggerAll(
-        Action<EntityStrategyBase, ISndEntity, ISndContext> hook,
+        Action<LifecycleStrategyBase, ISndEntity, ISndContext> hook,
         ISndEntity entity,
         ISndContext ctx)
     {
@@ -82,7 +82,7 @@ internal sealed class SndStrategyManager
 
     public void Add(ISndEntity entity, string index, ISndContext ctx)
     {
-        var strategy = _pool.GetStrategy<EntityStrategyBase>(index);
+        var strategy = _pool.GetStrategy<LifecycleStrategyBase>(index);
         var entry = new StrategyEntry { Index = index, Strategy = strategy };
 
         InsertSorted(entry);
@@ -133,6 +133,6 @@ internal sealed class SndStrategyManager
     private sealed class StrategyEntry
     {
         public required string Index { get; init; }
-        public required EntityStrategyBase Strategy { get; init; }
+        public required LifecycleStrategyBase Strategy { get; init; }
     }
 }

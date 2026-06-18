@@ -56,7 +56,7 @@ public class SndEntityAfterLoadTests
     }
 
     [StrategyIndex(AIndex)]
-    private sealed class AfterLoadProbeAStrategy : EntityStrategyBase
+    private sealed class AfterLoadProbeAStrategy : LifecycleStrategyBase
     {
         public static List<string>? Events { get; set; }
 
@@ -64,7 +64,7 @@ public class SndEntityAfterLoadTests
     }
 
     [StrategyIndex(BIndex)]
-    private sealed class AfterLoadProbeBStrategy : EntityStrategyBase
+    private sealed class AfterLoadProbeBStrategy : LifecycleStrategyBase
     {
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) =>
             AfterLoadProbeAStrategy.Events?.Add("afterload:b");

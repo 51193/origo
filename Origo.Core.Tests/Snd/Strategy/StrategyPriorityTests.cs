@@ -562,192 +562,192 @@ internal static class Rec
 // ── Strategy classes (all stateless for pool validation) ──
 
 [StrategyIndex("s.p50", Priority = 50)]
-internal sealed class SP50 : EntityStrategyBase
+internal sealed class SP50 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p50");
 }
 
 [StrategyIndex("s.p100", Priority = 100)]
-internal sealed class SP100 : EntityStrategyBase
+internal sealed class SP100 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p100");
 }
 
 [StrategyIndex("s.p200", Priority = 200)]
-internal sealed class SP200 : EntityStrategyBase
+internal sealed class SP200 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p200");
 }
 
 [StrategyIndex("s.p5", Priority = 5)]
-internal sealed class S5 : EntityStrategyBase
+internal sealed class S5 : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.p10a", Priority = 10)]
-internal sealed class S10A : EntityStrategyBase
+internal sealed class S10A : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.p10b", Priority = 10)]
-internal sealed class S10B : EntityStrategyBase
+internal sealed class S10B : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.p10c", Priority = 10)]
-internal sealed class S10C : EntityStrategyBase
+internal sealed class S10C : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.p15", Priority = 15)]
-internal sealed class S15 : EntityStrategyBase
+internal sealed class S15 : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.p20", Priority = 20)]
-internal sealed class S20 : EntityStrategyBase
+internal sealed class S20 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p20");
 }
 
 [StrategyIndex("s.p25", Priority = 25)]
-internal sealed class S25 : EntityStrategyBase
+internal sealed class S25 : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.p30", Priority = 30)]
-internal sealed class S30 : EntityStrategyBase
+internal sealed class S30 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p30");
 }
 
 [StrategyIndex("s.p40", Priority = 40)]
-internal sealed class S40 : EntityStrategyBase
+internal sealed class S40 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p40");
 }
 
 [StrategyIndex("s.p60", Priority = 60)]
-internal sealed class S60 : EntityStrategyBase
+internal sealed class S60 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p60");
 }
 
 [StrategyIndex("s.p80", Priority = 80)]
-internal sealed class S80 : EntityStrategyBase
+internal sealed class S80 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p80");
 }
 
 [StrategyIndex("s.p10", Priority = 10)]
-internal sealed class S10 : EntityStrategyBase
+internal sealed class S10 : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.p10");
 }
 
 [StrategyIndex("s.demo")]
-internal sealed class SDemo : EntityStrategyBase
+internal sealed class SDemo : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.a")]
-internal sealed class SA : EntityStrategyBase
+internal sealed class SA : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.a");
 }
 
 [StrategyIndex("s.b")]
-internal sealed class SB : EntityStrategyBase
+internal sealed class SB : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.b");
 }
 
 [StrategyIndex("s.c")]
-internal sealed class SC : EntityStrategyBase
+internal sealed class SC : LifecycleStrategyBase
 {
     public override void Process(ISndEntity e, double d, ISndContext c) => Rec.Add("s.c");
 }
 
 [StrategyIndex("s.n10", Priority = -10)]
-internal sealed class SN10 : EntityStrategyBase
+internal sealed class SN10 : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.n5", Priority = -5)]
-internal sealed class SN5 : EntityStrategyBase
+internal sealed class SN5 : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.n0", Priority = 0)]
-internal sealed class SN0 : EntityStrategyBase
+internal sealed class SN0 : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.zero", Priority = 0)]
-internal sealed class S0 : EntityStrategyBase
+internal sealed class S0 : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.min", Priority = int.MinValue)]
-internal sealed class SMin : EntityStrategyBase
+internal sealed class SMin : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.max", Priority = int.MaxValue)]
-internal sealed class SMax : EntityStrategyBase
+internal sealed class SMax : LifecycleStrategyBase
 {
 }
 
 [StrategyIndex("s.lc10", Priority = 10)]
-internal sealed class LC10 : EntityStrategyBase
+internal sealed class LC10 : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity e, ISndContext c) => Rec.Add("s.lc10");
 }
 
 [StrategyIndex("s.lc20", Priority = 20)]
-internal sealed class LC20 : EntityStrategyBase
+internal sealed class LC20 : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity e, ISndContext c) => Rec.Add("s.lc20");
 }
 
 [StrategyIndex("s.lc30", Priority = 30)]
-internal sealed class LC30 : EntityStrategyBase
+internal sealed class LC30 : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity e, ISndContext c) => Rec.Add("s.lc30");
 }
 
 [StrategyIndex("s.qv10", Priority = 10)]
-internal sealed class Q10 : EntityStrategyBase
+internal sealed class Q10 : LifecycleStrategyBase
 {
     public override void BeforeQuit(ISndEntity e, ISndContext c) => Rec.Add("s.qv10");
 }
 
 [StrategyIndex("s.qv20", Priority = 20)]
-internal sealed class Q20 : EntityStrategyBase
+internal sealed class Q20 : LifecycleStrategyBase
 {
     public override void BeforeQuit(ISndEntity e, ISndContext c) => Rec.Add("s.qv20");
 }
 
 [StrategyIndex("s.qv30", Priority = 30)]
-internal sealed class Q30 : EntityStrategyBase
+internal sealed class Q30 : LifecycleStrategyBase
 {
     public override void BeforeQuit(ISndEntity e, ISndContext c) => Rec.Add("s.qv30");
 }
 
 [StrategyIndex("s.ld10", Priority = 10)]
-internal sealed class LD10 : EntityStrategyBase
+internal sealed class LD10 : LifecycleStrategyBase
 {
     public override void AfterLoad(ISndEntity e, ISndContext c) => Rec.Add("s.ld10");
 }
 
 [StrategyIndex("s.ld20", Priority = 20)]
-internal sealed class LD20 : EntityStrategyBase
+internal sealed class LD20 : LifecycleStrategyBase
 {
     public override void AfterLoad(ISndEntity e, ISndContext c) => Rec.Add("s.ld20");
 }
 
 [StrategyIndex("s.ld30", Priority = 30)]
-internal sealed class LD30 : EntityStrategyBase
+internal sealed class LD30 : LifecycleStrategyBase
 {
     public override void AfterLoad(ISndEntity e, ISndContext c) => Rec.Add("s.ld30");
 }

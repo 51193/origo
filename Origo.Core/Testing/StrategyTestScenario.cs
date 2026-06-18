@@ -10,7 +10,7 @@ namespace Origo.Core.Testing;
 public static class StrategyTestScenario
 {
     public static StrategyTestScenarioBuilder<T> For<T>(string strategyIndex)
-        where T : EntityStrategyBase, new()
+        where T : LifecycleStrategyBase, new()
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(strategyIndex);
         return new StrategyTestScenarioBuilder<T>(strategyIndex);
@@ -66,13 +66,13 @@ public abstract class BaseStrategyTestHarness
 
 public sealed class StrategyTestHarness : BaseStrategyTestHarness
 {
-    internal StrategyTestHarness(EntityStrategyBase strategy, MinimalTestEntity entity, StrategyTestContext context)
+    internal StrategyTestHarness(LifecycleStrategyBase strategy, MinimalTestEntity entity, StrategyTestContext context)
         : base(entity, context)
     {
         Strategy = strategy;
     }
 
-    internal EntityStrategyBase Strategy { get; }
+    internal LifecycleStrategyBase Strategy { get; }
 
     public void RunFrame(double delta = 0.016)
     {
@@ -166,7 +166,7 @@ public abstract class BaseStrategyTestScenarioBuilder
     }
 }
 
-public sealed class StrategyTestScenarioBuilder<T> : BaseStrategyTestScenarioBuilder where T : EntityStrategyBase, new()
+public sealed class StrategyTestScenarioBuilder<T> : BaseStrategyTestScenarioBuilder where T : LifecycleStrategyBase, new()
 {
     internal StrategyTestScenarioBuilder(string strategyIndex) : base(strategyIndex)
     {

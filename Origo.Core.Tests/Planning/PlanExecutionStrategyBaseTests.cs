@@ -22,7 +22,7 @@ public class PlanExecutionStrategyBaseTests
     private const string ActionStatusKey = "test.action_status";
 
     [StrategyIndex("test.action.fake")]
-    private sealed class FakeActionStrategy : EntityStrategyBase
+    private sealed class FakeActionStrategy : LifecycleStrategyBase
     {
         public static List<string>? AfterAddCalls;
         public static List<string>? BeforeRemoveCalls;
@@ -39,7 +39,7 @@ public class PlanExecutionStrategyBaseTests
     }
 
     [StrategyIndex("test.action.fake2")]
-    private sealed class FakeAction2Strategy : EntityStrategyBase
+    private sealed class FakeAction2Strategy : LifecycleStrategyBase
     {
         public static List<string>? AfterAddCalls;
 
@@ -365,6 +365,104 @@ public class PlanExecutionStrategyBaseTests
         Assert.Equal("test_entity", FakeActionStrategy.BeforeRemoveCalls![0]);
     }
 
+    // ── Tests: failure path ────────────────────────────────────────
+
+    [StrategyIndex("test.fail_plan_strategy")]
+    private sealed class FailingPlanStrategy : PlanExecutionStrategyBase
+    {
+        public static List<string>? CompletedCalls;
+        public static List<string>? FailedCalls;
+
+        protected override string IntentKey => PlanExecutionStrategyBaseTests.IntentKey;
+        protected override string IntentStatusKey => PlanExecutionStrategyBaseTests.IntentStatusKey;
+        protected override string PlanStepKey => PlanExecutionStrategyBaseTests.PlanStepKey;
+        protected override string ActionKey => PlanExecutionStrategyBaseTests.ActionKey;
+        protected override string ActionStatusKey => PlanExecutionStrategyBaseTests.ActionStatusKey;
+
+        protected override string? ResolveNextStep(string intent, string currentStep, bool failed, ISndEntity entity)
+        {
+            return (intent, currentStep, failed) switch
+            {
+                ("fail_test", "" or null, false) => "step_a",
+                ("fail_test", "step_a", true) => null,
+                _ => null,
+            };
+        }
+
+        protected override string? StepToActionIndex(string stepType)
+        {
+            return stepType switch
+            {
+                "step_a" => "test.action.fake",
+                _ => null,
+            };
+        }
+
+        protected override void OnPlanCompleted(ISndEntity entity)
+        {
+            CompletedCalls?.Add(entity.Name);
+        }
+
+        protected override void OnPlanFailed(ISndEntity entity)
+        {
+            FailedCalls?.Add(entity.Name);
+        }
+    }
+
+    [Fact]
+    public void ActionFailed_AdvancesPlan_AndTerminates()
+    {
+        FailingPlanStrategy.CompletedCalls = new List<string>();
+        FailingPlanStrategy.FailedCalls = new List<string>();
+        FakeActionStrategy.AfterAddCalls = new List<string>();
+        FakeActionStrategy.BeforeRemoveCalls = new List<string>();
+
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        world.StrategyPool.Register(() => new FailingPlanStrategy());
+        world.StrategyPool.Register(() => new FakeActionStrategy());
+        host.BindWorld(world);
+
+        var fs = new TestFileSystem();
+        fs.SeedFile("res://entry/entry.json", "[]");
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
+        host.BindContext(ctx);
+
+        var meta = new SndMetaData
+        {
+            Name = "test_entity",
+            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string>() },
+            DataMetaData = new DataMetaData(),
+            NodeMetaData = new NodeMetaData()
+        };
+
+        var entity = host.CreateEntity(meta);
+        entity.SetData(IntentKey, "fail_test");
+
+        entity.AddStrategy("test.fail_plan_strategy");
+
+        // Plan started at step_a
+        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        Assert.True(foundStep);
+        Assert.Equal("step_a", step);
+
+        // Action fails → plan advances with failed=true → ResolveNextStep returns null → plan terminates
+        entity.SetData(ActionStatusKey, "failed");
+
+        var (foundIntent, intent) = entity.TryGetData<string>(IntentKey);
+        Assert.True(foundIntent);
+        Assert.Equal("", intent);
+
+        Assert.Single(FailingPlanStrategy.FailedCalls!);
+        Assert.Equal("test_entity", FailingPlanStrategy.FailedCalls![0]);
+        Assert.Empty(FailingPlanStrategy.CompletedCalls!);
+    }
+
     // ── Cleanup ────────────────────────────────────────────────────
 
     public PlanExecutionStrategyBaseTests()
@@ -372,5 +470,7 @@ public class PlanExecutionStrategyBaseTests
         FakeActionStrategy.AfterAddCalls = null;
         FakeActionStrategy.BeforeRemoveCalls = null;
         FakeAction2Strategy.AfterAddCalls = null;
+        FailingPlanStrategy.CompletedCalls = null;
+        FailingPlanStrategy.FailedCalls = null;
     }
 }

@@ -278,7 +278,7 @@ public class StrategyTestScenarioTests
     // ── Test strategies ────────────────────────────────────────────────────
 
     [StrategyIndex("test.damage")]
-    private sealed class DamageStrategy : EntityStrategyBase
+    private sealed class DamageStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -291,20 +291,20 @@ public class StrategyTestScenarioTests
     }
 
     [StrategyIndex("test.deferred")]
-    private sealed class DeferredActionStrategy : EntityStrategyBase
+    private sealed class DeferredActionStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
             ctx.EnqueueBusinessDeferred(() => entity.SetData("deferred_flag", 42));
     }
 
     [StrategyIndex("test.after_spawn_init")]
-    private sealed class AfterSpawnInitStrategy : EntityStrategyBase
+    private sealed class AfterSpawnInitStrategy : LifecycleStrategyBase
     {
         public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => entity.SetData("max_hp", 200);
     }
 
     [StrategyIndex("test.save_on_low")]
-    private sealed class SaveOnLowHpStrategy : EntityStrategyBase
+    private sealed class SaveOnLowHpStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -318,13 +318,13 @@ public class StrategyTestScenarioTests
     }
 
     [StrategyIndex("test.load_request")]
-    private sealed class LoadRequestStrategy : EntityStrategyBase
+    private sealed class LoadRequestStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ctx.RequestLoadGame("slot_1");
     }
 
     [StrategyIndex("test.bb_reader")]
-    private sealed class BlackboardReaderStrategy : EntityStrategyBase
+    private sealed class BlackboardReaderStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -335,7 +335,7 @@ public class StrategyTestScenarioTests
     }
 
     [StrategyIndex("test.progress_reader")]
-    private sealed class ProgressBlackboardReaderStrategy : EntityStrategyBase
+    private sealed class ProgressBlackboardReaderStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -346,7 +346,7 @@ public class StrategyTestScenarioTests
     }
 
     [StrategyIndex("test.session_reader")]
-    private sealed class SessionBlackboardReaderStrategy : EntityStrategyBase
+    private sealed class SessionBlackboardReaderStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -357,7 +357,7 @@ public class StrategyTestScenarioTests
     }
 
     [StrategyIndex("test.template_clone")]
-    private sealed class TemplateCloneStrategy : EntityStrategyBase
+    private sealed class TemplateCloneStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -372,7 +372,7 @@ public class StrategyTestScenarioTests
     }
 
     [StrategyIndex("test.lifecycle")]
-    private sealed class LifecycleRecordingStrategy : EntityStrategyBase
+    private sealed class LifecycleRecordingStrategy : LifecycleStrategyBase
     {
         public override void AfterLoad(ISndEntity entity, ISndContext ctx)
         {
@@ -394,21 +394,21 @@ public class StrategyTestScenarioTests
     }
 
     [StrategyIndex("test.level_switch")]
-    private sealed class LevelSwitchStrategy : EntityStrategyBase
+    private sealed class LevelSwitchStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
             ctx.RequestSwitchForegroundLevel("level_02");
     }
 
     [StrategyIndex("test.console")]
-    private sealed class ConsoleLogStrategy : EntityStrategyBase
+    private sealed class ConsoleLogStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
             ctx.TrySubmitConsoleCommand("echo hello");
     }
 
     [StrategyIndex("test.frame_counter")]
-    private sealed class FrameCounterStrategy : EntityStrategyBase
+    private sealed class FrameCounterStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -418,7 +418,7 @@ public class StrategyTestScenarioTests
     }
 
     [StrategyIndex("test.nop")]
-    private sealed class NopStrategy : EntityStrategyBase
+    private sealed class NopStrategy : LifecycleStrategyBase
     {
     }
 }

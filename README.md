@@ -124,7 +124,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 
 [StrategyIndex("game.player_move", Priority = 100)]
-public sealed class PlayerMoveStrategy : EntityStrategyBase
+public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
     {

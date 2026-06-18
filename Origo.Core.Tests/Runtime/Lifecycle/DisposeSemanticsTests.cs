@@ -604,7 +604,7 @@ public class DisposeSemanticsTests
     // ── Test strategies ─────────────────────────────────────────────────
 
     [StrategyIndex(BeforeSaveStrategyIndex)]
-    private sealed class BeforeSaveSpyStrategy : EntityStrategyBase
+    private sealed class BeforeSaveSpyStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
 
@@ -615,7 +615,7 @@ public class DisposeSemanticsTests
     }
 
     [StrategyIndex(BeforeQuitStrategyIndex)]
-    private sealed class BeforeQuitSpyStrategy : EntityStrategyBase
+    private sealed class BeforeQuitSpyStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
 
@@ -626,7 +626,7 @@ public class DisposeSemanticsTests
     }
 
     [StrategyIndex(SessionAccessStrategyIndex)]
-    private sealed class SessionAccessQuitStrategy : EntityStrategyBase
+    private sealed class SessionAccessQuitStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
 
@@ -660,7 +660,7 @@ public class DisposeSemanticsTests
     }
 
     [StrategyIndex(ThrowingQuitStrategyIndex)]
-    private sealed class ThrowingQuitStrategy : EntityStrategyBase
+    private sealed class ThrowingQuitStrategy : LifecycleStrategyBase
     {
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
             throw new InvalidOperationException("Intentional BeforeQuit failure for testing.");

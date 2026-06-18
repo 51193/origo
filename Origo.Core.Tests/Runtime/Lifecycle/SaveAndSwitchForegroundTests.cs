@@ -1151,7 +1151,7 @@ public class SaveAndSwitchForegroundTests
     // ── Test strategy: performs FindByName during AfterSpawn/AfterLoad ──
 
     [StrategyIndex(FindByNameStrategyIndex)]
-    private sealed class FindByNameStrategy : EntityStrategyBase
+    private sealed class FindByNameStrategy : LifecycleStrategyBase
     {
         private static List<string>? EventSink { get; set; }
 

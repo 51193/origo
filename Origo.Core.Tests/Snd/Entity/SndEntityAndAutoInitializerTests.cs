@@ -163,7 +163,7 @@ public class SndEntityAndAutoInitializerTests
     }
 
     [StrategyIndex(LifecycleStrategyIndex)]
-    private sealed class LifecycleStrategy : EntityStrategyBase
+    private sealed class LifecycleStrategy : LifecycleStrategyBase
     {
         private static List<string>? EventSink { get; set; }
 
@@ -182,19 +182,19 @@ public class SndEntityAndAutoInitializerTests
 }
 
 [StrategyIndex(IndexConst)]
-public sealed class AutoInitStrategyA : EntityStrategyBase
+public sealed class AutoInitStrategyA : LifecycleStrategyBase
 {
     public const string IndexConst = "auto.init.a";
 }
 
 [StrategyIndex(IndexConst)]
-public sealed class AutoInitStrategyB : EntityStrategyBase
+public sealed class AutoInitStrategyB : LifecycleStrategyBase
 {
     public const string IndexConst = "auto.init.b";
 }
 
 [StrategyIndex(IndexConst)]
-public abstract class StatefulAutoInitStrategy : EntityStrategyBase
+public abstract class StatefulAutoInitStrategy : LifecycleStrategyBase
 {
     public const string IndexConst = "auto.init.stateful";
     private int _counter;

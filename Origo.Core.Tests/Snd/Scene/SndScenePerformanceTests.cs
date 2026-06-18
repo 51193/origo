@@ -339,7 +339,7 @@ public class SndScenePerformanceTests
     // ── Strategy stubs ──────────────────────────────────────────────────
 
     [StrategyIndex(NoopIdx)]
-    private sealed class NoopStrategy : EntityStrategyBase
+    private sealed class NoopStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -347,7 +347,7 @@ public class SndScenePerformanceTests
     }
 
     [StrategyIndex(Read5Idx)]
-    private sealed class Read5Strategy : EntityStrategyBase
+    private sealed class Read5Strategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -360,7 +360,7 @@ public class SndScenePerformanceTests
     }
 
     [StrategyIndex(Write3Idx)]
-    private sealed class Write3Strategy : EntityStrategyBase
+    private sealed class Write3Strategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {

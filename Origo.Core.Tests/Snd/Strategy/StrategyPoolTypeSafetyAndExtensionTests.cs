@@ -18,7 +18,7 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         pool.Register(() => new PoolStateMachineStrategy());
 
         Assert.Throws<InvalidOperationException>(() => pool.GetStrategy<StateMachineStrategyBase>("pool.entity"));
-        Assert.Throws<InvalidOperationException>(() => pool.GetStrategy<EntityStrategyBase>("pool.sm"));
+        Assert.Throws<InvalidOperationException>(() => pool.GetStrategy<LifecycleStrategyBase>("pool.sm"));
     }
 
     [Fact]
@@ -29,9 +29,9 @@ public class StrategyPoolTypeSafetyAndExtensionTests
 
         Assert.Throws<InvalidOperationException>(() => pool.GetStrategy<StateMachineStrategyBase>("pool.entity"));
 
-        var first = pool.GetStrategy<EntityStrategyBase>("pool.entity");
+        var first = pool.GetStrategy<LifecycleStrategyBase>("pool.entity");
         pool.ReleaseStrategy("pool.entity");
-        var second = pool.GetStrategy<EntityStrategyBase>("pool.entity");
+        var second = pool.GetStrategy<LifecycleStrategyBase>("pool.entity");
 
         Assert.NotSame(first, second);
     }
@@ -81,7 +81,7 @@ public class StrategyPoolTypeSafetyAndExtensionTests
     }
 
     [StrategyIndex("pool.entity")]
-    private sealed class PoolEntityStrategy : EntityStrategyBase
+    private sealed class PoolEntityStrategy : LifecycleStrategyBase
     {
     }
 

@@ -877,7 +877,7 @@ public class BackgroundSessionTests
     // ── Test strategy implementations ─────────────────────────────────
 
     [StrategyIndex(TrackingStrategyIndex)]
-    private sealed class TrackingStrategy : EntityStrategyBase
+    private sealed class TrackingStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
 
@@ -906,7 +906,7 @@ public class BackgroundSessionTests
     }
 
     [StrategyIndex(ProcessStrategyIndex)]
-    private sealed class ProcessCounterStrategy : EntityStrategyBase
+    private sealed class ProcessCounterStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<Action?> _onProcess = new();
 
@@ -917,7 +917,7 @@ public class BackgroundSessionTests
     }
 
     [StrategyIndex(SessionContextStrategyIndex)]
-    private sealed class SessionContextSpyStrategy : EntityStrategyBase
+    private sealed class SessionContextSpyStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _seen = new();
 

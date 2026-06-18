@@ -197,11 +197,11 @@ public class SndStrategyPerformanceTests
     // ── Strategy stubs ──────────────────────────────────────────────────
 
     [StrategyIndex(PoolIdx)]
-    private sealed class PerfPoolStrategy : EntityStrategyBase
+    private sealed class PerfPoolStrategy : LifecycleStrategyBase
     {
     }
 
-    private abstract class PerfProcessBase : EntityStrategyBase
+    private abstract class PerfProcessBase : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) { }
     }

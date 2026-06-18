@@ -9,7 +9,7 @@ namespace Origo.Core.Snd.Metadata;
 /// </summary>
 public sealed class StrategyMetaData
 {
-    /// <summary>实体策略索引列表（EntityStrategyBase 子类）。</summary>
+    /// <summary>实体策略索引列表（LifecycleStrategyBase 子类）。</summary>
     public List<string> EntityIndices { get; set; } = new();
 
     /// <summary>主动策略索引列表（ActiveStrategyBase 子类）。</summary>

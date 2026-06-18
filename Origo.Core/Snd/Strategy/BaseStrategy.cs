@@ -4,7 +4,7 @@ namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
 ///     所有策略类型的统一根基类，承载对象池注册、索引注解与无状态约束等基础设施身份。
-///     具体生命周期钩子由 <see cref="EntityStrategyBase" />、<see cref="StateMachine.StateMachineStrategyBase" /> 等分支基类定义。
+///     具体生命周期钩子由 <see cref="LifecycleStrategyBase" />、<see cref="StateMachine.StateMachineStrategyBase" /> 等分支基类定义。
 ///     <para>
 ///         <b>
 ///             重要：策略实例通过 <see cref="SndStrategyPool" /> 在多个调用方之间共享复用。

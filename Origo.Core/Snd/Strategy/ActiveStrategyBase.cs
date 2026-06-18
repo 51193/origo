@@ -3,7 +3,7 @@ using Origo.Core.Abstractions.Entity;
 namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
-///     主动策略基类。与 <see cref="EntityStrategyBase" /> 并列继承 <see cref="BaseStrategy" />，
+///     主动策略基类。与 <see cref="LifecycleStrategyBase" /> 并列继承 <see cref="BaseStrategy" />，
 ///     但仅支持外部主动调用（<see cref="Invoke" />），不参与帧更新或生命周期钩子。
 ///     <para>
 ///         策略实例无状态、共享、池化，由 <see cref="SndStrategyPool" /> 统一管理。

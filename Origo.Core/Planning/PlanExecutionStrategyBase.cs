@@ -14,7 +14,7 @@ namespace Origo.Core.Planning;
 ///     The derived class provides the domain-specific plan structure
 ///     via <see cref="ResolveNextStep" /> and <see cref="StepToActionIndex" />.
 /// </summary>
-public abstract class PlanExecutionStrategyBase : EntityStrategyBase
+public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 {
     private static readonly ConditionalWeakTable<ISndEntity, WireCallbacks> WiredCallbacks = new();
 
