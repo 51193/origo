@@ -165,43 +165,11 @@ public class AdapterArchitectureGuardrailTests
         public (bool found, T? value) TryGetData<T>(string name) =>
             _data.TryGetValue(name, out var v) && v is T c ? (true, c) : (false, default);
 
-        public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> cb,
-            Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
-        {
-        }
+        public void MountObserverStrategy(string targetName, string observerIndex) { }
 
-        public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> cb)
-        {
-        }
-
-        public void SubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-        {
-        }
-
-        public void UnsubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-        {
-        }
-
-        public void ObserveData(ISndEntity target, string dataName,
-            Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-            Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
-        {
-        }
-
-        public void UnobserveData(ISndEntity target, string dataName,
-            Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
-        {
-        }
-
-        public void ObserveLifecycle(ISndEntity target,
-            Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-        {
-        }
-
-        public void UnobserveLifecycle(ISndEntity target,
-            Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-        {
-        }
+        public void UnmountObserverStrategy(string targetName, string observerIndex) { }
+    public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
+    public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
 
         public INodeHandle GetNode(string name) =>
             throw new InvalidOperationException($"Node '{name}' not found.");

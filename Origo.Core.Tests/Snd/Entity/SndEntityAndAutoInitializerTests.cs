@@ -15,55 +15,6 @@ public class SndEntityAndAutoInitializerTests
     private const string LifecycleStrategyIndex = "test.lifecycle";
 
     [Fact]
-    public void SndEntity_SpawnDataNodeStrategyLifecycle_WorksAsExpected()
-    {
-        var logger = new TestLogger();
-        var context = CreateContext(logger);
-        var nodeFactory = new TestNodeFactory();
-        var events = new List<string>();
-        LifecycleStrategy.Bind(events);
-        context.Runtime.SndWorld.RegisterStrategy(() => new LifecycleStrategy());
-
-        var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger);
-        var meta = new SndMetaData
-        {
-            Name = "Player",
-            NodeMetaData = new NodeMetaData
-                { Pairs = new Dictionary<string, string> { ["root"] = "res://player.tscn" } },
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string> { LifecycleStrategyIndex } },
-            DataMetaData = new DataMetaData
-            {
-                Pairs = new Dictionary<string, TypedData> { ["hp"] = new(typeof(int), 10) }
-            }
-        };
-
-        var callbackCount = 0;
-        entity.Subscribe("hp", (_, __, oldValue, newValue) =>
-        {
-            callbackCount++;
-            Assert.Equal(10, oldValue.AsInt32());
-            Assert.Equal(20, newValue.AsInt32());
-        });
-
-        entity.SpawnSingle(meta);
-        entity.SetData("hp", 20);
-        entity.SetData("hp", 20);
-        entity.AddStrategy(LifecycleStrategyIndex);
-        entity.RemoveStrategy(LifecycleStrategyIndex);
-        _ = entity.SaveSingle();
-        entity.QuitSingle();
-
-        Assert.Equal(1, callbackCount);
-        Assert.Contains("AfterSpawn", events);
-        Assert.Contains("AfterAdd", events);
-        Assert.Contains("BeforeRemove", events);
-        Assert.Contains("BeforeSave", events);
-        Assert.Contains("BeforeQuit", events);
-        Assert.Single(nodeFactory.CreatedHandles);
-        Assert.Equal(1, nodeFactory.CreatedHandles[0].FreeCount);
-    }
-
-    [Fact]
     public void SndEntity_GetNodeNamesAndGetNode_ReturnExpectedHandles()
     {
         var logger = new TestLogger();

@@ -4,8 +4,8 @@ namespace Origo.Core.Snd.Metadata;
 
 /// <summary>
 ///     与某个 SND 实体关联的策略索引列表。
-///     按策略类型分为实体策略（被动）和主动策略两组，分别由
-///     SndStrategyManager 和 ActiveStrategyManager 管理。
+///     按策略类型分为实体策略（被动）、主动策略和观察者策略三组，分别由
+///     SndStrategyManager、ActiveStrategyManager 和 ObserverStrategyManager 管理。
 /// </summary>
 public sealed class StrategyMetaData
 {
@@ -14,4 +14,22 @@ public sealed class StrategyMetaData
 
     /// <summary>主动策略索引列表（ActiveStrategyBase 子类）。</summary>
     public List<string> ActiveIndices { get; set; } = new();
+
+    /// <summary>
+    ///     观察者策略绑定列表。每个绑定记录被观察目标实体名与该实体上挂载的观察者策略索引列表。
+    ///     自观察时 Target 等于自身实体名。
+    /// </summary>
+    public List<ObserverBinding> ObserverBindings { get; set; } = new();
+
+    /// <summary>
+    ///     观察者策略绑定项。
+    /// </summary>
+    public sealed class ObserverBinding
+    {
+        /// <summary>被观察的目标实体名。</summary>
+        public string Target { get; set; } = string.Empty;
+
+        /// <summary>该目标实体上挂载的观察者策略索引列表。</summary>
+        public List<string> ObserverIndices { get; set; } = new();
+    }
 }

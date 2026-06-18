@@ -43,6 +43,27 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
             foreach (var element in activeNode.Elements)
                 meta.ActiveIndices.Add(element.AsString());
 
+        if (node.TryGetValue("observer_bindings", out var observerBindingsNode) && observerBindingsNode is not null && !observerBindingsNode.IsNull)
+            foreach (var element in observerBindingsNode.Elements)
+            {
+                if (element.Kind != DataSourceNodeKind.Map)
+                    continue;
+
+                var binding = new StrategyMetaData.ObserverBinding();
+                foreach (var key in element.Keys)
+                {
+                    binding.Target = key;
+                    var indicesNode = element[key];
+                    if (indicesNode is not null && !indicesNode.IsNull)
+                        foreach (var indexElement in indicesNode.Elements)
+                            binding.ObserverIndices.Add(indexElement.AsString());
+                    break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(binding.Target))
+                    meta.ObserverBindings.Add(binding);
+            }
+
         return meta;
     }
 
@@ -56,9 +77,30 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
         foreach (var index in value.ActiveIndices)
             activeIndices.Add(DataSourceNode.CreateString(index));
 
-        return DataSourceNode.CreateObject()
+        var result = DataSourceNode.CreateObject()
             .Add("entity_indices", entityIndices)
             .Add("active_indices", activeIndices);
+
+        if (value.ObserverBindings.Count > 0)
+        {
+            var observerBindings = DataSourceNode.CreateArray();
+            foreach (var binding in value.ObserverBindings)
+            {
+                if (string.IsNullOrWhiteSpace(binding.Target))
+                    continue;
+
+                var indices = DataSourceNode.CreateArray();
+                foreach (var index in binding.ObserverIndices)
+                    indices.Add(DataSourceNode.CreateString(index));
+
+                observerBindings.Add(DataSourceNode.CreateObject()
+                    .Add(binding.Target, indices));
+            }
+
+            result.Add("observer_bindings", observerBindings);
+        }
+
+        return result;
     }
 }
 

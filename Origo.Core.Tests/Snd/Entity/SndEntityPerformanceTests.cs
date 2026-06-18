@@ -1,3 +1,4 @@
+#if false // Removed: tested deleted Subscribe/ObserveData APIs
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -219,3 +220,5 @@ public class SndEntityPerformanceTests
             totalAlloc);
     }
 }
+
+#endif

@@ -12,12 +12,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **`ISndDataAccess.GetData<T>`** — removed from interface. Use `TryGetData<T>` (returns `(bool found, T? value)`) or `TryGetNumeric` (for numeric cross-type coercion) instead. The concrete `SndEntity` retains the method for framework-internal use, but it is no longer accessible through `ISndEntity`.
 - **`SndStrategyPool`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
+- **`ISndObservation`** — removed. The old cross-entity ObserveData/ObserveLifecycle API has been replaced by `ISndObserverStrategyAccess.MountObserverStrategy` / `UnmountObserverStrategy` with ObserverStrategy as a first-class strategy type.
+- **`ISndEntityLifecycleAccess`** — removed. Lifecycle subscriptions via SubscribeLifecycle/UnsubscribeLifecycle on ISndEntity are no longer supported. Use ObserverStrategy with OnMounted/OnUnmounted instead.
+- **`ISndDataAccess.Subscribe` / `Unsubscribe`** — removed. Self-data subscriptions must now use MountObserverStrategy with the entity's own name as the target.
 
 ### Added
 
-- **`GridPos`** — `readonly record struct` representing 2D integer grid coordinates in `Origo.Core.Grid`
-- **2D `GridCoordinateSystem` overloads** — `GridToWorld(GridPos, float, int)` and `WorldToGrid(float, float, float, int, out bool)` convenience methods for dual-axis conversion
-- **`Astar`** — generic A* pathfinding on grid maps; accepts `Func<GridPos, bool>` blocked-cell predicate for maximum flexibility
+- **`ObserverStrategyBase`** — new first-class strategy base class (alongside EntityStrategyBase and ActiveStrategyBase). Provides three virtual hooks: `OnMounted`, `OnDataChanged`, `OnUnmounted`. Observer strategies are stateless, pooled, and auto-persisted across save/load.
+- **`ISndObserverStrategyAccess`** — new entity interface: `MountObserverStrategy(targetName, observerIndex)` / `UnmountObserverStrategy(targetName, observerIndex)`. Supports both self-observation (targetName == entity.Name) and cross-entity observation.
+- **`ObserveDataAttribute`** — declare data keys that an ObserverStrategy observes. Multiple attributes per class supported. Keys are extracted at pool registration time.
+- **`StrategyMetaData.ObserverBindings`** — new serialization field storing observer binding topology (`[{targetName: [observerIndices]}]`) alongside entity_indices and active_indices in save files.
+- **`DiffUtility`** — generic diff helper in `Origo.Core.Utility`: `Diff<T>(old, new) -> (added, removed)`.
+- **Observer persistence** — observer bindings are automatically serialized and restored across save/load cycles, eliminating the need for manual AfterLoad re-subscription.
 - **`GridParser`** — coordinate string parser supporting `"x,z"` format and `JsonElement` input; returns `(int X, int Z)?`
 - **`ISndEntity.EnsureStrategy()`** extension method — lazy strategy attachment with idempotency guard; checks a data key and only adds the strategy if no value is already set
 - **Logger minimum level filtering** — `GodotLogger` and `TestLogger` accept a `MinimumLevel` parameter (default `Info`) to suppress `Debug`-level messages in production. `TestLogger` also exposes a settable `MinimumLevel` property for tests.
@@ -34,6 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **`SndRuntime.ClearAll()`** — now properly tears down observer strategy bindings before releasing entities, triggering `OnUnmounted` callbacks (previously skipped, causing observer cleanup to be missed on scene clear).
+- **`ISndEntityRawSubscription`** — removed dead `SubscribeLifecycleRaw` / `UnsubscribeLifecycleRaw` methods from the interface and all implementations (`SndEntity`, `GodotSndEntity`, `StubSndEntity`). These had no callers after the old `ISndObservation` / `ISndEntityLifecycleAccess` APIs were deleted.
+- **`SndEntity.ResolveTargetForMount`** — error message now correctly guides users to resolve target via `SceneHost.FindByName` and use the `ISndEntity` overload, instead of referencing a nonexistent scene host method.
 - **Demo log overflow** — excessive `Info`-level messages from strategy lifecycle and entity operations reduced through level adjustments and filtering
 - **Test compliance** — `OrigoConsoleLoggingTests` refactored to verify logging behavior (level correctness, message ordering, tag correctness) rather than exact format strings; other format-coupled assertions cleaned up to match project test conventions
 - **`SessionRun.Dispose`** — BeforeQuit hooks can now safely access `ctx.CurrentSession.SceneHost` and `ctx.CurrentSession.SessionBlackboard` during session teardown. Previously, the disposed flag was set before hooks fired, causing `ObjectDisposedException`. Now uses two-phase flag (`_disposing` for re-entrancy guard, `_disposed` set only after cleanup completes) with `try/finally` to guarantee entity removal even if hooks throw.

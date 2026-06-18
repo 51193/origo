@@ -1,3 +1,4 @@
+#if false // Removed: tested deleted Subscribe/ObserveData APIs
 using System;
 using System.Diagnostics;
 using Origo.Core.Abstractions.Entity;
@@ -137,3 +138,5 @@ public class SndEntityObserverPerformanceTests
         }
     }
 }
+
+#endif

@@ -186,12 +186,11 @@ public class SndArchetypeLoaderTests
             return (false, default);
         }
 
-        public void Subscribe(string name, System.Action<Origo.Core.Abstractions.Entity.ISndEntity,
-            Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Snd.Metadata.TypedData, Origo.Core.Snd.Metadata.TypedData> callback,
-            System.Func<Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Abstractions.Entity.ISndEntity,
-                Origo.Core.Snd.Metadata.TypedData, Origo.Core.Snd.Metadata.TypedData, bool>? filter = null) => throw new System.NotImplementedException();
-        public void Unsubscribe(string name, System.Action<Origo.Core.Abstractions.Entity.ISndEntity,
-            Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Snd.Metadata.TypedData, Origo.Core.Snd.Metadata.TypedData> callback) => throw new System.NotImplementedException();
+        public void MountObserverStrategy(string targetName, string observerIndex) { }
+
+        public void UnmountObserverStrategy(string targetName, string observerIndex) { }
+    public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
+    public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
 
         public Origo.Core.Abstractions.Node.INodeHandle GetNode(string name) => throw new System.NotImplementedException();
         public System.Collections.Generic.IReadOnlyCollection<string> GetNodeNames() => throw new System.NotImplementedException();
@@ -200,23 +199,6 @@ public class SndArchetypeLoaderTests
         public void AddActiveStrategy(string index) => throw new System.NotImplementedException();
         public void RemoveActiveStrategy(string index) => throw new System.NotImplementedException();
         public object? InvokeStrategy(string strategyIndex, object? input = null) => throw new System.NotImplementedException();
-        public void SubscribeLifecycle(System.Action<Origo.Core.Abstractions.Entity.ISndEntity,
-            Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Abstractions.Entity.EntityLifecycleEvent> callback) => throw new System.NotImplementedException();
-        public void UnsubscribeLifecycle(System.Action<Origo.Core.Abstractions.Entity.ISndEntity,
-            Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Abstractions.Entity.EntityLifecycleEvent> callback) => throw new System.NotImplementedException();
-        public void ObserveData(Origo.Core.Abstractions.Entity.ISndEntity target, string dataName,
-            System.Action<Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Abstractions.Entity.ISndEntity,
-                Origo.Core.Snd.Metadata.TypedData, Origo.Core.Snd.Metadata.TypedData> callback,
-            System.Func<Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Abstractions.Entity.ISndEntity,
-                Origo.Core.Snd.Metadata.TypedData, Origo.Core.Snd.Metadata.TypedData, bool>? filter = null) => throw new System.NotImplementedException();
-        public void UnobserveData(Origo.Core.Abstractions.Entity.ISndEntity target, string dataName,
-            System.Action<Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Abstractions.Entity.ISndEntity,
-                Origo.Core.Snd.Metadata.TypedData, Origo.Core.Snd.Metadata.TypedData> callback) => throw new System.NotImplementedException();
-        public void ObserveLifecycle(Origo.Core.Abstractions.Entity.ISndEntity target,
-            System.Action<Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Abstractions.Entity.ISndEntity,
-                Origo.Core.Abstractions.Entity.EntityLifecycleEvent> callback) => throw new System.NotImplementedException();
-        public void UnobserveLifecycle(Origo.Core.Abstractions.Entity.ISndEntity target,
-            System.Action<Origo.Core.Abstractions.Entity.ISndEntity, Origo.Core.Abstractions.Entity.ISndEntity,
-                Origo.Core.Abstractions.Entity.EntityLifecycleEvent> callback) => throw new System.NotImplementedException();
+
     }
 }

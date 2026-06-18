@@ -4,6 +4,7 @@ using System.Linq;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Snd.Scene;
@@ -77,9 +78,10 @@ internal sealed class StubSndSceneHost : ISndSceneHost
     }
 }
 
-internal sealed class StubSndEntity : ISndEntity
+internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
 {
     private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<(Action<ISndEntity, TypedData, TypedData> Original, Action<TypedData, TypedData> Wrapped)>> _subscriptions = new(StringComparer.Ordinal);
 
     public StubSndEntity(string name)
     {
@@ -108,43 +110,11 @@ internal sealed class StubSndEntity : ISndEntity
         return (false, default);
     }
 
-    public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
-    {
-    }
+    public void MountObserverStrategy(string targetName, string observerIndex) { }
 
-    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
-    {
-    }
-
-    public void SubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-    }
-
-    public void UnsubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-    }
-
-    public void ObserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
-    {
-    }
-
-    public void UnobserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
-    {
-    }
-
-    public void ObserveLifecycle(ISndEntity target,
-        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-    }
-
-    public void UnobserveLifecycle(ISndEntity target,
-        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-    }
+    public void UnmountObserverStrategy(string targetName, string observerIndex) { }
+    public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
+    public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
 
     public INodeHandle GetNode(string name)
     {
@@ -173,4 +143,20 @@ internal sealed class StubSndEntity : ISndEntity
     public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
 
     public bool IsPendingKill { get; set; }
+
+    void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
+        Func<ISndEntity, TypedData, TypedData, bool>? filter)
+    {
+        var wrapped = new Action<TypedData, TypedData>((o, n) => callback(this, o, n));
+        if (!_subscriptions.TryGetValue(name, out var list))
+            _subscriptions[name] = list = new List<(Action<ISndEntity, TypedData, TypedData>, Action<TypedData, TypedData>)>();
+        list.Add((callback, wrapped));
+    }
+
+    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback)
+    {
+        if (!_subscriptions.TryGetValue(name, out var list)) return;
+        list.RemoveAll(p => p.Original == callback);
+        if (list.Count == 0) _subscriptions.Remove(name);
+    }
 }

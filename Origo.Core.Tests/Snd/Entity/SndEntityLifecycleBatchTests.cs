@@ -198,11 +198,12 @@ public class SndEntityLifecycleBatchTests
             var target = h?.FindByName("target");
             if (target is not null)
             {
-                target.Subscribe("hp", (_, __, oldVal, newVal) =>
+                ((Origo.Core.Snd.Entity.ISndEntityRawSubscription)target).SubscribeDataRaw("hp",
+                    (_, oldVal, newVal) =>
                 {
                     Interlocked.Increment(ref _subCount);
                     Events.Add($"sub:{oldVal}->{newVal}");
-                });
+                }, null);
                 Events.Add("subscribed");
             }
         }

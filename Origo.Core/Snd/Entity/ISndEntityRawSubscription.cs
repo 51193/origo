@@ -10,8 +10,4 @@ public interface ISndEntityRawSubscription
         Func<ISndEntity, TypedData, TypedData, bool>? filter);
 
     void UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback);
-
-    void SubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback);
-
-    void UnsubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback);
 }

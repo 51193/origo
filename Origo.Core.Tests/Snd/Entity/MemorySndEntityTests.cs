@@ -1,15 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Origo.Core.Abstractions.Entity;
-using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
 using Xunit;
 
 namespace Origo.Core.Tests;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. SndContext save / load / continue workflows
-// ─────────────────────────────────────────────────────────────────────────────
 
 public class StubSndEntityTests
 {
@@ -75,26 +69,6 @@ public class StubSndEntityTests
     }
 
     [Fact]
-    public void SubscribeAndStrategyOperations_KeepDataAndNodeStateStable()
-    {
-        var entity = new StubSndEntity("e");
-        entity.SetData("hp", 10);
-        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback = (_, _, _, _) => { };
-
-        var ex = Record.Exception(() =>
-        {
-            entity.Subscribe("prop", callback);
-            entity.Unsubscribe("prop", callback);
-            entity.AddStrategy("idx1");
-            entity.RemoveStrategy("idx1");
-        });
-
-        Assert.Null(ex);
-        Assert.Equal(10, entity.GetData<int>("hp"));
-        Assert.Empty(entity.GetNodeNames());
-    }
-
-    [Fact]
     public void GetNode_ThrowsInvalidOperation()
     {
         var entity = new StubSndEntity("e");
@@ -114,8 +88,21 @@ public class StubSndEntityTests
         var entity = new StubSndEntity("test_name");
         Assert.Equal("test_name", entity.GetData<string>("name"));
     }
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. EntityStrategyBase — virtual hooks coverage
-// ─────────────────────────────────────────────────────────────────────────────
+    [Fact]
+    public void AddRemoveStrategy_DoesNotThrow()
+    {
+        var entity = new StubSndEntity("e");
+        entity.SetData("hp", 10);
+
+        var ex = Record.Exception(() =>
+        {
+            entity.AddStrategy("idx1");
+            entity.RemoveStrategy("idx1");
+        });
+
+        Assert.Null(ex);
+        Assert.Equal(10, entity.GetData<int>("hp"));
+        Assert.Empty(entity.GetNodeNames());
+    }
+}

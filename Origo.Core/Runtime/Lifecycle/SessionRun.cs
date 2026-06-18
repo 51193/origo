@@ -11,6 +11,7 @@ using Origo.Core.Save;
 using Origo.Core.Save.Serialization;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Scene;
 using Origo.Core.Abstractions.Lifecycle;
 
@@ -174,6 +175,16 @@ public sealed class SessionRun : ISessionRun
             foreach (var entity in _sceneHost.GetEntities())
                 if (entity is IEntityLifecycle lifecycle)
                     lifecycle.FireAfterLoadHooks();
+
+            foreach (var entity in _sceneHost.GetEntities())
+                if (entity is SndEntity se)
+                {
+                    var meta = ((IEntityLifecycle)se).BuildMetaData();
+                    var observerBindings = meta.StrategyMetaData?.ObserverBindings;
+                    if (observerBindings is not null && observerBindings.Count > 0)
+                        se.RecoverObserverBindings(observerBindings,
+                            targetName => _sceneHost.FindByName(targetName));
+                }
 
             _sessionScope.StateMachines.FlushAllAfterLoad();
 

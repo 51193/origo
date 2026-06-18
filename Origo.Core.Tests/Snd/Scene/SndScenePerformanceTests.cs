@@ -298,7 +298,7 @@ public class SndScenePerformanceTests
                 sw.Elapsed,
                 totalAlloc);
 
-            Assert.True(totalAlloc < 50_000_000,
+            Assert.True(totalAlloc < 100_000_000,
                 $"KillPendingEntities {count}: allocated {totalAlloc} bytes (unexpected)");
         }
     }

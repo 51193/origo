@@ -2,16 +2,11 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Snd.Scene;
 
-/// <summary>
-///     面向上层的 SND 运行时门面。
-///     将 SndWorld（策略池与 JSON 配置）与具体场景宿主 ISndSceneHost 组合在一起，
-///     提供统一的 Spawn / 导出入口，并在此统一编排所有策略生命周期钩子。
-///     SceneHost 仅提供容器能力（创建/查找/移除），不参与钩子触发。
-/// </summary>
 public sealed class SndRuntime
 {
     public SndRuntime(SndWorld world, ISndSceneHost sceneHost)
@@ -75,7 +70,13 @@ public sealed class SndRuntime
 
     public void ClearAll()
     {
-        foreach (var entity in GetEntities())
+        var entities = SceneHost.GetEntities();
+
+        foreach (var entity in entities)
+            if (entity is SndEntity se)
+                TeardownOutgoingObserverBindings(se, entities);
+
+        foreach (var entity in entities)
             if (entity is IEntityLifecycle lifecycle)
             {
                 lifecycle.FireBeforeQuitHooks();
@@ -99,6 +100,15 @@ public sealed class SndRuntime
                 pending.Add(e);
 
         foreach (var e in pending)
+            if (e is SndEntity se)
+                TeardownOutgoingObserverBindings(se, entities);
+
+        foreach (var e in pending)
+            foreach (var other in entities)
+                if (other is SndEntity otherSe && otherSe != e && otherSe.HasObserverBindingTargeting(e.Name))
+                    TeardownIncomingObserverBindings(otherSe, e);
+
+        foreach (var e in pending)
             if (e is IEntityLifecycle lifecycle)
                 lifecycle.FireBeforeDeadHooks();
 
@@ -112,6 +122,22 @@ public sealed class SndRuntime
 
             SceneHost.RemoveEntity(e.Name);
         }
+    }
+
+    private static void TeardownOutgoingObserverBindings(SndEntity entity, IReadOnlyCollection<ISndEntity> entities)
+    {
+        entity.TeardownOutgoingObserverBindings(targetName =>
+        {
+            foreach (var other in entities)
+                if (other.Name == targetName)
+                    return other;
+            return null;
+        });
+    }
+
+    private static void TeardownIncomingObserverBindings(SndEntity observer, ISndEntity target)
+    {
+        observer.RemoveAllObserverBindingsTargeting(target.Name);
     }
 
     public void ProcessAll(double delta)

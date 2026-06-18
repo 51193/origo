@@ -108,8 +108,5 @@ public class TryGetNumericExtensionsTests
             return (false, default);
         }
 
-        public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-            Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null) => throw new NotImplementedException();
-        public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback) => throw new NotImplementedException();
     }
 }

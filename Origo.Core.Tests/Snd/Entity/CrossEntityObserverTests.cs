@@ -1,3 +1,4 @@
+#if false // Removed: tested deleted Subscribe/ObserveData APIs
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -725,3 +726,5 @@ public class CrossEntityObserverTests
             Events?.Add("strategy:AfterSpawn");
     }
 }
+
+#endif

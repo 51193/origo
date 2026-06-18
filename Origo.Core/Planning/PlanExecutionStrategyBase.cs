@@ -1,6 +1,8 @@
 using System;
+using System.Runtime.CompilerServices;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 
@@ -14,6 +16,8 @@ namespace Origo.Core.Planning;
 /// </summary>
 public abstract class PlanExecutionStrategyBase : EntityStrategyBase
 {
+    private static readonly ConditionalWeakTable<ISndEntity, WireCallbacks> WiredCallbacks = new();
+
     /// <summary>Entity data key for the current intent (e.g. "combat", "forage", "wander").</summary>
     protected abstract string IntentKey { get; }
 
@@ -148,8 +152,15 @@ public abstract class PlanExecutionStrategyBase : EntityStrategyBase
 
     private void Wire(ISndEntity entity, bool initialize)
     {
-        entity.Subscribe(IntentKey, OnIntentChanged);
-        entity.Subscribe(ActionStatusKey, OnActionStatusChanged);
+        var raw = (ISndEntityRawSubscription)entity;
+
+        var intentCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnIntentChanged(t, entity, o, n));
+        var actionCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnActionStatusChanged(t, entity, o, n));
+
+        raw.SubscribeDataRaw(IntentKey, intentCb, null);
+        raw.SubscribeDataRaw(ActionStatusKey, actionCb, null);
+
+        WiredCallbacks.AddOrUpdate(entity, new WireCallbacks { IntentCb = intentCb, ActionCb = actionCb });
 
         if (!initialize)
             return;
@@ -161,8 +172,14 @@ public abstract class PlanExecutionStrategyBase : EntityStrategyBase
 
     private void Unwire(ISndEntity entity)
     {
-        entity.Unsubscribe(IntentKey, OnIntentChanged);
-        entity.Unsubscribe(ActionStatusKey, OnActionStatusChanged);
+        if (!WiredCallbacks.TryGetValue(entity, out var cbs))
+            return;
+
+        var raw = (ISndEntityRawSubscription)entity;
+        raw.UnsubscribeDataRaw(IntentKey, cbs.IntentCb);
+        raw.UnsubscribeDataRaw(ActionStatusKey, cbs.ActionCb);
+
+        WiredCallbacks.Remove(entity);
     }
 
     // ── Private: signal handlers ─────────────────────────────────────────
@@ -258,5 +275,11 @@ public abstract class PlanExecutionStrategyBase : EntityStrategyBase
         var strategyIndex = StepToActionIndex(step);
         if (!string.IsNullOrEmpty(strategyIndex))
             entity.RemoveStrategy(strategyIndex);
+    }
+
+    private sealed class WireCallbacks
+    {
+        public required Action<ISndEntity, TypedData, TypedData> IntentCb { get; init; }
+        public required Action<ISndEntity, TypedData, TypedData> ActionCb { get; init; }
     }
 }

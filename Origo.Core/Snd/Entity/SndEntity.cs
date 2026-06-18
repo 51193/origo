@@ -10,9 +10,6 @@ using Origo.Core.Snd.Strategy;
 
 namespace Origo.Core.Snd.Entity;
 
-/// <summary>
-///     SND 聚合实体。封装数据、节点与策略生命周期，保持 Core 与引擎解耦。
-/// </summary>
 public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubscription
 {
     private const string LogTag = nameof(SndEntity);
@@ -21,11 +18,8 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     private readonly SndDataManager _dataManager;
     private readonly ILogger _logger;
     private readonly SndNodeManager _nodeHost;
+    private readonly ObserverStrategyManager _observerStrategyManager;
     private readonly SndStrategyManager _strategyManager;
-
-    private readonly List<Action<ISndEntity, EntityLifecycleEvent>> _lifecycleObservers = new();
-    private readonly List<OutgoingDataSub> _outgoingDataSubs = new();
-    private readonly List<OutgoingLifecycleSub> _outgoingLifecycleSubs = new();
 
     internal SndEntity(
         INodeFactory nodeFactory,
@@ -48,6 +42,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _nodeHost = nodeHost;
         _strategyManager = new SndStrategyManager(strategyPool, logger);
         _activeStrategyManager = new ActiveStrategyManager(strategyPool);
+        _observerStrategyManager = new ObserverStrategyManager(strategyPool, context, logger);
     }
 
     public string Name { get; internal set; } = string.Empty;
@@ -58,64 +53,39 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     public (bool found, T? value) TryGetData<T>(string name) => _dataManager.TryGetData<T>(name);
 
-    public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
+    public void MountObserverStrategy(string targetName, string observerIndex)
     {
-        SubscribeDataInternal((ISndEntity)this, name, callback, filter);
+        var self = (ISndEntity)this;
+        var target = ResolveTargetForMount(self, targetName);
+        _observerStrategyManager.Mount(self, target, observerIndex);
     }
 
-    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
+    public void UnmountObserverStrategy(string targetName, string observerIndex)
     {
-        UnobserveData((ISndEntity)this, name, callback);
+        var self = (ISndEntity)this;
+        var target = ResolveTargetForMount(self, targetName);
+        _observerStrategyManager.Unmount(self, target, observerIndex);
     }
 
-    public void ObserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
+    public void MountObserverStrategy(ISndEntity target, string observerIndex)
     {
-        SubscribeDataInternal(target, dataName, callback, filter);
+        ArgumentNullException.ThrowIfNull(target);
+        _observerStrategyManager.Mount((ISndEntity)this, target, observerIndex);
     }
 
-    public void UnobserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
+    public void UnmountObserverStrategy(ISndEntity target, string observerIndex)
     {
-        for (var i = _outgoingDataSubs.Count - 1; i >= 0; i--)
-        {
-            var sub = _outgoingDataSubs[i];
-            if (sub.Target != target || sub.DataName != dataName || sub.OriginalCallback != callback)
-                continue;
-            ((ISndEntityRawSubscription)target).UnsubscribeDataRaw(dataName, sub.WrappedCallback);
-            _outgoingDataSubs.RemoveAt(i);
-        }
+        ArgumentNullException.ThrowIfNull(target);
+        _observerStrategyManager.Unmount((ISndEntity)this, target, observerIndex);
     }
 
-    public void SubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    private static ISndEntity ResolveTargetForMount(ISndEntity self, string targetName)
     {
-        SubscribeLifecycleInternal((ISndEntity)this, callback);
-    }
-
-    public void UnsubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-        UnobserveLifecycle((ISndEntity)this, callback);
-    }
-
-    public void ObserveLifecycle(ISndEntity target,
-        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-        SubscribeLifecycleInternal(target, callback);
-    }
-
-    public void UnobserveLifecycle(ISndEntity target,
-        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-        for (var i = _outgoingLifecycleSubs.Count - 1; i >= 0; i--)
-        {
-            var sub = _outgoingLifecycleSubs[i];
-            if (sub.Target != target || sub.OriginalCallback != callback)
-                continue;
-            ((ISndEntityRawSubscription)target).UnsubscribeLifecycleRaw(sub.WrappedCallback);
-            _outgoingLifecycleSubs.RemoveAt(i);
-        }
+        if (self.Name == targetName) return self;
+        throw new InvalidOperationException(
+            $"Cross-entity observer resolution requires a scene host. " +
+            $"Target '{targetName}' differs from self '{self.Name}'. " +
+            $"Resolve the target via SceneHost.FindByName, then use MountObserverStrategy(ISndEntity target, string observerIndex).");
     }
 
     public INodeHandle GetNode(string name) => _nodeHost.GetNode(name);
@@ -148,16 +118,6 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _dataManager.Unsubscribe(name, callback);
     }
 
-    void ISndEntityRawSubscription.SubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback)
-    {
-        _lifecycleObservers.Add(callback);
-    }
-
-    void ISndEntityRawSubscription.UnsubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback)
-    {
-        _lifecycleObservers.Remove(callback);
-    }
-
     void IEntityLifecycle.RecoverForLifecycle(SndMetaData metaData)
     {
         Name = metaData.Name;
@@ -173,7 +133,6 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     void IEntityLifecycle.FireAfterSpawnHooks()
     {
-        NotifyLifecycleObservers(EntityLifecycleEvent.AfterSpawn);
         _strategyManager.TriggerAfterSpawn(this, _context);
         _logger.Log(LogLevel.Debug, LogTag,
             new LogMessageBuilder().AddContext("entityName", Name).Build("Entity spawned (hooks)."));
@@ -181,7 +140,6 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     void IEntityLifecycle.FireAfterLoadHooks()
     {
-        NotifyLifecycleObservers(EntityLifecycleEvent.AfterLoad);
         _strategyManager.TriggerAfterLoad(this, _context);
         _logger.Log(LogLevel.Debug, LogTag,
             new LogMessageBuilder().AddContext("entityName", Name).Build("Entity loaded (hooks)."));
@@ -189,19 +147,16 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     void IEntityLifecycle.FireBeforeSaveHooks()
     {
-        NotifyLifecycleObservers(EntityLifecycleEvent.BeforeSave);
         _strategyManager.TriggerBeforeSave(this, _context);
     }
 
     void IEntityLifecycle.FireBeforeQuitHooks()
     {
-        NotifyLifecycleObservers(EntityLifecycleEvent.BeforeQuit);
         _strategyManager.TriggerBeforeQuit(this, _context);
     }
 
     void IEntityLifecycle.FireBeforeDeadHooks()
     {
-        NotifyLifecycleObservers(EntityLifecycleEvent.BeforeDead);
         _strategyManager.TriggerBeforeDead(this, _context);
     }
 
@@ -209,19 +164,11 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     {
         _activeStrategyManager.ReleaseAll();
         _strategyManager.ReleaseStrategiesOnly();
+        _observerStrategyManager.ReleaseStrategiesOnly();
     }
 
     void IEntityLifecycle.TeardownOnly()
     {
-        foreach (var sub in _outgoingDataSubs)
-            ((ISndEntityRawSubscription)sub.Target).UnsubscribeDataRaw(sub.DataName, sub.WrappedCallback);
-        _outgoingDataSubs.Clear();
-
-        foreach (var sub in _outgoingLifecycleSubs)
-            ((ISndEntityRawSubscription)sub.Target).UnsubscribeLifecycleRaw(sub.WrappedCallback);
-        _outgoingLifecycleSubs.Clear();
-
-        _lifecycleObservers.Clear();
         _nodeHost.Release();
         _dataManager.Release();
     }
@@ -238,7 +185,8 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             StrategyMetaData = new StrategyMetaData
             {
                 EntityIndices = new List<string>(entityIndices),
-                ActiveIndices = new List<string>(activeIndices)
+                ActiveIndices = new List<string>(activeIndices),
+                ObserverBindings = _observerStrategyManager.BuildObserverBindings().ToList()
             },
             DataMetaData = _dataManager.SerializeMeta()
         };
@@ -259,6 +207,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     public void QuitSingle()
     {
         ((IEntityLifecycle)this).FireBeforeQuitHooks();
+        TeardownObserverBindingsForDeath();
         ((IEntityLifecycle)this).ReleaseStrategiesOnly();
         ((IEntityLifecycle)this).TeardownOnly();
         _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity quit."));
@@ -267,9 +216,22 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     public void DeadSingle()
     {
         ((IEntityLifecycle)this).FireBeforeDeadHooks();
+        TeardownObserverBindingsForDeath();
         ((IEntityLifecycle)this).ReleaseStrategiesOnly();
         ((IEntityLifecycle)this).TeardownOnly();
         _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity dead."));
+    }
+
+    private void TeardownObserverBindingsForDeath()
+    {
+        var snapshot = _observerStrategyManager.SnapshotBindings();
+        SndEntity self = this;
+        foreach (var binding in snapshot)
+        {
+            var target = self.Name == binding.TargetName ? (ISndEntity)self : null;
+            if (target is null) continue;
+            _observerStrategyManager.Unmount(self, target, binding.ObserverIndex);
+        }
     }
 
     public SndMetaData SaveSingle()
@@ -278,66 +240,30 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         return ((IEntityLifecycle)this).BuildMetaData();
     }
 
-    private void SubscribeDataInternal(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter)
+    internal ObserverStrategyManager ObserverStrategyManager => _observerStrategyManager;
+
+    internal void TeardownOutgoingObserverBindings(Func<string, ISndEntity?> resolveTarget)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(dataName);
-        ArgumentNullException.ThrowIfNull(callback);
-
-        var self = (ISndEntity)this;
-        Action<ISndEntity, TypedData, TypedData> wrappedCb = (t, o, n) => callback(t, self, o, n);
-        Func<ISndEntity, TypedData, TypedData, bool>? wrappedFilter = filter is null
-            ? null
-            : (t, o, n) => filter(t, self, o, n);
-
-        ((ISndEntityRawSubscription)target).SubscribeDataRaw(dataName, wrappedCb, wrappedFilter);
-
-        _outgoingDataSubs.Add(new OutgoingDataSub
-        {
-            Target = target,
-            DataName = dataName,
-            OriginalCallback = callback,
-            WrappedCallback = wrappedCb
-        });
+        _observerStrategyManager.TeardownOutgoingBindings((ISndEntity)this, resolveTarget);
     }
 
-    private void SubscribeLifecycleInternal(ISndEntity target,
-        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    internal bool HasObserverBindingTargeting(string targetName)
     {
-        ArgumentNullException.ThrowIfNull(callback);
-
-        var self = (ISndEntity)this;
-        Action<ISndEntity, EntityLifecycleEvent> wrappedCb = (t, evt) => callback(t, self, evt);
-
-        ((ISndEntityRawSubscription)target).SubscribeLifecycleRaw(wrappedCb);
-
-        _outgoingLifecycleSubs.Add(new OutgoingLifecycleSub
-        {
-            Target = target,
-            OriginalCallback = callback,
-            WrappedCallback = wrappedCb
-        });
+        return _observerStrategyManager.HasBindingTargeting(targetName);
     }
 
-    private void NotifyLifecycleObservers(EntityLifecycleEvent evt)
+    internal void RemoveAllObserverBindingsTargeting(string targetName)
     {
-        foreach (var observer in _lifecycleObservers.ToArray())
-            observer(this, evt);
+        _observerStrategyManager.RemoveAllBindingsTargeting(targetName);
     }
 
-    private struct OutgoingDataSub
+    internal void RecoverObserverBindings(
+        IReadOnlyList<StrategyMetaData.ObserverBinding> bindings,
+        Func<string, ISndEntity?> resolveTarget)
     {
-        public ISndEntity Target;
-        public string DataName;
-        public Action<ISndEntity, ISndEntity, TypedData, TypedData> OriginalCallback;
-        public Action<ISndEntity, TypedData, TypedData> WrappedCallback;
-    }
-
-    private struct OutgoingLifecycleSub
-    {
-        public ISndEntity Target;
-        public Action<ISndEntity, ISndEntity, EntityLifecycleEvent> OriginalCallback;
-        public Action<ISndEntity, EntityLifecycleEvent> WrappedCallback;
+        _observerStrategyManager.RecoverBindings(
+            (ISndEntity)this,
+            bindings,
+            resolveTarget);
     }
 }

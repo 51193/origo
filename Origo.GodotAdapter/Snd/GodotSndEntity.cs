@@ -58,58 +58,28 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         return _entity!.TryGetData<T>(name);
     }
 
-    public void Subscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
+    public void MountObserverStrategy(string targetName, string observerIndex)
     {
         EnsureEntity();
-        _entity!.Subscribe(name, callback, filter);
+        _entity!.MountObserverStrategy(targetName, observerIndex);
     }
 
-    public void Unsubscribe(string name, Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
+    public void UnmountObserverStrategy(string targetName, string observerIndex)
     {
         EnsureEntity();
-        _entity!.Unsubscribe(name, callback);
+        _entity!.UnmountObserverStrategy(targetName, observerIndex);
     }
 
-    public void SubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    public void MountObserverStrategy(ISndEntity target, string observerIndex)
     {
         EnsureEntity();
-        _entity!.SubscribeLifecycle(callback);
+        _entity!.MountObserverStrategy(target, observerIndex);
     }
 
-    public void UnsubscribeLifecycle(Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
+    public void UnmountObserverStrategy(ISndEntity target, string observerIndex)
     {
         EnsureEntity();
-        _entity!.UnsubscribeLifecycle(callback);
-    }
-
-    public void ObserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback,
-        Func<ISndEntity, ISndEntity, TypedData, TypedData, bool>? filter = null)
-    {
-        EnsureEntity();
-        _entity!.ObserveData(target, dataName, callback, filter);
-    }
-
-    public void UnobserveData(ISndEntity target, string dataName,
-        Action<ISndEntity, ISndEntity, TypedData, TypedData> callback)
-    {
-        EnsureEntity();
-        _entity!.UnobserveData(target, dataName, callback);
-    }
-
-    public void ObserveLifecycle(ISndEntity target,
-        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-        EnsureEntity();
-        _entity!.ObserveLifecycle(target, callback);
-    }
-
-    public void UnobserveLifecycle(ISndEntity target,
-        Action<ISndEntity, ISndEntity, EntityLifecycleEvent> callback)
-    {
-        EnsureEntity();
-        _entity!.UnobserveLifecycle(target, callback);
+        _entity!.UnmountObserverStrategy(target, observerIndex);
     }
 
     void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
@@ -123,18 +93,6 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     {
         EnsureEntity();
         ((ISndEntityRawSubscription)_entity!).UnsubscribeDataRaw(name, callback);
-    }
-
-    void ISndEntityRawSubscription.SubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback)
-    {
-        EnsureEntity();
-        ((ISndEntityRawSubscription)_entity!).SubscribeLifecycleRaw(callback);
-    }
-
-    void ISndEntityRawSubscription.UnsubscribeLifecycleRaw(Action<ISndEntity, EntityLifecycleEvent> callback)
-    {
-        EnsureEntity();
-        ((ISndEntityRawSubscription)_entity!).UnsubscribeLifecycleRaw(callback);
     }
 
     public INodeHandle GetNode(string name)
