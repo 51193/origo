@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **High-frequency log messages downgraded to `Debug`** — strategy pool create/release, entity lifecycle hooks (spawn/load/quit/dead), strategy manager add/remove, and per-strategy auto-registration messages no longer appear at `Info` level
 - **`OrigoRuntime` banner downgraded to `Debug`** — no longer outputs the multi-line banner at `Info` level
 - **Performance timing added to key operations** — `OrigoConsole` command processing, `SessionRun` create/dispose/load/persist, `ProgressRun` create/dispose, `SaveStorageFacade` write/snapshot, and `SessionManager` mount/destroy now include elapsed milliseconds in log output
+- **`TreatWarningsAsErrors` enabled solution-wide** — all projects now fail the build on compiler and analyzer warnings, making code-quality regressions a hard build failure rather than ignorable warnings.
 
 ### Removed
 
