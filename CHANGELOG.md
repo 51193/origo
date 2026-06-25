@@ -36,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **`ISndDataAccess.GetData<T>`** — removed from interface. Use `TryGetData<T>` (returns `(bool found, T? value)`) or `TryGetNumeric` (for numeric cross-type coercion) instead. The concrete `SndEntity` retains the method for framework-internal use, but it is no longer accessible through `ISndEntity`.
 - **`ISndObservation`** — removed. The old cross-entity ObserveData/ObserveLifecycle API has been replaced by `ISndObserverStrategyAccess.MountObserverStrategy` / `UnmountObserverStrategy` with ObserverStrategy as a first-class strategy type.
-- **`ISndEntityLifecycleAccess`** — removed. Lifecycle subscriptions via SubscribeLifecycle/UnsubscribeLifecycle on ISndEntity are no longer supported. Use ObserverStrategy with OnMounted/OnUnmounted instead.
+- **`ISndEntityLifecycleAccess` / `EntityLifecycleEvent`** — removed. Lifecycle subscriptions via SubscribeLifecycle/UnsubscribeLifecycle on ISndEntity are no longer supported, and the accompanying `EntityLifecycleEvent` enum is removed along with them. Use ObserverStrategy with OnMounted/OnUnmounted instead.
 - **`ISndDataAccess.Subscribe` / `Unsubscribe`** — removed. Self-data subscriptions must now use MountObserverStrategy with the entity's own name as the target.
 
 ### Fixed

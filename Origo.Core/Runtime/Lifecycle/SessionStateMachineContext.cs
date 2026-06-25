@@ -9,7 +9,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 ///     会话级状态机上下文适配器。将全局上下文（系统/流程黑板、延迟队列）
 ///     与当前会话的黑板和场景访问组合在一起，使每个 SessionRun 的状态机钩子
 ///     拿到的 <see cref="IStateMachineContext.SessionBlackboard" /> 和 <see cref="IStateMachineContext.SceneAccess" /> 都指向自身会话，
-///     前后台会话不再有语义分差。
+///     前后台会话语义一致。
 /// </summary>
 internal sealed class SessionStateMachineContext : IStateMachineContext
 {
