@@ -250,7 +250,7 @@ public class ObserverStrategyTests
 
         var meta = entity.SaveSingle();
 
-        Assert.Single(meta.StrategyMetaData.ObserverBindings);
+        Assert.Single(meta.StrategyMetaData!.ObserverBindings);
         Assert.Equal(2, meta.StrategyMetaData.ObserverBindings[0].ObserverIndices.Count);
     }
 

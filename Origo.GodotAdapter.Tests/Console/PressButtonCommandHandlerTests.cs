@@ -100,7 +100,6 @@ public class PressButtonCommandHandlerTests
         {
         }
 
-        public T GetData<T>(string name) => default!;
         public (bool found, T? value) TryGetData<T>(string name) => (false, default);
 
         public void MountObserverStrategy(string targetName, string observerIndex) { }

@@ -88,7 +88,7 @@ public partial class OrigoAutoHost : Node
         ((IOrigoFrameDriver?)Runtime)?.DriveFrame(delta);
     }
 
-    [MemberNotNull(nameof(SndManager), nameof(SharedMetaAccess), nameof(SharedPathResolver), nameof(SharedDataSourceIo), nameof(Runtime))]
+    [MemberNotNull(nameof(SndManager), nameof(SharedMetaAccess), nameof(SharedPathResolver), nameof(SharedDataSourceIo))]
     private OrigoRuntime CreateRuntime()
     {
         var createWatch = Stopwatch.StartNew();
@@ -132,6 +132,7 @@ public partial class OrigoAutoHost : Node
         return runtime;
     }
 
+    [MemberNotNull(nameof(SndManager))]
     private GodotSndManager CreateAndSetupSndManager(
         GodotFileSystem fileSystem,
         GodotLogger logger,
