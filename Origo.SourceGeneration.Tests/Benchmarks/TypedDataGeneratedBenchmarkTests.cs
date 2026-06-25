@@ -9,29 +9,39 @@ namespace Origo.SourceGeneration.Tests;
 /// <summary>
 ///     Performance benchmarks for the source-generated TypedData product: the inline
 ///     (zero-boxing) storage and Kind-based dispatch emitted by TypedDataGenerator,
-///     compared against an unoptimized boxed reference implementation.
+///     compared against an unoptimized boxed reference implementation, across several
+///     value types and a reference type.
 ///
 ///     These are lenient benchmarks. They do NOT require the generated path to be
 ///     faster than the boxed baseline; they only guard against gross slowdowns
 ///     (generated path must stay within a generous multiple of the baseline) and
-///     against runaway durations (each benchmark has an absolute time cap). The
-///     comparison table is printed on every CI run via <see cref="PerfReporter" />.
+///     against runaway durations (per-benchmark absolute time cap).
 ///
-///     Only the public TypedData API is used (explicit operators, TryGetXxx, Data,
-///     FromObject), so no access to Origo.Core internals is required.
+///     Noise control: each measurement uses a fixed-capacity pool addressed by a bit
+///     mask, a large iteration count (so a single timed pass spans many OS time
+///     slices), one warmup round, and several timed rounds — taking the minimum
+///     elapsed time per side to drop rounds disturbed by preemption or GC.
+///
+///     Only the public TypedData API is used (explicit operators, TryGetXxx,
+///     TryGetString, Data, FromObject), so no access to Origo.Core internals is
+///     required. Tagged [Trait("Category", "Benchmark")] so it runs in a dedicated
+///     CI step (scripts/benchmark.sh) rather than alongside the coverage-gated suite.
 /// </summary>
+[Trait("Category", "Benchmark")]
 public class TypedDataGeneratedBenchmarkTests
 {
-    private const int Count = 500_000;
-    private const int MixedCount = 200_000;
-    private const int WarmupCount = 10_000;
+    private const int PoolSize = 1 << 16;
+    private const int PoolMask = PoolSize - 1;
+    private const int SampleCount = 256;
+    private const int SampleMask = SampleCount - 1;
+    private const int ReadIterations = 10_000_000;
+    private const int WriteIterations = 2_000_000;
+    private const int WarmupRounds = 1;
+    private const int TimedRounds = 5;
 
-    // Lenient: the generated path may be slower than the boxed baseline, but not by
-    // more than this factor. Tiny absolute durations bypass the ratio check to avoid
-    // flakiness from CI timing jitter.
     private const double MaxSlowdownFactor = 8.0;
-    private static readonly TimeSpan NegligibleDuration = TimeSpan.FromMilliseconds(50);
-    private static readonly TimeSpan MaxBenchmarkDuration = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan BaselineFloor = TimeSpan.FromMilliseconds(1);
+    private static readonly TimeSpan PerBenchmarkCap = TimeSpan.FromSeconds(5);
 
     private readonly PerfReporter _perf;
 
@@ -39,6 +49,10 @@ public class TypedDataGeneratedBenchmarkTests
     {
         _perf = PerfReporter.ForTest(output);
     }
+
+    private delegate TypedData GenFactory<T>(T value);
+
+    private delegate bool GenReader<T>(in TypedData td, out T value);
 
     private sealed class OldTypedData
     {
@@ -52,159 +66,255 @@ public class TypedDataGeneratedBenchmarkTests
         }
     }
 
+    // ─── Value types ───────────────────────────────────────────────
+
     [Fact]
-    public void WriteThroughput_GeneratedInline_vs_BoxedClass()
+    public void ValueTypes_WriteThroughput_GeneratedOperator_vs_BoxedClass()
     {
-        var genArr = new TypedData[Count];
-        var boxedArr = new OldTypedData[Count];
-
-        for (var i = 0; i < WarmupCount; i++)
-        {
-            genArr[i] = (TypedData)i;
-            boxedArr[i] = new OldTypedData(typeof(int), i);
-        }
-
-        var sw = Stopwatch.StartNew();
-        for (var i = 0; i < Count; i++)
-            genArr[i] = (TypedData)i;
-        sw.Stop();
-        var genTime = sw.Elapsed;
-
-        sw.Restart();
-        for (var i = 0; i < Count; i++)
-            boxedArr[i] = new OldTypedData(typeof(int), i);
-        sw.Stop();
-        var boxedTime = sw.Elapsed;
-
-        _perf.Compare("Write: generated inline TypedData vs boxed class",
-            "Generated (TypedData)i", Count, genTime, 0,
-            "Boxed OldTypedData", Count, boxedTime, 0);
-
-        AssertWithinBudget("Write", genTime, boxedTime);
+        RunWriteBenchmark("Int32", MakeSamples(i => i), static v => (TypedData)v);
+        RunWriteBenchmark("Int64", MakeSamples(i => (long)i), static v => (TypedData)v);
+        RunWriteBenchmark("Single", MakeSamples(i => i * 1.5f), static v => (TypedData)v);
+        RunWriteBenchmark("Double", MakeSamples(i => i * 1.5d), static v => (TypedData)v);
+        RunWriteBenchmark("Boolean", MakeSamples(i => i % 2 == 0), static v => (TypedData)v);
+        RunWriteBenchmark("Char", MakeSamples(i => (char)('A' + i % 26)), static v => (TypedData)v);
     }
 
     [Fact]
-    public void ReadThroughput_GeneratedKind_vs_BoxedIsT_Int32()
+    public void ValueTypes_ReadThroughput_GeneratedKind_vs_BoxedIsT()
     {
-        var genArr = new TypedData[Count];
-        var boxedArr = new OldTypedData[Count];
-        for (var i = 0; i < Count; i++)
-        {
-            genArr[i] = (TypedData)i;
-            boxedArr[i] = new OldTypedData(typeof(int), i);
-        }
-
-        long warmGen = 0;
-        long warmBoxed = 0;
-        for (var i = 0; i < WarmupCount; i++)
-        {
-            if (genArr[i].TryGetInt32(out var g)) warmGen += g;
-            if (boxedArr[i].Data is int b) warmBoxed += b;
-        }
-        Assert.Equal(warmGen, warmBoxed);
-
-        var sw = Stopwatch.StartNew();
-        long genSum = 0;
-        for (var i = 0; i < Count; i++)
-            if (genArr[i].TryGetInt32(out var v))
-                genSum += v;
-        sw.Stop();
-        var genTime = sw.Elapsed;
-
-        sw.Restart();
-        long boxedSum = 0;
-        for (var i = 0; i < Count; i++)
-            if (boxedArr[i].Data is int v)
-                boxedSum += v;
-        sw.Stop();
-        var boxedTime = sw.Elapsed;
-
-        Assert.Equal(genSum, boxedSum);
-
-        _perf.Compare("Read Int32: generated TryGetInt32 vs boxed 'is int'",
-            "Generated TryGetInt32", Count, genTime, 0,
-            "Boxed Data is int", Count, boxedTime, 0);
-
-        AssertWithinBudget("Read Int32", genTime, boxedTime);
+        RunReadBenchmark("Int32", MakeSamples(i => i),
+            static v => (TypedData)v,
+            static (in TypedData td, out int v) => td.TryGetInt32(out v),
+            static o => o.Data is int);
+        RunReadBenchmark("Int64", MakeSamples(i => (long)i),
+            static v => (TypedData)v,
+            static (in TypedData td, out long v) => td.TryGetInt64(out v),
+            static o => o.Data is long);
+        RunReadBenchmark("Single", MakeSamples(i => i * 1.5f),
+            static v => (TypedData)v,
+            static (in TypedData td, out float v) => td.TryGetSingle(out v),
+            static o => o.Data is float);
+        RunReadBenchmark("Double", MakeSamples(i => i * 1.5d),
+            static v => (TypedData)v,
+            static (in TypedData td, out double v) => td.TryGetDouble(out v),
+            static o => o.Data is double);
+        RunReadBenchmark("Boolean", MakeSamples(i => i % 2 == 0),
+            static v => (TypedData)v,
+            static (in TypedData td, out bool v) => td.TryGetBoolean(out v),
+            static o => o.Data is bool);
+        RunReadBenchmark("Char", MakeSamples(i => (char)('A' + i % 26)),
+            static v => (TypedData)v,
+            static (in TypedData td, out char v) => td.TryGetChar(out v),
+            static o => o.Data is char);
     }
+
+    // ─── Reference type ────────────────────────────────────────────
+
+    [Fact]
+    public void ReferenceType_String_GeneratedRefSlot_vs_BoxedClass()
+    {
+        var samples = MakeSamples(i => "s_" + i);
+
+        RunWriteBenchmark("String", samples,
+            static v => TypedData.FromObject(typeof(string), v));
+
+        RunReadBenchmark("String", samples,
+            static v => TypedData.FromObject(typeof(string), v),
+            static (in TypedData td, out string v) =>
+            {
+                var ok = td.TryGetString(out var s);
+                v = s!;
+                return ok;
+            },
+            static o => o.Data is string);
+    }
+
+    // ─── Mixed dispatch ────────────────────────────────────────────
 
     [Fact]
     public void MixedDispatch_GeneratedKind_vs_BoxedIsT()
     {
-        var genArr = new TypedData[MixedCount];
-        var boxedArr = new OldTypedData[MixedCount];
-        for (var i = 0; i < MixedCount; i++)
+        var genPool = new TypedData[PoolSize];
+        var boxedPool = new OldTypedData[PoolSize];
+        for (var i = 0; i < PoolSize; i++)
         {
             switch (i % 5)
             {
                 case 0:
-                    genArr[i] = (TypedData)i;
-                    boxedArr[i] = new OldTypedData(typeof(int), i);
+                    genPool[i] = (TypedData)i;
+                    boxedPool[i] = new OldTypedData(typeof(int), i);
                     break;
                 case 1:
-                    genArr[i] = (TypedData)(float)i;
-                    boxedArr[i] = new OldTypedData(typeof(float), (float)i);
+                    genPool[i] = (TypedData)(float)i;
+                    boxedPool[i] = new OldTypedData(typeof(float), (float)i);
                     break;
                 case 2:
-                    genArr[i] = (TypedData)(i % 2 == 0);
-                    boxedArr[i] = new OldTypedData(typeof(bool), i % 2 == 0);
+                    genPool[i] = (TypedData)(i % 2 == 0);
+                    boxedPool[i] = new OldTypedData(typeof(bool), i % 2 == 0);
                     break;
                 case 3:
-                    genArr[i] = TypedData.FromObject(typeof(string), "s_" + i);
-                    boxedArr[i] = new OldTypedData(typeof(string), "s_" + i);
+                    genPool[i] = TypedData.FromObject(typeof(string), "s_" + i);
+                    boxedPool[i] = new OldTypedData(typeof(string), "s_" + i);
                     break;
                 default:
-                    genArr[i] = (TypedData)(double)i;
-                    boxedArr[i] = new OldTypedData(typeof(double), (double)i);
+                    genPool[i] = (TypedData)(double)i;
+                    boxedPool[i] = new OldTypedData(typeof(double), (double)i);
                     break;
             }
         }
 
-        var sw = Stopwatch.StartNew();
-        var genHits = 0;
-        for (var i = 0; i < MixedCount; i++)
+        var genBest = TimeSpan.MaxValue;
+        var boxedBest = TimeSpan.MaxValue;
+
+        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
         {
-            var td = genArr[i];
-            if (td.TryGetInt32(out _)) genHits++;
-            if (td.TryGetSingle(out _)) genHits++;
-            if (td.TryGetBoolean(out _)) genHits++;
-            if (td.TryGetString(out _)) genHits++;
-            if (td.TryGetDouble(out _)) genHits++;
-        }
-        sw.Stop();
-        var genTime = sw.Elapsed;
+            var genHits = 0;
+            var sw = Stopwatch.StartNew();
+            for (var i = 0; i < ReadIterations; i++)
+            {
+                ref readonly var td = ref genPool[i & PoolMask];
+                if (td.TryGetInt32(out _)) genHits++;
+                if (td.TryGetSingle(out _)) genHits++;
+                if (td.TryGetBoolean(out _)) genHits++;
+                if (td.TryGetString(out _)) genHits++;
+                if (td.TryGetDouble(out _)) genHits++;
+            }
+            sw.Stop();
 
-        sw.Restart();
-        var boxedHits = 0;
-        for (var i = 0; i < MixedCount; i++)
+            var boxedHits = 0;
+            var sw2 = Stopwatch.StartNew();
+            for (var i = 0; i < ReadIterations; i++)
+            {
+                var data = boxedPool[i & PoolMask].Data;
+                if (data is int) boxedHits++;
+                if (data is float) boxedHits++;
+                if (data is bool) boxedHits++;
+                if (data is string) boxedHits++;
+                if (data is double) boxedHits++;
+            }
+            sw2.Stop();
+
+            Assert.Equal(genHits, boxedHits);
+
+            if (round >= WarmupRounds)
+            {
+                if (sw.Elapsed < genBest) genBest = sw.Elapsed;
+                if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
+            }
+        }
+
+        _perf.Compare(
+            $"Mixed dispatch (int/float/bool/string/double): generated Kind vs boxed 'is T' (min of {TimedRounds})",
+            "Generated TryGetXxx", ReadIterations, genBest, 0,
+            "Boxed Data is T", ReadIterations, boxedBest, 0);
+
+        AssertWithinBudget("Mixed dispatch", genBest, boxedBest);
+    }
+
+    // ─── Generic timing helpers ────────────────────────────────────
+
+    private void RunWriteBenchmark<T>(string typeLabel, T[] samples, GenFactory<T> makeGen)
+    {
+        var genPool = new TypedData[PoolSize];
+        var boxedPool = new OldTypedData[PoolSize];
+
+        var genBest = TimeSpan.MaxValue;
+        var boxedBest = TimeSpan.MaxValue;
+
+        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
         {
-            var data = boxedArr[i].Data;
-            if (data is int) boxedHits++;
-            if (data is float) boxedHits++;
-            if (data is bool) boxedHits++;
-            if (data is string) boxedHits++;
-            if (data is double) boxedHits++;
+            var sw = Stopwatch.StartNew();
+            for (var i = 0; i < WriteIterations; i++)
+                genPool[i & PoolMask] = makeGen(samples[i & SampleMask]);
+            sw.Stop();
+
+            var sw2 = Stopwatch.StartNew();
+            for (var i = 0; i < WriteIterations; i++)
+                boxedPool[i & PoolMask] = new OldTypedData(typeof(T), samples[i & SampleMask]);
+            sw2.Stop();
+
+            if (round >= WarmupRounds)
+            {
+                if (sw.Elapsed < genBest) genBest = sw.Elapsed;
+                if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
+            }
         }
-        sw.Stop();
-        var boxedTime = sw.Elapsed;
 
-        Assert.Equal(boxedHits, genHits);
+        // Defeat dead-store elimination: the pools are read after the timed loops.
+        Assert.False(genPool[0].IsNull && boxedPool[0] is null);
 
-        _perf.Compare("Mixed dispatch (int/float/bool/string/double): generated Kind vs boxed 'is T'",
-            "Generated TryGetXxx", MixedCount * 5, genTime, 0,
-            "Boxed Data is T", MixedCount * 5, boxedTime, 0);
+        _perf.Compare($"Write {typeLabel}: generated operator vs boxed class (min of {TimedRounds})",
+            $"Generated {typeLabel}", WriteIterations, genBest, 0,
+            $"Boxed {typeLabel}", WriteIterations, boxedBest, 0);
 
-        AssertWithinBudget("Mixed dispatch", genTime, boxedTime);
+        AssertWithinBudget($"Write {typeLabel}", genBest, boxedBest);
+    }
+
+    private void RunReadBenchmark<T>(
+        string typeLabel, T[] samples, GenFactory<T> makeGen, GenReader<T> tryGet, Func<OldTypedData, bool> boxedMatch)
+    {
+        var genPool = new TypedData[PoolSize];
+        var boxedPool = new OldTypedData[PoolSize];
+        for (var i = 0; i < PoolSize; i++)
+        {
+            var sample = samples[i & SampleMask];
+            genPool[i] = makeGen(sample);
+            boxedPool[i] = new OldTypedData(typeof(T), sample);
+        }
+
+        var genBest = TimeSpan.MaxValue;
+        var boxedBest = TimeSpan.MaxValue;
+
+        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        {
+            var genHits = 0;
+            var sw = Stopwatch.StartNew();
+            for (var i = 0; i < ReadIterations; i++)
+                if (tryGet(in genPool[i & PoolMask], out _))
+                    genHits++;
+            sw.Stop();
+
+            var boxedHits = 0;
+            var sw2 = Stopwatch.StartNew();
+            for (var i = 0; i < ReadIterations; i++)
+                if (boxedMatch(boxedPool[i & PoolMask]))
+                    boxedHits++;
+            sw2.Stop();
+
+            Assert.Equal(genHits, boxedHits);
+
+            if (round >= WarmupRounds)
+            {
+                if (sw.Elapsed < genBest) genBest = sw.Elapsed;
+                if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
+            }
+        }
+
+        _perf.Compare($"Read {typeLabel}: generated TryGet vs boxed 'is {typeLabel}' (min of {TimedRounds})",
+            $"Generated {typeLabel}", ReadIterations, genBest, 0,
+            $"Boxed is {typeLabel}", ReadIterations, boxedBest, 0);
+
+        AssertWithinBudget($"Read {typeLabel}", genBest, boxedBest);
+    }
+
+    private static T[] MakeSamples<T>(Func<int, T> factory)
+    {
+        var arr = new T[SampleCount];
+        for (var i = 0; i < SampleCount; i++)
+            arr[i] = factory(i);
+        return arr;
     }
 
     private static void AssertWithinBudget(string label, TimeSpan generated, TimeSpan baseline)
     {
-        Assert.True(generated < MaxBenchmarkDuration,
-            $"{label}: generated path took {generated.TotalSeconds:F2}s, exceeds {MaxBenchmarkDuration.TotalSeconds:F0}s cap");
+        Assert.True(generated < PerBenchmarkCap,
+            $"{label}: generated min {generated.TotalMilliseconds:F2}ms exceeds {PerBenchmarkCap.TotalSeconds:F0}s cap");
 
-        var withinRatio = generated.TotalMilliseconds <= baseline.TotalMilliseconds * MaxSlowdownFactor;
-        var negligible = generated < NegligibleDuration;
-        Assert.True(withinRatio || negligible,
+        // A sub-millisecond baseline cannot form a reliable ratio; the cap above still guards it.
+        if (baseline < BaselineFloor)
+            return;
+
+        Assert.True(generated.TotalMilliseconds <= baseline.TotalMilliseconds * MaxSlowdownFactor,
             $"{label}: generated {generated.TotalMilliseconds:F2}ms exceeds {MaxSlowdownFactor:F0}x of baseline {baseline.TotalMilliseconds:F2}ms");
     }
 }

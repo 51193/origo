@@ -33,15 +33,6 @@ echo ""
 echo ">>> Running tests — Coverlet will fail the job if any project's LINE coverage is below its threshold."
 echo ""
 
-dotnet test Origo.sln --no-build --configuration Release --verbosity normal
-
-echo ""
-echo ">>> SourceGeneration performance benchmarks — generated TypedData vs unoptimized boxing."
-echo ">>> (Already executed and asserted in the run above; re-run here only to print the comparison tables.)"
-echo ""
-
-dotnet test Origo.SourceGeneration.Tests/Origo.SourceGeneration.Tests.csproj \
-  --no-build --configuration Release \
-  --filter "FullyQualifiedName~TypedDataGeneratedBenchmarkTests" \
-  --logger "console;verbosity=detailed" \
-  -p:CollectCoverage=false
+# Benchmarks are tagged [Trait("Category","Benchmark")] and run separately via
+# scripts/benchmark.sh (a dedicated CI step) so they are not executed twice.
+dotnet test Origo.sln --no-build --configuration Release --verbosity normal --filter "Category!=Benchmark"

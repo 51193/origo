@@ -21,10 +21,16 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # scripts/ci.sh: restore + build + dotnet test; all three test projects run Coverlet.
+      # scripts/ci.sh: restore + build + dotnet test; all test projects run Coverlet.
+      # Benchmarks (Category=Benchmark) are excluded here and run in the next step.
       # Coverage gates:
-      #   Origo.Core          >= 90% line
-      #   Origo.ConsoleBridge >= 80% line
-      #   Origo.GodotAdapter  >= 85% line (testable subset, engine-dependent code excluded)
-      - name: CI — build, tests, line coverage gates (Core >= 90%, ConsoleBridge >= 80%, GodotAdapter >= 85%)
+      #   Origo.Core             >= 90% line
+      #   Origo.ConsoleBridge    >= 80% line
+      #   Origo.GodotAdapter     >= 85% line (testable subset, engine-dependent code excluded)
+      #   Origo.SourceGeneration >= 85% line
+      - name: CI — build, tests, line coverage gates (Core >= 90%, ConsoleBridge >= 80%, GodotAdapter >= 85%, SourceGeneration >= 85%)
         run: bash scripts/ci.sh
+
+      # Source-generation performance benchmarks, run once in their own step.
+      - name: Benchmarks — generated TypedData vs unoptimized boxing
+        run: bash scripts/benchmark.sh
