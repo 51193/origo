@@ -14,6 +14,26 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
     private const string TypedDataFullName = "Origo.Core.Snd.Metadata.TypedData";
     private const string RegistryFullName = "Origo.Core.Snd.Metadata.TypedDataLayeredRegistry";
 
+    private static readonly DiagnosticDescriptor SystemPrimitiveInAdapter = new(
+        id: "ORIGOSG001",
+        title: "System primitive registered outside the TypedData home assembly",
+        messageFormat:
+        "'{0}' is a system primitive and can only be registered as an inline TypedData type in the Origo.Core (home) assembly. "
+        + "Adapter assemblies may register only reference types or non-system value types, which are stored through the _ref slot.",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor UnsupportedHomeValueType = new(
+        id: "ORIGOSG002",
+        title: "Unsupported value type in the TypedData home assembly",
+        messageFormat:
+        "'{0}' is a value type that cannot be stored inline and is not supported in the Origo.Core (home) assembly. "
+        + "Only the supported system primitives may be registered as home inline types.",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var inputProvider = context.CompilationProvider
@@ -92,31 +112,43 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
     private static InlineTypeInfo CreateTypeInfo(ITypeSymbol typeSymbol, byte kindValue)
     {
         var kindName = GenerateKindName(typeSymbol);
-        var fullName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var clrName = typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat);
-        var isReferenceType = typeSymbol.IsReferenceType;
-        var specialType = typeSymbol.SpecialType;
-        var fitsInline = IsInlineCandidate(typeSymbol);
 
         return new InlineTypeInfo
         {
             KindIndex = kindName,
             KindValue = kindValue,
-            FullTypeName = fullName,
             ClrTypeName = clrName,
-            IsReferenceType = isReferenceType,
-            SpecialType = specialType,
-            FitsInline = fitsInline,
-            TypeSymbol = typeSymbol
+            IsReferenceType = typeSymbol.IsReferenceType,
+            SpecialType = typeSymbol.SpecialType,
+            FitsInline = IsInlineCandidate(typeSymbol)
         };
     }
 
+    // A type is inline-eligible only when it is one of the system primitive value
+    // types that fit in eight bytes. Inline storage is exclusively for these types
+    // in the home assembly; every other registered type (reference types such as
+    // string, and non-system value types such as decimal or engine structs) is
+    // stored through the _ref slot.
     private static bool IsInlineCandidate(ITypeSymbol type)
     {
         if (type.IsReferenceType) return false;
-        if (type.SpecialType == SpecialType.None) return false;
-        var full = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        return !full.Contains("global::System.Decimal");
+        return type.SpecialType switch
+        {
+            SpecialType.System_Byte
+                or SpecialType.System_SByte
+                or SpecialType.System_Int16
+                or SpecialType.System_UInt16
+                or SpecialType.System_Int32
+                or SpecialType.System_UInt32
+                or SpecialType.System_Int64
+                or SpecialType.System_UInt64
+                or SpecialType.System_Single
+                or SpecialType.System_Double
+                or SpecialType.System_Boolean
+                or SpecialType.System_Char => true,
+            _ => false
+        };
     }
 
     private static string GenerateKindName(ITypeSymbol type)
@@ -149,16 +181,56 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         var allTypes = input.TypeGroups.SelectMany(g => g.Types).ToList();
         if (allTypes.Count == 0) return;
 
+        var validTypes = ValidateAndFilter(context, input.IsHome, allTypes);
+        if (validTypes.Count == 0) return;
+
         if (input.IsHome)
-            GenerateHomeAssembly(context, input.TypeGroups, allTypes);
+            GenerateHomeAssembly(context, validTypes);
         else
-            GenerateAdapterAssembly(context, input.TypeGroups, allTypes);
+            GenerateAdapterAssembly(context, validTypes);
+    }
+
+    // Enforces the storage model with fail-fast diagnostics, then returns the
+    // types that can be generated. Invalid registrations are reported as build
+    // errors and excluded from generation so the emitted source stays compilable
+    // (the reported error fails the build regardless).
+    private static List<InlineTypeInfo> ValidateAndFilter(
+        SourceProductionContext context, bool isHome, List<InlineTypeInfo> allTypes)
+    {
+        var valid = new List<InlineTypeInfo>();
+
+        foreach (var t in allTypes)
+        {
+            if (t.IsReferenceType)
+            {
+                valid.Add(t);
+                continue;
+            }
+
+            if (t.FitsInline)
+            {
+                if (isHome)
+                    valid.Add(t);
+                else
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(SystemPrimitiveInAdapter, Location.None, t.ClrTypeName));
+            }
+            else
+            {
+                if (isHome)
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(UnsupportedHomeValueType, Location.None, t.ClrTypeName));
+                else
+                    valid.Add(t);
+            }
+        }
+
+        return valid;
     }
 
     // ─── Home assembly ─────────────────────────────────────────────
 
-    private static void GenerateHomeAssembly(SourceProductionContext context,
-        List<TypeGroup> groups, List<InlineTypeInfo> allTypes)
+    private static void GenerateHomeAssembly(SourceProductionContext context, List<InlineTypeInfo> types)
     {
         var sb = new StringBuilder();
 
@@ -172,31 +244,30 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("namespace Origo.Core.Snd.Metadata;");
         sb.AppendLine();
 
-        GenerateKindMap(sb, allTypes);
+        GenerateKindMap(sb, types);
         sb.AppendLine();
-        GenerateHomeKindRegistration(sb, allTypes);
+        GenerateHomeKindRegistration(sb, types);
         sb.AppendLine();
         GenerateStringConversion(sb);
         sb.AppendLine();
-        GenerateAsMethods(sb, allTypes);
+        GenerateAsMethods(sb, types);
         sb.AppendLine();
-        GenerateTryGetMethods(sb, allTypes);
+        GenerateTryGetMethods(sb, types);
         sb.AppendLine();
-        GenerateImplicitConversions(sb, allTypes);
+        GenerateImplicitConversions(sb, types);
         sb.AppendLine();
-        GenerateTypedDataTypeMap(sb, allTypes);
+        GenerateTypedDataTypeMap(sb, types);
         sb.AppendLine();
-        GenerateTypedDataObjectConverter(sb, allTypes);
+        GenerateTypedDataObjectConverter(sb, types);
         sb.AppendLine();
-        GenerateTypedDataFactory(sb, allTypes);
+        GenerateTypedDataFactory(sb, types);
 
         context.AddSource("TypedData.g.cs", sb.ToString());
     }
 
     // ─── Adapter assembly ──────────────────────────────────────────
 
-    private static void GenerateAdapterAssembly(SourceProductionContext context,
-        List<TypeGroup> groups, List<InlineTypeInfo> allTypes)
+    private static void GenerateAdapterAssembly(SourceProductionContext context, List<InlineTypeInfo> types)
     {
         var sb = new StringBuilder();
 
@@ -209,13 +280,13 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("using Origo.Core.Snd.Metadata;");
         sb.AppendLine();
 
-        GenerateAdapterExtensionMethods(sb, allTypes);
+        GenerateAdapterExtensionMethods(sb, types);
         sb.AppendLine();
-        GenerateAdapterKindRegistration(sb, allTypes);
+        GenerateAdapterKindRegistration(sb, types);
         sb.AppendLine();
-        GenerateAdapterConverterRegistration(sb, allTypes);
+        GenerateAdapterConverterRegistration(sb, types);
         sb.AppendLine();
-        GenerateAdapterTypeMapRegistration(sb, allTypes);
+        GenerateAdapterTypeMapRegistration(sb, types);
 
         context.AddSource("TypedData.g.cs", sb.ToString());
     }
@@ -279,6 +350,8 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
     }
 
     // ─── Adapter: converter fallback registration ──────────────────
+    // Adapter types are always stored through the _ref slot, so both directions
+    // are a straight passthrough of the boxed value.
 
     private static void GenerateAdapterConverterRegistration(StringBuilder sb, List<InlineTypeInfo> types)
     {
@@ -299,19 +372,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
         foreach (var t in types)
         {
-            if (t.IsReferenceType)
-            {
-                sb.AppendLine($"            case {t.KindValue}: return (0, value);");
-            }
-            else if (t.FitsInline)
-            {
-                var castExpr = GetNonSystemCastForBitsExpr(t);
-                sb.AppendLine($"            case {t.KindValue}: return (BitsFrom{GetShortTypeName(t)}(({t.ClrTypeName})value), null);");
-            }
-            else
-            {
-                sb.AppendLine($"            case {t.KindValue}: return (0, value);");
-            }
+            sb.AppendLine($"            case {t.KindValue}: return (0, value);");
         }
 
         sb.AppendLine("            default: return null;");
@@ -326,61 +387,13 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
         foreach (var t in types)
         {
-            if (t.IsReferenceType)
-            {
-                sb.AppendLine($"            case {t.KindValue}: return td._ref;");
-            }
-            else if (t.FitsInline)
-            {
-                sb.AppendLine($"            case {t.KindValue}: return Read{GetShortTypeName(t)}(td._inlineBits);");
-            }
-            else
-            {
-                sb.AppendLine($"            case {t.KindValue}: return td._ref;");
-            }
+            sb.AppendLine($"            case {t.KindValue}: return td._ref;");
         }
 
         sb.AppendLine("            default: return null;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
-
-        foreach (var t in types.Where(t => t.FitsInline))
-        {
-            sb.AppendLine();
-            sb.AppendLine($"    private static long BitsFrom{GetShortTypeName(t)}({t.ClrTypeName} value)");
-            sb.AppendLine("    {");
-            var bitExpr = GetNonSystemBitsExpr(t);
-            sb.AppendLine($"        {bitExpr}");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-            sb.AppendLine($"    private static {t.ClrTypeName} Read{GetShortTypeName(t)}(long bits)");
-            sb.AppendLine("    {");
-            var readExpr = GetNonSystemReadExpr(t);
-            sb.AppendLine($"        {readExpr}");
-            sb.AppendLine("    }");
-        }
-
         sb.AppendLine("}");
-    }
-
-    private static string GetShortTypeName(InlineTypeInfo t)
-    {
-        return SanitizeKindName(t.KindIndex ?? "Unknown");
-    }
-
-    private static string GetNonSystemCastForBitsExpr(InlineTypeInfo t)
-    {
-        return $"BitsFrom{GetShortTypeName(t)}(({t.ClrTypeName})value)";
-    }
-
-    private static string GetNonSystemBitsExpr(InlineTypeInfo t)
-    {
-        return "return 0;";
-    }
-
-    private static string GetNonSystemReadExpr(InlineTypeInfo t)
-    {
-        return "return default;";
     }
 
     // ─── Adapter: TypeMap registration ─────────────────────────────
@@ -431,7 +444,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
     private static void GenerateAsMethods(StringBuilder sb, List<InlineTypeInfo> types)
     {
-        var inlineTypes = types.Where(t => t.FitsInline && !t.IsReferenceType).ToList();
+        var inlineTypes = types.Where(t => t.FitsInline).ToList();
         if (inlineTypes.Count == 0) return;
 
         sb.AppendLine("partial struct TypedData");
@@ -445,28 +458,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    internal {returnType} {methodName}()");
             sb.AppendLine("    {");
-
-            if (t.SpecialType == SpecialType.System_Single)
-            {
-                sb.AppendLine("        return BitConverter.Int32BitsToSingle((int)_inlineBits);");
-            }
-            else if (t.SpecialType == SpecialType.System_Double)
-            {
-                sb.AppendLine("        return BitConverter.Int64BitsToDouble(_inlineBits);");
-            }
-            else if (t.SpecialType == SpecialType.System_Boolean)
-            {
-                sb.AppendLine("        return _inlineBits != 0;");
-            }
-            else if (t.SpecialType == SpecialType.System_Char)
-            {
-                sb.AppendLine("        return (char)(ushort)_inlineBits;");
-            }
-            else
-            {
-                sb.AppendLine($"        return ({returnType})_inlineBits;");
-            }
-
+            sb.AppendLine($"        {ReadInlineBitsExpr(t)}");
             sb.AppendLine("    }");
             sb.AppendLine();
         }
@@ -478,7 +470,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
     private static void GenerateTryGetMethods(StringBuilder sb, List<InlineTypeInfo> types)
     {
-        var inlineTypes = types.Where(t => t.FitsInline && !t.IsReferenceType).ToList();
+        var inlineTypes = types.Where(t => t.FitsInline).ToList();
         if (inlineTypes.Count == 0) return;
 
         sb.AppendLine("partial struct TypedData");
@@ -494,28 +486,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             sb.AppendLine("    {");
             sb.AppendLine($"        if (_kind == KindMap.{t.KindIndex})");
             sb.AppendLine("        {");
-
-            if (t.SpecialType == SpecialType.System_Single)
-            {
-                sb.AppendLine("            value = BitConverter.Int32BitsToSingle((int)_inlineBits);");
-            }
-            else if (t.SpecialType == SpecialType.System_Double)
-            {
-                sb.AppendLine("            value = BitConverter.Int64BitsToDouble(_inlineBits);");
-            }
-            else if (t.SpecialType == SpecialType.System_Boolean)
-            {
-                sb.AppendLine("            value = _inlineBits != 0;");
-            }
-            else if (t.SpecialType == SpecialType.System_Char)
-            {
-                sb.AppendLine("            value = (char)(ushort)_inlineBits;");
-            }
-            else
-            {
-                sb.AppendLine($"            value = ({returnType})_inlineBits;");
-            }
-
+            sb.AppendLine($"            value = {ReadInlineBitsValueExpr(t)};");
             sb.AppendLine("            return true;");
             sb.AppendLine("        }");
             sb.AppendLine($"        value = default;");
@@ -527,41 +498,33 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("}");
     }
 
+    private static string ReadInlineBitsExpr(InlineTypeInfo t) =>
+        $"return {ReadInlineBitsValueExpr(t)};";
+
+    private static string ReadInlineBitsValueExpr(InlineTypeInfo t)
+    {
+        return t.SpecialType switch
+        {
+            SpecialType.System_Single => "BitConverter.Int32BitsToSingle((int)_inlineBits)",
+            SpecialType.System_Double => "BitConverter.Int64BitsToDouble(_inlineBits)",
+            SpecialType.System_Boolean => "_inlineBits != 0",
+            SpecialType.System_Char => "(char)(ushort)_inlineBits",
+            _ => $"({t.ClrTypeName})_inlineBits"
+        };
+    }
+
     // ─── Adapter: Extension methods ────────────────────────────────
+    // Every adapter type is stored through the _ref slot.
 
     private static void GenerateAdapterExtensionMethods(StringBuilder sb, List<InlineTypeInfo> types)
     {
-        var inlineTypes = types.Where(t => t.FitsInline && !t.IsReferenceType).ToList();
         var refTypes = types.Where(t => t.IsReferenceType).ToList();
-        var largeValueTypes = types.Where(t => !t.FitsInline && !t.IsReferenceType).ToList();
+        var valueTypes = types.Where(t => !t.IsReferenceType).ToList();
 
-        if (inlineTypes.Count == 0 && refTypes.Count == 0 && largeValueTypes.Count == 0) return;
+        if (refTypes.Count == 0 && valueTypes.Count == 0) return;
 
         sb.AppendLine("public static class TypedDataLayeredExtensions");
         sb.AppendLine("{");
-
-        foreach (var t in inlineTypes)
-        {
-            sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.AppendLine($"    public static {t.ClrTypeName} As{t.KindIndex}(this TypedData td)");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        return ReadBitsAs{GetShortTypeName(t)}(td._inlineBits);");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-
-            sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.AppendLine($"    public static bool TryGet{t.KindIndex}(this TypedData td, out {t.ClrTypeName} value)");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        if (td._kind == {t.KindValue})");
-            sb.AppendLine("        {");
-            sb.AppendLine($"            value = ReadBitsAs{GetShortTypeName(t)}(td._inlineBits);");
-            sb.AppendLine("            return true;");
-            sb.AppendLine("        }");
-            sb.AppendLine("        value = default;");
-            sb.AppendLine("        return false;");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-        }
 
         foreach (var t in refTypes)
         {
@@ -586,7 +549,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        foreach (var t in largeValueTypes)
+        foreach (var t in valueTypes)
         {
             sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    public static {t.ClrTypeName} As{t.KindIndex}(this TypedData td)");
@@ -609,29 +572,14 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        GenerateInlineBitHelpers(sb, inlineTypes);
-
         sb.AppendLine("}");
-    }
-
-    private static void GenerateInlineBitHelpers(StringBuilder sb, List<InlineTypeInfo> types)
-    {
-        foreach (var t in types)
-        {
-            sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.AppendLine($"    private static {t.ClrTypeName} ReadBitsAs{GetShortTypeName(t)}(long bits)");
-            sb.AppendLine("    {");
-            sb.AppendLine("        return default;");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-        }
     }
 
     // ─── Home: Implicit conversions ────────────────────────────────
 
     private static void GenerateImplicitConversions(StringBuilder sb, List<InlineTypeInfo> types)
     {
-        var inlineTypes = types.Where(t => t.FitsInline && IsSystemType(t)).ToList();
+        var inlineTypes = types.Where(t => t.FitsInline).ToList();
         if (inlineTypes.Count == 0) return;
 
         sb.AppendLine("partial struct TypedData");
@@ -640,41 +588,11 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         foreach (var t in inlineTypes)
         {
             var typeName = t.ClrTypeName;
-            var kindValue = t.KindValue;
 
             sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    public static explicit operator TypedData({typeName} value)");
             sb.AppendLine("    {");
-
-            if (t.SpecialType == SpecialType.System_String)
-            {
-                sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, 0, value);");
-            }
-            else if (t.SpecialType == SpecialType.System_Single)
-            {
-                sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, BitConverter.SingleToInt32Bits(value), null);");
-            }
-            else if (t.SpecialType == SpecialType.System_Double)
-            {
-                sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, BitConverter.DoubleToInt64Bits(value), null);");
-            }
-            else if (t.SpecialType == SpecialType.System_Boolean)
-            {
-                sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, value ? 1 : 0, null);");
-            }
-            else if (t.SpecialType == SpecialType.System_Char)
-            {
-                sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, value, null);");
-            }
-            else if (t.SpecialType == SpecialType.System_UInt32 || t.SpecialType == SpecialType.System_UInt64)
-            {
-                sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, (long)value, null);");
-            }
-            else
-            {
-                sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, value, null);");
-            }
-
+            sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, {PackInlineBitsExpr(t, "value")}, null);");
             sb.AppendLine("    }");
             sb.AppendLine();
         }
@@ -682,9 +600,38 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("}");
     }
 
-    private static bool IsSystemType(InlineTypeInfo t)
+    private static string PackInlineBitsExpr(InlineTypeInfo t, string operand)
     {
-        return t.SpecialType != SpecialType.None;
+        return t.SpecialType switch
+        {
+            SpecialType.System_Single => $"BitConverter.SingleToInt32Bits({operand})",
+            SpecialType.System_Double => $"BitConverter.DoubleToInt64Bits({operand})",
+            SpecialType.System_Boolean => $"{operand} ? 1 : 0",
+            SpecialType.System_UInt32 or SpecialType.System_UInt64 => $"(long){operand}",
+            _ => operand
+        };
+    }
+
+    // Packs a boxed object into the inline bits, unboxing to the concrete type
+    // first. Used by FromObject where the input is typed as object.
+    private static string FromObjectBitsExpr(InlineTypeInfo t)
+    {
+        return t.SpecialType switch
+        {
+            SpecialType.System_Single => "BitConverter.SingleToInt32Bits((float)value)",
+            SpecialType.System_Double => "BitConverter.DoubleToInt64Bits((double)value)",
+            SpecialType.System_Boolean => "(bool)value ? 1 : 0",
+            SpecialType.System_Byte => "(long)(byte)value",
+            SpecialType.System_SByte => "(long)(sbyte)value",
+            SpecialType.System_Int16 => "(long)(short)value",
+            SpecialType.System_UInt16 => "(long)(ushort)value",
+            SpecialType.System_Int32 => "(long)(int)value",
+            SpecialType.System_UInt32 => "(long)(uint)value",
+            SpecialType.System_Int64 => "(long)value",
+            SpecialType.System_UInt64 => "(long)(ulong)value",
+            SpecialType.System_Char => "(long)(char)value",
+            _ => "(long)value"
+        };
     }
 
     // ─── TypedDataTypeMap ──────────────────────────────────────────
@@ -724,27 +671,14 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
         sb.AppendLine("        switch (td._kind)");
         sb.AppendLine("        {");
-
         sb.AppendLine("            case 0: return null;");
 
         foreach (var t in types)
         {
             if (t.IsReferenceType)
-            {
                 sb.AppendLine($"            case {t.KindValue}: return td._ref;");
-            }
-            else if (t.FitsInline && IsSystemType(t))
-            {
-                sb.AppendLine($"            case {t.KindValue}: return td.As{t.KindIndex}();");
-            }
-            else if (t.FitsInline)
-            {
-                sb.AppendLine($"            case {t.KindValue}: return td.As{t.KindIndex}();");
-            }
             else
-            {
-                sb.AppendLine($"            case {t.KindValue}: return td._ref;");
-            }
+                sb.AppendLine($"            case {t.KindValue}: return td.As{t.KindIndex}();");
         }
 
         sb.AppendLine("        }");
@@ -764,37 +698,9 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         foreach (var t in types)
         {
             if (t.IsReferenceType)
-            {
                 sb.AppendLine($"            case {t.KindValue}: return (0, value);");
-            }
-            else if (t.FitsInline && IsSystemType(t))
-            {
-                if (t.SpecialType == SpecialType.System_Single)
-                {
-                    sb.AppendLine($"            case {t.KindValue}: return (BitConverter.SingleToInt32Bits((float)value), null);");
-                }
-                else if (t.SpecialType == SpecialType.System_Double)
-                {
-                    sb.AppendLine($"            case {t.KindValue}: return (BitConverter.DoubleToInt64Bits((double)value), null);");
-                }
-                else if (t.SpecialType == SpecialType.System_Boolean)
-                {
-                    sb.AppendLine($"            case {t.KindValue}: return ((bool)value ? 1 : 0, null);");
-                }
-                else
-                {
-                    var castExpr = GetFromObjectCastExpr(t);
-                    sb.AppendLine($"            case {t.KindValue}: return ({castExpr}, null);");
-                }
-            }
-            else if (t.FitsInline)
-            {
-                sb.AppendLine($"            case {t.KindValue}: return (Pack{GetShortTypeName(t)}(({t.ClrTypeName})value), null);");
-            }
             else
-            {
-                sb.AppendLine($"            case {t.KindValue}: return (0, value);");
-            }
+                sb.AppendLine($"            case {t.KindValue}: return ({FromObjectBitsExpr(t)}, null);");
         }
 
         sb.AppendLine("        }");
@@ -802,15 +708,6 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("        if (result.HasValue) return result.Value;");
         sb.AppendLine("        return (0, value);");
         sb.AppendLine("    }");
-
-        foreach (var t in types.Where(t => t.FitsInline && !IsSystemType(t)))
-        {
-            sb.AppendLine();
-            sb.AppendLine($"    private static long Pack{GetShortTypeName(t)}({t.ClrTypeName} value)");
-            sb.AppendLine("    {");
-            sb.AppendLine("        return 0;");
-            sb.AppendLine("    }");
-        }
 
         sb.AppendLine("}");
     }
@@ -826,7 +723,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("    public static TypedData Create(T value)");
         sb.AppendLine("    {");
 
-        foreach (var t in types.Where(t => IsSystemType(t)))
+        foreach (var t in types)
         {
             var clrName = t.ClrTypeName;
 
@@ -837,13 +734,12 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             {
                 sb.AppendLine($"            return new TypedData({t.KindValue}, 0, value);");
             }
-            else if (t.FitsInline)
+            else
             {
                 var localType = GetFactoryLocalType(t);
                 var extractExpr = GetFactoryExtractExpr(t);
                 sb.AppendLine($"            {localType} local = {extractExpr};");
-                var bitsExpr = GetFactoryBitsExpr(t);
-                sb.AppendLine($"            return new TypedData({t.KindValue}, {bitsExpr}, null);");
+                sb.AppendLine($"            return new TypedData({t.KindValue}, {GetFactoryBitsExpr(t)}, null);");
             }
 
             sb.AppendLine("        }");
@@ -863,7 +759,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("    public static bool TryExtract(TypedData source, out T value)");
         sb.AppendLine("    {");
 
-        foreach (var t in types.Where(t => IsSystemType(t)))
+        foreach (var t in types)
         {
             var clrName = t.ClrTypeName;
 
@@ -874,11 +770,10 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             {
                 sb.AppendLine("            if (source._ref is T t) { value = t; return true; }");
             }
-            else if (t.FitsInline)
+            else
             {
                 var localType = GetFactoryLocalType(t);
-                var readExpr = GetFactoryReadFromBitsExpr(t);
-                sb.AppendLine($"            {localType} local = {readExpr};");
+                sb.AppendLine($"            {localType} local = {GetFactoryReadFromBitsExpr(t)};");
                 sb.AppendLine($"            value = Unsafe.As<{localType}, T>(ref local);");
                 sb.AppendLine("            return true;");
             }
@@ -964,23 +859,6 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         };
     }
 
-    private static string GetFromObjectCastExpr(InlineTypeInfo t)
-    {
-        return t.SpecialType switch
-        {
-            SpecialType.System_Byte => "(long)(byte)value",
-            SpecialType.System_SByte => "(long)(sbyte)value",
-            SpecialType.System_Int16 => "(long)(short)value",
-            SpecialType.System_UInt16 => "(long)(ushort)value",
-            SpecialType.System_Int32 => "(long)(int)value",
-            SpecialType.System_UInt32 => "(long)(uint)value",
-            SpecialType.System_Int64 => "(long)value",
-            SpecialType.System_UInt64 => "(long)(ulong)value",
-            SpecialType.System_Char => "(long)(char)value",
-            _ => "(long)value"
-        };
-    }
-
     // ─── Data types ────────────────────────────────────────────────
 
     private sealed class GenerationInput
@@ -999,11 +877,9 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
     {
         public string? KindIndex { get; set; }
         public byte KindValue { get; set; }
-        public string FullTypeName { get; set; } = string.Empty;
         public string ClrTypeName { get; set; } = string.Empty;
         public bool IsReferenceType { get; set; }
         public SpecialType SpecialType { get; set; }
         public bool FitsInline { get; set; }
-        public ITypeSymbol TypeSymbol { get; set; } = null!;
     }
 }

@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <RollForward>LatestMajor</RollForward>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <UseAppHost>true</UseAppHost>
+        <!-- Test methods use underscore naming convention by design. -->
+        <!-- CA1707: test method underscores; CA1861: inline arrays in assertions. -->
+        <NoWarn>$(NoWarn);CA1707;CA1861</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Coverlet: enforce Origo.SourceGeneration line coverage in CI and local test runs. -->
+        <CollectCoverage>true</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <Include>[Origo.SourceGeneration]*</Include>
+        <Threshold>85</Threshold>
+        <ThresholdType>line</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.msbuild" Version="6.0.2">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
+        <PackageReference Include="xunit.v3" Version="3.2.2"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Referenced as a plain library (not an analyzer) so tests can drive TypedDataGenerator directly. -->
+        <ProjectReference Include="..\Origo.SourceGeneration\Origo.SourceGeneration.csproj"
+                          ReferenceOutputAssembly="true"/>
+        <!-- Referenced for the generated-product performance benchmark (public TypedData API only). -->
+        <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>
+    </ItemGroup>
+
+</Project>
