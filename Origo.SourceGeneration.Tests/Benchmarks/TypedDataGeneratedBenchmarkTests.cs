@@ -213,8 +213,8 @@ public class TypedDataGeneratedBenchmarkTests
         }
 
         // Allocation is measured in a separate NoInlining helper so the timed
-        // loops above keep the exact codegen of the uninstrumented benchmark
-        // (no extra loop bodies or captured locals in this method).
+        // loops above are the only pool-touching code in this method; the
+        // measurement passes never share their codegen.
         var (genAlloc, boxedAlloc) = MeasureMixedAlloc(genPool, boxedPool);
 
         _perf.Compare(
@@ -373,10 +373,10 @@ public class TypedDataGeneratedBenchmarkTests
     }
 
     // ─── Allocation measurement (kept out-of-line) ─────────────────
-    // Each measurement runs one extra untimed pass per side and returns the
+    // Each measurement runs one untimed pass per side and returns the
     // GC.GetAllocatedBytesForCurrentThread delta. NoInlining keeps these loop
-    // bodies out of the timed methods so the timed loops retain the exact codegen
-    // of the uninstrumented benchmark.
+    // bodies out of the timed methods, so the measurement never shares codegen
+    // with the timed loops.
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static (long gen, long boxed) MeasureWriteAlloc<T>(

@@ -89,8 +89,8 @@ public class TypedDataRealWorldBenchmarkTests
             }
         }
 
-        // Allocation is measured in a separate NoInlining helper so the timed
-        // loops above keep the exact codegen of the uninstrumented benchmark.
+        // Allocation is measured in a separate NoInlining helper so its loop
+        // bodies stay out of this method and never share codegen with the timed loops.
         var (genAlloc, boxedAlloc) = MeasureDictReadAlloc(genDict, boxedDict, keys, genCheck, typeKey);
 
         _perf.Compare(label, "Generated Dict", ReadIterations, genBest, genAlloc,
@@ -320,10 +320,10 @@ public class TypedDataRealWorldBenchmarkTests
     }
 
     // ─── Allocation measurement (kept out-of-line) ─────────────────
-    // Each measurement runs one extra untimed pass per side and returns the
+    // Each measurement runs one untimed pass per side and returns the
     // GC.GetAllocatedBytesForCurrentThread delta. NoInlining keeps these loop
-    // bodies out of the timed methods so the timed loops retain the exact codegen
-    // of the uninstrumented benchmark.
+    // bodies out of the timed methods, so the measurement never shares codegen
+    // with the timed loops.
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static (long gen, long boxed) MeasureDictReadAlloc(
