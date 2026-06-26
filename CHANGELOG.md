@@ -35,6 +35,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **`PersistentRandom.NextInt32` validates its range** — calling it with `maxExclusive <= minInclusive` now throws `ArgumentOutOfRangeException` instead of throwing `DivideByZeroException` (when equal) or returning an out-of-range value (when inverted).
+- **Archetype integer values no longer lose precision** — `.map` archetype values that exceed `int` range are now stored as `long` instead of being silently coerced to `float`. Integer parsing is also culture-invariant.
 - **Snapshotting an existing save no longer risks losing it on failure** — overwriting a save slot now moves the old directory aside, renames the freshly built copy into place, and only then drops the backup, so the previous data is never deleted before the new data is durably in place.
 - **`current/` is no longer left half-written when a save payload is incomplete** — the payload's active level is now validated before any file is written, so a payload missing its active level fails before touching `current/` instead of after writing the progress and meta files.
 - **ConsoleBridge no longer corrupts output under concurrent writes** — when a client connects, the buffered backlog is now flushed while holding the writer lock, so it can no longer interleave with the live output broadcast on another thread. Previously the flush wrote outside the lock and could produce garbled lines over the TCP console.

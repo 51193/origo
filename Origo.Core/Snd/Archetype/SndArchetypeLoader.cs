@@ -45,8 +45,10 @@ public static class SndArchetypeLoader
 
         foreach (var (key, rawValue) in attributes)
         {
-            if (int.TryParse(rawValue, out var i))
+            if (int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
                 entity.SetData(key, i);
+            else if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l))
+                entity.SetData(key, l);
             else if (float.TryParse(rawValue,
                          NumberStyles.Float,
                          CultureInfo.InvariantCulture,

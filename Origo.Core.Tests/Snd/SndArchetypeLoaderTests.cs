@@ -75,6 +75,23 @@ public class SndArchetypeLoaderTests
     }
 
     [Fact]
+    public void ApplyAttributes_LargeIntegerString_StoresAsLong()
+    {
+        var entity = new TestArchetypeEntity();
+        var attrs = new Dictionary<string, string> { ["population"] = "10000000000" };
+        SndArchetypeLoader.ApplyAttributes(entity, attrs);
+
+        // Exceeds int.MaxValue; it must be stored as long without precision loss
+        // instead of being silently coerced to float.
+        var (foundLong, longVal) = entity.TryGetData<long>("population");
+        Assert.True(foundLong);
+        Assert.Equal(10000000000L, longVal);
+
+        var (foundFloat, _) = entity.TryGetData<float>("population");
+        Assert.False(foundFloat);
+    }
+
+    [Fact]
     public void ApplyAttributes_FloatString_StoresAsFloat()
     {
         var entity = new TestArchetypeEntity();

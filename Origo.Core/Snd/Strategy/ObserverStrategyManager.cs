@@ -27,15 +27,6 @@ internal sealed class ObserverStrategyManager
         _logger = logger;
     }
 
-    internal void RecoverStrategiesOnly(IEnumerable<string> indices)
-    {
-        foreach (var index in indices)
-        {
-            var strategy = _pool.GetStrategy<ObserverStrategyBase>(index);
-            _pool.ReleaseStrategy(index);
-        }
-    }
-
     internal void Mount(ISndEntity entity, ISndEntity target, string observerIndex)
     {
         ArgumentNullException.ThrowIfNull(entity);

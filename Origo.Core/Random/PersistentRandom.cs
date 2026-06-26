@@ -50,6 +50,9 @@ public sealed class PersistentRandom
 
     public int NextInt32(int minInclusive, int maxExclusive)
     {
+        if (maxExclusive <= minInclusive)
+            throw new ArgumentOutOfRangeException(nameof(maxExclusive),
+                "maxExclusive must be greater than minInclusive.");
         if (!TryNextInt32(out var raw))
             throw new InvalidOperationException("Random state not initialized. Call InitSeed first.");
         return (int)(((long)(uint)raw % (long)(maxExclusive - minInclusive)) + minInclusive);

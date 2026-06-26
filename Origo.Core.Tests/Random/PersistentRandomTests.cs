@@ -88,6 +88,24 @@ public class PersistentRandomTests
     }
 
     [Fact]
+    public void NextInt32_MaxEqualsMin_Throws()
+    {
+        var bb = new Origo.Core.Blackboard.Blackboard();
+        var pr = new PersistentRandom(bb);
+        pr.InitSeed("range_guard");
+        Assert.Throws<ArgumentOutOfRangeException>(() => pr.NextInt32(5, 5));
+    }
+
+    [Fact]
+    public void NextInt32_MaxLessThanMin_Throws()
+    {
+        var bb = new Origo.Core.Blackboard.Blackboard();
+        var pr = new PersistentRandom(bb);
+        pr.InitSeed("range_guard");
+        Assert.Throws<ArgumentOutOfRangeException>(() => pr.NextInt32(10, 3));
+    }
+
+    [Fact]
     public void NextFloat_InRange()
     {
         var bb = new Origo.Core.Blackboard.Blackboard();
