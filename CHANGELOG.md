@@ -31,10 +31,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`ISndEntity.EnsureReplaceableStrategy()`** extension method — supports the `*_impl` replaceable-strategy pattern. Reads a configured override from entity data, falling back to a default strategy index, with idempotency guard.
 - **TypedData generator diagnostics `ORIGOSG001` / `ORIGOSG002`** — the source generator now reports a build error when a system primitive is registered in an adapter `SndInlineTypes` group (`ORIGOSG001`) or when an unsupported value type (e.g. `decimal` or a custom struct) is registered in the home assembly (`ORIGOSG002`), making out-of-bounds inline registrations fail fast at build time.
 - **`Origo.SourceGeneration.Tests`** — dedicated test project that drives the TypedData source generator over in-memory compilations, verifying home/adapter output, the inline-vs-`_ref` storage model, the new diagnostics, and generation determinism (Coverlet line coverage gate ≥ 85%). It also includes lenient performance benchmarks comparing the generated inline `TypedData` against an unoptimized boxing implementation across several value types (`int`/`long`/`float`/`double`/`bool`/`char`) and the `string` reference type (write / read / mixed dispatch). Each benchmark uses a fixed pool, large iteration counts, and a min-of-rounds measurement to resist OS scheduling noise; it asserts the generated path stays within a generous slowdown bound and a per-benchmark time cap, and prints a comparison table. The benchmarks are tagged `[Trait("Category","Benchmark")]` and run once in a dedicated CI step (`scripts/benchmark.sh`), separate from the coverage-gated test run.
+- **`ORIGOSG003` diagnostic** — the TypedData source generator now reports a build error when a registered type's Kind value overflows the byte range (startKind + count exceeds 255)
 
-### Changed
+### Fixed
 
-- **BREAKING: `EntityStrategyBase` renamed to `LifecycleStrategyBase`** — the passive entity strategy base class that provides 8 lifecycle hooks (Process, AfterSpawn, AfterLoad, AfterAdd, BeforeRemove, BeforeSave, BeforeQuit, BeforeDead) has been renamed to more accurately convey its behavioral domain of lifecycle control. All subclasses must update their base type.
+- **`ConsoleBridgeServer.Start` race condition** — replaced the `_acceptThread is not null` idempotency guard with `Interlocked.CompareExchange` to prevent a theoretical race between concurrent `Start()` calls
+- **`Astar.FindPath` missing start bounds check** — the start position is now validated against `gridSize` before pathfinding begins, matching the existing endpoint validation
+
+- **`SaveCoordinator` null checks unified** — constructor uses `ArgumentNullException.ThrowIfNull` consistently instead of the `?? throw` pattern
+- **`PersistProgress` now requires an active foreground session** — calling `PersistProgress` without a mounted foreground session now throws `InvalidOperationException` instead of silently writing a partially-empty session payload
+
+### Changed — the passive entity strategy base class that provides 8 lifecycle hooks (Process, AfterSpawn, AfterLoad, AfterAdd, BeforeRemove, BeforeSave, BeforeQuit, BeforeDead) has been renamed to more accurately convey its behavioral domain of lifecycle control. All subclasses must update their base type.
 - **BREAKING: `SndStrategyPool`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
 - **`LogMessageBuilder` format simplified** — `AddPrefix`/`AddSuffix` replaced by unified `AddContext`; output format changed from `[+ms] prefix=val | msg | suffix=val` to `[+ms] msg | key=val, key=val`
 - **Log tags standardized** — all components use `nameof(ClassName)` consistently instead of mixed string literals

@@ -10,6 +10,8 @@ public static class Astar
     public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize,
         Func<GridPos, bool> isBlocked)
     {
+        if (!IsInBounds(start, gridSize))
+            return null;
         if (!IsInBounds(end, gridSize))
             return null;
         if (isBlocked(end))

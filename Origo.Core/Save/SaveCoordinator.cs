@@ -31,10 +31,14 @@ internal sealed class SaveCoordinator
         ProgressRuntime progressRuntime,
         string saveId)
     {
-        _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
-        _progressBlackboard = progressBlackboard ?? throw new ArgumentNullException(nameof(progressBlackboard));
-        _progressStateMachines = progressStateMachines ?? throw new ArgumentNullException(nameof(progressStateMachines));
-        _progressRuntime = progressRuntime ?? throw new ArgumentNullException(nameof(progressRuntime));
+        ArgumentNullException.ThrowIfNull(sessionManager);
+        ArgumentNullException.ThrowIfNull(progressBlackboard);
+        ArgumentNullException.ThrowIfNull(progressStateMachines);
+        ArgumentNullException.ThrowIfNull(progressRuntime);
+        _sessionManager = sessionManager;
+        _progressBlackboard = progressBlackboard;
+        _progressStateMachines = progressStateMachines;
+        _progressRuntime = progressRuntime;
         _saveId = saveId ?? throw new ArgumentNullException(nameof(saveId));
     }
 
@@ -82,17 +86,16 @@ internal sealed class SaveCoordinator
 
     internal void PersistProgress()
     {
-        var fgSession = _sessionManager.ForegroundSession;
-        if (fgSession is not null)
-        {
-            var topologyItems = BuildSessionTopology(fgSession);
-            _progressBlackboard.SetValue(WellKnownKeys.SessionTopology,
-                SessionTopologyCodec.Join(topologyItems));
-        }
+        var fgSession = _sessionManager.ForegroundSession
+            ?? throw new InvalidOperationException(
+                "Cannot persist progress: no active foreground session. " +
+                "Ensure a foreground session is loaded before calling PersistProgress.");
 
-        var sessionBb = fgSession?.SessionBlackboard ?? new Blackboard.Blackboard();
+        var topologyItems = BuildSessionTopology(fgSession);
+        _progressBlackboard.SetValue(WellKnownKeys.SessionTopology,
+            SessionTopologyCodec.Join(topologyItems));
 
-        var serializer = new SaveContext(_progressBlackboard, sessionBb, _progressRuntime.SndWorld);
+        var serializer = new SaveContext(_progressBlackboard, fgSession.SessionBlackboard, _progressRuntime.SndWorld);
         var progressNode = serializer.SerializeProgress();
         var smNode = ((StateMachineContainer)_progressStateMachines).SerializeToNode(_progressRuntime.ConverterRegistry);
 

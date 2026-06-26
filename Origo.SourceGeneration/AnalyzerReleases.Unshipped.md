@@ -7,3 +7,4 @@ Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 ORIGOSG001 | Origo.SourceGeneration | Error | TypedDataGenerator: system primitive registered outside the TypedData home assembly
 ORIGOSG002 | Origo.SourceGeneration | Error | TypedDataGenerator: unsupported value type in the TypedData home assembly
+ORIGOSG003 | Origo.SourceGeneration | Error | TypedDataGenerator: kind byte overflow — startKind + count exceeds 255

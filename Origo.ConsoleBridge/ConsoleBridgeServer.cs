@@ -35,6 +35,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private TcpListener? _listener;
     private long _outputSubId;
     private Socket? _serverSocket;
+    private int _started;
     private StreamWriter? _writer;
 
     public ConsoleBridgeServer(
@@ -77,7 +78,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     public void Start()
     {
         ObjectDisposedException.ThrowIf(_cts.IsCancellationRequested, this);
-        if (_acceptThread is not null)
+        if (Interlocked.CompareExchange(ref _started, 1, 0) != 0)
             return;
 
         _listener = new TcpListener(IPAddress.Loopback, _options.Port);

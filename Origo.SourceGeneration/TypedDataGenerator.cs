@@ -34,6 +34,17 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor KindOverflow = new(
+        id: "ORIGOSG003",
+        title: "TypedData kind byte overflow",
+        messageFormat:
+        "'{0}' was assigned kind 0 due to byte overflow. " +
+        "The total number of registered types in this SndInlineTypes group, " +
+        "plus the startKind, must not exceed 255.",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var inputProvider = context.CompilationProvider
@@ -201,6 +212,13 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
         foreach (var t in allTypes)
         {
+            if (t.KindValue == 0)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(KindOverflow, Location.None, t.ClrTypeName));
+                continue;
+            }
+
             if (t.IsReferenceType)
             {
                 valid.Add(t);
