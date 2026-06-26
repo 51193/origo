@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
-# Origo source-generation performance benchmarks.
-#
-# Compares the generated TypedData (inline storage + Kind-based dispatch) against
-# an unoptimized boxing implementation across several value types and a reference
-# type. Lenient: the generated path only has to stay within a generous multiple of
-# the baseline and within a per-benchmark time cap — it is not required to be
-# faster. Comparison tables are printed and the budget is asserted on every run.
+# Origo performance benchmarks.
+# Runs both micro-benchmarks (SG-generated TypedData members vs boxing) and
+# real-world-simulation benchmarks (dictionary-backed, observer, serialization).
 #
 # Tagged [Trait("Category","Benchmark")], these run here only (a dedicated CI step)
 # and are excluded from scripts/ci.sh so they execute exactly once.
@@ -14,10 +10,20 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo ""
-echo ">>> SourceGeneration performance benchmarks — generated TypedData vs unoptimized boxing"
+echo ">>> SourceGeneration micro-benchmarks — generated TypedData members vs unoptimized boxing"
 echo ""
 
 dotnet test Origo.SourceGeneration.Tests/Origo.SourceGeneration.Tests.csproj \
+  --configuration Release \
+  --filter "Category=Benchmark" \
+  --logger "console;verbosity=detailed" \
+  -p:CollectCoverage=false
+
+echo ""
+echo ">>> Core real-world benchmarks — dictionary-backed, observer, serialization simulations"
+echo ""
+
+dotnet test Origo.Core.Tests/Origo.Core.Tests.csproj \
   --configuration Release \
   --filter "Category=Benchmark" \
   --logger "console;verbosity=detailed" \

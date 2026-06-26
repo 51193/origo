@@ -105,8 +105,8 @@ public class TypedDataGeneratorTests
         var text = output.AllGeneratedText;
         Assert.Contains("internal static class KindMap", text);
         Assert.Contains("public const byte Int32 = 5;", text);
-        Assert.Contains("public bool TryGetInt32(out int value)", text);
-        Assert.Contains("internal int AsInt32()", text);
+        Assert.Contains("public readonly bool TryGetInt32(out int value)", text);
+        Assert.Contains("internal readonly int AsInt32()", text);
         Assert.Contains("public static explicit operator TypedData(int value)", text);
         Assert.Contains("internal static class TypedDataFactory<T>", text);
         Assert.Contains("internal static class TypedDataHomeKindRegistration", text);
@@ -119,7 +119,7 @@ public class TypedDataGeneratorTests
         var output = RunHome(HomePrimitivesAttribute);
         var text = output.AllGeneratedText;
 
-        Assert.Contains("public string? AsString() => (string?)_ref;", text);
+        Assert.Contains("public readonly string? AsString() => (string?)_ref;", text);
         Assert.Contains("case 13: return td._ref;", text);
     }
 
@@ -156,7 +156,7 @@ public class TypedDataGeneratorTests
             output.GeneratorDiagnostics.Where(d => d.Id == "ORIGOSG002"),
             d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
         // The valid type (int) is still generated; only the unsupported one is dropped.
-        Assert.Contains("public bool TryGetInt32(out int value)", output.AllGeneratedText);
+        Assert.Contains("public readonly bool TryGetInt32(out int value)", output.AllGeneratedText);
         Assert.DoesNotContain("Decimal", output.AllGeneratedText);
         Assert.Empty(output.CompileErrors);
     }

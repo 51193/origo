@@ -54,6 +54,8 @@ public class TypedDataGeneratedBenchmarkTests
 
     private delegate bool GenReader<T>(in TypedData td, out T value);
 
+    private delegate bool IsType(in TypedData td);
+
     private sealed class OldTypedData
     {
         public Type DataType { get; }
@@ -120,12 +122,18 @@ public class TypedDataGeneratedBenchmarkTests
 
         RunReadBenchmark("String", samples,
             static v => TypedData.FromObject(typeof(string), v),
-            static (in TypedData td, out string v) =>
-            {
-                var ok = td.TryGetString(out var s);
-                v = s!;
-                return ok;
-            },
+            static (in TypedData td, out string v) => td.TryGetString(out v),
+            static o => o.Data is string);
+    }
+
+    [Fact]
+    public void StringRead_IsString_vs_BoxedIsT()
+    {
+        var samples = MakeSamples(i => "s_" + i);
+
+        RunIsBenchmark("String", samples,
+            static v => TypedData.FromObject(typeof(string), v),
+            static (in TypedData td) => td.IsString,
             static o => o.Data is string);
     }
 
@@ -291,6 +299,53 @@ public class TypedDataGeneratedBenchmarkTests
         }
 
         _perf.Compare($"Read {typeLabel}: generated TryGet vs boxed 'is {typeLabel}' (min of {TimedRounds})",
+            $"Generated {typeLabel}", ReadIterations, genBest, 0,
+            $"Boxed is {typeLabel}", ReadIterations, boxedBest, 0);
+
+        AssertWithinBudget($"Read {typeLabel}", genBest, boxedBest);
+    }
+
+    private void RunIsBenchmark<T>(
+        string typeLabel, T[] samples, GenFactory<T> makeGen, IsType isCheck, Func<OldTypedData, bool> boxedMatch)
+    {
+        var genPool = new TypedData[PoolSize];
+        var boxedPool = new OldTypedData[PoolSize];
+        for (var i = 0; i < PoolSize; i++)
+        {
+            var sample = samples[i & SampleMask];
+            genPool[i] = makeGen(sample);
+            boxedPool[i] = new OldTypedData(typeof(T), sample);
+        }
+
+        var genBest = TimeSpan.MaxValue;
+        var boxedBest = TimeSpan.MaxValue;
+
+        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        {
+            var genHits = 0;
+            var sw = Stopwatch.StartNew();
+            for (var i = 0; i < ReadIterations; i++)
+                if (isCheck(in genPool[i & PoolMask]))
+                    genHits++;
+            sw.Stop();
+
+            var boxedHits = 0;
+            var sw2 = Stopwatch.StartNew();
+            for (var i = 0; i < ReadIterations; i++)
+                if (boxedMatch(boxedPool[i & PoolMask]))
+                    boxedHits++;
+            sw2.Stop();
+
+            Assert.Equal(genHits, boxedHits);
+
+            if (round >= WarmupRounds)
+            {
+                if (sw.Elapsed < genBest) genBest = sw.Elapsed;
+                if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
+            }
+        }
+
+        _perf.Compare($"Read {typeLabel}: generated IsType vs boxed 'is {typeLabel}' (min of {TimedRounds})",
             $"Generated {typeLabel}", ReadIterations, genBest, 0,
             $"Boxed is {typeLabel}", ReadIterations, boxedBest, 0);
 

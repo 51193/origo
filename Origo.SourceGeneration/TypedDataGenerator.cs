@@ -326,6 +326,8 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine();
         GenerateStringConversion(sb);
         sb.AppendLine();
+        GenerateIsProperties(sb, types);
+        sb.AppendLine();
         GenerateAsMethods(sb, types);
         sb.AppendLine();
         GenerateTryGetMethods(sb, types);
@@ -504,15 +506,34 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
     {
         sb.AppendLine("partial struct TypedData");
         sb.AppendLine("{");
-        sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        sb.AppendLine("    public string? AsString() => (string?)_ref;");
+        sb.AppendLine("    internal readonly bool IsString => _kind == KindMap.String;");
         sb.AppendLine();
         sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        sb.AppendLine("    public bool TryGetString(out string? value)");
+        sb.AppendLine("    public readonly string? AsString() => (string?)_ref;");
+        sb.AppendLine();
+        sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("    public readonly bool TryGetString(out string value)");
         sb.AppendLine("    {");
-        sb.AppendLine("        if (_kind == KindMap.String) { value = (string?)_ref; return true; }");
-        sb.AppendLine("        value = null; return false;");
+        sb.AppendLine("        if (_kind == KindMap.String) { value = (string)_ref!; return true; }");
+        sb.AppendLine("        value = null!; return false;");
         sb.AppendLine("    }");
+        sb.AppendLine("}");
+    }
+
+    // ─── Home: IsProperties ─────────────────────────────────────────
+
+    private static void GenerateIsProperties(StringBuilder sb, List<InlineTypeInfo> types)
+    {
+        sb.AppendLine("partial struct TypedData");
+        sb.AppendLine("{");
+
+        foreach (var t in types)
+        {
+            if (t.IsReferenceType) continue;
+            sb.AppendLine($"    internal readonly bool Is{t.KindIndex} => _kind == KindMap.{t.KindIndex};");
+            sb.AppendLine();
+        }
+
         sb.AppendLine("}");
     }
 
@@ -532,7 +553,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             var methodName = $"As{t.KindIndex}";
 
             sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.AppendLine($"    internal {returnType} {methodName}()");
+            sb.AppendLine($"    internal readonly {returnType} {methodName}()");
             sb.AppendLine("    {");
             sb.AppendLine($"        {ReadInlineBitsExpr(t)}");
             sb.AppendLine("    }");
@@ -558,7 +579,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             var methodName = $"TryGet{t.KindIndex}";
 
             sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.AppendLine($"    public bool {methodName}(out {returnType} value)");
+            sb.AppendLine($"    public readonly bool {methodName}(out {returnType} value)");
             sb.AppendLine("    {");
             sb.AppendLine($"        if (_kind == KindMap.{t.KindIndex})");
             sb.AppendLine("        {");
