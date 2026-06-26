@@ -43,9 +43,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **`SaveCoordinator` null checks unified** — constructor uses `ArgumentNullException.ThrowIfNull` consistently instead of the `?? throw` pattern
 - **`PersistProgress` now requires an active foreground session** — calling `PersistProgress` without a mounted foreground session now throws `InvalidOperationException` instead of silently writing a partially-empty session payload
+- **`PlanExecutionStrategyBase.BeforeSave` is now sealed** — completes the sealing of all 8 lifecycle hooks. Subclasses must use `OnBeforeSave` (new `protected virtual` hook) instead of overriding `BeforeSave` directly.
 
-### Changed — the passive entity strategy base class that provides 8 lifecycle hooks (Process, AfterSpawn, AfterLoad, AfterAdd, BeforeRemove, BeforeSave, BeforeQuit, BeforeDead) has been renamed to more accurately convey its behavioral domain of lifecycle control. All subclasses must update their base type.
-- **BREAKING: `SndStrategyPool`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
+### Changed
+
+- **BREAKING: `EntityStrategyBase` renamed to `LifecycleStrategyBase`** — concrete strategy types must now be `sealed`. Registration rejects non-sealed, non-abstract types at startup with `InvalidOperationException`. This enforces the pool's singleton-sharing model and prevents accidental subclassing.
 - **`LogMessageBuilder` format simplified** — `AddPrefix`/`AddSuffix` replaced by unified `AddContext`; output format changed from `[+ms] prefix=val | msg | suffix=val` to `[+ms] msg | key=val, key=val`
 - **Log tags standardized** — all components use `nameof(ClassName)` consistently instead of mixed string literals
 - **High-frequency log messages downgraded to `Debug`** — strategy pool create/release, entity lifecycle hooks (spawn/load/quit/dead), strategy manager add/remove, and per-strategy auto-registration messages no longer appear at `Info` level

@@ -108,6 +108,12 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     }
 
     /// <inheritdoc />
+    public sealed override void BeforeSave(ISndEntity entity, ISndContext ctx)
+    {
+        OnBeforeSave(entity, ctx);
+    }
+
+    /// <inheritdoc />
     public sealed override void Process(ISndEntity entity, double delta, ISndContext ctx)
     {
         OnProcess(entity, delta, ctx);
@@ -132,6 +138,9 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 
     /// <summary>Called before the sealed <see cref="BeforeDead" /> unwiring begins.</summary>
     protected virtual void OnBeforeDead(ISndEntity entity, ISndContext ctx) { }
+
+    /// <summary>Called from the sealed <see cref="BeforeSave" />.</summary>
+    protected virtual void OnBeforeSave(ISndEntity entity, ISndContext ctx) { }
 
     /// <summary>Called after the sealed <see cref="Process" /> is complete.</summary>
     protected virtual void OnProcess(ISndEntity entity, double delta, ISndContext ctx) { }
