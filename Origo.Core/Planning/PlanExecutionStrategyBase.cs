@@ -197,14 +197,14 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 
     private void OnIntentChanged(ISndEntity target, ISndEntity observer, TypedData oldValue, TypedData newValue)
     {
-        if (newValue.Data is not string intent || string.IsNullOrEmpty(intent))
+        if (!newValue.TryGetString(out var intent) || string.IsNullOrEmpty(intent))
             return;
         StartIntent(target, intent);
     }
 
     private void OnActionStatusChanged(ISndEntity target, ISndEntity observer, TypedData oldValue, TypedData newValue)
     {
-        if (newValue.Data is not string status)
+        if (!newValue.TryGetString(out var status))
             return;
         if (status != ActionStatusCompleted && status != ActionStatusFailed)
             return;

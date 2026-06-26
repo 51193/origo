@@ -327,7 +327,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             var progressDict = Runtime.SndWorld.ReadTypedDataMap(progressNode);
 
             if (!progressDict.TryGetValue(WellKnownKeys.SessionTopology, out var topologyData)
-                || topologyData.Data is not string rawTopology
+                || !topologyData.TryGetString(out var rawTopology)
                 || string.IsNullOrWhiteSpace(rawTopology))
                 throw new InvalidOperationException(
                     $"Cannot determine foreground level from '{WellKnownKeys.SessionTopology}' in progress for save '{saveId}'.");
