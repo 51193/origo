@@ -92,7 +92,17 @@ internal sealed class SndStrategyManager
         var entry = new StrategyEntry { Index = index, Strategy = strategy };
 
         InsertSorted(entry);
-        strategy.AfterAdd(entity, ctx);
+        try
+        {
+            strategy.AfterAdd(entity, ctx);
+        }
+        catch
+        {
+            _strategies.Remove(entry);
+            _pool.ReleaseStrategy(index);
+            throw;
+        }
+
         _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder()
             .AddContext("entityName", entity.Name)
             .AddContext("strategyIndex", index)

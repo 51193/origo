@@ -44,10 +44,12 @@ internal sealed class ObserverStrategyManager
             throw new ArgumentException("Observer strategy index cannot be null or whitespace.", nameof(observerIndex));
 
         var strategy = _pool.GetStrategy<ObserverStrategyBase>(observerIndex);
+        ObserverBindingEntry? entry = null;
+        var added = false;
         try
         {
             var keys = ObserverStrategyMetadata.GetDataKeys(strategy.GetType());
-            var entry = new ObserverBindingEntry
+            entry = new ObserverBindingEntry
             {
                 TargetName = target.Name,
                 ObserverIndex = observerIndex,
@@ -63,11 +65,12 @@ internal sealed class ObserverStrategyManager
                 var targetCapture = target;
                 Action<ISndEntity, TypedData, TypedData> wrappedCb = (t, o, n) =>
                     strategyCapture.OnDataChanged(entityCapture, _context, targetCapture, key, o, n);
-                entry.DataWrappers[key] = wrappedCb;
                 ((ISndEntityRawSubscription)target).SubscribeDataRaw(key, wrappedCb, null);
+                entry.DataWrappers[key] = wrappedCb;
             }
 
             _bindings.Add(entry);
+            added = true;
 
             strategy.OnMounted(entity, _context, target);
 
@@ -80,6 +83,14 @@ internal sealed class ObserverStrategyManager
         }
         catch
         {
+            if (entry is not null)
+            {
+                foreach (var (key, wrapper) in entry.DataWrappers)
+                    ((ISndEntityRawSubscription)target).UnsubscribeDataRaw(key, wrapper);
+                if (added)
+                    _bindings.Remove(entry);
+            }
+
             _pool.ReleaseStrategy(observerIndex);
             throw;
         }

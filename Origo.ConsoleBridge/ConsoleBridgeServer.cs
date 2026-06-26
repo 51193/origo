@@ -174,9 +174,10 @@ public sealed class ConsoleBridgeServer : IDisposable
             lock (_writerLock)
             {
                 _writer = writer;
+                foreach (var line in _pendingOutput)
+                    writer.WriteLine(line);
+                _pendingOutput.Clear();
             }
-
-            FlushPendingOutput(writer);
 
             while (!_cts.IsCancellationRequested)
             {
@@ -215,20 +216,5 @@ public sealed class ConsoleBridgeServer : IDisposable
                 _hasActiveClient = false;
             }
         }
-    }
-
-    private void FlushPendingOutput(StreamWriter writer)
-    {
-        List<string> pending;
-        lock (_writerLock)
-        {
-            if (_pendingOutput.Count == 0)
-                return;
-            pending = new List<string>(_pendingOutput);
-            _pendingOutput.Clear();
-        }
-
-        foreach (var line in pending)
-            writer.WriteLine(line);
     }
 }

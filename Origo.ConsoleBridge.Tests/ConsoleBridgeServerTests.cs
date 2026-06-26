@@ -665,6 +665,59 @@ public class ConsoleBridgeServerTests
         server.Dispose();
     }
 
+    // ── M-1 regression: connect-time flush vs concurrent publish ───────
+
+    [Fact]
+    public async Task PendingFlushDuringConcurrentPublish_DeliversIntactLines()
+    {
+        var (server, (_, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        // Backlog produced before any client connects is buffered and flushed
+        // when the connection is established.
+        const int backlog = 50;
+        const int burst = 200;
+        for (var i = 0; i < backlog; i++)
+            output.Publish($"pre_{i}");
+
+        // A bounded burst from another thread races the connect-time flush. The
+        // flush and the publish path must both hold the writer lock; otherwise
+        // lines from the two threads can interleave and corrupt the stream.
+        var publisher = Task.Run(() =>
+        {
+            for (var i = 0; i < burst; i++)
+                output.Publish($"live_{i}");
+        }, TestContext.Current.CancellationToken);
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+
+        var pre = new HashSet<string>();
+        var live = new HashSet<string>();
+        var watch = Stopwatch.StartNew();
+        while (watch.ElapsedMilliseconds < OutputTimeoutMs && pre.Count + live.Count < backlog + burst)
+        {
+            var line = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            if (line is null)
+                break;
+
+            // Every delivered line must be an intact, uncorrupted token.
+            Assert.Matches(@"^(pre|live)_\d+$", line);
+            if (line[0] == 'p')
+                pre.Add(line);
+            else
+                live.Add(line);
+        }
+
+        await publisher.WaitAsync(TimeSpan.FromMilliseconds(CommandTimeoutMs), TestContext.Current.CancellationToken);
+
+        Assert.Equal(backlog, pre.Count);
+        Assert.Equal(burst, live.Count);
+
+        server.Dispose();
+    }
+
     // ── Round-trip ─────────────────────────────────────────────────────
 
     [Fact]

@@ -128,6 +128,40 @@ public class EntityStrategyBaseTests
         Assert.Null(ex);
     }
 
+    [Fact]
+    public void AddStrategy_WhenAfterAddThrows_RollsBackInsertionAndPoolReference()
+    {
+        ThrowOnAddStrategy.ProcessCalls = 0;
+        var host = CreateHost(w => w.RegisterStrategy(() => new ThrowOnAddStrategy()));
+        var entity = host.CreateEntity(CreateMeta("E"));
+        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+
+        Assert.Throws<InvalidOperationException>(() => entity.AddStrategy(ThrowOnAddIdx));
+
+        // The rolled-back strategy must not run during Process; it would if it
+        // had been left half-attached to the entity's strategy list.
+        host.ProcessAll(0.016);
+        Assert.Equal(0, ThrowOnAddStrategy.ProcessCalls);
+    }
+
+    private const string ThrowOnAddIdx = "test.throw_on_add";
+
+    [StrategyIndex(ThrowOnAddIdx)]
+    private sealed class ThrowOnAddStrategy : LifecycleStrategyBase
+    {
+        public static int ProcessCalls { get; set; }
+
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx)
+        {
+            throw new InvalidOperationException("AfterAdd boom");
+        }
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+        {
+            ProcessCalls++;
+        }
+    }
+
     private sealed class TestEntityStrategy : LifecycleStrategyBase
     {
     }

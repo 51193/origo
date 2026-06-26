@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - **BREAKING: OrigoConsole no longer swallows command handler exceptions** — `ProcessPending()` now lets exceptions from command handlers propagate to the caller instead of logging at Warning level and publishing an error message. Console command handlers that throw will now crash the game frame, surfacing bugs immediately during development.
-- **ConsoleBridgeServer: all best-effort exception swallowing removed** — Dispose, AcceptLoop, HandleConnection, and FlushPendingOutput no longer silently catch and discard `IOException`/`ObjectDisposedException`/`SocketException`. Unrecoverable I/O errors now propagate.
+- **ConsoleBridgeServer: all best-effort exception swallowing removed** — Dispose, AcceptLoop, and HandleConnection no longer silently catch and discard `IOException`/`ObjectDisposedException`/`SocketException`. Unrecoverable I/O errors now propagate.
 - **ProgressRun.Dispose: exception swallowing removed** — `SessionManager.Clear()` and `DeleteCurrentDirectory()` errors during Dispose are no longer caught and logged at Warning; they now propagate to the caller.
 - **SessionRun.ResetAfterLoadFailure: multi-step exception accumulation removed** — each cleanup step (state machine clear, entity release, scene remove, blackboard clear) now propagates immediately instead of accumulating `firstError` and wrapping in `AggregateException`.
 - **SaveStorageFacade: SHA read fallback removed** — failing to read the existing `.payload.sha` file no longer falls back to `string.Empty` and unconditional overwrite; the error now propagates.
@@ -35,6 +35,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **ConsoleBridge no longer corrupts output under concurrent writes** — when a client connects, the buffered backlog is now flushed while holding the writer lock, so it can no longer interleave with the live output broadcast on another thread. Previously the flush wrote outside the lock and could produce garbled lines over the TCP console.
+- **`ISndEntity.AddStrategy` is now atomic on failure** — if a strategy's `AfterAdd` hook throws, the strategy is removed from the entity and returned to the pool before the exception propagates. Previously a throwing `AfterAdd` left the strategy half-attached (still driven by `Process` and lifecycle hooks) and leaked its pool reference.
+- **`MountObserverStrategy` cleans up fully on failure** — if subscribing an observed key or the `OnMounted` hook throws, all subscriptions made during the mount are removed and the half-added binding is discarded before the exception propagates. Previously a failed mount left dangling data subscriptions and a binding whose later teardown threw a double-release error.
 - **`ConsoleBridgeServer.Start` race condition** — replaced the `_acceptThread is not null` idempotency guard with `Interlocked.CompareExchange` to prevent a theoretical race between concurrent `Start()` calls
 - **`Astar.FindPath` missing start bounds check** — the start position is now validated against `gridSize` before pathfinding begins, matching the existing endpoint validation
 - **`SndEntity.TeardownObserverBindingsForDeath` cross-entity observer leak** — the old implementation only handled self-targeting observer bindings, leaving cross-entity bindings unresolved when `DeadSingle()` or `QuitSingle()` was called. Fixed by introducing `FullCleanup` on `ObserverBindingEntry` and `TeardownAllBindings` on `ObserverStrategyManager`, which properly unsubscribe data, invoke `OnUnmounted`, and release strategies for all bindings regardless of target.

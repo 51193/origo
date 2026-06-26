@@ -19,6 +19,7 @@ public class ObserverStrategyTests
     private const string NoDataKeyIdx = "observer.test.no_data_key";
     private const string NamedTargetIdx = "observer.test.named_target";
     private const string MemoryObservedIdx = "observer.test.memory";
+    private const string ThrowOnMountIdx = "observer.test.throw_on_mount";
 
     // ── Registration ───────────────────────────────────────────────────
 
@@ -119,6 +120,29 @@ public class ObserverStrategyTests
         entity.UnmountObserverStrategy(entity.Name, MemoryObservedIdx);
 
         Assert.Single(MemoryObserver.UnmountedCalls);
+    }
+
+    // ── Mount failure cleanup ──────────────────────────────────────────
+
+    [Fact]
+    public void Mount_WhenOnMountedThrows_RemovesBindingAndSubscription()
+    {
+        var (entity, _) = Setup();
+        entity.SpawnSingle(CreateMeta());
+        ThrowOnMountObserver.DataChangedCalls.Clear();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            entity.MountObserverStrategy(entity.Name, ThrowOnMountIdx));
+
+        // Subscription was cleaned up: changing the observed key must not reach
+        // the observer whose mount failed.
+        entity.SetData("character.hp", 42);
+        Assert.Empty(ThrowOnMountObserver.DataChangedCalls);
+
+        // Binding was removed: death teardown must not double-release the
+        // strategy that the failed mount already returned to the pool.
+        var ex = Record.Exception(() => entity.DeadSingle());
+        Assert.Null(ex);
     }
 
     // ── Data change notification ───────────────────────────────────────
@@ -733,6 +757,7 @@ public class ObserverStrategyTests
         runtime.SndWorld.RegisterStrategy(() => new NoDataKeyObserver());
         runtime.SndWorld.RegisterStrategy(() => new NamedTargetObserver());
         runtime.SndWorld.RegisterStrategy(() => new MemoryObserver());
+        runtime.SndWorld.RegisterStrategy(() => new ThrowOnMountObserver());
         var fs = new TestFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -841,5 +866,23 @@ public class ObserverStrategyTests
 
     private sealed class UnannotatedObserver : ObserverStrategyBase
     {
+    }
+
+    [StrategyIndex(ThrowOnMountIdx)]
+    [ObserveData("character.hp")]
+    private sealed class ThrowOnMountObserver : ObserverStrategyBase
+    {
+        public static List<string> DataChangedCalls { get; set; } = new();
+
+        public override void OnMounted(ISndEntity entity, ISndContext ctx, ISndEntity target)
+        {
+            throw new InvalidOperationException("OnMounted boom");
+        }
+
+        public override void OnDataChanged(ISndEntity entity, ISndContext ctx, ISndEntity target,
+            string dataKey, TypedData oldValue, TypedData newValue)
+        {
+            DataChangedCalls.Add(dataKey);
+        }
     }
 }
