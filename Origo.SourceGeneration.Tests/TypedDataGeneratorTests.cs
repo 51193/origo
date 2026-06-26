@@ -230,4 +230,46 @@ public class TypedDataGeneratorTests
         Assert.Contains("TypedData.RegisterKind(128, typeof(StubVec3));", text);
         Assert.Contains("TypedData.RegisterKind(129, typeof(StubRef));", text);
     }
+
+    [Fact]
+    public void KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero()
+    {
+        // startKind 255 + 3 primitives: byte->255 (valid), sbyte->256, short->257.
+        // Both 256 and 257 exceed the byte range. 257 in particular would wrap to
+        // byte 1 and silently collide with another type — it must be reported.
+        var attribute =
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(255, typeof(byte), typeof(sbyte), typeof(short))]";
+        var output = RunHome(attribute);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG003"));
+        Assert.All(
+            output.GeneratorDiagnostics.Where(d => d.Id == "ORIGOSG003"),
+            d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+
+        var text = output.AllGeneratedText;
+        // The in-range type is still generated; both out-of-range types are dropped.
+        Assert.Contains("public const byte Byte = 255;", text);
+        Assert.DoesNotContain("AsSByte", text);
+        Assert.DoesNotContain("AsInt16", text);
+    }
+
+    [Fact]
+    public void OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes()
+    {
+        // Two SndInlineTypes groups assign kind 1 to different types.
+        var attribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(1, typeof(int))]
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(1, typeof(long))]
+            """;
+        var output = RunHome(attribute);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG004"));
+        Assert.All(
+            output.GeneratorDiagnostics.Where(d => d.Id == "ORIGOSG004"),
+            d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+
+        var text = output.AllGeneratedText;
+        Assert.DoesNotContain("AsInt32", text);
+        Assert.DoesNotContain("AsInt64", text);
+    }
 }

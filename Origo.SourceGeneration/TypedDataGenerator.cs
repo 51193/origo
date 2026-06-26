@@ -36,11 +36,22 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
     private static readonly DiagnosticDescriptor KindOverflow = new(
         id: "ORIGOSG003",
-        title: "TypedData kind byte overflow",
+        title: "TypedData kind byte out of range",
         messageFormat:
-        "'{0}' was assigned kind 0 due to byte overflow. " +
-        "The total number of registered types in this SndInlineTypes group, " +
-        "plus the startKind, must not exceed 255.",
+        "'{0}' resolves to kind {1}, which is outside the valid byte range [1, 255]. " +
+        "Each registered type's kind is startKind plus its position in the SndInlineTypes group; "
+        + "keep startKind plus the type count within [1, 255].",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor KindCollision = new(
+        id: "ORIGOSG004",
+        title: "TypedData kind collision",
+        messageFormat:
+        "Kind {0} is assigned to multiple types ({1}). "
+        + "Each registered inline TypedData type must map to a unique kind byte; "
+        + "adjust the SndInlineTypes startKind offsets so the kind ranges do not overlap.",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -97,7 +108,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
     private static List<InlineTypeInfo> ExtractTypes(AttributeData attr, int startKind)
     {
         var result = new List<InlineTypeInfo>();
-        byte kindOffset = 0;
+        var kindOffset = 0;
 
         foreach (var ctorArg in attr.ConstructorArguments)
         {
@@ -106,21 +117,21 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
                 foreach (var element in ctorArg.Values)
                 {
                     if (element.Value is INamedTypeSymbol typeSymbol)
-                        result.Add(CreateTypeInfo(typeSymbol, (byte)(startKind + kindOffset++)));
+                        result.Add(CreateTypeInfo(typeSymbol, startKind + kindOffset++));
                     else if (element.Value is ITypeSymbol ts)
-                        result.Add(CreateTypeInfo(ts, (byte)(startKind + kindOffset++)));
+                        result.Add(CreateTypeInfo(ts, startKind + kindOffset++));
                 }
             }
             else if (ctorArg.Value is INamedTypeSymbol singleType)
             {
-                result.Add(CreateTypeInfo(singleType, (byte)(startKind + kindOffset++)));
+                result.Add(CreateTypeInfo(singleType, startKind + kindOffset++));
             }
         }
 
         return result;
     }
 
-    private static InlineTypeInfo CreateTypeInfo(ITypeSymbol typeSymbol, byte kindValue)
+    private static InlineTypeInfo CreateTypeInfo(ITypeSymbol typeSymbol, int rawKind)
     {
         var kindName = GenerateKindName(typeSymbol);
         var clrName = typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat);
@@ -128,7 +139,8 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         return new InlineTypeInfo
         {
             KindIndex = kindName,
-            KindValue = kindValue,
+            RawKind = rawKind,
+            KindValue = rawKind is > 0 and <= 255 ? (byte)rawKind : (byte)0,
             ClrTypeName = clrName,
             IsReferenceType = typeSymbol.IsReferenceType,
             SpecialType = typeSymbol.SpecialType,
@@ -193,6 +205,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         if (allTypes.Count == 0) return;
 
         var validTypes = ValidateAndFilter(context, input.IsHome, allTypes);
+        validTypes = RejectKindCollisions(context, validTypes);
         if (validTypes.Count == 0) return;
 
         if (input.IsHome)
@@ -212,10 +225,10 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
         foreach (var t in allTypes)
         {
-            if (t.KindValue == 0)
+            if (t.RawKind is <= 0 or > 255)
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(KindOverflow, Location.None, t.ClrTypeName));
+                    Diagnostic.Create(KindOverflow, Location.None, t.ClrTypeName, t.RawKind));
                 continue;
             }
 
@@ -244,6 +257,51 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         }
 
         return valid;
+    }
+
+    // Rejects types whose kind byte collides with another distinct type. A kind
+    // must map to exactly one type; overlapping SndInlineTypes startKind ranges
+    // are reported as ORIGOSG004 and every type on a colliding kind is dropped so
+    // the emitted source stays compilable (the reported error fails the build).
+    private static List<InlineTypeInfo> RejectKindCollisions(
+        SourceProductionContext context, List<InlineTypeInfo> types)
+    {
+        var firstTypeByKind = new Dictionary<byte, string>();
+        var collidingKinds = new HashSet<byte>();
+
+        foreach (var t in types)
+        {
+            if (firstTypeByKind.TryGetValue(t.KindValue, out var existing))
+            {
+                if (existing != t.ClrTypeName)
+                    collidingKinds.Add(t.KindValue);
+            }
+            else
+            {
+                firstTypeByKind[t.KindValue] = t.ClrTypeName;
+            }
+        }
+
+        foreach (var kind in collidingKinds)
+        {
+            var names = types
+                .Where(t => t.KindValue == kind)
+                .Select(t => t.ClrTypeName)
+                .Distinct();
+            context.ReportDiagnostic(Diagnostic.Create(
+                KindCollision, Location.None, kind, string.Join(", ", names)));
+        }
+
+        var result = new List<InlineTypeInfo>();
+        var emitted = new HashSet<byte>();
+        foreach (var t in types)
+        {
+            if (collidingKinds.Contains(t.KindValue)) continue;
+            if (!emitted.Add(t.KindValue)) continue;
+            result.Add(t);
+        }
+
+        return result;
     }
 
     // ─── Home assembly ─────────────────────────────────────────────
@@ -894,6 +952,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
     private sealed class InlineTypeInfo
     {
         public string? KindIndex { get; set; }
+        public int RawKind { get; set; }
         public byte KindValue { get; set; }
         public string ClrTypeName { get; set; } = string.Empty;
         public bool IsReferenceType { get; set; }
