@@ -1492,4 +1492,35 @@ public class DataSourceTests
         Assert.Equal(typeof(IReadOnlyDictionary<string, string>),
             tm.GetTypeByName(BclTypeNames.IReadOnlyDictionaryStringString));
     }
+
+    [Fact]
+    public void Dispose_DeeplyNestedTree_DoesNotStackOverflow()
+    {
+        const int depth = 2000;
+        DataSourceNode leaf = DataSourceNode.CreateNumber(1);
+        for (var i = 0; i < depth; i++)
+        {
+            var parent = DataSourceNode.CreateObject();
+            parent.Add("child", leaf);
+            leaf = parent;
+        }
+
+        leaf.Dispose();
+    }
+
+    [Fact]
+    public void ComputeSha256Hash_DeeplyNestedTree_DoesNotStackOverflow()
+    {
+        const int depth = 2000;
+        DataSourceNode leaf = DataSourceNode.CreateNumber(1);
+        for (var i = 0; i < depth; i++)
+        {
+            var parent = DataSourceNode.CreateObject();
+            parent.Add("child", leaf);
+            leaf = parent;
+        }
+
+        var hash = leaf.ComputeSha256Hash();
+        Assert.NotEmpty(hash);
+    }
 }

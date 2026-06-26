@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - **BREAKING: OrigoConsole no longer swallows command handler exceptions** — `ProcessPending()` now lets exceptions from command handlers propagate to the caller instead of logging at Warning level and publishing an error message. Console command handlers that throw will now crash the game frame, surfacing bugs immediately during development.
+- **ConsoleOutputChannel.Publish no longer drops subsequent listeners when one throws** — exceptions from individual listeners are caught so that all subscribers receive every published line; the first exception is re-thrown after the publish loop completes, preserving fail-fast while ensuring output is never silently lost to a single misbehaving subscriber.
 - **ConsoleBridgeServer: all best-effort exception swallowing removed** — Dispose, AcceptLoop, and HandleConnection no longer silently catch and discard `IOException`/`ObjectDisposedException`/`SocketException`. Unrecoverable I/O errors now propagate.
 - **ProgressRun.Dispose: exception swallowing removed** — `SessionManager.Clear()` and `DeleteCurrentDirectory()` errors during Dispose are no longer caught and logged at Warning; they now propagate to the caller.
 - **SessionRun.ResetAfterLoadFailure: multi-step exception accumulation removed** — each cleanup step (state machine clear, entity release, scene remove, blackboard clear) now propagates immediately instead of accumulating `firstError` and wrapping in `AggregateException`.
@@ -35,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **`DataSourceNode.Dispose` and `BuildCanonicalString` now use iterative traversal** — prevents `StackOverflowException` on extremely deep or degenerate tree structures that can arise from runtime-generated data.
 - **`PersistentRandom.NextInt32` validates its range** — calling it with `maxExclusive <= minInclusive` now throws `ArgumentOutOfRangeException` instead of throwing `DivideByZeroException` (when equal) or returning an out-of-range value (when inverted).
 - **Archetype integer values no longer lose precision** — `.map` archetype values that exceed `int` range are now stored as `long` instead of being silently coerced to `float`. Integer parsing is also culture-invariant.
 - **Snapshotting an existing save no longer risks losing it on failure** — overwriting a save slot now moves the old directory aside, renames the freshly built copy into place, and only then drops the backup, so the previous data is never deleted before the new data is durably in place.

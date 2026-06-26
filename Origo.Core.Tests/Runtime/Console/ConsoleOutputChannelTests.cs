@@ -73,4 +73,31 @@ public class ConsoleOutputChannelTests
         var channel = new ConsoleOutputChannel();
         Assert.Throws<ArgumentNullException>(() => channel.Subscribe(null!));
     }
+
+    [Fact]
+    public void ConsoleOutputChannel_Publish_FirstListenerThrows_SecondStillReceives()
+    {
+        var channel = new ConsoleOutputChannel();
+        var received = new List<string>();
+        channel.Subscribe(_ => throw new InvalidOperationException("fail1"));
+        channel.Subscribe(msg => received.Add(msg));
+
+        Assert.Throws<InvalidOperationException>(() => channel.Publish("msg"));
+        Assert.Single(received);
+        Assert.Equal("msg", received[0]);
+    }
+
+    [Fact]
+    public void ConsoleOutputChannel_Publish_FirstListenerThrows_ExceptionPropagates()
+    {
+        var channel = new ConsoleOutputChannel();
+        var received = new List<string>();
+        channel.Subscribe(_ => throw new InvalidOperationException("e1"));
+        channel.Subscribe(_ => throw new InvalidOperationException("e2"));
+        channel.Subscribe(msg => received.Add(msg));
+
+        var ex = Assert.Throws<InvalidOperationException>(() => channel.Publish("msg"));
+        Assert.Equal("e1", ex.Message);
+        Assert.Single(received);
+    }
 }

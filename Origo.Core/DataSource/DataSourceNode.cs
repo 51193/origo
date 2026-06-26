@@ -120,20 +120,28 @@ public sealed class DataSourceNode : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _disposed = true;
 
-        foreach (var child in _arrayChildren)
-            child.Dispose();
-        _arrayChildren.Clear();
+        var stack = new Stack<DataSourceNode>();
+        stack.Push(this);
+        while (stack.Count > 0)
+        {
+            var node = stack.Pop();
+            if (node._disposed) continue;
+            node._disposed = true;
 
-        foreach (var child in _objectChildren.Values)
-            child.Dispose();
-        _objectChildren.Clear();
-        _orderedKeys.Clear();
+            foreach (var child in node._arrayChildren)
+                stack.Push(child);
+            node._arrayChildren.Clear();
 
-        _rawText = null;
-        _expander = null;
-        _value = null;
+            foreach (var child in node._objectChildren.Values)
+                stack.Push(child);
+            node._objectChildren.Clear();
+            node._orderedKeys.Clear();
+
+            node._rawText = null;
+            node._expander = null;
+            node._value = null;
+        }
     }
 
     public bool TryGetValue(string key, out DataSourceNode? node)
@@ -329,19 +337,50 @@ public sealed class DataSourceNode : IDisposable
 
     private string BuildCanonicalString()
     {
-        return _kind switch
+        var resultMap = new Dictionary<DataSourceNode, string>();
+        var order = new List<DataSourceNode>();
+        var stack = new Stack<DataSourceNode>();
+        stack.Push(this);
+
+        while (stack.Count > 0)
         {
-            DataSourceNodeKind.Map => "O{" + string.Join(",",
-                _orderedKeys.OrderBy(k => k, StringComparer.Ordinal)
-                    .Select(k => k + "=" + _objectChildren[k].BuildCanonicalString())) + "}",
-            DataSourceNodeKind.Array => "A[" + string.Join(",",
-                _arrayChildren.Select(c => c.BuildCanonicalString())) + "]",
-            DataSourceNodeKind.Text => "S\"" + EscapeCanonical(_value) + "\"",
-            DataSourceNodeKind.Number => "N" + _value,
-            DataSourceNodeKind.Bool => "B" + _value,
-            DataSourceNodeKind.Null => "X",
-            _ => "X"
-        };
+            var node = stack.Pop();
+            order.Add(node);
+
+            if (node._kind == DataSourceNodeKind.Map)
+            {
+                for (var i = node._orderedKeys.Count - 1; i >= 0; i--)
+                {
+                    var key = node._orderedKeys[i];
+                    stack.Push(node._objectChildren[key]);
+                }
+            }
+            else if (node._kind == DataSourceNodeKind.Array)
+            {
+                for (var i = node._arrayChildren.Count - 1; i >= 0; i--)
+                    stack.Push(node._arrayChildren[i]);
+            }
+        }
+
+        for (var i = order.Count - 1; i >= 0; i--)
+        {
+            var node = order[i];
+            resultMap[node] = node._kind switch
+            {
+                DataSourceNodeKind.Map => "O{" + string.Join(",",
+                    node._orderedKeys.OrderBy(k => k, StringComparer.Ordinal)
+                        .Select(k => k + "=" + resultMap[node._objectChildren[k]])) + "}",
+                DataSourceNodeKind.Array => "A[" + string.Join(",",
+                    node._arrayChildren.Select(c => resultMap[c])) + "]",
+                DataSourceNodeKind.Text => "S\"" + EscapeCanonical(node._value) + "\"",
+                DataSourceNodeKind.Number => "N" + node._value,
+                DataSourceNodeKind.Bool => "B" + node._value,
+                DataSourceNodeKind.Null => "X",
+                _ => "X"
+            };
+        }
+
+        return resultMap[this];
     }
 
     private static string EscapeCanonical(string? value)

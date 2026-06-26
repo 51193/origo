@@ -43,7 +43,20 @@ public sealed class ConsoleOutputChannel : IConsoleOutputChannel
         }
 
         var payload = line ?? string.Empty;
+        Exception? firstError = null;
         foreach (var listener in targets)
-            listener(payload);
+        {
+            try
+            {
+                listener(payload);
+            }
+            catch (Exception ex)
+            {
+                firstError ??= ex;
+            }
+        }
+
+        if (firstError is not null)
+            throw firstError;
     }
 }
