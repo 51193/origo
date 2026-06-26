@@ -72,7 +72,7 @@ public class ConsoleTests
     }
 
     [Fact]
-    public void OrigoConsole_SpawnTemplate_MissingTemplate_WritesError()
+    public void OrigoConsole_SpawnTemplate_MissingTemplate_Throws()
     {
         var logger = new TestLogger();
         var sceneHost = new TestSndSceneHost();
@@ -89,24 +89,17 @@ public class ConsoleTests
         runtime.SndWorld.LoadTemplates("maps/empty.map", logger);
 
         var input = runtime.ConsoleInput!;
-        var output = (ConsoleOutputChannel)runtime.ConsoleOutputChannel!;
-        var messages = new List<string>();
-        output.Subscribe(messages.Add);
 
         input.Enqueue("spawn X missing_tpl");
-        runtime.Console!.ProcessPending();
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            runtime.Console!.ProcessPending());
+        Assert.Contains("empty", ex.Message, StringComparison.OrdinalIgnoreCase);
 
         Assert.Empty(sceneHost.BuildMetaList());
-        Assert.Contains(messages,
-            l => l.StartsWith("Command failed:", StringComparison.Ordinal)
-                 && (l.Contains("empty", StringComparison.OrdinalIgnoreCase)
-                     || l.Contains("not found", StringComparison.OrdinalIgnoreCase)
-                     || l.Contains("missing_tpl", StringComparison.OrdinalIgnoreCase)
-                     || l.Contains("No templates loaded", StringComparison.OrdinalIgnoreCase)));
     }
 
     [Fact]
-    public void OrigoConsole_SpawnTemplate_DuplicateName_WritesErrorAndSkipsSecondSpawn()
+    public void OrigoConsole_SpawnTemplate_DuplicateName_ThrowsAndLeavesFirstSpawnIntact()
     {
         var fs = new TestFileSystem();
         fs.SeedFile("maps/templates.map", "enemy_template: templates/enemy.json");
@@ -131,15 +124,13 @@ public class ConsoleTests
 
         runtime.SndWorld.LoadTemplates("maps/templates.map", logger);
         var input = runtime.ConsoleInput!;
-        var output = (ConsoleOutputChannel)runtime.ConsoleOutputChannel!;
-        var messages = new List<string>();
-        output.Subscribe(messages.Add);
 
         input.Enqueue("spawn Dup enemy_template");
         input.Enqueue("spawn Dup enemy_template");
-        runtime.Console!.ProcessPending();
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            runtime.Console!.ProcessPending());
+        Assert.Contains("already exists", ex.Message, StringComparison.OrdinalIgnoreCase);
 
         Assert.Single(sceneHost.BuildMetaList());
-        Assert.Contains(messages, l => l.Contains("already exists", StringComparison.OrdinalIgnoreCase));
     }
 }

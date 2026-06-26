@@ -77,18 +77,7 @@ internal static class SaveStorageFacade
         var snapshotShaAbs = handle.GetAbsolutePath(snapshotShaRel);
         if (handle.MetaAccess.FileExists(snapshotShaAbs))
         {
-            string existingHash;
-            try
-            {
-                existingHash = handle.IoGateway.ReadTree(snapshotShaAbs).AsString().Trim();
-            }
-            catch (Exception ex)
-            {
-                logger.Log(LogLevel.Warning, nameof(SaveStorageFacade),
-                    $"Failed to read existing payload SHA for save '{newSaveId}'; will overwrite. {ex.Message}");
-                existingHash = string.Empty;
-            }
-
+            var existingHash = handle.IoGateway.ReadTree(snapshotShaAbs).AsString().Trim();
             var newHash = SavePayloadWriter.ComputePayloadHash(payload);
             if (existingHash.Length > 0
                 && string.Equals(existingHash, newHash, StringComparison.Ordinal))

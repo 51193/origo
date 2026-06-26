@@ -60,44 +60,13 @@ public sealed class ConsoleBridgeServer : IDisposable
 
         lock (_writerLock)
         {
-            try
-            {
-                _writer?.Dispose();
-            }
-            catch (Exception)
-            {
-                /* best-effort cleanup */
-            }
-
+            _writer?.Dispose();
             _writer = null;
         }
 
-        try
-        {
-            _serverSocket?.Close();
-        }
-        catch (Exception)
-        {
-            /* best-effort cleanup */
-        }
-
-        try
-        {
-            _listener?.Stop();
-        }
-        catch (Exception)
-        {
-            /* best-effort cleanup */
-        }
-
-        try
-        {
-            _output.Unsubscribe(_outputSubId);
-        }
-        catch (Exception)
-        {
-            /* best-effort cleanup */
-        }
+        _serverSocket?.Close();
+        _listener?.Stop();
+        _output.Unsubscribe(_outputSubId);
 
         _acceptThread?.Join(DisposeJoinTimeoutMs);
         _handleThread?.Join(DisposeJoinTimeoutMs);
@@ -133,18 +102,7 @@ public sealed class ConsoleBridgeServer : IDisposable
         {
             if (_writer is not null)
             {
-                try
-                {
-                    _writer.WriteLine(line);
-                }
-                catch (IOException)
-                {
-                    /* client disconnected */
-                }
-                catch (ObjectDisposedException)
-                {
-                    /* stream disposed */
-                }
+                _writer.WriteLine(line);
             }
             else
             {
@@ -173,14 +131,6 @@ public sealed class ConsoleBridgeServer : IDisposable
                 {
                     break;
                 }
-                catch (SocketException)
-                {
-                    break;
-                }
-                catch (ObjectDisposedException)
-                {
-                    break;
-                }
 
                 if (client is null)
                     continue;
@@ -206,14 +156,7 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
         finally
         {
-            try
-            {
-                _listener?.Stop();
-            }
-            catch (Exception)
-            {
-                /* best-effort cleanup */
-            }
+            _listener?.Stop();
         }
     }
 
@@ -264,14 +207,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                 _writer = null;
             }
 
-            try
-            {
-                client.Close();
-            }
-            catch (Exception)
-            {
-                /* best-effort cleanup */
-            }
+            client.Close();
 
             lock (_acceptLock)
             {
@@ -292,13 +228,6 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
 
         foreach (var line in pending)
-            try
-            {
-                writer.WriteLine(line);
-            }
-            catch (IOException)
-            {
-                break;
-            }
+            writer.WriteLine(line);
     }
 }

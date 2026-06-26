@@ -86,25 +86,8 @@ public sealed partial class ProgressRun : IDisposable
         _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
             $"Disposing ProgressRun (saveId: '{SaveId}').");
 
-        try
-        {
-            _sessionManager.Clear();
-        }
-        catch (Exception ex)
-        {
-            _progressRuntime.Logger.Log(LogLevel.Warning, nameof(ProgressRun),
-                $"Session clear failed during Dispose (saveId: '{SaveId}'): {ex.Message}");
-        }
-
-        try
-        {
-            _progressRuntime.StorageService.DeleteCurrentDirectory();
-        }
-        catch (Exception ex)
-        {
-            _progressRuntime.Logger.Log(LogLevel.Warning, nameof(ProgressRun),
-                $"Delete current directory failed during Dispose (saveId: '{SaveId}'): {ex.Message}");
-        }
+        _sessionManager.Clear();
+        _progressRuntime.StorageService.DeleteCurrentDirectory();
 
         ProgressScope.StateMachines.PopAllOnQuit();
         ProgressScope.StateMachines.Clear();

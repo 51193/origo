@@ -73,15 +73,15 @@ public class OrigoConsoleLoggingTests
     }
 
     [Fact]
-    public void ProcessPending_HandlerThrowsException_LogsWarning()
+    public void ProcessPending_HandlerThrowsException_ThrowsUnhandledToCaller()
     {
-        var (runtime, logger, input, _) = CreateTestHarness();
+        var (runtime, _, input, _) = CreateTestHarness();
         runtime.Console!.RegisterHandler(new ThrowingHandler());
         input.Enqueue("throw");
-        runtime.Console!.ProcessPending();
 
-        Assert.NotEmpty(logger.Warnings);
-        Assert.Contains(logger.Warnings, m => m.Contains("throw"));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            runtime.Console!.ProcessPending());
+        Assert.Contains("Test exception from handler", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -180,15 +180,13 @@ public class OrigoConsoleLoggingTests
     }
 
     [Fact]
-    public void ProcessPending_WarningMessage_HasCorrectTag()
+    public void ProcessPending_NormalOperation_ProducesNoWarnings()
     {
         var (runtime, logger, input, _) = CreateTestHarness();
-        runtime.Console!.RegisterHandler(new ThrowingHandler());
-        input.Enqueue("throw");
+        input.Enqueue("help");
         runtime.Console!.ProcessPending();
 
-        Assert.Single(logger.Warnings);
-        Assert.StartsWith("OrigoConsole: ", logger.Warnings[0]);
+        Assert.Empty(logger.Warnings);
     }
 
     [Fact]

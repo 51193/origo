@@ -111,32 +111,21 @@ public sealed class OrigoConsole
             _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
                 $"Executing command: \"{invocation.Command}\" (positional: [{posArgs}]; named: {{{namedArgs}}})");
 
-            try
+            if (_router.TryExecute(invocation, _output, out var execError))
             {
-                if (_router.TryExecute(invocation, _output, out var execError))
-                {
-                    _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
-                        new LogMessageBuilder()
-                            .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
-                            .Build($"Command \"{invocation.Command}\" executed successfully."));
-                }
-                else
-                {
-                    _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
-                        new LogMessageBuilder()
-                            .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
-                            .Build($"Command \"{invocation.Command}\" failed: {execError}"));
-                    if (!string.IsNullOrEmpty(execError))
-                        _output.Publish(execError);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Log(LogLevel.Warning, nameof(OrigoConsole),
+                _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
                     new LogMessageBuilder()
                         .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
-                        .Build($"Command \"{invocation.Command}\" threw exception: {ex.Message}"));
-                _output.Publish($"Command failed: {ex.Message}");
+                        .Build($"Command \"{invocation.Command}\" executed successfully."));
+            }
+            else
+            {
+                _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
+                    new LogMessageBuilder()
+                        .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
+                        .Build($"Command \"{invocation.Command}\" failed: {execError}"));
+                if (!string.IsNullOrEmpty(execError))
+                    _output.Publish(execError);
             }
         }
     }
