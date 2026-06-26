@@ -89,8 +89,12 @@ public class TypedDataRealWorldBenchmarkTests
             }
         }
 
-        _perf.Compare(label, "Generated Dict", ReadIterations, genBest, 0,
-            "Boxed Dict", ReadIterations, boxedBest, 0);
+        // Allocation is measured in a separate NoInlining helper so the timed
+        // loops above keep the exact codegen of the uninstrumented benchmark.
+        var (genAlloc, boxedAlloc) = MeasureDictReadAlloc(genDict, boxedDict, keys, genCheck, typeKey);
+
+        _perf.Compare(label, "Generated Dict", ReadIterations, genBest, genAlloc,
+            "Boxed Dict", ReadIterations, boxedBest, boxedAlloc);
         AssertInCap(label, genBest);
     }
 
@@ -142,8 +146,10 @@ public class TypedDataRealWorldBenchmarkTests
             }
         }
 
-        _perf.Compare(label, "Generated Create+Insert", WriteIterations, genBest, 0,
-            "Boxed Insert", WriteIterations, boxedBest, 0);
+        var (genAlloc, boxedAlloc) = MeasureDictWriteAlloc(keys, samples, makeGen);
+
+        _perf.Compare(label, "Generated Create+Insert", WriteIterations, genBest, genAlloc,
+            "Boxed Insert", WriteIterations, boxedBest, boxedAlloc);
         AssertInCap(label, genBest);
     }
 
@@ -200,9 +206,11 @@ public class TypedDataRealWorldBenchmarkTests
             }
         }
 
+        var (genAlloc, boxedAlloc) = MeasureChainAlloc(genDict, boxedDict, keys[0]);
+
         _perf.Compare("Numeric coercion chain: float→int→long→double (int payload)",
-            "Generated chain", ReadIterations, genBest, 0,
-            "Boxed is T chain", ReadIterations, boxedBest, 0);
+            "Generated chain", ReadIterations, genBest, genAlloc,
+            "Boxed is T chain", ReadIterations, boxedBest, boxedAlloc);
         AssertInCap("Numeric chain", genBest);
     }
 
@@ -249,9 +257,11 @@ public class TypedDataRealWorldBenchmarkTests
             }
         }
 
+        var (genAlloc, boxedAlloc) = MeasureObserverAlloc(tdString, tdDefault, boxedString, boxedNull);
+
         _perf.Compare("Observer notify: pass (old,new) TypedData + check .Data is string",
-            "Generated (TypedData, TypedData)", ReadIterations, genBest, 0,
-            "Boxed (object?, object?)", ReadIterations, boxedBest, 0);
+            "Generated (TypedData, TypedData)", ReadIterations, genBest, genAlloc,
+            "Boxed (object?, object?)", ReadIterations, boxedBest, boxedAlloc);
         AssertInCap("Observer notify", genBest);
     }
 
@@ -300,11 +310,141 @@ public class TypedDataRealWorldBenchmarkTests
             }
         }
 
+        var (genAlloc, boxedAlloc) = MeasureHeteroAlloc(genDict, boxedDict);
+
         var total = IterateIterations * DictSize;
         _perf.Compare("Heterogeneous dict iterate: .Data (TypedData) vs plain object",
-            "Generated .Data", total, genBest, 0,
-            "Boxed dict iterate", total, boxedBest, 0);
+            "Generated .Data", total, genBest, genAlloc,
+            "Boxed dict iterate", total, boxedBest, boxedAlloc);
         AssertInCap("Heterogeneous dict iterate", genBest);
+    }
+
+    // ─── Allocation measurement (kept out-of-line) ─────────────────
+    // Each measurement runs one extra untimed pass per side and returns the
+    // GC.GetAllocatedBytesForCurrentThread delta. NoInlining keeps these loop
+    // bodies out of the timed methods so the timed loops retain the exact codegen
+    // of the uninstrumented benchmark.
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureDictReadAlloc(
+        Dictionary<string, TypedData> genDict, Dictionary<string, object> boxedDict,
+        string[] keys, Func<TypedData, bool> genCheck, string typeKey)
+    {
+        var sink = 0;
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+        {
+            var key = keys[i % keys.Length];
+            if (genDict.TryGetValue(key, out var td) && genCheck(td))
+                sink++;
+        }
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+        {
+            var key = keys[i % keys.Length];
+            if (boxedDict.TryGetValue(key, out var obj) && MatchesType(obj, typeKey))
+                sink++;
+        }
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        GC.KeepAlive(sink);
+        return (gen, boxed);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureDictWriteAlloc<T>(
+        string[] keys, T[] samples, Func<T, TypedData> makeGen)
+    {
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        var genDict = new Dictionary<string, TypedData>(WriteIterations, StringComparer.Ordinal);
+        for (var i = 0; i < WriteIterations; i++)
+            genDict[keys[i % SampleCount]] = makeGen(samples[i & SampleMask]);
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        var boxedDict = new Dictionary<string, object>(WriteIterations, StringComparer.Ordinal);
+        for (var i = 0; i < WriteIterations; i++)
+            boxedDict[keys[i % SampleCount]] = samples[i & SampleMask]!;
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        GC.KeepAlive(genDict);
+        GC.KeepAlive(boxedDict);
+        return (gen, boxed);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureChainAlloc(
+        Dictionary<string, TypedData> genDict, Dictionary<string, object> boxedDict, string key)
+    {
+        var sink = 0;
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+        {
+            genDict.TryGetValue(key, out var td);
+            if (td.TryGetSingle(out _)) sink++;
+            else if (td.TryGetInt32(out _)) sink++;
+            else if (td.TryGetInt64(out _)) sink++;
+            else if (td.TryGetDouble(out _)) sink++;
+        }
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+        {
+            boxedDict.TryGetValue(key, out var obj);
+            if (obj is float) sink++;
+            else if (obj is int) sink++;
+            else if (obj is long) sink++;
+            else if (obj is double) sink++;
+        }
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        GC.KeepAlive(sink);
+        return (gen, boxed);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureObserverAlloc(
+        TypedData tdString, TypedData tdDefault, string boxedString, object? boxedNull)
+    {
+        var sink = 0;
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+        {
+            var ok = tdString.TryGetString(out _);
+            _ = tdDefault;
+            if (ok) sink++;
+        }
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+        {
+            _ = boxedNull;
+            if (boxedString is string) sink++;
+        }
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        GC.KeepAlive(sink);
+        return (gen, boxed);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureHeteroAlloc(
+        Dictionary<string, TypedData> genDict, Dictionary<string, object> boxedDict)
+    {
+        object? dummy = null;
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < IterateIterations; i++)
+            foreach (var kv in genDict)
+                dummy = kv.Value.Data;
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < IterateIterations; i++)
+            foreach (var kv in boxedDict)
+                dummy = kv.Value;
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        GC.KeepAlive(dummy);
+        return (gen, boxed);
     }
 
     // ─── Helpers ────────────────────────────────────────────────────

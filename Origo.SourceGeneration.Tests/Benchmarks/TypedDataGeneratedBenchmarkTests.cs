@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Origo.Core.Snd.Metadata;
 using Origo.SourceGeneration.Tests.TestSupport;
 using Xunit;
@@ -211,10 +212,15 @@ public class TypedDataGeneratedBenchmarkTests
             }
         }
 
+        // Allocation is measured in a separate NoInlining helper so the timed
+        // loops above keep the exact codegen of the uninstrumented benchmark
+        // (no extra loop bodies or captured locals in this method).
+        var (genAlloc, boxedAlloc) = MeasureMixedAlloc(genPool, boxedPool);
+
         _perf.Compare(
             $"Mixed dispatch (int/float/bool/string/double): generated Kind vs boxed 'is T' (min of {TimedRounds})",
-            "Generated TryGetXxx", ReadIterations, genBest, 0,
-            "Boxed Data is T", ReadIterations, boxedBest, 0);
+            "Generated TryGetXxx", ReadIterations, genBest, genAlloc,
+            "Boxed Data is T", ReadIterations, boxedBest, boxedAlloc);
 
         AssertWithinBudget("Mixed dispatch", genBest, boxedBest);
     }
@@ -251,9 +257,11 @@ public class TypedDataGeneratedBenchmarkTests
         // Defeat dead-store elimination: the pools are read after the timed loops.
         Assert.False(genPool[0].IsNull && boxedPool[0] is null);
 
+        var (genAlloc, boxedAlloc) = MeasureWriteAlloc(genPool, boxedPool, samples, makeGen);
+
         _perf.Compare($"Write {typeLabel}: generated operator vs boxed class (min of {TimedRounds})",
-            $"Generated {typeLabel}", WriteIterations, genBest, 0,
-            $"Boxed {typeLabel}", WriteIterations, boxedBest, 0);
+            $"Generated {typeLabel}", WriteIterations, genBest, genAlloc,
+            $"Boxed {typeLabel}", WriteIterations, boxedBest, boxedAlloc);
 
         AssertWithinBudget($"Write {typeLabel}", genBest, boxedBest);
     }
@@ -298,9 +306,11 @@ public class TypedDataGeneratedBenchmarkTests
             }
         }
 
+        var (genAlloc, boxedAlloc) = MeasureReadAlloc(genPool, boxedPool, tryGet, boxedMatch);
+
         _perf.Compare($"Read {typeLabel}: generated TryGet vs boxed 'is {typeLabel}' (min of {TimedRounds})",
-            $"Generated {typeLabel}", ReadIterations, genBest, 0,
-            $"Boxed is {typeLabel}", ReadIterations, boxedBest, 0);
+            $"Generated {typeLabel}", ReadIterations, genBest, genAlloc,
+            $"Boxed is {typeLabel}", ReadIterations, boxedBest, boxedAlloc);
 
         AssertWithinBudget($"Read {typeLabel}", genBest, boxedBest);
     }
@@ -345,9 +355,11 @@ public class TypedDataGeneratedBenchmarkTests
             }
         }
 
+        var (genAlloc, boxedAlloc) = MeasureIsAlloc(genPool, boxedPool, isCheck, boxedMatch);
+
         _perf.Compare($"Read {typeLabel}: generated IsType vs boxed 'is {typeLabel}' (min of {TimedRounds})",
-            $"Generated {typeLabel}", ReadIterations, genBest, 0,
-            $"Boxed is {typeLabel}", ReadIterations, boxedBest, 0);
+            $"Generated {typeLabel}", ReadIterations, genBest, genAlloc,
+            $"Boxed is {typeLabel}", ReadIterations, boxedBest, boxedAlloc);
 
         AssertWithinBudget($"Read {typeLabel}", genBest, boxedBest);
     }
@@ -358,6 +370,99 @@ public class TypedDataGeneratedBenchmarkTests
         for (var i = 0; i < SampleCount; i++)
             arr[i] = factory(i);
         return arr;
+    }
+
+    // ─── Allocation measurement (kept out-of-line) ─────────────────
+    // Each measurement runs one extra untimed pass per side and returns the
+    // GC.GetAllocatedBytesForCurrentThread delta. NoInlining keeps these loop
+    // bodies out of the timed methods so the timed loops retain the exact codegen
+    // of the uninstrumented benchmark.
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureWriteAlloc<T>(
+        TypedData[] genPool, OldTypedData[] boxedPool, T[] samples, GenFactory<T> makeGen)
+    {
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < WriteIterations; i++)
+            genPool[i & PoolMask] = makeGen(samples[i & SampleMask]);
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < WriteIterations; i++)
+            boxedPool[i & PoolMask] = new OldTypedData(typeof(T), samples[i & SampleMask]);
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        return (gen, boxed);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureReadAlloc<T>(
+        TypedData[] genPool, OldTypedData[] boxedPool, GenReader<T> tryGet, Func<OldTypedData, bool> boxedMatch)
+    {
+        var sink = 0;
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+            if (tryGet(in genPool[i & PoolMask], out _))
+                sink++;
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+            if (boxedMatch(boxedPool[i & PoolMask]))
+                sink++;
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        GC.KeepAlive(sink);
+        return (gen, boxed);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureIsAlloc(
+        TypedData[] genPool, OldTypedData[] boxedPool, IsType isCheck, Func<OldTypedData, bool> boxedMatch)
+    {
+        var sink = 0;
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+            if (isCheck(in genPool[i & PoolMask]))
+                sink++;
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+            if (boxedMatch(boxedPool[i & PoolMask]))
+                sink++;
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        GC.KeepAlive(sink);
+        return (gen, boxed);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (long gen, long boxed) MeasureMixedAlloc(TypedData[] genPool, OldTypedData[] boxedPool)
+    {
+        var sink = 0;
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+        {
+            ref readonly var td = ref genPool[i & PoolMask];
+            if (td.TryGetInt32(out _)) sink++;
+            if (td.TryGetSingle(out _)) sink++;
+            if (td.TryGetBoolean(out _)) sink++;
+            if (td.TryGetString(out _)) sink++;
+            if (td.TryGetDouble(out _)) sink++;
+        }
+        var gen = GC.GetAllocatedBytesForCurrentThread() - start;
+
+        start = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < ReadIterations; i++)
+        {
+            var data = boxedPool[i & PoolMask].Data;
+            if (data is int) sink++;
+            if (data is float) sink++;
+            if (data is bool) sink++;
+            if (data is string) sink++;
+            if (data is double) sink++;
+        }
+        var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
+        GC.KeepAlive(sink);
+        return (gen, boxed);
     }
 
     private static void AssertWithinBudget(string label, TimeSpan generated, TimeSpan baseline)
