@@ -77,7 +77,10 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
 
     public void RemoveAllEntities()
     {
+        for (var i = _entities.Count - 1; i >= 0; i--)
+            _entities[i].DetachFromManager();
         _entities.Clear();
+        _entityView = null;
     }
 
     public ISndEntity CreateEntity(SndMetaData metaData)

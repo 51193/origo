@@ -6,20 +6,29 @@ namespace Origo.GodotAdapter.Snd;
 internal sealed class GodotNodeHandle : INodeHandle
 {
     private readonly Node _node;
+    private readonly string _cachedName;
 
     public GodotNodeHandle(Node node)
     {
         _node = node;
+        _cachedName = node.Name;
     }
 
-    public string Name => _node.Name;
+    public string Name => _cachedName;
 
-    public void Free() => _node.Free();
+    public void Free()
+    {
+        if (GodotObject.IsInstanceValid(_node))
+            _node.Free();
+    }
 
     internal Node UnsafeGetNode() => _node;
 
     public void SetVisible(bool visible)
     {
+        if (!GodotObject.IsInstanceValid(_node))
+            return;
+
         switch (_node)
         {
             case CanvasItem canvasItem:

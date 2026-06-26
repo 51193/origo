@@ -33,8 +33,19 @@ internal static class GodotPathResolver
         var trimmed = path.TrimEnd('/');
         var lastSlash = trimmed.LastIndexOf('/');
         if (lastSlash < 0)
-            return string.Empty;
+        {
+            if (trimmed.Length == 0 || trimmed.IndexOf(':') == trimmed.Length - 1)
+                throw new InvalidOperationException(
+                    $"Path '{path}' is at root and has no parent directory.");
 
-        return trimmed[..lastSlash];
+            return string.Empty;
+        }
+
+        var parent = trimmed[..lastSlash];
+        if (parent.Length == 0)
+            throw new InvalidOperationException(
+                $"Path '{path}' is at root and has no parent directory.");
+
+        return parent;
     }
 }

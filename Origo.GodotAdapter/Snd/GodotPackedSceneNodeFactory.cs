@@ -1,15 +1,14 @@
 using System;
+using System.Collections.Concurrent;
 using Godot;
 using Origo.Core.Abstractions.Node;
 
 namespace Origo.GodotAdapter.Snd;
 
-/// <summary>
-///     使用 Godot PackedScene 创建节点并挂载到指定父节点。
-/// </summary>
 public sealed class GodotPackedSceneNodeFactory : INodeFactory
 {
     private readonly Node _parent;
+    private readonly ConcurrentDictionary<string, PackedScene> _cache = new();
 
     public GodotPackedSceneNodeFactory(Node parent)
     {
@@ -18,7 +17,7 @@ public sealed class GodotPackedSceneNodeFactory : INodeFactory
 
     public INodeHandle Create(string logicalName, string resourceId)
     {
-        var scene = ResourceLoader.Load<PackedScene>(resourceId);
+        var scene = _cache.GetOrAdd(resourceId, static id => ResourceLoader.Load<PackedScene>(id));
         if (scene is null)
             throw new InvalidOperationException(
                 $"PackedScene not found for logicalName='{logicalName}', resourceId='{resourceId}'.");

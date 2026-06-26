@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
 using Origo.GodotAdapter.Console;
@@ -37,7 +38,11 @@ public partial class OrigoDefaultEntry
 
     private void RegisterConsoleCommandHandlers()
     {
-        Runtime.Console!.RegisterHandler(new PressButtonCommandHandler(Runtime));
-        Runtime.Console!.RegisterHandler(new TreeDebugCommandHandler(Runtime));
+        if (Runtime.Console is null)
+            throw new InvalidOperationException(
+                "Runtime.Console is not available. Ensure OrigoRuntime is fully initialized before calling Bootstrap.");
+
+        Runtime.Console.RegisterHandler(new PressButtonCommandHandler(Runtime));
+        Runtime.Console.RegisterHandler(new TreeDebugCommandHandler(Runtime));
     }
 }

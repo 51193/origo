@@ -96,6 +96,17 @@ public class GodotFileSystemPathTests
     }
 
     [Fact]
+    public void GodotPathResolver_GetParentDirectory_RootPath_ThrowsInvalidOperation()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            GodotPathResolver.GetParentDirectory("/"));
+        Assert.Throws<InvalidOperationException>(() =>
+            GodotPathResolver.GetParentDirectory("res://"));
+        Assert.Throws<InvalidOperationException>(() =>
+            GodotPathResolver.GetParentDirectory("user://"));
+    }
+
+    [Fact]
     public void GodotFileSystem_CombinePath_UsesHelperRules()
     {
         var fs = new GodotFileSystem();

@@ -37,6 +37,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - **`DataSourceNode.Dispose` and `BuildCanonicalString` now use iterative traversal** — prevents `StackOverflowException` on extremely deep or degenerate tree structures that can arise from runtime-generated data.
+- **`GodotNodeHandle` name is now cached at construction** — prevents crashes when accessing `.Name` after the underlying Godot node has been freed externally. `Free()` and `SetVisible` now check `IsInstanceValid` before accessing the node.
+- **`GodotPackedSceneNodeFactory` now caches loaded scenes** — avoids redundant disk I/O when the same `PackedScene` resource is instantiated multiple times.
+- **`GodotSndManager.RemoveAllEntities` properly frees Godot nodes** — entities are now detached and freed before the internal list is cleared, preventing orphaned nodes in the scene tree.
+- **`GodotPathResolver.GetParentDirectory` throws on root paths** — paths without a parent directory (e.g. `"/"`, `"res://"`) now throw `InvalidOperationException` instead of returning an empty string.
+- **`OrigoDefaultEntry.Bootstrap` throws a descriptive error when Console is null** — replaces the null-forgiving operator with a runtime null check that produces a clear `InvalidOperationException`.
 - **`PersistentRandom.NextInt32` validates its range** — calling it with `maxExclusive <= minInclusive` now throws `ArgumentOutOfRangeException` instead of throwing `DivideByZeroException` (when equal) or returning an out-of-range value (when inverted).
 - **Archetype integer values no longer lose precision** — `.map` archetype values that exceed `int` range are now stored as `long` instead of being silently coerced to `float`. Integer parsing is also culture-invariant.
 - **Snapshotting an existing save no longer risks losing it on failure** — overwriting a save slot now moves the old directory aside, renames the freshly built copy into place, and only then drops the backup, so the previous data is never deleted before the new data is durably in place.
