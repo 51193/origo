@@ -514,7 +514,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("    public readonly bool TryGetString(out string value)");
         sb.AppendLine("    {");
-        sb.AppendLine("        if (_kind == KindMap.String) { value = (string)_ref!; return true; }");
+        sb.AppendLine("        if (_kind == KindMap.String) { value = Unsafe.As<string>(_ref)!; return true; }");
         sb.AppendLine("        value = null!; return false;");
         sb.AppendLine("    }");
         sb.AppendLine("}");

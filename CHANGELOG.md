@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **ProgressRun.Dispose: exception swallowing removed** — `SessionManager.Clear()` and `DeleteCurrentDirectory()` errors during Dispose are no longer caught and logged at Warning; they now propagate to the caller.
 - **SessionRun.ResetAfterLoadFailure: multi-step exception accumulation removed** — each cleanup step (state machine clear, entity release, scene remove, blackboard clear) now propagates immediately instead of accumulating `firstError` and wrapping in `AggregateException`.
 - **SaveStorageFacade: SHA read fallback removed** — failing to read the existing `.payload.sha` file no longer falls back to `string.Empty` and unconditional overwrite; the error now propagates.
+- **Faster `TypedData.TryGetString`** — the generated string accessor no longer performs a redundant runtime cast on the inline reference slot (the kind tag already pins the stored type). Removing the potentially-throwing cast lets the JIT fully optimize string extraction, making `TryGetString`-heavy hot paths (e.g. observer-strategy notifications) significantly faster, on par with a plain `is string` check. Behavior is unchanged.
 
 ### Added
 
