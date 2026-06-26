@@ -51,7 +51,7 @@ public class SndScenePerformanceTests
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            EntityIndices = new List<string>(indices!)
+            LifecycleIndices = new List<string>(indices!)
         },
         DataMetaData = new DataMetaData()
     };

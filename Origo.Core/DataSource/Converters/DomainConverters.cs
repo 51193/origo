@@ -35,16 +35,16 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
     {
         var meta = new StrategyMetaData();
 
-        if (node.TryGetValue("entity_indices", out var entityNode) && entityNode is not null && !entityNode.IsNull)
-            foreach (var element in entityNode.Elements)
-                meta.EntityIndices.Add(element.AsString());
+        if (node.TryGetValue("lifecycle_indices", out var lifecycleNode) && lifecycleNode is not null && !lifecycleNode.IsNull)
+            foreach (var element in lifecycleNode.Elements)
+                meta.LifecycleIndices.Add(element.AsString());
 
         if (node.TryGetValue("active_indices", out var activeNode) && activeNode is not null && !activeNode.IsNull)
             foreach (var element in activeNode.Elements)
                 meta.ActiveIndices.Add(element.AsString());
 
-        if (node.TryGetValue("observer_bindings", out var observerBindingsNode) && observerBindingsNode is not null && !observerBindingsNode.IsNull)
-            foreach (var element in observerBindingsNode.Elements)
+        if (node.TryGetValue("observer_indices", out var observerIndicesNode) && observerIndicesNode is not null && !observerIndicesNode.IsNull)
+            foreach (var element in observerIndicesNode.Elements)
             {
                 if (element.Kind != DataSourceNodeKind.Map)
                     continue;
@@ -61,7 +61,7 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
                 }
 
                 if (!string.IsNullOrWhiteSpace(binding.Target))
-                    meta.ObserverBindings.Add(binding);
+                    meta.ObserverIndices.Add(binding);
             }
 
         return meta;
@@ -69,36 +69,33 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
 
     public override DataSourceNode Write(StrategyMetaData value)
     {
-        var entityIndices = DataSourceNode.CreateArray();
-        foreach (var index in value.EntityIndices)
-            entityIndices.Add(DataSourceNode.CreateString(index));
+        var lifecycleIndices = DataSourceNode.CreateArray();
+        foreach (var index in value.LifecycleIndices)
+            lifecycleIndices.Add(DataSourceNode.CreateString(index));
 
         var activeIndices = DataSourceNode.CreateArray();
         foreach (var index in value.ActiveIndices)
             activeIndices.Add(DataSourceNode.CreateString(index));
 
         var result = DataSourceNode.CreateObject()
-            .Add("entity_indices", entityIndices)
+            .Add("lifecycle_indices", lifecycleIndices)
             .Add("active_indices", activeIndices);
 
-        if (value.ObserverBindings.Count > 0)
+        var observerIndices = DataSourceNode.CreateArray();
+        foreach (var binding in value.ObserverIndices)
         {
-            var observerBindings = DataSourceNode.CreateArray();
-            foreach (var binding in value.ObserverBindings)
-            {
-                if (string.IsNullOrWhiteSpace(binding.Target))
-                    continue;
+            if (string.IsNullOrWhiteSpace(binding.Target))
+                continue;
 
-                var indices = DataSourceNode.CreateArray();
-                foreach (var index in binding.ObserverIndices)
-                    indices.Add(DataSourceNode.CreateString(index));
+            var indices = DataSourceNode.CreateArray();
+            foreach (var index in binding.ObserverIndices)
+                indices.Add(DataSourceNode.CreateString(index));
 
-                observerBindings.Add(DataSourceNode.CreateObject()
-                    .Add(binding.Target, indices));
-            }
-
-            result.Add("observer_bindings", observerBindings);
+            observerIndices.Add(DataSourceNode.CreateObject()
+                .Add(binding.Target, indices));
         }
+
+        result.Add("observer_indices", observerIndices);
 
         return result;
     }

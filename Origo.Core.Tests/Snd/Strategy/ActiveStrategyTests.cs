@@ -214,8 +214,8 @@ public class ActiveStrategyTests
 
         var meta = entity.SaveSingle();
 
-        Assert.Contains(EntityOnlyIndex, meta.StrategyMetaData!.EntityIndices);
-        Assert.DoesNotContain(QueryHpIndex, meta.StrategyMetaData!.EntityIndices);
+        Assert.Contains(EntityOnlyIndex, meta.StrategyMetaData!.LifecycleIndices);
+        Assert.DoesNotContain(QueryHpIndex, meta.StrategyMetaData!.LifecycleIndices);
         Assert.Contains(QueryHpIndex, meta.StrategyMetaData!.ActiveIndices);
         Assert.DoesNotContain(EntityOnlyIndex, meta.StrategyMetaData!.ActiveIndices);
     }
@@ -341,7 +341,7 @@ public class ActiveStrategyTests
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                EntityIndices = new List<string>(entityIndices),
+                LifecycleIndices = new List<string>(entityIndices),
                 ActiveIndices = new List<string>(activeIndices ?? Array.Empty<string>())
             },
             DataMetaData = new DataMetaData()

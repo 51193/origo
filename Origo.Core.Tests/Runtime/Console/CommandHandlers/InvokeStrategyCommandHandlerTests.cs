@@ -112,7 +112,7 @@ public class InvokeStrategyCommandHandlerTests
                 NodeMetaData = new NodeMetaData(),
                 StrategyMetaData = new StrategyMetaData
                 {
-                    EntityIndices = new List<string>(),
+                    LifecycleIndices = new List<string>(),
                     ActiveIndices = new List<string>(activeIndices)
                 },
                 DataMetaData = new DataMetaData()

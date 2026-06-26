@@ -42,7 +42,7 @@ public class ConsoleTests
             {
               "name": "TemplateEnemy",
               "node": { "pairs": {} },
-              "strategy": { "entity_indices": [] },
+              "strategy": { "lifecycle_indices": [] },
               "data": { "pairs": {} }
             }
             """);
@@ -108,7 +108,7 @@ public class ConsoleTests
             {
               "name": "TemplateEnemy",
               "node": { "pairs": {} },
-              "strategy": { "entity_indices": [] },
+              "strategy": { "lifecycle_indices": [] },
               "data": { "pairs": {} }
             }
             """);

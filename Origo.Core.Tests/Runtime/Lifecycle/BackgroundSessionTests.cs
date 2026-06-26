@@ -849,7 +849,7 @@ public class BackgroundSessionTests
         {
             Name = name,
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string> { TrackingStrategyIndex } },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { TrackingStrategyIndex } },
             DataMetaData = new DataMetaData()
         };
     }
@@ -860,7 +860,7 @@ public class BackgroundSessionTests
         {
             Name = name,
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string>(indices) },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>(indices) },
             DataMetaData = new DataMetaData()
         };
     }

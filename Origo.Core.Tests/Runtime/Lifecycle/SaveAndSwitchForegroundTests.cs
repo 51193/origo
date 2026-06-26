@@ -1143,7 +1143,7 @@ public class SaveAndSwitchForegroundTests
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                EntityIndices = new List<string>(indices ?? Array.Empty<string>())
+                LifecycleIndices = new List<string>(indices ?? Array.Empty<string>())
             },
             DataMetaData = new DataMetaData()
         };

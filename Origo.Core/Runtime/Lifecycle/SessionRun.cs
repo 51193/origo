@@ -180,7 +180,7 @@ public sealed class SessionRun : ISessionRun
                 if (entity is SndEntity se)
                 {
                     var meta = ((IEntityLifecycle)se).BuildMetaData();
-                    var observerBindings = meta.StrategyMetaData?.ObserverBindings;
+                    var observerBindings = meta.StrategyMetaData?.ObserverIndices;
                     if (observerBindings is not null && observerBindings.Count > 0)
                         se.RecoverObserverBindings(observerBindings,
                             targetName => _sceneHost.FindByName(targetName));

@@ -126,7 +126,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _nodeHost.Recover(metaData.NodeMetaData ??
                           throw new InvalidOperationException("NodeMetaData is required."));
         _strategyManager.RecoverStrategiesOnly(
-            metaData.StrategyMetaData?.EntityIndices ?? Enumerable.Empty<string>());
+            metaData.StrategyMetaData?.LifecycleIndices ?? Enumerable.Empty<string>());
         _activeStrategyManager.Recover(
             metaData.StrategyMetaData?.ActiveIndices ?? Enumerable.Empty<string>());
     }
@@ -184,9 +184,9 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             NodeMetaData = _nodeHost.SerializeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                EntityIndices = new List<string>(entityIndices),
+                LifecycleIndices = new List<string>(entityIndices),
                 ActiveIndices = new List<string>(activeIndices),
-                ObserverBindings = _observerStrategyManager.BuildObserverBindings().ToList()
+                ObserverIndices = _observerStrategyManager.BuildObserverBindings().ToList()
             },
             DataMetaData = _dataManager.SerializeMeta()
         };

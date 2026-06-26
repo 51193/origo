@@ -39,9 +39,9 @@ public sealed class SndMetaData
                 ? null
                 : new StrategyMetaData
                 {
-                    EntityIndices = new List<string>(StrategyMetaData.EntityIndices),
+                    LifecycleIndices = new List<string>(StrategyMetaData.LifecycleIndices),
                     ActiveIndices = new List<string>(StrategyMetaData.ActiveIndices),
-                    ObserverBindings = StrategyMetaData.ObserverBindings
+                    ObserverIndices = StrategyMetaData.ObserverIndices
                         .ConvertAll(b => new StrategyMetaData.ObserverBinding
                         {
                             Target = b.Target,

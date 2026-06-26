@@ -545,7 +545,7 @@ public class DataSourceTests
             },
             StrategyMetaData = new StrategyMetaData
             {
-                EntityIndices = new List<string> { "idle", "walk" }
+                LifecycleIndices = new List<string> { "idle", "walk" }
             },
             DataMetaData = new DataMetaData
             {
@@ -566,7 +566,7 @@ public class DataSourceTests
         Assert.Equal("res://main.tscn", result.NodeMetaData!.Pairs["scene"]);
 
         Assert.NotNull(result.StrategyMetaData);
-        Assert.Equal(new[] { "idle", "walk" }, result.StrategyMetaData!.EntityIndices);
+        Assert.Equal(new[] { "idle", "walk" }, result.StrategyMetaData!.LifecycleIndices);
 
         Assert.NotNull(result.DataMetaData);
         Assert.Equal(typeof(int), result.DataMetaData!.Pairs["hp"].DataType);
@@ -784,7 +784,7 @@ public class DataSourceTests
         var original = new SndMetaData
         {
             Name = "npc",
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string> { "patrol" } },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { "patrol" } },
             DataMetaData = new DataMetaData
             {
                 Pairs = new Dictionary<string, TypedData>
@@ -800,7 +800,7 @@ public class DataSourceTests
         var result = registry.Read<SndMetaData>(decodedNode);
 
         Assert.Equal("npc", result.Name);
-        Assert.Equal(new[] { "patrol" }, result.StrategyMetaData!.EntityIndices);
+        Assert.Equal(new[] { "patrol" }, result.StrategyMetaData!.LifecycleIndices);
         Assert.Equal(5.5, (double)result.DataMetaData!.Pairs["speed"].Data!);
     }
 

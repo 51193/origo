@@ -238,7 +238,7 @@ public class EntityStrategyBaseTests
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            EntityIndices = new List<string>(entityIndices ?? Array.Empty<string>())
+            LifecycleIndices = new List<string>(entityIndices ?? Array.Empty<string>())
         },
         DataMetaData = new DataMetaData()
     };

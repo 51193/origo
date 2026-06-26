@@ -247,9 +247,9 @@ public class ObserverStrategyTests
         var meta = entity.SaveSingle();
 
         Assert.NotNull(meta.StrategyMetaData);
-        Assert.Single(meta.StrategyMetaData.ObserverBindings);
-        Assert.Equal(entity.Name, meta.StrategyMetaData.ObserverBindings[0].Target);
-        Assert.Contains(SelfWatchIdx, meta.StrategyMetaData.ObserverBindings[0].ObserverIndices);
+        Assert.Single(meta.StrategyMetaData.ObserverIndices);
+        Assert.Equal(entity.Name, meta.StrategyMetaData.ObserverIndices[0].Target);
+        Assert.Contains(SelfWatchIdx, meta.StrategyMetaData.ObserverIndices[0].ObserverIndices);
     }
 
     [Fact]
@@ -261,7 +261,7 @@ public class ObserverStrategyTests
         var meta = entity.SaveSingle();
 
         Assert.NotNull(meta.StrategyMetaData);
-        Assert.Empty(meta.StrategyMetaData.ObserverBindings);
+        Assert.Empty(meta.StrategyMetaData.ObserverIndices);
     }
 
     [Fact]
@@ -274,8 +274,8 @@ public class ObserverStrategyTests
 
         var meta = entity.SaveSingle();
 
-        Assert.Single(meta.StrategyMetaData!.ObserverBindings);
-        Assert.Equal(2, meta.StrategyMetaData.ObserverBindings[0].ObserverIndices.Count);
+        Assert.Single(meta.StrategyMetaData!.ObserverIndices);
+        Assert.Equal(2, meta.StrategyMetaData.ObserverIndices[0].ObserverIndices.Count);
     }
 
     // ── Lifecycle: observer strategies released on dead ─────────────────
@@ -392,8 +392,8 @@ public class ObserverStrategyTests
         var clone = meta.DeepClone();
 
         Assert.NotNull(clone.StrategyMetaData);
-        Assert.Single(clone.StrategyMetaData.ObserverBindings);
-        Assert.Equal(entity.Name, clone.StrategyMetaData.ObserverBindings[0].Target);
+        Assert.Single(clone.StrategyMetaData.ObserverIndices);
+        Assert.Equal(entity.Name, clone.StrategyMetaData.ObserverIndices[0].Target);
     }
 
     // ── Save/Recover round-trip (via meta rebuild) ────────────────────
@@ -409,7 +409,7 @@ public class ObserverStrategyTests
 
         var (entity2, ctx2) = Setup();
         entity2.SpawnSingle(meta);
-        var bindings = meta.StrategyMetaData!.ObserverBindings;
+        var bindings = meta.StrategyMetaData!.ObserverIndices;
         entity2.RecoverObserverBindings(bindings, n => n == entity2.Name ? entity2 : null);
 
         SelfWatchObserver.DataChangedCalls.Clear();
@@ -704,7 +704,7 @@ public class ObserverStrategyTests
         entity.MountObserverStrategy("self", MultiKeyIdx);
 
         var meta = entity.SaveSingle();
-        var bindings = meta.StrategyMetaData!.ObserverBindings;
+        var bindings = meta.StrategyMetaData!.ObserverIndices;
 
         Assert.Single(bindings);
         Assert.Equal("self", bindings[0].Target);

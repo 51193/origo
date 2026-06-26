@@ -26,7 +26,7 @@ public class SndEntityAndAutoInitializerTests
         {
             Name = "E",
             NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string> { ["root"] = "res://e.tscn" } },
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
             DataMetaData = new DataMetaData()
         });
 
@@ -50,10 +50,10 @@ public class SndEntityAndAutoInitializerTests
             { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 
         entity.AddStrategy(LifecycleStrategyIndex);
-        Assert.Contains(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.EntityIndices);
+        Assert.Contains(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
 
         entity.RemoveStrategy(LifecycleStrategyIndex);
-        Assert.DoesNotContain(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.EntityIndices);
+        Assert.DoesNotContain(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
 
         // Removing a missing strategy should not throw.
         entity.RemoveStrategy(LifecycleStrategyIndex);
@@ -86,7 +86,7 @@ public class SndEntityAndAutoInitializerTests
               {
                 "name": "BootEntity",
                 "node": { "pairs": { "root": "res://boot.tscn" } },
-                "strategy": { "entity_indices": [] },
+                "strategy": { "lifecycle_indices": [] },
                 "data": { "pairs": { "ready": { "type": "Boolean", "data": true } } }
               }
             ]

@@ -33,17 +33,17 @@ public class SndMetaFluentBuilderTests
     }
 
     [Fact]
-    public void AddEntityStrategy_StoresIndex()
+    public void AddLifecycleStrategy_StoresIndex()
     {
         var meta = new SndMetaFluentBuilder("E")
-            .AddEntityStrategy("game.move")
-            .AddEntityStrategy("game.render")
+            .AddLifecycleStrategy("game.move")
+            .AddLifecycleStrategy("game.render")
             .Build();
 
         Assert.NotNull(meta.StrategyMetaData);
-        Assert.Equal(2, meta.StrategyMetaData.EntityIndices.Count);
-        Assert.Contains("game.move", meta.StrategyMetaData.EntityIndices);
-        Assert.Contains("game.render", meta.StrategyMetaData.EntityIndices);
+        Assert.Equal(2, meta.StrategyMetaData.LifecycleIndices.Count);
+        Assert.Contains("game.move", meta.StrategyMetaData.LifecycleIndices);
+        Assert.Contains("game.render", meta.StrategyMetaData.LifecycleIndices);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class SndMetaFluentBuilderTests
     {
         var meta = new SndMetaFluentBuilder("Player")
             .SetNode("sprite", "player_sprite")
-            .AddEntityStrategy("game.player_move")
+            .AddLifecycleStrategy("game.player_move")
             .AddActiveStrategy("ui.select")
             .SetInt("hp", 100)
             .SetFloat("speed", 200f)
@@ -153,7 +153,7 @@ public class SndMetaFluentBuilderTests
         Assert.NotNull(meta.NodeMetaData);
         Assert.Equal("player_sprite", meta.NodeMetaData.Pairs["sprite"]);
         Assert.NotNull(meta.StrategyMetaData);
-        Assert.Contains("game.player_move", meta.StrategyMetaData.EntityIndices);
+        Assert.Contains("game.player_move", meta.StrategyMetaData.LifecycleIndices);
         Assert.Contains("ui.select", meta.StrategyMetaData.ActiveIndices);
         Assert.NotNull(meta.DataMetaData);
         Assert.Equal(100, meta.DataMetaData.Pairs["hp"].Data);

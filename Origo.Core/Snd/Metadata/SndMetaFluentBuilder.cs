@@ -34,10 +34,10 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
-    public SndMetaFluentBuilder AddEntityStrategy(string index)
+    public SndMetaFluentBuilder AddLifecycleStrategy(string index)
     {
         _meta.StrategyMetaData ??= new StrategyMetaData();
-        _meta.StrategyMetaData.EntityIndices.Add(index);
+        _meta.StrategyMetaData.LifecycleIndices.Add(index);
         return this;
     }
 

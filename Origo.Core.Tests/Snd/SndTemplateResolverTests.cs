@@ -17,7 +17,7 @@ public class SndTemplateResolverTests
             """
             {
               "name": "EnemyTemplate",
-              "strategy": { "entity_indices": [ "enemy.ai" ] },
+              "strategy": { "lifecycle_indices": [ "enemy.ai" ] },
               "node": { "pairs": { "root": "enemy" } },
               "data": { "pairs": { "hp": { "type": "Int32", "data": 50 } } }
             }
@@ -57,7 +57,7 @@ public class SndTemplateResolverTests
     public void Resolve_TemplateFile_MissingNameField_ReturnsEmptyName()
     {
         var fs = new TestFileSystem();
-        fs.SeedFile("templates/noname.json", """{"strategy":{"entity_indices":[]},"data":{"pairs":{}}}""");
+        fs.SeedFile("templates/noname.json", """{"strategy":{"lifecycle_indices":[]},"data":{"pairs":{}}}""");
         var resolver = CreateResolver(fs, new Dictionary<string, string>
         {
             ["noname"] = "templates/noname.json"
@@ -73,7 +73,7 @@ public class SndTemplateResolverTests
     {
         var fs = new TestFileSystem();
         fs.SeedFile("templates/base.json",
-            """{"name":"BaseTemplate","strategy":{"entity_indices":[]},"data":{"pairs":{}}}""");
+            """{"name":"BaseTemplate","strategy":{"lifecycle_indices":[]},"data":{"pairs":{}}}""");
         var resolver = CreateResolver(fs, new Dictionary<string, string>
         {
             ["base"] = "templates/base.json"
@@ -94,7 +94,7 @@ public class SndTemplateResolverTests
     {
         var fs = new TestFileSystem();
         fs.SeedFile("templates/simple.json",
-            """{"name":"Simple","strategy":{"entity_indices":[]},"data":{"pairs":{}}}""");
+            """{"name":"Simple","strategy":{"lifecycle_indices":[]},"data":{"pairs":{}}}""");
         var resolver = CreateResolver(fs, new Dictionary<string, string>
         {
             ["simple"] = "templates/simple.json"

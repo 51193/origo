@@ -209,7 +209,7 @@ public class OrigoConsoleLoggingTests
             {
               "name": "TemplateEnemy",
               "node": { "pairs": {} },
-              "strategy": { "entity_indices": [] },
+              "strategy": { "lifecycle_indices": [] },
               "data": { "pairs": {} }
             }
             """);

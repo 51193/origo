@@ -371,7 +371,7 @@ public class ConsoleCommandExtendedTests
             {
               "name": "X",
               "node": { "pairs": {} },
-              "strategy": { "entity_indices": [] },
+              "strategy": { "lifecycle_indices": [] },
               "data": { "pairs": {} }
             }
             """);

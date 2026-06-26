@@ -51,7 +51,7 @@ public class SndEntityLifecycleBatchTests
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            EntityIndices = new List<string>(entityIndices ?? Array.Empty<string>()),
+            LifecycleIndices = new List<string>(entityIndices ?? Array.Empty<string>()),
             ActiveIndices = new List<string>(activeIndices ?? Array.Empty<string>())
         },
         DataMetaData = new DataMetaData()

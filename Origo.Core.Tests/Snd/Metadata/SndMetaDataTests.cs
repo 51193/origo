@@ -35,11 +35,11 @@ public class SndMetaDataTests
         var meta = new SndMetaData
         {
             Name = "entity",
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string> { "strat1", "strat2" } }
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { "strat1", "strat2" } }
         };
         var clone = meta.DeepClone();
-        Assert.NotSame(meta.StrategyMetaData!.EntityIndices, clone.StrategyMetaData!.EntityIndices);
-        Assert.Equal(2, clone.StrategyMetaData.EntityIndices.Count);
+        Assert.NotSame(meta.StrategyMetaData!.LifecycleIndices, clone.StrategyMetaData!.LifecycleIndices);
+        Assert.Equal(2, clone.StrategyMetaData.LifecycleIndices.Count);
     }
 
     [Fact]
@@ -88,15 +88,15 @@ public class SndMetaDataTests
         var meta = new SndMetaData
         {
             Name = "original",
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string> { "strategy_a" } }
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { "strategy_a" } }
         };
         var clone = meta.DeepClone();
         clone.Name = "modified";
-        clone.StrategyMetaData!.EntityIndices.Add("strategy_b");
+        clone.StrategyMetaData!.LifecycleIndices.Add("strategy_b");
 
         Assert.Equal("original", meta.Name);
-        Assert.Single(meta.StrategyMetaData.EntityIndices);
-        Assert.Equal("strategy_a", meta.StrategyMetaData.EntityIndices[0]);
+        Assert.Single(meta.StrategyMetaData.LifecycleIndices);
+        Assert.Equal("strategy_a", meta.StrategyMetaData.LifecycleIndices[0]);
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class SndMetaDataTests
             Name = "e",
             StrategyMetaData = new StrategyMetaData
             {
-                EntityIndices = new List<string> { "idle" },
+                LifecycleIndices = new List<string> { "idle" },
                 ActiveIndices = new List<string> { "invoke_handler" }
             }
         };

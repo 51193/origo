@@ -437,7 +437,7 @@ public class EntityKillTests
                 Name = "E",
                 NodeMetaData = new NodeMetaData(),
                 StrategyMetaData = new StrategyMetaData
-                    { EntityIndices = new List<string> { "quit.test.probe" }, ActiveIndices = new List<string>() },
+                    { LifecycleIndices = new List<string> { "quit.test.probe" }, ActiveIndices = new List<string>() },
                 DataMetaData = new DataMetaData()
             }
         });
@@ -535,7 +535,7 @@ public class EntityKillTests
                           {
                             "name": "E",
                             "node": { "pairs": {} },
-                            "strategy": { "entity_indices": [], "active_indices": [] },
+                            "strategy": { "lifecycle_indices": [], "active_indices": [] },
                             "data": { "pairs": {} }
                           }
                         ]
@@ -571,7 +571,7 @@ public class EntityKillTests
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                EntityIndices = new List<string> { "kill.test.lifecycle" },
+                LifecycleIndices = new List<string> { "kill.test.lifecycle" },
                 ActiveIndices = new List<string>()
             },
             DataMetaData = new DataMetaData()

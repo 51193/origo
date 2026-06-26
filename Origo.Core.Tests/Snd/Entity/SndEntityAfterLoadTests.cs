@@ -36,7 +36,7 @@ public class SndEntityAfterLoadTests
                        {
                          "name": "E",
                          "node": { "pairs": {} },
-                          "strategy": { "entity_indices": ["test.afterload.a", "test.afterload.b"] },
+                          "strategy": { "lifecycle_indices": ["test.afterload.a", "test.afterload.b"] },
                          "data": { "pairs": {} }
                        }
                        """;

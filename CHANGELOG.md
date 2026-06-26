@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **BREAKING: StrategyMetaData.EntityIndices renamed to LifecycleIndices** — the C# property and its save-file JSON key `"entity_indices"` are now `LifecycleIndices` / `"lifecycle_indices"`, consistently matching the concrete base class `LifecycleStrategyBase`. `SndMetaFluentBuilder.AddEntityStrategy` is now `AddLifecycleStrategy`. All existing save files and templates must be updated.
+- **BREAKING: StrategyMetaData.ObserverBindings renamed to ObserverIndices** — the C# property and its save-file JSON key `"observer_bindings"` are now `ObserverIndices` / `"observer_indices"`, aligning with the key naming convention of the other two strategy types (`lifecycle_indices`, `active_indices`). The inner `ObserverBinding` type is unchanged.
+- **Observer indices now always emit an `"observer_indices"` key** — empty observer index lists are no longer omitted from the serialized JSON, matching the behavior of `"lifecycle_indices"` and `"active_indices"` which always appear even when empty. This eliminates per-entity structural variance in save files.
 - **BREAKING: OrigoConsole no longer swallows command handler exceptions** — `ProcessPending()` now lets exceptions from command handlers propagate to the caller instead of logging at Warning level and publishing an error message. Console command handlers that throw will now crash the game frame, surfacing bugs immediately during development.
 - **ConsoleOutputChannel.Publish no longer drops subsequent listeners when one throws** — exceptions from individual listeners are caught so that all subscribers receive every published line; the first exception is re-thrown after the publish loop completes, preserving fail-fast while ensuring output is never silently lost to a single misbehaving subscriber.
 - **ConsoleBridgeServer: all best-effort exception swallowing removed** — Dispose, AcceptLoop, and HandleConnection no longer silently catch and discard `IOException`/`ObjectDisposedException`/`SocketException`. Unrecoverable I/O errors now propagate.
@@ -22,7 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`ObserverStrategyBase`** — new first-class strategy base class (alongside LifecycleStrategyBase and ActiveStrategyBase). Provides three virtual hooks: `OnMounted`, `OnDataChanged`, `OnUnmounted`. Observer strategies are stateless, pooled, and auto-persisted across save/load.
 - **`ISndObserverStrategyAccess`** — new entity interface: `MountObserverStrategy(targetName, observerIndex)` / `UnmountObserverStrategy(targetName, observerIndex)`. Supports both self-observation (targetName == entity.Name) and cross-entity observation.
 - **`ObserveDataAttribute`** — declare data keys that an ObserverStrategy observes. Multiple attributes per class supported. Keys are extracted at pool registration time.
-- **`StrategyMetaData.ObserverBindings`** — new serialization field storing observer binding topology (`[{targetName: [observerIndices]}]`) alongside entity_indices and active_indices in save files.
+- **`StrategyMetaData.ObserverIndices`** — new serialization field storing observer binding topology (`[{targetName: [observerIndices]}]`) alongside lifecycle_indices and active_indices in save files.
 - **`DiffUtility`** — generic diff helper in `Origo.Core.Utility`: `Diff<T>(old, new) -> (added, removed)`.
 - **Observer persistence** — observer bindings are automatically serialized and restored across save/load cycles, eliminating the need for manual AfterLoad re-subscription.
 - **`GridParser`** — coordinate string parser supporting `"x,z"` format and `JsonElement` input; returns `(int X, int Z)?`

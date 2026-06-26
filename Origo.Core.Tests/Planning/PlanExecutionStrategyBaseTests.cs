@@ -234,7 +234,7 @@ public class PlanExecutionStrategyBaseTests
         var meta = new SndMetaData
         {
             Name = "test_entity",
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
             DataMetaData = new DataMetaData(),
             NodeMetaData = new NodeMetaData()
         };
@@ -289,7 +289,7 @@ public class PlanExecutionStrategyBaseTests
         var meta = new SndMetaData
         {
             Name = "test_entity",
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
             DataMetaData = new DataMetaData(),
             NodeMetaData = new NodeMetaData()
         };
@@ -346,7 +346,7 @@ public class PlanExecutionStrategyBaseTests
         var meta = new SndMetaData
         {
             Name = "test_entity",
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
             DataMetaData = new DataMetaData(),
             NodeMetaData = new NodeMetaData()
         };
@@ -436,7 +436,7 @@ public class PlanExecutionStrategyBaseTests
         var meta = new SndMetaData
         {
             Name = "test_entity",
-            StrategyMetaData = new StrategyMetaData { EntityIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
             DataMetaData = new DataMetaData(),
             NodeMetaData = new NodeMetaData()
         };

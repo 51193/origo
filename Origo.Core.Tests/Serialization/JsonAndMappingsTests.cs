@@ -25,7 +25,7 @@ public class JsonAndMappingsTests
             Name = "Hero",
             NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string> { ["body"] = "hero_prefab" } },
             StrategyMetaData = new StrategyMetaData
-                { EntityIndices = new List<string> { StrategyMove, StrategyAttack } },
+                { LifecycleIndices = new List<string> { StrategyMove, StrategyAttack } },
             DataMetaData = new DataMetaData
             {
                 Pairs = new Dictionary<string, TypedData>
@@ -43,7 +43,7 @@ public class JsonAndMappingsTests
 
         Assert.Equal("Hero", parsed.Name);
         Assert.Equal("hero_prefab", parsed.NodeMetaData!.Pairs["body"]);
-        Assert.Equal(new[] { StrategyMove, StrategyAttack }, parsed.StrategyMetaData!.EntityIndices);
+        Assert.Equal(new[] { StrategyMove, StrategyAttack }, parsed.StrategyMetaData!.LifecycleIndices);
         Assert.Equal(100, Assert.IsType<int>(parsed.DataMetaData!.Pairs["hp"].Data));
         Assert.Equal("Knight", Assert.IsType<string>(parsed.DataMetaData.Pairs["title"].Data));
     }
@@ -72,7 +72,7 @@ public class JsonAndMappingsTests
             {
               "name": "TemplateHero",
               "node": { "pairs": { "root": "hero" } },
-              "strategy": { "entity_indices": [ "test.move" ] },
+              "strategy": { "lifecycle_indices": [ "test.move" ] },
               "data": { "pairs": { "hp": { "type": "Int32", "data": 150 } } }
             }
             """);
@@ -107,7 +107,7 @@ public class JsonAndMappingsTests
             {
               "name": "TemplateEnemy",
               "node": { "pairs": { "root": "enemy" } },
-              "strategy": { "entity_indices": [ "test.ai" ] },
+              "strategy": { "lifecycle_indices": [ "test.ai" ] },
               "data": { "pairs": { "damage": { "type": "Int32", "data": 8 } } }
             }
             """);
@@ -123,7 +123,7 @@ public class JsonAndMappingsTests
                      {
                        "name": "Npc",
                        "node": { "pairs": { "root": "npc" } },
-                       "strategy": { "entity_indices": [ "test.talk" ] },
+                       "strategy": { "lifecycle_indices": [ "test.talk" ] },
                        "data": { "pairs": { "mood": { "type": "String", "data": "Calm" } } }
                      }
                    ]
