@@ -36,6 +36,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **`PlanExecutionStrategyBase.Wire` no longer leaks data subscriptions on repeated calls** — `Wire` now calls `Unwire` first before subscribing new callbacks. Previously, sequences like `AfterSpawn` followed by `AfterAdd` would create duplicate subscriptions on the entity, and `BeforeRemove` would only clean up the latest pair, leaving stale callbacks that continued to fire on data changes.
+- **`ConsoleBridgeServer` thread-safety hardening** — `_handleThread` creation is now performed inside the `_acceptLock` critical section, preventing a race where the old handle thread's cleanup could reset `_hasActiveClient` between the Accept thread's check and the new thread's creation, which could allow two concurrent Handle threads. The redundant `volatile` modifier on `_hasActiveClient` has been removed (all accesses are already protected by `_acceptLock`).
+- **origo.manual: fixed documentation counts and links** — corrected Core test capability count (24→28), GodotAdapter test count (6→7), ISndContext role interface count (10→11 in Architecture.md), Planning module parent link (self-reference → `../README.md`), and stale version numbers in quick-start guide and root README.
+
 - **`DataSourceNode.Dispose` and `BuildCanonicalString` now use iterative traversal** — prevents `StackOverflowException` on extremely deep or degenerate tree structures that can arise from runtime-generated data.
 - **`GodotNodeHandle` name is now cached at construction** — prevents crashes when accessing `.Name` after the underlying Godot node has been freed externally. `Free()` and `SetVisible` now check `IsInstanceValid` before accessing the node.
 - **`GodotPackedSceneNodeFactory` now caches loaded scenes** — avoids redundant disk I/O when the same `PackedScene` resource is instantiated multiple times.

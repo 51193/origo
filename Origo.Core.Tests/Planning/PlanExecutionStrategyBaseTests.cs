@@ -463,6 +463,27 @@ public class PlanExecutionStrategyBaseTests
         Assert.Empty(FailingPlanStrategy.CompletedCalls!);
     }
 
+    [Fact]
+    public void Wire_CalledTwice_DoesNotLeakSubscriptions()
+    {
+        var strategy = new SimplePlanStrategy();
+        var entity = new StubSndEntity("e");
+        entity.SetData(IntentKey, "test");
+        ISndContext ctx = NullSndContext.Instance;
+
+        strategy.AfterSpawn(entity, ctx);
+        Assert.Equal(1, entity.GetRawSubscriptionCount(IntentKey));
+        Assert.Equal(1, entity.GetRawSubscriptionCount(ActionStatusKey));
+
+        strategy.AfterAdd(entity, ctx);
+        Assert.Equal(1, entity.GetRawSubscriptionCount(IntentKey));
+        Assert.Equal(1, entity.GetRawSubscriptionCount(ActionStatusKey));
+
+        strategy.BeforeRemove(entity, ctx);
+        Assert.Equal(0, entity.GetRawSubscriptionCount(IntentKey));
+        Assert.Equal(0, entity.GetRawSubscriptionCount(ActionStatusKey));
+    }
+
     // ── Cleanup ────────────────────────────────────────────────────
 
     public PlanExecutionStrategyBaseTests()

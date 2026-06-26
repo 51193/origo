@@ -161,6 +161,8 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 
     private void Wire(ISndEntity entity, bool initialize)
     {
+        Unwire(entity);
+
         var raw = (ISndEntityRawSubscription)entity;
 
         var intentCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnIntentChanged(t, entity, o, n));

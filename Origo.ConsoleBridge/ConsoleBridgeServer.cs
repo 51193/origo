@@ -31,7 +31,7 @@ public sealed class ConsoleBridgeServer : IDisposable
 
     private Thread? _acceptThread;
     private Thread? _handleThread;
-    private volatile bool _hasActiveClient;
+    private bool _hasActiveClient;
     private TcpListener? _listener;
     private long _outputSubId;
     private Socket? _serverSocket;
@@ -145,14 +145,14 @@ public sealed class ConsoleBridgeServer : IDisposable
                     }
 
                     _hasActiveClient = true;
-                }
 
-                _handleThread = new Thread(() => HandleConnection(client))
-                {
-                    Name = "ConsoleBridge-Handle",
-                    IsBackground = true
-                };
-                _handleThread.Start();
+                    _handleThread = new Thread(() => HandleConnection(client))
+                    {
+                        Name = "ConsoleBridge-Handle",
+                        IsBackground = true
+                    };
+                    _handleThread.Start();
+                }
             }
         }
         finally

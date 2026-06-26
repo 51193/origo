@@ -159,4 +159,9 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
         list.RemoveAll(p => p.Original == callback);
         if (list.Count == 0) _subscriptions.Remove(name);
     }
+
+    internal int GetRawSubscriptionCount(string key)
+    {
+        return _subscriptions.TryGetValue(key, out var list) ? list.Count : 0;
+    }
 }
