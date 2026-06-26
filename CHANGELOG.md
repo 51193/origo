@@ -37,6 +37,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **`ConsoleBridgeServer.Start` race condition** — replaced the `_acceptThread is not null` idempotency guard with `Interlocked.CompareExchange` to prevent a theoretical race between concurrent `Start()` calls
 - **`Astar.FindPath` missing start bounds check** — the start position is now validated against `gridSize` before pathfinding begins, matching the existing endpoint validation
+- **`SndEntity.TeardownObserverBindingsForDeath` cross-entity observer leak** — the old implementation only handled self-targeting observer bindings, leaving cross-entity bindings unresolved when `DeadSingle()` or `QuitSingle()` was called. Fixed by introducing `FullCleanup` on `ObserverBindingEntry` and `TeardownAllBindings` on `ObserverStrategyManager`, which properly unsubscribe data, invoke `OnUnmounted`, and release strategies for all bindings regardless of target.
+- **`RemoveAllBindingsTargeting` now triggers full cleanup** — previously only removed entries from the list without unsubscribing data or invoking `OnUnmounted`. Now delegates to `FullCleanup` for each removed binding.
+- **`SndStrategyManager.RecoverStrategiesOnly` no longer silently drops non-LifecycleStrategyBase strategies** — recovering a non-lifecycle strategy (e.g., `ActiveStrategyBase` or `ObserverStrategyBase`) in entity strategy slots now throws `InvalidOperationException` instead of silently releasing the strategy.
 
 - **`SaveCoordinator` null checks unified** — constructor uses `ArgumentNullException.ThrowIfNull` consistently instead of the `?? throw` pattern
 - **`PersistProgress` now requires an active foreground session** — calling `PersistProgress` without a mounted foreground session now throws `InvalidOperationException` instead of silently writing a partially-empty session payload

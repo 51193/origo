@@ -52,7 +52,8 @@ internal sealed class ObserverStrategyManager
                 TargetName = target.Name,
                 ObserverIndex = observerIndex,
                 Strategy = strategy,
-                DataKeys = keys
+                DataKeys = keys,
+                TargetEntity = target
             };
 
             foreach (var key in keys)
@@ -163,14 +164,46 @@ internal sealed class ObserverStrategyManager
         }
     }
 
+    internal void TeardownAllBindings(ISndEntity entity)
+    {
+        var snapshot = _bindings.ToArray();
+        foreach (var binding in snapshot)
+        {
+            _bindings.Remove(binding);
+
+            if (binding.TargetEntity is not null)
+                binding.FullCleanup(entity, _context, _pool);
+            else
+                throw new InvalidOperationException(
+                    $"Observer binding '{binding.ObserverIndex}' -> '{binding.TargetName}' " +
+                    "has no TargetEntity reference. This is a framework invariant violation — " +
+                    "all live bindings must store a TargetEntity reference.");
+        }
+    }
+
     internal bool HasBindingTargeting(string targetName)
     {
         return _bindings.Any(b => b.TargetName == targetName);
     }
 
-    internal void RemoveAllBindingsTargeting(string targetName)
+    internal void RemoveAllBindingsTargeting(string targetName, ISndEntity observerEntity)
     {
-        _bindings.RemoveAll(b => b.TargetName == targetName);
+        for (var i = _bindings.Count - 1; i >= 0; i--)
+        {
+            var binding = _bindings[i];
+            if (binding.TargetName != targetName)
+                continue;
+
+            _bindings.RemoveAt(i);
+
+            if (binding.TargetEntity is not null)
+                binding.FullCleanup(observerEntity, _context, _pool);
+            else
+                throw new InvalidOperationException(
+                    $"Observer binding '{binding.ObserverIndex}' -> '{binding.TargetName}' " +
+                    "has no TargetEntity reference for cleanup. " +
+                    "Bindings recovered from serialization require a scene host to resolve the target.");
+        }
     }
 
     internal IReadOnlyList<ObserverBindingEntry> SnapshotBindings()

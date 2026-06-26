@@ -224,14 +224,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     private void TeardownObserverBindingsForDeath()
     {
-        var snapshot = _observerStrategyManager.SnapshotBindings();
-        SndEntity self = this;
-        foreach (var binding in snapshot)
-        {
-            var target = self.Name == binding.TargetName ? (ISndEntity)self : null;
-            if (target is null) continue;
-            _observerStrategyManager.Unmount(self, target, binding.ObserverIndex);
-        }
+        _observerStrategyManager.TeardownAllBindings((ISndEntity)this);
     }
 
     public SndMetaData SaveSingle()
@@ -254,7 +247,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     internal void RemoveAllObserverBindingsTargeting(string targetName)
     {
-        _observerStrategyManager.RemoveAllBindingsTargeting(targetName);
+        _observerStrategyManager.RemoveAllBindingsTargeting(targetName, (ISndEntity)this);
     }
 
     internal void RecoverObserverBindings(

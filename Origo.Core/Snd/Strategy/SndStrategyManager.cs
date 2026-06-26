@@ -35,7 +35,13 @@ internal sealed class SndStrategyManager
                     InsertSorted(new StrategyEntry
                         { Index = index, Strategy = lifecycleStrategy });
                 else
+                {
                     _pool.ReleaseStrategy(index);
+                    throw new InvalidOperationException(
+                        $"Strategy '{index}' (type '{strategy.GetType().FullName}') is not a LifecycleStrategyBase " +
+                        "and cannot be recovered as an entity strategy. " +
+                        "Entity strategies must inherit from LifecycleStrategyBase.");
+                }
             }
         }
         catch
