@@ -35,6 +35,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **Snapshotting an existing save no longer risks losing it on failure** — overwriting a save slot now moves the old directory aside, renames the freshly built copy into place, and only then drops the backup, so the previous data is never deleted before the new data is durably in place.
+- **`current/` is no longer left half-written when a save payload is incomplete** — the payload's active level is now validated before any file is written, so a payload missing its active level fails before touching `current/` instead of after writing the progress and meta files.
 - **ConsoleBridge no longer corrupts output under concurrent writes** — when a client connects, the buffered backlog is now flushed while holding the writer lock, so it can no longer interleave with the live output broadcast on another thread. Previously the flush wrote outside the lock and could produce garbled lines over the TCP console.
 - **`ISndEntity.AddStrategy` is now atomic on failure** — if a strategy's `AfterAdd` hook throws, the strategy is removed from the entity and returned to the pool before the exception propagates. Previously a throwing `AfterAdd` left the strategy half-attached (still driven by `Process` and lifecycle hooks) and leaked its pool reference.
 - **`MountObserverStrategy` cleans up fully on failure** — if subscribing an observed key or the `OnMounted` hook throws, all subscriptions made during the mount are removed and the half-added binding is discarded before the exception propagates. Previously a failed mount left dangling data subscriptions and a binding whose later teardown threw a double-release error.

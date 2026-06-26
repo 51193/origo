@@ -227,6 +227,61 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void SnapshotCurrentToSave_OverwritingExistingSave_ReplacesContentAndLeavesNoBackup()
+    {
+        var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+
+        // First snapshot establishes save_001 with the old content.
+        fs.SeedFile("root/current/progress.json", """{"v":"old"}""");
+        fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
+        Assert.Equal("""{"v":"old"}""", fs.ReadAllText("root/save_001/progress.json"));
+
+        // Second snapshot overwrites it, exercising the backup-then-rename path.
+        fs.SeedFile("root/current/progress.json", """{"v":"new"}""");
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
+
+        Assert.Equal("""{"v":"new"}""", fs.ReadAllText("root/save_001/progress.json"));
+        // The old data is not deleted before the new data is in place, and the
+        // backup/temp directories must not be left behind.
+        Assert.False(fs.DirectoryExists("root/save_001.bak"));
+        Assert.False(fs.DirectoryExists("root/save_001.tmp"));
+    }
+
+    [Fact]
+    public void WriteToCurrent_WhenActiveLevelMissing_ThrowsWithoutWritingCurrent()
+    {
+        var fs = new TestFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        var payload = new SaveGamePayload
+        {
+            SaveId = "001",
+            ActiveLevelId = "missing",
+            ProgressNode = TestFactory.NodeFromJson("""{"k":{"type":"Int32","data":1}}"""),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}"""),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                ["default"] = new()
+                {
+                    LevelId = "default",
+                    SndSceneNode = TestFactory.NodeFromJson("[]"),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}""")
+                }
+            }
+        };
+
+        Assert.Throws<InvalidOperationException>(() => SavePayloadWriter.WriteToCurrent(handle, payload));
+
+        // Payload completeness is validated before any write, so current/ must
+        // not contain a partially-written progress file.
+        Assert.False(fs.Exists("root/current/progress.json"));
+    }
+
+    [Fact]
     public void SaveStorageFacade_ReadCurrent_ActiveLevelPartial_MissingSession_Throws()
     {
         var fs = new TestFileSystem();

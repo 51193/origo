@@ -45,6 +45,9 @@ internal static class SavePayloadWriter
         SaveFileHandle.ValidateRootPath(handle.SaveRootPath, nameof(handle.SaveRootPath),
             "Save root path cannot be null or whitespace.");
         ValidateStrictProgressPayload(payload.ProgressNode, payload.ProgressStateMachinesNode);
+        if (!payload.Levels.TryGetValue(payload.ActiveLevelId, out _))
+            throw new InvalidOperationException(
+                $"Active level '{payload.ActiveLevelId}' not found in SaveGamePayload.");
 
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
         var currentAbs = handle.GetAbsolutePath(currentRel);
@@ -61,16 +64,12 @@ internal static class SavePayloadWriter
 
         WriteCustomMetaToCurrent(handle, currentRel, payload.CustomMeta);
 
-        if (!payload.Levels.TryGetValue(payload.ActiveLevelId, out _))
-            throw new InvalidOperationException(
-                $"Active level '{payload.ActiveLevelId}' not found in SaveGamePayload.");
-
         foreach (var level in payload.Levels.Values)
             WriteLevelPayload(handle, currentRel, level, true);
 
-        handle.MetaAccess.Delete(markerAbs);
-
         WritePayloadShaFile(handle, currentRel, payload);
+
+        handle.MetaAccess.Delete(markerAbs);
     }
 
     public static void WriteLevelPayloadOnly(

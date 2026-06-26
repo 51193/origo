@@ -99,6 +99,9 @@ internal static class SaveStorageFacade
 
         SavePayloadWriter.WriteToCurrent(handle, payload);
 
+        // Re-mark current/ as write-in-progress for the snapshot phase: if the
+        // snapshot fails below, the marker is intentionally left in place so a
+        // later ReadFromCurrent rejects the updated-but-unsnapshotted current/.
         handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
 
         try
@@ -183,10 +186,23 @@ internal static class SaveStorageFacade
         handle.MetaAccess.CreateDirectory(tempAbs);
         CopyCurrentToTempDirectory(handle, currentRel, tempRel, logger);
 
-        if (handle.MetaAccess.DirectoryExists(saveAbs))
-            handle.MetaAccess.DeleteDirectory(saveAbs);
+        // Replace the existing snapshot via backup-then-rename so the old data is
+        // never deleted before the new data is in place: move the old directory
+        // aside, rename the freshly built temp into place, then drop the backup.
+        var bakRel = $"{saveRel}.bak";
+        var bakAbs = handle.GetAbsolutePath(bakRel);
+        if (handle.MetaAccess.DirectoryExists(bakAbs))
+            handle.MetaAccess.DeleteDirectory(bakAbs);
+
+        var hadExisting = handle.MetaAccess.DirectoryExists(saveAbs);
+        if (hadExisting)
+            handle.MetaAccess.Rename(saveAbs, bakAbs);
 
         handle.MetaAccess.Rename(tempAbs, saveAbs);
+
+        if (hadExisting)
+            handle.MetaAccess.DeleteDirectory(bakAbs);
+
         logger?.Log(LogLevel.Info, nameof(SaveStorageFacade),
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
