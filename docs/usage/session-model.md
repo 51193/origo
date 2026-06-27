@@ -13,7 +13,7 @@ Origo 支持**前台会话**和**后台会话**并存的模型，两种会话通
 | 键名 | `__foreground__`（固定） | 用户自定义（如 `"dungeon"`） |
 | 数量 | 至多一个 | 可多个 |
 | 场景宿主 | GodotSndManager（引擎渲染） | FullMemorySndSceneHost（无渲染） |
-| Strategy 访问 | 全局 ISndContext（`CurrentSession` 返回前台会话） | 全局 ISndContext（`CurrentSession` 返回前台会话） |
+| Strategy 访问 | `entity.OwningSession`（直达所属会话） | `entity.OwningSession`（直达所属会话） |
 | 状态机 | 会话级 StateMachineContainer | 会话级 StateMachineContainer |
 | 黑板 | 独立 SessionBlackboard | 独立 SessionBlackboard |
 

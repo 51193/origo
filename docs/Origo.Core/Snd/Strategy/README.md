@@ -51,7 +51,7 @@ BaseStrategy
 - **TeardownOutgoingFor(observer, resolveTarget)**：清理某 observer 的全部出边；目标可解析则完整 `Unmount`，否则归还策略并移除记录
 - **TeardownAllBindingsFor(observer)**：`DeadSingle`/`QuitSingle` 的自包含清理路径，对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略），不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用
 - **HasBindingTargetingFrom(observerName, targetName)** / **RemoveBindingsTargetingFor(observer, targetName)**：incoming 拆线支撑——查询/清理某 observer 指向特定 target 的绑定
-- **双向 teardown**：`SndRuntime.KillPendingEntities` 同时处理 outgoing（被杀实体作为 observer）与 incoming（被杀实体作为 target，经入边索引定位观察者），通过快照防止 `OnUnmounted` 回调中的重入修改
+- **双向 teardown**：`SessionRun.KillPending` 同时处理 outgoing（被杀实体作为 observer）与 incoming（被杀实体作为 target，经入边索引定位观察者），通过快照防止 `OnUnmounted` 回调中的重入修改
 
 ### 观察者策略持久化
 

@@ -12,7 +12,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 |--------|------|------|
 | [Entity](Entity/README.md) | 运行时实体聚合根 | SndEntity + 数据/节点/策略三个内部管理器 |
 | [Metadata](Metadata/README.md) | 实体元数据模型 | TypedData / SndMetaData / NodeMetaData / StrategyMetaData / DataMetaData / SndMetaFluentBuilder |
-| [Scene](Scene/README.md) | 场景宿主与运行时门面 | SndRuntime + FullMemorySndSceneHost + StubSndSceneHost |
+| [Scene](Scene/README.md) | 场景宿主与 spawn 工厂 | SndEntityFactory + FullMemorySndSceneHost + StubSndSceneHost |
 | [Strategy](Strategy/README.md) | 策略系统核心 | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase。策略池、被动/主动/观察者三类管理器 + 泛型调用扩展 |
 | [Archetype](Archetype/README.md) | 数值配方加载 | SndArchetypeLoader：键值对文件解析与类型推断 |
 
@@ -20,7 +20,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 
 | 文件 | 职责 |
 |------|------|
-| `ISndContext.cs` | SND 上下文组合接口：继承 10 个角色接口（[详见 Abstractions/Snd](../Abstractions/Snd/README.md)） |
+| `ISndContext.cs` | SND 上下文组合接口：继承 9 个角色接口 + 直接声明 `SessionManager`（[详见 Abstractions/Snd](../Abstractions/Snd/README.md)） |
 | `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→别名/模板加载→入口存档加载。实现 `ISndFileAccess`，将文件读写委托给 `SndWorld.DataSourceIo` + `ConverterRegistry` |
 | `SndContextParameters.cs` | SndContext 构造参数对象。含 `AutoDiscoverStrategies`、`DiscoverySkipPrefixes`、`SceneAliasMapPath`、`SndTemplateMapPath` 等启动配置属性 |
 | `NullSndContext.cs` | 测试用空上下文实现，`ISndFileAccess` 方法均抛 `InvalidOperationException` |
@@ -64,7 +64,7 @@ SndEntity (聚合根)
 7. **BeforeQuit** — 实体正常退出前
 8. **BeforeDead** — 实体销毁前
 
-> **批量生命周期（batch orchestration）：** `SpawnEntity`、`RecoverFromMetaList`、`RemoveAllEntities` 为整体操作，不逐实体触发 AfterSpawn / AfterLoad / BeforeDead 钩子。钩子统一由上层（SaveContext.BuildSndScene / RecoverSndScene、SessionRun 生命周期）在批量操作完成后按优先级集中触发。
+> **批量生命周期（batch orchestration）：** `CreateEntity`、`RecoverFromMetaList`、`RemoveAllEntities` 为整体容器操作，不逐实体触发 AfterSpawn / AfterLoad / BeforeDead 钩子。钩子统一由上层（`SndEntityFactory` 的 spawn、`SessionRun` 的 load/save/quit/kill 生命周期）在批量操作完成后按优先级集中触发。
 
 ## 观察系统
 

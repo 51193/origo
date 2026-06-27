@@ -376,7 +376,7 @@ public sealed class EnemyWatcherStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
-        var boss = ctx.CurrentSession?.SceneHost.FindByName("boss");
+        var boss = entity.OwningSession.FindByName("boss");
         if (boss is null) return;
 
         // 跨实体观察：绑定随实体持久化、读档自动恢复；boss 死亡或本实体死亡时自动卸载

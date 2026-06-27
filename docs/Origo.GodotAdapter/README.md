@@ -50,7 +50,7 @@ OrigoDefaultEntry._Ready()
 - **不冲刷延迟管线**：帧循环中不绕过 Core 直接调用 `FlushDeferredActionsForCurrentFrame`
 - **`OrigoAutoHost._Process` 为唯一帧入口**：在其中依次委托 Core 的 `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending`，适配层仅做调度，不做决策
 
-所有这些编排由 `SndRuntime`（Core 层）统一负责。详细分离原则见 [架构总览](../usage/architecture-overview.md#适配层与-core-层分离原则)。
+所有这些编排由 Core 层的会话生命周期（`SessionManager` / `SessionRun`）统一负责。详细分离原则见 [架构总览](../usage/architecture-overview.md#适配层与-core-层分离原则)。
 
 ### 桥接模式
 

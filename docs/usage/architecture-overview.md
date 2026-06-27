@@ -8,7 +8,7 @@ Origo 框架遵循以下核心设计约束：
 
 - **平台无关**：Core 零引擎依赖，所有 I/O 通过 `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver`（`IFileSystem` 内部化）
 - **适配层隔离**：适配层仅提供能力封装和桥接，不得触发策略钩子、管理策略生命周期
-- **接口隔离（ISP）**：`ISndContext` 拆分为 11 个角色接口；`ISessionRun` 返回抽象 `IStateMachineContainer`
+- **接口隔离（ISP）**：`ISndContext` 拆分为 9 个角色接口；`ISessionRun` 返回抽象 `IStateMachineContainer`
 - **依赖方向单向**：Abstractions → Core 实现 → Adapter，反向严格禁止
 - **public 白名单**：每个 public 接口必须有明确的跨程序集消费者
 - **策略一等公民**：策略可访问 `ISndContext` 全部 30+ 成员，不限制框架能力
@@ -44,8 +44,8 @@ SessionRun (foreground + background)
 | 层级 | 容器 | 持有资源 |
 |------|------|---------|
 | System | `SystemRuntime` | Logger, PathResolver, SaveRootPath, OrigoRuntime, SaveStorageService, SavePathPolicy, MetaAccess |
-| Progress | `ProgressRuntime` | Logger, SaveStorageService, SndWorld, SndRuntime, SceneHost, StateMachineContext, SndContext, SavePathPolicy |
-| Session | `SessionManagerRuntime` | Logger, SaveStorageService, SndWorld, SndRuntime, SceneHost, StateMachineContext, SndContext, ProgressBlackboard |
+| Progress | `ProgressRuntime` | Logger, SaveStorageService, SndWorld, SceneHost, StateMachineContext, SndContext, SavePathPolicy |
+| Session | `SessionManagerRuntime` | Logger, SaveStorageService, SndWorld, SceneHost, StateMachineContext, SndContext, ProgressBlackboard |
 | Instance | `SessionRun` | SessionBlackboard, ISndSceneHost, StateMachineContainer（经 RunStateScope） |
 
 ## SND 实体模型
@@ -136,7 +136,7 @@ Core 层所有文件操作通过三个接口完成：
 
 ### 接口抽象设计
 
-Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 11 个角色接口：
+Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 9 个角色接口（外加直接声明的 `SessionManager` 成员）：
 
 | 角色接口 | 职责 |
 |---------|------|
@@ -176,7 +176,7 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 11 个角色
 | 职责 | 说明 |
 |------|------|
 | **策略系统** | 策略基类、策略池、策略管理器、生命周期钩子定义与触发 |
-| **实体生命周期编排** | `SndRuntime.Spawn`/`SpawnMany`/`KillPendingEntities`/`ClearAll` 统一编排所有钩子 |
+| **实体生命周期编排** | `SndEntityFactory.Spawn`/`SpawnMany`（AfterSpawn）、`SessionRun` 的 load/save/quit 与 `KillPending`（经 `SessionManager.KillPendingAllSessions`）统一编排所有钩子 |
 | **场景宿主抽象** | `ISndSceneHost` 仅定义容器操作（创建/查找/移除），不含钩子语义 |
 | **延迟动作管线** | `ActionScheduler` 业务队列 + 系统队列，`IOrigoFrameDriver.DriveFrame` 统一冲刷 |
 | **启动编排** | `SndContext.Bootstrap()` 统一执行策略发现→别名/模板加载→入口存档加载 |
@@ -187,8 +187,8 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 11 个角色
 Godot._Process
   └── OrigoAutoHost._Process              ← 适配层（唯一帧入口）
         └── IOrigoFrameDriver.DriveFrame(delta)  ← Core: 统一帧边界
-              ├── Snd.ProcessAll(delta)    ← Core: 实体帧处理
-              ├── FlushEndOfFrameDeferred() ← Core: 延迟动作 + KillPendingEntities
+              ├── SessionManager.ProcessAllSessions(delta, true) ← Core: 实体帧处理（含前台）
+              ├── FlushEndOfFrameDeferred() ← Core: 延迟动作 + KillPendingAllSessions
               └── Console.ProcessPending() ← Core: 控制台
 ```
 

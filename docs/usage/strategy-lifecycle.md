@@ -87,7 +87,7 @@ public override void AfterLoad(ISndEntity entity, ISndContext ctx)
 
 ### 4. BeforeQuit 可安全访问会话资源
 
-`BeforeQuit` 执行期间，`ctx.CurrentSession.SceneHost` 和 `ctx.CurrentSession.SessionBlackboard` 保证可访问。框架的 Dispose 流程使用两阶段标志确保会话资源在 BeforeQuit 钩子执行完毕后才标记为 disposed。
+`BeforeQuit` 执行期间，`entity.OwningSession` 的实体操作（`FindByName`/`GetEntities`）与 `entity.OwningSession.SessionBlackboard` 保证可访问。框架的 Dispose 流程使用两阶段标志确保会话资源在 BeforeQuit 钩子执行完毕后才标记为 disposed。
 
 即使某个 BeforeQuit 钩子抛出异常，框架通过 `try/finally` 保证实体清理和场景容器清空必定完成，不会残留实体导致无限错误循环。
 
@@ -95,8 +95,7 @@ public override void AfterLoad(ISndEntity entity, ISndContext ctx)
 // ✅ 安全：BeforeQuit 中访问会话资源
 public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
 {
-    var session = ctx.CurrentSession;
-    if (session == null) return;
+    var session = entity.OwningSession;
 
     var mgr = session.FindByName("MyManager");
     mgr?.InvokeStrategy("my.unregister", entity.Name);

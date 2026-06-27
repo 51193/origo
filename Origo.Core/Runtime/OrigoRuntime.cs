@@ -77,7 +77,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
 
     /// <summary>
     ///     SND 世界实例，管理策略池、类型映射、编解码器和模板配置。
-    ///     是 Snd (SndRuntime) 的核心数据层。注意：Snd.World 与此属性指向同一实例。
+    ///     是 SND 子系统的核心数据层。注意：Snd.World 与此属性指向同一实例。
     /// </summary>
     public SndWorld SndWorld { get; }
 

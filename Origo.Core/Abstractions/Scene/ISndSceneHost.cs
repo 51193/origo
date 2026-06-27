@@ -7,8 +7,8 @@ namespace Origo.Core.Abstractions.Scene;
 /// <summary>
 ///     面向 Core 的 SND 场景宿主抽象。
 ///     仅负责实体的容器管理（创建/查找/移除），不涉及任何策略生命周期钩子。
-///     所有钩子编排由 <see cref="Origo.Core.Snd.Scene.SndRuntime" />
-///     和会话生命周期统一处理。
+///     所有钩子编排由会话生命周期统一处理
+///     （<see cref="Origo.Core.Runtime.Lifecycle.SessionRun" /> 与 <see cref="Origo.Core.Runtime.Lifecycle.SessionManager" />）。
 ///     <para>
 ///         适配层实现此接口时不应触发任何策略钩子——钩子是 Core 层的专属职责。
 ///     </para>
@@ -18,11 +18,10 @@ public interface ISndSceneHost : ISndSceneAccess
     /// <summary>
     ///     从元数据在场景中创建实体，恢复数据/策略/节点到内存。
     ///     不触发任何生命周期钩子（AfterSpawn / AfterLoad 等）。
-    ///     钩子应由调用方（SndRuntime / SessionRun）在适当阶段统一触发。
-    ///     <para>
-    ///         注意：此方法不执行重名校验。需要重名保护时应通过
-    ///         <see cref="Origo.Core.Snd.Scene.SndRuntime.Spawn" /> 调用。
-    ///     </para>
+///     钩子应由调用方（<see cref="Origo.Core.Snd.Scene.SndEntityFactory" /> / <see cref="Origo.Core.Runtime.Lifecycle.SessionRun" />）在适当阶段统一触发。
+///     <para>
+///         注意：此方法不执行重名校验，框架当前也不在上层强制重名唯一性。
+///     </para>
     /// </summary>
     ISndEntity CreateEntity(SndMetaData metaData);
 

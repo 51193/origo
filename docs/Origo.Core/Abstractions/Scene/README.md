@@ -4,7 +4,7 @@
 
 ## 概述
 
-定义 Core 层编排 SND 场景的抽象能力。`ISndSceneAccess` 提供最小化的构建/恢复操作（纯数据转换，不触发策略钩子），`ISndSceneHost` 在其基础上补充实体容器管理能力。策略生命周期钩子由上层 `SndRuntime` 和 `SessionRun` 统一编排。
+定义 Core 层编排 SND 场景的抽象能力。`ISndSceneAccess` 提供最小化的构建/恢复操作（纯数据转换，不触发策略钩子），`ISndSceneHost` 在其基础上补充实体容器管理能力，`IOwningSessionBindable` 允许会话在构造时把自身绑定到宿主以自动确定新实体的归属会话。策略生命周期钩子由上层会话生命周期（`SndEntityFactory` / `SessionRun`）统一编排。
 
 ## 包含文件
 
@@ -12,6 +12,7 @@
 |------|------|
 | `ISndSceneAccess.cs` | 最小场景访问：构建元数据列表 / 从元数据恢复（无钩子触发） |
 | `ISndSceneHost.cs` | 场景宿主（继承 ISndSceneAccess）：实体容器（创建/查找/移除/帧更新） |
+| `IOwningSessionBindable.cs` | 归属会话绑定：`SetOwningSession(session)`，宿主据此在创建实体时自动绑定 `ISndEntity.OwningSession` |
 
 ## 接口详细
 
@@ -34,6 +35,12 @@
 | `RemoveEntity(name)` | 从集合移除 + 释放引擎资源（节点/数据），不释放策略、不触发钩子。BeforeDead 钩子和策略释放由框架在调用前统一完成 |
 | `RemoveAllEntities()` | 清空场景实体集合引用（不触发钩子、不释放策略）。BeforeQuit 钩子和策略释放由框架在调用前统一完成 |
 
+### IOwningSessionBindable
+
+| 成员 | 说明 |
+|------|------|
+| `SetOwningSession(ISessionRun session)` | 由 `SessionRun` 构造时调用，把会话绑定到宿主；宿主此后创建的每个实体都自动绑定到该会话的 `ISndEntity.OwningSession` |
+
 ## 设计决策
 
 ### 为什么分离 ISndSceneAccess 和 ISndSceneHost
@@ -42,21 +49,21 @@
 
 ### 为什么场景宿主不触发策略钩子
 
-场景宿主仅负责实体容器管理，不涉及任何策略生命周期钩子。所有钩子编排由 `SndRuntime` 统一处理。这种职责分离确保：
+场景宿主仅负责实体容器管理，不涉及任何策略生命周期钩子。所有钩子编排由会话生命周期（`SndEntityFactory` / `SessionRun`）统一处理。这种职责分离确保：
 
 - Godot 适配层不参与策略生命周期管理
 - 批量操作可以在"全部创建/恢复"和"全部触发钩子"两个阶段之间进行
 - 钩子触发期间，所有实体已完全恢复到查找集合中，实现加载顺序无关的跨实体互操作
 
-参见 [IEntityLifecycle](../../Abstractions/Entity/README.md) 和 [SndRuntime](../../Snd/Scene/README.md#sndruntime-生命周期编排)。
+参见 [IEntityLifecycle](../Entity/README.md) 和 [Scene 实现](../../Snd/Scene/README.md#策略生命周期钩子的编排归属)。
 
 ### 为什么 CreateEntity 不做重名校验
 
-重名校验是上层业务规则（通过 `SndRuntime.Spawn` 执行），不在接口层强制。接口保持最小语义，将校验职责留给编排层。
+`CreateEntity` 保持最小语义，不在接口层做重名校验；框架当前在 spawn 路径上也不强制重名唯一性。接口不承担业务校验职责，将其留给需要时的上层业务规则。
 
 ### 为什么 Kill 分为 RequestKillEntity（标记）和 RemoveEntity（拆解）
 
-`RequestKillEntity` 立即标记实体为待销毁（`IsPendingKill = true`），但不立即物理移除。这允许同帧内后续操作通过 `IsPendingKill` 判断实体存活状态，避免延迟 Kill 导致的重复操作。物理销毁在帧末由 `KillPendingEntities()` 统一执行（业务队列之后、系统队列之前），先批量触发 BeforeDead 钩子、释放策略，再逐个调用 `RemoveEntity` 拆解。
+`RequestKillEntity` 立即标记实体为待销毁（`IsPendingKill = true`），但不立即物理移除。这允许同帧内后续操作通过 `IsPendingKill` 判断实体存活状态，避免延迟 Kill 导致的重复操作。物理销毁在帧末由 `SessionRun.KillPending()`（经 `SessionManager.KillPendingAllSessions()` 对每个会话调用）统一执行（业务队列之后、系统队列之前），先做观察者双向拆线，再批量触发 BeforeDead 钩子、释放策略，最后逐个调用 `RemoveEntity` 拆解。
 
 ---
 

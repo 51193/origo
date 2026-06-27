@@ -6,7 +6,7 @@
 
 SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组合了 `SndDataManager`（数据）、`SndNodeManager`（节点）、`SndStrategyManager`（被动策略）、`ActiveStrategyManager`（主动策略）四个内部管理器，并持有一个经构造注入的 per-scene-host `ObserverTopology`（观察者绑定）引用，实现了 `ISndEntity`、`IEntityLifecycle` 和 `ISndEntityRawSubscription` 接口。
 
-策略生命周期钩子通过 `IEntityLifecycle` 接口暴露的分阶段方法触发，由框架层的 `SndRuntime` 和 `SessionRun` 统一编排批量钩子调用，而非由业务代码直接调用实体方法。
+策略生命周期钩子通过 `IEntityLifecycle` 接口暴露的分阶段方法触发，由框架层的 `SndEntityFactory` 和 `SessionRun` 统一编排批量钩子调用，而非由业务代码直接调用实体方法。
 
 `SndEntity` 也是观察系统的参与者：观察者策略（`ObserverStrategyBase`）经 `MountObserverStrategy` 挂载到目标实体，由 per-scene-host 的 `ObserverTopology` 管理绑定拓扑、经 `ISndEntityRawSubscription` 接线目标的数据变更，并在实体退出/死亡时自动卸载。
 
@@ -60,9 +60,9 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 `Process(delta)` 按优先级 + 快照迭代触发策略 Process。
 
-`IsPendingKill` 标记由 `RequestKillEntity()` 立即设置。BeforeDead 钩子由 `SndRuntime.KillPendingEntities()` 批量触发，`RemoveEntity()` 仅做拆解。
+`IsPendingKill` 标记由 `RequestKillEntity()` 立即设置。BeforeDead 钩子由 `SessionRun.KillPending()` 批量触发，`RemoveEntity()` 仅做拆解。
 
-> **注意**：`CreateEntity` 是场景宿主（`ISndSceneHost`）的方法，不在实体自身上。`ISndSceneHost.CreateEntity` 创建实体并通过 `RecoverForLifecycle` 恢复数据/策略/节点，但不触发 AfterSpawn 钩子。AfterSpawn 钩子由 `SndRuntime.Spawn` / `SndRuntime.SpawnMany` 在创建完成后统一触发。
+> **注意**：`CreateEntity` 是场景宿主（`ISndSceneHost`）的方法，不在实体自身上。`ISndSceneHost.CreateEntity` 创建实体并通过 `RecoverForLifecycle` 恢复数据/策略/节点，但不触发 AfterSpawn 钩子。AfterSpawn 钩子由 `SndEntityFactory.Spawn` / `SndEntityFactory.SpawnMany` 在创建完成后统一触发。
 
 ### SndDataManager
 
@@ -91,7 +91,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 ### 为什么分离 IEntityLifecycle
 
-策略生命周期钩子（AfterSpawn/AfterLoad/BeforeSave/BeforeQuit/BeforeDead）的触发时机由框架层控制，不应该直接暴露在 `ISndEntity`（面向业务代码）上。`IEntityLifecycle` 接口暴露分阶段方法给 `SndRuntime` 和 `SessionRun`，实现批量编排的同时保持业务代码接口简洁。
+策略生命周期钩子（AfterSpawn/AfterLoad/BeforeSave/BeforeQuit/BeforeDead）的触发时机由框架层控制，不应该直接暴露在 `ISndEntity`（面向业务代码）上。`IEntityLifecycle` 接口暴露分阶段方法给 `SndEntityFactory` 和 `SessionRun`，实现批量编排的同时保持业务代码接口简洁。
 
 参见 [IEntityLifecycle](../../Abstractions/Entity/README.md)。
 
@@ -109,7 +109,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 ### 为什么观察经 per-scene-host ObserverTopology 而非实体订阅 API
 
-观察者策略与被动/主动策略一样无状态、可池化。将观察接线交由场景宿主级的 `ObserverTopology` 统一治理，使绑定拓扑可随实体序列化（`ObserverIndices`）并在读档时自动恢复，业务代码无需在 `AfterLoad` 中手动重连，也无需在 `BeforeDead` 中手动退订——实体退出/死亡时拓扑自动卸载全部绑定。跨实体绑定是有向图而非每实体私有状态，集中到 per-scene-host 拓扑后，`SndRuntime` 的 kill/clear 双向 teardown 经入边索引定位观察者，无需实体反向暴露内部管理器。
+观察者策略与被动/主动策略一样无状态、可池化。将观察接线交由场景宿主级的 `ObserverTopology` 统一治理，使绑定拓扑可随实体序列化（`ObserverIndices`）并在读档时自动恢复，业务代码无需在 `AfterLoad` 中手动重连，也无需在 `BeforeDead` 中手动退订——实体退出/死亡时拓扑自动卸载全部绑定。跨实体绑定是有向图而非每实体私有状态，集中到 per-scene-host 拓扑后，`SessionRun` 的 kill/clear 双向 teardown 经入边索引定位观察者，无需实体反向暴露内部管理器。
 
 ### 为什么 SndDataManager 存储 (OriginalCallback, WrappedCallback) 对
 

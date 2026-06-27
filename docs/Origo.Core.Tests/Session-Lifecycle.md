@@ -30,7 +30,6 @@ ProgressRun 的 LoadFromPayload/SwitchForeground/PersistProgress、
 | `BackgroundSessionTests.cs` | 后台会话独立测试 |
 | `BackgroundSession_CreationWithCorrectFlagTests.cs` | 后台 IsFrontSession=false |
 | `BackgroundSession_MultipleInstancesAllowedTests.cs` | 后台可多实例 |
-| `BackgroundSession_StrategyContextReceivesBackgroundFlagTests.cs` | 策略上下文接收后台标志 |
 | `FrontSession_CreationWithCorrectFlagTests.cs` | 前台 IsFrontSession=true |
 | `FrontSession_StrategyContextReceivesFrontFlagTests.cs` | 策略上下文接收前台标志 |
 | `FrontSession_UniqueConstraintValidationTests.cs` | 前台唯一性约束 |
@@ -83,7 +82,7 @@ ProgressRun 的 LoadFromPayload/SwitchForeground/PersistProgress、
 | `SessionRun_Dispose_DoesNotWriteFilesToCurrent` | Dispose 不自动写入文件（通过 ISaveStorageService 检查） | session-model: Dispose 不持久化 |
 | `SessionRun_Dispose_DoesNotTriggerBeforeSave` | Dispose 不触发 BeforeSave 钩子 | session-model: Dispose 不持久化 |
 | `SessionRun_Dispose_TriggersBeforeQuit` | Dispose 触发 BeforeQuit 钩子 | session-model |
-| `SessionRun_Dispose_BeforeQuit_CanAccessSceneHost` | BeforeQuit 中可安全访问 ctx.CurrentSession.SceneHost 和 SessionBlackboard（不抛 ObjectDisposedException） | strategy-lifecycle: BeforeQuit 会话访问保证 |
+| `SessionRun_Dispose_BeforeQuit_CanAccessSceneHost` | BeforeQuit 期间会话资源（SceneHost / SessionBlackboard）仍可访问，不抛 ObjectDisposedException | strategy-lifecycle: BeforeQuit 会话访问保证 |
 | `SessionRun_ExplicitPersistLevelState_WritesToCurrent_BeforeDispose` | 通过 ISndContext.RequestSaveGame 持久化写入文件 | session-model |
 | `SessionRun_ExplicitPersistLevelState_TriggersBeforeSave` | 通过 ISndContext.RequestSaveGame 触发 BeforeSave | session-model |
 | `ProgressRun_Dispose_DoesNotCallPersistProgress` | ProgressRun.Dispose 不调用 PersistProgress | session-model |

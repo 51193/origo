@@ -778,10 +778,10 @@ public class SndEntityLifecycleBatchTests
         });
     }
 
-    // ── SndRuntime.SpawnMany batch behavior ─────────────────────────────
+    // ── SndEntityFactory.SpawnMany batch behavior ─────────────────────────────
 
     [Fact]
-    public void SndRuntime_SpawnMany_TriggersAfterSpawnAfterAllCreated()
+    public void SndEntityFactory_SpawnMany_TriggersAfterSpawnAfterAllCreated()
     {
         ProbeStrategy.Events = new List<string>();
         var host = CreateHost(w =>
@@ -801,10 +801,10 @@ public class SndEntityLifecycleBatchTests
     }
 
     
-    // ── Boundary: SndRuntime orchestrates hooks, SceneHost is pure container ─
+    // ── Boundary: SndEntityFactory orchestrates AfterSpawn hooks, SceneHost is pure container ─
 
     [Fact]
-    public void SndRuntime_Spawn_CallsCreateEntityThenFiresAfterSpawn()
+    public void SndEntityFactory_Spawn_CallsCreateEntityThenFiresAfterSpawn()
     {
         ProbeStrategy.Events = new List<string>();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
@@ -815,7 +815,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [Fact]
-    public void SndRuntime_SpawnMany_EntitiesVisibleInAfterSpawn()
+    public void SndEntityFactory_SpawnMany_EntitiesVisibleInAfterSpawn()
     {
         ProbeStrategy.Events = new List<string>();
         var host = CreateHost(w =>
@@ -859,7 +859,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [Fact]
-    public void SndRuntime_Spawn_WithNonLifecycleEntity_DoesNotThrow()
+    public void SndEntityFactory_Spawn_WithNonLifecycleEntity_DoesNotThrow()
     {
         var memoryHost = new StubSndSceneHost();
         var entity = SndEntityFactory.Spawn(memoryHost, new SndMetaData { Name = "E" });
@@ -869,7 +869,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [Fact]
-    public void SndRuntime_SpawnMany_WithNonLifecycleEntity_DoesNotThrow()
+    public void SndEntityFactory_SpawnMany_WithNonLifecycleEntity_DoesNotThrow()
     {
         var memoryHost = new StubSndSceneHost();
         SndEntityFactory.SpawnMany(memoryHost, new[]
@@ -882,7 +882,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [Fact]
-    public void SndRuntime_ProcessAll_DoesNotThrowForEmptyScene()
+    public void ProcessAll_DoesNotThrowForEmptyScene()
     {
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
         host.ProcessAll(0.016);

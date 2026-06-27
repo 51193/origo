@@ -30,6 +30,7 @@ publish/
 
 # Coverlet (local / CI artifact)
 coverage.cobertura.xml
+coverage.xml
 TestResults/
 
 # OS

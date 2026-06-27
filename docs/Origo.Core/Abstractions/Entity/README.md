@@ -76,7 +76,7 @@
 
 ### IEntityLifecycle
 
-**框架内部使用的接口**，供 `SndRuntime` 和 `SessionRun` 进行两阶段批处理编排，也供适配层实体（如 `GodotSndEntity`）实现以桥接委托。业务代码不应直接调用此接口。
+**框架内部使用的接口**，供 `SndEntityFactory` 和 `SessionRun` 进行两阶段批处理编排，也供适配层实体（如 `GodotSndEntity`）实现以桥接委托。业务代码不应直接调用此接口。
 
 | 方法 | 阶段 | 说明 |
 |------|------|------|
@@ -112,7 +112,7 @@
 
 策略生命周期钩子的触发由框架层控制。将 `RecoverForLifecycle`、`FireXxxHooks`、`ReleaseStrategiesOnly`、`TeardownOnly` 放入独立接口可以：
 - 确保 `ISndEntity`（面向业务代码）不暴露生命周期编排能力
-- 允许 `SndRuntime` 和 `SessionRun` 通过 `IEntityLifecycle` 进行统一批处理
+- 允许 `SndEntityFactory` 和 `SessionRun` 通过 `IEntityLifecycle` 进行统一批处理
 - Godot 适配层的 `GodotSndEntity` 也能实现此接口，委托给内部 `SndEntity`
 
 ### 为什么 TryGetData 使用 found/value 元组

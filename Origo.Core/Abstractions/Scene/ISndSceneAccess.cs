@@ -6,7 +6,7 @@ namespace Origo.Core.Abstractions.Scene;
 /// <summary>
 ///     抽象 SND 场景访问能力，供 Core 层编排存读档流程。
 ///     仅负责数据转换（元数据列表的序列化/恢复），不触发策略生命周期钩子。
-///     钩子触发由上层（SndRuntime / SessionRun）在调用前后统一编排。
+///     钩子触发由上层（<see cref="Origo.Core.Snd.Scene.SndEntityFactory" /> / <see cref="Origo.Core.Runtime.Lifecycle.SessionRun" />）在调用前后统一编排。
 /// </summary>
 public interface ISndSceneAccess
 {

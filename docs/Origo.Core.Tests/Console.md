@@ -17,7 +17,6 @@
 | `ConsoleCommandRouterTests.cs` | 命令路由：注册/分发/未注册命令/help 命令 |
 | `ConsoleInputBufferTests.cs` | 输入队列：Enqueue/Dequeue/FIFO/空队列 |
 | `ConsoleOutputChannelTests.cs` | 输出通道：Subscribe/Publish/Unsubscribe/多订阅者 |
-| `ConsoleTests.cs` | 集成测试：spawn 命令 positional/named 模式、模板不存在、重名 |
 | `ConsoleCommandExtendedTests.cs` | 命令扩展/边缘测试 |
 | `ConsoleTypeInferenceTests.cs` | 类型推断：bb_set Int32/Single/Boolean/String、entity_set_data 新键推断+已有键类型保留 |
 | `OrigoConsoleLoggingTests.cs` | 控制台日志记录：日志级别正确性、消息顺序、Tag 一致性、内容完整性（行为验证，不耦合格式字符串） |
@@ -71,22 +70,6 @@
 | `EntitySetData_EntityNotFound_ReturnsError` | entity_set_data nonexistent hp 50 | 返回 false + error 含 "not found" |
 | `RequestSaveGame_ThrowsOnNullId` | null saveId | ArgumentException |
 | `RequestLoadGame_ThrowsOnNullId` | null loadId | ArgumentException |
-
-## ConsoleTests 测试详情
-
-### 正确路径
-
-| 测试方法 | 验证的行为 | 文档出处 |
-|---------|-----------|---------|
-| `OrigoConsole_SpawnTemplate_Positional_SpawnsWithResolvedName` | spawn 命令通过位置参数创建实体 | console-commands: spawn |
-| `OrigoConsole_SpawnTemplate_Named_SpawnsWithNameAndTemplate` | spawn 命令通过命名参数创建实体 | console-commands: spawn |
-
-### 错误路径
-
-| 测试方法 | 触发的错误 | 预期行为 |
-|---------|-----------|---------|
-| `OrigoConsole_SpawnTemplate_MissingTemplate_WritesError` | spawn 不存在的模板 | 输出错误消息 |
-| `OrigoConsole_SpawnTemplate_DuplicateName_WritesErrorAndSkipsSecondSpawn` | spawn 重名实体 | 第一个成功，第二个报错 |
 
 ## SpawnTemplateCommandHandlerTests 测试详情
 

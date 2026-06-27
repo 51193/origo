@@ -14,7 +14,6 @@
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `StrategyPriorityTests.cs` | 策略按 Priority 升序排列、同优先级按插入顺序、所有生命周期钩子遵循优先级 |
-| `StrategyPoolAndRuntimeTests.cs` | 策略池注册/复用/释放/引用计数、SndRuntime 代理到 SceneHost |
 | `StrategyPoolTypeSafetyAndExtensionTests.cs` | 策略池类型安全、无状态校验、注册与释放的边缘情况 |
 | `LifecycleStrategyBaseTests.cs` | 默认钩子不改变实体数据；Process 中 RequestKill 对自身和其他实体的影响；多策略 Process 中 Kill 自己的后续策略执行验证 |
 | `ActiveStrategyTests.cs` | 主动策略 Invoke 调用、实体 InvokeStrategy 委托链 |
@@ -62,26 +61,6 @@
 | `AlternatingPriorityInsertion_SortedCorrectly` | 交替优先级插入后排升序 | — |
 | `Remove_NonexistentStrategy_NoEffect` | 删除不存在的策略不影响 | — |
 | `AllDefaultPriority6205_MaintainsInsertionOrder` | 全部默认优先级保持插入序 | snd-entity-model |
-
-## StrategyPoolAndRuntimeTests 测试详情
-
-### 正确路径
-
-| 测试方法 | 验证的行为 | 文档出处 |
-|---------|-----------|---------|
-| `SndStrategyPool_ReusesAndReleasesByReferenceCount` | 引用计数复用：获取两次返回同实例，释放多余次数后重新创建 | snd-entity-model: 引用计数 |
-| `SndStrategyManager_Recover_WhenFailed_RollsBackAcquiredStrategies` | 部分策略 Spawn 失败时回滚已获取的策略 | snd-entity-model |
-| `SndRuntime_DelegatesToSceneHost` | SndRuntime.SpawnEntity/SpawnMany/RemoveAllEntities 代理到 SceneHost | Snd/Scene |
-| `OrigoRuntime_CreatesSndWorldAndSupportsInjectedSystemBlackboard` | OrigoRuntime 正确创建 SndWorld，注入黑板可用 | Runtime |
-| `OrigoRuntime_ResetConsoleState_ClearsInputQueueOnly` | 重置控制台只清理输入队列，不清理输出订阅 | Console |
-
-### 错误路径
-
-| 测试方法 | 触发的错误 | 预期行为 |
-|---------|-----------|---------|
-| `SndStrategyPool_GetUnknownStrategy_ThrowsInvalidOperation` | 获取未注册策略 | InvalidOperationException |
-| `SndStrategyPool_ReleaseWithoutAcquire_OrDoubleRelease_ThrowsInvalidOperation` | 未获取或重复释放 | InvalidOperationException |
-| `SndRuntime_SpawnEntity_DuplicateName_ThrowsInvalidOperation` | 重复实体名 | InvalidOperationException |
 
 ## LifecycleStrategyBaseTests 测试详情
 
@@ -131,8 +110,6 @@
 | `LD10 / LD20 / LD30` | StrategyPriorityTests.cs | 重写 AfterLoad 钩子 |
 | `SN10 / SN5 / SN0` | StrategyPriorityTests.cs | 负优先级策略 |
 | `SMin / SMax` | StrategyPriorityTests.cs | int.MinValue / int.MaxValue 优先级策略 |
-| `DemoStrategy` | StrategyPoolAndRuntimeTests.cs | 简单标记策略，验证池引用计数 |
-| `RecoverSafeStrategy` | StrategyPoolAndRuntimeTests.cs | 验证 Spawn 失败时回滚 |
 | `TestEntityStrategy` | LifecycleStrategyBaseTests.cs | 不重写任何钩子的空白策略 |
 | `Rec`（AsyncLocal 记录器） | StrategyPriorityTests.cs | 执行顺序日志收集器（使用 AsyncLocal 实现线程隔离） |
 

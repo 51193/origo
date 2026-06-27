@@ -78,7 +78,7 @@ entity.UnmountObserverStrategy(entity.Name, "character.intent_watcher");
 
 | 钩子 | 触发时机 | 典型用途 |
 |------|---------|---------|
-| `AfterSpawn(entity, ctx)` | 新实体生成后（由 `SndRuntime.Spawn` / `SpawnMany` 统一触发） | 初始化属性（hp, position 等） |
+| `AfterSpawn(entity, ctx)` | 新实体生成后（由 `SndEntityFactory.Spawn` / `SpawnMany` 统一触发） | 初始化属性（hp, position 等） |
 | `AfterLoad(entity, ctx)` | 从存档恢复后（批量 RecoverFromMetaList 不触发，由上层统一触发） | 恢复后重新注册事件等 |
 | `AfterAdd(entity, ctx)` | 策略动态添加到实体 | 动态添加状态逻辑 |
 | `Process(entity, delta, ctx)` | 每帧 | 持续逻辑（移动、计时等） |

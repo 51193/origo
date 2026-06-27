@@ -8,7 +8,7 @@
 
 验证 SND 场景宿主层的实现：StubSndSceneHost 的实体容器管理、
 FullMemorySndSceneHost 的边界行为、NullNodeFactory 的无操作行为、
-SndRuntime 的钩子编排、SndEntityFactory 的公共 API、ProcessAll/Spawn/Kill 批量缩放性能。
+SndEntityFactory 的 spawn + AfterSpawn 编排、ProcessAll 帧处理行为。
 
 ## 测试文件清单
 
@@ -17,7 +17,6 @@ SndRuntime 的钩子编排、SndEntityFactory 的公共 API、ProcessAll/Spawn/K
 | `MemorySndSceneHostTests.cs` | SndSceneHost 的 CreateEntity/FindByName/BuildMetaList/RecoverFromMetaList/RemoveAllEntities/RemoveEntity |
 | `FullMemorySndSceneHostTests.cs` | FullMemorySndSceneHost 的边界行为：CreateEntity 前置条件、RemoveEntity/RequestKillEntity 错误路径 |
 | `NullNodeFactoryTests.cs` | NullNodeFactory 返回 NullNodeHandle，不抛异常 |
-| `SndScenePerformanceTests.cs` | 场景操作缩放性能：ProcessAll 实体数量缩放、数据读/写帧模拟、ToArray 快照分配、Spawn/Kill/ClearAll 批量缩放 |
 
 > `SndEntityLifecycleBatchTests.cs` 与 [Snd-Entity.md](Snd-Entity.md) 共享，此处不再重复列出。
 
@@ -33,9 +32,6 @@ SndRuntime 的钩子编排、SndEntityFactory 的公共 API、ProcessAll/Spawn/K
 | RemoveAllEntities 清空所有实体 | RemoveAllEntities 后 GetEntities 为空 | ISndSceneHost |
 | RemoveEntity 移除实体 | RemoveEntity 后实体不可查找 | ISndSceneHost |
 | NullNodeFactory.Create 返回 NullNodeHandle | 无渲染模式下工厂返回空节点 | INodeFactory |
-| SndRuntime.Spawn 触发 AfterSpawn | CreateEntity + 钩子触发完整完成 | SndRuntime |
-| SndRuntime.SpawnMany 批量两阶段 | 全部创建后统一触发钩子 | SndRuntime |
-| SndRuntime.KillPendingEntities 全生命周期 | BeforeDead → Release → Teardown → RemoveEntity | SndRuntime |
 | SndEntityFactory.Spawn 封装 CreateEntity + AfterSpawn | 公共静态工具正确处理钩子 | SndEntityFactory |
 | SndEntityFactory.SpawnMany 批量封装 | 全部创建后统一触发 | SndEntityFactory |
 

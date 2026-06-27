@@ -66,7 +66,7 @@ public static class OrigoAutoInitializer
     }
 
     /// <summary>
-    ///     从单个 JSON 文件中读取 SndMetaData 数组并通过 SndRuntime 批量 Spawn。
+    ///     从单个 JSON 文件中读取 SndMetaData 数组并通过 <see cref="ISessionRun" /> 批量 Spawn 到当前会话。
     ///     支持完整的 SndMetaData 对象和模板引用简写。
     /// </summary>
     public static int LoadAndSpawnFromFile(
