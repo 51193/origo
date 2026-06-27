@@ -71,7 +71,7 @@
 | 成员 | 说明 |
 |------|------|
 | `Name { get; }` | 稳定的实体标识名 |
-| `OwningSession { get; }` | 实体所属的 `ISessionRun`（非空，fail-fast）：实体创建时由场景宿主自动绑定（`FullMemorySndSceneHost.CreateAndRecover` / `GodotSndManager.CreateEntity` / `RecoverFromMetaList` 路径）。策略通过此属性直达自己所属的会话（同 session 操作）以及跨 session 通过 `OwningSession.SessionManager` 访问其它会话。未绑定时访问抛 `InvalidOperationException` |
+| `OwningSession { get; }` | 实体所属的 `ISessionRun`（非空，fail-fast）：实体创建时由场景宿主自动绑定（`FullMemorySndSceneHost.CreateEntity` / `GodotSndManager.CreateEntity` / `RecoverFromMetaList` 路径）。策略通过此属性直达自己所属的会话（同 session 操作）以及跨 session 通过 `OwningSession.SessionManager` 访问其它会话。未绑定时访问抛 `InvalidOperationException` |
 | `IsPendingKill { get; }` | 标记为待销毁状态。框架在帧末统一执行销毁（业务延迟队列之后、系统延迟队列之前）。策略应在操作实体前通过此标志位判断实体是否仍然存活 |
 
 ### IEntityLifecycle

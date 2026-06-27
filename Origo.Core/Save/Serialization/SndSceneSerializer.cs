@@ -22,7 +22,7 @@ internal sealed class SndSceneSerializer
         return _world.WriteMetaListNode(metaList);
     }
 
-    public void RecoverInto(ISndSceneHost sceneHost, DataSourceNode serializedNode)
+    public void RecoverInto(ISndSceneAccess sceneHost, DataSourceNode serializedNode)
     {
         ArgumentNullException.ThrowIfNull(sceneHost);
         ArgumentNullException.ThrowIfNull(serializedNode);

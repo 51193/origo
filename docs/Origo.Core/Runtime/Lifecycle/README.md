@@ -56,7 +56,7 @@ SystemRuntime
 
 ### 运行
 
-- 每帧：`IScheduler.Tick()` → 执行延迟队列 → `SessionRun.ProcessAllSessions()`
+- 每帧：`IScheduler.Tick()` → 执行延迟队列 → `SessionManager.ProcessAllSessions()` → `SessionManager.KillPendingAllSessions()` → 系统队列 → 控制台
 - 控制台命令路由到 `OrigoConsole.ProcessPending()`
 
 ### 持久化

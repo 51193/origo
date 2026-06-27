@@ -53,6 +53,7 @@ public interface ISessionManager
     ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false);
     void DestroySession(string key);
     void ProcessAllSessions(double delta, bool includeForeground = false);
+    void KillPendingAllSessions();
 }
 ```
 

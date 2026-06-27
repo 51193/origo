@@ -16,6 +16,7 @@ public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess
 {
     string Name { get; }
     bool IsPendingKill { get; }
+    ISessionRun OwningSession { get; }
 }
 
 public interface ISndDataAccess
@@ -179,6 +180,7 @@ public interface ISessionManager
     ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false);
     void DestroySession(string key);
     void ProcessAllSessions(double delta, bool includeForeground = false);
+    void KillPendingAllSessions();
 }
 ```
 

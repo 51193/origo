@@ -13,7 +13,7 @@ Origo 框架遵循以下核心设计约束，所有模块实现和接口设计�
 |------|------|
 | **平台无关** | Origo.Core 零引擎依赖，所有游戏逻辑、持久化、实体模型仅使用 `System.*` 类型 |
 | **适配层隔离** | 引擎集成仅通过 `Origo.GodotAdapter` 实现 Core 抽象接口，适配层不得触发策略钩子、管理策略生命周期、冲刷延迟管线、持有 Core 编排状态 |
-| **接口隔离（ISP）** | `ISndContext` 拆分为 11 个窄角色接口，`ISessionRun` 返回抽象 `IStateMachineContainer` 而非具体类型 |
+| **接口隔离（ISP）** | `ISndContext` 拆分为 9 个窄角色接口，`ISessionRun` 返回抽象 `IStateMachineContainer` 而非具体类型 |
 | **依赖方向单向** | Abstractions → Core 实现 → Adapter，反向依赖严格禁止 |
 | **public 白名单** | 不为"可能未来有用"提前公开接口；每个 public 接口必须有明确的跨程序集消费者 |
 | **显式失败优先** | 接口契约被违反时抛异常而非静默降级；存档/读档严格校验完整性 |

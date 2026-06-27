@@ -73,7 +73,7 @@ internal sealed class SaveContext
 
     public DataSourceNode BuildSndScene(ISndSceneAccess sceneAccess) => _sceneSerializer.Build(sceneAccess);
 
-    public void RecoverSndScene(ISndSceneHost sceneHost, DataSourceNode serializedNode) =>
+    public void RecoverSndScene(ISndSceneAccess sceneHost, DataSourceNode serializedNode) =>
         _sceneSerializer.RecoverInto(sceneHost, serializedNode);
 
     public SaveGamePayload SaveGame(

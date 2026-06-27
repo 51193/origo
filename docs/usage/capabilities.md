@@ -108,7 +108,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 |------|------|----------|
 | 平台无关 | Origo.Core 仅依赖 System.\*，不引用任何引擎特定代码 | [架构概览](architecture-overview.md) |
 | 适配层隔离 | 引擎代码仅在 Origo.GodotAdapter 实现 Core 抽象，适配层不参与策略生命周期管理 | [架构概览](architecture-overview.md) |
-| 接口隔离（ISP） | ISndContext 拆分为 11 个窄角色接口，ISessionRun 返回抽象 IStateMachineContainer | [架构概览](architecture-overview.md) |
+| 接口隔离（ISP） | ISndContext 拆分为 9 个窄角色接口，ISessionRun 返回抽象 IStateMachineContainer | [架构概览](architecture-overview.md) |
 | 单线程帧模型 | 一帧 = 一个逻辑原子边界，延迟动作通过队列顺序执行。宿主（如 Godot `_Process`）通过 `IOrigoFrameDriver.DriveFrame(double delta)` 驱动帧，Core 内部顺序：实体 Process → 业务队列 → Kill 待处理 → 系统队列 → 控制台 | [架构概览](architecture-overview.md) |
 
 ---
