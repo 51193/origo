@@ -315,6 +315,10 @@ internal sealed class TestSessionManager : ISessionManager
     public void ProcessAllSessions(double delta, bool includeForeground = false)
     {
     }
+
+    public void KillPendingAllSessions()
+    {
+    }
 }
 
 internal sealed class TestSessionRun : ISessionRun

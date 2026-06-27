@@ -108,6 +108,20 @@ internal sealed class SessionManager : ISessionManager
         }
     }
 
+    /// <inheritdoc />
+    public void KillPendingAllSessions()
+    {
+        var keys = _sessions.Keys.ToArray();
+        foreach (var key in keys)
+        {
+            if (!_sessions.TryGetValue(key, out var mounted))
+                continue;
+
+            using (PushAmbient(mounted.Session))
+                mounted.Session.KillPending();
+        }
+    }
+
     // ── Internal methods for ProgressRun ──────────────────────────────
 
     /// <summary>
@@ -123,7 +137,7 @@ internal sealed class SessionManager : ISessionManager
 
         var sessionParams = new SessionParameters(levelId, new Blackboard.Blackboard(), sceneHost, true);
         var session = new SessionRun(_managerRuntime, sessionParams);
-        MountInternal(ISessionManager.ForegroundKey, session, false);
+        MountInternal(ISessionManager.ForegroundKey, session, true);
         return session;
     }
 

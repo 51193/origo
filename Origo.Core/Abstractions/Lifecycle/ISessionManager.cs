@@ -38,4 +38,10 @@ public interface ISessionManager
     ///     对所有配置为参与 Process 的会话执行帧更新。
     /// </summary>
     void ProcessAllSessions(double delta, bool includeForeground = false);
+
+    /// <summary>
+    ///     收割所有会话（含前台）中标记为待销毁的实体：触发观察者拆线与 BeforeDead 钩子后物理移除。
+    ///     由帧末统一调用，使前台与后台会话的 kill-pending 语义完全一致——前台不再被特殊对待。
+    /// </summary>
+    void KillPendingAllSessions();
 }

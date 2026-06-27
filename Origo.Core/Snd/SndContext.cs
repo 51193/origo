@@ -60,6 +60,10 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         var systemRuntime = new SystemRuntime(Runtime, systemParams);
         _systemRun = new SystemRun(systemRuntime);
         _parameters = parameters;
+
+        // Runtime 仅触达 SessionManager（再下查 SessionRun），不直达任何 SceneHost。
+        // 该 provider 在构造时建立（不依赖 Bootstrap），延迟解析当前会话管理器。
+        Runtime.SetSessionManagerProvider(() => SessionManager);
     }
 
     private readonly SndContextParameters _parameters;

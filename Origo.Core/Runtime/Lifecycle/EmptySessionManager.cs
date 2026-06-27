@@ -42,4 +42,9 @@ internal sealed class EmptySessionManager : ISessionManager
     {
         // No-op: no sessions to process.
     }
+
+    public void KillPendingAllSessions()
+    {
+        // No-op: no sessions to sweep.
+    }
 }

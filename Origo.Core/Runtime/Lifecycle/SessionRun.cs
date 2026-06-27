@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Entity;
@@ -212,6 +213,64 @@ public sealed class SessionRun : ISessionRun
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
                 .Build($"Level state persisted for '{LevelId}'."));
+    }
+
+    /// <summary>
+    ///     收割本会话场景中标记为待销毁的实体：先做观察者双向拆线，再触发 BeforeDead 钩子，最后物理移除。
+    ///     由 <see cref="SessionManager.KillPendingAllSessions" /> 在帧末对每个会话统一调用。
+    /// </summary>
+    internal void KillPending()
+    {
+        ThrowIfDisposed();
+        var entities = _sceneHost.GetEntities();
+        var topology = (_sceneHost as IObserverTopologyHost)?.ObserverTopology;
+        var pending = new List<ISndEntity>();
+        foreach (var e in entities)
+            if (e.IsPendingKill)
+                pending.Add(e);
+
+        if (pending.Count == 0)
+            return;
+
+        if (topology is not null)
+        {
+            foreach (var e in pending)
+                if (e is SndEntity se)
+                    TeardownOutgoingObserverBindings(se, entities, topology);
+
+            foreach (var e in pending)
+                foreach (var other in entities)
+                    if (other is SndEntity otherSe && otherSe != e
+                        && topology.HasBindingTargetingFrom(otherSe.Name, e.Name))
+                        topology.RemoveBindingsTargetingFor(otherSe, e.Name);
+        }
+
+        foreach (var e in pending)
+            if (e is IEntityLifecycle lifecycle)
+                lifecycle.FireBeforeDeadHooks();
+
+        foreach (var e in pending)
+        {
+            if (e is IEntityLifecycle lifecycle)
+            {
+                lifecycle.ReleaseStrategiesOnly();
+                lifecycle.TeardownOnly();
+            }
+
+            _sceneHost.RemoveEntity(e.Name);
+        }
+    }
+
+    private static void TeardownOutgoingObserverBindings(SndEntity entity,
+        IReadOnlyCollection<ISndEntity> entities, ObserverTopology topology)
+    {
+        topology.TeardownOutgoingFor(entity, targetName =>
+        {
+            foreach (var other in entities)
+                if (other.Name == targetName)
+                    return other;
+            return null;
+        });
     }
 
     private LevelPayload BuildLevelPayload()

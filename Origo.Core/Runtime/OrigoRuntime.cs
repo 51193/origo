@@ -1,12 +1,14 @@
 using System;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Runtime.Console;
+using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Scheduling;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
@@ -26,6 +28,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
 {
     private readonly ActionScheduler _businessDeferredScheduler;
     private readonly ActionScheduler _systemDeferredScheduler;
+    private Func<ISessionManager> _sessionManagerProvider = static () => EmptySessionManager.Instance;
 
     public OrigoRuntime(
         OrigoMeta meta,
@@ -120,13 +123,24 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     public void EnqueueSystemDeferred(Action action) => _systemDeferredScheduler.Enqueue(action);
 
     /// <summary>
+    ///     注入"当前会话管理器"的提供者。帧驱动与会话作用域操作经此解析 <see cref="ISessionManager" />，
+    ///     从而 Runtime 仅触达 SessionManager（再由它下查 SessionRun），不直达任何 SceneHost。
+    ///     由 <see cref="Snd.SndContext" /> 在 Bootstrap 时注入。
+    /// </summary>
+    internal void SetSessionManagerProvider(Func<ISessionManager> provider)
+    {
+        ArgumentNullException.ThrowIfNull(provider);
+        _sessionManagerProvider = provider;
+    }
+
+    /// <summary>
     ///     依次执行业务延迟队列和系统延迟队列中的所有待执行动作。
     ///     通常在每帧结束时由宿主主循环调用。
     /// </summary>
     public void FlushEndOfFrameDeferred()
     {
         _businessDeferredScheduler.Tick();
-        Snd.KillPendingEntities();
+        _sessionManagerProvider().KillPendingAllSessions();
         _systemDeferredScheduler.Tick();
     }
 
@@ -138,7 +152,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     /// </summary>
     void IOrigoFrameDriver.DriveFrame(double delta)
     {
-        Snd.ProcessAll(delta);
+        _sessionManagerProvider().ProcessAllSessions(delta, includeForeground: true);
         FlushEndOfFrameDeferred();
         Console?.ProcessPending();
     }

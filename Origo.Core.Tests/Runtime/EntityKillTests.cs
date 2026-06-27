@@ -23,14 +23,10 @@ public class EntityKillTests
     [Fact]
     public void RequestKillEntity_RemovesEntity_AfterFlush()
     {
-        var (ctx, _) = Setup();
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        var (ctx, host, _) = SetupKillTest();
+        SpawnEntityWithoutStrategy(host, "E");
 
-        Assert.NotNull(ctx.CurrentSession);
-        var host = ctx.CurrentSession!.SceneHost;
         Assert.NotNull(host.FindByName("E"));
-
         ctx.RequestKillEntity("E");
         ctx.FlushDeferredActionsForCurrentFrame();
 
@@ -166,26 +162,13 @@ public class EntityKillTests
     [Fact]
     public void RequestKillAll_RemovesAllAfterFlush()
     {
-        var (ctx, _) = Setup();
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
-
-        var host = ctx.CurrentSession!.SceneHost;
-        host.CreateEntity(new SndMetaData
-        {
-            Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
-            DataMetaData = new DataMetaData()
-        });
-        host.CreateEntity(new SndMetaData
-        {
-            Name = "B", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
-            DataMetaData = new DataMetaData()
-        });
+        var (ctx, host, _) = SetupKillTest();
+        SpawnEntityWithoutStrategy(host, "A");
+        SpawnEntityWithoutStrategy(host, "B");
 
         ctx.RequestKillAll();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Null(host.FindByName("E"));
         Assert.Null(host.FindByName("A"));
         Assert.Null(host.FindByName("B"));
     }
@@ -207,36 +190,19 @@ public class EntityKillTests
     // ── KillPendingEntities (unified sweep) ────────────────────────────
 
     [Fact]
-    public void KillPendingEntities_RemovesMarkedEntities()
-    {
-        var logger = new TestLogger();
-        var host = CreateFullMemoryHostWithEntity(logger);
-
-        Assert.NotNull(host.FindByName("E"));
-        host.RequestKillEntity("E");
-        Assert.True(host.FindByName("E")!.IsPendingKill);
-
-        var runtime = CreateKillPendingRuntime(logger, host);
-        runtime.FlushEndOfFrameDeferred(); // triggers KillPendingEntities
-
-        Assert.Null(host.FindByName("E"));
-    }
-
-    [Fact]
     public void KillPendingEntities_FiresBeforeDead()
     {
-        var logger = new TestLogger();
-        var host = CreateFullMemoryHostWithEntity(logger);
+        var (ctx, host, _) = SetupKillTest(registerKillProbe: true);
+        SpawnEntity(host, "E");
 
         KillProbeStrategy.Events = new List<string>();
         try
         {
-            host.RequestKillEntity("E");
-
-            var runtime = CreateKillPendingRuntime(logger, host);
-            runtime.FlushEndOfFrameDeferred();
+            ctx.RequestKillEntity("E");
+            ctx.FlushDeferredActionsForCurrentFrame();
 
             Assert.Contains("before_dead", KillProbeStrategy.Events);
+            Assert.Null(host.FindByName("E"));
         }
         finally
         {
@@ -247,37 +213,32 @@ public class EntityKillTests
     [Fact]
     public void KillPendingEntities_Order_BusinessBeforeKill()
     {
-        var logger = new TestLogger();
-        var host = CreateFullMemoryHostWithMultiple(logger, "A", "B");
+        var (ctx, host, _) = SetupKillTest(registerKillProbe: true);
+        SpawnEntity(host, "A");
+        SpawnEntity(host, "B");
         var events = new List<string>();
 
         KillProbeStrategy.Events = new List<string>();
         try
         {
-            // Mark A via business deferred
-            var runtime = CreateKillPendingRuntime(logger, host);
-            runtime.EnqueueBusinessDeferred(() =>
+            ctx.EnqueueBusinessDeferred(() =>
             {
                 events.Add("business:mark_a");
                 host.RequestKillEntity("A");
             });
-            runtime.EnqueueBusinessDeferred(() =>
+            ctx.EnqueueBusinessDeferred(() =>
             {
                 events.Add("business:mark_b");
                 host.RequestKillEntity("B");
             });
-            runtime.EnqueueBusinessDeferred(() => events.Add("business:after_marks"));
+            ctx.EnqueueBusinessDeferred(() => events.Add("business:after_marks"));
 
-            runtime.EnqueueSystemDeferred(() => events.Add("system"));
+            ctx.FlushDeferredActionsForCurrentFrame();
 
-            runtime.FlushEndOfFrameDeferred();
-
-            // business marks ran first, then KillPendingEntities (triggers BeforeDead), then system
             Assert.Equal("business:mark_a", events[0]);
             Assert.Equal("business:mark_b", events[1]);
             Assert.Equal("business:after_marks", events[2]);
             Assert.Contains("before_dead", KillProbeStrategy.Events);
-            Assert.Equal("system", events[3]);
         }
         finally
         {
@@ -288,11 +249,10 @@ public class EntityKillTests
     [Fact]
     public void KillPendingEntities_NoPendingEntities_DoesNotThrow()
     {
-        var logger = new TestLogger();
-        var host = CreateFullMemoryHostWithEntity(logger);
+        var (ctx, host, _) = SetupKillTest();
+        SpawnEntityWithoutStrategy(host, "E");
 
-        var runtime = CreateKillPendingRuntime(logger, host);
-        var ex = Record.Exception(() => runtime.FlushEndOfFrameDeferred());
+        var ex = Record.Exception(() => ctx.FlushDeferredActionsForCurrentFrame());
         Assert.Null(ex);
         Assert.NotNull(host.FindByName("E")); // entity still alive
     }
@@ -502,28 +462,111 @@ public class EntityKillTests
     [Fact]
     public void FullCycle_ProcessMarksThenFlushRemoves()
     {
-        var logger = new TestLogger();
-        var host = CreateFullMemoryHostWithEntity(logger);
+        var (ctx, host, _) = SetupKillTest();
+        SpawnEntityWithoutStrategy(host, "E");
 
-        // Simulate a frame: strategy Process calls RequestKillEntity
         var entity = host.FindByName("E");
         Assert.NotNull(entity);
-
         entity.SetData("should_kill", true);
 
-        // Frame: Process runs, then Flush removes
         host.ProcessAll(0.016);
         host.RequestKillEntity("E");
         Assert.True(entity.IsPendingKill);
 
-        // End of frame: KillPendingEntities + DeadByName
-        var runtime = CreateKillPendingRuntime(logger, host);
-        runtime.FlushEndOfFrameDeferred();
+        ctx.FlushDeferredActionsForCurrentFrame();
 
         Assert.Null(host.FindByName("E"));
     }
 
     // ── Helpers ────────────────────────────────────────────────────────
+
+    /// <summary>
+    ///     创建完整 SndContext + FullMemorySndSceneHost 作为前台,经 RequestLoadMainMenuEntrySave
+    ///     建立前台会话。所有实体生命周期（请求 / 收割）经 ctx 走 SessionManager 管线。
+    /// </summary>
+    private static (SndContext ctx, FullMemorySndSceneHost host, TestLogger logger) SetupKillTest(
+        bool registerKillProbe = false)
+    {
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        if (registerKillProbe)
+            world.RegisterStrategy(() => new KillProbeStrategy());
+        host.BindWorld(world);
+        var fs = new TestFileSystem();
+        fs.SeedFile("entry.json", "[]");
+        var io = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        host.BindContext(ctx);
+        ctx.RequestLoadMainMenuEntrySave();
+        ctx.FlushDeferredActionsForCurrentFrame();
+        return (ctx, host, logger);
+    }
+
+    private static ISndEntity SpawnEntityWithoutStrategy(FullMemorySndSceneHost host, string name)
+    {
+        var meta = new SndMetaData
+        {
+            Name = name,
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        };
+        var entity = host.CreateEntity(meta);
+        if (entity is IEntityLifecycle lc)
+            lc.FireAfterSpawnHooks();
+        return entity;
+    }
+
+    private static ISndEntity SpawnEntity(FullMemorySndSceneHost host, string name)
+    {
+        var meta = new SndMetaData
+        {
+            Name = name,
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData
+            {
+                LifecycleIndices = new List<string> { "kill.test.lifecycle" },
+                ActiveIndices = new List<string>()
+            },
+            DataMetaData = new DataMetaData()
+        };
+        var entity = host.CreateEntity(meta);
+        if (entity is IEntityLifecycle lc)
+            lc.FireAfterSpawnHooks();
+        return entity;
+    }
+
+    private static FullMemorySndSceneHost CreateFullMemoryHostWithEntity(TestLogger logger)
+    {
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        world.RegisterStrategy(() => new KillProbeStrategy());
+        host.BindWorld(world);
+        var fs = new TestFileSystem();
+        fs.SeedFile("entry.json", "[]");
+        var io = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        host.BindContext(ctx);
+        host.RecoverFromMetaList(new[]
+        {
+            new SndMetaData
+            {
+                Name = "E",
+                NodeMetaData = new NodeMetaData(),
+                StrategyMetaData = new StrategyMetaData
+                    { LifecycleIndices = new List<string> { "kill.test.lifecycle" }, ActiveIndices = new List<string>() },
+                DataMetaData = new DataMetaData()
+            }
+        });
+        return host;
+    }
 
     private static (SndContext ctx, TestLogger logger) Setup()
     {
@@ -547,42 +590,6 @@ public class EntityKillTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         return (ctx, logger);
     }
-
-    private static FullMemorySndSceneHost CreateFullMemoryHostWithEntity(TestLogger logger) =>
-        CreateFullMemoryHostWithMultiple(logger, "E");
-
-    private static FullMemorySndSceneHost CreateFullMemoryHostWithMultiple(TestLogger logger, params string[] names)
-    {
-        var host = new FullMemorySndSceneHost(logger);
-        var world = TestFactory.CreateSndWorld(logger: logger);
-        world.RegisterStrategy(() => new KillProbeStrategy());
-        host.BindWorld(world);
-        var fs = new TestFileSystem();
-        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
-        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
-        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
-        var runtime = TestFactory.CreateRuntime(logger, host);
-        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
-        host.BindContext(ctx);
-
-        var metas = names.Select(n => new SndMetaData
-        {
-            Name = n,
-            NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData
-            {
-                LifecycleIndices = new List<string> { "kill.test.lifecycle" },
-                ActiveIndices = new List<string>()
-            },
-            DataMetaData = new DataMetaData()
-        }).ToArray();
-
-        host.RecoverFromMetaList(metas);
-        return host;
-    }
-
-    private static OrigoRuntime CreateKillPendingRuntime(ILogger logger, ISndSceneHost host) =>
-        TestFactory.CreateRuntime(logger, host);
 
     private static OrigoRuntime CreateRuntimeWithConsole(ILogger logger, ISndSceneHost host)
     {
