@@ -44,6 +44,19 @@ jobs:
       - name: Copy NuGet config to artifacts
         run: cp nuget.config.example ./artifacts/nuget.config
 
+      - name: Package documentation snapshot
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          DIRNAME="origo-docs-${VERSION}"
+          mkdir -p "${DIRNAME}/docs"
+          cp -r docs/. "${DIRNAME}/docs/"
+          cp AGENTS.md "${DIRNAME}/"
+          cp CHANGELOG.md "${DIRNAME}/"
+          mkdir -p ./artifacts
+          tar -czf "./artifacts/${DIRNAME}.tar.gz" "${DIRNAME}"
+          zip -rq "./artifacts/${DIRNAME}.zip" "${DIRNAME}"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

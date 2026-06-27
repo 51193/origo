@@ -21,10 +21,12 @@ It uses the **SND (Strategy-Node-Data)** model and isolates engine code through 
 
 ## Documentation
 
-Full documentation: **[origo.manual](https://github.com/51193/origo.manual)**
+Full documentation lives in this repository under **[`docs/`](docs/README.md)** — a bottom-up structural mirror of the source tree.
+
+Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 
 > **Note**: Documentation is written entirely in Chinese due to its scale.
-> If you need to use it, feed the repository as a knowledge base to an AI agent
+> If you need to use it, feed the `docs/` tree as a knowledge base to an AI agent
 > and query the agent for answers.
 
 ## Special Capability: Background Session

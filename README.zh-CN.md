@@ -21,7 +21,9 @@
 
 ## 文档
 
-完整文档见 **[origo.manual](https://github.com/51193/origo.manual)**。
+完整文档已并入本仓库 **[`docs/`](docs/README.md)** ——一个自底向上、镜像源码结构的文档树。
+
+开发循环与 Agent 准则见 **[`AGENTS.md`](AGENTS.md)**。
 
 ## 特殊能力：Background Session
 
