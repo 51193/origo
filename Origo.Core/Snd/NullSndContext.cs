@@ -27,8 +27,6 @@ internal sealed class NullSndContext : ISndContext
     public IBlackboard SystemBlackboard => EmptyBlackboard;
     public IBlackboard? ProgressBlackboard => null;
     public ISessionManager SessionManager => EmptySessionManager.Instance;
-    public ISessionRun? CurrentSession => null;
-    public bool IsFrontSession => false;
 
     public void EnqueueBusinessDeferred(Action action) => action();
 
@@ -71,12 +69,6 @@ internal sealed class NullSndContext : ISndContext
 
     public void RequestSwitchForegroundLevel(string newLevelId) =>
         throw new InvalidOperationException("NullSndContext does not support level switching.");
-
-    public void RequestKillAll() =>
-        throw new InvalidOperationException("NullSndContext does not support clear operations.");
-
-    public void RequestKillEntity(string entityName) =>
-        throw new InvalidOperationException("NullSndContext does not support entity operations.");
 
     public bool HasContinueData() => false;
 

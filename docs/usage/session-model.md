@@ -4,7 +4,7 @@
 
 ## 概述
 
-Origo 支持**前台会话**和**后台会话**并存的模型，两种会话通过相同的 `ISessionRun` 接口表达，差异仅在于注入的 `ISndSceneHost` 和 `IsFrontSession` 标志。
+Origo 支持**前台会话**和**后台会话**并存的模型，两种会话通过相同的 `ISessionRun` 接口表达，差异仅在于内部实现和 `IsFrontSession` 标志。
 
 ## 前台 vs 后台
 
@@ -13,7 +13,7 @@ Origo 支持**前台会话**和**后台会话**并存的模型，两种会话通
 | 键名 | `__foreground__`（固定） | 用户自定义（如 `"dungeon"`） |
 | 数量 | 至多一个 | 可多个 |
 | 场景宿主 | GodotSndManager（引擎渲染） | FullMemorySndSceneHost（无渲染） |
-| Strategy 访问 | 全局 ISndContext（`CurrentSession` 经 ambient 解析为本会话） | 全局 ISndContext（处理期间 `CurrentSession` 经 ambient 解析为本会话） |
+| Strategy 访问 | 全局 ISndContext（`CurrentSession` 返回前台会话） | 全局 ISndContext（`CurrentSession` 返回前台会话） |
 | 状态机 | 会话级 StateMachineContainer | 会话级 StateMachineContainer |
 | 黑板 | 独立 SessionBlackboard | 独立 SessionBlackboard |
 
@@ -25,10 +25,17 @@ Origo 支持**前台会话**和**后台会话**并存的模型，两种会话通
 public interface ISessionRun : IDisposable
 {
     IBlackboard SessionBlackboard { get; }
-    ISndSceneHost SceneHost { get; }       // 支持完整实体操作
     string LevelId { get; }
     bool IsFrontSession { get; }
     IStateMachineContainer GetSessionStateMachines();
+    ISessionManager SessionManager { get; }    // 跨会话入口
+
+    // ── 实体操作（会话作用域）──
+    ISndEntity? FindByName(string name);
+    IReadOnlyCollection<ISndEntity> GetEntities();
+    ISndEntity Spawn(SndMetaData meta);
+    void SpawnMany(params SndMetaData[] metaList);
+    void RequestKillEntity(string entityName);
 }
 ```
 
@@ -58,7 +65,7 @@ var bgSession = sessionManager.CreateBackgroundSession(
     syncProcess: true);  // 参与 Process 帧更新
 
 // 后台会话拥有独立的实体、黑板和状态机
-bgSession.SceneHost.CreateEntity(dungeonEntityMeta);
+bgSession.Spawn(dungeonEntityMeta);
 bgSession.SessionBlackboard.SetValue("explored", true);
 ```
 
@@ -71,7 +78,7 @@ bgSession.SessionBlackboard.SetValue("explored", true);
 ```csharp
 // 方式一：自动处理（推荐）—— SwitchForeground 内部完成保存 + 销毁
 var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", false);
-bg.SceneHost.CreateEntity(...);
+bg.Spawn(new SndMetaData { Name = "entity" });
 bg.SessionBlackboard.SetValue("data", value);
 
 // 直接切换，SwitchForeground 会自动保存并销毁 bg
@@ -80,7 +87,7 @@ ctx.FlushDeferredActionsForCurrentFrame();
 
 // 方式二：手动控制——调用方显式逐步保存和销毁，获得更细粒度控制
 var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", false);
-bg.SceneHost.CreateEntity(...);
+bg.Spawn(new SndMetaData { Name = "entity" });
 
 ctx.RequestSaveGameAuto();
 ctx.FlushDeferredActionsForCurrentFrame();

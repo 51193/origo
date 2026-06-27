@@ -17,7 +17,7 @@ namespace Origo.GodotAdapter.Snd;
 
 [GlobalClass]
 public partial class GodotSndManager
-    : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, ISessionScopedSceneHost
+    : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable
 {
     private readonly List<GodotSndEntity> _entities = new();
     private EntityView? _entityView;
@@ -36,19 +36,11 @@ public partial class GodotSndManager
         _observerTopology ?? throw new InvalidOperationException(
             "ObserverTopology is not available. Call BindRuntimeDependencies before accessing the observer topology.");
 
-    void ISessionScopedSceneHost.SetOwningSession(ISessionRun session)
+    void IOwningSessionBindable.SetOwningSession(ISessionRun session)
     {
         ArgumentNullException.ThrowIfNull(session);
         _owningSession = session;
     }
-
-    IDisposable? ISessionScopedSceneHost.EnterOwningSessionAmbient()
-    {
-        if (_owningSession is null || Context is not SndContext sndContext)
-            return null;
-        return sndContext.PushAmbientSession(_owningSession);
-    }
-
     public void BindContext(ISndContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -81,6 +73,8 @@ public partial class GodotSndManager
                 _entities.Add(snd);
                 staged.Add(snd);
                 snd.RecoverForLifecycle(meta);
+                        if (_owningSession is not null)
+                snd.BindSession(_owningSession);
             }
             catch
             {
@@ -116,6 +110,8 @@ public partial class GodotSndManager
             _entities.Add(snd);
             staged.Add(snd);
             snd.RecoverForLifecycle(metaData);
+                        if (_owningSession is not null)
+                snd.BindSession(_owningSession);
             return snd;
         }
         catch

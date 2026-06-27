@@ -1,12 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.Console;
+using Origo.Core.Abstractions.Entity;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
-/// <summary>
-///     <c>kill_all</c> 命令：立即标记当前场景中所有 SND 实体为待销毁，
-///     物理销毁在帧末统一执行。
-/// </summary>
 internal sealed class KillAllCommandHandler : ConsoleCommandHandlerBase
 {
     private readonly OrigoRuntime _runtime;
@@ -27,14 +25,27 @@ internal sealed class KillAllCommandHandler : ConsoleCommandHandlerBase
         IConsoleOutputChannel outputChannel,
         out string? errorMessage)
     {
-        var entities = _runtime.Snd.GetEntities();
+        var session = _runtime.SessionManager.ForegroundSession;
+        IReadOnlyCollection<ISndEntity> entities;
+        if (session is not null)
+        {
+            entities = session.GetEntities();
+        }
+        else
+        {
+            entities = _runtime.ForegroundSceneHost.GetEntities();
+        }
+
         var count = entities.Count;
         var marked = 0;
         foreach (var entity in entities)
         {
             if (entity.IsPendingKill)
                 continue;
-            _runtime.Snd.SceneHost.RequestKillEntity(entity.Name);
+            if (session is not null)
+                session.RequestKillEntity(entity.Name);
+            else
+                _runtime.ForegroundSceneHost.RequestKillEntity(entity.Name);
             marked++;
         }
 

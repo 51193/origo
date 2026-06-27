@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Origo.Core;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Node;
@@ -42,8 +43,7 @@ public class AdapterArchitectureGuardrailTests
         def.FlushDeferredActionsForCurrentFrame();
         Assert.True(ran);
 
-        ISndSessionAccess session = ctx;
-        Assert.NotNull(session.SessionManager);
+        Assert.NotNull(ctx.SessionManager);
 
         ISndSaveOperations save = ctx;
         Assert.Empty(save.ListSaves());
@@ -158,6 +158,8 @@ public class AdapterArchitectureGuardrailTests
 
         public string Name => (string)_data["name"]!;
         public bool IsPendingKill { get; set; }
+
+        public ISessionRun OwningSession { get; set; } = null!;
 
         public void SetData<T>(string name, T value) => _data[name] = value;
         public T GetData<T>(string name) => _data.TryGetValue(name, out var v) && v is T c ? c : default!;

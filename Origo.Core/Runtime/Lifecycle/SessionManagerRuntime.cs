@@ -32,7 +32,6 @@ internal sealed class SessionManagerRuntime
         Logger = progressRuntime.Logger;
         StorageService = progressRuntime.StorageService;
         SndWorld = progressRuntime.SndWorld;
-        SndRuntime = progressRuntime.SndRuntime;
         ForegroundSceneHost = progressRuntime.ForegroundSceneHost;
         StateMachineContext = progressRuntime.StateMachineContext;
         SndContext = progressRuntime.SndContext;
@@ -42,7 +41,6 @@ internal sealed class SessionManagerRuntime
     internal ILogger Logger { get; }
     internal ISaveStorageService StorageService { get; }
     internal SndWorld SndWorld { get; }
-    internal SndRuntime SndRuntime { get; }
     internal ISndSceneHost ForegroundSceneHost { get; }
     internal IStateMachineContext StateMachineContext { get; }
     internal ISndContext SndContext { get; }

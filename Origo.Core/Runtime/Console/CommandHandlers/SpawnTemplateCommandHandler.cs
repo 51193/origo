@@ -1,12 +1,10 @@
 using System;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Scene;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
-/// <summary>
-///     <c>spawn</c> 命令：仅支持 template 模式（name + template 别名）。
-/// </summary>
 internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
 {
     private readonly OrigoRuntime _runtime;
@@ -34,11 +32,18 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
         }
 
         var template = _runtime.SndWorld.ResolveTemplate(templateKey);
-
         var cloned = SndWorld.CloneMetaData(template);
         cloned.Name = entityName;
 
-        _runtime.Snd.Spawn(cloned);
+        var session = _runtime.SessionManager.ForegroundSession;
+        if (session is not null)
+        {
+            session.Spawn(cloned);
+        }
+        else
+        {
+            SndEntityFactory.Spawn(_runtime.ForegroundSceneHost, cloned);
+        }
 
         var msg = $"Spawned '{entityName}' from template '{templateKey}'.";
         outputChannel.Publish(msg);

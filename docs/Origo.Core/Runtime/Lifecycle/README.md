@@ -44,7 +44,7 @@ SystemRuntime
 - `SystemRuntime` 持有 `SystemBlackboard`、`SndWorld`、`IScheduler`
 - `ProgressRuntime` 持有 `ProgressBlackboard`、`SaveContext`、`SessionManager`
 - `SessionManagerRuntime` 持有 `ISessionManager`
-- `SessionRun` 持有 `SessionBlackboard`、`ISndSceneHost`、`StateMachineContainer`
+- `SessionRun` 持有 `SessionBlackboard`、内部 `ISndSceneHost`（`internal`，框架内部使用）、`StateMachineContainer`、实体操作门面
 
 ## 关键生命周期流程
 
@@ -114,7 +114,7 @@ SystemRuntime
 
 ### 为什么前台会话键固定为 `__foreground__`
 
-前/后台会话共享同一接口 `ISessionRun`，差异仅在于注入的 `ISndSceneHost` 和键名。固定键名消除了"查找前台"的逻辑分支——直接从 SessionManager 中按常量键取值。
+前/后台会话共享同一接口 `ISessionRun`，差异仅在于内部实现（`ISndSceneHost` 的注入方式）和键名。固定键名消除了"查找前台"的逻辑分支——直接从 SessionManager 中按常量键取值。
 
 ### 为什么运行时容器按层分离
 

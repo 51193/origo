@@ -11,7 +11,7 @@
 | 文件 | 职责 |
 |------|------|
 | `ISessionManager.cs` | 会话管理器接口：创建/销毁/查找会话，管理前台与后台会话的完整生命周期 |
-| `ISessionRun.cs` | 会话运行时接口：SessionBlackboard + SceneHost + LevelId + IsFrontSession + 状态机容器 |
+| `ISessionRun.cs` | 会话运行时接口：SessionBlackboard + 实体操作门面（FindByName/GetEntities/Spawn/SpawnMany/RequestKillEntity）+ SessionManager + LevelId + IsFrontSession + 状态机容器 |
 
 ## ISessionManager 成员
 
@@ -32,10 +32,17 @@
 | 成员 | 说明 |
 |------|------|
 | `SessionBlackboard` | 会话级黑板，隔离于其他会话 |
-| `SceneHost` | 当前会话的 SND 场景宿主（前台和后台均返回 `ISndSceneHost`） |
 | `LevelId` | 关卡唯一标识符 |
 | `IsFrontSession` | 指示当前会话是否为前台会话 |
 | `GetSessionStateMachines()` | 会话级状态机容器（返回 `IStateMachineContainer`） |
+| `SessionManager` | 该会话所属的 `ISessionManager`，策略经此跨会话访问其它会话 |
+| `FindByName(name)` | 按名称查找当前会话中的实体 |
+| `GetEntities()` | 获取当前会话中所有存活实体 |
+| `Spawn(meta)` | 在当前会话创建实体并触发 AfterSpawn 钩子（含重名校验） |
+| `SpawnMany(metaList)` | 批量创建多个实体并统一触发 AfterSpawn 钩子 |
+| `RequestKillEntity(name)` | 标记指定实体为待销毁（帧末统一执行） |
+
+> **注意**：`ISndSceneHost SceneHost` 已从 `ISessionRun` 公共接口移除。策略不应直接接触 SceneHost（它是会话的内部实现容器）。实体操作请使用上表中的 `FindByName`/`GetEntities`/`Spawn`/`SpawnMany`/`RequestKillEntity`。需要底层 `ISndSceneHost` 的场景（如 `CreateEntity` 不触发钩子）仅限框架内部通过 `SessionRun`（具体类型）访问。
 
 ## 设计决策
 

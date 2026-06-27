@@ -61,10 +61,6 @@ internal sealed class StrategyTestContext : ISndContext
 
     public ISessionManager SessionManager { get; }
 
-    public ISessionRun? CurrentSession => SessionManager.ForegroundSession;
-
-    public bool IsFrontSession => true;
-
     public void EnqueueBusinessDeferred(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -128,9 +124,6 @@ internal sealed class StrategyTestContext : ISndContext
     }
 
     public void RequestSwitchForegroundLevel(string newLevelId) => LevelSwitchRequests.Add(newLevelId);
-
-    public void RequestKillAll() { }
-    public void RequestKillEntity(string entityName) { }
 
     public bool HasContinueData() => false;
 

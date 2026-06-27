@@ -51,7 +51,6 @@ internal sealed class SystemRuntime
     // ── Convenience accessors ──
 
     internal SndWorld SndWorld => Runtime.SndWorld;
-    internal SndRuntime SndRuntime => Runtime.Snd;
-    internal ISndSceneHost ForegroundSceneHost => Runtime.Snd.SceneHost;
+    internal ISndSceneHost ForegroundSceneHost => Runtime.ForegroundSceneHost;
     internal IBlackboard SystemBlackboard => Runtime.SystemBlackboard;
 }

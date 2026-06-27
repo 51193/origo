@@ -178,7 +178,7 @@ public class EntityStrategyBaseTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            ctx.RequestKillEntity(entity.Name);
+            ((SndContext)ctx).Runtime.ForegroundSceneHost.RequestKillEntity(entity.Name);
         }
     }
 
@@ -186,7 +186,7 @@ public class EntityStrategyBaseTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            ctx.RequestKillEntity("B");
+            ((SndContext)ctx).Runtime.ForegroundSceneHost.RequestKillEntity("B");
         }
     }
 
@@ -198,7 +198,7 @@ public class EntityStrategyBaseTests
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
             ProcessCalls.Add($"kill_self:{entity.Name}");
-            ctx.RequestKillEntity(entity.Name);
+            ((SndContext)ctx).Runtime.ForegroundSceneHost.RequestKillEntity(entity.Name);
         }
     }
 

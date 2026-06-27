@@ -12,7 +12,7 @@ using Origo.Core.Snd.Strategy;
 namespace Origo.Core.Snd.Scene;
 
 internal sealed class FullMemorySndSceneHost
-    : ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, ISessionScopedSceneHost
+    : ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable
 {
     private readonly List<MemoryEntityEntry> _entries = new();
     private readonly ILogger _logger;
@@ -43,13 +43,6 @@ internal sealed class FullMemorySndSceneHost
     {
         ArgumentNullException.ThrowIfNull(session);
         _owningSession = session;
-    }
-
-    public IDisposable? EnterOwningSessionAmbient()
-    {
-        if (_owningSession is null || _context is not SndContext sndContext)
-            return null;
-        return sndContext.PushAmbientSession(_owningSession);
     }
 
     public ISndEntity CreateEntity(SndMetaData metaData)
@@ -132,6 +125,8 @@ internal sealed class FullMemorySndSceneHost
         entity.Name = metaData.Name;
         _entries.Add(new MemoryEntityEntry(entity));
         ((IEntityLifecycle)entity).RecoverForLifecycle(metaData);
+        if (_owningSession is not null)
+            entity.BindSession(_owningSession);
         return entity;
     }
 

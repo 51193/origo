@@ -3,9 +3,6 @@ using Origo.Core.Abstractions.Console;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
-/// <summary>
-///     <c>snd_count</c> 命令：显示当前 SND 实体数量。
-/// </summary>
 internal sealed class SndCountCommandHandler : ConsoleCommandHandlerBase
 {
     private readonly OrigoRuntime _runtime;
@@ -26,7 +23,8 @@ internal sealed class SndCountCommandHandler : ConsoleCommandHandlerBase
         IConsoleOutputChannel outputChannel,
         out string? errorMessage)
     {
-        var count = _runtime.Snd.GetEntities().Count;
+        var count = _runtime.SessionManager.ForegroundSession?.GetEntities().Count
+                    ?? _runtime.ForegroundSceneHost.GetEntities().Count;
         var msg = $"Snd count: {count}.";
 
         outputChannel.Publish(msg);

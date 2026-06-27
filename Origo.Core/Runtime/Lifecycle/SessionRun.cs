@@ -70,8 +70,8 @@ public sealed class SessionRun : ISessionRun
 
         if (_sceneHost is ISndContextAttachableSceneHost contextAttachable)
             contextAttachable.BindContext(managerRuntime.SndContext);
-        if (_sceneHost is ISessionScopedSceneHost scoped)
-            scoped.SetOwningSession(this);
+        if (_sceneHost is IOwningSessionBindable bindable)
+            bindable.SetOwningSession(this);
         _logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)

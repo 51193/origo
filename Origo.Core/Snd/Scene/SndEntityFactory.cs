@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Snd.Metadata;
@@ -11,13 +12,21 @@ public static class SndEntityFactory
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(meta);
-        return SndRuntime.SpawnCore(host, meta);
+        var entity = host.CreateEntity(meta);
+        if (entity is IEntityLifecycle lifecycle)
+            lifecycle.FireAfterSpawnHooks();
+        return entity;
     }
 
     public static void SpawnMany(ISndSceneHost host, params SndMetaData[] metaList)
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(metaList);
-        SndRuntime.SpawnManyCore(host, metaList);
+        var staged = new List<ISndEntity>();
+        foreach (var meta in metaList)
+            staged.Add(host.CreateEntity(meta));
+        foreach (var entity in staged)
+            if (entity is IEntityLifecycle lifecycle)
+                lifecycle.FireAfterSpawnHooks();
     }
 }

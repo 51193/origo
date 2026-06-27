@@ -40,7 +40,7 @@ public abstract class BaseStrategyTestHarness
 
     public IBlackboard ProgressBlackboard => Context.ProgressBlackboard;
 
-    public IBlackboard SessionBlackboard => Context.CurrentSession!.SessionBlackboard;
+    public IBlackboard SessionBlackboard => Context.SessionManager.ForegroundSession!.SessionBlackboard;
 
     public IReadOnlyList<string> SaveRequests => Context.SaveRequests;
 
@@ -148,7 +148,7 @@ public abstract class BaseStrategyTestScenarioBuilder
             setup(context.ProgressBlackboard);
         foreach (var setup in _sessionSetup)
         {
-            var sessionBb = context.CurrentSession?.SessionBlackboard
+            var sessionBb = context.SessionManager.ForegroundSession?.SessionBlackboard
                             ?? throw new InvalidOperationException("Session blackboard is not available.");
             setup(sessionBb);
         }

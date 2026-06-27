@@ -103,8 +103,7 @@ internal sealed class SessionManager : ISessionManager
             if (!_sessions.TryGetValue(key, out var mounted) || !mounted.SyncProcess)
                 continue;
 
-            using (PushAmbient(mounted.Session))
-                mounted.Session.SceneHost.ProcessAll(delta);
+            mounted.Session.SceneHost.ProcessAll(delta);
         }
     }
 
@@ -117,8 +116,7 @@ internal sealed class SessionManager : ISessionManager
             if (!_sessions.TryGetValue(key, out var mounted))
                 continue;
 
-            using (PushAmbient(mounted.Session))
-                mounted.Session.KillPending();
+            mounted.Session.KillPending();
         }
     }
 
@@ -165,8 +163,7 @@ internal sealed class SessionManager : ISessionManager
     internal LevelPayload SerializeSession(string key)
     {
         var session = RequireMountedSession(key).Session;
-        using (PushAmbient(session))
-            return session.SerializeToPayload();
+        return session.SerializeToPayload();
     }
 
     /// <summary>
@@ -175,8 +172,7 @@ internal sealed class SessionManager : ISessionManager
     internal void PersistSession(string key)
     {
         var session = RequireMountedSession(key).Session;
-        using (PushAmbient(session))
-            session.PersistLevelState();
+        session.PersistLevelState();
     }
 
     /// <summary>
@@ -185,8 +181,7 @@ internal sealed class SessionManager : ISessionManager
     internal void LoadSessionFromPayload(string key, LevelPayload payload)
     {
         var session = RequireMountedSession(key).Session;
-        using (PushAmbient(session))
-            session.LoadFromPayload(payload);
+        session.LoadFromPayload(payload);
     }
 
     /// <summary>
@@ -328,16 +323,12 @@ internal sealed class SessionManager : ISessionManager
             $"Destroying session '{key}' (level: {mounted.Session.LevelId}).");
 
         mounted.Session.MountKey = null;
-        using (PushAmbient(mounted.Session))
-            mounted.Session.Dispose();
+        mounted.Session.Dispose();
         _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
                 .Build($"Destroyed session '{key}'."));
     }
-
-    private IDisposable PushAmbient(ISessionRun session) =>
-        ((SndContext)_managerRuntime.SndContext).PushAmbientSession(session);
 
     private sealed record MountedSession(SessionRun Session, bool SyncProcess);
 }

@@ -98,7 +98,7 @@ public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
     var session = ctx.CurrentSession;
     if (session == null) return;
 
-    var mgr = session.SceneHost.FindByName("MyManager");
+    var mgr = session.FindByName("MyManager");
     mgr?.InvokeStrategy("my.unregister", entity.Name);
 }
 ```

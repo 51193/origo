@@ -80,13 +80,14 @@ public interface IBlackboard
 
 ### ISndContext
 
-ISndContext 是策略钩子接收的统一门面接口，组合了 11 个角色接口。命名空间 `Origo.Core.Snd`。
+ISndContext 是策略钩子接收的统一门面接口，组合了 9 个角色接口。命名空间 `Origo.Core.Snd`。
 
 ```csharp
-public interface ISndContext : ISndBlackboardAccess, ISndSessionAccess, ISndDeferredActions,
+public interface ISndContext : ISndBlackboardAccess, ISndDeferredActions,
     ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
-    ISndLifecycleOperations, ISndEntityOperations, ISndFileAccess, ISndArchiveFileAccess
+    ISndLifecycleOperations, ISndFileAccess, ISndArchiveFileAccess
 {
+    ISessionManager SessionManager { get; }
 }
 
 // === 角色接口概览 ===
@@ -95,13 +96,6 @@ public interface ISndContext : ISndBlackboardAccess, ISndSessionAccess, ISndDefe
 public interface ISndBlackboardAccess {
     IBlackboard SystemBlackboard { get; }
     IBlackboard? ProgressBlackboard { get; }
-}
-
-// 会话管理
-public interface ISndSessionAccess {
-    ISessionManager SessionManager { get; }
-    ISessionRun? CurrentSession { get; }
-    bool IsFrontSession { get; }
 }
 
 // 延迟动作
@@ -149,12 +143,6 @@ public interface ISndLifecycleOperations {
     void RequestLoadMainMenuEntrySave();
 }
 
-// 实体操作
-public interface ISndEntityOperations {
-    void RequestKillAll();
-    void RequestKillEntity(string entityName);
-}
-
 // 文件访问（经 DataSource 边界，内置解析）
 public interface ISndFileAccess {
     DataSourceNode ReadFile(string path);
@@ -198,10 +186,17 @@ public interface ISessionManager
 public interface ISessionRun : IDisposable
 {
     IBlackboard SessionBlackboard { get; }
-    ISndSceneHost SceneHost { get; }
     string LevelId { get; }
     bool IsFrontSession { get; }
     IStateMachineContainer GetSessionStateMachines();
+    ISessionManager SessionManager { get; }
+
+    // ── 实体操作（会话作用域）──
+    ISndEntity? FindByName(string name);
+    IReadOnlyCollection<ISndEntity> GetEntities();
+    ISndEntity Spawn(SndMetaData meta);
+    void SpawnMany(params SndMetaData[] metaList);
+    void RequestKillEntity(string entityName);
 }
 ```
 

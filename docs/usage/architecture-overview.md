@@ -141,16 +141,15 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 11 个角色
 | 角色接口 | 职责 |
 |---------|------|
 | `ISndBlackboardAccess` | 系统级 + 流程级黑板访问 |
-| `ISndSessionAccess` | 会话管理器 + 当前会话访问 |
 | `ISndDeferredActions` | 延迟动作队列 |
 | `ISndTemplateAccess` | 模板克隆 |
 | `ISndConsoleAccess` | 控制台命令提交/处理 |
 | `ISndStateMachineAccess` | 流程级状态机容器访问 |
 | `ISndSaveOperations` | 存档/读档/关卡切换/continue |
 | `ISndLifecycleOperations` | 生命周期入口（Continue/Initial/MainMenu） |
-| `ISndEntityOperations` | 实体操作（标记销毁/批量清空） |
 | `ISndFileAccess` | 静态资源文件访问（经 DataSource 边界 + 内置解析） |
 | `ISndArchiveFileAccess` | 存档内文件访问（路径相对于存档活动目录的 `extra/` 子目录，随存档生命周期） |
+| `ISessionManager SessionManager` | 会话管理器（`ISndContext` 声明的唯一自有成员） |
 
 此外，`ISessionManager` 和 `ISessionRun` 位于 Abstractions 层，`ISessionRun.GetSessionStateMachines()` 返回 `IStateMachineContainer`（Abstractions 层接口）而非具体 `StateMachineContainer`，确保接口层完全解耦 Runtime 实现。
 

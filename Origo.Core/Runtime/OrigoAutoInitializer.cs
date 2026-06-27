@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -70,11 +71,13 @@ public static class OrigoAutoInitializer
     /// </summary>
     public static int LoadAndSpawnFromFile(
         string filePath,
-        SndRuntime snd,
+        SndWorld sndWorld,
+        ISessionRun session,
         IDataSourceIoGateway dataSourceIo,
         ILogger logger)
     {
-        ArgumentNullException.ThrowIfNull(snd);
+        ArgumentNullException.ThrowIfNull(sndWorld);
+        ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(dataSourceIo);
         var watch = Stopwatch.StartNew();
@@ -101,7 +104,7 @@ public static class OrigoAutoInitializer
                 throw ex;
             }
 
-            return SpawnFromJsonArray(root, snd, filePath, logger, watch);
+            return SpawnFromJsonArray(root, sndWorld, session, filePath, logger, watch);
         }
     }
 
@@ -188,13 +191,14 @@ public static class OrigoAutoInitializer
 
     private static int SpawnFromJsonArray(
         DataSourceNode root,
-        SndRuntime snd,
+        SndWorld sndWorld,
+        ISessionRun session,
         string filePath,
         ILogger logger,
         Stopwatch watch)
     {
-        var metaList = snd.World.ResolveMetaListFromJsonArray(root);
-        snd.SpawnMany(metaList);
+        var metaList = sndWorld.ResolveMetaListFromJsonArray(root);
+        session.SpawnMany(metaList.ToArray());
 
         watch.Stop();
         logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()

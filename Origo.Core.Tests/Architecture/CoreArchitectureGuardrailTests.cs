@@ -4,6 +4,7 @@ using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime;
+using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
 using Origo.Core.Abstractions.Lifecycle;
@@ -21,14 +22,16 @@ public class CoreArchitectureGuardrailTests
     }
 
     [Fact]
-    public void ISndContext_ShouldBeCompositionInterface_WithNoOwnMethodDeclarations()
+    public void ISndContext_ShouldBeCompositionInterface_WithMinimalOwnDeclarations()
     {
         var type = typeof(ISndContext);
         var ownMethods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
         var ownProperties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
 
-        Assert.Empty(ownMethods);
-        Assert.Empty(ownProperties);
+        var sessionManagerGetter = Assert.Single(ownMethods);
+        Assert.Equal("get_SessionManager", sessionManagerGetter.Name);
+        var sessionManagerProp = Assert.Single(ownProperties);
+        Assert.Equal("SessionManager", sessionManagerProp.Name);
     }
 
     [Fact]
@@ -38,14 +41,12 @@ public class CoreArchitectureGuardrailTests
         var interfaces = type.GetInterfaces();
 
         Assert.Contains(typeof(ISndBlackboardAccess), interfaces);
-        Assert.Contains(typeof(ISndSessionAccess), interfaces);
         Assert.Contains(typeof(ISndDeferredActions), interfaces);
         Assert.Contains(typeof(ISndTemplateAccess), interfaces);
         Assert.Contains(typeof(ISndConsoleAccess), interfaces);
         Assert.Contains(typeof(ISndStateMachineAccess), interfaces);
         Assert.Contains(typeof(ISndSaveOperations), interfaces);
         Assert.Contains(typeof(ISndLifecycleOperations), interfaces);
-        Assert.Contains(typeof(ISndEntityOperations), interfaces);
         Assert.Contains(typeof(ISndFileAccess), interfaces);
         Assert.Contains(typeof(ISndArchiveFileAccess), interfaces);
     }
@@ -124,14 +125,12 @@ public class CoreArchitectureGuardrailTests
         ISndLifecycleOperations lifecycle = ctx;
         Assert.False(lifecycle.HasContinueData());
 
-        ISndSessionAccess session = ctx;
-        Assert.NotNull(session.SessionManager);
+        Assert.NotNull(ctx.SessionManager);
 
         ISndConsoleAccess console = ctx;
         Assert.False(console.TrySubmitConsoleCommand(""));
 
-        ISndEntityOperations entityOps = ctx;
-        entityOps.RequestKillAll();
+        ctx.FlushDeferredActionsForCurrentFrame();
         ctx.FlushDeferredActionsForCurrentFrame();
 
         ISndFileAccess fileAccess = ctx;
@@ -197,7 +196,7 @@ public class CoreArchitectureGuardrailTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         ctx.ProgressBlackboard!.SetValue("score", 99);
-        ctx.CurrentSession!.SessionBlackboard.SetValue("level_data", "xyz");
+        ((SndContext)ctx).CurrentSession!.SessionBlackboard.SetValue("level_data", "xyz");
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -235,7 +234,7 @@ public class CoreArchitectureGuardrailTests
 
         Assert.Equal("bg1_level", bg.LevelId);
         Assert.False(bg.IsFrontSession);
-        Assert.NotNull(bg.SceneHost);
+        Assert.NotNull(((SessionRun)bg).SceneHost);
         Assert.NotNull(bg.GetSessionStateMachines());
 
         bg.Dispose();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Snd.Metadata;
@@ -132,5 +133,7 @@ public class PressButtonCommandHandlerTests
         public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
 
         public bool IsPendingKill { get; set; }
+
+        public ISessionRun OwningSession { get; set; } = null!;
     }
 }

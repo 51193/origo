@@ -26,7 +26,8 @@ internal sealed class PressButtonCommandHandler : CommandHandlerBase
         var entityName = invocation.PositionalArgs[0].Trim();
         var buttonPath = invocation.PositionalArgs[1].Trim();
 
-        var entity = Runtime.Snd.FindByName(entityName);
+        var entity = Runtime.SessionManager.ForegroundSession?.FindByName(entityName)
+                     ?? Runtime.ForegroundSceneHost.FindByName(entityName);
         if (entity is null)
         {
             errorMessage = $"Entity '{entityName}' not found.";

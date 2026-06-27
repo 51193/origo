@@ -34,10 +34,11 @@ ISndEntity ─── ISndDataAccess + ISndNodeAccess + ISndStrategyAccess
 
 IEntityLifecycle                (独立接口，框架内部，非 ISndEntity 子接口)
 
-ISndContext ─── ISndBlackboardAccess + ISndSessionAccess + ISndDeferredActions
+ISndContext ─── ISndBlackboardAccess + ISndDeferredActions
                + ISndTemplateAccess + ISndConsoleAccess + ISndStateMachineAccess
-               + ISndSaveOperations + ISndLifecycleOperations + ISndEntityOperations
+               + ISndSaveOperations + ISndLifecycleOperations
                + ISndFileAccess + ISndArchiveFileAccess
+               + SessionManager { get; }
 
 ISndSceneHost ─── ISndSceneAccess
 

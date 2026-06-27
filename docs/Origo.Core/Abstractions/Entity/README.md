@@ -15,7 +15,7 @@
 | `ISndStrategyAccess.cs` | 被动策略动态添加/移除 |
 | `ISndActiveStrategyAccess.cs` | 主动策略：添加/移除/调用 |
 | `ISndObserverStrategyAccess.cs` | 观察者策略的挂载/卸载（自观察与跨实体观察） |
-| `ISndEntity.cs` | 组合接口：继承上述五个能力接口 + `Name` 属性 + `IsPendingKill` |
+| `ISndEntity.cs` | 组合接口：继承上述五个能力接口 + `Name` 属性 + `IsPendingKill` + `OwningSession` 属性 |
 | `IEntityLifecycle.cs` | 框架内部生命周期接口：分阶段恢复/钩子/拆卸方法。实现者：`SndEntity`（Core 内存实体）、适配层实体（桥接委托给内部 `SndEntity`） |
 
 ## 接口详细
@@ -71,6 +71,7 @@
 | 成员 | 说明 |
 |------|------|
 | `Name { get; }` | 稳定的实体标识名 |
+| `OwningSession { get; }` | 实体所属的 `ISessionRun`（非空，fail-fast）：实体创建时由场景宿主自动绑定（`FullMemorySndSceneHost.CreateAndRecover` / `GodotSndManager.CreateEntity` / `RecoverFromMetaList` 路径）。策略通过此属性直达自己所属的会话（同 session 操作）以及跨 session 通过 `OwningSession.SessionManager` 访问其它会话。未绑定时访问抛 `InvalidOperationException` |
 | `IsPendingKill { get; }` | 标记为待销毁状态。框架在帧末统一执行销毁（业务延迟队列之后、系统延迟队列之前）。策略应在操作实体前通过此标志位判断实体是否仍然存活 |
 
 ### IEntityLifecycle
