@@ -9,6 +9,8 @@ using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Snd.Strategy;
+using Origo.Core.Snd.Scene;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -60,6 +62,58 @@ public class SndEntityOwningSessionTests
         Assert.Throws<InvalidOperationException>(() => entity.OwningSession);
     }
 
+    [Fact]
+    public void SndEntityFactory_Spawn_CreatesEntityAndFiresAfterSpawnHooks()
+    {
+        var events = new List<string>();
+        var host = CreateHost(w =>
+        {
+            w.RegisterStrategy(() => new TrackingStrategy(events));
+        });
+
+        SndEntityFactory.Spawn(host, CreateMetaWithStrategy("E", TrackingIdx));
+
+        Assert.NotNull(host.FindByName("E"));
+        Assert.Contains("AfterSpawn:E", events);
+    }
+
+    [Fact]
+    public void SndEntityFactory_SpawnMany_CreatesMultipleEntitiesAndFiresHooks()
+    {
+        var events = new List<string>();
+        var host = CreateHost(w =>
+        {
+            w.RegisterStrategy(() => new TrackingStrategy(events));
+        });
+
+        SndEntityFactory.SpawnMany(host,
+            CreateMetaWithStrategy("A", TrackingIdx),
+            CreateMetaWithStrategy("B", TrackingIdx),
+            CreateMetaWithStrategy("C", TrackingIdx));
+
+        Assert.Equal(3, host.GetEntities().Count);
+        Assert.Contains("AfterSpawn:A", events);
+        Assert.Contains("AfterSpawn:B", events);
+        Assert.Contains("AfterSpawn:C", events);
+    }
+
+    private static FullMemorySndSceneHost CreateHost(Action<SndWorld> configureWorld)
+    {
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        configureWorld(world);
+        host.BindWorld(world);
+        var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
+        var ctx = new SndContext(new SndContextParameters(runtime,
+            TestFactory.CreateIoGateway(new TestFileSystem()),
+            TestFactory.CreateFileMetaAccess(new TestFileSystem()),
+            TestFactory.CreatePathResolver(new TestFileSystem()),
+            "root", "initial", "entry.json"));
+        host.BindContext(ctx);
+        return host;
+    }
+
     private static SndMetaData CreateMeta(string name) => new()
     {
         Name = name,
@@ -72,6 +126,33 @@ public class SndEntityOwningSessionTests
         },
         DataMetaData = new DataMetaData()
     };
+
+    private static SndMetaData CreateMetaWithStrategy(string name, string idx) => new()
+    {
+        Name = name,
+        NodeMetaData = new NodeMetaData(),
+        StrategyMetaData = new StrategyMetaData
+        {
+            LifecycleIndices = new List<string> { idx },
+            ActiveIndices = new List<string>(),
+            ObserverIndices = new List<StrategyMetaData.ObserverBinding>()
+        },
+        DataMetaData = new DataMetaData()
+    };
+
+    private const string TrackingIdx = "owntest.tracking";
+
+    [StrategyIndex(TrackingIdx)]
+    private sealed class TrackingStrategy : LifecycleStrategyBase
+    {
+        private readonly List<string>? _events;
+        public TrackingStrategy(List<string> events) => _events = events;
+
+        public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
+        {
+            _events?.Add($"AfterSpawn:{entity.Name}");
+        }
+    }
 
     private sealed class StubSessionRun : ISessionRun
     {
