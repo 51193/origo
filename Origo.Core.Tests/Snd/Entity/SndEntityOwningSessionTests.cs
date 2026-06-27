@@ -8,7 +8,6 @@ using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
-using Origo.Core.Snd.Scene;
 using Origo.Core.Snd.Strategy;
 using Origo.Core.Snd.Scene;
 using Xunit;
