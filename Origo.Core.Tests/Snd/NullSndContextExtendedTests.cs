@@ -46,7 +46,3 @@ public class NullSndContextExtendedTests
         Assert.Empty(ctx.ListSaves());
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. SessionSndContext — pass-through delegation
-// ─────────────────────────────────────────────────────────────────────────────

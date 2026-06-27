@@ -5,7 +5,7 @@ namespace Origo.Core.Snd.Metadata;
 /// <summary>
 ///     与某个 SND 实体关联的策略索引列表。
 ///     按策略类型分为生命周期策略、主动策略和观察者策略三组，分别由
-///     SndStrategyManager、ActiveStrategyManager 和 ObserverStrategyManager 管理。
+///     SndStrategyManager、ActiveStrategyManager 和 ObserverTopology 管理。
 /// </summary>
 public sealed class StrategyMetaData
 {

@@ -42,8 +42,9 @@ public class SaveAndSwitchForegroundTests
 
         var entityA = host.CreateEntity(CreateMetaWithStrategy("EntityA",
             new[] { FindByNameStrategyIndex }));
-        if (entityA is IEntityLifecycle lc)
-            lc.FireAfterSpawnHooks();
+        using (((ISessionScopedSceneHost)host).EnterOwningSessionAmbient())
+            if (entityA is IEntityLifecycle lc)
+                lc.FireAfterSpawnHooks();
 
         Assert.Contains($"{AfterSpawnEventPrefix}EntityA:self=true", events);
         Assert.NotNull(host.FindByName("EntityA"));
@@ -65,8 +66,9 @@ public class SaveAndSwitchForegroundTests
         host.CreateEntity(CreateMetaWithStrategy("EntityA"));
         var entityB = host.CreateEntity(CreateMetaWithStrategy("EntityB",
             new[] { FindByNameStrategyIndex }));
-        if (entityB is IEntityLifecycle lc)
-            lc.FireAfterSpawnHooks();
+        using (((ISessionScopedSceneHost)host).EnterOwningSessionAmbient())
+            if (entityB is IEntityLifecycle lc)
+                lc.FireAfterSpawnHooks();
 
         Assert.Contains($"{AfterSpawnEventPrefix}EntityB:sibling=EntityA", events);
     }
@@ -88,9 +90,10 @@ public class SaveAndSwitchForegroundTests
         {
             CreateMetaWithStrategy("EntityC", new[] { FindByNameStrategyIndex })
         });
-        foreach (var e in host.GetEntities())
-            if (e is IEntityLifecycle lc)
-                lc.FireAfterLoadHooks();
+        using (((ISessionScopedSceneHost)host).EnterOwningSessionAmbient())
+            foreach (var e in host.GetEntities())
+                if (e is IEntityLifecycle lc)
+                    lc.FireAfterLoadHooks();
 
         Assert.Contains($"{AfterLoadEventPrefix}EntityC:self=true", events);
         Assert.NotNull(host.FindByName("EntityC"));
@@ -114,9 +117,10 @@ public class SaveAndSwitchForegroundTests
             CreateMetaWithStrategy("EntityD"),
             CreateMetaWithStrategy("EntityE", new[] { FindByNameStrategyIndex })
         });
-        foreach (var e in host.GetEntities())
-            if (e is IEntityLifecycle lc)
-                lc.FireAfterLoadHooks();
+        using (((ISessionScopedSceneHost)host).EnterOwningSessionAmbient())
+            foreach (var e in host.GetEntities())
+                if (e is IEntityLifecycle lc)
+                    lc.FireAfterLoadHooks();
 
         Assert.Contains($"{AfterLoadEventPrefix}EntityE:sibling=EntityD", events);
     }

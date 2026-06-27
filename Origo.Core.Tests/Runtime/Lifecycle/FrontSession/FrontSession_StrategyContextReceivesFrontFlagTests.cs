@@ -11,19 +11,6 @@ namespace Origo.Core.Tests;
 public class FrontSession_StrategyContextReceivesFrontFlagTests
 {
     [Fact]
-    public void GivenForegroundSession_WhenBuildSessionSndContext_ThenContextIsFrontSessionIsTrue()
-    {
-        var (ctx, _) = CreateContext();
-        SetupForegroundSession(ctx);
-        var fg = ctx.SessionManager.ForegroundSession!;
-
-        // SessionSndContext wraps the session; verify IsFrontSession propagates
-        var sessionCtx = new SessionSndContext(ctx, fg);
-        Assert.True(sessionCtx.IsFrontSession);
-        Assert.Same(fg, sessionCtx.CurrentSession);
-    }
-
-    [Fact]
     public void GivenGlobalSndContext_WhenForegroundMounted_ThenContextIsFrontSessionIsTrue()
     {
         var (ctx, _) = CreateContext();

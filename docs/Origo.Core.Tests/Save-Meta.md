@@ -29,7 +29,7 @@
 | SaveMetaMerger 合并多个贡献者 | 多来源元数据不冲突地合并到同一字典 | persistence-flow |
 | SaveMetaBuildContext 携带上下文数据 | Context 传递 Session/Progress 引用 | ISaveMetaContributor |
 | RegisterSaveMetaContributor 注册并保存 | ISaveMetaContributor 或委托注册后，RequestSaveGame 携带 CustomMeta | persistence-flow: meta.map |
-| NullSndContext / SessionSndContext 注册行为 | NullSndContext 抛异常，SessionSndContext 委托到全局 | ISndSaveOperations |
+| NullSndContext 注册行为 | NullSndContext 抛异常 | ISndSaveOperations |
 
 ### 边界路径
 

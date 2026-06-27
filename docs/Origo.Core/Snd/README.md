@@ -24,7 +24,6 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→别名/模板加载→入口存档加载。实现 `ISndFileAccess`，将文件读写委托给 `SndWorld.DataSourceIo` + `ConverterRegistry` |
 | `SndContextParameters.cs` | SndContext 构造参数对象。含 `AutoDiscoverStrategies`、`DiscoverySkipPrefixes`、`SceneAliasMapPath`、`SndTemplateMapPath` 等启动配置属性 |
 | `NullSndContext.cs` | 测试用空上下文实现，`ISndFileAccess` 方法均抛 `InvalidOperationException` |
-| `SessionSndContext.cs` | 会话级上下文适配器，`ISndFileAccess` 方法委托给全局 ISndContext |
 | `SndWorld.cs` | SND 世界：策略池 + 类型映射 + 转换器注册表 + 模板/别名 |
 | `SndDefaults.cs` | `internal` — SND 系统默认值常量 |
 | `SndMappings.cs` | 场景别名解析 + 模板注册与解析 |
@@ -49,8 +48,8 @@ SndEntity (聚合根)
 ├── ActiveStrategyManager (主动策略)
 │   ├── Dictionary<string, ActiveStrategyBase> (O(1) 按索引查找)
 │   └── SndStrategyPool (共享同一池实例)
-└── ObserverStrategyManager (观察者策略)
-    ├── 观察者绑定拓扑 (target → observerIndices)
+└── ObserverTopology 引用 (观察者策略，per-scene-host 共享，非实体私有)
+    ├── 双向绑定索引 (observer ↔ target，集中于场景宿主)
     └── 数据变更接线（经 ISndEntityRawSubscription）+ 绑定序列化/恢复
 ```
 
@@ -77,7 +76,7 @@ SND 的观察统一由观察者策略（`ObserverStrategyBase`）承载，自观
 - **自观察**：`entity.MountObserverStrategy(entity.Name, "my_game.hp_watcher")`
 - **跨实体观察**：先 `SceneHost.FindByName` 解析目标，再 `observer.MountObserverStrategy(target, "...")`
 
-观察者绑定拓扑通过 `StrategyMetaData.ObserverIndices` 随实体序列化，读档时由 `ObserverStrategyManager` 自动恢复接线，无需在 `AfterLoad` 中手动重连；目标或观察方死亡时自动卸载。公开接口见 [ISndObserverStrategyAccess](../Abstractions/Entity/README.md#isndobserverstrategyaccess)，策略类型见 [Strategy](Strategy/README.md)，实现细节见 [SndEntity](Entity/README.md#sndentity聚合根)。
+观察者绑定拓扑通过 `StrategyMetaData.ObserverIndices` 随实体序列化，读档时由 `SessionRun` 经场景宿主的 `ObserverTopology` 自动恢复接线，无需在 `AfterLoad` 中手动重连；目标或观察方死亡时自动卸载。公开接口见 [ISndObserverStrategyAccess](../Abstractions/Entity/README.md#isndobserverstrategyaccess)，策略类型见 [Strategy](Strategy/README.md)，实现细节见 [SndEntity](Entity/README.md#sndentity聚合根)。
 
 ## 核心原则
 

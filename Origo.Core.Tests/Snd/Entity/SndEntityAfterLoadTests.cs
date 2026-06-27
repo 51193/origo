@@ -44,7 +44,9 @@ public class SndEntityAfterLoadTests
             using var node = TestFactory.NodeFromJson(json);
             var meta = registry.Read<SndMetaData>(node);
 
-            var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger);
+            var observerTopology = new ObserverTopology(runtime.SndWorld.StrategyPool, logger);
+            observerTopology.BindContext(ctx);
+            var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, observerTopology);
             entity.LoadSingle(meta);
 
             Assert.Equal(new[] { "afterload:a", "afterload:b" }, AfterLoadProbeAStrategy.Events);

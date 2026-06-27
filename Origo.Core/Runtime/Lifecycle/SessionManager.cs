@@ -7,6 +7,7 @@ using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Logging;
 using Origo.Core.Save;
+using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
 using Origo.Core.Abstractions.Lifecycle;
 
@@ -102,7 +103,8 @@ internal sealed class SessionManager : ISessionManager
             if (!_sessions.TryGetValue(key, out var mounted) || !mounted.SyncProcess)
                 continue;
 
-            mounted.Session.SceneHost.ProcessAll(delta);
+            using (PushAmbient(mounted.Session))
+                mounted.Session.SceneHost.ProcessAll(delta);
         }
     }
 
@@ -146,18 +148,32 @@ internal sealed class SessionManager : ISessionManager
     /// <summary>
     ///     将指定键的会话序列化为 <see cref="LevelPayload" />。
     /// </summary>
-    internal LevelPayload SerializeSession(string key) => RequireMountedSession(key).Session.SerializeToPayload();
+    internal LevelPayload SerializeSession(string key)
+    {
+        var session = RequireMountedSession(key).Session;
+        using (PushAmbient(session))
+            return session.SerializeToPayload();
+    }
 
     /// <summary>
     ///     将指定键的会话状态持久化到 current/ 目录。
     /// </summary>
-    internal void PersistSession(string key) => RequireMountedSession(key).Session.PersistLevelState();
+    internal void PersistSession(string key)
+    {
+        var session = RequireMountedSession(key).Session;
+        using (PushAmbient(session))
+            session.PersistLevelState();
+    }
 
     /// <summary>
     ///     从 <see cref="LevelPayload" /> 恢复指定键的会话状态。
     /// </summary>
-    internal void LoadSessionFromPayload(string key, LevelPayload payload) =>
-        RequireMountedSession(key).Session.LoadFromPayload(payload);
+    internal void LoadSessionFromPayload(string key, LevelPayload payload)
+    {
+        var session = RequireMountedSession(key).Session;
+        using (PushAmbient(session))
+            session.LoadFromPayload(payload);
+    }
 
     /// <summary>
     ///     清除所有后台会话（Dispose 并移除）。前台会话不受影响。
@@ -298,12 +314,16 @@ internal sealed class SessionManager : ISessionManager
             $"Destroying session '{key}' (level: {mounted.Session.LevelId}).");
 
         mounted.Session.MountKey = null;
-        mounted.Session.Dispose();
+        using (PushAmbient(mounted.Session))
+            mounted.Session.Dispose();
         _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
                 .Build($"Destroyed session '{key}'."));
     }
+
+    private IDisposable PushAmbient(ISessionRun session) =>
+        ((SndContext)_managerRuntime.SndContext).PushAmbientSession(session);
 
     private sealed record MountedSession(SessionRun Session, bool SyncProcess);
 }

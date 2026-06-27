@@ -4,17 +4,22 @@ using System.Linq;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Strategy;
 
 namespace Origo.Core.Snd.Scene;
 
-internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttachableSceneHost
+internal sealed class FullMemorySndSceneHost
+    : ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, ISessionScopedSceneHost
 {
     private readonly List<MemoryEntityEntry> _entries = new();
     private readonly ILogger _logger;
     private readonly NullNodeFactory _nodeFactory = new();
     private ISndContext? _context;
+    private ObserverTopology? _observerTopology;
+    private ISessionRun? _owningSession;
     private SndWorld? _world;
 
     public FullMemorySndSceneHost(ILogger logger)
@@ -23,10 +28,28 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
         _logger = logger;
     }
 
+    public ObserverTopology ObserverTopology =>
+        _observerTopology ?? throw new InvalidOperationException(
+            "ObserverTopology is not available. Call BindWorld before accessing the observer topology.");
+
     public void BindContext(ISndContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
         _context = context;
+        _observerTopology?.BindContext(context);
+    }
+
+    public void SetOwningSession(ISessionRun session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        _owningSession = session;
+    }
+
+    public IDisposable? EnterOwningSessionAmbient()
+    {
+        if (_owningSession is null || _context is not SndContext sndContext)
+            return null;
+        return sndContext.PushAmbientSession(_owningSession);
     }
 
     public ISndEntity CreateEntity(SndMetaData metaData)
@@ -98,11 +121,14 @@ internal sealed class FullMemorySndSceneHost : ISndSceneHost, ISndContextAttacha
     {
         ArgumentNullException.ThrowIfNull(world);
         _world = world;
+        _observerTopology = new ObserverTopology(world.StrategyPool, _logger);
+        if (_context is not null)
+            _observerTopology.BindContext(_context);
     }
 
     private SndEntity CreateAndRecover(SndMetaData metaData)
     {
-        var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger);
+        var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger, _observerTopology!);
         entity.Name = metaData.Name;
         _entries.Add(new MemoryEntityEntry(entity));
         ((IEntityLifecycle)entity).RecoverForLifecycle(metaData);

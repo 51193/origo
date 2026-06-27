@@ -116,13 +116,14 @@ public sealed class SndWorld
         return ConverterRegistry.Read<IReadOnlyDictionary<string, TypedData>>(node);
     }
 
-    public SndEntity CreateEntity(
+    internal SndEntity CreateEntity(
         INodeFactory nodeFactory,
         ISndContext context,
-        ILogger logger)
+        ILogger logger,
+        ObserverTopology observerTopology)
     {
         ArgumentNullException.ThrowIfNull(logger);
-        return new SndEntity(nodeFactory, StrategyPool, Mappings.ResolveSceneAlias, context, logger);
+        return new SndEntity(nodeFactory, StrategyPool, Mappings.ResolveSceneAlias, context, logger, observerTopology);
     }
 
     public DataSourceNode WriteMetaNode(SndMetaData metaData) => ConverterRegistry.Write(metaData);

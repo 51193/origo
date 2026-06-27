@@ -20,7 +20,9 @@ public class SndEntityAndAutoInitializerTests
         var logger = new TestLogger();
         var context = CreateContext(logger);
         var nodeFactory = new TestNodeFactory();
-        var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger);
+        var observerTopology = new ObserverTopology(context.Runtime.SndWorld.StrategyPool, logger);
+        observerTopology.BindContext(context);
+        var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
 
         entity.SpawnSingle(new SndMetaData
         {
@@ -45,7 +47,9 @@ public class SndEntityAndAutoInitializerTests
         LifecycleStrategy.Bind(new List<string>());
         context.Runtime.SndWorld.RegisterStrategy(() => new LifecycleStrategy());
 
-        var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger);
+        var observerTopology = new ObserverTopology(context.Runtime.SndWorld.StrategyPool, logger);
+        observerTopology.BindContext(context);
+        var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
         entity.SpawnSingle(new SndMetaData
             { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 
@@ -65,7 +69,9 @@ public class SndEntityAndAutoInitializerTests
         var logger = new TestLogger();
         var context = CreateContext(logger);
         var nodeFactory = new TestNodeFactory();
-        var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger);
+        var observerTopology = new ObserverTopology(context.Runtime.SndWorld.StrategyPool, logger);
+        observerTopology.BindContext(context);
+        var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
         entity.SpawnSingle(new SndMetaData
             { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 

@@ -7,6 +7,7 @@ namespace Origo.Core.Snd.Strategy;
 
 internal sealed class ObserverBindingEntry
 {
+    public required string ObserverName { get; init; }
     public required string TargetName { get; init; }
     public required string ObserverIndex { get; init; }
     public required ObserverStrategyBase Strategy { get; init; }

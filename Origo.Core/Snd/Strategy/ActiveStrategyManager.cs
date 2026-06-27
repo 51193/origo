@@ -23,13 +23,23 @@ internal sealed class ActiveStrategyManager
 
     /// <summary>
     ///     从 metadata 批量恢复主动策略（Spawn/Load 时调用）。
-    ///     遍历全部 indices，仅保留 ActiveStrategyBase 类型，其余立即释放。
+    ///     遍历全部 indices；遇到非 ActiveStrategyBase 类型视为存档/代码不一致的
+    ///     数据损坏，立即释放该策略并抛 <see cref="InvalidOperationException" />。
+    ///     恢复中途失败时回滚已获取的全部主动策略，不残留半初始化状态。
     /// </summary>
     public void Recover(IEnumerable<string> indices)
     {
         ReleaseAll();
-        foreach (var index in indices)
-            TryAcquire(index);
+        try
+        {
+            foreach (var index in indices)
+                AcquireOrThrow(index);
+        }
+        catch
+        {
+            ReleaseAll();
+            throw;
+        }
     }
 
     /// <summary>动态添加主动策略。</summary>
@@ -81,5 +91,21 @@ internal sealed class ActiveStrategyManager
 
         _pool.ReleaseStrategy(index);
         return false;
+    }
+
+    private void AcquireOrThrow(string index)
+    {
+        var strategy = _pool.GetStrategy<BaseStrategy>(index);
+        if (strategy is ActiveStrategyBase active)
+        {
+            _active[index] = active;
+            return;
+        }
+
+        _pool.ReleaseStrategy(index);
+        throw new InvalidOperationException(
+            $"Strategy '{index}' (type '{strategy.GetType().FullName}') is not an ActiveStrategyBase " +
+            "and cannot be recovered as an active strategy. " +
+            "Active strategies must inherit from ActiveStrategyBase.");
     }
 }

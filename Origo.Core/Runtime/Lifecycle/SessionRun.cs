@@ -13,6 +13,7 @@ using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Snd.Strategy;
 using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
@@ -32,7 +33,6 @@ public sealed class SessionRun : ISessionRun
     private readonly ILogger _logger;
     private readonly SaveContext _saveContext;
     private readonly ISndSceneHost _sceneHost;
-    private readonly SessionSndContext _sessionContext;
     private readonly RunStateScope _sessionScope;
     private readonly ISaveStorageService _storageService;
     private bool _disposing;
@@ -62,10 +62,10 @@ public sealed class SessionRun : ISessionRun
         var sessionMachines = new StateMachineContainer(managerRuntime.SndWorld.StrategyPool, sessionSmCtx);
         _sessionScope = new RunStateScope(sessionParams.SessionBlackboard, sessionMachines);
 
-        var effectiveContext = managerRuntime.SndContext;
-        _sessionContext = new SessionSndContext(effectiveContext, this);
         if (_sceneHost is ISndContextAttachableSceneHost contextAttachable)
-            contextAttachable.BindContext(_sessionContext);
+            contextAttachable.BindContext(managerRuntime.SndContext);
+        if (_sceneHost is ISessionScopedSceneHost scoped)
+            scoped.SetOwningSession(this);
         _logger.Log(LogLevel.Info, LogTag,
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
@@ -176,15 +176,17 @@ public sealed class SessionRun : ISessionRun
                 if (entity is IEntityLifecycle lifecycle)
                     lifecycle.FireAfterLoadHooks();
 
-            foreach (var entity in _sceneHost.GetEntities())
-                if (entity is SndEntity se)
-                {
-                    var meta = ((IEntityLifecycle)se).BuildMetaData();
-                    var observerBindings = meta.StrategyMetaData?.ObserverIndices;
-                    if (observerBindings is not null && observerBindings.Count > 0)
-                        se.RecoverObserverBindings(observerBindings,
-                            targetName => _sceneHost.FindByName(targetName));
-                }
+            var observerTopology = (_sceneHost as IObserverTopologyHost)?.ObserverTopology;
+            if (observerTopology is not null)
+                foreach (var entity in _sceneHost.GetEntities())
+                    if (entity is SndEntity se)
+                    {
+                        var meta = ((IEntityLifecycle)se).BuildMetaData();
+                        var observerBindings = meta.StrategyMetaData?.ObserverIndices;
+                        if (observerBindings is not null && observerBindings.Count > 0)
+                            observerTopology.RecoverBindingsFor(se, observerBindings,
+                                targetName => _sceneHost.FindByName(targetName));
+                    }
 
             _sessionScope.StateMachines.FlushAllAfterLoad();
 

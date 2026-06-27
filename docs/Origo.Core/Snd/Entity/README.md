@@ -4,21 +4,21 @@
 
 ## 概述
 
-SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组合了 `SndDataManager`（数据）、`SndNodeManager`（节点）、`SndStrategyManager`（被动策略）、`ActiveStrategyManager`（主动策略）、`ObserverStrategyManager`（观察者策略）五个内部管理器，实现了 `ISndEntity`、`IEntityLifecycle` 和 `ISndEntityRawSubscription` 接口。
+SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组合了 `SndDataManager`（数据）、`SndNodeManager`（节点）、`SndStrategyManager`（被动策略）、`ActiveStrategyManager`（主动策略）四个内部管理器，并持有一个经构造注入的 per-scene-host `ObserverTopology`（观察者绑定）引用，实现了 `ISndEntity`、`IEntityLifecycle` 和 `ISndEntityRawSubscription` 接口。
 
 策略生命周期钩子通过 `IEntityLifecycle` 接口暴露的分阶段方法触发，由框架层的 `SndRuntime` 和 `SessionRun` 统一编排批量钩子调用，而非由业务代码直接调用实体方法。
 
-`SndEntity` 也是观察系统的宿主：观察者策略（`ObserverStrategyBase`）经 `MountObserverStrategy` 挂载到目标实体，由 `ObserverStrategyManager` 管理绑定拓扑、经 `ISndEntityRawSubscription` 接线目标的数据变更，并在实体退出/死亡时自动卸载。
+`SndEntity` 也是观察系统的参与者：观察者策略（`ObserverStrategyBase`）经 `MountObserverStrategy` 挂载到目标实体，由 per-scene-host 的 `ObserverTopology` 管理绑定拓扑、经 `ISndEntityRawSubscription` 接线目标的数据变更，并在实体退出/死亡时自动卸载。
 
 ## 包含文件
 
 | 文件 | 职责 |
 |------|------|
-| `SndEntity.cs` | 实体聚合根：组合数据/节点/被动策略/主动策略/观察者策略五个管理器，实现 `ISndEntity` + `IEntityLifecycle` + `ISndEntityRawSubscription` |
+| `SndEntity.cs` | 实体聚合根：组合数据/节点/被动策略/主动策略四个管理器 + 注入的 `ObserverTopology` 引用，实现 `ISndEntity` + `IEntityLifecycle` + `ISndEntityRawSubscription` |
 | `SndDataManager.cs` | `internal` — 实体数据字典管理 + 观察者变更通知 |
 | `SndNodeManager.cs` | `internal` — 实体节点管理：从元数据恢复到节点创建/查询/释放 |
 | `DataObserverManager.cs` | `internal` — 通用数据观察者订阅/通知基础设施（键 → 回调列表）|
-| `ISndEntityRawSubscription.cs` | 原始数据订阅接口（`SubscribeDataRaw` / `UnsubscribeDataRaw`）。供 `ObserverStrategyManager` 在内部链路中直接操作目标实体的 `SndDataManager`，将观察者策略接入数据变更 |
+| `ISndEntityRawSubscription.cs` | 原始数据订阅接口（`SubscribeDataRaw` / `UnsubscribeDataRaw`）。供 `ObserverTopology` 在内部链路中直接操作目标实体的 `SndDataManager`，将观察者策略接入数据变更 |
 
 > `TryGetNumericExtensions.cs`（位于 `Origo.Core.Snd` 命名空间）提供 `TryGetNumeric` / `GetNumeric` 扩展方法，桥接 `SetData("k", 5)`（int）和 `TryGetData<float>("k")`（float）之间的类型不匹配。按 float → int → long → double 顺序尝试读取，详见 [TryGetNumeric](../README.md)。
 
@@ -30,15 +30,15 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 **观察者接线**：
 
-观察通过观察者策略实现，挂载入口为 `ISndObserverStrategyAccess` 的四个方法，全部委托给 `ObserverStrategyManager`：
+观察通过观察者策略实现，挂载入口为 `ISndObserverStrategyAccess` 的四个方法，全部委托给注入的 per-scene-host `ObserverTopology`：
 
 | 公开方法 | 行为 |
 |----------|------|
-| `MountObserverStrategy(targetName, observerIndex)` | 按名称解析目标（自身 Name 即自观察；跨实体名称需场景宿主），交 `ObserverStrategyManager.Mount` |
+| `MountObserverStrategy(targetName, observerIndex)` | 按名称解析目标（自身 Name 即自观察；跨实体名称需场景宿主），交 `ObserverTopology.Mount` |
 | `MountObserverStrategy(target, observerIndex)` | 以已解析目标实体挂载（跨实体首选） |
 | `UnmountObserverStrategy(...)` | 对应卸载，触发观察者策略 `OnUnmounted` |
 
-`ObserverStrategyManager` 维护本实体的观察者绑定拓扑，挂载时经目标实体的 `ISndEntityRawSubscription.SubscribeDataRaw` 接入数据变更（由 `[ObserveData]` 声明的键），并将绑定通过 `BuildObserverBindings()` 序列化到 `StrategyMetaData.ObserverIndices`、读档时 `RecoverBindings()` 恢复。
+`ObserverTopology` 维护本宿主内所有实体的观察者绑定拓扑，挂载时经目标实体的 `ISndEntityRawSubscription.SubscribeDataRaw` 接入数据变更（由 `[ObserveData]` 声明的键），并将本实体的出边通过 `BuildBindingsFor(Name)` 序列化到 `StrategyMetaData.ObserverIndices`、读档时由 `SessionRun` 经宿主拓扑 `RecoverBindingsFor()` 恢复。
 
 **`IEntityLifecycle` 分阶段方法**：
 
@@ -69,7 +69,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 - **存储**：`Dictionary<string, TypedData>`
 - **SetData**：用 `CollectionsMarshal.GetValueRefOrAddDefault` 原地写入，旧值相同时跳过通知（避免无意义事件）
 - **GetData / GetRequiredData vs TryGetData**：前者 KeyNotFound 或类型不符时抛 `InvalidOperationException`，后者安全返回 `(found, value?)`
-- **Subscribe/Unsubscribe**：接收 `Action<ISndEntity, TypedData, TypedData>`（`(target, old, new)`），内部包装为 `Action<TypedData, TypedData>` 适配 `DataObserverManager`；`_subscriptionMap` 存 `(OriginalCallback, WrappedCallback)` 对用于退订匹配。该数据订阅通道经 `ISndEntityRawSubscription` 由 `ObserverStrategyManager` 驱动，不直接暴露给业务策略
+- **Subscribe/Unsubscribe**：接收 `Action<ISndEntity, TypedData, TypedData>`（`(target, old, new)`），内部包装为 `Action<TypedData, TypedData>` 适配 `DataObserverManager`；`_subscriptionMap` 存 `(OriginalCallback, WrappedCallback)` 对用于退订匹配。该数据订阅通道经 `ISndEntityRawSubscription` 由 `ObserverTopology` 驱动，不直接暴露给业务策略
 - **Recover / Release / SerializeMeta**：存档恢复/清理/序列化
 
 ### SndNodeManager
@@ -107,9 +107,9 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 通知回调中可能触发 Subscribe/Unsubscribe/SetData（从而再次 NotifyObservers）。若直接在列表上 foreach 同时修改，会导致 `Collection was modified` 异常。`ToArray()` 快照以少量分配换取安全。
 
-### 为什么观察经 ObserverStrategyManager 而非实体订阅 API
+### 为什么观察经 per-scene-host ObserverTopology 而非实体订阅 API
 
-观察者策略与被动/主动策略一样无状态、可池化。将观察接线交由 `ObserverStrategyManager` 统一治理，使绑定拓扑可随实体序列化（`ObserverIndices`）并在读档时自动恢复，业务代码无需在 `AfterLoad` 中手动重连，也无需在 `BeforeDead` 中手动退订——实体退出/死亡时管理器自动卸载全部绑定。
+观察者策略与被动/主动策略一样无状态、可池化。将观察接线交由场景宿主级的 `ObserverTopology` 统一治理，使绑定拓扑可随实体序列化（`ObserverIndices`）并在读档时自动恢复，业务代码无需在 `AfterLoad` 中手动重连，也无需在 `BeforeDead` 中手动退订——实体退出/死亡时拓扑自动卸载全部绑定。跨实体绑定是有向图而非每实体私有状态，集中到 per-scene-host 拓扑后，`SndRuntime` 的 kill/clear 双向 teardown 经入边索引定位观察者，无需实体反向暴露内部管理器。
 
 ### 为什么 SndDataManager 存储 (OriginalCallback, WrappedCallback) 对
 
@@ -117,7 +117,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 ### 为什么独立 ISndEntityRawSubscription 接口
 
-观察者接线需要直接订阅目标实体的数据变更通道。`ISndEntityRawSubscription` 提供 `TypedData` 级的原始数据订阅入口，成员以显式接口实现暴露——业务代码持有的 `ISndEntity` 看不到这些方法，仅 `ObserverStrategyManager` 等框架内部链路（经 `SndEntity` / `GodotSndEntity`）使用。
+观察者接线需要直接订阅目标实体的数据变更通道。`ISndEntityRawSubscription` 提供 `TypedData` 级的原始数据订阅入口，成员以显式接口实现暴露——业务代码持有的 `ISndEntity` 看不到这些方法，仅 `ObserverTopology` 等框架内部链路（经 `SndEntity` / `GodotSndEntity`）使用。
 
 ---
 

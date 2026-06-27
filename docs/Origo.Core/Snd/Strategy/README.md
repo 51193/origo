@@ -16,7 +16,9 @@ SND 策略系统的完整实现。策略是实体行为逻辑的载体，遵循"
 | `LifecycleStrategyBase.cs` | 实体策略基类：8 个生命周期虚方法钩子 |
 | `ActiveStrategyBase.cs` | 主动策略基类：`Invoke(entity, ctx, input)` — 外部按索引主动调用 |
 | `ObserverStrategyBase.cs` | 观察者策略基类：`OnMounted` / `OnDataChanged` / `OnUnmounted` |
-| `ObserverStrategyManager.cs` | `internal` — 单实体观察者策略管理器：绑定管理 + 接线/拆线 + 序列化 |
+| `ObserverTopology.cs` | `internal` — per-scene-host 观察者绑定拓扑：集中管理"谁观察谁"的有向图（接线/拆线/序列化/读档恢复），以 observerName 为主键维护出边/入边双向索引 |
+| `ObserverBindingEntry.cs` | `internal` — 单条观察者绑定记录（observerName / targetName / observerIndex / 策略 / 数据订阅包装），`FullCleanup` 退订 + 触发 `OnUnmounted` + 归还策略 |
+| `ObserverStrategyMetadata.cs` | `internal` — 按类型反射缓存 `[ObserveData]` 声明的观察数据键 |
 | `ObserveDataAttribute.cs` | 观察数据键声明特性：`[ObserveData("key")]`，支持多重声明 |
 | `ActiveStrategyExtensions.cs` | `ISndEntity` 扩展方法：泛型 `InvokeStrategy<TInput, TOutput>` 消除 JSON 序列化样板；`EnsureStrategy` 惰性策略挂载 + 幂等守卫 |
 | `ActiveStrategyManager.cs` | `internal` — 单实体主动策略管理器：Dictionary 容器 + 增删 + 序列化 |
@@ -36,18 +38,20 @@ BaseStrategy
 └── StateMachineStrategyBase   (状态机: OnPushRuntime, OnPushAfterLoad, OnPopRuntime, OnPopBeforeQuit)
 ```
 
-### ObserverStrategyManager
+### ObserverTopology
 
-每个 `SndEntity` 持有一个 manager 实例，管理观察者策略的完整生命周期：
+每个创建真实 `SndEntity` 的场景宿主（`FullMemorySndSceneHost`、`GodotSndManager`，均实现 `IObserverTopologyHost`）持有一个 `ObserverTopology` 实例，集中管理该宿主内所有实体的观察者绑定。拓扑以 observerName 为主键维护双向索引：出边（observer → 其绑定列表，用于序列化与 outgoing 拆线）、入边（target → 观察它的 observerName 集合，用于 O(1) incoming 拆线）。实体经构造注入拓扑引用并委托全部观察者操作（类比共享的策略池）。数据变更信号源始终在 target 实体的 `ISndEntityRawSubscription` 上，拓扑只管理绑定记录与接线/拆线。
 
-- **Mount(entity, target, observerIndex)**：获取策略实例 → 按 `[ObserveData]` 属性为每个 key 建立 `SubscribeDataRaw` 接线 → 记录绑定 → 触发 `OnMounted`。挂载是原子的：若接线或 `OnMounted` 抛异常，已建立的订阅全部取消、半加入的绑定被移除、策略引用归还池后异常再传播，不残留订阅或绑定
-- **Unmount(entity, target, observerIndex)**：拆线 `UnsubscribeDataRaw` → 触发 `OnUnmounted` → 释放池引用 → 移除绑定记录
-- **RecoverBindings(entity, bindings, resolveTarget)**：从存档恢复 observer_indices 拓扑，按名解析目标实体，重新接线并触发 `OnMounted`
-- **BuildObserverBindings()**：序列化当前所有绑定为 `List<ObserverBinding>` 写入 `StrategyMetaData`
-- **TeardownOutgoingBindings(entity, resolveTarget)**：实体死亡前通过场景宿主的 `FindByName` 解析目标并执行完整 `Unmount`
-- **TeardownAllBindings(entity)**：`DeadSingle`/`QuitSingle` 调用的自包含清理路径。枚举所有绑定，调用 `FullCleanup`（取消数据订阅 + 触发 `OnUnmounted` + 释放策略）。不依赖场景宿主——绑定条目内已存储 `TargetEntity` 引用
-- **ObserverBindingEntry.FullCleanup(entity, ctx, pool)**：取消所有通过 `TargetRawSubscription` 注册的数据订阅，调用 `OnUnmounted`，释放策略回池。替代原来仅处理自指绑定的 `TeardownObserverBindingsForDeath`
-- **Observer 双向清理**：`KillPendingEntities` 中同时处理 outgoing（自身→别人）和 incoming（别人→自身），通过快照防止 OnUnmounted 回调中的重入修改。`RemoveAllBindingsTargeting` 现在也执行完整 `FullCleanup`，不再是仅从列表中移除条目
+- **BindContext(ctx)**：由宿主在绑定上下文时注入，供 `OnMounted`/`OnDataChanged`/`OnUnmounted` 回调使用
+- **Mount(observer, target, observerIndex)**：获取策略实例 → 按 `[ObserveData]` 属性为每个 key 在 target 上建立 `SubscribeDataRaw` 接线 → 记录绑定 → 触发 `OnMounted`。挂载是原子的：若接线或 `OnMounted` 抛异常，已建立的订阅全部取消、半加入的绑定被移除、策略引用归还池后异常再传播
+- **Unmount(observer, target, observerIndex)**：拆线 `UnsubscribeDataRaw` → 触发 `OnUnmounted` → 释放池引用 → 移除绑定记录
+- **ReleaseStrategiesFor(observer)**：释放某 observer 持有的全部策略引用并清空其出边（不触发 `OnUnmounted`、不退订），对应实体整体销毁流程的 `ReleaseStrategiesOnly` 阶段
+- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`
+- **BuildBindingsFor(observerName)**：序列化某 observer 的全部出边为 `List<ObserverBinding>`（按 target 分组）写入 `StrategyMetaData`
+- **TeardownOutgoingFor(observer, resolveTarget)**：清理某 observer 的全部出边；目标可解析则完整 `Unmount`，否则归还策略并移除记录
+- **TeardownAllBindingsFor(observer)**：`DeadSingle`/`QuitSingle` 的自包含清理路径，对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略），不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用
+- **HasBindingTargetingFrom(observerName, targetName)** / **RemoveBindingsTargetingFor(observer, targetName)**：incoming 拆线支撑——查询/清理某 observer 指向特定 target 的绑定
+- **双向 teardown**：`SndRuntime.KillPendingEntities` 同时处理 outgoing（被杀实体作为 observer）与 incoming（被杀实体作为 target，经入边索引定位观察者），通过快照防止 `OnUnmounted` 回调中的重入修改
 
 ### 观察者策略持久化
 
@@ -102,7 +106,7 @@ BaseStrategy
 每个 `SndEntity` 持有一个 manager 实例，管理主动策略：
 
 - **容器**：`Dictionary<string, ActiveStrategyBase>` — O(1) 按索引查找，不参与每帧遍历
-- **Recover**：从 metadata 批量恢复，进行类型过滤（不触发钩子）
+- **Recover**：从 metadata 批量恢复（不触发钩子）；遇非 `ActiveStrategyBase` 类型立即抛 `InvalidOperationException`，并回滚本次恢复已获取的全部主动策略，不残留半初始化状态——与 `SndStrategyManager` 的实体策略恢复保持一致的 fail-fast 语义
 - **ReleaseAll**：逐个 `ReleaseStrategy` 并清空容器（不触发钩子）
 - **Add / Remove**：动态增删主动策略
 - **Invoke**：按索引查找策略实例，调用 `Invoke(entity, ctx, input)` 并返回结果

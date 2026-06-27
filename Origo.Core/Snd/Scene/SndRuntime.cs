@@ -4,6 +4,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Strategy;
 
 namespace Origo.Core.Snd.Scene;
 
@@ -50,8 +51,12 @@ public sealed class SndRuntime
     internal static ISndEntity SpawnCore(ISndSceneHost host, SndMetaData meta)
     {
         var entity = host.CreateEntity(meta);
-        if (entity is IEntityLifecycle lifecycle)
-            lifecycle.FireAfterSpawnHooks();
+        using ((host as ISessionScopedSceneHost)?.EnterOwningSessionAmbient())
+        {
+            if (entity is IEntityLifecycle lifecycle)
+                lifecycle.FireAfterSpawnHooks();
+        }
+
         return entity;
     }
 
@@ -61,9 +66,10 @@ public sealed class SndRuntime
         foreach (var meta in metaList)
             staged.Add(host.CreateEntity(meta));
 
-        foreach (var entity in staged)
-            if (entity is IEntityLifecycle lifecycle)
-                lifecycle.FireAfterSpawnHooks();
+        using ((host as ISessionScopedSceneHost)?.EnterOwningSessionAmbient())
+            foreach (var entity in staged)
+                if (entity is IEntityLifecycle lifecycle)
+                    lifecycle.FireAfterSpawnHooks();
     }
 
     public IReadOnlyList<SndMetaData> BuildMetaList() => SceneHost.BuildMetaList();
@@ -71,10 +77,12 @@ public sealed class SndRuntime
     public void ClearAll()
     {
         var entities = SceneHost.GetEntities();
+        var topology = (SceneHost as IObserverTopologyHost)?.ObserverTopology;
 
-        foreach (var entity in entities)
-            if (entity is SndEntity se)
-                TeardownOutgoingObserverBindings(se, entities);
+        if (topology is not null)
+            foreach (var entity in entities)
+                if (entity is SndEntity se)
+                    TeardownOutgoingObserverBindings(se, entities, topology);
 
         foreach (var entity in entities)
             if (entity is IEntityLifecycle lifecycle)
@@ -94,19 +102,24 @@ public sealed class SndRuntime
     public void KillPendingEntities()
     {
         var entities = SceneHost.GetEntities();
+        var topology = (SceneHost as IObserverTopologyHost)?.ObserverTopology;
         var pending = new List<ISndEntity>();
         foreach (var e in entities)
             if (e.IsPendingKill)
                 pending.Add(e);
 
-        foreach (var e in pending)
-            if (e is SndEntity se)
-                TeardownOutgoingObserverBindings(se, entities);
+        if (topology is not null)
+        {
+            foreach (var e in pending)
+                if (e is SndEntity se)
+                    TeardownOutgoingObserverBindings(se, entities, topology);
 
-        foreach (var e in pending)
-            foreach (var other in entities)
-                if (other is SndEntity otherSe && otherSe != e && otherSe.HasObserverBindingTargeting(e.Name))
-                    TeardownIncomingObserverBindings(otherSe, e);
+            foreach (var e in pending)
+                foreach (var other in entities)
+                    if (other is SndEntity otherSe && otherSe != e
+                        && topology.HasBindingTargetingFrom(otherSe.Name, e.Name))
+                        topology.RemoveBindingsTargetingFor(otherSe, e.Name);
+        }
 
         foreach (var e in pending)
             if (e is IEntityLifecycle lifecycle)
@@ -124,20 +137,16 @@ public sealed class SndRuntime
         }
     }
 
-    private static void TeardownOutgoingObserverBindings(SndEntity entity, IReadOnlyCollection<ISndEntity> entities)
+    private static void TeardownOutgoingObserverBindings(SndEntity entity,
+        IReadOnlyCollection<ISndEntity> entities, ObserverTopology topology)
     {
-        entity.TeardownOutgoingObserverBindings(targetName =>
+        topology.TeardownOutgoingFor(entity, targetName =>
         {
             foreach (var other in entities)
                 if (other.Name == targetName)
                     return other;
             return null;
         });
-    }
-
-    private static void TeardownIncomingObserverBindings(SndEntity observer, ISndEntity target)
-    {
-        observer.RemoveAllObserverBindingsTargeting(target.Name);
     }
 
     public void ProcessAll(double delta)

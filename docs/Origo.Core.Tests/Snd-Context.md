@@ -16,7 +16,6 @@
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch 全链路工作流 |
 | `SndContextEntryFlowTests.cs` | SndContext 从入口配置开始的工作流 |
 | `NullSndContextExtendedTests.cs` | NullSndContext 所有方法为无操作 |
-| `SessionSndContextExtendedTests.cs` | SessionSndContext 隔离上下文行为 |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder 构建和写入关卡数据 |
 | `SndWorldAndDiscoveryCoverageTests.cs` | SndWorld 策略发现和模板加载 |
 | `SndTemplateResolverTests.cs` | 模板别名解析、缓存、克隆不影响缓存 |

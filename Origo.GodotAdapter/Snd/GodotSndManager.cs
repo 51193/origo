@@ -7,17 +7,22 @@ using Godot;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Snd.Strategy;
 
 namespace Origo.GodotAdapter.Snd;
 
 [GlobalClass]
-public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachableSceneHost
+public partial class GodotSndManager
+    : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, ISessionScopedSceneHost
 {
     private readonly List<GodotSndEntity> _entities = new();
     private EntityView? _entityView;
+    private ObserverTopology? _observerTopology;
+    private ISessionRun? _owningSession;
 
     private bool _runtimeDepsBound;
 
@@ -27,6 +32,23 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
     public int ProcessTickCount { get; private set; }
     public double ProcessDeltaSum { get; private set; }
 
+    ObserverTopology IObserverTopologyHost.ObserverTopology =>
+        _observerTopology ?? throw new InvalidOperationException(
+            "ObserverTopology is not available. Call BindRuntimeDependencies before accessing the observer topology.");
+
+    void ISessionScopedSceneHost.SetOwningSession(ISessionRun session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        _owningSession = session;
+    }
+
+    IDisposable? ISessionScopedSceneHost.EnterOwningSessionAmbient()
+    {
+        if (_owningSession is null || Context is not SndContext sndContext)
+            return null;
+        return sndContext.PushAmbientSession(_owningSession);
+    }
+
     public void BindContext(ISndContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -34,6 +56,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
         if (!_runtimeDepsBound) throw new InvalidOperationException("Call BindRuntimeDependencies before BindContext.");
 
         Context = context;
+        _observerTopology!.BindContext(context);
     }
 
     public IReadOnlyList<SndMetaData> BuildMetaList()
@@ -151,6 +174,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
 
         SharedWorld = world;
         SharedLogger = logger;
+        _observerTopology = new ObserverTopology(world.StrategyPool, logger);
         _runtimeDepsBound = true;
     }
 
@@ -170,7 +194,7 @@ public partial class GodotSndManager : Node, ISndSceneHost, ISndContextAttachabl
     private GodotSndEntity CreateSndEntity()
     {
         EnsureReadyForSpawn();
-        return new GodotSndEntity(SharedWorld, Context!, SharedLogger,
+        return new GodotSndEntity(SharedWorld, Context!, SharedLogger, _observerTopology!,
             entity => new GodotPackedSceneNodeFactory(entity));
     }
 

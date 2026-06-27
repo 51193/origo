@@ -91,7 +91,7 @@
 
 实现者：`SndEntity`（Core 内存实体）、适配层实体（如 `GodotSndEntity`，桥接委托给内部 `SndEntity`）。
 
-`ISndEntityRawSubscription`（`Origo.Core/Snd/Entity/`）提供原始的 `TypedData` 级数据订阅接口——`SubscribeDataRaw`、`UnsubscribeDataRaw`。供框架内部的 `ObserverStrategyManager` 将观察者策略接入目标实体的数据变更，不暴露给业务策略代码。
+`ISndEntityRawSubscription`（`Origo.Core/Snd/Entity/`）提供原始的 `TypedData` 级数据订阅接口——`SubscribeDataRaw`、`UnsubscribeDataRaw`。供框架内部的 `ObserverTopology` 将观察者策略接入目标实体的数据变更，不暴露给业务策略代码。
 
 ## 设计决策
 
@@ -105,7 +105,7 @@
 
 ### 为什么观察统一为观察者策略
 
-数据变更响应与生命周期观察统一收敛到 `ObserverStrategyBase` 一种第一公民策略类型，通过 `ISndObserverStrategyAccess` 以策略索引挂载，而非在实体上暴露委托订阅 API。好处：观察逻辑与策略一样无状态、可池化复用；绑定拓扑可随实体一同序列化（`ObserverIndices`）并在读档时自动恢复，无需业务代码在 `AfterLoad` 中手动重连；接线、拆线和持久化由 `ObserverStrategyManager` 统一治理，消除委托实例匹配、手动退订等易错点。
+数据变更响应与生命周期观察统一收敛到 `ObserverStrategyBase` 一种第一公民策略类型，通过 `ISndObserverStrategyAccess` 以策略索引挂载，而非在实体上暴露委托订阅 API。好处：观察逻辑与策略一样无状态、可池化复用；绑定拓扑可随实体一同序列化（`ObserverIndices`）并在读档时自动恢复，无需业务代码在 `AfterLoad` 中手动重连；接线、拆线和持久化由 `ObserverTopology` 统一治理，消除委托实例匹配、手动退订等易错点。
 
 ### 为什么 IEntityLifecycle 单独定义
 

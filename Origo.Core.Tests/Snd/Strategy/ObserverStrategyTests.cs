@@ -401,16 +401,16 @@ public class ObserverStrategyTests
     [Fact]
     public void SaveSingle_ThenRecover_PreservesObserverBindings()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
 
         var meta = entity.SaveSingle();
 
-        var (entity2, ctx2) = Setup();
+        var (entity2, _, topology2) = SetupWithTopology();
         entity2.SpawnSingle(meta);
         var bindings = meta.StrategyMetaData!.ObserverIndices;
-        entity2.RecoverObserverBindings(bindings, n => n == entity2.Name ? entity2 : null);
+        topology2.RecoverBindingsFor(entity2, bindings, n => n == entity2.Name ? entity2 : null);
 
         SelfWatchObserver.DataChangedCalls.Clear();
         entity2.SetData("character.hp", 75);
@@ -454,7 +454,7 @@ public class ObserverStrategyTests
     [Fact]
     public void RecoverBindings_TargetNotFound_Skips()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
 
         var bindings = new List<StrategyMetaData.ObserverBinding>
@@ -463,7 +463,7 @@ public class ObserverStrategyTests
         };
 
         var ex = Record.Exception(() =>
-            entity.RecoverObserverBindings(bindings, _ => null));
+            topology.RecoverBindingsFor(entity, bindings, _ => null));
 
         Assert.Null(ex);
     }
@@ -471,11 +471,11 @@ public class ObserverStrategyTests
     [Fact]
     public void RecoverBindings_EmptyList_NoError()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
 
         var ex = Record.Exception(() =>
-            entity.RecoverObserverBindings(
+            topology.RecoverBindingsFor(entity,
                 Array.Empty<StrategyMetaData.ObserverBinding>(),
                 _ => null));
 
@@ -487,33 +487,33 @@ public class ObserverStrategyTests
     [Fact]
     public void HasObserverBindingTargeting_ExistingTarget_ReturnsTrue()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
         entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
 
-        Assert.True(entity.HasObserverBindingTargeting(entity.Name));
+        Assert.True(topology.HasBindingTargetingFrom(entity.Name, entity.Name));
     }
 
     [Fact]
     public void HasObserverBindingTargeting_NonexistentTarget_ReturnsFalse()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
 
-        Assert.False(entity.HasObserverBindingTargeting("ghost"));
+        Assert.False(topology.HasBindingTargetingFrom(entity.Name, "ghost"));
     }
 
     [Fact]
     public void RemoveAllObserverBindingsTargeting_ClearsBindings()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
         entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
         entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
 
-        entity.RemoveAllObserverBindingsTargeting(entity.Name);
+        topology.RemoveBindingsTargetingFor(entity, entity.Name);
 
-        Assert.False(entity.HasObserverBindingTargeting(entity.Name));
+        Assert.False(topology.HasBindingTargetingFrom(entity.Name, entity.Name));
     }
 
     // ── TeardownOutgoingObserverBindings ──────────────────────────────
@@ -521,12 +521,12 @@ public class ObserverStrategyTests
     [Fact]
     public void TeardownOutgoingObserverBindings_TriggersOnUnmounted()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.UnmountedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
-        entity.TeardownOutgoingObserverBindings(n => n == entity.Name ? entity : null);
+        topology.TeardownOutgoingFor(entity, n => n == entity.Name ? entity : null);
 
         Assert.Single(MemoryObserver.UnmountedCalls);
     }
@@ -534,15 +534,15 @@ public class ObserverStrategyTests
     [Fact]
     public void TeardownOutgoingObserverBindings_TargetNotFound_ReleasesStrategy()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta("alice"));
         entity.MountObserverStrategy("alice", MemoryObservedIdx);
 
         var ex = Record.Exception(() =>
-            entity.TeardownOutgoingObserverBindings(_ => null));
+            topology.TeardownOutgoingFor(entity, _ => null));
 
         Assert.Null(ex);
-        Assert.False(entity.HasObserverBindingTargeting("alice"));
+        Assert.False(topology.HasBindingTargetingFrom(entity.Name, "alice"));
     }
 
     // ── KillPendingEntities observer cleanup (integration) ────────────
@@ -750,6 +750,12 @@ public class ObserverStrategyTests
 
     private static (SndEntity entity, SndContext ctx) Setup()
     {
+        var (entity, ctx, _) = SetupWithTopology();
+        return (entity, ctx);
+    }
+
+    private static (SndEntity entity, SndContext ctx, ObserverTopology topology) SetupWithTopology()
+    {
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         runtime.SndWorld.RegisterStrategy(() => new SelfWatchObserver());
@@ -764,8 +770,10 @@ public class ObserverStrategyTests
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var nodeFactory = new TestNodeFactory();
-        var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger);
-        return (entity, ctx);
+        var topology = new ObserverTopology(runtime.SndWorld.StrategyPool, logger);
+        topology.BindContext(ctx);
+        var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, topology);
+        return (entity, ctx, topology);
     }
 
     private static SndMetaData CreateMeta(string name = "E")

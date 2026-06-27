@@ -123,6 +123,34 @@ public class ActiveStrategyTests
         Assert.Contains(QueryHpIndex, ex.Message, StringComparison.Ordinal);
     }
 
+    // ── Recover fail-fast (non-active type in ActiveIndices) ───────────
+
+    [Fact]
+    public void Load_ActiveIndexWithNonActiveType_Throws()
+    {
+        var (entity, _, _) = Setup();
+        var meta = CreateMeta(Array.Empty<string>(), new[] { EntityOnlyIndex });
+
+        var ex = Assert.Throws<InvalidOperationException>(() => entity.LoadSingle(meta));
+
+        Assert.Contains(EntityOnlyIndex, ex.Message, StringComparison.Ordinal);
+        Assert.Contains("ActiveStrategyBase", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Load_ActiveIndexWithNonActiveType_RollsBackAcquiredActives()
+    {
+        var (entity, _, _) = Setup();
+        // QueryHpIndex is acquired before the invalid EntityOnlyIndex; recovery must
+        // roll it back so no active strategy remains attached after the failure.
+        var meta = CreateMeta(Array.Empty<string>(), new[] { QueryHpIndex, EntityOnlyIndex });
+
+        Assert.Throws<InvalidOperationException>(() => entity.LoadSingle(meta));
+
+        var ex = Assert.Throws<InvalidOperationException>(() => entity.InvokeStrategy(QueryHpIndex));
+        Assert.Contains(QueryHpIndex, ex.Message, StringComparison.Ordinal);
+    }
+
     // ── Dynamic Add / Remove ──────────────────────────────────────────
 
     [Fact]
@@ -328,7 +356,9 @@ public class ActiveStrategyTests
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var nodeFactory = new TestNodeFactory();
-        var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger);
+        var observerTopology = new ObserverTopology(runtime.SndWorld.StrategyPool, logger);
+        observerTopology.BindContext(ctx);
+        var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, observerTopology);
         return (entity, ctx, logger);
     }
 

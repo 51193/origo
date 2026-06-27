@@ -18,7 +18,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     private readonly SndDataManager _dataManager;
     private readonly ILogger _logger;
     private readonly SndNodeManager _nodeHost;
-    private readonly ObserverStrategyManager _observerStrategyManager;
+    private readonly ObserverTopology _observerTopology;
     private readonly SndStrategyManager _strategyManager;
 
     internal SndEntity(
@@ -26,15 +26,18 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         SndStrategyPool strategyPool,
         Func<string, string> sceneAliasResolver,
         ISndContext context,
-        ILogger logger)
+        ILogger logger,
+        ObserverTopology observerTopology)
     {
         ArgumentNullException.ThrowIfNull(nodeFactory);
         ArgumentNullException.ThrowIfNull(strategyPool);
         ArgumentNullException.ThrowIfNull(sceneAliasResolver);
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(observerTopology);
         _context = context;
         _logger = logger;
+        _observerTopology = observerTopology;
 
         _dataManager = new SndDataManager(this, logger);
         var nodeHost = new SndNodeManager(nodeFactory, logger);
@@ -42,7 +45,6 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _nodeHost = nodeHost;
         _strategyManager = new SndStrategyManager(strategyPool, logger);
         _activeStrategyManager = new ActiveStrategyManager(strategyPool);
-        _observerStrategyManager = new ObserverStrategyManager(strategyPool, context, logger);
     }
 
     public string Name { get; internal set; } = string.Empty;
@@ -57,26 +59,26 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     {
         var self = (ISndEntity)this;
         var target = ResolveTargetForMount(self, targetName);
-        _observerStrategyManager.Mount(self, target, observerIndex);
+        _observerTopology.Mount(self, target, observerIndex);
     }
 
     public void UnmountObserverStrategy(string targetName, string observerIndex)
     {
         var self = (ISndEntity)this;
         var target = ResolveTargetForMount(self, targetName);
-        _observerStrategyManager.Unmount(self, target, observerIndex);
+        _observerTopology.Unmount(self, target, observerIndex);
     }
 
     public void MountObserverStrategy(ISndEntity target, string observerIndex)
     {
         ArgumentNullException.ThrowIfNull(target);
-        _observerStrategyManager.Mount((ISndEntity)this, target, observerIndex);
+        _observerTopology.Mount((ISndEntity)this, target, observerIndex);
     }
 
     public void UnmountObserverStrategy(ISndEntity target, string observerIndex)
     {
         ArgumentNullException.ThrowIfNull(target);
-        _observerStrategyManager.Unmount((ISndEntity)this, target, observerIndex);
+        _observerTopology.Unmount((ISndEntity)this, target, observerIndex);
     }
 
     private static ISndEntity ResolveTargetForMount(ISndEntity self, string targetName)
@@ -164,7 +166,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     {
         _activeStrategyManager.ReleaseAll();
         _strategyManager.ReleaseStrategiesOnly();
-        _observerStrategyManager.ReleaseStrategiesOnly();
+        _observerTopology.ReleaseStrategiesFor((ISndEntity)this);
     }
 
     void IEntityLifecycle.TeardownOnly()
@@ -186,7 +188,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             {
                 LifecycleIndices = new List<string>(entityIndices),
                 ActiveIndices = new List<string>(activeIndices),
-                ObserverIndices = _observerStrategyManager.BuildObserverBindings().ToList()
+                ObserverIndices = _observerTopology.BuildBindingsFor(Name).ToList()
             },
             DataMetaData = _dataManager.SerializeMeta()
         };
@@ -224,39 +226,12 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     private void TeardownObserverBindingsForDeath()
     {
-        _observerStrategyManager.TeardownAllBindings((ISndEntity)this);
+        _observerTopology.TeardownAllBindingsFor((ISndEntity)this);
     }
 
     public SndMetaData SaveSingle()
     {
         ((IEntityLifecycle)this).FireBeforeSaveHooks();
         return ((IEntityLifecycle)this).BuildMetaData();
-    }
-
-    internal ObserverStrategyManager ObserverStrategyManager => _observerStrategyManager;
-
-    internal void TeardownOutgoingObserverBindings(Func<string, ISndEntity?> resolveTarget)
-    {
-        _observerStrategyManager.TeardownOutgoingBindings((ISndEntity)this, resolveTarget);
-    }
-
-    internal bool HasObserverBindingTargeting(string targetName)
-    {
-        return _observerStrategyManager.HasBindingTargeting(targetName);
-    }
-
-    internal void RemoveAllObserverBindingsTargeting(string targetName)
-    {
-        _observerStrategyManager.RemoveAllBindingsTargeting(targetName, (ISndEntity)this);
-    }
-
-    internal void RecoverObserverBindings(
-        IReadOnlyList<StrategyMetaData.ObserverBinding> bindings,
-        Func<string, ISndEntity?> resolveTarget)
-    {
-        _observerStrategyManager.RecoverBindings(
-            (ISndEntity)this,
-            bindings,
-            resolveTarget);
     }
 }

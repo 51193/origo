@@ -15,6 +15,8 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 | `FullMemorySndSceneHost.cs` | 完整内存场景宿主，创建真实 SndEntity，具备完整策略生命周期 |
 | `StubSndSceneHost.cs` | 轻量存根场景宿主，使用简单 StubSndEntity（无策略/节点），用于单元测试和 LevelBuilder 离线构建 |
 | `ISndContextAttachableSceneHost.cs` | 接口：允许运行时绑定 ISndContext |
+| `IObserverTopologyHost.cs` | `internal` 接口：暴露宿主持有的 per-scene-host 观察者拓扑（`ObserverTopology`），供 `SndRuntime`/`SessionRun` 编排跨实体观察者绑定的拆线与读档恢复 |
+| `ISessionScopedSceneHost.cs` | `internal` 接口：宿主携带其归属 `ISessionRun`；当框架在宿主上直接触发实体钩子（如 `SpawnCore` 的 AfterSpawn）而未经 `SessionManager` 编排时，据此把归属会话压入 ambient 栈，确保策略经 `ISndContext.CurrentSession` 解析到正确会话 |
 | `NullNodeFactory.cs` | 内存级节点工厂，创建无操作句柄 |
 
 ## 模块详解
@@ -34,9 +36,9 @@ SndRuntime = SndWorld (策略池 + 配置) + ISndSceneHost (实体宿主) + 钩�
 |------|------|
 | `Spawn(meta)` | 重名校验后调用 `SceneHost.CreateEntity(meta)` 创建实体，再调用 `FireAfterSpawnHooks()` 触发钩子 |
 | `SpawnMany(metaList)` | 重名校验后批量 `CreateEntity()` 创建所有实体，再统一 `FireAfterSpawnHooks()` 触发钩子 |
-| `KillPendingEntities()` | 收集 IsPendingKill → 全部 `FireBeforeDeadHooks()` → 全部 `ReleaseStrategiesOnly()` + `TeardownOnly()` → 全部 `SceneHost.RemoveEntity(name)` |
+| `KillPendingEntities()` | 收集 IsPendingKill → 经宿主 `ObserverTopology` 对 `SndEntity` 实体做 observer 双向 teardown（outgoing + incoming）→ 全部 `FireBeforeDeadHooks()` → 全部 `ReleaseStrategiesOnly()` + `TeardownOnly()` → 全部 `SceneHost.RemoveEntity(name)` |
 | `ProcessAll(delta)` | 透传 `SceneHost.ProcessAll(delta)` |
-| `ClearAll()` | 全部 `FireBeforeQuitHooks()` + `ReleaseStrategiesOnly()` + `TeardownOnly()` → `SceneHost.RemoveAllEntities()` |
+| `ClearAll()` | 经宿主 `ObserverTopology` 对 `SndEntity` 实体做 outgoing observer teardown → 全部 `FireBeforeQuitHooks()` + `ReleaseStrategiesOnly()` + `TeardownOnly()` → `SceneHost.RemoveAllEntities()` |
 | `BuildMetaList()` | 透传 `SceneHost.BuildMetaList()`（无 BeforeSave） |
 
 Spawn/SpawnMany 的钩子触发由 SndRuntime 统一在创建完成后调用 `FireAfterSpawnHooks()` 完成。SceneHost.CreateEntity 仅负责创建和恢复，不触发钩子。
@@ -45,6 +47,8 @@ Spawn/SpawnMany 的钩子触发由 SndRuntime 统一在创建完成后调用 `Fi
 
 后台会话的默认场景宿主。关键特性：
 - 通过 `SndWorld.CreateEntity` 创建完整 `SndEntity`（非简单内存实体）
+- 实现 `IObserverTopologyHost`：在 `BindWorld` 时创建 per-scene-host `ObserverTopology`，并注入它创建的每个实体；该宿主内所有实体的观察者绑定集中于此拓扑
+- 实现 `ISessionScopedSceneHost`：`SessionRun` 构造时绑定其归属会话；`SpawnCore` 在该会话的 ambient 作用域内触发 AfterSpawn 钩子
 - 需延迟绑定 `SndWorld` 和 `ISndContext`（配合 `OrigoRuntime` 两阶段构造）
 - **实体容器管理**：只负责创建、查找、移除实体，不触发任何策略钩子
 - **CreateEntity**：创建实体，恢复数据/策略/节点（通过 `RecoverForLifecycle`），不触发 AfterSpawn 钩子。多个实体的 AfterSpawn 由 SndRuntime 在批量创建后统一触发。
@@ -88,6 +92,16 @@ spawn 逻辑的唯一权威实现是 `SndRuntime` 的内部静态方法 `SpawnCo
 ### 为什么实体在钩子触发前先登记到查找集合
 
 策略钩子可能需要在创建期间引用兄弟实体（例如通过 `FindByName` 查找依赖实体、调用 `ObserveData` 建立跨实体观察关系）。先登记后触发钩子保证了所有实体在整个生命周期内始终可被检索。批处理模式下，所有实体先全部登记，再统一触发钩子，进一步加强了这一保证。
+
+### 为什么观察者拓扑按场景宿主划分
+
+观察者绑定是 session 内的有向图（target 解析始终在单一宿主的 `FindByName` 范围内）。每个创建真实 `SndEntity` 的宿主（`FullMemorySndSceneHost`、`GodotSndManager`）持有一个 `ObserverTopology` 并实现 `IObserverTopologyHost`，拓扑与宿主同生命周期。`SndRuntime`/`SessionRun` 经该接口获取宿主拓扑，对其中 `SndEntity` 类型的实体编排 kill/clear 双向 teardown 与读档恢复；宿主内非裸 `SndEntity` 的包装实体类型（如 Godot 前台实体）按既有约定不参与 `SndRuntime` 的 observer 双向 teardown。`StubSndSceneHost` 不创建真实实体，不实现该接口。集中到宿主级拓扑后，实体不再需要反向暴露内部观察者管理器即可完成跨实体的接线、拆线与恢复。
+
+### 为什么场景宿主携带归属会话
+
+策略钩子经 `ISndContext.CurrentSession` 获知自身所属会话。该值由 `SndContext` 的 ambient 会话栈解析：栈顶即"当前正在处理的会话"，栈空时回退前台会话。`SessionManager` 在帧更新 / 读档 / 持久化 / 销毁编排时压入对应会话。
+
+但实体也可被**直接 spawn 到某后台会话的宿主**（不经 `SessionManager` 编排，如在后台预构建世界后再切前台）。此时 `SpawnCore` 触发 AfterSpawn 钩子，ambient 栈本会为空而回退前台，导致钩子误判归属。`ISessionScopedSceneHost` 让宿主携带其归属会话，`SpawnCore` / `SpawnManyCore` 据此在该会话的 ambient 作用域内触发钩子，使"实体观察到自身会话"在编排路径与直接 spawn 路径下都成立。`StubSndSceneHost` 不创建真实实体，不实现该接口。
 
 ---
 

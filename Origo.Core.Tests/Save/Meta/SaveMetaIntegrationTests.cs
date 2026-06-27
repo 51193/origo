@@ -211,21 +211,6 @@ public class SaveMetaNullAndSessionContextTests
             () => ctx.RegisterSaveMetaContributor(_ => new Dictionary<string, string>()));
     }
 
-    [Fact]
-    public void SessionSndContext_RegisterSaveMetaContributor_DelegatesToGlobal()
-    {
-        var global = new TrackingContext();
-        var session = new SessionSndContextSession("lv");
-        var ctx = new SessionSndContext(global, session);
-
-        var contributor = new StubContributor();
-        ctx.RegisterSaveMetaContributor(contributor);
-        Assert.Same(contributor, global.LastContributor);
-
-        ctx.RegisterSaveMetaContributor(_ => new Dictionary<string, string>());
-        Assert.NotNull(global.LastDelegate);
-    }
-
     private sealed class StubContributor : ISaveMetaContributor
     {
         public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context)
@@ -234,88 +219,6 @@ public class SaveMetaNullAndSessionContextTests
         }
     }
 
-    private sealed class TrackingContext : ISndContext
-    {
-        public ISaveMetaContributor? LastContributor { get; private set; }
-        public Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>>? LastDelegate { get; private set; }
-
-        public IBlackboard SystemBlackboard => new Blackboard.Blackboard();
-        public IBlackboard? ProgressBlackboard => null;
-        public ISessionManager SessionManager => EmptySessionManager.Instance;
-        public ISessionRun? CurrentSession => null;
-        public bool IsFrontSession => false;
-
-        public void EnqueueBusinessDeferred(Action action) => action();
-        public void FlushDeferredActionsForCurrentFrame() { }
-        public int GetPendingPersistenceRequestCount() => 0;
-        public SndMetaData CloneTemplate(string templateKey, string? overrideName = null) => throw new NotSupportedException();
-        public bool TrySubmitConsoleCommand(string commandLine) => false;
-        public void ProcessConsolePending() { }
-        public long SubscribeConsoleOutput(Action<string> onLine) => 0;
-        public void UnsubscribeConsoleOutput(long subscriptionId) { }
-        public IStateMachineContainer? GetProgressStateMachines() => null;
-        public IReadOnlyList<string> ListSaves() => Array.Empty<string>();
-        public void RequestLoadGame(string saveId) { }
-        public void RequestSaveGame(string newSaveId) { }
-        public string RequestSaveGameAuto(string? newSaveId = null) => newSaveId ?? "auto";
-        public void SetContinueTarget(string saveId) { }
-        public void RequestSwitchForegroundLevel(string newLevelId) { }
-        public void RequestKillAll() { }
-        public void RequestKillEntity(string entityName) { }
-        public bool HasContinueData() => false;
-        public bool RequestContinueGame() => false;
-        public void RequestLoadInitialSave() { }
-        public void RequestLoadMainMenuEntrySave() { }
-
-        public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)
-        {
-            LastContributor = contributor;
-        }
-
-        public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
-        {
-            LastDelegate = contribute;
-        }
-
-        DataSourceNode ISndFileAccess.ReadFile(string path) =>
-            throw new NotSupportedException("TrackingContext does not support file access.");
-
-        void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite) { }
-
-        bool ISndFileAccess.FileExists(string path) => false;
-
-        T ISndFileAccess.ReadObject<T>(string path) =>
-            throw new NotSupportedException("TrackingContext does not support file access.");
-
-        void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) { }
-
-        DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath) =>
-            throw new NotSupportedException("TrackingContext does not support archive file access.");
-
-        void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite) { }
-
-        bool ISndArchiveFileAccess.FileExists(string relativePath) => false;
-
-        T ISndArchiveFileAccess.ReadObject<T>(string relativePath) =>
-            throw new NotSupportedException("TrackingContext does not support archive file access.");
-
-        void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite) { }
-
-        void ISndArchiveFileAccess.DeleteFile(string relativePath) { }
-    }
-
-    private sealed class SessionSndContextSession : ISessionRun
-    {
-        public IBlackboard SessionBlackboard { get; } = new Blackboard.Blackboard();
-        public ISndSceneHost SceneHost => throw new NotSupportedException();
-        public string LevelId { get; }
-        public bool IsFrontSession => false;
-
-        public SessionSndContextSession(string levelId) => LevelId = levelId;
-
-        public IStateMachineContainer GetSessionStateMachines() => throw new NotSupportedException();
-        public void Dispose() { }
-    }
 }
 
 internal static class SndContextTestHelper

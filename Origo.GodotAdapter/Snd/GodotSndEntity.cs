@@ -7,6 +7,7 @@ using Origo.Core.Abstractions.Node;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Strategy;
 
 namespace Origo.GodotAdapter.Snd;
 
@@ -16,23 +17,27 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     private readonly ISndContext _context;
     private readonly ILogger _logger;
     private readonly Func<GodotSndEntity, INodeFactory> _nodeFactoryCreator;
+    private readonly ObserverTopology _observerTopology;
     private readonly SndWorld _world;
     private SndEntity? _entity;
     private bool _releasedFromManager;
 
-    public GodotSndEntity(
+    internal GodotSndEntity(
         SndWorld world,
         ISndContext context,
         ILogger logger,
+        ObserverTopology observerTopology,
         Func<GodotSndEntity, INodeFactory> nodeFactoryCreator)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(observerTopology);
         ArgumentNullException.ThrowIfNull(nodeFactoryCreator);
         _world = world;
         _context = context;
         _logger = logger;
+        _observerTopology = observerTopology;
         _nodeFactoryCreator = nodeFactoryCreator;
     }
 
@@ -266,7 +271,7 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         ThrowIfReleasedFromManager();
         if (_entity is not null) return;
         var nodeFactory = _nodeFactoryCreator(this);
-        _entity = _world.CreateEntity(nodeFactory, _context, _logger);
+        _entity = _world.CreateEntity(nodeFactory, _context, _logger, _observerTopology);
     }
 
     private void ThrowIfReleasedFromManager()

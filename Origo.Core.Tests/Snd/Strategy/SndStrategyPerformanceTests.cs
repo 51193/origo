@@ -135,7 +135,9 @@ public class SndStrategyPerformanceTests
             if (sc >= 9) world.RegisterStrategy(() => new PerfProcess9Strategy());
             if (sc >= 10) world.RegisterStrategy(() => new PerfProcess10Strategy());
 
-            var entity = world.CreateEntity(new NullNodeFactory(), NullSndContext.Instance, new TestLogger());
+            var observerTopology = new ObserverTopology(world.StrategyPool, new TestLogger());
+            observerTopology.BindContext(NullSndContext.Instance);
+            var entity = world.CreateEntity(new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), observerTopology);
             ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta("E", BuildIndices(sc)));
 
             GC.Collect();

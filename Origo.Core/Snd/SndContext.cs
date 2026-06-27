@@ -32,6 +32,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
 {
     private readonly SystemRun _systemRun;
     private readonly List<ISaveMetaContributor> _saveMetaContributors = new();
+    private readonly Stack<ISessionRun> _ambientSessions = new();
     private int _pendingPersistenceRequests;
     private ProgressRun? _progressRun;
     private bool _workflowInProgress;
@@ -100,7 +101,36 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     public ISessionManager SessionManager => _progressRun?.SessionManager ?? EmptySessionManager.Instance;
 
     /// <inheritdoc />
-    public ISessionRun? CurrentSession => SessionManager.ForegroundSession;
+    public ISessionRun? CurrentSession =>
+        _ambientSessions.Count > 0 ? _ambientSessions.Peek() : SessionManager.ForegroundSession;
+
+    /// <summary>
+    ///     在某会话的处理边界（帧更新 / spawn / 读档 / 持久化 / 销毁）内将其设为当前活动会话。
+    ///     释放返回的作用域即弹出。栈空时 <see cref="CurrentSession" /> 回退前台会话。
+    ///     由 <see cref="SessionManager" /> 编排与场景宿主的 spawn 路径调用，
+    ///     确保策略钩子无论运行于哪个会话都能经 <see cref="CurrentSession" /> 获知自身归属。
+    /// </summary>
+    internal IDisposable PushAmbientSession(ISessionRun session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        _ambientSessions.Push(session);
+        return new AmbientSessionScope(this);
+    }
+
+    private sealed class AmbientSessionScope : IDisposable
+    {
+        private readonly SndContext _owner;
+        private bool _disposed;
+
+        public AmbientSessionScope(SndContext owner) => _owner = owner;
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _owner._ambientSessions.Pop();
+        }
+    }
 
     /// <inheritdoc />
     public bool IsFrontSession => CurrentSession?.IsFrontSession ?? false;
