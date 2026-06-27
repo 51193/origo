@@ -13,6 +13,7 @@ using Origo.Core.Save.Serialization;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Entity;
+using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
 using Origo.Core.Snd.Strategy;
 using Origo.Core.Abstractions.Lifecycle;
@@ -31,6 +32,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 public sealed class SessionRun : ISessionRun
 {
     private const string LogTag = nameof(SessionRun);
+    private readonly ISessionManager _sessionManager;
     private readonly ILogger _logger;
     private readonly SaveContext _saveContext;
     private readonly ISndSceneHost _sceneHost;
@@ -39,10 +41,12 @@ public sealed class SessionRun : ISessionRun
     private bool _disposing;
     private bool _disposed;
 
-    internal SessionRun(SessionManagerRuntime managerRuntime, SessionParameters sessionParams)
+    internal SessionRun(SessionManagerRuntime managerRuntime, SessionParameters sessionParams,
+        ISessionManager sessionManager)
     {
         var watch = Stopwatch.StartNew();
         ArgumentNullException.ThrowIfNull(managerRuntime);
+        ArgumentNullException.ThrowIfNull(sessionManager);
         if (string.IsNullOrWhiteSpace(sessionParams.LevelId))
             throw new ArgumentException("Level id cannot be null or whitespace.");
         ArgumentNullException.ThrowIfNull(sessionParams.SceneHost);
@@ -50,6 +54,7 @@ public sealed class SessionRun : ISessionRun
         LevelId = sessionParams.LevelId;
         IsFrontSession = sessionParams.IsFrontSession;
         _sceneHost = sessionParams.SceneHost;
+        _sessionManager = sessionManager;
         _storageService = managerRuntime.StorageService;
         _logger = managerRuntime.Logger;
 
@@ -95,20 +100,48 @@ public sealed class SessionRun : ISessionRun
         }
     }
 
-    public ISndSceneHost SceneHost
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return _sceneHost;
-        }
-    }
+    /// <summary>
+    ///     内部场景宿主。仅框架层(SaveContext/SessionManager/SndSceneSerializer)编排用,策略不可见。
+    /// </summary>
+    internal ISndSceneHost SceneHost => _sceneHost;
 
     public string LevelId { get; }
 
     public bool IsFrontSession { get; }
 
-    public StateMachineContainer GetSessionStateMachines()
+    public ISessionManager SessionManager => _sessionManager;
+
+    public ISndEntity? FindByName(string name)
+    {
+        ThrowIfDisposed();
+        return _sceneHost.FindByName(name);
+    }
+
+    public IReadOnlyCollection<ISndEntity> GetEntities()
+    {
+        ThrowIfDisposed();
+        return _sceneHost.GetEntities();
+    }
+
+    public ISndEntity Spawn(SndMetaData meta)
+    {
+        ThrowIfDisposed();
+        return SndEntityFactory.Spawn(_sceneHost, meta);
+    }
+
+    public void SpawnMany(params SndMetaData[] metaList)
+    {
+        ThrowIfDisposed();
+        SndEntityFactory.SpawnMany(_sceneHost, metaList);
+    }
+
+    public void RequestKillEntity(string entityName)
+    {
+        ThrowIfDisposed();
+        _sceneHost.RequestKillEntity(entityName);
+    }
+
+    internal StateMachineContainer GetSessionStateMachines()
     {
         ThrowIfDisposed();
         return _sessionScope.StateMachines;

@@ -50,7 +50,7 @@ internal sealed class SaveCoordinator
             fgSession.LevelId,
             _progressBlackboard,
             fgSession.SessionBlackboard,
-            fgSession.SceneHost);
+            ((SessionRun)fgSession).SceneHost);
     }
 
     internal SaveGamePayload BuildSavePayload(
@@ -73,7 +73,7 @@ internal sealed class SaveCoordinator
             .SerializeToNode(_progressRuntime.ConverterRegistry);
 
         var payload = saveContext.SaveGame(
-            fgSession.SceneHost,
+            ((SessionRun)fgSession).SceneHost,
             newSaveId,
             fgSession.LevelId,
             mergedMeta,

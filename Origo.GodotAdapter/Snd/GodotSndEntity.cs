@@ -1,3 +1,4 @@
+using Origo.Core.Abstractions.Lifecycle;
 using System;
 using System.Collections.Generic;
 using Godot;
@@ -20,6 +21,7 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     private readonly ObserverTopology _observerTopology;
     private readonly SndWorld _world;
     private SndEntity? _entity;
+    public ISessionRun OwningSession => _entity?.OwningSession ?? throw new InvalidOperationException("GodotSndEntity has no backing SndEntity.");
     private bool _releasedFromManager;
 
     internal GodotSndEntity(

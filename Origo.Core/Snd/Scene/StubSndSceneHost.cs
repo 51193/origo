@@ -1,3 +1,4 @@
+using Origo.Core.Abstractions.Lifecycle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,6 +89,9 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
         Name = name ?? throw new ArgumentNullException(nameof(name));
         _data["name"] = name;
     }
+
+    public ISessionRun OwningSession => throw new NotSupportedException(
+        "StubSndEntity does not belong to a session.");
 
     public string Name { get; }
 

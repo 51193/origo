@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Snd;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.DataSource;
 using Origo.Core.Snd.Archetype;
 using Xunit;
@@ -188,6 +189,7 @@ public class SndArchetypeLoaderTests
 
     private sealed class TestArchetypeEntity : Origo.Core.Abstractions.Entity.ISndEntity
     {
+        public ISessionRun OwningSession { get; set; } = null!;
         private readonly Dictionary<string, object> _data = new();
 
         public string Name => "test";

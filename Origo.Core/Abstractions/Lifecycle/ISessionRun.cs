@@ -1,31 +1,40 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
-using Origo.Core.Abstractions.Scene;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.StateMachine;
+using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Abstractions.Lifecycle;
 
 /// <summary>
-///     关卡会话级运行时的只读门面接口。
-///     外部代码（策略层）仅通过此接口访问会话内部状态；
-///     生命周期（创建 / 销毁）与序列化 / 反序列化均由 <see cref="ISessionManager" /> 统一管理。
-///     前台和后台关卡均为同一接口，区别仅在于注入的 <see cref="ISndSceneHost" /> 实现
-///     以及 <see cref="IsFrontSession" /> 标志。
-///     <see cref="IDisposable.Dispose" /> 仅供框架内部通过 <see cref="ISessionManager" /> 调用，
-///     策略代码应通过 <see cref="ISessionManager.DestroySession" /> 销毁会话。
+///     关卡会话级运行时的门面接口。
+///     策略经此访问会话能力：实体操作（查找/生成/kill）、黑板、状态机、
+///     以及所属的 <see cref="ISessionManager" />（跨会话入口）。
+///     生命周期（创建 / 销毁）与序列化均由 <see cref="ISessionManager" /> 管理。
+///     前台和后台会话为同一接口，差异仅在于 <see cref="IsFrontSession" />。
 /// </summary>
 public interface ISessionRun : IDisposable
 {
     IBlackboard SessionBlackboard { get; }
 
-    ISndSceneHost SceneHost { get; }
-
     string LevelId { get; }
 
     bool IsFrontSession { get; }
 
-    /// <summary>
-    ///     会话级状态机容器。策略层可通过此接口创建/获取会话级状态机。
-    /// </summary>
     IStateMachineContainer GetSessionStateMachines();
+
+    /// <summary>
+    ///     该会话所属的 <see cref="ISessionManager" />。
+    ///     策略经此跨会话访问其它会话。
+    /// </summary>
+    ISessionManager SessionManager { get; }
+
+    // ── 实体操作（会话作用域） ──
+
+    ISndEntity? FindByName(string name);
+    IReadOnlyCollection<ISndEntity> GetEntities();
+    ISndEntity Spawn(SndMetaData meta);
+    void SpawnMany(params SndMetaData[] metaList);
+    void RequestKillEntity(string entityName);
 }

@@ -136,7 +136,7 @@ internal sealed class SessionManager : ISessionManager
         ValidateLevelIdUnique(levelId, ISessionManager.ForegroundKey);
 
         var sessionParams = new SessionParameters(levelId, new Blackboard.Blackboard(), sceneHost, true);
-        var session = new SessionRun(_managerRuntime, sessionParams);
+        var session = new SessionRun(_managerRuntime, sessionParams, this);
         MountInternal(ISessionManager.ForegroundKey, session, true);
         return session;
     }
@@ -255,7 +255,7 @@ internal sealed class SessionManager : ISessionManager
         sceneHost.BindContext(_managerRuntime.SndContext);
 
         var sessionParams = new SessionParameters(levelId, new Blackboard.Blackboard(), sceneHost);
-        return new SessionRun(_managerRuntime, sessionParams);
+        return new SessionRun(_managerRuntime, sessionParams, this);
     }
 
     private void ValidateKey(string key)

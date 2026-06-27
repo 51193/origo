@@ -129,20 +129,8 @@ internal sealed class StrategyTestContext : ISndContext
 
     public void RequestSwitchForegroundLevel(string newLevelId) => LevelSwitchRequests.Add(newLevelId);
 
-    public void RequestKillAll()
-    {
-        foreach (var entity in CurrentSession?.SceneHost?.GetEntities() ?? Array.Empty<ISndEntity>())
-        {
-            if (entity.IsPendingKill)
-                continue;
-            RequestKillEntity(entity.Name);
-        }
-    }
-
-    public void RequestKillEntity(string entityName)
-    {
-        if (CurrentSession?.SceneHost is ISndSceneHost host) host.RequestKillEntity(entityName);
-    }
+    public void RequestKillAll() { }
+    public void RequestKillEntity(string entityName) { }
 
     public bool HasContinueData() => false;
 
@@ -224,6 +212,7 @@ internal sealed class StrategyTestContext : ISndContext
 
 internal sealed class MinimalTestEntity : ISndEntity
 {
+    public ISessionRun OwningSession { get; set; } = null!;
     private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
 
     internal Func<string, object?, object?>? InvokeStrategyHandler { get; set; }
@@ -330,6 +319,20 @@ internal sealed class TestSessionRun : ISessionRun
     public string LevelId => "test_level";
 
     public bool IsFrontSession => true;
+
+    public ISessionManager SessionManager => throw new NotSupportedException();
+
+    public ISndEntity? FindByName(string name) => SceneHost.FindByName(name);
+    public IReadOnlyCollection<ISndEntity> GetEntities() => SceneHost.GetEntities();
+
+    public ISndEntity Spawn(SndMetaData meta) =>
+        throw new NotSupportedException("Spawn not supported in strategy unit tests.");
+
+    public void SpawnMany(params SndMetaData[] metaList) =>
+        throw new NotSupportedException("SpawnMany not supported in strategy unit tests.");
+
+    public void RequestKillEntity(string entityName) =>
+        SceneHost.RequestKillEntity(entityName);
 
     public StateMachineContainer GetSessionStateMachines() =>
         throw new NotSupportedException(

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
 
@@ -48,6 +49,7 @@ public class ActiveStrategyExtensionsTests
 
     private sealed class StubActiveStrategyEntity : Origo.Core.Abstractions.Entity.ISndEntity
     {
+        public ISessionRun OwningSession { get; set; } = null!;
         private readonly System.Func<object?, object?> _invokeResult;
 
         public StubActiveStrategyEntity(System.Func<object?, object?> invokeResult)

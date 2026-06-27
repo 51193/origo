@@ -1,3 +1,4 @@
+using Origo.Core.Abstractions.Lifecycle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,8 +20,10 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     private readonly ILogger _logger;
     private readonly SndNodeManager _nodeHost;
     private readonly ObserverTopology _observerTopology;
+    private ISessionRun? _owningSession;
     private readonly SndStrategyManager _strategyManager;
 
+    internal void BindSession(ISessionRun session) { _owningSession = session; }
     internal SndEntity(
         INodeFactory nodeFactory,
         SndStrategyPool strategyPool,
@@ -106,6 +109,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
 
     public bool IsPendingKill { get; set; }
+    public ISessionRun OwningSession => _owningSession ?? throw new InvalidOperationException("Entity is not bound to a session. OwningSession must be set before the entity is used.");
 
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);
 

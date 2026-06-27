@@ -6,6 +6,7 @@ using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Abstractions.Scene;
@@ -356,6 +357,8 @@ internal sealed class TestSndSceneHost : ISndSceneHost
 
 internal sealed class DummySndEntity : ISndEntity
 {
+    public ISessionRun OwningSession { get; set; } = null!;
+
     private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
     public readonly string EntityName;
 
