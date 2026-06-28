@@ -134,7 +134,12 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
         _sessionManagerProvider = provider;
     }
 
-    internal ISessionManager SessionManager => _sessionManagerProvider();
+    /// <summary>
+    ///     当前会话管理器。非实体代码（如控制台命令处理器）通过此属性访问
+    ///     <see cref="ISessionManager" />；策略代码应使用
+    ///     <see cref="ISndEntity.OwningSession" />。SessionManager 本身返回 public。
+    /// </summary>
+    public ISessionManager SessionManager => _sessionManagerProvider();
 
     /// <summary>
     ///     依次执行业务延迟队列和系统延迟队列中的所有待执行动作。
