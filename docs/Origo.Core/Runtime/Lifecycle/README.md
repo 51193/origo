@@ -10,7 +10,7 @@
 
 | 文件 | 职责 |
 |------|------|
-| `SystemParameters.cs` | 系统层构造参数 |
+| `SystemParameters.cs` | 系统层构造参数（含 `AdapterSceneHost`） |
 | `SystemRuntime.cs` | 系统级运行时容器：持有 SystemRun、SystemBlackboard、SndWorld |
 | `SystemRun.cs` | 系统层启动：创建 SndWorld → 构造 ProgressRuntime |
 | `ProgressParameters.cs` | 流程层构造参数 |
@@ -41,9 +41,10 @@ SystemRuntime
 ```
 
 每层容器持有本层的核心对象引用和公共访问入口：
-- `SystemRuntime` 持有 `SystemBlackboard`、`SndWorld`、`IScheduler`
-- `ProgressRuntime` 持有 `ProgressBlackboard`、`SaveContext`、`SessionManager`
-- `SessionManagerRuntime` 持有 `ISessionManager`
+- `SystemRuntime` 持有 `SystemBlackboard`、`SndWorld`、`IScheduler`，以及 adapter 注入的 `AdapterSceneHost`
+- `ProgressRuntime` 持有 `ProgressBlackboard`、`SaveContext`、`SessionManager`，以及透传的 `AdapterSceneHost`
+- `SessionManagerRuntime` 持有 `ISessionManager` 和 `AdapterSceneHost`
+- `SessionManager` 构造时读取 `AdapterSceneHost` 并存储，用于创建前台 session
 - `SessionRun` 持有 `SessionBlackboard`、内部 `ISndSceneHost`（`internal`，框架内部使用）、`StateMachineContainer`、实体操作门面
 
 ## 关键生命周期流程

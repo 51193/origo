@@ -90,7 +90,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         throw new InvalidOperationException(
             $"Cross-entity observer resolution requires a scene host. " +
             $"Target '{targetName}' differs from self '{self.Name}'. " +
-            $"Resolve the target via SceneHost.FindByName, then use MountObserverStrategy(ISndEntity target, string observerIndex).");
+            $"Resolve the target via entity.OwningSession.FindByName(targetName), then use MountObserverStrategy(ISndEntity target, string observerIndex).");
     }
 
     public INodeHandle GetNode(string name) => _nodeHost.GetNode(name);

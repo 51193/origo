@@ -23,8 +23,8 @@ internal sealed class SndCountCommandHandler : ConsoleCommandHandlerBase
         IConsoleOutputChannel outputChannel,
         out string? errorMessage)
     {
-        var count = _runtime.SessionManager.ForegroundSession?.GetEntities().Count
-                    ?? _runtime.ForegroundSceneHost.GetEntities().Count;
+        var session = _runtime.SessionManager.ForegroundSession;
+        var count = session?.GetEntities().Count ?? 0;
         var msg = $"Snd count: {count}.";
 
         outputChannel.Publish(msg);

@@ -17,12 +17,12 @@ public class FrontSession_UniqueConstraintValidationTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg1 = ctx.SessionManager.ForegroundSession!;
+        var fg1 = ctx.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg1.IsFrontSession);
 
         // Replace foreground with new level
         ctx.EnsureProgressRun().SwitchForeground("new_level");
-        var fg2 = ctx.SessionManager.ForegroundSession!;
+        var fg2 = ctx.Runtime.SessionManager.ForegroundSession!;
 
         Assert.True(fg2.IsFrontSession);
         Assert.NotSame(fg1, fg2);
@@ -36,7 +36,7 @@ public class FrontSession_UniqueConstraintValidationTests
         SetupForegroundSession(ctx);
 
         var foregroundCount = 0;
-        foreach (var key in ctx.SessionManager.Keys)
+        foreach (var key in ctx.Runtime.SessionManager.Keys)
             if (key == ISessionManager.ForegroundKey)
                 foregroundCount++;
 
@@ -48,9 +48,9 @@ public class FrontSession_UniqueConstraintValidationTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg_1", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_1", "bg_level");
 
-        var fg = ctx.SessionManager.ForegroundSession!;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg.IsFrontSession);
         Assert.False(bg.IsFrontSession);
     }

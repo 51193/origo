@@ -10,12 +10,13 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
-///     per-scene-host 的观察者绑定拓扑：集中管理"谁观察谁"的有向图。
-///     取代分散在各 <see cref="SndEntity" /> 内部的单实体观察者管理器，
-///     使跨实体的接线、拆线、序列化与读档恢复在一处完成，无需实体反向暴露内部状态。
+///     per-scene-host 的观察者绑定拓扑：以双向索引（_incoming / _outgoing）集中管理
+///     "谁观察谁"的有向图。跨实体的接线、拆线、序列化与读档恢复均在本类闭环，
+///     实体无需反向暴露内部观察者状态。
 ///     <para>
-///         数据变更信号源始终在 target 实体的 <see cref="ISndEntityRawSubscription" /> 上，
-///         拓扑只管理绑定记录与接线/拆线，不取代底层数据订阅机制。
+///         数据变更信号源由 target 实体的 <see cref="ISndEntityRawSubscription" /> 驱动；
+///         拓扑负责绑定生命周期的编排——挂载/卸载钩子分发、读写档恢复、死亡时拆线——
+///         但不持有或代理数据订阅本身。
 ///     </para>
 /// </summary>
 internal sealed class ObserverTopology

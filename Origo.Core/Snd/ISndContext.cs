@@ -1,4 +1,3 @@
-using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Snd;
 
 namespace Origo.Core.Snd;
@@ -23,15 +22,11 @@ namespace Origo.Core.Snd;
 ///         <see cref="ISndFileAccess" />（静态资源文件访问）、
 ///         <see cref="ISndArchiveFileAccess" />（存档内文件访问）。
 ///         消费者可按需依赖窄接口，策略钩子保持全量 <c>ISndContext ctx</c> 参数。
+///         跨会话操作（如访问其他 session 的实体）应通过 <c>entity.OwningSession.SessionManager</c>。
 ///     </para>
 /// </summary>
 public interface ISndContext : ISndBlackboardAccess, ISndDeferredActions,
     ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
     ISndLifecycleOperations, ISndFileAccess, ISndArchiveFileAccess
 {
-    /// <summary>
-    ///     会话管理器，以 KVP 形式统一管理所有 <see cref="ISessionRun" />。
-    ///     前台会话以 <see cref="ISessionManager.ForegroundKey" /> 为键挂载。
-    /// </summary>
-    ISessionManager SessionManager { get; }
 }

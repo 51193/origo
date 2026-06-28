@@ -350,7 +350,7 @@ public class StrategyTestScenarioTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            var (found, paused) = ctx.SessionManager.ForegroundSession!.SessionBlackboard.TryGet<bool>("paused");
+            var (found, paused) = entity.OwningSession.SessionBlackboard.TryGet<bool>("paused");
             if (found)
                 entity.SetData("is_paused", paused);
         }

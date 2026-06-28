@@ -36,8 +36,8 @@ public class SndContextEntryFlowTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         Assert.NotNull(ctx.ProgressBlackboard);
-        Assert.NotNull(ctx.SessionManager.ForegroundSession);
-        Assert.NotNull(runtime.ForegroundSceneHost.FindByName("EntryNpc"));
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
+        Assert.NotNull(host.FindByName("EntryNpc"));
     }
 
     [Fact]
@@ -54,18 +54,18 @@ public class SndContextEntryFlowTests
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
 
-        runtime.ForegroundSceneHost.CreateEntity(new SndMetaData
+        host.CreateEntity(new SndMetaData
         {
             Name = "legacy",
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
-        Assert.NotNull(runtime.ForegroundSceneHost.FindByName("legacy"));
+        Assert.NotNull(host.FindByName("legacy"));
 
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Null(runtime.ForegroundSceneHost.FindByName("legacy"));
+        Assert.Null(host.FindByName("legacy"));
     }
 }

@@ -55,14 +55,15 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             new DefaultSaveStorageService(MetaAccess, DataSourceIo, PathResolver, InitialSaveRootPath, SavePathPolicy);
 
         var systemParams = new SystemParameters(
-            Runtime.Logger, MetaAccess, PathResolver, SaveRootPath, StorageService, SavePathPolicy);
+            Runtime.Logger, MetaAccess, PathResolver, SaveRootPath, StorageService, SavePathPolicy,
+            Runtime.GetAdapterSceneHost());
         var systemRuntime = new SystemRuntime(Runtime, systemParams);
         _systemRun = new SystemRun(systemRuntime);
         _parameters = parameters;
 
         // Runtime 仅触达 SessionManager（再下查 SessionRun），不直达任何 SceneHost。
         // 该 provider 在构造时建立（不依赖 Bootstrap），延迟解析当前会话管理器。
-        Runtime.SetSessionManagerProvider(() => SessionManager);
+        Runtime.SetSessionManagerProvider(() => _progressRun?.SessionManager ?? EmptySessionManager.Instance);
     }
 
     private readonly SndContextParameters _parameters;
@@ -98,12 +99,6 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     internal ISaveStorageService StorageService { get; }
     internal ISaveStorageService InitialStorageService { get; }
     internal ISavePathPolicy SavePathPolicy { get; }
-
-    public ISessionManager SessionManager => _progressRun?.SessionManager ?? EmptySessionManager.Instance;
-
-    public ISessionRun? CurrentSession => SessionManager.ForegroundSession;
-
-    public bool IsFrontSession => CurrentSession?.IsFrontSession ?? false;
 
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
     {
@@ -238,11 +233,11 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     public IBlackboard? ProgressBlackboard => _progressRun?.ProgressBlackboard;
 
     ISndSceneAccess IStateMachineContext.SceneAccess =>
-        SessionManager.ForegroundSession is SessionRun fgSession
+        _progressRun?.SessionManager.ForegroundSession is SessionRun fgSession
             ? fgSession.SceneHost
             : throw new InvalidOperationException("SceneAccess unavailable without a foreground session.");
 
-    IBlackboard? IStateMachineContext.SessionBlackboard => SessionManager.ForegroundSession?.SessionBlackboard;
+    IBlackboard? IStateMachineContext.SessionBlackboard => _progressRun?.SessionManager.ForegroundSession?.SessionBlackboard;
 
     // ── Public API ─────────────────────────────────────────────────────
 
@@ -370,7 +365,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
             OrigoAutoInitializer.LoadAndSpawnFromFile(
                 EntryConfigPath,
                 Runtime.SndWorld,
-                SessionManager.ForegroundSession!,
+                progressRun.SessionManager.ForegroundSession!,
                 DataSourceIo,
                 Runtime.Logger);
         });

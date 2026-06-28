@@ -35,6 +35,7 @@ internal sealed class StrategyTestContext : ISndContext
     {
         var session = new TestSessionRun();
         SessionManager = new TestSessionManager(session);
+        ((IOwningSessionBindable)session.SceneHost).SetOwningSession(session);
 
         var fileSystem = new MemoryFileSystem();
         _metaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
@@ -274,6 +275,7 @@ internal sealed class TestSessionManager : ISessionManager
     {
         ArgumentNullException.ThrowIfNull(foregroundSession);
         _sessions[ISessionManager.ForegroundKey] = foregroundSession;
+        ((TestSessionRun)foregroundSession)._sessionManager = this;
     }
 
     public bool CanCreateSessions => true;
@@ -305,6 +307,8 @@ internal sealed class TestSessionManager : ISessionManager
 
 internal sealed class TestSessionRun : ISessionRun
 {
+    internal ISessionManager? _sessionManager;
+
     public IBlackboard SessionBlackboard { get; } = new Blackboard.Blackboard();
 
     public ISndSceneHost SceneHost { get; } = new TestSceneHost();
@@ -313,7 +317,8 @@ internal sealed class TestSessionRun : ISessionRun
 
     public bool IsFrontSession => true;
 
-    public ISessionManager SessionManager => throw new NotSupportedException();
+    public ISessionManager SessionManager => _sessionManager ?? throw new InvalidOperationException(
+        "SessionManager is not initialized. Ensure TestSessionManager sets the back-reference.");
 
     public ISndEntity? FindByName(string name) => SceneHost.FindByName(name);
     public IReadOnlyCollection<ISndEntity> GetEntities() => SceneHost.GetEntities();
@@ -339,13 +344,20 @@ internal sealed class TestSessionRun : ISessionRun
     }
 }
 
-internal sealed class TestSceneHost : ISndSceneHost
+internal sealed class TestSceneHost : ISndSceneHost, IOwningSessionBindable
 {
     private readonly List<ISndEntity> _entities = new();
+    private ISessionRun? _owningSession;
+
+    public void SetOwningSession(ISessionRun session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        _owningSession = session;
+    }
 
     public ISndEntity CreateEntity(SndMetaData metaData)
     {
-        var entity = new MinimalTestEntity { Name = metaData.Name };
+        var entity = new MinimalTestEntity { Name = metaData.Name, OwningSession = _owningSession! };
         _entities.Add(entity);
         return entity;
     }

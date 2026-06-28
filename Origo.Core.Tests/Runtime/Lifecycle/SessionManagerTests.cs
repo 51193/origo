@@ -20,30 +20,30 @@ public class SessionManagerTests
     public void CreateBackgroundSession_AddsSession_TryGetReturnsIt()
     {
         var (ctx, _) = CreateContext();
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
-        Assert.True(ctx.SessionManager.Contains("bg1"));
-        Assert.Same(bg, ctx.SessionManager.TryGet("bg1"));
+        Assert.True(ctx.Runtime.SessionManager.Contains("bg1"));
+        Assert.Same(bg, ctx.Runtime.SessionManager.TryGet("bg1"));
     }
 
     [Fact]
     public void DestroySession_RemovesSession_TryGetReturnsNull()
     {
         var (ctx, _) = CreateContext();
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
-        ctx.SessionManager.DestroySession("bg1");
-        Assert.False(ctx.SessionManager.Contains("bg1"));
-        Assert.Null(ctx.SessionManager.TryGet("bg1"));
+        ctx.Runtime.SessionManager.DestroySession("bg1");
+        Assert.False(ctx.Runtime.SessionManager.Contains("bg1"));
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("bg1"));
     }
 
     [Fact]
     public void CreateBackgroundSession_DuplicateKey_Throws()
     {
         var (ctx, _) = CreateContext();
-        ctx.SessionManager.CreateBackgroundSession("dup", "bg1");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("dup", "bg1");
 
-        Assert.Throws<InvalidOperationException>(() => ctx.SessionManager.CreateBackgroundSession("dup", "bg2"));
+        Assert.Throws<InvalidOperationException>(() => ctx.Runtime.SessionManager.CreateBackgroundSession("dup", "bg2"));
     }
 
     [Fact]
@@ -51,13 +51,13 @@ public class SessionManagerTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        ctx.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
-        ctx.SessionManager.DestroySession("no_such_key");
+        ctx.Runtime.SessionManager.DestroySession("no_such_key");
 
-        Assert.True(ctx.SessionManager.Contains(ISessionManager.ForegroundKey));
-        Assert.True(ctx.SessionManager.Contains("bg1"));
-        Assert.NotNull(ctx.SessionManager.ForegroundSession);
+        Assert.True(ctx.Runtime.SessionManager.Contains(ISessionManager.ForegroundKey));
+        Assert.True(ctx.Runtime.SessionManager.Contains("bg1"));
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class SessionManagerTests
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
 
-        Assert.NotNull(ctx.SessionManager.ForegroundSession);
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public class SessionManagerTests
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
 
-        ctx.SessionManager.DestroySession(ISessionManager.ForegroundKey);
-        Assert.Null(ctx.SessionManager.ForegroundSession);
+        ctx.Runtime.SessionManager.DestroySession(ISessionManager.ForegroundKey);
+        Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
     }
 
     // ── Foreground accessor ──────────────────────────────────────────
@@ -86,11 +86,11 @@ public class SessionManagerTests
     {
         var (ctx, _) = CreateContext();
         // Progress run exists but no foreground session yet.
-        Assert.Null(ctx.SessionManager.ForegroundSession);
+        Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
 
         SetupForegroundSession(ctx);
-        Assert.NotNull(ctx.SessionManager.ForegroundSession);
-        Assert.Same(ctx.SessionManager.ForegroundSession, ctx.SessionManager.TryGet(ISessionManager.ForegroundKey));
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
+        Assert.Same(ctx.Runtime.SessionManager.ForegroundSession, ctx.Runtime.SessionManager.TryGet(ISessionManager.ForegroundKey));
     }
 
     [Fact]
@@ -99,18 +99,18 @@ public class SessionManagerTests
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
 
-        var session = ctx.SessionManager.TryGet(ISessionManager.ForegroundKey);
-        Assert.Same(ctx.SessionManager.ForegroundSession, session);
+        var session = ctx.Runtime.SessionManager.TryGet(ISessionManager.ForegroundKey);
+        Assert.Same(ctx.Runtime.SessionManager.ForegroundSession, session);
     }
 
     [Fact]
     public void Contains_ForegroundKey_TrueWhenSessionActive()
     {
         var (ctx, _) = CreateContext();
-        Assert.False(ctx.SessionManager.Contains(ISessionManager.ForegroundKey));
+        Assert.False(ctx.Runtime.SessionManager.Contains(ISessionManager.ForegroundKey));
 
         SetupForegroundSession(ctx);
-        Assert.True(ctx.SessionManager.Contains(ISessionManager.ForegroundKey));
+        Assert.True(ctx.Runtime.SessionManager.Contains(ISessionManager.ForegroundKey));
     }
 
     // ── Keys ────────────────────────────────────────────────────────
@@ -120,9 +120,9 @@ public class SessionManagerTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        ctx.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
-        var keys = ctx.SessionManager.Keys;
+        var keys = ctx.Runtime.SessionManager.Keys;
         Assert.Contains(ISessionManager.ForegroundKey, keys);
         Assert.Contains("bg1", keys);
     }
@@ -134,28 +134,28 @@ public class SessionManagerTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        ctx.SessionManager.CreateBackgroundSession("synced", "synced", true);
-        ctx.SessionManager.CreateBackgroundSession("stored", "stored");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("synced", "synced", true);
+        ctx.Runtime.SessionManager.CreateBackgroundSession("stored", "stored");
 
         var ex = Record.Exception(() =>
         {
-            ctx.SessionManager.ProcessAllSessions(0.016);
-            ctx.SessionManager.ProcessAllSessions(0.016, true);
+            ctx.Runtime.SessionManager.ProcessAllSessions(0.016);
+            ctx.Runtime.SessionManager.ProcessAllSessions(0.016, true);
         });
 
         Assert.Null(ex);
-        Assert.Contains("synced", ((SessionManager)ctx.SessionManager).ProcessingKeys);
-        Assert.DoesNotContain("stored", ((SessionManager)ctx.SessionManager).ProcessingKeys);
+        Assert.Contains("synced", ((SessionManager)ctx.Runtime.SessionManager).ProcessingKeys);
+        Assert.DoesNotContain("stored", ((SessionManager)ctx.Runtime.SessionManager).ProcessingKeys);
     }
 
     [Fact]
     public void ProcessingKeys_OnlyReturnsSyncedKeys()
     {
         var (ctx, _) = CreateContext();
-        ctx.SessionManager.CreateBackgroundSession("synced", "synced", true);
-        ctx.SessionManager.CreateBackgroundSession("stored", "stored");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("synced", "synced", true);
+        ctx.Runtime.SessionManager.CreateBackgroundSession("stored", "stored");
 
-        var processingKeys = ((SessionManager)ctx.SessionManager).ProcessingKeys;
+        var processingKeys = ((SessionManager)ctx.Runtime.SessionManager).ProcessingKeys;
         Assert.Contains("synced", processingKeys);
         Assert.DoesNotContain("stored", processingKeys);
     }
@@ -174,9 +174,9 @@ public class SessionManagerTests
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
 
-        ctx.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
         var ex =
-            Assert.Throws<InvalidOperationException>(() => ctx.SessionManager.CreateBackgroundSession("bg2", "bg1"));
+            Assert.Throws<InvalidOperationException>(() => ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "bg1"));
         Assert.Contains("bg1", ex.Message);
         Assert.Contains("already manages this level", ex.Message);
     }
@@ -186,9 +186,9 @@ public class SessionManagerTests
     {
         var (ctx, _) = CreateContext();
 
-        ctx.SessionManager.CreateBackgroundSession("bg1", "level_a");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "level_a");
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            ctx.SessionManager.CreateBackgroundSession("bg2", "level_a"));
+            ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "level_a"));
         Assert.Contains("bg1", ex.Message);
         Assert.Contains("already manages this level", ex.Message);
     }
@@ -198,7 +198,7 @@ public class SessionManagerTests
     {
         var (ctx, fs) = CreateContext();
 
-        ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
 
         fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_game/session.json", "{}");
@@ -208,10 +208,10 @@ public class SessionManagerTests
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("game");
 
-        var destroyedBg = ctx.SessionManager.TryGet("bg");
+        var destroyedBg = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.Null(destroyedBg);
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
     }
@@ -222,7 +222,7 @@ public class SessionManagerTests
         var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
 
-        ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
 
         fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_game/session.json", "{}");
@@ -232,11 +232,11 @@ public class SessionManagerTests
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
     }
@@ -247,7 +247,7 @@ public class SessionManagerTests
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "level_x", true);
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "level_x", true);
         ((SessionRun)bg).SceneHost.CreateEntity(new SndMetaData
         {
             Name = "CollisionEntity",
@@ -274,7 +274,7 @@ public class SessionManagerTests
         // foreground is rejected immediately — it never reaches
         // AppendBackgroundPayloads.
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            ctx.SessionManager.CreateBackgroundSession("bg", "default"));
+            ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "default"));
         Assert.Contains("bg", ex.Message);
         Assert.Contains("default", ex.Message);
         Assert.Contains("__foreground__", ex.Message);
@@ -286,10 +286,10 @@ public class SessionManagerTests
     {
         var (ctx, _) = CreateContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "reusable");
-        ctx.SessionManager.DestroySession("bg1");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "reusable");
+        ctx.Runtime.SessionManager.DestroySession("bg1");
 
-        var bg2 = ctx.SessionManager.CreateBackgroundSession("bg2", "reusable");
+        var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "reusable");
         Assert.NotNull(bg2);
         Assert.Equal("reusable", bg2.LevelId);
     }
@@ -299,14 +299,103 @@ public class SessionManagerTests
     {
         var (ctx, _) = CreateContext();
 
-        ctx.SessionManager.CreateBackgroundSession("owner", "treasure");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("owner", "treasure");
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            ctx.SessionManager.CreateBackgroundSession("thief", "treasure"));
+            ctx.Runtime.SessionManager.CreateBackgroundSession("thief", "treasure"));
 
         Assert.Contains("thief", ex.Message);
         Assert.Contains("treasure", ex.Message);
         Assert.Contains("owner", ex.Message);
         Assert.Contains("Destroy the existing session", ex.Message);
+    }
+
+    // ── Entity operations on ISessionRun ────────────────────────────────
+
+    [Fact]
+    public void SessionRun_Spawn_CreatesEntity()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entity = session.Spawn(new SndMetaData
+        {
+            Name = "spawned",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        });
+
+        Assert.Equal("spawned", entity.Name);
+        Assert.Same(entity, session.FindByName("spawned"));
+    }
+
+    [Fact]
+    public void SessionRun_SpawnMany_CreatesMultipleEntities()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        session.SpawnMany(new[]
+        {
+            new SndMetaData
+            {
+                Name = "a1", NodeMetaData = new NodeMetaData(),
+                StrategyMetaData = new StrategyMetaData(), DataMetaData = new DataMetaData()
+            },
+            new SndMetaData
+            {
+                Name = "a2", NodeMetaData = new NodeMetaData(),
+                StrategyMetaData = new StrategyMetaData(), DataMetaData = new DataMetaData()
+            }
+        });
+
+        Assert.Equal(2, session.GetEntities().Count);
+        Assert.NotNull(session.FindByName("a1"));
+        Assert.NotNull(session.FindByName("a2"));
+    }
+
+    [Fact]
+    public void SessionRun_RequestKillEntity_MarksEntityPending()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entity = session.Spawn(new SndMetaData
+        {
+            Name = "to_kill",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        });
+
+        Assert.False(entity.IsPendingKill);
+
+        session.RequestKillEntity("to_kill");
+        Assert.True(entity.IsPendingKill);
+    }
+
+    [Fact]
+    public void KillPendingAllSessions_ProcessesForegroundPendingKill()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        session.Spawn(new SndMetaData
+        {
+            Name = "doomed",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        });
+
+        session.RequestKillEntity("doomed");
+        ctx.Runtime.SessionManager.KillPendingAllSessions();
+
+        Assert.Null(session.FindByName("doomed"));
     }
 
     // ── Helpers ─────────────────────────────────────────────────────

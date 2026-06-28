@@ -134,18 +134,25 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
 ## 生命周期
 
 ```
-创建:
+创建后台会话:
   SessionManager.CreateBackgroundSession(key, levelId)
     → 校验 key 和 levelId 均不与已有会话冲突
     → 创建 SessionRun
-    → 注入 FullMemorySndSceneHost
+    → 注入 FullMemorySndSceneHost（SessionManager 内部 new）
     → 挂载到 _sessions 字典
     → 可选：从存档恢复 SessionBlackboard + 状态机 + 实体
 
+创建前台会话:
+  SessionManager 构造时持有 adapter 注入的场景宿主
+  SessionManager.CreateForegroundSession(levelId)    // 不再接收 host 参数
+    → 使用存储的 adapter scene host 创建 SessionRun
+    → 以 `__foreground__` 为键挂载到 _sessions 字典
+    → adapter scene host 仅前台 session 使用；后台 session 始终使用 FullMemorySndSceneHost
+
 运行:
   SessionManager.ProcessAllSessions(delta)
-    → 遍历所有 syncProcess=true 的后台会话
-    → 调用 session.SceneHost.ProcessAll(delta)
+    → 遍历所有 syncProcess=true 的后台会话（以及前台会话），
+    → 通过 SessionRun 内部驱动 SceneHost 的实体帧处理
 
  关卡切换:
    RequestSwitchForegroundLevel(newLevelId)

@@ -76,6 +76,7 @@ public class PressButtonCommandHandlerTests
     public void TryExecute_EntityNotGodot_ReturnsError()
     {
         var (runtime, sceneHost) = TestRuntimeHelper.CreateRuntime();
+        TestRuntimeHelper.BootstrapForegroundSession(runtime);
         sceneHost.AddEntity(new DummyEntity("DummyEntity"));
         var handler = new PressButtonCommandHandler(runtime);
         var output = new ConsoleOutputChannel();

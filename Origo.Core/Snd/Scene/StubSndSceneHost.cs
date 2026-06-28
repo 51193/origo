@@ -15,16 +15,23 @@ namespace Origo.Core.Snd.Scene;
 ///     用于 <see cref="LevelBuilder" /> 等 Core 层离线构建关卡场景，
 ///     以及单元测试中需要完全内存化的场景宿主。
 /// </summary>
-internal sealed class StubSndSceneHost : ISndSceneHost
+internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
 {
     private readonly List<ISndEntity> _entities = new();
     private readonly List<SndMetaData> _metaList = new();
+    private ISessionRun? _owningSession;
+
+    public void SetOwningSession(ISessionRun session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        _owningSession = session;
+    }
 
     public ISndEntity CreateEntity(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
         _metaList.Add(metaData);
-        var entity = new StubSndEntity(metaData.Name);
+        var entity = new StubSndEntity(metaData.Name) { OwningSession = _owningSession! };
         _entities.Add(entity);
         return entity;
     }
@@ -44,7 +51,7 @@ internal sealed class StubSndSceneHost : ISndSceneHost
         foreach (var meta in metaList)
         {
             _metaList.Add(meta);
-            _entities.Add(new StubSndEntity(meta.Name));
+            _entities.Add(new StubSndEntity(meta.Name) { OwningSession = _owningSession! });
         }
     }
 
@@ -90,8 +97,7 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
         _data["name"] = name;
     }
 
-    public ISessionRun OwningSession => throw new NotSupportedException(
-        "StubSndEntity does not belong to a session.");
+    public ISessionRun OwningSession { get; set; } = null!;
 
     public string Name { get; }
 

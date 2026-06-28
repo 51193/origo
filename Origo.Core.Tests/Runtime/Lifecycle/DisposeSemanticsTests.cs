@@ -34,7 +34,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity"));
 
         var progressRun = ctx.EnsureProgressRun();
@@ -56,7 +56,7 @@ public class DisposeSemanticsTests
             world.RegisterStrategy(() => new BeforeSaveSpyStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
 
         events.Clear();
@@ -75,7 +75,7 @@ public class DisposeSemanticsTests
             world.RegisterStrategy(() => new BeforeQuitSpyStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", BeforeQuitStrategyIndex));
 
         events.Clear();
@@ -89,7 +89,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity"));
         bg.SessionBlackboard.SetValue("data", 42);
 
@@ -113,7 +113,7 @@ public class DisposeSemanticsTests
             world.RegisterStrategy(() => new BeforeSaveSpyStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
 
         events.Clear();
@@ -175,7 +175,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Dispose();
 
         var ex = Record.Exception(() => bg.Dispose());
@@ -201,7 +201,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DisposedEntity"));
         bg.SessionBlackboard.SetValue("disposed_key", "disposed_val");
         bg.Dispose();
@@ -217,7 +217,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.SessionBlackboard.SetValue("data", 42);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DisposedEntity"));
         bg.Dispose();
@@ -233,7 +233,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
@@ -244,7 +244,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => bg.FindByName("any"));
@@ -255,7 +255,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => bg.GetSessionStateMachines());
@@ -269,18 +269,18 @@ public class DisposeSemanticsTests
         var (ctx, _) = CreateForegroundContext();
         var progressRun = ctx.EnsureProgressRun();
 
-        Assert.NotNull(progressRun.ForegroundSession);
+        Assert.NotNull(progressRun.SessionManager.ForegroundSession);
 
         progressRun.Dispose();
 
-        Assert.Null(progressRun.ForegroundSession);
+        Assert.Null(progressRun.SessionManager.ForegroundSession);
     }
 
     [Fact]
     public void ProgressRun_AfterDispose_SessionManagerKeys_IsEmpty()
     {
         var (ctx, _) = CreateForegroundContext();
-        ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
 
         var progressRun = ctx.EnsureProgressRun();
         Assert.NotEmpty(progressRun.SessionManager.Keys);
@@ -337,7 +337,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
 
         ((SessionRun)fg).SceneHost.CreateEntity(CreateMeta("SavedEntity"));
@@ -361,7 +361,7 @@ public class DisposeSemanticsTests
 
         newPr.LoadFromPayload(payload);
 
-        var restoredFg = newPr.ForegroundSession;
+        var restoredFg = newPr.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
 
         var entities = restoredFg.GetEntities();
@@ -404,17 +404,17 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("gen", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("GameEntity"));
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("gen");
+        ctx.Runtime.SessionManager.DestroySession("gen");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -432,7 +432,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("gen", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("GameEntity1"));
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("GameEntity2"));
         bg.SessionBlackboard.SetValue("map_seed", 42);
@@ -440,11 +440,11 @@ public class DisposeSemanticsTests
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("gen");
+        ctx.Runtime.SessionManager.DestroySession("gen");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fgBefore = ctx.SessionManager.ForegroundSession;
+        var fgBefore = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fgBefore);
         Assert.Equal("game", fgBefore.LevelId);
 
@@ -462,7 +462,7 @@ public class DisposeSemanticsTests
         ctx.SetProgressRun(newPr);
         newPr.LoadFromPayload(payload);
 
-        var restoredFg = newPr.ForegroundSession;
+        var restoredFg = newPr.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
         Assert.Equal("game", restoredFg.LevelId);
         Assert.Equal(2, restoredFg.GetEntities().Count);
@@ -477,7 +477,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var oldFg = ctx.SessionManager.ForegroundSession;
+        var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
         oldFg.SessionBlackboard.SetValue("old_data", "old_value");
         ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("OldEntity"));
@@ -511,7 +511,7 @@ public class DisposeSemanticsTests
             world.RegisterStrategy(() => new SessionAccessQuitStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", SessionAccessStrategyIndex));
 
         events.Clear();
@@ -530,7 +530,7 @@ public class DisposeSemanticsTests
             world.RegisterStrategy(() => new ThrowingQuitStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", ThrowingQuitStrategyIndex));
 
         var ex = Record.Exception(() => bg.Dispose());
@@ -547,7 +547,7 @@ public class DisposeSemanticsTests
             world.RegisterStrategy(() => new ThrowingQuitStrategy());
         });
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", ThrowingQuitStrategyIndex));
 
         Record.Exception(() => bg.Dispose());
@@ -635,7 +635,7 @@ public class DisposeSemanticsTests
 
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
         {
-            var session = ((SndContext)ctx).CurrentSession;
+            var session = entity.OwningSession;
             if (session == null) return;
 
             try

@@ -88,7 +88,7 @@ public class SaveCoordinatorTests
         var fs = new TestFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
-        var systemParams = new SystemParameters(logger, metaAccess, pathResolver, "root", storageService, new DefaultSavePathPolicy());
+        var systemParams = new SystemParameters(logger, metaAccess, pathResolver, "root", storageService, new DefaultSavePathPolicy(), runtime.GetAdapterSceneHost());
         var systemRuntime = new SystemRuntime(runtime, systemParams);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
         var progressRuntime = new ProgressRuntime(systemRuntime, new TestStateMachineContext(), ctx);
@@ -103,7 +103,7 @@ public class SaveCoordinatorTests
         var fs = new TestFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
-        var systemParams = new SystemParameters(logger, metaAccess, pathResolver, "root", storageService, new DefaultSavePathPolicy());
+        var systemParams = new SystemParameters(logger, metaAccess, pathResolver, "root", storageService, new DefaultSavePathPolicy(), runtime.GetAdapterSceneHost());
         var systemRuntime = new SystemRuntime(runtime, systemParams);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
         return new ProgressRuntime(systemRuntime, new TestStateMachineContext(), ctx);

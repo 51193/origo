@@ -52,16 +52,18 @@ public class EntityStrategyBaseTests
     public void Process_KillsItself_MarksEntity()
     {
         var host = new StubSndSceneHost();
-        var meta = new SndMetaData { Name = "e" };
-        var entity = host.CreateEntity(meta);
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "[]");
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
-        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
+        ctx.RequestLoadMainMenuEntrySave();
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        var entity = host.CreateEntity(new SndMetaData { Name = "e" });
 
         var strategy = new TestEntityStrategyKillSelf();
         strategy.Process(entity, 0.016, ctx);
@@ -73,18 +75,19 @@ public class EntityStrategyBaseTests
     public void Process_KillsOtherEntity_MarksTargetEntity()
     {
         var host = new StubSndSceneHost();
-        var metaA = new SndMetaData { Name = "A" };
-        var metaB = new SndMetaData { Name = "B" };
-        var entityA = host.CreateEntity(metaA);
-        host.CreateEntity(metaB);
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "[]");
         var io2 = TestFactory.CreateIoGateway(fs);
         var metaAccess2 = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver2 = TestFactory.CreatePathResolver(fs);
-        var ctx = new SndContext(new SndContextParameters(runtime, io2, metaAccess2, pathResolver2, "root", "res://initial", "entry.json"));
+        var ctx = new SndContext(new SndContextParameters(runtime, io2, metaAccess2, pathResolver2, "root", "res://initial", "res://entry/entry.json"));
+        ctx.RequestLoadMainMenuEntrySave();
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        var entityA = host.CreateEntity(new SndMetaData { Name = "A" });
+        host.CreateEntity(new SndMetaData { Name = "B" });
 
         var strategy = new TestEntityStrategyKillOther();
         strategy.Process(entityA, 0.016, ctx);
@@ -104,6 +107,18 @@ public class EntityStrategyBaseTests
             w.RegisterStrategy(() => new KillSelfRecordingStrategy());
             w.RegisterStrategy(() => new ProcessCalledStrategy());
         });
+
+        var logger = new TestLogger();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestFileSystem();
+        fs.SeedFile("res://entry/entry.json", "[]");
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
+        host.BindContext(ctx);
+        ctx.RequestLoadMainMenuEntrySave();
+        ctx.FlushDeferredActionsForCurrentFrame();
 
         var entity = host.CreateEntity(CreateMeta("E", new[] { KillSelfIdx, ProcessCalledIdx }));
         ((IEntityLifecycle)entity).FireAfterSpawnHooks();
@@ -178,7 +193,7 @@ public class EntityStrategyBaseTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            ((SndContext)ctx).Runtime.ForegroundSceneHost.RequestKillEntity(entity.Name);
+            entity.OwningSession.RequestKillEntity(entity.Name);
         }
     }
 
@@ -186,7 +201,7 @@ public class EntityStrategyBaseTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            ((SndContext)ctx).Runtime.ForegroundSceneHost.RequestKillEntity("B");
+            entity.OwningSession.RequestKillEntity("B");
         }
     }
 
@@ -198,7 +213,7 @@ public class EntityStrategyBaseTests
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
             ProcessCalls.Add($"kill_self:{entity.Name}");
-            ((SndContext)ctx).Runtime.ForegroundSceneHost.RequestKillEntity(entity.Name);
+            entity.OwningSession.RequestKillEntity(entity.Name);
         }
     }
 

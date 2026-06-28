@@ -28,7 +28,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
 {
     private readonly ActionScheduler _businessDeferredScheduler;
     private readonly ActionScheduler _systemDeferredScheduler;
-    private readonly ISndSceneHost _foregroundSceneHost;
+    private readonly ISndSceneHost _adapterSceneHost;
     private Func<ISessionManager> _sessionManagerProvider = static () => EmptySessionManager.Instance;
 
     public OrigoRuntime(
@@ -55,7 +55,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
         ArgumentNullException.ThrowIfNull(converterRegistry);
         ArgumentNullException.ThrowIfNull(dataSourceIo);
         SndWorld = new SndWorld(typeStringMapping, Logger, converterRegistry, dataSourceIo);
-        _foregroundSceneHost = sndSceneHost;
+        _adapterSceneHost = sndSceneHost;
         _businessDeferredScheduler = new ActionScheduler(Logger);
         _systemDeferredScheduler = new ActionScheduler(Logger);
 
@@ -82,10 +82,10 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     public SndWorld SndWorld { get; }
 
     /// <summary>
-    ///     前台场景宿主，在构造时注入。
-    ///     用于框架内部在拆前台会话后清理场景实体（ResetForeground）。
+    ///     Adapter 层注入的场景宿主，仅在 Bootstrap 时由 SndContext 读取一次
+    ///     并下传到 SessionManager 构造链。
     /// </summary>
-    internal ISndSceneHost ForegroundSceneHost => _foregroundSceneHost;
+    internal ISndSceneHost GetAdapterSceneHost() => _adapterSceneHost;
 
     /// <summary>
     ///     系统级黑板，生命周期跨越整个应用运行期。

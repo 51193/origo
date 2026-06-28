@@ -36,14 +36,13 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
         cloned.Name = entityName;
 
         var session = _runtime.SessionManager.ForegroundSession;
-        if (session is not null)
+        if (session is null)
         {
-            session.Spawn(cloned);
+            errorMessage = "No foreground session — cannot spawn entities.";
+            return false;
         }
-        else
-        {
-            SndEntityFactory.Spawn(_runtime.ForegroundSceneHost, cloned);
-        }
+
+        session.Spawn(cloned);
 
         var msg = $"Spawned '{entityName}' from template '{templateKey}'.";
         outputChannel.Publish(msg);

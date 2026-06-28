@@ -41,7 +41,7 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg_level", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_level", "bg_level");
 
         Assert.Equal("bg_level", bg.LevelId);
         Assert.NotNull(bg.SessionBlackboard);
@@ -57,7 +57,7 @@ public class BackgroundSessionTests
     public void CreateBackgroundSession_Throws_WhenLevelIdInvalid(string? levelId)
     {
         var (ctx, _) = CreateForegroundContext();
-        Assert.ThrowsAny<ArgumentException>(() => ctx.SessionManager.CreateBackgroundSession("test_key", levelId!));
+        Assert.ThrowsAny<ArgumentException>(() => ctx.Runtime.SessionManager.CreateBackgroundSession("test_key", levelId!));
     }
 
     // ── Shared ProgressBlackboard ─────────────────────────────────────
@@ -67,7 +67,7 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         ctx.ProgressBlackboard!.SetValue("shared_key", 42);
 
@@ -82,7 +82,7 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         ctx.ProgressBlackboard!.SetValue("from_bg", "hello");
 
         var (found, value) = ctx.ProgressBlackboard!.TryGet<string>("from_bg");
@@ -102,7 +102,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         var entity = ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithStrategy("bg_entity"));
         if (entity is IEntityLifecycle lc)
             lc.FireAfterSpawnHooks();
@@ -120,9 +120,9 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new SessionContextSpyStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg_ctx", "bg_ctx", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_ctx", "bg_ctx", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("spy", SessionContextStrategyIndex));
-        ctx.SessionManager.ProcessAllSessions(0.016, false);
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016, false);
 
         Assert.Contains("bg_ctx", seenSessionLevelIds);
     }
@@ -134,10 +134,10 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         bg.SessionBlackboard.SetValue("bg_only", 99);
 
-        var (found, _) = ctx.SessionManager.ForegroundSession?.SessionBlackboard!.TryGet<int>("bg_only") ?? (false, 0);
+        var (found, _) = ctx.Runtime.SessionManager.ForegroundSession?.SessionBlackboard!.TryGet<int>("bg_only") ?? (false, 0);
         Assert.False(found);
     }
 
@@ -148,10 +148,10 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("bg_entity"));
 
-        Assert.Null(ctx.SessionManager.ForegroundSession?.FindByName("bg_entity"));
+        Assert.Null(ctx.Runtime.SessionManager.ForegroundSession?.FindByName("bg_entity"));
         Assert.NotNull(bg.FindByName("bg_entity"));
     }
 
@@ -165,7 +165,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithStrategy("npc"));
 
         var entity = bg.FindByName("npc");
@@ -183,7 +183,7 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = ((SessionRun)bg).SceneHost;
         var entity = host.CreateEntity(CreateMeta("npc"));
 
@@ -197,7 +197,7 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = ((SessionRun)bg).SceneHost;
         foreach (var meta in new[] { CreateMeta("a"), CreateMeta("b"), CreateMeta("c") })
             host.CreateEntity(meta);
@@ -210,7 +210,7 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         Assert.Null(bg.FindByName("nonexistent"));
     }
@@ -227,7 +227,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = ((SessionRun)bg).SceneHost;
         host.CreateEntity(CreateMetaWithStrategy("npc"));
 
@@ -250,7 +250,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = ((SessionRun)bg).SceneHost;
         host.CreateEntity(CreateMetaWithStrategy("a"));
         host.CreateEntity(CreateMetaWithStrategy("b"));
@@ -282,10 +282,10 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new ProcessCounterStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
 
-        ctx.SessionManager.ProcessAllSessions(0.016, false);
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016, false);
 
         Assert.Equal(1, processCount);
     }
@@ -297,7 +297,7 @@ public class BackgroundSessionTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = ((SessionRun)bg).SceneHost;
         host.CreateEntity(CreateMeta("a"));
         host.CreateEntity(CreateMeta("b"));
@@ -314,7 +314,7 @@ public class BackgroundSessionTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("dungeon", "dungeon");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("dungeon", "dungeon");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("boss"));
         bg.SessionBlackboard.SetValue("difficulty", "hard");
 
@@ -338,7 +338,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithStrategy("npc"));
         bg.Dispose();
 
@@ -350,7 +350,7 @@ public class BackgroundSessionTests
     public void Dispose_IsIdempotent()
     {
         var (ctx, _) = CreateForegroundContext();
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         bg.Dispose();
         var ex = Record.Exception(bg.Dispose);
         Assert.Null(ex);
@@ -360,13 +360,13 @@ public class BackgroundSessionTests
     public void DisposedSession_ThrowsOnAllPublicMethods()
     {
         var (ctx, _) = CreateForegroundContext();
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         bg.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
         Assert.Throws<ObjectDisposedException>(() => bg.GetSessionStateMachines());
         Assert.Throws<ObjectDisposedException>(() => bg.FindByName("any"));
-        Assert.Throws<ObjectDisposedException>(() => bg.FindByName("any"));
+        Assert.Throws<ObjectDisposedException>(() => bg.GetEntities());
     }
 
     // ── Full background workflow ──────────────────────────────────────
@@ -383,7 +383,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new ProcessCounterStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("generated_level", "generated_level", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("generated_level", "generated_level", true);
         var host = ((SessionRun)bg).SceneHost;
 
         // Populate with entities.
@@ -399,7 +399,7 @@ public class BackgroundSessionTests
 
         // ProcessAll: Process fires.
         events.Clear();
-        ctx.SessionManager.ProcessAllSessions(0.016, false);
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016, false);
         Assert.Contains("Process", events);
 
         // Set session data.
@@ -430,7 +430,7 @@ public class BackgroundSessionTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg_level", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_level", "bg_level");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("soldier_01"));
         bg.SessionBlackboard.SetValue("hp", 100);
 
@@ -459,7 +459,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        using var source = ctx.SessionManager.CreateBackgroundSession("src_level", "src_level");
+        using var source = ctx.Runtime.SessionManager.CreateBackgroundSession("src_level", "src_level");
         ((SessionRun)source).SceneHost.CreateEntity(CreateMetaWithStrategy("guard_01"));
         source.SessionBlackboard.SetValue("alert", 5);
 
@@ -475,7 +475,7 @@ public class BackgroundSessionTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("unit_a"));
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("unit_b"));
         bg.SessionBlackboard.SetValue("score", 42);
@@ -497,7 +497,7 @@ public class BackgroundSessionTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         bg.Dispose();
 
         ctx.RequestSaveGame("after_dispose");
@@ -511,7 +511,7 @@ public class BackgroundSessionTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("entity"));
         bg.Dispose();
 
@@ -533,7 +533,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        using var source = ctx.SessionManager.CreateBackgroundSession("src", "src");
+        using var source = ctx.Runtime.SessionManager.CreateBackgroundSession("src", "src");
         ((SessionRun)source).SceneHost.CreateEntity(CreateMetaWithStrategy("npc_a"));
         source.SessionBlackboard.SetValue("difficulty", "hard");
 
@@ -551,7 +551,7 @@ public class BackgroundSessionTests
     public void LoadSessionFromPayload_Throws_WhenPayloadNull()
     {
         var (ctx, _) = CreateForegroundContext();
-        Assert.Throws<ArgumentException>(() => ctx.SessionManager.CreateBackgroundSession("bg", ""));
+        Assert.Throws<ArgumentException>(() => ctx.Runtime.SessionManager.CreateBackgroundSession("bg", ""));
     }
 
     // ── FullMemorySndSceneHost ────────────────────────────────────────
@@ -566,10 +566,10 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new ProcessCounterStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
 
-        ctx.SessionManager.ProcessAllSessions(0.016, false);
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016, false);
 
         Assert.Equal(1, processCount);
     }
@@ -584,7 +584,7 @@ public class BackgroundSessionTests
             world.RegisterStrategy(() => new TrackingStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         var host = ((SessionRun)bg).SceneHost;
         host.CreateEntity(CreateMetaWithStrategy("old_entity"));
         events.Clear();
@@ -606,7 +606,7 @@ public class BackgroundSessionTests
     public void BuildSavePayload_IncludesBackgroundSessionsInPayload()
     {
         var (ctx, _) = CreateForegroundContext();
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
         bg.SessionBlackboard.SetValue("bg_key", 42);
 
         var progressRun = ctx.EnsureProgressRun();
@@ -628,7 +628,7 @@ public class BackgroundSessionTests
         var (ctx, fs) = CreateForegroundContext();
 
         // Create and mount a background session with data.
-        var bg = ctx.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
         bg.SessionBlackboard.SetValue("sim_round", 10);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
 
@@ -639,7 +639,7 @@ public class BackgroundSessionTests
             payload, "save_bg_test", ctx.Runtime.Logger);
 
         // Clean up current runs.
-        ctx.SessionManager.DestroySession("sim1");
+        ctx.Runtime.SessionManager.DestroySession("sim1");
         ctx.SetProgressRun(null);
 
         // Reload from saved snapshot.
@@ -649,8 +649,8 @@ public class BackgroundSessionTests
         newProgressRun.LoadFromPayload(payload);
 
         // Verify the background session was restored.
-        Assert.NotNull(ctx.SessionManager.TryGet("sim1"));
-        var restoredBg = ctx.SessionManager.TryGet("sim1")!;
+        Assert.NotNull(ctx.Runtime.SessionManager.TryGet("sim1"));
+        var restoredBg = ctx.Runtime.SessionManager.TryGet("sim1")!;
         Assert.Equal("bg_sim", restoredBg.LevelId);
         var (found, round) = restoredBg.SessionBlackboard.TryGet<int>("sim_round");
         Assert.True(found);
@@ -687,8 +687,8 @@ public class BackgroundSessionTests
     public void BuildSavePayload_IncludesSyncProcessInBackgroundLevelIds()
     {
         var (ctx, _) = CreateForegroundContext();
-        ctx.SessionManager.CreateBackgroundSession("bg_sync", "bg_sync_level", true);
-        ctx.SessionManager.CreateBackgroundSession("bg_nosync", "bg_nosync_level");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg_sync", "bg_sync_level", true);
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg_nosync", "bg_nosync_level");
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.BuildSavePayload("save_sync_test");
@@ -703,15 +703,15 @@ public class BackgroundSessionTests
     public void SaveAndLoad_RoundTrips_SyncProcessFlag()
     {
         var (ctx, _) = CreateForegroundContext();
-        ctx.SessionManager.CreateBackgroundSession("bg_sync", "bg_sync_level", true);
-        ctx.SessionManager.CreateBackgroundSession("bg_nosync", "bg_nosync_level");
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg_sync", "bg_sync_level", true);
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg_nosync", "bg_nosync_level");
 
         var progressRun = ctx.EnsureProgressRun();
         var payload = progressRun.BuildSavePayload("save_sync_rt");
 
         // Clean up and reload.
-        ctx.SessionManager.DestroySession("bg_sync");
-        ctx.SessionManager.DestroySession("bg_nosync");
+        ctx.Runtime.SessionManager.DestroySession("bg_sync");
+        ctx.Runtime.SessionManager.DestroySession("bg_nosync");
         ctx.SetProgressRun(null);
 
         var newProgressRun = TestFactory.CreateProgressRun(
@@ -720,8 +720,8 @@ public class BackgroundSessionTests
         newProgressRun.LoadFromPayload(payload);
 
         // Verify syncProcess was restored for the true session.
-        Assert.NotNull(ctx.SessionManager.TryGet("bg_sync"));
-        Assert.NotNull(ctx.SessionManager.TryGet("bg_nosync"));
+        Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg_sync"));
+        Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg_nosync"));
 
         // Verify via another save: the persisted format records the correct flags.
         var payload2 = newProgressRun.BuildSavePayload("save_sync_rt2");
@@ -739,7 +739,7 @@ public class BackgroundSessionTests
         var (ctx, fs) = CreateForegroundContext();
 
         // Create a background session with data.
-        var bg = ctx.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
         bg.SessionBlackboard.SetValue("sim_round", 10);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
 
@@ -750,7 +750,7 @@ public class BackgroundSessionTests
             payload, "save_disk_test", ctx.Runtime.Logger);
 
         // Clean up.
-        ctx.SessionManager.DestroySession("sim1");
+        ctx.Runtime.SessionManager.DestroySession("sim1");
         ctx.SetProgressRun(null);
 
         // Read back from snapshot (simulating a full reload from disk).
@@ -768,7 +768,7 @@ public class BackgroundSessionTests
         newProgressRun.LoadFromPayload(readPayload);
 
         // Verify the background session was restored.
-        var restoredBg = ctx.SessionManager.TryGet("sim1");
+        var restoredBg = ctx.Runtime.SessionManager.TryGet("sim1");
         Assert.NotNull(restoredBg);
         Assert.Equal("bg_sim", restoredBg!.LevelId);
         var (found, round) = restoredBg.SessionBlackboard.TryGet<int>("sim_round");
@@ -786,7 +786,7 @@ public class BackgroundSessionTests
         var (ctx, fs) = CreateForegroundContext();
 
         // Create a background session.
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level");
         bg.SessionBlackboard.SetValue("val", 99);
 
         // Build payload and write to current/.

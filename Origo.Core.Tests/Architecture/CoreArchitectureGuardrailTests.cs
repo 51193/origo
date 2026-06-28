@@ -28,10 +28,8 @@ public class CoreArchitectureGuardrailTests
         var ownMethods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
         var ownProperties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
 
-        var sessionManagerGetter = Assert.Single(ownMethods);
-        Assert.Equal("get_SessionManager", sessionManagerGetter.Name);
-        var sessionManagerProp = Assert.Single(ownProperties);
-        Assert.Equal("SessionManager", sessionManagerProp.Name);
+        Assert.Empty(ownMethods);
+        Assert.Empty(ownProperties);
     }
 
     [Fact]
@@ -84,7 +82,7 @@ public class CoreArchitectureGuardrailTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         fg.SessionBlackboard.SetValue("test_key", "test_value");
 
@@ -125,7 +123,7 @@ public class CoreArchitectureGuardrailTests
         ISndLifecycleOperations lifecycle = ctx;
         Assert.False(lifecycle.HasContinueData());
 
-        Assert.NotNull(ctx.SessionManager);
+        Assert.NotNull(ctx.Runtime.SessionManager);
 
         ISndConsoleAccess console = ctx;
         Assert.False(console.TrySubmitConsoleCommand(""));
@@ -168,15 +166,15 @@ public class CoreArchitectureGuardrailTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
         bg.SessionBlackboard.SetValue("bg_key", "bg_value");
 
-        Assert.True(ctx.SessionManager.Contains("bg1"));
-        Assert.NotNull(ctx.SessionManager.TryGet("bg1"));
-        Assert.Contains("bg1", ctx.SessionManager.Keys);
+        Assert.True(ctx.Runtime.SessionManager.Contains("bg1"));
+        Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg1"));
+        Assert.Contains("bg1", ctx.Runtime.SessionManager.Keys);
 
-        ctx.SessionManager.DestroySession("bg1");
-        Assert.False(ctx.SessionManager.Contains("bg1"));
+        ctx.Runtime.SessionManager.DestroySession("bg1");
+        Assert.False(ctx.Runtime.SessionManager.Contains("bg1"));
     }
 
     [Fact]
@@ -196,7 +194,7 @@ public class CoreArchitectureGuardrailTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         ctx.ProgressBlackboard!.SetValue("score", 99);
-        ((SndContext)ctx).CurrentSession!.SessionBlackboard.SetValue("level_data", "xyz");
+        ctx.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("level_data", "xyz");
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
@@ -225,7 +223,7 @@ public class CoreArchitectureGuardrailTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
 
         bg.SessionBlackboard.SetValue("item", "sword");
         var (found, value) = bg.SessionBlackboard.TryGet<string>("item");
@@ -256,16 +254,16 @@ public class CoreArchitectureGuardrailTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.NotNull(ctx.SessionManager.ForegroundSession);
-        Assert.NotEmpty(ctx.SessionManager.Keys);
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
+        Assert.NotEmpty(ctx.Runtime.SessionManager.Keys);
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("side", "side_level", true);
-        Assert.True(ctx.SessionManager.Contains("side"));
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("side", "side_level", true);
+        Assert.True(ctx.Runtime.SessionManager.Contains("side"));
 
-        ctx.SessionManager.DestroySession("side");
-        Assert.False(ctx.SessionManager.Contains("side"));
+        ctx.Runtime.SessionManager.DestroySession("side");
+        Assert.False(ctx.Runtime.SessionManager.Contains("side"));
 
-        ctx.SessionManager.ProcessAllSessions(0.016);
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016);
 
         bg.Dispose();
     }

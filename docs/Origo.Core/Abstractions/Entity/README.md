@@ -59,7 +59,7 @@
 |------|------|
 | `MountObserverStrategy(targetName, observerIndex)` | 按名称挂载观察者策略。`targetName == 自身 Name` 为自观察；跨实体名称解析需场景宿主，应改用 `ISndEntity` 重载 |
 | `UnmountObserverStrategy(targetName, observerIndex)` | 按名称卸载，触发 `OnUnmounted` |
-| `MountObserverStrategy(target, observerIndex)` | 以已解析的目标实体挂载（跨实体观察首选；目标由 `SceneHost.FindByName` 获得） |
+| `MountObserverStrategy(target, observerIndex)` | 以已解析的目标实体挂载（跨实体观察首选；目标由 `entity.OwningSession.FindByName(name)` 获得） |
 | `UnmountObserverStrategy(target, observerIndex)` | 以目标实体卸载，触发 `OnUnmounted` |
 
 ### ISndEntity

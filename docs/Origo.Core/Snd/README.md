@@ -20,7 +20,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 
 | 文件 | 职责 |
 |------|------|
-| `ISndContext.cs` | SND 上下文组合接口：继承 9 个角色接口 + 直接声明 `SessionManager`（[详见 Abstractions/Snd](../Abstractions/Snd/README.md)） |
+| `ISndContext.cs` | SND 上下文组合接口：继承 9 个角色接口（[详见 Abstractions/Snd](../Abstractions/Snd/README.md)） |
 | `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→别名/模板加载→入口存档加载。实现 `ISndFileAccess`，将文件读写委托给 `SndWorld.DataSourceIo` + `ConverterRegistry` |
 | `SndContextParameters.cs` | SndContext 构造参数对象。含 `AutoDiscoverStrategies`、`DiscoverySkipPrefixes`、`SceneAliasMapPath`、`SndTemplateMapPath` 等启动配置属性 |
 | `NullSndContext.cs` | 测试用空上下文实现，`ISndFileAccess` 方法均抛 `InvalidOperationException` |
@@ -74,7 +74,7 @@ SND 的观察统一由观察者策略（`ObserverStrategyBase`）承载，自观
 - **响应数据变更**：实现 `OnDataChanged(entity, ctx, target, dataKey, oldValue, newValue)`
 - **挂载/卸载回调**：`OnMounted` / `OnUnmounted`
 - **自观察**：`entity.MountObserverStrategy(entity.Name, "my_game.hp_watcher")`
-- **跨实体观察**：先 `SceneHost.FindByName` 解析目标，再 `observer.MountObserverStrategy(target, "...")`
+- **跨实体观察**：先 `entity.OwningSession.FindByName(name)` 解析目标，再 `observer.MountObserverStrategy(target, "...")`
 
 观察者绑定拓扑通过 `StrategyMetaData.ObserverIndices` 随实体序列化，读档时由 `SessionRun` 经场景宿主的 `ObserverTopology` 自动恢复接线，无需在 `AfterLoad` 中手动重连；目标或观察方死亡时自动卸载。公开接口见 [ISndObserverStrategyAccess](../Abstractions/Entity/README.md#isndobserverstrategyaccess)，策略类型见 [Strategy](Strategy/README.md)，实现细节见 [SndEntity](Entity/README.md#sndentity聚合根)。
 

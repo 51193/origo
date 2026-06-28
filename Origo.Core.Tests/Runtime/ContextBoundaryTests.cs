@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
 
@@ -13,11 +14,11 @@ public class ContextBoundaryTests
 
         Assert.NotNull(ctx.SystemBlackboard);
         Assert.Null(ctx.ProgressBlackboard);
-        Assert.Null(ctx.SessionManager.ForegroundSession);
+        Assert.Null(EmptySessionManager.Instance.ForegroundSession);
         Assert.False(ctx.TrySubmitConsoleCommand("x"));
         Assert.Equal(0, ctx.GetPendingPersistenceRequestCount());
         Assert.Null(ctx.GetProgressStateMachines());
-        Assert.NotNull(ctx.SessionManager);
+        Assert.NotNull(EmptySessionManager.Instance);
         Assert.Equal(0, ctx.SubscribeConsoleOutput(_ => { }));
         ctx.UnsubscribeConsoleOutput(1);
         ctx.EnqueueBusinessDeferred(() => { });

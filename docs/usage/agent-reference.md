@@ -88,7 +88,6 @@ public interface ISndContext : ISndBlackboardAccess, ISndDeferredActions,
     ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
     ISndLifecycleOperations, ISndFileAccess, ISndArchiveFileAccess
 {
-    ISessionManager SessionManager { get; }
 }
 
 // === 角色接口概览 ===

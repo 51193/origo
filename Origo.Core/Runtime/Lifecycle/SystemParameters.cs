@@ -1,5 +1,6 @@
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
+using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
 using Origo.Core.Save.Storage;
 
@@ -15,4 +16,5 @@ internal readonly record struct SystemParameters(
     IPathResolver PathResolver,
     string SaveRootPath,
     ISaveStorageService StorageService,
-    ISavePathPolicy SavePathPolicy);
+    ISavePathPolicy SavePathPolicy,
+    ISndSceneHost AdapterSceneHost);

@@ -27,8 +27,7 @@ internal sealed class TreeDebugCommandHandler : CommandHandlerBase
     {
         var entityName = invocation.PositionalArgs[0].Trim();
 
-        var entity = Runtime.SessionManager.ForegroundSession?.FindByName(entityName)
-                     ?? Runtime.ForegroundSceneHost.FindByName(entityName);
+        var entity = Runtime.SessionManager.ForegroundSession?.FindByName(entityName);
         if (entity is null)
         {
             errorMessage = $"实体 '{entityName}' 未找到。";

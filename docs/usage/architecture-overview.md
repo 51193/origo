@@ -13,6 +13,7 @@ Origo 框架遵循以下核心设计约束：
 - **public 白名单**：每个 public 接口必须有明确的跨程序集消费者
 - **策略一等公民**：策略可访问 `ISndContext` 全部 30+ 成员，不限制框架能力
 - **单线程帧模型**：一帧 = 一个逻辑原子边界
+- **单一访问路径**：每种能力只有一条外部路径；旁路会跳过接口编排的副作用（钩子、校验、生命周期），极难排查
 
 ## 项目设计
 
@@ -136,7 +137,7 @@ Core 层所有文件操作通过三个接口完成：
 
 ### 接口抽象设计
 
-Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 9 个角色接口（外加直接声明的 `SessionManager` 成员）：
+Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 9 个角色接口：
 
 | 角色接口 | 职责 |
 |---------|------|
@@ -149,7 +150,6 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 9 个角色�
 | `ISndLifecycleOperations` | 生命周期入口（Continue/Initial/MainMenu） |
 | `ISndFileAccess` | 静态资源文件访问（经 DataSource 边界 + 内置解析） |
 | `ISndArchiveFileAccess` | 存档内文件访问（路径相对于存档活动目录的 `extra/` 子目录，随存档生命周期） |
-| `ISessionManager SessionManager` | 会话管理器（`ISndContext` 声明的唯一自有成员） |
 
 此外，`ISessionManager` 和 `ISessionRun` 位于 Abstractions 层，`ISessionRun.GetSessionStateMachines()` 返回 `IStateMachineContainer`（Abstractions 层接口）而非具体 `StateMachineContainer`，确保接口层完全解耦 Runtime 实现。
 

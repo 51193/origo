@@ -8,6 +8,7 @@ using Origo.Core.Blackboard;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime;
 using Origo.Core.Serialization;
+using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 
 namespace Origo.GodotAdapter.Tests.TestSupport;
@@ -102,5 +103,19 @@ internal static class TestRuntimeHelper
             bb);
 
         return (runtime, sceneHost);
+    }
+
+    public static void BootstrapForegroundSession(OrigoRuntime runtime)
+    {
+        var fs = new MemoryFileSystem();
+        fs.WriteAllText("entry.json", "[]", true);
+        var io = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        ctx.RequestLoadMainMenuEntrySave();
+        ctx.FlushDeferredActionsForCurrentFrame();
     }
 }

@@ -38,7 +38,6 @@ ISndContext ─── ISndBlackboardAccess + ISndDeferredActions
                + ISndTemplateAccess + ISndConsoleAccess + ISndStateMachineAccess
                + ISndSaveOperations + ISndLifecycleOperations
                + ISndFileAccess + ISndArchiveFileAccess
-               + SessionManager { get; }
 
 ISndSceneHost ─── ISndSceneAccess
 

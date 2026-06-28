@@ -215,6 +215,7 @@ public sealed class StrategyTestScenarioBuilder<T> : BaseStrategyTestScenarioBui
         ApplySetup(context);
 
         var entity = CreateEntity();
+        entity.OwningSession = context.SessionManager.ForegroundSession!;
 
         var strategy = new T();
         strategy.AfterSpawn(entity, context);
@@ -272,6 +273,7 @@ public sealed class ActiveStrategyTestScenarioBuilder<T> : BaseStrategyTestScena
         ApplySetup(context);
 
         var entity = CreateEntity();
+        entity.OwningSession = context.SessionManager.ForegroundSession!;
 
         var strategy = new T();
         entity.InvokeStrategyHandler = (index, input) => strategy.Invoke(entity, context, input);

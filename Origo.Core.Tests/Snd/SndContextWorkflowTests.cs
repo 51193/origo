@@ -158,7 +158,7 @@ public class SndContextWorkflowTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         Assert.NotNull(ctx.ProgressBlackboard);
-        Assert.NotNull(ctx.SessionManager.ForegroundSession);
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
         var (found, saveId) = ctx.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
         Assert.True(found);
         Assert.Equal("save1", saveId);
@@ -211,7 +211,7 @@ public class SndContextWorkflowTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         Assert.NotNull(ctx.ProgressBlackboard);
-        Assert.NotNull(ctx.SessionManager.ForegroundSession);
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
     }
 
     // ── RequestLoadInitialSave ──
@@ -226,7 +226,7 @@ public class SndContextWorkflowTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         Assert.NotNull(ctx.ProgressBlackboard);
-        Assert.NotNull(ctx.SessionManager.ForegroundSession);
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
         // After initial load, active save id should be cleared
         var (found, saveId) = ctx.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
         Assert.True(found);
@@ -256,7 +256,7 @@ public class SndContextWorkflowTests
         ctx.RequestSwitchForegroundLevel("b");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Equal("b", ctx.SessionManager.ForegroundSession?.LevelId);
+        Assert.Equal("b", ctx.Runtime.SessionManager.ForegroundSession?.LevelId);
     }
 
     // ── CloneTemplate ──
@@ -482,10 +482,10 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContext(out _, out _);
         Assert.Null(ctx.ProgressBlackboard);
-        Assert.Null(((SndContext)ctx).CurrentSession);
+        Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
         Assert.NotNull(ctx.SystemBlackboard);
-        Assert.NotNull(ctx.SessionManager);
-        Assert.NotNull(ctx.SessionManager);
+        Assert.NotNull(ctx.Runtime.SessionManager);
+        Assert.NotNull(ctx.Runtime.SessionManager);
     }
 
     // ── BeginWorkflow concurrent guard ──

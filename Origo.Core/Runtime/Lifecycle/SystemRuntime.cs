@@ -30,6 +30,7 @@ internal sealed class SystemRuntime
             throw new ArgumentException("Save root path cannot be null or whitespace.", nameof(systemParams));
         ArgumentNullException.ThrowIfNull(systemParams.StorageService);
         ArgumentNullException.ThrowIfNull(systemParams.SavePathPolicy);
+        ArgumentNullException.ThrowIfNull(systemParams.AdapterSceneHost);
 
         Logger = systemParams.Logger;
         MetaAccess = systemParams.MetaAccess;
@@ -38,6 +39,7 @@ internal sealed class SystemRuntime
         Runtime = runtime;
         StorageService = systemParams.StorageService;
         SavePathPolicy = systemParams.SavePathPolicy;
+        AdapterSceneHost = systemParams.AdapterSceneHost;
     }
 
     internal ILogger Logger { get; }
@@ -51,6 +53,6 @@ internal sealed class SystemRuntime
     // ── Convenience accessors ──
 
     internal SndWorld SndWorld => Runtime.SndWorld;
-    internal ISndSceneHost ForegroundSceneHost => Runtime.ForegroundSceneHost;
+    internal ISndSceneHost AdapterSceneHost { get; }
     internal IBlackboard SystemBlackboard => Runtime.SystemBlackboard;
 }

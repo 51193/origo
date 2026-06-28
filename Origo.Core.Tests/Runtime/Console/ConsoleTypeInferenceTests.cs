@@ -15,7 +15,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void BlackboardSet_IntLiteral_StoredAsInt32()
     {
-        var runtime = CreateRuntimeWithConsole();
+        var (runtime, _) = CreateRuntimeWithConsole();
         var handler = new BlackboardSetCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -31,7 +31,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void BlackboardSet_NegativeInt_StoredAsInt32()
     {
-        var runtime = CreateRuntimeWithConsole();
+        var (runtime, _) = CreateRuntimeWithConsole();
         var handler = new BlackboardSetCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -47,7 +47,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void BlackboardSet_FloatLiteral_StoredAsSingle()
     {
-        var runtime = CreateRuntimeWithConsole();
+        var (runtime, _) = CreateRuntimeWithConsole();
         var handler = new BlackboardSetCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -63,7 +63,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void BlackboardSet_TrueLiteral_StoredAsBoolean()
     {
-        var runtime = CreateRuntimeWithConsole();
+        var (runtime, _) = CreateRuntimeWithConsole();
         var handler = new BlackboardSetCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -79,7 +79,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void BlackboardSet_FalseLiteral_StoredAsBoolean()
     {
-        var runtime = CreateRuntimeWithConsole();
+        var (runtime, _) = CreateRuntimeWithConsole();
         var handler = new BlackboardSetCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -95,7 +95,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void BlackboardSet_NonNumericLiteral_StoredAsString()
     {
-        var runtime = CreateRuntimeWithConsole();
+        var (runtime, _) = CreateRuntimeWithConsole();
         var handler = new BlackboardSetCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -111,7 +111,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void BlackboardSet_UnknownLayer_ReturnsError()
     {
-        var runtime = CreateRuntimeWithConsole();
+        var (runtime, _) = CreateRuntimeWithConsole();
         var handler = new BlackboardSetCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -128,7 +128,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void EntitySetData_NewKey_IntLiteral_StoredAsInt32()
     {
-        var runtime = CreateRuntimeWithConsoleAndEntity("player");
+        var (runtime, host) = CreateRuntimeWithConsoleAndEntity("player");
         var handler = new SetEntityDataCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -136,7 +136,7 @@ public class ConsoleTypeInferenceTests
             CreateInvocation("entity_set_data", "player", "hp", "100"), output, out var err);
 
         Assert.Null(err);
-        var entity = runtime.ForegroundSceneHost.FindByName("player");
+        var entity = host.FindByName("player");
         Assert.NotNull(entity);
         var (found, value) = entity!.TryGetData<int>("hp");
         Assert.True(found);
@@ -146,7 +146,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void EntitySetData_NewKey_FloatLiteral_StoredAsSingle()
     {
-        var runtime = CreateRuntimeWithConsoleAndEntity("player");
+        var (runtime, host) = CreateRuntimeWithConsoleAndEntity("player");
         var handler = new SetEntityDataCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -154,7 +154,7 @@ public class ConsoleTypeInferenceTests
             CreateInvocation("entity_set_data", "player", "speed", "1.5"), output, out var err);
 
         Assert.Null(err);
-        var entity = runtime.ForegroundSceneHost.FindByName("player");
+        var entity = host.FindByName("player");
         Assert.NotNull(entity);
         var (found, value) = entity!.TryGetData<float>("speed");
         Assert.True(found);
@@ -164,7 +164,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void EntitySetData_NewKey_BoolLiteral_StoredAsBoolean()
     {
-        var runtime = CreateRuntimeWithConsoleAndEntity("player");
+        var (runtime, host) = CreateRuntimeWithConsoleAndEntity("player");
         var handler = new SetEntityDataCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -172,7 +172,7 @@ public class ConsoleTypeInferenceTests
             CreateInvocation("entity_set_data", "player", "alive", "true"), output, out var err);
 
         Assert.Null(err);
-        var entity = runtime.ForegroundSceneHost.FindByName("player");
+        var entity = host.FindByName("player");
         Assert.NotNull(entity);
         var (found, value) = entity!.TryGetData<bool>("alive");
         Assert.True(found);
@@ -182,7 +182,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void EntitySetData_NewKey_StringLiteral_StoredAsString()
     {
-        var runtime = CreateRuntimeWithConsoleAndEntity("player");
+        var (runtime, host) = CreateRuntimeWithConsoleAndEntity("player");
         var handler = new SetEntityDataCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -190,7 +190,7 @@ public class ConsoleTypeInferenceTests
             CreateInvocation("entity_set_data", "player", "tag", "hero"), output, out var err);
 
         Assert.Null(err);
-        var entity = runtime.ForegroundSceneHost.FindByName("player");
+        var entity = host.FindByName("player");
         Assert.NotNull(entity);
         var (found, value) = entity!.TryGetData<string>("tag");
         Assert.True(found);
@@ -200,8 +200,8 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void EntitySetData_ExistingKey_PreservesType()
     {
-        var runtime = CreateRuntimeWithConsoleAndEntity("player");
-        var entity = runtime.ForegroundSceneHost.FindByName("player")!;
+        var (runtime, host) = CreateRuntimeWithConsoleAndEntity("player");
+        var entity = host.FindByName("player")!;
         entity.SetData("hunger", 50.0f);
 
         var handler = new SetEntityDataCommandHandler(runtime);
@@ -219,7 +219,7 @@ public class ConsoleTypeInferenceTests
     [Fact]
     public void EntitySetData_EntityNotFound_ReturnsError()
     {
-        var runtime = CreateRuntimeWithConsole();
+        var (runtime, _) = CreateRuntimeWithConsole();
         var handler = new SetEntityDataCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -233,7 +233,7 @@ public class ConsoleTypeInferenceTests
 
     // ── Helpers ─────────────────────────────────────────────────────
 
-    private static OrigoRuntime CreateRuntimeWithConsole()
+    private static (OrigoRuntime runtime, TestSndSceneHost host) CreateRuntimeWithConsole()
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
@@ -242,20 +242,21 @@ public class ConsoleTypeInferenceTests
         var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
 
-        return TestFactory.CreateRuntime(logger, host, tm, systemBb, input, output);
+        return (TestFactory.CreateRuntime(logger, host, tm, systemBb, input, output), host);
     }
 
-    private static OrigoRuntime CreateRuntimeWithConsoleAndEntity(string entityName)
+    private static (OrigoRuntime runtime, TestSndSceneHost host) CreateRuntimeWithConsoleAndEntity(string entityName)
     {
-        var runtime = CreateRuntimeWithConsole();
-        runtime.ForegroundSceneHost.CreateEntity(new SndMetaData
+        var (runtime, host) = CreateRuntimeWithConsole();
+        TestFactory.BootstrapForegroundSession(runtime);
+        host.CreateEntity(new SndMetaData
         {
             Name = entityName,
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
-        return runtime;
+        return (runtime, host);
     }
 
     private static CommandInvocation CreateInvocation(string command, params string[] positionalArgs)

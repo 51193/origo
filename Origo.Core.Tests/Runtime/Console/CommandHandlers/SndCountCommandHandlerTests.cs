@@ -22,15 +22,17 @@ public class SndCountCommandHandlerTests
         var tm = new TypeStringMapping();
         var runtime = TestFactory.CreateRuntime(logger, host, tm, bb, input, output);
 
+        TestFactory.BootstrapForegroundSession(runtime, logger);
+
         // Spawn some entities
-        runtime.ForegroundSceneHost.CreateEntity(new SndMetaData
+        host.CreateEntity(new SndMetaData
         {
             Name = "e1",
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
-        runtime.ForegroundSceneHost.CreateEntity(new SndMetaData
+        host.CreateEntity(new SndMetaData
         {
             Name = "e2",
             NodeMetaData = new NodeMetaData(),

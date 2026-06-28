@@ -16,8 +16,7 @@ public class FrontSession_StrategyContextReceivesFrontFlagTests
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
 
-        // Global context's CurrentSession points to foreground
-        Assert.True(ctx.IsFrontSession);
+        Assert.True(ctx.Runtime.SessionManager.ForegroundSession!.IsFrontSession);
     }
 
     [Fact]
@@ -25,9 +24,8 @@ public class FrontSession_StrategyContextReceivesFrontFlagTests
     {
         var (ctx, _) = CreateContext();
 
-        // No progress run, no session
-        Assert.False(ctx.IsFrontSession);
-        Assert.Null(ctx.SessionManager.ForegroundSession);
+        Assert.False(ctx.Runtime.SessionManager.ForegroundSession?.IsFrontSession == true);
+        Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
     }
 
     private static (SndContext ctx, TestFileSystem fs) CreateContext()

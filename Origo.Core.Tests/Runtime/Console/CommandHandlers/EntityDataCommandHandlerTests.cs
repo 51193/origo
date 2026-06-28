@@ -24,6 +24,8 @@ public class EntityDataCommandHandlerTests
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, tm, bb, consoleInput, consoleOutput);
 
+        TestFactory.BootstrapForegroundSession(runtime, logger);
+
         var messages = new List<string>();
         consoleOutput.Subscribe(messages.Add);
 

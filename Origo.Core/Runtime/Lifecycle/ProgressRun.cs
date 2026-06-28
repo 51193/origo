@@ -70,8 +70,6 @@ public sealed partial class ProgressRun : IDisposable
 
     internal RunStateScope ProgressScope { get; }
 
-    internal ISessionRun? ForegroundSession => _sessionManager.ForegroundSession;
-
     public IBlackboard ProgressBlackboard => ProgressScope.Blackboard;
 
     public ISessionManager SessionManager => _sessionManager;
@@ -107,7 +105,7 @@ public sealed partial class ProgressRun : IDisposable
         SaveId = saveId;
     }
 
-    internal ISessionRun RequireForegroundSession() => ForegroundSession ??
+    internal ISessionRun RequireForegroundSession() => _sessionManager.ForegroundSession ??
         throw new InvalidOperationException("No active foreground session.");
 
     internal List<string> BuildSessionTopology() =>

@@ -26,7 +26,6 @@ internal sealed class NullSndContext : ISndContext
 
     public IBlackboard SystemBlackboard => EmptyBlackboard;
     public IBlackboard? ProgressBlackboard => null;
-    public ISessionManager SessionManager => EmptySessionManager.Instance;
 
     public void EnqueueBusinessDeferred(Action action) => action();
 

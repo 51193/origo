@@ -38,7 +38,7 @@ public class SaveAndSwitchForegroundTests
             world.RegisterStrategy(() => new FindByNameStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         var entityA = host.CreateEntity(CreateMetaWithStrategy("EntityA",
@@ -60,7 +60,7 @@ if (entityA is IEntityLifecycle lc)
             world.RegisterStrategy(() => new FindByNameStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         host.CreateEntity(CreateMetaWithStrategy("EntityA"));
@@ -82,7 +82,7 @@ if (entityB is IEntityLifecycle lc)
             world.RegisterStrategy(() => new FindByNameStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         host.RecoverFromMetaList(new[]
@@ -107,7 +107,7 @@ foreach (var e in host.GetEntities())
             world.RegisterStrategy(() => new FindByNameStrategy());
         });
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         host.RecoverFromMetaList(new[]
@@ -129,7 +129,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity1"));
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity2"));
         bg.SessionBlackboard.SetValue("bg_value", 42);
@@ -137,11 +137,11 @@ foreach (var e in host.GetEntities())
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -156,7 +156,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("key_int", 100);
         bg.SessionBlackboard.SetValue("key_str", "hello");
@@ -164,11 +164,11 @@ foreach (var e in host.GetEntities())
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
 
         var (foundInt, intValue) = fg.SessionBlackboard.TryGet<int>("key_int");
@@ -185,21 +185,21 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("bg_only", 99);
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var stillAlive = ctx.SessionManager.TryGet("bg");
+        var stillAlive = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.Null(stillAlive);
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
     }
@@ -211,7 +211,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
         var progressRun = ctx.EnsureProgressRun();
 
         progressRun.PersistProgress();
@@ -231,7 +231,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
         fs.SeedFile("root/current/level_other/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_other/session.json", "{}");
         fs.SeedFile("root/current/level_other/session_state_machines.json",
@@ -271,8 +271,8 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg1 = ctx.SessionManager.CreateBackgroundSession("sim1", "sim_level", true);
-        using var bg2 = ctx.SessionManager.CreateBackgroundSession("sim2", "other_sim");
+        using var bg1 = ctx.Runtime.SessionManager.CreateBackgroundSession("sim1", "sim_level", true);
+        using var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("sim2", "other_sim");
         fs.SeedFile("root/current/level_new_fg/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_new_fg/session.json", "{}");
         fs.SeedFile("root/current/level_new_fg/session_state_machines.json",
@@ -296,7 +296,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DiskEntity"));
 
         ctx.RequestSaveGameAuto();
@@ -306,11 +306,11 @@ foreach (var e in host.GetEntities())
         Assert.True(fs.Exists("root/current/level_game/session.json"));
         Assert.True(fs.Exists("root/current/level_game/session_state_machines.json"));
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.NotEmpty(fg.GetEntities());
     }
@@ -320,13 +320,13 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity"));
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
@@ -345,7 +345,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity1"));
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity2"));
         bg.SessionBlackboard.SetValue("round_key", "round_value");
@@ -353,7 +353,7 @@ foreach (var e in host.GetEntities())
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
@@ -362,8 +362,8 @@ foreach (var e in host.GetEntities())
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(
             payload, progressRun.SaveId, ctx.Runtime.Logger);
 
-        foreach (var key in ctx.SessionManager.Keys)
-            ctx.SessionManager.DestroySession(key);
+        foreach (var key in ctx.Runtime.SessionManager.Keys)
+            ctx.Runtime.SessionManager.DestroySession(key);
         ctx.SetProgressRun(null);
 
         var newPr = TestFactory.CreateProgressRun(
@@ -375,7 +375,7 @@ foreach (var e in host.GetEntities())
             progressRun.SaveId, "game");
         newPr.LoadFromPayload(snapshotPayload);
 
-        var fg = newPr.ForegroundSession;
+        var fg = newPr.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -397,7 +397,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DirectEntity"));
         bg.SessionBlackboard.SetValue("direct_key", 77);
 
@@ -409,11 +409,11 @@ foreach (var e in host.GetEntities())
         fs.SeedFile("root/current/level_game/session_state_machines.json",
             "{\"machines\":[]}");
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
     }
@@ -423,13 +423,13 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DirectEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("missing_level");
 
-        var fg = progressRun.ForegroundSession;
+        var fg = progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("missing_level", fg.LevelId);
         Assert.Empty(fg.GetEntities());
@@ -445,7 +445,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("QueueEntity"));
         bg.SessionBlackboard.SetValue("queue_val", 123);
 
@@ -455,11 +455,11 @@ foreach (var e in host.GetEntities())
         if (flushBetween)
             ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -479,7 +479,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var fgBefore = ctx.EnsureProgressRun().ForegroundSession;
+        var fgBefore = ctx.EnsureProgressRun().SessionManager.ForegroundSession;
         Assert.NotNull(fgBefore);
         ((SessionRun)fgBefore).SceneHost.CreateEntity(CreateMeta("OldFgEntity"));
         fgBefore.SessionBlackboard.SetValue("old_key", "old_value");
@@ -503,7 +503,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgSurvivor1"));
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgSurvivor2"));
 
@@ -514,7 +514,7 @@ foreach (var e in host.GetEntities())
 
         ctx.EnsureProgressRun().SwitchForeground("new");
 
-        var bgAlive = ctx.SessionManager.TryGet("bg");
+        var bgAlive = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.NotNull(bgAlive);
         Assert.Equal(2, bgAlive.GetEntities().Count);
         Assert.Contains(bgAlive.GetEntities(), e => e.Name == "BgSurvivor1");
@@ -526,8 +526,8 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bgTick = ctx.SessionManager.CreateBackgroundSession("ticker", "tick_level", true);
-        using var bgNoTick = ctx.SessionManager.CreateBackgroundSession("noticker", "no_tick");
+        using var bgTick = ctx.Runtime.SessionManager.CreateBackgroundSession("ticker", "tick_level", true);
+        using var bgNoTick = ctx.Runtime.SessionManager.CreateBackgroundSession("noticker", "no_tick");
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_new/session.json", "{}");
@@ -556,13 +556,13 @@ foreach (var e in host.GetEntities())
 
         ctx.RequestSwitchForegroundLevel("after");
 
-        var fgBeforeFlush = ctx.SessionManager.ForegroundSession;
+        var fgBeforeFlush = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fgBeforeFlush);
         Assert.Equal("test_level", fgBeforeFlush.LevelId);
 
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fgAfterFlush = ctx.SessionManager.ForegroundSession;
+        var fgAfterFlush = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fgAfterFlush);
         Assert.Equal("after", fgAfterFlush.LevelId);
     }
@@ -582,7 +582,7 @@ foreach (var e in host.GetEntities())
         ctx.FlushDeferredActionsForCurrentFrame();
 
         Assert.Equal("business", executionOrder[0]);
-        Assert.Equal("after", ctx.SessionManager.ForegroundSession!.LevelId);
+        Assert.Equal("after", ctx.Runtime.SessionManager.ForegroundSession!.LevelId);
     }
 
     // ── Entity count edge cases ─────────────────────────────────────────
@@ -592,17 +592,17 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "empty_game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "empty_game", true);
         bg.SessionBlackboard.SetValue("note", "empty");
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("empty_game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("empty_game", fg.LevelId);
         Assert.Empty(fg.GetEntities());
@@ -618,18 +618,18 @@ foreach (var e in host.GetEntities())
         var (ctx, _) = CreateForegroundContext();
         const int EntityCount = 50;
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "massive", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "massive", true);
         for (var i = 0; i < EntityCount; i++)
             ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta($"Entity_{i:D3}"));
 
         ctx.RequestSaveGameAuto();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        ctx.SessionManager.DestroySession("bg");
+        ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.RequestSwitchForegroundLevel("massive");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal(EntityCount, fg.GetEntities().Count);
 
@@ -644,7 +644,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var oldFg = ctx.SessionManager.ForegroundSession;
+        var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
         ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("OldEntity"));
         oldFg.SessionBlackboard.SetValue("old_key", "old_value");
@@ -672,7 +672,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("bg_key", "bg_value");
 
@@ -695,12 +695,12 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("bg_key", "bg_value");
 
         // Explicitly persist background session before switch
-        ((SessionManager)ctx.SessionManager).PersistSession("bg");
+        ((SessionManager)ctx.Runtime.SessionManager).PersistSession("bg");
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_new/session.json", "{}");
@@ -725,7 +725,7 @@ foreach (var e in host.GetEntities())
         // CreateBackgroundSession with the same levelId as foreground is rejected immediately,
         // so it never reaches AppendBackgroundPayloads
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            ctx.SessionManager.CreateBackgroundSession("bg", "test_level", true));
+            ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "test_level", true));
         Assert.Contains("bg", ex.Message);
         Assert.Contains("test_level", ex.Message);
         Assert.Contains("already manages this level", ex.Message);
@@ -738,7 +738,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var oldFg = ctx.SessionManager.ForegroundSession;
+        var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
         ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("SameEntity"));
         oldFg.SessionBlackboard.SetValue("same_level_data", 42);
@@ -746,7 +746,7 @@ foreach (var e in host.GetEntities())
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("test_level");
 
-        var fg = progressRun.ForegroundSession;
+        var fg = progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("test_level", fg.LevelId);
 
@@ -789,7 +789,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("auto_key", 42);
 
@@ -801,9 +801,9 @@ foreach (var e in host.GetEntities())
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("game");
 
-        Assert.Null(ctx.SessionManager.TryGet("bg"));
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("bg"));
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
     }
@@ -813,7 +813,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("PreservedEntity"));
         bg.SessionBlackboard.SetValue("preserved_int", 123);
         bg.SessionBlackboard.SetValue("preserved_str", "data");
@@ -821,7 +821,7 @@ foreach (var e in host.GetEntities())
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("game");
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -844,7 +844,7 @@ foreach (var e in host.GetEntities())
         var (ctx, _) = CreateForegroundContext();
         const int EntityCount = 30;
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("bg", "massive", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "massive", true);
         for (var i = 0; i < EntityCount; i++)
             ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta($"Entity_{i:D3}"));
         bg.SessionBlackboard.SetValue("count", EntityCount);
@@ -852,7 +852,7 @@ foreach (var e in host.GetEntities())
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("massive");
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal(EntityCount, fg.GetEntities().Count);
 
@@ -869,14 +869,14 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.SessionManager.CreateBackgroundSession("empty_bg", "empty_level", true);
+        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("empty_bg", "empty_level", true);
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("empty_level");
 
-        Assert.Null(ctx.SessionManager.TryGet("empty_bg"));
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("empty_bg"));
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("empty_level", fg.LevelId);
         Assert.Empty(fg.GetEntities());
@@ -887,18 +887,18 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
+        using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
         ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity"));
-        using var survivor = ctx.SessionManager.CreateBackgroundSession("survivor", "other_level", true);
+        using var survivor = ctx.Runtime.SessionManager.CreateBackgroundSession("survivor", "other_level", true);
         ((SessionRun)survivor).SceneHost.CreateEntity(CreateMeta("SurvivorEntity"));
         survivor.SessionBlackboard.SetValue("survivor_data", 999);
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("game");
 
-        Assert.Null(ctx.SessionManager.TryGet("target"));
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("target"));
 
-        var alive = ctx.SessionManager.TryGet("survivor");
+        var alive = ctx.Runtime.SessionManager.TryGet("survivor");
         Assert.NotNull(alive);
         Assert.Single(alive.GetEntities());
         Assert.Equal("SurvivorEntity", alive.GetEntities().First().Name);
@@ -913,8 +913,8 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
-        using var survivor = ctx.SessionManager.CreateBackgroundSession("survivor", "other_level");
+        using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
+        using var survivor = ctx.Runtime.SessionManager.CreateBackgroundSession("survivor", "other_level");
         ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
@@ -933,21 +933,21 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        var oldFg = ctx.SessionManager.ForegroundSession;
+        var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
         ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("OldFgEntity"));
         oldFg.SessionBlackboard.SetValue("old_fg_data", "preserved");
 
-        using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
+        using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
         ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity"));
         target.SessionBlackboard.SetValue("target_data", "from_bg");
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("game");
 
-        Assert.Null(ctx.SessionManager.TryGet("target"));
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("target"));
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -967,7 +967,7 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
+        using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
         ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
@@ -986,12 +986,12 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        var oldFg = ctx.SessionManager.ForegroundSession;
+        var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
         ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("OldFgEntity"));
         oldFg.SessionBlackboard.SetValue("fg_key", "fg_value");
 
-        using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
+        using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
         ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity1"));
         ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity2"));
         target.SessionBlackboard.SetValue("bg_key", "bg_value");
@@ -999,7 +999,7 @@ foreach (var e in host.GetEntities())
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("game");
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         var entities = fg.GetEntities();
         Assert.Equal(2, entities.Count);
@@ -1017,8 +1017,8 @@ foreach (var e in host.GetEntities())
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(
             payload, progressRun.SaveId, ctx.Runtime.Logger);
 
-        foreach (var key in ctx.SessionManager.Keys)
-            ctx.SessionManager.DestroySession(key);
+        foreach (var key in ctx.Runtime.SessionManager.Keys)
+            ctx.Runtime.SessionManager.DestroySession(key);
         ctx.SetProgressRun(null);
 
         var newPr = TestFactory.CreateProgressRun(
@@ -1030,7 +1030,7 @@ foreach (var e in host.GetEntities())
             progressRun.SaveId, "game");
         newPr.LoadFromPayload(snapshotPayload);
 
-        var restoredFg = newPr.ForegroundSession;
+        var restoredFg = newPr.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
         Assert.Equal("game", restoredFg.LevelId);
 
@@ -1047,16 +1047,16 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var target = ctx.SessionManager.CreateBackgroundSession("target", "game", true);
+        using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
         ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("DeferredEntity"));
         target.SessionBlackboard.SetValue("deferred_key", 55);
 
         ctx.RequestSwitchForegroundLevel("game");
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Null(ctx.SessionManager.TryGet("target"));
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("target"));
 
-        var fg = ctx.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -1074,30 +1074,30 @@ foreach (var e in host.GetEntities())
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg1 = ctx.SessionManager.CreateBackgroundSession("bg1", "level_a", true);
+        using var bg1 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "level_a", true);
         ((SessionRun)bg1).SceneHost.CreateEntity(CreateMeta("EntityA"));
         bg1.SessionBlackboard.SetValue("which", "a");
 
-        using var bg2 = ctx.SessionManager.CreateBackgroundSession("bg2", "level_b", true);
+        using var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "level_b", true);
         ((SessionRun)bg2).SceneHost.CreateEntity(CreateMeta("EntityB"));
         bg2.SessionBlackboard.SetValue("which", "b");
 
         var progressRun = ctx.EnsureProgressRun();
 
         progressRun.SwitchForeground("level_a");
-        var fgA = progressRun.ForegroundSession;
+        var fgA = progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fgA);
         Assert.Equal("level_a", fgA.LevelId);
         Assert.Equal("a", fgA.SessionBlackboard.TryGet<string>("which").value);
-        Assert.Null(ctx.SessionManager.TryGet("bg1"));
-        Assert.NotNull(ctx.SessionManager.TryGet("bg2"));
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("bg1"));
+        Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg2"));
 
         progressRun.SwitchForeground("level_b");
-        var fgB = progressRun.ForegroundSession;
+        var fgB = progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fgB);
         Assert.Equal("level_b", fgB.LevelId);
         Assert.Equal("b", fgB.SessionBlackboard.TryGet<string>("which").value);
-        Assert.Null(ctx.SessionManager.TryGet("bg2"));
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("bg2"));
     }
 
     // ── Helper methods ──────────────────────────────────────────────────

@@ -26,26 +26,20 @@ internal sealed class KillAllCommandHandler : ConsoleCommandHandlerBase
         out string? errorMessage)
     {
         var session = _runtime.SessionManager.ForegroundSession;
-        IReadOnlyCollection<ISndEntity> entities;
-        if (session is not null)
+        if (session is null)
         {
-            entities = session.GetEntities();
-        }
-        else
-        {
-            entities = _runtime.ForegroundSceneHost.GetEntities();
+            errorMessage = "No foreground session — no entities to kill.";
+            return false;
         }
 
+        var entities = session.GetEntities();
         var count = entities.Count;
         var marked = 0;
         foreach (var entity in entities)
         {
             if (entity.IsPendingKill)
                 continue;
-            if (session is not null)
-                session.RequestKillEntity(entity.Name);
-            else
-                _runtime.ForegroundSceneHost.RequestKillEntity(entity.Name);
+            session.RequestKillEntity(entity.Name);
             marked++;
         }
 

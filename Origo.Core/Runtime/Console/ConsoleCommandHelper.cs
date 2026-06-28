@@ -13,8 +13,7 @@ internal static class ConsoleCommandHelper
         out ISndEntity? entity,
         out string? errorMessage)
     {
-        entity = runtime.SessionManager.ForegroundSession?.FindByName(entityName.Trim())
-                 ?? runtime.ForegroundSceneHost.FindByName(entityName.Trim());
+        entity = runtime.SessionManager.ForegroundSession?.FindByName(entityName.Trim());
         if (entity is null)
         {
             errorMessage = $"Entity '{entityName}' not found.";

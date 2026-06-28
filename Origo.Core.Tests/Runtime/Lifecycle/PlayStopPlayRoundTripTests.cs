@@ -29,7 +29,7 @@ public class PlayStopPlayRoundTripTests
         var pr1 = SetupProgressRun(ctx1, fs);
         pr1.LoadAndMountForeground("level_a");
 
-        var fg1 = ctx1.SessionManager.ForegroundSession!;
+        var fg1 = ctx1.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg1.IsFrontSession);
         Assert.Equal("level_a", fg1.LevelId);
 
@@ -44,7 +44,7 @@ public class PlayStopPlayRoundTripTests
         var pr2 = SetupProgressRun(ctx2, fs2);
         pr2.LoadFromPayload(payload);
 
-        var fg2 = ctx2.SessionManager.ForegroundSession!;
+        var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg2.IsFrontSession, "Foreground identity must be restored after round-trip.");
         Assert.Equal("level_a", fg2.LevelId);
 
@@ -60,10 +60,10 @@ public class PlayStopPlayRoundTripTests
         pr1.LoadAndMountForeground("level_a");
 
         // Create background sessions: one with syncProcess=true, one with syncProcess=false.
-        ctx1.SessionManager.CreateBackgroundSession("bg_tick", "bg_level_tick", true);
-        ctx1.SessionManager.CreateBackgroundSession("bg_store", "bg_level_store");
+        ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_tick", "bg_level_tick", true);
+        ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_store", "bg_level_store");
 
-        var sm = (SessionManager)ctx1.SessionManager;
+        var sm = (SessionManager)ctx1.Runtime.SessionManager;
         Assert.Contains("bg_tick", sm.ProcessingKeys);
         Assert.DoesNotContain("bg_store", sm.ProcessingKeys);
 
@@ -78,11 +78,11 @@ public class PlayStopPlayRoundTripTests
         var pr2 = SetupProgressRun(ctx2, fs2);
         pr2.LoadFromPayload(payload);
 
-        var sm2 = (SessionManager)ctx2.SessionManager;
+        var sm2 = (SessionManager)ctx2.Runtime.SessionManager;
         Assert.Contains("bg_tick", sm2.ProcessingKeys);
         Assert.DoesNotContain("bg_store", sm2.ProcessingKeys);
-        Assert.NotNull(ctx2.SessionManager.TryGet("bg_tick"));
-        Assert.NotNull(ctx2.SessionManager.TryGet("bg_store"));
+        Assert.NotNull(ctx2.Runtime.SessionManager.TryGet("bg_tick"));
+        Assert.NotNull(ctx2.Runtime.SessionManager.TryGet("bg_store"));
 
         pr2.Dispose();
     }
@@ -95,11 +95,11 @@ public class PlayStopPlayRoundTripTests
         var pr1 = SetupProgressRun(ctx1, fs);
         pr1.LoadAndMountForeground("level_a");
 
-        var fg1 = ctx1.SessionManager.ForegroundSession!;
+        var fg1 = ctx1.Runtime.SessionManager.ForegroundSession!;
         fg1.SessionBlackboard.SetValue("marker", "fg_data_42");
         fg1.SessionBlackboard.SetValue("fg_only", 100);
 
-        var bg1 = ctx1.SessionManager.CreateBackgroundSession("bg1", "bg_level");
+        var bg1 = ctx1.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level");
         bg1.SessionBlackboard.SetValue("marker", "bg_data_99");
         bg1.SessionBlackboard.SetValue("bg_only", 200);
 
@@ -118,8 +118,8 @@ public class PlayStopPlayRoundTripTests
         var pr2 = SetupProgressRun(ctx2, fs2);
         pr2.LoadFromPayload(payload);
 
-        var fg2 = ctx2.SessionManager.ForegroundSession!;
-        var bg2 = ctx2.SessionManager.TryGet("bg1")!;
+        var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
+        var bg2 = ctx2.Runtime.SessionManager.TryGet("bg1")!;
 
         // Foreground data restored.
         var (fgFound, fgMarker) = fg2.SessionBlackboard.TryGet<string>("marker");
@@ -155,7 +155,7 @@ public class PlayStopPlayRoundTripTests
         pr1.LoadAndMountForeground("level_a");
         pr1.ProgressBlackboard.SetValue("global_flag", "hello_world");
 
-        ctx1.SessionManager.CreateBackgroundSession("bg1", "bg_level");
+        ctx1.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level");
 
         var payload = pr1.BuildSavePayload("save-004");
 
@@ -183,23 +183,23 @@ public class PlayStopPlayRoundTripTests
         var pr1 = SetupProgressRun(ctx1, fs);
         pr1.LoadAndMountForeground("main_level");
 
-        var fg1 = ctx1.SessionManager.ForegroundSession!;
+        var fg1 = ctx1.Runtime.SessionManager.ForegroundSession!;
         fg1.SessionBlackboard.SetValue("score", 42);
 
         // Tickable background.
-        var bgTick = ctx1.SessionManager.CreateBackgroundSession("sim", "sim_level", true);
+        var bgTick = ctx1.Runtime.SessionManager.CreateBackgroundSession("sim", "sim_level", true);
         bgTick.SessionBlackboard.SetValue("step", 7);
 
         // Non-tickable background.
-        var bgStore = ctx1.SessionManager.CreateBackgroundSession("cache", "cache_level");
+        var bgStore = ctx1.Runtime.SessionManager.CreateBackgroundSession("cache", "cache_level");
         bgStore.SessionBlackboard.SetValue("cached", true);
 
         // Verify state before serialization.
         Assert.True(fg1.IsFrontSession);
         Assert.False(bgTick.IsFrontSession);
         Assert.False(bgStore.IsFrontSession);
-        Assert.Contains("sim", ((SessionManager)ctx1.SessionManager).ProcessingKeys);
-        Assert.DoesNotContain("cache", ((SessionManager)ctx1.SessionManager).ProcessingKeys);
+        Assert.Contains("sim", ((SessionManager)ctx1.Runtime.SessionManager).ProcessingKeys);
+        Assert.DoesNotContain("cache", ((SessionManager)ctx1.Runtime.SessionManager).ProcessingKeys);
 
         var payload = pr1.BuildSavePayload("save-005");
 
@@ -212,24 +212,24 @@ public class PlayStopPlayRoundTripTests
         pr2.LoadFromPayload(payload);
 
         // Foreground identity & data.
-        var fg2 = ctx2.SessionManager.ForegroundSession!;
+        var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg2.IsFrontSession, "Foreground identity must be restored.");
         Assert.Equal("main_level", fg2.LevelId);
         Assert.Equal(42, fg2.SessionBlackboard.TryGet<int>("score").value);
 
         // Tickable background: restored with syncProcess=true.
-        var sim2 = ctx2.SessionManager.TryGet("sim")!;
+        var sim2 = ctx2.Runtime.SessionManager.TryGet("sim")!;
         Assert.False(sim2.IsFrontSession);
         Assert.Equal("sim_level", sim2.LevelId);
         Assert.Equal(7, sim2.SessionBlackboard.TryGet<int>("step").value);
-        Assert.Contains("sim", ((SessionManager)ctx2.SessionManager).ProcessingKeys);
+        Assert.Contains("sim", ((SessionManager)ctx2.Runtime.SessionManager).ProcessingKeys);
 
         // Non-tickable background: restored with syncProcess=false.
-        var cache2 = ctx2.SessionManager.TryGet("cache")!;
+        var cache2 = ctx2.Runtime.SessionManager.TryGet("cache")!;
         Assert.False(cache2.IsFrontSession);
         Assert.Equal("cache_level", cache2.LevelId);
         Assert.True(cache2.SessionBlackboard.TryGet<bool>("cached").value);
-        Assert.DoesNotContain("cache", ((SessionManager)ctx2.SessionManager).ProcessingKeys);
+        Assert.DoesNotContain("cache", ((SessionManager)ctx2.Runtime.SessionManager).ProcessingKeys);
 
         // Cross-contamination check.
         Assert.False(fg2.SessionBlackboard.TryGet<int>("step").found);
@@ -278,7 +278,7 @@ public class PlayStopPlayRoundTripTests
         pr1.LoadAndMountForeground("level_x");
         pr1.ProgressBlackboard.SetValue("user_data", "important");
 
-        ctx1.SessionManager.CreateBackgroundSession("bg_sim", "sim_level", true);
+        ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_sim", "sim_level", true);
 
         var payload = pr1.BuildSavePayload("save-rt");
 
@@ -325,7 +325,7 @@ public class PlayStopPlayRoundTripTests
         // Create second state.
         pr.SwitchForeground("second_level");
         pr.ProgressBlackboard.SetValue("second_data", "B");
-        ctx.SessionManager.CreateBackgroundSession("bg2", "bg2_level", true);
+        ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "bg2_level", true);
 
         var payload2 = pr.BuildSavePayload("save-2");
 

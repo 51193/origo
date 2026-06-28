@@ -58,7 +58,7 @@ public sealed partial class ProgressRun
                 throw;
             }
 
-            var fg = _owner.ForegroundSession
+            var fg = _owner._sessionManager.ForegroundSession
                      ?? throw new InvalidOperationException("No active foreground session after topology restore.");
             _owner.EnsureActiveLevelInvariant();
         }
@@ -90,7 +90,7 @@ public sealed partial class ProgressRun
 
         private void PersistForegroundLevelState()
         {
-            var fg = _owner.ForegroundSession;
+            var fg = _owner._sessionManager.ForegroundSession;
             if (fg is not null)
                 _owner._sessionManager.PersistSession(ISessionManager.ForegroundKey);
         }
@@ -111,8 +111,7 @@ public sealed partial class ProgressRun
         {
             ResetForeground(false);
 
-            var session = _owner._sessionManager.CreateForegroundFromPayload(
-                levelId, _owner._progressRuntime.ForegroundSceneHost, levelPayload);
+            var session = _owner._sessionManager.CreateForegroundFromPayload(levelId, levelPayload);
             return FinalizeForegroundMount(levelId, session);
         }
 
@@ -121,7 +120,7 @@ public sealed partial class ProgressRun
             ResetForeground(true);
 
             var session =
-                _owner._sessionManager.CreateForegroundSession(levelId, _owner._progressRuntime.ForegroundSceneHost);
+                _owner._sessionManager.CreateForegroundSession(levelId);
             return FinalizeForegroundMount(levelId, session);
         }
 
@@ -143,14 +142,20 @@ public sealed partial class ProgressRun
         private void FlushStateMachinesAfterSceneReady()
         {
             _owner.ProgressScope.StateMachines.FlushAllAfterLoad();
-            ((StateMachineContainer?)_owner.ForegroundSession?.GetSessionStateMachines())?.FlushAllAfterLoad();
+            ((StateMachineContainer?)_owner._sessionManager.ForegroundSession?.GetSessionStateMachines())?.FlushAllAfterLoad();
         }
 
         private void ResetForeground(bool clearScene)
         {
-            _owner._sessionManager.DestroyForeground();
             if (clearScene)
-                _owner._progressRuntime.ForegroundSceneHost.RemoveAllEntities();
+            {
+                if (_owner._sessionManager.ForegroundSession is SessionRun fg)
+                    fg.SceneHost.RemoveAllEntities();
+                else
+                    _owner._sessionManager.ClearAdapterScene();
+            }
+
+            _owner._sessionManager.DestroyForeground();
         }
 
         private static void ValidateLevelId(string levelId, string paramName, string message)

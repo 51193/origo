@@ -83,7 +83,7 @@ public class SndEntityLifecycleBatchTests
 
         public override void AfterLoad(ISndEntity entity, ISndContext ctx)
         {
-            var h = Host ?? ((SessionRun?)((SndContext)ctx).CurrentSession)?.SceneHost;
+            var h = Host ?? ((SessionRun?)entity.OwningSession)?.SceneHost;
             foreach (var target in TargetNames)
             {
                 var sibling = h?.FindByName(target);
@@ -95,7 +95,7 @@ public class SndEntityLifecycleBatchTests
 
         public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
         {
-            var h = Host ?? ((SessionRun?)((SndContext)ctx).CurrentSession)?.SceneHost;
+            var h = Host ?? ((SessionRun?)entity.OwningSession)?.SceneHost;
             foreach (var target in TargetNames)
             {
                 var sibling = h?.FindByName(target);
@@ -107,7 +107,7 @@ public class SndEntityLifecycleBatchTests
 
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
         {
-            var h = Host ?? ((SessionRun?)((SndContext)ctx).CurrentSession)?.SceneHost;
+            var h = Host ?? ((SessionRun?)entity.OwningSession)?.SceneHost;
             foreach (var target in TargetNames)
             {
                 var sibling = h?.FindByName(target);
@@ -119,7 +119,7 @@ public class SndEntityLifecycleBatchTests
 
         public override void BeforeDead(ISndEntity entity, ISndContext ctx)
         {
-            var h = Host ?? ((SessionRun?)((SndContext)ctx).CurrentSession)?.SceneHost;
+            var h = Host ?? ((SessionRun?)entity.OwningSession)?.SceneHost;
             foreach (var target in TargetNames)
             {
                 var sibling = h?.FindByName(target);
@@ -140,7 +140,7 @@ public class SndEntityLifecycleBatchTests
 
         private static void TryInvoke(ISndEntity entity, ISndContext ctx)
         {
-            var h = Host ?? ((SessionRun?)((SndContext)ctx).CurrentSession)?.SceneHost;
+            var h = Host ?? ((SessionRun?)entity.OwningSession)?.SceneHost;
             var target = h?.FindByName(InvokeTarget);
             try
             {
@@ -195,7 +195,7 @@ public class SndEntityLifecycleBatchTests
 
         public override void AfterLoad(ISndEntity entity, ISndContext ctx)
         {
-            var h = Host ?? ((SessionRun?)((SndContext)ctx).CurrentSession)?.SceneHost;
+            var h = Host ?? ((SessionRun?)entity.OwningSession)?.SceneHost;
             var target = h?.FindByName("target");
             if (target is not null)
             {

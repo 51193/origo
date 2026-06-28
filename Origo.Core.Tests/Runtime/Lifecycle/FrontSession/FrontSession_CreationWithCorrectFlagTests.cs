@@ -18,7 +18,7 @@ public class FrontSession_CreationWithCorrectFlagTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg = ctx.SessionManager.ForegroundSession!;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
 
         Assert.True(fg.IsFrontSession);
     }
@@ -29,12 +29,12 @@ public class FrontSession_CreationWithCorrectFlagTests
         var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
 
-        ctx.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("test", 42);
+        ctx.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("test", 42);
         ctx.RequestSaveGame("fg_test");
         ctx.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_fg_test/progress.json"));
-        Assert.True(ctx.SessionManager.ForegroundSession!.IsFrontSession);
+        Assert.True(ctx.Runtime.SessionManager.ForegroundSession!.IsFrontSession);
     }
 
     [Fact]
@@ -44,14 +44,14 @@ public class FrontSession_CreationWithCorrectFlagTests
         SetupForegroundSession(ctx);
 
         // 1st foreground
-        var fg1 = ctx.SessionManager.ForegroundSession!;
+        var fg1 = ctx.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg1.IsFrontSession);
 
         // Switch foreground (creates new one)
         var progressRun = ctx.EnsureProgressRun();
         progressRun.SwitchForeground("level_b");
 
-        var fg2 = ctx.SessionManager.ForegroundSession!;
+        var fg2 = ctx.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg2.IsFrontSession);
     }
 

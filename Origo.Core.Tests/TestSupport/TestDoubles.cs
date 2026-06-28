@@ -531,7 +531,29 @@ internal static class TestFactory
         savePathPolicy ??= new DefaultSavePathPolicy();
         storageService ??= CreateDefaultSaveStorageServiceForTests(metaAccess, runtime, pathResolver, saveRootPath, savePathPolicy, sharedDataSourceIo);
         return new SystemRuntime(runtime,
-            new SystemParameters(logger, metaAccess, pathResolver, saveRootPath, storageService, savePathPolicy));
+            new SystemParameters(logger, metaAccess, pathResolver, saveRootPath, storageService, savePathPolicy,
+                runtime.GetAdapterSceneHost()));
+    }
+
+    public static ISessionRun BootstrapForegroundSession(
+        OrigoRuntime runtime,
+        ILogger? logger = null,
+        IDataSourceIoGateway? dataSourceIo = null)
+    {
+        logger ??= new TestLogger();
+        var fs = new TestFileSystem();
+        fs.SeedFile("entry.json", "[]");
+        var io = dataSourceIo ?? CreateIoGateway(fs);
+        var metaAccess = CreateFileMetaAccess(fs);
+        var pathResolver = CreatePathResolver(fs);
+
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        ctx.RequestLoadMainMenuEntrySave();
+        ctx.FlushDeferredActionsForCurrentFrame();
+
+        return runtime.SessionManager.ForegroundSession
+               ?? throw new InvalidOperationException("Foreground session was not created.");
     }
 
     private static DefaultSaveStorageService CreateDefaultSaveStorageServiceForTests(

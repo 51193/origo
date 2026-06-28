@@ -91,12 +91,15 @@ public class InvokeStrategyCommandHandlerTests
         host.BindWorld(world);
 
         var fs = new TestFileSystem();
+        fs.SeedFile("entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var runtime = TestFactory.CreateRuntime(logger, host);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
+        ctx.RequestLoadMainMenuEntrySave();
+        ctx.FlushDeferredActionsForCurrentFrame();
 
         var output = new CollectingConsoleOutputChannel();
         return (runtime, host, output);

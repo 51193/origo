@@ -72,7 +72,7 @@ public class LifecycleRunsTests
         };
 
         progressRun.LoadFromPayload(payload);
-        var (found, value) = progressRun.ForegroundSession!.SessionBlackboard.TryGet<int>("x");
+        var (found, value) = progressRun.SessionManager.ForegroundSession!.SessionBlackboard.TryGet<int>("x");
 
         Assert.True(found);
         Assert.Equal(3, value);
@@ -134,7 +134,7 @@ public class LifecycleRunsTests
 
         progressRun.SwitchForeground("b");
 
-        Assert.Equal("b", progressRun.ForegroundSession!.LevelId);
+        Assert.Equal("b", progressRun.SessionManager.ForegroundSession!.LevelId);
         Assert.True(progressRun.SessionManager.Contains(ISessionManager.ForegroundKey));
 
         var (foundTopology, topology) =
@@ -162,16 +162,16 @@ public class LifecycleRunsTests
         progressRun.LoadAndMountForeground("a");
 
         // Missing target level payload in current/ → enter empty session and clear scene (README contract).
-        runtime.ForegroundSceneHost.CreateEntity(new SndMetaData
+        host.CreateEntity(new SndMetaData
             { Name = "Temp", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
-        Assert.NotEmpty(runtime.ForegroundSceneHost.BuildMetaList());
+        Assert.NotEmpty(host.BuildMetaList());
 
         progressRun.SwitchForeground("b");
 
-        Assert.Empty(runtime.ForegroundSceneHost.BuildMetaList());
-        Assert.Equal("b", progressRun.ForegroundSession?.LevelId);
-        Assert.NotNull(progressRun.ForegroundSession);
-        Assert.Equal("b", progressRun.ForegroundSession!.LevelId);
+        Assert.Empty(host.BuildMetaList());
+        Assert.Equal("b", progressRun.SessionManager.ForegroundSession?.LevelId);
+        Assert.NotNull(progressRun.SessionManager.ForegroundSession);
+        Assert.Equal("b", progressRun.SessionManager.ForegroundSession!.LevelId);
 
         var (foundTopology, topology) =
             progressRun.ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
@@ -201,7 +201,7 @@ public class LifecycleRunsTests
         var (found, topology) = progressRun.ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found);
         Assert.Equal("__foreground__=dungeon=false", topology);
-        Assert.Equal("dungeon", progressRun.ForegroundSession!.LevelId);
+        Assert.Equal("dungeon", progressRun.SessionManager.ForegroundSession!.LevelId);
     }
 
     [Fact]
@@ -239,7 +239,7 @@ public class LifecycleRunsTests
         sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("level1");
 
-        var fg = progressRun.ForegroundSession!;
+        var fg = progressRun.SessionManager.ForegroundSession!;
         fg.SessionBlackboard.SetValue("score", 42);
 
         sndContext.RequestSaveGame("roundtrip_001");
@@ -315,11 +315,11 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
-        Assert.True(sndContext.SessionManager.Contains("bg1"));
+        var bg = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
 
-        sndContext.SessionManager.DestroySession("bg1");
-        Assert.False(sndContext.SessionManager.Contains("bg1"));
+        sndContext.Runtime.SessionManager.DestroySession("bg1");
+        Assert.False(sndContext.Runtime.SessionManager.Contains("bg1"));
     }
 
     [Fact]
@@ -336,12 +336,12 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        var bg = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
-        Assert.True(sndContext.SessionManager.Contains("bg1"));
+        Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
 
-        sndContext.SessionManager.DestroySession("bg1");
-        Assert.False(sndContext.SessionManager.Contains("bg1"));
+        sndContext.Runtime.SessionManager.DestroySession("bg1");
+        Assert.False(sndContext.Runtime.SessionManager.Contains("bg1"));
     }
 
     [Fact]
@@ -358,13 +358,13 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
-        Assert.True(sndContext.SessionManager.Contains("bg1"));
+        var bg = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
 
         bg.Dispose();
 
         // After Dispose, session should have auto-unmounted.
-        Assert.False(sndContext.SessionManager.Contains("bg1"));
+        Assert.False(sndContext.Runtime.SessionManager.Contains("bg1"));
     }
 
     // ── LoadAndMountForeground tests ──────────────────────────────
@@ -462,7 +462,7 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        using var bg = sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        using var bg = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
         Assert.Contains(logger.Infos, msg => msg.Contains("SessionManager") && msg.Contains("bg1"));
     }
@@ -484,19 +484,19 @@ public class LifecycleRunsTests
         sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
 
-        sndContext.SessionManager.CreateBackgroundSession("bg1", "bg1");
-        sndContext.SessionManager.CreateBackgroundSession("bg2", "bg2", true);
+        sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        sndContext.Runtime.SessionManager.CreateBackgroundSession("bg2", "bg2", true);
 
-        Assert.True(sndContext.SessionManager.Contains("bg1"));
-        Assert.True(sndContext.SessionManager.Contains("bg2"));
-        Assert.NotNull(sndContext.SessionManager.ForegroundSession);
+        Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
+        Assert.True(sndContext.Runtime.SessionManager.Contains("bg2"));
+        Assert.NotNull(sndContext.Runtime.SessionManager.ForegroundSession);
 
-        sndContext.SessionManager.DestroySession("bg1");
-        sndContext.SessionManager.DestroySession("bg2");
-        sndContext.SessionManager.DestroySession(ISessionManager.ForegroundKey);
+        sndContext.Runtime.SessionManager.DestroySession("bg1");
+        sndContext.Runtime.SessionManager.DestroySession("bg2");
+        sndContext.Runtime.SessionManager.DestroySession(ISessionManager.ForegroundKey);
 
-        Assert.Empty(sndContext.SessionManager.Keys);
-        Assert.Null(sndContext.SessionManager.ForegroundSession);
+        Assert.Empty(sndContext.Runtime.SessionManager.Keys);
+        Assert.Null(sndContext.Runtime.SessionManager.ForegroundSession);
     }
 
     [Fact]

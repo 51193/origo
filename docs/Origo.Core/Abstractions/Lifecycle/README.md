@@ -4,7 +4,7 @@
 
 ## 概述
 
-定义会话管理的抽象接口。`ISessionManager` 和 `ISessionRun` 为策略层提供了与具体实现解耦的会话访问能力。这两个接口位于 Abstractions 层，确保引用它们的 `ISndContext`（声明 `SessionManager`）与 `ISndEntity`（声明 `OwningSession`）不依赖 Runtime 层。
+定义会话管理的抽象接口。`ISessionManager` 和 `ISessionRun` 为策略层提供了与具体实现解耦的会话访问能力。这两个接口位于 Abstractions 层，确保引用它们的 `ISndEntity`（声明 `OwningSession`）不依赖 Runtime 层。
 
 ## 包含文件
 
@@ -48,10 +48,9 @@
 
 ### 为什么 ISessionRun/ISessionManager 放在 Abstractions 层
 
-这两个接口定义在 Abstractions 层。若放在 Runtime 层，会导致引用它们的 `ISndContext`（声明 `SessionManager`）与 `ISndEntity`（声明 `OwningSession`）依赖 Runtime 层、违反依赖方向。定义在 Abstractions 层：
-
-- `ISndContext` 可直接引用同层的 `ISessionManager`，`ISndEntity.OwningSession` 可直接引用同层的 `ISessionRun`
-- 策略层通过 `ISndContext` 与 `entity.OwningSession` 访问会话能力，不感知 Runtime 层具体实现
+这两个接口定义在 Abstractions 层。若放在 Runtime 层，会导致引用它们的 `ISndEntity`（声明 `OwningSession`）依赖 Runtime 层、违反依赖方向。定义在 Abstractions 层：
+- `ISndEntity.OwningSession` 可直接引用同层的 `ISessionRun`
+- 策略层通过 `entity.OwningSession` 访问会话能力（包括 `SessionManager`），不感知 Runtime 层具体实现
 - 具体实现（`SessionManager`、`SessionRun`、`EmptySessionManager`）仍留在 Runtime 层
 
 ### 为什么 GetSessionStateMachines() 返回 IStateMachineContainer

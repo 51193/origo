@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Origo.Core;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
-using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Abstractions.Scene;
@@ -26,7 +23,7 @@ public class AdapterArchitectureGuardrailTests
     public void SndContext_AllRoleInterfaces_AreAccessibleThroughISndContext()
     {
         var runtime = CreateSimpleOrigoRuntime();
-        var fs = new InMemoryFileSystem();
+        var fs = new MemoryFileSystem();
 
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
@@ -43,7 +40,7 @@ public class AdapterArchitectureGuardrailTests
         def.FlushDeferredActionsForCurrentFrame();
         Assert.True(ran);
 
-        Assert.NotNull(ctx.SessionManager);
+        Assert.NotNull(ctx.Runtime.SessionManager);
 
         ISndSaveOperations save = ctx;
         Assert.Empty(save.ListSaves());
@@ -65,9 +62,9 @@ public class AdapterArchitectureGuardrailTests
     public void SndContext_ViaSessionManager_CanCreateAndDestroyBackgroundSessions()
     {
         var runtime = CreateSimpleOrigoRuntime();
-        var fs = new InMemoryFileSystem();
+        var fs = new MemoryFileSystem();
 
-        fs.SeedFile("entry.json", "[]");
+        fs.WriteAllText("entry.json", "[]", true);
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -76,16 +73,16 @@ public class AdapterArchitectureGuardrailTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var bg = ctx.SessionManager.CreateBackgroundSession("bg_sess", "bg_level");
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_sess", "bg_level");
         bg.SessionBlackboard.SetValue("bg_data", "bg_value");
 
         var (found, val) = bg.SessionBlackboard.TryGet<string>("bg_data");
         Assert.True(found);
         Assert.Equal("bg_value", val);
 
-        Assert.True(ctx.SessionManager.Contains("bg_sess"));
-        ctx.SessionManager.DestroySession("bg_sess");
-        Assert.False(ctx.SessionManager.Contains("bg_sess"));
+        Assert.True(ctx.Runtime.SessionManager.Contains("bg_sess"));
+        ctx.Runtime.SessionManager.DestroySession("bg_sess");
+        Assert.False(ctx.Runtime.SessionManager.Contains("bg_sess"));
 
         bg.Dispose();
     }
@@ -96,7 +93,7 @@ public class AdapterArchitectureGuardrailTests
         var host = new InMemorySndSceneHost();
         var tm = new TypeStringMapping();
         var reg = DataSourceFactory.CreateDefaultRegistry(tm);
-        var fs = new InMemoryFileSystem();
+        var fs = new MemoryFileSystem();
         var io = DataSourceFactory.CreateDefaultIoGateway(fs);
         var systemBb = new Blackboard();
         var meta = new OrigoMeta("Origo", "test", string.Empty);
@@ -195,64 +192,6 @@ public class AdapterArchitectureGuardrailTests
         }
 
         public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
-    }
-
-    private sealed class InMemoryFileSystem : IFileSystem
-    {
-        private readonly Dictionary<string, string> _files = new(StringComparer.Ordinal);
-        public bool Exists(string path) => _files.ContainsKey(Normalize(path));
-
-        public bool DirectoryExists(string path) =>
-            _files.Keys.Any(f => f.StartsWith(Normalize(path).TrimEnd('/') + "/", StringComparison.Ordinal));
-
-        public string ReadAllText(string path) => _files[Normalize(path)];
-
-        public void WriteAllText(string path, string content, bool overwrite)
-        {
-            var n = Normalize(path);
-            if (!overwrite && _files.ContainsKey(n)) throw new IOException($"File exists: {n}");
-            _files[n] = content;
-        }
-
-        public void Copy(string s, string d, bool o) => WriteAllText(d, ReadAllText(s), o);
-        public IEnumerable<string> EnumerateFiles(string dir, string pattern, bool recursive) => Array.Empty<string>();
-
-        public void CreateDirectory(string path)
-        {
-        }
-
-        public IEnumerable<string> EnumerateDirectories(string directoryPath) => Array.Empty<string>();
-        public void Delete(string path) => _files.Remove(Normalize(path));
-
-        public void DeleteDirectory(string path)
-        {
-            var prefix = Normalize(path).TrimEnd('/') + "/";
-            foreach (var f in _files.Keys.Where(f => f.StartsWith(prefix, StringComparison.Ordinal)).ToArray())
-                _files.Remove(f);
-        }
-
-        public void Rename(string s, string d)
-        {
-            var sp = Normalize(s).TrimEnd('/') + "/";
-            foreach (var f in _files.Keys.Where(f => f.StartsWith(sp, StringComparison.Ordinal) || f == Normalize(s))
-                         .ToArray())
-            {
-                _files[string.Concat(Normalize(d), f.AsSpan(Normalize(s).Length))] = _files[f];
-                _files.Remove(f);
-            }
-        }
-
-        public string CombinePath(string b, string r) => Normalize(b).TrimEnd('/') + "/" + r;
-
-        public string GetParentDirectory(string p)
-        {
-            var n = Normalize(p).TrimEnd('/');
-            var i = n.LastIndexOf('/');
-            return i <= 0 ? "" : n[..i];
-        }
-
-        public void SeedFile(string path, string content) => _files[Normalize(path)] = content;
-        private static string Normalize(string p) => p.Replace('\\', '/').Trim();
     }
 }
 

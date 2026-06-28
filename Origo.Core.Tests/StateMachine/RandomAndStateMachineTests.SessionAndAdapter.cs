@@ -36,7 +36,7 @@ public partial class RandomAndStateMachineTests
             ctx.SetProgressRun(progressRun);
             progressRun.LoadAndMountForeground("default");
 
-            using var run = ctx.SessionManager.CreateBackgroundSession("bg", "bg");
+            using var run = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
             var sm = run.GetSessionStateMachines().CreateOrGet("ui", "sm.push.test", "sm.pop.test");
             sm.Push("a");

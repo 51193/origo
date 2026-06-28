@@ -22,6 +22,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 internal sealed class SessionManager : ISessionManager
 {
     private const string LogTag = nameof(SessionManager);
+    private readonly ISndSceneHost _adapterSceneHost;
     private readonly SessionManagerRuntime _managerRuntime;
     private readonly Dictionary<string, MountedSession> _sessions = new(StringComparer.Ordinal);
 
@@ -35,6 +36,7 @@ internal sealed class SessionManager : ISessionManager
         ArgumentNullException.ThrowIfNull(progressRuntime);
         ArgumentNullException.ThrowIfNull(progressBlackboard);
         _managerRuntime = new SessionManagerRuntime(progressRuntime, progressBlackboard);
+        _adapterSceneHost = _managerRuntime.AdapterSceneHost;
     }
 
     /// <summary>获取所有参与 Process 帧更新的会话的键列表。</summary>
@@ -125,15 +127,14 @@ internal sealed class SessionManager : ISessionManager
     /// <summary>
     ///     创建前台会话并自动挂载。若已有前台会话，先销毁旧的。
     /// </summary>
-    internal ISessionRun CreateForegroundSession(string levelId, ISndSceneHost sceneHost)
+    internal ISessionRun CreateForegroundSession(string levelId)
     {
         if (string.IsNullOrWhiteSpace(levelId))
             throw new ArgumentException("Level id cannot be null or whitespace.", nameof(levelId));
-        ArgumentNullException.ThrowIfNull(sceneHost);
 
         ValidateLevelIdUnique(levelId, ISessionManager.ForegroundKey);
 
-        var sessionParams = new SessionParameters(levelId, new Blackboard.Blackboard(), sceneHost, true);
+        var sessionParams = new SessionParameters(levelId, new Blackboard.Blackboard(), _adapterSceneHost, true);
         var session = new SessionRun(_managerRuntime, sessionParams, this);
         MountInternal(ISessionManager.ForegroundKey, session, true);
         return session;
@@ -142,12 +143,10 @@ internal sealed class SessionManager : ISessionManager
     /// <summary>
     ///     创建前台会话，从 payload 恢复状态，并自动挂载。若已有前台会话，先销毁旧的。
     /// </summary>
-    internal ISessionRun CreateForegroundFromPayload(string levelId, ISndSceneHost sceneHost, LevelPayload payload)
+    internal ISessionRun CreateForegroundFromPayload(string levelId, LevelPayload payload)
     {
         ArgumentNullException.ThrowIfNull(payload);
-        var session = CreateForegroundSession(levelId, sceneHost);
-        // session is always SessionRun (created by CreateForegroundSession → MountInternal),
-        // so we can directly access it through the MountedSession.
+        var session = CreateForegroundSession(levelId);
         _sessions[ISessionManager.ForegroundKey].Session.LoadFromPayload(payload);
         return session;
     }
@@ -156,6 +155,11 @@ internal sealed class SessionManager : ISessionManager
     ///     销毁当前前台会话（若存在）。
     /// </summary>
     internal void DestroyForeground() => DestroySession(ISessionManager.ForegroundKey);
+
+    /// <summary>
+    ///     清空 adapter 场景宿主上的所有实体（用于首次挂载前台前，或前台会话不存在时的清理）。
+    /// </summary>
+    internal void ClearAdapterScene() => _adapterSceneHost.RemoveAllEntities();
 
     /// <summary>
     ///     将指定键的会话序列化为 <see cref="LevelPayload" />。

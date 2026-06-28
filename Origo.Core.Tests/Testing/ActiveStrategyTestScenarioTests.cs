@@ -597,8 +597,8 @@ public class ActiveStrategyTestScenarioTests
             AppendFromBb(ctx.SystemBlackboard, parts, "a");
             AppendFromBb(ctx.ProgressBlackboard!, parts, "progress_key");
             AppendFromBb(ctx.ProgressBlackboard!, parts, "b");
-            AppendFromBb(ctx.SessionManager.ForegroundSession!.SessionBlackboard, parts, "session_key");
-            AppendFromBb(ctx.SessionManager.ForegroundSession!.SessionBlackboard, parts, "c");
+            AppendFromBb(entity.OwningSession.SessionBlackboard, parts, "session_key");
+            AppendFromBb(entity.OwningSession.SessionBlackboard, parts, "c");
             return string.Join(",", parts);
         }
 

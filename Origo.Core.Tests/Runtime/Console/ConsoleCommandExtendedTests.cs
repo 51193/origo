@@ -77,6 +77,7 @@ public class ConsoleCommandExtendedTests
     {
         var (runtime, input, _, messages) = CreateConsoleRuntime();
 
+        TestFactory.BootstrapForegroundSession(runtime);
         input.Enqueue("kill_all");
         runtime.Console!.ProcessPending();
 
@@ -390,6 +391,7 @@ public class ConsoleCommandExtendedTests
 
         runtime.SndWorld.LoadTemplates("maps/t.map", logger);
 
+        TestFactory.BootstrapForegroundSession(runtime, logger);
         consoleInput.Enqueue("spawn name=Ent1 template=tpl");
         runtime.Console!.ProcessPending();
 
