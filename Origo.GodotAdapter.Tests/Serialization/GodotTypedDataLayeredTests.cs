@@ -51,37 +51,37 @@ public class GodotTypedDataLayeredTests
     public void Godot_Vector2_FromObject_RoundTrip()
     {
         var v = new Vector2(1.5f, 3.0f);
-        var td = TypedData.FromObject(typeof(Vector2), v);
+        var td = new TypedData(128, 0, v);
 
         Assert.Equal(typeof(Vector2), td.DataType);
-        Assert.Equal(v, td.Data);
+        Assert.Equal(v, TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
     public void Godot_Vector3_FromObject_RoundTrip()
     {
         var v = new Vector3(1.0f, 2.0f, 3.0f);
-        var td = TypedData.FromObject(typeof(Vector3), v);
+        var td = new TypedData(130, 0, v);
 
         Assert.Equal(typeof(Vector3), td.DataType);
-        Assert.Equal(v, td.Data);
+        Assert.Equal(v, TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
     public void Godot_Color_FromObject_RoundTrip()
     {
         var c = new Color(0.1f, 0.2f, 0.3f, 0.4f);
-        var td = TypedData.FromObject(typeof(Color), c);
+        var td = new TypedData(137, 0, c);
 
         Assert.Equal(typeof(Color), td.DataType);
-        Assert.Equal(c, td.Data);
+        Assert.Equal(c, TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
     public void Godot_Vector2_Extension_TryGet()
     {
         var v = new Vector2(5.0f, 7.0f);
-        var td = TypedData.FromObject(typeof(Vector2), v);
+        var td = new TypedData(128, 0, v);
 
         Assert.True(td.TryGetVector2(out var result));
         Assert.Equal(v, result);
@@ -91,7 +91,7 @@ public class GodotTypedDataLayeredTests
     public void Godot_Vector3_Extension_TryGet()
     {
         var v = new Vector3(1.0f, 2.0f, 3.0f);
-        var td = TypedData.FromObject(typeof(Vector3), v);
+        var td = new TypedData(130, 0, v);
 
         Assert.True(td.TryGetVector3(out var result));
         Assert.Equal(v, result);
@@ -101,7 +101,7 @@ public class GodotTypedDataLayeredTests
     public void Godot_Color_Extension_TryGet()
     {
         var c = new Color(0.5f, 0.6f, 0.7f, 0.8f);
-        var td = TypedData.FromObject(typeof(Color), c);
+        var td = new TypedData(137, 0, c);
 
         Assert.True(td.TryGetColor(out var result));
         Assert.Equal(c, result);
@@ -111,7 +111,7 @@ public class GodotTypedDataLayeredTests
     public void Godot_Type_WrongKind_ReturnsFalse()
     {
         var v = new Vector2(1.0f, 2.0f);
-        var td = TypedData.FromObject(typeof(Vector2), v);
+        var td = new TypedData(128, 0, v);
 
         Assert.False(td.TryGetVector3(out _));
         Assert.False(td.TryGetColor(out _));
@@ -154,7 +154,7 @@ public class GodotTypedDataLayeredTests
     public void DataType_ForGodotType_ReturnsCorrectType()
     {
         var v = new Vector3(1, 2, 3);
-        var td = TypedData.FromObject(typeof(Vector3), v);
+        var td = new TypedData(130, 0, v);
 
         Assert.Equal(typeof(Vector3), td.DataType);
     }
@@ -163,16 +163,16 @@ public class GodotTypedDataLayeredTests
     public void Data_ForGodotType_ReturnsUnboxedValue()
     {
         var c = new Color(0.1f, 0.2f, 0.3f, 0.4f);
-        var td = TypedData.FromObject(typeof(Color), c);
+        var td = new TypedData(137, 0, c);
 
-        Assert.Equal(c, td.Data);
+        Assert.Equal(c, TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
     public void AsXxx_ForGodotType_Works()
     {
         var v = new Vector2(3.5f, 7.0f);
-        var td = TypedData.FromObject(typeof(Vector2), v);
+        var td = new TypedData(128, 0, v);
 
         Assert.Equal(v, td.AsVector2());
     }
@@ -192,10 +192,10 @@ public class GodotTypedDataLayeredTests
     [Fact]
     public void GodotType_Null_PreservesDataType()
     {
-        var td = TypedData.FromObject(typeof(Vector3), null);
+        var td = new TypedData(130, 0, null);
 
         Assert.Equal(typeof(Vector3), td.DataType);
-        Assert.Null(td.Data);
+        Assert.Null(TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
@@ -233,7 +233,8 @@ public class GodotTypedDataLayeredTests
 
     private static void AssertRoundTrip<T>(T value, Func<TypedData, T?> extractor) where T : struct
     {
-        var td = TypedData.FromObject(typeof(T), value);
+        var kind = TypedDataTypeMap.GetKindForType(typeof(T));
+        var td = new TypedData(kind, 0, value);
         var extracted = extractor(td);
         Assert.True(extracted.HasValue, $"Failed to extract {typeof(T).Name}");
         Assert.Equal(value, extracted.Value);

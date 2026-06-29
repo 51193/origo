@@ -119,10 +119,10 @@ public class TypedDataGeneratedBenchmarkTests
         var samples = MakeSamples(i => "s_" + i);
 
         RunWriteBenchmark("String", samples,
-            static v => TypedData.FromObject(typeof(string), v));
+            static v => new TypedData(TypedData.KindMap.String, 0, v));
 
         RunReadBenchmark("String", samples,
-            static v => TypedData.FromObject(typeof(string), v),
+            static v => new TypedData(TypedData.KindMap.String, 0, v),
             static (in TypedData td, out string v) => td.TryGetString(out v),
             static o => o.Data is string);
     }
@@ -133,7 +133,7 @@ public class TypedDataGeneratedBenchmarkTests
         var samples = MakeSamples(i => "s_" + i);
 
         RunIsBenchmark("String", samples,
-            static v => TypedData.FromObject(typeof(string), v),
+            static v => new TypedData(TypedData.KindMap.String, 0, v),
             static (in TypedData td) => td.IsString,
             static o => o.Data is string);
     }
@@ -162,7 +162,7 @@ public class TypedDataGeneratedBenchmarkTests
                     boxedPool[i] = new OldTypedData(typeof(bool), i % 2 == 0);
                     break;
                 case 3:
-                    genPool[i] = TypedData.FromObject(typeof(string), "s_" + i);
+                    genPool[i] = new TypedData(TypedData.KindMap.String, 0, "s_" + i);
                     boxedPool[i] = new OldTypedData(typeof(string), "s_" + i);
                     break;
                 default:

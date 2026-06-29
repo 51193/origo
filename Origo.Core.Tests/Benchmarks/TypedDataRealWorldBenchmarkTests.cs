@@ -104,7 +104,7 @@ public class TypedDataRealWorldBenchmarkTests
     public void DictInsert_FactoryCreate_vs_BoxedDict()
     {
         RunDictWrite("String", MakeSamples(i => "s_" + i),
-            v => TypedData.FromObject(typeof(string), v), "Write String: Create+Insert vs Boxing");
+            v => new TypedData(TypedData.KindMap.String, 0, v), "Write String: Create+Insert vs Boxing");
 
         RunDictWrite("Int32", MakeSamples(i => i),
             v => (TypedData)v, "Write Int32: Create+Insert vs Boxing");
@@ -219,7 +219,7 @@ public class TypedDataRealWorldBenchmarkTests
     [Fact]
     public void ObserverNotify_Generated_vs_Boxed()
     {
-        var tdString = TypedData.FromObject(typeof(string), "intent_attack");
+        var tdString = new TypedData(TypedData.KindMap.String, 0, "intent_attack");
         var tdDefault = default(TypedData);
         var boxedString = "intent_attack";
         var boxedNull = (object?)null;
@@ -259,7 +259,7 @@ public class TypedDataRealWorldBenchmarkTests
 
         var (genAlloc, boxedAlloc) = MeasureObserverAlloc(tdString, tdDefault, boxedString, boxedNull);
 
-        _perf.Compare("Observer notify: pass (old,new) TypedData + check .Data is string",
+        _perf.Compare("Observer notify: pass (old,new) TypedData + check TryGetString",
             "Generated (TypedData, TypedData)", ReadIterations, genBest, genAlloc,
             "Boxed (object?, object?)", ReadIterations, boxedBest, boxedAlloc);
         AssertInCap("Observer notify", genBest);
@@ -285,7 +285,7 @@ public class TypedDataRealWorldBenchmarkTests
             {
                 foreach (var kv in genDict)
                 {
-                    dummy = kv.Value.Data; // TypedDataObjectConverter.ToObject
+                    dummy = TypedDataObjectConverter.ToObject(kv.Value);
                 }
             }
             sw.Stop();
@@ -313,8 +313,8 @@ public class TypedDataRealWorldBenchmarkTests
         var (genAlloc, boxedAlloc) = MeasureHeteroAlloc(genDict, boxedDict);
 
         var total = IterateIterations * DictSize;
-        _perf.Compare("Heterogeneous dict iterate: .Data (TypedData) vs plain object",
-            "Generated .Data", total, genBest, genAlloc,
+        _perf.Compare("Heterogeneous dict iterate: ToObject (TypedData) vs plain object",
+            "Generated ToObject", total, genBest, genAlloc,
             "Boxed dict iterate", total, boxedBest, boxedAlloc);
         AssertInCap("Heterogeneous dict iterate", genBest);
     }
@@ -435,7 +435,7 @@ public class TypedDataRealWorldBenchmarkTests
         var start = GC.GetAllocatedBytesForCurrentThread();
         for (var i = 0; i < IterateIterations; i++)
             foreach (var kv in genDict)
-                dummy = kv.Value.Data;
+                dummy = TypedDataObjectConverter.ToObject(kv.Value);
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
@@ -477,7 +477,7 @@ public class TypedDataRealWorldBenchmarkTests
             0 => (TypedData)i,                        // int
             1 => (TypedData)(float)i,                 // float
             2 => (TypedData)(i % 2 == 0),             // bool
-            3 => TypedData.FromObject(typeof(string), "s_" + i), // string
+            3 => new TypedData(TypedData.KindMap.String, 0, "s_" + i), // string
             _ => (TypedData)(double)i,                // double
         };
     }

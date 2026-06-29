@@ -488,13 +488,13 @@ public class DataSourceTests
         var tm = new TypeStringMapping();
         var registry = TestFactory.CreateRegistry(tm);
 
-        var original = new TypedData(typeof(int), 42);
+        var original = (TypedData)42;
 
         var node = registry.Write(original);
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(int), result.DataType);
-        Assert.Equal(42, result.Data);
+        Assert.Equal(42, TypedDataObjectConverter.ToObject(result));
     }
 
     [Fact]
@@ -503,13 +503,13 @@ public class DataSourceTests
         var tm = new TypeStringMapping();
         var registry = TestFactory.CreateRegistry(tm);
 
-        var original = new TypedData(typeof(string), "hello");
+        var original = new TypedData(TypedData.KindMap.String, 0, "hello");
 
         var node = registry.Write(original);
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(string), result.DataType);
-        Assert.Equal("hello", result.Data);
+        Assert.Equal("hello", TypedDataObjectConverter.ToObject(result));
     }
 
     [Fact]
@@ -519,13 +519,13 @@ public class DataSourceTests
         tm.RegisterType<object>("Object");
         var registry = TestFactory.CreateRegistry(tm);
 
-        var original = new TypedData(typeof(string), null);
+        var original = new TypedData(TypedData.KindMap.String, 0, null);
 
         var node = registry.Write(original);
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(string), result.DataType);
-        Assert.Null(result.Data);
+        Assert.Null(TypedDataObjectConverter.ToObject(result));
     }
 
     // ── 14. SndMetaData converter ──
@@ -551,8 +551,8 @@ public class DataSourceTests
             {
                 Pairs = new Dictionary<string, TypedData>
                 {
-                    ["hp"] = new(typeof(int), 100),
-                    ["name"] = new(typeof(string), "hero")
+                    ["hp"] = (TypedData)100,
+                    ["name"] = new TypedData(TypedData.KindMap.String, 0, "hero")
                 }
             }
         };
@@ -570,8 +570,8 @@ public class DataSourceTests
 
         Assert.NotNull(result.DataMetaData);
         Assert.Equal(typeof(int), result.DataMetaData!.Pairs["hp"].DataType);
-        Assert.Equal(100, result.DataMetaData.Pairs["hp"].Data);
-        Assert.Equal("hero", result.DataMetaData.Pairs["name"].Data);
+        Assert.Equal(100, TypedDataObjectConverter.ToObject(result.DataMetaData.Pairs["hp"]));
+        Assert.Equal("hero", TypedDataObjectConverter.ToObject(result.DataMetaData.Pairs["name"]));
     }
 
     [Fact]
@@ -608,18 +608,18 @@ public class DataSourceTests
 
         var original = new Dictionary<string, TypedData>
         {
-            ["score"] = new(typeof(int), 999),
-            ["player"] = new(typeof(string), "Alice"),
-            ["alive"] = new(typeof(bool), true)
+            ["score"] = (TypedData)999,
+            ["player"] = new TypedData(TypedData.KindMap.String, 0, "Alice"),
+            ["alive"] = (TypedData)true
         } as IReadOnlyDictionary<string, TypedData>;
 
         var node = registry.Write(original);
         var result = registry.Read<IReadOnlyDictionary<string, TypedData>>(node);
 
         Assert.Equal(3, result.Count);
-        Assert.Equal(999, result["score"].Data);
-        Assert.Equal("Alice", result["player"].Data);
-        Assert.Equal(true, result["alive"].Data);
+        Assert.Equal(999, TypedDataObjectConverter.ToObject(result["score"]));
+        Assert.Equal("Alice", TypedDataObjectConverter.ToObject(result["player"]));
+        Assert.Equal(true, TypedDataObjectConverter.ToObject(result["alive"]));
     }
 
     // ── 16. StateMachineContainerPayload converter ──
@@ -789,7 +789,7 @@ public class DataSourceTests
             {
                 Pairs = new Dictionary<string, TypedData>
                 {
-                    ["speed"] = new(typeof(double), 5.5)
+                    ["speed"] = (TypedData)5.5
                 }
             }
         };
@@ -801,7 +801,7 @@ public class DataSourceTests
 
         Assert.Equal("npc", result.Name);
         Assert.Equal(new[] { "patrol" }, result.StrategyMetaData!.LifecycleIndices);
-        Assert.Equal(5.5, (double)result.DataMetaData!.Pairs["speed"].Data!);
+        Assert.Equal(5.5, (double)TypedDataObjectConverter.ToObject(result.DataMetaData!.Pairs["speed"])!);
     }
 
     // ── 19. Extended primitive converter round-trips ──
@@ -1107,12 +1107,12 @@ public class DataSourceTests
         var tm = new TypeStringMapping();
         var registry = TestFactory.CreateRegistry(tm);
 
-        var original = new TypedData(typeof(byte), (byte)42);
+        var original = (TypedData)(byte)42;
         using var node = registry.Write(original);
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(byte), result.DataType);
-        Assert.Equal((byte)42, result.Data);
+        Assert.Equal((byte)42, TypedDataObjectConverter.ToObject(result));
     }
 
     [Fact]
@@ -1121,12 +1121,12 @@ public class DataSourceTests
         var tm = new TypeStringMapping();
         var registry = TestFactory.CreateRegistry(tm);
 
-        var original = new TypedData(typeof(decimal), 3.14159m);
+        var original = new TypedData(TypedData.UnregisteredKind, 0, 3.14159m);
         using var node = registry.Write(original);
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(decimal), result.DataType);
-        Assert.Equal(3.14159m, result.Data);
+        Assert.Equal(3.14159m, TypedDataObjectConverter.ToObject(result));
     }
 
     [Fact]
@@ -1135,12 +1135,12 @@ public class DataSourceTests
         var tm = new TypeStringMapping();
         var registry = TestFactory.CreateRegistry(tm);
 
-        var original = new TypedData(typeof(char), 'X');
+        var original = (TypedData)'X';
         using var node = registry.Write(original);
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(char), result.DataType);
-        Assert.Equal('X', result.Data);
+        Assert.Equal('X', TypedDataObjectConverter.ToObject(result));
     }
 
     [Fact]
@@ -1149,12 +1149,12 @@ public class DataSourceTests
         var tm = new TypeStringMapping();
         var registry = TestFactory.CreateRegistry(tm);
 
-        var original = new TypedData(typeof(int[]), new[] { 1, 2, 3 });
+        var original = new TypedData(TypedData.UnregisteredKind, 0, new[] { 1, 2, 3 });
         using var node = registry.Write(original);
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(int[]), result.DataType);
-        Assert.Equal(new[] { 1, 2, 3 }, (int[])result.Data!);
+        Assert.Equal(new[] { 1, 2, 3 }, (int[])TypedDataObjectConverter.ToObject(result)!);
     }
 
     [Fact]
@@ -1163,12 +1163,12 @@ public class DataSourceTests
         var tm = new TypeStringMapping();
         var registry = TestFactory.CreateRegistry(tm);
 
-        var original = new TypedData(typeof(byte[]), new byte[] { 0, 128, 255 });
+        var original = new TypedData(TypedData.UnregisteredKind, 0, new byte[] { 0, 128, 255 });
         using var node = registry.Write(original);
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(byte[]), result.DataType);
-        Assert.Equal(new byte[] { 0, 128, 255 }, (byte[])result.Data!);
+        Assert.Equal(new byte[] { 0, 128, 255 }, (byte[])TypedDataObjectConverter.ToObject(result)!);
     }
 
     // ── 23. DataSourceNode IDisposable ──

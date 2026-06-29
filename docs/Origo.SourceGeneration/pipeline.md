@@ -421,9 +421,11 @@ public static object? ToObject(TypedData td)
 
 值类型通过 `ToObject` 读时**不可避免地要装箱**——因为返回值类型是 `object`。
 
-#### `.Data` 迭代的性能取舍
+#### `TypedDataObjectConverter.ToObject` 迭代的性能取舍
 
-**基准**（2048 键异构字典 `.Data` 迭代，80% 为值类型）：
+`TypedData.Data` 属性已经被删除——它形成了一条相对于零装箱 `TryGetXxx` 的旁路。类型擦除场景现在仅通过 `internal` 的 `TypedDataObjectConverter.ToObject(td)` 处理。以下是该路径的性能数据：
+
+**基准**（2048 键异构字典 `ToObject` 迭代，80% 为值类型）：
 
 | 指标 | 生成侧 | 装箱侧 |
 |------|-------|-------|
@@ -431,11 +433,11 @@ public static object? ToObject(TypedData td)
 | 倍率 | **0.14x**（装箱 6.9x 快） | — |
 | 分配 | 37.49 MB | 0 B |
 
-这是生成方案唯一显著劣势的场景。**但它不是真实热路径**：
+这是类型擦除路径固有的开销。**但它不是真实热路径**：
 
 - 框架内部热/温路径（数据变更信号处理、加载校验、实体观察）一律用零装箱 `TryGetXxx`
-- `.Data` 仅用于序列化和冷路径——这些路径固有需要 `object`，内置装箱无法避免
-- **即使是最坏情况也不会在热路径出现**——下游调用方接受并理解这一取舍
+- `TypedDataObjectConverter.ToObject` 仅用于框架内部的序列化和冷路径，不暴露给外部调用方
+- **即使是最坏情况也不会在热路径出现**——且冷路径调用方无法绕过此限制，因为 `Data` 属性已经不存在
 
 ---
 
@@ -567,7 +569,7 @@ offset 16: _ref (8B)
 
 - **写入** 12-13x 快于装箱，零堆分配。这是生成方案最大的收益。
 - **读取** 不劣于装箱（≤ 1.10x），混合分发反超（1.54x），强转链反超（1.40x）。
-- 唯一输项（`.Data` 迭代 0.14x）是冷路径中被刻意接受的取舍——框架约定热路径用 `TryGetXxx`。
+- 唯一输项（`TypedDataObjectConverter.ToObject` 迭代 0.14x）是内部冷路径中不可避免的装箱开销。`public object? Data` 属性已删除，外部代码无法触发此路径。
 
 ---
 

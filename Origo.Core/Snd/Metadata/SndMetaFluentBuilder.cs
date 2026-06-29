@@ -51,49 +51,49 @@ public sealed class SndMetaFluentBuilder
     public SndMetaFluentBuilder SetInt(string key, int value)
     {
         EnsureDataMetaData();
-        _meta.DataMetaData!.Pairs[key] = new TypedData(typeof(int), value);
+        _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
     }
 
     public SndMetaFluentBuilder SetFloat(string key, float value)
     {
         EnsureDataMetaData();
-        _meta.DataMetaData!.Pairs[key] = new TypedData(typeof(float), value);
+        _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
     }
 
     public SndMetaFluentBuilder SetDouble(string key, double value)
     {
         EnsureDataMetaData();
-        _meta.DataMetaData!.Pairs[key] = new TypedData(typeof(double), value);
+        _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
     }
 
     public SndMetaFluentBuilder SetLong(string key, long value)
     {
         EnsureDataMetaData();
-        _meta.DataMetaData!.Pairs[key] = new TypedData(typeof(long), value);
+        _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
     }
 
     public SndMetaFluentBuilder SetBool(string key, bool value)
     {
         EnsureDataMetaData();
-        _meta.DataMetaData!.Pairs[key] = new TypedData(typeof(bool), value);
+        _meta.DataMetaData!.Pairs[key] = (TypedData)value;
         return this;
     }
 
     public SndMetaFluentBuilder SetString(string key, string value)
     {
         EnsureDataMetaData();
-        _meta.DataMetaData!.Pairs[key] = new TypedData(typeof(string), value);
+        _meta.DataMetaData!.Pairs[key] = new TypedData(TypedData.KindMap.String, 0, value);
         return this;
     }
 
     public SndMetaFluentBuilder SetBytes(string key, byte[] value)
     {
         EnsureDataMetaData();
-        _meta.DataMetaData!.Pairs[key] = new TypedData(typeof(byte[]), value);
+        _meta.DataMetaData!.Pairs[key] = new TypedData(TypedData.UnregisteredKind, 0, value);
         return this;
     }
 

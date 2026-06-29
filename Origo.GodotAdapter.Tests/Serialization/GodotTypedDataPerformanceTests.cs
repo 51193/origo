@@ -34,7 +34,7 @@ public class GodotTypedDataPerformanceTests
         long allocBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
         for (var i = 0; i < Iterations; i++)
-            _ = TypedData.FromObject(typeof(Vector3), v);
+            _ = new TypedData(130, 0, v);
         sw.Stop();
         var timeRegistered = sw.Elapsed;
         long allocRegistered = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
@@ -60,7 +60,7 @@ public class GodotTypedDataPerformanceTests
     public void ReadThroughput_TryGetVector3_Outperforms_IsT()
     {
         var source = new Vector3(1.0f, 2.0f, 3.0f);
-        var td = TypedData.FromObject(typeof(Vector3), source);
+        var td = new TypedData(130, 0, source);
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
@@ -84,7 +84,7 @@ public class GodotTypedDataPerformanceTests
         var sumIsT = 0.0f;
         for (var i = 0; i < Iterations; i++)
         {
-            if (td.Data is Vector3 r) sumIsT += r.X;
+            if (TypedDataObjectConverter.ToObject(td) is Vector3 r) sumIsT += r.X;
         }
         sw.Stop();
         var timeIsT = sw.Elapsed;
@@ -121,7 +121,7 @@ public class GodotTypedDataPerformanceTests
         allocBefore = GC.GetAllocatedBytesForCurrentThread();
         sw.Restart();
         for (var i = 0; i < Iterations; i++)
-            _ = td.Data;
+            _ = TypedDataObjectConverter.ToObject(td);
         sw.Stop();
         var timeData = sw.Elapsed;
         long allocData = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
@@ -202,8 +202,8 @@ public class GodotTypedDataPerformanceTests
         {
             entityDicts[e] = new Dictionary<string, TypedData>
             {
-                ["position"] = TypedData.FromObject(typeof(Vector3), new Vector3(e * 2, 0, 0)),
-                ["color"] = TypedData.FromObject(typeof(Color), new Color(0.5f, 0.3f, 0.1f, 1.0f)),
+                ["position"] = new TypedData(130, 0, new Vector3(e * 2, 0, 0)),
+                ["color"] = new TypedData(137, 0, new Color(0.5f, 0.3f, 0.1f, 1.0f)),
                 ["alive"] = (TypedData)true,
                 ["speed"] = (TypedData)(float)(e % 10 + 1)
             };
@@ -232,7 +232,7 @@ public class GodotTypedDataPerformanceTests
 
                 for (var w = 0; w < writesPerFrame; w++)
                 {
-                    dict["position"] = TypedData.FromObject(typeof(Vector3),
+                    dict["position"] = new TypedData(130, 0,
                         new Vector3(e * 2 + w, f, w));
                     dict["speed"] = (TypedData)(float)(f + w);
                 }

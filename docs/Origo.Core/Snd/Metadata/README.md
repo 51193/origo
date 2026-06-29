@@ -40,25 +40,26 @@ SND 系统的核心类型保留与内联存储机制。值类型（`int`、`floa
 
 `TypedData` 是一个由 Source Generator 增强的 partial struct——编译时生成的代码提供每种注册类型的强类型访问器（`AsInt32()` / `TryGetSingle(out v)` 等）、显式转换运算符和泛型工厂类（`TypedDataFactory<T>`），详见 [Origo.SourceGeneration](../../../Origo.SourceGeneration/README.md)。
 
-类型判别通过 `_kind` 字段实现。判别值 `0` 为 `Null` 哨兵（`default(TypedData)`）。`DataType` 属性根据 `_kind` 从生成的查找表中返回对应的 `System.Type`。`Data` 属性用于序列化边界，按需将内联值装箱为 `object`。
+类型判别通过 `_kind` 字段实现。判别值 `0` 为 `Null` 哨兵（`default(TypedData)`）。`DataType` 属性根据 `_kind` 从生成的查找表中返回对应的 `System.Type`。
 
 `TypedData.RegisterKind(byte kind, Type type)` 允许适配层通过 `[ModuleInitializer]` 向全局 `KindTypeMap[256]` 中注册自己的类型。Core 层的 13 种基础类型和 GodotAdapter 层的 14 种引擎类型分别在不同 Kind 区间（1–13 和 128–141），互不冲突。
 
-序列化边界（反序列化时）通过 `TypedData.FromObject(Type, object?)` 静态方法构造。注册类型走内联存储；未注册类型和适配层类型走 `_ref` 兜底。`TypedDataLayeredRegistry` 提供链式回调机制，使适配层的转换逻辑能够插入 `TypedDataObjectConverter.ToObject` / `FromObject` 的 switch 分发中。
+序列化边界（反序列化时）通过 `TypedDataConverter.Read()` 和 `TypedDataTypeMap.GetKindForType` + `TypedDataObjectConverter.FromObject` 内部链路构造。注册类型走内联存储；未注册类型和适配层类型走 `_ref` 兜底。`TypedDataLayeredRegistry` 提供链式回调机制，使适配层的转换逻辑能够插入 `TypedDataObjectConverter.ToObject` / `FromObject` 的 switch 分发中。
 
 ### TypedData 的访问方式与推荐用法
 
-`TypedData` 提供两类读取方式，性能特征不同：
+`TypedData` 提供以下读取方式，性能特征不同：
 
 | 方式 | 前提 | 装箱 | 适用 |
 |------|------|------|------|
 | `TryGetInt32(out int)` / `TryGetString(out string)` / `AsXxx()` 等生成的强类型访问器 | 编译期已知目标类型 | **零装箱** | **热路径、已知类型的读取与类型判定**（数据变更处理、每帧读写、替代 `is T` 判定） |
-| `Data`（`object?`） | 类型擦除 | 值类型经 `ToObject` **装箱** | **冷的、真正类型擦除的路径**：序列化、控制台/调试输出、`ToString`、测试断言 |
+| `TypedDataObjectConverter.ToObject(td)` | 类型擦除 | 值类型**装箱** | **仅框架内部冷路径**：序列化、控制台/调试输出、`ToString`。`internal`，外部代码不可访问 |
 
 **推荐用法**：
 
-- 已知期望类型时（包括判断「是否为某类型」），用 `TryGetXxx` / `TryGetString`，而非 `Data is T`。前者零装箱，且不经 `ToObject` 的 switch 分发。
-- `Data` 仅用于编译期无法得知类型的场景（按 `DataType` 驱动的序列化、通用打印）。**避免在热路径或大批量迭代中读取 `Data`**——值类型会逐个装箱。
+- 取值始终用 `TryGetXxx` / `TypedDataFactory<T>.TryExtract()`，前者零装箱，且不经 `ToObject` 的 switch 分发。
+- 构造始终用显式 operator（如 `(TypedData)42`）或 `TypedDataFactory<T>.Create()`。
+- **不要自行做 kind 分派或 if-else 链处理不同类型的 TypedData**——类型判别逻辑已封装在生成代码和 `TypedDataObjectConverter` 内部。
 
 ### SndMetaData
 
@@ -133,9 +134,11 @@ Entity 的 Data 值可能是复杂引用类型（如字符串、数组、嵌套�
 
 原方案使用 `static TypedData()` 填充 `KindTypeMap`，但静态构造器只能在定义程序集中存在一个。多适配层架构下，GodotAdapter 等下游程序集需要注册自己的类型到同一个 `KindTypeMap` 数组中。`ModuleInitializer` 允许多个程序集各自在加载时调用 `TypedData.RegisterKind()`，按依赖顺序执行（Core 先于 Adapter），实现全局类型注册的组合。
 
-### `Data` 为何是类型擦除的装箱访问器
+### 为什么删除了 `Data` 属性和 `TypedData(Type, object?)` 构造器
 
-`Data`（`object?`）读取值类型时经 `ToObject` 装箱，与零装箱的 `TryGetXxx` 形成分工：`Data` 服务于编译期无法得知类型的冷路径（按 `DataType` 的序列化、控制台输出、`ToString`），这些路径固有需要 `object` 访问；热/温路径（数据变更信号处理、加载校验）一律用 `TryGetXxx`。因此装箱只落在冷路径，不构成热路径开销。值类型读取的相对性能见 [benchmarks/baseline.md](../../../benchmarks/baseline.md)。
+早期版本的 `TypedData` 暴露了 `public object? Data` 属性和 `public TypedData(Type, object?)` 构造器。前者允许任何调用方以类型擦除方式读取任意 TypedData 值（内部走 `TypedDataObjectConverter.ToObject` 装箱），后者允许以 `System.Type` + `object` 方式构造 TypedData（内部走 `FromObject`）。
+
+这两条路径形成了相对于零装箱 `TryGetXxx` / `TypedDataFactory<T>` 的**旁路**（见 AGENTS.md §1.4）：它们功能完备、使用简单，二次开发者无需了解性能模型即可正常使用，但每次调用都在静默执行装箱/拆箱。为了消除旁路并强制唯一访问路径，这些慢路径已被删除。类型擦除场景（序列化、控制台调试）现在统一通过 `internal` 的 `TypedDataObjectConverter` 处理，不暴露给外部。
 
 ---
 

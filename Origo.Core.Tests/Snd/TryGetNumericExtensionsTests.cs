@@ -97,13 +97,13 @@ public class TryGetNumericExtensionsTests
 
         public void SetData<T>(string name, T value)
         {
-            _data[name] = new TypedData(typeof(T), value);
+            _data[name] = new TypedData(TypedData.UnregisteredKind, 0, value);
         }
 
         public T GetData<T>(string name) => throw new NotImplementedException();
         public (bool found, T? value) TryGetData<T>(string name)
         {
-            if (_data.TryGetValue(name, out var td) && td.Data is T v)
+            if (_data.TryGetValue(name, out var td) && TypedDataObjectConverter.ToObject(td) is T v)
                 return (true, v);
             return (false, default);
         }

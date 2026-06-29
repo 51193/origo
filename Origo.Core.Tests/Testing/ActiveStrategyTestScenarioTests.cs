@@ -387,7 +387,7 @@ public class ActiveStrategyTestScenarioTests
             StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         };
-        template.DataMetaData.Pairs["template_key"] = new TypedData(typeof(string), "template_value");
+        template.DataMetaData.Pairs["template_key"] = new TypedData(TypedData.KindMap.String, 0, "template_value");
 
         var harness = StrategyTestScenario
             .ForActive<TemplateCloneStrategy>(TemplateCloneStrategyIndex)
@@ -563,7 +563,7 @@ public class ActiveStrategyTestScenarioTests
 
             var parts = new List<string>();
             foreach (var kv in clone.DataMetaData.Pairs)
-                parts.Add($"{kv.Key}={kv.Value.Data}");
+                parts.Add($"{kv.Key}={TypedDataObjectConverter.ToObject(kv.Value)}");
             return string.Join(",", parts);
         }
     }

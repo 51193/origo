@@ -55,6 +55,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`ISndObservation`** — removed. The old cross-entity ObserveData/ObserveLifecycle API has been replaced by `ISndObserverStrategyAccess.MountObserverStrategy` / `UnmountObserverStrategy` with ObserverStrategy as a first-class strategy type.
 - **`ISndEntityLifecycleAccess` / `EntityLifecycleEvent`** — removed. Lifecycle subscriptions via SubscribeLifecycle/UnsubscribeLifecycle on `ISndEntity` are no longer supported, and the accompanying `EntityLifecycleEvent` enum is removed along with them. Use ObserverStrategy with OnMounted/OnUnmounted instead.
 - **`ISndDataAccess.Subscribe` / `Unsubscribe`** — removed. Self-data subscriptions must now use `MountObserverStrategy` with the entity's own name as the target.
+- **BREAKING: `TypedData.Data` property** — removed. The public boxing accessor formed a bypass of the zero-boxing `TryGetXxx` and `TypedDataFactory<T>.TryExtract` read paths. For type-erased access, framework-internal callers (serialization, console debug) now use `TypedDataObjectConverter.ToObject` directly.
+- **BREAKING: `TypedData(Type, object?)` constructor and `TypedData.FromObject` static factory** — removed. Construct TypedData values via explicit operators (`(TypedData)42`), `TypedDataFactory<T>.Create()`, or the `SndMetaFluentBuilder` convenience API. The deserialization path (`TypedDataConverter.Read`) now uses `TypedDataTypeMap.GetKindForType` + `TypedDataObjectConverter.FromObject` internally.
 
 ### Changed
 

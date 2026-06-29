@@ -68,7 +68,7 @@ public class SndMetaFluentBuilderTests
         Assert.NotNull(meta.DataMetaData);
         var pair = meta.DataMetaData.Pairs["score"];
         Assert.Equal(typeof(int), pair.DataType);
-        Assert.Equal(42, pair.Data);
+        Assert.Equal(42, TypedDataObjectConverter.ToObject(pair));
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class SndMetaFluentBuilderTests
         Assert.NotNull(meta.DataMetaData);
         var pair = meta.DataMetaData.Pairs["speed"];
         Assert.Equal(typeof(float), pair.DataType);
-        Assert.Equal(3.14f, pair.Data);
+        Assert.Equal(3.14f, TypedDataObjectConverter.ToObject(pair));
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class SndMetaFluentBuilderTests
         Assert.NotNull(meta.DataMetaData);
         var pair = meta.DataMetaData.Pairs["label"];
         Assert.Equal(typeof(string), pair.DataType);
-        Assert.Equal("hello", pair.Data);
+        Assert.Equal("hello", TypedDataObjectConverter.ToObject(pair));
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class SndMetaFluentBuilderTests
         Assert.NotNull(meta.DataMetaData);
         var pair = meta.DataMetaData.Pairs["active"];
         Assert.Equal(typeof(bool), pair.DataType);
-        Assert.Equal(true, pair.Data);
+        Assert.Equal(true, TypedDataObjectConverter.ToObject(pair));
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class SndMetaFluentBuilderTests
         Assert.NotNull(meta.DataMetaData);
         var pair = meta.DataMetaData.Pairs["precise"];
         Assert.Equal(typeof(double), pair.DataType);
-        Assert.Equal(0.123, pair.Data);
+        Assert.Equal(0.123, TypedDataObjectConverter.ToObject(pair));
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public class SndMetaFluentBuilderTests
         Assert.NotNull(meta.DataMetaData);
         var pair = meta.DataMetaData.Pairs["big"];
         Assert.Equal(typeof(long), pair.DataType);
-        Assert.Equal(9999999999L, pair.Data);
+        Assert.Equal(9999999999L, TypedDataObjectConverter.ToObject(pair));
     }
 
     [Fact]
@@ -156,9 +156,9 @@ public class SndMetaFluentBuilderTests
         Assert.Contains("game.player_move", meta.StrategyMetaData.LifecycleIndices);
         Assert.Contains("ui.select", meta.StrategyMetaData.ActiveIndices);
         Assert.NotNull(meta.DataMetaData);
-        Assert.Equal(100, meta.DataMetaData.Pairs["hp"].Data);
-        Assert.Equal(200f, meta.DataMetaData.Pairs["speed"].Data);
-        Assert.Equal("Hero", meta.DataMetaData.Pairs["name"].Data);
-        Assert.Equal(true, meta.DataMetaData.Pairs["alive"].Data);
+        Assert.Equal(100, TypedDataObjectConverter.ToObject(meta.DataMetaData.Pairs["hp"]));
+        Assert.Equal(200f, TypedDataObjectConverter.ToObject(meta.DataMetaData.Pairs["speed"]));
+        Assert.Equal("Hero", TypedDataObjectConverter.ToObject(meta.DataMetaData.Pairs["name"]));
+        Assert.Equal(true, TypedDataObjectConverter.ToObject(meta.DataMetaData.Pairs["alive"]));
     }
 }

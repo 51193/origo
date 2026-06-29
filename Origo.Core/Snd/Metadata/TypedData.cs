@@ -25,12 +25,6 @@ public readonly partial struct TypedData : IEquatable<TypedData>
         _ref = refValue;
     }
 
-    public TypedData(Type type, object? data)
-    {
-        var td = FromObject(type, data);
-        this = td;
-    }
-
     public Type DataType
     {
         get
@@ -39,9 +33,6 @@ public readonly partial struct TypedData : IEquatable<TypedData>
             return KindTypeMap[_kind] ?? typeof(object);
         }
     }
-
-    public object? Data =>
-        TypedDataObjectConverter.ToObject(this);
 
     public bool IsNull => _kind == 0;
 
@@ -87,24 +78,7 @@ public readonly partial struct TypedData : IEquatable<TypedData>
     {
         if (_kind == 0) return "null";
         var typeName = DataType.Name;
-        return Data is null ? $"({typeName})null" : $"({typeName}){Data}";
-    }
-
-    public static TypedData FromObject(Type type, object? value)
-    {
-        if (value is null)
-        {
-            var nullKind = TypedDataTypeMap.GetKindForType(type);
-            if (nullKind != 0)
-                return new TypedData(nullKind, 0, null);
-            return new TypedData(UnregisteredKind, 0, null);
-        }
-
-        var kind = TypedDataTypeMap.GetKindForType(type);
-        if (kind == 0)
-            return new TypedData(UnregisteredKind, 0, value);
-
-        var boxed = TypedDataObjectConverter.FromObject(kind, value);
-        return new TypedData(kind, boxed.inlineBits, boxed.refValue);
+        var data = TypedDataObjectConverter.ToObject(this);
+        return data is null ? $"({typeName})null" : $"({typeName}){data}";
     }
 }

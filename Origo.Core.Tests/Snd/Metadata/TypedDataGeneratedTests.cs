@@ -47,7 +47,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void ExplicitConversion_String_RoundTrip()
     {
-        var td = TypedData.FromObject(typeof(string), "hello");
+        var td = new TypedData(TypedData.KindMap.String, 0, "hello");
         Assert.True(td.TryGetString(out var v));
         Assert.Equal("hello", v);
     }
@@ -98,7 +98,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void CrossTypeAccess_StringAsInt32_ReturnsFalse()
     {
-        var td = TypedData.FromObject(typeof(string), "text");
+        var td = new TypedData(TypedData.KindMap.String, 0, "text");
         Assert.False(td.TryGetInt32(out _));
     }
 
@@ -158,7 +158,7 @@ public class TypedDataGeneratedTests
     {
         Assert.Equal(typeof(int), ((TypedData)42).DataType);
         Assert.Equal(typeof(float), ((TypedData)1.5f).DataType);
-        Assert.Equal(typeof(string), TypedData.FromObject(typeof(string), "test").DataType);
+        Assert.Equal(typeof(string), new TypedData(TypedData.KindMap.String, 0, "test").DataType);
         Assert.Equal(typeof(bool), ((TypedData)true).DataType);
         Assert.Equal(typeof(double), ((TypedData)3.14).DataType);
     }
@@ -217,7 +217,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void FromObject_RegisteredType_PreservesValue()
     {
-        var td = TypedData.FromObject(typeof(int), 42);
+        var td = (TypedData)42;
         Assert.Equal(typeof(int), td.DataType);
         Assert.True(td.TryGetInt32(out var v));
         Assert.Equal(42, v);
@@ -227,17 +227,17 @@ public class TypedDataGeneratedTests
     public void FromObject_UnregisteredType_UsesRefSlot()
     {
         var guid = Guid.NewGuid();
-        var td = TypedData.FromObject(typeof(Guid), guid);
+        var td = new TypedData(TypedData.UnregisteredKind, 0, guid);
         Assert.Equal(typeof(Guid), td.DataType);
-        Assert.Equal(guid, td.Data);
+        Assert.Equal(guid, TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
     public void FromObject_NullValue_PreservesType()
     {
-        var td = TypedData.FromObject(typeof(string), null);
+        var td = new TypedData(TypedData.KindMap.String, 0, null);
         Assert.Equal(typeof(string), td.DataType);
-        Assert.Null(td.Data);
+        Assert.Null(TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
@@ -257,7 +257,7 @@ public class TypedDataGeneratedTests
             (TypedData)10.0,
             (TypedData)true,
             (TypedData)'X',
-            TypedData.FromObject(typeof(string), "Y")
+            new TypedData(TypedData.KindMap.String, 0, "Y")
         };
 
         foreach (var td in typesToCheck)
@@ -325,7 +325,7 @@ public class TypedDataGeneratedTests
         var td = TypedDataFactory<TimeSpan>.Create(ts);
 
         Assert.Equal(typeof(TimeSpan), td.DataType);
-        Assert.Equal(ts, td.Data);
+        Assert.Equal(ts, TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
@@ -348,10 +348,10 @@ public class TypedDataGeneratedTests
         TypedDataLayeredRegistry.RegisterKindResolver(t => t == typeof(Uri) ? (byte)206 : (byte)0);
 
         var uri = new Uri("https://example.com");
-        var td = TypedData.FromObject(typeof(Uri), uri);
+        var td = new TypedData(TypedData.UnregisteredKind, 0, uri);
 
         Assert.Equal(typeof(Uri), td.DataType);
-        Assert.Equal(uri, td.Data);
+        Assert.Equal(uri, TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]
@@ -381,10 +381,10 @@ public class TypedDataGeneratedTests
         GC.Collect();
         GC.WaitForPendingFinalizers();
         var before = GC.GetAllocatedBytesForCurrentThread();
-        var unused = td.Data;
+        var unused = TypedDataObjectConverter.ToObject(td);
         var after = GC.GetAllocatedBytesForCurrentThread();
 
-        Assert.Equal(42, td.Data);
+        Assert.Equal(42, TypedDataObjectConverter.ToObject(td));
         Assert.True(after - before < 1024,
             $"Data access for inline type should produce near-zero allocation, got {after - before} bytes");
     }
@@ -396,7 +396,7 @@ public class TypedDataGeneratedTests
         var version = new Version(3, 0);
         var td = new TypedData(208, 0, version);
 
-        Assert.Same(version, td.Data);
+        Assert.Same(version, TypedDataObjectConverter.ToObject(td));
     }
 
     [Fact]

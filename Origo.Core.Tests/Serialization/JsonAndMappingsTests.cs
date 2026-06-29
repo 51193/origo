@@ -30,8 +30,8 @@ public class JsonAndMappingsTests
             {
                 Pairs = new Dictionary<string, TypedData>
                 {
-                    ["hp"] = new(typeof(int), 100),
-                    ["title"] = new(typeof(string), "Knight")
+                    ["hp"] = (TypedData)100,
+                    ["title"] = new TypedData(TypedData.KindMap.String, 0, "Knight")
                 }
             }
         };
@@ -44,8 +44,8 @@ public class JsonAndMappingsTests
         Assert.Equal("Hero", parsed.Name);
         Assert.Equal("hero_prefab", parsed.NodeMetaData!.Pairs["body"]);
         Assert.Equal(new[] { StrategyMove, StrategyAttack }, parsed.StrategyMetaData!.LifecycleIndices);
-        Assert.Equal(100, Assert.IsType<int>(parsed.DataMetaData!.Pairs["hp"].Data));
-        Assert.Equal("Knight", Assert.IsType<string>(parsed.DataMetaData.Pairs["title"].Data));
+        Assert.Equal(100, Assert.IsType<int>(TypedDataObjectConverter.ToObject(parsed.DataMetaData!.Pairs["hp"])));
+        Assert.Equal("Knight", Assert.IsType<string>(TypedDataObjectConverter.ToObject(parsed.DataMetaData.Pairs["title"])));
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class JsonAndMappingsTests
 
         var template = mappings.ResolveTemplate("hero_template");
         Assert.Equal("TemplateHero", template.Name);
-        Assert.Equal(150, Assert.IsType<int>(template.DataMetaData!.Pairs["hp"].Data));
+        Assert.Equal(150, Assert.IsType<int>(TypedDataObjectConverter.ToObject(template.DataMetaData!.Pairs["hp"])));
 
         var readsAfterFirstResolve = fs.ReadAllTextCallCount;
         _ = mappings.ResolveTemplate("hero_template");
@@ -134,9 +134,9 @@ public class JsonAndMappingsTests
 
         Assert.Equal(2, metas.Count);
         Assert.Equal("EnemyA", metas[0].Name);
-        Assert.Equal(8, Assert.IsType<int>(metas[0].DataMetaData!.Pairs["damage"].Data));
+        Assert.Equal(8, Assert.IsType<int>(TypedDataObjectConverter.ToObject(metas[0].DataMetaData!.Pairs["damage"])));
         Assert.Equal("Npc", metas[1].Name);
-        Assert.Equal("Calm", Assert.IsType<string>(metas[1].DataMetaData!.Pairs["mood"].Data));
+        Assert.Equal("Calm", Assert.IsType<string>(TypedDataObjectConverter.ToObject(metas[1].DataMetaData!.Pairs["mood"])));
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public class JsonAndMappingsTests
         var node = codec.Decode(json);
         var td = registry.Read<TypedData>(node);
         Assert.Equal(typeof(int), td.DataType);
-        Assert.Equal(42, Assert.IsType<int>(td.Data));
+        Assert.Equal(42, Assert.IsType<int>(TypedDataObjectConverter.ToObject(td)));
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public class JsonAndMappingsTests
 
         var exported = bb.SerializeAll();
         Assert.Single(exported);
-        Assert.Equal(1, Assert.IsType<int>(exported["k"].Data));
+        Assert.Equal(1, Assert.IsType<int>(TypedDataObjectConverter.ToObject(exported["k"])));
 
         ((Dictionary<string, TypedData>)exported).Clear();
         Assert.Single(bb.GetKeys());

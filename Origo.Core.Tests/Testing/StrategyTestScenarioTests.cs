@@ -142,7 +142,7 @@ public class StrategyTestScenarioTests
             {
                 Pairs = new Dictionary<string, TypedData>
                 {
-                    ["type"] = new(typeof(string), "goblin")
+                    ["type"] = new TypedData(TypedData.KindMap.String, 0, "goblin")
                 }
             }
         };
@@ -364,7 +364,7 @@ public class StrategyTestScenarioTests
             var clone = ctx.CloneTemplate("enemy_template", "GoblinKing");
             entity.SetData("cloned_name", clone.Name);
             var (found, type) = clone.DataMetaData!.Pairs.TryGetValue("type", out var td)
-                ? (true, td.Data as string)
+                ? (true, td.TryGetString(out var s) ? s : null)
                 : (false, null);
             if (found)
                 entity.SetData("cloned_type", type);

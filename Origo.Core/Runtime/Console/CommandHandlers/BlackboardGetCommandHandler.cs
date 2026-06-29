@@ -1,5 +1,6 @@
 using System;
 using Origo.Core.Abstractions.Console;
+using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
@@ -41,7 +42,7 @@ internal sealed class BlackboardGetCommandHandler : ConsoleCommandHandlerBase
 
         var all = bb.SerializeAll();
         if (all.TryGetValue(key, out var td))
-            outputChannel.Publish($"[{layer}] {key} = {td.Data} (type: {td.DataType.Name})");
+            outputChannel.Publish($"[{layer}] {key} = {TypedDataObjectConverter.ToObject(td)} (type: {td.DataType.Name})");
         else
             outputChannel.Publish($"[{layer}] Key '{key}' not found.");
 

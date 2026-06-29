@@ -70,16 +70,16 @@ public class SndMetaDataTests
             {
                 Pairs = new Dictionary<string, TypedData>
                 {
-                    ["hp"] = new(typeof(int), 100),
-                    ["name"] = new(typeof(string), "hero")
+                    ["hp"] = (TypedData)100,
+                    ["name"] = new TypedData(TypedData.KindMap.String, 0, "hero")
                 }
             }
         };
         var clone = meta.DeepClone();
         Assert.NotSame(meta.DataMetaData, clone.DataMetaData);
         Assert.NotNull(clone.DataMetaData);
-        Assert.Equal(100, clone.DataMetaData!.Pairs["hp"].Data);
-        Assert.Equal("hero", clone.DataMetaData.Pairs["name"].Data);
+        Assert.Equal(100, TypedDataObjectConverter.ToObject(clone.DataMetaData!.Pairs["hp"]));
+        Assert.Equal("hero", TypedDataObjectConverter.ToObject(clone.DataMetaData.Pairs["name"]));
     }
 
     [Fact]

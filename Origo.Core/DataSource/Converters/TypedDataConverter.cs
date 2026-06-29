@@ -27,10 +27,28 @@ internal sealed class TypedDataConverter : DataSourceConverter<TypedData>
         var type = _typeMapping.GetTypeByName(typeName);
 
         if (!node.TryGetValue("data", out var dataNode) || dataNode is null || dataNode.IsNull)
-            return new TypedData(type, null);
+        {
+            var nullKind = TypedDataTypeMap.GetKindForType(type);
+            return nullKind != 0
+                ? new TypedData(nullKind, 0, null)
+                : new TypedData(TypedData.UnregisteredKind, 0, null);
+        }
 
         var data = _registry.Read(type, dataNode);
-        return new TypedData(type, data);
+        if (data is null)
+        {
+            var nullKind = TypedDataTypeMap.GetKindForType(type);
+            return nullKind != 0
+                ? new TypedData(nullKind, 0, null)
+                : new TypedData(TypedData.UnregisteredKind, 0, null);
+        }
+
+        var kind = TypedDataTypeMap.GetKindForType(type);
+        if (kind == 0)
+            return new TypedData(TypedData.UnregisteredKind, 0, data);
+
+        var boxed = TypedDataObjectConverter.FromObject(kind, data);
+        return new TypedData(kind, boxed.inlineBits, boxed.refValue);
     }
 
     public override DataSourceNode Write(TypedData value)
@@ -39,7 +57,8 @@ internal sealed class TypedDataConverter : DataSourceConverter<TypedData>
 
         var node = DataSourceNode.CreateObject();
         node.Add("type", DataSourceNode.CreateString(typeName));
-        node.Add("data", _registry.Write(value.DataType, value.Data));
+        node.Add("data", _registry.Write(value.DataType,
+            TypedDataObjectConverter.ToObject(value)));
 
         return node;
     }
