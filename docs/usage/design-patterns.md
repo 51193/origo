@@ -181,7 +181,7 @@ public class SchedulingStrategy : LifecycleStrategyBase
 ### InvokeStrategy：同步请求/响应
 
 ```csharp
-var target = ctx.FindEntity("TraversabilityManager");
+var target = entity.OwningSession.FindByName("TraversabilityManager");
 var path = target.InvokeStrategy<GridPos[], List<GridPos>>(
     "traversability.find_path", new[] { start, end });
 ```
@@ -211,7 +211,7 @@ entity.MountObserverStrategy(entity.Name, "schedule.intent_watcher");
 ### 规则
 
 - **禁止持有实体直接引用**（实体可能随时被销毁）
-- 通过 `ctx.FindEntity(name)` 按需查找
+- 通过 `entity.OwningSession.FindByName(name)` 按需查找
 - 通过 `InvokeStrategy` 实现同步请求/响应
 - 通过观察者策略（`MountObserverStrategy` + `[ObserveData]`）实现异步数据变更通知
 

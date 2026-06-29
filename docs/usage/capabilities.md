@@ -13,8 +13,8 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 无状态策略池 | 策略实例共享复用，注册时反射校验无状态约束，引用计数管理 | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.md) |
 | 策略优先级排序 | Process 等钩子按 Priority 升序执行，同优先级 FIFO | [SND 实体模型](snd-entity-model.md) |
 | TypedData 类型保持 | 只读 partial struct 内联存储，Source Generator 生成类型化转换，JSON 往返不丢失精度 | [SND 实体模型](snd-entity-model.md) |
-| 数据观察者 | Subscribe 按 key 监听实体数据变更，支持可选的 filter 过滤 | [SND 实体模型](snd-entity-model.md) |
-| 跨实体观察 | ObserveData / ObserveLifecycle 实现跨实体数据与生命周期观察，Teardown 自动清理 | [Agent Reference](agent-reference.md) |
+| 数据观察者 | 观察者策略（`ObserverStrategyBase` + `[ObserveData]` 属性）响应实体数据变更；挂载/卸载经 `MountObserverStrategy`/`UnmountObserverStrategy`，绑定随存档持久化、读档自动恢复、实体死亡自动清理 | [SND 实体模型](snd-entity-model.md) |
+| 跨实体观察 | `MountObserverStrategy(target, observerIndex)` 支持自观察与跨实体观察；`OnMounted`/`OnUnmounted` 承载生命周期感知 | [SND 实体模型](snd-entity-model.md) |
 | 主动策略 | 按索引外部调用 Invoke，与被动策略独立容器管理，O(1) 查找 | [策略测试](strategy-testing.md) |
 | 泛型主动策略调用 | `InvokeStrategy<TInput, TOutput>` 扩展方法，类型安全消除 JSON 序列化样板 | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.md) |
 | SndMetaFluentBuilder | 链式 API 构建实体元数据，消除 `??= new DataMetaData()` 样板 | [↔ Snd/Metadata](../Origo.Core/Snd/Metadata/README.md) |

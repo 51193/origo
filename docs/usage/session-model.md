@@ -78,7 +78,7 @@ bgSession.SessionBlackboard.SetValue("explored", true);
 
 ```csharp
 // 方式一：自动处理（推荐）—— SwitchForeground 内部完成保存 + 销毁
-var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", false);
+var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
 bg.SessionBlackboard.SetValue("data", value);
 
@@ -87,13 +87,13 @@ ctx.RequestSwitchForegroundLevel("game");
 ctx.FlushDeferredActionsForCurrentFrame();
 
 // 方式二：手动控制——调用方显式逐步保存和销毁，获得更细粒度控制
-var bg = ctx.SessionManager.CreateBackgroundSession("gen", "game", false);
+var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
 
 ctx.RequestSaveGameAuto();
 ctx.FlushDeferredActionsForCurrentFrame();
 
-ctx.SessionManager.DestroySession("gen");
+sessionManager.DestroySession("gen");
 ctx.RequestSwitchForegroundLevel("game");
 ctx.FlushDeferredActionsForCurrentFrame();
 ```

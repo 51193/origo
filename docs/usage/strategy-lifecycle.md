@@ -23,12 +23,12 @@
 // ✅ 正确：AfterLoad ↔ BeforeQuit 配对（运行期非持久化资源）
 public override void AfterLoad(ISndEntity entity, ISndContext ctx)
 {
-    ctx.FindEntity("InputRouter")?.InvokeStrategy("input.capture_begin", entity.Name);
+    entity.OwningSession.FindByName("InputRouter")?.InvokeStrategy("input.capture_begin", entity.Name);
 }
 
 public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
 {
-    ctx.FindEntity("InputRouter")?.InvokeStrategy("input.capture_end", entity.Name);
+    entity.OwningSession.FindByName("InputRouter")?.InvokeStrategy("input.capture_end", entity.Name);
 }
 ```
 
@@ -36,12 +36,12 @@ public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
 // ❌ 错误：AfterLoad 中获取，BeforeRemove 中释放（闭环不匹配）
 public override void AfterLoad(ISndEntity entity, ISndContext ctx)
 {
-    ctx.FindEntity("InputRouter")?.InvokeStrategy("input.capture_begin", entity.Name);
+    entity.OwningSession.FindByName("InputRouter")?.InvokeStrategy("input.capture_begin", entity.Name);
 }
 
 public override void BeforeRemove(ISndEntity entity, ISndContext ctx)
 {
-    ctx.FindEntity("InputRouter")?.InvokeStrategy("input.capture_end", entity.Name); // 退出时不触发 BeforeRemove
+    entity.OwningSession.FindByName("InputRouter")?.InvokeStrategy("input.capture_end", entity.Name); // 退出时不触发 BeforeRemove
 }
 ```
 
@@ -56,13 +56,13 @@ public override void BeforeRemove(ISndEntity entity, ISndContext ctx)
 // 游戏逻辑闭环：注册到全局管理器（仅首次创建时）
 public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
 {
-    var mgr = ctx.FindEntity("FoodManager");
+    var mgr = entity.OwningSession.FindByName("FoodManager");
     mgr.InvokeStrategy("food.register", entity.Name);
 }
 
 public override void BeforeDead(ISndEntity entity, ISndContext ctx)
 {
-    var mgr = ctx.FindEntity("FoodManager");
+    var mgr = entity.OwningSession.FindByName("FoodManager");
     mgr.InvokeStrategy("food.unregister", entity.Name);
 }
 ```
@@ -75,7 +75,7 @@ public override void BeforeDead(ISndEntity entity, ISndContext ctx)
 // ✅ 正确：AfterLoad 只恢复运行时非持久化资源（如向运行时管理器注册）
 public override void AfterLoad(ISndEntity entity, ISndContext ctx)
 {
-    ctx.FindEntity("CombatManager")?.InvokeStrategy("combat.register", entity.Name);
+    entity.OwningSession.FindByName("CombatManager")?.InvokeStrategy("combat.register", entity.Name);
 }
 
 // ❌ 错误：AfterLoad 重置业务状态（Data 中已有正确值）
@@ -151,7 +151,7 @@ public sealed class CharacterCoreStrategy : LifecycleStrategyBase
     // 游戏逻辑闭环：注册/注销到管理器（AfterSpawn ↔ BeforeDead 配对）
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
-        ctx.FindEntity("CharacterManager")?.InvokeStrategy("character.register", entity.Name);
+        entity.OwningSession.FindByName("CharacterManager")?.InvokeStrategy("character.register", entity.Name);
 
         // 观察闭环：挂载 hp 观察者策略（绑定随存档持久化、读档自动恢复、死亡自动卸载）
         entity.MountObserverStrategy(entity.Name, "game.character.hp_death");
@@ -159,7 +159,7 @@ public sealed class CharacterCoreStrategy : LifecycleStrategyBase
 
     public override void BeforeDead(ISndEntity entity, ISndContext ctx)
     {
-        ctx.FindEntity("CharacterManager")?.InvokeStrategy("character.unregister", entity.Name);
+        entity.OwningSession.FindByName("CharacterManager")?.InvokeStrategy("character.unregister", entity.Name);
     }
 
     // 特殊钩子：保存时同步引擎状态
