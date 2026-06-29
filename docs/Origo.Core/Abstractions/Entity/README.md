@@ -10,7 +10,7 @@
 
 | 文件 | 职责 |
 |------|------|
-| `ISndDataAccess.cs` | 数据写入与安全读取 |
+| `ISndDataAccess.cs` | 数据写入、安全读取与强断言读取 |
 | `ISndNodeAccess.cs` | 节点查询与枚举 |
 | `ISndStrategyAccess.cs` | 被动策略动态添加/移除 |
 | `ISndActiveStrategyAccess.cs` | 主动策略：添加/移除/调用 |
@@ -25,7 +25,8 @@
 | 成员 | 说明 |
 |------|------|
 | `SetData<T>(name, value)` | 写入命名数据。值与旧值相同则跳过变更通知 |
-| `TryGetData<T>(name)` | 安全读取，返回 `(found, value?)` —— **唯一的接口级读取方法** |
+| `TryGetData<T>(name)` | 安全读取，返回 `(found, value?)`。适用于数据可能不存在或类型不确定的场景 |
+| `GetData<T>(name)` | 强断言读取，数据缺失或类型不匹配时抛出 `InvalidOperationException`。适用于调用方已知数据必定存在的场景（fail-fast） |
 
 > 数据变更的观察不在此接口上。响应数据变更通过 `ObserverStrategyBase` 的 `OnDataChanged` 钩子实现，由 `ISndObserverStrategyAccess` 挂载。详见 [Snd/Strategy](../../Snd/Strategy/README.md)。
 

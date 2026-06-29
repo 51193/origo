@@ -104,6 +104,9 @@ public class PressButtonCommandHandlerTests
 
         public (bool found, T? value) TryGetData<T>(string name) => (false, default);
 
+        public T GetData<T>(string name) =>
+            throw new InvalidOperationException($"Data key '{name}' not found.");
+
         public void MountObserverStrategy(string targetName, string observerIndex) { }
 
         public void UnmountObserverStrategy(string targetName, string observerIndex) { }
