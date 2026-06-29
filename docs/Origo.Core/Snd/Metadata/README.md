@@ -92,7 +92,7 @@ var meta = new SndMetaFluentBuilder("Player")
     .SetInt("hp", 100)
     .SetFloat("speed", 200f)
     .SetBool("alive", true)
-    .AddEntityStrategy("game.player_move")
+    .AddLifecycleStrategy("game.player_move")
     .SetNode("scene", "res://player.tscn")
     .Build();
 ```

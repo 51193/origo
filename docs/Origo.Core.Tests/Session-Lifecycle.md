@@ -40,7 +40,7 @@ ProgressRun 的 LoadFromPayload/SwitchForeground/PersistProgress、
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `SessionRun_Dispose_ClearsSessionAndScene_ThenThrowsOnAccess` | Dispose 后 SessionBlackboard/SceneHost/StateMachines 访问抛 ObjectDisposedException | session-model: Dispose 语义 |
+| `SessionRun_Dispose_ClearsSessionAndScene_ThenThrowsOnAccess` | Dispose 后 SessionBlackboard/FindByName/StateMachines 访问抛 ObjectDisposedException | session-model: Dispose 语义 |
 | `ProgressRun_LoadFromPayload_RestoresProgressAndSession` | 从 Payload 恢复 Progress 黑板和 Session 黑板 | persistence-flow |
 | `ProgressRun_SwitchForegroundLevel_PersistsOldSession_AndLoadsNewSessionFromCurrent` | 切换关卡时旧会话显式持久化、新会话从 current/ 加载 | session-model: 关卡切换 |
 | `ProgressRun_SwitchForegroundLevel_WhenTargetMissing_EntersEmptySessionAndClearsScene` | 目标关卡无数据时进入空会话、清空 Scene | session-model |
@@ -109,7 +109,7 @@ ProgressRun 的 LoadFromPayload/SwitchForeground/PersistProgress、
 | `SessionRun_AfterDispose_SaveDoesNotPersistSessionData` | Dispose 后保存不包含已释放会话的数据 | 文件不存在 |
 | `SessionRun_AfterDispose_SaveExcludesDisposedSession` | Dispose 后 RequestSaveGame 排除已释放会话 | 文件不存在 |
 | `SessionRun_AfterDispose_SessionBlackboard_ThrowsObjectDisposed` | Dispose 后访问黑板（ISessionRun 公共属性） | ObjectDisposedException |
-| `SessionRun_AfterDispose_SceneHost_ThrowsObjectDisposed` | Dispose 后访问 SceneHost（ISessionRun 公共属性） | ObjectDisposedException |
+| `SessionRun_AfterDispose_SceneHost_ThrowsObjectDisposed` | Dispose 后通过 FindByName 访问实体（ISessionRun 公共方法） | ObjectDisposedException |
 | `SessionRun_AfterDispose_GetSessionStateMachines_ThrowsObjectDisposed` | Dispose 后获取状态机（ISessionRun 公共方法） | ObjectDisposedException |
 | `ProgressRun_AfterDispose_ForegroundSession_IsNull` | Dispose 后 ForegroundSession 为 null | — |
 | `ProgressRun_AfterDispose_SessionManagerKeys_IsEmpty` | Dispose 后 Keys 为空 | — |

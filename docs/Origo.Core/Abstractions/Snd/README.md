@@ -20,7 +20,7 @@ ISndContext 的角色接口拆分。9 个窄接口按职责分解，遵循接口
 | `ISndFileAccess.cs` | 文件访问：结构化读写 + 强类型读写 + 存在检查（5 成员）。所有文件内容读写统一通过 `IDataSourceIoGateway` 边界，策略无需自行处理原始文本解析 |
 | `ISndArchiveFileAccess.cs` | 存档内文件访问：结构化读写 + 强类型读写 + 存在检查 + 删除（6 成员）。路径相对于存档活动目录的 extra/ 子目录，随存档生命周期 |
 
-> **已删除**：`ISndSessionAccess.cs` 和 `ISndEntityOperations.cs`。`CurrentSession`、`IsFrontSession` 不在 `ISndContext` 接口上，仅保留为具体 `SndContext` 类的公共便捷成员（`CurrentSession` 直接返回前台会话，无 ambient 栈）。`RequestKillAll`/`RequestKillEntity` 已从 `ISndContext` 移除——实体销毁经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行。`SessionManager` 不在 `ISndContext` 上——跨会话操作通过 `entity.OwningSession.SessionManager`。
+> **已删除**：`ISndSessionAccess.cs` 和 `ISndEntityOperations.cs`。`CurrentSession`、`IsFrontSession`、`SessionManager`、`RequestKillAll`/`RequestKillEntity` 已从 `ISndContext` 移除。`IsFrontSession` 现仅存在于 `ISessionRun`（经 `entity.OwningSession.IsFrontSession` 访问）。`SessionManager` 可通过 `entity.OwningSession.SessionManager` 或 `OrigoRuntime.SessionManager`（public）访问。实体销毁经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行。
 
 ## ISndContext 组合
 
