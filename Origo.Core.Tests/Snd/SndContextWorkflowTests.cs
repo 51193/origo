@@ -478,7 +478,7 @@ public class SndContextWorkflowTests
     // ── SndContext initial state ──
 
     [Fact]
-    public void InitialState_NoProgressBlackboard_NoCurrentSession()
+    public void InitialState_NoProgressBlackboard_NoForegroundSession()
     {
         var ctx = CreateContext(out _, out _);
         Assert.Null(ctx.ProgressBlackboard);

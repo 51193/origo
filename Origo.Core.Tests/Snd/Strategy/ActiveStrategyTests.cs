@@ -65,7 +65,7 @@ public class ActiveStrategyTests
     }
 
     [Fact]
-    public void Invoke_EntityStrategyIndex_Throws()
+    public void Invoke_LifecycleStrategyIndex_Throws()
     {
         var (entity, ctx, _) = Setup();
         entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }));
@@ -288,7 +288,7 @@ public class ActiveStrategyTests
     }
 
     [Fact]
-    public void RemoveEntityStrategy_LeavesActiveStrategy()
+    public void RemoveLifecycleStrategy_LeavesActiveStrategy()
     {
         var (entity, _, _) = Setup();
         entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
@@ -299,7 +299,7 @@ public class ActiveStrategyTests
     }
 
     [Fact]
-    public void RemoveActiveStrategy_LeavesEntityStrategy()
+    public void RemoveActiveStrategy_LeavesLifecycleStrategy()
     {
         var (entity, _, _) = Setup();
         entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
@@ -362,7 +362,7 @@ public class ActiveStrategyTests
         return (entity, ctx, logger);
     }
 
-    private static SndMetaData CreateMeta(string[] entityIndices,
+    private static SndMetaData CreateMeta(string[] lifecycleIndices,
         string[]? activeIndices = null)
     {
         return new SndMetaData
@@ -371,7 +371,7 @@ public class ActiveStrategyTests
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                LifecycleIndices = new List<string>(entityIndices),
+                LifecycleIndices = new List<string>(lifecycleIndices),
                 ActiveIndices = new List<string>(activeIndices ?? Array.Empty<string>())
             },
             DataMetaData = new DataMetaData()

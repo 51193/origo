@@ -79,8 +79,8 @@
 | 验证 ActiveStrategy 的 Invoke 调用 | Invoke 正确调用策略方法 | snd-entity-model |
 | 验证 InvokeStrategy 委托链 | 实体 InvokeStrategy 正确委托到 ActiveStrategy | snd-entity-model |
 | `SameEntity_HasBothTypeStrategies` | 同一实体同时挂 EntityStrategy 和 ActiveStrategy | snd-entity-model |
-| `RemoveEntityStrategy_LeavesActiveStrategy` | 移除 EntityStrategy 后 ActiveStrategy 仍可 Invoke | snd-entity-model |
-| `RemoveActiveStrategy_LeavesEntityStrategy` | 移除 ActiveStrategy 后 EntityStrategy 仍可 Process | snd-entity-model |
+| `RemoveLifecycleStrategy_LeavesActiveStrategy` | 移除 LifecycleStrategy 后 ActiveStrategy 仍可 Invoke | snd-entity-model |
+| `RemoveActiveStrategy_LeavesLifecycleStrategy` | 移除 ActiveStrategy 后 LifecycleStrategy 仍可 Process | snd-entity-model |
 
 ## LifecycleStrategyBaseTests 测试详情
 

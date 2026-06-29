@@ -111,7 +111,7 @@ public class BackgroundSessionTests
     }
 
     [Fact]
-    public void SessionContext_CurrentSessionPointsToOwningSession()
+    public void SessionContext_OwningSession_CorrectlyBoundToBackgroundSession()
     {
         var seenSessionLevelIds = new List<string>();
         var (ctx, _) = CreateForegroundContext(world =>

@@ -181,7 +181,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     SndMetaData IEntityLifecycle.BuildMetaData()
     {
-        var entityIndices = _strategyManager.GetStrategyIndices();
+        var lifecycleIndices = _strategyManager.GetStrategyIndices();
         var activeIndices = _activeStrategyManager.SerializeIndices();
 
         return new SndMetaData
@@ -190,7 +190,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             NodeMetaData = _nodeHost.SerializeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                LifecycleIndices = new List<string>(entityIndices),
+                LifecycleIndices = new List<string>(lifecycleIndices),
                 ActiveIndices = new List<string>(activeIndices),
                 ObserverIndices = _observerTopology.BuildBindingsFor(Name).ToList()
             },

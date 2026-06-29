@@ -15,12 +15,12 @@ namespace Origo.Core.Tests;
 // 1. SndContext save / load / continue workflows
 // ─────────────────────────────────────────────────────────────────────────────
 
-public class EntityStrategyBaseTests
+public class LifecycleStrategyBaseTests
 {
     [Fact]
     public void DefaultHooks_DoNotMutateEntityData()
     {
-        var strategy = new TestEntityStrategy();
+        var strategy = new TestLifecycleStrategy();
         var entity = new StubSndEntity("e");
         entity.SetData("score", 7);
         ISndContext ctx = NullSndContext.Instance;
@@ -40,7 +40,7 @@ public class EntityStrategyBaseTests
     [Fact]
     public void Process_AddsNewStrategy_DoesNotThrow()
     {
-        var strategy = new TestEntityStrategyWithAdd();
+        var strategy = new TestLifecycleStrategyWithAdd();
         var entity = new StubSndEntity("e");
         ISndContext ctx = NullSndContext.Instance;
 
@@ -65,7 +65,7 @@ public class EntityStrategyBaseTests
 
         var entity = host.CreateEntity(new SndMetaData { Name = "e" });
 
-        var strategy = new TestEntityStrategyKillSelf();
+        var strategy = new TestLifecycleStrategyKillSelf();
         strategy.Process(entity, 0.016, ctx);
 
         Assert.True(entity.IsPendingKill);
@@ -89,7 +89,7 @@ public class EntityStrategyBaseTests
         var entityA = host.CreateEntity(new SndMetaData { Name = "A" });
         host.CreateEntity(new SndMetaData { Name = "B" });
 
-        var strategy = new TestEntityStrategyKillOther();
+        var strategy = new TestLifecycleStrategyKillOther();
         strategy.Process(entityA, 0.016, ctx);
 
         Assert.False(entityA.IsPendingKill);
@@ -177,11 +177,11 @@ public class EntityStrategyBaseTests
         }
     }
 
-    private sealed class TestEntityStrategy : LifecycleStrategyBase
+    private sealed class TestLifecycleStrategy : LifecycleStrategyBase
     {
     }
 
-    private sealed class TestEntityStrategyWithAdd : LifecycleStrategyBase
+    private sealed class TestLifecycleStrategyWithAdd : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -189,7 +189,7 @@ public class EntityStrategyBaseTests
         }
     }
 
-    private sealed class TestEntityStrategyKillSelf : LifecycleStrategyBase
+    private sealed class TestLifecycleStrategyKillSelf : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -197,7 +197,7 @@ public class EntityStrategyBaseTests
         }
     }
 
-    private sealed class TestEntityStrategyKillOther : LifecycleStrategyBase
+    private sealed class TestLifecycleStrategyKillOther : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -247,13 +247,13 @@ public class EntityStrategyBaseTests
         return host;
     }
 
-    private static SndMetaData CreateMeta(string name, string[]? entityIndices = null) => new()
+    private static SndMetaData CreateMeta(string name, string[]? lifecycleIndices = null) => new()
     {
         Name = name,
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            LifecycleIndices = new List<string>(entityIndices ?? Array.Empty<string>())
+            LifecycleIndices = new List<string>(lifecycleIndices ?? Array.Empty<string>())
         },
         DataMetaData = new DataMetaData()
     };

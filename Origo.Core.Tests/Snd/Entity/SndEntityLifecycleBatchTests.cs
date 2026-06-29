@@ -45,14 +45,14 @@ public class SndEntityLifecycleBatchTests
         return host;
     }
 
-    private static SndMetaData CreateMeta(string name, string[]? entityIndices = null,
+    private static SndMetaData CreateMeta(string name, string[]? lifecycleIndices = null,
         string[]? activeIndices = null) => new()
     {
         Name = name,
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            LifecycleIndices = new List<string>(entityIndices ?? Array.Empty<string>()),
+            LifecycleIndices = new List<string>(lifecycleIndices ?? Array.Empty<string>()),
             ActiveIndices = new List<string>(activeIndices ?? Array.Empty<string>())
         },
         DataMetaData = new DataMetaData()

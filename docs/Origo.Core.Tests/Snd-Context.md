@@ -73,7 +73,7 @@
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
 | `HasContinueData_FalseWhenNoTargetSet` | 未设置 Continue 目标 | 返回 false |
-| `InitialState_NoProgressBlackboard_NoCurrentSession` | 刚创建时无 Progress 和前台会话（ForegroundSession 为 null） | null |
+| `InitialState_NoProgressBlackboard_NoForegroundSession` | 刚创建时无 Progress 和前台会话（ForegroundSession 为 null） | null |
 | `RequestSaveGame_ConcurrentWorkflow_AllowsSequentialSavesInSingleFlush` | 同一 Flush 中多次 Save | 不抛异常 |
 
 ## SndTemplateResolverTests 测试详情
