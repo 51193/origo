@@ -6,6 +6,8 @@
 
 **Origo.SourceGeneration** 是 Roslyn 增量源码生成器（`IIncrementalGenerator`），为 `TypedData` 部分结构体生成类型特化的内联存储与强类型访问器。支持 **Home/Adapter 双模式**生成，使 Core 层和下游适配层分别声明各自的类型集合，并自动协调全局 Kind 值空间。
 
+> 完整的性能推理、逐阶段分析及扩展指南见 **[pipeline.md](pipeline.md)**。
+
 ## 包含文件
 
 | 文件 | 职责 |
@@ -13,6 +15,7 @@
 | `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`：双模式代码生成器 |
 | `AnalyzerReleases.Shipped.md` | 分析器发布跟踪（已发布规则，当前为空） |
 | `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`、`ORIGOSG002`、`ORIGOSG003`、`ORIGOSG004`） |
+| `pipeline.md` | 全链路性能解析：从装箱问题到编译期优化的完整推理与基准说明 |
 
 ## 双模式架构
 
