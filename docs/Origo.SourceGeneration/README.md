@@ -31,7 +31,7 @@ Source Generator 在编译时检测当前程序集是否为 TypedData 的"宿主
 | 生成类别 | 生成内容 | 说明 |
 |---------|---------|------|
 | **KindMap** | `partial struct TypedData { internal static class KindMap { const byte Int32 = 5; ... } }` | 每种注册类型的 `const byte` 判别值，从 `StartKind` 开始编号 |
-| **Kind 注册** | `TypedDataHomeKindRegistration` + `[ModuleInitializer]` | 调用 `TypedData.RegisterKind()` 填充全局 `KindTypeMap[]`，替代旧方案中的 `static TypedData()` 静态构造器 |
+| **Kind 注册** | `TypedDataHomeKindRegistration` + `[ModuleInitializer]` | 调用 `TypedData.RegisterKind()` 填充全局 `KindTypeMap[]`，独立于任何静态构造器，允许多程序集各自注册类型 |
 | **强类型构造** | `explicit operator TypedData(...)` | 每种系统类型的显式转换运算符，将值内联写入结构体字段 |
 | **强类型读取** | `AsXxx()` / `TryGetXxx()` | 内部/公开访问器方法，通过 Kind 判别值直接字段读取 |
 | **泛型工厂** | `TypedDataFactory<T>` | `Create(T)` / `TryExtract(TypedData, out T)`，if-else 链经 JIT 常量折叠 |

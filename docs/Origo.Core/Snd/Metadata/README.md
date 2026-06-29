@@ -116,7 +116,7 @@ var meta = SndMetaFluentBuilder.From(ctx.CloneTemplate("player_template", "Playe
 
 TypedData 存储实体运行时可变状态（如 `hp = 100`、`speed = 3.5f`），其中绝大多数是值类型。使用 class（引用类型）意味着每次 `SetData` 都需要堆分配 `new TypedData(typeof(T), value)`，对频繁更新的游戏实体（每帧多次读写）产生显著的 GC 压力。
 
-改为值类型后，内联存储消除堆分配。`Dictionary<string, TypedData>` 的值直接嵌入字典条目，值类型在栈上或内联在集合中，不产生独立 GC 对象。
+作为值类型，内联存储消除堆分配。`Dictionary<string, TypedData>` 的值直接嵌入字典条目，值类型在栈上或内联在集合中，不产生独立 GC 对象。
 
 ### 为什么使用 Source Generator 生成类型成员
 
@@ -130,15 +130,17 @@ TypedData 存储实体运行时可变状态（如 `hp = 100`、`speed = 3.5f`）
 
 Entity 的 Data 值可能是复杂引用类型（如字符串、数组、嵌套对象）。全量递归深拷贝成本高且可能错误复制引擎内部引用（通过 `INodeHandle.Native` 等）。当前浅复制语义与 JSON 往返序列化行为一致——如果 JSON 序列化不会复制，DeepClone 也不复制。
 
-### 为什么 TypedData 使用 ModuleInitializer + RegisterKind 而非静态构造器
+### 为什么 TypedData 使用 ModuleInitializer + RegisterKind
 
-原方案使用 `static TypedData()` 填充 `KindTypeMap`，但静态构造器只能在定义程序集中存在一个。多适配层架构下，GodotAdapter 等下游程序集需要注册自己的类型到同一个 `KindTypeMap` 数组中。`ModuleInitializer` 允许多个程序集各自在加载时调用 `TypedData.RegisterKind()`，按依赖顺序执行（Core 先于 Adapter），实现全局类型注册的组合。
+`static TypedData()` 静态构造器只能在定义程序集中存在一个，而多适配层架构下 GodotAdapter 等下游程序集需要注册自己的类型到同一个 `KindTypeMap` 数组中。`ModuleInitializer` 允许多个程序集各自在加载时调用 `TypedData.RegisterKind()`，按依赖顺序执行（Core 先于 Adapter），实现全局类型注册的组合。
 
-### 为什么删除了 `Data` 属性和 `TypedData(Type, object?)` 构造器
+### 为什么 TypedData 不暴露 `object?` 装箱取值器
 
-早期版本的 `TypedData` 暴露了 `public object? Data` 属性和 `public TypedData(Type, object?)` 构造器。前者允许任何调用方以类型擦除方式读取任意 TypedData 值（内部走 `TypedDataObjectConverter.ToObject` 装箱），后者允许以 `System.Type` + `object` 方式构造 TypedData（内部走 `FromObject`）。
+将 `int`/`float` 等值类型以 `object?` 形式返回，在 CLR 上**必然触发装箱分配**。如果 TypedData 暴露这样一个属性，无论命名为 `Data` 还是其他，它都会成为二次开发者面对 TypedData 时最自然的取值手段——因为它对所有类型"都管用"，无需了解泛型或 `TryGetXxx`。这正是 §1.4 禁止的**旁路**：一条功能完备、使用更简单的访问路径，掩盖了零装箱 `TryGetXxx` / `TypedDataFactory<T>.TryExtract()` 的存在。
 
-这两条路径形成了相对于零装箱 `TryGetXxx` / `TypedDataFactory<T>` 的**旁路**（见 AGENTS.md §1.4）：它们功能完备、使用简单，二次开发者无需了解性能模型即可正常使用，但每次调用都在静默执行装箱/拆箱。为了消除旁路并强制唯一访问路径，这些慢路径已被删除。类型擦除场景（序列化、控制台调试）现在统一通过 `internal` 的 `TypedDataObjectConverter` 处理，不暴露给外部。
+TypedData 刻意不暴露装箱取值器。取值只有一条路：编译期已知类型 → `TryGetXxx` 或 `TypedDataFactory<T>.TryExtract()`，经 JIT 折叠为零开销字段读取。框架内部需要类型擦除的冷路径（序列化、控制台调试、`ToString`）通过 `internal` 的 `TypedDataObjectConverter.ToObject` 处理，外部代码无法触及。
+
+同理，TypedData 不暴露 `new TypedData(Type, object?)` 万能构造器。构造只有一条路：`TypedDataFactory<T>.Create()` 或显式 operator（如 `(TypedData)42`），经 JIT 折叠为零开销字段写入。
 
 ---
 

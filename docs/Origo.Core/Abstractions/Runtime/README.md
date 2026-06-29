@@ -4,7 +4,7 @@
 
 ## 概述
 
-定义帧驱动抽象接口。`IOrigoFrameDriver` 是宿主环境与 Core 之间的帧边界——适配层通过 `DriveFrame(delta)` 移交帧控制权，Core 内部按固定顺序编排（实体处理→业务队列→杀实体→系统队列→控制台）。`IScheduler`（已改为 `internal`）是 Core 内部的调度队列接口。
+定义帧驱动抽象接口。`IOrigoFrameDriver` 是宿主环境与 Core 之间的帧边界——适配层通过 `DriveFrame(delta)` 移交帧控制权，Core 内部按固定顺序编排（实体处理→业务队列→杀实体→系统队列→控制台）。`IScheduler` 是 Core 内部的调度队列接口，标记为 `internal`。
 
 ## 包含文件
 
@@ -33,7 +33,7 @@
 
 ### 为什么 IOrigoFrameDriver 独立于 IScheduler
 
-`IScheduler` 是 Core 内部的调度队列接口（已改为 `internal`），供 `OrigoRuntime` 内部子系统使用。`IOrigoFrameDriver` 是对外暴露的帧边界抽象——适配层通过它移交帧控制权，不感知 Core 内部的队列顺序、实体处理管线等编排细节。两接口职责正交：一个管理队列，一个定义帧边界。
+`IScheduler` 是 Core 内部的调度队列接口，标记为 `internal`，供 `OrigoRuntime` 内部子系统使用。`IOrigoFrameDriver` 是对外暴露的帧边界抽象——适配层通过它移交帧控制权，不感知 Core 内部的队列顺序、实体处理管线等编排细节。两接口职责正交：一个管理队列，一个定义帧边界。
 
 ### 为什么 IScheduler 是 internal
 

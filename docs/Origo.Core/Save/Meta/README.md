@@ -51,7 +51,7 @@ IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 
 ### 为什么贡献者返回独立字典而非修改可变 target
 
-原 `void Contribute(context, IDictionary<string, string> target)` 设计中，贡献者持有可变 `target` 引用，可以调用 `Clear()`、`Remove()` 等方法破坏此前其他贡献者的结果。改为返回 `IReadOnlyDictionary<string, string>` 后，每个贡献者只产出自己的键值对，合并（覆盖顺序）由框架的 `SaveMetaMerger` 统一处理——贡献者无法影响彼此的产出。
+如果贡献者持有可变 `IDictionary<string, string>` 引用，就能调用 `Clear()`、`Remove()` 等方法破坏其他贡献者的结果。每个贡献者返回独立的 `IReadOnlyDictionary<string, string>` 后，合并（覆盖顺序）由 `SaveMetaMerger` 统一处理——贡献者彼此隔离，无法影响其他人的产出。
 
 ### 为什么 SaveMetaBuildContext 是 readonly struct
 

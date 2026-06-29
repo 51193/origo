@@ -265,7 +265,7 @@ public class TypedDataRealWorldBenchmarkTests
         AssertInCap("Observer notify", genBest);
     }
 
-    // ─── Scenario 5: Heterogeneous dictionary iteration — .Data property ──
+    // ─── Scenario 5: Heterogeneous dictionary iteration — TypedDataObjectConverter.ToObject ──
 
     [Fact]
     public void HeterogeneousDictIteration_GeneratedData_vs_BoxedDict()
