@@ -141,6 +141,8 @@ public sealed class ConsoleBridgeServer : IDisposable
                     if (_hasActiveClient)
                     {
                         client.Close();
+                        while (_hasActiveClient && !_cts.IsCancellationRequested)
+                            Monitor.Wait(_acceptLock, 100);
                         continue;
                     }
 
@@ -214,6 +216,7 @@ public sealed class ConsoleBridgeServer : IDisposable
             lock (_acceptLock)
             {
                 _hasActiveClient = false;
+                Monitor.Pulse(_acceptLock);
             }
         }
     }

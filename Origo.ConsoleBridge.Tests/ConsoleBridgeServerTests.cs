@@ -16,6 +16,7 @@ public class ConsoleBridgeServerTests
     private const int CommandTimeoutMs = 2000;
     private const int OutputTimeoutMs = 3000;
     private const int DisconnectDelayMs = 200;
+    private const int ConnectRetryIntervalMs = 5;
     private const int SpinPollIntervalMs = 10;
     private const int StressCommandCount = 100;
 
@@ -52,13 +53,7 @@ public class ConsoleBridgeServerTests
         var port = server.ActualPort;
         server.Dispose();
 
-        Thread.Sleep(DisconnectDelayMs);
-
-        Assert.ThrowsAny<SocketException>(() =>
-        {
-            using var client = new TcpClient();
-            client.Connect(IPAddress.Loopback, port);
-        });
+        AssertConnectionRefused(port, DisconnectDelayMs);
     }
 
     [Fact]
@@ -262,8 +257,9 @@ public class ConsoleBridgeServerTests
 
         writer.WriteLine("\t  ");
         writer.WriteLine("    ");
+        writer.WriteLine("__SENTINEL__");
 
-        Thread.Sleep(DisconnectDelayMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "__SENTINEL__", CommandTimeoutMs);
 
         Assert.False(input.TryDequeueCommand(out _));
 
@@ -493,11 +489,7 @@ public class ConsoleBridgeServerTests
             client.Connect(IPAddress.Loopback, port);
         }
 
-        Thread.Sleep(DisconnectDelayMs);
-
-        // New connection should be accepted
-        using var client2 = new TcpClient();
-        client2.Connect(IPAddress.Loopback, port);
+        using var client2 = ConnectWithRetry(port, CommandTimeoutMs);
         using var writer = new StreamWriter(client2.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("after_reconnect");
@@ -519,19 +511,13 @@ public class ConsoleBridgeServerTests
             client.Connect(IPAddress.Loopback, port);
         }
 
-        Thread.Sleep(DisconnectDelayMs);
-
         // Second client (should be accepted)
-        using (var client2 = new TcpClient())
+        using (var client2 = ConnectWithRetry(port, CommandTimeoutMs))
         {
-            client2.Connect(IPAddress.Loopback, port);
         }
 
-        Thread.Sleep(DisconnectDelayMs);
-
         // Third client (should also be accepted)
-        using var client3 = new TcpClient();
-        client3.Connect(IPAddress.Loopback, port);
+        using var client3 = ConnectWithRetry(port, CommandTimeoutMs);
         using var writer = new StreamWriter(client3.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("third");
@@ -554,11 +540,8 @@ public class ConsoleBridgeServerTests
             // Disconnect immediately - Handle Thread will get ReadLine null
         }
 
-        Thread.Sleep(DisconnectDelayMs);
-
         // New connection should work
-        using var client2 = new TcpClient();
-        client2.Connect(IPAddress.Loopback, port);
+        using var client2 = ConnectWithRetry(port, CommandTimeoutMs);
         using var writer = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer.WriteLine("after_immediate");
 
@@ -582,10 +565,7 @@ public class ConsoleBridgeServerTests
 
         client.Client.Dispose();
 
-        Thread.Sleep(DisconnectDelayMs);
-
-        using var client2 = new TcpClient();
-        client2.Connect(IPAddress.Loopback, port);
+        using var client2 = ConnectWithRetry(port, CommandTimeoutMs);
         using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer2.WriteLine("after_hard_disconnect");
 
@@ -608,10 +588,7 @@ public class ConsoleBridgeServerTests
             SpinUntil(() => input.TryDequeueCommand(out var l) && l == "before_abort", CommandTimeoutMs);
         }
 
-        Thread.Sleep(DisconnectDelayMs);
-
-        using var client2 = new TcpClient();
-        client2.Connect(IPAddress.Loopback, port);
+        using var client2 = ConnectWithRetry(port, CommandTimeoutMs);
         using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer2.WriteLine("after_abort");
 
@@ -640,7 +617,7 @@ public class ConsoleBridgeServerTests
             for (var i = 0; i < 50; i++)
             {
                 output.Publish($"pub_{i}");
-                Thread.Sleep(1);
+                Thread.Yield();
             }
 
             pubDone.Set();
@@ -767,10 +744,15 @@ public class ConsoleBridgeServerTests
         writer.WriteLine("help");
         SpinUntil(() => input.TryDequeueCommand(out var l) && l == "help", CommandTimeoutMs);
 
-        var readTask = Task.Run(() => ReadLineWithTimeout(reader, OutputTimeoutMs),
-            TestContext.Current.CancellationToken);
+        var readerBlocked = new ManualResetEventSlim(false);
+        var readTask = Task.Run(() =>
+        {
+            readerBlocked.Set();
+            return ReadLineWithTimeout(reader, OutputTimeoutMs);
+        }, TestContext.Current.CancellationToken);
 
-        Thread.Sleep(50);
+        Assert.True(readerBlocked.Wait(CommandTimeoutMs, TestContext.Current.CancellationToken));
+        Thread.Sleep(5);
 
         output.Publish("command result here");
 
@@ -878,12 +860,9 @@ public class ConsoleBridgeServerTests
             Assert.Equal("session1_result", response);
         }
 
-        Thread.Sleep(DisconnectDelayMs);
-
         // Session 2: reconnect, send new command, read output
-        using (var client = new TcpClient())
+        using (var client = ConnectWithRetry(port, CommandTimeoutMs))
         {
-            client.Connect(IPAddress.Loopback, port);
             using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
             using var reader = new StreamReader(client.GetStream());
 
@@ -908,20 +887,21 @@ public class ConsoleBridgeServerTests
         client.Connect(IPAddress.Loopback, port);
         using var reader = new StreamReader(client.GetStream());
 
+        var readerAboutToBlock = new ManualResetEventSlim(false);
         var readTask = Task.Run(() =>
         {
             var lines = new List<string>();
             string? line;
+            readerAboutToBlock.Set();
             while ((line = ReadLineWithTimeout(reader, OutputTimeoutMs)) is not null)
                 lines.Add(line);
             return lines;
         }, TestContext.Current.CancellationToken);
 
-        Thread.Sleep(30);
+        Assert.True(readerAboutToBlock.Wait(CommandTimeoutMs, TestContext.Current.CancellationToken));
+        Thread.Sleep(5);
         output.Publish("log_a");
-        Thread.Sleep(10);
         output.Publish("log_b");
-        Thread.Sleep(10);
         output.Publish("log_c");
 
         var result = await readTask;
@@ -966,13 +946,16 @@ public class ConsoleBridgeServerTests
         using var client = new TcpClient();
         client.Connect(IPAddress.Loopback, port);
 
+        var readerAboutToBlock = new ManualResetEventSlim(false);
         var readTask = Task.Run(() =>
         {
             using var reader = new StreamReader(client.GetStream());
+            readerAboutToBlock.Set();
             reader.ReadLine();
         }, TestContext.Current.CancellationToken);
 
-        Thread.Sleep(50);
+        Assert.True(readerAboutToBlock.Wait(CommandTimeoutMs, TestContext.Current.CancellationToken));
+        Thread.Sleep(5);
         server.Dispose();
 
         await readTask.WaitAsync(TimeSpan.FromMilliseconds(3000), TestContext.Current.CancellationToken);
@@ -1104,6 +1087,47 @@ public class ConsoleBridgeServerTests
         finally
         {
             stream.ReadTimeout = oldTimeout;
+        }
+    }
+
+    private static TcpClient ConnectWithRetry(int port, int timeoutMs)
+    {
+        var sw = Stopwatch.StartNew();
+        SocketException? lastEx = null;
+        while (sw.ElapsedMilliseconds < timeoutMs)
+        {
+            try
+            {
+                var client = new TcpClient();
+                client.Connect(IPAddress.Loopback, port);
+                return client;
+            }
+            catch (SocketException ex)
+            {
+                lastEx = ex;
+                Thread.Sleep(ConnectRetryIntervalMs);
+            }
+        }
+        throw new TimeoutException(
+            $"Could not connect to port {port} within {timeoutMs}ms", lastEx);
+    }
+
+    private static void AssertConnectionRefused(int port, int timeoutMs)
+    {
+        var sw = Stopwatch.StartNew();
+        while (sw.ElapsedMilliseconds < timeoutMs)
+        {
+            try
+            {
+                using var client = new TcpClient();
+                client.Connect(IPAddress.Loopback, port);
+                Assert.Fail("Connection should have been refused after server dispose");
+            }
+            catch (SocketException)
+            {
+                // Expected — server is not accepting connections
+            }
+            Thread.Sleep(ConnectRetryIntervalMs);
         }
     }
 }

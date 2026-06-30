@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`ISndEntity.OwningSession`** — every entity exposes its owning `ISessionRun` via this non-null property, bound at creation time. Strategies reach their session (and other sessions via `OwningSession.SessionManager`) directly, without going through a global context lookup.
 - **`ISessionRun.SessionManager`** — each session exposes its parent `ISessionManager`, enabling strategies to access cross-session operations via `entity.OwningSession.SessionManager.TryGet(key)`.
 - **`ISessionRun` entity operations** — `FindByName(name)`, `GetEntities()`, `Spawn(meta)`, `SpawnMany(metaList)`, `RequestKillEntity(name)`. These provide a session-scoped entity operation facade, replacing the now-internal `SceneHost` property. `Spawn`/`SpawnMany` fire `AfterSpawn` lifecycle hooks (via `SndEntityFactory`); `CreateEntity` remains available on `ISndSceneHost` for framework-internal use without hooks.
+- **SndEntity AfterLoad edge-case tests** — `AfterLoad_EmptyIndices_NoThrow` (entity with zero lifecycle strategies loads without error) and `AfterLoad_ThrowingStrategy_HookExceptionPropagates` (hook exceptions from `AfterLoad` propagate to the caller, upholding fail-fast).
+- **TypedData source generator branch coverage tests** — home assembly with only reference types (verifies `GeneratAsMethods`/`GenerateTryGetMethods`/`GenerateImplicitConversions` early-return when no inline types exist); overlapping kind ranges with the same CLR type (verifies `RejectKindCollisions` same-type deduplication path).
 
 ### Changed
 
@@ -48,18 +50,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`OrigoRuntime` banner downgraded to `Debug`** — no longer outputs the multi-line banner at `Info` level.
 - **Performance timing added to key operations** — `OrigoConsole` command processing, `SessionRun` create/dispose/load/persist, `ProgressRun` create/dispose, `SaveStorageFacade` write/snapshot, and `SessionManager` mount/destroy now include elapsed milliseconds in log output.
 - **`TreatWarningsAsErrors` enabled solution-wide** — all projects now fail the build on compiler and analyzer warnings, making code-quality regressions a hard build failure rather than ignorable warnings.
-
-### Removed
-
-- **BREAKING: `SndRuntime` removed** — the public SND runtime facade is gone. Spawning (with `AfterSpawn` hooks) is now performed by `SndEntityFactory` / `ISessionRun.Spawn`, while frame drive and end-of-frame kill-pending orchestration moved to `SessionManager` / `SessionRun`. The save-file format and observer-strategy behavior are unchanged.
-- **`ISndObservation`** — removed. The old cross-entity ObserveData/ObserveLifecycle API has been replaced by `ISndObserverStrategyAccess.MountObserverStrategy` / `UnmountObserverStrategy` with ObserverStrategy as a first-class strategy type.
-- **`ISndEntityLifecycleAccess` / `EntityLifecycleEvent`** — removed. Lifecycle subscriptions via SubscribeLifecycle/UnsubscribeLifecycle on `ISndEntity` are no longer supported, and the accompanying `EntityLifecycleEvent` enum is removed along with them. Use ObserverStrategy with OnMounted/OnUnmounted instead.
-- **`ISndDataAccess.Subscribe` / `Unsubscribe`** — removed. Self-data subscriptions must now use `MountObserverStrategy` with the entity's own name as the target.
-- **BREAKING: `TypedData.Data` property** — removed. The public boxing accessor formed a bypass of the zero-boxing `TryGetXxx` and `TypedDataFactory<T>.TryExtract` read paths. For type-erased access, framework-internal callers (serialization, console debug) now use `TypedDataObjectConverter.ToObject` directly.
-- **BREAKING: `TypedData(Type, object?)` constructor and `TypedData.FromObject` static factory** — removed. Construct TypedData values via explicit operators (`(TypedData)42`), `TypedDataFactory<T>.Create()`, or the `SndMetaFluentBuilder` convenience API. The deserialization path (`TypedDataConverter.Read`) now uses `TypedDataTypeMap.GetKindForType` + `TypedDataObjectConverter.FromObject` internally.
-
-### Changed
-
 - **Console command handlers for entity operations now require a foreground session** — `kill_all`, `snd_count`, and `spawn` no longer silently fall back to `ForegroundSceneHost` when no session is active. With no foreground session, `kill_all` and `spawn` return a clear error message; `snd_count` reports zero. This closes a side door left behind by the SessionManager refactoring.
 
 - **BREAKING: `OrigoRuntime.ForegroundSceneHost` removed** — the `internal` property is deleted, and with it the entire `ForegroundSceneHost` cascade through `SystemRuntime`, `ProgressRuntime`, and `SessionManagerRuntime`. The adapter scene host now flows through `SystemParameters` → `SystemRuntime.AdapterSceneHost` → `ProgressRuntime.AdapterSceneHost` → `SessionManagerRuntime.AdapterSceneHost` → `SessionManager` (where it is stored and used exclusively for session creation). `OrigoRuntime` retains the host only via the narrow `GetAdapterSceneHost()` bootstrap method, which is called once by `SndContext`. Console handlers (`ConsoleCommandHelper`, GodotAdapter `PressButtonCommandHandler`, `TreeDebugCommandHandler`) no longer fall back to the removed property. The `ResetForeground` logic now accesses the scene through the current foreground session, not through a runtime-level property.
@@ -81,6 +71,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`TestSceneHost` now implements `IOwningSessionBindable`** — consistent with `StubSndSceneHost` and `FullMemorySndSceneHost`. Entities created through `TestSceneHost.CreateEntity()` now have `OwningSession` bound.
 
 - **`OrigoRuntime.SessionManager` changed from `internal` to `public`** — non-entity code (e.g. console command handlers in external assemblies) now has a public path to `ISessionManager`. Strategies should still use `entity.OwningSession.SessionManager`.
+- **`GodotAdapter.Tests` coverage exclusions expanded** — `GodotFileSystem.cs`, `GodotSndBootstrap.cs`, and `PressButtonCommandHandler.cs` are now excluded from line coverage measurement. These files are thin passthrough delegates to Godot engine APIs with no independently testable logic.
+
+### Removed
+
+- **BREAKING: `SndRuntime` removed** — the public SND runtime facade is gone. Spawning (with `AfterSpawn` hooks) is now performed by `SndEntityFactory` / `ISessionRun.Spawn`, while frame drive and end-of-frame kill-pending orchestration moved to `SessionManager` / `SessionRun`. The save-file format and observer-strategy behavior are unchanged.
+- **`ISndObservation`** — removed. The old cross-entity ObserveData/ObserveLifecycle API has been replaced by `ISndObserverStrategyAccess.MountObserverStrategy` / `UnmountObserverStrategy` with ObserverStrategy as a first-class strategy type.
+- **`ISndEntityLifecycleAccess` / `EntityLifecycleEvent`** — removed. Lifecycle subscriptions via SubscribeLifecycle/UnsubscribeLifecycle on `ISndEntity` are no longer supported, and the accompanying `EntityLifecycleEvent` enum is removed along with them. Use ObserverStrategy with OnMounted/OnUnmounted instead.
+- **`ISndDataAccess.Subscribe` / `Unsubscribe`** — removed. Self-data subscriptions must now use `MountObserverStrategy` with the entity's own name as the target.
+- **BREAKING: `TypedData.Data` property** — removed. The public boxing accessor formed a bypass of the zero-boxing `TryGetXxx` and `TypedDataFactory<T>.TryExtract` read paths. For type-erased access, framework-internal callers (serialization, console debug) now use `TypedDataObjectConverter.ToObject` directly.
+- **BREAKING: `TypedData(Type, object?)` constructor and `TypedData.FromObject` static factory** — removed. Construct TypedData values via explicit operators (`(TypedData)42`), `TypedDataFactory<T>.Create()`, or the `SndMetaFluentBuilder` convenience API. The deserialization path (`TypedDataConverter.Read`) now uses `TypedDataTypeMap.GetKindForType` + `TypedDataObjectConverter.FromObject` internally.
+- **Dead code in `TypedDataGenerator.ExtractTypes`** — removed unreachable branch that matched a single `INamedTypeSymbol` constructor argument (`SndInlineTypes` always uses `params Type[]`, so the argument is always `TypedConstantKind.Array`).
 
 ### Fixed
 
@@ -96,6 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`current/` is no longer left half-written when a save payload is incomplete** — the payload's active level is now validated before any file is written, so a payload missing its active level fails before touching `current/` instead of after writing the progress and meta files.
 - **ConsoleBridge no longer corrupts output under concurrent writes** — when a client connects, the buffered backlog is now flushed while holding the writer lock, so it can no longer interleave with the live output broadcast on another thread.
 - **`ConsoleBridgeServer` thread-safety hardening** — `_handleThread` creation is now performed inside the `_acceptLock` critical section, and `Start()` uses `Interlocked.CompareExchange` for its idempotency guard, closing races that could allow two concurrent Handle threads.
+- **`ConsoleBridgeServer` accept loop no longer races with HandleConnection teardown** — `Monitor.Wait`/`Pulse` over the accept lock now coordinates the handoff between the accept loop and the handle-thread finally block, ensuring a newly accepted connection is not immediately closed because `_hasActiveClient` hasn't been cleared yet by the previous connection's teardown.
 - **`ISndEntity.AddStrategy` is now atomic on failure** — if a strategy's `AfterAdd` hook throws, the strategy is removed from the entity and returned to the pool before the exception propagates, instead of leaving it half-attached and leaking its pool reference.
 - **`Astar.FindPath` missing start bounds check** — the start position is now validated against `gridSize` before pathfinding begins, matching the existing endpoint validation.
 - **`SndStrategyManager.RecoverStrategiesOnly` no longer silently drops non-`LifecycleStrategyBase` strategies** — recovering a non-lifecycle strategy in entity strategy slots now throws `InvalidOperationException` instead of silently releasing the strategy.
