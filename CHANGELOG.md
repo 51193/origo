@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-> 开发循环与 changelog 规则见 [AGENTS.md](AGENTS.md)。变更须在通过测试循环后才记录（源码 → 测试扩展/适配 → 测试执行 → 修复重测 → Changelog → 文档同步）。
+> See [AGENTS.md](AGENTS.md) for the development loop and changelog rules. Changes are recorded only after passing the test loop (source -> tests -> run -> fix & retest -> changelog -> docs sync).
 
 ---
 
 ## [Unreleased]
+
+## [0.0.8] - 2026-06-30
 
 ### Added
 
