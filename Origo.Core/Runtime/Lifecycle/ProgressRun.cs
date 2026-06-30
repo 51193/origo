@@ -22,7 +22,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 ///         所有会话操作均委托给 <see cref="SessionManager" />。
 ///     </para>
 /// </summary>
-public sealed partial class ProgressRun : IDisposable
+internal sealed partial class ProgressRun : IDisposable
 {
     private readonly ProgressRuntime _progressRuntime;
     private readonly SaveCoordinator _saveCoordinator;

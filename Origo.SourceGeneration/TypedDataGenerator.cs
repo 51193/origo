@@ -122,10 +122,6 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
                         result.Add(CreateTypeInfo(ts, startKind + kindOffset++));
                 }
             }
-            else if (ctorArg.Value is INamedTypeSymbol singleType)
-            {
-                result.Add(CreateTypeInfo(singleType, startKind + kindOffset++));
-            }
         }
 
         return result;

@@ -9,7 +9,7 @@ using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
-public sealed partial class ProgressRun
+internal sealed partial class ProgressRun
 {
     internal void LoadFromPayload(SaveGamePayload payload) => _sessionLifecycle.LoadFromPayload(payload);
 

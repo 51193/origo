@@ -29,7 +29,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 ///         资源回收遵循 RAII 原则：SessionRun 在 Dispose 中回收自己的所有资源。
 ///     </para>
 /// </summary>
-public sealed class SessionRun : ISessionRun
+internal sealed class SessionRun : ISessionRun
 {
     private const string LogTag = nameof(SessionRun);
     private readonly ISessionManager _sessionManager;
