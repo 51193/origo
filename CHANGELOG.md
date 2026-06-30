@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 > 开发循环与 changelog 规则见 [AGENTS.md](AGENTS.md)。变更须在通过测试循环后才记录（源码 → 测试扩展/适配 → 测试执行 → 修复重测 → Changelog → 文档同步）。
 
