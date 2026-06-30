@@ -5,7 +5,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
-using Origo.Core.Testing;
+using Origo.Core.Tests.TestSupport;
 using Xunit;
 
 namespace Origo.Core.Tests;

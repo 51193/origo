@@ -5,6 +5,7 @@ using Origo.Core.Snd.Scene;
 using Origo.Core.Abstractions.StateMachine;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Runtime;
 using Origo.Core.DataSource;
@@ -182,9 +183,10 @@ public class SndEntityAndAutoInitializerTests
     [StrategyIndex(LifecycleStrategyIndex)]
     private sealed class LifecycleStrategy : LifecycleStrategyBase
     {
-        private static List<string>? EventSink { get; set; }
+        private static readonly AsyncLocal<List<string>?> _eventSink = new();
+        private static List<string>? EventSink => _eventSink.Value;
 
-        public static void Bind(List<string> events) => EventSink = events;
+        public static void Bind(List<string> events) => _eventSink.Value = events;
 
         public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => EventSink?.Add("AfterSpawn");
 

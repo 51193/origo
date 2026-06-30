@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Origo.GodotAdapter.Tests.Serialization;
 
+[Trait("Category", "Benchmark")]
 public class GodotTypedDataPerformanceTests
 {
     private const int Iterations = 200_000;

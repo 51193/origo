@@ -1,5 +1,4 @@
 using Origo.Core.Runtime.Lifecycle;
-#pragma warning disable CS8602
 using System;
 using System.Collections.Generic;
 using System.Threading;

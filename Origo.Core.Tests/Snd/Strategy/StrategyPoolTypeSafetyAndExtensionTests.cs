@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Snd;
@@ -68,6 +69,33 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         Assert.Equal("ok", s.ProbeValue());
     }
 
+    [Fact]
+    public void RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws()
+    {
+        var pool = new SndStrategyPool(NullLogger.Instance);
+        pool.Register(() => new PoolActiveStrategy());
+        pool.Register(() => new PoolEntityStrategy());
+
+        var mgr = new SndStrategyManager(pool, NullLogger.Instance);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            mgr.RecoverStrategiesOnly(new[] { "pool.active_for_entity" }));
+        Assert.Contains("LifecycleStrategyBase", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RecoverStrategiesOnly_WithOnlyValidStrategies_Succeeds()
+    {
+        var pool = new SndStrategyPool(NullLogger.Instance);
+        pool.Register(() => new PoolEntityStrategy());
+
+        var mgr = new SndStrategyManager(pool, NullLogger.Instance);
+
+        var ex = Record.Exception(() =>
+            mgr.RecoverStrategiesOnly(new[] { "pool.entity" }));
+        Assert.Null(ex);
+    }
+
     /// <summary>示例：在统一根基类之上扩展第三领域策略基类，仍复用同一策略池与索引机制。</summary>
     public abstract class ExtensionDomainStrategyBase : BaseStrategy
     {
@@ -88,5 +116,11 @@ public class StrategyPoolTypeSafetyAndExtensionTests
     [StrategyIndex("pool.sm")]
     private sealed class PoolStateMachineStrategy : StateMachineStrategyBase
     {
+    }
+
+    [StrategyIndex("pool.active_for_entity")]
+    private sealed class PoolActiveStrategy : ActiveStrategyBase
+    {
+        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => null;
     }
 }

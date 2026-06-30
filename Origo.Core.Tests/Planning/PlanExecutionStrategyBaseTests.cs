@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Planning;
@@ -24,8 +25,11 @@ public class PlanExecutionStrategyBaseTests
     [StrategyIndex("test.action.fake")]
     private sealed class FakeActionStrategy : LifecycleStrategyBase
     {
-        public static List<string>? AfterAddCalls;
-        public static List<string>? BeforeRemoveCalls;
+        private static readonly AsyncLocal<List<string>?> _afterAddCalls = new();
+        public static List<string>? AfterAddCalls { get => _afterAddCalls.Value; set => _afterAddCalls.Value = value; }
+
+        private static readonly AsyncLocal<List<string>?> _beforeRemoveCalls = new();
+        public static List<string>? BeforeRemoveCalls { get => _beforeRemoveCalls.Value; set => _beforeRemoveCalls.Value = value; }
 
         public override void AfterAdd(ISndEntity entity, ISndContext ctx)
         {
@@ -41,7 +45,8 @@ public class PlanExecutionStrategyBaseTests
     [StrategyIndex("test.action.fake2")]
     private sealed class FakeAction2Strategy : LifecycleStrategyBase
     {
-        public static List<string>? AfterAddCalls;
+        private static readonly AsyncLocal<List<string>?> _afterAddCalls = new();
+        public static List<string>? AfterAddCalls { get => _afterAddCalls.Value; set => _afterAddCalls.Value = value; }
 
         public override void AfterAdd(ISndEntity entity, ISndContext ctx)
         {
@@ -370,8 +375,11 @@ public class PlanExecutionStrategyBaseTests
     [StrategyIndex("test.fail_plan_strategy")]
     private sealed class FailingPlanStrategy : PlanExecutionStrategyBase
     {
-        public static List<string>? CompletedCalls;
-        public static List<string>? FailedCalls;
+        private static readonly AsyncLocal<List<string>?> _completedCalls = new();
+        public static List<string>? CompletedCalls { get => _completedCalls.Value; set => _completedCalls.Value = value; }
+
+        private static readonly AsyncLocal<List<string>?> _failedCalls = new();
+        public static List<string>? FailedCalls { get => _failedCalls.Value; set => _failedCalls.Value = value; }
 
         protected override string IntentKey => PlanExecutionStrategyBaseTests.IntentKey;
         protected override string IntentStatusKey => PlanExecutionStrategyBaseTests.IntentStatusKey;

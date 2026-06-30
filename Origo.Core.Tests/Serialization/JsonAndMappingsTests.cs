@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -203,5 +204,16 @@ public class JsonAndMappingsTests
         mappings.LoadTemplates(io, "maps/templates.map", registry, logger);
 
         Assert.ThrowsAny<Exception>(() => mappings.ResolveTemplate("bad_template"));
+    }
+
+    [Fact]
+    public void JsonCodec_DecodeJsonArrayRoot_ReadsElements()
+    {
+        var codec = TestFactory.CreateJsonCodec();
+        using var root = codec.Decode("""[1, true, "hi"]""");
+        Assert.Equal(DataSourceNodeKind.Array, root.Kind);
+        Assert.Equal(1, root[0].AsInt());
+        Assert.True(root[1].AsBool());
+        Assert.Equal("hi", root[2].AsString());
     }
 }

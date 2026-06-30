@@ -13,6 +13,7 @@ using Origo.Core.Runtime;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.GodotAdapter.Tests.TestSupport;
 using Xunit;
 
 namespace Origo.GodotAdapter.Tests.Architecture;
@@ -142,56 +143,6 @@ public class AdapterArchitectureGuardrailTests
             _entities.Add(entity);
             return entity;
         }
-    }
-
-    private sealed class InMemorySndEntity : ISndEntity
-    {
-        private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
-
-        public InMemorySndEntity(string name)
-        {
-            _data["name"] = name;
-        }
-
-        public string Name => (string)_data["name"]!;
-        public bool IsPendingKill { get; set; }
-
-        public ISessionRun OwningSession { get; set; } = null!;
-
-        public void SetData<T>(string name, T value) => _data[name] = value;
-        public T GetData<T>(string name) => _data.TryGetValue(name, out var v) && v is T c ? c : default!;
-
-        public (bool found, T? value) TryGetData<T>(string name) =>
-            _data.TryGetValue(name, out var v) && v is T c ? (true, c) : (false, default);
-
-        public void MountObserverStrategy(string targetName, string observerIndex) { }
-
-        public void UnmountObserverStrategy(string targetName, string observerIndex) { }
-    public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
-    public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
-
-        public INodeHandle GetNode(string name) =>
-            throw new InvalidOperationException($"Node '{name}' not found.");
-
-        public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
-
-        public void AddStrategy(string index)
-        {
-        }
-
-        public void RemoveStrategy(string index)
-        {
-        }
-
-        public void AddActiveStrategy(string index)
-        {
-        }
-
-        public void RemoveActiveStrategy(string index)
-        {
-        }
-
-        public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
     }
 }
 

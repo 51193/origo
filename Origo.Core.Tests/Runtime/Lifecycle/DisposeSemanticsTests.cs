@@ -1,5 +1,4 @@
 using Origo.Core.Runtime.Lifecycle;
-#pragma warning disable CS8602
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -324,7 +323,6 @@ public class DisposeSemanticsTests
         var (ctx, _) = CreateForegroundContext();
 
         var progressRun = ctx.EnsureProgressRun();
-        var sm = progressRun.GetProgressStateMachines();
 
         var ex = Record.Exception(() => progressRun.Dispose());
         Assert.Null(ex);
@@ -473,7 +471,7 @@ public class DisposeSemanticsTests
     }
 
     [Fact]
-    public void FullRoundTrip_SwitchWithoutSave_OldLevelDataOnDisk()
+    public void FullRoundTrip_SwitchForeground_OldLevelDataPersistedImplicitly()
     {
         var (ctx, fs) = CreateForegroundContext();
 

@@ -14,6 +14,13 @@ public class GodotFileSystemPathTests
     };
 
     [Fact]
+    public void GodotPathResolver_Combine_WithTrailingDotDotNoSlash_Throws()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            GodotPathResolver.Combine("res://root", "foo/.."));
+    }
+
+    [Fact]
     public void GodotPathResolver_Combine_JoinsPaths()
     {
         var combined = GodotPathResolver.Combine("user://origo_saves", "current/system.json");

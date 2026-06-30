@@ -28,3 +28,13 @@ dotnet test Origo.Core.Tests/Origo.Core.Tests.csproj \
   --filter "Category=Benchmark" \
   --logger "console;verbosity=detailed" \
   -p:CollectCoverage=false
+
+echo ""
+echo ">>> GodotAdapter benchmarks — Godot-typed TypedData write/read/convert throughput"
+echo ""
+
+dotnet test Origo.GodotAdapter.Tests/Origo.GodotAdapter.Tests.csproj \
+  --configuration Release \
+  --filter "Category=Benchmark" \
+  --logger "console;verbosity=detailed" \
+  -p:CollectCoverage=false

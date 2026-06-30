@@ -254,6 +254,39 @@ public class TypedDataGeneratorTests
     }
 
     [Fact]
+    public void Home_OnlyReferenceTypes_NoInlineMethods()
+    {
+        var attribute = "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(string))]";
+        var output = RunHome(attribute);
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+
+        var text = output.AllGeneratedText;
+        Assert.Contains("KindMap", text);
+        Assert.Contains("AsString(", text);
+        Assert.DoesNotContain("public static explicit operator TypedData(int", text);
+        Assert.DoesNotContain("_inlineBits", text);
+    }
+
+    [Fact]
+    public void OverlappingStartKinds_SameType_Deduplicated()
+    {
+        var attribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(1, typeof(int), typeof(string), typeof(float))]
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(1, typeof(int), typeof(string))]
+            """;
+        var output = RunHome(attribute);
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+
+        var text = output.AllGeneratedText;
+        Assert.Contains("Int32", text);
+        Assert.Contains("Single", text);
+    }
+
+    [Fact]
     public void OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes()
     {
         // Two SndInlineTypes groups assign kind 1 to different types.
@@ -271,5 +304,109 @@ public class TypedDataGeneratorTests
         var text = output.AllGeneratedText;
         Assert.DoesNotContain("AsInt32", text);
         Assert.DoesNotContain("AsInt64", text);
+    }
+
+    // ─── Incremental generator behaviour ────────────────────────────
+
+    [Fact]
+    public void Incremental_SameInputTwice_ProducesIdenticalOutput()
+    {
+        var source = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var compilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+
+        var (first, driver2) = GeneratorTestHarness.RunIncremental(driver, compilation);
+        var (second, _) = GeneratorTestHarness.RunIncremental(driver2, compilation);
+
+        Assert.Equal(first.GeneratedSources.Length, second.GeneratedSources.Length);
+        for (var i = 0; i < first.GeneratedSources.Length; i++)
+            Assert.Equal(first.GeneratedSources[i], second.GeneratedSources[i]);
+    }
+
+    [Fact]
+    public void Incremental_SameInputTwice_NoAdditionalOutputs()
+    {
+        var source = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var compilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+
+        var (first, driver2) = GeneratorTestHarness.RunIncremental(driver, compilation);
+        var (second, driver3) = GeneratorTestHarness.RunIncremental(driver2, compilation);
+        var (third, _) = GeneratorTestHarness.RunIncremental(driver3, compilation);
+
+        Assert.Equal(first.GeneratedSources.Length, third.GeneratedSources.Length);
+        for (var i = 0; i < first.GeneratedSources.Length; i++)
+            Assert.Equal(first.GeneratedSources[i], third.GeneratedSources[i]);
+    }
+
+    [Fact]
+    public void Incremental_UnrelatedCodeChange_GeneratedOutputUnchanged()
+    {
+        var sourceA = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var sourceB = sourceA + "\n// unrelated comment";
+        var compilationA = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", sourceA);
+        var compilationB = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", sourceB);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+
+        var (first, driver2) = GeneratorTestHarness.RunIncremental(driver, compilationA);
+        var (second, _) = GeneratorTestHarness.RunIncremental(driver2, compilationB);
+
+        Assert.Equal(first.GeneratedSources.Length, second.GeneratedSources.Length);
+        for (var i = 0; i < first.GeneratedSources.Length; i++)
+            Assert.Equal(first.GeneratedSources[i], second.GeneratedSources[i]);
+    }
+
+    [Fact]
+    public void Incremental_NoAttribute_ThenAddAttribute_ProducesNewOutput()
+    {
+        var noAttrSource = ScaffoldHeader + "\n" + ScaffoldBody;
+        var withAttrSource = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var compilationA = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", noAttrSource);
+        var compilationB = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", withAttrSource);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+
+        var (first, driver2) = GeneratorTestHarness.RunIncremental(driver, compilationA);
+        var (second, _) = GeneratorTestHarness.RunIncremental(driver2, compilationB);
+
+        Assert.Empty(first.GeneratedSources);
+        Assert.NotEmpty(second.GeneratedSources);
+    }
+
+    [Fact]
+    public void Incremental_HasAttribute_ThenRemoveAttribute_OutputDisappears()
+    {
+        var withAttrSource = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var noAttrSource = ScaffoldHeader + "\n" + ScaffoldBody;
+        var compilationA = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", withAttrSource);
+        var compilationB = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", noAttrSource);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+
+        var (first, driver2) = GeneratorTestHarness.RunIncremental(driver, compilationA);
+        var (second, _) = GeneratorTestHarness.RunIncremental(driver2, compilationB);
+
+        Assert.NotEmpty(first.GeneratedSources);
+        Assert.Empty(second.GeneratedSources);
+    }
+
+    [Fact]
+    public void Incremental_AddTypeToExistingAttribute_OutputChanges()
+    {
+        var prefix = ScaffoldHeader + "\n";
+        var suffix = "\n" + ScaffoldBody;
+        var oneTypeAttr = "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int))]";
+        var twoTypeAttr = "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int), typeof(float))]";
+        var sourceA = prefix + oneTypeAttr + suffix;
+        var sourceB = prefix + twoTypeAttr + suffix;
+        var compilationA = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", sourceA);
+        var compilationB = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", sourceB);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+
+        var (first, driver2) = GeneratorTestHarness.RunIncremental(driver, compilationA);
+        var (second, _) = GeneratorTestHarness.RunIncremental(driver2, compilationB);
+
+        Assert.DoesNotContain("Single", first.AllGeneratedText);
+        Assert.Contains("Int32", first.AllGeneratedText);
+        Assert.Contains("Int32", second.AllGeneratedText);
+        Assert.Contains("Single", second.AllGeneratedText);
     }
 }

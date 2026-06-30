@@ -77,7 +77,7 @@ public class PressButtonCommandHandlerTests
     {
         var (runtime, sceneHost) = TestRuntimeHelper.CreateRuntime();
         TestRuntimeHelper.BootstrapForegroundSession(runtime);
-        sceneHost.AddEntity(new DummyEntity("DummyEntity"));
+        sceneHost.AddEntity(new InMemorySndEntity("DummyEntity"));
         var handler = new PressButtonCommandHandler(runtime);
         var output = new ConsoleOutputChannel();
 
@@ -87,57 +87,5 @@ public class PressButtonCommandHandlerTests
         Assert.False(ok);
         Assert.NotNull(error);
         Assert.Contains("is not a Godot entity", error);
-    }
-
-    private sealed class DummyEntity : ISndEntity
-    {
-        public DummyEntity(string name)
-        {
-            Name = name;
-        }
-
-        public string Name { get; }
-
-        public void SetData<T>(string name, T value)
-        {
-        }
-
-        public (bool found, T? value) TryGetData<T>(string name) => (false, default);
-
-        public T GetData<T>(string name) =>
-            throw new InvalidOperationException($"Data key '{name}' not found.");
-
-        public void MountObserverStrategy(string targetName, string observerIndex) { }
-
-        public void UnmountObserverStrategy(string targetName, string observerIndex) { }
-    public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
-    public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
-
-        public INodeHandle GetNode(string name) =>
-            throw new InvalidOperationException($"Node '{name}' not found.");
-
-        public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
-
-        public void AddStrategy(string index)
-        {
-        }
-
-        public void RemoveStrategy(string index)
-        {
-        }
-
-        public void AddActiveStrategy(string index)
-        {
-        }
-
-        public void RemoveActiveStrategy(string index)
-        {
-        }
-
-        public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
-
-        public bool IsPendingKill { get; set; }
-
-        public ISessionRun OwningSession { get; set; } = null!;
     }
 }

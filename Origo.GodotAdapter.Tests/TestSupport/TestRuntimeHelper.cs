@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using Origo.Core;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
+using Origo.Core.Abstractions.Node;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Blackboard;
 using Origo.Core.DataSource;
@@ -52,6 +54,39 @@ internal sealed class TestSndSceneHost : ISndSceneHost
     }
 
     public void AddEntity(ISndEntity entity) => _entities[entity.Name] = entity;
+}
+
+internal sealed class InMemorySndEntity : ISndEntity
+{
+    private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
+
+    public InMemorySndEntity(string name)
+    {
+        _data["name"] = name;
+    }
+
+    public string Name => (string)_data["name"]!;
+    public bool IsPendingKill { get; set; }
+    public ISessionRun OwningSession { get; set; } = null!;
+
+    public void SetData<T>(string name, T value) => _data[name] = value;
+    public T GetData<T>(string name) => _data.TryGetValue(name, out var v) && v is T c ? c : default!;
+    public (bool found, T? value) TryGetData<T>(string name) =>
+        _data.TryGetValue(name, out var v) && v is T c ? (true, c) : (false, default);
+
+    public void MountObserverStrategy(string targetName, string observerIndex) { }
+    public void UnmountObserverStrategy(string targetName, string observerIndex) { }
+    public void MountObserverStrategy(ISndEntity target, string observerIndex) { }
+    public void UnmountObserverStrategy(ISndEntity target, string observerIndex) { }
+
+    public INodeHandle GetNode(string name) =>
+        throw new InvalidOperationException($"Node '{name}' not found.");
+    public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
+    public void AddStrategy(string index) { }
+    public void RemoveStrategy(string index) { }
+    public void AddActiveStrategy(string index) { }
+    public void RemoveActiveStrategy(string index) { }
+    public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
 }
 
 internal sealed class TestLogger : ILogger

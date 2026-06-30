@@ -1,6 +1,7 @@
 using Origo.Core.Runtime.Lifecycle;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Scene;
@@ -442,9 +443,10 @@ public class SavePathPolicyContractTests
     [StrategyIndex("contract.scene_access")]
     private sealed class SceneContractStrategy : StateMachineStrategyBase
     {
-        internal static List<List<string>>? ObservedScenes { get; set; }
+        private static readonly AsyncLocal<List<List<string>>?> _observedScenes = new();
+        internal static List<List<string>>? ObservedScenes => _observedScenes.Value;
 
-        public static void Reset() => ObservedScenes = new List<List<string>>();
+        public static void Reset() => _observedScenes.Value = new List<List<string>>();
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -459,9 +461,10 @@ public class SavePathPolicyContractTests
     [StrategyIndex("contract.bb_access")]
     private sealed class BbContractStrategy : StateMachineStrategyBase
     {
-        internal static List<string?>? ObservedValues { get; set; }
+        private static readonly AsyncLocal<List<string?>?> _observedValues = new();
+        internal static List<string?>? ObservedValues => _observedValues.Value;
 
-        public static void Reset() => ObservedValues = new List<string?>();
+        public static void Reset() => _observedValues.Value = new List<string?>();
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {

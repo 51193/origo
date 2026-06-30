@@ -1,5 +1,6 @@
 using Origo.Core.Runtime.Lifecycle;
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
@@ -273,7 +274,8 @@ public class SessionDecouplingTests
     [StrategyIndex("test.bb_probe")]
     private sealed class BlackboardProbeStrategy : StateMachineStrategyBase
     {
-        internal static List<string?>? ObservedMarkers { get; set; }
+        private static readonly AsyncLocal<List<string?>?> _observedMarkers = new();
+        internal static List<string?>? ObservedMarkers { get => _observedMarkers.Value; set => _observedMarkers.Value = value; }
 
         public static void Reset() => ObservedMarkers = new List<string?>();
 
@@ -293,7 +295,8 @@ public class SessionDecouplingTests
     [StrategyIndex("test.scene_probe")]
     private sealed class SceneAccessProbeStrategy : StateMachineStrategyBase
     {
-        internal static List<List<string>>? ObservedEntityNames { get; set; }
+        private static readonly AsyncLocal<List<List<string>>?> _observedEntityNames = new();
+        internal static List<List<string>>? ObservedEntityNames { get => _observedEntityNames.Value; set => _observedEntityNames.Value = value; }
 
         public static void Reset() => ObservedEntityNames = new List<List<string>>();
 

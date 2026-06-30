@@ -224,6 +224,30 @@ public class SaveIdempotencyTests
     }
 
     [Fact]
+    public void WriteSavePayloadToCurrentThenSnapshot_ShaReadError_PropagatesException()
+    {
+        var fs = new TestFileSystem();
+        var (metaAccess, _, pathResolver) = CreateGateways(fs);
+        var policy = new DefaultSavePathPolicy();
+        var snapshotRel = policy.GetSaveDirectory("001");
+        var shaRel = policy.GetPayloadShaFile(snapshotRel);
+        var shaAbs = fs.CombinePath("root", shaRel);
+
+        fs.SeedFile(shaAbs, "abc123");
+
+        var throwingFs = new ThrowingOnReadFileSystem(fs, shaAbs);
+        var (_, throwingIo, _) = CreateGateways(throwingFs);
+        var logger = new TestLogger();
+        var handle = new SaveFileHandle(metaAccess, throwingIo, pathResolver, "root", policy);
+
+        var payload = CreateMinimalPayload("001", "default");
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger));
+        Assert.Contains("Simulated read failure", ex.Message);
+    }
+
+    [Fact]
     public void SnapshotCurrentToSave_CopiesPayloadShaFile()
     {
         var fs = new TestFileSystem();
@@ -394,4 +418,47 @@ public class SaveIdempotencyTests
         (DataSourceFactory.CreateFileMetaAccess(fs),
          DataSourceFactory.CreateDefaultIoGateway(fs),
          DataSourceFactory.CreatePathResolver(fs));
+
+    private sealed class ThrowingOnReadFileSystem : IFileSystem
+    {
+        private readonly TestFileSystem _inner;
+        private readonly string _throwOnReadPath;
+
+        public ThrowingOnReadFileSystem(TestFileSystem inner, string throwOnReadPath)
+        {
+            _inner = inner;
+            _throwOnReadPath = throwOnReadPath;
+        }
+
+        public bool Exists(string path) => _inner.Exists(path);
+        public bool DirectoryExists(string path) => _inner.DirectoryExists(path);
+
+        public string ReadAllText(string path)
+        {
+            if (string.Equals(path, _throwOnReadPath, StringComparison.Ordinal))
+                throw new InvalidOperationException("Simulated read failure for SHA payload file.");
+            return _inner.ReadAllText(path);
+        }
+
+        public void WriteAllText(string path, string content, bool overwrite) =>
+            _inner.WriteAllText(path, content, overwrite);
+
+        public void Copy(string sourcePath, string destinationPath, bool overwrite) =>
+            _inner.Copy(sourcePath, destinationPath, overwrite);
+
+        public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive) =>
+            _inner.EnumerateFiles(directoryPath, searchPattern, recursive);
+
+        public void CreateDirectory(string directoryPath) => _inner.CreateDirectory(directoryPath);
+        public void Delete(string path) => _inner.Delete(path);
+        public string CombinePath(string basePath, string relativePath) =>
+            _inner.CombinePath(basePath, relativePath);
+        public string GetParentDirectory(string path) => _inner.GetParentDirectory(path);
+        public IEnumerable<string> EnumerateDirectories(string directoryPath) =>
+            _inner.EnumerateDirectories(directoryPath);
+        public void Rename(string sourcePath, string destinationPath) =>
+            _inner.Rename(sourcePath, destinationPath);
+        public void DeleteDirectory(string directoryPath) => _inner.DeleteDirectory(directoryPath);
+        public void SeedFile(string path, string content) => _inner.SeedFile(path, content);
+    }
 }

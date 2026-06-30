@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
@@ -39,8 +40,10 @@ public class StateMachineStrategyBaseTests
     [StrategyIndex(SmPushIdx)]
     private sealed class TrackingPushStrategy : StateMachineStrategyBase
     {
-        public static List<string> PushRuntimeCalls { get; set; } = new();
-        public static List<string> PushAfterLoadCalls { get; set; } = new();
+        private static readonly AsyncLocal<List<string>> _pushRuntimeCalls = new();
+        public static List<string> PushRuntimeCalls => _pushRuntimeCalls.Value ??= new();
+        private static readonly AsyncLocal<List<string>> _pushAfterLoadCalls = new();
+        public static List<string> PushAfterLoadCalls => _pushAfterLoadCalls.Value ??= new();
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -56,8 +59,10 @@ public class StateMachineStrategyBaseTests
     [StrategyIndex(SmPopIdx)]
     private sealed class TrackingPopStrategy : StateMachineStrategyBase
     {
-        public static List<string> PopRuntimeCalls { get; set; } = new();
-        public static List<string> PopBeforeQuitCalls { get; set; } = new();
+        private static readonly AsyncLocal<List<string>> _popRuntimeCalls = new();
+        public static List<string> PopRuntimeCalls => _popRuntimeCalls.Value ??= new();
+        private static readonly AsyncLocal<List<string>> _popBeforeQuitCalls = new();
+        public static List<string> PopBeforeQuitCalls => _popBeforeQuitCalls.Value ??= new();
 
         public override void OnPopRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -73,10 +78,10 @@ public class StateMachineStrategyBaseTests
     [Fact]
     public void Push_TriggersOnPushRuntime()
     {
-        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
-        TrackingPushStrategy.PushAfterLoadCalls = new List<string>();
-        TrackingPopStrategy.PopRuntimeCalls = new List<string>();
-        TrackingPopStrategy.PopBeforeQuitCalls = new List<string>();
+        TrackingPushStrategy.PushRuntimeCalls.Clear();
+        TrackingPushStrategy.PushAfterLoadCalls.Clear();
+        TrackingPopStrategy.PopRuntimeCalls.Clear();
+        TrackingPopStrategy.PopBeforeQuitCalls.Clear();
 
         var logger = new TestLogger();
         var pool = new SndStrategyPool(logger);
@@ -98,9 +103,9 @@ public class StateMachineStrategyBaseTests
     [Fact]
     public void Pop_TriggersOnPopRuntime()
     {
-        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
-        TrackingPopStrategy.PopRuntimeCalls = new List<string>();
-        TrackingPopStrategy.PopBeforeQuitCalls = new List<string>();
+        TrackingPushStrategy.PushRuntimeCalls.Clear();
+        TrackingPopStrategy.PopRuntimeCalls.Clear();
+        TrackingPopStrategy.PopBeforeQuitCalls.Clear();
 
         var logger = new TestLogger();
         var pool = new SndStrategyPool(logger);
@@ -123,8 +128,8 @@ public class StateMachineStrategyBaseTests
     [Fact]
     public void Quit_PopTriggersOnPopBeforeQuit()
     {
-        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
-        TrackingPopStrategy.PopBeforeQuitCalls = new List<string>();
+        TrackingPushStrategy.PushRuntimeCalls.Clear();
+        TrackingPopStrategy.PopBeforeQuitCalls.Clear();
 
         var logger = new TestLogger();
         var pool = new SndStrategyPool(logger);
@@ -146,8 +151,8 @@ public class StateMachineStrategyBaseTests
     [Fact]
     public void AfterLoad_TriggersOnPushAfterLoad_BottomToTop()
     {
-        TrackingPushStrategy.PushAfterLoadCalls = new List<string>();
-        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
+        TrackingPushStrategy.PushAfterLoadCalls.Clear();
+        TrackingPushStrategy.PushRuntimeCalls.Clear();
 
         var logger = new TestLogger();
         var pool = new SndStrategyPool(logger);
@@ -174,8 +179,8 @@ public class StateMachineStrategyBaseTests
     [Fact]
     public void Container_PopAllOnQuit_TriggersPopBeforeQuit_OnAllMachines()
     {
-        TrackingPopStrategy.PopBeforeQuitCalls = new List<string>();
-        TrackingPushStrategy.PushRuntimeCalls = new List<string>();
+        TrackingPopStrategy.PopBeforeQuitCalls.Clear();
+        TrackingPushStrategy.PushRuntimeCalls.Clear();
 
         var logger = new TestLogger();
         var pool = new SndStrategyPool(logger);

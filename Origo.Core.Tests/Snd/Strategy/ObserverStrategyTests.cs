@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Snd;
@@ -17,7 +18,6 @@ public class ObserverStrategyTests
     private const string SelfWatchIdx = "observer.test.self_watch";
     private const string MultiKeyIdx = "observer.test.multi_key";
     private const string NoDataKeyIdx = "observer.test.no_data_key";
-    private const string NamedTargetIdx = "observer.test.named_target";
     private const string MemoryObservedIdx = "observer.test.memory";
     private const string ThrowOnMountIdx = "observer.test.throw_on_mount";
 
@@ -112,6 +112,22 @@ public class ObserverStrategyTests
 
     // ── Mount failure cleanup ──────────────────────────────────────────
 
+    [Fact]
+    public void Mount_WhenOnMountedThrows_RollsBackAndReturnsToPool()
+    {
+        var (entity, ctx) = Setup();
+        entity.SpawnSingle(CreateMeta());
+        ThrowOnMountObserver.DataChangedCalls.Clear();
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            entity.MountObserverStrategy(entity.Name, ThrowOnMountIdx));
+        Assert.Contains("OnMounted boom", ex.Message);
+
+        // After failure, data subscription must be rolled back
+        entity.SetData("character.hp", 10);
+        Assert.Empty(ThrowOnMountObserver.DataChangedCalls);
+    }
+
     // ── Data change notification ───────────────────────────────────────
 
     [Fact]
@@ -183,6 +199,9 @@ public class ObserverStrategyTests
         entity.SetData("character.hp", 50);
 
         Assert.Single(SelfWatchObserver.DataChangedCalls);
+        var call = SelfWatchObserver.DataChangedCalls[0];
+        Assert.Equal(100, call.OldValue.AsInt32());
+        Assert.Equal(50, call.NewValue.AsInt32());
     }
 
     // ── Observer strategy without data keys ─────────────────────────────
@@ -432,6 +451,7 @@ public class ObserverStrategyTests
         var ex = Record.Exception(() =>
             topology.RecoverBindingsFor(entity, bindings, _ => null));
 
+        Assert.Null(ex);
     }
 
     // ── Has / Remove observer bindings by target ──────────────────────
@@ -509,9 +529,15 @@ public class ObserverStrategyTests
             if (e is IEntityLifecycle lc)
                 lc.FireAfterSpawnHooks();
 
-        var entity = (SndEntity)host.FindByName("bob")!;
-        entity.IsPendingKill = true;
+        var entity = host.FindByName("bob")!;
+        Assert.False(entity.IsPendingKill);
 
+        host.RequestKillEntity("bob");
+        Assert.True(entity.IsPendingKill);
+        Assert.Single(host.GetEntities());
+
+        host.RemoveEntity("bob");
+        Assert.Empty(host.GetEntities());
     }
 
     // ── ClearAll observer cleanup ─────────────────────────────────────
@@ -540,6 +566,10 @@ public class ObserverStrategyTests
             if (e is IEntityLifecycle lc)
                 lc.FireAfterSpawnHooks();
 
+        Assert.Single(host.GetEntities());
+
+        host.RemoveAllEntities();
+        Assert.Empty(host.GetEntities());
     }
 
     // ── Data change filtering: multi-entity observer isolation ────────
@@ -589,6 +619,9 @@ public class ObserverStrategyTests
         entity.SetData("character.hp", 50);
 
         Assert.Single(SelfWatchObserver.DataChangedCalls);
+        var call = SelfWatchObserver.DataChangedCalls[0];
+        Assert.Equal(100, call.OldValue.AsInt32());
+        Assert.Equal(50, call.NewValue.AsInt32());
     }
 
     // ── Helpers ────────────────────────────────────────────────────────
@@ -625,7 +658,6 @@ public class ObserverStrategyTests
         runtime.SndWorld.RegisterStrategy(() => new SelfWatchObserver());
         runtime.SndWorld.RegisterStrategy(() => new MultiKeyObserver());
         runtime.SndWorld.RegisterStrategy(() => new NoDataKeyObserver());
-        runtime.SndWorld.RegisterStrategy(() => new NamedTargetObserver());
         runtime.SndWorld.RegisterStrategy(() => new MemoryObserver());
         runtime.SndWorld.RegisterStrategy(() => new ThrowOnMountObserver());
         var fs = new TestFileSystem();
@@ -657,7 +689,8 @@ public class ObserverStrategyTests
     [ObserveData("character.hp")]
     private sealed class SelfWatchObserver : ObserverStrategyBase
     {
-        public static List<DataCall> DataChangedCalls { get; set; } = new();
+        private static readonly AsyncLocal<List<DataCall>> _dataChangedCalls = new();
+        public static List<DataCall> DataChangedCalls => _dataChangedCalls.Value ??= new();
 
         public override void OnDataChanged(ISndEntity entity, ISndContext ctx, ISndEntity target,
             string dataKey, TypedData oldValue, TypedData newValue)
@@ -666,7 +699,9 @@ public class ObserverStrategyTests
             {
                 EntityName = entity.Name,
                 TargetName = target.Name,
-                DataKey = dataKey
+                DataKey = dataKey,
+                OldValue = oldValue,
+                NewValue = newValue
             });
         }
 
@@ -675,6 +710,8 @@ public class ObserverStrategyTests
             public string EntityName { get; set; } = string.Empty;
             public string TargetName { get; set; } = string.Empty;
             public string DataKey { get; set; } = string.Empty;
+            public TypedData OldValue { get; set; }
+            public TypedData NewValue { get; set; }
         }
     }
 
@@ -683,8 +720,10 @@ public class ObserverStrategyTests
     [ObserveData("character.mp")]
     private sealed class MultiKeyObserver : ObserverStrategyBase
     {
-        public static List<string> HpChangedCalls { get; set; } = new();
-        public static List<string> MpChangedCalls { get; set; } = new();
+        private static readonly AsyncLocal<List<string>> _hpChangedCalls = new();
+        private static readonly AsyncLocal<List<string>> _mpChangedCalls = new();
+        public static List<string> HpChangedCalls => _hpChangedCalls.Value ??= new();
+        public static List<string> MpChangedCalls => _mpChangedCalls.Value ??= new();
 
         public override void OnDataChanged(ISndEntity entity, ISndContext ctx, ISndEntity target,
             string dataKey, TypedData oldValue, TypedData newValue)
@@ -701,31 +740,34 @@ public class ObserverStrategyTests
     {
     }
 
-    [StrategyIndex(NamedTargetIdx)]
-    private sealed class NamedTargetObserver : ObserverStrategyBase
-    {
-    }
-
     [StrategyIndex(MemoryObservedIdx)]
     private sealed class MemoryObserver : ObserverStrategyBase
     {
-        public static List<MountCall> MountedCalls { get; set; } = new();
-        public static List<MountCall> UnmountedCalls { get; set; } = new();
+        private static readonly AsyncLocal<List<MountCall>> _mountedCalls = new();
+        private static readonly AsyncLocal<List<MountCall>> _unmountedCalls = new();
+        public static List<MountCall> MountedCalls => _mountedCalls.Value ??= new();
+        public static List<MountCall> UnmountedCalls => _unmountedCalls.Value ??= new();
 
         public override void OnMounted(ISndEntity entity, ISndContext ctx, ISndEntity target)
         {
-            MountedCalls.Add(new MountCall { Entity = entity, Target = target });
+            MountedCalls.Add(new MountCall(entity, target));
         }
 
         public override void OnUnmounted(ISndEntity entity, ISndContext ctx, ISndEntity target)
         {
-            UnmountedCalls.Add(new MountCall { Entity = entity, Target = target });
+            UnmountedCalls.Add(new MountCall(entity, target));
         }
 
         public sealed class MountCall
         {
-            public ISndEntity Entity { get; set; } = null!;
-            public ISndEntity Target { get; set; } = null!;
+            public ISndEntity Entity { get; }
+            public ISndEntity Target { get; }
+
+            public MountCall(ISndEntity entity, ISndEntity target)
+            {
+                Entity = entity;
+                Target = target;
+            }
         }
     }
 
@@ -744,7 +786,8 @@ public class ObserverStrategyTests
     [ObserveData("character.hp")]
     private sealed class ThrowOnMountObserver : ObserverStrategyBase
     {
-        public static List<string> DataChangedCalls { get; set; } = new();
+        private static readonly AsyncLocal<List<string>> _dataChangedCalls = new();
+        public static List<string> DataChangedCalls => _dataChangedCalls.Value ??= new();
 
         public override void OnMounted(ISndEntity entity, ISndContext ctx, ISndEntity target)
         {

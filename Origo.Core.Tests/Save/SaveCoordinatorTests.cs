@@ -79,6 +79,19 @@ public class SaveCoordinatorTests
             new SaveCoordinator(sm, bb, sc, pr, null!));
     }
 
+    [Fact]
+    public void PersistProgress_WithoutForegroundSession_Throws()
+    {
+        var sm = CreateSessionManager();
+        var bb = new Blackboard.Blackboard();
+        var sc = new StateMachineContainer(new SndStrategyPool(new TestLogger()), new TestStateMachineContext());
+        var pr = CreateProgressRuntime();
+        var coordinator = new SaveCoordinator(sm, bb, sc, pr, "test_save");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => coordinator.PersistProgress());
+        Assert.Contains("foreground", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static SessionManager CreateSessionManager()
     {
         var logger = new TestLogger();

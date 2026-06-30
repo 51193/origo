@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Xunit;
 
@@ -102,6 +104,43 @@ public class AutoInitializerGuardTests
 
         var strategy = world.StrategyPool.GetStrategy<LifecycleStrategyBase>("auto.init.readonly.local");
         Assert.NotNull(strategy);
+    }
+
+    [Fact]
+    public void DiscoverAndRegisterStrategies_SkippingTestAssembly_DoesNotRegisterFromSkippedAssembly()
+    {
+        var logger = new TestLogger();
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        var n = OrigoAutoInitializer.DiscoverAndRegisterStrategies(world, logger, new[] { "Origo.Core.Tests" });
+        Assert.Equal(0, n);
+    }
+
+    [Fact]
+    public void SndWorld_RegisterTypeMappings_NullCallback_Throws()
+    {
+        var world = TestFactory.CreateSndWorld();
+        Assert.Throws<ArgumentNullException>(() => world.RegisterTypeMappings(null!));
+    }
+
+    [Fact]
+    public void SndWorld_WriteMetaListNode_NonListEnumerable_UsesToListPath()
+    {
+        var world = TestFactory.CreateSndWorld();
+        var lazy = MetaYield();
+        using var node = world.WriteMetaListNode(lazy);
+        var json = TestFactory.JsonFromNode(node);
+        Assert.Contains("E1", json, StringComparison.Ordinal);
+
+        static IEnumerable<SndMetaData> MetaYield()
+        {
+            yield return new SndMetaData
+            {
+                Name = "E1",
+                NodeMetaData = new NodeMetaData(),
+                StrategyMetaData = new StrategyMetaData(),
+                DataMetaData = new DataMetaData()
+            };
+        }
     }
 
     [StrategyIndex(IndexConst)]

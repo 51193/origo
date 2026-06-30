@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
@@ -101,7 +102,7 @@ public class LifecycleStrategyBaseTests
     [Fact]
     public void Process_RequestKillDuringProcess_RemainingStrategiesStillExecuted()
     {
-        KillSelfRecordingStrategy.ProcessCalls = new List<string>();
+        KillSelfRecordingStrategy.ProcessCalls.Clear();
         var host = CreateHost(w =>
         {
             w.RegisterStrategy(() => new KillSelfRecordingStrategy());
@@ -164,7 +165,8 @@ public class LifecycleStrategyBaseTests
     [StrategyIndex(ThrowOnAddIdx)]
     private sealed class ThrowOnAddStrategy : LifecycleStrategyBase
     {
-        public static int ProcessCalls { get; set; }
+        private static readonly AsyncLocal<int> _processCalls = new();
+        public static int ProcessCalls { get => _processCalls.Value; set => _processCalls.Value = value; }
 
         public override void AfterAdd(ISndEntity entity, ISndContext ctx)
         {
@@ -208,7 +210,8 @@ public class LifecycleStrategyBaseTests
     [StrategyIndex(KillSelfIdx)]
     private sealed class KillSelfRecordingStrategy : LifecycleStrategyBase
     {
-        public static List<string> ProcessCalls { get; set; } = null!;
+        private static readonly AsyncLocal<List<string>> _processCalls = new();
+        public static List<string> ProcessCalls => _processCalls.Value ??= new();
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -220,7 +223,8 @@ public class LifecycleStrategyBaseTests
     [StrategyIndex(ProcessCalledIdx)]
     private sealed class ProcessCalledStrategy : LifecycleStrategyBase
     {
-        public static bool Called { get; set; }
+        private static readonly AsyncLocal<bool> _called = new();
+        public static bool Called { get => _called.Value; set => _called.Value = value; }
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {

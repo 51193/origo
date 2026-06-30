@@ -1,5 +1,6 @@
 using Origo.Core.Runtime.Lifecycle;
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using Origo.Core.Abstractions.Entity;
@@ -48,7 +49,7 @@ public class EntityKillTests
     // ── RequestKillAll ─────────────────────────────────────────────────
 
     [Fact]
-    public void RequestKillAll_MarksAllAliveEntities()
+    public void ManualIterateAndRequestKillEntity_MarksAllAliveEntities()
     {
         var (ctx, _) = Setup();
         ctx.RequestLoadMainMenuEntrySave();
@@ -163,7 +164,7 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void KillPendingEntities_Order_BusinessBeforeKill()
+    public void KillPendingEntities_BusinessDeferredBeforeKillSweep()
     {
         var (ctx, host, _) = SetupKillTest(registerKillProbe: true);
         SpawnEntity(host, "A");
@@ -587,7 +588,8 @@ public class EntityKillTests
     [StrategyIndex("kill.test.lifecycle")]
     private sealed class KillProbeStrategy : LifecycleStrategyBase
     {
-        public static List<string>? Events { get; set; }
+        private static readonly AsyncLocal<List<string>?> _events = new();
+        public static List<string>? Events { get => _events.Value; set => _events.Value = value; }
 
         public override void BeforeDead(ISndEntity entity, ISndContext ctx) => Events?.Add("before_dead");
     }
@@ -595,7 +597,8 @@ public class EntityKillTests
     [StrategyIndex("quit.test.probe")]
     private sealed class QuitProbeStrategy : LifecycleStrategyBase
     {
-        public static List<string>? Events { get; set; }
+        private static readonly AsyncLocal<List<string>?> _events = new();
+        public static List<string>? Events { get => _events.Value; set => _events.Value = value; }
 
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) => Events?.Add("before_quit");
     }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Xunit;
 
 namespace Origo.SourceGeneration.Tests;
 
@@ -70,6 +71,36 @@ internal static class GeneratorTestHarness
             .ToImmutableArray();
 
         return new GeneratorOutput(generatedSources, generatorDiagnostics, compileErrors);
+    }
+
+    public static GeneratorDriver CreateTrackedDriver()
+    {
+        return CSharpGeneratorDriver.Create(
+            new[] { new TypedDataGenerator().AsSourceGenerator() },
+            parseOptions: ParseOptions,
+            driverOptions: new GeneratorDriverOptions(
+                disabledOutputs: IncrementalGeneratorOutputKind.None,
+                trackIncrementalGeneratorSteps: true));
+    }
+
+    public static (GeneratorOutput Output, GeneratorDriver Driver) RunIncremental(
+        GeneratorDriver driver, CSharpCompilation compilation)
+    {
+        driver = driver.RunGeneratorsAndUpdateCompilation(
+            compilation, out var outputCompilation, out var generatorDiagnostics);
+
+        var runResult = driver.GetRunResult();
+
+        var generatedSources = runResult.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Select(s => s.SourceText.ToString())
+            .ToImmutableArray();
+
+        var compileErrors = outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .ToImmutableArray();
+
+        return (new GeneratorOutput(generatedSources, generatorDiagnostics, compileErrors), driver);
     }
 }
 

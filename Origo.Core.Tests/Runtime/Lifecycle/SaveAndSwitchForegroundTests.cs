@@ -1,6 +1,6 @@
 using Origo.Core.Runtime.Lifecycle;
-#pragma warning disable CS8602
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using Origo.Core.Abstractions.Entity;
@@ -1154,7 +1154,8 @@ foreach (var e in host.GetEntities())
     [StrategyIndex(FindByNameStrategyIndex)]
     private sealed class FindByNameStrategy : LifecycleStrategyBase
     {
-        private static List<string>? EventSink { get; set; }
+        private static readonly AsyncLocal<List<string>?> _eventSink = new();
+        private static List<string>? EventSink { get => _eventSink.Value; set => _eventSink.Value = value; }
 
         public static void Bind(List<string> sink) => EventSink = sink;
 

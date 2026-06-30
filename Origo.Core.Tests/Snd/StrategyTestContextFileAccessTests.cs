@@ -2,7 +2,7 @@ using System;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
-using Origo.Core.Testing;
+using Origo.Core.Tests.TestSupport;
 using Xunit;
 
 namespace Origo.Core.Tests;

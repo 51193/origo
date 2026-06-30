@@ -242,7 +242,7 @@ public class SessionManagerTests
     }
 
     [Fact]
-    public void AppendBackgroundPayloads_LevelIdCollision_Throws()
+    public void AppendBackgroundPayloads_DifferentLevelIds_IncludesBothInPayload()
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
