@@ -55,6 +55,11 @@ public class GodotTypedDataPerformanceTests
             "Godot Vector3 Write: Registered (FromObject) vs Unregistered (kind=255)",
             "FromObject (kind=130)", Iterations, timeRegistered, allocRegistered,
             "new TypedData(255)", Iterations, timeUnregistered, allocUnregistered);
+
+        var tdReg = new TypedData(130, 0, v);
+        var obj = TypedDataObjectConverter.ToObject(tdReg);
+        Assert.IsType<Vector3>(obj);
+        Assert.Equal(v, (Vector3)obj!);
     }
 
     [Fact]
@@ -131,6 +136,10 @@ public class GodotTypedDataPerformanceTests
             "Godot ToObject: Switch dispatch vs Data property",
             "ToObject (switch)", Iterations, timeSwitch, allocSwitch,
             "Data property", Iterations, timeData, allocData);
+
+        var result = TypedDataObjectConverter.ToObject(td);
+        Assert.IsType<Vector3>(result);
+        Assert.Equal(v, (Vector3)result);
     }
 
     [Fact]
@@ -164,6 +173,10 @@ public class GodotTypedDataPerformanceTests
             "Godot FromObject: Kind-switch vs unregistered fallback",
             "FromObject (kind=137)", Iterations, timeSwitch, allocSwitch,
             "FromObject (kind=255)", Iterations, timeFallback, allocFallback);
+
+        var (bitsReg, refReg) = TypedDataObjectConverter.FromObject(137, v);
+        var (bitsUnreg, refUnreg) = TypedDataObjectConverter.FromObject(255, v);
+        Assert.Equal(refReg, refUnreg);
     }
 
     [Fact]
@@ -187,6 +200,11 @@ public class GodotTypedDataPerformanceTests
 
         PrintReport("Godot Vector3 Factory Create+Extract (kind-based path)", Iterations * 2,
             timeRegistered, allocRegistered);
+
+        var tdCreated = TypedDataFactory<Vector3>.Create(v);
+        var extracted = TypedDataFactory<Vector3>.TryExtract(tdCreated, out var ev);
+        Assert.True(extracted);
+        Assert.Equal(v, ev);
     }
 
     [Fact]
@@ -246,6 +264,13 @@ public class GodotTypedDataPerformanceTests
         PrintReport(
             $"Godot Entity Simulation: {entityCount} entities × {frames} frames, {readsPerFrame}r+{writesPerFrame}w",
             (int)totalOps, sw.Elapsed, totalAlloc);
+
+        var e0 = entityDicts[0];
+        Assert.True(e0.TryGetValue("position", out var posCheck));
+        Assert.True(posCheck.TryGetVector3(out _));
+        Assert.True(e0.TryGetValue("alive", out var aliveCheck));
+        Assert.True(aliveCheck.TryGetBoolean(out var isAlive));
+        Assert.True(isAlive);
     }
 
     private void PrintReport(string title, int iterations, TimeSpan elapsed, long allocated)

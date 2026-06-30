@@ -111,6 +111,8 @@ public class SndStrategyPerformanceTests
                 frames * sc,
                 sw.Elapsed,
                 totalAlloc);
+
+            Assert.NotNull(host.FindByName("E"));
         }
     }
 
@@ -153,6 +155,8 @@ public class SndStrategyPerformanceTests
                 1,
                 TimeSpan.Zero,
                 singleTriggerAlloc);
+
+            Assert.Equal("E", entity.Name);
         }
     }
 

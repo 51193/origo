@@ -363,7 +363,8 @@ public class SndContextWorkflowTests
     public void SubscribeConsoleOutput_ThrowsWhenNoChannel()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Throws<InvalidOperationException>(() => ctx.SubscribeConsoleOutput(_ => { }));
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.SubscribeConsoleOutput(_ => { }));
+        Assert.Contains("Console", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

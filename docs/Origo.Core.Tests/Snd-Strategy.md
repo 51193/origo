@@ -8,7 +8,7 @@
 
 验证 SND 策略系统的全部行为：策略优先级排序、池引用计数/回收、实体策略的 8 个生命周期钩子、主动策略的 Invoke 调用、观察者策略的挂载/卸载/数据变更通知/持久化/拓扑查询、策略注册时的类型安全校验。
 
-`SndStrategyPerformanceTests` 中的三个性能测试使用 `Stopwatch` + `PerfReporter` 测量吞吐/分配，不携带 `[Trait("Category","Benchmark")]` 标签，随功能测试管线一同执行。
+`SndStrategyPerformanceTests` 中的三个性能测试使用 `Stopwatch` + `PerfReporter` 测量吞吐/分配并附带正确性断言，不携带 `[Trait("Category","Benchmark")]` 标签，随功能测试管线一同执行。
 
 ## 测试文件清单
 
@@ -214,8 +214,8 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `StrategyPool_GetRelease_Throughput` | 100,000 次 Get+Release 往返吞吐与分配量在可接受范围内（< 500MB） | — |
-| `StrategyManager_Process_StrategyCountScaling` | 1/5/10/20 策略 × 10,000 帧 Process 的吞吐与分配量线性可接受 | — |
-| `TriggerAll_AfterSpawn_AllocationByStrategyCount` | 1/10 策略 AfterSpawn TriggerAll 的 ToArray 分配量 | — |
+| `StrategyManager_Process_StrategyCountScaling` | 1/5/10/20 策略 × 10,000 帧 Process 的吞吐与分配：断言 ProcessAll 后实体仍存活 | — |
+| `TriggerAll_AfterSpawn_AllocationByStrategyCount` | 1/10 策略 AfterSpawn TriggerAll 的 ToArray 分配量：断言 AfterSpawn 后实体名称正确 | — |
 
 ## 测试辅助策略
 

@@ -130,7 +130,8 @@ public class StackStateMachineTests
         var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
         sm.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => sm.Push("a"));
+        var ex = Assert.Throws<ObjectDisposedException>(() => sm.Push("a"));
+        Assert.Contains("disposed", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -140,7 +141,8 @@ public class StackStateMachineTests
         var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
         sm.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => sm.TryPopRuntime(out _));
+        var ex = Assert.Throws<ObjectDisposedException>(() => sm.TryPopRuntime(out _));
+        Assert.Contains("disposed", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -150,7 +152,8 @@ public class StackStateMachineTests
         var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
         sm.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => sm.Peek());
+        var ex = Assert.Throws<ObjectDisposedException>(() => sm.Peek());
+        Assert.Contains("disposed", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

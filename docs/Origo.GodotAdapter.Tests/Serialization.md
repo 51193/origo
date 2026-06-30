@@ -101,12 +101,12 @@ Basis、Transform2D/3D、Rect2/2I、Aabb、Plane。所有类型通过 `DataSourc
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `WriteThroughput_Registered_Outperforms_Unregistered` | 已注册 Kind(130) 写入 vs 未注册 Kind(255) 写入吞吐对比 | GodotAdapter Snd |
+| `WriteThroughput_Registered_Outperforms_Unregistered` | 已注册 Kind(130) vs 未注册 Kind(255) 写入吞吐对比；断言两侧提取值等价 | GodotAdapter Snd |
 | `ReadThroughput_TryGetVector3_Outperforms_IsT` | `TryGetVector3`（Kind）vs `ToObject is Vector3` 读取，结果一致并打印对比 | GodotAdapter Snd |
-| `ObjectConverter_ToObject_GodotSwitch_Outperforms_Data` | ToObject switch 分发 vs Data 属性路径对比 | GodotAdapter Snd |
-| `ObjectConverter_FromObject_GodotSwitch_Outperforms_Fallback` | FromObject Kind-switch(137) vs 未注册 fallback(255) 对比 | GodotAdapter Snd |
-| `Factory_CreateExtract_Vector3_RegisteredVsUnregistered` | `TypedDataFactory<Vector3>` Create+Extract 基于 Kind 的路径吞吐 | GodotAdapter Snd |
-| `MixedEntitySimulation_GodotTypes` | 500 实体 × 60 帧、每帧 3 读 2 写的混合实体模拟吞吐与分配 | GodotAdapter Snd |
+| `ObjectConverter_ToObject_GodotSwitch_Outperforms_Data` | ToObject switch 分发 vs Data 属性路径对比；断言返回值为正确 Vector3 | GodotAdapter Snd |
+| `ObjectConverter_FromObject_GodotSwitch_Outperforms_Fallback` | FromObject Kind-switch(137) vs 未注册 fallback(255) 对比；断言两侧提取 Color 值等价 | GodotAdapter Snd |
+| `Factory_CreateExtract_Vector3_RegisteredVsUnregistered` | `TypedDataFactory<Vector3>` Create+Extract 基于 Kind 路径吞吐；断言往返正确 | GodotAdapter Snd |
+| `MixedEntitySimulation_GodotTypes` | 500 实体 × 60 帧混合模拟吞吐与分配；断言实体 0 的 position/alive 数据完好 | GodotAdapter Snd |
 
 ## 测试辅助策略
 
@@ -120,7 +120,7 @@ Basis、Transform2D/3D、Rect2/2I、Aabb、Plane。所有类型通过 `DataSourc
 |---------|------|---------|
 | Godot 类型转换器在畸形/缺字段 JSON 节点上的错误路径未覆盖 | 反序列化容错行为未验证 | Origo.GodotAdapter/Serialization |
 | `TryGetAllGodotTypes_RoundTrip` 未覆盖 Vector4/Quaternion/Basis/Transform2D/3D/Aabb/Plane 的 TryGet 往返 | 部分 Godot 类型的扩展方法往返未直接验证 | Origo.GodotAdapter/Snd |
-| 性能基准为打印型对比，无硬性阈值断言（不守护性能退化） | 仅作观测，回归不会使测试失败 | Origo.GodotAdapter/Snd |
+| 性能基准含正确性烟雾断言（值等价/往返验证），但不设硬性性能阈值 | 数据正确性回归会使测试失败；性能退化仅作观测，不自动失败 | Origo.GodotAdapter/Snd |
 
 ---
 

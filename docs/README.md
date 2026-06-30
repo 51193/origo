@@ -39,7 +39,7 @@ Root (this file)
   │
   ├── 我需要了解"测试覆盖了什么能力"
   │   ├── Origo.Core.Tests/README.md → 按能力查看 Core 测试
-  │   ├── Origo.GodotAdapter.Tests/README.md → 适配层 6 个能力测试
+  │   ├── Origo.GodotAdapter.Tests/README.md → 适配层 7 个能力测试
   │   ├── Origo.ConsoleBridge.Tests/README.md → TCP 桥接测试
   │   └── Origo.SourceGeneration.Tests/README.md → 源码生成器测试
   │

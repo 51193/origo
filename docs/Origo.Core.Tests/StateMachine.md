@@ -23,7 +23,7 @@ StateMachineStrategyBase 默认钩子语义、StateMachineStrategyContext 快照
 | `RandomAndStateMachineTests.Container.cs` | Container：CreateOrGet/序列化/反序列化/批量 Pop/原子替换 |
 | `RandomAndStateMachineTests.SessionAndAdapter.cs` | 会话 Dispose 触发 PopAllOnQuit、StateMachineStrategyContext 快照 |
 | `RandomAndStateMachineTests.Random.cs` | RandomNumberGenerator 随机数测试（见 [Random.md](Random.md)，本文档不收录） |
-| `RandomAndStateMachineTests.TestStrategies.cs` | 测试辅助策略定义（见“测试辅助策略”章节） |
+| `RandomAndStateMachineTests.TestStrategies.cs`（辅助文件，含 0 个 `[Fact]`） | 测试辅助策略类定义，见 [测试辅助策略](#测试辅助策略) |
 
 ## StateMachineStrategyBaseTests 测试详情
 
