@@ -119,6 +119,15 @@ public sealed class ConsoleBridgeServer : IDisposable
         {
             while (!_cts.IsCancellationRequested)
             {
+                lock (_acceptLock)
+                {
+                    while (_hasActiveClient && !_cts.IsCancellationRequested)
+                        Monitor.Wait(_acceptLock, 100);
+                }
+
+                if (_cts.IsCancellationRequested)
+                    break;
+
                 TcpClient? client = null;
                 try
                 {
@@ -138,14 +147,6 @@ public sealed class ConsoleBridgeServer : IDisposable
 
                 lock (_acceptLock)
                 {
-                    if (_hasActiveClient)
-                    {
-                        client.Close();
-                        while (_hasActiveClient && !_cts.IsCancellationRequested)
-                            Monitor.Wait(_acceptLock, 100);
-                        continue;
-                    }
-
                     _hasActiveClient = true;
 
                     _handleThread = new Thread(() => HandleConnection(client))
@@ -211,13 +212,13 @@ public sealed class ConsoleBridgeServer : IDisposable
                 _writer = null;
             }
 
-            client.Close();
-
             lock (_acceptLock)
             {
                 _hasActiveClient = false;
                 Monitor.Pulse(_acceptLock);
             }
+
+            client.Close();
         }
     }
 }
