@@ -6,57 +6,77 @@
 
 ## 被测行为概览
 
-验证 SND 场景宿主层的实现：StubSndSceneHost 的实体容器管理、
-FullMemorySndSceneHost 的边界行为、NullNodeFactory 的无操作行为、
-SndEntityFactory 的 spawn + AfterSpawn 编排、ProcessAll 帧处理行为。
+验证 SND 场景宿主层的实现：StubSndSceneHost 的实体容器操作（CreateEntity/FindByName/RecoverFromMetaList/RemoveAllEntities/BuildMetaList）、
+FullMemorySndSceneHost 的绑定前置条件和错误路径、NullNodeFactory 的无渲染行为。
+
+SndEntityFactory 的 spawn 编排和 ProcessAll 帧处理由 SndEntityLifecycleBatchTests 覆盖，参见 [Snd-Entity.md](Snd-Entity.md)。
 
 ## 测试文件清单
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `MemorySndSceneHostTests.cs` | SndSceneHost 的 CreateEntity/FindByName/BuildMetaList/RecoverFromMetaList/RemoveAllEntities/RemoveEntity |
-| `FullMemorySndSceneHostTests.cs` | FullMemorySndSceneHost 的边界行为：CreateEntity 前置条件、RemoveEntity/RequestKillEntity 错误路径 |
-| `NullNodeFactoryTests.cs` | NullNodeFactory 返回 NullNodeHandle，不抛异常 |
+| `MemorySndSceneHostTests.cs` | StubSndSceneHost 的实体增删查改和列表序列化基本行为 |
+| `FullMemorySndSceneHostTests.cs` | FullMemorySndSceneHost 的绑定前置条件、CreateEntity/RemoveEntity/RequestKillEntity 错误路径 |
+| `NullNodeFactoryTests.cs` | NullNodeFactory 返回 NullNodeHandle，Free/SetVisible 为无操作 |
 
-> `SndEntityLifecycleBatchTests.cs` 与 [Snd-Entity.md](Snd-Entity.md) 共享，此处不再重复列出。
-
-## 测试详情
+## MemorySndSceneHostTests 测试详情
 
 ### 正确路径
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| StubSndSceneHost.CreateEntity 创建实体并加入列表 | CreateEntity 后实体可被 FindByName 找到 | ISndSceneHost |
-| BuildMetaList 返回当前实体元数据 | 序列化快照反映当前状态 | ISndSceneHost |
-| RecoverFromMetaList 恢复实体列表 | 反序列化后 GetEntities 包含实体 | ISndSceneHost |
-| RemoveAllEntities 清空所有实体 | RemoveAllEntities 后 GetEntities 为空 | ISndSceneHost |
-| RemoveEntity 移除实体 | RemoveEntity 后实体不可查找 | ISndSceneHost |
-| NullNodeFactory.Create 返回 NullNodeHandle | 无渲染模式下工厂返回空节点 | INodeFactory |
-| SndEntityFactory.Spawn 封装 CreateEntity + AfterSpawn | 公共静态工具正确处理钩子 | SndEntityFactory |
-| SndEntityFactory.SpawnMany 批量封装 | 全部创建后统一触发 | SndEntityFactory |
+| `Spawn_AddsEntityAndMeta` | CreateEntity 将实体加入 GetEntities 列表和 BuildMetaList | ISndSceneHost |
+| `FindByName_ReturnsEntity` | FindByName 找到已创建实体，不存在返回 null | ISndSceneHost |
+| `LoadFromMetaList_ReplacesExisting` | RecoverFromMetaList 替换全部实体，旧实体不可查找 | ISndSceneHost |
+| `ClearAll_RemovesEntitiesAndMeta` | RemoveAllEntities 后 GetEntities 和 BuildMetaList 均为空 | ISndSceneHost |
+| `SerializeMetaList_ReturnsCorrectData` | BuildMetaList 返回当前全部实体元数据 | ISndSceneHost |
 
-### 边界路径
+### 错误路径
 
-| 测试方法 | 边界条件 | 预期行为 |
-|---------|---------|---------|
-| FindByName 不存在时返回 null | 查询不存在的实体 | 返回 null |
-| CreateEntity 不触发 AfterSpawn | 直接调用 CreateEntity | 策略钩子不触发 |
-| RemoveEntity 不触发 BeforeDead | 直接调用 RemoveEntity | 策略钩子不触发 |
-| Spawn/SpawnMany 处理非 IEntityLifecycle 实体 | StubSndEntity 等无生命周期实体 | 不抛异常，正常返回 |
-| ProcessAll 空场景不抛异常 | 无实体的场景 | 不抛异常 |
-| ProcessAll 单实体调用策略 Process | 单个实体帧处理 | 策略 Process 被调用，delta 正确传播 |
-| ProcessAll 多实体全部被处理 | 多实体帧处理 | 所有实体策略 Process 均被调用 |
-| ProcessAll 中 AddStrategy 新策略不执行 | Process 中添加策略 | 当前帧不执行新策略（快照固定） |
-| ProcessAll 中 RemoveStrategy 后续策略仍执行 | Process 中移除策略 | 后续策略仍正常执行 |
-| FullMemorySndSceneHost CreateEntity 前置条件 | World/Context 未绑定 | InvalidOperationException |
-| FullMemorySndSceneHost RemoveEntity 错误路径 | 不存在的名称 | InvalidOperationException |
-| FullMemorySndSceneHost RequestKillEntity 双重标记 | 重复 kill | InvalidOperationException |
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Spawn_ThrowsOnNull` | null metadata 参数 | ArgumentNullException |
+| `LoadFromMetaList_ThrowsOnNull` | null metaList 参数 | ArgumentNullException |
+
+## FullMemorySndSceneHostTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `CreateEntity_ReturnsEntityAndAddsToCollection` | CreateEntity 返回实体，FindByName 可找到，GetEntities 包含 | ISndSceneHost |
+| `RemoveEntity_ExistingName_RemovesAndNotFoundAfter` | RemoveEntity 后 FindByName 返回 null | ISndSceneHost |
+| `RequestKillEntity_SetsPendingKillTrue` | RequestKillEntity 将 IsPendingKill 设为 true | ISndSceneHost |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `CreateEntity_NullMeta_ThrowsArgumentNull` | null metadata (paramName="metaData") | ArgumentNullException |
+| `CreateEntity_BeforeBindWorld_ThrowsInvalidOperation` | BindWorld 未调用 | InvalidOperationException，消息包含 "SndWorld" |
+| `CreateEntity_BeforeBindContext_ThrowsInvalidOperation` | BindContext 未调用 | InvalidOperationException，消息包含 "ISndContext" |
+| `RemoveEntity_NonexistentName_ThrowsInvalidOperation` | 不存在的实体名称 | InvalidOperationException，消息包含实体名 |
+| `RequestKillEntity_DoubleRequest_ThrowsInvalidOperation` | 重复调用 RequestKillEntity | InvalidOperationException，消息包含 "already pending kill" |
+
+## NullNodeFactoryTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `NullNodeFactory_CreatesNullNodeHandle` | Create 返回非 null 句柄，Free/SetVisible 为无操作 | INodeFactory |
+
+## 测试辅助策略
+
+| 策略类 | 定义位置 | 用途 |
+|--------|---------|------|
+| 无 | — | 本测试文件不定义策略类，纯接口行为测试 |
 
 ## 已知覆盖缺口
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| 并发 CreateEntity/RemoveEntity 的线程安全 | 场景宿主是否承诺线程安全 | ISndSceneHost |
+| 并发 CreateEntity/RemoveEntity 的线程安全性 | 场景宿主是否承诺线程安全 | ISndSceneHost |
 
 ---
 

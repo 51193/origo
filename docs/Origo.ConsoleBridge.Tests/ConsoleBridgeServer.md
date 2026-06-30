@@ -71,6 +71,7 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `Concurrent_PublishWhileReading_NoDeadlock` | 发布+读取并发执行不死锁 | ConsoleBridge |
+| `PendingFlushDuringConcurrentPublish_DeliversIntactLines` | 连接建立时的待发缓冲 flush 与另一线程的并发 Publish 竞争，写入锁保证两条路径互斥，递送的每一行均为未损坏的完整 token（backlog 与实时行各自完整到达） | ConsoleBridge |
 
 ### Agent 工作流集成
 
@@ -94,6 +95,16 @@
 | `Constructor_NullOutput_Throws` | null output | ArgumentNullException |
 | `Constructor_DefaultOptions_HasExpectedPort` | 默认选项 | ActualPort > 0 |
 | `Constructor_CustomPort_StoredInOptions` | Port=9876 | ActualPort=9876 |
+
+## ConsoleBridgeOptionsTests 测试详情
+
+### 选项配置
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `DefaultPort_IsExpectedValue` | 默认端口为 9876 | ConsoleBridge |
+| `DefaultOptions_HasCorrectDefaults` | `ConsoleBridgeOptions` 默认值正确 | ConsoleBridge |
+| `Options_CustomPort_Assigned` | 自定义端口被正确存储 | ConsoleBridge |
 
 ## 已知覆盖缺口
 

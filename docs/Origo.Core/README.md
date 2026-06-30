@@ -24,7 +24,6 @@
 | [Serialization](Serialization/README.md) | 类型映射 | TypeStringMapping（CLR 类型 ↔ 稳定字符串标识）|
 | [Snd](Snd/README.md) | SND 实体系统 | 策略→实体→数据→场景宿主→数值配方加载 完整堆栈 |
 | [StateMachine](StateMachine/README.md) | 字符串栈状态机 | StackStateMachine + 策略钩子 + 持久化模型 |
-| [Testing](Testing/README.md) | 测试基础设施 | StrategyTestScenario：策略隔离测试框架 |
 | [Utility](Utility/README.md) | 通用工具 | DiffUtility：集合差异比较 |
 
 > TypedData 源码生成器是独立项目 [Origo.SourceGeneration](../Origo.SourceGeneration/README.md)，不在 Core 内。

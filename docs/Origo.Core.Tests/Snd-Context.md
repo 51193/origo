@@ -7,7 +7,9 @@
 ## 被测行为概览
 
 验证 SndContext 作为 SND 系统的核心编排器的全部工作流：save/load/continue 操作、
-控制台命令提交、模板克隆、延迟动作队列、NullSndContext 的无操作行为。
+控制台命令提交、模板克隆、延迟动作队列、NullSndContext 的无操作行为、
+LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动流程、
+模板别名解析与缓存。
 
 ## 测试文件清单
 
@@ -17,7 +19,7 @@
 | `SndContextEntryFlowTests.cs` | SndContext 从入口配置开始的工作流 |
 | `NullSndContextExtendedTests.cs` | NullSndContext 所有方法为无操作 |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder 构建和写入关卡数据 |
-| `SndWorldAndDiscoveryCoverageTests.cs` | SndWorld 策略发现和模板加载 |
+| `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad 解析与 ApplyAttributes 类型推断 |
 | `SndTemplateResolverTests.cs` | 模板别名解析、缓存、克隆不影响缓存 |
 
 ## SndContextWorkflowTests 测试详情
@@ -86,6 +88,7 @@
 | `Resolve_CacheThenClone_CloneDoesNotAffectCache` | DeepClone 不污染缓存 | SndTemplateResolver |
 | `Resolve_TemplateFile_EmptyObject_ReturnsMinimalMetaData` | 空 JSON → Name 为空串的 MetaData | — |
 | `Resolve_TemplateFile_MissingNameField_ReturnsEmptyName` | 无 name 字段时返回 Name 为空的 MetaData | — |
+| `Resolve_MapFileComments_Skipped` | 模板文件正常解析，名称正确返回 | SndTemplateResolver |
 
 ### 错误路径
 
@@ -95,6 +98,81 @@
 | `Resolve_WhitespaceAlias_ThrowsArgumentException` | 空白别名 | ArgumentException |
 | `Resolve_InvalidJson_Throws` | 无效 JSON 模板文件 | Exception |
 | `Resolve_ConverterReturnsNull_ThrowsInvalidOperationException` | 转换器返回 null | InvalidOperationException（含 "deserialized to null"） |
+
+## NullSndContextExtendedTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `ListSaves_ReturnsEmpty` | NullSndContext.ListSaves 返回空集合 | ISndSaveOperations |
+| `HasContinueData_ReturnsFalse` | NullSndContext.HasContinueData 返回 false | ISndLifecycleOperations |
+| `RequestContinueGame_ReturnsFalse` | NullSndContext.RequestContinueGame 返回 false | ISndLifecycleOperations |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `RequestSaveGameAuto_Throws` | 无参调用 RequestSaveGameAuto | InvalidOperationException |
+| `RequestSaveGameAuto_WithValue_Throws` | 带 ID 调用 RequestSaveGameAuto | InvalidOperationException |
+| `MutationOperations_ThrowInvalidOperationException` | RequestLoadGame / RequestSaveGame / SetContinueTarget / RequestSwitchForegroundLevel / RequestLoadInitialSave / RequestLoadMainMenuEntrySave | 全部抛出 InvalidOperationException；只读操作（HasContinueData、ListSaves）不受影响 |
+
+## LevelBuilderExtendedTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `Build_ProducesLevelPayload` | Build() 产生包含 LevelId、SndSceneNode、SessionNode、SessionStateMachinesNode 的有效负载 | LevelBuilder |
+| `Commit_WritesToFileSystem` | Commit() 写入 payload 到文件系统 `root/current/level_lvl1/snd_scene.json` | LevelBuilder |
+| `AddEntities_BatchAdd` | AddEntities 批量添加 3 个实体，SceneHost 实体计数为 3 | LevelBuilder |
+| `AddEntityFromTemplate_ClonesAndAdds` | AddEntityFromTemplate 克隆模板并通过 SceneHost.FindByName 可找到 | LevelBuilder |
+| `SessionBlackboard_IsAccessible` | SetSessionData 写入后 SessionBlackboard.TryGet 可读回 | SessionBlackboard |
+| `LevelId_ExposesConstructedValue` | 构造时传入的 LevelId 通过 LevelId 属性暴露 | LevelBuilder |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Build_ThenModify_Throws` | Build 后调用 AddEntity / SetSessionData / Build | InvalidOperationException |
+| `AddEntity_DuplicateName_Throws` | 重复名称 AddEntity | InvalidOperationException |
+| `AddEntity_NullMeta_Throws` | null SndMetaData | ArgumentNullException |
+| `AddEntity_EmptyName_Throws` | Name 为空串的 SndMetaData | ArgumentException |
+| `AddEntities_NullList_Throws` | null 实体列表 | ArgumentNullException |
+| `AddEntityFromTemplate_EmptyKey_Throws` | 空模板 key | ArgumentException |
+| `Constructor_EmptyLevelId_Throws` | 空 levelId | ArgumentException |
+| `Constructor_NullSndWorld_Throws` | null SndWorld | ArgumentNullException |
+| `Constructor_NullStorage_Throws` | null ISaveStorageService | ArgumentNullException |
+
+## SndContextEntryFlowTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `RequestLoadMainMenuEntrySave_MountsForegroundAndSpawnsEntryEntities` | 加载入口存档后 ProgressBlackboard 非 null、ForegroundSession 非 null、host 中可找到入口实体 | ISndLifecycleOperations |
+| `RequestLoadMainMenuEntrySave_ClearsPreviousForegroundEntities` | 加载入口存档前遗留的实体在加载后被清除 | ISndLifecycleOperations |
+
+## SndArchetypeLoaderTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `TryLoad_ValidMapFile_ReturnsAttributes` | 有效 map 文件解析返回 4 个属性，键值正确 | SndArchetypeLoader.TryLoad |
+| `ApplyAttributes_IntString_StoresAsInt` | 整数字符串 "100" 存储为 int(100) | SndArchetypeLoader.ApplyAttributes |
+| `ApplyAttributes_LargeIntegerString_StoresAsLong` | 超大整数字符串超过 int.MaxValue 时存储为 long，不存为 float | SndArchetypeLoader.ApplyAttributes |
+| `ApplyAttributes_FloatString_StoresAsFloat` | 浮点字符串 "3.14" 存储为 float(3.14f) | SndArchetypeLoader.ApplyAttributes |
+| `ApplyAttributes_BoolString_StoresAsBool` | "true" 存储为 bool(true) | SndArchetypeLoader.ApplyAttributes |
+| `ApplyAttributes_PlainString_StoresAsString` | 普通字符串 "hero" 存储为 string | SndArchetypeLoader.ApplyAttributes |
+
+### 边界路径
+
+| 测试方法 | 边界条件 | 预期行为 |
+|---------|---------|---------|
+| `TryLoad_FileNotExists_ReturnsFalse` | 文件不存在 | 返回 false，attrs 为空 |
+| `TryLoad_EmptyObject_ReturnsFalse` | 空 JSON 对象 {} | 返回 false，attrs 为空 |
+| `TryLoad_NonObjectNode_ReturnsFalse` | JSON 值为字符串而非对象 | 返回 false，attrs 为空 |
 
 ## 测试辅助策略
 

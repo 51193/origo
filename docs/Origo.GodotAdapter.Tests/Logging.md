@@ -33,6 +33,19 @@ null handler 时不抛异常、最低日志级别过滤。
 | `MinimumLevel_Error_SuppressesWarning` | MinLevel=Error，Log(Warning) | 不触发 handler |
 | `MinimumLevel_Error_AllowsError` | MinLevel=Error，Log(Error) | 触发 handler |
 
+## 测试辅助策略
+
+| 策略类 | 定义位置 | 用途 |
+|--------|---------|------|
+| 无 | — | 本测试文件不定义辅助策略；通过捕获闭包变量与本地 `Action<LogLevel, string, string>` 委托收集回调参数 |
+
+## 已知覆盖缺口
+
+| 缺口描述 | 影响 | 文档依据 |
+|---------|------|---------|
+| `GodotLogger` 经真实 Godot `GD.Print`/`GD.PushWarning`/`GD.PushError` 输出的路径未覆盖（依赖 Godot 引擎运行时） | 默认无委托时的引擎级输出行为未在测试中直接验证 | Origo.GodotAdapter/Logging |
+| 委托抛异常时 `GodotLogger.Log` 的传播/吞噬行为未覆盖 | 故障委托下的健壮性未验证 | Origo.GodotAdapter/Logging |
+
 ---
 
 [↑ 回到 Origo.GodotAdapter.Tests](README.md)

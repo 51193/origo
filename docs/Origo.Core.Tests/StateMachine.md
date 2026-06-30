@@ -8,22 +8,34 @@
 
 验证 StackStateMachine 的字符串栈操作：Push/PopRuntime/PopOnQuit 触发对应策略钩子、
 Snapshot/RestoreStackWithoutHooks/FlushAfterLoad 两阶段恢复、
-StateMachineContainer 的 CreateOrGet/TryGet/Remove/Clear 容器操作、
-PopAllRuntime/PopAllOnQuit 批量操作、序列化/反序列化往返。
+StateMachineContainer 的 CreateOrGet/TryGet/序列化往返/批量 Pop 操作、
+StateMachineStrategyBase 默认钩子语义、StateMachineStrategyContext 快照、会话 Dispose 触发 PopAllOnQuit。
+
+`RandomAndStateMachineTests.Random.cs` 虽在本测试类的分部文件中，但只包含 RandomNumberGenerator（XorShift128+）的随机数测试，属随机数能力，记录于 [Random.md](Random.md)，本文档不重复收录。
 
 ## 测试文件清单
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `StateMachineStrategyBaseTests.cs` | 默认钩子不调度动作 |
+| `StateMachineStrategyBaseTests.cs` | 默认钩子不调度动作、Push/Pop/Quit/AfterLoad 钩子触发、容器退出钩子 |
 | `StackStateMachineTests.cs` | StackStateMachine 原子操作边界：Push/Pop/Peek/Dispose/Restore 全场景 |
-| `RandomAndStateMachineTests.StringStack.cs` | StringStack 核心操作：Push/Pop/恢复/FlushAfterLoad |
-| `RandomAndStateMachineTests.Container.cs` | Container：CreateOrGet/序列化/反序列化/批量Pop |
-| `RandomAndStateMachineTests.SessionAndAdapter.cs` | 状态机在会话和适配层中的集成 |
-| `RandomAndStateMachineTests.Random.cs` | 状态机与随机数集成 |
-| `RandomAndStateMachineTests.TestStrategies.cs` | 测试辅助策略定义 |
+| `RandomAndStateMachineTests.StringStack.cs` | StringStack 核心操作：Snapshot/Restore 往返、Push/Pop 钩子顺序、FlushAfterLoad |
+| `RandomAndStateMachineTests.Container.cs` | Container：CreateOrGet/序列化/反序列化/批量 Pop/原子替换 |
+| `RandomAndStateMachineTests.SessionAndAdapter.cs` | 会话 Dispose 触发 PopAllOnQuit、StateMachineStrategyContext 快照 |
+| `RandomAndStateMachineTests.Random.cs` | RandomNumberGenerator 随机数测试（见 [Random.md](Random.md)，本文档不收录） |
+| `RandomAndStateMachineTests.TestStrategies.cs` | 测试辅助策略定义（见“测试辅助策略”章节） |
 
 ## StateMachineStrategyBaseTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `Push_TriggersOnPushRuntime` | Push 触发 OnPushRuntime（AfterTop=入栈值），不触发 OnPushAfterLoad | state-machine: Push |
+| `Pop_TriggersOnPopRuntime` | TryPopRuntime 触发 OnPopRuntime（BeforeTop=出栈值） | state-machine: TryPopRuntime |
+| `Quit_PopTriggersOnPopBeforeQuit` | TryPopOnQuit 触发 OnPopBeforeQuit | state-machine: TryPopOnQuit |
+| `AfterLoad_TriggersOnPushAfterLoad_BottomToTop` | FlushAfterLoad 按 bottom→top 顺序触发 OnPushAfterLoad | state-machine: 读档恢复 |
+| `Container_PopAllOnQuit_TriggersPopBeforeQuit_OnAllMachines` | 容器 PopAllOnQuit 对所有机器触发 OnPopBeforeQuit | state-machine: 容器操作 |
 
 ### 边界路径
 
@@ -71,10 +83,10 @@ PopAllRuntime/PopAllOnQuit 批量操作、序列化/反序列化往返。
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `StringStackStateMachine_Snapshot_RestoreStackWithoutHooks_RoundTrip` | Snapshot → Restore 后栈一致 | state-machine: 读档恢复（两阶段） |
-| `PushPopRuntime_AfterAddAndBeforeRemove_OrderAndContext` | Push→Pop 触发正确钩子，上下文 BeforeTop/AfterTop 正确 | state-machine: TryPopRuntime |
-| `PushPopOnQuit_AfterAddAndBeforeQuit_OrderAndContext` | PopOnQuit 触发 BeforeQuit 钩子 | state-machine: TryPopOnQuit |
-| `FlushAfterLoad_CallsAfterLoadInPushOrder` | RestoreWithoutHooks→FlushAfterLoad 按入栈顺序重放 | state-machine: 读档恢复 |
+| `StringStackStateMachine_Snapshot_RestoreStackWithoutHooks_RoundTrip` | Snapshot → Restore 后栈快照一致 | state-machine: 读档恢复（两阶段） |
+| `StringStackStateMachine_PushPopRuntime_AfterAddAndBeforeRemove_OrderAndContext` | Push→Pop 触发正确钩子，BeforeTop/AfterTop 上下文与顺序正确 | state-machine: TryPopRuntime |
+| `StringStackStateMachine_PushPopOnQuit_AfterAddAndBeforeQuit_OrderAndContext` | PopOnQuit 触发 beforeQuit 钩子，顺序与上下文正确 | state-machine: TryPopOnQuit |
+| `StringStackStateMachine_FlushAfterLoad_CallsAfterLoadInPushOrder` | RestoreWithoutHooks → FlushAfterLoad 按入栈顺序重放 afterload | state-machine: 读档恢复 |
 
 ### 错误路径
 
@@ -88,43 +100,52 @@ PopAllRuntime/PopAllOnQuit 批量操作、序列化/反序列化往返。
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `PopAllRuntime_InvokesBeforeRemoveTopToBottom` | PopAllRuntime 按寄存器 LIFO 弹空 | state-machine: 容器操作 |
-| `PopAllOnQuit_InvokesBeforeQuitTopToBottom` | PopAllOnQuit 触发 BeforeQuit | state-machine: 容器操作 |
-| `PopAllOnQuit_TraversesMachinesInInsertionOrder` | 多状态机按插入顺序遍历 | state-machine |
-| `SerializeDeserialize_RoundTrip` | 序列化→反序列化后状态机栈一致 | state-machine: 序列化格式 |
-| `DeserializeWithoutHooks_SwapsAtomically` | 无钩子恢复后旧状态被替换 | state-machine |
-| `CreateOrGet_IdempotentForSameKeyAndIndices` | 同 key+同索引 CreateOrGet 返回同实例 | state-machine |
-| `FlushAllAfterLoad_NotifiesPushStrategy` | FlushAllAfterLoad 重放 AfterLoad | state-machine |
+| `StateMachineContainer_PopAllRuntime_InvokesBeforeRemoveTopToBottom` | PopAllRuntime 按 LIFO 触发 runtime 钩子弹空 | state-machine: 容器操作 |
+| `StateMachineContainer_PopAllOnQuit_InvokesBeforeQuitTopToBottom` | PopAllOnQuit 按 LIFO 触发 beforeQuit 钩子 | state-machine: 容器操作 |
+| `StateMachineContainer_PopAllOnQuit_TraversesMachinesInInsertionOrder` | 多状态机按插入顺序遍历 | state-machine |
+| `StateMachineContainer_SerializeDeserialize_RoundTrip` | 序列化→反序列化后状态机栈一致 | state-machine: 序列化格式 |
+| `StateMachineContainer_DeserializeWithoutHooks_SwapsAtomically` | 无钩子反序列化原子替换旧状态 | state-machine |
+| `StateMachineContainer_CreateOrGet_IdempotentForSameKeyAndIndices` | 同 key+同索引 CreateOrGet 返回同实例 | state-machine |
+| `StateMachineContainer_FlushAllAfterLoad_NotifiesPushStrategy` | FlushAllAfterLoad 按入栈顺序重放 afterload | state-machine |
 
 ### 错误路径
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `CreateOrGet_ConflictingIndices_Throws` | 同 key 不同索引的 CreateOrGet | InvalidOperationException |
-| `DeserializeFromNode_DuplicateMachineKey_Throws` | 反序列化含重复 key | InvalidOperationException |
-| `DeserializeFromNode_ThrowsOnNullNode` | null 节点反序列化 | ArgumentNullException |
+| `StateMachineContainer_CreateOrGet_ConflictingIndices_Throws` | 同 key 不同索引的 CreateOrGet | InvalidOperationException |
+| `StateMachineContainer_DeserializeFromNode_DuplicateMachineKey_Throws` | 反序列化含重复 key | InvalidOperationException |
+| `StateMachineContainer_DeserializeFromNode_ThrowsOnNullNode` | null 节点反序列化 | ArgumentNullException |
 
-### 边界路径
+## SessionAndAdapter 测试详情
 
-| 测试方法 | 边界条件 | 预期行为 |
-|---------|---------|---------|
-| 空栈 TryPeek/TryPop 返回 false | 空状态机 | false |
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `SessionRun_Dispose_InvokesPopAllOnQuit_TopToBottom` | 会话 Dispose 触发容器 PopAllOnQuit，push/beforeQuit 事件序列按 top→bottom 正确 | state-machine: 容器操作 |
+| `StateMachineStrategyContext_HoldsMachineKeyAndStackSnapshot` | StateMachineStrategyContext 正确保存 MachineKey、BeforeTop、AfterTop | state-machine: 策略上下文 |
 
 ## 测试辅助策略
 
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
-| `SmPushStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Push 钩子：记录 "push:runtime:null→a" 格式事件 |
-| `SmPopStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Pop 钩子：记录 PopRemove/PopQuit 事件 |
-| `SmPopOrderProbeStrategy` | RandomAndStateMachineTests.TestStrategies.cs | 记录 MachineKey，验证多状态机遍历顺序 |
-| `SwapTestPushStrategy` | RandomAndStateMachineTests.Container.cs | 空 Push 钩子 |
-| `SwapTestPopStrategy` | RandomAndStateMachineTests.Container.cs | 空 Pop 钩子 |
+| `SmPushStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Push 钩子：记录 `push:runtime:before->after` 与 `push:afterload:before->after` 格式事件 |
+| `SmPopStrategy` | RandomAndStateMachineTests.TestStrategies.cs | Pop 钩子：记录 `pop:runtime:...` 与 `pop:beforeQuit:...` 事件 |
+| `SmPopOrderProbeStrategy` | RandomAndStateMachineTests.TestStrategies.cs | OnPopBeforeQuit 记录 MachineKey，验证多状态机遍历顺序 |
+| `SwapTestPushStrategy` | RandomAndStateMachineTests.Container.cs | 空 Push 钩子，用于序列化原子替换测试 |
+| `SwapTestPopStrategy` | RandomAndStateMachineTests.Container.cs | 空 Pop 钩子，用于序列化原子替换测试 |
+| `SmPushStub` | StackStateMachineTests.cs | 空 StateMachineStrategyBase Push 桩，仅用于驱动栈操作 |
+| `SmPopStub` | StackStateMachineTests.cs | 空 StateMachineStrategyBase Pop 桩，仅用于驱动栈操作 |
+| `TrackingPushStrategy` | StateMachineStrategyBaseTests.cs | 记录 OnPushRuntime/OnPushAfterLoad 调用次数与 AfterTop |
+| `TrackingPopStrategy` | StateMachineStrategyBaseTests.cs | 记录 OnPopRuntime/OnPopBeforeQuit 调用次数与 BeforeTop |
+| `TestSmStrategy` | StateMachineStrategyBaseTests.cs | 默认 StateMachineStrategyBase（未覆盖任何钩子），验证默认实现不调度动作 |
+| `StubStateMachineContext` | StateMachineStrategyBaseTests.cs | IStateMachineContext 桩，统计 EnqueueBusinessDeferred 调用次数 |
 
 ## 已知覆盖缺口
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| RestoreStackWithoutHooks 后 Peek 返回栈顶 | 恢复后栈状态验证 | state-machine |
+| 容器在含多个状态机时部分反序列化失败的事务性 | 反序列化中途异常是否保持原状态不变 | state-machine: 序列化格式 |
 
 ---
 

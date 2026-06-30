@@ -1,13 +1,15 @@
 # 策略测试框架 测试
 
 > [↑ 回到 Origo.Core.Tests](README.md)
-> [↔ 被测代码: Origo.Core/Testing](../Origo.Core/Testing/README.md)
 > [↔ 被测行为: usage/strategy-testing](../usage/strategy-testing.md)
 
 ## 被测行为概览
 
-验证 StrategyTestScenario 测试框架本身的正确性。确保框架的 Harness 能正确模拟
-EntityStrategy 的 Process/RunFrames/生命周期钩子和 ActiveStrategy 的 Invoke 调用，
+验证 StrategyTestScenario 测试框架本身的正确性。该框架位于 `Origo.Core.Tests/TestSupport/`，
+是测试基础设施的一部分（在 [Tests README](README.md) 中有概述），没有对应的生产模块。
+
+确保框架的 Harness 能正确模拟 EntityStrategy 的 Process/RunFrames/生命周期钩子和
+ActiveStrategy 的 Invoke 调用，
 并能正确记录副作用（Save/Load/LevelSwitch/ControlConsole/DeferredAction）。
 
 ## 测试文件清单
@@ -53,6 +55,55 @@ EntityStrategy 的 Process/RunFrames/生命周期钩子和 ActiveStrategy 的 In
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
 | `WithEntityName_EmptyString_UsesDefault` | "  " 空白名 | 回退到 __test_entity__ |
+
+## ActiveStrategyTestScenarioTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `Invoke_WithNoInput_ReturnsExpectedResult` | Build → Invoke 无输入返回策略默认值 42 | strategy-testing: ActiveStrategy |
+| `Invoke_WithInput_PassesInputToStrategy` | Build → Invoke("hello") 传入字符串，策略返回相同值 | strategy-testing: ActiveStrategy |
+| `Invoke_WithComplexInput_PassesThrough` | 匿名对象输入传入策略并原样返回 | strategy-testing: ActiveStrategy |
+| `Strategy_ReadsEntityData_SetViaBuilder` | WithData 设置 counter/label，策略读取后拼入返回字符串 | strategy-testing: ActiveStrategy |
+| `Strategy_WritesEntityData_HarnessCanReadBack` | 策略写入 invoke_count/invoke_status，Harness 通过 GetEntityData 读回 | strategy-testing: ActiveStrategy |
+| `MultipleInvokes_IncrementData` | 3 次 Invoke 后 invoke_count=3 | strategy-testing: ActiveStrategy |
+| `InvokeViaEntity_DelegatesToStrategy` | InvokeViaEntity 无输入委托到策略返回 42 | strategy-testing: ActiveStrategy |
+| `InvokeViaEntity_WithInput_DelegatesCorrectly` | InvokeViaEntity("world") 委托到策略返回 "world" | strategy-testing: ActiveStrategy |
+| `SystemConfig_AccessibleInStrategy` | WithSystemConfig 后策略通过 SystemBlackboard 读取 | strategy-testing: Blackboard |
+| `ProgressConfig_AccessibleInStrategy` | WithProgressConfig 后策略通过 ProgressBlackboard 读取 | strategy-testing: Blackboard |
+| `SessionConfig_AccessibleInStrategy` | WithSessionConfig 后策略通过 SessionBlackboard 读取 | strategy-testing: Blackboard |
+| `AllThreeBlackboards_Accessible` | 三层黑板同时配置，策略全部可读取 | strategy-testing: Blackboard |
+| `DefaultEntityName_IsTestEntity` | 默认实体名为 __test_entity__ | strategy-testing: ActiveStrategy |
+| `CustomEntityName_PassedToStrategy` | WithEntityName("MyCustomEntity") 后策略通过 entity.Name 获取 | strategy-testing: ActiveStrategy |
+| `Strategy_EnqueueBusinessDeferred_TracksCount` | Invoke → FlushDeferredActions 后 DeferredActionCount=1 | strategy-testing: 延迟动作 |
+| `Strategy_MultipleDeferredActions_TracksAll` | WithData("defer_count", 3) → Invoke → Flush 后计数=3 | strategy-testing: 延迟动作 |
+| `Strategy_SubmitConsoleCommand_TracksInList` | Invoke 后 ConsoleCommands 包含 "test_command arg1" | strategy-testing: 控制台 |
+| `Strategy_RequestSave_TracksRequest` | Invoke 后 SaveRequests 包含 "slot_001" | strategy-testing: ActiveStrategy |
+| `Strategy_RequestLoad_TracksRequest` | Invoke 后 LoadRequests 包含 "slot_002" | strategy-testing: ActiveStrategy |
+| `Strategy_RequestSwitchLevel_TracksRequest` | Invoke 后 LevelSwitchRequests 包含 "dungeon" | strategy-testing: ActiveStrategy |
+| `WithTemplate_RegistersTemplateForCloning` | WithTemplate 后 CloneTemplate 获取模板数据并拼入返回字符串 | strategy-testing: 模板 |
+| `Entity_AfterBuild_IsAccessible` | Build 后 Entity 非 null，Name 为 __test_entity__ | strategy-testing: ActiveStrategy |
+| `FoodKeyGeneration_Invoke_GeneratesSequentialKeys` | 3 次 Invoke 产生 Food_xxxx 递增 key，next_id=4 | strategy-testing: ActiveStrategy |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `GetEntityData_WithMissingKey_Throws` | 读取不存在的 key | InvalidOperationException |
+| `GetEntityData_WithWrongType_Throws` | int 字段用 string 类型读 | InvalidOperationException |
+| `ForActive_WithNullOrEmptyIndex_Throws` | null/空/空白 策略索引 | ArgumentException |
+| `WithTemplate_WithNull_Throws` | null 模板 | ArgumentNullException |
+
+### 边界路径
+
+| 测试方法 | 边界条件 | 预期行为 |
+|---------|---------|---------|
+| `Invoke_WithNullInput_StrategyReceivesNull` | Invoke 无输入时传入 null | 策略接收 null 并返回 null |
+| `Invoke_StrategyReturnsNull_IsNull` | 策略返回 null | Invoke 返回 null |
+| `TryGetEntityData_WithMissingKey_ReturnsFalse` | TryGetEntityData 不存在的 key | found=false |
+| `WithEntityName_EmptyOrWhitespace_ResetsToDefault` | WithEntityName("  ") 空白名 | 实体名回退到 __test_entity__ |
+| `Entity_AfterBuild_StartswithCleanData` | Build 后无 WithData 时实体无数据 | TryGetEntityData 不存在 key 返回 false |
 
 ## 测试辅助策略
 

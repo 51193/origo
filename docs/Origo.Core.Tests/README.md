@@ -53,11 +53,11 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 持久化：存储 | [Save-Storage.md](Save-Storage.md) | 两阶段写入、write_in_progress marker 契约、关卡三件套完整性、路径策略、快照读写、幂等去重 |
 | 持久化：序列化 | [Save-Serialization.md](Save-Serialization.md) | BlackboardSerializer、SndSceneSerializer、SaveContext 编排 |
 | 持久化：元数据 | [Save-Meta.md](Save-Meta.md) | ISaveMetaContributor、SaveMetaMerger、meta.map 编解码 |
-| SND 实体 | [Snd-Entity.md](Snd-Entity.md) | SndEntity CRUD、AfterLoad 钩子、AutoInitializer 恢复、批量生命周期、性能基准 |
-| SND 元数据 | [Snd-Metadata.md](Snd-Metadata.md) | TypedData struct 值语义、SndMetaData 深拷贝、SG 输出验证、零分配基准 + SG 工厂性能对比 |
+| SND 实体 | [Snd-Entity.md](Snd-Entity.md) | SndEntity CRUD、AfterLoad 钩子、AutoInitializer 恢复、批量生命周期、所属会话绑定 |
+| SND 元数据 | [Snd-Metadata.md](Snd-Metadata.md) | TypedData struct 值语义与 IEquatable、SndMetaData 深拷贝、SG 输出验证、Fluent 构建、TypedData 集成 |
 | 真实模拟性能基准 | [Benchmarks.md](Benchmarks.md) | `[Category=Benchmark]` 套件（`benchmark.sh` 独立运行）：字典查找/插入、数值强转链、观察者通知、异构字典迭代，生成 `TypedData` vs 装箱字典 |
-| SND 场景 | [Snd-Scene.md](Snd-Scene.md) | SndSceneHost、FullMemorySndSceneHost 直接测试、NullNodeFactory、ProcessAll/Spawn/Kill 批量缩放性能 |
-| SND 策略 | [Snd-Strategy.md](Snd-Strategy.md) | 策略优先级排序、池引用计数/回收、实体策略生命周期钩子、主动策略 Invoke、策略池与 Manager 性能基准 |
+| SND 场景 | [Snd-Scene.md](Snd-Scene.md) | MemorySndSceneHost 与 FullMemorySndSceneHost 的 Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity、NullNodeFactory |
+| SND 策略 | [Snd-Strategy.md](Snd-Strategy.md) | 策略优先级排序、池引用计数/回收、实体策略生命周期钩子、观察者策略、主动策略 Invoke、策略池 Get/Release 与 Process 缩放性能测量 |
 | SND 上下文 | [Snd-Context.md](Snd-Context.md) | SndContext save/load/continue 工作流、NullSndContext、LevelBuilder、模板解析、Archetype 加载 |
 | SND 扩展 | [Snd-Extensions.md](Snd-Extensions.md) | EnsureStrategy 惰性策略挂载（幂等）、TryGetNumeric 跨数值类型读取、InvokeStrategy 泛型调用 |
 | 文件访问 | [Snd-FileAccess.md](Snd-FileAccess.md) | ISndFileAccess 在 SndContext 上的 DataSourceNode 读写往返、强类型往返、overwrite 语义、错误/边界路径 |
@@ -65,6 +65,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 存档文件访问 | [Snd-ArchiveFileAccess.md](Snd-ArchiveFileAccess.md) | ISndArchiveFileAccess 在 SndContext 上的 extra/ 子目录文件操作、DeleteFile、路径穿越防护、save/load 往返 |
 | 状态机 | [StateMachine.md](StateMachine.md) | StackStateMachine 压栈/出栈/恢复/FlushAfterLoad、空栈/空串/Dispose 边界测试、容器 CreateOrGet/序列化 |
 | 策略测试框架 | [StrategyTestScenario.md](StrategyTestScenario.md) | 三阶段模式（configure/run/assert）、EntityStrategy harness、ActiveStrategy harness |
+| 集合差异比较 | [Utility.md](Utility.md) | DiffUtility 泛型集合差异比较（added/removed）+ 去重语义 |
 
 ---
 

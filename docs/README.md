@@ -61,7 +61,7 @@ Root (this file)
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.md) | Godot 4 适配层：文件系统、日志、序列化、启动 |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.md) | TCP 远程控制台桥接（端口 9876） |
 | **使用文档** | [README](usage/README.md) | 从快速入门到深度参考的使用指南 |
-| **测试: Core** | [README](Origo.Core.Tests/README.md) | Core 层 29 个能力的行为测试文档 |
+| **测试: Core** | [README](Origo.Core.Tests/README.md) | Core 层 30 个能力的行为测试文档 |
 | **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.md) | 适配层 7 个能力测试文档 |
 | **测试: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.md) | TCP 桥接服务器行为测试文档 |
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.md) | TypedData 源码生成器的驱动器行为测试文档 |

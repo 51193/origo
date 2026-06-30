@@ -22,24 +22,24 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `Enqueue_IncreasesCount` | Enqueue 后 Count 递增 | Scheduling |
-| `ExecuteAll_RunsAllActions` | ExecuteAll 执行全部入队 action，Count 归零 | Scheduling |
-| `ExecuteAll_ActionThatReenqueues` | ExecuteAll 中 re-enqueue 的 action 在同一次调用中执行 | Scheduling |
-| `ExecuteAll_PropagatesException` | 单个 action 异常时 propagate | Scheduling |
+| `ConcurrentActionQueue_Enqueue_IncreasesCount` | Enqueue 后 Count 递增 | Scheduling |
+| `ConcurrentActionQueue_ExecuteAll_RunsAllActions` | ExecuteAll 执行全部入队 action，Count 归零 | Scheduling |
+| `ConcurrentActionQueue_ExecuteAll_ActionThatReenqueues` | ExecuteAll 中 re-enqueue 的 action 在同一次调用中执行 | Scheduling |
+| `ConcurrentActionQueue_ExecuteAll_PropagatesException` | 单个 action 异常时 propagate | Scheduling |
 
 ### 错误路径
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `Enqueue_ThrowsOnNull` | Enqueue(null) | ArgumentNullException |
-| `Constructor_ThrowsOnNullLogger` | new ConcurrentActionQueue(null) | ArgumentNullException |
+| `ConcurrentActionQueue_Enqueue_ThrowsOnNull` | Enqueue(null) | ArgumentNullException |
+| `ConcurrentActionQueue_Constructor_ThrowsOnNullLogger` | new ConcurrentActionQueue(null) | ArgumentNullException |
 
 ### 边界路径
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
-| `ExecuteAll_EmptyQueue_ReturnsZero` | 空队列 ExecuteAll | 返回 0 |
-| `Clear_EmptiesQueue` | Clear 后 Count=0 | Count 归零 |
+| `ConcurrentActionQueue_ExecuteAll_EmptyQueue_ReturnsZero` | 空队列 ExecuteAll | 返回 0 |
+| `ConcurrentActionQueue_Clear_EmptiesQueue` | Clear 后 Count=0 | Count 归零 |
 
 ## ConcurrentActionQueueConcurrencyTests 测试详情
 
@@ -61,6 +61,12 @@
 |---------|---------|---------|
 | `ExecuteAll_EmptyQueue_IsIdempotent` | 连续 3 次 ExecuteAll | 每次返回 0 |
 | `ExecuteAll_AfterClear_DoesNotExecuteClearedActions` | Clear 后 ExecuteAll | 返回 0，action 不被执行 |
+
+## 测试辅助策略
+
+| 策略类 | 定义位置 | 用途 |
+|--------|---------|------|
+| 无 | — | 本能力的测试不定义辅助策略，纯队列行为测试 |
 
 ## 已知覆盖缺口
 

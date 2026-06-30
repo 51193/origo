@@ -46,11 +46,11 @@ old/new 值正确传递、key 隔离（只通知订阅的 key）、多订阅者�
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `Subscribe_And_Notify` | 基础通知链路 | snd-entity-model |
-| `Unsubscribe_StopsNotification` | 取消后不再通知 | snd-entity-model |
-| `Subscribe_WithFilter_SkipsFiltered` | filter 返回 false 时跳过 | snd-entity-model |
-| `Clear_RemovesAllSubscriptions` | Clear 后全部通知不触发 | snd-entity-model |
-| `MultipleSubscribers_AllNotified` | 多订多通知 | snd-entity-model |
+| `DataObserverManager_Subscribe_And_Notify` | 基础通知链路 | snd-entity-model |
+| `DataObserverManager_Unsubscribe_StopsNotification` | 取消后不再通知 | snd-entity-model |
+| `DataObserverManager_Subscribe_WithFilter_SkipsFiltered` | filter 返回 false 时跳过 | snd-entity-model |
+| `DataObserverManager_Clear_RemovesAllSubscriptions` | Clear 后全部通知不触发 | snd-entity-model |
+| `DataObserverManager_MultipleSubscribers_AllNotified` | 多订多通知 | snd-entity-model |
 
 ## 已知覆盖缺口
 

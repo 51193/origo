@@ -58,6 +58,7 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `GridToWorld2D_Origin_CellCenter` | 2D 原点转换 | Grid |
+| `GridToWorld2D_MaxCoord_CellCenter` | 2D 最大坐标转换 (9,9) | Grid |
 | `GridToWorld2D_DifferentAxes_Independent` | 不同轴独立转换 | Grid |
 | `WorldToGrid2D_RoundTrip` | 2D 全网格往返 | Grid |
 
