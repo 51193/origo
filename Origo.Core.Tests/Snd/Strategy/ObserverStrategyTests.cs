@@ -762,9 +762,9 @@ public class ObserverStrategyTests
     private sealed class StatefulObserver : ObserverStrategyBase
     {
         // _counter 实例字段有意保留：验证注册有实例字段的观察者被 SndStrategyPool 拒绝
-#pragma warning disable CS0169
-        private readonly int _counter;
-#pragma warning restore CS0169
+#pragma warning disable CS0169, IDE0044
+        private int _counter;
+#pragma warning restore CS0169, IDE0044
     }
 
     private sealed class UnannotatedObserver : ObserverStrategyBase
