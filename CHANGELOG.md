@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- `Origo.GodotAdapter.Tests.csproj` no longer sets `GodotProjectDir` to a path outside the repository, and no longer declares `GodotDisabledSourceGenerators` / `CompilerVisibleProperty` — these Godot SDK properties are irrelevant for the `Microsoft.NET.Sdk`-based test project and only belong in the `Godot.NET.Sdk`-based adapter project itself.
 - CI format gate (`dotnet format --verify-no-changes --severity info`) now passes with zero violations.
 - **Save idempotency now includes `extra/` files in hash computation.** `WriteSavePayloadToCurrentThenSnapshot` previously computed the idempotent skip hash from `SaveGamePayload` alone, ignoring files written by `ISndArchiveFileAccess` to `current/extra/`. When only extra files changed between saves, the save was silently skipped, causing data loss on next load. The fix adds `ComputeExtraDirectoryHash` (SHA-256 of all `extra/` files, sorted by path) and `CombineHashes` to merge it with the payload hash, ensuring extra file changes trigger a fresh write.
 
