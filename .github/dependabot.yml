@@ -4,3 +4,15 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      roslyn:
+        patterns:
+          - "Microsoft.CodeAnalysis.*"
+    ignore:
+      - dependency-name: "Microsoft.CodeAnalysis.*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: dotnet-sdk
+    directory: /
+    schedule:
+      interval: weekly
