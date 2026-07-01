@@ -2,106 +2,104 @@
 
 [简体中文](README.zh-CN.md)
 
-**Origo** is a lightweight, platform-agnostic C# game framework.
-It uses the **SND (Strategy-Node-Data)** model and isolates engine code through adapters.
+**Origo** is a lightweight, platform-agnostic C# game framework.  
+Write your game logic as strategies — Origo handles entity lifecycle, persistence, and runtime orchestration.  
+Engine integration is isolated behind an adapter layer (official Godot 4 adapter included).
 
-## Core Features
+## What You Can Do
 
-- **Engine-free Core**: `Origo.Core` has no engine dependency.
-- **SND Entity Model**: behavior (`Strategy`), view (`Node`), and state (`Data`) are separated.
-- **Stateless Strategy Pool**: strategies are shared and validated at registration.
-- **Layered Runtime**: `SystemRun -> ProgressRun -> SessionManager -> SessionRun`.
-- **Foreground/Background Session Parity**: background sessions run the same strategy logic and lifecycle as foreground sessions.
-- **Built-in Save Flow**: current workspace + snapshot slots.
-- **Official Godot 4 Adapter**: `Origo.GodotAdapter` for bootstrap and runtime integration.
-- **TCP Remote Console**: `Origo.ConsoleBridge` for agent-driven development over a network connection.
-- **Source Generation**: `Origo.SourceGeneration` generates strongly-typed `TypedData` accessors at compile time via Roslyn incremental generator.
-- **Active Strategy**: type-safe inter-entity service invocation via `InvokeStrategy<TInput, TOutput>`.
-- **Dynamic Strategy Management**: add/remove strategies at runtime with full lifecycle hooks (`AfterAdd`/`BeforeRemove`).
+### Write game logic as strategies
 
-## Documentation
+Every piece of gameplay behavior is a **strategy** — a plain C# class. No base engine class required.
+Strategies are stateless, pooled, and validated at registration so they don't silently break at runtime.
 
-Full documentation lives in this repository under **[`docs/`](docs/README.md)** — a bottom-up structural mirror of the source tree.
+```csharp
+[StrategyIndex("my_game.health")]
+public class HealthStrategy : LifecycleStrategyBase
+{
+    public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
+    {
+        entity.SetData("hp", 100);
+    }
 
-Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
+    public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+    {
+        var (found, hp) = entity.TryGetData<int>("hp");
+        if (found && hp <= 0)
+            ctx.RequestKillEntity(entity.Id);
+    }
+}
+```
 
-> **Note**: Documentation is written entirely in Chinese due to its scale.
-> If you need to use it, feed the `docs/` tree as a knowledge base to an AI agent
-> and query the agent for answers.
+- **SND model**: Strategy (behavior), Node (presentation), and Data (state) are separated by design.
+- **Full lifecycle hooks**: `AfterSpawn`, `AfterLoad`, `AfterAdd`, `Process`, `BeforeRemove`, `BeforeSave`, `BeforeQuit`, `BeforeDead` — hook into any phase.
+- **Data observation**: subscribe to data changes on any entity (self or cross-entity) with observer strategies. Bindings persist across save/load.
+- **Active strategies**: type-safe cross-entity service calls with `InvokeStrategy<TInput, TOutput>`.
+- **Add/remove strategies at runtime**: mount and unmount strategies dynamically with full lifecycle awareness.
+- **TypedData**: compile-time generated strongly-typed data accessors via Roslyn source generator. Zero boxing, zero string keys in hot paths.
 
-## Special Capability: Background Session
+### Manage state and persistence
 
-Origo supports creating background sessions that execute the same gameplay logic path as the foreground session.
-This means you can run AI simulation, procedural generation, or long-running world updates in memory while keeping exactly the same strategy behavior and data contracts.
+- **Built-in save system**: current workspace + snapshot slots. Two-phase write (`current/` → `save_xxx/`) with hash-based idempotent dedup. Strict read validation on load.
+- **Background sessions**: run AI simulation, procedural generation, or off-screen world updates in a background session — same strategy logic, same data contracts as the foreground. Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)`.
+- **Snapshot management**: enumerate, inspect metadata, and select saves at runtime.
 
-Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)` and process it through the same session pipeline.
+### Navigation, AI, and planning
 
-## Console Bridge
+- **Grid coordinate system**: `GridPos` with single/dual-axis conversion.
+- **A\* pathfinding**: built-in, grid-based.
+- **State machine**: string-stack state machine with push/pop strategy hooks. Stack state is serialized and restored on load.
+- **Intent-driven planning**: `PlanExecutionStrategyBase` for sequences of actions with scoped parameter store.
+- **Deferred action scheduling**: thread-safe queue with snapshot-and-drain pattern.
 
-`Origo.ConsoleBridge` provides a TCP-based remote console for agent-driven development. External tools (e.g., AI coding agents) can send console commands and receive command output over a TCP connection, enabling automated gameplay testing and runtime inspection.
+### Utility systems
+
+- **RNG**: `XorShift128+` (period 2^128−1), no global state. `PersistentRandom` for save-safe reproducible randomness.
+- **Noise generation**: OpenSimplex2 + Worley cellular noise for procedural terrain/content.
+- **Blackboard**: in-memory key-value store, serializable, for runtime configuration and shared state.
+- **Archetype loading**: load entity data from key-value pair files with automatic type inference.
+
+### Development tools
+
+- **TCP remote console** (port 9876): send commands and receive output over a network connection — designed for agent-driven development and automated testing. 11 built-in commands for entity inspection, data manipulation, and strategy invocation. Extensible with custom commands.
 
 ```bash
-# Connect via any TCP client
 nc localhost 9876
 ```
 
-> **Note**: The Console Bridge only carries console I/O — command input and command
-> output. Runtime logs are handled by the engine/logger independently and do not
-> travel through the bridge.
+- **Source generator**: Roslyn incremental generator emits compile-time typed data accessors, eliminating boxing and string-key lookups in hot paths. 4 diagnostics (`ORIGOSG001`–`004`) catch misconfigurations at build time.
+- **Test infrastructure**: `StrategyTestScenario` for declarative strategy unit tests (Configure → Simulate → Inspect). Architecture guardrail tests enforce dependency direction and strategy constraints.
 
-## 5-Minute Setup (Godot 4)
+### Godot 4 adapter
 
-### 1) Reference projects
+- **File system**: `res://` and `user://` access through `IFileSystem`, with path traversal protection.
+- **Logging proxy**: bridges Core logging to `GD.Print` / `PushWarning` / `PushError`.
+- **Scene node factory**: instantiate `PackedScene` nodes via logical scene aliases.
+- **Entity-node bridge**: `GodotSndEntity` links `ISndEntity` lifecycle with Godot `Node` lifecycle. Godot types (14 vector/math types) serialize to JSON with full round-trip fidelity.
 
-#### Option A: NuGet (recommended)
+## Quick Start (Godot 4)
+
+### 1. Add packages
+
+**NuGet** (recommended): download `.nupkg` files from the [latest release](https://github.com/51193/origo/releases/latest), place them in `./packages/origo/`, and configure a local package source:
+
+```xml
+<!-- nuget.config in your Godot project root -->
+<configuration>
+  <packageSources>
+    <add key="origo-local" value="./packages/origo/" />
+  </packageSources>
+</configuration>
+```
 
 ```xml
 <PackageReference Include="Origo.Core" />
 <PackageReference Include="Origo.GodotAdapter" />
-<PackageReference Include="Origo.ConsoleBridge" />
 ```
 
-> **NuGet packages are published via GitHub Releases.** Download the `.nupkg` files
-> from the [latest release](https://github.com/51193/origo/releases/latest),
-> place them in `./packages/origo/`, and configure `nuget.config` to add the local
-> package source (a sample `nuget.config` is included in the release assets).
->
-> ```xml
-> <?xml version="1.0" encoding="utf-8"?>
-> <!-- nuget.config (place in your Godot project root) -->
-> <configuration>
->   <packageSources>
->     <add key="origo-local" value="./packages/origo/" />
->   </packageSources>
-> </configuration>
-> ```
->
-> Commit `nuget.config` to your repository so all contributors share the same
-> package source. Add `packages/` to your `.gitignore` — `.nupkg` binaries should
-> not be tracked by version control.
+### 2. Create folder structure
 
-#### Option B: Project reference
-
-```xml
-<ProjectReference Include="../Origo.Core/Origo.Core.csproj" />
-<ProjectReference Include="../Origo.GodotAdapter/Origo.GodotAdapter.csproj" />
 ```
-
-> **Godot `[GlobalClass]` resolution**: Godot resolves `[GlobalClass]` by script
-> resource path and may fail to locate `OrigoDefaultEntry` regardless of which
-> option you chose above (NuGet or ProjectReference). Workaround: create a bridge
-> class in your project:
->
-> ```csharp
-> [GlobalClass]
-> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
-> ```
->
-> Then point your `.tscn` node script to `MyOrigoEntry` instead.
-
-### 2) Minimal folder layout
-
-```text
 res://origo/
   entry/entry.json
   maps/scene_aliases.map
@@ -109,22 +107,18 @@ res://origo/
   initial/
 ```
 
-### 3) Add Origo entry node
+### 3. Add entry node
 
-Attach `OrigoDefaultEntry` to your startup scene, then set:
+Attach `OrigoDefaultEntry` to your startup scene and configure paths.  
+> If Godot can't resolve the `[GlobalClass]`, create a one-line bridge class:
+> ```csharp
+> [GlobalClass]
+> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> ```
 
-- `ConfigPath`
-- `SceneAliasMapPath`
-- `SndTemplateMapPath`
-- `SaveRootPath`
-- `InitialSaveRootPath`
-
-### 4) Write one strategy
+### 4. Write a strategy and define entities
 
 ```csharp
-using Origo.Core.Snd;
-using Origo.Core.Snd.Strategy;
-
 [StrategyIndex("game.player_move", Priority = 100)]
 public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 {
@@ -137,12 +131,6 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 }
 ```
 
-> **Priority**: Strategy priority (default 6205). Process and all lifecycle hooks
-> execute in ascending priority order; same priority uses insertion order (FIFO).
-> Lower values execute first.
-
-### 5) Define one entity
-
 ```json
 {
   "name": "Player",
@@ -152,41 +140,52 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 }
 ```
 
-## Typical Runtime Flow
+### 5. Run
 
-1. `OrigoDefaultEntry` boots runtime.
-2. Load entry save/config.
-3. Spawn entities from metadata.
-4. Execute strategy `Process` each frame.
-5. Save to `current/`, then snapshot to `save_xxx/`.
+`OrigoDefaultEntry._Ready()` discovers all `[StrategyIndex]` strategies, loads aliases and templates, and boots the game.
 
-## Repository Layout
+> Full walkthrough: [Quick Start](docs/usage/quick-start.md) &middot; [Architecture Overview](docs/usage/architecture-overview.md) &middot; [SND Entity Model](docs/usage/snd-entity-model.md)
 
-```text
-Origo.Core/
-Origo.SourceGeneration/
-Origo.ConsoleBridge/
-Origo.GodotAdapter/
-Origo.Core.Tests/
-Origo.ConsoleBridge.Tests/
-Origo.GodotAdapter.Tests/
-scripts/
-Origo.sln
-```
+## Documentation
 
-## Test
+Full documentation lives in this repository under **[`docs/`](docs/README.md)** — a bottom-up structural mirror of the source tree.
 
-Run the same pipeline as CI from repository root:
+Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 
-```bash
-bash scripts/ci.sh
-```
+> Documentation is written in Chinese. Non-Chinese readers can feed the `docs/` tree to an AI agent as a knowledge base and query the agent for answers.
 
-Quick test-only run:
+| I want to... | Go to |
+|---|---|
+| Browse all capabilities | [Capabilities](docs/usage/capabilities.md) |
+| Understand the architecture | [Architecture Overview](docs/usage/architecture-overview.md) |
+| Learn the SND model | [SND Entity Model](docs/usage/snd-entity-model.md) |
+| Test my strategies | [Strategy Testing](docs/usage/strategy-testing.md) |
+| Use the save system | [Persistence Flow](docs/usage/persistence-flow.md) |
+| Use the state machine | [State Machine](docs/usage/state-machine.md) |
+| Use the console | [Console Commands](docs/usage/console-commands.md) |
+| Reference for AI agents | [Agent Reference](docs/usage/agent-reference.md) |
+
+## Development
 
 ```bash
-bash scripts/run-test.sh
+bash scripts/ci.sh        # Build + test + coverage
+bash scripts/validate.sh  # Full CI pipeline (format + ci.sh)
+bash scripts/run-test.sh  # Tests only, no coverage gates
 ```
+
+| Module | Description |
+|---|---|
+| `Origo.Core` | Platform-agnostic core: SND entities, runtime, persistence, state machines |
+| `Origo.SourceGeneration` | Roslyn incremental source generator for TypedData |
+| `Origo.ConsoleBridge` | TCP remote console bridge |
+| `Origo.GodotAdapter` | Godot 4 adapter: file system, logging, serialization, bootstrap |
+
+| Test project | Coverage gate |
+|---|---|
+| `Origo.Core.Tests` | ≥ 90% |
+| `Origo.GodotAdapter.Tests` | ≥ 85% |
+| `Origo.ConsoleBridge.Tests` | ≥ 80% |
+| `Origo.SourceGeneration.Tests` | ≥ 85% |
 
 ## License
 
