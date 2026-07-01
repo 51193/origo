@@ -58,6 +58,13 @@
 - **禁止**让调用方自行拼接底层操作来"手工模拟"某个接口的效果——即使表面结果相同，接口封装内有意编排的副作用（校验、钩子、状态转换、资源生命周期管理）会被跳过。这类由旁路造成的缺失极难排查。
 - 如果旁路来自一个**本不该具备该能力的对象**（即它既不是该能力的预期提供者，也不是其委托链上的一环），则这极可能是设计缺陷。此情况**必须由维护者介入判断**，Agent 不得自行扫描修复——防止把跨模块协作的刻意设计误判为旁路（参见 §1.3）。
 
+### 1.5 代码格式一致 —— 本地即 CI
+
+- **所有 C# 代码必须通过 `dotnet format --verify-no-changes --severity info`**。这是 CI 中的第一道门禁（见 `scripts/validate.sh` 与 `.github/workflows/ci.yml`）。
+- `.editorconfig` 定义了项目的命名、空格、集合初始化、`var` 偏好、主构造函数等全套格式规则；CI 强制校验，本地通过 `scripts/validate.sh` 等价验证。
+- **测试项目使用扁平命名空间**（`Origo.Core.Tests` 而非 `Origo.Core.Tests.Snd.Strategy`），这是 xUnit 惯例的刻意设计——便于跨目录类型访问，IDE0130 已在 `.editorconfig` 中为测试路径关闭。详见 [`docs/Origo.Core.Tests/META-TEST.md`](docs/Origo.Core.Tests/META-TEST.md) §测试命名空间约定。
+- **禁止在 `.editorconfig` 的排除规则上钻空子**：排除规则仅适用于有文档记录的刻意设计（如测试扁平命名空间），不得为绕过格式校验而临时关闭规则。
+
 ---
 
 ## 2. 开发迭代循环（强制顺序）
@@ -68,7 +75,7 @@
 |------|------|------|
 | 1 | **开发源码** | 在满足 §0 门禁与 §1 原则的前提下实现功能 / 修复 / 重构 |
 | 2 | **测试扩展 / 适配** | 为本次变更新增或调整测试：新 public API 写行为测试，bug 修复写回归测试（先红），行为变更同步更新既有测试 |
-| 3 | **测试执行** | 运行 `bash scripts/ci.sh`（与 CI 同管线：restore → build → test + 覆盖率门禁） |
+| 3 | **测试执行** | 开发迭代期可跑 `bash scripts/ci.sh`（restore → build → test + 覆盖门禁）。**提交前必须跑** `bash scripts/validate.sh`，与 CI 完全对齐：格式校验 + ci.sh 全套 |
 | 4 | **修复源码 + 重测试循环** | 测试未全绿则回到源码修复，再次执行步骤 3，**循环直到全部通过**。修复仍须遵守 §1（尤其勿做假阳性修复） |
 | 5 | **Changelog 对齐** | 将面向用户的显著变更写入 `CHANGELOG.md` 的 `[Unreleased]` 区块（规范见 §4） |
 | 6 | **文档同步** | 同步更新 `docs/` 下镜像结构、接口清单、设计决策、usage / 测试文档（规则见 §5 与 `docs/META.md`） |
@@ -86,7 +93,7 @@
 | 行为变更 | 更新已有测试以反映新行为 |
 | 重构 | 现有测试必须全部通过，无需新增 |
 
-- **运行命令**：`bash scripts/ci.sh`（在仓库根目录）。仅跑测试可用 `bash scripts/run-test.sh`。
+- **运行命令**：`bash scripts/validate.sh`（仓库根目录，等价 CI：格式校验 + 构建 + 测试 + 覆盖门禁）。开发迭代期可使用 `bash scripts/ci.sh`（仅测试）或 `bash scripts/run-test.sh`（仅跑测试无覆盖门禁）。
 - **测试项目**：`Origo.Core.Tests`、`Origo.GodotAdapter.Tests`、`Origo.ConsoleBridge.Tests`、`Origo.SourceGeneration.Tests`。
 - **覆盖率门禁**由 Coverlet 在 `ci.sh` 中强制（Core ≥ 90%、ConsoleBridge ≥ 80%、GodotAdapter ≥ 85%、SourceGeneration ≥ 85%）；低于门槛 `dotnet test` 直接失败。
 - 测试风格、`InternalsVisibleTo` 白名单原则、静态可变状态隔离等约定见 [`docs/Origo.Core.Tests/META-TEST.md`](docs/Origo.Core.Tests/META-TEST.md)。
@@ -184,3 +191,6 @@
 | 使用指南 | [`docs/usage/README.md`](docs/usage/README.md) | 从快速入门到深度参考 |
 | 测试文档 | [`docs/Origo.Core.Tests/README.md`](docs/Origo.Core.Tests/README.md) | 按能力查看测试覆盖 |
 | 性能基线 | [`docs/benchmarks/baseline.md`](docs/benchmarks/baseline.md) | TypedData 性能现状快照与权衡 |
+| 格式规则 | [`.editorconfig`](.editorconfig) | C# 代码风格 + IDE/CA 诊断规则 |
+| CI 工作流 | [`.github/workflows/`](.github/workflows/) | CI / Release / CodeQL 工作流定义 |
+| 验证脚本 | [`scripts/validate.sh`](scripts/validate.sh) | 本地等价 CI：格式 + 构建 + 测试 + 覆盖门禁 |

@@ -22,14 +22,24 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
       - name: Restore
         run: dotnet restore Origo.sln
 
       - name: Build
         run: dotnet build Origo.sln --no-restore --configuration Release
 
-      - name: Test
-        run: dotnet test Origo.sln --no-build --configuration Release --verbosity normal
+      - name: Test with coverage gates
+        run: |
+          dotnet test Origo.sln \
+            --no-build --configuration Release \
+            --verbosity normal \
+            --filter "Category!=Benchmark"
 
       - name: Pack Origo.Core
         run: dotnet pack Origo.Core/Origo.Core.csproj --no-build --configuration Release --output ./artifacts
