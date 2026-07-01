@@ -50,10 +50,7 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     public void WriteLevelPayloadOnly(
         string baseDirectoryRel,
         LevelPayload levelPayload,
-        bool overwrite = true)
-    {
-        SavePayloadWriter.WriteLevelPayloadOnly(_handle, baseDirectoryRel, levelPayload, overwrite);
-    }
+        bool overwrite = true) => SavePayloadWriter.WriteLevelPayloadOnly(_handle, baseDirectoryRel, levelPayload, overwrite);
 
     public void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload, bool overwrite = true)
     {
@@ -64,40 +61,22 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     public void WriteProgressOnlyToCurrent(
         DataSourceNode progressNode,
         DataSourceNode progressStateMachinesNode,
-        bool overwrite = true)
-    {
-        SavePayloadWriter.WriteProgressOnlyToCurrent(_handle, progressNode, progressStateMachinesNode, overwrite);
-    }
+        bool overwrite = true) => SavePayloadWriter.WriteProgressOnlyToCurrent(_handle, progressNode, progressStateMachinesNode, overwrite);
 
     public SaveGamePayload ReadSavePayloadFromCurrent(
         string saveId,
         string activeLevelId,
-        ILogger? logger = null)
-    {
-        return SavePayloadReader.ReadFromCurrent(_handle, saveId, activeLevelId, logger);
-    }
+        ILogger? logger = null) => SavePayloadReader.ReadFromCurrent(_handle, saveId, activeLevelId, logger);
 
     public SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
-        string activeLevelId)
-    {
-        return SavePayloadReader.ReadFromSnapshot(_handle, saveId, activeLevelId);
-    }
+        string activeLevelId) => SavePayloadReader.ReadFromSnapshot(_handle, saveId, activeLevelId);
 
-    public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId)
-    {
-        return SavePayloadReader.ReadProgressNodeFromSnapshot(_handle, saveId);
-    }
+    public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId) => SavePayloadReader.ReadProgressNodeFromSnapshot(_handle, saveId);
 
-    public LevelPayload? TryReadLevelPayloadFromCurrent(string levelId)
-    {
-        return SavePayloadReader.TryReadLevelPayloadFromCurrent(_handle, levelId);
-    }
+    public LevelPayload? TryReadLevelPayloadFromCurrent(string levelId) => SavePayloadReader.TryReadLevelPayloadFromCurrent(_handle, levelId);
 
-    public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId)
-    {
-        return SavePayloadReader.TryReadLevelPayloadFromSnapshot(_handle, saveId, levelId);
-    }
+    public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId) => SavePayloadReader.TryReadLevelPayloadFromSnapshot(_handle, saveId, levelId);
 
     public LevelPayload? ResolveLevelPayload(string saveId, string levelId)
     {

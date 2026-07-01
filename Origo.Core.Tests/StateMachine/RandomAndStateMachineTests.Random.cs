@@ -9,11 +9,11 @@ public partial class RandomAndStateMachineTests
     [Fact]
     public void CreateStateFromSeed_SameSeed_ProducesSameState()
     {
-        var left = RandomNumberGenerator.CreateStateFromSeed("same-seed");
+        var (s0, s1) = RandomNumberGenerator.CreateStateFromSeed("same-seed");
         var right = RandomNumberGenerator.CreateStateFromSeed("same-seed");
 
-        Assert.Equal(left.s0, right.s0);
-        Assert.Equal(left.s1, right.s1);
+        Assert.Equal(s0, right.s0);
+        Assert.Equal(s1, right.s1);
     }
 
     [Fact]
@@ -51,11 +51,11 @@ public partial class RandomAndStateMachineTests
     [Fact]
     public void NextInt32AndNextInt64_StayConsistentWithNextUInt64Step()
     {
-        var initial = RandomNumberGenerator.CreateStateFromSeed("numeric-seed");
+        var (s0, s1) = RandomNumberGenerator.CreateStateFromSeed("numeric-seed");
 
-        var (uValue, uS0, uS1) = RandomNumberGenerator.NextUInt64(initial.s0, initial.s1);
-        var (i64Value, i64S0, i64S1) = RandomNumberGenerator.NextInt64(initial.s0, initial.s1);
-        var (i32Value, i32S0, i32S1) = RandomNumberGenerator.NextInt32(initial.s0, initial.s1);
+        var (uValue, uS0, uS1) = RandomNumberGenerator.NextUInt64(s0, s1);
+        var (i64Value, i64S0, i64S1) = RandomNumberGenerator.NextInt64(s0, s1);
+        var (i32Value, i32S0, i32S1) = RandomNumberGenerator.NextInt32(s0, s1);
 
         Assert.Equal(uS0, i64S0);
         Assert.Equal(uS1, i64S1);

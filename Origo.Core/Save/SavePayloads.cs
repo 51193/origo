@@ -73,5 +73,5 @@ public sealed class SaveGamePayload
     /// <summary>
     ///     按关卡 ID 索引的所有关卡存档数据。
     /// </summary>
-    public Dictionary<string, LevelPayload> Levels { get; set; } = new();
+    public Dictionary<string, LevelPayload> Levels { get; set; } = [];
 }

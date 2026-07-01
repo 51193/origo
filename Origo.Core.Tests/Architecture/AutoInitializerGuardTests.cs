@@ -149,9 +149,6 @@ public class AutoInitializerGuardTests
         public const string IndexConst = "auto.init.readonly.local";
         private readonly int _readonlyValue = 42;
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            _ = _readonlyValue;
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _ = _readonlyValue;
     }
 }

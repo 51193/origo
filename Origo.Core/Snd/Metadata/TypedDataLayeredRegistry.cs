@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace Origo.Core.Snd.Metadata;
 
@@ -49,7 +50,7 @@ internal static class TypedDataLayeredRegistry
     internal static byte ResolveKind(Type type)
     {
         if (_kindResolverChain is null) return 0;
-        foreach (Func<Type, byte> handler in _kindResolverChain.GetInvocationList())
+        foreach (Func<Type, byte> handler in _kindResolverChain.GetInvocationList().Cast<Func<Type, byte>>())
         {
             var kind = handler(type);
             if (kind != 0) return kind;

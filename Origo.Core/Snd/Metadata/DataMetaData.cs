@@ -7,5 +7,5 @@ namespace Origo.Core.Snd.Metadata;
 /// </summary>
 public sealed class DataMetaData
 {
-    public Dictionary<string, TypedData> Pairs { get; set; } = new();
+    public Dictionary<string, TypedData> Pairs { get; set; } = [];
 }

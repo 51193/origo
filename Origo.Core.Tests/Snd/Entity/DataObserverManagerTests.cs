@@ -53,7 +53,7 @@ public class DataObserverManagerTests
     {
         var mgr = new DataObserverManager();
         var callCount = 0;
-        Action<TypedData, TypedData> cb = (_, _) => callCount++;
+        void cb(TypedData oldVal, TypedData newVal) => callCount++;
         mgr.Subscribe("hp", cb);
         mgr.Unsubscribe("hp", cb);
         mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50);
@@ -157,8 +157,8 @@ public class DataObserverManagerTests
         var cb1Called = false;
         var cb2Called = false;
 
-        Action<TypedData, TypedData> cb1 = (_, _) => cb1Called = true;
-        Action<TypedData, TypedData> cb2 = (_, _) => cb2Called = true;
+        void cb1(TypedData oldVal, TypedData newVal) => cb1Called = true;
+        void cb2(TypedData oldVal, TypedData newVal) => cb2Called = true;
 
         mgr.Subscribe("hp", cb1);
         mgr.Subscribe("hp", cb2);

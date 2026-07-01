@@ -12,6 +12,7 @@ using Origo.Core.Abstractions.Node;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
+using Origo.Core.DataSource.Codec;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Runtime.Lifecycle;
@@ -23,10 +24,10 @@ namespace Origo.Core.Tests;
 
 internal sealed class TestLogger : ILogger
 {
-    public readonly List<string> Debugs = new();
-    public readonly List<string> Errors = new();
-    public readonly List<string> Infos = new();
-    public readonly List<string> Warnings = new();
+    public readonly List<string> Debugs = [];
+    public readonly List<string> Errors = [];
+    public readonly List<string> Infos = [];
+    public readonly List<string> Warnings = [];
 
     public LogLevel MinimumLevel { get; set; } = LogLevel.Debug;
 
@@ -59,36 +60,26 @@ internal sealed class TestLogger : ILogger
     }
 }
 
-internal sealed class TestNodeHandle : INodeHandle
+internal sealed class TestNodeHandle(string name) : INodeHandle
 {
-    public TestNodeHandle(string name)
-    {
-        Name = name;
-    }
-
     public bool IsVisible { get; private set; } = true;
     public int FreeCount { get; private set; }
 
-    public string Name { get; }
+    public string Name { get; } = name;
 
     public void Free() => FreeCount++;
 
     public void SetVisible(bool visible) => IsVisible = visible;
 }
 
-internal sealed class TestNodeFactory : INodeFactory
+internal sealed class TestNodeFactory(IEnumerable<string>? resourceIdsThatFail = null) : INodeFactory
 {
-    private readonly HashSet<string> _resourceIdsThatFail;
-    public readonly List<TestNodeHandle> CreatedHandles = new();
-
-    public readonly List<(string logicalName, string resourceId)> Requests = new();
-
-    public TestNodeFactory(IEnumerable<string>? resourceIdsThatFail = null)
-    {
-        _resourceIdsThatFail = resourceIdsThatFail != null
+    private readonly HashSet<string> _resourceIdsThatFail = resourceIdsThatFail != null
             ? new HashSet<string>(resourceIdsThatFail, StringComparer.Ordinal)
             : new HashSet<string>(StringComparer.Ordinal);
-    }
+    public readonly List<TestNodeHandle> CreatedHandles = [];
+
+    public readonly List<(string logicalName, string resourceId)> Requests = [];
 
     public INodeHandle Create(string logicalName, string resourceId)
     {
@@ -160,7 +151,7 @@ internal sealed class TestFileSystem : IFileSystem
 
             if (!recursive)
             {
-                var rest = file.Substring(prefix.Length);
+                var rest = file[prefix.Length..];
                 if (rest.Contains('/'))
                     continue;
             }
@@ -193,7 +184,7 @@ internal sealed class TestFileSystem : IFileSystem
     {
         var normalized = Normalize(path).TrimEnd('/');
         var index = normalized.LastIndexOf('/');
-        return index <= 0 ? string.Empty : normalized.Substring(0, index);
+        return index <= 0 ? string.Empty : normalized[..index];
     }
 
     public IEnumerable<string> EnumerateDirectories(string directoryPath)
@@ -206,10 +197,10 @@ internal sealed class TestFileSystem : IFileSystem
         {
             if (!dir.StartsWith(prefix, StringComparison.Ordinal))
                 continue;
-            var rest = dir.Substring(prefix.Length);
+            var rest = dir[prefix.Length..];
             var slash = rest.IndexOf('/');
             if (slash >= 0)
-                rest = rest.Substring(0, slash);
+                rest = rest[..slash];
             if (rest.Length > 0)
                 children.Add(prefix + rest);
         }
@@ -218,7 +209,7 @@ internal sealed class TestFileSystem : IFileSystem
         {
             if (!file.StartsWith(prefix, StringComparison.Ordinal))
                 continue;
-            var rest = file.Substring(prefix.Length);
+            var rest = file[prefix.Length..];
             var slash = rest.IndexOf('/');
             if (slash > 0)
                 children.Add(string.Concat(prefix.AsSpan(), rest.AsSpan(0, slash)));
@@ -287,7 +278,7 @@ internal sealed class TestFileSystem : IFileSystem
         var index = normalized.LastIndexOf('/');
         while (index > 0)
         {
-            var dir = normalized.Substring(0, index);
+            var dir = normalized[..index];
             _directories.Add(dir);
             index = dir.LastIndexOf('/');
         }
@@ -296,8 +287,8 @@ internal sealed class TestFileSystem : IFileSystem
 
 internal sealed class TestSndSceneHost : ISndSceneHost
 {
-    private readonly List<ISndEntity> _entities = new();
-    private readonly List<SndMetaData> _metaList = new();
+    private readonly List<ISndEntity> _entities = [];
+    private readonly List<SndMetaData> _metaList = [];
     public int ClearAllCount { get; private set; }
 
     public ISndEntity CreateEntity(SndMetaData metaData)
@@ -390,7 +381,7 @@ internal sealed class DummySndEntity : ISndEntity
 
     public INodeHandle GetNode(string name) => throw new InvalidOperationException($"Node '{name}' not found.");
 
-    public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
+    public IReadOnlyCollection<string> GetNodeNames() => [];
 
     public void AddStrategy(string index)
     {

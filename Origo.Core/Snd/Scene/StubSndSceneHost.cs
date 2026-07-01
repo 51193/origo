@@ -17,8 +17,8 @@ namespace Origo.Core.Snd.Scene;
 /// </summary>
 internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
 {
-    private readonly List<ISndEntity> _entities = new();
-    private readonly List<SndMetaData> _metaList = new();
+    private readonly List<ISndEntity> _entities = [];
+    private readonly List<SndMetaData> _metaList = [];
     private ISessionRun? _owningSession;
 
     public void SetOwningSession(ISessionRun session)
@@ -132,7 +132,7 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
             $"StubSndEntity does not support node access. Node '{name}' requested.");
     }
 
-    public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
+    public IReadOnlyCollection<string> GetNodeNames() => [];
 
     public void AddStrategy(string index)
     {
@@ -159,7 +159,7 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
     {
         var wrapped = new Action<TypedData, TypedData>((o, n) => callback(this, o, n));
         if (!_subscriptions.TryGetValue(name, out var list))
-            _subscriptions[name] = list = new List<(Action<ISndEntity, TypedData, TypedData>, Action<TypedData, TypedData>)>();
+            _subscriptions[name] = list = [];
         list.Add((callback, wrapped));
     }
 
@@ -170,8 +170,5 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
         if (list.Count == 0) _subscriptions.Remove(name);
     }
 
-    internal int GetRawSubscriptionCount(string key)
-    {
-        return _subscriptions.TryGetValue(key, out var list) ? list.Count : 0;
-    }
+    internal int GetRawSubscriptionCount(string key) => _subscriptions.TryGetValue(key, out var list) ? list.Count : 0;
 }

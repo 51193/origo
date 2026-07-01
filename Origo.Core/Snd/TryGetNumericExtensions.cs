@@ -44,8 +44,5 @@ public static class TryGetNumericExtensions
         return false;
     }
 
-    public static float GetNumeric(this ISndDataAccess access, string key, float fallback = 0f)
-    {
-        return TryGetNumeric(access, key, out var value) ? value : fallback;
-    }
+    public static float GetNumeric(this ISndDataAccess access, string key, float fallback = 0f) => TryGetNumeric(access, key, out var value) ? value : fallback;
 }

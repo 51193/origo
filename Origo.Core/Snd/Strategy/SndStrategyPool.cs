@@ -14,11 +14,11 @@ namespace Origo.Core.Snd.Strategy;
 /// </summary>
 internal sealed class SndStrategyPool
 {
-    private readonly Dictionary<string, Func<BaseStrategy>> _factories = new();
+    private readonly Dictionary<string, Func<BaseStrategy>> _factories = [];
     private readonly ILogger _logger;
-    private readonly Dictionary<string, BaseStrategy> _pool = new();
-    private readonly Dictionary<string, int> _priorities = new();
-    private readonly Dictionary<string, int> _refCounts = new();
+    private readonly Dictionary<string, BaseStrategy> _pool = [];
+    private readonly Dictionary<string, int> _priorities = [];
+    private readonly Dictionary<string, int> _refCounts = [];
 
     public SndStrategyPool(ILogger logger)
     {
@@ -110,9 +110,7 @@ internal sealed class SndStrategyPool
 
     private static string ResolveRequiredIndex(Type strategyType)
     {
-        var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>();
-        if (attr is null)
-            throw new InvalidOperationException(
+        var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>() ?? throw new InvalidOperationException(
                 $"Strategy type '{strategyType.FullName}' must declare [StrategyIndex(\"...\")].");
         if (string.IsNullOrWhiteSpace(attr.Index))
             throw new InvalidOperationException(

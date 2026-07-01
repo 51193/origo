@@ -137,7 +137,7 @@ public class SaveCoordinatorTests
     private sealed class TestSceneAccess : Abstractions.Scene.ISndSceneAccess
     {
         public IReadOnlyList<SndMetaData> BuildMetaList() =>
-            Array.Empty<SndMetaData>();
+            [];
         public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList) { }
     }
 

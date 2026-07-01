@@ -73,7 +73,7 @@ public sealed class MemoryFileSystem : IFileSystem
 
             if (!recursive)
             {
-                var rest = file.Substring(prefix.Length);
+                var rest = file[prefix.Length..];
                 if (rest.Contains('/'))
                     continue;
             }
@@ -111,7 +111,7 @@ public sealed class MemoryFileSystem : IFileSystem
     {
         var normalized = Normalize(path).TrimEnd('/');
         var index = normalized.LastIndexOf('/');
-        return index <= 0 ? string.Empty : normalized.Substring(0, index);
+        return index <= 0 ? string.Empty : normalized[..index];
     }
 
     /// <inheritdoc />
@@ -125,10 +125,10 @@ public sealed class MemoryFileSystem : IFileSystem
         {
             if (!dir.StartsWith(prefix, StringComparison.Ordinal))
                 continue;
-            var rest = dir.Substring(prefix.Length);
+            var rest = dir[prefix.Length..];
             var slash = rest.IndexOf('/');
             if (slash >= 0)
-                rest = rest.Substring(0, slash);
+                rest = rest[..slash];
             if (rest.Length > 0)
                 children.Add(prefix + rest);
         }
@@ -137,7 +137,7 @@ public sealed class MemoryFileSystem : IFileSystem
         {
             if (!file.StartsWith(prefix, StringComparison.Ordinal))
                 continue;
-            var rest = file.Substring(prefix.Length);
+            var rest = file[prefix.Length..];
             var slash = rest.IndexOf('/');
             if (slash > 0)
                 children.Add(string.Concat(prefix, rest.AsSpan(0, slash)));
@@ -204,7 +204,7 @@ public sealed class MemoryFileSystem : IFileSystem
         var index = normalized.LastIndexOf('/');
         while (index > 0)
         {
-            var dir = normalized.Substring(0, index);
+            var dir = normalized[..index];
             _directories.Add(dir);
             index = dir.LastIndexOf('/');
         }

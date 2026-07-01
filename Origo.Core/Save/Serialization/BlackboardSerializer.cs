@@ -25,9 +25,7 @@ internal sealed class BlackboardSerializer
     public void DeserializeInto(IBlackboard blackboard, DataSourceNode serializedNode)
     {
         ArgumentNullException.ThrowIfNull(serializedNode);
-        var dict = _registry.Read<IReadOnlyDictionary<string, TypedData>>(serializedNode);
-        if (dict is null)
-            throw new InvalidOperationException("Failed to deserialize blackboard data.");
+        var dict = _registry.Read<IReadOnlyDictionary<string, TypedData>>(serializedNode) ?? throw new InvalidOperationException("Failed to deserialize blackboard data.");
         blackboard.DeserializeAll(dict);
     }
 }

@@ -76,10 +76,7 @@ internal static class SavePayloadWriter
         SaveFileHandle handle,
         string baseDirectoryRel,
         LevelPayload level,
-        bool overwrite = true)
-    {
-        WriteLevelPayload(handle, baseDirectoryRel, level, overwrite);
-    }
+        bool overwrite = true) => WriteLevelPayload(handle, baseDirectoryRel, level, overwrite);
 
     private static void WriteLevelPayload(
         SaveFileHandle handle,

@@ -45,7 +45,7 @@ public static class OrigoAutoInitializer
         var registered = 0;
 
         var skipPrefixes = additionalSkipPrefixes is not null
-            ? DefaultSkipPrefixes.Concat(additionalSkipPrefixes).ToArray()
+            ? [.. DefaultSkipPrefixes, .. additionalSkipPrefixes]
             : DefaultSkipPrefixes;
 
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -198,7 +198,7 @@ public static class OrigoAutoInitializer
         Stopwatch watch)
     {
         var metaList = sndWorld.ResolveMetaListFromJsonArray(root);
-        session.SpawnMany(metaList.ToArray());
+        session.SpawnMany([.. metaList]);
 
         watch.Stop();
         logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
@@ -226,9 +226,7 @@ public static class OrigoAutoInitializer
 
     private static string ResolveStrategyIndex(Type strategyType)
     {
-        var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>();
-        if (attr is null)
-            throw new InvalidOperationException(
+        var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>() ?? throw new InvalidOperationException(
                 $"Strategy '{strategyType.FullName}' missing required StrategyIndexAttribute.");
         if (string.IsNullOrWhiteSpace(attr.Index))
             throw new InvalidOperationException(

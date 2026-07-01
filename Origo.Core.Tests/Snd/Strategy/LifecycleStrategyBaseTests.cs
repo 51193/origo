@@ -121,7 +121,7 @@ public class LifecycleStrategyBaseTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var entity = host.CreateEntity(CreateMeta("E", new[] { KillSelfIdx, ProcessCalledIdx }));
+        var entity = host.CreateEntity(CreateMeta("E", [KillSelfIdx, ProcessCalledIdx]));
         ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         KillSelfRecordingStrategy.ProcessCalls.Clear();
         ProcessCalledStrategy.Called = false;
@@ -168,15 +168,9 @@ public class LifecycleStrategyBaseTests
         private static readonly AsyncLocal<int> _processCalls = new();
         public static int ProcessCalls { get => _processCalls.Value; set => _processCalls.Value = value; }
 
-        public override void AfterAdd(ISndEntity entity, ISndContext ctx)
-        {
-            throw new InvalidOperationException("AfterAdd boom");
-        }
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx) => throw new InvalidOperationException("AfterAdd boom");
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            ProcessCalls++;
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ProcessCalls++;
     }
 
     private sealed class TestLifecycleStrategy : LifecycleStrategyBase
@@ -185,33 +179,24 @@ public class LifecycleStrategyBaseTests
 
     private sealed class TestLifecycleStrategyWithAdd : LifecycleStrategyBase
     {
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            entity.AddStrategy("some.new.strategy");
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => entity.AddStrategy("some.new.strategy");
     }
 
     private sealed class TestLifecycleStrategyKillSelf : LifecycleStrategyBase
     {
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            entity.OwningSession.RequestKillEntity(entity.Name);
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => entity.OwningSession.RequestKillEntity(entity.Name);
     }
 
     private sealed class TestLifecycleStrategyKillOther : LifecycleStrategyBase
     {
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            entity.OwningSession.RequestKillEntity("B");
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => entity.OwningSession.RequestKillEntity("B");
     }
 
     [StrategyIndex(KillSelfIdx)]
     private sealed class KillSelfRecordingStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _processCalls = new();
-        public static List<string> ProcessCalls => _processCalls.Value ??= new();
+        public static List<string> ProcessCalls => _processCalls.Value ??= [];
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -226,10 +211,7 @@ public class LifecycleStrategyBaseTests
         private static readonly AsyncLocal<bool> _called = new();
         public static bool Called { get => _called.Value; set => _called.Value = value; }
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            Called = true;
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => Called = true;
     }
 
     private static FullMemorySndSceneHost CreateHost(Action<SndWorld> configureWorld)
@@ -257,7 +239,7 @@ public class LifecycleStrategyBaseTests
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            LifecycleIndices = new List<string>(lifecycleIndices ?? Array.Empty<string>())
+            LifecycleIndices = [.. lifecycleIndices ?? []]
         },
         DataMetaData = new DataMetaData()
     };

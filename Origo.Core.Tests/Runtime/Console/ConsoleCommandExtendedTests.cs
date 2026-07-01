@@ -443,18 +443,12 @@ public class ConsoleCommandExtendedTests
         }
     }
 
-    private sealed class TestMinMaxHandler : ConsoleCommandHandlerBase
+    private sealed class TestMinMaxHandler(int min, int max) : ConsoleCommandHandlerBase
     {
-        public TestMinMaxHandler(int min, int max)
-        {
-            MinPositionalArgs = min;
-            MaxPositionalArgs = max;
-        }
-
         public override string Name => "test_minmax";
         public override string HelpText => "test_minmax <arg1> [arg2] — test handler.";
-        public override int MinPositionalArgs { get; }
-        public override int MaxPositionalArgs { get; }
+        public override int MinPositionalArgs { get; } = min;
+        public override int MaxPositionalArgs { get; } = max;
 
         protected override bool ExecuteCore(CommandInvocation invocation, IConsoleOutputChannel outputChannel,
             out string? errorMessage)

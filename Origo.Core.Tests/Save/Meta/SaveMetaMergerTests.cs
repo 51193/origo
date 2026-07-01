@@ -50,7 +50,7 @@ public class SaveMetaMergerTests
     [Fact]
     public void Merge_NoContributorsNoOverrides_ReturnsNull()
     {
-        var merged = SaveMetaMerger.Merge(Array.Empty<ISaveMetaContributor>(), DummyContext(), null);
+        var merged = SaveMetaMerger.Merge([], DummyContext(), null);
         Assert.Null(merged);
     }
 
@@ -64,14 +64,9 @@ public class SaveMetaMergerTests
         Assert.Equal("keep", merged!["x"]);
     }
 
-    private sealed class FuncContributor : ISaveMetaContributor
+    private sealed class FuncContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> func) : ISaveMetaContributor
     {
-        private readonly Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> _func;
-
-        public FuncContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> func)
-        {
-            _func = func;
-        }
+        private readonly Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> _func = func;
 
         public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context) =>
             _func(context);
@@ -79,7 +74,7 @@ public class SaveMetaMergerTests
 
     private sealed class NullSceneHost : ISndSceneHost
     {
-        public IReadOnlyList<SndMetaData> BuildMetaList() => Array.Empty<SndMetaData>();
+        public IReadOnlyList<SndMetaData> BuildMetaList() => [];
 
         public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
         {
@@ -91,7 +86,7 @@ public class SaveMetaMergerTests
 
         public ISndEntity CreateEntity(SndMetaData metaData) => throw new NotSupportedException();
 
-        public IReadOnlyCollection<ISndEntity> GetEntities() => Array.Empty<ISndEntity>();
+        public IReadOnlyCollection<ISndEntity> GetEntities() => [];
 
         public ISndEntity? FindByName(string name) => null;
 

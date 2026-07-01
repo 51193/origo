@@ -18,10 +18,10 @@ public interface ISndSceneHost : ISndSceneAccess
     /// <summary>
     ///     从元数据在场景中创建实体，恢复数据/策略/节点到内存。
     ///     不触发任何生命周期钩子（AfterSpawn / AfterLoad 等）。
-///     钩子应由调用方（<see cref="Origo.Core.Snd.Scene.SndEntityFactory" /> / <see cref="Origo.Core.Runtime.Lifecycle.SessionRun" />）在适当阶段统一触发。
-///     <para>
-///         注意：此方法不执行重名校验，框架当前也不在上层强制重名唯一性。
-///     </para>
+    ///     钩子应由调用方（<see cref="Origo.Core.Snd.Scene.SndEntityFactory" /> / <see cref="Origo.Core.Runtime.Lifecycle.SessionRun" />）在适当阶段统一触发。
+    ///     <para>
+    ///         注意：此方法不执行重名校验，框架当前也不在上层强制重名唯一性。
+    ///     </para>
     /// </summary>
     ISndEntity CreateEntity(SndMetaData metaData);
 

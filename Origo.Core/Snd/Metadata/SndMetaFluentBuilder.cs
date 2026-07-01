@@ -97,13 +97,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
-    public SndMetaData Build()
-    {
-        return _meta;
-    }
+    public SndMetaData Build() => _meta;
 
-    private void EnsureDataMetaData()
-    {
-        _meta.DataMetaData ??= new DataMetaData();
-    }
+    private void EnsureDataMetaData() => _meta.DataMetaData ??= new DataMetaData();
 }

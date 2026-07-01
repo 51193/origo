@@ -18,6 +18,7 @@ using Origo.GodotAdapter.FileSystem;
 using Origo.GodotAdapter.Logging;
 using Origo.GodotAdapter.Serialization;
 using Origo.GodotAdapter.Snd;
+using Origo.GodotAdapter;
 
 namespace Origo.GodotAdapter.Bootstrap;
 
@@ -83,10 +84,7 @@ public partial class OrigoAutoHost : Node
         }
     }
 
-    public override void _Process(double delta)
-    {
-        ((IOrigoFrameDriver?)Runtime)?.DriveFrame(delta);
-    }
+    public override void _Process(double delta) => ((IOrigoFrameDriver?)Runtime)?.DriveFrame(delta);
 
     [MemberNotNull(nameof(SndManager), nameof(SharedMetaAccess), nameof(SharedPathResolver), nameof(SharedDataSourceIo))]
     private OrigoRuntime CreateRuntime()

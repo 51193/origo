@@ -16,7 +16,7 @@ namespace Origo.Core.Planning;
 /// </summary>
 public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 {
-    private static readonly ConditionalWeakTable<ISndEntity, WireCallbacks> WiredCallbacks = new();
+    private static readonly ConditionalWeakTable<ISndEntity, WireCallbacks> WiredCallbacks = [];
 
     /// <summary>Entity data key for the current intent (e.g. "combat", "forage", "wander").</summary>
     protected abstract string IntentKey { get; }
@@ -108,16 +108,10 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     }
 
     /// <inheritdoc />
-    public sealed override void BeforeSave(ISndEntity entity, ISndContext ctx)
-    {
-        OnBeforeSave(entity, ctx);
-    }
+    public sealed override void BeforeSave(ISndEntity entity, ISndContext ctx) => OnBeforeSave(entity, ctx);
 
     /// <inheritdoc />
-    public sealed override void Process(ISndEntity entity, double delta, ISndContext ctx)
-    {
-        OnProcess(entity, delta, ctx);
-    }
+    public sealed override void Process(ISndEntity entity, double delta, ISndContext ctx) => OnProcess(entity, delta, ctx);
 
     // ── Virtual extension hooks ────────────────────────────────────────────
 

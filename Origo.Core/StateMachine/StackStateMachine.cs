@@ -17,7 +17,7 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
     private readonly SndStrategyPool _pool;
     private readonly StateMachineStrategyBase _popStrategy;
     private readonly StateMachineStrategyBase _pushStrategy;
-    private readonly List<string> _stack = new();
+    private readonly List<string> _stack = [];
     private bool _disposed;
 
     internal StackStateMachine(

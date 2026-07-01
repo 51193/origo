@@ -127,11 +127,11 @@ public sealed class ActiveStrategyTestHarness : BaseStrategyTestHarness
 
 public abstract class BaseStrategyTestScenarioBuilder
 {
-    private protected readonly List<Action<ISndEntity>> _entitySetup = new();
-    private protected readonly List<Action<IBlackboard>> _progressSetup = new();
-    private protected readonly List<Action<IBlackboard>> _sessionSetup = new();
+    private protected readonly List<Action<ISndEntity>> _entitySetup = [];
+    private protected readonly List<Action<IBlackboard>> _progressSetup = [];
+    private protected readonly List<Action<IBlackboard>> _sessionSetup = [];
     private protected readonly string _strategyIndex;
-    private protected readonly List<Action<IBlackboard>> _systemSetup = new();
+    private protected readonly List<Action<IBlackboard>> _systemSetup = [];
     private protected readonly Dictionary<string, SndMetaData> _templates = new(StringComparer.Ordinal);
     private protected string _entityName = "__test_entity__";
 

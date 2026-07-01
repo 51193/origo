@@ -95,23 +95,23 @@ public class TypedDataIntegrationTests
         bb.SetValue("boolVal", true);
         bb.SetValue("doubleVal", 2.718281828);
 
-        (bool fi, int iv) = bb.TryGet<int>("intVal");
+        (var fi, var iv) = bb.TryGet<int>("intVal");
         Assert.True(fi);
         Assert.Equal(42, iv);
 
-        (bool ff, float fv) = bb.TryGet<float>("floatVal");
+        (var ff, var fv) = bb.TryGet<float>("floatVal");
         Assert.True(ff);
         Assert.Equal(3.14f, fv, 0.0001f);
 
-        (bool fs, string sv) = bb.TryGet<string>("stringVal");
+        (var fs, var sv) = bb.TryGet<string>("stringVal");
         Assert.True(fs);
         Assert.Equal("hello", sv);
 
-        (bool fb, bool bv) = bb.TryGet<bool>("boolVal");
+        (var fb, var bv) = bb.TryGet<bool>("boolVal");
         Assert.True(fb);
         Assert.True(bv);
 
-        (bool fd, double dv) = bb.TryGet<double>("doubleVal");
+        (var fd, var dv) = bb.TryGet<double>("doubleVal");
         Assert.True(fd);
         Assert.Equal(2.718281828, dv);
     }
@@ -129,15 +129,15 @@ public class TypedDataIntegrationTests
         var bb2 = new Origo.Core.Blackboard.Blackboard();
         bb2.DeserializeAll(serialized);
 
-        (bool f1, int v1) = bb2.TryGet<int>("hp");
+        (var f1, var v1) = bb2.TryGet<int>("hp");
         Assert.True(f1);
         Assert.Equal(100, v1);
 
-        (bool f2, string v2) = bb2.TryGet<string>("name");
+        (var f2, var v2) = bb2.TryGet<string>("name");
         Assert.True(f2);
         Assert.Equal("player", v2);
 
-        (bool f3, bool v3) = bb2.TryGet<bool>("alive");
+        (var f3, var v3) = bb2.TryGet<bool>("alive");
         Assert.True(f3);
         Assert.True(v3);
     }

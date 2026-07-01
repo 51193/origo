@@ -12,8 +12,8 @@ internal sealed class SndStrategyManager
     private const string LogTag = nameof(SndStrategyManager);
     private readonly ILogger _logger;
     private readonly SndStrategyPool _pool;
-    private readonly List<StrategyEntry> _processBuffer = new();
-    private readonly List<StrategyEntry> _strategies = new();
+    private readonly List<StrategyEntry> _processBuffer = [];
+    private readonly List<StrategyEntry> _strategies = [];
 
     public SndStrategyManager(SndStrategyPool pool, ILogger logger)
     {
@@ -33,7 +33,7 @@ internal sealed class SndStrategyManager
                 var strategy = _pool.GetStrategy<BaseStrategy>(index);
                 if (strategy is LifecycleStrategyBase lifecycleStrategy)
                     InsertSorted(new StrategyEntry
-                        { Index = index, Strategy = lifecycleStrategy });
+                    { Index = index, Strategy = lifecycleStrategy });
                 else
                 {
                     _pool.ReleaseStrategy(index);

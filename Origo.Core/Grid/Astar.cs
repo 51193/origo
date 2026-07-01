@@ -5,7 +5,7 @@ namespace Origo.Core.Grid;
 
 public static class Astar
 {
-    private static readonly (int X, int Z)[] Neighbors = { (1, 0), (-1, 0), (0, 1), (0, -1) };
+    private static readonly (int X, int Z)[] Neighbors = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
     public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize,
         Func<GridPos, bool> isBlocked)
@@ -17,7 +17,7 @@ public static class Astar
         if (isBlocked(end))
             return null;
         if (start == end)
-            return new List<GridPos>();
+            return [];
 
         var maxSteps = gridSize * gridSize;
         var openSet = new PriorityQueue<GridPos, float>();
@@ -61,10 +61,7 @@ public static class Astar
         return null;
     }
 
-    private static bool IsInBounds(GridPos p, int gridSize)
-    {
-        return p.X >= 0 && p.X < gridSize && p.Z >= 0 && p.Z < gridSize;
-    }
+    private static bool IsInBounds(GridPos p, int gridSize) => p.X >= 0 && p.X < gridSize && p.Z >= 0 && p.Z < gridSize;
 
     private static float Heuristic(GridPos a, GridPos b)
     {

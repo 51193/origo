@@ -14,10 +14,7 @@ internal static class GodotDirectoryOperations
 
     public static IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
     {
-        using var dir = DirAccess.Open(directoryPath);
-        if (dir is null)
-            throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
-
+        using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
         var normalizedDir = directoryPath.TrimEnd('/');
         IEnumerable<string> fileNames = dir.GetFiles();
 
@@ -38,21 +35,15 @@ internal static class GodotDirectoryOperations
 
     public static IEnumerable<string> EnumerateDirectories(string directoryPath)
     {
-        using var dir = DirAccess.Open(directoryPath);
-        if (dir is null)
-            throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
-
+        using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
         var normalizedDir = directoryPath.TrimEnd('/');
         return dir.GetDirectories().Select(d => $"{normalizedDir}/{d}").ToArray();
     }
 
     public static void Rename(string sourcePath, string destinationPath)
     {
-        using var dir = DirAccess.Open(GodotPathResolver.GetParentDirectory(sourcePath));
-        if (dir is null)
-            throw new DirectoryNotFoundException(
+        using var dir = DirAccess.Open(GodotPathResolver.GetParentDirectory(sourcePath)) ?? throw new DirectoryNotFoundException(
                 $"Cannot open parent directory for rename: {sourcePath}");
-
         var err = dir.Rename(sourcePath, destinationPath);
         if (err != Error.Ok)
             throw new IOException(

@@ -1,4 +1,4 @@
-namespace Origo.Core.DataSource;
+namespace Origo.Core.DataSource.Codec;
 
 /// <summary>
 ///     原始字符串编解码器：将无结构的纯文本（如 SHA 哈希、哨兵标记）包装为单字符串 <see cref="DataSourceNode" />。

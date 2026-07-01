@@ -20,7 +20,7 @@ internal sealed class NullFileSystem : IFileSystem
         throw new NotSupportedException("NullFileSystem does not support I/O.");
 
     public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive) =>
-        Array.Empty<string>();
+        [];
 
     public void CreateDirectory(string directoryPath)
     {
@@ -35,7 +35,7 @@ internal sealed class NullFileSystem : IFileSystem
 
     public string GetParentDirectory(string path) => string.Empty;
 
-    public IEnumerable<string> EnumerateDirectories(string directoryPath) => Array.Empty<string>();
+    public IEnumerable<string> EnumerateDirectories(string directoryPath) => [];
 
     public void Rename(string sourcePath, string destinationPath)
     {

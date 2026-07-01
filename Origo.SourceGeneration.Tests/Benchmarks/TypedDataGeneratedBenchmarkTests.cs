@@ -31,7 +31,7 @@ namespace Origo.SourceGeneration.Tests;
 ///     CI step (scripts/benchmark.sh) rather than alongside the coverage-gated suite.
 /// </summary>
 [Trait("Category", "Benchmark")]
-public class TypedDataGeneratedBenchmarkTests
+public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 {
     private const int PoolSize = 1 << 16;
     private const int PoolMask = PoolSize - 1;
@@ -46,12 +46,7 @@ public class TypedDataGeneratedBenchmarkTests
     private static readonly TimeSpan BaselineFloor = TimeSpan.FromMilliseconds(1);
     private static readonly TimeSpan PerBenchmarkCap = TimeSpan.FromSeconds(5);
 
-    private readonly PerfReporter _perf;
-
-    public TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
-    {
-        _perf = PerfReporter.ForTest(output);
-    }
+    private readonly PerfReporter _perf = PerfReporter.ForTest(output);
 
     private delegate TypedData GenFactory<T>(T value);
 
@@ -59,16 +54,10 @@ public class TypedDataGeneratedBenchmarkTests
 
     private delegate bool IsType(in TypedData td);
 
-    private sealed class OldTypedData
+    private sealed class OldTypedData(Type dataType, object? data)
     {
-        public Type DataType { get; }
-        public object? Data { get; }
-
-        public OldTypedData(Type dataType, object? data)
-        {
-            DataType = dataType;
-            Data = data;
-        }
+        public Type DataType { get; } = dataType;
+        public object? Data { get; } = data;
     }
 
     // ─── Value types ───────────────────────────────────────────────
@@ -89,27 +78,27 @@ public class TypedDataGeneratedBenchmarkTests
     {
         RunReadBenchmark("Int32", MakeSamples(i => i),
             static v => (TypedData)v,
-            static (in TypedData td, out int v) => td.TryGetInt32(out v),
+            static (in td, out v) => td.TryGetInt32(out v),
             static o => o.Data is int);
         RunReadBenchmark("Int64", MakeSamples(i => (long)i),
             static v => (TypedData)v,
-            static (in TypedData td, out long v) => td.TryGetInt64(out v),
+            static (in td, out v) => td.TryGetInt64(out v),
             static o => o.Data is long);
         RunReadBenchmark("Single", MakeSamples(i => i * 1.5f),
             static v => (TypedData)v,
-            static (in TypedData td, out float v) => td.TryGetSingle(out v),
+            static (in td, out v) => td.TryGetSingle(out v),
             static o => o.Data is float);
         RunReadBenchmark("Double", MakeSamples(i => i * 1.5d),
             static v => (TypedData)v,
-            static (in TypedData td, out double v) => td.TryGetDouble(out v),
+            static (in td, out v) => td.TryGetDouble(out v),
             static o => o.Data is double);
         RunReadBenchmark("Boolean", MakeSamples(i => i % 2 == 0),
             static v => (TypedData)v,
-            static (in TypedData td, out bool v) => td.TryGetBoolean(out v),
+            static (in td, out v) => td.TryGetBoolean(out v),
             static o => o.Data is bool);
         RunReadBenchmark("Char", MakeSamples(i => (char)('A' + i % 26)),
             static v => (TypedData)v,
-            static (in TypedData td, out char v) => td.TryGetChar(out v),
+            static (in td, out v) => td.TryGetChar(out v),
             static o => o.Data is char);
     }
 
@@ -125,7 +114,7 @@ public class TypedDataGeneratedBenchmarkTests
 
         RunReadBenchmark("String", samples,
             static v => new TypedData(TypedData.KindMap.String, 0, v),
-            static (in TypedData td, out string v) => td.TryGetString(out v),
+            static (in td, out v) => td.TryGetString(out v),
             static o => o.Data is string);
     }
 
@@ -136,7 +125,7 @@ public class TypedDataGeneratedBenchmarkTests
 
         RunIsBenchmark("String", samples,
             static v => new TypedData(TypedData.KindMap.String, 0, v),
-            static (in TypedData td) => td.IsString,
+            static (in td) => td.IsString,
             static o => o.Data is string);
     }
 

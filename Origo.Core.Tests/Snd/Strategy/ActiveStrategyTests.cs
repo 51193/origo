@@ -22,7 +22,7 @@ public class ActiveStrategyTests
     public void Invoke_ReturnsResult()
     {
         var (entity, ctx, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex]));
 
         var result = entity.InvokeStrategy(QueryHpIndex);
 
@@ -34,7 +34,7 @@ public class ActiveStrategyTests
     public void Invoke_EntityPassedCorrectly()
     {
         var (entity, ctx, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex]));
 
         var name = (string?)entity.InvokeStrategy(QueryHpIndex, "get_name");
 
@@ -45,7 +45,7 @@ public class ActiveStrategyTests
     public void Invoke_InputPassedCorrectly()
     {
         var (entity, ctx, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { CmdDamageIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([CmdDamageIndex]));
 
         var result = entity.InvokeStrategy(CmdDamageIndex, 42);
 
@@ -57,7 +57,7 @@ public class ActiveStrategyTests
     public void Invoke_UnregisteredIndex_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(Array.Empty<string>()));
+        entity.SpawnSingle(CreateMeta([]));
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.InvokeStrategy("not.exist"));
@@ -68,7 +68,7 @@ public class ActiveStrategyTests
     public void Invoke_LifecycleStrategyIndex_Throws()
     {
         var (entity, ctx, _) = Setup();
-        entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }));
+        entity.SpawnSingle(CreateMeta([EntityOnlyIndex]));
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.InvokeStrategy(EntityOnlyIndex));
@@ -81,7 +81,7 @@ public class ActiveStrategyTests
     public void Spawn_RecoversActiveStrategies()
     {
         var (entity, ctx, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex]));
 
         var result = entity.InvokeStrategy(QueryHpIndex);
 
@@ -92,7 +92,7 @@ public class ActiveStrategyTests
     public void Load_RecoversActiveStrategies()
     {
         var (entity, ctx, _) = Setup();
-        entity.LoadSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.LoadSingle(CreateMetaWithActive([QueryHpIndex]));
 
         var result = entity.InvokeStrategy(QueryHpIndex);
 
@@ -103,7 +103,7 @@ public class ActiveStrategyTests
     public void Quit_ReleasesAllActiveStrategies()
     {
         var (entity, ctx, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex]));
         entity.QuitSingle();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -115,7 +115,7 @@ public class ActiveStrategyTests
     public void Dead_ReleasesAllActiveStrategies()
     {
         var (entity, ctx, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex]));
         entity.DeadSingle();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -129,7 +129,7 @@ public class ActiveStrategyTests
     public void Load_ActiveIndexWithNonActiveType_Throws()
     {
         var (entity, _, _) = Setup();
-        var meta = CreateMeta(Array.Empty<string>(), new[] { EntityOnlyIndex });
+        var meta = CreateMeta([], [EntityOnlyIndex]);
 
         var ex = Assert.Throws<InvalidOperationException>(() => entity.LoadSingle(meta));
 
@@ -143,7 +143,7 @@ public class ActiveStrategyTests
         var (entity, _, _) = Setup();
         // QueryHpIndex is acquired before the invalid EntityOnlyIndex; recovery must
         // roll it back so no active strategy remains attached after the failure.
-        var meta = CreateMeta(Array.Empty<string>(), new[] { QueryHpIndex, EntityOnlyIndex });
+        var meta = CreateMeta([], [QueryHpIndex, EntityOnlyIndex]);
 
         Assert.Throws<InvalidOperationException>(() => entity.LoadSingle(meta));
 
@@ -157,7 +157,7 @@ public class ActiveStrategyTests
     public void AddActiveStrategy_Then_Invoke_Works()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(Array.Empty<string>()));
+        entity.SpawnSingle(CreateMeta([]));
         entity.AddActiveStrategy(QueryHpIndex);
 
         var result = entity.InvokeStrategy(QueryHpIndex);
@@ -169,7 +169,7 @@ public class ActiveStrategyTests
     public void AddActiveStrategy_Duplicate_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex]));
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.AddActiveStrategy(QueryHpIndex));
@@ -180,7 +180,7 @@ public class ActiveStrategyTests
     public void AddActiveStrategy_NonActiveType_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(Array.Empty<string>()));
+        entity.SpawnSingle(CreateMeta([]));
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.AddActiveStrategy(EntityOnlyIndex));
@@ -191,7 +191,7 @@ public class ActiveStrategyTests
     public void AddActiveStrategy_NullOrWhitespace_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(Array.Empty<string>()));
+        entity.SpawnSingle(CreateMeta([]));
 
         Assert.Throws<ArgumentException>(() => entity.AddActiveStrategy(null!));
         Assert.Throws<ArgumentException>(() => entity.AddActiveStrategy("  "));
@@ -201,7 +201,7 @@ public class ActiveStrategyTests
     public void RemoveActiveStrategy_Then_Invoke_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex]));
         entity.RemoveActiveStrategy(QueryHpIndex);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -213,7 +213,7 @@ public class ActiveStrategyTests
     public void RemoveActiveStrategy_NotExists_Noop()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(Array.Empty<string>()));
+        entity.SpawnSingle(CreateMeta([]));
 
         var ex = Record.Exception(() => entity.RemoveActiveStrategy("not.exist"));
         Assert.Null(ex);
@@ -225,7 +225,7 @@ public class ActiveStrategyTests
     public void SerializeMetaData_IncludesActiveIndices()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex, CmdDamageIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex, CmdDamageIndex]));
 
         var meta = entity.SaveSingle();
         var activeIndices = meta.StrategyMetaData!.ActiveIndices;
@@ -238,7 +238,7 @@ public class ActiveStrategyTests
     public void SerializeMetaData_EntityAndActive_Separated()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMeta([EntityOnlyIndex], [QueryHpIndex]));
 
         var meta = entity.SaveSingle();
 
@@ -252,7 +252,7 @@ public class ActiveStrategyTests
     public void SerializeMetaData_DynamicAdd_Then_Serialized()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(Array.Empty<string>()));
+        entity.SpawnSingle(CreateMeta([]));
         entity.AddActiveStrategy(QueryHpIndex);
 
         var meta = entity.SaveSingle();
@@ -264,7 +264,7 @@ public class ActiveStrategyTests
     public void SerializeMetaData_DynamicRemove_NotSerialized()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive(new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMetaWithActive([QueryHpIndex]));
         entity.RemoveActiveStrategy(QueryHpIndex);
 
         var meta = entity.SaveSingle();
@@ -278,7 +278,7 @@ public class ActiveStrategyTests
     public void SameEntity_HasBothTypeStrategies()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMeta([EntityOnlyIndex], [QueryHpIndex]));
 
         var processEx = Record.Exception(() => entity.Process(0.016));
         Assert.Null(processEx);
@@ -291,7 +291,7 @@ public class ActiveStrategyTests
     public void RemoveLifecycleStrategy_LeavesActiveStrategy()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMeta([EntityOnlyIndex], [QueryHpIndex]));
         entity.RemoveStrategy(EntityOnlyIndex);
 
         var result = entity.InvokeStrategy(QueryHpIndex);
@@ -302,7 +302,7 @@ public class ActiveStrategyTests
     public void RemoveActiveStrategy_LeavesLifecycleStrategy()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta(new[] { EntityOnlyIndex }, new[] { QueryHpIndex }));
+        entity.SpawnSingle(CreateMeta([EntityOnlyIndex], [QueryHpIndex]));
         entity.RemoveActiveStrategy(QueryHpIndex);
 
         var ex = Record.Exception(() => entity.Process(0.016));
@@ -371,15 +371,15 @@ public class ActiveStrategyTests
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                LifecycleIndices = new List<string>(lifecycleIndices),
-                ActiveIndices = new List<string>(activeIndices ?? Array.Empty<string>())
+                LifecycleIndices = [.. lifecycleIndices],
+                ActiveIndices = [.. activeIndices ?? []]
             },
             DataMetaData = new DataMetaData()
         };
     }
 
     private static SndMetaData CreateMetaWithActive(string[] activeIndices) =>
-        CreateMeta(Array.Empty<string>(), activeIndices);
+        CreateMeta([], activeIndices);
 
     // ── Test strategies ────────────────────────────────────────────────
 

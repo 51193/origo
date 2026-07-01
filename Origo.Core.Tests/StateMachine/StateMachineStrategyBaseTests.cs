@@ -41,38 +41,26 @@ public class StateMachineStrategyBaseTests
     private sealed class TrackingPushStrategy : StateMachineStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _pushRuntimeCalls = new();
-        public static List<string> PushRuntimeCalls => _pushRuntimeCalls.Value ??= new();
+        public static List<string> PushRuntimeCalls => _pushRuntimeCalls.Value ??= [];
         private static readonly AsyncLocal<List<string>> _pushAfterLoadCalls = new();
-        public static List<string> PushAfterLoadCalls => _pushAfterLoadCalls.Value ??= new();
+        public static List<string> PushAfterLoadCalls => _pushAfterLoadCalls.Value ??= [];
 
-        public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
-        {
-            PushRuntimeCalls.Add(context.AfterTop ?? "");
-        }
+        public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) => PushRuntimeCalls.Add(context.AfterTop ?? "");
 
-        public override void OnPushAfterLoad(StateMachineStrategyContext context, IStateMachineContext ctx)
-        {
-            PushAfterLoadCalls.Add(context.AfterTop ?? "");
-        }
+        public override void OnPushAfterLoad(StateMachineStrategyContext context, IStateMachineContext ctx) => PushAfterLoadCalls.Add(context.AfterTop ?? "");
     }
 
     [StrategyIndex(SmPopIdx)]
     private sealed class TrackingPopStrategy : StateMachineStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _popRuntimeCalls = new();
-        public static List<string> PopRuntimeCalls => _popRuntimeCalls.Value ??= new();
+        public static List<string> PopRuntimeCalls => _popRuntimeCalls.Value ??= [];
         private static readonly AsyncLocal<List<string>> _popBeforeQuitCalls = new();
-        public static List<string> PopBeforeQuitCalls => _popBeforeQuitCalls.Value ??= new();
+        public static List<string> PopBeforeQuitCalls => _popBeforeQuitCalls.Value ??= [];
 
-        public override void OnPopRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
-        {
-            PopRuntimeCalls.Add(context.BeforeTop ?? "");
-        }
+        public override void OnPopRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) => PopRuntimeCalls.Add(context.BeforeTop ?? "");
 
-        public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx)
-        {
-            PopBeforeQuitCalls.Add(context.BeforeTop ?? "");
-        }
+        public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx) => PopBeforeQuitCalls.Add(context.BeforeTop ?? "");
     }
 
     [Fact]

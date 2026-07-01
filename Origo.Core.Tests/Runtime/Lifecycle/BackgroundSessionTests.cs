@@ -849,7 +849,7 @@ public class BackgroundSessionTests
         {
             Name = name,
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { TrackingStrategyIndex } },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TrackingStrategyIndex] },
             DataMetaData = new DataMetaData()
         };
     }
@@ -860,17 +860,19 @@ public class BackgroundSessionTests
         {
             Name = name,
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>(indices) },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [.. indices] },
             DataMetaData = new DataMetaData()
         };
     }
 
     private static TheoryData<string?> CreateBackgroundSessionInvalidLevelIds()
     {
-        var d = new TheoryData<string?>();
-        d.Add(default(string?));
-        d.Add("");
-        d.Add("   ");
+        var d = new TheoryData<string?>
+        {
+            default(string?),
+            "",
+            "   "
+        };
         return d;
     }
 
@@ -923,9 +925,6 @@ public class BackgroundSessionTests
 
         public static void Bind(List<string> seen) => _seen.Value = seen;
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            _seen.Value?.Add(entity.OwningSession.LevelId);
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _seen.Value?.Add(entity.OwningSession.LevelId);
     }
 }

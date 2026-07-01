@@ -35,13 +35,13 @@ public class GridCoordinateSystem2DTests
         var cellSize = 2f;
         var gridSize = 16;
         for (var gx = 0; gx < gridSize; gx++)
-        for (var gz = 0; gz < gridSize; gz++)
-        {
-            var (wx, wz) = GridCoordinateSystem.GridToWorld(new GridPos(gx, gz), cellSize, gridSize);
-            var result = GridCoordinateSystem.WorldToGrid(wx, wz, cellSize, gridSize, out var oob);
-            Assert.False(oob);
-            Assert.Equal(new GridPos(gx, gz), result);
-        }
+            for (var gz = 0; gz < gridSize; gz++)
+            {
+                var (wx, wz) = GridCoordinateSystem.GridToWorld(new GridPos(gx, gz), cellSize, gridSize);
+                var result = GridCoordinateSystem.WorldToGrid(wx, wz, cellSize, gridSize, out var oob);
+                Assert.False(oob);
+                Assert.Equal(new GridPos(gx, gz), result);
+            }
     }
 
     [Fact]

@@ -21,7 +21,7 @@ internal sealed class EmptySessionManager : ISessionManager
 
     public ISessionRun? ForegroundSession => null;
 
-    public IReadOnlyCollection<string> Keys => Array.Empty<string>();
+    public IReadOnlyCollection<string> Keys => [];
 
     public ISessionRun? TryGet(string key) => null;
 

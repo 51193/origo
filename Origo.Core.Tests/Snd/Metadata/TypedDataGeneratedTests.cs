@@ -164,10 +164,7 @@ public class TypedDataGeneratedTests
     }
 
     [Fact]
-    public void DataType_Null_ReturnsObject()
-    {
-        Assert.Equal(typeof(object), default(TypedData).DataType);
-    }
+    public void DataType_Null_ReturnsObject() => Assert.Equal(typeof(object), default(TypedData).DataType);
 
     [Fact]
     public void TypedDataFactory_Create_Int32_Correct()
@@ -209,10 +206,7 @@ public class TypedDataGeneratedTests
     }
 
     [Fact]
-    public void TypedDataFactory_TryExtract_FromDefault_ReturnsFalse()
-    {
-        Assert.False(TypedDataFactory<int>.TryExtract(default, out _));
-    }
+    public void TypedDataFactory_TryExtract_FromDefault_ReturnsFalse() => Assert.False(TypedDataFactory<int>.TryExtract(default, out _));
 
     [Fact]
     public void FromObject_RegisteredType_PreservesValue()
@@ -416,9 +410,9 @@ public class TypedDataGeneratedTests
         TypedDataLayeredRegistry.RegisterFromObjectFallback((k, v) =>
             k == 211 ? ((long inlineBits, object? refValue)?)(42L, null) : null);
 
-        var result = TypedDataObjectConverter.FromObject(211, "ignored");
-        Assert.Equal(42L, result.inlineBits);
-        Assert.Null(result.refValue);
+        var (inlineBits, refValue) = TypedDataObjectConverter.FromObject(211, "ignored");
+        Assert.Equal(42L, inlineBits);
+        Assert.Null(refValue);
     }
 
     [Fact]

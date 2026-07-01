@@ -7,7 +7,7 @@ namespace Origo.Core.StateMachine;
 /// </summary>
 internal sealed class StateMachineContainerPayload
 {
-    public List<StateMachineEntryPayload> Machines { get; set; } = new();
+    public List<StateMachineEntryPayload> Machines { get; set; } = [];
 }
 
 internal sealed class StateMachineEntryPayload
@@ -18,5 +18,5 @@ internal sealed class StateMachineEntryPayload
 
     public string PopIndex { get; set; } = string.Empty;
 
-    public List<string> Stack { get; set; } = new();
+    public List<string> Stack { get; set; } = [];
 }

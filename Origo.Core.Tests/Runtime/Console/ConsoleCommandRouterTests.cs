@@ -18,7 +18,7 @@ public class ConsoleCommandRouterTests
         var invocation = new CommandInvocation
         {
             Command = "test",
-            PositionalArgs = Array.Empty<string>(),
+            PositionalArgs = [],
             NamedArgs = new Dictionary<string, string>()
         };
         var channel = new ConsoleOutputChannel();
@@ -36,7 +36,7 @@ public class ConsoleCommandRouterTests
         var invocation = new CommandInvocation
         {
             Command = "unknown",
-            PositionalArgs = Array.Empty<string>(),
+            PositionalArgs = [],
             NamedArgs = new Dictionary<string, string>()
         };
         var channel = new ConsoleOutputChannel();
@@ -63,7 +63,7 @@ public class ConsoleCommandRouterTests
         var invocation = new CommandInvocation
         {
             Command = "TEST",
-            PositionalArgs = Array.Empty<string>(),
+            PositionalArgs = [],
             NamedArgs = new Dictionary<string, string>()
         };
         var channel = new ConsoleOutputChannel();
@@ -84,7 +84,7 @@ public class ConsoleCommandRouterTests
         var invocation = new CommandInvocation
         {
             Command = "test",
-            PositionalArgs = Array.Empty<string>(),
+            PositionalArgs = [],
             NamedArgs = new Dictionary<string, string>()
         };
         var channel = new ConsoleOutputChannel();
@@ -95,15 +95,10 @@ public class ConsoleCommandRouterTests
         Assert.True(newHandler.WasExecuted);
     }
 
-    private sealed class StubHandler : IConsoleCommandHandler
+    private sealed class StubHandler(string name) : IConsoleCommandHandler
     {
-        public StubHandler(string name)
-        {
-            Name = name;
-        }
-
         public bool WasExecuted { get; private set; }
-        public string Name { get; }
+        public string Name { get; } = name;
         public string HelpText => $"{Name} — stub command.";
         public int MinPositionalArgs => 0;
         public int MaxPositionalArgs => -1;

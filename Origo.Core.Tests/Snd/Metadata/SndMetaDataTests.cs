@@ -35,7 +35,7 @@ public class SndMetaDataTests
         var meta = new SndMetaData
         {
             Name = "entity",
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { "strat1", "strat2" } }
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["strat1", "strat2"] }
         };
         var clone = meta.DeepClone();
         Assert.NotSame(meta.StrategyMetaData!.LifecycleIndices, clone.StrategyMetaData!.LifecycleIndices);
@@ -88,7 +88,7 @@ public class SndMetaDataTests
         var meta = new SndMetaData
         {
             Name = "original",
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { "strategy_a" } }
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["strategy_a"] }
         };
         var clone = meta.DeepClone();
         clone.Name = "modified";
@@ -107,8 +107,8 @@ public class SndMetaDataTests
             Name = "e",
             StrategyMetaData = new StrategyMetaData
             {
-                LifecycleIndices = new List<string> { "idle" },
-                ActiveIndices = new List<string> { "invoke_handler" }
+                LifecycleIndices = ["idle"],
+                ActiveIndices = ["invoke_handler"]
             }
         };
         var clone = meta.DeepClone();
@@ -123,7 +123,7 @@ public class SndMetaDataTests
         var meta = new SndMetaData
         {
             Name = "e",
-            NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string>() }
+            NodeMetaData = new NodeMetaData { Pairs = [] }
         };
         var clone = meta.DeepClone();
         Assert.NotNull(clone.NodeMetaData);
@@ -136,7 +136,7 @@ public class SndMetaDataTests
         var meta = new SndMetaData
         {
             Name = "e",
-            DataMetaData = new DataMetaData { Pairs = new Dictionary<string, TypedData>() }
+            DataMetaData = new DataMetaData { Pairs = [] }
         };
         var clone = meta.DeepClone();
         Assert.NotNull(clone.DataMetaData);

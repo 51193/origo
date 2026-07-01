@@ -108,14 +108,14 @@ public class SndTemplateResolverTests
     [Fact]
     public void Resolve_MissingAlias_ThrowsKeyNotFoundException()
     {
-        var resolver = CreateResolver(new TestFileSystem(), new Dictionary<string, string>());
+        var resolver = CreateResolver(new TestFileSystem(), []);
         Assert.Throws<KeyNotFoundException>(() => resolver.Resolve("missing"));
     }
 
     [Fact]
     public void Resolve_WhitespaceAlias_ThrowsArgumentException()
     {
-        var resolver = CreateResolver(new TestFileSystem(), new Dictionary<string, string>());
+        var resolver = CreateResolver(new TestFileSystem(), []);
         Assert.Throws<ArgumentException>(() => resolver.Resolve(" "));
     }
 

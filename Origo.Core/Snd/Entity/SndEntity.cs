@@ -23,7 +23,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     private ISessionRun? _owningSession;
     private readonly SndStrategyManager _strategyManager;
 
-    internal void BindSession(ISessionRun session) { _owningSession = session; }
+    internal void BindSession(ISessionRun session) => _owningSession = session;
     internal SndEntity(
         INodeFactory nodeFactory,
         SndStrategyPool strategyPool,
@@ -114,15 +114,9 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);
 
     void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
-        Func<ISndEntity, TypedData, TypedData, bool>? filter)
-    {
-        _dataManager.Subscribe(name, callback, filter);
-    }
+        Func<ISndEntity, TypedData, TypedData, bool>? filter) => _dataManager.Subscribe(name, callback, filter);
 
-    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback)
-    {
-        _dataManager.Unsubscribe(name, callback);
-    }
+    void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback) => _dataManager.Unsubscribe(name, callback);
 
     void IEntityLifecycle.RecoverForLifecycle(SndMetaData metaData)
     {
@@ -151,20 +145,11 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             new LogMessageBuilder().AddContext("entityName", Name).Build("Entity loaded (hooks)."));
     }
 
-    void IEntityLifecycle.FireBeforeSaveHooks()
-    {
-        _strategyManager.TriggerBeforeSave(this, _context);
-    }
+    void IEntityLifecycle.FireBeforeSaveHooks() => _strategyManager.TriggerBeforeSave(this, _context);
 
-    void IEntityLifecycle.FireBeforeQuitHooks()
-    {
-        _strategyManager.TriggerBeforeQuit(this, _context);
-    }
+    void IEntityLifecycle.FireBeforeQuitHooks() => _strategyManager.TriggerBeforeQuit(this, _context);
 
-    void IEntityLifecycle.FireBeforeDeadHooks()
-    {
-        _strategyManager.TriggerBeforeDead(this, _context);
-    }
+    void IEntityLifecycle.FireBeforeDeadHooks() => _strategyManager.TriggerBeforeDead(this, _context);
 
     void IEntityLifecycle.ReleaseStrategiesOnly()
     {
@@ -190,9 +175,9 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             NodeMetaData = _nodeHost.SerializeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                LifecycleIndices = new List<string>(lifecycleIndices),
-                ActiveIndices = new List<string>(activeIndices),
-                ObserverIndices = _observerTopology.BuildBindingsFor(Name).ToList()
+                LifecycleIndices = [.. lifecycleIndices],
+                ActiveIndices = [.. activeIndices],
+                ObserverIndices = [.. _observerTopology.BuildBindingsFor(Name)]
             },
             DataMetaData = _dataManager.SerializeMeta()
         };
@@ -228,10 +213,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity dead."));
     }
 
-    private void TeardownObserverBindingsForDeath()
-    {
-        _observerTopology.TeardownAllBindingsFor((ISndEntity)this);
-    }
+    private void TeardownObserverBindingsForDeath() => _observerTopology.TeardownAllBindingsFor((ISndEntity)this);
 
     public SndMetaData SaveSingle()
     {

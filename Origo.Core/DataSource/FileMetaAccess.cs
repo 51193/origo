@@ -4,14 +4,9 @@ using Origo.Core.Abstractions.FileSystem;
 
 namespace Origo.Core.DataSource;
 
-internal sealed class FileMetaAccess : IFileMetaAccess
+internal sealed class FileMetaAccess(IFileSystem fileSystem) : IFileMetaAccess
 {
-    private readonly IFileSystem _fileSystem;
-
-    public FileMetaAccess(IFileSystem fileSystem)
-    {
-        _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-    }
+    private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
 
     public bool FileExists(string path)
     {

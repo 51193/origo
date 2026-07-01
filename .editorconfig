@@ -32,3 +32,9 @@ csharp_style_prefer_not_pattern = true:suggestion
 
 # Null checking style
 dotnet_diagnostic.CA1062.severity = suggestion
+
+# Test projects: flat namespace (Origo.Core.Tests, not Origo.Core.Tests.Snd.Strategy).
+# Intentional design — cross-directory type access without extra usings.
+# See docs/Origo.Core.Tests/META-TEST.md §测试命名空间约定.
+[{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests}/**/*.cs]
+dotnet_diagnostic.IDE0130.severity = none

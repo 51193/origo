@@ -70,7 +70,7 @@ internal sealed class ObserverTopology
                 var observerCapture = observer;
                 var strategyCapture = strategy;
                 var targetCapture = target;
-                Action<ISndEntity, TypedData, TypedData> wrappedCb = (t, o, n) =>
+                void wrappedCb(ISndEntity t, TypedData o, TypedData n) =>
                     strategyCapture.OnDataChanged(observerCapture, ctx, targetCapture, key, o, n);
                 ((ISndEntityRawSubscription)target).SubscribeDataRaw(key, wrappedCb, null);
                 entry.DataWrappers[key] = wrappedCb;
@@ -248,14 +248,14 @@ internal sealed class ObserverTopology
     internal IReadOnlyList<StrategyMetaData.ObserverBinding> BuildBindingsFor(string observerName)
     {
         if (!_outgoing.TryGetValue(observerName, out var list) || list.Count == 0)
-            return Array.Empty<StrategyMetaData.ObserverBinding>();
+            return [];
 
         return list
             .GroupBy(b => b.TargetName, StringComparer.Ordinal)
             .Select(g => new StrategyMetaData.ObserverBinding
             {
                 Target = g.Key,
-                ObserverIndices = g.Select(b => b.ObserverIndex).ToList()
+                ObserverIndices = [.. g.Select(b => b.ObserverIndex)]
             })
             .ToArray();
     }
@@ -283,7 +283,7 @@ internal sealed class ObserverTopology
     private void AddBinding(ObserverBindingEntry entry)
     {
         if (!_outgoing.TryGetValue(entry.ObserverName, out var list))
-            _outgoing[entry.ObserverName] = list = new List<ObserverBindingEntry>();
+            _outgoing[entry.ObserverName] = list = [];
         list.Add(entry);
 
         if (!_incoming.TryGetValue(entry.TargetName, out var observers))

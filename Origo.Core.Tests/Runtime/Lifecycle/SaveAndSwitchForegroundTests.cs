@@ -42,9 +42,9 @@ public class SaveAndSwitchForegroundTests
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         var entityA = host.CreateEntity(CreateMetaWithStrategy("EntityA",
-            new[] { FindByNameStrategyIndex }));
-if (entityA is IEntityLifecycle lc)
-                lc.FireAfterSpawnHooks();
+            [FindByNameStrategyIndex]));
+        if (entityA is IEntityLifecycle lc)
+            lc.FireAfterSpawnHooks();
 
         Assert.Contains($"{AfterSpawnEventPrefix}EntityA:self=true", events);
         Assert.NotNull(host.FindByName("EntityA"));
@@ -65,9 +65,9 @@ if (entityA is IEntityLifecycle lc)
 
         host.CreateEntity(CreateMetaWithStrategy("EntityA"));
         var entityB = host.CreateEntity(CreateMetaWithStrategy("EntityB",
-            new[] { FindByNameStrategyIndex }));
-if (entityB is IEntityLifecycle lc)
-                lc.FireAfterSpawnHooks();
+            [FindByNameStrategyIndex]));
+        if (entityB is IEntityLifecycle lc)
+            lc.FireAfterSpawnHooks();
 
         Assert.Contains($"{AfterSpawnEventPrefix}EntityB:sibling=EntityA", events);
     }
@@ -87,11 +87,11 @@ if (entityB is IEntityLifecycle lc)
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMetaWithStrategy("EntityC", new[] { FindByNameStrategyIndex })
+            CreateMetaWithStrategy("EntityC", [FindByNameStrategyIndex])
         });
-foreach (var e in host.GetEntities())
-                if (e is IEntityLifecycle lc)
-                    lc.FireAfterLoadHooks();
+        foreach (var e in host.GetEntities())
+            if (e is IEntityLifecycle lc)
+                lc.FireAfterLoadHooks();
 
         Assert.Contains($"{AfterLoadEventPrefix}EntityC:self=true", events);
         Assert.NotNull(host.FindByName("EntityC"));
@@ -113,11 +113,11 @@ foreach (var e in host.GetEntities())
         host.RecoverFromMetaList(new[]
         {
             CreateMetaWithStrategy("EntityD"),
-            CreateMetaWithStrategy("EntityE", new[] { FindByNameStrategyIndex })
+            CreateMetaWithStrategy("EntityE", [FindByNameStrategyIndex])
         });
-foreach (var e in host.GetEntities())
-                if (e is IEntityLifecycle lc)
-                    lc.FireAfterLoadHooks();
+        foreach (var e in host.GetEntities())
+            if (e is IEntityLifecycle lc)
+                lc.FireAfterLoadHooks();
 
         Assert.Contains($"{AfterLoadEventPrefix}EntityE:sibling=EntityD", events);
     }
@@ -1144,7 +1144,7 @@ foreach (var e in host.GetEntities())
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                LifecycleIndices = new List<string>(indices ?? Array.Empty<string>())
+                LifecycleIndices = [.. indices ?? []]
             },
             DataMetaData = new DataMetaData()
         };

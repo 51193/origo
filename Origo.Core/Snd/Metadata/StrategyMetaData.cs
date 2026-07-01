@@ -10,16 +10,16 @@ namespace Origo.Core.Snd.Metadata;
 public sealed class StrategyMetaData
 {
     /// <summary>生命周期策略索引列表（LifecycleStrategyBase 子类）。</summary>
-    public List<string> LifecycleIndices { get; set; } = new();
+    public List<string> LifecycleIndices { get; set; } = [];
 
     /// <summary>主动策略索引列表（ActiveStrategyBase 子类）。</summary>
-    public List<string> ActiveIndices { get; set; } = new();
+    public List<string> ActiveIndices { get; set; } = [];
 
     /// <summary>
     ///     观察者策略索引列表。按目标实体分组；每个绑定记录被观察目标实体名与该实体上挂载的观察者策略索引列表。
     ///     自观察时 Target 等于自身实体名。
     /// </summary>
-    public List<ObserverBinding> ObserverIndices { get; set; } = new();
+    public List<ObserverBinding> ObserverIndices { get; set; } = [];
 
     /// <summary>
     ///     观察者策略索引绑定项。
@@ -30,6 +30,6 @@ public sealed class StrategyMetaData
         public string Target { get; set; } = string.Empty;
 
         /// <summary>该目标实体上挂载的观察者策略索引列表。</summary>
-        public List<string> ObserverIndices { get; set; } = new();
+        public List<string> ObserverIndices { get; set; } = [];
     }
 }

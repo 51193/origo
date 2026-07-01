@@ -596,7 +596,7 @@ public class DisposeSemanticsTests
         {
             Name = name,
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { index } },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [index] },
             DataMetaData = new DataMetaData()
         };
 

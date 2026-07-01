@@ -10,7 +10,7 @@ namespace Origo.Core.Runtime.Console;
 /// </summary>
 public sealed class ConsoleOutputChannel : IConsoleOutputChannel
 {
-    private readonly Dictionary<long, Action<string>> _listeners = new();
+    private readonly Dictionary<long, Action<string>> _listeners = [];
     private readonly object _lock = new();
     private long _nextId = 1;
 

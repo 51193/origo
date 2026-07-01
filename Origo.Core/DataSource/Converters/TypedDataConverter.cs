@@ -47,8 +47,8 @@ internal sealed class TypedDataConverter : DataSourceConverter<TypedData>
         if (kind == 0)
             return new TypedData(TypedData.UnregisteredKind, 0, data);
 
-        var boxed = TypedDataObjectConverter.FromObject(kind, data);
-        return new TypedData(kind, boxed.inlineBits, boxed.refValue);
+        var (inlineBits, refValue) = TypedDataObjectConverter.FromObject(kind, data);
+        return new TypedData(kind, inlineBits, refValue);
     }
 
     public override DataSourceNode Write(TypedData value)

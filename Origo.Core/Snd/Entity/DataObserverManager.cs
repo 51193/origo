@@ -10,14 +10,14 @@ namespace Origo.Core.Snd.Entity;
 /// </summary>
 internal sealed class DataObserverManager
 {
-    private readonly Dictionary<string, List<Subscription>> _subscriptions = new();
+    private readonly Dictionary<string, List<Subscription>> _subscriptions = [];
 
     public void Subscribe(string name, Action<TypedData, TypedData> callback,
         Func<TypedData, TypedData, bool>? filter = null)
     {
         if (!_subscriptions.TryGetValue(name, out var list))
         {
-            list = new List<Subscription>();
+            list = [];
             _subscriptions[name] = list;
         }
 

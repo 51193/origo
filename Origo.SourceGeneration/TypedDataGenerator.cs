@@ -957,13 +957,13 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
     private sealed class GenerationInput
     {
         public bool IsHome { get; set; }
-        public List<TypeGroup> TypeGroups { get; set; } = new();
+        public List<TypeGroup> TypeGroups { get; set; } = [];
     }
 
     private sealed class TypeGroup
     {
         public int StartKind { get; set; }
-        public List<InlineTypeInfo> Types { get; set; } = new();
+        public List<InlineTypeInfo> Types { get; set; } = [];
     }
 
     private sealed class InlineTypeInfo

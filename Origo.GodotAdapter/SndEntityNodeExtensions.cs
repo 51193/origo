@@ -3,7 +3,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Node;
 using Origo.GodotAdapter.Snd;
 
-namespace Origo.GodotAdapter.Snd;
+namespace Origo.GodotAdapter;
 
 public static class SndEntityNodeExtensions
 {

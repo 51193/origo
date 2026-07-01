@@ -5,15 +5,12 @@ using Origo.Core.Abstractions.Console;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.GodotAdapter.Snd;
+using Origo.GodotAdapter;
 
 namespace Origo.GodotAdapter.Console;
 
-internal sealed class TreeDebugCommandHandler : CommandHandlerBase
+internal sealed class TreeDebugCommandHandler(OrigoRuntime runtime) : CommandHandlerBase(runtime)
 {
-    public TreeDebugCommandHandler(OrigoRuntime runtime) : base(runtime)
-    {
-    }
-
     public override string Name => "tree_debug";
 
     public override string HelpText => "tree_debug <entity> — 打印实体的完整节点树。";

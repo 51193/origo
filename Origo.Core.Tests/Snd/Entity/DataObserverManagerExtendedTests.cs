@@ -30,7 +30,7 @@ public class DataObserverManagerExtendedTests
     {
         var mgr = new DataObserverManager();
         var callCount = 0;
-        Action<TypedData, TypedData> callback = (_, _) => callCount++;
+        void callback(TypedData oldVal, TypedData newVal) => callCount++;
 
         mgr.Subscribe("hp", callback);
         mgr.NotifyObservers("hp", default, default);

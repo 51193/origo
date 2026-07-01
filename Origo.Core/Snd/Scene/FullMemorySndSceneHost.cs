@@ -14,7 +14,7 @@ namespace Origo.Core.Snd.Scene;
 internal sealed class FullMemorySndSceneHost
     : ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable
 {
-    private readonly List<MemoryEntityEntry> _entries = new();
+    private readonly List<MemoryEntityEntry> _entries = [];
     private readonly ILogger _logger;
     private readonly NullNodeFactory _nodeFactory = new();
     private ISndContext? _context;
@@ -140,13 +140,8 @@ internal sealed class FullMemorySndSceneHost
                 "ISndContext is not bound. Call BindContext before spawning or loading entities.");
     }
 
-    private sealed class MemoryEntityEntry
+    private sealed class MemoryEntityEntry(SndEntity entity)
     {
-        public MemoryEntityEntry(SndEntity entity)
-        {
-            Entity = entity;
-        }
-
-        public SndEntity Entity { get; }
+        public SndEntity Entity { get; } = entity;
     }
 }

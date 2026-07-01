@@ -10,8 +10,8 @@ public class GodotLoggerTests
     public void Log_WithHandler_InvokesHandlerWithCorrectLevelTagAndMessage()
     {
         LogLevel capturedLevel = default;
-        string capturedTag = string.Empty;
-        string capturedMessage = string.Empty;
+        var capturedTag = string.Empty;
+        var capturedMessage = string.Empty;
 
         var logger = new GodotLogger((level, tag, message) =>
         {

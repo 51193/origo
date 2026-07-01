@@ -13,7 +13,8 @@ internal sealed class ObserverBindingEntry
     public required ObserverStrategyBase Strategy { get; init; }
     public required IReadOnlyCollection<string> DataKeys { get; init; }
     public Dictionary<string, Action<ISndEntity,
-        Origo.Core.Snd.Metadata.TypedData, Origo.Core.Snd.Metadata.TypedData>> DataWrappers { get; } = new();
+        Origo.Core.Snd.Metadata.TypedData, Origo.Core.Snd.Metadata.TypedData>> DataWrappers
+    { get; } = [];
 
     public ISndEntity? TargetEntity { get; init; }
 

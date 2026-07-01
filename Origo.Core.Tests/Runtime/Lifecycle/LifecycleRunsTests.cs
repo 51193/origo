@@ -163,7 +163,7 @@ public class LifecycleRunsTests
 
         // Missing target level payload in current/ → enter empty session and clear scene (README contract).
         host.CreateEntity(new SndMetaData
-            { Name = "Temp", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
+        { Name = "Temp", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
         Assert.NotEmpty(host.BuildMetaList());
 
         progressRun.SwitchForeground("b");

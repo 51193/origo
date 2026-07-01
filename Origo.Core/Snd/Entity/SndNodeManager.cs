@@ -14,8 +14,8 @@ internal sealed class SndNodeManager : INodeHost
 {
     private readonly INodeFactory _factory;
     private readonly ILogger _logger;
-    private readonly Dictionary<string, INodeHandle> _nodes = new();
-    private Dictionary<string, string> _resources = new();
+    private readonly Dictionary<string, INodeHandle> _nodes = [];
+    private Dictionary<string, string> _resources = [];
     private Func<string, string> _resolveSceneAlias = static s => s;
 
     public SndNodeManager(INodeFactory factory, ILogger logger)
@@ -25,10 +25,7 @@ internal sealed class SndNodeManager : INodeHost
         _logger = logger;
     }
 
-    public void SetSceneAliasResolver(Func<string, string> resolveSceneAlias)
-    {
-        _resolveSceneAlias = resolveSceneAlias ?? (static s => s);
-    }
+    public void SetSceneAliasResolver(Func<string, string> resolveSceneAlias) => _resolveSceneAlias = resolveSceneAlias ?? (static s => s);
 
     public INodeHandle GetNode(string name)
     {

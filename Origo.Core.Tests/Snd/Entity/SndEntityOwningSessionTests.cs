@@ -119,9 +119,9 @@ public class SndEntityOwningSessionTests
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            LifecycleIndices = new List<string>(),
-            ActiveIndices = new List<string>(),
-            ObserverIndices = new List<StrategyMetaData.ObserverBinding>()
+            LifecycleIndices = [],
+            ActiveIndices = [],
+            ObserverIndices = []
         },
         DataMetaData = new DataMetaData()
     };
@@ -132,9 +132,9 @@ public class SndEntityOwningSessionTests
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            LifecycleIndices = new List<string> { idx },
-            ActiveIndices = new List<string>(),
-            ObserverIndices = new List<StrategyMetaData.ObserverBinding>()
+            LifecycleIndices = [idx],
+            ActiveIndices = [],
+            ObserverIndices = []
         },
         DataMetaData = new DataMetaData()
     };
@@ -142,15 +142,11 @@ public class SndEntityOwningSessionTests
     private const string TrackingIdx = "owntest.tracking";
 
     [StrategyIndex(TrackingIdx)]
-    private sealed class TrackingStrategy : LifecycleStrategyBase
+    private sealed class TrackingStrategy(List<string> events) : LifecycleStrategyBase
     {
-        private readonly List<string>? _events;
-        public TrackingStrategy(List<string> events) => _events = events;
+        private readonly List<string>? _events = events;
 
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
-        {
-            _events?.Add($"AfterSpawn:{entity.Name}");
-        }
+        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => _events?.Add($"AfterSpawn:{entity.Name}");
     }
 
     private sealed class StubSessionRun : ISessionRun
@@ -161,7 +157,7 @@ public class SndEntityOwningSessionTests
         public ISessionManager SessionManager => throw new NotSupportedException();
         public IStateMachineContainer GetSessionStateMachines() => throw new NotSupportedException();
         public ISndEntity? FindByName(string name) => null;
-        public IReadOnlyCollection<ISndEntity> GetEntities() => Array.Empty<ISndEntity>();
+        public IReadOnlyCollection<ISndEntity> GetEntities() => [];
         public ISndEntity Spawn(SndMetaData meta) => throw new NotSupportedException();
         public void SpawnMany(params SndMetaData[] metaList) => throw new NotSupportedException();
         public void RequestKillEntity(string entityName) => throw new NotSupportedException();

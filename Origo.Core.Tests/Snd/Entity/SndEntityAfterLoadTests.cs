@@ -96,7 +96,7 @@ public class SndEntityAfterLoadTests
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var nodeFactory = new TestNodeFactory();
 
-        AfterLoadProbeAStrategy.Events = new List<string>();
+        AfterLoadProbeAStrategy.Events = [];
 
         try
         {

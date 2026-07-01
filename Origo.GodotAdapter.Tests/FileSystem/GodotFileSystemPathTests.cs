@@ -6,12 +6,12 @@ namespace Origo.GodotAdapter.Tests.FileSystemTests;
 
 public class GodotFileSystemPathTests
 {
-    public static TheoryData<string> GodotPathResolver_Combine_WithTraversal_Data { get; } = new()
-    {
+    public static TheoryData<string> GodotPathResolver_Combine_WithTraversal_Data { get; } =
+    [
         "../escape",
         "foo/../bar",
         "foo\\..\\bar"
-    };
+    ];
 
     [Fact]
     public void GodotPathResolver_Combine_WithTrailingDotDotNoSlash_Throws()

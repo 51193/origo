@@ -419,16 +419,10 @@ public class SaveIdempotencyTests
          DataSourceFactory.CreateDefaultIoGateway(fs),
          DataSourceFactory.CreatePathResolver(fs));
 
-    private sealed class ThrowingOnReadFileSystem : IFileSystem
+    private sealed class ThrowingOnReadFileSystem(TestFileSystem inner, string throwOnReadPath) : IFileSystem
     {
-        private readonly TestFileSystem _inner;
-        private readonly string _throwOnReadPath;
-
-        public ThrowingOnReadFileSystem(TestFileSystem inner, string throwOnReadPath)
-        {
-            _inner = inner;
-            _throwOnReadPath = throwOnReadPath;
-        }
+        private readonly TestFileSystem _inner = inner;
+        private readonly string _throwOnReadPath = throwOnReadPath;
 
         public bool Exists(string path) => _inner.Exists(path);
         public bool DirectoryExists(string path) => _inner.DirectoryExists(path);

@@ -52,7 +52,7 @@ internal sealed class NullSndContext : ISndContext
 
     public IStateMachineContainer? GetProgressStateMachines() => null;
 
-    public IReadOnlyList<string> ListSaves() => Array.Empty<string>();
+    public IReadOnlyList<string> ListSaves() => [];
 
     public void RequestLoadGame(string saveId) =>
         throw new InvalidOperationException("NullSndContext does not support load operations.");

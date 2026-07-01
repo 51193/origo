@@ -445,7 +445,7 @@ public class ObserverStrategyTests
 
         var bindings = new List<StrategyMetaData.ObserverBinding>
         {
-            new() { Target = "ghost", ObserverIndices = new List<string> { SelfWatchIdx } }
+            new() { Target = "ghost", ObserverIndices = [SelfWatchIdx] }
         };
 
         var ex = Record.Exception(() =>
@@ -505,7 +505,7 @@ public class ObserverStrategyTests
 
     // ── KillPendingEntities observer cleanup (integration) ────────────
 
-    
+
     [Fact]
     public void KillPendingEntities_NoObserverBindings_NoError()
     {
@@ -542,7 +542,7 @@ public class ObserverStrategyTests
 
     // ── ClearAll observer cleanup ─────────────────────────────────────
 
-    
+
     [Fact]
     public void ClearAll_NoObserverBindings_NoError()
     {
@@ -690,7 +690,7 @@ public class ObserverStrategyTests
     private sealed class SelfWatchObserver : ObserverStrategyBase
     {
         private static readonly AsyncLocal<List<DataCall>> _dataChangedCalls = new();
-        public static List<DataCall> DataChangedCalls => _dataChangedCalls.Value ??= new();
+        public static List<DataCall> DataChangedCalls => _dataChangedCalls.Value ??= [];
 
         public override void OnDataChanged(ISndEntity entity, ISndContext ctx, ISndEntity target,
             string dataKey, TypedData oldValue, TypedData newValue)
@@ -722,8 +722,8 @@ public class ObserverStrategyTests
     {
         private static readonly AsyncLocal<List<string>> _hpChangedCalls = new();
         private static readonly AsyncLocal<List<string>> _mpChangedCalls = new();
-        public static List<string> HpChangedCalls => _hpChangedCalls.Value ??= new();
-        public static List<string> MpChangedCalls => _mpChangedCalls.Value ??= new();
+        public static List<string> HpChangedCalls => _hpChangedCalls.Value ??= [];
+        public static List<string> MpChangedCalls => _mpChangedCalls.Value ??= [];
 
         public override void OnDataChanged(ISndEntity entity, ISndContext ctx, ISndEntity target,
             string dataKey, TypedData oldValue, TypedData newValue)
@@ -745,29 +745,17 @@ public class ObserverStrategyTests
     {
         private static readonly AsyncLocal<List<MountCall>> _mountedCalls = new();
         private static readonly AsyncLocal<List<MountCall>> _unmountedCalls = new();
-        public static List<MountCall> MountedCalls => _mountedCalls.Value ??= new();
-        public static List<MountCall> UnmountedCalls => _unmountedCalls.Value ??= new();
+        public static List<MountCall> MountedCalls => _mountedCalls.Value ??= [];
+        public static List<MountCall> UnmountedCalls => _unmountedCalls.Value ??= [];
 
-        public override void OnMounted(ISndEntity entity, ISndContext ctx, ISndEntity target)
+        public override void OnMounted(ISndEntity entity, ISndContext ctx, ISndEntity target) => MountedCalls.Add(new MountCall(entity, target));
+
+        public override void OnUnmounted(ISndEntity entity, ISndContext ctx, ISndEntity target) => UnmountedCalls.Add(new MountCall(entity, target));
+
+        public sealed class MountCall(ISndEntity entity, ISndEntity target)
         {
-            MountedCalls.Add(new MountCall(entity, target));
-        }
-
-        public override void OnUnmounted(ISndEntity entity, ISndContext ctx, ISndEntity target)
-        {
-            UnmountedCalls.Add(new MountCall(entity, target));
-        }
-
-        public sealed class MountCall
-        {
-            public ISndEntity Entity { get; }
-            public ISndEntity Target { get; }
-
-            public MountCall(ISndEntity entity, ISndEntity target)
-            {
-                Entity = entity;
-                Target = target;
-            }
+            public ISndEntity Entity { get; } = entity;
+            public ISndEntity Target { get; } = target;
         }
     }
 
@@ -788,17 +776,11 @@ public class ObserverStrategyTests
     private sealed class ThrowOnMountObserver : ObserverStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _dataChangedCalls = new();
-        public static List<string> DataChangedCalls => _dataChangedCalls.Value ??= new();
+        public static List<string> DataChangedCalls => _dataChangedCalls.Value ??= [];
 
-        public override void OnMounted(ISndEntity entity, ISndContext ctx, ISndEntity target)
-        {
-            throw new InvalidOperationException("OnMounted boom");
-        }
+        public override void OnMounted(ISndEntity entity, ISndContext ctx, ISndEntity target) => throw new InvalidOperationException("OnMounted boom");
 
         public override void OnDataChanged(ISndEntity entity, ISndContext ctx, ISndEntity target,
-            string dataKey, TypedData oldValue, TypedData newValue)
-        {
-            DataChangedCalls.Add(dataKey);
-        }
+            string dataKey, TypedData oldValue, TypedData newValue) => DataChangedCalls.Add(dataKey);
     }
 }

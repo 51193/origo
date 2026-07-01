@@ -18,7 +18,7 @@ public static class SndArchetypeLoader
         ArgumentNullException.ThrowIfNull(fileAccess);
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
-        attributes = new Dictionary<string, string>();
+        attributes = [];
 
         if (!fileAccess.FileExists(path))
             return false;

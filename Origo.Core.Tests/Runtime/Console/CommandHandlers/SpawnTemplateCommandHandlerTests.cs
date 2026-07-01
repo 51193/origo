@@ -40,7 +40,7 @@ public class SpawnTemplateCommandHandlerTests
         var invocation = new CommandInvocation
         {
             Command = "spawn",
-            PositionalArgs = Array.Empty<string>(),
+            PositionalArgs = [],
             NamedArgs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["template"] = "t"

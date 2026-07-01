@@ -15,7 +15,7 @@ namespace Origo.Core.Runtime.StateMachine;
 public sealed class StateMachineContainer : IStateMachineContainer
 {
     private readonly IStateMachineContext _ctx;
-    private readonly List<string> _machineOrder = new();
+    private readonly List<string> _machineOrder = [];
     private readonly Dictionary<string, StackStateMachine> _machines = new(StringComparer.Ordinal);
     private readonly SndStrategyPool _pool;
 
@@ -109,7 +109,7 @@ public sealed class StateMachineContainer : IStateMachineContainer
                 Key = key,
                 PushIndex = sm.PushStrategyIndex,
                 PopIndex = sm.PopStrategyIndex,
-                Stack = sm.Snapshot().ToList()
+                Stack = [.. sm.Snapshot()]
             });
         }
 

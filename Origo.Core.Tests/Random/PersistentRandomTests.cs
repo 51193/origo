@@ -136,10 +136,7 @@ public class PersistentRandomTests
     }
 
     [Fact]
-    public void NullBlackboard_Throws()
-    {
-        Assert.Throws<ArgumentNullException>(() => new PersistentRandom(null!));
-    }
+    public void NullBlackboard_Throws() => Assert.Throws<ArgumentNullException>(() => new PersistentRandom(null!));
 
     [Fact]
     public void CustomStateKeys_UseProvidedKeys()

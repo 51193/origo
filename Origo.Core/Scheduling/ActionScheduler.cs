@@ -8,14 +8,9 @@ namespace Origo.Core.Scheduling;
 ///     基于 ConcurrentActionQueue 的简单调度器实现。
 ///     宿主环境负责在合适的时间调用 Tick 执行排队的动作。
 /// </summary>
-internal sealed class ActionScheduler : IScheduler
+internal sealed class ActionScheduler(ILogger logger) : IScheduler
 {
-    private readonly ConcurrentActionQueue _queue;
-
-    public ActionScheduler(ILogger logger)
-    {
-        _queue = new ConcurrentActionQueue(logger);
-    }
+    private readonly ConcurrentActionQueue _queue = new ConcurrentActionQueue(logger);
 
     public void Enqueue(Action action) => _queue.Enqueue(action);
 

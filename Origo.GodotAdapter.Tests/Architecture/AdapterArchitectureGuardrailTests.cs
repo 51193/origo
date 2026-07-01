@@ -111,10 +111,10 @@ public class AdapterArchitectureGuardrailTests
 
     private sealed class InMemorySndSceneHost : ISndSceneHost
     {
-        private readonly List<ISndEntity> _entities = new();
+        private readonly List<ISndEntity> _entities = [];
         public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
         public ISndEntity? FindByName(string name) => null;
-        public IReadOnlyList<SndMetaData> BuildMetaList() => Array.Empty<SndMetaData>();
+        public IReadOnlyList<SndMetaData> BuildMetaList() => [];
 
         public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
         {

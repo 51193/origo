@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource.Converters;
+using Origo.Core.DataSource.Codec;
 using Origo.Core.Serialization;
 
 namespace Origo.Core.DataSource;

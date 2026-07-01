@@ -17,10 +17,7 @@ public static class NoiseMapGenerator
     ///     生成 Simplex + Worley(70/30) 混合噪声图，返回长度为 <c>size*size</c> 的行优先数组，值域为 <c>0..1</c>。
     /// </summary>
     public static float[] GenerateSimplexWorleyBlendMap(int size, int seed = DefaultSeed,
-        float frequency = DefaultFrequency)
-    {
-        return GenerateSimplexWorleyBlendMap(size, seed, frequency, 1, 2f, 0.5f, 1f);
-    }
+        float frequency = DefaultFrequency) => GenerateSimplexWorleyBlendMap(size, seed, frequency, 1, 2f, 0.5f, 1f);
 
     /// <summary>
     ///     生成 Simplex + Worley(70/30) 混合噪声图（扩展参数版本）。
@@ -47,13 +44,13 @@ public static class NoiseMapGenerator
         var map = new float[size * size];
 
         for (var y = 0; y < size; y++)
-        for (var x = 0; x < size; x++)
-        {
-            var simplexValue = simplex.GetNoise(x, y);
-            var worleyValue = worley.GetNoise(x, y);
-            var mixed = simplexValue * SimplexWeight + worleyValue * WorleyWeight;
-            map[y * size + x] = NormalizeToZeroOne(mixed);
-        }
+            for (var x = 0; x < size; x++)
+            {
+                var simplexValue = simplex.GetNoise(x, y);
+                var worleyValue = worley.GetNoise(x, y);
+                var mixed = simplexValue * SimplexWeight + worleyValue * WorleyWeight;
+                map[y * size + x] = NormalizeToZeroOne(mixed);
+            }
 
         return map;
     }

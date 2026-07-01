@@ -4,16 +4,10 @@ using Xunit;
 
 namespace Origo.Core.Tests.TestSupport;
 
-public class PerfReporter
+public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
 {
-    private readonly TextWriter _output;
-    private readonly ITestOutputHelper? _testOutput;
-
-    public PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
-    {
-        _output = output;
-        _testOutput = testOutput;
-    }
+    private readonly TextWriter _output = output;
+    private readonly ITestOutputHelper? _testOutput = testOutput;
 
     public static PerfReporter ToConsole { get; } = new(Console.Out);
 

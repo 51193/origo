@@ -1,7 +1,7 @@
 using System;
 using Origo.Core.Abstractions.Entity;
 
-namespace Origo.Core.Snd;
+namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
 ///     Extension methods for <see cref="ISndEntity" /> strategy management.

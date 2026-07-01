@@ -3,15 +3,12 @@ using Origo.Core.Abstractions.Console;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.GodotAdapter.Snd;
+using Origo.GodotAdapter;
 
 namespace Origo.GodotAdapter.Console;
 
-internal sealed class PressButtonCommandHandler : CommandHandlerBase
+internal sealed class PressButtonCommandHandler(OrigoRuntime runtime) : CommandHandlerBase(runtime)
 {
-    public PressButtonCommandHandler(OrigoRuntime runtime) : base(runtime)
-    {
-    }
-
     public override string Name => "press_button";
 
     public override string HelpText => "press_button <entity> <path> — 按下指定实体下某路径的 Button 节点";

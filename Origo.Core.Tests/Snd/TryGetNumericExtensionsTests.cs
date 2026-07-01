@@ -95,10 +95,7 @@ public class TryGetNumericExtensionsTests
     {
         private readonly Dictionary<string, TypedData> _data = new(StringComparer.Ordinal);
 
-        public void SetData<T>(string name, T value)
-        {
-            _data[name] = new TypedData(TypedData.UnregisteredKind, 0, value);
-        }
+        public void SetData<T>(string name, T value) => _data[name] = new TypedData(TypedData.UnregisteredKind, 0, value);
 
         public T GetData<T>(string name) => throw new NotImplementedException();
         public (bool found, T? value) TryGetData<T>(string name)

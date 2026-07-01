@@ -2,6 +2,7 @@ using System;
 using Godot;
 using Origo.Core.Snd.Metadata;
 using Origo.GodotAdapter.Snd;
+using Origo.GodotAdapter;
 using Xunit;
 
 namespace Origo.GodotAdapter.Tests.Serialization;

@@ -31,15 +31,9 @@ public class PlanExecutionStrategyBaseTests
         private static readonly AsyncLocal<List<string>?> _beforeRemoveCalls = new();
         public static List<string>? BeforeRemoveCalls { get => _beforeRemoveCalls.Value; set => _beforeRemoveCalls.Value = value; }
 
-        public override void AfterAdd(ISndEntity entity, ISndContext ctx)
-        {
-            AfterAddCalls?.Add(entity.Name);
-        }
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx) => AfterAddCalls?.Add(entity.Name);
 
-        public override void BeforeRemove(ISndEntity entity, ISndContext ctx)
-        {
-            BeforeRemoveCalls?.Add(entity.Name);
-        }
+        public override void BeforeRemove(ISndEntity entity, ISndContext ctx) => BeforeRemoveCalls?.Add(entity.Name);
     }
 
     [StrategyIndex("test.action.fake2")]
@@ -48,10 +42,7 @@ public class PlanExecutionStrategyBaseTests
         private static readonly AsyncLocal<List<string>?> _afterAddCalls = new();
         public static List<string>? AfterAddCalls { get => _afterAddCalls.Value; set => _afterAddCalls.Value = value; }
 
-        public override void AfterAdd(ISndEntity entity, ISndContext ctx)
-        {
-            AfterAddCalls?.Add(entity.Name);
-        }
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx) => AfterAddCalls?.Add(entity.Name);
     }
 
     [StrategyIndex("test.plan_strategy")]
@@ -215,9 +206,9 @@ public class PlanExecutionStrategyBaseTests
     [Fact]
     public void ActionCompletion_InSndEntity_AdvancesToNextStep()
     {
-        FakeActionStrategy.AfterAddCalls = new List<string>();
-        FakeActionStrategy.BeforeRemoveCalls = new List<string>();
-        FakeAction2Strategy.AfterAddCalls = new List<string>();
+        FakeActionStrategy.AfterAddCalls = [];
+        FakeActionStrategy.BeforeRemoveCalls = [];
+        FakeAction2Strategy.AfterAddCalls = [];
 
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);
@@ -239,7 +230,7 @@ public class PlanExecutionStrategyBaseTests
         var meta = new SndMetaData
         {
             Name = "test_entity",
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
             DataMetaData = new DataMetaData(),
             NodeMetaData = new NodeMetaData()
         };
@@ -270,9 +261,9 @@ public class PlanExecutionStrategyBaseTests
     [Fact]
     public void ActionCompletion_LastStep_CompletesPlan()
     {
-        FakeActionStrategy.AfterAddCalls = new List<string>();
-        FakeActionStrategy.BeforeRemoveCalls = new List<string>();
-        FakeAction2Strategy.AfterAddCalls = new List<string>();
+        FakeActionStrategy.AfterAddCalls = [];
+        FakeActionStrategy.BeforeRemoveCalls = [];
+        FakeAction2Strategy.AfterAddCalls = [];
 
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);
@@ -294,7 +285,7 @@ public class PlanExecutionStrategyBaseTests
         var meta = new SndMetaData
         {
             Name = "test_entity",
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
             DataMetaData = new DataMetaData(),
             NodeMetaData = new NodeMetaData()
         };
@@ -329,8 +320,8 @@ public class PlanExecutionStrategyBaseTests
     [Fact]
     public void BeforeRemove_UnmountsActionStrategy()
     {
-        FakeActionStrategy.AfterAddCalls = new List<string>();
-        FakeActionStrategy.BeforeRemoveCalls = new List<string>();
+        FakeActionStrategy.AfterAddCalls = [];
+        FakeActionStrategy.BeforeRemoveCalls = [];
 
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);
@@ -351,7 +342,7 @@ public class PlanExecutionStrategyBaseTests
         var meta = new SndMetaData
         {
             Name = "test_entity",
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
             DataMetaData = new DataMetaData(),
             NodeMetaData = new NodeMetaData()
         };
@@ -406,24 +397,18 @@ public class PlanExecutionStrategyBaseTests
             };
         }
 
-        protected override void OnPlanCompleted(ISndEntity entity)
-        {
-            CompletedCalls?.Add(entity.Name);
-        }
+        protected override void OnPlanCompleted(ISndEntity entity) => CompletedCalls?.Add(entity.Name);
 
-        protected override void OnPlanFailed(ISndEntity entity)
-        {
-            FailedCalls?.Add(entity.Name);
-        }
+        protected override void OnPlanFailed(ISndEntity entity) => FailedCalls?.Add(entity.Name);
     }
 
     [Fact]
     public void ActionFailed_AdvancesPlan_AndTerminates()
     {
-        FailingPlanStrategy.CompletedCalls = new List<string>();
-        FailingPlanStrategy.FailedCalls = new List<string>();
-        FakeActionStrategy.AfterAddCalls = new List<string>();
-        FakeActionStrategy.BeforeRemoveCalls = new List<string>();
+        FailingPlanStrategy.CompletedCalls = [];
+        FailingPlanStrategy.FailedCalls = [];
+        FakeActionStrategy.AfterAddCalls = [];
+        FakeActionStrategy.BeforeRemoveCalls = [];
 
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);
@@ -444,7 +429,7 @@ public class PlanExecutionStrategyBaseTests
         var meta = new SndMetaData
         {
             Name = "test_entity",
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
             DataMetaData = new DataMetaData(),
             NodeMetaData = new NodeMetaData()
         };

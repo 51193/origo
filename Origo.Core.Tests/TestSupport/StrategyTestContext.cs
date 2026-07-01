@@ -22,8 +22,8 @@ namespace Origo.Core.Tests.TestSupport;
 
 internal sealed class StrategyTestContext : ISndContext
 {
-    private readonly List<string> _consoleCommands = new();
-    private readonly List<string> _consoleOutput = new();
+    private readonly List<string> _consoleCommands = [];
+    private readonly List<string> _consoleOutput = [];
     private readonly Queue<Action> _deferred = new();
     private readonly Dictionary<string, SndMetaData> _templates = new(StringComparer.Ordinal);
     private readonly IFileMetaAccess _metaAccess;
@@ -44,11 +44,11 @@ internal sealed class StrategyTestContext : ISndContext
         _converterRegistry = DataSourceFactory.CreateDefaultRegistry(new TypeStringMapping());
     }
 
-    public List<string> SaveRequests { get; } = new();
+    public List<string> SaveRequests { get; } = [];
 
-    public List<string> LoadRequests { get; } = new();
+    public List<string> LoadRequests { get; } = [];
 
-    public List<string> LevelSwitchRequests { get; } = new();
+    public List<string> LevelSwitchRequests { get; } = [];
 
     public int DeferredActionCount { get; private set; }
 
@@ -107,7 +107,7 @@ internal sealed class StrategyTestContext : ISndContext
 
     public IStateMachineContainer? GetProgressStateMachines() => null;
 
-    public IReadOnlyList<string> ListSaves() => Array.Empty<string>();
+    public IReadOnlyList<string> ListSaves() => [];
 
     public void RequestLoadGame(string saveId) => LoadRequests.Add(saveId);
 
@@ -240,7 +240,7 @@ internal sealed class MinimalTestEntity : ISndEntity
     public INodeHandle GetNode(string name) =>
         throw new NotSupportedException("GetNode is not supported in strategy unit tests.");
 
-    public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
+    public IReadOnlyCollection<string> GetNodeNames() => [];
 
     public void AddStrategy(string index)
     {
@@ -346,7 +346,7 @@ internal sealed class TestSessionRun : ISessionRun
 
 internal sealed class TestSceneHost : ISndSceneHost, IOwningSessionBindable
 {
-    private readonly List<ISndEntity> _entities = new();
+    private readonly List<ISndEntity> _entities = [];
     private ISessionRun? _owningSession;
 
     public void SetOwningSession(ISessionRun session)
@@ -371,7 +371,7 @@ internal sealed class TestSceneHost : ISndSceneHost, IOwningSessionBindable
     {
     }
 
-    public IReadOnlyList<SndMetaData> BuildMetaList() => Array.Empty<SndMetaData>();
+    public IReadOnlyList<SndMetaData> BuildMetaList() => [];
 
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {

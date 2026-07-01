@@ -401,14 +401,9 @@ public class SavePathPolicyContractTests
 
     // ── Custom ISavePathPolicy that prefixes all directory segments ──
 
-    private sealed class TestPrefixedPathPolicy : ISavePathPolicy
+    private sealed class TestPrefixedPathPolicy(string prefix) : ISavePathPolicy
     {
-        private readonly string _prefix;
-
-        public TestPrefixedPathPolicy(string prefix)
-        {
-            _prefix = prefix;
-        }
+        private readonly string _prefix = prefix;
 
         public string GetCurrentDirectory() => $"{_prefix}current";
 
@@ -446,7 +441,7 @@ public class SavePathPolicyContractTests
         private static readonly AsyncLocal<List<List<string>>?> _observedScenes = new();
         internal static List<List<string>>? ObservedScenes => _observedScenes.Value;
 
-        public static void Reset() => _observedScenes.Value = new List<List<string>>();
+        public static void Reset() => _observedScenes.Value = [];
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -464,7 +459,7 @@ public class SavePathPolicyContractTests
         private static readonly AsyncLocal<List<string?>?> _observedValues = new();
         internal static List<string?>? ObservedValues => _observedValues.Value;
 
-        public static void Reset() => _observedValues.Value = new List<string?>();
+        public static void Reset() => _observedValues.Value = [];
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {

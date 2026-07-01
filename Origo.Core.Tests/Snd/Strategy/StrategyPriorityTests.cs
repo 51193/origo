@@ -549,7 +549,7 @@ internal static class Rec
 {
     private static readonly AsyncLocal<List<string>> _log = new();
 
-    public static void BeginTest() => _log.Value = new List<string>();
+    public static void BeginTest() => _log.Value = [];
 
     public static IReadOnlyList<string> Log =>
         _log.Value ?? throw new InvalidOperationException("Call Rec.BeginTest() before test");

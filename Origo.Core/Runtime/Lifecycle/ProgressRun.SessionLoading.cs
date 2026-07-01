@@ -218,7 +218,7 @@ internal sealed partial class ProgressRun
         {
             var (found, raw) = _owner.ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
             if (!found || string.IsNullOrWhiteSpace(raw))
-                return new List<SessionTopologyCodec.SessionDescriptor>();
+                return [];
 
             return SessionTopologyCodec.Parse(raw);
         }

@@ -7,7 +7,7 @@ namespace Origo.Core.Snd.Strategy;
 
 internal static class ObserverStrategyMetadata
 {
-    private static readonly Dictionary<Type, IReadOnlyCollection<string>> Cache = new();
+    private static readonly Dictionary<Type, IReadOnlyCollection<string>> Cache = [];
 
     internal static IReadOnlyCollection<string> GetDataKeys(Type observerStrategyType)
     {
@@ -17,7 +17,7 @@ internal static class ObserverStrategyMetadata
         var attributes = observerStrategyType.GetCustomAttributes<ObserveDataAttribute>(false);
         if (attributes is null)
         {
-            Cache[observerStrategyType] = Array.Empty<string>();
+            Cache[observerStrategyType] = [];
             return Cache[observerStrategyType];
         }
 

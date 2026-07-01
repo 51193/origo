@@ -32,10 +32,7 @@ internal sealed class SaveFileHandle
         PathPolicy = pathPolicy ?? new DefaultSavePathPolicy();
     }
 
-    public string GetAbsolutePath(string relativePath)
-    {
-        return PathResolver.CombinePath(SaveRootPath, relativePath);
-    }
+    public string GetAbsolutePath(string relativePath) => PathResolver.CombinePath(SaveRootPath, relativePath);
 
     public void EnsureParentDirectory(string filePath)
     {
@@ -56,7 +53,7 @@ internal sealed class SaveFileHandle
 
         if (fullPath.StartsWith(basePrefix, StringComparison.Ordinal))
         {
-            var relative = fullPath.Substring(basePrefix.Length);
+            var relative = fullPath[basePrefix.Length..];
             RejectPathTraversal(relative);
             return relative;
         }
@@ -77,7 +74,7 @@ internal sealed class SaveFileHandle
         var slashIndex = trimmed.LastIndexOf(sep);
         var backslashIndex = trimmed.LastIndexOf('\\');
         var lastSeparator = Math.Max(slashIndex, backslashIndex);
-        return lastSeparator < 0 ? trimmed : trimmed.Substring(lastSeparator + 1);
+        return lastSeparator < 0 ? trimmed : trimmed[(lastSeparator + 1)..];
     }
 
     public static void RejectPathTraversal(string pathSegment)

@@ -277,7 +277,7 @@ public class SessionDecouplingTests
         private static readonly AsyncLocal<List<string?>?> _observedMarkers = new();
         internal static List<string?>? ObservedMarkers { get => _observedMarkers.Value; set => _observedMarkers.Value = value; }
 
-        public static void Reset() => ObservedMarkers = new List<string?>();
+        public static void Reset() => ObservedMarkers = [];
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -298,7 +298,7 @@ public class SessionDecouplingTests
         private static readonly AsyncLocal<List<List<string>>?> _observedEntityNames = new();
         internal static List<List<string>>? ObservedEntityNames { get => _observedEntityNames.Value; set => _observedEntityNames.Value = value; }
 
-        public static void Reset() => ObservedEntityNames = new List<List<string>>();
+        public static void Reset() => ObservedEntityNames = [];
 
         public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
         {
@@ -317,14 +317,9 @@ public class SessionDecouplingTests
 
     // ── Custom ISavePathPolicy that prefixes all directory segments ──
 
-    private sealed class PrefixedSavePathPolicy : ISavePathPolicy
+    private sealed class PrefixedSavePathPolicy(string prefix) : ISavePathPolicy
     {
-        private readonly string _prefix;
-
-        public PrefixedSavePathPolicy(string prefix)
-        {
-            _prefix = prefix;
-        }
+        private readonly string _prefix = prefix;
 
         public string GetCurrentDirectory() => $"{_prefix}current";
 
@@ -356,14 +351,9 @@ public class SessionDecouplingTests
 
     // ── Tracking wrapper for ISaveStorageService ──
 
-    private sealed class TrackingSaveStorageService : ISaveStorageService
+    private sealed class TrackingSaveStorageService(DefaultSaveStorageService inner) : ISaveStorageService
     {
-        private readonly DefaultSaveStorageService _inner;
-
-        public TrackingSaveStorageService(DefaultSaveStorageService inner)
-        {
-            _inner = inner;
-        }
+        private readonly DefaultSaveStorageService _inner = inner;
 
         public int WriteLevelPayloadOnlyCalls { get; private set; }
         public LevelPayload? LastWrittenPayload { get; private set; }

@@ -34,7 +34,7 @@ public class SndEntityAndAutoInitializerTests
         {
             Name = "E",
             NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string> { ["root"] = "res://e.tscn" } },
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string>() },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
             DataMetaData = new DataMetaData()
         });
 
@@ -50,14 +50,14 @@ public class SndEntityAndAutoInitializerTests
         var logger = new TestLogger();
         var context = CreateContext(logger);
         var nodeFactory = new TestNodeFactory();
-        LifecycleStrategy.Bind(new List<string>());
+        LifecycleStrategy.Bind([]);
         context.Runtime.SndWorld.RegisterStrategy(() => new LifecycleStrategy());
 
         var observerTopology = new ObserverTopology(context.Runtime.SndWorld.StrategyPool, logger);
         observerTopology.BindContext(context);
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
         entity.SpawnSingle(new SndMetaData
-            { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
+        { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 
         entity.AddStrategy(LifecycleStrategyIndex);
         Assert.Contains(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
@@ -79,7 +79,7 @@ public class SndEntityAndAutoInitializerTests
         observerTopology.BindContext(context);
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
         entity.SpawnSingle(new SndMetaData
-            { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
+        { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 
         Assert.Throws<InvalidOperationException>(() => entity.GetData<int>("missing"));
     }

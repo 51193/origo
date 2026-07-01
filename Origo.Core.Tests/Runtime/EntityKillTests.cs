@@ -27,7 +27,7 @@ public class EntityKillTests
         var logger = new TestLogger();
         var host = CreateFullMemoryHostWithEntity(logger);
 
-        KillProbeStrategy.Events = new List<string>();
+        KillProbeStrategy.Events = [];
         try
         {
             host.RequestKillEntity("E");
@@ -59,12 +59,16 @@ public class EntityKillTests
         var host = ((SessionRun)session).SceneHost;
         host.CreateEntity(new SndMetaData
         {
-            Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
+            Name = "A",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
         host.CreateEntity(new SndMetaData
         {
-            Name = "B", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
+            Name = "B",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
 
@@ -88,7 +92,9 @@ public class EntityKillTests
         var host = ((SessionRun)session).SceneHost;
         host.CreateEntity(new SndMetaData
         {
-            Name = "A", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData(),
+            Name = "A",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
 
@@ -147,7 +153,7 @@ public class EntityKillTests
         var (ctx, host, _) = SetupKillTest(registerKillProbe: true);
         SpawnEntity(host, "E");
 
-        KillProbeStrategy.Events = new List<string>();
+        KillProbeStrategy.Events = [];
         try
         {
             var session = ctx.Runtime.SessionManager.ForegroundSession!;
@@ -172,7 +178,7 @@ public class EntityKillTests
         var events = new List<string>();
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
 
-        KillProbeStrategy.Events = new List<string>();
+        KillProbeStrategy.Events = [];
         try
         {
             ctx.EnqueueBusinessDeferred(() =>
@@ -237,7 +243,7 @@ public class EntityKillTests
         var host = CreateFullMemoryHostWithEntity(logger);
         Assert.NotNull(host.FindByName("E"));
 
-        KillProbeStrategy.Events = new List<string>();
+        KillProbeStrategy.Events = [];
         try
         {
             var entity = host.FindByName("E");
@@ -368,7 +374,7 @@ public class EntityKillTests
                 Name = "E",
                 NodeMetaData = new NodeMetaData(),
                 StrategyMetaData = new StrategyMetaData
-                    { LifecycleIndices = new List<string> { "quit.test.probe" }, ActiveIndices = new List<string>() },
+                    { LifecycleIndices = ["quit.test.probe"], ActiveIndices = [] },
                 DataMetaData = new DataMetaData()
             }
         });
@@ -507,8 +513,8 @@ public class EntityKillTests
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData
             {
-                LifecycleIndices = new List<string> { "kill.test.lifecycle" },
-                ActiveIndices = new List<string>()
+                LifecycleIndices = ["kill.test.lifecycle"],
+                ActiveIndices = []
             },
             DataMetaData = new DataMetaData()
         };
@@ -539,7 +545,7 @@ public class EntityKillTests
                 Name = "E",
                 NodeMetaData = new NodeMetaData(),
                 StrategyMetaData = new StrategyMetaData
-                    { LifecycleIndices = new List<string> { "kill.test.lifecycle" }, ActiveIndices = new List<string>() },
+                    { LifecycleIndices = ["kill.test.lifecycle"], ActiveIndices = [] },
                 DataMetaData = new DataMetaData()
             }
         });

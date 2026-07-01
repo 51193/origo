@@ -25,7 +25,7 @@ public class InvokeStrategyCommandHandlerTests
     public void InvokeStrategy_NoInput_ReturnsResult()
     {
         var (runtime, host, output) = Setup();
-        LoadEntities(host, new[] { QueryNameIndex });
+        LoadEntities(host, [QueryNameIndex]);
         var handler = new InvokeStrategyCommandHandler(runtime);
 
         var ok = handler.TryExecute(CreateInvocation("E", QueryNameIndex),
@@ -40,7 +40,7 @@ public class InvokeStrategyCommandHandlerTests
     public void InvokeStrategy_WithInput_PassesToStrategy()
     {
         var (runtime, host, output) = Setup();
-        LoadEntities(host, new[] { CmdWithInputIndex });
+        LoadEntities(host, [CmdWithInputIndex]);
         var handler = new InvokeStrategyCommandHandler(runtime);
 
         var ok = handler.TryExecute(
@@ -69,7 +69,7 @@ public class InvokeStrategyCommandHandlerTests
     public void InvokeStrategy_NotActiveStrategy_OutputsError()
     {
         var (runtime, host, output) = Setup();
-        LoadEntities(host, Array.Empty<string>());
+        LoadEntities(host, []);
         var handler = new InvokeStrategyCommandHandler(runtime);
 
         var ok = handler.TryExecute(CreateInvocation("E", "not.exist"),
@@ -115,8 +115,8 @@ public class InvokeStrategyCommandHandlerTests
                 NodeMetaData = new NodeMetaData(),
                 StrategyMetaData = new StrategyMetaData
                 {
-                    LifecycleIndices = new List<string>(),
-                    ActiveIndices = new List<string>(activeIndices)
+                    LifecycleIndices = [],
+                    ActiveIndices = [.. activeIndices]
                 },
                 DataMetaData = new DataMetaData()
             }
@@ -128,7 +128,7 @@ public class InvokeStrategyCommandHandlerTests
     {
         var args = input is not null
             ? new[] { entityName, strategyIndex, input }
-            : new[] { entityName, strategyIndex };
+            : [entityName, strategyIndex];
         return new CommandInvocation
         {
             Command = "invoke_strategy",
@@ -155,7 +155,7 @@ public class InvokeStrategyCommandHandlerTests
 
     private sealed class CollectingConsoleOutputChannel : IConsoleOutputChannel
     {
-        private readonly List<string> _entries = new();
+        private readonly List<string> _entries = [];
 
         public IReadOnlyList<string> Entries => _entries;
 

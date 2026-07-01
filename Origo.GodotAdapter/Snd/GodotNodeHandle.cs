@@ -3,16 +3,10 @@ using Origo.Core.Abstractions.Node;
 
 namespace Origo.GodotAdapter.Snd;
 
-internal sealed class GodotNodeHandle : INodeHandle
+internal sealed class GodotNodeHandle(Node node) : INodeHandle
 {
-    private readonly Node _node;
-    private readonly string _cachedName;
-
-    public GodotNodeHandle(Node node)
-    {
-        _node = node;
-        _cachedName = node.Name;
-    }
+    private readonly Node _node = node;
+    private readonly string _cachedName = node.Name;
 
     public string Name => _cachedName;
 

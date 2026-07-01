@@ -24,8 +24,7 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     internal void BindSession(ISessionRun session)
     {
         ThrowIfReleasedFromManager();
-        if (_entity is not null)
-            _entity.BindSession(session);
+        _entity?.BindSession(session);
     }
     public ISessionRun OwningSession => _entity?.OwningSession ?? throw new InvalidOperationException("GodotSndEntity has no backing SndEntity.");
     private bool _releasedFromManager;

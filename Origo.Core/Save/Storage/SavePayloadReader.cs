@@ -272,7 +272,7 @@ internal static class SavePayloadReader
         if (!leaf.StartsWith(SavePathLayout.LevelDirectoryPrefix, StringComparison.Ordinal))
             return null;
 
-        var levelId = leaf.Substring(SavePathLayout.LevelDirectoryPrefix.Length);
+        var levelId = leaf[SavePathLayout.LevelDirectoryPrefix.Length..];
         return string.IsNullOrWhiteSpace(levelId) ? null : levelId;
     }
 

@@ -144,8 +144,8 @@ public class SaveMetaContributorRegistrationTests
         SndContextTestHelper.SetupProgressRun(ctx, fs);
         string? receivedSaveId = null;
         string? receivedLevelId = null;
-        bool hasProgress = false;
-        bool hasSession = false;
+        var hasProgress = false;
+        var hasSession = false;
 
         ctx.RegisterSaveMetaContributor(context =>
         {
@@ -192,10 +192,7 @@ public class SaveMetaContributorRegistrationTests
 
     private sealed class KeyValueContributor(string key, string value) : ISaveMetaContributor
     {
-        public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context)
-        {
-            return new Dictionary<string, string> { [key] = value };
-        }
+        public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context) => new Dictionary<string, string> { [key] = value };
     }
 }
 
@@ -213,10 +210,7 @@ public class SaveMetaNullAndSessionContextTests
 
     private sealed class StubContributor : ISaveMetaContributor
     {
-        public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context)
-        {
-            return new Dictionary<string, string>();
-        }
+        public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context) => new Dictionary<string, string>();
     }
 
 }

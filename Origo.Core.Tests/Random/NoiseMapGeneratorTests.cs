@@ -7,7 +7,7 @@ namespace Origo.Core.Tests;
 
 public class NoiseMapGeneratorTests
 {
-    public static TheoryData<int> GenerateSimplexWorleyBlendMap_InvalidSize_Data { get; } = new() { 0, -4 };
+    public static TheoryData<int> GenerateSimplexWorleyBlendMap_InvalidSize_Data { get; } = [0, -4];
 
     [Fact]
     public void GenerateSimplexWorleyBlendMap_ReturnsExpectedLengthAndRange()

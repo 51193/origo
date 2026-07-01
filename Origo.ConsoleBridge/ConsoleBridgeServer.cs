@@ -24,7 +24,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private readonly IConsoleInputSource _input;
     private readonly ConsoleBridgeOptions _options;
     private readonly IConsoleOutputChannel _output;
-    private readonly List<string> _pendingOutput = new();
+    private readonly List<string> _pendingOutput = [];
 
     private readonly object _writerLock = new();
     private readonly CancellationTokenSource _cts = new();

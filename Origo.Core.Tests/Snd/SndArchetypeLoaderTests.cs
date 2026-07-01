@@ -9,10 +9,7 @@ namespace Origo.Core.Tests;
 
 public class SndArchetypeLoaderTests
 {
-    private static TestArchetypeFileSystem CreateFileSystem(string content)
-    {
-        return new TestArchetypeFileSystem(content);
-    }
+    private static TestArchetypeFileSystem CreateFileSystem(string content) => new TestArchetypeFileSystem(content);
 
     [Fact]
     public void TryLoad_ValidMapFile_ReturnsAttributes()
@@ -128,11 +125,9 @@ public class SndArchetypeLoaderTests
         Assert.Equal("hero", val);
     }
 
-    private sealed class TestArchetypeFileSystem : ISndFileAccess
+    private sealed class TestArchetypeFileSystem(string? content) : ISndFileAccess
     {
-        private readonly string? _content;
-
-        public TestArchetypeFileSystem(string? content) => _content = content;
+        private readonly string? _content = content;
 
         public bool FileExists(string path) => _content is not null;
 
@@ -190,7 +185,7 @@ public class SndArchetypeLoaderTests
     private sealed class TestArchetypeEntity : Origo.Core.Abstractions.Entity.ISndEntity
     {
         public ISessionRun OwningSession { get; set; } = null!;
-        private readonly Dictionary<string, object> _data = new();
+        private readonly Dictionary<string, object> _data = [];
 
         public string Name => "test";
         public bool IsPendingKill => false;
@@ -208,8 +203,8 @@ public class SndArchetypeLoaderTests
         public void MountObserverStrategy(string targetName, string observerIndex) { }
 
         public void UnmountObserverStrategy(string targetName, string observerIndex) { }
-    public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
-    public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
+        public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
+        public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
 
         public Origo.Core.Abstractions.Node.INodeHandle GetNode(string name) => throw new System.NotImplementedException();
         public System.Collections.Generic.IReadOnlyCollection<string> GetNodeNames() => throw new System.NotImplementedException();

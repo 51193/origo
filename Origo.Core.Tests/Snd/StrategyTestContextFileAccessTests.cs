@@ -12,11 +12,9 @@ namespace Origo.Core.Tests;
 /// </summary>
 public class StrategyTestContextFileAccessTests
 {
-    private static ISndFileAccess AsFileAccess(StrategyTestContext ctx)
-    {
+    private static ISndFileAccess AsFileAccess(StrategyTestContext ctx) =>
         // StrategyTestContext is internal; ISndContext provides ISndFileAccess.
-        return (ISndFileAccess)(ISndContext)ctx;
-    }
+        (ISndFileAccess)(ISndContext)ctx;
 
     // ── FileExists ──
 

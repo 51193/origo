@@ -18,15 +18,11 @@ internal sealed class NullNodeFactory : INodeFactory
 ///     纯内存 <see cref="INodeHandle" /> 实现，不绑定引擎节点。
 ///     所有操作均为空操作，仅用于 Core 层内存场景。
 /// </summary>
-internal sealed class NullNodeHandle : INodeHandle
+internal sealed class NullNodeHandle(string name) : INodeHandle
 {
-    public NullNodeHandle(string name)
-    {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-    }
 
     /// <inheritdoc />
-    public string Name { get; }
+    public string Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
 
     /// <inheritdoc />
     public void Free()

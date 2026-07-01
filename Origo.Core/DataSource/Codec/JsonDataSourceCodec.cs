@@ -2,19 +2,14 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 
-namespace Origo.Core.DataSource;
+namespace Origo.Core.DataSource.Codec;
 
 /// <summary>
 ///     基于 System.Text.Json 的 JSON 编解码器，支持延迟展开。
 /// </summary>
-internal sealed class JsonDataSourceCodec : IDataSourceCodec
+internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSourceCodec
 {
-    private readonly bool _writeIndented;
-
-    public JsonDataSourceCodec(bool writeIndented = true)
-    {
-        _writeIndented = writeIndented;
-    }
+    private readonly bool _writeIndented = writeIndented;
 
     public DataSourceNode Decode(string rawText) => DataSourceNode.CreateLazy(rawText, ExpandOneLevel);
 

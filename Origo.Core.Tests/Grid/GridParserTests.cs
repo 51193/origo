@@ -53,8 +53,5 @@ public class GridParserTests
     }
 
     [Fact]
-    public void ParseCoords_NullInput_ReturnsNull()
-    {
-        Assert.Null(GridParser.ParseCoords(null!));
-    }
+    public void ParseCoords_NullInput_ReturnsNull() => Assert.Null(GridParser.ParseCoords(null!));
 }

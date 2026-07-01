@@ -545,7 +545,7 @@ public class DataSourceTests
             },
             StrategyMetaData = new StrategyMetaData
             {
-                LifecycleIndices = new List<string> { "idle", "walk" }
+                LifecycleIndices = ["idle", "walk"]
             },
             DataMetaData = new DataMetaData
             {
@@ -631,23 +631,23 @@ public class DataSourceTests
 
         var original = new StateMachineContainerPayload
         {
-            Machines = new List<StateMachineEntryPayload>
-            {
+            Machines =
+            [
                 new()
                 {
                     Key = "main",
                     PushIndex = "start",
                     PopIndex = "end",
-                    Stack = new List<string> { "stateA", "stateB" }
+                    Stack = ["stateA", "stateB"]
                 },
                 new()
                 {
                     Key = "sub",
                     PushIndex = "init",
                     PopIndex = "",
-                    Stack = new List<string> { "only" }
+                    Stack = ["only"]
                 }
-            }
+            ]
         };
 
         var node = registry.Write(original);
@@ -784,7 +784,7 @@ public class DataSourceTests
         var original = new SndMetaData
         {
             Name = "npc",
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = new List<string> { "patrol" } },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["patrol"] },
             DataMetaData = new DataMetaData
             {
                 Pairs = new Dictionary<string, TypedData>
@@ -1374,7 +1374,7 @@ public class DataSourceTests
     [Fact]
     public void LazyNode_WhenExpanderThrows_NodeCanStillBeDisposed()
     {
-        DataSourceNode expander(string raw)
+        static DataSourceNode expander(string raw)
         {
             throw new InvalidOperationException("Always fails.");
         }

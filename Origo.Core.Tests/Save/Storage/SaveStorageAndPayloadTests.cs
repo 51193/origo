@@ -489,15 +489,10 @@ public class SaveStorageAndPayloadTests
     ///     <see cref="IFileSystem.Copy" /> when the destination path contains the configured substring.
     ///     Used to simulate snapshot copy failures.
     /// </summary>
-    private sealed class FailOnCopyFileSystem : IFileSystem
+    private sealed class FailOnCopyFileSystem(string failTargetSubstring) : IFileSystem
     {
-        private readonly string _failTargetSubstring;
+        private readonly string _failTargetSubstring = failTargetSubstring;
         private readonly TestFileSystem _inner = new();
-
-        public FailOnCopyFileSystem(string failTargetSubstring)
-        {
-            _failTargetSubstring = failTargetSubstring;
-        }
 
         public bool Exists(string path) => _inner.Exists(path);
 

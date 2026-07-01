@@ -21,7 +21,7 @@ internal static class SaveStorageFacade
         ArgumentNullException.ThrowIfNull(handle);
 
         if (!handle.MetaAccess.DirectoryExists(handle.SaveRootPath))
-            return Array.Empty<string>();
+            return [];
 
         var result = new List<string>();
         foreach (var dir in handle.MetaAccess.EnumerateDirectories(handle.SaveRootPath))
@@ -29,7 +29,7 @@ internal static class SaveStorageFacade
             var leaf = SaveFileHandle.GetLeafDirectoryName(dir);
             if (!leaf.StartsWith(SaveDirectoryPrefix, StringComparison.Ordinal))
                 continue;
-            var id = leaf.Substring(SaveDirectoryPrefix.Length);
+            var id = leaf[SaveDirectoryPrefix.Length..];
             if (id.Length == 0)
                 continue;
             result.Add(id);
@@ -58,10 +58,7 @@ internal static class SaveStorageFacade
         return list;
     }
 
-    public static void WriteSavePayloadToCurrent(SaveFileHandle handle, SaveGamePayload payload)
-    {
-        SavePayloadWriter.WriteToCurrent(handle, payload);
-    }
+    public static void WriteSavePayloadToCurrent(SaveFileHandle handle, SaveGamePayload payload) => SavePayloadWriter.WriteToCurrent(handle, payload);
 
     public static void WriteSavePayloadToCurrentThenSnapshot(
         SaveFileHandle handle,
@@ -131,34 +128,22 @@ internal static class SaveStorageFacade
         SaveFileHandle handle,
         string baseDirectoryRel,
         LevelPayload levelPayload,
-        bool overwrite = true)
-    {
-        SavePayloadWriter.WriteLevelPayloadOnly(handle, baseDirectoryRel, levelPayload, overwrite);
-    }
+        bool overwrite = true) => SavePayloadWriter.WriteLevelPayloadOnly(handle, baseDirectoryRel, levelPayload, overwrite);
 
     public static SaveGamePayload ReadSavePayloadFromCurrent(
         SaveFileHandle handle,
         string saveId,
         string activeLevelId,
-        ILogger? logger = null)
-    {
-        return SavePayloadReader.ReadFromCurrent(handle, saveId, activeLevelId, logger);
-    }
+        ILogger? logger = null) => SavePayloadReader.ReadFromCurrent(handle, saveId, activeLevelId, logger);
 
     public static SaveGamePayload ReadSavePayloadFromSnapshot(
         SaveFileHandle handle,
         string saveId,
-        string activeLevelId)
-    {
-        return SavePayloadReader.ReadFromSnapshot(handle, saveId, activeLevelId);
-    }
+        string activeLevelId) => SavePayloadReader.ReadFromSnapshot(handle, saveId, activeLevelId);
 
     public static DataSourceNode? ReadProgressNodeFromSnapshot(
         SaveFileHandle handle,
-        string saveId)
-    {
-        return SavePayloadReader.ReadProgressNodeFromSnapshot(handle, saveId);
-    }
+        string saveId) => SavePayloadReader.ReadProgressNodeFromSnapshot(handle, saveId);
 
     public static void SnapshotCurrentToSave(
         SaveFileHandle handle,
@@ -221,7 +206,7 @@ internal static class SaveStorageFacade
                 var relFromRoot = handle.GetRelativePath(srcAbs);
                 var prefix = currentRel + "/";
                 var relFromCurrent = relFromRoot.StartsWith(prefix, StringComparison.Ordinal)
-                    ? relFromRoot.Substring(prefix.Length)
+                    ? relFromRoot[prefix.Length..]
                     : relFromRoot;
                 var destRel = $"{tempRel}/{relFromCurrent}";
                 var destAbs = handle.GetAbsolutePath(destRel);
@@ -284,7 +269,7 @@ internal static class SaveStorageFacade
             var relFromRoot = handle.GetRelativePath(srcFileAbs);
             var prefix = srcRel + "/";
             var relFromSrc = relFromRoot.StartsWith(prefix, StringComparison.Ordinal)
-                ? relFromRoot.Substring(prefix.Length)
+                ? relFromRoot[prefix.Length..]
                 : relFromRoot;
             var destFileRel = $"{destRel}/{relFromSrc}";
             var destFileAbs = handle.GetAbsolutePath(destFileRel);

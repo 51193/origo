@@ -47,15 +47,10 @@ public class ActiveStrategyExtensionsTests
         public int Result { get; set; }
     }
 
-    private sealed class StubActiveStrategyEntity : Origo.Core.Abstractions.Entity.ISndEntity
+    private sealed class StubActiveStrategyEntity(System.Func<object?, object?> invokeResult) : Origo.Core.Abstractions.Entity.ISndEntity
     {
         public ISessionRun OwningSession { get; set; } = null!;
-        private readonly System.Func<object?, object?> _invokeResult;
-
-        public StubActiveStrategyEntity(System.Func<object?, object?> invokeResult)
-        {
-            _invokeResult = invokeResult;
-        }
+        private readonly System.Func<object?, object?> _invokeResult = invokeResult;
 
         public string Name => "stub";
         public bool IsPendingKill => false;
@@ -69,8 +64,8 @@ public class ActiveStrategyExtensionsTests
         public void MountObserverStrategy(string targetName, string observerIndex) { }
 
         public void UnmountObserverStrategy(string targetName, string observerIndex) { }
-    public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
-    public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
+        public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
+        public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
         public Origo.Core.Abstractions.Node.INodeHandle GetNode(string name) => throw new System.NotImplementedException();
         public IReadOnlyCollection<string> GetNodeNames() => throw new System.NotImplementedException();
         public void AddStrategy(string index) => throw new System.NotImplementedException();

@@ -315,9 +315,8 @@ internal sealed class SessionManager : ISessionManager
 
     private string[] EnumerateManagedKeys(bool includeForeground)
     {
-        return _sessions.Keys.Where(key =>
-                includeForeground || !string.Equals(key, ISessionManager.ForegroundKey, StringComparison.Ordinal))
-            .ToArray();
+        return [.. _sessions.Keys.Where(key =>
+                includeForeground || !string.Equals(key, ISessionManager.ForegroundKey, StringComparison.Ordinal))];
     }
 
     private void DisposeMountedSession(string key, MountedSession mounted)

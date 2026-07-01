@@ -26,7 +26,7 @@ public class JsonAndMappingsTests
             Name = "Hero",
             NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string> { ["body"] = "hero_prefab" } },
             StrategyMetaData = new StrategyMetaData
-                { LifecycleIndices = new List<string> { StrategyMove, StrategyAttack } },
+            { LifecycleIndices = [StrategyMove, StrategyAttack] },
             DataMetaData = new DataMetaData
             {
                 Pairs = new Dictionary<string, TypedData>

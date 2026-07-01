@@ -17,7 +17,7 @@ namespace Origo.GodotAdapter.Tests.TestSupport;
 
 internal sealed class TestSndSceneHost : ISndSceneHost
 {
-    private readonly Dictionary<string, ISndEntity> _entities = new();
+    private readonly Dictionary<string, ISndEntity> _entities = [];
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => _entities.Values;
 
@@ -33,7 +33,7 @@ internal sealed class TestSndSceneHost : ISndSceneHost
 
     public void RemoveAllEntities() => _entities.Clear();
 
-    public IReadOnlyList<SndMetaData> BuildMetaList() => Array.Empty<SndMetaData>();
+    public IReadOnlyList<SndMetaData> BuildMetaList() => [];
 
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
@@ -81,7 +81,7 @@ internal sealed class InMemorySndEntity : ISndEntity
 
     public INodeHandle GetNode(string name) =>
         throw new InvalidOperationException($"Node '{name}' not found.");
-    public IReadOnlyCollection<string> GetNodeNames() => Array.Empty<string>();
+    public IReadOnlyCollection<string> GetNodeNames() => [];
     public void AddStrategy(string index) { }
     public void RemoveStrategy(string index) { }
     public void AddActiveStrategy(string index) { }
@@ -91,10 +91,10 @@ internal sealed class InMemorySndEntity : ISndEntity
 
 internal sealed class TestLogger : ILogger
 {
-    public readonly List<string> Debugs = new();
-    public readonly List<string> Errors = new();
-    public readonly List<string> Infos = new();
-    public readonly List<string> Warnings = new();
+    public readonly List<string> Debugs = [];
+    public readonly List<string> Errors = [];
+    public readonly List<string> Infos = [];
+    public readonly List<string> Warnings = [];
 
     public void Log(LogLevel level, string tag, string message)
     {

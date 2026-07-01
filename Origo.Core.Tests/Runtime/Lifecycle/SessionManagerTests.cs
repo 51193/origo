@@ -337,8 +337,8 @@ public class SessionManagerTests
         SetupForegroundSession(ctx);
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
-        session.SpawnMany(new[]
-        {
+        session.SpawnMany(
+        [
             new SndMetaData
             {
                 Name = "a1", NodeMetaData = new NodeMetaData(),
@@ -349,7 +349,7 @@ public class SessionManagerTests
                 Name = "a2", NodeMetaData = new NodeMetaData(),
                 StrategyMetaData = new StrategyMetaData(), DataMetaData = new DataMetaData()
             }
-        });
+        ]);
 
         Assert.Equal(2, session.GetEntities().Count);
         Assert.NotNull(session.FindByName("a1"));

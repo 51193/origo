@@ -8,16 +8,10 @@ namespace Origo.SourceGeneration.Tests.TestSupport;
 ///     Prints performance comparison tables to both the console and the xUnit test
 ///     output so benchmark results are visible in every CI run.
 /// </summary>
-public class PerfReporter
+public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
 {
-    private readonly TextWriter _output;
-    private readonly ITestOutputHelper? _testOutput;
-
-    public PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
-    {
-        _output = output;
-        _testOutput = testOutput;
-    }
+    private readonly TextWriter _output = output;
+    private readonly ITestOutputHelper? _testOutput = testOutput;
 
     public static PerfReporter ForTest(ITestOutputHelper output) => new(Console.Out, output);
 

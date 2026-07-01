@@ -9,7 +9,7 @@ using Xunit;
 namespace Origo.Core.Tests.Benchmarks;
 
 [Trait("Category", "Benchmark")]
-public class TypedDataRealWorldBenchmarkTests
+public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 {
     private const int DictSize = 1024;
     private const int DictMask = DictSize - 1;
@@ -24,12 +24,7 @@ public class TypedDataRealWorldBenchmarkTests
 
     private static readonly TimeSpan PerBenchmarkCap = TimeSpan.FromSeconds(8);
 
-    private readonly PerfReporter _perf;
-
-    public TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
-    {
-        _perf = PerfReporter.ForTest(output);
-    }
+    private readonly PerfReporter _perf = PerfReporter.ForTest(output);
 
     // ─── Scenario 1: SndDataManager.TryGetData<T> — Dictionary lookup + TryExtract ──
 

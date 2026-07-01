@@ -7,5 +7,5 @@ namespace Origo.Core.Snd.Metadata;
 /// </summary>
 public sealed class NodeMetaData
 {
-    public Dictionary<string, string> Pairs { get; set; } = new();
+    public Dictionary<string, string> Pairs { get; set; } = [];
 }

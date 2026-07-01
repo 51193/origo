@@ -110,19 +110,13 @@ public class CommandHandlerBaseTests
         Assert.Contains("ok", messages);
     }
 
-    private sealed class TestHandler : CommandHandlerBase
+    private sealed class TestHandler(OrigoRuntime runtime, int min, int max) : CommandHandlerBase(runtime)
     {
-        public TestHandler(OrigoRuntime runtime, int min, int max) : base(runtime)
-        {
-            MinPositionalArgs = min;
-            MaxPositionalArgs = max;
-        }
-
         public override string Name => "test";
         public override string HelpText => "test — test handler";
-        public override int MinPositionalArgs { get; }
+        public override int MinPositionalArgs { get; } = min;
 
-        public override int MaxPositionalArgs { get; }
+        public override int MaxPositionalArgs { get; } = max;
 
         protected override bool ExecuteCore(CommandInvocation invocation, IConsoleOutputChannel outputChannel,
             out string? errorMessage)

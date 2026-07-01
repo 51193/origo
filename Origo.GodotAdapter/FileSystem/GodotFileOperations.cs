@@ -12,9 +12,7 @@ internal static class GodotFileOperations
     public static string ReadAllText(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        using var file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
-        if (file is null)
-            throw new FileNotFoundException($"Cannot open file: {path}");
+        using var file = FileAccess.Open(path, FileAccess.ModeFlags.Read) ?? throw new FileNotFoundException($"Cannot open file: {path}");
         return file.GetAsText();
     }
 
@@ -25,9 +23,7 @@ internal static class GodotFileOperations
         if (!overwrite && FileAccess.FileExists(path))
             throw new IOException($"File already exists and overwrite is disabled: {path}");
 
-        using var file = FileAccess.Open(path, FileAccess.ModeFlags.Write);
-        if (file is null)
-            throw new IOException($"Cannot open file for writing: {path}");
+        using var file = FileAccess.Open(path, FileAccess.ModeFlags.Write) ?? throw new IOException($"Cannot open file for writing: {path}");
         file.StoreString(content);
     }
 

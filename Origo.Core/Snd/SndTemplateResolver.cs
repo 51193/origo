@@ -39,10 +39,7 @@ internal sealed class SndTemplateResolver
             throw new KeyNotFoundException($"Template alias '{alias}' not found in template map.");
 
         using var node = _dataSourceIo.ReadTree(path);
-        var meta = _converter.Read(node);
-        if (meta is null)
-            throw new InvalidOperationException($"Template '{alias}' at '{path}' deserialized to null.");
-
+        var meta = _converter.Read(node) ?? throw new InvalidOperationException($"Template '{alias}' at '{path}' deserialized to null.");
         _cache[alias] = meta;
         return meta;
     }

@@ -125,10 +125,12 @@ public class SavePathLayoutTests
 
     private static TheoryData<string?> CreateInvalidSaveIds()
     {
-        var d = new TheoryData<string?>();
-        d.Add(default(string?));
-        d.Add("");
-        d.Add("   ");
+        var d = new TheoryData<string?>
+        {
+            default(string?),
+            "",
+            "   "
+        };
         return d;
     }
 }

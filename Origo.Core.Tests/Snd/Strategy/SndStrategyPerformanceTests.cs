@@ -13,15 +13,9 @@ using Xunit;
 namespace Origo.Core.Tests;
 
 [Collection("StrategyStateTests")]
-public class SndStrategyPerformanceTests
+public class SndStrategyPerformanceTests(ITestOutputHelper output)
 {
-    private readonly PerfReporter _perf;
-
-    public SndStrategyPerformanceTests(ITestOutputHelper output)
-    {
-        _perf = PerfReporter.ForTest(output);
-    }
-
+    private readonly PerfReporter _perf = PerfReporter.ForTest(output);
     private const string PoolIdx = "perf.pool.test";
     private const string Process1Idx = "perf.process.1";
 
@@ -38,7 +32,7 @@ public class SndStrategyPerformanceTests
         GC.WaitForPendingFinalizers();
         GC.Collect();
 
-        long allocBefore = GC.GetAllocatedBytesForCurrentThread();
+        var allocBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
         for (var i = 0; i < iterations; i++)
         {
@@ -46,7 +40,7 @@ public class SndStrategyPerformanceTests
             pool.ReleaseStrategy(PoolIdx);
         }
         sw.Stop();
-        long totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+        var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
         _perf.Report(
             "StrategyPool Get+Release roundtrip",
@@ -99,12 +93,12 @@ public class SndStrategyPerformanceTests
             GC.WaitForPendingFinalizers();
             GC.Collect();
 
-            long allocBefore = GC.GetAllocatedBytesForCurrentThread();
+            var allocBefore = GC.GetAllocatedBytesForCurrentThread();
             var sw = Stopwatch.StartNew();
             for (var f = 0; f < frames; f++)
                 host.ProcessAll(0.016);
             sw.Stop();
-            long totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+            var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
             _perf.Report(
                 $"Process {frames} frames with {sc} strategies",
@@ -146,9 +140,9 @@ public class SndStrategyPerformanceTests
             GC.WaitForPendingFinalizers();
             GC.Collect();
 
-            long allocBefore = GC.GetAllocatedBytesForCurrentThread();
+            var allocBefore = GC.GetAllocatedBytesForCurrentThread();
             ((IEntityLifecycle)entity).FireAfterSpawnHooks();
-            long singleTriggerAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+            var singleTriggerAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
             _perf.Report(
                 $"TriggerAll AfterSpawn _strategies.ToArray() — {sc} strategies",
@@ -195,7 +189,7 @@ public class SndStrategyPerformanceTests
         NodeMetaData = new NodeMetaData(),
         StrategyMetaData = new StrategyMetaData
         {
-            LifecycleIndices = new List<string>(indices ?? Array.Empty<string>())
+            LifecycleIndices = [.. indices ?? []]
         },
         DataMetaData = new DataMetaData()
     };

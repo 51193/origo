@@ -17,10 +17,10 @@ internal sealed class SndDataManager
     private readonly ILogger _logger;
 
     private readonly DataObserverManager _observerManager = new();
-    private readonly Dictionary<string, List<SubscriptionPair>> _subscriptionMap = new();
+    private readonly Dictionary<string, List<SubscriptionPair>> _subscriptionMap = [];
     private readonly ISndEntity _target;
 
-    private Dictionary<string, TypedData> _data = new();
+    private Dictionary<string, TypedData> _data = [];
 
     public SndDataManager(ISndEntity target, ILogger logger)
     {
@@ -50,7 +50,7 @@ internal sealed class SndDataManager
         );
         if (!_subscriptionMap.TryGetValue(name, out var list))
         {
-            list = new List<SubscriptionPair>();
+            list = [];
             _subscriptionMap[name] = list;
         }
 

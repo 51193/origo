@@ -7,13 +7,13 @@ namespace Origo.Core.Tests;
 
 public class SessionTopologyCodecTests
 {
-    public static TheoryData<string> Parse_MalformedOrEmptyKeyOrLevel_Data { get; } = new()
-    {
+    public static TheoryData<string> Parse_MalformedOrEmptyKeyOrLevel_Data { get; } =
+    [
         "only_key",
         "key=level_only",
         "=level=true",
         "key==true"
-    };
+    ];
 
     public static TheoryData<string, bool> Parse_SyncFieldParsing_Data { get; } = new()
     {
@@ -70,7 +70,7 @@ public class SessionTopologyCodecTests
     [Fact]
     public void Join_EmptyEntries_ReturnsEmptyString()
     {
-        var result = SessionTopologyCodec.Join(Array.Empty<string>());
+        var result = SessionTopologyCodec.Join([]);
         Assert.Equal(string.Empty, result);
     }
 

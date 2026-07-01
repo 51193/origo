@@ -29,17 +29,16 @@ internal static class GeneratorTestHarness
         // performance benchmark) must not appear in the compilation references — it
         // would collide with the scaffold's same-named types (CS0433).
         var tpa = (string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!;
-        return tpa.Split(Path.PathSeparator)
+        return [.. tpa.Split(Path.PathSeparator)
             .Where(p => p.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
                         && !Path.GetFileName(p).StartsWith("Origo.", StringComparison.OrdinalIgnoreCase))
-            .Select(p => (MetadataReference)MetadataReference.CreateFromFile(p))
-            .ToArray();
+            .Select(p => (MetadataReference)MetadataReference.CreateFromFile(p))];
     }
 
     public static CSharpCompilation CreateCompilation(
         string assemblyName, string source, IEnumerable<MetadataReference>? extraReferences = null)
     {
-        var references = RuntimeReferences.Concat(extraReferences ?? Array.Empty<MetadataReference>());
+        var references = RuntimeReferences.Concat(extraReferences ?? []);
         return CSharpCompilation.Create(
             assemblyName,
             new[] { CSharpSyntaxTree.ParseText(source, ParseOptions) },

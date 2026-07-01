@@ -11,8 +11,8 @@ namespace Origo.Core.Serialization;
 /// </summary>
 public sealed class TypeStringMapping
 {
-    private readonly Dictionary<Type, string> _reverseTypeMap = new();
-    private readonly Dictionary<string, Type> _typeMap = new();
+    private readonly Dictionary<Type, string> _reverseTypeMap = [];
+    private readonly Dictionary<string, Type> _typeMap = [];
 
     public TypeStringMapping()
     {

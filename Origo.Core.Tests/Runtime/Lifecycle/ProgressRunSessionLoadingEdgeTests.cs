@@ -23,7 +23,7 @@ public class ProgressRunSessionLoadingEdgeTests
             ProgressNode = TestFactory.NodeFromJson(
                 """{"origo.session_topology":{"type":"String","data":"bad_entry"}}"""),
             ProgressStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}"),
-            Levels = new Dictionary<string, LevelPayload>()
+            Levels = []
         };
 
         var ex = Assert.Throws<InvalidOperationException>(() => progressRun.LoadFromPayload(payload));
@@ -41,7 +41,7 @@ public class ProgressRunSessionLoadingEdgeTests
             ActiveLevelId = "default",
             ProgressNode = TestFactory.NodeFromJson("{}"),
             ProgressStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}"),
-            Levels = new Dictionary<string, LevelPayload>()
+            Levels = []
         };
 
         var ex = Assert.Throws<InvalidOperationException>(() => progressRun.LoadFromPayload(payload));

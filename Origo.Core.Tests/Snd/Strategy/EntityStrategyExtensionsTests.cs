@@ -2,6 +2,7 @@ using System;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Snd.Strategy;
 using Xunit;
 
 namespace Origo.Core.Tests;

@@ -19,7 +19,7 @@ namespace Origo.GodotAdapter.Snd;
 public partial class GodotSndManager
     : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable
 {
-    private readonly List<GodotSndEntity> _entities = new();
+    private readonly List<GodotSndEntity> _entities = [];
     private EntityView? _entityView;
     private ObserverTopology? _observerTopology;
     private ISessionRun? _owningSession;
@@ -73,8 +73,8 @@ public partial class GodotSndManager
                 _entities.Add(snd);
                 staged.Add(snd);
                 snd.RecoverForLifecycle(meta);
-                        if (_owningSession is not null)
-                snd.BindSession(_owningSession);
+                if (_owningSession is not null)
+                    snd.BindSession(_owningSession);
             }
             catch
             {
@@ -110,7 +110,7 @@ public partial class GodotSndManager
             _entities.Add(snd);
             staged.Add(snd);
             snd.RecoverForLifecycle(metaData);
-                        if (_owningSession is not null)
+            if (_owningSession is not null)
                 snd.BindSession(_owningSession);
             return snd;
         }
@@ -140,20 +140,14 @@ public partial class GodotSndManager
 
     public void RemoveEntity(string name)
     {
-        var snd = _entities.FirstOrDefault(s => s.StableName == name);
-        if (snd is null)
-            throw new InvalidOperationException($"No entity with StableName '{name}'.");
-
+        var snd = _entities.FirstOrDefault(s => s.StableName == name) ?? throw new InvalidOperationException($"No entity with StableName '{name}'.");
         _entities.Remove(snd);
         snd.DetachFromManager();
     }
 
     public void RequestKillEntity(string name)
     {
-        var snd = _entities.FirstOrDefault(s => s.StableName == name);
-        if (snd is null)
-            throw new InvalidOperationException($"No entity with StableName '{name}'.");
-
+        var snd = _entities.FirstOrDefault(s => s.StableName == name) ?? throw new InvalidOperationException($"No entity with StableName '{name}'.");
         if (snd.IsPendingKill)
             throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
 

@@ -31,7 +31,7 @@ namespace Origo.Core.Snd;
 public sealed class SndContext : IStateMachineContext, ISndContext
 {
     private readonly SystemRun _systemRun;
-    private readonly List<ISaveMetaContributor> _saveMetaContributors = new();
+    private readonly List<ISaveMetaContributor> _saveMetaContributors = [];
     private int _pendingPersistenceRequests;
     private ProgressRun? _progressRun;
     private bool _workflowInProgress;
@@ -302,9 +302,7 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     {
         return RunWorkflow(() =>
         {
-            using var progressNode = StorageService.ReadProgressNodeFromSnapshot(saveId);
-            if (progressNode is null)
-                throw new InvalidOperationException($"Missing required progress.json in save '{saveId}'.");
+            using var progressNode = StorageService.ReadProgressNodeFromSnapshot(saveId) ?? throw new InvalidOperationException($"Missing required progress.json in save '{saveId}'.");
             var progressDict = Runtime.SndWorld.ReadTypedDataMap(progressNode);
 
             if (!progressDict.TryGetValue(WellKnownKeys.SessionTopology, out var topologyData)

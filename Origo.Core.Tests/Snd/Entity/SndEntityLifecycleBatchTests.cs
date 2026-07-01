@@ -47,22 +47,22 @@ public class SndEntityLifecycleBatchTests
 
     private static SndMetaData CreateMeta(string name, string[]? lifecycleIndices = null,
         string[]? activeIndices = null) => new()
-    {
-        Name = name,
-        NodeMetaData = new NodeMetaData(),
-        StrategyMetaData = new StrategyMetaData
         {
-            LifecycleIndices = new List<string>(lifecycleIndices ?? Array.Empty<string>()),
-            ActiveIndices = new List<string>(activeIndices ?? Array.Empty<string>())
-        },
-        DataMetaData = new DataMetaData()
-    };
+            Name = name,
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData
+            {
+                LifecycleIndices = [.. lifecycleIndices ?? []],
+                ActiveIndices = [.. activeIndices ?? []]
+            },
+            DataMetaData = new DataMetaData()
+        };
 
     [StrategyIndex(ProbeIdx)]
     private sealed class ProbeStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _events = new();
-        public static List<string> Events => _events.Value ??= new();
+        public static List<string> Events => _events.Value ??= [];
 
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) => Events.Add($"after_load:{entity.Name}");
 
@@ -79,9 +79,9 @@ public class SndEntityLifecycleBatchTests
     private sealed class CrossRefStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _events = new();
-        public static List<string> Events => _events.Value ??= new();
+        public static List<string> Events => _events.Value ??= [];
         private static readonly AsyncLocal<string[]> _targetNames = new();
-        public static string[] TargetNames { get => _targetNames.Value ?? Array.Empty<string>(); set => _targetNames.Value = value; }
+        public static string[] TargetNames { get => _targetNames.Value ?? []; set => _targetNames.Value = value; }
         private static readonly AsyncLocal<ISndSceneHost?> _host = new();
         public static ISndSceneHost? Host { get => _host.Value; set => _host.Value = value; }
 
@@ -138,7 +138,7 @@ public class SndEntityLifecycleBatchTests
     private sealed class QueryActiveProxy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _events = new();
-        public static List<string> Events => _events.Value ??= new();
+        public static List<string> Events => _events.Value ??= [];
         private static readonly AsyncLocal<string> _invokeTarget = new();
         public static string InvokeTarget { get => _invokeTarget.Value ?? string.Empty; set => _invokeTarget.Value = value; }
         private static readonly AsyncLocal<string> _invokeIndex = new();
@@ -200,7 +200,7 @@ public class SndEntityLifecycleBatchTests
     private sealed class SubscribeStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _events = new();
-        public static List<string> Events => _events.Value ??= new();
+        public static List<string> Events => _events.Value ??= [];
         private static readonly AsyncLocal<ISndSceneHost?> _host = new();
         public static ISndSceneHost? Host { get => _host.Value; set => _host.Value = value; }
 
@@ -225,19 +225,16 @@ public class SndEntityLifecycleBatchTests
     private sealed class ProcessRecordingStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<(string Name, double Delta)>> _processCalls = new();
-        public static List<(string Name, double Delta)> ProcessCalls => _processCalls.Value ??= new();
+        public static List<(string Name, double Delta)> ProcessCalls => _processCalls.Value ??= [];
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            ProcessCalls.Add((entity.Name, delta));
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ProcessCalls.Add((entity.Name, delta));
     }
 
     [StrategyIndex(AddDuringProcessIdx)]
     private sealed class AddDuringProcessStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _processCalls = new();
-        public static List<string> ProcessCalls => _processCalls.Value ??= new();
+        public static List<string> ProcessCalls => _processCalls.Value ??= [];
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -250,19 +247,16 @@ public class SndEntityLifecycleBatchTests
     private sealed class SelfRemoveRecordingStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _processCalls = new();
-        public static List<string> ProcessCalls => _processCalls.Value ??= new();
+        public static List<string> ProcessCalls => _processCalls.Value ??= [];
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            ProcessCalls.Add($"self_remove:{entity.Name}");
-        }
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ProcessCalls.Add($"self_remove:{entity.Name}");
     }
 
     [StrategyIndex("batch.perf.remove_self")]
     private sealed class RemoveSelfDuringProcessStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _processCalls = new();
-        public static List<string> ProcessCalls => _processCalls.Value ??= new();
+        public static List<string> ProcessCalls => _processCalls.Value ??= [];
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
@@ -281,9 +275,9 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("A", new[] { ProbeIdx }),
-            CreateMeta("B", new[] { ProbeIdx }),
-            CreateMeta("C", new[] { ProbeIdx })
+            CreateMeta("A", [ProbeIdx]),
+            CreateMeta("B", [ProbeIdx]),
+            CreateMeta("C", [ProbeIdx])
         });
 
         Assert.Empty(ProbeStrategy.Events);
@@ -299,17 +293,17 @@ public class SndEntityLifecycleBatchTests
     public void BatchLoad_CrossEntity_FindByName_SucceedsRegardlessOfOrder()
     {
         CrossRefStrategy.Events.Clear();
-        CrossRefStrategy.TargetNames = new[] { "A", "B", "C", "D" };
+        CrossRefStrategy.TargetNames = ["A", "B", "C", "D"];
         CrossRefStrategy.Host = null;
         var host = CreateHost(w => { w.RegisterStrategy(() => new CrossRefStrategy()); });
         CrossRefStrategy.Host = host;
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("A", new[] { CrossRefIdx }),
-            CreateMeta("B", new[] { CrossRefIdx }),
-            CreateMeta("C", new[] { CrossRefIdx }),
-            CreateMeta("D", new[] { CrossRefIdx })
+            CreateMeta("A", [CrossRefIdx]),
+            CreateMeta("B", [CrossRefIdx]),
+            CreateMeta("C", [CrossRefIdx]),
+            CreateMeta("D", [CrossRefIdx])
         });
 
         foreach (var e in host.GetEntities())
@@ -339,8 +333,8 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("Self", new[] { ActiveQueryIdx },
-                new[] { "batch.active.simple" })
+            CreateMeta("Self", [ActiveQueryIdx],
+                ["batch.active.simple"])
         });
 
         foreach (var e in host.GetEntities())
@@ -368,9 +362,9 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("A", new[] { ActiveQueryIdx }),
-            CreateMeta("Peer", new[] { ProbeIdx },
-                new[] { "batch.active.simple" })
+            CreateMeta("A", [ActiveQueryIdx]),
+            CreateMeta("Peer", [ProbeIdx],
+                ["batch.active.simple"])
         });
 
         foreach (var e in host.GetEntities())
@@ -395,8 +389,8 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("subscriber", new[] { "batch.subscribe" }),
-            CreateMeta("target", new[] { ProbeIdx })
+            CreateMeta("subscriber", ["batch.subscribe"]),
+            CreateMeta("target", [ProbeIdx])
         });
 
         foreach (var e in host.GetEntities())
@@ -421,9 +415,9 @@ public class SndEntityLifecycleBatchTests
         ProbeStrategy.Events.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
 
-        var es1 = host.CreateEntity(CreateMeta("A", new[] { ProbeIdx }));
-        var es2 = host.CreateEntity(CreateMeta("B", new[] { ProbeIdx }));
-        var es3 = host.CreateEntity(CreateMeta("C", new[] { ProbeIdx }));
+        var es1 = host.CreateEntity(CreateMeta("A", [ProbeIdx]));
+        var es2 = host.CreateEntity(CreateMeta("B", [ProbeIdx]));
+        var es3 = host.CreateEntity(CreateMeta("C", [ProbeIdx]));
         ((IEntityLifecycle)es1).FireAfterSpawnHooks();
         ((IEntityLifecycle)es2).FireAfterSpawnHooks();
         ((IEntityLifecycle)es3).FireAfterSpawnHooks();
@@ -447,9 +441,9 @@ public class SndEntityLifecycleBatchTests
         });
         QueryActiveProxy.Host = host;
 
-        var se1 = host.CreateEntity(CreateMeta("A", new[] { ActiveQueryIdx }));
-        var se2 = host.CreateEntity(CreateMeta("Peer", new[] { ProbeIdx },
-            new[] { "batch.active.simple" }));
+        var se1 = host.CreateEntity(CreateMeta("A", [ActiveQueryIdx]));
+        var se2 = host.CreateEntity(CreateMeta("Peer", [ProbeIdx],
+            ["batch.active.simple"]));
         ((IEntityLifecycle)se1).FireAfterSpawnHooks();
         ((IEntityLifecycle)se2).FireAfterSpawnHooks();
 
@@ -466,8 +460,8 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("A", new[] { ProbeIdx }),
-            CreateMeta("B", new[] { ProbeIdx })
+            CreateMeta("A", [ProbeIdx]),
+            CreateMeta("B", [ProbeIdx])
         });
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
@@ -494,8 +488,8 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("A", new[] { ProbeIdx }),
-            CreateMeta("B", new[] { ProbeIdx })
+            CreateMeta("A", [ProbeIdx]),
+            CreateMeta("B", [ProbeIdx])
         });
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
@@ -529,9 +523,9 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("First", new[] { ProbeIdx }),
-            CreateMeta("Second", new[] { ProbeIdx }),
-            CreateMeta("Third", new[] { ProbeIdx })
+            CreateMeta("First", [ProbeIdx]),
+            CreateMeta("Second", [ProbeIdx]),
+            CreateMeta("Third", [ProbeIdx])
         });
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
@@ -550,7 +544,7 @@ public class SndEntityLifecycleBatchTests
     public void BatchQuit_CrossEntity_FindByNameSucceedsDuringBeforeQuit()
     {
         CrossRefStrategy.Events.Clear();
-        CrossRefStrategy.TargetNames = new[] { "B" };
+        CrossRefStrategy.TargetNames = ["B"];
         CrossRefStrategy.Host = null;
         var host3 = CreateHost(w =>
         {
@@ -561,8 +555,8 @@ public class SndEntityLifecycleBatchTests
 
         host3.RecoverFromMetaList(new[]
         {
-            CreateMeta("A", new[] { CrossRefIdx }),
-            CreateMeta("B", new[] { ProbeIdx })
+            CreateMeta("A", [CrossRefIdx]),
+            CreateMeta("B", [ProbeIdx])
         });
         foreach (var e in host3.GetEntities())
             if (e is IEntityLifecycle lc)
@@ -586,8 +580,8 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("A", new[] { ProbeIdx }),
-            CreateMeta("B", new[] { ProbeIdx })
+            CreateMeta("A", [ProbeIdx]),
+            CreateMeta("B", [ProbeIdx])
         });
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
@@ -611,7 +605,7 @@ public class SndEntityLifecycleBatchTests
     public void BatchDead_CrossEntity_FindByNameSucceedsDuringBeforeDead()
     {
         CrossRefStrategy.Events.Clear();
-        CrossRefStrategy.TargetNames = new[] { "B" };
+        CrossRefStrategy.TargetNames = ["B"];
         CrossRefStrategy.Host = null;
         ProbeStrategy.Events.Clear();
         var host4 = CreateHost(w =>
@@ -623,8 +617,8 @@ public class SndEntityLifecycleBatchTests
 
         host4.RecoverFromMetaList(new[]
         {
-            CreateMeta("A", new[] { CrossRefIdx }),
-            CreateMeta("B", new[] { ProbeIdx })
+            CreateMeta("A", [CrossRefIdx]),
+            CreateMeta("B", [ProbeIdx])
         });
         foreach (var e in host4.GetEntities())
             if (e is IEntityLifecycle lc)
@@ -655,7 +649,7 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("E", new[] { P100Idx, P50Idx })
+            CreateMeta("E", [P100Idx, P50Idx])
         });
 
         foreach (var e in host.GetEntities())
@@ -672,7 +666,7 @@ public class SndEntityLifecycleBatchTests
     {
         var host = CreateHost(w => { });
 
-        host.RecoverFromMetaList(Array.Empty<SndMetaData>());
+        host.RecoverFromMetaList([]);
         Assert.Empty(host.GetEntities());
     }
 
@@ -682,7 +676,7 @@ public class SndEntityLifecycleBatchTests
         ProbeStrategy.Events.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
 
-        host.RecoverFromMetaList(new[] { CreateMeta("Solo", new[] { ProbeIdx }) });
+        host.RecoverFromMetaList(new[] { CreateMeta("Solo", [ProbeIdx]) });
         Assert.Empty(ProbeStrategy.Events);
 
         foreach (var e in host.GetEntities())
@@ -721,8 +715,8 @@ public class SndEntityLifecycleBatchTests
         host.BindContext(ctx);
         QueryActiveProxy.Host = host;
 
-        var entity = host.CreateEntity(CreateMeta("SelfSpawn", new[] { ActiveQueryIdx },
-            new[] { "batch.active.simple" }));
+        var entity = host.CreateEntity(CreateMeta("SelfSpawn", [ActiveQueryIdx],
+            ["batch.active.simple"]));
         ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Contains("invoke_ok:hello_from:SelfSpawn", QueryActiveProxy.Events);
@@ -756,8 +750,8 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("SelfLoad", new[] { ActiveQueryIdx },
-                new[] { "batch.active.simple" })
+            CreateMeta("SelfLoad", [ActiveQueryIdx],
+                ["batch.active.simple"])
         });
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
@@ -780,9 +774,9 @@ public class SndEntityLifecycleBatchTests
 
         host.RecoverFromMetaList(new[]
         {
-            CreateMeta("Good", new[] { ProbeIdx }),
-            CreateMeta("Bad", new[] { "batch.failing" }),
-            CreateMeta("After", new[] { ProbeIdx })
+            CreateMeta("Good", [ProbeIdx]),
+            CreateMeta("Bad", ["batch.failing"]),
+            CreateMeta("After", [ProbeIdx])
         });
 
         Assert.Throws<InvalidOperationException>(() =>
@@ -805,17 +799,17 @@ public class SndEntityLifecycleBatchTests
             w.RegisterStrategy(() => new SimpleActiveStrategy());
         });
 
-        SndEntityFactory.SpawnMany(host, new[]
-        {
-            CreateMeta("A", new[] { ProbeIdx }),
-            CreateMeta("B", new[] { ProbeIdx }),
-            CreateMeta("C", new[] { ProbeIdx })
-        });
+        SndEntityFactory.SpawnMany(host,
+        [
+            CreateMeta("A", [ProbeIdx]),
+            CreateMeta("B", [ProbeIdx]),
+            CreateMeta("C", [ProbeIdx])
+        ]);
 
         Assert.Equal(new[] { "after_spawn:A", "after_spawn:B", "after_spawn:C" }, ProbeStrategy.Events);
     }
 
-    
+
     // ── Boundary: SndEntityFactory orchestrates AfterSpawn hooks, SceneHost is pure container ─
 
     [Fact]
@@ -823,7 +817,7 @@ public class SndEntityLifecycleBatchTests
     {
         ProbeStrategy.Events.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
-        var entity = SndEntityFactory.Spawn(host, CreateMeta("E", new[] { ProbeIdx }));
+        var entity = SndEntityFactory.Spawn(host, CreateMeta("E", [ProbeIdx]));
 
         Assert.NotNull(entity);
         Assert.Contains("after_spawn:E", ProbeStrategy.Events);
@@ -838,11 +832,11 @@ public class SndEntityLifecycleBatchTests
             w.RegisterStrategy(() => new ProbeStrategy());
             w.RegisterStrategy(() => new SimpleActiveStrategy());
         });
-        SndEntityFactory.SpawnMany(host, new[]
-        {
-            CreateMeta("A", new[] { ProbeIdx }),
-            CreateMeta("B", new[] { ProbeIdx })
-        });
+        SndEntityFactory.SpawnMany(host,
+        [
+            CreateMeta("A", [ProbeIdx]),
+            CreateMeta("B", [ProbeIdx])
+        ]);
 
         Assert.Equal(new[] { "after_spawn:A", "after_spawn:B" }, ProbeStrategy.Events);
         Assert.Equal(2, host.GetEntities().Count);
@@ -854,7 +848,7 @@ public class SndEntityLifecycleBatchTests
         ProbeStrategy.Events.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
 
-        host.CreateEntity(CreateMeta("E", new[] { ProbeIdx }));
+        host.CreateEntity(CreateMeta("E", [ProbeIdx]));
 
         Assert.Empty(ProbeStrategy.Events);
         Assert.NotNull(host.FindByName("E"));
@@ -865,7 +859,7 @@ public class SndEntityLifecycleBatchTests
     {
         ProbeStrategy.Events.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
-        var entity = host.CreateEntity(CreateMeta("E", new[] { ProbeIdx }));
+        var entity = host.CreateEntity(CreateMeta("E", [ProbeIdx]));
 
         host.RemoveEntity("E");
 
@@ -887,11 +881,11 @@ public class SndEntityLifecycleBatchTests
     public void SndEntityFactory_SpawnMany_WithNonLifecycleEntity_DoesNotThrow()
     {
         var memoryHost = new StubSndSceneHost();
-        SndEntityFactory.SpawnMany(memoryHost, new[]
-        {
+        SndEntityFactory.SpawnMany(memoryHost,
+        [
             new SndMetaData { Name = "A" },
             new SndMetaData { Name = "B" }
-        });
+        ]);
 
         Assert.Equal(2, memoryHost.GetEntities().Count);
     }
@@ -910,15 +904,15 @@ public class SndEntityLifecycleBatchTests
     {
         ProcessRecordingStrategy.ProcessCalls.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProcessRecordingStrategy()); });
-        SndEntityFactory.Spawn(host, CreateMeta("E", new[] { PerfProcessIdx }));
+        SndEntityFactory.Spawn(host, CreateMeta("E", [PerfProcessIdx]));
         ProcessRecordingStrategy.ProcessCalls.Clear();
 
         host.ProcessAll(0.016);
 
         var calls = ProcessRecordingStrategy.ProcessCalls;
         Assert.Single(calls);
-        Assert.Equal("E", calls[0].Item1);
-        Assert.Equal(0.016, calls[0].Item2, 0.001);
+        Assert.Equal("E", calls[0].Name);
+        Assert.Equal(0.016, calls[0].Delta, 0.001);
     }
 
     [Fact]
@@ -926,17 +920,17 @@ public class SndEntityLifecycleBatchTests
     {
         ProcessRecordingStrategy.ProcessCalls.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProcessRecordingStrategy()); });
-        SndEntityFactory.SpawnMany(host, new[]
-        {
-            CreateMeta("A", new[] { PerfProcessIdx }),
-            CreateMeta("B", new[] { PerfProcessIdx }),
-            CreateMeta("C", new[] { PerfProcessIdx })
-        });
+        SndEntityFactory.SpawnMany(host,
+        [
+            CreateMeta("A", [PerfProcessIdx]),
+            CreateMeta("B", [PerfProcessIdx]),
+            CreateMeta("C", [PerfProcessIdx])
+        ]);
         ProcessRecordingStrategy.ProcessCalls.Clear();
 
         host.ProcessAll(0.016);
 
-        var names = ProcessRecordingStrategy.ProcessCalls.Select(c => c.Item1).ToArray();
+        var names = ProcessRecordingStrategy.ProcessCalls.Select(c => c.Name).ToArray();
         Assert.Equal(new[] { "A", "B", "C" }, names);
     }
 
@@ -945,12 +939,12 @@ public class SndEntityLifecycleBatchTests
     {
         ProcessRecordingStrategy.ProcessCalls.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProcessRecordingStrategy()); });
-        SndEntityFactory.Spawn(host, CreateMeta("E", new[] { PerfProcessIdx }));
+        SndEntityFactory.Spawn(host, CreateMeta("E", [PerfProcessIdx]));
         ProcessRecordingStrategy.ProcessCalls.Clear();
 
         host.ProcessAll(0.033);
 
-        Assert.Equal(0.033, ProcessRecordingStrategy.ProcessCalls[0].Item2, 0.001);
+        Assert.Equal(0.033, ProcessRecordingStrategy.ProcessCalls[0].Delta, 0.001);
     }
 
     [Fact]
@@ -963,7 +957,7 @@ public class SndEntityLifecycleBatchTests
             w.RegisterStrategy(() => new AddDuringProcessStrategy());
             w.RegisterStrategy(() => new ProcessRecordingStrategy());
         });
-        SndEntityFactory.Spawn(host, CreateMeta("E", new[] { AddDuringProcessIdx }));
+        SndEntityFactory.Spawn(host, CreateMeta("E", [AddDuringProcessIdx]));
         AddDuringProcessStrategy.ProcessCalls.Clear();
         ProcessRecordingStrategy.ProcessCalls.Clear();
 
@@ -983,7 +977,7 @@ public class SndEntityLifecycleBatchTests
             w.RegisterStrategy(() => new RemoveSelfDuringProcessStrategy());
             w.RegisterStrategy(() => new ProcessRecordingStrategy());
         });
-        SndEntityFactory.Spawn(host, CreateMeta("E", new[] { "batch.perf.remove_self", PerfProcessIdx }));
+        SndEntityFactory.Spawn(host, CreateMeta("E", ["batch.perf.remove_self", PerfProcessIdx]));
 
         RemoveSelfDuringProcessStrategy.ProcessCalls.Clear();
         ProcessRecordingStrategy.ProcessCalls.Clear();
@@ -991,7 +985,7 @@ public class SndEntityLifecycleBatchTests
 
         Assert.Single(RemoveSelfDuringProcessStrategy.ProcessCalls);
         Assert.Single(ProcessRecordingStrategy.ProcessCalls);
-        Assert.Equal("E", ProcessRecordingStrategy.ProcessCalls[0].Item1);
+        Assert.Equal("E", ProcessRecordingStrategy.ProcessCalls[0].Name);
     }
 
     // ── SndEntityFactory tests ──────────────────────────────────────────
@@ -1002,7 +996,7 @@ public class SndEntityLifecycleBatchTests
         ProbeStrategy.Events.Clear();
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
 
-        var entity = SndEntityFactory.Spawn(host, CreateMeta("E", new[] { ProbeIdx }));
+        var entity = SndEntityFactory.Spawn(host, CreateMeta("E", [ProbeIdx]));
 
         Assert.NotNull(entity);
         Assert.Contains("after_spawn:E", ProbeStrategy.Events);
@@ -1015,9 +1009,9 @@ public class SndEntityLifecycleBatchTests
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
 
         SndEntityFactory.SpawnMany(host,
-            CreateMeta("A", new[] { ProbeIdx }),
-            CreateMeta("B", new[] { ProbeIdx }),
-            CreateMeta("C", new[] { ProbeIdx }));
+            CreateMeta("A", [ProbeIdx]),
+            CreateMeta("B", [ProbeIdx]),
+            CreateMeta("C", [ProbeIdx]));
 
         Assert.Equal(new[] { "after_spawn:A", "after_spawn:B", "after_spawn:C" }, ProbeStrategy.Events);
     }
@@ -1029,11 +1023,11 @@ public class SndEntityLifecycleBatchTests
         CrossRefStrategy.Host = null;
         var host = CreateHost(w => { w.RegisterStrategy(() => new CrossRefStrategy()); });
         CrossRefStrategy.Host = host;
-        CrossRefStrategy.TargetNames = new[] { "A", "B" };
+        CrossRefStrategy.TargetNames = ["A", "B"];
 
         SndEntityFactory.SpawnMany(host,
-            CreateMeta("A", new[] { CrossRefIdx }),
-            CreateMeta("B", new[] { CrossRefIdx }));
+            CreateMeta("A", [CrossRefIdx]),
+            CreateMeta("B", [CrossRefIdx]));
 
         Assert.Contains("found:A", CrossRefStrategy.Events);
         Assert.Contains("found:B", CrossRefStrategy.Events);
@@ -1041,15 +1035,15 @@ public class SndEntityLifecycleBatchTests
 
     // ── KillPendingEntities full lifecycle ───────────────────────────────
 
-    
-    
+
+
     // ── RemoveEntity boundary verification ───────────────────────────────
 
     [Fact]
     public void FullMemorySndSceneHost_RemoveEntity_ClearsCollectionOnly()
     {
         var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
-        var entity = host.CreateEntity(CreateMeta("E", new[] { ProbeIdx }));
+        var entity = host.CreateEntity(CreateMeta("E", [ProbeIdx]));
 
         host.RemoveEntity("E");
 

@@ -106,6 +106,19 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 
 **判断标准**：如果我改了内部实现但行为契约不变，这个测试应该仍然通过。如果不能通过公共接口验证到同等的行为语义，则可以使用 `InternalsVisibleTo`。请牢记：`InternalsVisibleTo` 是"白名单"——如无必要，不得使用。
 
+### 测试命名空间约定
+
+所有测试文件统一使用**扁平命名空间**（`Origo.Core.Tests`），不按子目录拆分为 `Origo.Core.Tests.Snd.Strategy` 等子命名空间。所有测试辅助类型（test doubles、helper strategies、factory methods）无需跨命名空间 using 即可互相访问。
+
+**设计决策**：
+
+- **为什么**：xUnit test discovery 不受命名空间影响，扁平命名空间消除跨目录的 using 指令维护成本。测试项目不是 API 库，命名空间层次不会暴露给下游消费者。
+- **为什么不拆**：分割子命名空间后，`Snd/Strategy/` 目录的测试文件需要 `using Origo.Core.Tests.TestSupport;` 才能引用 `TestFactory` 等公用设施，反而增加维护开销。
+
+**实现**：此约定通过 `.editorconfig` 规则强制执行——`[Origo.Core.Tests/**/*.cs]` 路径上的 `IDE0130` 诊断已设为 `none`（详见仓库根 `.editorconfig`），其他测试项目同理。
+
+**偏离此约定前**：请与维护者确认设计意图。如需为特定目录启用子命名空间，必须在对应测试能力文档中记录原因。
+
 ### 静态可变状态隔离原则
 
 框架要求策略必须无状态（无实例字段、无可写实例属性），这是通过 `SndStrategyPool.Register()` 的反射检查强制执行的。测试中的 spy 策略因此只能使用 `static` 字段收集事件。

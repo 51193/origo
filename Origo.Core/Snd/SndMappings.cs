@@ -150,9 +150,7 @@ internal sealed class SndMappings
             }
             else
             {
-                var meta = sndMetaConverter.Read(item);
-                if (meta is null)
-                    throw new InvalidOperationException("Failed to deserialize SndMetaData from config entry.");
+                var meta = sndMetaConverter.Read(item) ?? throw new InvalidOperationException("Failed to deserialize SndMetaData from config entry.");
                 if (string.IsNullOrWhiteSpace(meta.Name))
                     throw new InvalidOperationException("SndMetaData 'name' cannot be empty.");
                 list.Add(meta);

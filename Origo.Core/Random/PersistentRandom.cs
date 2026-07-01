@@ -9,21 +9,14 @@ namespace Origo.Core.Random;
 ///     Initialized from a string seed; each invocation atomically reads, advances,
 ///     and writes back the state. Deterministic across sessions for the same seed.
 /// </summary>
-public sealed class PersistentRandom
+public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key = null, string? state2Key = null)
 {
     private const string DefaultState1Key = "rand.state1";
     private const string DefaultState2Key = "rand.state2";
 
-    private readonly IBlackboard _blackboard;
-    private readonly string _state1Key;
-    private readonly string _state2Key;
-
-    public PersistentRandom(IBlackboard blackboard, string? state1Key = null, string? state2Key = null)
-    {
-        _blackboard = blackboard ?? throw new ArgumentNullException(nameof(blackboard));
-        _state1Key = string.IsNullOrWhiteSpace(state1Key) ? DefaultState1Key : state1Key;
-        _state2Key = string.IsNullOrWhiteSpace(state2Key) ? DefaultState2Key : state2Key;
-    }
+    private readonly IBlackboard _blackboard = blackboard ?? throw new ArgumentNullException(nameof(blackboard));
+    private readonly string _state1Key = string.IsNullOrWhiteSpace(state1Key) ? DefaultState1Key : state1Key;
+    private readonly string _state2Key = string.IsNullOrWhiteSpace(state2Key) ? DefaultState2Key : state2Key;
 
     public bool InitSeed(string seed)
     {

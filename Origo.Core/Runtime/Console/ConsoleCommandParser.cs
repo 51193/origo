@@ -32,7 +32,7 @@ public static class ConsoleCommandParser
         }
 
         var command = tokens[0];
-        var rest = tokens.Count > 1 ? tokens.GetRange(1, tokens.Count - 1) : new List<string>();
+        var rest = tokens.Count > 1 ? tokens.GetRange(1, tokens.Count - 1) : [];
 
         if (HasNamedArgument(rest))
             return TryParseNamed(command, rest, out invocation, out error);
@@ -68,8 +68,8 @@ public static class ConsoleCommandParser
                 return false;
             }
 
-            var key = t.Substring(0, eq).Trim();
-            var value = t.Substring(eq + 1).Trim();
+            var key = t[..eq].Trim();
+            var value = t[(eq + 1)..].Trim();
             if (key.Length == 0)
             {
                 invocation = null;
@@ -83,7 +83,7 @@ public static class ConsoleCommandParser
         invocation = new CommandInvocation
         {
             Command = command,
-            PositionalArgs = Array.Empty<string>(),
+            PositionalArgs = [],
             NamedArgs = named
         };
         error = null;
@@ -93,6 +93,6 @@ public static class ConsoleCommandParser
     private static List<string> Tokenize(string line)
     {
         var parts = line.Trim().Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries);
-        return new List<string>(parts);
+        return [.. parts];
     }
 }
