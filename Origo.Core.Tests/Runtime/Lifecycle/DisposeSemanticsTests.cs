@@ -23,8 +23,8 @@ namespace Origo.Core.Tests;
 [Collection("StrategyStateTests")]
 public class DisposeSemanticsTests
 {
-    private const string BeforeSaveStrategyIndex = "dispose_sem.before_save";
-    private const string BeforeQuitStrategyIndex = "dispose_sem.before_quit";
+    private const string _beforeSaveStrategyIndex = "dispose_sem.before_save";
+    private const string _beforeQuitStrategyIndex = "dispose_sem.before_quit";
 
     // ── SessionRun.Dispose: no persist, no BeforeSave ───────────────────
 
@@ -56,7 +56,7 @@ public class DisposeSemanticsTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", _beforeSaveStrategyIndex));
 
         events.Clear();
         bg.Dispose();
@@ -75,7 +75,7 @@ public class DisposeSemanticsTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", BeforeQuitStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", _beforeQuitStrategyIndex));
 
         events.Clear();
         bg.Dispose();
@@ -113,7 +113,7 @@ public class DisposeSemanticsTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", BeforeSaveStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", _beforeSaveStrategyIndex));
 
         events.Clear();
         ctx.RequestSaveGame("before_save_test");
@@ -496,8 +496,8 @@ public class DisposeSemanticsTests
 
     // ── BeforeQuit session access safety ──────────────────────────────────
 
-    private const string SessionAccessStrategyIndex = "dispose_sem.session_access";
-    private const string ThrowingQuitStrategyIndex = "dispose_sem.throwing_quit";
+    private const string _sessionAccessStrategyIndex = "dispose_sem.session_access";
+    private const string _throwingQuitStrategyIndex = "dispose_sem.throwing_quit";
 
     [Fact]
     public void SessionRun_Dispose_BeforeQuit_CanAccessSceneHost()
@@ -510,7 +510,7 @@ public class DisposeSemanticsTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", SessionAccessStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", _sessionAccessStrategyIndex));
 
         events.Clear();
         var ex = Record.Exception(() => bg.Dispose());
@@ -529,7 +529,7 @@ public class DisposeSemanticsTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", ThrowingQuitStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", _throwingQuitStrategyIndex));
 
         var ex = Record.Exception(() => bg.Dispose());
 
@@ -546,7 +546,7 @@ public class DisposeSemanticsTests
         });
 
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", ThrowingQuitStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", _throwingQuitStrategyIndex));
 
         Record.Exception(() => bg.Dispose());
 
@@ -602,7 +602,7 @@ public class DisposeSemanticsTests
 
     // ── Test strategies ─────────────────────────────────────────────────
 
-    [StrategyIndex(BeforeSaveStrategyIndex)]
+    [StrategyIndex(_beforeSaveStrategyIndex)]
     private sealed class BeforeSaveSpyStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
@@ -613,7 +613,7 @@ public class DisposeSemanticsTests
             _events.Value?.Add($"BeforeSave:{entity.Name}");
     }
 
-    [StrategyIndex(BeforeQuitStrategyIndex)]
+    [StrategyIndex(_beforeQuitStrategyIndex)]
     private sealed class BeforeQuitSpyStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
@@ -624,7 +624,7 @@ public class DisposeSemanticsTests
             _events.Value?.Add($"BeforeQuit:{entity.Name}");
     }
 
-    [StrategyIndex(SessionAccessStrategyIndex)]
+    [StrategyIndex(_sessionAccessStrategyIndex)]
     private sealed class SessionAccessQuitStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
@@ -658,7 +658,7 @@ public class DisposeSemanticsTests
         }
     }
 
-    [StrategyIndex(ThrowingQuitStrategyIndex)]
+    [StrategyIndex(_throwingQuitStrategyIndex)]
     private sealed class ThrowingQuitStrategy : LifecycleStrategyBase
     {
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>

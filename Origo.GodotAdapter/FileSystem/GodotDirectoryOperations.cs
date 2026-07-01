@@ -37,7 +37,7 @@ internal static class GodotDirectoryOperations
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
         var normalizedDir = directoryPath.TrimEnd('/');
-        return dir.GetDirectories().Select(d => $"{normalizedDir}/{d}").ToArray();
+        return [.. dir.GetDirectories().Select(d => $"{normalizedDir}/{d}")];
     }
 
     public static void Rename(string sourcePath, string destinationPath)

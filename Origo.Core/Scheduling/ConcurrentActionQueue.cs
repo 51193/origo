@@ -19,7 +19,7 @@ internal class ConcurrentActionQueue
     /// <summary>
     ///     Guard against infinite synchronous re-queue (action enqueues another that runs in the same drain).
     /// </summary>
-    private const int MaxReentrantDrainDepth = 100;
+    private const int _maxReentrantDrainDepth = 100;
 
     private readonly List<Action> _actionQueue = [];
     private readonly object _lock = new();
@@ -77,9 +77,9 @@ internal class ConcurrentActionQueue
 
         while (true)
         {
-            if (executeBatchCount >= MaxReentrantDrainDepth)
+            if (executeBatchCount >= _maxReentrantDrainDepth)
                 throw new InvalidOperationException(
-                    $"ConcurrentActionQueue exceeded max re-entrant drain depth ({MaxReentrantDrainDepth}).");
+                    $"ConcurrentActionQueue exceeded max re-entrant drain depth ({_maxReentrantDrainDepth}).");
 
             List<Action> currentBatch;
             lock (_lock)

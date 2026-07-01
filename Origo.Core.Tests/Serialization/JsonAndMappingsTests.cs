@@ -10,10 +10,10 @@ namespace Origo.Core.Tests;
 
 public class JsonAndMappingsTests
 {
-    private const string StrategyMove = "test.move";
-    private const string StrategyAttack = "test.attack";
-    private const string StrategyAi = "test.ai";
-    private const string StrategyTalk = "test.talk";
+    private const string _strategyMove = "test.move";
+    private const string _strategyAttack = "test.attack";
+    private const string _strategyAi = "test.ai";
+    private const string _strategyTalk = "test.talk";
 
     [Fact]
     public void SndMetaData_RoundTripPreservesTypedData()
@@ -26,7 +26,7 @@ public class JsonAndMappingsTests
             Name = "Hero",
             NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string> { ["body"] = "hero_prefab" } },
             StrategyMetaData = new StrategyMetaData
-            { LifecycleIndices = [StrategyMove, StrategyAttack] },
+            { LifecycleIndices = [_strategyMove, _strategyAttack] },
             DataMetaData = new DataMetaData
             {
                 Pairs = new Dictionary<string, TypedData>
@@ -44,7 +44,7 @@ public class JsonAndMappingsTests
 
         Assert.Equal("Hero", parsed.Name);
         Assert.Equal("hero_prefab", parsed.NodeMetaData!.Pairs["body"]);
-        Assert.Equal(new[] { StrategyMove, StrategyAttack }, parsed.StrategyMetaData!.LifecycleIndices);
+        Assert.Equal(new[] { _strategyMove, _strategyAttack }, parsed.StrategyMetaData!.LifecycleIndices);
         Assert.Equal(100, Assert.IsType<int>(TypedDataObjectConverter.ToObject(parsed.DataMetaData!.Pairs["hp"])));
         Assert.Equal("Knight", Assert.IsType<string>(TypedDataObjectConverter.ToObject(parsed.DataMetaData.Pairs["title"])));
     }

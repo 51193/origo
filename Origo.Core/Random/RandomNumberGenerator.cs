@@ -7,9 +7,9 @@ namespace Origo.Core.Random;
 /// </summary>
 public static class RandomNumberGenerator
 {
-    private const ulong FnvOffsetBasis = 0xcbf29ce484222325;
-    private const ulong FnvPrime = 0x100000001b3;
-    private const ulong DefaultStateValue = 0xBAD5EED;
+    private const ulong _fnvOffsetBasis = 0xcbf29ce484222325;
+    private const ulong _fnvPrime = 0x100000001b3;
+    private const ulong _defaultStateValue = 0xBAD5EED;
 
     /// <summary>
     ///     由字符串种子生成可复现的初始随机状态。
@@ -21,7 +21,7 @@ public static class RandomNumberGenerator
         var hash1 = GetStableHash64(seed + "K6205");
         var hash2 = GetStableHash64(seed + "AMADEUS");
 
-        return (hash1 == 0 ? DefaultStateValue : hash1, hash2 == 0 ? DefaultStateValue : hash2);
+        return (hash1 == 0 ? _defaultStateValue : hash1, hash2 == 0 ? _defaultStateValue : hash2);
     }
 
     /// <summary>
@@ -55,12 +55,12 @@ public static class RandomNumberGenerator
 
     private static ulong GetStableHash64(string str)
     {
-        var hash = FnvOffsetBasis;
+        var hash = _fnvOffsetBasis;
 
         foreach (var c in str)
         {
             hash ^= c;
-            hash *= FnvPrime;
+            hash *= _fnvPrime;
         }
 
         return hash;

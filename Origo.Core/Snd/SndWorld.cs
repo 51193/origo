@@ -107,8 +107,11 @@ public sealed class SndWorld
             logger);
     }
 
-    public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root) =>
-        Mappings.ResolveMetaListFromJsonArray(root, ConverterRegistry);
+    public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        return Mappings.ResolveMetaListFromJsonArray(root, ConverterRegistry);
+    }
 
     public IReadOnlyDictionary<string, TypedData> ReadTypedDataMap(DataSourceNode node)
     {
@@ -136,7 +139,7 @@ public sealed class SndWorld
 
     public DataSourceNode WriteMetaListNode(IEnumerable<SndMetaData> metaDataList)
     {
-        var list = metaDataList as IReadOnlyList<SndMetaData> ?? metaDataList.ToList();
+        var list = metaDataList as IReadOnlyList<SndMetaData> ?? [.. metaDataList];
         return ConverterRegistry.Write(list);
     }
 

@@ -18,7 +18,7 @@ namespace Origo.Core.Tests;
 
 public class SndEntityAndAutoInitializerTests
 {
-    private const string LifecycleStrategyIndex = "test.lifecycle";
+    private const string _lifecycleStrategyIndex = "test.lifecycle";
 
     [Fact]
     public void SndEntity_GetNodeNamesAndGetNode_ReturnExpectedHandles()
@@ -59,14 +59,14 @@ public class SndEntityAndAutoInitializerTests
         entity.SpawnSingle(new SndMetaData
         { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
 
-        entity.AddStrategy(LifecycleStrategyIndex);
-        Assert.Contains(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
+        entity.AddStrategy(_lifecycleStrategyIndex);
+        Assert.Contains(_lifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
 
-        entity.RemoveStrategy(LifecycleStrategyIndex);
-        Assert.DoesNotContain(LifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
+        entity.RemoveStrategy(_lifecycleStrategyIndex);
+        Assert.DoesNotContain(_lifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
 
         // Removing a missing strategy should not throw.
-        entity.RemoveStrategy(LifecycleStrategyIndex);
+        entity.RemoveStrategy(_lifecycleStrategyIndex);
     }
 
     [Fact]
@@ -170,7 +170,6 @@ public class SndEntityAndAutoInitializerTests
     private static SndContext CreateContext(TestLogger logger)
     {
         var host = new TestSndSceneHost();
-        var session = new StubSessionRun(host);
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
@@ -180,7 +179,7 @@ public class SndEntityAndAutoInitializerTests
             "res://entry/entry.json"));
     }
 
-    [StrategyIndex(LifecycleStrategyIndex)]
+    [StrategyIndex(_lifecycleStrategyIndex)]
     private sealed class LifecycleStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _eventSink = new();

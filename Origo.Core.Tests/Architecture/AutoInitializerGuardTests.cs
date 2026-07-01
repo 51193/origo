@@ -59,7 +59,7 @@ public class AutoInitializerGuardTests
         var world = TestFactory.CreateSndWorld(logger: logger);
 
         var registered = OrigoAutoInitializer.DiscoverAndRegisterStrategies(
-            world, logger, new[] { "Origo" });
+            world, logger, ["Origo"]);
 
         Assert.Equal(0, registered);
     }
@@ -111,7 +111,7 @@ public class AutoInitializerGuardTests
     {
         var logger = new TestLogger();
         var world = TestFactory.CreateSndWorld(logger: logger);
-        var n = OrigoAutoInitializer.DiscoverAndRegisterStrategies(world, logger, new[] { "Origo.Core.Tests" });
+        var n = OrigoAutoInitializer.DiscoverAndRegisterStrategies(world, logger, ["Origo.Core.Tests"]);
         Assert.Equal(0, n);
     }
 

@@ -49,8 +49,8 @@ public class DiffUtilityTests
     [Fact]
     public void Diff_EmptyBoth_ReturnsEmpty()
     {
-        var (added, removed) = DiffUtility.Diff(
-            new List<int>(), new List<int>());
+        var (added, removed) = DiffUtility.Diff<int>(
+            [], []);
 
         Assert.Empty(added);
         Assert.Empty(removed);
@@ -60,7 +60,7 @@ public class DiffUtilityTests
     public void Diff_EmptyOld_NewHasItems_ReturnsAdded()
     {
         var (added, removed) = DiffUtility.Diff(
-            new List<int>(), new List<int> { 1, 2 });
+            [], [1, 2]);
 
         Assert.Equal(2, added.Count);
         Assert.Empty(removed);
@@ -70,7 +70,7 @@ public class DiffUtilityTests
     public void Diff_EmptyNew_OldHasItems_ReturnsRemoved()
     {
         var (added, removed) = DiffUtility.Diff(
-            new List<int> { 1, 2 }, new List<int>());
+            [1, 2], []);
 
         Assert.Empty(added);
         Assert.Equal(2, removed.Count);
@@ -80,7 +80,7 @@ public class DiffUtilityTests
     public void Diff_NoChange_ReturnsEmpty()
     {
         var (added, removed) = DiffUtility.Diff(
-            new List<string> { "a", "b" }, new List<string> { "a", "b" });
+            ["a", "b"], ["a", "b"]);
 
         Assert.Empty(added);
         Assert.Empty(removed);
@@ -90,7 +90,7 @@ public class DiffUtilityTests
     public void Diff_Duplicates_TreatedAsSingle()
     {
         var (added, removed) = DiffUtility.Diff(
-            new List<string> { "a", "a", "b" }, new List<string> { "a", "b", "b" });
+            ["a", "a", "b"], ["a", "b", "b"]);
 
         Assert.Empty(added);
         Assert.Empty(removed);
@@ -100,7 +100,7 @@ public class DiffUtilityTests
     public void Diff_NullOld_Throws()
     {
         Assert.Throws<System.ArgumentNullException>(() =>
-            DiffUtility.Diff<string>(null!, new List<string>()));
+            DiffUtility.Diff<string>(null!, []));
     }
 
     [Fact]

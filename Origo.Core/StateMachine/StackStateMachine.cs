@@ -130,7 +130,7 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
     public IReadOnlyList<string> Snapshot()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        return _stack.ToArray();
+        return [.. _stack];
     }
 
     /// <summary>从快照恢复栈内容，不触发任何策略钩子。配合 <see cref="FlushAfterLoad" /> 使用。</summary>

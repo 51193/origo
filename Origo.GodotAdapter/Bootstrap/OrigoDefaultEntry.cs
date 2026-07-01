@@ -12,7 +12,7 @@ namespace Origo.GodotAdapter.Bootstrap;
 [GlobalClass]
 public partial class OrigoDefaultEntry : OrigoAutoHost
 {
-    private static readonly string[] GodotSkipPrefixes = ["Godot", "GodotSharp"];
+    private static readonly string[] _godotSkipPrefixes = ["Godot", "GodotSharp"];
 
     private SndContext? _sndContext;
 

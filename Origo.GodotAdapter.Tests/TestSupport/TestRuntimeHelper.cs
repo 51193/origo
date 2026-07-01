@@ -41,7 +41,7 @@ internal sealed class TestSndSceneHost : ISndSceneHost
 
     public void RemoveEntity(string name)
     {
-        if (_entities.TryGetValue(name, out var entity)) _entities.Remove(name);
+        if (_entities.TryGetValue(name, out _)) _entities.Remove(name);
     }
 
     public void RequestKillEntity(string name)

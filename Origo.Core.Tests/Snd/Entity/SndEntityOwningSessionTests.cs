@@ -70,7 +70,7 @@ public class SndEntityOwningSessionTests
             w.RegisterStrategy(() => new TrackingStrategy(events));
         });
 
-        SndEntityFactory.Spawn(host, CreateMetaWithStrategy("E", TrackingIdx));
+        SndEntityFactory.Spawn(host, CreateMetaWithStrategy("E", _trackingIdx));
 
         Assert.NotNull(host.FindByName("E"));
         Assert.Contains("AfterSpawn:E", events);
@@ -86,9 +86,9 @@ public class SndEntityOwningSessionTests
         });
 
         SndEntityFactory.SpawnMany(host,
-            CreateMetaWithStrategy("A", TrackingIdx),
-            CreateMetaWithStrategy("B", TrackingIdx),
-            CreateMetaWithStrategy("C", TrackingIdx));
+            CreateMetaWithStrategy("A", _trackingIdx),
+            CreateMetaWithStrategy("B", _trackingIdx),
+            CreateMetaWithStrategy("C", _trackingIdx));
 
         Assert.Equal(3, host.GetEntities().Count);
         Assert.Contains("AfterSpawn:A", events);
@@ -139,9 +139,9 @@ public class SndEntityOwningSessionTests
         DataMetaData = new DataMetaData()
     };
 
-    private const string TrackingIdx = "owntest.tracking";
+    private const string _trackingIdx = "owntest.tracking";
 
-    [StrategyIndex(TrackingIdx)]
+    [StrategyIndex(_trackingIdx)]
     private sealed class TrackingStrategy(List<string> events) : LifecycleStrategyBase
     {
         private readonly List<string>? _events = events;

@@ -13,7 +13,7 @@ namespace Origo.Core.Snd.Entity;
 
 public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubscription
 {
-    private const string LogTag = nameof(SndEntity);
+    private const string _logTag = nameof(SndEntity);
     private readonly ActiveStrategyManager _activeStrategyManager;
     private readonly ISndContext _context;
     private readonly SndDataManager _dataManager;
@@ -134,14 +134,14 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     void IEntityLifecycle.FireAfterSpawnHooks()
     {
         _strategyManager.TriggerAfterSpawn(this, _context);
-        _logger.Log(LogLevel.Debug, LogTag,
+        _logger.Log(LogLevel.Debug, _logTag,
             new LogMessageBuilder().AddContext("entityName", Name).Build("Entity spawned (hooks)."));
     }
 
     void IEntityLifecycle.FireAfterLoadHooks()
     {
         _strategyManager.TriggerAfterLoad(this, _context);
-        _logger.Log(LogLevel.Debug, LogTag,
+        _logger.Log(LogLevel.Debug, _logTag,
             new LogMessageBuilder().AddContext("entityName", Name).Build("Entity loaded (hooks)."));
     }
 
@@ -201,7 +201,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         TeardownObserverBindingsForDeath();
         ((IEntityLifecycle)this).ReleaseStrategiesOnly();
         ((IEntityLifecycle)this).TeardownOnly();
-        _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity quit."));
+        _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity quit."));
     }
 
     public void DeadSingle()
@@ -210,7 +210,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         TeardownObserverBindingsForDeath();
         ((IEntityLifecycle)this).ReleaseStrategiesOnly();
         ((IEntityLifecycle)this).TeardownOnly();
-        _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity dead."));
+        _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity dead."));
     }
 
     private void TeardownObserverBindingsForDeath() => _observerTopology.TeardownAllBindingsFor((ISndEntity)this);

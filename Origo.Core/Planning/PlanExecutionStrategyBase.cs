@@ -16,7 +16,7 @@ namespace Origo.Core.Planning;
 /// </summary>
 public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 {
-    private static readonly ConditionalWeakTable<ISndEntity, WireCallbacks> WiredCallbacks = [];
+    private static readonly ConditionalWeakTable<ISndEntity, WireCallbacks> _wiredCallbacks = [];
 
     /// <summary>Entity data key for the current intent (e.g. "combat", "forage", "wander").</summary>
     protected abstract string IntentKey { get; }
@@ -65,6 +65,7 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     /// <inheritdoc />
     public sealed override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         Wire(entity, true);
         OnAfterSpawn(entity, ctx);
     }
@@ -72,6 +73,7 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     /// <inheritdoc />
     public sealed override void AfterLoad(ISndEntity entity, ISndContext ctx)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         Wire(entity, false);
         OnAfterLoad(entity, ctx);
     }
@@ -79,6 +81,7 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     /// <inheritdoc />
     public sealed override void AfterAdd(ISndEntity entity, ISndContext ctx)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         Wire(entity, true);
         OnAfterAdd(entity, ctx);
     }
@@ -86,6 +89,7 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     /// <inheritdoc />
     public sealed override void BeforeRemove(ISndEntity entity, ISndContext ctx)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         RemoveCurrentAction(entity);
         OnBeforeRemove(entity, ctx);
         Unwire(entity);
@@ -94,6 +98,7 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     /// <inheritdoc />
     public sealed override void BeforeQuit(ISndEntity entity, ISndContext ctx)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         RemoveCurrentAction(entity);
         OnBeforeQuit(entity, ctx);
         Unwire(entity);
@@ -102,6 +107,7 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     /// <inheritdoc />
     public sealed override void BeforeDead(ISndEntity entity, ISndContext ctx)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         RemoveCurrentAction(entity);
         OnBeforeDead(entity, ctx);
         Unwire(entity);
@@ -159,13 +165,13 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 
         var raw = (ISndEntityRawSubscription)entity;
 
-        var intentCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnIntentChanged(t, entity, o, n));
-        var actionCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnActionStatusChanged(t, entity, o, n));
+        var intentCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnIntentChanged(t, n));
+        var actionCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnActionStatusChanged(t, n));
 
         raw.SubscribeDataRaw(IntentKey, intentCb, null);
         raw.SubscribeDataRaw(ActionStatusKey, actionCb, null);
 
-        WiredCallbacks.AddOrUpdate(entity, new WireCallbacks { IntentCb = intentCb, ActionCb = actionCb });
+        _wiredCallbacks.AddOrUpdate(entity, new WireCallbacks { IntentCb = intentCb, ActionCb = actionCb });
 
         if (!initialize)
             return;
@@ -177,26 +183,26 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 
     private void Unwire(ISndEntity entity)
     {
-        if (!WiredCallbacks.TryGetValue(entity, out var cbs))
+        if (!_wiredCallbacks.TryGetValue(entity, out var cbs))
             return;
 
         var raw = (ISndEntityRawSubscription)entity;
         raw.UnsubscribeDataRaw(IntentKey, cbs.IntentCb);
         raw.UnsubscribeDataRaw(ActionStatusKey, cbs.ActionCb);
 
-        WiredCallbacks.Remove(entity);
+        _wiredCallbacks.Remove(entity);
     }
 
     // ── Private: signal handlers ─────────────────────────────────────────
 
-    private void OnIntentChanged(ISndEntity target, ISndEntity observer, TypedData oldValue, TypedData newValue)
+    private void OnIntentChanged(ISndEntity target, TypedData newValue)
     {
         if (!newValue.TryGetString(out var intent) || string.IsNullOrEmpty(intent))
             return;
         StartIntent(target, intent);
     }
 
-    private void OnActionStatusChanged(ISndEntity target, ISndEntity observer, TypedData oldValue, TypedData newValue)
+    private void OnActionStatusChanged(ISndEntity target, TypedData newValue)
     {
         if (!newValue.TryGetString(out var status))
             return;

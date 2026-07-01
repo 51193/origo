@@ -26,9 +26,9 @@ namespace Origo.Core.Tests;
 [Collection("StrategyStateTests")]
 public class BackgroundSessionTests
 {
-    private const string TrackingStrategyIndex = "test.tracking";
-    private const string ProcessStrategyIndex = "test.process";
-    private const string SessionContextStrategyIndex = "test.session_context";
+    private const string _trackingStrategyIndex = "test.tracking";
+    private const string _processStrategyIndex = "test.process";
+    private const string _sessionContextStrategyIndex = "test.session_context";
 
     public static TheoryData<string?> CreateBackgroundSession_InvalidLevelIds_Data { get; } =
         CreateBackgroundSessionInvalidLevelIds();
@@ -47,7 +47,7 @@ public class BackgroundSessionTests
         Assert.NotNull(bg.GetSessionStateMachines());
         Assert.NotNull(bg.GetSessionStateMachines());
         Assert.NotNull(((SessionRun)bg).SceneHost);
-        Assert.IsAssignableFrom<ISndSceneHost>(((SessionRun)bg).SceneHost);
+        Assert.IsType<ISndSceneHost>(((SessionRun)bg).SceneHost, exactMatch: false);
         Assert.Empty(bg.GetEntities());
     }
 
@@ -120,7 +120,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_ctx", "bg_ctx", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("spy", SessionContextStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("spy", _sessionContextStrategyIndex));
         ctx.Runtime.SessionManager.ProcessAllSessions(0.016, false);
 
         Assert.Contains("bg_ctx", seenSessionLevelIds);
@@ -282,7 +282,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("npc", _processStrategyIndex));
 
         ctx.Runtime.SessionManager.ProcessAllSessions(0.016, false);
 
@@ -386,10 +386,10 @@ public class BackgroundSessionTests
         var host = ((SessionRun)bg).SceneHost;
 
         // Populate with entities.
-        var guard01 = host.CreateEntity(CreateMetaWithIndices("guard_01", TrackingStrategyIndex, ProcessStrategyIndex));
+        var guard01 = host.CreateEntity(CreateMetaWithIndices("guard_01", _trackingStrategyIndex, _processStrategyIndex));
         if (guard01 is IEntityLifecycle lc1)
             lc1.FireAfterSpawnHooks();
-        var guard02 = host.CreateEntity(CreateMetaWithIndices("guard_02", TrackingStrategyIndex));
+        var guard02 = host.CreateEntity(CreateMetaWithIndices("guard_02", _trackingStrategyIndex));
         if (guard02 is IEntityLifecycle lc2)
             lc2.FireAfterSpawnHooks();
         Assert.Contains("AfterSpawn:guard_01", events);
@@ -566,7 +566,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("npc", ProcessStrategyIndex));
+        ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndices("npc", _processStrategyIndex));
 
         ctx.Runtime.SessionManager.ProcessAllSessions(0.016, false);
 
@@ -589,7 +589,7 @@ public class BackgroundSessionTests
         events.Clear();
 
         host.RemoveAllEntities();
-        host.RecoverFromMetaList(new[] { CreateMetaWithStrategy("new_entity") });
+        host.RecoverFromMetaList([CreateMetaWithStrategy("new_entity")]);
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
                 lc.FireAfterLoadHooks();
@@ -723,7 +723,7 @@ public class BackgroundSessionTests
         Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg_nosync"));
 
         // Verify via another save: the persisted format records the correct flags.
-        var payload2 = newProgressRun.BuildSavePayload("save_sync_rt2");
+        _ = newProgressRun.BuildSavePayload("save_sync_rt2");
         var (found2, bgIds2) = newProgressRun.ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found2);
         Assert.Contains("bg_sync=bg_sync_level=true", bgIds2);
@@ -849,7 +849,7 @@ public class BackgroundSessionTests
         {
             Name = name,
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TrackingStrategyIndex] },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [_trackingStrategyIndex] },
             DataMetaData = new DataMetaData()
         };
     }
@@ -878,7 +878,7 @@ public class BackgroundSessionTests
 
     // ── Test strategy implementations ─────────────────────────────────
 
-    [StrategyIndex(TrackingStrategyIndex)]
+    [StrategyIndex(_trackingStrategyIndex)]
     private sealed class TrackingStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
@@ -907,7 +907,7 @@ public class BackgroundSessionTests
             _events.Value?.Add($"BeforeDead:{entity.Name}");
     }
 
-    [StrategyIndex(ProcessStrategyIndex)]
+    [StrategyIndex(_processStrategyIndex)]
     private sealed class ProcessCounterStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<Action?> _onProcess = new();
@@ -918,7 +918,7 @@ public class BackgroundSessionTests
             _onProcess.Value?.Invoke();
     }
 
-    [StrategyIndex(SessionContextStrategyIndex)]
+    [StrategyIndex(_sessionContextStrategyIndex)]
     private sealed class SessionContextSpyStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _seen = new();

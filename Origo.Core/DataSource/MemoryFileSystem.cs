@@ -16,11 +16,16 @@ public sealed class MemoryFileSystem : IFileSystem
     private readonly Dictionary<string, string> _files = new(StringComparer.Ordinal);
 
     /// <inheritdoc />
-    public bool Exists(string path) => _files.ContainsKey(Normalize(path));
+    public bool Exists(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        return _files.ContainsKey(Normalize(path));
+    }
 
     /// <inheritdoc />
     public bool DirectoryExists(string path)
     {
+        ArgumentNullException.ThrowIfNull(path);
         var normalized = Normalize(path).TrimEnd('/');
         return _directories.Contains(normalized) ||
                _files.Keys.Any(f => f.StartsWith(normalized + "/", StringComparison.Ordinal));
@@ -29,6 +34,7 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public string ReadAllText(string path)
     {
+        ArgumentNullException.ThrowIfNull(path);
         var normalized = Normalize(path);
         if (!_files.TryGetValue(normalized, out var content))
             throw new FileNotFoundException($"File not found: {normalized}", normalized);
@@ -38,6 +44,7 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public void WriteAllText(string path, string content, bool overwrite)
     {
+        ArgumentNullException.ThrowIfNull(path);
         var normalized = Normalize(path);
         if (!overwrite && _files.ContainsKey(normalized))
             throw new IOException($"File already exists: {normalized}");
@@ -49,6 +56,8 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public void Copy(string sourcePath, string destinationPath, bool overwrite)
     {
+        ArgumentNullException.ThrowIfNull(sourcePath);
+        ArgumentNullException.ThrowIfNull(destinationPath);
         var source = Normalize(sourcePath);
         var destination = Normalize(destinationPath);
         if (!_files.TryGetValue(source, out var content))
@@ -64,6 +73,8 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
     {
+        ArgumentNullException.ThrowIfNull(directoryPath);
+        ArgumentNullException.ThrowIfNull(searchPattern);
         var normalized = Normalize(directoryPath).TrimEnd('/');
         var prefix = normalized + "/";
         foreach (var file in _files.Keys.ToArray())
@@ -87,6 +98,7 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public void CreateDirectory(string directoryPath)
     {
+        ArgumentNullException.ThrowIfNull(directoryPath);
         var normalized = Normalize(directoryPath).TrimEnd('/');
         if (normalized.Length == 0)
             return;
@@ -98,17 +110,22 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public void Delete(string path)
     {
+        ArgumentNullException.ThrowIfNull(path);
         var normalized = Normalize(path);
         _files.Remove(normalized);
     }
 
     /// <inheritdoc />
-    public string CombinePath(string basePath, string relativePath) =>
-        Normalize($"{Normalize(basePath).TrimEnd('/')}/{relativePath}");
+    public string CombinePath(string basePath, string relativePath)
+    {
+        ArgumentNullException.ThrowIfNull(basePath);
+        return Normalize($"{Normalize(basePath).TrimEnd('/')}/{relativePath}");
+    }
 
     /// <inheritdoc />
     public string GetParentDirectory(string path)
     {
+        ArgumentNullException.ThrowIfNull(path);
         var normalized = Normalize(path).TrimEnd('/');
         var index = normalized.LastIndexOf('/');
         return index <= 0 ? string.Empty : normalized[..index];
@@ -117,6 +134,7 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public IEnumerable<string> EnumerateDirectories(string directoryPath)
     {
+        ArgumentNullException.ThrowIfNull(directoryPath);
         var normalized = Normalize(directoryPath).TrimEnd('/');
         var prefix = normalized + "/";
         var children = new HashSet<string>(StringComparer.Ordinal);
@@ -149,6 +167,8 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public void Rename(string sourcePath, string destinationPath)
     {
+        ArgumentNullException.ThrowIfNull(sourcePath);
+        ArgumentNullException.ThrowIfNull(destinationPath);
         var src = Normalize(sourcePath).TrimEnd('/');
         var dst = Normalize(destinationPath).TrimEnd('/');
 
@@ -180,6 +200,7 @@ public sealed class MemoryFileSystem : IFileSystem
     /// <inheritdoc />
     public void DeleteDirectory(string directoryPath)
     {
+        ArgumentNullException.ThrowIfNull(directoryPath);
         var normalized = Normalize(directoryPath).TrimEnd('/');
         var prefix = normalized + "/";
 

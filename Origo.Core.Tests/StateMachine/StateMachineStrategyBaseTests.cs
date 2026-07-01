@@ -34,10 +34,10 @@ public class StateMachineStrategyBaseTests
 
     // ── Integration: StackStateMachine with strategy hooks ──────────
 
-    private const string SmPushIdx = "test.sm.push";
-    private const string SmPopIdx = "test.sm.pop";
+    private const string _smPushIdx = "test.sm.push";
+    private const string _smPopIdx = "test.sm.pop";
 
-    [StrategyIndex(SmPushIdx)]
+    [StrategyIndex(_smPushIdx)]
     private sealed class TrackingPushStrategy : StateMachineStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _pushRuntimeCalls = new();
@@ -50,7 +50,7 @@ public class StateMachineStrategyBaseTests
         public override void OnPushAfterLoad(StateMachineStrategyContext context, IStateMachineContext ctx) => PushAfterLoadCalls.Add(context.AfterTop ?? "");
     }
 
-    [StrategyIndex(SmPopIdx)]
+    [StrategyIndex(_smPopIdx)]
     private sealed class TrackingPopStrategy : StateMachineStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _popRuntimeCalls = new();
@@ -77,7 +77,7 @@ public class StateMachineStrategyBaseTests
         pool.Register(() => new TrackingPopStrategy());
 
         var ctx = new StubStateMachineContext();
-        var sm = new StackStateMachine("machine1", SmPushIdx, SmPopIdx, pool, ctx);
+        var sm = new StackStateMachine("machine1", _smPushIdx, _smPopIdx, pool, ctx);
 
         sm.Push("state_a");
 
@@ -101,7 +101,7 @@ public class StateMachineStrategyBaseTests
         pool.Register(() => new TrackingPopStrategy());
 
         var ctx = new StubStateMachineContext();
-        var sm = new StackStateMachine("machine1", SmPushIdx, SmPopIdx, pool, ctx);
+        var sm = new StackStateMachine("machine1", _smPushIdx, _smPopIdx, pool, ctx);
 
         sm.Push("state_a");
         var result = sm.TryPopRuntime(out _);
@@ -125,7 +125,7 @@ public class StateMachineStrategyBaseTests
         pool.Register(() => new TrackingPopStrategy());
 
         var ctx = new StubStateMachineContext();
-        var sm = new StackStateMachine("machine1", SmPushIdx, SmPopIdx, pool, ctx);
+        var sm = new StackStateMachine("machine1", _smPushIdx, _smPopIdx, pool, ctx);
 
         sm.Push("state_a");
         sm.TryPopOnQuit(out _);
@@ -148,7 +148,7 @@ public class StateMachineStrategyBaseTests
         pool.Register(() => new TrackingPopStrategy());
 
         var ctx = new StubStateMachineContext();
-        var sm = new StackStateMachine("machine1", SmPushIdx, SmPopIdx, pool, ctx);
+        var sm = new StackStateMachine("machine1", _smPushIdx, _smPopIdx, pool, ctx);
 
         sm.Push("state_bottom");
         sm.Push("state_top");
@@ -177,8 +177,8 @@ public class StateMachineStrategyBaseTests
 
         var ctx = new StubStateMachineContext();
         var container = new StateMachineContainer(pool, ctx);
-        container.CreateOrGet("machine_a", SmPushIdx, SmPopIdx);
-        container.CreateOrGet("machine_b", SmPushIdx, SmPopIdx);
+        container.CreateOrGet("machine_a", _smPushIdx, _smPopIdx);
+        container.CreateOrGet("machine_b", _smPushIdx, _smPopIdx);
 
         container.TryGet("machine_a", out var smA);
         container.TryGet("machine_b", out var smB);

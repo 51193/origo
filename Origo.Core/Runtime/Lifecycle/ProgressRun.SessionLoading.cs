@@ -58,7 +58,7 @@ internal sealed partial class ProgressRun
                 throw;
             }
 
-            var fg = _owner._sessionManager.ForegroundSession
+            _ = _owner._sessionManager.ForegroundSession
                      ?? throw new InvalidOperationException("No active foreground session after topology restore.");
             _owner.EnsureActiveLevelInvariant();
         }

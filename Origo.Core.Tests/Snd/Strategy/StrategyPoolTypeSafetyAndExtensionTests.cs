@@ -79,7 +79,7 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         var mgr = new SndStrategyManager(pool, NullLogger.Instance);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            mgr.RecoverStrategiesOnly(new[] { "pool.active_for_entity" }));
+            mgr.RecoverStrategiesOnly(["pool.active_for_entity"]));
         Assert.Contains("LifecycleStrategyBase", ex.Message, StringComparison.Ordinal);
     }
 
@@ -92,7 +92,7 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         var mgr = new SndStrategyManager(pool, NullLogger.Instance);
 
         var ex = Record.Exception(() =>
-            mgr.RecoverStrategiesOnly(new[] { "pool.entity" }));
+            mgr.RecoverStrategiesOnly(["pool.entity"]));
         Assert.Null(ex);
     }
 

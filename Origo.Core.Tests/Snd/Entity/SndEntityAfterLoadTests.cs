@@ -12,8 +12,8 @@ namespace Origo.Core.Tests;
 
 public class SndEntityAfterLoadTests
 {
-    private const string AIndex = "test.afterload.a";
-    private const string BIndex = "test.afterload.b";
+    private const string _aIndex = "test.afterload.a";
+    private const string _bIndex = "test.afterload.b";
 
     [Fact]
     public void AfterLoad_EmptyIndices_NoThrow()
@@ -125,7 +125,7 @@ public class SndEntityAfterLoadTests
         }
     }
 
-    [StrategyIndex(AIndex)]
+    [StrategyIndex(_aIndex)]
     private sealed class AfterLoadProbeAStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _events = new();
@@ -134,7 +134,7 @@ public class SndEntityAfterLoadTests
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) => Events?.Add("afterload:a");
     }
 
-    [StrategyIndex(BIndex)]
+    [StrategyIndex(_bIndex)]
     private sealed class AfterLoadProbeBStrategy : LifecycleStrategyBase
     {
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) =>

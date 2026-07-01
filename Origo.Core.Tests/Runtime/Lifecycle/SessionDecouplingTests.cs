@@ -126,8 +126,8 @@ public class SessionDecouplingTests
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         // Both should expose ISndSceneHost (which includes FindByName/Spawn/GetEntities).
-        Assert.IsAssignableFrom<ISndSceneHost>(((SessionRun)fg).SceneHost);
-        Assert.IsAssignableFrom<ISndSceneHost>(((SessionRun)bg).SceneHost);
+        Assert.IsType<ISndSceneHost>(((SessionRun)fg).SceneHost, exactMatch: false);
+        Assert.IsType<ISndSceneHost>(((SessionRun)bg).SceneHost, exactMatch: false);
 
         // Verify methods are directly callable without casting.
         var fgHost = ((SessionRun)fg).SceneHost;

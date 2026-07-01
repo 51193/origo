@@ -15,11 +15,11 @@ namespace Origo.Core.Tests;
 
 public class ObserverStrategyTests
 {
-    private const string SelfWatchIdx = "observer.test.self_watch";
-    private const string MultiKeyIdx = "observer.test.multi_key";
-    private const string NoDataKeyIdx = "observer.test.no_data_key";
-    private const string MemoryObservedIdx = "observer.test.memory";
-    private const string ThrowOnMountIdx = "observer.test.throw_on_mount";
+    private const string _selfWatchIdx = "observer.test.self_watch";
+    private const string _multiKeyIdx = "observer.test.multi_key";
+    private const string _noDataKeyIdx = "observer.test.no_data_key";
+    private const string _memoryObservedIdx = "observer.test.memory";
+    private const string _throwOnMountIdx = "observer.test.throw_on_mount";
 
     // ── Registration ───────────────────────────────────────────────────
 
@@ -29,7 +29,7 @@ public class ObserverStrategyTests
         var world = TestFactory.CreateSndWorld();
         world.RegisterStrategy(() => new SelfWatchObserver());
 
-        Assert.Contains(SelfWatchIdx, world.GetRegisteredStrategyIndices());
+        Assert.Contains(_selfWatchIdx, world.GetRegisteredStrategyIndices());
     }
 
     [Fact]
@@ -56,12 +56,12 @@ public class ObserverStrategyTests
     [Fact]
     public void Mount_TriggersOnMounted_WithCorrectParameters()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
 
         Assert.Single(MemoryObserver.MountedCalls);
         var call = MemoryObserver.MountedCalls[0];
@@ -72,13 +72,13 @@ public class ObserverStrategyTests
     [Fact]
     public void Unmount_TriggersOnUnmounted_WithCorrectParameters()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
-        entity.UnmountObserverStrategy(entity.Name, MemoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
+        entity.UnmountObserverStrategy(entity.Name, _memoryObservedIdx);
 
         Assert.Single(MemoryObserver.UnmountedCalls);
     }
@@ -86,12 +86,12 @@ public class ObserverStrategyTests
     [Fact]
     public void Mount_Duplicate_DoesNotThrow()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.MountedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
 
         Assert.Equal(2, MemoryObserver.MountedCalls.Count);
     }
@@ -99,13 +99,13 @@ public class ObserverStrategyTests
     [Fact]
     public void Unmount_OnlyRemovesOneInstance()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.UnmountedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
-        entity.UnmountObserverStrategy(entity.Name, MemoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
+        entity.UnmountObserverStrategy(entity.Name, _memoryObservedIdx);
 
         Assert.Single(MemoryObserver.UnmountedCalls);
     }
@@ -115,12 +115,12 @@ public class ObserverStrategyTests
     [Fact]
     public void Mount_WhenOnMountedThrows_RollsBackAndReturnsToPool()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         ThrowOnMountObserver.DataChangedCalls.Clear();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            entity.MountObserverStrategy(entity.Name, ThrowOnMountIdx));
+            entity.MountObserverStrategy(entity.Name, _throwOnMountIdx));
         Assert.Contains("OnMounted boom", ex.Message);
 
         // After failure, data subscription must be rolled back
@@ -133,11 +133,11 @@ public class ObserverStrategyTests
     [Fact]
     public void SetData_TriggersOnDataChanged_ForObservedKey()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         SelfWatchObserver.DataChangedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
         entity.SetData("character.hp", 50);
 
         Assert.Single(SelfWatchObserver.DataChangedCalls);
@@ -147,11 +147,11 @@ public class ObserverStrategyTests
     [Fact]
     public void SetData_DoesNotTrigger_ForUnobservedKey()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         SelfWatchObserver.DataChangedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
         entity.SetData("character.mp", 20);
 
         Assert.Empty(SelfWatchObserver.DataChangedCalls);
@@ -160,12 +160,12 @@ public class ObserverStrategyTests
     [Fact]
     public void SetData_DoesNotTrigger_AfterUnmount()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         SelfWatchObserver.DataChangedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
-        entity.UnmountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
+        entity.UnmountObserverStrategy(entity.Name, _selfWatchIdx);
         entity.SetData("character.hp", 50);
 
         Assert.Empty(SelfWatchObserver.DataChangedCalls);
@@ -174,12 +174,12 @@ public class ObserverStrategyTests
     [Fact]
     public void SetData_TriggersForMultipleKeys()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         MultiKeyObserver.HpChangedCalls.Clear();
         MultiKeyObserver.MpChangedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, MultiKeyIdx);
+        entity.MountObserverStrategy(entity.Name, _multiKeyIdx);
         entity.SetData("character.hp", 30);
         entity.SetData("character.mp", 10);
 
@@ -190,12 +190,12 @@ public class ObserverStrategyTests
     [Fact]
     public void SetData_OldAndNewValuesCorrect()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         SelfWatchObserver.DataChangedCalls.Clear();
 
         entity.SetData("character.hp", 100);
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
         entity.SetData("character.hp", 50);
 
         Assert.Single(SelfWatchObserver.DataChangedCalls);
@@ -209,15 +209,15 @@ public class ObserverStrategyTests
     [Fact]
     public void NoDataKeyObserver_CanMountAndUnmount()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
 
         var ex1 = Record.Exception(() =>
-            entity.MountObserverStrategy(entity.Name, NoDataKeyIdx));
+            entity.MountObserverStrategy(entity.Name, _noDataKeyIdx));
         Assert.Null(ex1);
 
         var ex2 = Record.Exception(() =>
-            entity.UnmountObserverStrategy(entity.Name, NoDataKeyIdx));
+            entity.UnmountObserverStrategy(entity.Name, _noDataKeyIdx));
         Assert.Null(ex2);
     }
 
@@ -226,22 +226,22 @@ public class ObserverStrategyTests
     [Fact]
     public void BuildMetaData_IncludesObserverBindings()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
 
         var meta = entity.SaveSingle();
 
         Assert.NotNull(meta.StrategyMetaData);
         Assert.Single(meta.StrategyMetaData.ObserverIndices);
         Assert.Equal(entity.Name, meta.StrategyMetaData.ObserverIndices[0].Target);
-        Assert.Contains(SelfWatchIdx, meta.StrategyMetaData.ObserverIndices[0].ObserverIndices);
+        Assert.Contains(_selfWatchIdx, meta.StrategyMetaData.ObserverIndices[0].ObserverIndices);
     }
 
     [Fact]
     public void BuildMetaData_EmptyBindings_WhenNoObservers()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
 
         var meta = entity.SaveSingle();
@@ -253,10 +253,10 @@ public class ObserverStrategyTests
     [Fact]
     public void BuildMetaData_MultipleTargets_GroupedCorrectly()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
-        entity.MountObserverStrategy(entity.Name, MultiKeyIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _multiKeyIdx);
 
         var meta = entity.SaveSingle();
 
@@ -269,9 +269,9 @@ public class ObserverStrategyTests
     [Fact]
     public void Dead_ReleasesObserverStrategies()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
         SelfWatchObserver.DataChangedCalls.Clear();
 
         entity.DeadSingle();
@@ -284,12 +284,12 @@ public class ObserverStrategyTests
     [Fact]
     public void Dead_TriggersOnUnmounted()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
         entity.DeadSingle();
 
         Assert.Single(MemoryObserver.UnmountedCalls);
@@ -329,11 +329,11 @@ public class ObserverStrategyTests
     [Fact]
     public void MountObserverStrategy_WithSelfTargetName_Succeeds()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta("test_hero"));
         MemoryObserver.MountedCalls.Clear();
 
-        entity.MountObserverStrategy("test_hero", MemoryObservedIdx);
+        entity.MountObserverStrategy("test_hero", _memoryObservedIdx);
 
         Assert.Single(MemoryObserver.MountedCalls);
     }
@@ -341,11 +341,11 @@ public class ObserverStrategyTests
     [Fact]
     public void MountObserverStrategy_WithDifferentTargetName_Throws()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta("observer"));
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            entity.MountObserverStrategy("other_entity", MemoryObservedIdx));
+            entity.MountObserverStrategy("other_entity", _memoryObservedIdx));
         Assert.Contains("Cross-entity", ex.Message, StringComparison.Ordinal);
     }
 
@@ -354,12 +354,12 @@ public class ObserverStrategyTests
     [Fact]
     public void Quit_TriggersOnUnmounted()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
         entity.QuitSingle();
 
         Assert.Single(MemoryObserver.UnmountedCalls);
@@ -370,9 +370,9 @@ public class ObserverStrategyTests
     [Fact]
     public void DeepClone_PreservesObserverBindings()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
 
         var meta = entity.SaveSingle();
         var clone = meta.DeepClone();
@@ -389,7 +389,7 @@ public class ObserverStrategyTests
     {
         var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
 
         var meta = entity.SaveSingle();
 
@@ -408,17 +408,17 @@ public class ObserverStrategyTests
     [Fact]
     public void Mount_NullTargetName_Throws()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
 
         Assert.Throws<InvalidOperationException>(
-            () => entity.MountObserverStrategy((string)null!, MemoryObservedIdx));
+            () => entity.MountObserverStrategy((string)null!, _memoryObservedIdx));
     }
 
     [Fact]
     public void Mount_EmptyObserverIndex_Throws()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
 
         Assert.Throws<ArgumentException>(
@@ -428,7 +428,7 @@ public class ObserverStrategyTests
     [Fact]
     public void Mount_UnknownObserverIndex_Throws()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
 
         Assert.Throws<InvalidOperationException>(
@@ -445,7 +445,7 @@ public class ObserverStrategyTests
 
         var bindings = new List<StrategyMetaData.ObserverBinding>
         {
-            new() { Target = "ghost", ObserverIndices = [SelfWatchIdx] }
+            new() { Target = "ghost", ObserverIndices = [_selfWatchIdx] }
         };
 
         var ex = Record.Exception(() =>
@@ -461,7 +461,7 @@ public class ObserverStrategyTests
     {
         var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
 
         Assert.True(topology.HasBindingTargetingFrom(entity.Name, entity.Name));
     }
@@ -480,8 +480,8 @@ public class ObserverStrategyTests
     {
         var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
 
         topology.RemoveBindingsTargetingFor(entity, entity.Name);
 
@@ -497,7 +497,7 @@ public class ObserverStrategyTests
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.UnmountedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, MemoryObservedIdx);
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
         topology.TeardownOutgoingFor(entity, n => n == entity.Name ? entity : null);
 
         Assert.Single(MemoryObserver.UnmountedCalls);
@@ -524,7 +524,7 @@ public class ObserverStrategyTests
         host.BindContext(ctx);
 
         var meta = CreateMeta("bob");
-        host.RecoverFromMetaList(new[] { meta });
+        host.RecoverFromMetaList([meta]);
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
                 lc.FireAfterSpawnHooks();
@@ -561,7 +561,7 @@ public class ObserverStrategyTests
         host.BindContext(ctx);
 
         var meta = CreateMeta("bob");
-        host.RecoverFromMetaList(new[] { meta });
+        host.RecoverFromMetaList([meta]);
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
                 lc.FireAfterSpawnHooks();
@@ -577,9 +577,9 @@ public class ObserverStrategyTests
     [Fact]
     public void DataChange_OnlyTargetEntityNotified()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta("alice"));
-        entity.MountObserverStrategy("alice", SelfWatchIdx);
+        entity.MountObserverStrategy("alice", _selfWatchIdx);
         SelfWatchObserver.DataChangedCalls.Clear();
 
         entity.SetData("character.hp", 10);
@@ -592,10 +592,10 @@ public class ObserverStrategyTests
     [Fact]
     public void BuildObserverBindings_TwoTargets_GroupsCorrectly()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta("self"));
-        entity.MountObserverStrategy("self", SelfWatchIdx);
-        entity.MountObserverStrategy("self", MultiKeyIdx);
+        entity.MountObserverStrategy("self", _selfWatchIdx);
+        entity.MountObserverStrategy("self", _multiKeyIdx);
 
         var meta = entity.SaveSingle();
         var bindings = meta.StrategyMetaData!.ObserverIndices;
@@ -603,19 +603,19 @@ public class ObserverStrategyTests
         Assert.Single(bindings);
         Assert.Equal("self", bindings[0].Target);
         Assert.Equal(2, bindings[0].ObserverIndices.Count);
-        Assert.Contains(SelfWatchIdx, bindings[0].ObserverIndices);
-        Assert.Contains(MultiKeyIdx, bindings[0].ObserverIndices);
+        Assert.Contains(_selfWatchIdx, bindings[0].ObserverIndices);
+        Assert.Contains(_multiKeyIdx, bindings[0].ObserverIndices);
     }
 
     [Fact]
     public void OnDataChanged_OldAndNewValues_Correct()
     {
-        var (entity, ctx) = Setup();
+        var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
         entity.SetData("character.hp", 100);
         SelfWatchObserver.DataChangedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, SelfWatchIdx);
+        entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
         entity.SetData("character.hp", 50);
 
         Assert.Single(SelfWatchObserver.DataChangedCalls);
@@ -685,7 +685,7 @@ public class ObserverStrategyTests
 
     // ── Test strategies ────────────────────────────────────────────────
 
-    [StrategyIndex(SelfWatchIdx)]
+    [StrategyIndex(_selfWatchIdx)]
     [ObserveData("character.hp")]
     private sealed class SelfWatchObserver : ObserverStrategyBase
     {
@@ -715,7 +715,7 @@ public class ObserverStrategyTests
         }
     }
 
-    [StrategyIndex(MultiKeyIdx)]
+    [StrategyIndex(_multiKeyIdx)]
     [ObserveData("character.hp")]
     [ObserveData("character.mp")]
     private sealed class MultiKeyObserver : ObserverStrategyBase
@@ -735,12 +735,12 @@ public class ObserverStrategyTests
         }
     }
 
-    [StrategyIndex(NoDataKeyIdx)]
+    [StrategyIndex(_noDataKeyIdx)]
     private sealed class NoDataKeyObserver : ObserverStrategyBase
     {
     }
 
-    [StrategyIndex(MemoryObservedIdx)]
+    [StrategyIndex(_memoryObservedIdx)]
     private sealed class MemoryObserver : ObserverStrategyBase
     {
         private static readonly AsyncLocal<List<MountCall>> _mountedCalls = new();
@@ -763,7 +763,7 @@ public class ObserverStrategyTests
     {
         // _counter 实例字段有意保留：验证注册有实例字段的观察者被 SndStrategyPool 拒绝
 #pragma warning disable CS0169
-        private int _counter;
+        private readonly int _counter;
 #pragma warning restore CS0169
     }
 
@@ -771,7 +771,7 @@ public class ObserverStrategyTests
     {
     }
 
-    [StrategyIndex(ThrowOnMountIdx)]
+    [StrategyIndex(_throwOnMountIdx)]
     [ObserveData("character.hp")]
     private sealed class ThrowOnMountObserver : ObserverStrategyBase
     {

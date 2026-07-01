@@ -21,8 +21,8 @@ public sealed class OrigoConsole
 
     internal static IReadOnlyList<IConsoleCommandHandler> CreateHandlers(OrigoRuntime runtime, ConsoleCommandRouter router)
     {
-        return new List<IConsoleCommandHandler>
-        {
+        return
+        [
             new SpawnTemplateCommandHandler(runtime),
             new SndCountCommandHandler(runtime),
             new FindEntityCommandHandler(runtime),
@@ -34,7 +34,7 @@ public sealed class OrigoConsole
             new SetEntityDataCommandHandler(runtime),
             new InvokeStrategyCommandHandler(runtime),
             new HelpCommandHandler(router)
-        };
+        ];
     }
 
     public OrigoConsole(IConsoleInputSource input, IConsoleOutputChannel output, OrigoRuntime runtime)

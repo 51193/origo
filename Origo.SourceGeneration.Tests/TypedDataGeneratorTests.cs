@@ -18,14 +18,14 @@ public class TypedDataGeneratorTests
     // Header (usings + assembly attributes) is kept separate from the type body so a
     // [assembly: SndInlineTypes(...)] attribute can be inserted before any type
     // declaration, as C# requires.
-    private const string ScaffoldHeader = """
+    private const string _scaffoldHeader = """
         using System;
         using System.Runtime.CompilerServices;
 
         [assembly: InternalsVisibleTo("Origo.AdapterUnderTest")]
         """;
 
-    private const string ScaffoldBody = """
+    private const string _scaffoldBody = """
         namespace Origo.Core.Snd.Metadata
         {
             [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
@@ -68,28 +68,28 @@ public class TypedDataGeneratorTests
         }
         """;
 
-    private const string HomePrimitivesAttribute = """
+    private const string _homePrimitivesAttribute = """
         [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(
             typeof(byte), typeof(sbyte), typeof(short), typeof(ushort),
             typeof(int), typeof(uint), typeof(long), typeof(ulong),
             typeof(float), typeof(double), typeof(bool), typeof(char), typeof(string))]
         """;
 
-    private const string AdapterTypes = """
+    private const string _adapterTypes = """
         [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(StubVec3), typeof(StubRef))]
         public struct StubVec3 { public float X; public float Y; public float Z; }
         public sealed class StubRef { public int Value; }
         """;
 
     private static GeneratorOutput RunHome(string attribute) =>
-        GeneratorTestHarness.Run("Origo.HomeUnderTest", ScaffoldHeader + "\n" + attribute + "\n" + ScaffoldBody);
+        GeneratorTestHarness.Run("Origo.HomeUnderTest", _scaffoldHeader + "\n" + attribute + "\n" + _scaffoldBody);
 
     private static GeneratorOutput RunAdapter(string adapterSource)
     {
         var homeCompilation = GeneratorTestHarness.CreateCompilation(
-            "Origo.CoreUnderTest", ScaffoldHeader + "\n" + ScaffoldBody);
+            "Origo.CoreUnderTest", _scaffoldHeader + "\n" + _scaffoldBody);
         var homeRef = homeCompilation.ToMetadataReference();
-        return GeneratorTestHarness.Run("Origo.AdapterUnderTest", adapterSource, new[] { homeRef });
+        return GeneratorTestHarness.Run("Origo.AdapterUnderTest", adapterSource, [homeRef]);
     }
 
     // ─── Home mode ─────────────────────────────────────────────────
@@ -97,7 +97,7 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Home_Primitives_GeneratesExpectedMembers_AndCompiles()
     {
-        var output = RunHome(HomePrimitivesAttribute);
+        var output = RunHome(_homePrimitivesAttribute);
 
         Assert.Empty(output.GeneratorDiagnostics);
         Assert.Empty(output.CompileErrors);
@@ -116,7 +116,7 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Home_StringStoredViaRefSlot()
     {
-        var output = RunHome(HomePrimitivesAttribute);
+        var output = RunHome(_homePrimitivesAttribute);
         var text = output.AllGeneratedText;
 
         Assert.Contains("public readonly string? AsString() => (string?)_ref;", text);
@@ -128,7 +128,7 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Home_DoesNotEmitSilentStubHelpers()
     {
-        var text = RunHome(HomePrimitivesAttribute).AllGeneratedText;
+        var text = RunHome(_homePrimitivesAttribute).AllGeneratedText;
 
         Assert.DoesNotContain("BitsFrom", text);
         Assert.DoesNotContain("ReadBitsAs", text);
@@ -166,7 +166,7 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Adapter_ValueAndRefTypes_UseRefSlot_AndCompiles()
     {
-        var output = RunAdapter(AdapterTypes);
+        var output = RunAdapter(_adapterTypes);
 
         Assert.Empty(output.GeneratorDiagnostics);
         Assert.Empty(output.CompileErrors);
@@ -190,7 +190,7 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Adapter_DoesNotEmitInlineHelpers()
     {
-        var text = RunAdapter(AdapterTypes).AllGeneratedText;
+        var text = RunAdapter(_adapterTypes).AllGeneratedText;
 
         Assert.DoesNotContain("ReadBitsAs", text);
         Assert.DoesNotContain("BitsFrom", text);
@@ -216,8 +216,8 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Generation_IsDeterministic()
     {
-        var first = RunHome(HomePrimitivesAttribute).AllGeneratedText;
-        var second = RunHome(HomePrimitivesAttribute).AllGeneratedText;
+        var first = RunHome(_homePrimitivesAttribute).AllGeneratedText;
+        var second = RunHome(_homePrimitivesAttribute).AllGeneratedText;
 
         Assert.Equal(first, second);
     }
@@ -225,7 +225,7 @@ public class TypedDataGeneratorTests
     [Fact]
     public void StartKind_OffsetIsHonored_AndNumberingIsSequential()
     {
-        var text = RunAdapter(AdapterTypes).AllGeneratedText;
+        var text = RunAdapter(_adapterTypes).AllGeneratedText;
 
         Assert.Contains("TypedData.RegisterKind(128, typeof(StubVec3));", text);
         Assert.Contains("TypedData.RegisterKind(129, typeof(StubRef));", text);
@@ -311,7 +311,7 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Incremental_SameInputTwice_ProducesIdenticalOutput()
     {
-        var source = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var source = _scaffoldHeader + "\n" + _homePrimitivesAttribute + "\n" + _scaffoldBody;
         var compilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
         var driver = GeneratorTestHarness.CreateTrackedDriver();
 
@@ -326,12 +326,12 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Incremental_SameInputTwice_NoAdditionalOutputs()
     {
-        var source = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var source = _scaffoldHeader + "\n" + _homePrimitivesAttribute + "\n" + _scaffoldBody;
         var compilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
         var driver = GeneratorTestHarness.CreateTrackedDriver();
 
         var (first, driver2) = GeneratorTestHarness.RunIncremental(driver, compilation);
-        var (second, driver3) = GeneratorTestHarness.RunIncremental(driver2, compilation);
+        var (_, driver3) = GeneratorTestHarness.RunIncremental(driver2, compilation);
         var (third, _) = GeneratorTestHarness.RunIncremental(driver3, compilation);
 
         Assert.Equal(first.GeneratedSources.Length, third.GeneratedSources.Length);
@@ -342,7 +342,7 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Incremental_UnrelatedCodeChange_GeneratedOutputUnchanged()
     {
-        var sourceA = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var sourceA = _scaffoldHeader + "\n" + _homePrimitivesAttribute + "\n" + _scaffoldBody;
         var sourceB = sourceA + "\n// unrelated comment";
         var compilationA = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", sourceA);
         var compilationB = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", sourceB);
@@ -359,8 +359,8 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Incremental_NoAttribute_ThenAddAttribute_ProducesNewOutput()
     {
-        var noAttrSource = ScaffoldHeader + "\n" + ScaffoldBody;
-        var withAttrSource = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
+        var noAttrSource = _scaffoldHeader + "\n" + _scaffoldBody;
+        var withAttrSource = _scaffoldHeader + "\n" + _homePrimitivesAttribute + "\n" + _scaffoldBody;
         var compilationA = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", noAttrSource);
         var compilationB = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", withAttrSource);
         var driver = GeneratorTestHarness.CreateTrackedDriver();
@@ -375,8 +375,8 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Incremental_HasAttribute_ThenRemoveAttribute_OutputDisappears()
     {
-        var withAttrSource = ScaffoldHeader + "\n" + HomePrimitivesAttribute + "\n" + ScaffoldBody;
-        var noAttrSource = ScaffoldHeader + "\n" + ScaffoldBody;
+        var withAttrSource = _scaffoldHeader + "\n" + _homePrimitivesAttribute + "\n" + _scaffoldBody;
+        var noAttrSource = _scaffoldHeader + "\n" + _scaffoldBody;
         var compilationA = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", withAttrSource);
         var compilationB = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", noAttrSource);
         var driver = GeneratorTestHarness.CreateTrackedDriver();
@@ -391,8 +391,8 @@ public class TypedDataGeneratorTests
     [Fact]
     public void Incremental_AddTypeToExistingAttribute_OutputChanges()
     {
-        var prefix = ScaffoldHeader + "\n";
-        var suffix = "\n" + ScaffoldBody;
+        var prefix = _scaffoldHeader + "\n";
+        var suffix = "\n" + _scaffoldBody;
         var oneTypeAttr = "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int))]";
         var twoTypeAttr = "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int), typeof(float))]";
         var sourceA = prefix + oneTypeAttr + suffix;

@@ -9,7 +9,7 @@ namespace Origo.Core.Snd.Strategy;
 
 internal sealed class SndStrategyManager
 {
-    private const string LogTag = nameof(SndStrategyManager);
+    private const string _logTag = nameof(SndStrategyManager);
     private readonly ILogger _logger;
     private readonly SndStrategyPool _pool;
     private readonly List<StrategyEntry> _processBuffer = [];
@@ -50,7 +50,7 @@ internal sealed class SndStrategyManager
             throw;
         }
 
-        _logger.Log(LogLevel.Info, LogTag,
+        _logger.Log(LogLevel.Info, _logTag,
             new LogMessageBuilder().Build($"Strategies recovered: {_strategies.Count}."));
     }
 
@@ -84,7 +84,7 @@ internal sealed class SndStrategyManager
         foreach (var s in _strategies.ToArray()) hook(s.Strategy, entity, ctx);
     }
 
-    internal IReadOnlyCollection<string> GetStrategyIndices() => _strategies.Select(s => s.Index).ToArray();
+    internal IReadOnlyCollection<string> GetStrategyIndices() => [.. _strategies.Select(s => s.Index)];
 
     public void Add(ISndEntity entity, string index, ISndContext ctx)
     {
@@ -103,7 +103,7 @@ internal sealed class SndStrategyManager
             throw;
         }
 
-        _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder()
+        _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder()
             .AddContext("entityName", entity.Name)
             .AddContext("strategyIndex", index)
             .Build("Strategy added."));
@@ -118,7 +118,7 @@ internal sealed class SndStrategyManager
         entry.Strategy.BeforeRemove(entity, ctx);
         _strategies.RemoveAt(i);
         _pool.ReleaseStrategy(index);
-        _logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder()
+        _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder()
             .AddContext("entityName", entity.Name)
             .AddContext("strategyIndex", index)
             .Build("Strategy removed."));

@@ -24,7 +24,7 @@ public class FrontSession_StrategyContextReceivesFrontFlagTests
     {
         var (ctx, _) = CreateContext();
 
-        Assert.False(ctx.Runtime.SessionManager.ForegroundSession?.IsFrontSession == true);
+        Assert.False(ctx.Runtime.SessionManager.ForegroundSession?.IsFrontSession ?? false);
         Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
     }
 

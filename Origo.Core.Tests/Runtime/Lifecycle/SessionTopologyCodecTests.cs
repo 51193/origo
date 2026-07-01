@@ -26,11 +26,11 @@ public class SessionTopologyCodecTests
     [Fact]
     public void Parse_AndSerialize_RoundTripPreservesDescriptors()
     {
-        var raw = SessionTopologyCodec.Join(new[]
-        {
+        var raw = SessionTopologyCodec.Join(
+        [
             SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, "main_menu", false),
             SessionTopologyCodec.Serialize("bg_city", "city_level", true)
-        });
+        ]);
 
         var descriptors = SessionTopologyCodec.Parse(raw);
 

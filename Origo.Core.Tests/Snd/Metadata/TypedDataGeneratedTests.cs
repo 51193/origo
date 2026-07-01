@@ -23,7 +23,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void ImplicitConversion_Int32_RoundTrip()
     {
-        TypedData td = (TypedData)42;
+        var td = (TypedData)42;
         Assert.True(td.TryGetInt32(out var v));
         Assert.Equal(42, v);
     }
@@ -31,7 +31,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void ImplicitConversion_Single_RoundTrip()
     {
-        TypedData td = (TypedData)3.14f;
+        var td = (TypedData)3.14f;
         Assert.True(td.TryGetSingle(out var v));
         Assert.Equal(3.14f, v, 0.0001f);
     }
@@ -39,7 +39,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void ImplicitConversion_Double_RoundTrip()
     {
-        TypedData td = (TypedData)2.718281828;
+        var td = (TypedData)2.718281828;
         Assert.True(td.TryGetDouble(out var v));
         Assert.Equal(2.718281828, v);
     }
@@ -67,7 +67,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void ImplicitConversion_Byte_RoundTrip()
     {
-        TypedData td = (TypedData)(byte)200;
+        var td = (TypedData)(byte)200;
         Assert.True(td.TryGetByte(out var v));
         Assert.Equal((byte)200, v);
     }
@@ -75,7 +75,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void ExplicitConversion_Int64_RoundTrip()
     {
-        TypedData td = (TypedData)((long)int.MaxValue + 1);
+        var td = (TypedData)((long)int.MaxValue + 1);
         Assert.True(td.TryGetInt64(out var v));
         Assert.Equal((long)int.MaxValue + 1, v);
     }
@@ -83,7 +83,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void ImplicitConversion_Char_RoundTrip()
     {
-        TypedData td = (TypedData)'Z';
+        var td = (TypedData)'Z';
         Assert.True(td.TryGetChar(out var v));
         Assert.Equal('Z', v);
     }
@@ -91,7 +91,7 @@ public class TypedDataGeneratedTests
     [Fact]
     public void CrossTypeAccess_Int32AsSingle_ReturnsFalse()
     {
-        TypedData td = (TypedData)42;
+        var td = (TypedData)42;
         Assert.False(td.TryGetSingle(out _));
     }
 
@@ -375,7 +375,7 @@ public class TypedDataGeneratedTests
         GC.Collect();
         GC.WaitForPendingFinalizers();
         var before = GC.GetAllocatedBytesForCurrentThread();
-        var unused = TypedDataObjectConverter.ToObject(td);
+        _ = TypedDataObjectConverter.ToObject(td);
         var after = GC.GetAllocatedBytesForCurrentThread();
 
         Assert.Equal(42, TypedDataObjectConverter.ToObject(td));

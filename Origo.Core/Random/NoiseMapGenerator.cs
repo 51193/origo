@@ -8,16 +8,16 @@ namespace Origo.Core.Random;
 /// </summary>
 public static class NoiseMapGenerator
 {
-    private const float SimplexWeight = 0.7f;
-    private const float WorleyWeight = 0.3f;
-    private const int DefaultSeed = 1337;
-    private const float DefaultFrequency = 0.01f;
+    private const float _simplexWeight = 0.7f;
+    private const float _worleyWeight = 0.3f;
+    private const int _defaultSeed = 1337;
+    private const float _defaultFrequency = 0.01f;
 
     /// <summary>
     ///     生成 Simplex + Worley(70/30) 混合噪声图，返回长度为 <c>size*size</c> 的行优先数组，值域为 <c>0..1</c>。
     /// </summary>
-    public static float[] GenerateSimplexWorleyBlendMap(int size, int seed = DefaultSeed,
-        float frequency = DefaultFrequency) => GenerateSimplexWorleyBlendMap(size, seed, frequency, 1, 2f, 0.5f, 1f);
+    public static float[] GenerateSimplexWorleyBlendMap(int size, int seed = _defaultSeed,
+        float frequency = _defaultFrequency) => GenerateSimplexWorleyBlendMap(size, seed, frequency, 1, 2f, 0.5f, 1f);
 
     /// <summary>
     ///     生成 Simplex + Worley(70/30) 混合噪声图（扩展参数版本）。
@@ -48,7 +48,7 @@ public static class NoiseMapGenerator
             {
                 var simplexValue = simplex.GetNoise(x, y);
                 var worleyValue = worley.GetNoise(x, y);
-                var mixed = simplexValue * SimplexWeight + worleyValue * WorleyWeight;
+                var mixed = simplexValue * _simplexWeight + worleyValue * _worleyWeight;
                 map[y * size + x] = NormalizeToZeroOne(mixed);
             }
 

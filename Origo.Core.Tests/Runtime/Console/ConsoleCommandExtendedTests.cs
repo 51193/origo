@@ -229,7 +229,6 @@ public class ConsoleCommandExtendedTests
 
         input.Enqueue("help");
         runtime.Console!.ProcessPending();
-        var initialHelp = messages[0];
 
         // register a custom handler
         runtime.Console.RegisterHandler(new TestPingHandler());
@@ -254,7 +253,6 @@ public class ConsoleCommandExtendedTests
     public void GetRegisteredNames_ReturnsSortedNames()
     {
         var router = new ConsoleCommandRouter();
-        var outputChannel = new ConsoleOutputChannel();
         router.Register(new TestPingHandler());
 
         var names = router.GetRegisteredNames();
@@ -270,7 +268,7 @@ public class ConsoleCommandExtendedTests
         var invocation = new CommandInvocation
         {
             Command = "test_minmax",
-            PositionalArgs = new[] { "a" },
+            PositionalArgs = ["a"],
             NamedArgs = new Dictionary<string, string>()
         };
         var output = new ConsoleOutputChannel();
@@ -289,7 +287,7 @@ public class ConsoleCommandExtendedTests
         var invocation = new CommandInvocation
         {
             Command = "test_minmax",
-            PositionalArgs = new[] { "a", "b" },
+            PositionalArgs = ["a", "b"],
             NamedArgs = new Dictionary<string, string>()
         };
         var output = new ConsoleOutputChannel();
@@ -307,7 +305,7 @@ public class ConsoleCommandExtendedTests
         var invocation = new CommandInvocation
         {
             Command = "test_minmax",
-            PositionalArgs = new[] { "a", "b" },
+            PositionalArgs = ["a", "b"],
             NamedArgs = new Dictionary<string, string>()
         };
         var output = new ConsoleOutputChannel();
@@ -328,7 +326,7 @@ public class ConsoleCommandExtendedTests
         var invocation = new CommandInvocation
         {
             Command = "test_minmax",
-            PositionalArgs = new[] { "a", "b", "c", "d", "e" },
+            PositionalArgs = ["a", "b", "c", "d", "e"],
             NamedArgs = new Dictionary<string, string>()
         };
         var output = new ConsoleOutputChannel();
@@ -391,7 +389,7 @@ public class ConsoleCommandExtendedTests
 
         runtime.SndWorld.LoadTemplates("maps/t.map", logger);
 
-        TestFactory.BootstrapForegroundSession(runtime, logger);
+        TestFactory.BootstrapForegroundSession(runtime);
         consoleInput.Enqueue("spawn name=Ent1 template=tpl");
         runtime.Console!.ProcessPending();
 

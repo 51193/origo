@@ -9,7 +9,7 @@ namespace Origo.Core.Tests;
 
 public class SndArchetypeLoaderTests
 {
-    private static TestArchetypeFileSystem CreateFileSystem(string content) => new TestArchetypeFileSystem(content);
+    private static TestArchetypeFileSystem CreateFileSystem(string content) => new(content);
 
     [Fact]
     public void TryLoad_ValidMapFile_ReturnsAttributes()

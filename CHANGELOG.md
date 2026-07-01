@@ -10,6 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** Public methods in `MemoryFileSystem` (17 methods), `PlanExecutionStrategyBase` (7 lifecycle hooks), `ActiveStrategyExtensions` (3 methods), `GodotFileSystem` (3 methods), `GodotJsonConverterRegistry` (2 methods), `Blackboard`, `Astar`, `SndWorld`, `TypeStringMapping`, and `TryGetNumericExtensions` now throw `ArgumentNullException` on null parameters instead of silently proceeding or throwing downstream errors.
+- Private field naming convention enforced across the entire codebase (161 fields renamed to `_camelCase` prefix).
+- Code style rules (collection initialization simplification, `var` usage, pattern matching preferences) applied project-wide via `dotnet format`.
+
+### Removed
+
+- Unused method parameters removed from `SaveStorageFacade.CopyDirectoryFromSnapshot`, `OrigoAutoHost.CreateAndSetupSndManager`, `PlanExecutionStrategyBase.OnIntentChanged`/`OnActionStatusChanged`, `SetupProgressRun`, `RunDictWrite`, `TryInvoke`, `PrintCompare`, and `MeasureObserverAlloc`.
+
+### Fixed
+
+- CI format gate (`dotnet format --verify-no-changes --severity info`) now passes with zero violations.
+
 ## [0.0.8] - 2026-06-30
 
 ### Added

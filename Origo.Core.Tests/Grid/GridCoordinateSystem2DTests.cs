@@ -54,7 +54,7 @@ public class GridCoordinateSystem2DTests
     [Fact]
     public void WorldToGrid2D_PartialOutOfBounds_ReportsTrue()
     {
-        var (wx, wz) = GridCoordinateSystem.GridToWorld(new GridPos(5, 5), 1f, 10);
+        var (wx, _) = GridCoordinateSystem.GridToWorld(new GridPos(5, 5), 1f, 10);
         GridCoordinateSystem.WorldToGrid(wx, 1000f, 1f, 10, out var oob);
         Assert.True(oob);
     }

@@ -18,7 +18,7 @@ public class PressButtonCommandHandlerTests
         return new CommandInvocation
         {
             Command = "press_button",
-            PositionalArgs = new[] { entityName, buttonPath },
+            PositionalArgs = [entityName, buttonPath],
             NamedArgs = new Dictionary<string, string>()
         };
     }
@@ -46,7 +46,7 @@ public class PressButtonCommandHandlerTests
         var invocation = new CommandInvocation
         {
             Command = "press_button",
-            PositionalArgs = new[] { "Entity" },
+            PositionalArgs = ["Entity"],
             NamedArgs = new Dictionary<string, string>()
         };
 

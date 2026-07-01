@@ -15,13 +15,13 @@ namespace Origo.Core.Snd;
 internal sealed class SndMappings
 {
     /// <summary>Detects Godot-style schemes (<c>res://</c>, <c>user://</c>) and other URI-like resource ids.</summary>
-    private const string UriLikeSchemeSeparator = "://";
+    private const string _uriLikeSchemeSeparator = "://";
 
     /// <summary>JSON key for template reference in meta list shorthand entries.</summary>
-    private const string TemplateKeyField = "templateKey";
+    private const string _templateKeyField = "templateKey";
 
     /// <summary>JSON key for entity display name in meta list shorthand entries.</summary>
-    private const string SndNameField = "sndName";
+    private const string _sndNameField = "sndName";
 
     private readonly Dictionary<string, string> _sceneAliases = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _templatePaths = new(StringComparer.Ordinal);
@@ -128,19 +128,19 @@ internal sealed class SndMappings
         var sndMetaConverter = registry.Get<SndMetaData>();
 
         foreach (var item in root.Elements)
-            if (item.Kind == DataSourceNodeKind.Map && item.ContainsKey(TemplateKeyField))
+            if (item.Kind == DataSourceNodeKind.Map && item.ContainsKey(_templateKeyField))
             {
-                var templateKey = item[TemplateKeyField].AsString();
+                var templateKey = item[_templateKeyField].AsString();
                 if (string.IsNullOrWhiteSpace(templateKey))
-                    throw new InvalidOperationException($"Config entry has an empty '{TemplateKeyField}'.");
+                    throw new InvalidOperationException($"Config entry has an empty '{_templateKeyField}'.");
 
-                var sndName = item.TryGetValue(SndNameField, out var sndNameNode) && sndNameNode is not null
+                var sndName = item.TryGetValue(_sndNameField, out var sndNameNode) && sndNameNode is not null
                     ? sndNameNode.AsString()
                     : string.Empty;
 
                 if (string.IsNullOrWhiteSpace(sndName))
                     throw new InvalidOperationException(
-                        $"Config entry referencing template '{templateKey}' has an empty '{SndNameField}'.");
+                        $"Config entry referencing template '{templateKey}' has an empty '{_sndNameField}'.");
 
                 var template = ResolveTemplate(templateKey);
 
@@ -160,5 +160,5 @@ internal sealed class SndMappings
     }
 
     private static bool IsExplicitResourcePath(string id) =>
-        id.Contains(UriLikeSchemeSeparator, StringComparison.Ordinal);
+        id.Contains(_uriLikeSchemeSeparator, StringComparison.Ordinal);
 }

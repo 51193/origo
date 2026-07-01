@@ -24,7 +24,7 @@ public class EntityDataCommandHandlerTests
 
         var runtime = TestFactory.CreateRuntime(logger, sceneHost, tm, bb, consoleInput, consoleOutput);
 
-        TestFactory.BootstrapForegroundSession(runtime, logger);
+        TestFactory.BootstrapForegroundSession(runtime);
 
         var messages = new List<string>();
         consoleOutput.Subscribe(messages.Add);
@@ -108,7 +108,7 @@ public class EntityDataCommandHandlerTests
     [Fact]
     public void EntitySetData_PreservesExistingIntType()
     {
-        var (runtime, sceneHost, input, _, messages) = CreateConsoleRuntime();
+        var (runtime, sceneHost, input, _, _) = CreateConsoleRuntime();
         var entity = CreateEntity(sceneHost, "player");
         entity.SetData("hp", 50);
 
@@ -121,7 +121,7 @@ public class EntityDataCommandHandlerTests
     [Fact]
     public void EntitySetData_PreservesExistingFloatType()
     {
-        var (runtime, sceneHost, input, _, messages) = CreateConsoleRuntime();
+        var (runtime, sceneHost, input, _, _) = CreateConsoleRuntime();
         var entity = CreateEntity(sceneHost, "player");
         entity.SetData("speed", 1.5f);
 
@@ -134,7 +134,7 @@ public class EntityDataCommandHandlerTests
     [Fact]
     public void EntitySetData_PreservesExistingBoolType()
     {
-        var (runtime, sceneHost, input, _, messages) = CreateConsoleRuntime();
+        var (runtime, sceneHost, input, _, _) = CreateConsoleRuntime();
         var entity = CreateEntity(sceneHost, "player");
         entity.SetData("alive", false);
 
@@ -147,7 +147,7 @@ public class EntityDataCommandHandlerTests
     [Fact]
     public void EntitySetData_PreservesExistingStringType()
     {
-        var (runtime, sceneHost, input, _, messages) = CreateConsoleRuntime();
+        var (runtime, sceneHost, input, _, _) = CreateConsoleRuntime();
         var entity = CreateEntity(sceneHost, "player");
         entity.SetData("name", "OldName");
 

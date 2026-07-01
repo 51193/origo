@@ -18,17 +18,17 @@ namespace Origo.Core.Tests;
 
 public class InvokeStrategyCommandHandlerTests
 {
-    private const string QueryNameIndex = "invoke.cmd.query_name";
-    private const string CmdWithInputIndex = "invoke.cmd.with_input";
+    private const string _queryNameIndex = "invoke.cmd.query_name";
+    private const string _cmdWithInputIndex = "invoke.cmd.with_input";
 
     [Fact]
     public void InvokeStrategy_NoInput_ReturnsResult()
     {
         var (runtime, host, output) = Setup();
-        LoadEntities(host, [QueryNameIndex]);
+        LoadEntities(host, [_queryNameIndex]);
         var handler = new InvokeStrategyCommandHandler(runtime);
 
-        var ok = handler.TryExecute(CreateInvocation("E", QueryNameIndex),
+        var ok = handler.TryExecute(CreateInvocation("E", _queryNameIndex),
             output, out var errorMessage);
 
         Assert.True(ok);
@@ -40,11 +40,11 @@ public class InvokeStrategyCommandHandlerTests
     public void InvokeStrategy_WithInput_PassesToStrategy()
     {
         var (runtime, host, output) = Setup();
-        LoadEntities(host, [CmdWithInputIndex]);
+        LoadEntities(host, [_cmdWithInputIndex]);
         var handler = new InvokeStrategyCommandHandler(runtime);
 
         var ok = handler.TryExecute(
-            CreateInvocation("E", CmdWithInputIndex, @"{""x"":64,""z"":64}"),
+            CreateInvocation("E", _cmdWithInputIndex, @"{""x"":64,""z"":64}"),
             output, out var errorMessage);
 
         Assert.True(ok);
@@ -58,7 +58,7 @@ public class InvokeStrategyCommandHandlerTests
         var (runtime, _, output) = Setup();
         var handler = new InvokeStrategyCommandHandler(runtime);
 
-        var ok = handler.TryExecute(CreateInvocation("Ghost", QueryNameIndex),
+        var ok = handler.TryExecute(CreateInvocation("Ghost", _queryNameIndex),
             output, out var errorMessage);
 
         Assert.False(ok);
@@ -107,8 +107,8 @@ public class InvokeStrategyCommandHandlerTests
 
     private static void LoadEntities(ISndSceneHost host, string[] activeIndices)
     {
-        host.RecoverFromMetaList(new[]
-        {
+        host.RecoverFromMetaList(
+        [
             new SndMetaData
             {
                 Name = "E",
@@ -120,7 +120,7 @@ public class InvokeStrategyCommandHandlerTests
                 },
                 DataMetaData = new DataMetaData()
             }
-        });
+        ]);
     }
 
     private static CommandInvocation CreateInvocation(string entityName, string strategyIndex,
@@ -139,13 +139,13 @@ public class InvokeStrategyCommandHandlerTests
 
     // ── Test strategies ────────────────────────────────────────────────
 
-    [StrategyIndex(QueryNameIndex)]
+    [StrategyIndex(_queryNameIndex)]
     private sealed class QueryNameStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => entity.Name;
     }
 
-    [StrategyIndex(CmdWithInputIndex)]
+    [StrategyIndex(_cmdWithInputIndex)]
     private sealed class CmdWithInputStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => $"received input: {input}";

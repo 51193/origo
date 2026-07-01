@@ -28,7 +28,7 @@ namespace Origo.GodotAdapter.Bootstrap;
 [GlobalClass]
 public partial class OrigoAutoHost : Node
 {
-    private const string LogTag = nameof(OrigoAutoHost);
+    private const string _logTag = nameof(OrigoAutoHost);
 
     [Export] public string SystemBlackboardSaveRoot { get; set; } = "user://origo_saves";
     public GodotSndManager SndManager { get; private set; } = null!;
@@ -64,12 +64,12 @@ public partial class OrigoAutoHost : Node
     {
         var readyWatch = Stopwatch.StartNew();
         var bootstrapLogger = CreateBootstrapLogger();
-        bootstrapLogger.Log(LogLevel.Info, LogTag, new LogMessageBuilder().Build("_Ready begin."));
+        bootstrapLogger.Log(LogLevel.Info, _logTag, new LogMessageBuilder().Build("_Ready begin."));
         try
         {
             Runtime = CreateRuntime();
             readyWatch.Stop();
-            Runtime.Logger.Log(LogLevel.Info, LogTag,
+            Runtime.Logger.Log(LogLevel.Info, _logTag,
                 new LogMessageBuilder()
                     .SetElapsedMs(readyWatch.Elapsed.TotalMilliseconds)
                     .Build("_Ready completed."));
@@ -77,7 +77,7 @@ public partial class OrigoAutoHost : Node
         catch (Exception ex)
         {
             readyWatch.Stop();
-            bootstrapLogger.Log(LogLevel.Error, LogTag,
+            bootstrapLogger.Log(LogLevel.Error, _logTag,
                 new LogMessageBuilder().SetElapsedMs(readyWatch.Elapsed.TotalMilliseconds)
                     .Build($"_Ready failed: {ex.Message}"));
             throw;
@@ -91,7 +91,7 @@ public partial class OrigoAutoHost : Node
     {
         var createWatch = Stopwatch.StartNew();
         var logger = CreateBootstrapLogger();
-        logger.Log(LogLevel.Info, LogTag,
+        logger.Log(LogLevel.Info, _logTag,
             new LogMessageBuilder().Build("CreateRuntime begin."));
 
         var fileSystem = new GodotFileSystem();
@@ -99,7 +99,7 @@ public partial class OrigoAutoHost : Node
         SharedMetaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
         SharedPathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
 
-        var sndManager = CreateAndSetupSndManager(fileSystem, logger, out var sharedTypeMapping,
+        var sndManager = CreateAndSetupSndManager(out var sharedTypeMapping,
             out var converterRegistry, out var persistentBb,
             out var consoleInput, out var consoleOutputChannel);
 
@@ -122,7 +122,7 @@ public partial class OrigoAutoHost : Node
 
         var systemBbPath = SharedPathResolver.CombinePath(SystemBlackboardSaveRoot, "system.json");
         createWatch.Stop();
-        logger.Log(LogLevel.Info, LogTag,
+        logger.Log(LogLevel.Info, _logTag,
             new LogMessageBuilder()
                 .SetElapsedMs(createWatch.Elapsed.TotalMilliseconds)
                 .AddContext("filePath", systemBbPath)
@@ -132,8 +132,6 @@ public partial class OrigoAutoHost : Node
 
     [MemberNotNull(nameof(SndManager))]
     private GodotSndManager CreateAndSetupSndManager(
-        GodotFileSystem fileSystem,
-        GodotLogger logger,
         out TypeStringMapping sharedTypeMapping,
         out DataSourceConverterRegistry converterRegistry,
         out PersistentBlackboard persistentBb,

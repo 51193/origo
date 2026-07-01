@@ -120,7 +120,7 @@ public class SndContextFileAccessTests
     [Fact]
     public void WriteFile_WritesArrayNode()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
         var array = DataSourceNode.CreateArray();
         array.Add(DataSourceNode.CreateString("a"));
         array.Add(DataSourceNode.CreateString("b"));
@@ -211,7 +211,7 @@ public class SndContextFileAccessTests
     [Fact]
     public void ReadWriteObject_RoundTrip_PreservesBool()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
 
         AsFileAccess(ctx).WriteObject("output/bool.json", true);
         var readBack = AsFileAccess(ctx).ReadObject<bool>("output/bool.json");
@@ -222,7 +222,7 @@ public class SndContextFileAccessTests
     [Fact]
     public void ReadWriteObject_RoundTrip_PreservesDouble()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
 
         AsFileAccess(ctx).WriteObject("output/double.json", 3.14159);
         var readBack = AsFileAccess(ctx).ReadObject<double>("output/double.json");
@@ -294,7 +294,7 @@ public class SndContextFileAccessTests
     [Fact]
     public void WriteFile_EmptyObject_RoundTrip()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
         var empty = DataSourceNode.CreateObject();
 
         AsFileAccess(ctx).WriteFile("output/empty.json", empty);
@@ -307,7 +307,7 @@ public class SndContextFileAccessTests
     [Fact]
     public void WriteFile_NullValueNode_RoundTrip()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
         var node = DataSourceNode.CreateObject();
         node.Add("nullable", DataSourceNode.CreateNull());
 
@@ -320,7 +320,7 @@ public class SndContextFileAccessTests
     [Fact]
     public void WriteFile_BooleanValues_RoundTrip()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
         var node = DataSourceNode.CreateObject();
         node.Add("flag_true", DataSourceNode.CreateBoolean(true));
         node.Add("flag_false", DataSourceNode.CreateBoolean(false));

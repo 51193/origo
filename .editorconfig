@@ -38,3 +38,4 @@ dotnet_diagnostic.CA1062.severity = suggestion
 # See docs/Origo.Core.Tests/META-TEST.md §测试命名空间约定.
 [{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests}/**/*.cs]
 dotnet_diagnostic.IDE0130.severity = none
+

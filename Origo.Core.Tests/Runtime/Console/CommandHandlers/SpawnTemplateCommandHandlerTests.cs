@@ -16,7 +16,7 @@ public class SpawnTemplateCommandHandlerTests
         var invocation = new CommandInvocation
         {
             Command = "spawn",
-            PositionalArgs = new[] { "extraPositional" },
+            PositionalArgs = ["extraPositional"],
             NamedArgs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["name"] = "n",

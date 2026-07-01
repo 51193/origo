@@ -185,7 +185,7 @@ public class SndContextArchiveFileAccessTests
     [Fact]
     public void ReadWriteObject_RoundTrip_PreservesBool()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
 
         AsFileAccess(ctx).WriteObject("bool.json", true);
         var readBack = AsFileAccess(ctx).ReadObject<bool>("bool.json");
@@ -196,7 +196,7 @@ public class SndContextArchiveFileAccessTests
     [Fact]
     public void ReadWriteObject_RoundTrip_PreservesString()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
 
         AsFileAccess(ctx).WriteObject("str.json", "hello world");
         var readBack = AsFileAccess(ctx).ReadObject<string>("str.json");
@@ -207,7 +207,7 @@ public class SndContextArchiveFileAccessTests
     [Fact]
     public void ReadWriteObject_RoundTrip_PreservesDouble()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
 
         AsFileAccess(ctx).WriteObject("double.json", 3.14159);
         var readBack = AsFileAccess(ctx).ReadObject<double>("double.json");
@@ -331,7 +331,7 @@ public class SndContextArchiveFileAccessTests
     [Fact]
     public void WriteFile_EmptyObject_RoundTrip()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
         var empty = DataSourceNode.CreateObject();
 
         AsFileAccess(ctx).WriteFile("empty.json", empty);
@@ -344,7 +344,7 @@ public class SndContextArchiveFileAccessTests
     [Fact]
     public void WriteFile_NullValueNode_RoundTrip()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
         var node = DataSourceNode.CreateObject();
         node.Add("nullable", DataSourceNode.CreateNull());
 
@@ -357,7 +357,7 @@ public class SndContextArchiveFileAccessTests
     [Fact]
     public void WriteFile_BooleanValues_RoundTrip()
     {
-        var ctx = CreateContext(out var fs, out _);
+        var ctx = CreateContext(out _, out _);
         var node = DataSourceNode.CreateObject();
         node.Add("yes", DataSourceNode.CreateBoolean(true));
         node.Add("no", DataSourceNode.CreateBoolean(false));

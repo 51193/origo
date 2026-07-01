@@ -11,18 +11,18 @@ namespace Origo.Core.Tests.Benchmarks;
 [Trait("Category", "Benchmark")]
 public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 {
-    private const int DictSize = 1024;
-    private const int DictMask = DictSize - 1;
-    private const int SampleCount = 128;
-    private const int SampleMask = SampleCount - 1;
+    private const int _dictSize = 1024;
+    private const int _dictMask = _dictSize - 1;
+    private const int _sampleCount = 128;
+    private const int _sampleMask = _sampleCount - 1;
 
-    private const int ReadIterations = 2_000_000;
-    private const int WriteIterations = 500_000;
-    private const int IterateIterations = 2_000;
-    private const int WarmupRounds = 1;
-    private const int TimedRounds = 5;
+    private const int _readIterations = 2_000_000;
+    private const int _writeIterations = 500_000;
+    private const int _iterateIterations = 2_000;
+    private const int _warmupRounds = 1;
+    private const int _timedRounds = 5;
 
-    private static readonly TimeSpan PerBenchmarkCap = TimeSpan.FromSeconds(8);
+    private static readonly TimeSpan _perBenchmarkCap = TimeSpan.FromSeconds(8);
 
     private readonly PerfReporter _perf = PerfReporter.ForTest(output);
 
@@ -31,7 +31,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     [Fact]
     public void DictLookup_TryExtract_vs_BoxedDict()
     {
-        var keyCount = DictSize / 4;
+        var keyCount = _dictSize / 4;
         var keys = MakeSampleKeys(keyCount);
         var genDict = FillTypedDataDict(keys);
         var boxedDict = FillBoxedDict(keys);
@@ -53,11 +53,11 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
             var genHits = 0;
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
+            for (var i = 0; i < _readIterations; i++)
             {
                 var key = keys[i % keys.Length];
                 if (genDict.TryGetValue(key, out var td) && genCheck(td))
@@ -67,7 +67,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
             var boxedHits = 0;
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
+            for (var i = 0; i < _readIterations; i++)
             {
                 var key = keys[i % keys.Length];
                 if (boxedDict.TryGetValue(key, out var obj) && MatchesType(obj, typeKey))
@@ -77,7 +77,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
             Assert.Equal(genHits, boxedHits);
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
                 if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
@@ -88,8 +88,8 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         // bodies stay out of this method and never share codegen with the timed loops.
         var (genAlloc, boxedAlloc) = MeasureDictReadAlloc(genDict, boxedDict, keys, genCheck, typeKey);
 
-        _perf.Compare(label, "Generated Dict", ReadIterations, genBest, genAlloc,
-            "Boxed Dict", ReadIterations, boxedBest, boxedAlloc);
+        _perf.Compare(label, "Generated Dict", _readIterations, genBest, genAlloc,
+            "Boxed Dict", _readIterations, boxedBest, boxedAlloc);
         AssertInCap(label, genBest);
     }
 
@@ -98,43 +98,43 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     [Fact]
     public void DictInsert_FactoryCreate_vs_BoxedDict()
     {
-        RunDictWrite("String", MakeSamples(i => "s_" + i),
+        RunDictWrite(MakeSamples(i => "s_" + i),
             v => new TypedData(TypedData.KindMap.String, 0, v), "Write String: Create+Insert vs Boxing");
 
-        RunDictWrite("Int32", MakeSamples(i => i),
+        RunDictWrite(MakeSamples(i => i),
             v => (TypedData)v, "Write Int32: Create+Insert vs Boxing");
 
-        RunDictWrite("Single", MakeSamples(i => i * 1.5f),
+        RunDictWrite(MakeSamples(i => i * 1.5f),
             v => (TypedData)v, "Write Single: Create+Insert vs Boxing");
 
-        RunDictWrite("Boolean", MakeSamples(i => i % 2 == 0),
+        RunDictWrite(MakeSamples(i => i % 2 == 0),
             v => (TypedData)v, "Write Boolean: Create+Insert vs Boxing");
     }
 
-    private void RunDictWrite<T>(string keyPrefix, T[] samples,
+    private void RunDictWrite<T>(T[] samples,
         Func<T, TypedData> makeGen, string label)
     {
-        var keys = MakeSampleKeys(SampleCount);
+        var keys = MakeSampleKeys(_sampleCount);
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
-            var genDict = new Dictionary<string, TypedData>(WriteIterations, StringComparer.Ordinal);
+            var genDict = new Dictionary<string, TypedData>(_writeIterations, StringComparer.Ordinal);
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < WriteIterations; i++)
-                genDict[keys[i % SampleCount]] = makeGen(samples[i & SampleMask]);
+            for (var i = 0; i < _writeIterations; i++)
+                genDict[keys[i % _sampleCount]] = makeGen(samples[i & _sampleMask]);
             sw.Stop();
 
-            var boxedDict = new Dictionary<string, object>(WriteIterations, StringComparer.Ordinal);
+            var boxedDict = new Dictionary<string, object>(_writeIterations, StringComparer.Ordinal);
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < WriteIterations; i++)
-                boxedDict[keys[i % SampleCount]] = samples[i & SampleMask]!;
+            for (var i = 0; i < _writeIterations; i++)
+                boxedDict[keys[i % _sampleCount]] = samples[i & _sampleMask]!;
             sw2.Stop();
 
             Assert.Equal(genDict.Count, boxedDict.Count);
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
                 if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
@@ -143,8 +143,8 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
         var (genAlloc, boxedAlloc) = MeasureDictWriteAlloc(keys, samples, makeGen);
 
-        _perf.Compare(label, "Generated Create+Insert", WriteIterations, genBest, genAlloc,
-            "Boxed Insert", WriteIterations, boxedBest, boxedAlloc);
+        _perf.Compare(label, "Generated Create+Insert", _writeIterations, genBest, genAlloc,
+            "Boxed Insert", _writeIterations, boxedBest, boxedAlloc);
         AssertInCap(label, genBest);
     }
 
@@ -166,11 +166,11 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
             var genOk = 0;
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
+            for (var i = 0; i < _readIterations; i++)
             {
                 genDict.TryGetValue(keys[0], out var td);
                 if (td.TryGetSingle(out _)) genOk++;
@@ -182,7 +182,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
             var boxedOk = 0;
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
+            for (var i = 0; i < _readIterations; i++)
             {
                 boxedDict.TryGetValue(keys[0], out var obj);
                 if (obj is float) boxedOk++;
@@ -194,7 +194,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
             Assert.Equal(genOk, boxedOk);
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
                 if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
@@ -204,8 +204,8 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         var (genAlloc, boxedAlloc) = MeasureChainAlloc(genDict, boxedDict, keys[0]);
 
         _perf.Compare("Numeric coercion chain: float→int→long→double (int payload)",
-            "Generated chain", ReadIterations, genBest, genAlloc,
-            "Boxed is T chain", ReadIterations, boxedBest, boxedAlloc);
+            "Generated chain", _readIterations, genBest, genAlloc,
+            "Boxed is T chain", _readIterations, boxedBest, boxedAlloc);
         AssertInCap("Numeric chain", genBest);
     }
 
@@ -217,16 +217,17 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         var tdString = new TypedData(TypedData.KindMap.String, 0, "intent_attack");
         var tdDefault = default(TypedData);
         var boxedString = "intent_attack";
+        _ = boxedString;
         var boxedNull = (object?)null;
 
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
             var genHits = 0;
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
+            for (var i = 0; i < _readIterations; i++)
             {
                 var ok = tdString.TryGetString(out _);
                 _ = tdDefault;
@@ -236,27 +237,27 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
             var boxedHits = 0;
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
+            for (var i = 0; i < _readIterations; i++)
             {
                 _ = boxedNull;
-                if (boxedString is string) boxedHits++;
+                boxedHits++;
             }
             sw2.Stop();
 
             Assert.Equal(genHits, boxedHits);
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
                 if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
             }
         }
 
-        var (genAlloc, boxedAlloc) = MeasureObserverAlloc(tdString, tdDefault, boxedString, boxedNull);
+        var (genAlloc, boxedAlloc) = MeasureObserverAlloc(tdString, tdDefault, boxedNull);
 
         _perf.Compare("Observer notify: pass (old,new) TypedData + check TryGetString",
-            "Generated (TypedData, TypedData)", ReadIterations, genBest, genAlloc,
-            "Boxed (object?, object?)", ReadIterations, boxedBest, boxedAlloc);
+            "Generated (TypedData, TypedData)", _readIterations, genBest, genAlloc,
+            "Boxed (object?, object?)", _readIterations, boxedBest, boxedAlloc);
         AssertInCap("Observer notify", genBest);
     }
 
@@ -265,18 +266,18 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     [Fact]
     public void HeterogeneousDictIteration_GeneratedData_vs_BoxedDict()
     {
-        var keys = MakeSampleKeys(DictSize);
+        var keys = MakeSampleKeys(_dictSize);
         var genDict = FillTypedDataDict(keys);
         var boxedDict = FillBoxedDict(keys);
 
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
             object? dummy = null;
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < IterateIterations; i++)
+            for (var i = 0; i < _iterateIterations; i++)
             {
                 foreach (var kv in genDict)
                 {
@@ -286,7 +287,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
             sw.Stop();
 
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < IterateIterations; i++)
+            for (var i = 0; i < _iterateIterations; i++)
             {
                 foreach (var kv in boxedDict)
                 {
@@ -295,9 +296,9 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
             }
             sw2.Stop();
 
-            Assert.False(dummy is null && dummy is not null);
+            GC.KeepAlive(dummy);
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 // Only meaningful for the heavier (generated) case — boxing is plain object passthrough
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
@@ -307,7 +308,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
         var (genAlloc, boxedAlloc) = MeasureHeteroAlloc(genDict, boxedDict);
 
-        var total = IterateIterations * DictSize;
+        var total = _iterateIterations * _dictSize;
         _perf.Compare("Heterogeneous dict iterate: ToObject (TypedData) vs plain object",
             "Generated ToObject", total, genBest, genAlloc,
             "Boxed dict iterate", total, boxedBest, boxedAlloc);
@@ -327,7 +328,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     {
         var sink = 0;
         var start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
+        for (var i = 0; i < _readIterations; i++)
         {
             var key = keys[i % keys.Length];
             if (genDict.TryGetValue(key, out var td) && genCheck(td))
@@ -336,7 +337,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
+        for (var i = 0; i < _readIterations; i++)
         {
             var key = keys[i % keys.Length];
             if (boxedDict.TryGetValue(key, out var obj) && MatchesType(obj, typeKey))
@@ -352,15 +353,15 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         string[] keys, T[] samples, Func<T, TypedData> makeGen)
     {
         var start = GC.GetAllocatedBytesForCurrentThread();
-        var genDict = new Dictionary<string, TypedData>(WriteIterations, StringComparer.Ordinal);
-        for (var i = 0; i < WriteIterations; i++)
-            genDict[keys[i % SampleCount]] = makeGen(samples[i & SampleMask]);
+        var genDict = new Dictionary<string, TypedData>(_writeIterations, StringComparer.Ordinal);
+        for (var i = 0; i < _writeIterations; i++)
+            genDict[keys[i % _sampleCount]] = makeGen(samples[i & _sampleMask]);
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        var boxedDict = new Dictionary<string, object>(WriteIterations, StringComparer.Ordinal);
-        for (var i = 0; i < WriteIterations; i++)
-            boxedDict[keys[i % SampleCount]] = samples[i & SampleMask]!;
+        var boxedDict = new Dictionary<string, object>(_writeIterations, StringComparer.Ordinal);
+        for (var i = 0; i < _writeIterations; i++)
+            boxedDict[keys[i % _sampleCount]] = samples[i & _sampleMask]!;
         var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
         GC.KeepAlive(genDict);
         GC.KeepAlive(boxedDict);
@@ -373,7 +374,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     {
         var sink = 0;
         var start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
+        for (var i = 0; i < _readIterations; i++)
         {
             genDict.TryGetValue(key, out var td);
             if (td.TryGetSingle(out _)) sink++;
@@ -384,7 +385,7 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
+        for (var i = 0; i < _readIterations; i++)
         {
             boxedDict.TryGetValue(key, out var obj);
             if (obj is float) sink++;
@@ -399,11 +400,11 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static (long gen, long boxed) MeasureObserverAlloc(
-        TypedData tdString, TypedData tdDefault, string boxedString, object? boxedNull)
+        TypedData tdString, TypedData tdDefault, object? boxedNull)
     {
         var sink = 0;
         var start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
+        for (var i = 0; i < _readIterations; i++)
         {
             var ok = tdString.TryGetString(out _);
             _ = tdDefault;
@@ -412,10 +413,10 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
+        for (var i = 0; i < _readIterations; i++)
         {
             _ = boxedNull;
-            if (boxedString is string) sink++;
+            sink++;
         }
         var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
         GC.KeepAlive(sink);
@@ -428,13 +429,13 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     {
         object? dummy = null;
         var start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < IterateIterations; i++)
+        for (var i = 0; i < _iterateIterations; i++)
             foreach (var kv in genDict)
                 dummy = TypedDataObjectConverter.ToObject(kv.Value);
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < IterateIterations; i++)
+        for (var i = 0; i < _iterateIterations; i++)
             foreach (var kv in boxedDict)
                 dummy = kv.Value;
         var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
@@ -513,15 +514,15 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
     private static T[] MakeSamples<T>(Func<int, T> factory)
     {
-        var arr = new T[SampleCount];
-        for (var i = 0; i < SampleCount; i++)
+        var arr = new T[_sampleCount];
+        for (var i = 0; i < _sampleCount; i++)
             arr[i] = factory(i);
         return arr;
     }
 
     private static void AssertInCap(string label, TimeSpan elapsed)
     {
-        Assert.True(elapsed < PerBenchmarkCap,
-            $"{label}: {elapsed.TotalMilliseconds:F2}ms exceeds {PerBenchmarkCap.TotalSeconds:F0}s cap");
+        Assert.True(elapsed < _perBenchmarkCap,
+            $"{label}: {elapsed.TotalMilliseconds:F2}ms exceeds {_perBenchmarkCap.TotalSeconds:F0}s cap");
     }
 }

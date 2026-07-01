@@ -46,7 +46,7 @@ public class StubSndSceneHostTests
         host.CreateEntity(MakeMeta("old"));
         Assert.Single(host.GetEntities());
 
-        host.RecoverFromMetaList(new[] { MakeMeta("new1"), MakeMeta("new2") });
+        host.RecoverFromMetaList([MakeMeta("new1"), MakeMeta("new2")]);
         Assert.Equal(2, host.GetEntities().Count);
         Assert.Null(host.FindByName("old"));
         Assert.NotNull(host.FindByName("new1"));

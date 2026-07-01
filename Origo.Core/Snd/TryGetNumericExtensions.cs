@@ -12,6 +12,7 @@ public static class TryGetNumericExtensions
 {
     public static bool TryGetNumeric(this ISndDataAccess access, string key, out float value)
     {
+        ArgumentNullException.ThrowIfNull(access);
         var (foundFloat, f) = access.TryGetData<float>(key);
         if (foundFloat)
         {

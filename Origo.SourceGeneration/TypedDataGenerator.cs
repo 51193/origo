@@ -10,11 +10,11 @@ namespace Origo.SourceGeneration;
 [Generator(LanguageNames.CSharp)]
 public sealed class TypedDataGenerator : IIncrementalGenerator
 {
-    private const string AttributeFullName = "Origo.Core.Snd.Metadata.SndInlineTypesAttribute";
-    private const string TypedDataFullName = "Origo.Core.Snd.Metadata.TypedData";
-    private const string RegistryFullName = "Origo.Core.Snd.Metadata.TypedDataLayeredRegistry";
+    private const string _attributeFullName = "Origo.Core.Snd.Metadata.SndInlineTypesAttribute";
+    private const string _typedDataFullName = "Origo.Core.Snd.Metadata.TypedData";
+    private const string _registryFullName = "Origo.Core.Snd.Metadata.TypedDataLayeredRegistry";
 
-    private static readonly DiagnosticDescriptor SystemPrimitiveInAdapter = new(
+    private static readonly DiagnosticDescriptor _systemPrimitiveInAdapter = new(
         id: "ORIGOSG001",
         title: "System primitive registered outside the TypedData home assembly",
         messageFormat:
@@ -24,7 +24,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    private static readonly DiagnosticDescriptor UnsupportedHomeValueType = new(
+    private static readonly DiagnosticDescriptor _unsupportedHomeValueType = new(
         id: "ORIGOSG002",
         title: "Unsupported value type in the TypedData home assembly",
         messageFormat:
@@ -34,7 +34,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    private static readonly DiagnosticDescriptor KindOverflow = new(
+    private static readonly DiagnosticDescriptor _kindOverflow = new(
         id: "ORIGOSG003",
         title: "TypedData kind byte out of range",
         messageFormat:
@@ -45,7 +45,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    private static readonly DiagnosticDescriptor KindCollision = new(
+    private static readonly DiagnosticDescriptor _kindCollision = new(
         id: "ORIGOSG004",
         title: "TypedData kind collision",
         messageFormat:
@@ -71,7 +71,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
         foreach (var attributeData in compilation.Assembly.GetAttributes())
         {
-            if (attributeData.AttributeClass?.ToDisplayString() != AttributeFullName)
+            if (attributeData.AttributeClass?.ToDisplayString() != _attributeFullName)
                 continue;
 
             var startKind = ExtractStartKind(attributeData);
@@ -90,7 +90,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
 
     private static bool IsHomeAssembly(Compilation compilation)
     {
-        var typedDataSymbol = compilation.GetTypeByMetadataName(TypedDataFullName);
+        var typedDataSymbol = compilation.GetTypeByMetadataName(_typedDataFullName);
         return typedDataSymbol?.ContainingAssembly
             .Equals(compilation.Assembly, SymbolEqualityComparer.Default) == true;
     }
@@ -224,7 +224,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
             if (t.RawKind is <= 0 or > 255)
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(KindOverflow, Location.None, t.ClrTypeName, t.RawKind));
+                    Diagnostic.Create(_kindOverflow, Location.None, t.ClrTypeName, t.RawKind));
                 continue;
             }
 
@@ -240,13 +240,13 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
                     valid.Add(t);
                 else
                     context.ReportDiagnostic(
-                        Diagnostic.Create(SystemPrimitiveInAdapter, Location.None, t.ClrTypeName));
+                        Diagnostic.Create(_systemPrimitiveInAdapter, Location.None, t.ClrTypeName));
             }
             else
             {
                 if (isHome)
                     context.ReportDiagnostic(
-                        Diagnostic.Create(UnsupportedHomeValueType, Location.None, t.ClrTypeName));
+                        Diagnostic.Create(_unsupportedHomeValueType, Location.None, t.ClrTypeName));
                 else
                     valid.Add(t);
             }
@@ -285,7 +285,7 @@ public sealed class TypedDataGenerator : IIncrementalGenerator
                 .Select(t => t.ClrTypeName)
                 .Distinct();
             context.ReportDiagnostic(Diagnostic.Create(
-                KindCollision, Location.None, kind, string.Join(", ", names)));
+                _kindCollision, Location.None, kind, string.Join(", ", names)));
         }
 
         var result = new List<InlineTypeInfo>();

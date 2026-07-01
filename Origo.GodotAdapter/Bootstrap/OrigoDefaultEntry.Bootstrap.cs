@@ -23,7 +23,7 @@ public partial class OrigoDefaultEntry
             ConfigPath)
         {
             AutoDiscoverStrategies = AutoDiscoverStrategies,
-            DiscoverySkipPrefixes = AutoDiscoverStrategies ? GodotSkipPrefixes : null,
+            DiscoverySkipPrefixes = AutoDiscoverStrategies ? _godotSkipPrefixes : null,
             SceneAliasMapPath = SceneAliasMapPath,
             SndTemplateMapPath = SndTemplateMapPath,
             ConfigureConverters = RegisterCustomConverters,

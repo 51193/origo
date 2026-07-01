@@ -122,7 +122,7 @@ public class SaveIdempotencyTests
 
         // First write — must succeed.
         SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
-        var firstWriteTime = fs.ReadAllText("root/current/progress.json");
+        _ = fs.ReadAllText("root/current/progress.json");
 
         // Modify the file system to track if any file content changes happen on second write.
         // Seed the snapshot with existing .sha from the first write.

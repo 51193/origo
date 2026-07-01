@@ -40,6 +40,7 @@ public sealed class Blackboard : IBlackboard
 
     public void DeserializeAll(IReadOnlyDictionary<string, TypedData> data)
     {
+        ArgumentNullException.ThrowIfNull(data);
         _data.Clear();
         foreach (var pair in data)
             _data[pair.Key] = pair.Value;

@@ -80,6 +80,7 @@ public sealed class TypeStringMapping
 
     public string GetNameByType(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
         return _reverseTypeMap.TryGetValue(type, out var typeName)
             ? typeName
             : throw new InvalidOperationException($"Type '{type.FullName}' is not registered.");

@@ -25,8 +25,8 @@ public class PlayStopPlayRoundTripTests
     public void RoundTrip_ForegroundIdentity_Preserved()
     {
         // ── PLAY 1 ──────────────────────────────────────────────────────
-        var (ctx1, fs) = CreateContext();
-        var pr1 = SetupProgressRun(ctx1, fs);
+        var (ctx1, _) = CreateContext();
+        var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_a");
 
         var fg1 = ctx1.Runtime.SessionManager.ForegroundSession!;
@@ -40,8 +40,8 @@ public class PlayStopPlayRoundTripTests
         pr1.Dispose();
 
         // ── PLAY 2 ──────────────────────────────────────────────────────
-        var (ctx2, fs2) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2, fs2);
+        var (ctx2, _) = CreateContext();
+        var pr2 = SetupProgressRun(ctx2);
         pr2.LoadFromPayload(payload);
 
         var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
@@ -55,8 +55,8 @@ public class PlayStopPlayRoundTripTests
     public void RoundTrip_BackgroundTickState_Preserved()
     {
         // ── PLAY 1 ──────────────────────────────────────────────────────
-        var (ctx1, fs) = CreateContext();
-        var pr1 = SetupProgressRun(ctx1, fs);
+        var (ctx1, _) = CreateContext();
+        var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_a");
 
         // Create background sessions: one with syncProcess=true, one with syncProcess=false.
@@ -74,8 +74,8 @@ public class PlayStopPlayRoundTripTests
         pr1.Dispose();
 
         // ── PLAY 2 ──────────────────────────────────────────────────────
-        var (ctx2, fs2) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2, fs2);
+        var (ctx2, _) = CreateContext();
+        var pr2 = SetupProgressRun(ctx2);
         pr2.LoadFromPayload(payload);
 
         var sm2 = (SessionManager)ctx2.Runtime.SessionManager;
@@ -91,8 +91,8 @@ public class PlayStopPlayRoundTripTests
     public void RoundTrip_SessionBlackboards_Isolated_NoCrossContamination()
     {
         // ── PLAY 1 ──────────────────────────────────────────────────────
-        var (ctx1, fs) = CreateContext();
-        var pr1 = SetupProgressRun(ctx1, fs);
+        var (ctx1, _) = CreateContext();
+        var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_a");
 
         var fg1 = ctx1.Runtime.SessionManager.ForegroundSession!;
@@ -114,8 +114,8 @@ public class PlayStopPlayRoundTripTests
         pr1.Dispose();
 
         // ── PLAY 2 ──────────────────────────────────────────────────────
-        var (ctx2, fs2) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2, fs2);
+        var (ctx2, _) = CreateContext();
+        var pr2 = SetupProgressRun(ctx2);
         pr2.LoadFromPayload(payload);
 
         var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
@@ -150,8 +150,8 @@ public class PlayStopPlayRoundTripTests
     public void RoundTrip_ProgressBlackboard_Shared_AcrossSessions()
     {
         // ── PLAY 1 ──────────────────────────────────────────────────────
-        var (ctx1, fs) = CreateContext();
-        var pr1 = SetupProgressRun(ctx1, fs);
+        var (ctx1, _) = CreateContext();
+        var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_a");
         pr1.ProgressBlackboard.SetValue("global_flag", "hello_world");
 
@@ -163,8 +163,8 @@ public class PlayStopPlayRoundTripTests
         pr1.Dispose();
 
         // ── PLAY 2 ──────────────────────────────────────────────────────
-        var (ctx2, fs2) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2, fs2);
+        var (ctx2, _) = CreateContext();
+        var pr2 = SetupProgressRun(ctx2);
         pr2.LoadFromPayload(payload);
 
         // ProgressBlackboard data is restored and shared.
@@ -179,8 +179,8 @@ public class PlayStopPlayRoundTripTests
     public void RoundTrip_AllSessionProperties_Restored_Correctly()
     {
         // ── PLAY 1: Create complex topology ─────────────────────────────
-        var (ctx1, fs) = CreateContext();
-        var pr1 = SetupProgressRun(ctx1, fs);
+        var (ctx1, _) = CreateContext();
+        var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("main_level");
 
         var fg1 = ctx1.Runtime.SessionManager.ForegroundSession!;
@@ -207,8 +207,8 @@ public class PlayStopPlayRoundTripTests
         pr1.Dispose();
 
         // ── PLAY 2: Full restore ────────────────────────────────────────
-        var (ctx2, fs2) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2, fs2);
+        var (ctx2, _) = CreateContext();
+        var pr2 = SetupProgressRun(ctx2);
         pr2.LoadFromPayload(payload);
 
         // Foreground identity & data.
@@ -273,8 +273,8 @@ public class PlayStopPlayRoundTripTests
     public void LoadFromPayload_FullyRestoresFromPayloadOnly()
     {
         // ── PLAY 1: Create state ────────────────────────────────────────
-        var (ctx1, fs) = CreateContext();
-        var pr1 = SetupProgressRun(ctx1, fs);
+        var (ctx1, _) = CreateContext();
+        var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_x");
         pr1.ProgressBlackboard.SetValue("user_data", "important");
 
@@ -286,8 +286,8 @@ public class PlayStopPlayRoundTripTests
         pr1.Dispose();
 
         // ── PLAY 2: Restore from payload only ───────────────────────────
-        var (ctx2, fs2) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2, fs2);
+        var (ctx2, _) = CreateContext();
+        var pr2 = SetupProgressRun(ctx2);
 
         // Before LoadFromPayload: completely empty.
         Assert.Null(pr2.SessionManager.ForegroundSession);
@@ -315,8 +315,8 @@ public class PlayStopPlayRoundTripTests
     {
         // Verify that calling LoadFromPayload on an already-loaded ProgressRun
         // cleanly replaces all state (no residual data from previous load).
-        var (ctx, fs) = CreateContext();
-        var pr = SetupProgressRun(ctx, fs);
+        var (ctx, _) = CreateContext();
+        var pr = SetupProgressRun(ctx);
         pr.LoadAndMountForeground("first_level");
         pr.ProgressBlackboard.SetValue("first_data", "A");
 
@@ -332,8 +332,8 @@ public class PlayStopPlayRoundTripTests
         pr.Dispose();
 
         // Restore from payload1.
-        var (ctx2, fs2) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2, fs2);
+        var (ctx2, _) = CreateContext();
+        var pr2 = SetupProgressRun(ctx2);
         pr2.LoadFromPayload(payload1);
 
         Assert.Equal("first_level", pr2.SessionManager.ForegroundSession!.LevelId);
@@ -367,7 +367,7 @@ public class PlayStopPlayRoundTripTests
         return (ctx, fs);
     }
 
-    private static ProgressRun SetupProgressRun(SndContext ctx, TestFileSystem fs)
+    private static ProgressRun SetupProgressRun(SndContext ctx)
     {
         var progressRun = TestFactory.CreateProgressRun(
             "001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);

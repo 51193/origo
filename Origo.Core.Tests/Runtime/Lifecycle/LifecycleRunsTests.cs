@@ -315,7 +315,7 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        var bg = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        _ = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
         Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
 
         sndContext.Runtime.SessionManager.DestroySession("bg1");
@@ -336,7 +336,7 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        var bg = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        _ = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
         Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
 

@@ -30,7 +30,7 @@ public class SessionManagerTests
     public void DestroySession_RemovesSession_TryGetReturnsNull()
     {
         var (ctx, _) = CreateContext();
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        _ = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
         ctx.Runtime.SessionManager.DestroySession("bg1");
         Assert.False(ctx.Runtime.SessionManager.Contains("bg1"));
@@ -286,7 +286,7 @@ public class SessionManagerTests
     {
         var (ctx, _) = CreateContext();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "reusable");
+        _ = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "reusable");
         ctx.Runtime.SessionManager.DestroySession("bg1");
 
         var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "reusable");

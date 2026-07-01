@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Origo.Core.DataSource;
 using Origo.Core.Serialization;
@@ -11,6 +12,7 @@ public static class GodotJsonConverterRegistry
 {
     public static void RegisterTypeMappings(TypeStringMapping typeMapping)
     {
+        ArgumentNullException.ThrowIfNull(typeMapping);
         typeMapping.RegisterType<Vector2>(GodotEngineTypeNames.Vector2);
         typeMapping.RegisterType<Vector2I>(GodotEngineTypeNames.Vector2I);
         typeMapping.RegisterType<Vector3>(GodotEngineTypeNames.Vector3);
@@ -29,6 +31,7 @@ public static class GodotJsonConverterRegistry
 
     public static void RegisterDataSourceConverters(DataSourceConverterRegistry registry)
     {
+        ArgumentNullException.ThrowIfNull(registry);
         registry.Register(new Vector2DataSourceConverter());
         registry.Register(new Vector2IDataSourceConverter());
         registry.Register(new Vector3DataSourceConverter());

@@ -63,7 +63,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p50", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p50", "s.p100", "s.p200" }, indices);
+        Assert.Equal(["s.p50", "s.p100", "s.p200"], indices);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.c", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.a", "s.b", "s.c" }, indices);
+        Assert.Equal(["s.a", "s.b", "s.c"], indices);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p10c", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p5", "s.p10a", "s.p10b", "s.p10c", "s.p20" }, indices);
+        Assert.Equal(["s.p5", "s.p10a", "s.p10b", "s.p10c", "s.p20"], indices);
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p15", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p10a", "s.p10b", "s.p15", "s.p20" }, indices);
+        Assert.Equal(["s.p10a", "s.p10b", "s.p15", "s.p20"], indices);
     }
 
     // ── Process execution order ──
@@ -137,7 +137,7 @@ public class StrategyPriorityTests
         Rec.Reset();
         mgr.Process(e, 0.016, NoCtx);
 
-        Assert.Equal(new[] { "s.p50", "s.p100", "s.p200" }, Rec.Log);
+        Assert.Equal(["s.p50", "s.p100", "s.p200"], Rec.Log);
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public class StrategyPriorityTests
         Rec.Reset();
         mgr.Process(e, 0.016, NoCtx);
 
-        Assert.Equal(new[] { "s.c", "s.a", "s.b" }, Rec.Log);
+        Assert.Equal(["s.c", "s.a", "s.b"], Rec.Log);
     }
 
     // ── Spawn / Load (Recover) ordering ──
@@ -168,13 +168,13 @@ public class StrategyPriorityTests
         pool.Register(() => new S10());
         pool.Register(() => new S20());
 
-        mgr.RecoverStrategiesOnly(new[] { "s.p30", "s.p10", "s.p20" });
+        mgr.RecoverStrategiesOnly(["s.p30", "s.p10", "s.p20"]);
         mgr.TriggerAfterSpawn(e, NoCtx);
 
         Rec.Reset();
         mgr.Process(e, 0.016, NoCtx);
 
-        Assert.Equal(new[] { "s.p10", "s.p20", "s.p30" }, Rec.Log);
+        Assert.Equal(["s.p10", "s.p20", "s.p30"], Rec.Log);
     }
 
     [Fact]
@@ -185,13 +185,13 @@ public class StrategyPriorityTests
         pool.Register(() => new SB());
         pool.Register(() => new SC());
 
-        mgr.RecoverStrategiesOnly(new[] { "s.a", "s.b", "s.c" });
+        mgr.RecoverStrategiesOnly(["s.a", "s.b", "s.c"]);
         mgr.TriggerAfterSpawn(e, NoCtx);
 
         Rec.Reset();
         mgr.Process(e, 0.016, NoCtx);
 
-        Assert.Equal(new[] { "s.a", "s.b", "s.c" }, Rec.Log);
+        Assert.Equal(["s.a", "s.b", "s.c"], Rec.Log);
     }
 
     [Fact]
@@ -202,13 +202,13 @@ public class StrategyPriorityTests
         pool.Register(() => new SP50());
         pool.Register(() => new SP200());
 
-        mgr.RecoverStrategiesOnly(new[] { "s.p200", "s.p100", "s.p50" });
+        mgr.RecoverStrategiesOnly(["s.p200", "s.p100", "s.p50"]);
         mgr.TriggerAfterLoad(e, NoCtx);
 
         Rec.Reset();
         mgr.Process(e, 0.016, NoCtx);
 
-        Assert.Equal(new[] { "s.p50", "s.p100", "s.p200" }, Rec.Log);
+        Assert.Equal(["s.p50", "s.p100", "s.p200"], Rec.Log);
     }
 
     // ── SerializeIndices / save-load roundtrip ──
@@ -226,7 +226,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p100", NoCtx);
 
         var saved = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p50", "s.p100", "s.p200" }, saved);
+        Assert.Equal(["s.p50", "s.p100", "s.p200"], saved);
     }
 
     [Fact]
@@ -253,7 +253,7 @@ public class StrategyPriorityTests
         Rec.Reset();
         mgr2.Process(e2, 0.016, NoCtx);
 
-        Assert.Equal(new[] { "s.p50", "s.p100", "s.p200" }, Rec.Log);
+        Assert.Equal(["s.p50", "s.p100", "s.p200"], Rec.Log);
     }
 
     // ── Lifecycle hook ordering ──
@@ -267,10 +267,10 @@ public class StrategyPriorityTests
         pool.Register(() => new LC30());
 
         Rec.Reset();
-        mgr.RecoverStrategiesOnly(new[] { "s.lc30", "s.lc20", "s.lc10" });
+        mgr.RecoverStrategiesOnly(["s.lc30", "s.lc20", "s.lc10"]);
         mgr.TriggerAfterSpawn(e, NoCtx);
 
-        Assert.Equal(new[] { "s.lc10", "s.lc20", "s.lc30" }, Rec.Log);
+        Assert.Equal(["s.lc10", "s.lc20", "s.lc30"], Rec.Log);
     }
 
     [Fact]
@@ -281,13 +281,13 @@ public class StrategyPriorityTests
         pool.Register(() => new Q20());
         pool.Register(() => new Q30());
 
-        mgr.RecoverStrategiesOnly(new[] { "s.qv30", "s.qv10", "s.qv20" });
+        mgr.RecoverStrategiesOnly(["s.qv30", "s.qv10", "s.qv20"]);
         mgr.TriggerAfterSpawn(e, NoCtx);
 
         Rec.Reset();
         mgr.TriggerBeforeQuit(e, NoCtx);
 
-        Assert.Equal(new[] { "s.qv10", "s.qv20", "s.qv30" }, Rec.Log);
+        Assert.Equal(["s.qv10", "s.qv20", "s.qv30"], Rec.Log);
     }
 
     [Fact]
@@ -299,10 +299,10 @@ public class StrategyPriorityTests
         pool.Register(() => new LD30());
 
         Rec.Reset();
-        mgr.RecoverStrategiesOnly(new[] { "s.ld30", "s.ld10", "s.ld20" });
+        mgr.RecoverStrategiesOnly(["s.ld30", "s.ld10", "s.ld20"]);
         mgr.TriggerAfterLoad(e, NoCtx);
 
-        Assert.Equal(new[] { "s.ld10", "s.ld20", "s.ld30" }, Rec.Log);
+        Assert.Equal(["s.ld10", "s.ld20", "s.ld30"], Rec.Log);
     }
 
     // ── Remove and re-add ──
@@ -321,7 +321,7 @@ public class StrategyPriorityTests
         mgr.Remove(e, "s.p20", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p10", "s.p30" }, indices);
+        Assert.Equal(["s.p10", "s.p30"], indices);
     }
 
     [Fact]
@@ -338,7 +338,7 @@ public class StrategyPriorityTests
         mgr.Remove(e, "s.p10", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p20", "s.p30" }, indices);
+        Assert.Equal(["s.p20", "s.p30"], indices);
     }
 
     [Fact]
@@ -355,7 +355,7 @@ public class StrategyPriorityTests
         mgr.Remove(e, "s.p30", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p10", "s.p20" }, indices);
+        Assert.Equal(["s.p10", "s.p20"], indices);
     }
 
     [Fact]
@@ -374,7 +374,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p25", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p10", "s.p20", "s.p25" }, indices);
+        Assert.Equal(["s.p10", "s.p20", "s.p25"], indices);
     }
 
     [Fact]
@@ -387,7 +387,7 @@ public class StrategyPriorityTests
         mgr.Remove(e, "nonexistent", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p50" }, indices);
+        Assert.Equal(["s.p50"], indices);
     }
 
     // ── Edge cases ──
@@ -401,7 +401,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p100", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p100" }, indices);
+        Assert.Equal(["s.p100"], indices);
     }
 
     [Fact]
@@ -419,7 +419,6 @@ public class StrategyPriorityTests
     {
         var pool = new SndStrategyPool(NoLog);
         var mgr = new SndStrategyManager(pool, NoLog);
-        var e = new DummySndEntity("empty");
 
         var indices = mgr.GetStrategyIndices();
         Assert.Empty(indices);
@@ -438,7 +437,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.a", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.demo", "s.b", "s.a" }, indices);
+        Assert.Equal(["s.demo", "s.b", "s.a"], indices);
     }
 
     [Fact]
@@ -456,7 +455,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.n5", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.n10", "s.n5", "s.n0", "s.p50" }, indices);
+        Assert.Equal(["s.n10", "s.n5", "s.n0", "s.p50"], indices);
     }
 
     [Fact]
@@ -472,7 +471,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.min", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.min", "s.zero", "s.max" }, indices);
+        Assert.Equal(["s.min", "s.zero", "s.max"], indices);
     }
 
     [Fact]
@@ -492,7 +491,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p20", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p20", "s.p40", "s.p60", "s.p80", "s.p100" }, indices);
+        Assert.Equal(["s.p20", "s.p40", "s.p60", "s.p80", "s.p100"], indices);
     }
 
     [Fact]
@@ -512,7 +511,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p100", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p20", "s.p40", "s.p60", "s.p80", "s.p100" }, indices);
+        Assert.Equal(["s.p20", "s.p40", "s.p60", "s.p80", "s.p100"], indices);
     }
 
     [Fact]
@@ -530,7 +529,7 @@ public class StrategyPriorityTests
         mgr.Add(e, "s.p50", NoCtx);
 
         var indices = mgr.GetStrategyIndices();
-        Assert.Equal(new[] { "s.p10", "s.p50", "s.p100", "s.p200" }, indices);
+        Assert.Equal(["s.p10", "s.p50", "s.p100", "s.p200"], indices);
     }
 
     // ── Helpers ──

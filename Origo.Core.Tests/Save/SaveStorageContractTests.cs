@@ -50,7 +50,7 @@ public class SaveStorageContractTests
     [Fact]
     public void ReadSavePayloadFromCurrent_WhenNoMarker_Succeeds()
     {
-        var (ctx, fs) = CreateForegroundContext();
+        var (ctx, _) = CreateForegroundContext();
         ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         ctx.StorageService.WriteSavePayloadToCurrent(
@@ -67,7 +67,7 @@ public class SaveStorageContractTests
     [Fact]
     public void TryReadLevelPayload_AllThreeMissing_ReturnsNull()
     {
-        var (ctx, fs) = CreateForegroundContext();
+        var (ctx, _) = CreateForegroundContext();
         ctx.StorageService.WriteProgressOnlyToCurrent(
             BuildNode("""{"origo.session_topology":{"type":"String","data":"__foreground__=test_level=false"}}"""),
             BuildNode("""{"machines":[]}"""));
@@ -185,7 +185,7 @@ public class SaveStorageContractTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_ThenReadBackRoundTrip()
     {
-        var (ctx, fs) = CreateForegroundContext();
+        var (ctx, _) = CreateForegroundContext();
         ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         var payload = BuildPayload("test_level", "round_save");
@@ -324,7 +324,7 @@ public class SaveStorageContractTests
     [Fact]
     public void EnumerateSaveIds_ReturnsCorrectList()
     {
-        var (ctx, fs) = CreateForegroundContext();
+        var (ctx, _) = CreateForegroundContext();
         ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
 

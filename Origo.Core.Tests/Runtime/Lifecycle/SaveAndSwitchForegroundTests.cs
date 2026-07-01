@@ -22,9 +22,9 @@ namespace Origo.Core.Tests;
 [Collection("StrategyStateTests")]
 public class SaveAndSwitchForegroundTests
 {
-    private const string FindByNameStrategyIndex = "test.find_by_name";
-    private const string AfterSpawnEventPrefix = "AfterSpawn:";
-    private const string AfterLoadEventPrefix = "AfterLoad:";
+    private const string _findByNameStrategyIndex = "test.find_by_name";
+    private const string _afterSpawnEventPrefix = "AfterSpawn:";
+    private const string _afterLoadEventPrefix = "AfterLoad:";
 
     // ── FullMemorySndSceneHost: FindByName during hooks ──────────────────
 
@@ -42,11 +42,11 @@ public class SaveAndSwitchForegroundTests
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         var entityA = host.CreateEntity(CreateMetaWithStrategy("EntityA",
-            [FindByNameStrategyIndex]));
+            [_findByNameStrategyIndex]));
         if (entityA is IEntityLifecycle lc)
             lc.FireAfterSpawnHooks();
 
-        Assert.Contains($"{AfterSpawnEventPrefix}EntityA:self=true", events);
+        Assert.Contains($"{_afterSpawnEventPrefix}EntityA:self=true", events);
         Assert.NotNull(host.FindByName("EntityA"));
     }
 
@@ -65,11 +65,11 @@ public class SaveAndSwitchForegroundTests
 
         host.CreateEntity(CreateMetaWithStrategy("EntityA"));
         var entityB = host.CreateEntity(CreateMetaWithStrategy("EntityB",
-            [FindByNameStrategyIndex]));
+            [_findByNameStrategyIndex]));
         if (entityB is IEntityLifecycle lc)
             lc.FireAfterSpawnHooks();
 
-        Assert.Contains($"{AfterSpawnEventPrefix}EntityB:sibling=EntityA", events);
+        Assert.Contains($"{_afterSpawnEventPrefix}EntityB:sibling=EntityA", events);
     }
 
     [Fact]
@@ -85,15 +85,15 @@ public class SaveAndSwitchForegroundTests
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
-        host.RecoverFromMetaList(new[]
-        {
-            CreateMetaWithStrategy("EntityC", [FindByNameStrategyIndex])
-        });
+        host.RecoverFromMetaList(
+        [
+            CreateMetaWithStrategy("EntityC", [_findByNameStrategyIndex])
+        ]);
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
                 lc.FireAfterLoadHooks();
 
-        Assert.Contains($"{AfterLoadEventPrefix}EntityC:self=true", events);
+        Assert.Contains($"{_afterLoadEventPrefix}EntityC:self=true", events);
         Assert.NotNull(host.FindByName("EntityC"));
     }
 
@@ -110,16 +110,16 @@ public class SaveAndSwitchForegroundTests
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
-        host.RecoverFromMetaList(new[]
-        {
+        host.RecoverFromMetaList(
+        [
             CreateMetaWithStrategy("EntityD"),
-            CreateMetaWithStrategy("EntityE", [FindByNameStrategyIndex])
-        });
+            CreateMetaWithStrategy("EntityE", [_findByNameStrategyIndex])
+        ]);
         foreach (var e in host.GetEntities())
             if (e is IEntityLifecycle lc)
                 lc.FireAfterLoadHooks();
 
-        Assert.Contains($"{AfterLoadEventPrefix}EntityE:sibling=EntityD", events);
+        Assert.Contains($"{_afterLoadEventPrefix}EntityE:sibling=EntityD", events);
     }
 
     // ── Core: save background session, then switch foreground ──────────
@@ -1151,7 +1151,7 @@ public class SaveAndSwitchForegroundTests
 
     // ── Test strategy: performs FindByName during AfterSpawn/AfterLoad ──
 
-    [StrategyIndex(FindByNameStrategyIndex)]
+    [StrategyIndex(_findByNameStrategyIndex)]
     private sealed class FindByNameStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _eventSink = new();
@@ -1165,11 +1165,11 @@ public class SaveAndSwitchForegroundTests
                 return;
 
             var self = entity.OwningSession.FindByName(entity.Name);
-            EventSink.Add($"{AfterSpawnEventPrefix}{entity.Name}:self={(self is not null ? "true" : "false")}");
+            EventSink.Add($"{_afterSpawnEventPrefix}{entity.Name}:self={(self is not null ? "true" : "false")}");
 
             foreach (var other in entity.OwningSession.GetEntities())
                 if (other.Name != entity.Name)
-                    EventSink.Add($"{AfterSpawnEventPrefix}{entity.Name}:sibling={other.Name}");
+                    EventSink.Add($"{_afterSpawnEventPrefix}{entity.Name}:sibling={other.Name}");
         }
 
         public override void AfterLoad(ISndEntity entity, ISndContext ctx)
@@ -1178,11 +1178,11 @@ public class SaveAndSwitchForegroundTests
                 return;
 
             var self = entity.OwningSession.FindByName(entity.Name);
-            EventSink.Add($"{AfterLoadEventPrefix}{entity.Name}:self={(self is not null ? "true" : "false")}");
+            EventSink.Add($"{_afterLoadEventPrefix}{entity.Name}:self={(self is not null ? "true" : "false")}");
 
             foreach (var other in entity.OwningSession.GetEntities())
                 if (other.Name != entity.Name)
-                    EventSink.Add($"{AfterLoadEventPrefix}{entity.Name}:sibling={other.Name}");
+                    EventSink.Add($"{_afterLoadEventPrefix}{entity.Name}:sibling={other.Name}");
         }
     }
 }

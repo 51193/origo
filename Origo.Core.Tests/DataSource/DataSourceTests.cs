@@ -49,7 +49,7 @@ public class DataSourceTests
         var fromDouble = DataSourceNode.CreateNumber(2.718281828);
         var fromString = DataSourceNode.CreateNumber("99");
 
-        Assert.All(new[] { fromInt, fromLong, fromFloat, fromDouble, fromString },
+        Assert.All([fromInt, fromLong, fromFloat, fromDouble, fromString],
             n => Assert.Equal(DataSourceNodeKind.Number, n.Kind));
     }
 
@@ -1437,7 +1437,7 @@ public class DataSourceTests
         var node = registry.Write(typeof(ReadOnlyDictionary<string, string>), boxed);
         var result = registry.Read(typeof(IReadOnlyDictionary<string, string>), node);
 #pragma warning restore CA2263
-        var castResult = Assert.IsAssignableFrom<IReadOnlyDictionary<string, string>>(result);
+        var castResult = Assert.IsType<IReadOnlyDictionary<string, string>>(result, exactMatch: false);
 
         Assert.Equal(2, castResult.Count);
         Assert.Equal("1", castResult["a"]);
@@ -1497,7 +1497,7 @@ public class DataSourceTests
     public void Dispose_DeeplyNestedTree_DoesNotStackOverflow()
     {
         const int depth = 2000;
-        DataSourceNode leaf = DataSourceNode.CreateNumber(1);
+        var leaf = DataSourceNode.CreateNumber(1);
         for (var i = 0; i < depth; i++)
         {
             var parent = DataSourceNode.CreateObject();
@@ -1512,7 +1512,7 @@ public class DataSourceTests
     public void ComputeSha256Hash_DeeplyNestedTree_DoesNotStackOverflow()
     {
         const int depth = 2000;
-        DataSourceNode leaf = DataSourceNode.CreateNumber(1);
+        var leaf = DataSourceNode.CreateNumber(1);
         for (var i = 0; i < depth; i++)
         {
             var parent = DataSourceNode.CreateObject();

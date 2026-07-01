@@ -5,11 +5,12 @@ namespace Origo.Core.Grid;
 
 public static class Astar
 {
-    private static readonly (int X, int Z)[] Neighbors = [(1, 0), (-1, 0), (0, 1), (0, -1)];
+    private static readonly (int X, int Z)[] _neighbors = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
     public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize,
         Func<GridPos, bool> isBlocked)
     {
+        ArgumentNullException.ThrowIfNull(isBlocked);
         if (!IsInBounds(start, gridSize))
             return null;
         if (!IsInBounds(end, gridSize))
@@ -35,7 +36,7 @@ public static class Astar
 
             closedSet.Add(current);
 
-            foreach (var (dx, dz) in Neighbors)
+            foreach (var (dx, dz) in _neighbors)
             {
                 var neighbor = new GridPos(current.X + dx, current.Z + dz);
 

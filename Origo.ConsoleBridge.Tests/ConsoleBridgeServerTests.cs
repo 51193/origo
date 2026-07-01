@@ -13,11 +13,11 @@ namespace Origo.ConsoleBridge.Tests;
 
 public class ConsoleBridgeServerTests
 {
-    private const int CommandTimeoutMs = 2000;
-    private const int OutputTimeoutMs = 3000;
-    private const int ConnectRetryIntervalMs = 5;
-    private const int SpinPollIntervalMs = 10;
-    private const int StressCommandCount = 100;
+    private const int _commandTimeoutMs = 2000;
+    private const int _outputTimeoutMs = 3000;
+    private const int _connectRetryIntervalMs = 5;
+    private const int _spinPollIntervalMs = 10;
+    private const int _stressCommandCount = 100;
 
     // ── Lifecycle ───────────────────────────────────────────────────────
 
@@ -98,7 +98,7 @@ public class ConsoleBridgeServerTests
         writer.WriteLine("help");
 
         string? cmd = null;
-        var ok = SpinUntil(() => input.TryDequeueCommand(out cmd), CommandTimeoutMs);
+        var ok = SpinUntil(() => input.TryDequeueCommand(out cmd), _commandTimeoutMs);
         Assert.True(ok, "Command should arrive in input queue");
         Assert.Equal("help", cmd);
 
@@ -125,7 +125,7 @@ public class ConsoleBridgeServerTests
             while (input.TryDequeueCommand(out var l))
                 lines.Add(l);
             return lines.Count >= 3;
-        }, OutputTimeoutMs);
+        }, _outputTimeoutMs);
 
         Assert.Equal(3, lines.Count);
         Assert.Equal("first", lines[0]);
@@ -145,7 +145,7 @@ public class ConsoleBridgeServerTests
         client.Connect(IPAddress.Loopback, port);
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
-        for (var i = 0; i < StressCommandCount; i++)
+        for (var i = 0; i < _stressCommandCount; i++)
             writer.WriteLine($"cmd_{i}");
 
         var count = 0;
@@ -153,10 +153,10 @@ public class ConsoleBridgeServerTests
         {
             while (input.TryDequeueCommand(out _))
                 count++;
-            return count >= StressCommandCount;
-        }, OutputTimeoutMs);
+            return count >= _stressCommandCount;
+        }, _outputTimeoutMs);
 
-        Assert.True(count >= StressCommandCount, $"Expected >= {StressCommandCount}, got {count}");
+        Assert.True(count >= _stressCommandCount, $"Expected >= {_stressCommandCount}, got {count}");
 
         server.Dispose();
     }
@@ -175,7 +175,7 @@ public class ConsoleBridgeServerTests
         writer.WriteLine(longCmd);
 
         string? cmd = null;
-        SpinUntil(() => input.TryDequeueCommand(out cmd) && cmd == longCmd, OutputTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out cmd) && cmd == longCmd, _outputTimeoutMs);
         Assert.Equal(longCmd, cmd);
 
         server.Dispose();
@@ -194,7 +194,7 @@ public class ConsoleBridgeServerTests
         writer.WriteLine("héllo 世界 🌍");
 
         string? cmd = null;
-        SpinUntil(() => input.TryDequeueCommand(out cmd) && cmd == "héllo 世界 🌍", OutputTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out cmd) && cmd == "héllo 世界 🌍", _outputTimeoutMs);
         Assert.Equal("héllo 世界 🌍", cmd);
 
         server.Dispose();
@@ -213,7 +213,7 @@ public class ConsoleBridgeServerTests
         writer.WriteLine("  \t  hello  \t  ");
 
         string? cmd = null;
-        SpinUntil(() => input.TryDequeueCommand(out cmd) && cmd == "hello", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out cmd) && cmd == "hello", _commandTimeoutMs);
         Assert.Equal("hello", cmd);
 
         server.Dispose();
@@ -239,7 +239,7 @@ public class ConsoleBridgeServerTests
                 if (l == "valid")
                     return true;
             return false;
-        }, CommandTimeoutMs);
+        }, _commandTimeoutMs);
         Assert.True(ok, "Only 'valid' should appear in input queue (blank/whitespace lines filtered)");
 
         server.Dispose();
@@ -259,7 +259,7 @@ public class ConsoleBridgeServerTests
         writer.WriteLine("    ");
         writer.WriteLine("__SENTINEL__");
 
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "__SENTINEL__", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "__SENTINEL__", _commandTimeoutMs);
 
         Assert.False(input.TryDequeueCommand(out _));
 
@@ -281,7 +281,7 @@ public class ConsoleBridgeServerTests
 
         output.Publish("hello from console");
 
-        var line = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var line = ReadLineWithTimeout(reader, _outputTimeoutMs);
         Assert.NotNull(line);
         Assert.Equal("hello from console", line);
 
@@ -306,7 +306,7 @@ public class ConsoleBridgeServerTests
         var received = new List<string>();
         for (var i = 0; i < 3; i++)
         {
-            var line = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            var line = ReadLineWithTimeout(reader, _outputTimeoutMs);
             Assert.NotNull(line);
             received.Add(line!);
         }
@@ -332,7 +332,7 @@ public class ConsoleBridgeServerTests
 
         output.Publish(null!);
 
-        var line = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var line = ReadLineWithTimeout(reader, _outputTimeoutMs);
         Assert.NotNull(line);
         Assert.Equal(string.Empty, line);
 
@@ -350,19 +350,19 @@ public class ConsoleBridgeServerTests
         using var reader = new StreamReader(client.GetStream());
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
-        for (var i = 0; i < StressCommandCount; i++)
+        for (var i = 0; i < _stressCommandCount; i++)
             output.Publish($"out_{i}");
 
         var count = 0;
-        for (var i = 0; i < StressCommandCount; i++)
+        for (var i = 0; i < _stressCommandCount; i++)
         {
-            var line = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            var line = ReadLineWithTimeout(reader, _outputTimeoutMs);
             if (line is null)
                 break;
             count++;
         }
 
-        Assert.True(count >= StressCommandCount, $"Expected >= {StressCommandCount}, got {count}");
+        Assert.True(count >= _stressCommandCount, $"Expected >= {_stressCommandCount}, got {count}");
 
         server.Dispose();
     }
@@ -394,7 +394,7 @@ public class ConsoleBridgeServerTests
 
         var received = new List<string>();
         string? line;
-        while ((line = ReadLineWithTimeout(reader, OutputTimeoutMs)) is not null)
+        while ((line = ReadLineWithTimeout(reader, _outputTimeoutMs)) is not null)
             received.Add(line);
 
         Assert.True(received.Count >= concurrentCount * 10,
@@ -417,7 +417,7 @@ public class ConsoleBridgeServerTests
 
         // Verify client1 works
         writer1.WriteLine("from_first");
-        var ok1 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "from_first", CommandTimeoutMs);
+        var ok1 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "from_first", _commandTimeoutMs);
         Assert.True(ok1, "'from_first' should arrive from first client");
 
         // Try to connect second client — should be rejected
@@ -435,7 +435,7 @@ public class ConsoleBridgeServerTests
 
         // client1 should still work
         writer1.WriteLine("still_works");
-        var ok2 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "still_works", CommandTimeoutMs);
+        var ok2 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "still_works", _commandTimeoutMs);
         Assert.True(ok2, "'still_works' should arrive - client1 still functional after second rejected");
 
         server.Dispose();
@@ -452,7 +452,7 @@ public class ConsoleBridgeServerTests
         var writer1 = new StreamWriter(client1.GetStream()) { AutoFlush = true };
 
         writer1.WriteLine("from_first");
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "from_first", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "from_first", _commandTimeoutMs);
 
         try
         {
@@ -489,12 +489,12 @@ public class ConsoleBridgeServerTests
             client.Connect(IPAddress.Loopback, port);
         }
 
-        using var client2 = ConnectWithRetry(port, CommandTimeoutMs);
+        using var client2 = ConnectWithRetry(port, _commandTimeoutMs);
         using var writer = new StreamWriter(client2.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("after_reconnect");
 
-        var ok = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_reconnect", CommandTimeoutMs);
+        var ok = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_reconnect", _commandTimeoutMs);
         Assert.True(ok, "'after_reconnect' should arrive after disconnect/reconnect");
 
         server.Dispose();
@@ -513,17 +513,17 @@ public class ConsoleBridgeServerTests
         }
 
         // Second client (should be accepted)
-        using (var client2 = ConnectWithRetry(port, CommandTimeoutMs))
+        using (var client2 = ConnectWithRetry(port, _commandTimeoutMs))
         {
         }
 
         // Third client (should also be accepted)
-        using var client3 = ConnectWithRetry(port, CommandTimeoutMs);
+        using var client3 = ConnectWithRetry(port, _commandTimeoutMs);
         using var writer = new StreamWriter(client3.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("third");
 
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "third", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "third", _commandTimeoutMs);
 
         server.Dispose();
     }
@@ -542,11 +542,11 @@ public class ConsoleBridgeServerTests
         }
 
         // New connection should work
-        using var client2 = ConnectWithRetry(port, CommandTimeoutMs);
+        using var client2 = ConnectWithRetry(port, _commandTimeoutMs);
         using var writer = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer.WriteLine("after_immediate");
 
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_immediate", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_immediate", _commandTimeoutMs);
 
         server.Dispose();
     }
@@ -562,16 +562,16 @@ public class ConsoleBridgeServerTests
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("in_session");
-        var ok1 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "in_session", CommandTimeoutMs);
+        var ok1 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "in_session", _commandTimeoutMs);
         Assert.True(ok1, "'in_session' should arrive from initial client");
 
         client.Client.Dispose();
 
-        using var client2 = ConnectWithRetry(port, CommandTimeoutMs);
+        using var client2 = ConnectWithRetry(port, _commandTimeoutMs);
         using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer2.WriteLine("after_hard_disconnect");
 
-        var ok2 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_hard_disconnect", CommandTimeoutMs);
+        var ok2 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_hard_disconnect", _commandTimeoutMs);
         Assert.True(ok2, "'after_hard_disconnect' should arrive after hard disconnect recovery");
 
         server.Dispose();
@@ -588,15 +588,15 @@ public class ConsoleBridgeServerTests
             client.Connect(IPAddress.Loopback, port);
             using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
             writer.WriteLine("before_abort");
-            var ok1 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "before_abort", CommandTimeoutMs);
+            var ok1 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "before_abort", _commandTimeoutMs);
             Assert.True(ok1, "'before_abort' should arrive from initial client");
         }
 
-        using var client2 = ConnectWithRetry(port, CommandTimeoutMs);
+        using var client2 = ConnectWithRetry(port, _commandTimeoutMs);
         using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer2.WriteLine("after_abort");
 
-        var ok2 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_abort", CommandTimeoutMs);
+        var ok2 = SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_abort", _commandTimeoutMs);
         Assert.True(ok2, "'after_abort' should arrive after abort recovery");
 
         server.Dispose();
@@ -633,7 +633,7 @@ public class ConsoleBridgeServerTests
             writer.WriteLine($"cmd_{i}");
 
         // Wait for publisher to finish
-        Assert.True(pubDone.Wait(CommandTimeoutMs, TestContext.Current.CancellationToken), "Publisher should complete");
+        Assert.True(pubDone.Wait(_commandTimeoutMs, TestContext.Current.CancellationToken), "Publisher should complete");
 
         // All commands should arrive
         SpinUntil(() =>
@@ -642,7 +642,7 @@ public class ConsoleBridgeServerTests
             while (input.TryDequeueCommand(out _))
                 count++;
             return count >= 20;
-        }, CommandTimeoutMs);
+        }, _commandTimeoutMs);
 
         server.Dispose();
     }
@@ -678,9 +678,9 @@ public class ConsoleBridgeServerTests
         var pre = new HashSet<string>();
         var live = new HashSet<string>();
         var watch = Stopwatch.StartNew();
-        while (watch.ElapsedMilliseconds < OutputTimeoutMs && pre.Count + live.Count < backlog + burst)
+        while (watch.ElapsedMilliseconds < _outputTimeoutMs && pre.Count + live.Count < backlog + burst)
         {
-            var line = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            var line = ReadLineWithTimeout(reader, _outputTimeoutMs);
             if (line is null)
                 break;
 
@@ -692,7 +692,7 @@ public class ConsoleBridgeServerTests
                 live.Add(line);
         }
 
-        await publisher.WaitAsync(TimeSpan.FromMilliseconds(CommandTimeoutMs), TestContext.Current.CancellationToken);
+        await publisher.WaitAsync(TimeSpan.FromMilliseconds(_commandTimeoutMs), TestContext.Current.CancellationToken);
 
         Assert.Equal(backlog, pre.Count);
         Assert.Equal(burst, live.Count);
@@ -715,18 +715,18 @@ public class ConsoleBridgeServerTests
 
         // Send command, publish response, read it immediately
         writer.WriteLine("cmd1");
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "cmd1", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "cmd1", _commandTimeoutMs);
         output.Publish("response1");
 
-        var response1 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var response1 = ReadLineWithTimeout(reader, _outputTimeoutMs);
         Assert.NotNull(response1);
         Assert.Equal("response1", response1);
 
         writer.WriteLine("cmd2");
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "cmd2", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "cmd2", _commandTimeoutMs);
         output.Publish("response2");
 
-        var response2 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var response2 = ReadLineWithTimeout(reader, _outputTimeoutMs);
         Assert.NotNull(response2);
         Assert.Equal("response2", response2);
 
@@ -747,16 +747,16 @@ public class ConsoleBridgeServerTests
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("help");
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "help", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "help", _commandTimeoutMs);
 
         var readerBlocked = new ManualResetEventSlim(false);
         var readTask = Task.Run(() =>
         {
             readerBlocked.Set();
-            return ReadLineWithTimeout(reader, OutputTimeoutMs);
+            return ReadLineWithTimeout(reader, _outputTimeoutMs);
         }, TestContext.Current.CancellationToken);
 
-        Assert.True(readerBlocked.Wait(CommandTimeoutMs, TestContext.Current.CancellationToken));
+        Assert.True(readerBlocked.Wait(_commandTimeoutMs, TestContext.Current.CancellationToken));
         Thread.Yield();
         Thread.Sleep(0);
 
@@ -783,11 +783,11 @@ public class ConsoleBridgeServerTests
         for (var round = 1; round <= 5; round++)
         {
             writer.WriteLine($"cmd_{round}");
-            SpinUntil(() => input.TryDequeueCommand(out var l) && l == $"cmd_{round}", CommandTimeoutMs);
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == $"cmd_{round}", _commandTimeoutMs);
 
             output.Publish($"result_{round}");
 
-            var response = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            var response = ReadLineWithTimeout(reader, _outputTimeoutMs);
             Assert.NotNull(response);
             Assert.Equal($"result_{round}", response);
         }
@@ -807,15 +807,15 @@ public class ConsoleBridgeServerTests
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("list");
-        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "list", CommandTimeoutMs);
+        SpinUntil(() => input.TryDequeueCommand(out var l) && l == "list", _commandTimeoutMs);
 
         output.Publish("entity_1");
         output.Publish("entity_2");
         output.Publish("entity_3");
 
-        var r1 = ReadLineWithTimeout(reader, OutputTimeoutMs);
-        var r2 = ReadLineWithTimeout(reader, OutputTimeoutMs);
-        var r3 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var r1 = ReadLineWithTimeout(reader, _outputTimeoutMs);
+        var r2 = ReadLineWithTimeout(reader, _outputTimeoutMs);
+        var r3 = ReadLineWithTimeout(reader, _outputTimeoutMs);
         Assert.Equal("entity_1", r1);
         Assert.Equal("entity_2", r2);
         Assert.Equal("entity_3", r3);
@@ -837,8 +837,8 @@ public class ConsoleBridgeServerTests
         client.Connect(IPAddress.Loopback, port);
         using var reader = new StreamReader(client.GetStream());
 
-        var r1 = ReadLineWithTimeout(reader, OutputTimeoutMs);
-        var r2 = ReadLineWithTimeout(reader, OutputTimeoutMs);
+        var r1 = ReadLineWithTimeout(reader, _outputTimeoutMs);
+        var r2 = ReadLineWithTimeout(reader, _outputTimeoutMs);
         Assert.Equal("startup log 1", r1);
         Assert.Equal("startup log 2", r2);
 
@@ -859,24 +859,24 @@ public class ConsoleBridgeServerTests
             using var reader = new StreamReader(client.GetStream());
 
             writer.WriteLine("session1_cmd");
-            SpinUntil(() => input.TryDequeueCommand(out var l) && l == "session1_cmd", CommandTimeoutMs);
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == "session1_cmd", _commandTimeoutMs);
             output.Publish("session1_result");
 
-            var response = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            var response = ReadLineWithTimeout(reader, _outputTimeoutMs);
             Assert.Equal("session1_result", response);
         }
 
         // Session 2: reconnect, send new command, read output
-        using (var client = ConnectWithRetry(port, CommandTimeoutMs))
+        using (var client = ConnectWithRetry(port, _commandTimeoutMs))
         {
             using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
             using var reader = new StreamReader(client.GetStream());
 
             writer.WriteLine("session2_cmd");
-            SpinUntil(() => input.TryDequeueCommand(out var l) && l == "session2_cmd", CommandTimeoutMs);
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == "session2_cmd", _commandTimeoutMs);
             output.Publish("session2_result");
 
-            var response = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            var response = ReadLineWithTimeout(reader, _outputTimeoutMs);
             Assert.Equal("session2_result", response);
         }
 
@@ -899,12 +899,12 @@ public class ConsoleBridgeServerTests
             var lines = new List<string>();
             string? line;
             readerAboutToBlock.Set();
-            while ((line = ReadLineWithTimeout(reader, OutputTimeoutMs)) is not null)
+            while ((line = ReadLineWithTimeout(reader, _outputTimeoutMs)) is not null)
                 lines.Add(line);
             return lines;
         }, TestContext.Current.CancellationToken);
 
-        Assert.True(readerAboutToBlock.Wait(CommandTimeoutMs, TestContext.Current.CancellationToken));
+        Assert.True(readerAboutToBlock.Wait(_commandTimeoutMs, TestContext.Current.CancellationToken));
         Thread.Yield();
         Thread.Sleep(0);
         output.Publish("log_a");
@@ -933,10 +933,10 @@ public class ConsoleBridgeServerTests
         for (var round = 0; round < 50; round++)
         {
             writer.WriteLine($"stress_{round}");
-            SpinUntil(() => input.TryDequeueCommand(out var l) && l == $"stress_{round}", CommandTimeoutMs);
+            SpinUntil(() => input.TryDequeueCommand(out var l) && l == $"stress_{round}", _commandTimeoutMs);
             output.Publish($"pong_{round}");
 
-            var response = ReadLineWithTimeout(reader, OutputTimeoutMs);
+            var response = ReadLineWithTimeout(reader, _outputTimeoutMs);
             Assert.NotNull(response);
             Assert.Equal($"pong_{round}", response);
         }
@@ -961,7 +961,7 @@ public class ConsoleBridgeServerTests
             reader.ReadLine();
         }, TestContext.Current.CancellationToken);
 
-        Assert.True(readerAboutToBlock.Wait(CommandTimeoutMs, TestContext.Current.CancellationToken));
+        Assert.True(readerAboutToBlock.Wait(_commandTimeoutMs, TestContext.Current.CancellationToken));
         Thread.Yield();
         Thread.Sleep(0);
         server.Dispose();
@@ -1073,7 +1073,7 @@ public class ConsoleBridgeServerTests
         {
             if (condition())
                 return true;
-            Thread.Sleep(SpinPollIntervalMs);
+            Thread.Sleep(_spinPollIntervalMs);
         }
 
         return condition();
@@ -1113,7 +1113,7 @@ public class ConsoleBridgeServerTests
             catch (SocketException ex)
             {
                 lastEx = ex;
-                Thread.Sleep(ConnectRetryIntervalMs);
+                Thread.Sleep(_connectRetryIntervalMs);
             }
         }
         throw new TimeoutException(
@@ -1135,7 +1135,7 @@ public class ConsoleBridgeServerTests
             {
                 // Expected — server is not accepting connections
             }
-            Thread.Sleep(ConnectRetryIntervalMs);
+            Thread.Sleep(_connectRetryIntervalMs);
         }
     }
 }

@@ -18,13 +18,13 @@ namespace Origo.Core.Snd;
 internal sealed class NullSndContext : ISndContext
 {
     internal static readonly NullSndContext Instance = new();
-    private static readonly IBlackboard EmptyBlackboard = new Blackboard.Blackboard();
+    private static readonly IBlackboard _emptyBlackboard = new Blackboard.Blackboard();
 
     private NullSndContext()
     {
     }
 
-    public IBlackboard SystemBlackboard => EmptyBlackboard;
+    public IBlackboard SystemBlackboard => _emptyBlackboard;
     public IBlackboard? ProgressBlackboard => null;
 
     public void EnqueueBusinessDeferred(Action action) => action();

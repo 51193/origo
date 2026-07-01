@@ -367,8 +367,8 @@ public class EntityKillTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
-        host.RecoverFromMetaList(new[]
-        {
+        host.RecoverFromMetaList(
+        [
             new SndMetaData
             {
                 Name = "E",
@@ -377,7 +377,7 @@ public class EntityKillTests
                     { LifecycleIndices = ["quit.test.probe"], ActiveIndices = [] },
                 DataMetaData = new DataMetaData()
             }
-        });
+        ]);
 
         try
         {
@@ -408,7 +408,7 @@ public class EntityKillTests
         var host = new StubSndSceneHost();
 
         var runtime = CreateRuntimeWithConsole(logger, host);
-        TestFactory.BootstrapForegroundSession(runtime, logger);
+        TestFactory.BootstrapForegroundSession(runtime);
 
         host.CreateEntity(new SndMetaData { Name = "A" });
         host.CreateEntity(new SndMetaData { Name = "B" });
@@ -427,7 +427,7 @@ public class EntityKillTests
         var host = new StubSndSceneHost();
 
         var runtime = CreateRuntimeWithConsole(logger, host);
-        TestFactory.BootstrapForegroundSession(runtime, logger);
+        TestFactory.BootstrapForegroundSession(runtime);
 
         host.CreateEntity(new SndMetaData { Name = "A" });
         host.CreateEntity(new SndMetaData { Name = "B" });
@@ -538,8 +538,8 @@ public class EntityKillTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
-        host.RecoverFromMetaList(new[]
-        {
+        host.RecoverFromMetaList(
+        [
             new SndMetaData
             {
                 Name = "E",
@@ -548,7 +548,7 @@ public class EntityKillTests
                     { LifecycleIndices = ["kill.test.lifecycle"], ActiveIndices = [] },
                 DataMetaData = new DataMetaData()
             }
-        });
+        ]);
         return host;
     }
 

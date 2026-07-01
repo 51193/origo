@@ -16,9 +16,9 @@ namespace Origo.SourceGeneration.Tests;
 /// </summary>
 internal static class GeneratorTestHarness
 {
-    private static readonly MetadataReference[] RuntimeReferences = LoadRuntimeReferences();
+    private static readonly MetadataReference[] _runtimeReferences = LoadRuntimeReferences();
 
-    private static readonly CSharpParseOptions ParseOptions =
+    private static readonly CSharpParseOptions _parseOptions =
         new(LanguageVersion.Latest);
 
     private static MetadataReference[] LoadRuntimeReferences()
@@ -38,10 +38,10 @@ internal static class GeneratorTestHarness
     public static CSharpCompilation CreateCompilation(
         string assemblyName, string source, IEnumerable<MetadataReference>? extraReferences = null)
     {
-        var references = RuntimeReferences.Concat(extraReferences ?? []);
+        var references = _runtimeReferences.Concat(extraReferences ?? []);
         return CSharpCompilation.Create(
             assemblyName,
-            new[] { CSharpSyntaxTree.ParseText(source, ParseOptions) },
+            [CSharpSyntaxTree.ParseText(source, _parseOptions)],
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
     }
@@ -52,8 +52,8 @@ internal static class GeneratorTestHarness
         var compilation = CreateCompilation(assemblyName, source, extraReferences);
 
         var driver = CSharpGeneratorDriver.Create(
-            new[] { new TypedDataGenerator().AsSourceGenerator() },
-            parseOptions: ParseOptions);
+            [new TypedDataGenerator().AsSourceGenerator()],
+            parseOptions: _parseOptions);
 
         var ranDriver = driver.RunGeneratorsAndUpdateCompilation(
             compilation, out var outputCompilation, out var generatorDiagnostics);
@@ -75,8 +75,8 @@ internal static class GeneratorTestHarness
     public static GeneratorDriver CreateTrackedDriver()
     {
         return CSharpGeneratorDriver.Create(
-            new[] { new TypedDataGenerator().AsSourceGenerator() },
-            parseOptions: ParseOptions,
+            [new TypedDataGenerator().AsSourceGenerator()],
+            parseOptions: _parseOptions,
             driverOptions: new GeneratorDriverOptions(
                 disabledOutputs: IncrementalGeneratorOutputKind.None,
                 trackIncrementalGeneratorSteps: true));

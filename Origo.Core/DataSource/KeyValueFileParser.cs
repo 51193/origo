@@ -10,7 +10,7 @@ namespace Origo.Core.DataSource;
 /// </summary>
 internal static class KeyValueFileParser
 {
-    private static readonly char[] LineSeparators = ['\r', '\n'];
+    private static readonly char[] _lineSeparators = ['\r', '\n'];
 
     public static Dictionary<string, string> Parse(
         string? content,
@@ -24,7 +24,7 @@ internal static class KeyValueFileParser
         if (string.IsNullOrWhiteSpace(content))
             return result;
 
-        var lines = content.Split(LineSeparators, StringSplitOptions.RemoveEmptyEntries);
+        var lines = content.Split(_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
         foreach (var rawLine in lines)
         {
             var line = rawLine.Trim();

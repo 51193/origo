@@ -121,7 +121,7 @@ public class LifecycleStrategyBaseTests
         ctx.RequestLoadMainMenuEntrySave();
         ctx.FlushDeferredActionsForCurrentFrame();
 
-        var entity = host.CreateEntity(CreateMeta("E", [KillSelfIdx, ProcessCalledIdx]));
+        var entity = host.CreateEntity(CreateMeta("E", [_killSelfIdx, _processCalledIdx]));
         ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         KillSelfRecordingStrategy.ProcessCalls.Clear();
         ProcessCalledStrategy.Called = false;
@@ -132,8 +132,8 @@ public class LifecycleStrategyBaseTests
         Assert.True(ProcessCalledStrategy.Called);
     }
 
-    private const string KillSelfIdx = "test.kill_self";
-    private const string ProcessCalledIdx = "test.process_called";
+    private const string _killSelfIdx = "test.kill_self";
+    private const string _processCalledIdx = "test.process_called";
 
     [Fact]
     public void Remove_NonexistentStrategy_DoesNotThrow()
@@ -152,7 +152,7 @@ public class LifecycleStrategyBaseTests
         var entity = host.CreateEntity(CreateMeta("E"));
         ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
-        Assert.Throws<InvalidOperationException>(() => entity.AddStrategy(ThrowOnAddIdx));
+        Assert.Throws<InvalidOperationException>(() => entity.AddStrategy(_throwOnAddIdx));
 
         // The rolled-back strategy must not run during Process; it would if it
         // had been left half-attached to the entity's strategy list.
@@ -160,9 +160,9 @@ public class LifecycleStrategyBaseTests
         Assert.Equal(0, ThrowOnAddStrategy.ProcessCalls);
     }
 
-    private const string ThrowOnAddIdx = "test.throw_on_add";
+    private const string _throwOnAddIdx = "test.throw_on_add";
 
-    [StrategyIndex(ThrowOnAddIdx)]
+    [StrategyIndex(_throwOnAddIdx)]
     private sealed class ThrowOnAddStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<int> _processCalls = new();
@@ -192,7 +192,7 @@ public class LifecycleStrategyBaseTests
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) => entity.OwningSession.RequestKillEntity("B");
     }
 
-    [StrategyIndex(KillSelfIdx)]
+    [StrategyIndex(_killSelfIdx)]
     private sealed class KillSelfRecordingStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>> _processCalls = new();
@@ -205,7 +205,7 @@ public class LifecycleStrategyBaseTests
         }
     }
 
-    [StrategyIndex(ProcessCalledIdx)]
+    [StrategyIndex(_processCalledIdx)]
     private sealed class ProcessCalledStrategy : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<bool> _called = new();

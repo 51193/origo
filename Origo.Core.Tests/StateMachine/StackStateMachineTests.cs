@@ -194,7 +194,7 @@ public class StackStateMachineTests
         var (pool, ctx) = CreatePoolAndContext();
         using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
 
-        sm.RestoreStackWithoutHooks(new[] { "x", "y" });
+        sm.RestoreStackWithoutHooks(["x", "y"]);
 
         var (found, top) = sm.Peek();
         Assert.True(found);

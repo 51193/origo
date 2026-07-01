@@ -21,7 +21,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 /// </summary>
 internal sealed class SessionManager : ISessionManager
 {
-    private const string LogTag = nameof(SessionManager);
+    private const string _logTag = nameof(SessionManager);
     private readonly ISndSceneHost _adapterSceneHost;
     private readonly SessionManagerRuntime _managerRuntime;
     private readonly Dictionary<string, MountedSession> _sessions = new(StringComparer.Ordinal);
@@ -41,8 +41,7 @@ internal sealed class SessionManager : ISessionManager
 
     /// <summary>获取所有参与 Process 帧更新的会话的键列表。</summary>
     internal IReadOnlyCollection<string> ProcessingKeys =>
-        _sessions.Where(kvp => kvp.Value.SyncProcess)
-            .Select(kvp => kvp.Key).ToArray();
+        [.. _sessions.Where(kvp => kvp.Value.SyncProcess).Select(kvp => kvp.Key)];
 
     /// <inheritdoc />
     public bool CanCreateSessions => true;
@@ -52,7 +51,7 @@ internal sealed class SessionManager : ISessionManager
         _sessions.TryGetValue(ISessionManager.ForegroundKey, out var mounted) ? mounted.Session : null;
 
     /// <inheritdoc />
-    public IReadOnlyCollection<string> Keys => _sessions.Keys.ToArray();
+    public IReadOnlyCollection<string> Keys => [.. _sessions.Keys];
 
     /// <inheritdoc />
     public ISessionRun? TryGet(string key)
@@ -220,10 +219,9 @@ internal sealed class SessionManager : ISessionManager
     /// </summary>
     internal IReadOnlyList<KeyValuePair<string, ISessionRun>> GetBackgroundSessions()
     {
-        return _sessions
+        return [.. _sessions
             .Where(kvp => !string.Equals(kvp.Key, ISessionManager.ForegroundKey, StringComparison.Ordinal))
-            .Select(kvp => new KeyValuePair<string, ISessionRun>(kvp.Key, kvp.Value.Session))
-            .ToArray();
+            .Select(kvp => new KeyValuePair<string, ISessionRun>(kvp.Key, kvp.Value.Session))];
     }
 
     /// <summary>
@@ -291,7 +289,7 @@ internal sealed class SessionManager : ISessionManager
             throw new InvalidOperationException($"A session with key '{key}' is already mounted.");
 
         _sessions[key] = new MountedSession(session, syncProcess);
-        _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
+        _managerRuntime.Logger.Log(LogLevel.Info, _logTag,
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
                 .Build($"Mounted session '{key}' (level: {session.LevelId}, syncProcess: {syncProcess})."));
@@ -322,12 +320,12 @@ internal sealed class SessionManager : ISessionManager
     private void DisposeMountedSession(string key, MountedSession mounted)
     {
         var watch = Stopwatch.StartNew();
-        _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
+        _managerRuntime.Logger.Log(LogLevel.Info, _logTag,
             $"Destroying session '{key}' (level: {mounted.Session.LevelId}).");
 
         mounted.Session.MountKey = null;
         mounted.Session.Dispose();
-        _managerRuntime.Logger.Log(LogLevel.Info, LogTag,
+        _managerRuntime.Logger.Log(LogLevel.Info, _logTag,
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
                 .Build($"Destroyed session '{key}'."));

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.FileSystem;
 
@@ -22,8 +23,11 @@ public sealed class GodotFileSystem : IFileSystem
     public void Copy(string sourcePath, string destinationPath, bool overwrite) =>
         GodotFileOperations.Copy(sourcePath, destinationPath, overwrite);
 
-    public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive) =>
-        GodotDirectoryOperations.EnumerateFiles(directoryPath, searchPattern, recursive);
+    public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
+    {
+        ArgumentNullException.ThrowIfNull(directoryPath);
+        return GodotDirectoryOperations.EnumerateFiles(directoryPath, searchPattern, recursive);
+    }
 
     public void CreateDirectory(string directoryPath) => GodotDirectoryOperations.Create(directoryPath);
 
@@ -32,13 +36,20 @@ public sealed class GodotFileSystem : IFileSystem
     public string CombinePath(string basePath, string relativePath) =>
         GodotPathResolver.Combine(basePath, relativePath);
 
-    public IEnumerable<string> EnumerateDirectories(string directoryPath) =>
-        GodotDirectoryOperations.EnumerateDirectories(directoryPath);
+    public IEnumerable<string> EnumerateDirectories(string directoryPath)
+    {
+        ArgumentNullException.ThrowIfNull(directoryPath);
+        return GodotDirectoryOperations.EnumerateDirectories(directoryPath);
+    }
 
     public string GetParentDirectory(string path) => GodotPathResolver.GetParentDirectory(path);
 
     public void Rename(string sourcePath, string destinationPath) =>
         GodotDirectoryOperations.Rename(sourcePath, destinationPath);
 
-    public void DeleteDirectory(string directoryPath) => GodotDirectoryOperations.DeleteRecursive(directoryPath);
+    public void DeleteDirectory(string directoryPath)
+    {
+        ArgumentNullException.ThrowIfNull(directoryPath);
+        GodotDirectoryOperations.DeleteRecursive(directoryPath);
+    }
 }

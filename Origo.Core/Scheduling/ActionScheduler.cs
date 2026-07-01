@@ -10,7 +10,7 @@ namespace Origo.Core.Scheduling;
 /// </summary>
 internal sealed class ActionScheduler(ILogger logger) : IScheduler
 {
-    private readonly ConcurrentActionQueue _queue = new ConcurrentActionQueue(logger);
+    private readonly ConcurrentActionQueue _queue = new(logger);
 
     public void Enqueue(Action action) => _queue.Enqueue(action);
 

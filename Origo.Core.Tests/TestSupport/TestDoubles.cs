@@ -303,7 +303,7 @@ internal sealed class TestSndSceneHost : ISndSceneHost
 
     public ISndEntity? FindByName(string name) => _entities.FirstOrDefault(e => e.Name == name);
 
-    public IReadOnlyList<SndMetaData> BuildMetaList() => _metaList.ToArray();
+    public IReadOnlyList<SndMetaData> BuildMetaList() => [.. _metaList];
 
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
@@ -528,10 +528,8 @@ internal static class TestFactory
 
     public static ISessionRun BootstrapForegroundSession(
         OrigoRuntime runtime,
-        ILogger? logger = null,
         IDataSourceIoGateway? dataSourceIo = null)
     {
-        logger ??= new TestLogger();
         var fs = new TestFileSystem();
         fs.SeedFile("entry.json", "[]");
         var io = dataSourceIo ?? CreateIoGateway(fs);

@@ -16,14 +16,14 @@ namespace Origo.Core.Tests;
 /// </summary>
 public class ActiveStrategyTestScenarioTests
 {
-    private const string SimpleStrategyIndex = "active_test.simple";
-    private const string InputStrategyIndex = "active_test.with_input";
-    private const string DataWriteStrategyIndex = "active_test.data_write";
-    private const string DeferredActionStrategyIndex = "active_test.deferred";
-    private const string ConsoleCommandStrategyIndex = "active_test.console";
-    private const string SaveRequestStrategyIndex = "active_test.save_request";
-    private const string TemplateCloneStrategyIndex = "active_test.template";
-    private const string ComplexStrategyIndex = "active_test.complex";
+    private const string _simpleStrategyIndex = "active_test.simple";
+    private const string _inputStrategyIndex = "active_test.with_input";
+    private const string _dataWriteStrategyIndex = "active_test.data_write";
+    private const string _deferredActionStrategyIndex = "active_test.deferred";
+    private const string _consoleCommandStrategyIndex = "active_test.console";
+    private const string _saveRequestStrategyIndex = "active_test.save_request";
+    private const string _templateCloneStrategyIndex = "active_test.template";
+    private const string _complexStrategyIndex = "active_test.complex";
 
     // ── Basic invoke ──────────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ public class ActiveStrategyTestScenarioTests
     public void Invoke_WithNoInput_ReturnsExpectedResult()
     {
         var harness = StrategyTestScenario
-            .ForActive<SimpleAnswerStrategy>(SimpleStrategyIndex)
+            .ForActive<SimpleAnswerStrategy>(_simpleStrategyIndex)
             .Build();
 
         var result = harness.Invoke();
@@ -43,7 +43,7 @@ public class ActiveStrategyTestScenarioTests
     public void Invoke_WithInput_PassesInputToStrategy()
     {
         var harness = StrategyTestScenario
-            .ForActive<EchoInputStrategy>(InputStrategyIndex)
+            .ForActive<EchoInputStrategy>(_inputStrategyIndex)
             .Build();
 
         var result = harness.Invoke("hello");
@@ -55,7 +55,7 @@ public class ActiveStrategyTestScenarioTests
     public void Invoke_WithNullInput_StrategyReceivesNull()
     {
         var harness = StrategyTestScenario
-            .ForActive<EchoInputStrategy>(InputStrategyIndex)
+            .ForActive<EchoInputStrategy>(_inputStrategyIndex)
             .Build();
 
         var result = harness.Invoke();
@@ -67,7 +67,7 @@ public class ActiveStrategyTestScenarioTests
     public void Invoke_WithComplexInput_PassesThrough()
     {
         var harness = StrategyTestScenario
-            .ForActive<EchoInputStrategy>(InputStrategyIndex)
+            .ForActive<EchoInputStrategy>(_inputStrategyIndex)
             .Build();
 
         var input = new { Key = "test", Value = 99 };
@@ -82,7 +82,7 @@ public class ActiveStrategyTestScenarioTests
     public void Strategy_ReadsEntityData_SetViaBuilder()
     {
         var harness = StrategyTestScenario
-            .ForActive<DataReadingStrategy>(ComplexStrategyIndex)
+            .ForActive<DataReadingStrategy>(_complexStrategyIndex)
             .WithData("counter", 10)
             .WithData("label", "test_label")
             .Build();
@@ -97,7 +97,7 @@ public class ActiveStrategyTestScenarioTests
     public void Strategy_WritesEntityData_HarnessCanReadBack()
     {
         var harness = StrategyTestScenario
-            .ForActive<DataWritingStrategy>(DataWriteStrategyIndex)
+            .ForActive<DataWritingStrategy>(_dataWriteStrategyIndex)
             .Build();
 
         harness.Invoke();
@@ -110,7 +110,7 @@ public class ActiveStrategyTestScenarioTests
     public void MultipleInvokes_IncrementData()
     {
         var harness = StrategyTestScenario
-            .ForActive<DataWritingStrategy>(DataWriteStrategyIndex)
+            .ForActive<DataWritingStrategy>(_dataWriteStrategyIndex)
             .Build();
 
         harness.Invoke();
@@ -124,7 +124,7 @@ public class ActiveStrategyTestScenarioTests
     public void GetEntityData_WithMissingKey_Throws()
     {
         var harness = StrategyTestScenario
-            .ForActive<SimpleAnswerStrategy>(SimpleStrategyIndex)
+            .ForActive<SimpleAnswerStrategy>(_simpleStrategyIndex)
             .Build();
 
         Assert.Throws<InvalidOperationException>(() => harness.GetEntityData<int>("nonexistent"));
@@ -134,7 +134,7 @@ public class ActiveStrategyTestScenarioTests
     public void TryGetEntityData_WithMissingKey_ReturnsFalse()
     {
         var harness = StrategyTestScenario
-            .ForActive<SimpleAnswerStrategy>(SimpleStrategyIndex)
+            .ForActive<SimpleAnswerStrategy>(_simpleStrategyIndex)
             .Build();
 
         var (found, _) = harness.TryGetEntityData<int>("nonexistent");
@@ -145,7 +145,7 @@ public class ActiveStrategyTestScenarioTests
     public void GetEntityData_WithWrongType_Throws()
     {
         var harness = StrategyTestScenario
-            .ForActive<DataWritingStrategy>(DataWriteStrategyIndex)
+            .ForActive<DataWritingStrategy>(_dataWriteStrategyIndex)
             .Build();
         harness.Invoke();
 
@@ -158,7 +158,7 @@ public class ActiveStrategyTestScenarioTests
     public void InvokeViaEntity_DelegatesToStrategy()
     {
         var harness = StrategyTestScenario
-            .ForActive<SimpleAnswerStrategy>(SimpleStrategyIndex)
+            .ForActive<SimpleAnswerStrategy>(_simpleStrategyIndex)
             .Build();
 
         var result = harness.InvokeViaEntity();
@@ -170,7 +170,7 @@ public class ActiveStrategyTestScenarioTests
     public void InvokeViaEntity_WithInput_DelegatesCorrectly()
     {
         var harness = StrategyTestScenario
-            .ForActive<EchoInputStrategy>(InputStrategyIndex)
+            .ForActive<EchoInputStrategy>(_inputStrategyIndex)
             .Build();
 
         var result = harness.InvokeViaEntity("world");
@@ -184,7 +184,7 @@ public class ActiveStrategyTestScenarioTests
     public void SystemConfig_AccessibleInStrategy()
     {
         var harness = StrategyTestScenario
-            .ForActive<BlackboardReadingStrategy>(ComplexStrategyIndex)
+            .ForActive<BlackboardReadingStrategy>(_complexStrategyIndex)
             .WithSystemConfig("system_key", "sys_value")
             .Build();
 
@@ -200,7 +200,7 @@ public class ActiveStrategyTestScenarioTests
     public void ProgressConfig_AccessibleInStrategy()
     {
         var harness = StrategyTestScenario
-            .ForActive<BlackboardReadingStrategy>(ComplexStrategyIndex)
+            .ForActive<BlackboardReadingStrategy>(_complexStrategyIndex)
             .WithProgressConfig("progress_key", 777)
             .Build();
 
@@ -216,7 +216,7 @@ public class ActiveStrategyTestScenarioTests
     public void SessionConfig_AccessibleInStrategy()
     {
         var harness = StrategyTestScenario
-            .ForActive<BlackboardReadingStrategy>(ComplexStrategyIndex)
+            .ForActive<BlackboardReadingStrategy>(_complexStrategyIndex)
             .WithSessionConfig("session_key", "ses_val")
             .Build();
 
@@ -232,7 +232,7 @@ public class ActiveStrategyTestScenarioTests
     public void AllThreeBlackboards_Accessible()
     {
         var harness = StrategyTestScenario
-            .ForActive<BlackboardReadingStrategy>(ComplexStrategyIndex)
+            .ForActive<BlackboardReadingStrategy>(_complexStrategyIndex)
             .WithSystemConfig("a", 1)
             .WithProgressConfig("b", 2)
             .WithSessionConfig("c", 3)
@@ -251,7 +251,7 @@ public class ActiveStrategyTestScenarioTests
     public void DefaultEntityName_IsTestEntity()
     {
         var harness = StrategyTestScenario
-            .ForActive<EntityNameStrategy>(ComplexStrategyIndex)
+            .ForActive<EntityNameStrategy>(_complexStrategyIndex)
             .Build();
 
         var result = harness.Invoke();
@@ -263,7 +263,7 @@ public class ActiveStrategyTestScenarioTests
     public void CustomEntityName_PassedToStrategy()
     {
         var harness = StrategyTestScenario
-            .ForActive<EntityNameStrategy>(ComplexStrategyIndex)
+            .ForActive<EntityNameStrategy>(_complexStrategyIndex)
             .WithEntityName("MyCustomEntity")
             .Build();
 
@@ -276,7 +276,7 @@ public class ActiveStrategyTestScenarioTests
     public void WithEntityName_EmptyOrWhitespace_ResetsToDefault()
     {
         var harness = StrategyTestScenario
-            .ForActive<EntityNameStrategy>(ComplexStrategyIndex)
+            .ForActive<EntityNameStrategy>(_complexStrategyIndex)
             .WithEntityName("  ")
             .Build();
 
@@ -291,7 +291,7 @@ public class ActiveStrategyTestScenarioTests
     public void Strategy_EnqueueBusinessDeferred_TracksCount()
     {
         var harness = StrategyTestScenario
-            .ForActive<BusinessDeferredStrategy>(DeferredActionStrategyIndex)
+            .ForActive<BusinessDeferredStrategy>(_deferredActionStrategyIndex)
             .Build();
 
         Assert.Equal(0, harness.DeferredActionCount);
@@ -306,7 +306,7 @@ public class ActiveStrategyTestScenarioTests
     public void Strategy_MultipleDeferredActions_TracksAll()
     {
         var harness = StrategyTestScenario
-            .ForActive<BusinessDeferredStrategy>(DeferredActionStrategyIndex)
+            .ForActive<BusinessDeferredStrategy>(_deferredActionStrategyIndex)
             .WithData("defer_count", 3)
             .Build();
 
@@ -322,7 +322,7 @@ public class ActiveStrategyTestScenarioTests
     public void Strategy_SubmitConsoleCommand_TracksInList()
     {
         var harness = StrategyTestScenario
-            .ForActive<ConsoleCommandStrategy>(ConsoleCommandStrategyIndex)
+            .ForActive<ConsoleCommandStrategy>(_consoleCommandStrategyIndex)
             .Build();
 
         Assert.Empty(harness.ConsoleCommands);
@@ -338,7 +338,7 @@ public class ActiveStrategyTestScenarioTests
     public void Strategy_RequestSave_TracksRequest()
     {
         var harness = StrategyTestScenario
-            .ForActive<SaveRequestStrategy>(SaveRequestStrategyIndex)
+            .ForActive<SaveRequestStrategy>(_saveRequestStrategyIndex)
             .WithData("save_id", "slot_001")
             .Build();
 
@@ -353,7 +353,7 @@ public class ActiveStrategyTestScenarioTests
     public void Strategy_RequestLoad_TracksRequest()
     {
         var harness = StrategyTestScenario
-            .ForActive<SaveRequestStrategy>(SaveRequestStrategyIndex)
+            .ForActive<SaveRequestStrategy>(_saveRequestStrategyIndex)
             .WithData("load_id", "slot_002")
             .Build();
 
@@ -366,7 +366,7 @@ public class ActiveStrategyTestScenarioTests
     public void Strategy_RequestSwitchLevel_TracksRequest()
     {
         var harness = StrategyTestScenario
-            .ForActive<SaveRequestStrategy>(SaveRequestStrategyIndex)
+            .ForActive<SaveRequestStrategy>(_saveRequestStrategyIndex)
             .WithData("switch_id", "dungeon")
             .Build();
 
@@ -390,7 +390,7 @@ public class ActiveStrategyTestScenarioTests
         template.DataMetaData.Pairs["template_key"] = new TypedData(TypedData.KindMap.String, 0, "template_value");
 
         var harness = StrategyTestScenario
-            .ForActive<TemplateCloneStrategy>(TemplateCloneStrategyIndex)
+            .ForActive<TemplateCloneStrategy>(_templateCloneStrategyIndex)
             .WithTemplate("my_tmpl", template)
             .Build();
 
@@ -415,7 +415,7 @@ public class ActiveStrategyTestScenarioTests
     [Fact]
     public void WithTemplate_WithNull_Throws()
     {
-        var builder = StrategyTestScenario.ForActive<SimpleAnswerStrategy>(SimpleStrategyIndex);
+        var builder = StrategyTestScenario.ForActive<SimpleAnswerStrategy>(_simpleStrategyIndex);
         Assert.Throws<ArgumentNullException>(() => builder.WithTemplate("key", null!));
     }
 
@@ -423,7 +423,7 @@ public class ActiveStrategyTestScenarioTests
     public void Invoke_StrategyReturnsNull_IsNull()
     {
         var harness = StrategyTestScenario
-            .ForActive<NullReturnStrategy>(ComplexStrategyIndex)
+            .ForActive<NullReturnStrategy>(_complexStrategyIndex)
             .Build();
 
         var result = harness.Invoke();
@@ -437,7 +437,7 @@ public class ActiveStrategyTestScenarioTests
     public void Entity_AfterBuild_IsAccessible()
     {
         var harness = StrategyTestScenario
-            .ForActive<SimpleAnswerStrategy>(SimpleStrategyIndex)
+            .ForActive<SimpleAnswerStrategy>(_simpleStrategyIndex)
             .Build();
 
         Assert.NotNull(harness.Entity);
@@ -448,7 +448,7 @@ public class ActiveStrategyTestScenarioTests
     public void Entity_AfterBuild_StartswithCleanData()
     {
         var harness = StrategyTestScenario
-            .ForActive<SimpleAnswerStrategy>(SimpleStrategyIndex)
+            .ForActive<SimpleAnswerStrategy>(_simpleStrategyIndex)
             .Build();
 
         var (found, _) = harness.TryGetEntityData<int>("nonexistent");
@@ -461,7 +461,7 @@ public class ActiveStrategyTestScenarioTests
     public void FoodKeyGeneration_Invoke_GeneratesSequentialKeys()
     {
         var harness = StrategyTestScenario
-            .ForActive<FoodKeyGeneratorStrategy>(ComplexStrategyIndex)
+            .ForActive<FoodKeyGeneratorStrategy>(_complexStrategyIndex)
             .WithData("food.registry", "[]")
             .WithData("food.next_id", 1)
             .Build();
@@ -483,19 +483,19 @@ public class ActiveStrategyTestScenarioTests
 
     // ── Test strategy implementations ───────────────────────────────────
 
-    [StrategyIndex(SimpleStrategyIndex)]
+    [StrategyIndex(_simpleStrategyIndex)]
     private sealed class SimpleAnswerStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => 42;
     }
 
-    [StrategyIndex(InputStrategyIndex)]
+    [StrategyIndex(_inputStrategyIndex)]
     private sealed class EchoInputStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => input;
     }
 
-    [StrategyIndex(DataWriteStrategyIndex)]
+    [StrategyIndex(_dataWriteStrategyIndex)]
     private sealed class DataWritingStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
@@ -507,7 +507,7 @@ public class ActiveStrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex(DeferredActionStrategyIndex)]
+    [StrategyIndex(_deferredActionStrategyIndex)]
     private sealed class BusinessDeferredStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
@@ -521,7 +521,7 @@ public class ActiveStrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex(ConsoleCommandStrategyIndex)]
+    [StrategyIndex(_consoleCommandStrategyIndex)]
     private sealed class ConsoleCommandStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
@@ -531,7 +531,7 @@ public class ActiveStrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex(SaveRequestStrategyIndex)]
+    [StrategyIndex(_saveRequestStrategyIndex)]
     private sealed class SaveRequestStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
@@ -552,7 +552,7 @@ public class ActiveStrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex(TemplateCloneStrategyIndex)]
+    [StrategyIndex(_templateCloneStrategyIndex)]
     private sealed class TemplateCloneStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
@@ -568,7 +568,7 @@ public class ActiveStrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex(ComplexStrategyIndex)]
+    [StrategyIndex(_complexStrategyIndex)]
     private sealed class DataReadingStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
@@ -587,7 +587,7 @@ public class ActiveStrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex(ComplexStrategyIndex)]
+    [StrategyIndex(_complexStrategyIndex)]
     private sealed class BlackboardReadingStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
@@ -617,19 +617,19 @@ public class ActiveStrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex(ComplexStrategyIndex)]
+    [StrategyIndex(_complexStrategyIndex)]
     private sealed class EntityNameStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => entity.Name;
     }
 
-    [StrategyIndex(ComplexStrategyIndex)]
+    [StrategyIndex(_complexStrategyIndex)]
     private sealed class NullReturnStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => null;
     }
 
-    [StrategyIndex(ComplexStrategyIndex)]
+    [StrategyIndex(_complexStrategyIndex)]
     private sealed class FoodKeyGeneratorStrategy : ActiveStrategyBase
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)

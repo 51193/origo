@@ -12,20 +12,20 @@ namespace Origo.Core.Runtime.Lifecycle;
 /// </summary>
 internal static class SessionTopologyCodec
 {
-    private const char EntrySeparator = ',';
-    private const char FieldSeparator = '=';
-    private const int RequiredFieldCount = 3;
+    private const char _entrySeparator = ',';
+    private const char _fieldSeparator = '=';
+    private const int _requiredFieldCount = 3;
 
     /// <summary>
     ///     Serializes a single topology entry into the canonical string form.
     /// </summary>
     public static string Serialize(string key, string levelId, bool syncProcess) =>
-        $"{key}{FieldSeparator}{levelId}{FieldSeparator}{(syncProcess ? "true" : "false")}";
+        $"{key}{_fieldSeparator}{levelId}{_fieldSeparator}{(syncProcess ? "true" : "false")}";
 
     /// <summary>
     ///     Joins multiple serialized entries into a single topology string.
     /// </summary>
-    public static string Join(IEnumerable<string> entries) => string.Join(EntrySeparator, entries);
+    public static string Join(IEnumerable<string> entries) => string.Join(_entrySeparator, entries);
 
     /// <summary>
     ///     Parses a topology string into a list of <see cref="SessionDescriptor" />.
@@ -34,11 +34,11 @@ internal static class SessionTopologyCodec
     public static List<SessionDescriptor> Parse(string raw)
     {
         var list = new List<SessionDescriptor>();
-        var entries = raw.Split(EntrySeparator, StringSplitOptions.RemoveEmptyEntries);
+        var entries = raw.Split(_entrySeparator, StringSplitOptions.RemoveEmptyEntries);
         foreach (var entry in entries)
         {
-            var parts = entry.Split(FieldSeparator);
-            if (parts.Length < RequiredFieldCount)
+            var parts = entry.Split(_fieldSeparator);
+            if (parts.Length < _requiredFieldCount)
                 throw new InvalidOperationException(
                     $"Malformed session topology entry '{entry}': expected format 'key=levelId=syncProcess'.");
 

@@ -41,7 +41,7 @@ internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
     public ISndEntity? FindByName(string name) =>
         _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
 
-    public IReadOnlyList<SndMetaData> BuildMetaList() => _metaList.ToArray();
+    public IReadOnlyList<SndMetaData> BuildMetaList() => [.. _metaList];
 
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {

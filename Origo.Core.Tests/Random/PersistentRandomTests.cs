@@ -29,7 +29,7 @@ public class PersistentRandomTests
         var bb = new Origo.Core.Blackboard.Blackboard();
         var pr = new PersistentRandom(bb);
         pr.InitSeed("my_seed");
-        Assert.True(pr.TryNextInt32(out var value));
+        Assert.True(pr.TryNextInt32(out _));
     }
 
     [Fact]

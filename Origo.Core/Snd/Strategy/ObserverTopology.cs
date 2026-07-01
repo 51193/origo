@@ -250,14 +250,13 @@ internal sealed class ObserverTopology
         if (!_outgoing.TryGetValue(observerName, out var list) || list.Count == 0)
             return [];
 
-        return list
+        return [.. list
             .GroupBy(b => b.TargetName, StringComparer.Ordinal)
             .Select(g => new StrategyMetaData.ObserverBinding
             {
                 Target = g.Key,
                 ObserverIndices = [.. g.Select(b => b.ObserverIndex)]
-            })
-            .ToArray();
+            })];
     }
 
     private ISndContext RequireContext()

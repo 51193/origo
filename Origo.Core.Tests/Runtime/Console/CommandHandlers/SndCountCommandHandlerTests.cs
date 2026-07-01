@@ -22,7 +22,7 @@ public class SndCountCommandHandlerTests
         var tm = new TypeStringMapping();
         var runtime = TestFactory.CreateRuntime(logger, host, tm, bb, input, output);
 
-        TestFactory.BootstrapForegroundSession(runtime, logger);
+        TestFactory.BootstrapForegroundSession(runtime);
 
         // Spawn some entities
         host.CreateEntity(new SndMetaData

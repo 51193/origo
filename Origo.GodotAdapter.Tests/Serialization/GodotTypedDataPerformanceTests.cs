@@ -12,7 +12,7 @@ namespace Origo.GodotAdapter.Tests.Serialization;
 [Trait("Category", "Benchmark")]
 public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 {
-    private const int Iterations = 200_000;
+    private const int _iterations = 200_000;
     private readonly ITestOutputHelper _output = output;
 
     static GodotTypedDataPerformanceTests()
@@ -30,7 +30,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         var allocBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
             _ = new TypedData(130, 0, v);
         sw.Stop();
         var timeRegistered = sw.Elapsed;
@@ -41,7 +41,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         allocBefore = GC.GetAllocatedBytesForCurrentThread();
         sw.Restart();
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
             _ = new TypedData(255, 0, v);
         sw.Stop();
         var timeUnregistered = sw.Elapsed;
@@ -49,8 +49,8 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         PrintCompare(
             "Godot Vector3 Write: Registered (FromObject) vs Unregistered (kind=255)",
-            "FromObject (kind=130)", Iterations, timeRegistered, allocRegistered,
-            "new TypedData(255)", Iterations, timeUnregistered, allocUnregistered);
+            "FromObject (kind=130)", timeRegistered, allocRegistered,
+            "new TypedData(255)", timeUnregistered, allocUnregistered);
 
         var tdReg = new TypedData(130, 0, v);
         var obj = TypedDataObjectConverter.ToObject(tdReg);
@@ -70,7 +70,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         var allocBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
         var sumKind = 0.0f;
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
         {
             if (td.TryGetVector3(out var r)) sumKind += r.X;
         }
@@ -84,7 +84,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         allocBefore = GC.GetAllocatedBytesForCurrentThread();
         sw.Restart();
         var sumIsT = 0.0f;
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
         {
             if (TypedDataObjectConverter.ToObject(td) is Vector3 r) sumIsT += r.X;
         }
@@ -96,8 +96,8 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         PrintCompare(
             "Godot Vector3 Read: TryGetVector3 (kind+is) vs Data is Vector3",
-            "TryGetVector3 (kind)", Iterations, timeKind, allocKind,
-            "Data is Vector3 (is T)", Iterations, timeIsT, allocIsT);
+            "TryGetVector3 (kind)", timeKind, allocKind,
+            "Data is Vector3 (is T)", timeIsT, allocIsT);
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         var allocBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
             _ = TypedDataObjectConverter.ToObject(td);
         sw.Stop();
         var timeSwitch = sw.Elapsed;
@@ -122,7 +122,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         allocBefore = GC.GetAllocatedBytesForCurrentThread();
         sw.Restart();
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
             _ = TypedDataObjectConverter.ToObject(td);
         sw.Stop();
         var timeData = sw.Elapsed;
@@ -130,8 +130,8 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         PrintCompare(
             "Godot ToObject: Switch dispatch vs Data property",
-            "ToObject (switch)", Iterations, timeSwitch, allocSwitch,
-            "Data property", Iterations, timeData, allocData);
+            "ToObject (switch)", timeSwitch, allocSwitch,
+            "Data property", timeData, allocData);
 
         var result = TypedDataObjectConverter.ToObject(td);
         Assert.IsType<Vector3>(result);
@@ -148,7 +148,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         var allocBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
             _ = TypedDataObjectConverter.FromObject(137, v);
         sw.Stop();
         var timeSwitch = sw.Elapsed;
@@ -159,7 +159,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         allocBefore = GC.GetAllocatedBytesForCurrentThread();
         sw.Restart();
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
             _ = TypedDataObjectConverter.FromObject(255, v);
         sw.Stop();
         var timeFallback = sw.Elapsed;
@@ -167,11 +167,11 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         PrintCompare(
             "Godot FromObject: Kind-switch vs unregistered fallback",
-            "FromObject (kind=137)", Iterations, timeSwitch, allocSwitch,
-            "FromObject (kind=255)", Iterations, timeFallback, allocFallback);
+            "FromObject (kind=137)", timeSwitch, allocSwitch,
+            "FromObject (kind=255)", timeFallback, allocFallback);
 
-        var (bitsReg, refReg) = TypedDataObjectConverter.FromObject(137, v);
-        var (bitsUnreg, refUnreg) = TypedDataObjectConverter.FromObject(255, v);
+        var (_, refReg) = TypedDataObjectConverter.FromObject(137, v);
+        var (_, refUnreg) = TypedDataObjectConverter.FromObject(255, v);
         Assert.Equal(refReg, refUnreg);
     }
 
@@ -185,7 +185,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         var allocBefore = GC.GetAllocatedBytesForCurrentThread();
         var sw = Stopwatch.StartNew();
-        for (var i = 0; i < Iterations; i++)
+        for (var i = 0; i < _iterations; i++)
         {
             var created = TypedDataFactory<Vector3>.Create(v);
             TypedDataFactory<Vector3>.TryExtract(created, out _);
@@ -194,7 +194,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         var timeRegistered = sw.Elapsed;
         var allocRegistered = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-        PrintReport("Godot Vector3 Factory Create+Extract (kind-based path)", Iterations * 2,
+        PrintReport("Godot Vector3 Factory Create+Extract (kind-based path)", _iterations * 2,
             timeRegistered, allocRegistered);
 
         var tdCreated = TypedDataFactory<Vector3>.Create(v);
@@ -276,15 +276,15 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         _output.WriteLine("");
         _output.WriteLine($"  === {title} ===");
         _output.WriteLine($"  {separator}");
-        _output.WriteLine($"  Iterations: {iterations:N0} | Time: {elapsed.TotalMilliseconds:F2} ms | " +
+        _output.WriteLine($"  _iterations: {iterations:N0} | Time: {elapsed.TotalMilliseconds:F2} ms | " +
                           $"Ops/s: {opsPerSec / 1_000_000:F2} M | " +
                           $"Alloc: {allocated / 1024.0:F2} KB");
         _output.WriteLine($"  {separator}");
     }
 
     private void PrintCompare(string title,
-        string nameA, int itersA, TimeSpan timeA, long allocA,
-        string nameB, int itersB, TimeSpan timeB, long allocB)
+        string nameA, TimeSpan timeA, long allocA,
+        string nameB, TimeSpan timeB, long allocB)
     {
         var ratio = timeA < timeB
             ? timeB.TotalMilliseconds / timeA.TotalMilliseconds

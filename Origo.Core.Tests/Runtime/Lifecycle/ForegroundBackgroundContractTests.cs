@@ -30,7 +30,7 @@ public class ForegroundBackgroundContractTests
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         // 公共 API 只暴露 ISessionRun，业务层无法获得具体类型。
-        Assert.IsAssignableFrom<ISessionRun>(bg);
+        Assert.IsType<ISessionRun>(bg, exactMatch: false);
     }
 
     [Fact]
@@ -38,13 +38,6 @@ public class ForegroundBackgroundContractTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        var payload = new LevelPayload
-        {
-            LevelId = "bg",
-            SndSceneNode = TestFactory.NodeFromJson("[]"),
-            SessionNode = TestFactory.NodeFromJson("{}"),
-            SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
-        };
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         // Verify session can be populated via save/load round-trip
@@ -53,7 +46,7 @@ public class ForegroundBackgroundContractTests
             $"{ISessionManager.ForegroundKey}=default=false,bg=bg=false");
         ctx.RequestSaveGame("test_load_rt");
         ctx.FlushDeferredActionsForCurrentFrame();
-        Assert.IsAssignableFrom<ISessionRun>(bg);
+        Assert.IsType<ISessionRun>(bg, exactMatch: false);
     }
 
     [Fact]
@@ -65,7 +58,7 @@ public class ForegroundBackgroundContractTests
         // ForegroundSession 属性类型为 ISessionRun?
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
-        Assert.IsAssignableFrom<ISessionRun>(fg);
+        Assert.IsType<ISessionRun>(fg, exactMatch: false);
     }
 
     // ── 2. 序列化/反序列化格式一致 ─────────────────────────────────────

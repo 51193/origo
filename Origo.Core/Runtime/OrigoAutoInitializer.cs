@@ -22,13 +22,13 @@ namespace Origo.Core.Runtime;
 /// </summary>
 public static class OrigoAutoInitializer
 {
-    private const string LogTag = nameof(OrigoAutoInitializer);
+    private const string _logTag = nameof(OrigoAutoInitializer);
 
     /// <summary>Legacy assembly name that should always be skipped during strategy scanning.</summary>
-    private const string LegacyCorLibAssemblyName = "mscorlib";
+    private const string _legacyCorLibAssemblyName = "mscorlib";
 
     /// <summary>Assembly simple name prefixes skipped when scanning for <see cref="BaseStrategy" /> types.</summary>
-    private static readonly string[] DefaultSkipPrefixes =
+    private static readonly string[] _defaultSkipPrefixes =
         ["System", "Microsoft", "netstandard"];
 
     public static int DiscoverAndRegisterStrategies(
@@ -45,8 +45,8 @@ public static class OrigoAutoInitializer
         var registered = 0;
 
         var skipPrefixes = additionalSkipPrefixes is not null
-            ? [.. DefaultSkipPrefixes, .. additionalSkipPrefixes]
-            : DefaultSkipPrefixes;
+            ? [.. _defaultSkipPrefixes, .. additionalSkipPrefixes]
+            : _defaultSkipPrefixes;
 
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
@@ -58,7 +58,7 @@ public static class OrigoAutoInitializer
         }
 
         watch.Stop();
-        logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
+        logger.Log(LogLevel.Info, _logTag, new LogMessageBuilder()
             .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
             .Build("Strategy auto-discovery complete."));
 
@@ -85,7 +85,7 @@ public static class OrigoAutoInitializer
         if (string.IsNullOrWhiteSpace(filePath))
         {
             var ex = new ArgumentException("Config file path cannot be null or whitespace.", nameof(filePath));
-            logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+            logger.Log(LogLevel.Error, _logTag, new LogMessageBuilder()
                 .AddContext("filePath", filePath)
                 .Build($"Invalid config path: {ex.Message}"));
             throw ex;
@@ -98,7 +98,7 @@ public static class OrigoAutoInitializer
             if (root.Kind != DataSourceNodeKind.Array)
             {
                 var ex = new InvalidOperationException($"Config file '{filePath}' must be a JSON array.");
-                logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+                logger.Log(LogLevel.Error, _logTag, new LogMessageBuilder()
                     .AddContext("filePath", filePath)
                     .Build($"Config json root is not array: {ex.Message}"));
                 throw ex;
@@ -118,7 +118,7 @@ public static class OrigoAutoInitializer
         {
             var wrapped = new InvalidOperationException(
                 $"Failed to enumerate types from assembly '{assembly.FullName}'.", ex);
-            logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+            logger.Log(LogLevel.Error, _logTag, new LogMessageBuilder()
                 .AddContext("filePath", assembly.FullName)
                 .Build($"Discover strategy types failed: {wrapped.Message}"));
             throw wrapped;
@@ -141,7 +141,7 @@ public static class OrigoAutoInitializer
             {
                 var ex = new InvalidOperationException(
                     $"Strategy type '{type.FullName}' must declare a public parameterless constructor.");
-                logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+                logger.Log(LogLevel.Error, _logTag, new LogMessageBuilder()
                     .Build($"Invalid strategy constructor: {ex.Message}"));
                 throw ex;
             }
@@ -151,7 +151,7 @@ public static class OrigoAutoInitializer
                 var ex = new InvalidOperationException(
                     $"Strategy type '{type.FullName}' declares invalid instance members ({invalidMembers}); " +
                     "shared pooled strategies must be stateless.");
-                logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+                logger.Log(LogLevel.Error, _logTag, new LogMessageBuilder()
                     .Build($"Strategy state validation failed: {ex.Message}"));
                 throw ex;
             }
@@ -161,7 +161,7 @@ public static class OrigoAutoInitializer
             pool.Register(capturedType, () => (BaseStrategy)Activator.CreateInstance(capturedType)!);
             registered++;
 
-            logger.Log(LogLevel.Debug, LogTag, new LogMessageBuilder()
+            logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
                 .AddContext("strategyIndex", index)
                 .Build("Strategy auto-registered."));
@@ -182,7 +182,7 @@ public static class OrigoAutoInitializer
         catch (Exception ex) when (ex is KeyNotFoundException or FileNotFoundException or DirectoryNotFoundException)
         {
             var notFound = new InvalidOperationException($"Config file '{filePath}' not found.", ex);
-            logger.Log(LogLevel.Error, LogTag, new LogMessageBuilder()
+            logger.Log(LogLevel.Error, _logTag, new LogMessageBuilder()
                 .AddContext("filePath", filePath)
                 .Build($"Config file not found: {notFound.Message}"));
             throw notFound;
@@ -201,7 +201,7 @@ public static class OrigoAutoInitializer
         session.SpawnMany([.. metaList]);
 
         watch.Stop();
-        logger.Log(LogLevel.Info, LogTag, new LogMessageBuilder()
+        logger.Log(LogLevel.Info, _logTag, new LogMessageBuilder()
             .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
             .AddContext("filePath", filePath)
             .Build($"Spawned entities from config: {metaList.Count}."));
@@ -212,7 +212,7 @@ public static class OrigoAutoInitializer
     {
         var name = assembly.GetName().Name;
         if (name is null) return true;
-        if (name == LegacyCorLibAssemblyName) return true;
+        if (name == _legacyCorLibAssemblyName) return true;
 
         foreach (var prefix in skipPrefixes)
             if (name.StartsWith(prefix, StringComparison.Ordinal))

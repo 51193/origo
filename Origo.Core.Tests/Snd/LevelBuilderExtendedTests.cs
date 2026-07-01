@@ -116,7 +116,7 @@ public class LevelBuilderExtendedTests
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
 
-        builder.AddEntities(new[] { MakeMeta("a"), MakeMeta("b"), MakeMeta("c") });
+        builder.AddEntities([MakeMeta("a"), MakeMeta("b"), MakeMeta("c")]);
         Assert.Equal(3, builder.SceneHost.GetEntities().Count);
     }
 

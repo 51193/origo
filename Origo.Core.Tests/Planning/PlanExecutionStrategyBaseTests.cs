@@ -16,11 +16,11 @@ public class PlanExecutionStrategyBaseTests
 {
     // ── Test strategy: minimal plan ─────────────────────────────────
 
-    private const string IntentKey = "test.intent";
-    private const string IntentStatusKey = "test.intent_status";
-    private const string PlanStepKey = "test.plan_step";
-    private const string ActionKey = "test.action";
-    private const string ActionStatusKey = "test.action_status";
+    private const string _intentKey = "test.intent";
+    private const string _intentStatusKey = "test.intent_status";
+    private const string _planStepKey = "test.plan_step";
+    private const string _actionKey = "test.action";
+    private const string _actionStatusKey = "test.action_status";
 
     [StrategyIndex("test.action.fake")]
     private sealed class FakeActionStrategy : LifecycleStrategyBase
@@ -48,11 +48,11 @@ public class PlanExecutionStrategyBaseTests
     [StrategyIndex("test.plan_strategy")]
     private sealed class SimplePlanStrategy : PlanExecutionStrategyBase
     {
-        protected override string IntentKey => PlanExecutionStrategyBaseTests.IntentKey;
-        protected override string IntentStatusKey => PlanExecutionStrategyBaseTests.IntentStatusKey;
-        protected override string PlanStepKey => PlanExecutionStrategyBaseTests.PlanStepKey;
-        protected override string ActionKey => PlanExecutionStrategyBaseTests.ActionKey;
-        protected override string ActionStatusKey => PlanExecutionStrategyBaseTests.ActionStatusKey;
+        protected override string IntentKey => PlanExecutionStrategyBaseTests._intentKey;
+        protected override string IntentStatusKey => PlanExecutionStrategyBaseTests._intentStatusKey;
+        protected override string PlanStepKey => PlanExecutionStrategyBaseTests._planStepKey;
+        protected override string ActionKey => PlanExecutionStrategyBaseTests._actionKey;
+        protected override string ActionStatusKey => PlanExecutionStrategyBaseTests._actionStatusKey;
 
         protected override string? ResolveNextStep(string intent, string currentStep, bool failed, ISndEntity entity)
         {
@@ -102,16 +102,16 @@ public class PlanExecutionStrategyBaseTests
     {
         var strategy = new SimplePlanStrategy();
         var entity = new StubSndEntity("e");
-        entity.SetData(IntentKey, "test");
+        entity.SetData(_intentKey, "test");
         ISndContext ctx = NullSndContext.Instance;
 
         strategy.AfterSpawn(entity, ctx);
 
-        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("step_a", step);
 
-        var (foundStatus, status) = entity.TryGetData<string>(ActionStatusKey);
+        var (foundStatus, status) = entity.TryGetData<string>(_actionStatusKey);
         Assert.True(foundStatus);
         Assert.Equal("executing", status);
     }
@@ -125,10 +125,10 @@ public class PlanExecutionStrategyBaseTests
 
         strategy.AfterSpawn(entity, ctx);
 
-        var (foundStep, _) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, _) = entity.TryGetData<string>(_planStepKey);
         Assert.False(foundStep);
 
-        var (foundStatus, _) = entity.TryGetData<string>(ActionStatusKey);
+        var (foundStatus, _) = entity.TryGetData<string>(_actionStatusKey);
         Assert.False(foundStatus);
     }
 
@@ -137,13 +137,13 @@ public class PlanExecutionStrategyBaseTests
     {
         var strategy = new SimplePlanStrategy();
         var entity = new StubSndEntity("e");
-        entity.SetData(IntentKey, "test");
-        entity.SetData(PlanStepKey, "step_b");
+        entity.SetData(_intentKey, "test");
+        entity.SetData(_planStepKey, "step_b");
         ISndContext ctx = NullSndContext.Instance;
 
         strategy.AfterLoad(entity, ctx);
 
-        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("step_b", step);
     }
@@ -153,12 +153,12 @@ public class PlanExecutionStrategyBaseTests
     {
         var strategy = new SimplePlanStrategy();
         var entity = new StubSndEntity("e");
-        entity.SetData(IntentKey, "test");
+        entity.SetData(_intentKey, "test");
         ISndContext ctx = NullSndContext.Instance;
 
         strategy.AfterAdd(entity, ctx);
 
-        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("step_a", step);
     }
@@ -168,14 +168,14 @@ public class PlanExecutionStrategyBaseTests
     {
         var strategy = new SimplePlanStrategy();
         var entity = new StubSndEntity("e");
-        entity.SetData(IntentKey, "test");
-        entity.SetData(PlanStepKey, "old_step");
-        entity.SetData(ActionKey, "old_action");
+        entity.SetData(_intentKey, "test");
+        entity.SetData(_planStepKey, "old_step");
+        entity.SetData(_actionKey, "old_action");
         ISndContext ctx = NullSndContext.Instance;
 
         strategy.AfterSpawn(entity, ctx);
 
-        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("step_a", step);
     }
@@ -187,16 +187,16 @@ public class PlanExecutionStrategyBaseTests
     {
         var strategy = new SimplePlanStrategy();
         var entity = new StubSndEntity("e");
-        entity.SetData(IntentKey, "step_refuses_action");
+        entity.SetData(_intentKey, "step_refuses_action");
         ISndContext ctx = NullSndContext.Instance;
 
         strategy.AfterSpawn(entity, ctx);
 
-        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("no_action_step", step);
 
-        var (foundStatus, status) = entity.TryGetData<string>(ActionStatusKey);
+        var (foundStatus, status) = entity.TryGetData<string>(_actionStatusKey);
         Assert.True(foundStatus);
         Assert.Equal("executing", status);
     }
@@ -236,21 +236,21 @@ public class PlanExecutionStrategyBaseTests
         };
 
         var entity = host.CreateEntity(meta);
-        entity.SetData(IntentKey, "test");
+        entity.SetData(_intentKey, "test");
 
         entity.AddStrategy("test.plan_strategy");
 
         // After AddStrategy, AfterAdd fires → Wire(true) → StartIntent
-        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("step_a", step);
         Assert.Single(FakeActionStrategy.AfterAddCalls);
         Assert.Equal("test_entity", FakeActionStrategy.AfterAddCalls![0]);
 
         // Complete step_a → should advance to step_b
-        entity.SetData(ActionStatusKey, "completed");
+        entity.SetData(_actionStatusKey, "completed");
 
-        var (foundStep2, step2) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep2, step2) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep2);
         Assert.Equal("step_b", step2);
 
@@ -291,26 +291,26 @@ public class PlanExecutionStrategyBaseTests
         };
 
         var entity = host.CreateEntity(meta);
-        entity.SetData(IntentKey, "test");
+        entity.SetData(_intentKey, "test");
 
         entity.AddStrategy("test.plan_strategy");
 
         // Plan started at step_a
-        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("step_a", step);
 
         // Complete step_a → advances to step_b
-        entity.SetData(ActionStatusKey, "completed");
+        entity.SetData(_actionStatusKey, "completed");
 
         // Complete step_b → plan finishes, intent cleared
-        entity.SetData(ActionStatusKey, "completed");
+        entity.SetData(_actionStatusKey, "completed");
 
-        var (foundIntent, intent) = entity.TryGetData<string>(IntentKey);
+        var (foundIntent, intent) = entity.TryGetData<string>(_intentKey);
         Assert.True(foundIntent);
         Assert.Equal("", intent);
 
-        var (foundStatus, intentStatus) = entity.TryGetData<string>(IntentStatusKey);
+        var (foundStatus, intentStatus) = entity.TryGetData<string>(_intentStatusKey);
         Assert.True(foundStatus);
         Assert.Equal("completed", intentStatus);
     }
@@ -348,7 +348,7 @@ public class PlanExecutionStrategyBaseTests
         };
 
         var entity = host.CreateEntity(meta);
-        entity.SetData(IntentKey, "test");
+        entity.SetData(_intentKey, "test");
 
         entity.AddStrategy("test.plan_strategy");
 
@@ -372,11 +372,11 @@ public class PlanExecutionStrategyBaseTests
         private static readonly AsyncLocal<List<string>?> _failedCalls = new();
         public static List<string>? FailedCalls { get => _failedCalls.Value; set => _failedCalls.Value = value; }
 
-        protected override string IntentKey => PlanExecutionStrategyBaseTests.IntentKey;
-        protected override string IntentStatusKey => PlanExecutionStrategyBaseTests.IntentStatusKey;
-        protected override string PlanStepKey => PlanExecutionStrategyBaseTests.PlanStepKey;
-        protected override string ActionKey => PlanExecutionStrategyBaseTests.ActionKey;
-        protected override string ActionStatusKey => PlanExecutionStrategyBaseTests.ActionStatusKey;
+        protected override string IntentKey => PlanExecutionStrategyBaseTests._intentKey;
+        protected override string IntentStatusKey => PlanExecutionStrategyBaseTests._intentStatusKey;
+        protected override string PlanStepKey => PlanExecutionStrategyBaseTests._planStepKey;
+        protected override string ActionKey => PlanExecutionStrategyBaseTests._actionKey;
+        protected override string ActionStatusKey => PlanExecutionStrategyBaseTests._actionStatusKey;
 
         protected override string? ResolveNextStep(string intent, string currentStep, bool failed, ISndEntity entity)
         {
@@ -435,19 +435,19 @@ public class PlanExecutionStrategyBaseTests
         };
 
         var entity = host.CreateEntity(meta);
-        entity.SetData(IntentKey, "fail_test");
+        entity.SetData(_intentKey, "fail_test");
 
         entity.AddStrategy("test.fail_plan_strategy");
 
         // Plan started at step_a
-        var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
         Assert.True(foundStep);
         Assert.Equal("step_a", step);
 
         // Action fails → plan advances with failed=true → ResolveNextStep returns null → plan terminates
-        entity.SetData(ActionStatusKey, "failed");
+        entity.SetData(_actionStatusKey, "failed");
 
-        var (foundIntent, intent) = entity.TryGetData<string>(IntentKey);
+        var (foundIntent, intent) = entity.TryGetData<string>(_intentKey);
         Assert.True(foundIntent);
         Assert.Equal("", intent);
 
@@ -461,20 +461,20 @@ public class PlanExecutionStrategyBaseTests
     {
         var strategy = new SimplePlanStrategy();
         var entity = new StubSndEntity("e");
-        entity.SetData(IntentKey, "test");
+        entity.SetData(_intentKey, "test");
         ISndContext ctx = NullSndContext.Instance;
 
         strategy.AfterSpawn(entity, ctx);
-        Assert.Equal(1, entity.GetRawSubscriptionCount(IntentKey));
-        Assert.Equal(1, entity.GetRawSubscriptionCount(ActionStatusKey));
+        Assert.Equal(1, entity.GetRawSubscriptionCount(_intentKey));
+        Assert.Equal(1, entity.GetRawSubscriptionCount(_actionStatusKey));
 
         strategy.AfterAdd(entity, ctx);
-        Assert.Equal(1, entity.GetRawSubscriptionCount(IntentKey));
-        Assert.Equal(1, entity.GetRawSubscriptionCount(ActionStatusKey));
+        Assert.Equal(1, entity.GetRawSubscriptionCount(_intentKey));
+        Assert.Equal(1, entity.GetRawSubscriptionCount(_actionStatusKey));
 
         strategy.BeforeRemove(entity, ctx);
-        Assert.Equal(0, entity.GetRawSubscriptionCount(IntentKey));
-        Assert.Equal(0, entity.GetRawSubscriptionCount(ActionStatusKey));
+        Assert.Equal(0, entity.GetRawSubscriptionCount(_intentKey));
+        Assert.Equal(0, entity.GetRawSubscriptionCount(_actionStatusKey));
     }
 
     // ── Cleanup ────────────────────────────────────────────────────

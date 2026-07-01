@@ -242,8 +242,7 @@ internal static class SaveStorageFacade
     public static void CopyDirectoryFromSnapshot(
         SaveFileHandle handle,
         string saveId,
-        string relativeDirName,
-        ILogger? logger = null)
+        string relativeDirName)
     {
         ArgumentNullException.ThrowIfNull(handle);
         if (string.IsNullOrWhiteSpace(saveId))

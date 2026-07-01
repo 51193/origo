@@ -16,9 +16,9 @@ namespace Origo.ConsoleBridge;
 /// </summary>
 public sealed class ConsoleBridgeServer : IDisposable
 {
-    private const int MaxPendingOutputLines = 1000;
-    private const int ReadTimeoutMs = 30000;
-    private const int DisposeJoinTimeoutMs = 3000;
+    private const int _maxPendingOutputLines = 1000;
+    private const int _readTimeoutMs = 30000;
+    private const int _disposeJoinTimeoutMs = 3000;
 
     private readonly object _acceptLock = new();
     private readonly IConsoleInputSource _input;
@@ -69,8 +69,8 @@ public sealed class ConsoleBridgeServer : IDisposable
         _listener?.Stop();
         _output.Unsubscribe(_outputSubId);
 
-        _acceptThread?.Join(DisposeJoinTimeoutMs);
-        _handleThread?.Join(DisposeJoinTimeoutMs);
+        _acceptThread?.Join(_disposeJoinTimeoutMs);
+        _handleThread?.Join(_disposeJoinTimeoutMs);
 
         _cts.Dispose();
     }
@@ -107,7 +107,7 @@ public sealed class ConsoleBridgeServer : IDisposable
             }
             else
             {
-                if (_pendingOutput.Count < MaxPendingOutputLines)
+                if (_pendingOutput.Count < _maxPendingOutputLines)
                     _pendingOutput.Add(line);
             }
         }
@@ -168,9 +168,9 @@ public sealed class ConsoleBridgeServer : IDisposable
     {
         try
         {
-            client.ReceiveTimeout = ReadTimeoutMs;
+            client.ReceiveTimeout = _readTimeoutMs;
             using var stream = client.GetStream();
-            stream.ReadTimeout = ReadTimeoutMs;
+            stream.ReadTimeout = _readTimeoutMs;
             using var reader = new StreamReader(stream);
             using var writer = new StreamWriter(stream) { AutoFlush = true };
 

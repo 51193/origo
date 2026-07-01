@@ -186,7 +186,7 @@ public partial class RandomAndStateMachineTests
         c2.DeserializeFromNode(node, TestFactory.CreateRegistry());
         c2.TryGet("ui", out var restored);
         Assert.NotNull(restored);
-        Assert.Equal(new[] { "p", "q" }, restored!.Snapshot());
+        Assert.Equal(["p", "q"], restored!.Snapshot());
 
         c1.PopAllOnQuit();
         c2.PopAllOnQuit();
@@ -216,7 +216,7 @@ public partial class RandomAndStateMachineTests
 
         // Populate with a machine, serialize, then deserialize into the same container.
         var sm = container.CreateOrGet("nav", "sm.swap.push", "sm.swap.pop");
-        sm.RestoreStackWithoutHooks(new List<string> { "a", "b" });
+        sm.RestoreStackWithoutHooks(["a", "b"]);
         using var node = container.SerializeToNode(TestFactory.CreateRegistry());
 
         // Deserialize replaces old state atomically.
@@ -224,7 +224,7 @@ public partial class RandomAndStateMachineTests
 
         Assert.True(container.TryGet("nav", out var restored));
         Assert.NotNull(restored);
-        Assert.Equal(new[] { "a", "b" }, restored!.Snapshot());
+        Assert.Equal(["a", "b"], restored!.Snapshot());
 
         // Old key must still be accessible (same key name).
         Assert.True(container.TryGet("nav", out _));
@@ -309,7 +309,7 @@ public partial class RandomAndStateMachineTests
         {
             var c = new StateMachineContainer(pool, ctx);
             var sm = c.CreateOrGet("ui", "sm.push.test", "sm.pop.test");
-            sm.RestoreStackWithoutHooks(new List<string> { "x", "y" });
+            sm.RestoreStackWithoutHooks(["x", "y"]);
             c.FlushAllAfterLoad();
             Assert.Equal(
                 new[] { "push:afterload:null->x", "push:afterload:x->y" },

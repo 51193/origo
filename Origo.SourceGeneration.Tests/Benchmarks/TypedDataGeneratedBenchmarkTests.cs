@@ -33,18 +33,18 @@ namespace Origo.SourceGeneration.Tests;
 [Trait("Category", "Benchmark")]
 public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 {
-    private const int PoolSize = 1 << 16;
-    private const int PoolMask = PoolSize - 1;
-    private const int SampleCount = 256;
-    private const int SampleMask = SampleCount - 1;
-    private const int ReadIterations = 10_000_000;
-    private const int WriteIterations = 2_000_000;
-    private const int WarmupRounds = 1;
-    private const int TimedRounds = 5;
+    private const int _poolSize = 1 << 16;
+    private const int _poolMask = _poolSize - 1;
+    private const int _sampleCount = 256;
+    private const int _sampleMask = _sampleCount - 1;
+    private const int _readIterations = 10_000_000;
+    private const int _writeIterations = 2_000_000;
+    private const int _warmupRounds = 1;
+    private const int _timedRounds = 5;
 
-    private const double MaxSlowdownFactor = 8.0;
-    private static readonly TimeSpan BaselineFloor = TimeSpan.FromMilliseconds(1);
-    private static readonly TimeSpan PerBenchmarkCap = TimeSpan.FromSeconds(5);
+    private const double _maxSlowdownFactor = 8.0;
+    private static readonly TimeSpan _baselineFloor = TimeSpan.FromMilliseconds(1);
+    private static readonly TimeSpan _perBenchmarkCap = TimeSpan.FromSeconds(5);
 
     private readonly PerfReporter _perf = PerfReporter.ForTest(output);
 
@@ -134,9 +134,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     [Fact]
     public void MixedDispatch_GeneratedKind_vs_BoxedIsT()
     {
-        var genPool = new TypedData[PoolSize];
-        var boxedPool = new OldTypedData[PoolSize];
-        for (var i = 0; i < PoolSize; i++)
+        var genPool = new TypedData[_poolSize];
+        var boxedPool = new OldTypedData[_poolSize];
+        for (var i = 0; i < _poolSize; i++)
         {
             switch (i % 5)
             {
@@ -166,13 +166,13 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
             var genHits = 0;
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
+            for (var i = 0; i < _readIterations; i++)
             {
-                ref readonly var td = ref genPool[i & PoolMask];
+                ref readonly var td = ref genPool[i & _poolMask];
                 if (td.TryGetInt32(out _)) genHits++;
                 if (td.TryGetSingle(out _)) genHits++;
                 if (td.TryGetBoolean(out _)) genHits++;
@@ -183,9 +183,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
             var boxedHits = 0;
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
+            for (var i = 0; i < _readIterations; i++)
             {
-                var data = boxedPool[i & PoolMask].Data;
+                var data = boxedPool[i & _poolMask].Data;
                 if (data is int) boxedHits++;
                 if (data is float) boxedHits++;
                 if (data is bool) boxedHits++;
@@ -196,7 +196,7 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
             Assert.Equal(genHits, boxedHits);
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
                 if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
@@ -209,9 +209,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         var (genAlloc, boxedAlloc) = MeasureMixedAlloc(genPool, boxedPool);
 
         _perf.Compare(
-            $"Mixed dispatch (int/float/bool/string/double): generated Kind vs boxed 'is T' (min of {TimedRounds})",
-            "Generated TryGetXxx", ReadIterations, genBest, genAlloc,
-            "Boxed Data is T", ReadIterations, boxedBest, boxedAlloc);
+            $"Mixed dispatch (int/float/bool/string/double): generated Kind vs boxed 'is T' (min of {_timedRounds})",
+            "Generated TryGetXxx", _readIterations, genBest, genAlloc,
+            "Boxed Data is T", _readIterations, boxedBest, boxedAlloc);
 
         AssertWithinBudget("Mixed dispatch", genBest, boxedBest);
     }
@@ -220,25 +220,25 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
     private void RunWriteBenchmark<T>(string typeLabel, T[] samples, GenFactory<T> makeGen)
     {
-        var genPool = new TypedData[PoolSize];
-        var boxedPool = new OldTypedData[PoolSize];
+        var genPool = new TypedData[_poolSize];
+        var boxedPool = new OldTypedData[_poolSize];
 
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < WriteIterations; i++)
-                genPool[i & PoolMask] = makeGen(samples[i & SampleMask]);
+            for (var i = 0; i < _writeIterations; i++)
+                genPool[i & _poolMask] = makeGen(samples[i & _sampleMask]);
             sw.Stop();
 
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < WriteIterations; i++)
-                boxedPool[i & PoolMask] = new OldTypedData(typeof(T), samples[i & SampleMask]);
+            for (var i = 0; i < _writeIterations; i++)
+                boxedPool[i & _poolMask] = new OldTypedData(typeof(T), samples[i & _sampleMask]);
             sw2.Stop();
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
                 if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
@@ -250,9 +250,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
         var (genAlloc, boxedAlloc) = MeasureWriteAlloc(genPool, boxedPool, samples, makeGen);
 
-        _perf.Compare($"Write {typeLabel}: generated operator vs boxed class (min of {TimedRounds})",
-            $"Generated {typeLabel}", WriteIterations, genBest, genAlloc,
-            $"Boxed {typeLabel}", WriteIterations, boxedBest, boxedAlloc);
+        _perf.Compare($"Write {typeLabel}: generated operator vs boxed class (min of {_timedRounds})",
+            $"Generated {typeLabel}", _writeIterations, genBest, genAlloc,
+            $"Boxed {typeLabel}", _writeIterations, boxedBest, boxedAlloc);
 
         AssertWithinBudget($"Write {typeLabel}", genBest, boxedBest);
     }
@@ -260,11 +260,11 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     private void RunReadBenchmark<T>(
         string typeLabel, T[] samples, GenFactory<T> makeGen, GenReader<T> tryGet, Func<OldTypedData, bool> boxedMatch)
     {
-        var genPool = new TypedData[PoolSize];
-        var boxedPool = new OldTypedData[PoolSize];
-        for (var i = 0; i < PoolSize; i++)
+        var genPool = new TypedData[_poolSize];
+        var boxedPool = new OldTypedData[_poolSize];
+        for (var i = 0; i < _poolSize; i++)
         {
-            var sample = samples[i & SampleMask];
+            var sample = samples[i & _sampleMask];
             genPool[i] = makeGen(sample);
             boxedPool[i] = new OldTypedData(typeof(T), sample);
         }
@@ -272,25 +272,25 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
             var genHits = 0;
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
-                if (tryGet(in genPool[i & PoolMask], out _))
+            for (var i = 0; i < _readIterations; i++)
+                if (tryGet(in genPool[i & _poolMask], out _))
                     genHits++;
             sw.Stop();
 
             var boxedHits = 0;
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
-                if (boxedMatch(boxedPool[i & PoolMask]))
+            for (var i = 0; i < _readIterations; i++)
+                if (boxedMatch(boxedPool[i & _poolMask]))
                     boxedHits++;
             sw2.Stop();
 
             Assert.Equal(genHits, boxedHits);
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
                 if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
@@ -299,9 +299,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
         var (genAlloc, boxedAlloc) = MeasureReadAlloc(genPool, boxedPool, tryGet, boxedMatch);
 
-        _perf.Compare($"Read {typeLabel}: generated TryGet vs boxed 'is {typeLabel}' (min of {TimedRounds})",
-            $"Generated {typeLabel}", ReadIterations, genBest, genAlloc,
-            $"Boxed is {typeLabel}", ReadIterations, boxedBest, boxedAlloc);
+        _perf.Compare($"Read {typeLabel}: generated TryGet vs boxed 'is {typeLabel}' (min of {_timedRounds})",
+            $"Generated {typeLabel}", _readIterations, genBest, genAlloc,
+            $"Boxed is {typeLabel}", _readIterations, boxedBest, boxedAlloc);
 
         AssertWithinBudget($"Read {typeLabel}", genBest, boxedBest);
     }
@@ -309,11 +309,11 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     private void RunIsBenchmark<T>(
         string typeLabel, T[] samples, GenFactory<T> makeGen, IsType isCheck, Func<OldTypedData, bool> boxedMatch)
     {
-        var genPool = new TypedData[PoolSize];
-        var boxedPool = new OldTypedData[PoolSize];
-        for (var i = 0; i < PoolSize; i++)
+        var genPool = new TypedData[_poolSize];
+        var boxedPool = new OldTypedData[_poolSize];
+        for (var i = 0; i < _poolSize; i++)
         {
-            var sample = samples[i & SampleMask];
+            var sample = samples[i & _sampleMask];
             genPool[i] = makeGen(sample);
             boxedPool[i] = new OldTypedData(typeof(T), sample);
         }
@@ -321,25 +321,25 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         var genBest = TimeSpan.MaxValue;
         var boxedBest = TimeSpan.MaxValue;
 
-        for (var round = 0; round < WarmupRounds + TimedRounds; round++)
+        for (var round = 0; round < _warmupRounds + _timedRounds; round++)
         {
             var genHits = 0;
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
-                if (isCheck(in genPool[i & PoolMask]))
+            for (var i = 0; i < _readIterations; i++)
+                if (isCheck(in genPool[i & _poolMask]))
                     genHits++;
             sw.Stop();
 
             var boxedHits = 0;
             var sw2 = Stopwatch.StartNew();
-            for (var i = 0; i < ReadIterations; i++)
-                if (boxedMatch(boxedPool[i & PoolMask]))
+            for (var i = 0; i < _readIterations; i++)
+                if (boxedMatch(boxedPool[i & _poolMask]))
                     boxedHits++;
             sw2.Stop();
 
             Assert.Equal(genHits, boxedHits);
 
-            if (round >= WarmupRounds)
+            if (round >= _warmupRounds)
             {
                 if (sw.Elapsed < genBest) genBest = sw.Elapsed;
                 if (sw2.Elapsed < boxedBest) boxedBest = sw2.Elapsed;
@@ -348,17 +348,17 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
         var (genAlloc, boxedAlloc) = MeasureIsAlloc(genPool, boxedPool, isCheck, boxedMatch);
 
-        _perf.Compare($"Read {typeLabel}: generated IsType vs boxed 'is {typeLabel}' (min of {TimedRounds})",
-            $"Generated {typeLabel}", ReadIterations, genBest, genAlloc,
-            $"Boxed is {typeLabel}", ReadIterations, boxedBest, boxedAlloc);
+        _perf.Compare($"Read {typeLabel}: generated IsType vs boxed 'is {typeLabel}' (min of {_timedRounds})",
+            $"Generated {typeLabel}", _readIterations, genBest, genAlloc,
+            $"Boxed is {typeLabel}", _readIterations, boxedBest, boxedAlloc);
 
         AssertWithinBudget($"Read {typeLabel}", genBest, boxedBest);
     }
 
     private static T[] MakeSamples<T>(Func<int, T> factory)
     {
-        var arr = new T[SampleCount];
-        for (var i = 0; i < SampleCount; i++)
+        var arr = new T[_sampleCount];
+        for (var i = 0; i < _sampleCount; i++)
             arr[i] = factory(i);
         return arr;
     }
@@ -374,13 +374,13 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         TypedData[] genPool, OldTypedData[] boxedPool, T[] samples, GenFactory<T> makeGen)
     {
         var start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < WriteIterations; i++)
-            genPool[i & PoolMask] = makeGen(samples[i & SampleMask]);
+        for (var i = 0; i < _writeIterations; i++)
+            genPool[i & _poolMask] = makeGen(samples[i & _sampleMask]);
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < WriteIterations; i++)
-            boxedPool[i & PoolMask] = new OldTypedData(typeof(T), samples[i & SampleMask]);
+        for (var i = 0; i < _writeIterations; i++)
+            boxedPool[i & _poolMask] = new OldTypedData(typeof(T), samples[i & _sampleMask]);
         var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
         return (gen, boxed);
     }
@@ -391,14 +391,14 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     {
         var sink = 0;
         var start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
-            if (tryGet(in genPool[i & PoolMask], out _))
+        for (var i = 0; i < _readIterations; i++)
+            if (tryGet(in genPool[i & _poolMask], out _))
                 sink++;
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
-            if (boxedMatch(boxedPool[i & PoolMask]))
+        for (var i = 0; i < _readIterations; i++)
+            if (boxedMatch(boxedPool[i & _poolMask]))
                 sink++;
         var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
         GC.KeepAlive(sink);
@@ -411,14 +411,14 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     {
         var sink = 0;
         var start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
-            if (isCheck(in genPool[i & PoolMask]))
+        for (var i = 0; i < _readIterations; i++)
+            if (isCheck(in genPool[i & _poolMask]))
                 sink++;
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
-            if (boxedMatch(boxedPool[i & PoolMask]))
+        for (var i = 0; i < _readIterations; i++)
+            if (boxedMatch(boxedPool[i & _poolMask]))
                 sink++;
         var boxed = GC.GetAllocatedBytesForCurrentThread() - start;
         GC.KeepAlive(sink);
@@ -430,9 +430,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     {
         var sink = 0;
         var start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
+        for (var i = 0; i < _readIterations; i++)
         {
-            ref readonly var td = ref genPool[i & PoolMask];
+            ref readonly var td = ref genPool[i & _poolMask];
             if (td.TryGetInt32(out _)) sink++;
             if (td.TryGetSingle(out _)) sink++;
             if (td.TryGetBoolean(out _)) sink++;
@@ -442,9 +442,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         var gen = GC.GetAllocatedBytesForCurrentThread() - start;
 
         start = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < ReadIterations; i++)
+        for (var i = 0; i < _readIterations; i++)
         {
-            var data = boxedPool[i & PoolMask].Data;
+            var data = boxedPool[i & _poolMask].Data;
             if (data is int) sink++;
             if (data is float) sink++;
             if (data is bool) sink++;
@@ -458,14 +458,14 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
     private static void AssertWithinBudget(string label, TimeSpan generated, TimeSpan baseline)
     {
-        Assert.True(generated < PerBenchmarkCap,
-            $"{label}: generated min {generated.TotalMilliseconds:F2}ms exceeds {PerBenchmarkCap.TotalSeconds:F0}s cap");
+        Assert.True(generated < _perBenchmarkCap,
+            $"{label}: generated min {generated.TotalMilliseconds:F2}ms exceeds {_perBenchmarkCap.TotalSeconds:F0}s cap");
 
         // A sub-millisecond baseline cannot form a reliable ratio; the cap above still guards it.
-        if (baseline < BaselineFloor)
+        if (baseline < _baselineFloor)
             return;
 
-        Assert.True(generated.TotalMilliseconds <= baseline.TotalMilliseconds * MaxSlowdownFactor,
-            $"{label}: generated {generated.TotalMilliseconds:F2}ms exceeds {MaxSlowdownFactor:F0}x of baseline {baseline.TotalMilliseconds:F2}ms");
+        Assert.True(generated.TotalMilliseconds <= baseline.TotalMilliseconds * _maxSlowdownFactor,
+            $"{label}: generated {generated.TotalMilliseconds:F2}ms exceeds {_maxSlowdownFactor:F0}x of baseline {baseline.TotalMilliseconds:F2}ms");
     }
 }

@@ -11,12 +11,12 @@ namespace Origo.Core.Random;
 /// </summary>
 public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key = null, string? state2Key = null)
 {
-    private const string DefaultState1Key = "rand.state1";
-    private const string DefaultState2Key = "rand.state2";
+    private const string _defaultState1Key = "rand.state1";
+    private const string _defaultState2Key = "rand.state2";
 
     private readonly IBlackboard _blackboard = blackboard ?? throw new ArgumentNullException(nameof(blackboard));
-    private readonly string _state1Key = string.IsNullOrWhiteSpace(state1Key) ? DefaultState1Key : state1Key;
-    private readonly string _state2Key = string.IsNullOrWhiteSpace(state2Key) ? DefaultState2Key : state2Key;
+    private readonly string _state1Key = string.IsNullOrWhiteSpace(state1Key) ? _defaultState1Key : state1Key;
+    private readonly string _state2Key = string.IsNullOrWhiteSpace(state2Key) ? _defaultState2Key : state2Key;
 
     public bool InitSeed(string seed)
     {

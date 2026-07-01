@@ -16,8 +16,8 @@ namespace Origo.Core.Tests;
 public class SndStrategyPerformanceTests(ITestOutputHelper output)
 {
     private readonly PerfReporter _perf = PerfReporter.ForTest(output);
-    private const string PoolIdx = "perf.pool.test";
-    private const string Process1Idx = "perf.process.1";
+    private const string _poolIdx = "perf.pool.test";
+    private const string _process1Idx = "perf.process.1";
 
     // ── Strategy pool Get/Release throughput ────────────────────────────
 
@@ -36,8 +36,8 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
         var sw = Stopwatch.StartNew();
         for (var i = 0; i < iterations; i++)
         {
-            var s = pool.GetStrategy<PerfPoolStrategy>(PoolIdx);
-            pool.ReleaseStrategy(PoolIdx);
+            var s = pool.GetStrategy<PerfPoolStrategy>(_poolIdx);
+            pool.ReleaseStrategy(_poolIdx);
         }
         sw.Stop();
         var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
@@ -196,7 +196,7 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
 
     // ── Strategy stubs ──────────────────────────────────────────────────
 
-    [StrategyIndex(PoolIdx)]
+    [StrategyIndex(_poolIdx)]
     private sealed class PerfPoolStrategy : LifecycleStrategyBase
     {
     }
@@ -206,7 +206,7 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) { }
     }
 
-    [StrategyIndex(Process1Idx)] private sealed class PerfProcess1Strategy : PerfProcessBase { }
+    [StrategyIndex(_process1Idx)] private sealed class PerfProcess1Strategy : PerfProcessBase { }
     [StrategyIndex("perf.process.2")] private sealed class PerfProcess2Strategy : PerfProcessBase { }
     [StrategyIndex("perf.process.3")] private sealed class PerfProcess3Strategy : PerfProcessBase { }
     [StrategyIndex("perf.process.4")] private sealed class PerfProcess4Strategy : PerfProcessBase { }

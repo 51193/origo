@@ -177,7 +177,7 @@ public partial class RandomAndStateMachineTests
         try
         {
             var sm = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx);
-            sm.RestoreStackWithoutHooks(new[] { "x", "y", "z" });
+            sm.RestoreStackWithoutHooks(["x", "y", "z"]);
             sm.FlushAfterLoad();
             sm.Dispose();
 
