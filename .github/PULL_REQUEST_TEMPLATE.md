@@ -10,6 +10,14 @@
 - [ ] Removed
 - [ ] Internal (refactor, chore, test, docs — no user-facing change)
 
+## AI Agent Usage
+
+- [ ] This PR was created without AI agent assistance
+- [ ] This PR was created with AI agent assistance
+
+<!-- If yes, paste the original prompts below (no translation needed).
+     Multi-round: all prompts or key prompts only. -->
+
 ## Checklist
 
 - [ ] `bash scripts/validate.sh` passes locally (format + build + test + coverage)
