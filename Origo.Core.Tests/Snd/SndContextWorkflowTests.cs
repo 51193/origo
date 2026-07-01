@@ -379,6 +379,24 @@ public class SndContextWorkflowTests
         Assert.Empty(received);
     }
 
+    [Fact]
+    public void UnsubscribeConsoleOutput_ZeroId_DoesNotThrow()
+    {
+        var ctx = CreateContextWithConsole(out _, out _, out _);
+
+        var ex = Record.Exception(() => ctx.UnsubscribeConsoleOutput(0));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public void UnsubscribeConsoleOutput_NegativeId_DoesNotThrow()
+    {
+        var ctx = CreateContextWithConsole(out _, out _, out _);
+
+        var ex = Record.Exception(() => ctx.UnsubscribeConsoleOutput(-1));
+        Assert.Null(ex);
+    }
+
     // ── GetPendingPersistenceRequestCount / EnqueueBusinessDeferred ──
 
     [Fact]

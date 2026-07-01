@@ -188,16 +188,6 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     清除所有后台会话（Dispose 并移除）。前台会话不受影响。
-    /// </summary>
-    internal void ClearBackground()
-    {
-        var bgKeys = EnumerateManagedKeys(false);
-        foreach (var key in bgKeys)
-            DestroySession(key);
-    }
-
-    /// <summary>
     ///     清除所有会话（Dispose 并移除）。
     /// </summary>
     internal void Clear()

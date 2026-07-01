@@ -67,8 +67,6 @@ internal static class SavePayloadWriter
         foreach (var level in payload.Levels.Values)
             WriteLevelPayload(handle, currentRel, level, true);
 
-        WritePayloadShaFile(handle, currentRel, payload);
-
         handle.MetaAccess.Delete(markerAbs);
     }
 
@@ -185,17 +183,5 @@ internal static class SavePayloadWriter
         }
 
         return Convert.ToHexString(sha.GetHashAndReset()).ToLowerInvariant();
-    }
-
-    private static void WritePayloadShaFile(
-        SaveFileHandle handle,
-        string currentRel,
-        SaveGamePayload payload)
-    {
-        var hash = ComputePayloadHash(payload);
-        var shaRel = handle.PathPolicy.GetPayloadShaFile(currentRel);
-        var shaAbs = handle.GetAbsolutePath(shaRel);
-        handle.EnsureParentDirectory(shaRel);
-        handle.IoGateway.WriteTree(shaAbs, DataSourceNode.CreateString(hash));
     }
 }

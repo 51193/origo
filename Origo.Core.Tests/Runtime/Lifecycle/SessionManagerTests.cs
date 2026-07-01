@@ -398,6 +398,37 @@ public class SessionManagerTests
         Assert.Null(session.FindByName("doomed"));
     }
 
+    // ── Edge cases: empty/null/whitespace keys ──────────────────────────
+
+    [Fact]
+    public void TryGet_EmptyKey_ReturnsNull()
+    {
+        var (ctx, _) = CreateContext();
+        Assert.Null(ctx.Runtime.SessionManager.TryGet(""));
+    }
+
+    [Fact]
+    public void TryGet_WhitespaceKey_ReturnsNull()
+    {
+        var (ctx, _) = CreateContext();
+        Assert.Null(ctx.Runtime.SessionManager.TryGet("   "));
+    }
+
+    [Fact]
+    public void Contains_EmptyKey_ReturnsFalse()
+    {
+        var (ctx, _) = CreateContext();
+        Assert.False(ctx.Runtime.SessionManager.Contains(""));
+    }
+
+    [Fact]
+    public void DestroySession_EmptyKey_DoesNotThrow()
+    {
+        var (ctx, _) = CreateContext();
+        var ex = Record.Exception(() => ctx.Runtime.SessionManager.DestroySession(""));
+        Assert.Null(ex);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────
 
     private static (SndContext ctx, TestFileSystem fs) CreateContext()

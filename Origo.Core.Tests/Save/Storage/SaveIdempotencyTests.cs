@@ -101,7 +101,7 @@ public class SaveIdempotencyTests
         var policy = new DefaultSavePathPolicy();
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
-        SavePayloadWriter.WriteToCurrent(handle, payload);
+        SaveStorageFacade.WriteSavePayloadToCurrent(handle, payload);
 
         var shaRel = policy.GetPayloadShaFile(policy.GetCurrentDirectory());
         var shaAbs = fs.CombinePath("root", shaRel);
@@ -116,16 +116,14 @@ public class SaveIdempotencyTests
         var fs = new TestFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
-        var payload = CreateMinimalPayload("001", "default");
         var policy = new DefaultSavePathPolicy();
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
         // First write — must succeed.
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, CreateMinimalPayload("001", "default"), "001", logger);
         _ = fs.ReadAllText("root/current/progress.json");
 
-        // Modify the file system to track if any file content changes happen on second write.
-        // Seed the snapshot with existing .sha from the first write.
+        // Verify the snapshot .sha exists.
         var existingShaAbs = fs.CombinePath("root",
             policy.GetPayloadShaFile(policy.GetSaveDirectory("001")));
         Assert.True(fs.Exists(existingShaAbs));
@@ -133,8 +131,8 @@ public class SaveIdempotencyTests
         // Clear current/ to force a fresh Current write if the facade doesn't skip.
         fs.DeleteDirectory(fs.CombinePath("root", policy.GetCurrentDirectory()));
 
-        // Second write with same payload — should skip.
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
+        // Second write with same content — should skip (using fresh payload to avoid node mutation).
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, CreateMinimalPayload("001", "default"), "001", logger);
 
         // The current/ directory should NOT have been recreated (because the entire method returned early).
         Assert.False(fs.DirectoryExists(fs.CombinePath("root", policy.GetCurrentDirectory())));
@@ -215,12 +213,17 @@ public class SaveIdempotencyTests
         var shaAbs = fs.CombinePath("root", policy.GetPayloadShaFile(snapshotRel));
         fs.SeedFile(shaAbs, string.Empty);
 
-        var payload = CreateMinimalPayload("001", "default");
-        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
+        // Compute expected hash before the save mutates the nodes.
+        var freshPayload = CreateMinimalPayload("001", "default");
+        var expectedHash = SaveStorageFacade.CombineHashes(
+            SavePayloadWriter.ComputePayloadHash(freshPayload),
+            SaveStorageFacade.ComputeSideDirectoryHash(handle, SavePathLayout.ExtraDirectoryName));
 
-        // .payload.sha should be overwritten with correct hash.
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, freshPayload, "001", logger);
+
+        // .payload.sha should be overwritten with the combined hash.
         var hash = fs.ReadAllText(shaAbs).Trim();
-        Assert.Equal(SavePayloadWriter.ComputePayloadHash(payload), hash);
+        Assert.Equal(expectedHash, hash);
     }
 
     [Fact]

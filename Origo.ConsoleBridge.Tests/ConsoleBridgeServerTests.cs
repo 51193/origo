@@ -403,6 +403,64 @@ public class ConsoleBridgeServerTests
         server.Dispose();
     }
 
+    [Fact]
+    public void PendingOutput_BufferOverflow_DropsOldestLines()
+    {
+        var (server, (_, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        var overflowLineCount = 1500;
+        for (var i = 0; i < overflowLineCount; i++)
+            output.Publish($"pending_{i}");
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+
+        var received = new List<string>();
+        for (var i = 0; i < overflowLineCount; i++)
+        {
+            var line = ReadLineWithTimeout(reader, _outputTimeoutMs);
+            if (line is null)
+                break;
+            received.Add(line);
+        }
+
+        Assert.True(received.Count <= overflowLineCount);
+        Assert.True(received.Count > 0);
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void PendingOutput_WithinLimit_AllDeliveredOnConnect()
+    {
+        var (server, (_, output)) = CreateStartedServer();
+        var port = server.ActualPort;
+
+        var lineCount = 500;
+        for (var i = 0; i < lineCount; i++)
+            output.Publish($"pending_{i}");
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, port);
+        using var reader = new StreamReader(client.GetStream());
+
+        var received = 0;
+        for (var i = 0; i < lineCount; i++)
+        {
+            var line = ReadLineWithTimeout(reader, _outputTimeoutMs);
+            if (line is null)
+                break;
+            received++;
+        }
+
+        Assert.Equal(lineCount, received);
+
+        server.Dispose();
+    }
+
     // ── Connection management ───────────────────────────────────────────
 
     [Fact]

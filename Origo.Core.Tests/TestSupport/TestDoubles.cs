@@ -16,6 +16,7 @@ using Origo.Core.DataSource.Codec;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Runtime.Lifecycle;
+using Origo.Core.Save;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -576,5 +577,27 @@ internal static class TestFactory
             new ProgressParameters(saveId),
             (IStateMachineContext)sndContext,
             sndContext);
+    }
+
+    public static SaveGamePayload CreateMinimalPayload(string saveId, string activeLevelId)
+    {
+        return new SaveGamePayload
+        {
+            SaveId = saveId,
+            ActiveLevelId = activeLevelId,
+            ProgressNode = NodeFromJson(
+                """{"origo.session_topology":{"type":"String","data":"__foreground__=default=false"}}"""),
+            ProgressStateMachinesNode = NodeFromJson("""{"machines":[]}"""),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                [activeLevelId] = new()
+                {
+                    LevelId = activeLevelId,
+                    SndSceneNode = NodeFromJson("[]"),
+                    SessionNode = NodeFromJson("{}"),
+                    SessionStateMachinesNode = NodeFromJson("""{"machines":[]}""")
+                }
+            }
+        };
     }
 }

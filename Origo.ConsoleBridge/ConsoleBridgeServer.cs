@@ -32,9 +32,8 @@ public sealed class ConsoleBridgeServer : IDisposable
     private Thread? _acceptThread;
     private Thread? _handleThread;
     private bool _hasActiveClient;
-    private TcpListener? _listener;
+    private TcpListener _listener = null!;
     private long _outputSubId;
-    private Socket? _serverSocket;
     private int _started;
     private StreamWriter? _writer;
 
@@ -65,7 +64,6 @@ public sealed class ConsoleBridgeServer : IDisposable
             _writer = null;
         }
 
-        _serverSocket?.Close();
         _listener?.Stop();
         _output.Unsubscribe(_outputSubId);
 
@@ -84,7 +82,6 @@ public sealed class ConsoleBridgeServer : IDisposable
         _listener = new TcpListener(IPAddress.Loopback, _options.Port);
         _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         _listener.Start();
-        _serverSocket = _listener.Server;
         ActualPort = ((IPEndPoint)_listener.LocalEndpoint).Port;
 
         _outputSubId = _output.Subscribe(OnConsoleOutput);
@@ -131,7 +128,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                 TcpClient? client = null;
                 try
                 {
-                    client = _listener!.AcceptTcpClient();
+                    client = _listener.AcceptTcpClient();
                 }
                 catch (SocketException) when (_cts.IsCancellationRequested)
                 {
@@ -160,7 +157,6 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
         finally
         {
-            _listener?.Stop();
         }
     }
 

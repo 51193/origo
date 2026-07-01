@@ -10,19 +10,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `SaveExtraFilesRoundTripTests` — 14 tests covering `CopyDirectoryFromSnapshot` (low-level copy behavior, subdirectory preservation, silent skip on missing source, overwrite, null/whitespace guards) and `ISndArchiveFileAccess` full save/load cycles (multiple files, subdirectories, typed data round-trips, delete-then-save).
+- `SndContextBootstrapTests` — 15 tests covering `SndContext.Bootstrap()` full flow (converter callback, auto-discover on/off, template loading, foreground session establishment, error on missing entry), `IStateMachineContext` interface casting (SceneAccess/SystemBlackboard/ProgressBlackboard), `CloneTemplate` edge cases (null/whitespace/non-existing key), and `SaveRootPath`/`InitialSaveRootPath`/`EntryConfigPath` getter contracts.
+- `ConsoleBridgeServer` `PendingOutput` boundary tests: buffer overflow behavior (lines beyond the 1000-line limit are dropped) and within-limit delivery on connect.
+- Cross-entity `MountObserverStrategy(ISndEntity, string)` test on real `SndEntity` instances plus null target guard.
+- `UnsubscribeConsoleOutput` zero/negative subscription ID edge case tests.
+- `ISessionManager.TryGet`/`Contains`/`DestroySession` empty and whitespace key edge case tests.
+- `ComputeExtraDirectoryHash`/`CombineHashes` unit tests (empty dir, no dir, with files, same content, different content).
+- `ExtraFiles_SaveTwice_SameSlot_HasLatestContent` regression test for save idempotency with extra files.
+- `IdempotentSkip_UnchangedPayloadAndExtra_SkipHappens` test verifying the corrected skip preserves the hash check.
+
 ### Changed
 
 - **BREAKING:** Public methods in `MemoryFileSystem` (17 methods), `PlanExecutionStrategyBase` (7 lifecycle hooks), `ActiveStrategyExtensions` (3 methods), `GodotFileSystem` (3 methods), `GodotJsonConverterRegistry` (2 methods), `Blackboard`, `Astar`, `SndWorld`, `TypeStringMapping`, and `TryGetNumericExtensions` now throw `ArgumentNullException` on null parameters instead of silently proceeding or throwing downstream errors.
 - Private field naming convention enforced across the entire codebase (161 fields renamed to `_camelCase` prefix).
 - Code style rules (collection initialization simplification, `var` usage, pattern matching preferences) applied project-wide via `dotnet format`.
+- `ConsoleBridgeServer` `_listener` field: removed redundant `_serverSocket` field, replaced nullable `TcpListener?` + `!` operator with non-nullable `TcpListener = null!`, removed redundant `_listener?.Stop()` in `AcceptLoop` finally block.
+- `SavePayloadWriter.WriteToCurrent` no longer writes `.payload.sha` — hash writing is now the sole responsibility of `SaveStorageFacade` (via `WritePayloadSha`), eliminating the fragile double-write pattern.
+- `CombineHashes` always produces a consistent domain-separated format (`P:`/`S:` prefixes) regardless of whether side-channel files exist — no more implicit format switching. `WritePayloadSha` is now the sole `.payload.sha` writer (extracted from `WriteToCurrent`). `StripPathPrefix` replaces 3 identical relative-path-stripping patterns.
 
 ### Removed
 
 - Unused method parameters removed from `SaveStorageFacade.CopyDirectoryFromSnapshot`, `OrigoAutoHost.CreateAndSetupSndManager`, `PlanExecutionStrategyBase.OnIntentChanged`/`OnActionStatusChanged`, `SetupProgressRun`, `RunDictWrite`, `TryInvoke`, `PrintCompare`, and `MeasureObserverAlloc`.
+- `SessionManager.ClearBackground()` — unused internal method with zero callers.
 
 ### Fixed
 
 - CI format gate (`dotnet format --verify-no-changes --severity info`) now passes with zero violations.
+- **Save idempotency now includes `extra/` files in hash computation.** `WriteSavePayloadToCurrentThenSnapshot` previously computed the idempotent skip hash from `SaveGamePayload` alone, ignoring files written by `ISndArchiveFileAccess` to `current/extra/`. When only extra files changed between saves, the save was silently skipped, causing data loss on next load. The fix adds `ComputeExtraDirectoryHash` (SHA-256 of all `extra/` files, sorted by path) and `CombineHashes` to merge it with the payload hash, ensuring extra file changes trigger a fresh write.
 
 ## [0.0.8] - 2026-06-30
 

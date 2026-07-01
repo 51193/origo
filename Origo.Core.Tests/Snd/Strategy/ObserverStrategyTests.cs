@@ -783,4 +783,55 @@ public class ObserverStrategyTests
         public override void OnDataChanged(ISndEntity entity, ISndContext ctx, ISndEntity target,
             string dataKey, TypedData oldValue, TypedData newValue) => DataChangedCalls.Add(dataKey);
     }
+
+    // ── Cross-entity observer (ISndEntity overload) ────────────────────
+
+    [Fact]
+    public void MountObserverStrategy_ByEntityOverload_Works()
+    {
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        world.RegisterStrategy(() => new SelfWatchObserver());
+        world.RegisterStrategy(() => new MultiKeyObserver());
+        host.BindWorld(world);
+        var fs = new TestFileSystem();
+        fs.SeedFile("res://entry/entry.json", "[]");
+        var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
+            "res://entry/entry.json"));
+        host.BindContext(ctx);
+
+        var metaAlice = CreateMeta("alice");
+        var metaBob = CreateMeta("bob");
+        host.RecoverFromMetaList([metaAlice, metaBob]);
+        foreach (var e in host.GetEntities())
+            if (e is IEntityLifecycle lc)
+                lc.FireAfterSpawnHooks();
+
+        var alice = host.FindByName("alice")!;
+        var bob = host.FindByName("bob")!;
+
+        SelfWatchObserver.DataChangedCalls.Clear();
+        alice.MountObserverStrategy(bob, _selfWatchIdx);
+
+        bob.SetData("character.hp", 50);
+
+        Assert.Single(SelfWatchObserver.DataChangedCalls);
+        Assert.Equal("alice", SelfWatchObserver.DataChangedCalls[0].EntityName);
+        Assert.Equal("bob", SelfWatchObserver.DataChangedCalls[0].TargetName);
+    }
+
+    [Fact]
+    public void MountObserverStrategy_ByEntityOverload_NullTarget_Throws()
+    {
+        var (entity, _) = Setup();
+        entity.SpawnSingle(CreateMeta());
+
+        Assert.Throws<ArgumentNullException>(() =>
+            entity.MountObserverStrategy((ISndEntity)null!, _memoryObservedIdx));
+    }
 }
