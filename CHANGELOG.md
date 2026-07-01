@@ -38,6 +38,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Community health files (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `PULL_REQUEST_TEMPLATE.md`) moved from `.github/` to repository root so that relative links in `CONTRIBUTING.md` resolve correctly when GitHub renders the contributing guide.
+- Fixed broken documentation links: `docs/README.md` Testing entry pointed to non-existent `Origo.Core/Testing/` (now `Origo.Core.Tests/StrategyTestScenario.md`), Entity README anchor to Blackboard was missing hyphens in slug, Planning README footer link was self-referential.
 - `Origo.GodotAdapter.Tests.csproj` no longer sets `GodotProjectDir` to a path outside the repository, and no longer declares `GodotDisabledSourceGenerators` / `CompilerVisibleProperty` — these Godot SDK properties are irrelevant for the `Microsoft.NET.Sdk`-based test project and only belong in the `Godot.NET.Sdk`-based adapter project itself.
 - CI format gate (`dotnet format --verify-no-changes --severity info`) now passes with zero violations.
 - **Save idempotency now includes `extra/` files in hash computation.** `WriteSavePayloadToCurrentThenSnapshot` previously computed the idempotent skip hash from `SaveGamePayload` alone, ignoring files written by `ISndArchiveFileAccess` to `current/extra/`. When only extra files changed between saves, the save was silently skipped, causing data loss on next load. The fix adds `ComputeExtraDirectoryHash` (SHA-256 of all `extra/` files, sorted by path) and `CombineHashes` to merge it with the payload hash, ensuring extra file changes trigger a fresh write.

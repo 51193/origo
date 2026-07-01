@@ -118,7 +118,7 @@
 
 ### 为什么 TryGetData 使用 found/value 元组
 
-参考 [Blackboard 的相同设计决策](../Blackboard/README.md#为什么是泛型tryget而非object)。
+参考 [Blackboard 的相同设计决策](../Blackboard/README.md#为什么是泛型-tryget-而非-object)。
 
 ### 为什么观察者钩子签名包含 target 参数
 

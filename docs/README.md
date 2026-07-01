@@ -87,7 +87,7 @@ Root (this file)
 | [Serialization](Origo.Core/Serialization/README.md) | 类型 ↔ 字符串映射 |
 | [Logging](Origo.Core/Logging/README.md) | 日志构建器 + NullLogger |
 | [Addons](Origo.Core/Addons/README.md) | FastNoiseLite 噪声库 |
-| [Testing](Origo.Core/Testing/README.md) | StrategyTestScenario 测试框架 |
+| [Testing](Origo.Core.Tests/StrategyTestScenario.md) | StrategyTestScenario 测试框架 |
 
 ## 快速导航
 

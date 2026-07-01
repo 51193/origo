@@ -109,4 +109,4 @@ entity.EnsureReplaceableStrategy("character.path_impl", "character.pathfind.asta
 
 ---
 
-[↑ 回到 Origo.Core](README.md)
+[↑ 回到 Origo.Core](../README.md)

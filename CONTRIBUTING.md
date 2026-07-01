@@ -5,9 +5,9 @@ process.
 
 ## Before you start
 
-- Read the development workflow in [`AGENTS.md`](../AGENTS.md) — it is the
+- Read the development workflow in [`AGENTS.md`](AGENTS.md) — it is the
   authoritative entry point for all code changes.
-- Read the commit message convention in [`docs/META.md`](../docs/META.md#git-提交消息格式).
+- Read the commit message convention in [`docs/META.md`](docs/META.md#git-提交消息格式).
 - Use the [pull request template](PULL_REQUEST_TEMPLATE.md) when opening a PR.
 - Read the [code of conduct](CODE_OF_CONDUCT.md).
 
