@@ -81,5 +81,62 @@ Godot 场景树中如果存在同名节点，Godot 会自动在 Name 后追加 `
 
 如果在 `_entities` 遍历中直接释放节点，Godot 的节点树变化可能导致后续迭代跳过实体或重复处理。先移除，后释放，保证列表迭代安全。
 
+### 适配层实体桥接：为什么 GodotSndEntity 必须手写转发
+
+`GodotSndEntity`（290 行）的代码可分解为三类：
+
+| 类别 | 行数 | 占比 | 说明 |
+|------|------|------|------|
+| 纯转发样板 | ~130 | 45% | `ISndEntity`（~20 个方法）、`IEntityLifecycle`（8 个钩子）、`ISndEntityRawSubscription`（2 个方法）全部形如 `EnsureEntity(); _entity!.Foo(...)`，每个方法 4~6 行 |
+| 引擎特有逻辑 | ~60 | 21% | `StableName` ↔ `Node.Name` 同步、`Free()` 清理、`GetNodeFromSnd<TNode>()` Godot 节点转义、`EnsureEntity()` 延迟创建 |
+| 基础设施 | ~100 | 34% | 字段声明、构造函数、Guard 方法、using |
+
+#### 为什么不能提取基类或自动生成
+
+**C# 单继承是根本约束。** `GodotSndEntity` 必须继承 `Godot.Node`（`[GlobalClass]` 要求）才能挂载到 Godot 场景树。若在 Core 中提供抽象基类 `SndEntityBridge`，Godot 适配器无法同时继承基类和 `Node`。Unity 同理（必须继承 `MonoBehaviour`）。
+
+其他技术路线也缺乏投入产出比：
+
+- **接口默认方法（DIMs）**：要求修改 `ISndEntity` 等核心接口的契约设计，添加抽象属性作为间接访问点，与当前 ISP 拆分方向相悖，且 `IEntityLifecycle` 显式接口实现语义与 DIMs 冲突。
+- **源生成器自动生成转发**：为节省 ~130 行一次性样板代码，需要新增一个 Roslyn 增量源生成器（约 200-300 行），并承担其维护负担。而实体桥接在整个引擎适配工作量中仅占约 5%，真正成本在场景宿主、文件系统、序列化等组件。
+- **独立委托对象**（`SndEntityProxy`）：将转发代码从适配器移到委托类，适配器仍需实现 `ISndEntity` 将调用转发到委托对象，没有减少任何样板。
+
+综上，C# 单继承约束下，当前手写转发方案已是最优解，不值得为此投入代码变更。
+
+#### 未来适配层作者的参考
+
+当一个新引擎适配器需要实现自己的实体桥接时，以下是可以直接复制的纯转发样板（方法签名和实现完全相同，只需替换类型名）：
+
+```
+ISndEntity:
+  SetData / GetData / TryGetData
+  GetNode / GetNodeNames
+  AddStrategy / RemoveStrategy
+  AddActiveStrategy / RemoveActiveStrategy / InvokeStrategy
+  MountObserverStrategy / UnmountObserverStrategy（两组重载）
+
+IEntityLifecycle（显式接口实现）:
+  FireAfterSpawnHooks / FireAfterLoadHooks / FireBeforeSaveHooks
+  FireBeforeQuitHooks / FireBeforeDeadHooks
+  ReleaseStrategiesOnly / TeardownOnly / BuildMetaData
+
+ISndEntityRawSubscription（显式接口实现）:
+  SubscribeDataRaw / UnsubscribeDataRaw
+```
+
+以下必须在每个适配器中重写（引擎特有部分）：
+
+| 逻辑 | Godot 实现 | Unity 需替换为 |
+|------|-----------|---------------|
+| 引擎基类 | `: Node` | `: MonoBehaviour` |
+| 实体清理 | `Free()` | `Destroy(gameObject)` |
+| 名称同步 | `StableName` / `Node.Name` | 等价概念（`gameObject.name`） |
+| 节点访问 | `GetNodeFromSnd<TNode>()` 返回 `Godot.Node` | 返回 `UnityEngine.GameObject` / `Component` |
+| 节点工厂 | `GodotPackedSceneNodeFactory`，以自身为父节点 | `UnityPrefabNodeFactory`，实例化到自身 Transform 下 |
+| 延迟创建 | `_world.CreateEntity(nodeFactory, ...)` | 相同调用，但传入 Unity 的 `INodeFactory` |
+
+**预估工作量**：整个实体桥接部分约 2 小时（130 行机械转发复制 + 60 行引擎 API 替换），占适配层总工作量的不到 5%。真正的适配成本在 `ISndSceneHost`（场景实体管理）、`IFileSystem`（引擎文件 API）、`ILogger`（引擎日志 API）、`INodeFactory/INodeHandle`（节点生命周期）、Bootstrap 等组件。
+
 ---
+
 [↑ 回到 Origo.GodotAdapter](../README.md)
