@@ -97,7 +97,14 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
         _data["name"] = name;
     }
 
-    public ISessionRun OwningSession { get; set; } = null!;
+    private ISessionRun? _owningSession;
+
+    public ISessionRun OwningSession
+    {
+        get => _owningSession ?? throw new InvalidOperationException(
+            "OwningSession has not been bound. Entities must be created through a scene host that implements IOwningSessionBindable.");
+        set => _owningSession = value;
+    }
 
     public string Name { get; }
 

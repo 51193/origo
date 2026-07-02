@@ -24,8 +24,8 @@ public static class OrigoAutoInitializer
 {
     private const string _logTag = nameof(OrigoAutoInitializer);
 
-    /// <summary>Legacy assembly name that should always be skipped during strategy scanning.</summary>
-    private const string _legacyCorLibAssemblyName = "mscorlib";
+    /// <summary>Core runtime assembly name that should always be skipped during strategy scanning.</summary>
+    private const string _corLibAssemblyName = "mscorlib";
 
     /// <summary>Assembly simple name prefixes skipped when scanning for <see cref="BaseStrategy" /> types.</summary>
     private static readonly string[] _defaultSkipPrefixes =
@@ -212,7 +212,7 @@ public static class OrigoAutoInitializer
     {
         var name = assembly.GetName().Name;
         if (name is null) return true;
-        if (name == _legacyCorLibAssemblyName) return true;
+        if (name == _corLibAssemblyName) return true;
 
         foreach (var prefix in skipPrefixes)
             if (name.StartsWith(prefix, StringComparison.Ordinal))

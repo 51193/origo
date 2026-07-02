@@ -224,6 +224,13 @@ public sealed class SndContext : IStateMachineContext, ISndContext
 
     public void RequestLoadMainMenuEntrySave() => EnqueueSystemDeferred(ExecuteLoadMainMenuEntrySaveNow);
 
+    /// <summary>
+    ///     Returns the current number of in-flight persistence requests.
+    ///     <c>Interlocked.CompareExchange(ref x, 0, 0)</c> is the standard
+    ///     lock-free atomic read pattern for <see cref="int" /> fields,
+    ///     since <see cref="Interlocked.Read(ref long)" /> is only available
+    ///     for <see cref="long" />.
+    /// </summary>
     public int GetPendingPersistenceRequestCount() =>
         Interlocked.CompareExchange(ref _pendingPersistenceRequests, 0, 0);
 
