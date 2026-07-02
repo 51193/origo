@@ -294,7 +294,7 @@ public class StrategyTestScenarioTests
     private sealed class DeferredActionStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
-            ctx.EnqueueBusinessDeferred(() => entity.SetData("deferred_flag", 42));
+            ctx.Deferred.EnqueueBusinessDeferred(() => entity.SetData("deferred_flag", 42));
     }
 
     [StrategyIndex("test.after_spawn_init")]
@@ -313,14 +313,14 @@ public class StrategyTestScenarioTests
             hp -= dps;
             entity.SetData("hp", hp);
             if (hp <= 0)
-                ctx.RequestSaveGame("test_save");
+                ctx.Save.RequestSaveGame("test_save");
         }
     }
 
     [StrategyIndex("test.load_request")]
     private sealed class LoadRequestStrategy : LifecycleStrategyBase
     {
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ctx.RequestLoadGame("slot_1");
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ctx.Save.RequestLoadGame("slot_1");
     }
 
     [StrategyIndex("test.bb_reader")]
@@ -328,7 +328,7 @@ public class StrategyTestScenarioTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            var (found, difficulty) = ctx.SystemBlackboard.TryGet<string>("game.difficulty");
+            var (found, difficulty) = ctx.Blackboard.SystemBlackboard.TryGet<string>("game.difficulty");
             if (found)
                 entity.SetData("difficulty", difficulty);
         }
@@ -339,7 +339,7 @@ public class StrategyTestScenarioTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            var (found, level) = ctx.ProgressBlackboard!.TryGet<int>("level");
+            var (found, level) = ctx.Blackboard.ProgressBlackboard!.TryGet<int>("level");
             if (found)
                 entity.SetData("current_level", level);
         }
@@ -361,7 +361,7 @@ public class StrategyTestScenarioTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            var clone = ctx.CloneTemplate("enemy_template", "GoblinKing");
+            var clone = ctx.Template.CloneTemplate("enemy_template", "GoblinKing");
             entity.SetData("cloned_name", clone.Name);
             var (found, type) = clone.DataMetaData!.Pairs.TryGetValue("type", out var td)
                 ? (true, td.TryGetString(out var s) ? s : null)
@@ -397,14 +397,14 @@ public class StrategyTestScenarioTests
     private sealed class LevelSwitchStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
-            ctx.RequestSwitchForegroundLevel("level_02");
+            ctx.Save.RequestSwitchForegroundLevel("level_02");
     }
 
     [StrategyIndex("test.console")]
     private sealed class ConsoleLogStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
-            ctx.TrySubmitConsoleCommand("echo hello");
+            ctx.ConsoleAccess.TrySubmitConsoleCommand("echo hello");
     }
 
     [StrategyIndex("test.frame_counter")]

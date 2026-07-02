@@ -20,7 +20,9 @@ using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Tests.TestSupport;
 
-internal sealed class StrategyTestContext : ISndContext
+internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, ISndDeferredActions,
+    ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
+    ISndLifecycleOperations, IStateMachineContext
 {
     private readonly List<string> _consoleCommands = [];
     private readonly List<string> _consoleOutput = [];
@@ -42,7 +44,29 @@ internal sealed class StrategyTestContext : ISndContext
         _dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem);
         _pathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
         _converterRegistry = DataSourceFactory.CreateDefaultRegistry(new TypeStringMapping());
+
+        FileAccess = new StrategyFileAccess(_dataSourceIo, _metaAccess, _converterRegistry);
+        ArchiveFileAccess = new StrategyArchiveFileAccess(_dataSourceIo, _metaAccess, _converterRegistry);
     }
+
+    public void Bootstrap()
+    {
+    }
+
+    public string SaveRootPath => string.Empty;
+    public string InitialSaveRootPath => string.Empty;
+    public string EntryConfigPath => string.Empty;
+
+    public ISndBlackboardAccess Blackboard => this;
+    public ISndDeferredActions Deferred => this;
+    public ISndTemplateAccess Template => this;
+    public ISndConsoleAccess ConsoleAccess => this;
+    public ISndStateMachineAccess StateMachines => this;
+    public ISndSaveOperations Save => this;
+    public ISndLifecycleOperations Lifecycle => this;
+    public ISndFileAccess FileAccess { get; }
+    public ISndArchiveFileAccess ArchiveFileAccess { get; }
+    public IStateMachineContext StateMachineContext => this;
 
     public List<string> SaveRequests { get; } = [];
 
@@ -148,47 +172,71 @@ internal sealed class StrategyTestContext : ISndContext
 
     public void RegisterTemplate(string key, SndMetaData template) => _templates[key] = template;
 
-    DataSourceNode ISndFileAccess.ReadFile(string path) => _dataSourceIo.ReadTree(path);
+    ISndSceneAccess IStateMachineContext.SceneAccess => throw new NotSupportedException();
 
-    void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite)
+    IBlackboard? IStateMachineContext.SessionBlackboard => null;
+}
+
+internal sealed class StrategyFileAccess(
+    IDataSourceIoGateway dataSourceIo,
+    IFileMetaAccess metaAccess,
+    DataSourceConverterRegistry converterRegistry) : ISndFileAccess
+{
+    private readonly IDataSourceIoGateway _dataSourceIo = dataSourceIo;
+    private readonly IFileMetaAccess _metaAccess = metaAccess;
+    private readonly DataSourceConverterRegistry _converterRegistry = converterRegistry;
+
+    public DataSourceNode ReadFile(string path) => _dataSourceIo.ReadTree(path);
+
+    public void WriteFile(string path, DataSourceNode node, bool overwrite)
         => _dataSourceIo.WriteTree(path, node, overwrite);
 
-    bool ISndFileAccess.FileExists(string path) => _metaAccess.FileExists(path);
+    public bool FileExists(string path) => _metaAccess.FileExists(path);
 
-    T ISndFileAccess.ReadObject<T>(string path)
+    public T ReadObject<T>(string path)
     {
         var node = _dataSourceIo.ReadTree(path);
         return _converterRegistry.Read<T>(node);
     }
 
-    void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite)
+    public void WriteObject<T>(string path, T value, bool overwrite)
     {
         var node = _converterRegistry.Write(value);
         _dataSourceIo.WriteTree(path, node, overwrite);
     }
+}
 
-    DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath)
+internal sealed class StrategyArchiveFileAccess(
+    IDataSourceIoGateway dataSourceIo,
+    IFileMetaAccess metaAccess,
+    DataSourceConverterRegistry converterRegistry) : ISndArchiveFileAccess
+{
+    private readonly IDataSourceIoGateway _dataSourceIo = dataSourceIo;
+    private readonly IFileMetaAccess _metaAccess = metaAccess;
+    private readonly DataSourceConverterRegistry _converterRegistry = converterRegistry;
+
+    public DataSourceNode ReadFile(string relativePath)
         => _dataSourceIo.ReadTree(ResolveExtraTestPath(relativePath));
 
-    void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite)
+    public void WriteFile(string relativePath, DataSourceNode node, bool overwrite)
         => _dataSourceIo.WriteTree(ResolveExtraTestPath(relativePath), node, overwrite);
 
-    bool ISndArchiveFileAccess.FileExists(string relativePath)
+    public bool FileExists(string relativePath)
         => _metaAccess.FileExists(ResolveExtraTestPath(relativePath));
 
-    T ISndArchiveFileAccess.ReadObject<T>(string relativePath)
+    public T ReadObject<T>(string relativePath)
     {
         var node = _dataSourceIo.ReadTree(ResolveExtraTestPath(relativePath));
         return _converterRegistry.Read<T>(node);
     }
 
-    void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite)
+    public void WriteObject<T>(string relativePath, T value, bool overwrite)
     {
         var node = _converterRegistry.Write(value);
         _dataSourceIo.WriteTree(ResolveExtraTestPath(relativePath), node, overwrite);
     }
 
-    void ISndArchiveFileAccess.DeleteFile(string relativePath)
+    public void DeleteFile(string relativePath)
     {
         var resolved = ResolveExtraTestPath(relativePath);
         if (!_metaAccess.FileExists(resolved))

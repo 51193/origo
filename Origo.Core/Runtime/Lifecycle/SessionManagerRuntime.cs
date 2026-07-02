@@ -47,7 +47,7 @@ internal sealed class SessionManagerRuntime
 
     /// <summary>
     ///     The progress-level blackboard, passed directly by <see cref="SessionManager" />
-    ///     to avoid depending on <see cref="IStateMachineContext.ProgressBlackboard" /> which
+    ///     to avoid depending on <see cref="IStateMachineContext.Blackboard.ProgressBlackboard" /> which
     ///     may be null before the context is fully wired (e.g. in tests or startup ordering).
     /// </summary>
     internal IBlackboard ProgressBlackboard { get; }

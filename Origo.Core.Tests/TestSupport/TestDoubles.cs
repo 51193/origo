@@ -539,8 +539,8 @@ internal static class TestFactory
 
         var ctx = new SndContext(new SndContextParameters(
             runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         return runtime.SessionManager.ForegroundSession
                ?? throw new InvalidOperationException("Foreground session was not created.");
@@ -575,7 +575,7 @@ internal static class TestFactory
         return new ProgressRun(
             systemRuntime,
             new ProgressParameters(saveId),
-            (IStateMachineContext)sndContext,
+            sndContext.StateMachineContext,
             sndContext);
     }
 

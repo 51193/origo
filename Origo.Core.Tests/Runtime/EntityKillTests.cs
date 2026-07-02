@@ -52,8 +52,8 @@ public class EntityKillTests
     public void ManualIterateAndRequestKillEntity_MarksAllAliveEntities()
     {
         var (ctx, _) = Setup();
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         var host = ((SessionRun)session).SceneHost;
@@ -85,8 +85,8 @@ public class EntityKillTests
     public void RequestKillAll_SkipsAlreadyPendingEntities()
     {
         var (ctx, _) = Setup();
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         var host = ((SessionRun)session).SceneHost;
@@ -129,8 +129,8 @@ public class EntityKillTests
     public void RequestKillAll_EmptyScene_DoesNotThrow()
     {
         var (ctx, _) = Setup();
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         var host = ((SessionRun)session).SceneHost;
@@ -181,19 +181,19 @@ public class EntityKillTests
         KillProbeStrategy.Events = [];
         try
         {
-            ctx.EnqueueBusinessDeferred(() =>
+            ctx.Deferred.EnqueueBusinessDeferred(() =>
             {
                 events.Add("business:mark_a");
                 session.RequestKillEntity("A");
             });
-            ctx.EnqueueBusinessDeferred(() =>
+            ctx.Deferred.EnqueueBusinessDeferred(() =>
             {
                 events.Add("business:mark_b");
                 session.RequestKillEntity("B");
             });
-            ctx.EnqueueBusinessDeferred(() => events.Add("business:after_marks"));
+            ctx.Deferred.EnqueueBusinessDeferred(() => events.Add("business:after_marks"));
 
-            ctx.FlushDeferredActionsForCurrentFrame();
+            ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
             Assert.Equal("business:mark_a", events[0]);
             Assert.Equal("business:mark_b", events[1]);
@@ -485,8 +485,8 @@ public class EntityKillTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         return (ctx, host, logger);
     }
 

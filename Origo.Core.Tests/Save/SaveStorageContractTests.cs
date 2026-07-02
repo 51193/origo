@@ -22,7 +22,7 @@ public class SaveStorageContractTests
     public void WriteSaveToCurrent_CreatesMarkerDuringWrite()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
 
         ctx.StorageService.WriteSavePayloadToCurrent(
@@ -36,7 +36,7 @@ public class SaveStorageContractTests
     public void ReadSavePayloadFromCurrent_WhenWriteInProgressMarkerExists_Throws()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         ctx.StorageService.WriteSavePayloadToCurrent(
             BuildPayload("test_level", "slot"));
@@ -51,7 +51,7 @@ public class SaveStorageContractTests
     public void ReadSavePayloadFromCurrent_WhenNoMarker_Succeeds()
     {
         var (ctx, _) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         ctx.StorageService.WriteSavePayloadToCurrent(
             BuildPayload("test_level", "slot"));
@@ -154,7 +154,7 @@ public class SaveStorageContractTests
     public void WriteSavePayloadToCurrent_WritesAllExpectedFiles()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
 
         ctx.StorageService.WriteSavePayloadToCurrent(
@@ -171,7 +171,7 @@ public class SaveStorageContractTests
     public void WriteSavePayloadToCurrentThenSnapshot_CreatesSnapshotDirectory()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         var payload = BuildPayload("test_level", "snap_save");
 
@@ -186,7 +186,7 @@ public class SaveStorageContractTests
     public void WriteSavePayloadToCurrentThenSnapshot_ThenReadBackRoundTrip()
     {
         var (ctx, _) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         var payload = BuildPayload("test_level", "round_save");
         payload.ProgressNode = BuildNode(
@@ -207,7 +207,7 @@ public class SaveStorageContractTests
     public void SnapshotCurrentToSave_WritesAllLevelFiles()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         ctx.StorageService.WriteSavePayloadToCurrent(
             BuildPayload("test_level", "pre_snap"));
@@ -224,7 +224,7 @@ public class SaveStorageContractTests
     public void WriteSavePayloadToCurrent_ValidPayload_WritesSuccessfully()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         var payload = BuildPayload("test_level", "valid_save");
 
@@ -238,7 +238,7 @@ public class SaveStorageContractTests
     public void WriteSavePayloadToCurrent_EmptySaveId_StillWrites()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         var payload = BuildPayload("test_level", string.Empty);
 
@@ -253,7 +253,7 @@ public class SaveStorageContractTests
     public void WriteSavePayloadToCurrentThenSnapshot_WithCustomMeta_WritesMetaMap()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         var payload = BuildPayload("test_level", "meta_save");
         payload.CustomMeta = new Dictionary<string, string>
@@ -275,7 +275,7 @@ public class SaveStorageContractTests
     public void WriteSavePayloadToCurrentThenSnapshot_WithoutCustomMeta_MetaMapNotCreated()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         var payload = BuildPayload("test_level", "no_meta_save");
         payload.CustomMeta = null;
@@ -325,7 +325,7 @@ public class SaveStorageContractTests
     public void EnumerateSaveIds_ReturnsCorrectList()
     {
         var (ctx, _) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
 
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(
@@ -357,7 +357,7 @@ public class SaveStorageContractTests
     public void DeleteCurrentDirectory_RemovesAllCurrentFiles()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         ctx.StorageService.WriteSavePayloadToCurrent(
             BuildPayload("test_level", "tmp_save"));
@@ -384,7 +384,7 @@ public class SaveStorageContractTests
     public void StaleWriteMarker_AfterDeleteCurrentDirectory_WriteThenSucceeds()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
 
         ctx.StorageService.WriteSavePayloadToCurrent(
@@ -396,7 +396,7 @@ public class SaveStorageContractTests
         ctx.StorageService.DeleteCurrentDirectory();
         Assert.False(fs.Exists("root/current/.write_in_progress"));
 
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         var ex = Record.Exception(() =>
             ctx.StorageService.WriteSavePayloadToCurrent(
@@ -408,7 +408,7 @@ public class SaveStorageContractTests
     public void RecoverFromStaleWriteMarker_CleanStateAfterRecovery()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
 
         ctx.StorageService.WriteSavePayloadToCurrent(
@@ -418,7 +418,7 @@ public class SaveStorageContractTests
 
         ctx.StorageService.DeleteCurrentDirectory();
 
-        ctx.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
+        ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         ctx.StorageService.WriteSavePayloadToCurrent(
             BuildPayload("test_level", "recovery_test"));

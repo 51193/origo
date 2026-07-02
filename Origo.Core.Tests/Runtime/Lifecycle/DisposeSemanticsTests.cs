@@ -92,8 +92,8 @@ public class DisposeSemanticsTests
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity"));
         bg.SessionBlackboard.SetValue("data", 42);
 
-        ctx.RequestSaveGame("explicit1");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("explicit1");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_explicit1/level_bg_level/snd_scene.json"));
         Assert.True(fs.Exists("root/save_explicit1/level_bg_level/session.json"));
@@ -116,8 +116,8 @@ public class DisposeSemanticsTests
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMetaWithIndex("Entity", _beforeSaveStrategyIndex));
 
         events.Clear();
-        ctx.RequestSaveGame("before_save_test");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("before_save_test");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Contains("BeforeSave:Entity", events);
     }
@@ -129,7 +129,7 @@ public class DisposeSemanticsTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        ctx.ProgressBlackboard!.SetValue("test_key", 42);
+        ctx.Blackboard.ProgressBlackboard!.SetValue("test_key", 42);
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.Dispose();
@@ -205,8 +205,8 @@ public class DisposeSemanticsTests
         bg.SessionBlackboard.SetValue("disposed_key", "disposed_val");
         bg.Dispose();
 
-        ctx.RequestSaveGame("after_dispose_save");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("after_dispose_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.False(fs.Exists("root/save_after_dispose_save/level_bg_level/snd_scene.json"));
     }
@@ -221,8 +221,8 @@ public class DisposeSemanticsTests
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DisposedEntity"));
         bg.Dispose();
 
-        ctx.RequestSaveGame("exclude_disposed");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("exclude_disposed");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.False(fs.Exists("root/save_exclude_disposed/level_bg_level/snd_scene.json"));
     }
@@ -293,7 +293,7 @@ public class DisposeSemanticsTests
     public void ProgressRun_AfterDispose_ProgressBlackboard_IsCleared()
     {
         var (ctx, _) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue("key", "value");
+        ctx.Blackboard.ProgressBlackboard!.SetValue("key", "value");
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.Dispose();
@@ -341,8 +341,8 @@ public class DisposeSemanticsTests
         ((SessionRun)fg).SceneHost.CreateEntity(CreateMeta("SavedEntity"));
         fg.SessionBlackboard.SetValue("save_key", "save_value");
 
-        ctx.RequestSaveGame("test_001");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("test_001");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_test_001/progress.json"));
         Assert.True(fs.Exists("root/save_test_001/level_test_level/snd_scene.json"));
@@ -375,10 +375,10 @@ public class DisposeSemanticsTests
     public void Save_ThenDispose_ThenContinue_ProgressBlackboardPreserved()
     {
         var (ctx, fs) = CreateForegroundContext();
-        ctx.ProgressBlackboard!.SetValue("global_score", 9001);
+        ctx.Blackboard.ProgressBlackboard!.SetValue("global_score", 9001);
 
-        ctx.RequestSaveGame("score_save");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("score_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.Dispose();
@@ -405,20 +405,20 @@ public class DisposeSemanticsTests
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("gen", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("GameEntity"));
 
-        ctx.RequestSaveGameAuto();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGameAuto();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         ctx.Runtime.SessionManager.DestroySession("gen");
-        ctx.RequestSwitchForegroundLevel("game");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
         var saveId = "after_switch";
-        ctx.RequestSaveGame(saveId);
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame(saveId);
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var payload = ctx.StorageService.ReadSavePayloadFromSnapshot(saveId, "game");
         Assert.Equal("game", payload.ActiveLevelId);
@@ -435,20 +435,20 @@ public class DisposeSemanticsTests
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("GameEntity2"));
         bg.SessionBlackboard.SetValue("map_seed", 42);
 
-        ctx.RequestSaveGameAuto();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGameAuto();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         ctx.Runtime.SessionManager.DestroySession("gen");
-        ctx.RequestSwitchForegroundLevel("game");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fgBefore = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fgBefore);
         Assert.Equal("game", fgBefore.LevelId);
 
         var saveId = "reload_test";
-        ctx.RequestSaveGame(saveId);
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame(saveId);
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.Dispose();

@@ -68,10 +68,10 @@ public class BackgroundSessionTests
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
-        ctx.ProgressBlackboard!.SetValue("shared_key", 42);
+        ctx.Blackboard.ProgressBlackboard!.SetValue("shared_key", 42);
 
         // Background session shares the same ProgressBlackboard via SndContext.
-        var (found, value) = ctx.ProgressBlackboard!.TryGet<int>("shared_key");
+        var (found, value) = ctx.Blackboard.ProgressBlackboard!.TryGet<int>("shared_key");
         Assert.True(found);
         Assert.Equal(42, value);
     }
@@ -82,9 +82,9 @@ public class BackgroundSessionTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
-        ctx.ProgressBlackboard!.SetValue("from_bg", "hello");
+        ctx.Blackboard.ProgressBlackboard!.SetValue("from_bg", "hello");
 
-        var (found, value) = ctx.ProgressBlackboard!.TryGet<string>("from_bg");
+        var (found, value) = ctx.Blackboard.ProgressBlackboard!.TryGet<string>("from_bg");
         Assert.True(found);
         Assert.Equal("hello", value);
     }
@@ -317,8 +317,8 @@ public class BackgroundSessionTests
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("boss"));
         bg.SessionBlackboard.SetValue("difficulty", "hard");
 
-        ctx.RequestSaveGame("persist_dungeon");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("persist_dungeon");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_persist_dungeon/level_dungeon/snd_scene.json"));
         Assert.True(fs.Exists("root/save_persist_dungeon/level_dungeon/session.json"));
@@ -405,14 +405,14 @@ public class BackgroundSessionTests
         bg.SessionBlackboard.SetValue("patrol_route", "north");
 
         // Write to ProgressBlackboard (shared with foreground).
-        ctx.ProgressBlackboard!.SetValue("generated_level_ready", true);
-        var (ready, _) = ctx.ProgressBlackboard!.TryGet<bool>("generated_level_ready");
+        ctx.Blackboard.ProgressBlackboard!.SetValue("generated_level_ready", true);
+        var (ready, _) = ctx.Blackboard.ProgressBlackboard!.TryGet<bool>("generated_level_ready");
         Assert.True(ready);
 
         // Save via ISndContext.
         events.Clear();
-        ctx.RequestSaveGame("full_workflow_save");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("full_workflow_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         Assert.Contains("BeforeSave:guard_01", events);
         Assert.Contains("BeforeSave:guard_02", events);
 
@@ -433,8 +433,8 @@ public class BackgroundSessionTests
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("soldier_01"));
         bg.SessionBlackboard.SetValue("hp", 100);
 
-        ctx.RequestSaveGame("ser_test");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("ser_test");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_ser_test/level_bg_level/snd_scene.json"));
         Assert.True(fs.Exists("root/save_ser_test/level_bg_level/session.json"));
@@ -462,8 +462,8 @@ public class BackgroundSessionTests
         ((SessionRun)source).SceneHost.CreateEntity(CreateMetaWithStrategy("guard_01"));
         source.SessionBlackboard.SetValue("alert", 5);
 
-        ctx.RequestSaveGame("src_save");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("src_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_src_save/level_src_level/session.json"));
         Assert.True(fs.Exists("root/save_src_save/level_src_level/snd_scene.json"));
@@ -479,8 +479,8 @@ public class BackgroundSessionTests
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("unit_b"));
         bg.SessionBlackboard.SetValue("score", 42);
 
-        ctx.RequestSaveGame("roundtrip");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("roundtrip");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_roundtrip/level_bg/snd_scene.json"));
         Assert.True(fs.Exists("root/save_roundtrip/level_bg/session.json"));
@@ -499,8 +499,8 @@ public class BackgroundSessionTests
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         bg.Dispose();
 
-        ctx.RequestSaveGame("after_dispose");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("after_dispose");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.False(fs.Exists("root/save_after_dispose/level_bg/snd_scene.json"));
     }
@@ -514,8 +514,8 @@ public class BackgroundSessionTests
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("entity"));
         bg.Dispose();
 
-        ctx.RequestSaveGame("after_dispose2");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("after_dispose2");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.False(fs.Exists("root/save_after_dispose2/level_bg/snd_scene.json"));
     }
@@ -536,8 +536,8 @@ public class BackgroundSessionTests
         ((SessionRun)source).SceneHost.CreateEntity(CreateMetaWithStrategy("npc_a"));
         source.SessionBlackboard.SetValue("difficulty", "hard");
 
-        ctx.RequestSaveGame("load_sess");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("load_sess");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_load_sess/level_src/session.json"));
         Assert.NotNull(source.FindByName("npc_a"));
@@ -616,7 +616,7 @@ public class BackgroundSessionTests
         Assert.True(payload.Levels.ContainsKey("bg_level"));
 
         // Session topology should be persisted in progress blackboard.
-        var (found, bgIds) = ctx.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
+        var (found, bgIds) = ctx.Blackboard.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found);
         Assert.Contains("bg1=bg_level", bgIds);
     }
@@ -666,7 +666,7 @@ public class BackgroundSessionTests
         var (ctx, _) = CreateForegroundContext();
 
         // Set a stale but valid topology value (includes foreground + stale background).
-        ctx.ProgressBlackboard!.SetValue(
+        ctx.Blackboard.ProgressBlackboard!.SetValue(
             WellKnownKeys.SessionTopology,
             $"{ISessionManager.ForegroundKey}=test_level=false,stale=old=false");
 
@@ -674,7 +674,7 @@ public class BackgroundSessionTests
         var payload = progressRun.BuildSavePayload("save_empty");
 
         // SessionTopology should always include foreground session.
-        var (found, bgIds) = ctx.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
+        var (found, bgIds) = ctx.Blackboard.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found);
         Assert.Contains($"{ISessionManager.ForegroundKey}=test_level=false", bgIds);
 
@@ -692,7 +692,7 @@ public class BackgroundSessionTests
         var progressRun = ctx.EnsureProgressRun();
         progressRun.BuildSavePayload("save_sync_test");
 
-        var (found, bgIds) = ctx.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
+        var (found, bgIds) = ctx.Blackboard.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found);
         Assert.Contains("bg_sync=bg_sync_level=true", bgIds);
         Assert.Contains("bg_nosync=bg_nosync_level=false", bgIds);

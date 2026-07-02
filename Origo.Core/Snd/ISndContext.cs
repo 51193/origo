@@ -1,32 +1,68 @@
 using Origo.Core.Abstractions.Snd;
+using Origo.Core.Abstractions.StateMachine;
 
 namespace Origo.Core.Snd;
 
 /// <summary>
-///     面向策略与游戏层的统一业务门面接口。
+///     面向策略与游戏层的统一业务门面接口。不继承任何角色接口，
+///     所有能力通过类型化 companion 属性访问。
 ///     <para>
-///         整个游戏由实体的策略模式驱动，包括 UI 按钮、场景控件等；因此此接口覆盖完整业务链路：
-///         三层黑板、存档/读档、控制台、关卡切换、会话管理、状态机等。
-///         不暴露框架内部实现细节（如场景宿主、会话生命周期编排、文件路径等），
-///         仅暴露策略钩子与游戏逻辑可合理调用的能力。
-///     </para>
-///     <para>
-///         遵循接口隔离原则（ISP），本接口按职责拆分为 9 个角色接口：
-///         <see cref="ISndBlackboardAccess" />（黑板访问）、
-///         <see cref="ISndDeferredActions" />（延迟动作队列）、
-///         <see cref="ISndTemplateAccess" />（模板克隆）、
-///         <see cref="ISndConsoleAccess" />（控制台）、
-///         <see cref="ISndStateMachineAccess" />（状态机）、
-///         <see cref="ISndSaveOperations" />（存档/关卡操作）、
-///         <see cref="ISndLifecycleOperations" />（生命周期入口）、
-///         <see cref="ISndFileAccess" />（静态资源文件访问）、
-///         <see cref="ISndArchiveFileAccess" />（存档内文件访问）。
-///         消费者可按需依赖窄接口，策略钩子保持全量 <c>ISndContext ctx</c> 参数。
-///         跨会话操作（如访问其他 session 的实体）应通过 <c>entity.OwningSession.SessionManager</c>。
+///         companion 属性按职责划分：
+///         <see cref="Blackboard" />（黑板访问）、
+///         <see cref="Deferred" />（延迟动作队列）、
+///         <see cref="Template" />（模板克隆）、
+///         <see cref="ConsoleAccess" />（控制台）、
+///         <see cref="StateMachines" />（状态机）、
+///         <see cref="Save" />（存档/关卡操作）、
+///         <see cref="Lifecycle" />（生命周期入口）、
+///         <see cref="FileAccess" />（静态资源文件访问）、
+///         <see cref="ArchiveFileAccess" />（存档内文件访问）、
+///         <see cref="StateMachineContext" />（状态机上下文）。
+///         策略钩子保持全量 <c>ISndContext ctx</c> 参数，
+///         通过 <c>ctx.Blackboard.Blackboard.SystemBlackboard</c> 等二级访问使用各项能力。
 ///     </para>
 /// </summary>
-public interface ISndContext : ISndBlackboardAccess, ISndDeferredActions,
-    ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
-    ISndLifecycleOperations, ISndFileAccess, ISndArchiveFileAccess
+public interface ISndContext
 {
+    /// <summary>启动流程：策略发现 → 别名/模板加载 → 入口存档加载。</summary>
+    void Bootstrap();
+
+    /// <summary>当前存档根路径。</summary>
+    string SaveRootPath { get; }
+
+    /// <summary>初始存档根路径。</summary>
+    string InitialSaveRootPath { get; }
+
+    /// <summary>入口配置路径。</summary>
+    string EntryConfigPath { get; }
+
+    /// <summary>系统级和流程级黑板访问。</summary>
+    ISndBlackboardAccess Blackboard { get; }
+
+    /// <summary>延迟动作队列。</summary>
+    ISndDeferredActions Deferred { get; }
+
+    /// <summary>模板克隆。</summary>
+    ISndTemplateAccess Template { get; }
+
+    /// <summary>控制台命令提交、处理与输出订阅。</summary>
+    ISndConsoleAccess ConsoleAccess { get; }
+
+    /// <summary>流程级状态机容器访问。</summary>
+    ISndStateMachineAccess StateMachines { get; }
+
+    /// <summary>存档读写与关卡切换。</summary>
+    ISndSaveOperations Save { get; }
+
+    /// <summary>存档生命周期入口：继续游戏、初始存档、主菜单入口。</summary>
+    ISndLifecycleOperations Lifecycle { get; }
+
+    /// <summary>静态资源文件访问（策略范围，路径相对于项目配置目录）。</summary>
+    ISndFileAccess FileAccess { get; }
+
+    /// <summary>存档内文件访问（路径相对于存档的 extra/ 子目录）。</summary>
+    ISndArchiveFileAccess ArchiveFileAccess { get; }
+
+    /// <summary>状态机上下文（黑板访问 + 延迟动作 + 会话/场景访问）。</summary>
+    IStateMachineContext StateMachineContext { get; }
 }

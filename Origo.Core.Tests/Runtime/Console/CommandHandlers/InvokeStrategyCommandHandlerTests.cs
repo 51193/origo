@@ -98,8 +98,8 @@ public class InvokeStrategyCommandHandlerTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var output = new CollectingConsoleOutputChannel();
         return (runtime, host, output);

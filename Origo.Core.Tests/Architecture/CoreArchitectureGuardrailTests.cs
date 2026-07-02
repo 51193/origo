@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
@@ -22,31 +23,53 @@ public class CoreArchitectureGuardrailTests
     }
 
     [Fact]
-    public void ISndContext_ShouldBeCompositionInterface_WithMinimalOwnDeclarations()
+    public void ISndContext_ShouldBeCompositionInterface_WithCompanionProperties()
     {
         var type = typeof(ISndContext);
-        var ownMethods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-        var ownProperties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
 
-        Assert.Empty(ownMethods);
-        Assert.Empty(ownProperties);
+        var companionProps = new[]
+        {
+            nameof(ISndContext.Blackboard),
+            nameof(ISndContext.Deferred),
+            nameof(ISndContext.Template),
+            nameof(ISndContext.ConsoleAccess),
+            nameof(ISndContext.StateMachines),
+            nameof(ISndContext.Save),
+            nameof(ISndContext.Lifecycle),
+            nameof(ISndContext.FileAccess),
+            nameof(ISndContext.ArchiveFileAccess),
+            nameof(ISndContext.StateMachineContext)
+        };
+
+        foreach (var prop in companionProps)
+            Assert.NotNull(type.GetProperty(prop));
+
+        var ownMethods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+            .Where(m => !m.IsSpecialName).ToArray();
+        Assert.Single(ownMethods);
+        Assert.Equal(nameof(ISndContext.Bootstrap), ownMethods[0].Name);
     }
 
     [Fact]
-    public void ISndContext_ShouldInheritAllRoleInterfaces()
+    public void ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties()
     {
         var type = typeof(ISndContext);
-        var interfaces = type.GetInterfaces();
 
-        Assert.Contains(typeof(ISndBlackboardAccess), interfaces);
-        Assert.Contains(typeof(ISndDeferredActions), interfaces);
-        Assert.Contains(typeof(ISndTemplateAccess), interfaces);
-        Assert.Contains(typeof(ISndConsoleAccess), interfaces);
-        Assert.Contains(typeof(ISndStateMachineAccess), interfaces);
-        Assert.Contains(typeof(ISndSaveOperations), interfaces);
-        Assert.Contains(typeof(ISndLifecycleOperations), interfaces);
-        Assert.Contains(typeof(ISndFileAccess), interfaces);
-        Assert.Contains(typeof(ISndArchiveFileAccess), interfaces);
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.Blackboard)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.Deferred)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.Template)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.ConsoleAccess)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.StateMachines)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.Save)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.Lifecycle)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.FileAccess)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.ArchiveFileAccess)));
+        Assert.NotNull(type.GetProperty(nameof(ISndContext.StateMachineContext)));
+
+        var interfaces = type.GetInterfaces();
+        Assert.DoesNotContain(typeof(ISndBlackboardAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndFileAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndArchiveFileAccess), interfaces);
     }
 
     [Fact]
@@ -79,15 +102,15 @@ public class CoreArchitectureGuardrailTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         fg.SessionBlackboard.SetValue("test_key", "test_value");
 
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/progress.json"));
     }
@@ -128,10 +151,10 @@ public class CoreArchitectureGuardrailTests
         ISndConsoleAccess console = ctx;
         Assert.False(console.TrySubmitConsoleCommand(""));
 
-        ctx.FlushDeferredActionsForCurrentFrame();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        ISndFileAccess fileAccess = ctx;
+        ISndFileAccess fileAccess = ctx.FileAccess;
         Assert.False(fileAccess.FileExists("nonexistent.json"));
         var writeNode = DataSourceNode.CreateObject();
         writeNode.Add("test_key", DataSourceNode.CreateString("hello"));
@@ -140,7 +163,7 @@ public class CoreArchitectureGuardrailTests
         var readNode = fileAccess.ReadFile("test.json");
         Assert.Equal("hello", readNode["test_key"].AsString());
 
-        ISndArchiveFileAccess archiveFileAccess = ctx;
+        ISndArchiveFileAccess archiveFileAccess = ctx.ArchiveFileAccess;
         Assert.False(archiveFileAccess.FileExists("nonexistent.json"));
         var archiveNode = DataSourceNode.CreateObject();
         archiveNode.Add("archive_key", DataSourceNode.CreateString("world"));
@@ -163,8 +186,8 @@ public class CoreArchitectureGuardrailTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
         bg.SessionBlackboard.SetValue("bg_key", "bg_value");
@@ -190,14 +213,14 @@ public class CoreArchitectureGuardrailTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        ctx.ProgressBlackboard!.SetValue("score", 99);
+        ctx.Blackboard.ProgressBlackboard!.SetValue("score", 99);
         ctx.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("level_data", "xyz");
 
-        ctx.RequestSaveGameAuto();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGameAuto();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         ISndSaveOperations saveOps = ctx;
         var saves = saveOps.ListSaves();
@@ -220,8 +243,8 @@ public class CoreArchitectureGuardrailTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
 
@@ -251,8 +274,8 @@ public class CoreArchitectureGuardrailTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         fs.SeedFile("entry.json", "[]");
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
         Assert.NotEmpty(ctx.Runtime.SessionManager.Keys);

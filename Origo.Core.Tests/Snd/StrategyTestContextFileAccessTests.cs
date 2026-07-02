@@ -14,7 +14,7 @@ public class StrategyTestContextFileAccessTests
 {
     private static ISndFileAccess AsFileAccess(StrategyTestContext ctx) =>
         // StrategyTestContext is internal; ISndContext provides ISndFileAccess.
-        (ISndFileAccess)(ISndContext)ctx;
+        ctx.FileAccess;
 
     // ── FileExists ──
 

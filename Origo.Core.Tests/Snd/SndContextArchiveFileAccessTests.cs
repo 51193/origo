@@ -30,7 +30,7 @@ public class SndContextArchiveFileAccessTests
         return new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
     }
 
-    private static ISndArchiveFileAccess AsFileAccess(SndContext ctx) => ctx;
+    private static ISndArchiveFileAccess AsFileAccess(SndContext ctx) => ctx.ArchiveFileAccess;
 
     // ── Correct path: ReadFile ──
 
@@ -254,7 +254,7 @@ public class SndContextArchiveFileAccessTests
     public void ArchiveFileAccess_IsAccessibleThroughRoleInterface()
     {
         var ctx = CreateContext(out _, out _);
-        var access = (ISndArchiveFileAccess)ctx;
+        var access = ctx.ArchiveFileAccess;
 
         Assert.False(access.FileExists("anything.json"));
     }
@@ -376,20 +376,20 @@ public class SndContextArchiveFileAccessTests
     {
         var ctx = CreateContext(out var fs, out _);
         fs.SeedFile("entry.json", "[]");
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var node = DataSourceNode.CreateObject();
         node.Add("game_data", DataSourceNode.CreateString("persisted"));
         AsFileAccess(ctx).WriteFile("game_state.json", node);
 
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/extra/game_state.json"));
 
-        ctx.RequestLoadGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestLoadGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var readBack = AsFileAccess(ctx).ReadFile("game_state.json");
         Assert.Equal("persisted", readBack["game_data"].AsString());

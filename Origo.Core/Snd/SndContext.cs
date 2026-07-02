@@ -28,7 +28,9 @@ namespace Origo.Core.Snd;
 ///         每层通过结构化参数构造，单向传递运行时能力。
 ///     </para>
 /// </summary>
-public sealed class SndContext : IStateMachineContext, ISndContext
+public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferredActions,
+    ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
+    ISndLifecycleOperations, IStateMachineContext
 {
     private readonly SystemRun _systemRun;
     private readonly List<ISaveMetaContributor> _saveMetaContributors = [];
@@ -64,6 +66,11 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         // Runtime 仅触达 SessionManager（再下查 SessionRun），不直达任何 SceneHost。
         // 该 provider 在构造时建立（不依赖 Bootstrap），延迟解析当前会话管理器。
         Runtime.SetSessionManagerProvider(() => _progressRun?.SessionManager ?? EmptySessionManager.Instance);
+
+        FileAccess = new SndContextFileAccess(DataSourceIo, MetaAccess, Runtime.SndWorld.ConverterRegistry);
+        ArchiveFileAccess = new SndContextArchiveFileAccess(
+            DataSourceIo, MetaAccess, Runtime.SndWorld.ConverterRegistry,
+            PathResolver, SaveRootPath, SavePathPolicy);
     }
 
     private readonly SndContextParameters _parameters;
@@ -239,16 +246,38 @@ public sealed class SndContext : IStateMachineContext, ISndContext
     public IBlackboard SystemBlackboard => _systemRun.SystemBlackboard;
     public IBlackboard? ProgressBlackboard => _progressRun?.ProgressBlackboard;
 
-    ISndSceneAccess IStateMachineContext.SceneAccess =>
+    public ISndSceneAccess SceneAccess =>
         _progressRun?.SessionManager.ForegroundSession is SessionRun fgSession
             ? fgSession.SceneHost
             : throw new InvalidOperationException("SceneAccess unavailable without a foreground session.");
 
-    IBlackboard? IStateMachineContext.SessionBlackboard => _progressRun?.SessionManager.ForegroundSession?.SessionBlackboard;
+    public IBlackboard? SessionBlackboard => _progressRun?.SessionManager.ForegroundSession?.SessionBlackboard;
 
     // ── Public API ─────────────────────────────────────────────────────
 
     public void EnqueueBusinessDeferred(Action action) => Runtime.EnqueueBusinessDeferred(action);
+
+    // ── Companion properties ────────────────────────────────────────────
+
+    public ISndBlackboardAccess Blackboard => this;
+
+    public ISndDeferredActions Deferred => this;
+
+    public ISndTemplateAccess Template => this;
+
+    public ISndConsoleAccess ConsoleAccess => this;
+
+    public ISndStateMachineAccess StateMachines => this;
+
+    public ISndSaveOperations Save => this;
+
+    public ISndLifecycleOperations Lifecycle => this;
+
+    public ISndFileAccess FileAccess { get; }
+
+    public ISndArchiveFileAccess ArchiveFileAccess { get; }
+
+    public IStateMachineContext StateMachineContext => this;
 
     // ── Internal helpers ──────────────────────────────────────────────
 
@@ -406,83 +435,5 @@ public sealed class SndContext : IStateMachineContext, ISndContext
         }
     }
 
-    // ── ISndFileAccess ─────────────────────────────────────────────────
-
-    DataSourceNode ISndFileAccess.ReadFile(string path)
-        => Runtime.SndWorld.DataSourceIo.ReadTree(path);
-
-    void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite)
-        => Runtime.SndWorld.DataSourceIo.WriteTree(path, node, overwrite);
-
-    bool ISndFileAccess.FileExists(string path)
-        => MetaAccess.FileExists(path);
-
-    T ISndFileAccess.ReadObject<T>(string path)
-    {
-        var node = Runtime.SndWorld.DataSourceIo.ReadTree(path);
-        return Runtime.SndWorld.ConverterRegistry.Read<T>(node);
-    }
-
-    void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite)
-    {
-        var node = Runtime.SndWorld.ConverterRegistry.Write(value);
-        Runtime.SndWorld.DataSourceIo.WriteTree(path, node, overwrite);
-    }
-
-    // ── ISndArchiveFileAccess ──────────────────────────────────────────
-
-    private static void RejectPathTraversal(string path)
-    {
-        if (path.Contains(".."))
-            throw new ArgumentException("Path traversal '..' is not allowed.", nameof(path));
-    }
-
-    private string ResolveExtraPath(string relativePath)
-    {
-        var currentRel = SavePathPolicy.GetCurrentDirectory();
-        var extraRel = SavePathPolicy.GetExtraDirectory(currentRel);
-        var fileRel = SavePathLayout.Combine(extraRel, relativePath);
-        return PathResolver.CombinePath(SaveRootPath, fileRel);
-    }
-
-    DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath)
-    {
-        RejectPathTraversal(relativePath);
-        return Runtime.SndWorld.DataSourceIo.ReadTree(ResolveExtraPath(relativePath));
-    }
-
-    void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite)
-    {
-        RejectPathTraversal(relativePath);
-        Runtime.SndWorld.DataSourceIo.WriteTree(ResolveExtraPath(relativePath), node, overwrite);
-    }
-
-    bool ISndArchiveFileAccess.FileExists(string relativePath)
-    {
-        RejectPathTraversal(relativePath);
-        return MetaAccess.FileExists(ResolveExtraPath(relativePath));
-    }
-
-    T ISndArchiveFileAccess.ReadObject<T>(string relativePath)
-    {
-        RejectPathTraversal(relativePath);
-        var node = Runtime.SndWorld.DataSourceIo.ReadTree(ResolveExtraPath(relativePath));
-        return Runtime.SndWorld.ConverterRegistry.Read<T>(node);
-    }
-
-    void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite)
-    {
-        RejectPathTraversal(relativePath);
-        var node = Runtime.SndWorld.ConverterRegistry.Write(value);
-        Runtime.SndWorld.DataSourceIo.WriteTree(ResolveExtraPath(relativePath), node, overwrite);
-    }
-
-    void ISndArchiveFileAccess.DeleteFile(string relativePath)
-    {
-        RejectPathTraversal(relativePath);
-        var absPath = ResolveExtraPath(relativePath);
-        if (!MetaAccess.FileExists(absPath))
-            throw new InvalidOperationException($"File not found in archive: '{relativePath}'.");
-        MetaAccess.Delete(absPath);
-    }
+    // ── End of file ──
 }

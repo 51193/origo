@@ -229,12 +229,12 @@ public class SessionManagerTests
         fs.SeedFile("root/current/level_game/session_state_machines.json",
             "{\"machines\":[]}");
 
-        ctx.RequestSaveGameAuto();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGameAuto();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
-        ctx.RequestSwitchForegroundLevel("game");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);

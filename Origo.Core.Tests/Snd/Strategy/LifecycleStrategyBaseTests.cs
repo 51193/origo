@@ -61,8 +61,8 @@ public class LifecycleStrategyBaseTests
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var entity = host.CreateEntity(new SndMetaData { Name = "e" });
 
@@ -84,8 +84,8 @@ public class LifecycleStrategyBaseTests
         var metaAccess2 = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver2 = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io2, metaAccess2, pathResolver2, "root", "res://initial", "res://entry/entry.json"));
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var entityA = host.CreateEntity(new SndMetaData { Name = "A" });
         host.CreateEntity(new SndMetaData { Name = "B" });
@@ -118,8 +118,8 @@ public class LifecycleStrategyBaseTests
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
         host.BindContext(ctx);
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var entity = host.CreateEntity(CreateMeta("E", [_killSelfIdx, _processCalledIdx]));
         ((IEntityLifecycle)entity).FireAfterSpawnHooks();

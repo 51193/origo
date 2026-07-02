@@ -89,7 +89,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
 
     /// <summary>
     ///     系统级黑板，生命周期跨越整个应用运行期。
-    ///     存储全局状态（如 continue slot ID、active save ID）。与 SndContext.SystemBlackboard 指向同一实例。
+    ///     存储全局状态（如 continue slot ID、active save ID）。与 SndContext.Blackboard.SystemBlackboard 指向同一实例。
     /// </summary>
     public IBlackboard SystemBlackboard { get; }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
@@ -14,12 +15,14 @@ namespace Origo.Core.Tests;
 
 /// <summary>
 ///     用于纯运行时单测场景的空上下文实现。
-///     变更操作（存读档、关卡切换等）显式失败以满足 §2.1 显式失败优先。
+///     变更操作（存读档、关卡切换等）显式失败以满足 fail-fast 原则。
 ///     静态成员是空对象模式的正常设计——忽略 CA1822 警告。
 /// </summary>
 #pragma warning disable CA1822
 #pragma warning disable IDE0060
-public sealed class NullSndContext : ISndContext
+public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDeferredActions,
+    ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
+    ISndLifecycleOperations, IStateMachineContext
 {
     public static readonly NullSndContext Instance = new();
     private static readonly IBlackboard _emptyBlackboard = new Blackboard.Blackboard();
@@ -27,6 +30,25 @@ public sealed class NullSndContext : ISndContext
     private NullSndContext()
     {
     }
+
+    public void Bootstrap()
+    {
+    }
+
+    public string SaveRootPath => string.Empty;
+    public string InitialSaveRootPath => string.Empty;
+    public string EntryConfigPath => string.Empty;
+
+    public ISndBlackboardAccess Blackboard => this;
+    public ISndDeferredActions Deferred => this;
+    public ISndTemplateAccess Template => this;
+    public ISndConsoleAccess ConsoleAccess => this;
+    public ISndStateMachineAccess StateMachines => this;
+    public ISndSaveOperations Save => this;
+    public ISndLifecycleOperations Lifecycle => this;
+    public ISndFileAccess FileAccess => NullFileAccess.Instance;
+    public ISndArchiveFileAccess ArchiveFileAccess => NullArchiveFileAccess.Instance;
+    public IStateMachineContext StateMachineContext => this;
 
     public IBlackboard SystemBlackboard => _emptyBlackboard;
     public IBlackboard? ProgressBlackboard => null;
@@ -93,34 +115,49 @@ public sealed class NullSndContext : ISndContext
     public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute) =>
         throw new InvalidOperationException("NullSndContext does not support save meta registration.");
 
-    DataSourceNode ISndFileAccess.ReadFile(string path) =>
-        throw new InvalidOperationException("NullSndContext does not support file access.");
+    ISndSceneAccess IStateMachineContext.SceneAccess =>
+        throw new InvalidOperationException("NullSndContext does not support scene access.");
 
-    void ISndFileAccess.WriteFile(string path, DataSourceNode node, bool overwrite) =>
-        throw new InvalidOperationException("NullSndContext does not support file access.");
+    IBlackboard? IStateMachineContext.SessionBlackboard => null;
 
-    bool ISndFileAccess.FileExists(string path) => false;
+    private sealed class NullFileAccess : ISndFileAccess
+    {
+        public static readonly NullFileAccess Instance = new();
 
-    T ISndFileAccess.ReadObject<T>(string path) =>
-        throw new InvalidOperationException("NullSndContext does not support file access.");
+        public DataSourceNode ReadFile(string path) =>
+            throw new InvalidOperationException("NullSndContext does not support file access.");
 
-    void ISndFileAccess.WriteObject<T>(string path, T value, bool overwrite) =>
-        throw new InvalidOperationException("NullSndContext does not support file access.");
+        public void WriteFile(string path, DataSourceNode node, bool overwrite) =>
+            throw new InvalidOperationException("NullSndContext does not support file access.");
 
-    DataSourceNode ISndArchiveFileAccess.ReadFile(string relativePath) =>
-        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+        public bool FileExists(string path) => false;
 
-    void ISndArchiveFileAccess.WriteFile(string relativePath, DataSourceNode node, bool overwrite) =>
-        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+        public T ReadObject<T>(string path) =>
+            throw new InvalidOperationException("NullSndContext does not support file access.");
 
-    bool ISndArchiveFileAccess.FileExists(string relativePath) => false;
+        public void WriteObject<T>(string path, T value, bool overwrite) =>
+            throw new InvalidOperationException("NullSndContext does not support file access.");
+    }
 
-    T ISndArchiveFileAccess.ReadObject<T>(string relativePath) =>
-        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+    private sealed class NullArchiveFileAccess : ISndArchiveFileAccess
+    {
+        public static readonly NullArchiveFileAccess Instance = new();
 
-    void ISndArchiveFileAccess.WriteObject<T>(string relativePath, T value, bool overwrite) =>
-        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+        public DataSourceNode ReadFile(string relativePath) =>
+            throw new InvalidOperationException("NullSndContext does not support archive file access.");
 
-    void ISndArchiveFileAccess.DeleteFile(string relativePath) =>
-        throw new InvalidOperationException("NullSndContext does not support archive file access.");
+        public void WriteFile(string relativePath, DataSourceNode node, bool overwrite) =>
+            throw new InvalidOperationException("NullSndContext does not support archive file access.");
+
+        public bool FileExists(string relativePath) => false;
+
+        public T ReadObject<T>(string relativePath) =>
+            throw new InvalidOperationException("NullSndContext does not support archive file access.");
+
+        public void WriteObject<T>(string relativePath, T value, bool overwrite) =>
+            throw new InvalidOperationException("NullSndContext does not support archive file access.");
+
+        public void DeleteFile(string relativePath) =>
+            throw new InvalidOperationException("NullSndContext does not support archive file access.");
+    }
 }

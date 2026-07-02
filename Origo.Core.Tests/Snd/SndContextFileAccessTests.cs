@@ -29,7 +29,7 @@ public class SndContextFileAccessTests
         return new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
     }
 
-    private static ISndFileAccess AsFileAccess(SndContext ctx) => ctx;
+    private static ISndFileAccess AsFileAccess(SndContext ctx) => ctx.FileAccess;
 
     // ── Correct path: ReadFile ──
 
@@ -338,7 +338,7 @@ public class SndContextFileAccessTests
         var ctx = CreateContext(out var fs, out _);
         fs.SeedFile("data/sample.json", """{"x":1}""");
 
-        ISndFileAccess fa = ctx;
+        ISndFileAccess fa = ctx.FileAccess;
         Assert.True(fa.FileExists("data/sample.json"));
         var node = fa.ReadFile("data/sample.json");
         Assert.Equal(1, node["x"].As<int>());

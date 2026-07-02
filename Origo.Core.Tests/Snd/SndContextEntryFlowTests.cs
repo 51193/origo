@@ -32,10 +32,10 @@ public class SndContextEntryFlowTests
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        Assert.NotNull(ctx.ProgressBlackboard);
+        Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
         Assert.NotNull(host.FindByName("EntryNpc"));
     }
@@ -63,8 +63,8 @@ public class SndContextEntryFlowTests
         });
         Assert.NotNull(host.FindByName("legacy"));
 
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Null(host.FindByName("legacy"));
     }

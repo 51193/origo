@@ -30,8 +30,8 @@ public class FrontSession_CreationWithCorrectFlagTests
         SetupForegroundSession(ctx);
 
         ctx.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("test", 42);
-        ctx.RequestSaveGame("fg_test");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("fg_test");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_fg_test/progress.json"));
         Assert.True(ctx.Runtime.SessionManager.ForegroundSession!.IsFrontSession);

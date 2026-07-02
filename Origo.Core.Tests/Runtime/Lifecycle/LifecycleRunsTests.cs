@@ -242,8 +242,8 @@ public class LifecycleRunsTests
         var fg = progressRun.SessionManager.ForegroundSession!;
         fg.SessionBlackboard.SetValue("score", 42);
 
-        sndContext.RequestSaveGame("roundtrip_001");
-        sndContext.FlushDeferredActionsForCurrentFrame();
+        sndContext.Save.RequestSaveGame("roundtrip_001");
+        sndContext.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_roundtrip_001/level_level1/session.json"));
 

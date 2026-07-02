@@ -25,7 +25,7 @@ public class SndContextBootstrapTests
         fs.SeedFile("entry.json", "[]");
 
         ctx.Bootstrap();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
     }
@@ -72,9 +72,9 @@ public class SndContextBootstrapTests
         fs.SeedFile("entry.json", "[]");
 
         ctx.Bootstrap();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var clone = ctx.CloneTemplate("hero", "MyHero");
+        var clone = ctx.Template.CloneTemplate("hero", "MyHero");
         Assert.Equal("MyHero", clone.Name);
     }
 
@@ -85,7 +85,7 @@ public class SndContextBootstrapTests
 
         ctx.Bootstrap();
 
-        Assert.ThrowsAny<Exception>(() => ctx.FlushDeferredActionsForCurrentFrame());
+        Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
     }
 
     [Fact]
@@ -117,9 +117,9 @@ public class SndContextBootstrapTests
         var ctx = CreateBootstrapContext(out var fs);
         fs.SeedFile("entry.json", "[]");
         ctx.Bootstrap();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var smCtx = (IStateMachineContext)ctx;
+        var smCtx = ctx.StateMachineContext;
         Assert.NotNull(smCtx.SceneAccess);
     }
 
@@ -129,9 +129,9 @@ public class SndContextBootstrapTests
         var ctx = CreateBootstrapContext(out var fs);
         fs.SeedFile("entry.json", "[]");
         ctx.Bootstrap();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var smCtx = (IStateMachineContext)ctx;
+        var smCtx = ctx.StateMachineContext;
         Assert.NotNull(smCtx.SystemBlackboard);
     }
 
@@ -141,9 +141,9 @@ public class SndContextBootstrapTests
         var ctx = CreateBootstrapContext(out var fs);
         fs.SeedFile("entry.json", "[]");
         ctx.Bootstrap();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var smCtx = (IStateMachineContext)ctx;
+        var smCtx = ctx.StateMachineContext;
         Assert.NotNull(smCtx.ProgressBlackboard);
     }
 
@@ -153,21 +153,21 @@ public class SndContextBootstrapTests
     public void CloneTemplate_NullKey_ThrowsArgumentException()
     {
         var ctx = CreateBootstrapContext(out _);
-        Assert.Throws<ArgumentException>(() => ctx.CloneTemplate(null!));
+        Assert.Throws<ArgumentException>(() => ctx.Template.CloneTemplate(null!));
     }
 
     [Fact]
     public void CloneTemplate_WhitespaceKey_ThrowsArgumentException()
     {
         var ctx = CreateBootstrapContext(out _);
-        Assert.Throws<ArgumentException>(() => ctx.CloneTemplate("   "));
+        Assert.Throws<ArgumentException>(() => ctx.Template.CloneTemplate("   "));
     }
 
     [Fact]
     public void CloneTemplate_NonExistingKey_Throws()
     {
         var ctx = CreateBootstrapContext(out _);
-        Assert.Throws<InvalidOperationException>(() => ctx.CloneTemplate("does_not_exist"));
+        Assert.Throws<InvalidOperationException>(() => ctx.Template.CloneTemplate("does_not_exist"));
     }
 
     // ── Helpers ────────────────────────────────────────────────────────

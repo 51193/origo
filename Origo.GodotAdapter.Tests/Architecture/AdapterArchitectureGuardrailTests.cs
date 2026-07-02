@@ -52,10 +52,10 @@ public class AdapterArchitectureGuardrailTests
         ISndConsoleAccess console = ctx;
         Assert.False(console.TrySubmitConsoleCommand(""));
 
-        ISndFileAccess fileAccess = ctx;
+        ISndFileAccess fileAccess = ctx.FileAccess;
         Assert.False(fileAccess.FileExists("nonexistent.json"));
 
-        ISndArchiveFileAccess archiveFileAccess = ctx;
+        ISndArchiveFileAccess archiveFileAccess = ctx.ArchiveFileAccess;
         Assert.False(archiveFileAccess.FileExists("nonexistent.json"));
     }
 
@@ -71,8 +71,8 @@ public class AdapterArchitectureGuardrailTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_sess", "bg_level");
         bg.SessionBlackboard.SetValue("bg_data", "bg_value");

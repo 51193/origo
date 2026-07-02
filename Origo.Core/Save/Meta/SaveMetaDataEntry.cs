@@ -4,7 +4,7 @@ namespace Origo.Core.Save.Meta;
 
 /// <summary>
 ///     存档槽位条目，包含槽位 ID 与关联的展示用元数据键值对。
-///     由 <see cref="Origo.Core.Snd.ISndContext.ListSavesWithMetaData" /> 返回。
+///     由 <see cref="Origo.Core.Snd.ISndContext.Save.ListSavesWithMetaData" /> 返回。
 /// </summary>
 public sealed class SaveMetaDataEntry
 {

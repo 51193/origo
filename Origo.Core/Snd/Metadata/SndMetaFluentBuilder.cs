@@ -23,7 +23,7 @@ public sealed class SndMetaFluentBuilder
 
     /// <summary>
     ///     Create a builder wrapping an existing <see cref="SndMetaData" /> (e.g. from
-    ///     <c>ctx.CloneTemplate</c>), allowing additional data to be set fluently.
+    ///     <c>ctx.Template.CloneTemplate</c>), allowing additional data to be set fluently.
     /// </summary>
     public static SndMetaFluentBuilder From(SndMetaData meta) => new(meta);
 

@@ -512,11 +512,11 @@ public class ActiveStrategyTestScenarioTests
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
         {
-            ctx.EnqueueBusinessDeferred(() => { });
+            ctx.Deferred.EnqueueBusinessDeferred(() => { });
             var (found, count) = entity.TryGetData<int>("defer_count");
             var times = found ? count : 1;
             for (var i = 1; i < times; i++)
-                ctx.EnqueueBusinessDeferred(() => { });
+                ctx.Deferred.EnqueueBusinessDeferred(() => { });
             return null;
         }
     }
@@ -526,7 +526,7 @@ public class ActiveStrategyTestScenarioTests
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
         {
-            ctx.TrySubmitConsoleCommand("test_command arg1");
+            ctx.ConsoleAccess.TrySubmitConsoleCommand("test_command arg1");
             return null;
         }
     }
@@ -538,15 +538,15 @@ public class ActiveStrategyTestScenarioTests
         {
             var (found, saveId) = entity.TryGetData<string>("save_id");
             if (found && saveId is not null)
-                ctx.RequestSaveGameAuto(saveId);
+                ctx.Save.RequestSaveGameAuto(saveId);
 
             var (loadFound, loadId) = entity.TryGetData<string>("load_id");
             if (loadFound && loadId is not null)
-                ctx.RequestLoadGame(loadId);
+                ctx.Save.RequestLoadGame(loadId);
 
             var (switchFound, switchId) = entity.TryGetData<string>("switch_id");
             if (switchFound && switchId is not null)
-                ctx.RequestSwitchForegroundLevel(switchId);
+                ctx.Save.RequestSwitchForegroundLevel(switchId);
 
             return null;
         }
@@ -557,7 +557,7 @@ public class ActiveStrategyTestScenarioTests
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
         {
-            var clone = ctx.CloneTemplate("my_tmpl", "ClonedEntity");
+            var clone = ctx.Template.CloneTemplate("my_tmpl", "ClonedEntity");
             if (clone.DataMetaData is null)
                 return "no_data";
 
@@ -593,10 +593,10 @@ public class ActiveStrategyTestScenarioTests
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input)
         {
             var parts = new List<string>();
-            AppendFromBb(ctx.SystemBlackboard, parts, "system_key");
-            AppendFromBb(ctx.SystemBlackboard, parts, "a");
-            AppendFromBb(ctx.ProgressBlackboard!, parts, "progress_key");
-            AppendFromBb(ctx.ProgressBlackboard!, parts, "b");
+            AppendFromBb(ctx.Blackboard.SystemBlackboard, parts, "system_key");
+            AppendFromBb(ctx.Blackboard.SystemBlackboard, parts, "a");
+            AppendFromBb(ctx.Blackboard.ProgressBlackboard!, parts, "progress_key");
+            AppendFromBb(ctx.Blackboard.ProgressBlackboard!, parts, "b");
             AppendFromBb(entity.OwningSession.SessionBlackboard, parts, "session_key");
             AppendFromBb(entity.OwningSession.SessionBlackboard, parts, "c");
             return string.Join(",", parts);

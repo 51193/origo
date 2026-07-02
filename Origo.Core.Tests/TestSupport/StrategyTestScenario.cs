@@ -36,9 +36,9 @@ public abstract class BaseStrategyTestHarness
 
     public ISndEntity Entity { get; }
 
-    public IBlackboard SystemBlackboard => Context.SystemBlackboard;
+    public IBlackboard SystemBlackboard => Context.Blackboard.SystemBlackboard;
 
-    public IBlackboard ProgressBlackboard => Context.ProgressBlackboard;
+    public IBlackboard ProgressBlackboard => Context.Blackboard.ProgressBlackboard!;
 
     public IBlackboard SessionBlackboard => Context.SessionManager.ForegroundSession!.SessionBlackboard;
 
@@ -77,7 +77,7 @@ public sealed class StrategyTestHarness : BaseStrategyTestHarness
     public void RunFrame(double delta = 0.016)
     {
         Strategy.Process(Entity, delta, Context);
-        Context.FlushDeferredActionsForCurrentFrame();
+        Context.Deferred.FlushDeferredActionsForCurrentFrame();
     }
 
     public void RunFrames(int count, double delta = 0.016)
@@ -120,7 +120,7 @@ public sealed class ActiveStrategyTestHarness : BaseStrategyTestHarness
 
     public object? Invoke(object? input = null) => Strategy.Invoke(Entity, Context, input);
 
-    public void FlushDeferredActions() => Context.FlushDeferredActionsForCurrentFrame();
+    public void FlushDeferredActions() => Context.Deferred.FlushDeferredActionsForCurrentFrame();
 
     public object? InvokeViaEntity(object? input = null) => Entity.InvokeStrategy(_strategyIndex, input);
 }

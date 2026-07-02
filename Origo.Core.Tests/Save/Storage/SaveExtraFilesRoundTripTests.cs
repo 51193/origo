@@ -141,7 +141,7 @@ public class SaveExtraFilesRoundTripTests
     public void ExtraFiles_FullSaveLoadRoundTrip_PreservesMultipleFiles()
     {
         var ctx = CreateContextWithEntry(out var fs);
-        var archive = (ISndArchiveFileAccess)ctx;
+        var archive = ctx.ArchiveFileAccess;
 
         var objNode = DataSourceNode.CreateObject()
             .Add("game_data", DataSourceNode.CreateString("persisted"));
@@ -154,14 +154,14 @@ public class SaveExtraFilesRoundTripTests
             .Add(DataSourceNode.CreateNumber(2));
         archive.WriteFile("sequence.json", arrNode);
 
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/extra/state.json"), "state.json should be in snapshot");
         Assert.True(fs.Exists("root/save_slot_01/extra/sequence.json"), "sequence.json should be in snapshot");
 
-        ctx.RequestLoadGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestLoadGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(archive.FileExists("state.json"), "state.json should exist after reload");
         var readObj = archive.ReadFile("state.json");
@@ -177,19 +177,19 @@ public class SaveExtraFilesRoundTripTests
     public void ExtraFiles_SaveLoadRoundTrip_SubdirectoryPreserved()
     {
         var ctx = CreateContextWithEntry(out var fs);
-        var archive = (ISndArchiveFileAccess)ctx;
+        var archive = ctx.ArchiveFileAccess;
 
         var node = DataSourceNode.CreateObject()
             .Add("data", DataSourceNode.CreateString("nested_content"));
         archive.WriteFile("sub/dir/file.json", node);
 
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/extra/sub/dir/file.json"));
 
-        ctx.RequestLoadGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestLoadGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var readBack = archive.ReadFile("sub/dir/file.json");
         Assert.Equal("nested_content", readBack["data"].AsString());
@@ -199,22 +199,22 @@ public class SaveExtraFilesRoundTripTests
     public void ExtraFiles_SaveTwice_SameSlot_HasLatestContent()
     {
         var ctx = CreateContextWithEntry(out _);
-        var archive = (ISndArchiveFileAccess)ctx;
+        var archive = ctx.ArchiveFileAccess;
 
         var v1 = DataSourceNode.CreateObject()
             .Add("version", DataSourceNode.CreateNumber(1));
         archive.WriteFile("data.json", v1);
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var v2 = DataSourceNode.CreateObject()
             .Add("version", DataSourceNode.CreateNumber(2));
         archive.WriteFile("data.json", v2);
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        ctx.RequestLoadGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestLoadGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var readBack = archive.ReadFile("data.json");
         Assert.Equal(2, readBack["version"].As<int>());
@@ -224,20 +224,20 @@ public class SaveExtraFilesRoundTripTests
     public void ExtraFiles_DifferentContent_DifferentCombinedHash()
     {
         var ctx = CreateContextWithEntry(out var fs);
-        var archive = (ISndArchiveFileAccess)ctx;
+        var archive = ctx.ArchiveFileAccess;
 
         var node = DataSourceNode.CreateObject()
             .Add("data", DataSourceNode.CreateString("v1"));
         archive.WriteFile("state.json", node);
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var sha1 = fs.ReadAllText("root/save_slot_01/.payload.sha");
 
         archive.WriteFile("state.json",
             DataSourceNode.CreateObject().Add("data", DataSourceNode.CreateString("v2")));
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var sha2 = fs.ReadAllText("root/save_slot_01/.payload.sha");
 
@@ -248,18 +248,18 @@ public class SaveExtraFilesRoundTripTests
     public void ExtraFiles_LoadWithoutExtra_DoesNotThrowAndPreviousStateCleared()
     {
         var ctx = CreateContextWithEntry(out var fs);
-        var archive = (ISndArchiveFileAccess)ctx;
+        var archive = ctx.ArchiveFileAccess;
 
         var node = DataSourceNode.CreateObject()
             .Add("marker", DataSourceNode.CreateString("before_save"));
         archive.WriteFile("temp.json", node);
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/extra/temp.json"));
 
-        ctx.RequestLoadGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestLoadGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(archive.FileExists("temp.json"));
     }
@@ -268,17 +268,17 @@ public class SaveExtraFilesRoundTripTests
     public void ExtraFiles_SaveLoadRoundTrip_TypeDataRoundTrip_PreservesNumbers()
     {
         var ctx = CreateContextWithEntry(out _);
-        var archive = (ISndArchiveFileAccess)ctx;
+        var archive = ctx.ArchiveFileAccess;
 
         archive.WriteObject("numbers.json", 42);
         archive.WriteObject("flag.json", true);
         archive.WriteObject("text.json", "hello");
 
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        ctx.RequestLoadGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestLoadGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Equal(42, archive.ReadObject<int>("numbers.json"));
         Assert.True(archive.ReadObject<bool>("flag.json"));
@@ -289,7 +289,7 @@ public class SaveExtraFilesRoundTripTests
     public void ExtraFiles_DeleteFileThenSave_FileNotInSnapshot()
     {
         var ctx = CreateContextWithEntry(out var fs);
-        var archive = (ISndArchiveFileAccess)ctx;
+        var archive = ctx.ArchiveFileAccess;
 
         var node = DataSourceNode.CreateObject()
             .Add("tmp", DataSourceNode.CreateString("to_delete"));
@@ -297,8 +297,8 @@ public class SaveExtraFilesRoundTripTests
 
         archive.DeleteFile("remove_me.json");
 
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.False(fs.Exists("root/save_slot_01/extra/remove_me.json"));
     }
@@ -459,8 +459,8 @@ public class SaveExtraFilesRoundTripTests
         var runtime = TestFactory.CreateRuntime(logger, host, tm, bb, fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
         fs.SeedFile("entry.json", "[]");
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         return ctx;
     }
 }

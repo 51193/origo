@@ -48,7 +48,7 @@ public class SndContextWorkflowTests
     public void ListSaves_ReturnsEmptyWhenNoSaves()
     {
         var ctx = CreateContext(out _, out _);
-        var saves = ctx.ListSaves();
+        var saves = ctx.Save.ListSaves();
         Assert.Empty(saves);
     }
 
@@ -57,7 +57,7 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContext(out var fs, out _);
         SeedSaveSnapshot(fs, "root", "abc", "default");
-        var saves = ctx.ListSaves();
+        var saves = ctx.Save.ListSaves();
         Assert.Contains("abc", saves);
     }
 
@@ -67,14 +67,14 @@ public class SndContextWorkflowTests
     public void RequestSaveGame_ThrowsOnEmptyId()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Throws<ArgumentException>(() => ctx.RequestSaveGame(""));
+        Assert.Throws<ArgumentException>(() => ctx.Save.RequestSaveGame(""));
     }
 
     [Fact]
     public void RequestSaveGame_ThrowsOnNullId()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Throws<ArgumentException>(() => ctx.RequestSaveGame(null!));
+        Assert.Throws<ArgumentException>(() => ctx.Save.RequestSaveGame(null!));
     }
 
     [Fact]
@@ -83,11 +83,11 @@ public class SndContextWorkflowTests
         var ctx = CreateContext(out var fs, out _);
         SetupProgressRun(ctx, fs);
 
-        ctx.RequestSaveGame("slot_01");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSaveGame("slot_01");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/progress.json"));
-        var (found, saveId) = ctx.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
+        var (found, saveId) = ctx.Blackboard.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
         Assert.True(found);
         Assert.Equal("slot_01", saveId);
     }
@@ -98,11 +98,11 @@ public class SndContextWorkflowTests
         var ctx = CreateContext(out var fs, out _);
         SetupProgressRun(ctx, fs);
 
-        ctx.RequestSaveGame("slot_02");
+        ctx.Save.RequestSaveGame("slot_02");
         // Before flush, count should be > 0
-        Assert.True(ctx.GetPendingPersistenceRequestCount() > 0);
-        ctx.FlushDeferredActionsForCurrentFrame();
-        Assert.Equal(0, ctx.GetPendingPersistenceRequestCount());
+        Assert.True(ctx.Deferred.GetPendingPersistenceRequestCount() > 0);
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
     // ── RequestSaveGameAuto ──
@@ -113,9 +113,9 @@ public class SndContextWorkflowTests
         var ctx = CreateContext(out var fs, out _);
         SetupProgressRun(ctx, fs);
 
-        var effectiveId = ctx.RequestSaveGameAuto("my_auto");
+        var effectiveId = ctx.Save.RequestSaveGameAuto("my_auto");
         Assert.Equal("my_auto", effectiveId);
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         Assert.True(fs.Exists("root/save_my_auto/progress.json"));
     }
 
@@ -125,11 +125,11 @@ public class SndContextWorkflowTests
         var ctx = CreateContext(out var fs, out _);
         SetupProgressRun(ctx, fs);
 
-        var effectiveId = ctx.RequestSaveGameAuto();
+        var effectiveId = ctx.Save.RequestSaveGameAuto();
         Assert.False(string.IsNullOrWhiteSpace(effectiveId));
         // Should be parseable as a long (unix timestamp ms)
         Assert.True(long.TryParse(effectiveId, out _));
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
     }
 
     // ── RequestLoadGame ──
@@ -138,14 +138,14 @@ public class SndContextWorkflowTests
     public void RequestLoadGame_ThrowsOnEmptyId()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Throws<ArgumentException>(() => ctx.RequestLoadGame(""));
+        Assert.Throws<ArgumentException>(() => ctx.Save.RequestLoadGame(""));
     }
 
     [Fact]
     public void RequestLoadGame_ThrowsOnNullId()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Throws<ArgumentException>(() => ctx.RequestLoadGame(null!));
+        Assert.Throws<ArgumentException>(() => ctx.Save.RequestLoadGame(null!));
     }
 
     [Fact]
@@ -154,12 +154,12 @@ public class SndContextWorkflowTests
         var ctx = CreateContext(out var fs, out _);
         SeedSaveSnapshot(fs, "root", "save1", "default");
 
-        ctx.RequestLoadGame("save1");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestLoadGame("save1");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        Assert.NotNull(ctx.ProgressBlackboard);
+        Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
-        var (found, saveId) = ctx.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
+        var (found, saveId) = ctx.Blackboard.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
         Assert.True(found);
         Assert.Equal("save1", saveId);
     }
@@ -170,10 +170,10 @@ public class SndContextWorkflowTests
         var ctx = CreateContext(out var fs, out _);
         SeedSaveSnapshot(fs, "root", "save2", "default");
 
-        ctx.RequestLoadGame("save2");
-        Assert.True(ctx.GetPendingPersistenceRequestCount() > 0);
-        ctx.FlushDeferredActionsForCurrentFrame();
-        Assert.Equal(0, ctx.GetPendingPersistenceRequestCount());
+        ctx.Save.RequestLoadGame("save2");
+        Assert.True(ctx.Deferred.GetPendingPersistenceRequestCount() > 0);
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
     // ── HasContinueData / SetContinueTarget / RequestContinueGame ──
@@ -182,22 +182,22 @@ public class SndContextWorkflowTests
     public void HasContinueData_FalseWhenNoTargetSet()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.False(ctx.HasContinueData());
+        Assert.False(ctx.Lifecycle.HasContinueData());
     }
 
     [Fact]
     public void SetContinueTarget_MakesHasContinueDataTrue()
     {
         var ctx = CreateContext(out _, out _);
-        ctx.SetContinueTarget("slot_x");
-        Assert.True(ctx.HasContinueData());
+        ctx.Save.SetContinueTarget("slot_x");
+        Assert.True(ctx.Lifecycle.HasContinueData());
     }
 
     [Fact]
     public void RequestContinueGame_ReturnsFalseWhenNoContinue()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.False(ctx.RequestContinueGame());
+        Assert.False(ctx.Lifecycle.RequestContinueGame());
     }
 
     [Fact]
@@ -205,12 +205,12 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContext(out var fs, out _);
         SeedSaveSnapshot(fs, "root", "cont", "default");
-        ctx.SetContinueTarget("cont");
+        ctx.Save.SetContinueTarget("cont");
 
-        Assert.True(ctx.RequestContinueGame());
-        ctx.FlushDeferredActionsForCurrentFrame();
+        Assert.True(ctx.Lifecycle.RequestContinueGame());
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        Assert.NotNull(ctx.ProgressBlackboard);
+        Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
     }
 
@@ -222,13 +222,13 @@ public class SndContextWorkflowTests
         var ctx = CreateContext(out var fs, out _);
         SeedInitialSave(fs, "res://initial");
 
-        ctx.RequestLoadInitialSave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadInitialSave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        Assert.NotNull(ctx.ProgressBlackboard);
+        Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
         // After initial load, active save id should be cleared
-        var (found, saveId) = ctx.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
+        var (found, saveId) = ctx.Blackboard.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
         Assert.True(found);
         Assert.Equal(string.Empty, saveId);
     }
@@ -239,7 +239,7 @@ public class SndContextWorkflowTests
     public void RequestSwitchForegroundLevel_ThrowsOnEmptyId()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Throws<ArgumentException>(() => ctx.RequestSwitchForegroundLevel(""));
+        Assert.Throws<ArgumentException>(() => ctx.Save.RequestSwitchForegroundLevel(""));
     }
 
     [Fact]
@@ -253,8 +253,8 @@ public class SndContextWorkflowTests
         fs.SeedFile("root/current/level_b/session.json", "{}");
         fs.SeedFile("root/current/level_b/session_state_machines.json", """{"machines":[]}""");
 
-        ctx.RequestSwitchForegroundLevel("b");
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Save.RequestSwitchForegroundLevel("b");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Equal("b", ctx.Runtime.SessionManager.ForegroundSession?.LevelId);
     }
@@ -276,7 +276,7 @@ public class SndContextWorkflowTests
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
-        var cloned = ctx.CloneTemplate("tmpl_a", "NewName");
+        var cloned = ctx.Template.CloneTemplate("tmpl_a", "NewName");
 
         Assert.Equal("NewName", cloned.Name);
     }
@@ -296,7 +296,7 @@ public class SndContextWorkflowTests
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
-        var cloned = ctx.CloneTemplate("tmpl_b");
+        var cloned = ctx.Template.CloneTemplate("tmpl_b");
         Assert.Equal("KeepMe", cloned.Name);
     }
 
@@ -320,22 +320,22 @@ public class SndContextWorkflowTests
     public void TrySubmitConsoleCommand_ReturnsFalseForEmptyCommand()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.False(ctx.TrySubmitConsoleCommand(""));
-        Assert.False(ctx.TrySubmitConsoleCommand("   "));
+        Assert.False(ctx.ConsoleAccess.TrySubmitConsoleCommand(""));
+        Assert.False(ctx.ConsoleAccess.TrySubmitConsoleCommand("   "));
     }
 
     [Fact]
     public void TrySubmitConsoleCommand_ReturnsTrueWhenConsoleInputExists()
     {
         var ctx = CreateContextWithConsole(out _, out _, out _);
-        Assert.True(ctx.TrySubmitConsoleCommand("snd_count"));
+        Assert.True(ctx.ConsoleAccess.TrySubmitConsoleCommand("snd_count"));
     }
 
     [Fact]
     public void TrySubmitConsoleCommand_ReturnsFalseWhenNoConsoleInput()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.False(ctx.TrySubmitConsoleCommand("snd_count"));
+        Assert.False(ctx.ConsoleAccess.TrySubmitConsoleCommand("snd_count"));
     }
 
     [Fact]
@@ -345,8 +345,8 @@ public class SndContextWorkflowTests
         var received = new List<string>();
         output.Subscribe(line => received.Add(line));
 
-        ctx.TrySubmitConsoleCommand("snd_count");
-        ctx.ProcessConsolePending();
+        ctx.ConsoleAccess.TrySubmitConsoleCommand("snd_count");
+        ctx.ConsoleAccess.ProcessConsolePending();
 
         Assert.Contains(received, s => s.Contains("Snd count:"));
     }
@@ -355,7 +355,7 @@ public class SndContextWorkflowTests
     public void SubscribeConsoleOutput_ReturnsPositiveId()
     {
         var ctx = CreateContextWithConsole(out _, out _, out _);
-        var id = ctx.SubscribeConsoleOutput(_ => { });
+        var id = ctx.ConsoleAccess.SubscribeConsoleOutput(_ => { });
         Assert.True(id > 0);
     }
 
@@ -363,7 +363,7 @@ public class SndContextWorkflowTests
     public void SubscribeConsoleOutput_ThrowsWhenNoChannel()
     {
         var ctx = CreateContext(out _, out _);
-        var ex = Assert.Throws<InvalidOperationException>(() => ctx.SubscribeConsoleOutput(_ => { }));
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.ConsoleAccess.SubscribeConsoleOutput(_ => { }));
         Assert.Contains("Console", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -372,8 +372,8 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContextWithConsole(out _, out _, out var output);
         var received = new List<string>();
-        var subId = ctx.SubscribeConsoleOutput(line => received.Add(line));
-        ctx.UnsubscribeConsoleOutput(subId);
+        var subId = ctx.ConsoleAccess.SubscribeConsoleOutput(line => received.Add(line));
+        ctx.ConsoleAccess.UnsubscribeConsoleOutput(subId);
 
         output.Publish("test");
         Assert.Empty(received);
@@ -384,7 +384,7 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContextWithConsole(out _, out _, out _);
 
-        var ex = Record.Exception(() => ctx.UnsubscribeConsoleOutput(0));
+        var ex = Record.Exception(() => ctx.ConsoleAccess.UnsubscribeConsoleOutput(0));
         Assert.Null(ex);
     }
 
@@ -393,7 +393,7 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContextWithConsole(out _, out _, out _);
 
-        var ex = Record.Exception(() => ctx.UnsubscribeConsoleOutput(-1));
+        var ex = Record.Exception(() => ctx.ConsoleAccess.UnsubscribeConsoleOutput(-1));
         Assert.Null(ex);
     }
 
@@ -403,7 +403,7 @@ public class SndContextWorkflowTests
     public void GetPendingPersistenceRequestCount_InitiallyZero()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Equal(0, ctx.GetPendingPersistenceRequestCount());
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
     [Fact]
@@ -411,9 +411,9 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContext(out _, out _);
         var executed = false;
-        ctx.EnqueueBusinessDeferred(() => executed = true);
+        ctx.Deferred.EnqueueBusinessDeferred(() => executed = true);
         Assert.False(executed);
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         Assert.True(executed);
     }
 
@@ -423,7 +423,7 @@ public class SndContextWorkflowTests
     public void GetProgressStateMachines_NullWhenNoProgress()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Null(ctx.GetProgressStateMachines());
+        Assert.Null(ctx.StateMachines.GetProgressStateMachines());
     }
 
     [Fact]
@@ -431,7 +431,7 @@ public class SndContextWorkflowTests
     {
         var ctx = CreateContext(out var fs, out _);
         SetupProgressRun(ctx, fs);
-        Assert.NotNull(ctx.GetProgressStateMachines());
+        Assert.NotNull(ctx.StateMachines.GetProgressStateMachines());
     }
 
     // ── SndContext constructor validation ──
@@ -500,9 +500,9 @@ public class SndContextWorkflowTests
     public void InitialState_NoProgressBlackboard_NoForegroundSession()
     {
         var ctx = CreateContext(out _, out _);
-        Assert.Null(ctx.ProgressBlackboard);
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
         Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
-        Assert.NotNull(ctx.SystemBlackboard);
+        Assert.NotNull(ctx.Blackboard.SystemBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager);
         Assert.NotNull(ctx.Runtime.SessionManager);
     }
@@ -516,12 +516,12 @@ public class SndContextWorkflowTests
         SetupProgressRun(ctx, fs);
 
         // Request save twice - second enqueued action should throw
-        ctx.RequestSaveGame("slot_a");
-        ctx.RequestSaveGame("slot_b");
+        ctx.Save.RequestSaveGame("slot_a");
+        ctx.Save.RequestSaveGame("slot_b");
         // The second call will try BeginWorkflow while first is in progress within same flush
         // Both are enqueued as system deferred; first completes, second runs after
         // Actually both run in same flush, sequentially, so this should succeed
-        var ex = Record.Exception(() => ctx.FlushDeferredActionsForCurrentFrame());
+        var ex = Record.Exception(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
         // The first save succeeds and EndWorkflow is called, so the second should also succeed
         Assert.Null(ex);
     }
@@ -563,8 +563,8 @@ public class SndContextWorkflowTests
     {
         // Load main menu entry to establish a ProgressRun
         fs.SeedFile("entry.json", "[]");
-        ctx.RequestLoadMainMenuEntrySave();
-        ctx.FlushDeferredActionsForCurrentFrame();
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
     }
 }
 
