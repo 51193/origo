@@ -54,7 +54,7 @@ public class StrategyTestContextFileAccessTests
         var readBack = fa.ReadFile("data/save.json");
 
         Assert.Equal("test", readBack["name"].AsString());
-        Assert.Equal(100, readBack["score"].AsInt());
+        Assert.Equal(100, readBack["score"].As<int>());
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class StrategyTestContextFileAccessTests
         var readBack = fa.ReadFile("data/array.json");
 
         Assert.Equal(2, readBack.Count);
-        Assert.Equal(2, readBack[1].AsInt());
+        Assert.Equal(2, readBack[1].As<int>());
     }
 
     [Fact]

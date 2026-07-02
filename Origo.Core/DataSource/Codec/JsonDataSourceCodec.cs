@@ -115,7 +115,7 @@ internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSour
                 break;
 
             case DataSourceNodeKind.Bool:
-                writer.WriteBooleanValue(node.AsBool());
+                writer.WriteBooleanValue(node.As<bool>());
                 break;
 
             case DataSourceNodeKind.Null:
@@ -152,7 +152,7 @@ internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSour
                 break;
 
             case DataSourceNodeKind.Bool:
-                writer.WriteBoolean(key, node.AsBool());
+                writer.WriteBoolean(key, node.As<bool>());
                 break;
 
             case DataSourceNodeKind.Null:

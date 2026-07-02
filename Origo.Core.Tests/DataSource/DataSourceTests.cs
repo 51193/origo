@@ -60,9 +60,9 @@ public class DataSourceTests
         var f = DataSourceNode.CreateBoolean(false);
 
         Assert.Equal(DataSourceNodeKind.Bool, t.Kind);
-        Assert.True(t.AsBool());
+        Assert.True(t.As<bool>());
         Assert.Equal(DataSourceNodeKind.Bool, f.Kind);
-        Assert.False(f.AsBool());
+        Assert.False(f.As<bool>());
     }
 
     [Fact]
@@ -89,25 +89,25 @@ public class DataSourceTests
         Assert.Equal(string.Empty, DataSourceNode.CreateNull().AsString());
 
     [Fact]
-    public void AsInt_ParsesCorrectly() => Assert.Equal(42, DataSourceNode.CreateNumber(42).AsInt());
+    public void AsInt_ParsesCorrectly() => Assert.Equal(42, DataSourceNode.CreateNumber(42).As<int>());
 
     [Fact]
     public void AsInt_OnNonNumericString_Throws()
     {
         var node = DataSourceNode.CreateString("hello");
-        Assert.Throws<FormatException>(() => node.AsInt());
+        Assert.Throws<FormatException>(() => node.As<int>());
     }
 
     [Fact]
     public void AsLong_ParsesCorrectly() =>
-        Assert.Equal(9876543210L, DataSourceNode.CreateNumber(9876543210L).AsLong());
+        Assert.Equal(9876543210L, DataSourceNode.CreateNumber(9876543210L).As<long>());
 
     [Fact]
-    public void AsFloat_ParsesCorrectly() => Assert.Equal(3.14f, DataSourceNode.CreateNumber(3.14f).AsFloat(), 0.001f);
+    public void AsFloat_ParsesCorrectly() => Assert.Equal(3.14f, DataSourceNode.CreateNumber(3.14f).As<float>(), 0.001f);
 
     [Fact]
     public void AsDouble_ParsesCorrectly() =>
-        Assert.Equal(2.718281828, DataSourceNode.CreateNumber(2.718281828).AsDouble(), 0.000001);
+        Assert.Equal(2.718281828, DataSourceNode.CreateNumber(2.718281828).As<double>(), 0.000001);
 
     // ── 3. Object access ──
 
@@ -136,7 +136,7 @@ public class DataSourceTests
 
         Assert.True(obj.TryGetValue("k", out var child));
         Assert.NotNull(child);
-        Assert.Equal(1, child!.AsInt());
+        Assert.Equal(1, child!.As<int>());
     }
 
     [Fact]
@@ -199,7 +199,7 @@ public class DataSourceTests
             .Add(DataSourceNode.CreateNumber(1))
             .Add(DataSourceNode.CreateNumber(2));
 
-        var values = arr.Elements.Select(e => e.AsInt()).ToArray();
+        var values = arr.Elements.Select(e => e.As<int>()).ToArray();
         Assert.Equal(new[] { 1, 2 }, values);
     }
 
@@ -281,13 +281,13 @@ public class DataSourceTests
         var decoded = codec.Decode(json);
 
         Assert.Equal("test", decoded["name"].AsString());
-        Assert.Equal(42, decoded["count"].AsInt());
-        Assert.True(decoded["active"].AsBool());
+        Assert.Equal(42, decoded["count"].As<int>());
+        Assert.True(decoded["active"].As<bool>());
         Assert.True(decoded["nothing"].IsNull);
         Assert.Equal(2, decoded["tags"].Count);
         Assert.Equal("a", decoded["tags"][0].AsString());
         Assert.Equal("b", decoded["tags"][1].AsString());
-        Assert.Equal(3.14, decoded["nested"]["inner"].AsDouble(), 0.001);
+        Assert.Equal(3.14, decoded["nested"]["inner"].As<double>(), 0.001);
     }
 
     [Fact]
@@ -305,7 +305,7 @@ public class DataSourceTests
 
         Assert.Equal(DataSourceNodeKind.Array, decoded.Kind);
         Assert.Equal(3, decoded.Count);
-        Assert.Equal(2, decoded[1].AsInt());
+        Assert.Equal(2, decoded[1].As<int>());
     }
 
     // ── 8. JSON codec lazy behavior ──
@@ -1205,7 +1205,7 @@ public class DataSourceTests
 
         parent.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => _ = child.AsInt());
+        Assert.Throws<ObjectDisposedException>(() => _ = child.As<int>());
     }
 
     [Fact]
@@ -1252,50 +1252,50 @@ public class DataSourceTests
     [Fact]
     public void AsByte_ParsesCorrectly()
     {
-        Assert.Equal((byte)0, DataSourceNode.CreateNumber("0").AsByte());
-        Assert.Equal((byte)255, DataSourceNode.CreateNumber("255").AsByte());
+        Assert.Equal((byte)0, DataSourceNode.CreateNumber("0").As<byte>());
+        Assert.Equal((byte)255, DataSourceNode.CreateNumber("255").As<byte>());
     }
 
     [Fact]
     public void AsSByte_ParsesCorrectly()
     {
-        Assert.Equal((sbyte)-128, DataSourceNode.CreateNumber("-128").AsSByte());
-        Assert.Equal((sbyte)127, DataSourceNode.CreateNumber("127").AsSByte());
+        Assert.Equal((sbyte)-128, DataSourceNode.CreateNumber("-128").As<sbyte>());
+        Assert.Equal((sbyte)127, DataSourceNode.CreateNumber("127").As<sbyte>());
     }
 
     [Fact]
     public void AsShort_ParsesCorrectly()
     {
-        Assert.Equal((short)-32768, DataSourceNode.CreateNumber("-32768").AsShort());
-        Assert.Equal((short)32767, DataSourceNode.CreateNumber("32767").AsShort());
+        Assert.Equal((short)-32768, DataSourceNode.CreateNumber("-32768").As<short>());
+        Assert.Equal((short)32767, DataSourceNode.CreateNumber("32767").As<short>());
     }
 
     [Fact]
     public void AsUShort_ParsesCorrectly()
     {
-        Assert.Equal((ushort)0, DataSourceNode.CreateNumber("0").AsUShort());
-        Assert.Equal((ushort)65535, DataSourceNode.CreateNumber("65535").AsUShort());
+        Assert.Equal((ushort)0, DataSourceNode.CreateNumber("0").As<ushort>());
+        Assert.Equal((ushort)65535, DataSourceNode.CreateNumber("65535").As<ushort>());
     }
 
     [Fact]
     public void AsUInt_ParsesCorrectly()
     {
-        Assert.Equal(0u, DataSourceNode.CreateNumber("0").AsUInt());
-        Assert.Equal(4294967295u, DataSourceNode.CreateNumber("4294967295").AsUInt());
+        Assert.Equal(0u, DataSourceNode.CreateNumber("0").As<uint>());
+        Assert.Equal(4294967295u, DataSourceNode.CreateNumber("4294967295").As<uint>());
     }
 
     [Fact]
     public void AsULong_ParsesCorrectly()
     {
-        Assert.Equal(0ul, DataSourceNode.CreateNumber("0").AsULong());
-        Assert.Equal(18446744073709551615ul, DataSourceNode.CreateNumber("18446744073709551615").AsULong());
+        Assert.Equal(0ul, DataSourceNode.CreateNumber("0").As<ulong>());
+        Assert.Equal(18446744073709551615ul, DataSourceNode.CreateNumber("18446744073709551615").As<ulong>());
     }
 
     [Fact]
     public void AsDecimal_ParsesCorrectly()
     {
-        Assert.Equal(3.14159m, DataSourceNode.CreateNumber("3.14159").AsDecimal());
-        Assert.Equal(-99.99m, DataSourceNode.CreateNumber("-99.99").AsDecimal());
+        Assert.Equal(3.14159m, DataSourceNode.CreateNumber("3.14159").As<decimal>());
+        Assert.Equal(-99.99m, DataSourceNode.CreateNumber("-99.99").As<decimal>());
     }
 
     [Fact]

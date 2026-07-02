@@ -5,7 +5,7 @@ namespace Origo.GodotAdapter.Serialization;
 
 internal sealed class Vector2DataSourceConverter : DataSourceConverter<Vector2>
 {
-    public override Vector2 Read(DataSourceNode node) => new(node["x"].AsFloat(), node["y"].AsFloat());
+    public override Vector2 Read(DataSourceNode node) => new(node["x"].As<float>(), node["y"].As<float>());
 
     public override DataSourceNode Write(Vector2 value)
     {
@@ -17,7 +17,7 @@ internal sealed class Vector2DataSourceConverter : DataSourceConverter<Vector2>
 
 internal sealed class Vector2IDataSourceConverter : DataSourceConverter<Vector2I>
 {
-    public override Vector2I Read(DataSourceNode node) => new(node["x"].AsInt(), node["y"].AsInt());
+    public override Vector2I Read(DataSourceNode node) => new(node["x"].As<int>(), node["y"].As<int>());
 
     public override DataSourceNode Write(Vector2I value)
     {
@@ -30,7 +30,7 @@ internal sealed class Vector2IDataSourceConverter : DataSourceConverter<Vector2I
 internal sealed class Vector3DataSourceConverter : DataSourceConverter<Vector3>
 {
     public override Vector3 Read(DataSourceNode node) =>
-        new(node["x"].AsFloat(), node["y"].AsFloat(), node["z"].AsFloat());
+        new(node["x"].As<float>(), node["y"].As<float>(), node["z"].As<float>());
 
     public override DataSourceNode Write(Vector3 value)
     {
@@ -43,7 +43,7 @@ internal sealed class Vector3DataSourceConverter : DataSourceConverter<Vector3>
 
 internal sealed class Vector3IDataSourceConverter : DataSourceConverter<Vector3I>
 {
-    public override Vector3I Read(DataSourceNode node) => new(node["x"].AsInt(), node["y"].AsInt(), node["z"].AsInt());
+    public override Vector3I Read(DataSourceNode node) => new(node["x"].As<int>(), node["y"].As<int>(), node["z"].As<int>());
 
     public override DataSourceNode Write(Vector3I value)
     {
@@ -56,8 +56,8 @@ internal sealed class Vector3IDataSourceConverter : DataSourceConverter<Vector3I
 
 internal sealed class Vector4DataSourceConverter : DataSourceConverter<Vector4>
 {
-    public override Vector4 Read(DataSourceNode node) => new(node["x"].AsFloat(), node["y"].AsFloat(),
-        node["z"].AsFloat(), node["w"].AsFloat());
+    public override Vector4 Read(DataSourceNode node) => new(node["x"].As<float>(), node["y"].As<float>(),
+        node["z"].As<float>(), node["w"].As<float>());
 
     public override DataSourceNode Write(Vector4 value)
     {
@@ -71,8 +71,8 @@ internal sealed class Vector4DataSourceConverter : DataSourceConverter<Vector4>
 
 internal sealed class QuaternionDataSourceConverter : DataSourceConverter<Quaternion>
 {
-    public override Quaternion Read(DataSourceNode node) => new(node["x"].AsFloat(), node["y"].AsFloat(),
-        node["z"].AsFloat(), node["w"].AsFloat());
+    public override Quaternion Read(DataSourceNode node) => new(node["x"].As<float>(), node["y"].As<float>(),
+        node["z"].As<float>(), node["w"].As<float>());
 
     public override DataSourceNode Write(Quaternion value)
     {
@@ -86,8 +86,8 @@ internal sealed class QuaternionDataSourceConverter : DataSourceConverter<Quater
 
 internal sealed class ColorDataSourceConverter : DataSourceConverter<Color>
 {
-    public override Color Read(DataSourceNode node) => new(node["r"].AsFloat(), node["g"].AsFloat(),
-        node["b"].AsFloat(), node["a"].AsFloat());
+    public override Color Read(DataSourceNode node) => new(node["r"].As<float>(), node["g"].As<float>(),
+        node["b"].As<float>(), node["a"].As<float>());
 
     public override DataSourceNode Write(Color value)
     {
@@ -193,7 +193,7 @@ internal sealed class PlaneDataSourceConverter : DataSourceConverter<Plane>
 {
     private readonly Vector3DataSourceConverter _vec3 = new();
 
-    public override Plane Read(DataSourceNode node) => new(_vec3.Read(node["normal"]), node["d"].AsFloat());
+    public override Plane Read(DataSourceNode node) => new(_vec3.Read(node["normal"]), node["d"].As<float>());
 
     public override DataSourceNode Write(Plane value)
     {

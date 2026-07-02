@@ -7,17 +7,21 @@ using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save.Meta;
+using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 
-namespace Origo.Core.Snd;
+namespace Origo.Core.Tests;
 
 /// <summary>
 ///     用于纯运行时单测场景的空上下文实现。
 ///     变更操作（存读档、关卡切换等）显式失败以满足 §2.1 显式失败优先。
+///     静态成员是空对象模式的正常设计——忽略 CA1822 警告。
 /// </summary>
-internal sealed class NullSndContext : ISndContext
+#pragma warning disable CA1822
+#pragma warning disable IDE0060
+public sealed class NullSndContext : ISndContext
 {
-    internal static readonly NullSndContext Instance = new();
+    public static readonly NullSndContext Instance = new();
     private static readonly IBlackboard _emptyBlackboard = new Blackboard.Blackboard();
 
     private NullSndContext()
@@ -27,7 +31,11 @@ internal sealed class NullSndContext : ISndContext
     public IBlackboard SystemBlackboard => _emptyBlackboard;
     public IBlackboard? ProgressBlackboard => null;
 
-    public void EnqueueBusinessDeferred(Action action) => action();
+    public void EnqueueBusinessDeferred(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        action();
+    }
 
     public void FlushDeferredActionsForCurrentFrame()
     {

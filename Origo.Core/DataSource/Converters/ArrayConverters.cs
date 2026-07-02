@@ -9,7 +9,7 @@ internal sealed class ByteArrayDataSourceConverter : DataSourceConverter<byte[]>
         var result = new byte[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsByte();
+            result[i++] = element.As<byte>();
         return result;
     }
 
@@ -29,7 +29,7 @@ internal sealed class SByteArrayDataSourceConverter : DataSourceConverter<sbyte[
         var result = new sbyte[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsSByte();
+            result[i++] = element.As<sbyte>();
         return result;
     }
 
@@ -49,7 +49,7 @@ internal sealed class Int16ArrayDataSourceConverter : DataSourceConverter<short[
         var result = new short[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsShort();
+            result[i++] = element.As<short>();
         return result;
     }
 
@@ -69,7 +69,7 @@ internal sealed class UInt16ArrayDataSourceConverter : DataSourceConverter<ushor
         var result = new ushort[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsUShort();
+            result[i++] = element.As<ushort>();
         return result;
     }
 
@@ -89,7 +89,7 @@ internal sealed class Int32ArrayDataSourceConverter : DataSourceConverter<int[]>
         var result = new int[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsInt();
+            result[i++] = element.As<int>();
         return result;
     }
 
@@ -109,7 +109,7 @@ internal sealed class UInt32ArrayDataSourceConverter : DataSourceConverter<uint[
         var result = new uint[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsUInt();
+            result[i++] = element.As<uint>();
         return result;
     }
 
@@ -129,7 +129,7 @@ internal sealed class Int64ArrayDataSourceConverter : DataSourceConverter<long[]
         var result = new long[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsLong();
+            result[i++] = element.As<long>();
         return result;
     }
 
@@ -149,7 +149,7 @@ internal sealed class UInt64ArrayDataSourceConverter : DataSourceConverter<ulong
         var result = new ulong[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsULong();
+            result[i++] = element.As<ulong>();
         return result;
     }
 
@@ -169,7 +169,7 @@ internal sealed class SingleArrayDataSourceConverter : DataSourceConverter<float
         var result = new float[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsFloat();
+            result[i++] = element.As<float>();
         return result;
     }
 
@@ -189,7 +189,7 @@ internal sealed class DoubleArrayDataSourceConverter : DataSourceConverter<doubl
         var result = new double[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsDouble();
+            result[i++] = element.As<double>();
         return result;
     }
 
@@ -209,7 +209,7 @@ internal sealed class DecimalArrayDataSourceConverter : DataSourceConverter<deci
         var result = new decimal[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsDecimal();
+            result[i++] = element.As<decimal>();
         return result;
     }
 
@@ -229,7 +229,7 @@ internal sealed class BooleanArrayDataSourceConverter : DataSourceConverter<bool
         var result = new bool[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsBool();
+            result[i++] = element.As<bool>();
         return result;
     }
 

@@ -11,7 +11,7 @@ TCP 远程控制台桥接服务器。允许通过 telnet/nc 连接（默认端�
 | 文件 | 职责 |
 |------|------|
 | `ConsoleBridgeOptions.cs` | 配置选项：端口号（默认 9876）|
-| `ConsoleBridgeServer.cs` | TCP 控制台桥接器：Accept 线程 + Handle 线程 + 输出订阅 |
+| `ConsoleBridgeServer.cs` | TCP 控制台桥接器：内部异步 I/O 接受连接与读取命令 |
 
 ## 架构
 
@@ -23,9 +23,8 @@ telnet client ──TCP:9876──> ConsoleBridgeServer
 ```
 
 **线程模型**：
-- **Accept 线程**：后台线程，循环接受连接。有活跃连接时拒绝新连接（单连接模式）
-- **Handle 线程**：每个连接一个后台线程，`ReadLine` 阻塞读取 → Enqueue 到共享 InputQueue
-- **输出线程安全**：所有 `StreamWriter` 访问——输出广播写入与连接建立时的积压冲刷——都在 `lock(_writerLock)` 内串行化，避免输出线程与 Handle 线程并发写入同一 writer
+- **异步 I/O**：`AcceptTcpClientAsync` 和 `ReadLineAsync` 在 ThreadPool 上运行，不占用专用线程。CancellationToken 替代 `Monitor.Wait` 轮询和 `ReceiveTimeout`，取消操作立即响应。
+- **输出路径同步**：`OnConsoleOutput` 回调中的 `StreamWriter.WriteLine` 保持同步——控制台输出是短 kernel 调用，TCP 发送缓冲区在实际使用中不会满，异步化得不偿失。
 
 ## 使用方式
 
@@ -51,9 +50,15 @@ Origo 的游戏帧循环是单线程的。多连接意味着多条命令流并�
 
 `ConsoleBridgeServer` 订阅 `IConsoleOutputChannel`，所有日志和控制台输出（不只是 Bridge 连接的客户端的命令输出）都推到连接。这让远程连接者可以看到完整的游戏日志流，便于调试。
 
-### 为什么 Accept 和 Handle 分离为两个线程
+### 为什么采用异步 I/O 而非手动线程
 
-Accept 线程只负责建立连接，立即交给 Handle 线程处理 I/O。如果 Accept 线程在处理连接 I/O 时阻塞，下一个客户端将无法连接。线程分离确保 Accept 线程始终处于"等待下一个连接"状态。
+`AcceptTcpClientAsync` 和 `ReadLineAsync` 在操作系统层面通过 IOCP 等待，不占用专用线程栈。相较于之前的手动 `Thread` + `Monitor.Wait(100ms)` 轮询模型：
+
+- 空闲时零 CPU 开销（无需每 100ms 唤醒检查状态）
+- `Dispose()` 关闭延迟从最坏 6 秒（两个 `Thread.Join(3000)`）降至亚秒级（`CancellationToken` 立即中断异步 I/O）
+- 不再需要 `ReceiveTimeout` 读超时兜底——取消令牌直接中断 `ReadLineAsync`
+
+输出路径保持同步 `StreamWriter.WriteLine`，避免将 `Action<string>` 回调改为 `Func<string, Task>`（会级联污染 `IConsoleOutputChannel` 接口）。
 
 ### 异常传播策略（fail-fast）
 

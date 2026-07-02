@@ -9,7 +9,7 @@
 验证 `meta.map` 展示元数据的构建、合并与持久化。
 覆盖 `ISaveMetaContributor` 贡献者接口、`DelegateSaveMetaContributor` 委托包装、
 `SaveMetaBuildContext` 上下文数据传递、`SaveMetaMerger` 多来源合并、
-贡献者注册与 SaveGame 完整链路、NullSndContext 错误路径。
+贡献者注册与 SaveGame 完整链路。
 
 ## 测试文件清单
 
@@ -69,11 +69,7 @@
 | `RegisterSaveMetaContributor_ThrowsOnNullContributor` | null ISaveMetaContributor | ArgumentNullException |
 | `RegisterSaveMetaContributor_ThrowsOnNullDelegate` | null 委托 | ArgumentNullException |
 
-### SaveMetaNullAndSessionContextTests 错误路径
-
-| 测试方法 | 触发的错误 | 预期行为 |
-|---------|-----------|---------|
-| `NullSndContext_RegisterSaveMetaContributor_Throws` | 在 NullSndContext 上注册 ISaveMetaContributor/委托 | InvalidOperationException |
+## SaveMetaNullAndSessionContextTests 正确路径
 
 ## SaveMetaMergerTests 测试详情
 
@@ -97,7 +93,6 @@
 |--------|---------|------|
 | `KeyValueContributor` | SaveMetaIntegrationTests.cs | 固定 key/value 的 ISaveMetaContributor 桩 |
 | `SndContextTestHelper` | SaveMetaIntegrationTests.cs | SndContext 快速构造与 ProgressRun 初始化辅助 |
-| `StubContributor` | SaveMetaIntegrationTests.cs | 空返回的 ISaveMetaContributor 桩，供 NullSndContext 错误测试 |
 | `FuncContributor` | SaveMetaMergerTests.cs | 委托驱动的 ISaveMetaContributor 桩 |
 | `NullSceneHost` | SaveMetaMergerTests.cs | ISndSceneHost 空实现，供 SaveMetaBuildContext 构造 |
 

@@ -99,23 +99,10 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `Resolve_InvalidJson_Throws` | 无效 JSON 模板文件 | Exception |
 | `Resolve_ConverterReturnsNull_ThrowsInvalidOperationException` | 转换器返回 null | InvalidOperationException（含 "deserialized to null"） |
 
-## NullSndContextExtendedTests 测试详情
+## NullSndContext（测试基础设施）
 
-### 正确路径
-
-| 测试方法 | 验证的行为 | 文档出处 |
-|---------|-----------|---------|
-| `ListSaves_ReturnsEmpty` | NullSndContext.ListSaves 返回空集合 | ISndSaveOperations |
-| `HasContinueData_ReturnsFalse` | NullSndContext.HasContinueData 返回 false | ISndLifecycleOperations |
-| `RequestContinueGame_ReturnsFalse` | NullSndContext.RequestContinueGame 返回 false | ISndLifecycleOperations |
-
-### 错误路径
-
-| 测试方法 | 触发的错误 | 预期行为 |
-|---------|-----------|---------|
-| `RequestSaveGameAuto_Throws` | 无参调用 RequestSaveGameAuto | InvalidOperationException |
-| `RequestSaveGameAuto_WithValue_Throws` | 带 ID 调用 RequestSaveGameAuto | InvalidOperationException |
-| `MutationOperations_ThrowInvalidOperationException` | RequestLoadGame / RequestSaveGame / SetContinueTarget / RequestSwitchForegroundLevel / RequestLoadInitialSave / RequestLoadMainMenuEntrySave | 全部抛出 InvalidOperationException；只读操作（HasContinueData、ListSaves）不受影响 |
+`NullSndContext` 已从生产代码（`Origo.Core/Snd/`）迁移到测试项目（`Origo.Core.Tests/TestSupport/`），作为测试辅助类使用。
+自引用测试文件 `NullSndContextExtendedTests.cs` 已随迁移删除。
 
 ## LevelBuilderExtendedTests 测试详情
 

@@ -171,94 +171,51 @@ public sealed class DataSourceNode : IDisposable
         };
     }
 
-    public byte AsByte()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return byte.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public sbyte AsSByte()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return sbyte.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public short AsShort()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return short.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public ushort AsUShort()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return ushort.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public int AsInt()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return int.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public uint AsUInt()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return uint.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public long AsLong()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return long.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public ulong AsULong()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return ulong.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public float AsFloat()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return float.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public double AsDouble()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return double.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
-    public decimal AsDecimal()
-    {
-        EnsureExpanded();
-        ThrowIfValueMissing();
-        return decimal.Parse(_value!, CultureInfo.InvariantCulture);
-    }
-
     public char AsChar()
     {
         EnsureExpanded();
         return _value is not null && _value.Length > 0 ? _value[0] : '\0';
     }
 
-    public bool AsBool()
+    /// <summary>
+    ///     Generic typed value accessor. Supported types: <see cref="string" />,
+    ///     <see cref="byte" />, <see cref="sbyte" />, <see cref="short" />,
+    ///     <see cref="ushort" />, <see cref="int" />, <see cref="uint" />,
+    ///     <see cref="long" />, <see cref="ulong" />, <see cref="float" />,
+    ///     <see cref="double" />, <see cref="decimal" />, <see cref="char" />,
+    ///     <see cref="bool" />.
+    ///     For complex types (arrays, domain objects), use
+    ///     <see cref="DataSourceConverterRegistry.Read{T}" />.
+    /// </summary>
+    public T As<T>()
     {
         EnsureExpanded();
+
+        if (typeof(T) == typeof(string))
+            return (T)(object)AsString();
+
+        if (typeof(T) == typeof(char))
+            return (T)(object)AsChar();
+
         ThrowIfValueMissing();
-        return bool.Parse(_value!);
+
+        if (typeof(T) == typeof(byte)) return (T)(object)byte.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(sbyte)) return (T)(object)sbyte.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(short)) return (T)(object)short.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(ushort)) return (T)(object)ushort.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(int)) return (T)(object)int.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(uint)) return (T)(object)uint.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(long)) return (T)(object)long.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(ulong)) return (T)(object)ulong.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(float)) return (T)(object)float.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(double)) return (T)(object)double.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(decimal)) return (T)(object)decimal.Parse(_value!, CultureInfo.InvariantCulture);
+        if (typeof(T) == typeof(bool)) return (T)(object)bool.Parse(_value!);
+
+        throw new NotSupportedException(
+            $"As<{typeof(T).Name}> is not supported. " +
+            "Only primitive types are supported. " +
+            "For complex types, use DataSourceConverterRegistry.Read<T>.");
     }
 
     private void ThrowIfValueMissing()

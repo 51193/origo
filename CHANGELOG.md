@@ -28,11 +28,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Private field naming convention enforced across the entire codebase (161 fields renamed to `_camelCase` prefix).
 - Code style rules (collection initialization simplification, `var` usage, pattern matching preferences) applied project-wide via `dotnet format`.
 - `ConsoleBridgeServer` `_listener` field: removed redundant `_serverSocket` field, replaced nullable `TcpListener?` + `!` operator with non-nullable `TcpListener = null!`, removed redundant `_listener?.Stop()` in `AcceptLoop` finally block.
+- `ConsoleBridgeServer` internal threading model replaced with `async`/`await`: `AcceptTcpClientAsync`/`ReadLineAsync` eliminate the 100ms `Monitor.Wait` polling loop, `CancellationToken` replaces `ReceiveTimeout` for clean read cancellation, dedicated threads replaced with `Task`-based `ThreadPool` reuse. Public API (`Start`, `Dispose`) stays synchronous.
+- **BREAKING:** `DataSourceNode.AsByte/AsSByte/AsShort/AsUShort/AsInt/AsUInt/AsLong/AsULong/AsFloat/AsDouble/AsDecimal/AsBool` (12 methods) replaced by a single unified `As<T>()` generic method. `AsString()` and `AsChar()` are retained as standalone methods. `PrimitiveConverters` and `ArrayConverters` updated to use `node.As<T>()`.
 - `SavePayloadWriter.WriteToCurrent` no longer writes `.payload.sha` — hash writing is now the sole responsibility of `SaveStorageFacade` (via `WritePayloadSha`), eliminating the fragile double-write pattern.
 - `CombineHashes` always produces a consistent domain-separated format (`P:`/`S:` prefixes) regardless of whether side-channel files exist — no more implicit format switching. `WritePayloadSha` is now the sole `.payload.sha` writer (extracted from `WriteToCurrent`). `StripPathPrefix` replaces 3 identical relative-path-stripping patterns.
 
 ### Removed
 
+- `NullSndContext` removed from production code (`Origo.Core/Snd/`) and relocated to test project (`Origo.Core.Tests/TestSupport/`). Self-referential test files `NullSndContextExtendedTests.cs` and `ContextBoundaryTests.cs` deleted.
 - Unused method parameters removed from `SaveStorageFacade.CopyDirectoryFromSnapshot`, `OrigoAutoHost.CreateAndSetupSndManager`, `PlanExecutionStrategyBase.OnIntentChanged`/`OnActionStatusChanged`, `SetupProgressRun`, `RunDictWrite`, `TryInvoke`, `PrintCompare`, and `MeasureObserverAlloc`.
 - `SessionManager.ClearBackground()` — unused internal method with zero callers.
 

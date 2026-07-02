@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Runtime.Console;
 
@@ -11,16 +12,14 @@ namespace Origo.ConsoleBridge;
 
 /// <summary>
 ///     TCP 控制台桥接服务器。
-///     单连接模式：Accept 线程接受连接，Handle 线程读入命令，
+///     单连接模式：内部使用异步 I/O 接受连接和读取命令，
 ///     控制台输出通过 Subscribe 回调直接写入 TCP 连接。
 /// </summary>
 public sealed class ConsoleBridgeServer : IDisposable
 {
     private const int _maxPendingOutputLines = 1000;
-    private const int _readTimeoutMs = 30000;
     private const int _disposeJoinTimeoutMs = 3000;
 
-    private readonly object _acceptLock = new();
     private readonly IConsoleInputSource _input;
     private readonly ConsoleBridgeOptions _options;
     private readonly IConsoleOutputChannel _output;
@@ -29,13 +28,12 @@ public sealed class ConsoleBridgeServer : IDisposable
     private readonly object _writerLock = new();
     private readonly CancellationTokenSource _cts = new();
 
-    private Thread? _acceptThread;
-    private Thread? _handleThread;
-    private bool _hasActiveClient;
+    private int _activeClientCount;
     private TcpListener _listener = null!;
     private long _outputSubId;
     private int _started;
     private StreamWriter? _writer;
+    private Task? _acceptTask;
 
     public ConsoleBridgeServer(
         IConsoleInputSource input,
@@ -67,8 +65,16 @@ public sealed class ConsoleBridgeServer : IDisposable
         _listener?.Stop();
         _output.Unsubscribe(_outputSubId);
 
-        _acceptThread?.Join(_disposeJoinTimeoutMs);
-        _handleThread?.Join(_disposeJoinTimeoutMs);
+        if (_acceptTask is not null)
+        {
+            try
+            {
+                _acceptTask.Wait(_disposeJoinTimeoutMs);
+            }
+            catch (AggregateException)
+            {
+            }
+        }
 
         _cts.Dispose();
     }
@@ -86,12 +92,7 @@ public sealed class ConsoleBridgeServer : IDisposable
 
         _outputSubId = _output.Subscribe(OnConsoleOutput);
 
-        _acceptThread = new Thread(AcceptLoop)
-        {
-            Name = "ConsoleBridge-Accept",
-            IsBackground = true
-        };
-        _acceptThread.Start();
+        _acceptTask = Task.Run(() => AcceptLoopAsync(_cts.Token), _cts.Token);
     }
 
     private void OnConsoleOutput(string line)
@@ -110,63 +111,43 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
     }
 
-    private void AcceptLoop()
+    private async Task AcceptLoopAsync(CancellationToken ct)
     {
-        try
+        while (!ct.IsCancellationRequested)
         {
-            while (!_cts.IsCancellationRequested)
+            TcpClient client;
+            try
             {
-                lock (_acceptLock)
-                {
-                    while (_hasActiveClient && !_cts.IsCancellationRequested)
-                        Monitor.Wait(_acceptLock, 100);
-                }
-
-                if (_cts.IsCancellationRequested)
-                    break;
-
-                TcpClient? client = null;
-                try
-                {
-                    client = _listener.AcceptTcpClient();
-                }
-                catch (SocketException) when (_cts.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (ObjectDisposedException) when (_cts.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                if (client is null)
-                    continue;
-
-                lock (_acceptLock)
-                {
-                    _hasActiveClient = true;
-
-                    _handleThread = new Thread(() => HandleConnection(client))
-                    {
-                        Name = "ConsoleBridge-Handle",
-                        IsBackground = true
-                    };
-                    _handleThread.Start();
-                }
+                client = await _listener.AcceptTcpClientAsync(ct);
             }
-        }
-        finally
-        {
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (SocketException) when (ct.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (ObjectDisposedException) when (ct.IsCancellationRequested)
+            {
+                break;
+            }
+
+            if (Interlocked.CompareExchange(ref _activeClientCount, 1, 0) != 0)
+            {
+                client.Close();
+                continue;
+            }
+
+            _ = HandleConnectionAsync(client, ct);
         }
     }
 
-    private void HandleConnection(TcpClient client)
+    private async Task HandleConnectionAsync(TcpClient client, CancellationToken ct)
     {
         try
         {
-            client.ReceiveTimeout = _readTimeoutMs;
             using var stream = client.GetStream();
-            stream.ReadTimeout = _readTimeoutMs;
             using var reader = new StreamReader(stream);
             using var writer = new StreamWriter(stream) { AutoFlush = true };
 
@@ -178,12 +159,16 @@ public sealed class ConsoleBridgeServer : IDisposable
                 _pendingOutput.Clear();
             }
 
-            while (!_cts.IsCancellationRequested)
+            while (!ct.IsCancellationRequested)
             {
                 string? line;
                 try
                 {
-                    line = reader.ReadLine();
+                    line = await reader.ReadLineAsync(ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
                 }
                 catch (IOException)
                 {
@@ -208,12 +193,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                 _writer = null;
             }
 
-            lock (_acceptLock)
-            {
-                _hasActiveClient = false;
-                Monitor.Pulse(_acceptLock);
-            }
-
+            Interlocked.Exchange(ref _activeClientCount, 0);
             client.Close();
         }
     }

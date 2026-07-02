@@ -169,8 +169,8 @@ public class SaveExtraFilesRoundTripTests
 
         var readArr = archive.ReadFile("sequence.json");
         Assert.Equal(2, readArr.Count);
-        Assert.Equal(1, readArr[0].AsInt());
-        Assert.Equal(2, readArr[1].AsInt());
+        Assert.Equal(1, readArr[0].As<int>());
+        Assert.Equal(2, readArr[1].As<int>());
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public class SaveExtraFilesRoundTripTests
         ctx.FlushDeferredActionsForCurrentFrame();
 
         var readBack = archive.ReadFile("data.json");
-        Assert.Equal(2, readBack["version"].AsInt());
+        Assert.Equal(2, readBack["version"].As<int>());
     }
 
     [Fact]

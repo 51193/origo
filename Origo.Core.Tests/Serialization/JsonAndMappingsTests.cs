@@ -212,8 +212,8 @@ public class JsonAndMappingsTests
         var codec = TestFactory.CreateJsonCodec();
         using var root = codec.Decode("""[1, true, "hi"]""");
         Assert.Equal(DataSourceNodeKind.Array, root.Kind);
-        Assert.Equal(1, root[0].AsInt());
-        Assert.True(root[1].AsBool());
+        Assert.Equal(1, root[0].As<int>());
+        Assert.True(root[1].As<bool>());
         Assert.Equal("hi", root[2].AsString());
     }
 }

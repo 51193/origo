@@ -17,7 +17,7 @@ Origo 的数据源抽象层——Core 与外部格式（JSON、.map）之间的�
 
 | 文件 | 职责 |
 |------|------|
-| `DataSourceNode.cs` | 树形数据节点：Map/Array/Text/Number/Bool/Null + 延迟展开（Lazy）+ `ComputeSha256Hash()` — 迭代后序遍历生成确定性字符串表示后计算 SHA-256 哈希，用于存档幂等去重。`Dispose()` 同样使用迭代遍历防止深度嵌套树的栈溢出 |
+| `DataSourceNode.cs` | 树形数据节点：Map/Array/Text/Number/Bool/Null + 延迟展开（Lazy）+ `As<T>()` 泛型值访问器（支持 string/char/byte/sbyte/short/ushort/int/uint/long/ulong/float/double/decimal/bool 14 种类型）+ `ComputeSha256Hash()` — 迭代后序遍历生成确定性字符串表示后计算 SHA-256 哈希，用于存档幂等去重。`Dispose()` 同样使用迭代遍历防止深度嵌套树的栈溢出 |
 | `DataSourceNodeKind.cs` | 节点类型枚举 |
 | `DataSourceCodecKind.cs` | 编解码格式枚举（Json / Map / RawString） |
 | `IDataSourceCodec.cs` | 编解码器接口：Decode/Encode |

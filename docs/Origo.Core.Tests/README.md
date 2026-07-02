@@ -58,7 +58,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 真实模拟性能基准 | [Benchmarks.md](Benchmarks.md) | `[Category=Benchmark]` 套件（`benchmark.sh` 独立运行）：字典查找/插入、数值强转链、观察者通知、异构字典迭代，生成 `TypedData` vs 装箱字典 |
 | SND 场景 | [Snd-Scene.md](Snd-Scene.md) | MemorySndSceneHost 与 FullMemorySndSceneHost 的 Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity、NullNodeFactory |
 | SND 策略 | [Snd-Strategy.md](Snd-Strategy.md) | 策略优先级排序、池引用计数/回收、实体策略生命周期钩子、观察者策略、主动策略 Invoke、策略池 Get/Release 与 Process 缩放性能测量 |
-| SND 上下文 | [Snd-Context.md](Snd-Context.md) | SndContext save/load/continue 工作流、NullSndContext、LevelBuilder、模板解析、Archetype 加载 |
+| SND 上下文 | [Snd-Context.md](Snd-Context.md) | SndContext save/load/continue 工作流、LevelBuilder、模板解析、Archetype 加载 |
 | SND 扩展 | [Snd-Extensions.md](Snd-Extensions.md) | EnsureStrategy 惰性策略挂载（幂等）、TryGetNumeric 跨数值类型读取、InvokeStrategy 泛型调用 |
 | 文件访问 | [Snd-FileAccess.md](Snd-FileAccess.md) | ISndFileAccess 在 SndContext 上的 DataSourceNode 读写往返、强类型往返、overwrite 语义、错误/边界路径 |
 | 策略测试上下文文件访问 | [StrategyTestContext-FileAccess.md](StrategyTestContext-FileAccess.md) | ISndFileAccess 在 StrategyTestContext 上的内存文件系统行为、DataSourceNode 和强类型往返 |

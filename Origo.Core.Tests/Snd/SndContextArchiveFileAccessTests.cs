@@ -43,7 +43,7 @@ public class SndContextArchiveFileAccessTests
         var node = AsFileAccess(ctx).ReadFile("data.json");
 
         Assert.Equal("value", node["key"].AsString());
-        Assert.Equal(42, node["num"].AsInt());
+        Assert.Equal(42, node["num"].As<int>());
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class SndContextArchiveFileAccessTests
 
         Assert.Equal("deep", node["outer"]["inner"].AsString());
         Assert.Equal(3, node["outer"]["list"].Count);
-        Assert.Equal(3, node["outer"]["list"][2].AsInt());
+        Assert.Equal(3, node["outer"]["list"][2].As<int>());
     }
 
     // ── Correct path: WriteFile ──
@@ -86,7 +86,7 @@ public class SndContextArchiveFileAccessTests
         Assert.True(fs.Exists("root/current/extra/output.json"));
         var readBack = AsFileAccess(ctx).ReadFile("output.json");
         Assert.Equal("test", readBack["name"].AsString());
-        Assert.Equal(42, readBack["value"].AsInt());
+        Assert.Equal(42, readBack["value"].As<int>());
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public class SndContextArchiveFileAccessTests
         Assert.Equal(3, readBack.Count);
         Assert.Equal("a", readBack[0].AsString());
         Assert.Equal("b", readBack[1].AsString());
-        Assert.Equal(3, readBack[2].AsInt());
+        Assert.Equal(3, readBack[2].As<int>());
     }
 
     [Fact]
@@ -365,8 +365,8 @@ public class SndContextArchiveFileAccessTests
         AsFileAccess(ctx).WriteFile("bools.json", node);
         var readBack = AsFileAccess(ctx).ReadFile("bools.json");
 
-        Assert.True(readBack["yes"].AsBool());
-        Assert.False(readBack["no"].AsBool());
+        Assert.True(readBack["yes"].As<bool>());
+        Assert.False(readBack["no"].As<bool>());
     }
 
     // ── Save/Load roundtrip ──

@@ -6,7 +6,7 @@
 
 ## 被测行为概览
 
-验证 OrigoRuntime 的基础构造和控制台注入、帧末延迟动作队列的刷新、NullSndContext 边界契约、实体 Kill/KillAll 的标记—收割两阶段语义，以及 ActionScheduler 的入队/嵌套执行/清空。
+验证 OrigoRuntime 的基础构造和控制台注入、帧末延迟动作队列的刷新、实体 Kill/KillAll 的标记—收割两阶段语义，以及 ActionScheduler 的入队/嵌套执行/清空。
 
 `SchedulingAndTypeMappingTests.cs` 同时承载 ActionScheduler 与 TypeStringMapping 两种能力的测试：本文档记录其 ActionScheduler 相关方法；其 TypeStringMapping 方法（`TypeStringMapping_HasDefaultTypes_AndSupportsCustomRegistration`）属于类型序列化能力，记录于 [TypeStringMapping.md](TypeStringMapping.md)，本文档不重复收录。
 
@@ -15,7 +15,6 @@
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `OrigoRuntimeBasicTests.cs` | OrigoRuntime 构造、SndWorld 创建、控制台注入/未注入、ResetConsoleState、FlushEndOfFrameDeferred、IOrigoFrameDriver.DriveFrame |
-| `ContextBoundaryTests.cs` | NullSndContext 空对象契约：noop 成员安全、不支持操作抛异常 |
 | `EntityKillTests.cs` | 实体 Kill/KillAll：标记为待销毁（IsPendingKill）、KillPendingAllSessions 收割、BeforeDead/BeforeQuit 钩子、kill_all 命令 |
 | `SchedulingAndTypeMappingTests.cs` | ActionScheduler 的入队/嵌套执行/清空（TypeStringMapping 方法见 [TypeStringMapping.md](TypeStringMapping.md)） |
 
@@ -31,14 +30,6 @@
 | `OrigoRuntime_ResetConsoleState_ClearsInputQueue` | 重置只清理输入队列 | Runtime: Console |
 | `OrigoRuntime_FlushEndOfFrameDeferred_ExecutesDeferredActions` | Business 和 System 延迟动作全部执行 | Scheduling |
 | `OrigoRuntime_DriveFrame_DelegatesToFlushAndConsole` | IOrigoFrameDriver.DriveFrame(delta) 执行业务延迟队列并处理控制台 pending | Abstractions/Runtime: IOrigoFrameDriver |
-
-## ContextBoundaryTests 测试详情
-
-### 边界路径
-
-| 测试方法 | 边界条件 | 预期行为 |
-|---------|---------|---------|
-| `NullSndContext_AllNoopMembers_AreSafe` | NullSndContext 空对象的全部 noop 成员调用 | SystemBlackboard 非空、其余查询返回 null/0/false 不抛；`RequestLoadMainMenuEntrySave`/`CloneTemplate` 抛 InvalidOperationException |
 
 ## EntityKillTests 测试详情
 

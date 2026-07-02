@@ -23,7 +23,6 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | `ISndContext.cs` | SND 上下文组合接口：继承 9 个角色接口（[详见 Abstractions/Snd](../Abstractions/Snd/README.md)） |
 | `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→别名/模板加载→入口存档加载。实现 `ISndFileAccess`，将文件读写委托给 `SndWorld.DataSourceIo` + `ConverterRegistry` |
 | `SndContextParameters.cs` | SndContext 构造参数对象。含 `AutoDiscoverStrategies`、`DiscoverySkipPrefixes`、`SceneAliasMapPath`、`SndTemplateMapPath` 等启动配置属性 |
-| `NullSndContext.cs` | 测试用空上下文实现，`ISndFileAccess` 方法均抛 `InvalidOperationException` |
 | `SndWorld.cs` | SND 世界：策略池 + 类型映射 + 转换器注册表 + 模板/别名 |
 | `SndDefaults.cs` | `internal` — SND 系统默认值常量 |
 | `SndMappings.cs` | 场景别名解析 + 模板注册与解析 |
