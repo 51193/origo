@@ -25,6 +25,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | `DummySndEntity` | `ISndEntity` 实现 | 内存中的实体实现，提供 SetData/GetData/TryGetData |
 | `TestFactory` | 静态工厂类 | 快速创建 OrigoRuntime / SndWorld / ProgressRun / ConverterRegistry 等常用组合 |
 | `TestContextBuilder` | Fluent Builder | 构造 `SndContext` 实例（集成测试），提供合理默认值和可选覆盖，替代重复的 10 行构造模式 |
+| `GameplaySimulationHarness` | Fluent Builder + Harness | 一键创建完整帧驱动游戏模拟环境：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），支持 DriveFrame/RunFrames/SpawnEntity/GetEntityData |
 | `PerfReporter` | 静态工具类 | 性能测试输出格式化：Compare/Report 方法，打印时间/吞吐/分配对比。支持双通道输出（`Console.Out` + `ITestOutputHelper`），确保 CI 和本地均可看到结果 |
 | `ConsoleInputBuffer` | `IConsoleInputSource` 实现 | 控制台输入队列（Core 生产代码，测试中直接使用） |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` 实现 | 控制台输出通道（Core 生产代码，测试中直接使用） |
@@ -66,6 +67,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 存档文件访问 | [Snd-ArchiveFileAccess.md](Snd-ArchiveFileAccess.md) | ISndArchiveFileAccess 在 SndContext 上的 extra/ 子目录文件操作、DeleteFile、路径穿越防护、save/load 往返 |
 | 状态机 | [StateMachine.md](StateMachine.md) | StackStateMachine 压栈/出栈/恢复/FlushAfterLoad、空栈/空串/Dispose 边界测试、容器 CreateOrGet/序列化 |
 | 策略测试框架 | [StrategyTestScenario.md](StrategyTestScenario.md) | 三阶段模式（configure/run/assert）、EntityStrategy harness、ActiveStrategy harness |
+| 帧驱动集成测试 | [Integration/README.md](Integration/README.md) | GameplaySimulationHarness 完整运行时模拟：SndContext → Bootstrap → DriveFrame 帧循环 → 实体处理/黑板交互/延迟动作 |
 | 集合差异比较 | [Utility.md](Utility.md) | DiffUtility 泛型集合差异比较（added/removed）+ 去重语义 |
 
 ---
