@@ -172,7 +172,8 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
 
     public void RegisterTemplate(string key, SndMetaData template) => _templates[key] = template;
 
-    ISndSceneAccess IStateMachineContext.SceneAccess => throw new NotSupportedException();
+    ISndSceneAccess IStateMachineContext.SceneAccess => throw new InvalidOperationException(
+        "SceneAccess unavailable in strategy unit tests. Use full SndContext integration tests for state machine scenarios.");
 
     IBlackboard? IStateMachineContext.SessionBlackboard => null;
 }

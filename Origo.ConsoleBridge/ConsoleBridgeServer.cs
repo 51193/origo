@@ -71,7 +71,7 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 _acceptTask.Wait(_disposeJoinTimeoutMs);
             }
-            catch (AggregateException)
+            catch (AggregateException ex) when (ex.InnerException is OperationCanceledException)
             {
             }
         }

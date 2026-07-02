@@ -34,6 +34,7 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
 {
     private readonly SystemRun _systemRun;
     private readonly List<ISaveMetaContributor> _saveMetaContributors = [];
+    private readonly SndContextParameters _parameters;
     private int _pendingPersistenceRequests;
     private ProgressRun? _progressRun;
     private bool _workflowInProgress;
@@ -72,8 +73,6 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
             DataSourceIo, MetaAccess, Runtime.SndWorld.ConverterRegistry,
             PathResolver, SaveRootPath, SavePathPolicy);
     }
-
-    private readonly SndContextParameters _parameters;
 
     /// <summary>
     ///     执行框架启动流程：策略发现 → 场景别名/模板加载 → 入口存档加载。

@@ -19,7 +19,7 @@ namespace Origo.Core.Snd;
 ///         <see cref="ArchiveFileAccess" />（存档内文件访问）、
 ///         <see cref="StateMachineContext" />（状态机上下文）。
 ///         策略钩子保持全量 <c>ISndContext ctx</c> 参数，
-///         通过 <c>ctx.Blackboard.Blackboard.SystemBlackboard</c> 等二级访问使用各项能力。
+///         通过 <c>ctx.Blackboard.SystemBlackboard</c> 等二级访问使用各项能力。
 ///     </para>
 /// </summary>
 public interface ISndContext
