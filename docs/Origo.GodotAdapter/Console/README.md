@@ -13,6 +13,8 @@ Godot 适配层的控制台命令扩展。一个适配层的命令处理器基�
 | `CommandHandlerBase.cs` | 适配层命令处理器基类，持有 `OrigoRuntime` 引用，校验参数数量 |
 | `PressButtonCommandHandler.cs` | Godot 特有命令：按 entity + path 查找并发射 Button.Pressed 信号 |
 | `TreeDebugCommandHandler.cs` | Godot 特有命令：打印实体的完整 Godot 节点树（含动态创建的子节点） |
+| `CameraViewCommandHandler.cs` | Godot 特有命令：显示活跃摄像头视角下所有实体节点的屏幕坐标和深度 |
+| `ProjectionHelper.cs` | 摄像头投影数学工具：世界坐标 → 屏幕像素坐标（视锥体裁剪） |
 
 ## 模块详解
 
@@ -43,6 +45,23 @@ tree_debug <entity>
 2. 检查实体是否为 `GodotSndEntity` 类型
 3. 递归遍历实体的 Godot 节点树，打印每个节点的 `[类型] "名称"`
 4. 输出完整节点树信息，用于调试路径解析问题
+
+### CameraViewCommandHandler
+
+```
+camera_view
+```
+
+流程：
+1. 通过 `Engine.GetMainLoop()` 获取 SceneTree → Root Viewport
+2. `viewport.GetCamera3D()` 获取活跃摄像头
+3. 遍历 foreground session 中的所有 `GodotSndEntity`
+4. 对每个实体的子节点递归遍历：
+   - `Node3D` → 通过 `ProjectionHelper.ProjectWorldToScreen` 计算 2D 屏幕坐标和深度
+   - `Control` → 直接读取 `GlobalPosition`（UI 空间）
+5. 输出格式：`entity / node [类型] screen=(X, Y) depth=D`
+
+> 遮盖/遮挡检测暂未实现，当前显示视锥体内所有可见节点。深度值可用于手动排序判断前后关系。
 
 ## 设计决策
 

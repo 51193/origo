@@ -25,6 +25,7 @@ Origo 内置的控制台命令系统。支持通过 Godot 控制台或 TCP 桥�
 | `entity_set_data` | `<entity> <key> <value>` | 设置实体数据（自动推断类型，保留已有键的类型） |
 | `invoke_strategy` | `<entity> <index> [input]` | 调用实体的主动策略并显示结果 |
 | `tree_debug` | `<entity>` | 打印实体的 Godot 场景树结构（适配层命令） |
+| `camera_view` | 无 | 显示活跃摄像头视角下所有可见实体节点的屏幕坐标和深度（适配层命令） |
 
 ## 命令详细
 
@@ -126,6 +127,26 @@ InvokeStrategy 'traversability.is_passable' on 'TraversabilityManager': true
 ```
 
 打印指定实体的完整 Godot 节点子树，输出节点类型名和节点名。要求 1 个位置参数（实体名称）。若实体不存在或非 Godot 实体，输出错误。
+
+### camera_view（适配层）
+
+```
+> camera_view
+Camera: Camera3D | Viewport: 1920x1080
+
+player / CharacterBody3D [3D] screen=(960, 400) depth=5.2
+player / WeaponMesh [3D] screen=(1020, 420) depth=5.5
+enemy_01 / Sprite3D [3D] screen=(300, 350) depth=12.1
+main_ui / MainMenu [UI] screen=(100, 50)
+
+4 个节点 (3 3D, 1 UI) 来自 3 个实体可见。
+```
+
+无需参数。自动发现当前活跃 `Camera3D`，遍历所有 Godot 实体的子节点：
+- **3D 节点**（`Node3D`）：通过视锥体裁剪和投影计算屏幕坐标，输出 `(screenX, screenY) depth`
+- **UI 节点**（`Control`）：直接读取 `GlobalPosition` 作为屏幕坐标
+
+> 遮盖/遮挡检测暂未实现，仅做视锥体裁剪。深度值可用于手动判断前后关系。
 
 ## 添加自定义命令
 

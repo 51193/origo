@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `camera_view` console command — displays screen coordinates and depth of all Godot entity nodes visible through the active `Camera3D`. Walks `Node3D` children through frustum culling and world-to-screen projection, and reports `Control` node screen positions.
 - `GameplaySimulationHarness` — integration test harness that creates a fully bootstrapped `OrigoRuntime` + `SndContext` with a background game session (`syncProcess=true`), enabling true frame-driven gameplay simulation via `DriveFrame`/`RunFrames` with real `SndEntity` lifecycle and strategy processing.
 - `GameplayIntegrationTests` — 9 integration tests covering multi-frame entity data accumulation, cross-entity interaction (`FindByName` and `SessionBlackboard`), business deferred action execution, save-to-disk persistence, entity kill lifecycle (BeforeDead + removal), console command processing, full save-dispose-reload round-trip, and observer strategy mount-and-notify through the full `IOrigoFrameDriver.DriveFrame` pipeline.
 - `TestContextBuilder` — fluent builder for constructing `SndContext` instances in integration tests with sensible defaults and optional overrides for logger, scene host, blackboard, and paths.

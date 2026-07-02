@@ -44,5 +44,6 @@ public partial class OrigoDefaultEntry
 
         Runtime.Console.RegisterHandler(new PressButtonCommandHandler(Runtime));
         Runtime.Console.RegisterHandler(new TreeDebugCommandHandler(Runtime));
+        Runtime.Console.RegisterHandler(new CameraViewCommandHandler(Runtime));
     }
 }
