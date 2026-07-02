@@ -10,7 +10,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 - **不测试 internal 实现细节**：每个测试验证 `usage/` 或模块文档中描述的某条行为契约，而非代码的内部形状。原则：若可通过 `ISndContext`/`ISessionManager` 等公共接口验证行为，则不应使用 `InternalsVisibleTo` 直接访问 internal 类型。详见 [测试文档元指令 — InternalsVisibleTo 白名单原则](META-TEST.md#internalsvisibleto-白名单原则)。
 - **正确路径、错误路径、边界路径同等覆盖**：每个能力文档按三类路径组织测试方法。
 - **使用 TestFileSystem**：所有文件 I/O 测试使用内存文件系统（`TestFileSystem`），不涉及真实磁盘操作。策略测试上下文（`StrategyTestContext`）内置 `MemoryFileSystem` 全链路，支持 ISndFileAccess 行为验证。
-- **策略隔离测试**：`StrategyTestScenario` 框架允许在完全无运行时的环境下测试单个策略的生命周期。
+- **策略隔离测试**：`StrategyTestScenario` 框架允许在完全无运行时的环境下测试单个策略的生命周期。`TestContextBuilder` 提供集成测试场景下的 SndContext 构造。
 
 ## 测试辅助设施
 
@@ -24,6 +24,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | `TestNodeFactory` | `INodeFactory` 实现 | 可注入失败资源的节点工厂 |
 | `DummySndEntity` | `ISndEntity` 实现 | 内存中的实体实现，提供 SetData/GetData/TryGetData |
 | `TestFactory` | 静态工厂类 | 快速创建 OrigoRuntime / SndWorld / ProgressRun / ConverterRegistry 等常用组合 |
+| `TestContextBuilder` | Fluent Builder | 构造 `SndContext` 实例（集成测试），提供合理默认值和可选覆盖，替代重复的 10 行构造模式 |
 | `PerfReporter` | 静态工具类 | 性能测试输出格式化：Compare/Report 方法，打印时间/吞吐/分配对比。支持双通道输出（`Console.Out` + `ITestOutputHelper`），确保 CI 和本地均可看到结果 |
 | `ConsoleInputBuffer` | `IConsoleInputSource` 实现 | 控制台输入队列（Core 生产代码，测试中直接使用） |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` 实现 | 控制台输出通道（Core 生产代码，测试中直接使用） |

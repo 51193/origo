@@ -4,7 +4,7 @@
 
 ## 概述
 
-ISndContext 的角色接口拆分。9 个窄接口按职责分解，遵循接口隔离原则（ISP）。ISndContext 本身作为组合接口继承全部角色，不声明自有成员。
+ISndContext 的角色接口拆分。10 个窄接口按职责分解，遵循接口隔离原则（ISP）。ISndContext 不继承任何角色接口，所有能力通过类型化 companion 属性访问。
 
 ## 包含文件
 
@@ -22,14 +22,24 @@ ISndContext 的角色接口拆分。9 个窄接口按职责分解，遵循接口
 
 > **已删除**：`ISndSessionAccess.cs` 和 `ISndEntityOperations.cs`。`CurrentSession`、`IsFrontSession`、`SessionManager`、`RequestKillAll`/`RequestKillEntity` 已从 `ISndContext` 移除。`IsFrontSession` 现仅存在于 `ISessionRun`（经 `entity.OwningSession.IsFrontSession` 访问）。`SessionManager` 可通过 `entity.OwningSession.SessionManager` 或 `OrigoRuntime.SessionManager`（public）访问。实体销毁经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行。
 
-## ISndContext 组合
+## ISndContext Companion 属性
 
-```
-ISndContext : ISndBlackboardAccess + ISndDeferredActions
-            + ISndTemplateAccess + ISndConsoleAccess + ISndStateMachineAccess
-            + ISndSaveOperations + ISndLifecycleOperations
-            + ISndFileAccess + ISndArchiveFileAccess
-```
+ISndContext 不继承任何角色接口，所有能力通过 10 个 companion 属性访问：
+
+| Companion 属性 | 类型 | 职责 |
+|---------------|------|------|
+| `Blackboard` | `ISndBlackboardAccess` | 系统级 + 流程级黑板访问 |
+| `Deferred` | `ISndDeferredActions` | 延迟动作队列：入队 + 冲刷 + 计数 |
+| `Template` | `ISndTemplateAccess` | 模板克隆 |
+| `ConsoleAccess` | `ISndConsoleAccess` | 控制台命令提交/处理/输出订阅 |
+| `StateMachines` | `ISndStateMachineAccess` | 流程级状态机容器访问 |
+| `Save` | `ISndSaveOperations` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册 |
+| `Lifecycle` | `ISndLifecycleOperations` | Continue/Initial/MainMenu 生命周期入口 |
+| `FileAccess` | `ISndFileAccess` | 静态资源文件访问（结构化读写 + 强类型读写 + 存在检查） |
+| `ArchiveFileAccess` | `ISndArchiveFileAccess` | 存档内文件访问（结构化读写 + 强类型读写 + 存在检查 + 删除） |
+| `StateMachineContext` | `IStateMachineContext` | 状态机上下文（黑板访问 + 延迟动作 + 会话/场景访问） |
+
+策略钩子保持 `ISndContext ctx` 全量参数，通过 `ctx.Blackboard.SystemBlackboard`、`ctx.Save.RequestLoadGame(...)` 等二级访问使用各项能力。
 
 ## 与 IStateMachineContext 的关系
 
@@ -44,7 +54,7 @@ IStateMachineContext : ISndBlackboardAccess + ISndDeferredActions
 
 ### 为什么拆分 ISndContext
 
-将接口拆分为 9 个窄接口，每个消费者可按需依赖窄接口：
+将接口拆分为 10 个窄接口，每个消费者可按需依赖窄接口：
 
 - 仅需黑板访问的代码可依赖 `ISndBlackboardAccess`
 - 仅需延迟队列的代码可依赖 `ISndDeferredActions`
@@ -53,9 +63,13 @@ IStateMachineContext : ISndBlackboardAccess + ISndDeferredActions
 
 策略钩子（`LifecycleStrategyBase` 的 8 个虚方法）保持 `ISndContext ctx` 全量参数——策略作为一等公民，应能访问框架全部能力。
 
-### 为什么 ISndContext 仍作为组合接口存在
+### 为什么 ISndContext 使用 companion 属性而非接口继承
 
-策略钩子需要全量能力（如 `Process` 中也允许 `RequestSaveGame`）。作为组合接口保持调用方兼容性，拆分仅在类型层级表达职责边界。
+ISndContext 本身是统一业务门面，不继承任何角色接口。所有能力通过类型化 companion 属性暴露：
+
+- **消除命名冲突**：多个角色接口可能包含同名成员（如不同接口的 `Clear()` 方法），接口继承在 C# 中必须通过显式接口实现消除歧义，companion 属性自然隔离命名空间（`ctx.Blackboard.Clear()` vs `ctx.Save.xxx()`）
+- **更清晰的调用语义**：`ctx.Save.RequestLoadGame(...)` 明确表达"通过存档服务执行加载"，优于直接 `ctx.RequestLoadGame(...)`
+- **组合优于继承**：companion 模式允许未来在不改变 ISndContext 签名的前提下添加/替换能力提供者
 
 ### 为什么 SessionManager 不在 ISndContext 上
 

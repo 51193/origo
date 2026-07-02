@@ -81,16 +81,29 @@ public interface IBlackboard
 
 ### ISndContext
 
-ISndContext 是策略钩子接收的统一门面接口，组合了 9 个角色接口。命名空间 `Origo.Core.Snd`。
+ISndContext 是策略钩子接收的统一门面接口，不继承任何角色接口，所有能力通过 10 个类型化 companion 属性访问。命名空间 `Origo.Core.Snd`。
 
 ```csharp
-public interface ISndContext : ISndBlackboardAccess, ISndDeferredActions,
-    ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
-    ISndLifecycleOperations, ISndFileAccess, ISndArchiveFileAccess
+public interface ISndContext
 {
+    void Bootstrap();
+    string SaveRootPath { get; }
+    string InitialSaveRootPath { get; }
+    string EntryConfigPath { get; }
+
+    ISndBlackboardAccess Blackboard { get; }
+    ISndDeferredActions Deferred { get; }
+    ISndTemplateAccess Template { get; }
+    ISndConsoleAccess ConsoleAccess { get; }
+    ISndStateMachineAccess StateMachines { get; }
+    ISndSaveOperations Save { get; }
+    ISndLifecycleOperations Lifecycle { get; }
+    ISndFileAccess FileAccess { get; }
+    ISndArchiveFileAccess ArchiveFileAccess { get; }
+    IStateMachineContext StateMachineContext { get; }
 }
 
-// === 角色接口概览 ===
+// === 角色接口概览（companion 属性的类型定义） ===
 
 // 黑板访问
 public interface ISndBlackboardAccess {
