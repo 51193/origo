@@ -21,3 +21,7 @@
 ### 为什么不使用更复杂的 diff 算法
 
 当前用途仅需检测集合元素的增删（策略绑定、观察者绑定等拓扑变化的计算），不需要 LCS 等序列级 diff。HashSet-based 实现已足够。
+
+---
+
+[↑ 回到 Origo.Core/Utility](README.md)

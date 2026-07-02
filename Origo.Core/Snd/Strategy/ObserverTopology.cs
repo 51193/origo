@@ -88,7 +88,7 @@ internal sealed class ObserverTopology
                     .AddContext("observerIndex", observerIndex)
                     .Build("Observer strategy mounted."));
         }
-        catch
+        catch (Exception)
         {
             if (entry is not null)
             {

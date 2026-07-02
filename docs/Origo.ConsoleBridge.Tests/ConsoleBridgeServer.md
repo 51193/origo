@@ -12,7 +12,9 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `ConsoleBridgeServerTests.cs` | 服务器完整行为 |
+| `ConsoleBridgeServerLifecycleTests.cs` | 服务器生命周期（Start/Stop/Dispose/双 Dispose/ActualPort）和连接管理（双连接拒绝、断开重连、硬断开恢复） |
+| `ConsoleBridgeServerCommunicationTests.cs` | 客户端输入命令传递（FIFO 顺序、Unicode、长行、空白行过滤）和输出通道分发（多行、null、大容量、并发发布、缓冲溢出） |
+| `ConsoleBridgeServerTests.cs` | 线程安全（并发读写无死锁）、回归测试（connect-time flush vs 并发发布）、短往返、Agent 工作流集成（输出到达、多行输出、重连全流程） |
 | `ConsoleBridgeOptionsTests.cs` | 选项配置（自定义端口等） |
 
 ## ConsoleBridgeServerTests 测试详情

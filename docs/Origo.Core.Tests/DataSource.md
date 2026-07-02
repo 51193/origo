@@ -12,7 +12,10 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `DataSourceTests.cs` | 完整 DataSource 体系：工厂/访问器/对象数组访问/Builder/Lazy/JSON 与 Map 编解码/ConverterRegistry/基本类型与数组转换器/领域类型转换器/TypeStringMapping/Dispose |
+| `DataSourceFactoryTests.cs` | 工厂方法和基本访问器：节点创建、值/对象/数组访问、Builder 链式 Add、Lazy 展开 |
+| `DataSourceCodecTests.cs` | JSON 编解码往返（复杂嵌套树、顶层数组、懒展开）和 Map 编解码边缘情况（注释/空行跳过、值中冒号、无冒号行报错） |
+| `DataSourceConverterTests.cs` | ConverterRegistry 注册与读写、14 种基本类型 + 14 种数组类型 + 5 种领域类型（TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary）完整往返、TypeStringMapping 扩展 |
+| `DataSourceTests.cs` | 余项：IDisposable 递归释放与深树防栈溢出、新访问器方法、TypeStringMapping 新类型注册、DataSourceConverterRegistry 类型层级回退、ReadOnlyDictionary 往返 |
 | `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` 规范化摘要计算 |
 | `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` 键值文件解析（严格/宽松模式、注释、重复键、null/空内容） |
 

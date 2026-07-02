@@ -52,7 +52,7 @@ internal sealed partial class ProgressRun
                 foreach (var descriptor in topology)
                     MountSessionFromDescriptor(payload, descriptor);
             }
-            catch
+            catch (Exception)
             {
                 _owner._sessionManager.Clear();
                 throw;

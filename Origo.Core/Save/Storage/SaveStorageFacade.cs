@@ -77,45 +77,13 @@ internal static class SaveStorageFacade
         ArgumentNullException.ThrowIfNull(logger);
         var watch = Stopwatch.StartNew();
 
-        var payloadHash = SavePayloadWriter.ComputePayloadHash(payload);
+        var combinedHash = ComputeCombinedHash(handle, payload);
 
-        var snapshotDirRel = handle.PathPolicy.GetSaveDirectory(newSaveId);
-        var snapshotShaRel = handle.PathPolicy.GetPayloadShaFile(snapshotDirRel);
-        var snapshotShaAbs = handle.GetAbsolutePath(snapshotShaRel);
-
-        var sideHash = ComputeSideDirectoryHash(handle, SavePathLayout.ExtraDirectoryName);
-        var combinedHash = CombineHashes(payloadHash, sideHash);
-
-        if (handle.MetaAccess.FileExists(snapshotShaAbs))
-        {
-            var existingHash = handle.IoGateway.ReadTree(snapshotShaAbs).AsString().Trim();
-            if (existingHash.Length > 0
-                && string.Equals(existingHash, combinedHash, StringComparison.Ordinal))
-            {
-                logger.Log(LogLevel.Info, nameof(SaveStorageFacade),
-                    new LogMessageBuilder()
-                        .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                        .Build($"Idempotent save skip: combined hash unchanged for save '{newSaveId}'."));
-                return;
-            }
-        }
+        if (TryIdempotentSkip(handle, newSaveId, combinedHash, logger, watch))
+            return;
 
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
-        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
-        var markerAbs = handle.GetAbsolutePath(markerRel);
-        var currentAbs = handle.GetAbsolutePath(currentRel);
-        handle.MetaAccess.CreateDirectory(currentAbs);
-        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
-
-        SavePayloadWriter.WriteToCurrent(handle, payload);
-
-        // Write .payload.sha with the combined hash (payload + extra/ files).
-        WritePayloadSha(handle, currentRel, combinedHash);
-
-        // Re-mark current/ as write-in-progress for the snapshot phase: if the
-        // snapshot fails below, the marker is intentionally left in place so a
-        // later ReadFromCurrent rejects the updated-but-unsnapshotted current/.
-        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
+        var markerAbs = WriteCurrentWithMarker(handle, payload, currentRel, combinedHash);
 
         try
         {
@@ -178,6 +146,73 @@ internal static class SaveStorageFacade
 
         var saveRel = handle.PathPolicy.GetSaveDirectory(newSaveId);
         var saveAbs = handle.GetAbsolutePath(saveRel);
+        var tempAbs = PrepareTempDirectory(handle, saveRel);
+
+        CopyCurrentToTempDirectory(handle, currentRel, $"{saveRel}.tmp", logger);
+
+        SwapSnapshotDirectory(handle, saveAbs, tempAbs, saveRel);
+
+        logger?.Log(LogLevel.Info, nameof(SaveStorageFacade),
+            new LogMessageBuilder()
+                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                .Build($"Snapshot completed from current/ to save '{newSaveId}'."));
+    }
+
+    private static string ComputeCombinedHash(SaveFileHandle handle, SaveGamePayload payload)
+    {
+        var payloadHash = SavePayloadWriter.ComputePayloadHash(payload);
+        var sideHash = ComputeSideDirectoryHash(handle, SavePathLayout.ExtraDirectoryName);
+        return CombineHashes(payloadHash, sideHash);
+    }
+
+    private static bool TryIdempotentSkip(
+        SaveFileHandle handle, string newSaveId, string combinedHash, ILogger logger, Stopwatch watch)
+    {
+        var snapshotDirRel = handle.PathPolicy.GetSaveDirectory(newSaveId);
+        var snapshotShaRel = handle.PathPolicy.GetPayloadShaFile(snapshotDirRel);
+        var snapshotShaAbs = handle.GetAbsolutePath(snapshotShaRel);
+
+        if (!handle.MetaAccess.FileExists(snapshotShaAbs))
+            return false;
+
+        var existingHash = handle.IoGateway.ReadTree(snapshotShaAbs).AsString().Trim();
+        if (existingHash.Length > 0
+            && string.Equals(existingHash, combinedHash, StringComparison.Ordinal))
+        {
+            logger.Log(LogLevel.Info, nameof(SaveStorageFacade),
+                new LogMessageBuilder()
+                    .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                    .Build($"Idempotent save skip: combined hash unchanged for save '{newSaveId}'."));
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     将 payload 写入 current/ 并放置 write-in-progress marker。
+    ///     payload.sha 写入合并哈希（payload + extra/ 文件）。
+    ///     marker 在写入完成后刷新：若后续 snapshot 阶段失败，marker 有意保留在磁盘上，
+    ///     以便后续 ReadFromCurrent 拒绝 updated-but-unsnapshotted current/。
+    /// </summary>
+    private static string WriteCurrentWithMarker(
+        SaveFileHandle handle, SaveGamePayload payload, string currentRel, string combinedHash)
+    {
+        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
+        var markerAbs = handle.GetAbsolutePath(markerRel);
+        var currentAbs = handle.GetAbsolutePath(currentRel);
+        handle.MetaAccess.CreateDirectory(currentAbs);
+        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
+
+        SavePayloadWriter.WriteToCurrent(handle, payload);
+        WritePayloadSha(handle, currentRel, combinedHash);
+
+        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
+        return markerAbs;
+    }
+
+    private static string PrepareTempDirectory(SaveFileHandle handle, string saveRel)
+    {
         var tempRel = $"{saveRel}.tmp";
         var tempAbs = handle.GetAbsolutePath(tempRel);
 
@@ -185,11 +220,16 @@ internal static class SaveStorageFacade
             handle.MetaAccess.DeleteDirectory(tempAbs);
 
         handle.MetaAccess.CreateDirectory(tempAbs);
-        CopyCurrentToTempDirectory(handle, currentRel, tempRel, logger);
+        return tempAbs;
+    }
 
-        // Replace the existing snapshot via backup-then-rename so the old data is
-        // never deleted before the new data is in place: move the old directory
-        // aside, rename the freshly built temp into place, then drop the backup.
+    /// <summary>
+    ///     通过 backup-then-rename 替换已有 snapshot，确保旧数据在新数据到位前永不被删除：
+    ///     先将旧目录移开 → 将新构建的 temp 重命名到位 → 再删除 backup。
+    /// </summary>
+    private static void SwapSnapshotDirectory(
+        SaveFileHandle handle, string saveAbs, string tempAbs, string saveRel)
+    {
         var bakRel = $"{saveRel}.bak";
         var bakAbs = handle.GetAbsolutePath(bakRel);
         if (handle.MetaAccess.DirectoryExists(bakAbs))
@@ -203,11 +243,6 @@ internal static class SaveStorageFacade
 
         if (hadExisting)
             handle.MetaAccess.DeleteDirectory(bakAbs);
-
-        logger?.Log(LogLevel.Info, nameof(SaveStorageFacade),
-            new LogMessageBuilder()
-                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                .Build($"Snapshot completed from current/ to save '{newSaveId}'."));
     }
 
     private static void CopyCurrentToTempDirectory(
