@@ -23,60 +23,37 @@ namespace Origo.Core.Tests;
 /// </summary>
 public class SaveCoordinatorTests
 {
-    [Fact]
-    public void Constructor_NullSessionManager_Throws()
+    public enum NullParam
     {
-        var bb = new Blackboard.Blackboard();
-        var sm = new StateMachineContainer(new SndStrategyPool(new TestLogger()), new TestStateMachineContext());
-        var pr = CreateProgressRuntime();
-
-        Assert.Throws<ArgumentNullException>(() =>
-            new SaveCoordinator(null!, bb, sm, pr, "save_01"));
+        SessionManager,
+        ProgressBlackboard,
+        StateMachines,
+        ProgressRuntime,
+        SaveId
     }
 
-    [Fact]
-    public void Constructor_NullProgressBlackboard_Throws()
-    {
-        var sm = CreateSessionManager();
-        var sc = new StateMachineContainer(new SndStrategyPool(new TestLogger()), new TestStateMachineContext());
-        var pr = CreateProgressRuntime();
-
-        Assert.Throws<ArgumentNullException>(() =>
-            new SaveCoordinator(sm, null!, sc, pr, "save_01"));
-    }
-
-    [Fact]
-    public void Constructor_NullStateMachines_Throws()
-    {
-        var sm = CreateSessionManager();
-        var bb = new Blackboard.Blackboard();
-        var pr = CreateProgressRuntime();
-
-        Assert.Throws<ArgumentNullException>(() =>
-            new SaveCoordinator(sm, bb, null!, pr, "save_01"));
-    }
-
-    [Fact]
-    public void Constructor_NullProgressRuntime_Throws()
-    {
-        var sm = CreateSessionManager();
-        var bb = new Blackboard.Blackboard();
-        var sc = new StateMachineContainer(new SndStrategyPool(new TestLogger()), new TestStateMachineContext());
-
-        Assert.Throws<ArgumentNullException>(() =>
-            new SaveCoordinator(sm, bb, sc, null!, "save_01"));
-    }
-
-    [Fact]
-    public void Constructor_NullSaveId_Throws()
+    [Theory]
+    [InlineData(NullParam.SessionManager, null!, "bb", "sc", "pr", "save_01")]
+    [InlineData(NullParam.ProgressBlackboard, "sm", null!, "sc", "pr", "save_01")]
+    [InlineData(NullParam.StateMachines, "sm", "bb", null!, "pr", "save_01")]
+    [InlineData(NullParam.ProgressRuntime, "sm", "bb", "sc", null!, "save_01")]
+    [InlineData(NullParam.SaveId, "sm", "bb", "sc", "pr", null!)]
+    public void Constructor_NullParam_Throws(NullParam _, string? smMarker, string? bbMarker,
+        string? scMarker, string? prMarker, string? saveIdMarker)
     {
         var sm = CreateSessionManager();
         var bb = new Blackboard.Blackboard();
         var sc = new StateMachineContainer(new SndStrategyPool(new TestLogger()), new TestStateMachineContext());
         var pr = CreateProgressRuntime();
 
+        var sessionManager = smMarker is null ? null! : sm;
+        var blackboard = bbMarker is null ? null! : (IBlackboard)bb;
+        var stateMachines = scMarker is null ? null! : (IStateMachineContainer)sc;
+        var progressRuntime = prMarker is null ? null! : pr;
+        var saveId = saveIdMarker is null ? null! : "save_01";
+
         Assert.Throws<ArgumentNullException>(() =>
-            new SaveCoordinator(sm, bb, sc, pr, null!));
+            new SaveCoordinator(sessionManager, blackboard, stateMachines, progressRuntime, saveId));
     }
 
     [Fact]

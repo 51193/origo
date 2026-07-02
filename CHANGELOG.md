@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `TestContextBuilder` — fluent builder for constructing `SndContext` instances in integration tests with sensible defaults and optional overrides for logger, scene host, blackboard, and paths.
 - `SaveExtraFilesRoundTripTests` — 14 tests covering `CopyDirectoryFromSnapshot` (low-level copy behavior, subdirectory preservation, silent skip on missing source, overwrite, null/whitespace guards) and `ISndArchiveFileAccess` full save/load cycles (multiple files, subdirectories, typed data round-trips, delete-then-save).
 - `SndContextBootstrapTests` — 15 tests covering `SndContext.Bootstrap()` full flow (converter callback, auto-discover on/off, template loading, foreground session establishment, error on missing entry), `IStateMachineContext` interface casting (SceneAccess/SystemBlackboard/ProgressBlackboard), `CloneTemplate` edge cases (null/whitespace/non-existing key), and `SaveRootPath`/`InitialSaveRootPath`/`EntryConfigPath` getter contracts.
 - `ConsoleBridgeServer` `PendingOutput` boundary tests: buffer overflow behavior (lines beyond the 1000-line limit are dropped) and within-limit delivery on connect.
