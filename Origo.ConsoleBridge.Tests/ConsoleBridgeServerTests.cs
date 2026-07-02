@@ -256,7 +256,7 @@ public class ConsoleBridgeServerTests
             Assert.Equal("session1_result", response);
         }
 
-        using (var client = ConsoleBridgeTestInfrastructure.ConnectWithRetry(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs))
+        using (var client = ConsoleBridgeTestInfrastructure.Connect(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs))
         {
             using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
             using var reader = new StreamReader(client.GetStream());

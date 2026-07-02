@@ -56,15 +56,10 @@ public class ConsoleOutputChannelTests
     }
 
     [Fact]
-    public void ConsoleOutputChannel_Publish_NullBroadcastsEmpty()
+    public void ConsoleOutputChannel_Publish_Null_Throws()
     {
         var channel = new ConsoleOutputChannel();
-        var received = new List<string>();
-        channel.Subscribe(msg => received.Add(msg));
-
-        channel.Publish(null!);
-        Assert.Single(received);
-        Assert.Equal(string.Empty, received[0]);
+        Assert.Throws<ArgumentNullException>(() => channel.Publish(null!));
     }
 
     [Fact]
@@ -96,8 +91,8 @@ public class ConsoleOutputChannelTests
         channel.Subscribe(_ => throw new InvalidOperationException("e2"));
         channel.Subscribe(msg => received.Add(msg));
 
-        var ex = Assert.Throws<InvalidOperationException>(() => channel.Publish("msg"));
-        Assert.Equal("e1", ex.Message);
+        var ex = Assert.Throws<AggregateException>(() => channel.Publish("msg"));
+        Assert.Equal("e1", ex.InnerException!.Message);
         Assert.Single(received);
     }
 }

@@ -9,7 +9,7 @@ public static class GridParser
         var str = input switch
         {
             string s => s,
-            JsonElement je => je.GetString(),
+            JsonElement je when je.ValueKind == JsonValueKind.String => je.GetString(),
             _ => null
         };
 

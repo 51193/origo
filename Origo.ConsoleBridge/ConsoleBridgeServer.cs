@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -12,8 +13,9 @@ namespace Origo.ConsoleBridge;
 
 /// <summary>
 ///     TCP 控制台桥接服务器。
-///     单连接模式：内部使用异步 I/O 接受连接和读取命令，
-///     控制台输出通过 Subscribe 回调直接写入 TCP 连接。
+///     单连接模式：一次只处理一个客户端连接。
+///     Accept 循环在 handler 完成后才继续接受下一个连接，
+///     新连接在此期间进入 OS backlog 队列自然等待。
 /// </summary>
 public sealed class ConsoleBridgeServer : IDisposable
 {
@@ -28,7 +30,6 @@ public sealed class ConsoleBridgeServer : IDisposable
     private readonly object _writerLock = new();
     private readonly CancellationTokenSource _cts = new();
 
-    private int _activeClientCount;
     private TcpListener _listener = null!;
     private long _outputSubId;
     private int _started;
@@ -71,7 +72,7 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 _acceptTask.Wait(_disposeJoinTimeoutMs);
             }
-            catch (AggregateException ex) when (ex.InnerException is OperationCanceledException)
+            catch (AggregateException ex) when (ex.InnerExceptions.Count > 0 && ex.InnerExceptions.All(e => e is OperationCanceledException))
             {
             }
         }
@@ -133,13 +134,15 @@ public sealed class ConsoleBridgeServer : IDisposable
                 break;
             }
 
-            if (Interlocked.CompareExchange(ref _activeClientCount, 1, 0) != 0)
+            try
             {
-                client.Close();
-                continue;
+                await HandleConnectionAsync(client, ct);
             }
-
-            _ = HandleConnectionAsync(client, ct);
+            catch
+            {
+                // Handler already catches all expected exceptions internally.
+                // Unexpected exceptions are swallowed to keep the accept loop alive.
+            }
         }
     }
 
@@ -193,7 +196,6 @@ public sealed class ConsoleBridgeServer : IDisposable
                 _writer = null;
             }
 
-            Interlocked.Exchange(ref _activeClientCount, 0);
             client.Close();
         }
     }

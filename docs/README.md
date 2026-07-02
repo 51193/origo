@@ -61,7 +61,7 @@ Root (this file)
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.md) | Godot 4 适配层：文件系统、日志、序列化、启动 |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.md) | TCP 远程控制台桥接（端口 9876） |
 | **使用文档** | [README](usage/README.md) | 从快速入门到深度参考的使用指南 |
-| **测试: Core** | [README](Origo.Core.Tests/README.md) | Core 层 30 个能力的行为测试文档 |
+| **测试: Core** | [README](Origo.Core.Tests/README.md) | Core 层 31 个能力的行为测试文档 |
 | **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.md) | 适配层 7 个能力测试文档 |
 | **测试: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.md) | TCP 桥接服务器行为测试文档 |
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.md) | TypedData 源码生成器的驱动器行为测试文档 |
@@ -84,10 +84,10 @@ Root (this file)
 | [Scheduling](Origo.Core/Scheduling/README.md) | 延迟动作调度 |
 | [Blackboard](Origo.Core/Blackboard/README.md) | 内存黑板实现 |
 | [Random](Origo.Core/Random/README.md) | 随机数 + 噪声图 |
+| [Utility](Origo.Core/Utility/README.md) | 通用工具：集合差异比较 |
 | [Serialization](Origo.Core/Serialization/README.md) | 类型 ↔ 字符串映射 |
 | [Logging](Origo.Core/Logging/README.md) | 日志构建器 + NullLogger |
 | [Addons](Origo.Core/Addons/README.md) | FastNoiseLite 噪声库 |
-| [Testing](Origo.Core.Tests/StrategyTestScenario.md) | StrategyTestScenario 测试框架 |
 
 ## 快速导航
 

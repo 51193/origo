@@ -19,7 +19,7 @@ public sealed class LogMessageBuilder
 
     public LogMessageBuilder AddContext(string key, object? value)
     {
-        if (!string.IsNullOrWhiteSpace(key) && value is not null) _context[key] = value;
+        if (!string.IsNullOrWhiteSpace(key)) _context[key] = value;
         return this;
     }
 

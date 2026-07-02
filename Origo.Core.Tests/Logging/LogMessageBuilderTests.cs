@@ -46,10 +46,10 @@ public class LogMessageBuilderTests
     }
 
     [Fact]
-    public void AddContext_NullValue_Skipped()
+    public void AddContext_NullValue_Preserved()
     {
         var msg = new LogMessageBuilder().AddContext("key", null).Build("test");
-        Assert.Equal("test", msg);
+        Assert.Equal("test | key=", msg);
     }
 
     [Fact]

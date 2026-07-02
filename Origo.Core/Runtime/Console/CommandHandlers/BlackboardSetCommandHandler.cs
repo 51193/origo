@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
@@ -33,10 +34,14 @@ internal sealed class BlackboardSetCommandHandler : ConsoleCommandHandlerBase
         var key = invocation.PositionalArgs[1].Trim();
         var raw = invocation.PositionalArgs[2].Trim();
 
-        var bb = ConsoleCommandHelper.ResolveBlackboardLayer(_runtime, layer);
-        if (bb is null)
+        IBlackboard bb;
+        try
         {
-            errorMessage = $"Unknown or unavailable blackboard layer '{layer}'. Use: system";
+            bb = ConsoleCommandHelper.ResolveBlackboardLayer(_runtime, layer);
+        }
+        catch (ArgumentException ex)
+        {
+            errorMessage = ex.Message;
             return false;
         }
 

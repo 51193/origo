@@ -66,6 +66,8 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
 
         // Runtime 仅触达 SessionManager（再下查 SessionRun），不直达任何 SceneHost。
         // 该 provider 在构造时建立（不依赖 Bootstrap），延迟解析当前会话管理器。
+        // 尚未加载 ProgressRun 时缓回退到 EmptySessionManager（Null Object 模式），
+        // SessionManager 相关操作在 Bootstrap 之前将会无操作——这是设计性行为，不是缺陷。
         Runtime.SetSessionManagerProvider(() => _progressRun?.SessionManager ?? EmptySessionManager.Instance);
 
         FileAccess = new SndContextFileAccess(DataSourceIo, MetaAccess, Runtime.SndWorld.ConverterRegistry);

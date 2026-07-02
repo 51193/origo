@@ -19,9 +19,9 @@
 
 ### 链接规范
 
-- **每个 README 必须包含向上一层（父目录）的链接**，格式：`[↑ 回到 Xxx](path)`
+- **每个 README 必须包含向上一层（父目录）的链接**，格式：`` `[↑ Back to Xxx](path)` ``
 - **每个 README 必须包含所有子模块的链接**（如果有子目录）
-- **横向关联可选**（如实现 ↔ 抽象），格式：`[↔ Xxx](path)`
+- **横向关联可选**（如实现 ↔ 抽象），格式：`` `[↔ Xxx](path)` ``
 - **禁止孤立叶子**：整个文档树通过链接严格连通
 
 ### 内容约定
@@ -168,8 +168,13 @@ docs/                            # 文档根（位于 origo 仓库内）
 ├── Origo.Core/                  # 镜像仓根 Origo.Core/ 的目录结构
 │   ├── README.md               # 模块根文档
 │   └── 子目录/README.md        # 逐级下钻
+├── Origo.Core.Tests/            # 镜像仓根 Origo.Core.Tests/
 ├── Origo.GodotAdapter/          # 镜像仓根 Origo.GodotAdapter/
-└── Origo.ConsoleBridge/         # 镜像仓根 Origo.ConsoleBridge/
+├── Origo.GodotAdapter.Tests/    # 镜像仓根 Origo.GodotAdapter.Tests/
+├── Origo.ConsoleBridge/         # 镜像仓根 Origo.ConsoleBridge/
+├── Origo.ConsoleBridge.Tests/   # 镜像仓根 Origo.ConsoleBridge.Tests/
+├── Origo.SourceGeneration/      # 镜像仓根 Origo.SourceGeneration/
+└── Origo.SourceGeneration.Tests/ # 镜像仓根 Origo.SourceGeneration.Tests/
 ```
 
 > 顶层入口 [AGENTS.md](../AGENTS.md) 位于仓库根，自动注入每次会话，并链接到本文件。

@@ -55,9 +55,8 @@ internal static class GodotDirectoryOperations
         if (!DirAccess.DirExistsAbsolute(directoryPath))
             return;
 
-        using var dir = DirAccess.Open(directoryPath);
-        if (dir is null)
-            return;
+        using var dir = DirAccess.Open(directoryPath) ?? throw new InvalidOperationException(
+            $"Failed to open directory for deletion: {directoryPath}");
 
         var normalizedDir = directoryPath.TrimEnd('/');
 

@@ -2,7 +2,7 @@
 
 > [↑ 回到 Origo.Core.Tests](../README.md)
 > [↔ 被测行为: usage/architecture-overview](../../usage/architecture-overview.md)
-> [↔ 被测模块: Origo.Core/Runtime](../Origo.Core/Runtime/README.md)
+> [↔ 被测模块: Origo.Core/Runtime](../../Origo.Core/Runtime/README.md)
 
 ## 被测行为概览
 

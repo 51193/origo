@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Abstractions.Logging;
 using Origo.GodotAdapter.Logging;
 using Xunit;
@@ -28,14 +29,8 @@ public class GodotLoggerTests
     }
 
     [Fact]
-    public void Log_WithNullHandler_DoesNotThrow()
-    {
-        var logger = new GodotLogger();
-
-        var ex = Record.Exception(() => logger.Log(LogLevel.Error, "tag", "msg"));
-
-        Assert.Null(ex);
-    }
+    public void Constructor_WithNullHandler_Throws() =>
+        Assert.Throws<ArgumentNullException>(() => new GodotLogger(null!));
 
     [Fact]
     public void Log_EachLogLevel_PassesCorrectLevel()

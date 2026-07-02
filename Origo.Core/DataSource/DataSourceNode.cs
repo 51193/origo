@@ -353,9 +353,12 @@ public sealed class DataSourceNode : IDisposable
         if (_expanded)
             return;
 
+        if (_expander is null || _rawText is null)
+            throw new InvalidOperationException(
+                "DataSourceNode cannot be expanded: this node was not created as a lazy node (CreateLazy).");
         // Expand first, then mark as expanded. If the expander throws,
         // the node stays in the lazy state and can be retried or disposed safely.
-        var expanded = _expander!(_rawText!);
+        var expanded = _expander(_rawText);
         var nextOrderedKeys = new List<string>(expanded._orderedKeys.Count);
         var nextObjectChildren =
             new Dictionary<string, DataSourceNode>(expanded._orderedKeys.Count, StringComparer.Ordinal);

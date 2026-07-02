@@ -13,7 +13,7 @@ public static class ConsoleBridgeTestInfrastructure
 {
     public const int CommandTimeoutMs = 2000;
     public const int OutputTimeoutMs = 3000;
-    public const int ConnectRetryIntervalMs = 5;
+    public const int ConnectRetryIntervalMs = 10;
     public const int SpinPollIntervalMs = 10;
     public const int StressCommandCount = 100;
 
@@ -64,10 +64,9 @@ public static class ConsoleBridgeTestInfrastructure
         }
     }
 
-    public static TcpClient ConnectWithRetry(int port, int timeoutMs)
+    public static TcpClient Connect(int port, int timeoutMs)
     {
         var sw = Stopwatch.StartNew();
-        SocketException? lastEx = null;
         while (sw.ElapsedMilliseconds < timeoutMs)
         {
             try
@@ -76,14 +75,13 @@ public static class ConsoleBridgeTestInfrastructure
                 client.Connect(IPAddress.Loopback, port);
                 return client;
             }
-            catch (SocketException ex)
+            catch (SocketException)
             {
-                lastEx = ex;
                 Thread.Sleep(ConnectRetryIntervalMs);
             }
         }
-        throw new TimeoutException(
-            $"Could not connect to port {port} within {timeoutMs}ms", lastEx);
+
+        throw new TimeoutException($"Could not connect to port {port} within {timeoutMs}ms");
     }
 
     public static void AssertConnectionRefused(int port, int timeoutMs)

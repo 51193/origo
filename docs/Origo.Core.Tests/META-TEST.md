@@ -24,7 +24,7 @@
 ### 链接规范
 
 - **每个文档必须包含向上一层（模块 README）的链接**，格式：`[↑ 回到 Origo.Core.Tests](README.md)`
-- **每个能力文档必须包含横向链接**到被测模块的文档，格式：`[↔ 被测模块: Origo.Core/Xxx](../Origo.Core/Xxx/README.md)`
+- **每个能力文档必须包含横向链接**到被测模块的文档，格式：`` `[↔ 被测模块: Origo.Core/Xxx](../Origo.Core/Xxx/README.md)` ``
 - **每个能力文档引用 usage/ 中的行为描述时，必须链接到对应文档**
 - **禁止孤立文档**：所有测试文档通过链接严格连通到模块 README 和顶级 README
 

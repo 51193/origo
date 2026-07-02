@@ -1,7 +1,6 @@
 using Origo.Core.Abstractions.Lifecycle;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Node;
@@ -60,6 +59,8 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     public void MountObserverStrategy(string targetName, string observerIndex)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(targetName);
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(observerIndex);
         var self = (ISndEntity)this;
         var target = ResolveTargetForMount(self, targetName);
         _observerTopology.Mount(self, target, observerIndex);
@@ -67,6 +68,8 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     public void UnmountObserverStrategy(string targetName, string observerIndex)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(targetName);
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(observerIndex);
         var self = (ISndEntity)this;
         var target = ResolveTargetForMount(self, targetName);
         _observerTopology.Unmount(self, target, observerIndex);
@@ -93,20 +96,43 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             $"Resolve the target via entity.OwningSession.FindByName(targetName), then use MountObserverStrategy(ISndEntity target, string observerIndex).");
     }
 
-    public INodeHandle GetNode(string name) => _nodeHost.GetNode(name);
+    public INodeHandle GetNode(string name)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(name);
+        return _nodeHost.GetNode(name);
+    }
 
     public IReadOnlyCollection<string> GetNodeNames() => _nodeHost.GetNodeNames();
 
-    public void AddStrategy(string index) => _strategyManager.Add(this, index, _context);
+    public void AddStrategy(string index)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(index);
+        _strategyManager.Add(this, index, _context);
+    }
 
-    public void RemoveStrategy(string index) => _strategyManager.Remove(this, index, _context);
+    public void RemoveStrategy(string index)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(index);
+        _strategyManager.Remove(this, index, _context);
+    }
 
-    public void AddActiveStrategy(string index) => _activeStrategyManager.Add(index);
+    public void AddActiveStrategy(string index)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(index);
+        _activeStrategyManager.Add(index);
+    }
 
-    public void RemoveActiveStrategy(string index) => _activeStrategyManager.Remove(index);
+    public void RemoveActiveStrategy(string index)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(index);
+        _activeStrategyManager.Remove(index);
+    }
 
-    public object? InvokeStrategy(string strategyIndex, object? input = null) =>
-        _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
+    public object? InvokeStrategy(string strategyIndex, object? input = null)
+    {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(strategyIndex);
+        return _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
+    }
 
     public bool IsPendingKill { get; set; }
     public ISessionRun OwningSession => _owningSession ?? throw new InvalidOperationException("Entity is not bound to a session. OwningSession must be set before the entity is used.");
@@ -125,10 +151,10 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
                              throw new InvalidOperationException("DataMetaData is required."));
         _nodeHost.Recover(metaData.NodeMetaData ??
                           throw new InvalidOperationException("NodeMetaData is required."));
-        _strategyManager.RecoverStrategiesOnly(
-            metaData.StrategyMetaData?.LifecycleIndices ?? Enumerable.Empty<string>());
-        _activeStrategyManager.Recover(
-            metaData.StrategyMetaData?.ActiveIndices ?? Enumerable.Empty<string>());
+        if (metaData.StrategyMetaData is null)
+            throw new InvalidOperationException("StrategyMetaData is required during entity recovery.");
+        _strategyManager.RecoverStrategiesOnly(metaData.StrategyMetaData.LifecycleIndices);
+        _activeStrategyManager.Recover(metaData.StrategyMetaData.ActiveIndices);
     }
 
     void IEntityLifecycle.FireAfterSpawnHooks()
@@ -185,12 +211,14 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     public void SpawnSingle(SndMetaData metaData)
     {
+        ArgumentNullException.ThrowIfNull(metaData);
         ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
         ((IEntityLifecycle)this).FireAfterSpawnHooks();
     }
 
     public void LoadSingle(SndMetaData metaData)
     {
+        ArgumentNullException.ThrowIfNull(metaData);
         ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
         ((IEntityLifecycle)this).FireAfterLoadHooks();
     }

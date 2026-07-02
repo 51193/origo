@@ -48,6 +48,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CI format gate (`dotnet format --verify-no-changes --severity info`) now passes with zero violations.
 - **Save idempotency now includes `extra/` files in hash computation.** `WriteSavePayloadToCurrentThenSnapshot` previously computed the idempotent skip hash from `SaveGamePayload` alone, ignoring files written by `ISndArchiveFileAccess` to `current/extra/`. When only extra files changed between saves, the save was silently skipped, causing data loss on next load. The fix adds `ComputeExtraDirectoryHash` (SHA-256 of all `extra/` files, sorted by path) and `CombineHashes` to merge it with the payload hash, ensuring extra file changes trigger a fresh write.
 
+### Added (2026-07-02 Audit)
+
+- `OrigoMeta` dedicated tests: default banner, `ToString`, equality comparisons.
+- `GridParser.ParseCoords` now handles non-string `JsonElement` values (Number, True, Null) by returning `null`.
+- `ConsoleOutputChannel.Publish` now throws `AggregateException` when multiple listeners throw.
+- `ConsoleBridgeServer` fire-and-forget task now has a faulted-continuation to prevent unobserved exceptions.
+
+### Changed (2026-07-02 Audit)
+
+- **BREAKING:** `GodotLogger` now requires a non-null handler at construction.
+- `SndEntity` public methods now validate parameters with `ThrowIfNullOrWhiteSpace`/`ThrowIfNull`.
+- `SndEntity.RecoverForLifecycle` throws when `StrategyMetaData` is null instead of silently falling back.
+- `ConsoleCommandHelper.ResolveBlackboardLayer` throws for unknown layer names instead of returning null.
+- `GodotSndEntity.ProcessSnd` and `BindSession` now throw when the backing entity is null.
+- `ConsoleOutputChannel.Publish` throws `ArgumentNullException` for null input.
+- `GodotDirectoryOperations.DeleteRecursive` throws when `DirAccess.Open` fails.
+- `LogMessageBuilder.AddContext` preserves null values in output.
+- `DataSourceNode.EnsureExpanded` throws descriptive error on non-lazy nodes.
+- `GodotSndManager.EnsureReadyForSpawn` checks `_observerTopology`.
+- `ConsoleBridgeServer` accept-handle pipeline now uses `await` serialization instead of fire-and-forget + `Interlocked` polling. Eliminates `_activeClientCount` field and all connection-rejection races, making the single-connection model intrinsically race-free.
+
+### Fixed (2026-07-02 Audit)
+
+- Broken link in `docs/Origo.Core.Tests/Integration/README.md` to Runtime.
+- `docs/README.md` now includes `Utility` subsystem and correct capability count (31).
+- Template placeholder links in docs fixed to not form broken markdown links.
+- `docs/META.md` directory diagram now includes all existing directories.
+- `docs/benchmarks/README.md` added.
+- Removed commented-out code from `FastNoiseLite.cs`.
+- `DateTime.UtcNow` assertion in tests uses tolerance window.
+- `docs/Origo.Core.Tests/` document links to `DisposeSemanticsTests.cs` clarified.
+
 ## [0.0.8] - 2026-06-30
 
 ### Added

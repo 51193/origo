@@ -190,7 +190,7 @@ public partial class GodotSndManager
 
     private void EnsureReadyForSpawn()
     {
-        if (!_runtimeDepsBound || Context is null)
+        if (!_runtimeDepsBound || Context is null || _observerTopology is null)
             throw new InvalidOperationException(
                 "GodotSndManager is not ready: call BindRuntimeDependencies and BindContext before spawning entities.");
     }

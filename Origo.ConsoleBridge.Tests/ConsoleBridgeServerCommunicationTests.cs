@@ -244,21 +244,11 @@ public class ConsoleBridgeServerCommunicationTests
     }
 
     [Fact]
-    public void OutputChannel_PublishNullString_ArrivesAsEmpty()
+    public void OutputChannel_PublishNullString_Throws()
     {
         var (server, (_, output)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
-        var port = server.ActualPort;
 
-        using var client = new TcpClient();
-        client.Connect(IPAddress.Loopback, port);
-        using var reader = new StreamReader(client.GetStream());
-        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
-
-        output.Publish(null!);
-
-        var line = ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(reader, ConsoleBridgeTestInfrastructure.OutputTimeoutMs);
-        Assert.NotNull(line);
-        Assert.Equal(string.Empty, line);
+        Assert.Throws<ArgumentNullException>(() => output.Publish(null!));
 
         server.Dispose();
     }

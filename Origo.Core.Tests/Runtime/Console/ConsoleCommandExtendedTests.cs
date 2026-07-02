@@ -184,7 +184,7 @@ public class ConsoleCommandExtendedTests
         input.Enqueue("bb_set invalid k v");
         runtime.Console!.ProcessPending();
         Assert.Single(messages);
-        Assert.Contains("Unknown", messages[0]);
+        Assert.Contains("Unsupported", messages[0]);
     }
 
     [Fact]

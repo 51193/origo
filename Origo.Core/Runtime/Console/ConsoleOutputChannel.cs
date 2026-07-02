@@ -42,8 +42,9 @@ public sealed class ConsoleOutputChannel : IConsoleOutputChannel
             _listeners.Values.CopyTo(targets, 0);
         }
 
-        var payload = line ?? string.Empty;
+        var payload = line ?? throw new ArgumentNullException(nameof(line));
         Exception? firstError = null;
+        var errorCount = 0;
         foreach (var listener in targets)
         {
             try
@@ -53,9 +54,13 @@ public sealed class ConsoleOutputChannel : IConsoleOutputChannel
             catch (Exception ex)
             {
                 firstError ??= ex;
+                errorCount++;
             }
         }
 
+        if (errorCount > 1)
+            throw new AggregateException(
+                $"Multiple listeners ({errorCount}) threw exceptions during Publish.", firstError!);
         if (firstError is not null)
             throw firstError;
     }

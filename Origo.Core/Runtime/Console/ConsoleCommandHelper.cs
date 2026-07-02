@@ -24,12 +24,12 @@ internal static class ConsoleCommandHelper
         return true;
     }
 
-    public static IBlackboard? ResolveBlackboardLayer(OrigoRuntime runtime, string layer)
+    public static IBlackboard ResolveBlackboardLayer(OrigoRuntime runtime, string layer)
     {
         return layer.Trim().ToLowerInvariant() switch
         {
             "system" => runtime.SystemBlackboard,
-            _ => null
+            _ => throw new ArgumentException($"Unsupported blackboard layer '{layer}'. Expected 'system'.", nameof(layer))
         };
     }
 

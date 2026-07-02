@@ -52,8 +52,6 @@ using System.Runtime.CompilerServices;
 // Switch between using floats or doubles for input position
 using FNLfloat = float;
 
-//using FNLfloat = System.Double;
-
 namespace Origo.Core.Addons.FastNoiseLite;
 
 public class FastNoiseLite

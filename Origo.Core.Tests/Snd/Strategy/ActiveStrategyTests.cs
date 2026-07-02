@@ -193,7 +193,7 @@ public class ActiveStrategyTests
         var (entity, _, _) = Setup();
         entity.SpawnSingle(CreateMeta([]));
 
-        Assert.Throws<ArgumentException>(() => entity.AddActiveStrategy(null!));
+        Assert.Throws<ArgumentNullException>(() => entity.AddActiveStrategy(null!));
         Assert.Throws<ArgumentException>(() => entity.AddActiveStrategy("  "));
     }
 

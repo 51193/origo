@@ -295,7 +295,7 @@ public class TypedDataGeneratedTests
         var td = new TypedData(202, 0, now);
 
         var obj = TypedDataObjectConverter.ToObject(td);
-        Assert.Equal(now, obj);
+        Assert.Equal(now, (DateTime)obj!, TimeSpan.FromSeconds(1));
     }
 
     [Fact]

@@ -34,7 +34,7 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     internal void BindSession(ISessionRun session)
     {
         ThrowIfReleasedFromManager();
-        _entity?.BindSession(session);
+        _entity!.BindSession(session);
     }
     public ISessionRun OwningSession => _entity?.OwningSession ?? throw new InvalidOperationException("GodotSndEntity has no backing SndEntity.");
     private bool _releasedFromManager;
@@ -170,7 +170,11 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     public SndMetaData SaveSingle() => Entity.SaveSingle();
 
-    public void ProcessSnd(double delta) => _entity?.Process(delta);
+    public void ProcessSnd(double delta)
+    {
+        ThrowIfReleasedFromManager();
+        _entity!.Process(delta);
+    }
 
     private void EnsureEntity()
     {

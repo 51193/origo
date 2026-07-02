@@ -149,7 +149,7 @@ public class ConsoleBridgeServerLifecycleTests
             client.Connect(IPAddress.Loopback, port);
         }
 
-        using var client2 = ConsoleBridgeTestInfrastructure.ConnectWithRetry(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        using var client2 = ConsoleBridgeTestInfrastructure.Connect(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
         using var writer = new StreamWriter(client2.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("after_reconnect");
@@ -171,11 +171,11 @@ public class ConsoleBridgeServerLifecycleTests
             client.Connect(IPAddress.Loopback, port);
         }
 
-        using (var client2 = ConsoleBridgeTestInfrastructure.ConnectWithRetry(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs))
+        using (var client2 = ConsoleBridgeTestInfrastructure.Connect(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs))
         {
         }
 
-        using var client3 = ConsoleBridgeTestInfrastructure.ConnectWithRetry(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        using var client3 = ConsoleBridgeTestInfrastructure.Connect(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
         using var writer = new StreamWriter(client3.GetStream()) { AutoFlush = true };
 
         writer.WriteLine("third");
@@ -196,7 +196,7 @@ public class ConsoleBridgeServerLifecycleTests
             client.Connect(IPAddress.Loopback, port);
         }
 
-        using var client2 = ConsoleBridgeTestInfrastructure.ConnectWithRetry(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        using var client2 = ConsoleBridgeTestInfrastructure.Connect(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
         using var writer = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer.WriteLine("after_immediate");
 
@@ -221,7 +221,7 @@ public class ConsoleBridgeServerLifecycleTests
 
         client.Client.Dispose();
 
-        using var client2 = ConsoleBridgeTestInfrastructure.ConnectWithRetry(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        using var client2 = ConsoleBridgeTestInfrastructure.Connect(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
         using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer2.WriteLine("after_hard_disconnect");
 
@@ -246,7 +246,7 @@ public class ConsoleBridgeServerLifecycleTests
             Assert.True(ok1, "'before_abort' should arrive from initial client");
         }
 
-        using var client2 = ConsoleBridgeTestInfrastructure.ConnectWithRetry(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        using var client2 = ConsoleBridgeTestInfrastructure.Connect(port, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
         using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer2.WriteLine("after_abort");
 

@@ -16,6 +16,12 @@ internal sealed class GodotNodeHandle(Node node) : INodeHandle
             _node.Free();
     }
 
+    /// <summary>
+    ///     Returns the raw Godot <see cref="Node" /> reference.
+    ///     This bypasses the <see cref="INodeHandle" /> abstraction and should be used
+    ///     only in tightly controlled adapter-internal contexts where direct node access
+    ///     is required (e.g., <see cref="GodotSndEntity.GetNodeFromSnd{TNode}" />).
+    /// </summary>
     internal Node UnsafeGetNode() => _node;
 
     public void SetVisible(bool visible)

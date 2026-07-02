@@ -54,4 +54,25 @@ public class GridParserTests
 
     [Fact]
     public void ParseCoords_NullInput_ReturnsNull() => Assert.Null(GridParser.ParseCoords(null!));
+
+    [Fact]
+    public void ParseCoords_JsonElement_NumberKind_ReturnsNull()
+    {
+        using var doc = JsonDocument.Parse("42");
+        Assert.Null(GridParser.ParseCoords(doc.RootElement));
+    }
+
+    [Fact]
+    public void ParseCoords_JsonElement_TrueKind_ReturnsNull()
+    {
+        using var doc = JsonDocument.Parse("true");
+        Assert.Null(GridParser.ParseCoords(doc.RootElement));
+    }
+
+    [Fact]
+    public void ParseCoords_JsonElement_NullKind_ReturnsNull()
+    {
+        using var doc = JsonDocument.Parse("null");
+        Assert.Null(GridParser.ParseCoords(doc.RootElement));
+    }
 }

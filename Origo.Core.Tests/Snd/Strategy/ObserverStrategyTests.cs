@@ -411,7 +411,7 @@ public class ObserverStrategyTests
         var (entity, _) = Setup();
         entity.SpawnSingle(CreateMeta());
 
-        Assert.Throws<InvalidOperationException>(
+        Assert.Throws<ArgumentNullException>(
             () => entity.MountObserverStrategy((string)null!, _memoryObservedIdx));
     }
 
