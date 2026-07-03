@@ -54,6 +54,34 @@ internal sealed class GameplaySimulationHarness
             DriveFrame(delta);
     }
 
+    public bool SubmitConsoleCommand(string commandLine) =>
+        Context.ConsoleAccess.TrySubmitConsoleCommand(commandLine);
+
+    public void ClearConsoleOutput() => _capturedConsoleOutput.Clear();
+
+    public void SetEntityData<T>(string entityName, string key, T value)
+    {
+        var entity = FindEntity(entityName)
+            ?? throw new InvalidOperationException($"Entity '{entityName}' not found.");
+        entity.SetData(key, value);
+    }
+
+    public object? InvokeEntityStrategy(string entityName, string strategyIndex, object? input = null)
+    {
+        var entity = FindEntity(entityName)
+            ?? throw new InvalidOperationException($"Entity '{entityName}' not found.");
+        return entity.InvokeStrategy(strategyIndex, input);
+    }
+
+    public void MountObserver(string observerName, string targetName, string observerIndex)
+    {
+        var observer = FindEntity(observerName)
+            ?? throw new InvalidOperationException($"Observer '{observerName}' not found.");
+        var target = FindEntity(targetName)
+            ?? throw new InvalidOperationException($"Target '{targetName}' not found.");
+        observer.MountObserverStrategy(target, observerIndex);
+    }
+
     public ISndEntity SpawnEntity(string name, string[] lifecycleIndices)
     {
         var meta = new SndMetaData

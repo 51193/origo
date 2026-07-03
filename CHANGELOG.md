@@ -30,6 +30,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `OrigoMeta` dedicated tests: default banner, `ToString`, equality comparisons.
 - `docs/benchmarks/README.md` added.
 
+- `GameplaySimulationHarness` extended with `SubmitConsoleCommand`, `ClearConsoleOutput`, `SetEntityData`, `InvokeEntityStrategy`, and `MountObserver` methods for richer integration test scenarios.
+- `AdvancedGameplayIntegrationTests` — 10 integration tests covering large-scale entity batch spawn/kill (100 entities), console command routing (`snd_count`, `bb_set`/`bb_get` on system layer), entity data direct API round-trip, multi-strategy entity combinations (Lifecycle+Observer, Lifecycle+Active, all three types), save/load of multiple entities with state preservation, and error path for requesting kill on unknown entities.
+
 ### Changed
 
 - **BREAKING:** `ISndContext` no longer inherits any role interfaces. All 9 role interfaces plus `IStateMachineContext` are exposed through typed companion properties: `Blackboard`, `Deferred`, `Template`, `ConsoleAccess`, `StateMachines`, `Save`, `Lifecycle`, `FileAccess`, `ArchiveFileAccess`, `StateMachineContext`. Strategy callers use `ctx.Blackboard.SystemBlackboard` instead of `ctx.SystemBlackboard`, `ctx.Save.RequestSaveGame(id)` instead of `ctx.RequestSaveGame(id)`, etc. `SndContextFileAccess` and `SndContextArchiveFileAccess` are new internal companions extracted from SndContext.

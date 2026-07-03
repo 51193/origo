@@ -17,6 +17,7 @@
 |------|-----------|
 | `GameplayIntegrationTests.cs` | 多帧数据处理、实体间交互（FindByName / SessionBlackboard）、业务延迟动作执行、存档持久化、实体销毁、控制台命令、观察者 |
 | `GameplaySessionSwitchAndConcurrencyTests.cs` | 会话切换黑板隔离、同帧并发 spawn/kill、kill 后重 spawn、多后台会话并行处理 |
+| `AdvancedGameplayIntegrationTests.cs` | 大量实体批量 spawn/kill（100 实体）、控制台命令路由（snd_count / bb_set/bb_get system 层）、实体数据直接 API round-trip、多策略实体组合（Lifecycle+Observer、Lifecycle+Active、三种类型全挂载）、多实体存档/加载状态保持、request kill 未知实体错误路径 |
 
 ## GameplayIntegrationTests 测试详情
 
@@ -49,7 +50,7 @@
 
 | 设施 | 位置 | 用途 |
 |------|------|------|
-| `GameplaySimulationHarness` | `TestSupport/GameplaySimulationHarness.cs` | 一键创建完整运行时：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），提供 DriveFrame/RunFrames/SpawnEntity/RequestKillEntity/CreateBackgroundSession/GetEntityData |
+| `GameplaySimulationHarness` | `TestSupport/GameplaySimulationHarness.cs` | 一键创建完整运行时：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），提供 DriveFrame/RunFrames/SpawnEntity/RequestKillEntity/CreateBackgroundSession/GetEntityData/SubmitConsoleCommand/SetEntityData/InvokeEntityStrategy/MountObserver |
 | `GameplaySimulationBuilder` | `TestSupport/GameplaySimulationHarness.cs` | Fluent Builder：WithStrategy 注册策略、WithSessionConfig 设置会话黑板 |
 | `FrameCounterStrategy` | `GameplayIntegrationTests.cs` | AfterSpawn 初始化 count=0，Process 每帧 count++ |
 | `PeerLookupStrategy` | `GameplayIntegrationTests.cs` | Process 中通过 OwningSession.FindByName 查找对端实体并读取数据 |
@@ -59,6 +60,9 @@
 | `KillProbeIntegrationStrategy` | `GameplayIntegrationTests.cs` | BeforeDead 时记录 "before_dead" 事件，验证 Kill 收割触发钩子 |
 | `ConsoleCommandStrategy` | `GameplayIntegrationTests.cs` | Process 中 TrySubmitConsoleCommand("snd_count")，验证命令行经 DriveFrame 处理 |
 | `HpObserverIntegrationStrategy` | `GameplayIntegrationTests.cs` | ObserverStrategyBase：OnDataChanged 记录 "changed:{dataKey}"，验证观察者 Mount/Notify 机制 |
+| `BatchFrameCounterStrategy` | `AdvancedGameplayIntegrationTests.cs` | AfterSpawn 初始化 count=0，Process 每帧 count++，用于大量实体和策略组合测试 |
+| `DataObserverIntegrationStrategy` | `AdvancedGameplayIntegrationTests.cs` | ObserverStrategyBase：ObserveData("count")，OnDataChanged 记录 "changed:{dataKey}"，用于多策略组合测试 |
+| `EchoActiveStrategy` | `AdvancedGameplayIntegrationTests.cs` | ActiveStrategyBase：Invoke 返回 input * 2（int 类型），用于多策略组合和 ActiveStrategy 集成测试 |
 
 ## 使用模式
 
