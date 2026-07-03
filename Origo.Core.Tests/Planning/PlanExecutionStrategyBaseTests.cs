@@ -491,43 +491,40 @@ public class PlanExecutionStrategyBaseTests
         FailingPlanStrategy.FailedCalls = null;
     }
 
-    private sealed class SubscriptionTrackingEntity : ISndEntity, ISndEntityRawSubscription
+    private sealed class SubscriptionTrackingEntity(StubSndEntity inner) : ISndEntity, ISndEntityRawSubscription
     {
-        private readonly StubSndEntity _inner;
         private readonly Dictionary<string, int> _subCounts = new(StringComparer.Ordinal);
-
-        public SubscriptionTrackingEntity(StubSndEntity inner) => _inner = inner;
 
         public int GetSubCount(string key) => _subCounts.TryGetValue(key, out var c) ? c : 0;
 
         void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback, Func<ISndEntity, TypedData, TypedData, bool>? filter)
         {
             _subCounts[name] = GetSubCount(name) + 1;
-            ((ISndEntityRawSubscription)_inner).SubscribeDataRaw(name, callback, filter);
+            ((ISndEntityRawSubscription)inner).SubscribeDataRaw(name, callback, filter);
         }
 
         void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback)
         {
             _subCounts[name] = Math.Max(0, GetSubCount(name) - 1);
-            ((ISndEntityRawSubscription)_inner).UnsubscribeDataRaw(name, callback);
+            ((ISndEntityRawSubscription)inner).UnsubscribeDataRaw(name, callback);
         }
 
-        public string Name => _inner.Name;
-        public ISessionRun OwningSession { get => _inner.OwningSession; set => _inner.OwningSession = value; }
-        public bool IsPendingKill { get => _inner.IsPendingKill; set => _inner.IsPendingKill = value; }
-        public void SetData<T>(string name, T value) => _inner.SetData(name, value);
-        public T GetData<T>(string name) => _inner.GetData<T>(name);
-        public (bool found, T? value) TryGetData<T>(string name) => _inner.TryGetData<T>(name);
-        public INodeHandle GetNode(string name) => _inner.GetNode(name);
-        public IReadOnlyCollection<string> GetNodeNames() => _inner.GetNodeNames();
-        public void AddStrategy(string index) => _inner.AddStrategy(index);
-        public void RemoveStrategy(string index) => _inner.RemoveStrategy(index);
-        public void AddActiveStrategy(string index) => _inner.AddActiveStrategy(index);
-        public void RemoveActiveStrategy(string index) => _inner.RemoveActiveStrategy(index);
-        public object? InvokeStrategy(string strategyIndex, object? input = null) => _inner.InvokeStrategy(strategyIndex, input);
-        public void MountObserverStrategy(string targetName, string observerIndex) => _inner.MountObserverStrategy(targetName, observerIndex);
-        public void UnmountObserverStrategy(string targetName, string observerIndex) => _inner.UnmountObserverStrategy(targetName, observerIndex);
-        public void MountObserverStrategy(ISndEntity target, string observerIndex) => _inner.MountObserverStrategy(target, observerIndex);
-        public void UnmountObserverStrategy(ISndEntity target, string observerIndex) => _inner.UnmountObserverStrategy(target, observerIndex);
+        public string Name => inner.Name;
+        public ISessionRun OwningSession { get => inner.OwningSession; set => inner.OwningSession = value; }
+        public bool IsPendingKill { get => inner.IsPendingKill; set => inner.IsPendingKill = value; }
+        public void SetData<T>(string name, T value) => inner.SetData(name, value);
+        public T GetData<T>(string name) => inner.GetData<T>(name);
+        public (bool found, T? value) TryGetData<T>(string name) => inner.TryGetData<T>(name);
+        public INodeHandle GetNode(string name) => inner.GetNode(name);
+        public IReadOnlyCollection<string> GetNodeNames() => inner.GetNodeNames();
+        public void AddStrategy(string index) => inner.AddStrategy(index);
+        public void RemoveStrategy(string index) => inner.RemoveStrategy(index);
+        public void AddActiveStrategy(string index) => inner.AddActiveStrategy(index);
+        public void RemoveActiveStrategy(string index) => inner.RemoveActiveStrategy(index);
+        public object? InvokeStrategy(string strategyIndex, object? input = null) => inner.InvokeStrategy(strategyIndex, input);
+        public void MountObserverStrategy(string targetName, string observerIndex) => inner.MountObserverStrategy(targetName, observerIndex);
+        public void UnmountObserverStrategy(string targetName, string observerIndex) => inner.UnmountObserverStrategy(targetName, observerIndex);
+        public void MountObserverStrategy(ISndEntity target, string observerIndex) => inner.MountObserverStrategy(target, observerIndex);
+        public void UnmountObserverStrategy(ISndEntity target, string observerIndex) => inner.UnmountObserverStrategy(target, observerIndex);
     }
 }
