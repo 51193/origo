@@ -15,7 +15,8 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `GameplayIntegrationTests.cs` | 多帧数据处理、实体间交互（FindByName / SessionBlackboard）、业务延迟动作执行 |
+| `GameplayIntegrationTests.cs` | 多帧数据处理、实体间交互（FindByName / SessionBlackboard）、业务延迟动作执行、存档持久化、实体销毁、控制台命令、观察者 |
+| `GameplaySessionSwitchAndConcurrencyTests.cs` | 会话切换黑板隔离、同帧并发 spawn/kill、kill 后重 spawn、多后台会话并行处理 |
 
 ## GameplayIntegrationTests 测试详情
 
@@ -33,11 +34,22 @@
 | `FullGameLoopRoundTrip_SaveDisposeReload` | 运行帧 → 设定 session 数据 → Save → 销毁所有 session → Reload → 游戏 session 的 SessionBlackboard 数据恢复 | persistence-flow |
 | `ObserverStrategy_MountAndNotify` | 实体 B MountObserverStrategy(实体A) → 实体A SetData("hp") → 观察者 OnDataChanged 触发 | snd-entity-model |
 
+## GameplaySessionSwitchAndConcurrencyTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `SwitchSession_BackgroundSessionBlackboard_Isolated` | 创建后台会话 → 设置各自黑板的独立 key → 验证互不污染 | SessionManager |
+| `ConcurrentSpawnKill_SameFrame_AllCleanedUp` | 同时 spawn 两个实体 → 同一帧 kill 两个 → 验证 BeforeDead 触发两次 + 实体全部移除 | Runtime: SessionManager |
+| `KillEntity_ThenRespawn_NewEntityIndependent` | 实体 kill → 同名重 spawn → 验证新实体 data 独立（不继承旧实体状态） | ISndEntity lifecycle |
+| `MultipleBackgroundSessions_EntitiesProcessedInParallel` | 创建 3 个 session（1 前台 + 2 后台）→ 每 session 各 spawn 一个 FrameCounter → DriveFrame → 验证各自 count=1 | SessionManager: Multi-session |
+
 ## 测试辅助设施
 
 | 设施 | 位置 | 用途 |
 |------|------|------|
-| `GameplaySimulationHarness` | `TestSupport/GameplaySimulationHarness.cs` | 一键创建完整运行时：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），提供 DriveFrame/RunFrames/SpawnEntity/GetEntityData |
+| `GameplaySimulationHarness` | `TestSupport/GameplaySimulationHarness.cs` | 一键创建完整运行时：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），提供 DriveFrame/RunFrames/SpawnEntity/RequestKillEntity/CreateBackgroundSession/GetEntityData |
 | `GameplaySimulationBuilder` | `TestSupport/GameplaySimulationHarness.cs` | Fluent Builder：WithStrategy 注册策略、WithSessionConfig 设置会话黑板 |
 | `FrameCounterStrategy` | `GameplayIntegrationTests.cs` | AfterSpawn 初始化 count=0，Process 每帧 count++ |
 | `PeerLookupStrategy` | `GameplayIntegrationTests.cs` | Process 中通过 OwningSession.FindByName 查找对端实体并读取数据 |
@@ -69,7 +81,8 @@ Assert.Equal(10, count);
 |---------|------|---------|
 | 多实体批量 spawn + 帧处理的扩展场景（实体数量 > 100） | 未验证大量实体时帧循环的稳定性 | architecture-overview: 帧循环 |
 | StrategyStateMachine 在帧循环中的跨实体状态机交互 | 未验证状态机变换触发的跨实体作用 | state-machine |
-| ActiveStrategy 在帧循环中通过 InvokeStrategy 的调用模式 | 当前测试仅覆盖 LifecycleStrategy，未覆盖 ActiveStrategy | strategy-testing |
+| ActiveStrategy 在帧循环中通过 InvokeStrategy 的调用模式 | 当前测试未覆盖 ActiveStrategy | strategy-testing |
+| 跨 session 的实体交互（一个 session 的实体通过 SessionManager.TryGet 访问另一个 session 的实体） | 未验证跨 session 实体的策略互操作 | SessionManager |
 
 ---
 

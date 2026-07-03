@@ -72,6 +72,15 @@ internal sealed class GameplaySimulationHarness
 
     public IReadOnlyCollection<ISndEntity> GetEntities() => GameSession.GetEntities();
 
+    public void RequestKillEntity(string entityName) => GameSession.RequestKillEntity(entityName);
+
+    public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = true)
+    {
+        return Runtime.SessionManager.CreateBackgroundSession(key, levelId, syncProcess);
+    }
+
+    public ISessionRun? TryGetSession(string key) => Runtime.SessionManager.TryGet(key);
+
     public T GetEntityData<T>(string entityName, string key)
     {
         var entity = GameSession.FindByName(entityName)
