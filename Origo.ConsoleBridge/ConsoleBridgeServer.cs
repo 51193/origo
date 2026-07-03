@@ -134,15 +134,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                 break;
             }
 
-            try
-            {
-                await HandleConnectionAsync(client, ct);
-            }
-            catch
-            {
-                // Handler already catches all expected exceptions internally.
-                // Unexpected exceptions are swallowed to keep the accept loop alive.
-            }
+            await HandleConnectionAsync(client, ct);
         }
     }
 

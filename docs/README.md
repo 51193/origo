@@ -110,9 +110,11 @@ Root (this file)
 
 ## 版本
 
-当前 Origo 框架版本：**0.0.9**。文档与源代码同仓维护，版本天然同步。代码目录结构变更时，应同步更新本手册的目录镜像和索引。
+当前 Origo 框架版本：**0.0.9-nightly**（开发中）。文档与源代码同仓维护，版本天然同步。代码目录结构变更时，应同步更新本手册的目录镜像和索引。
 
 - 框架源码与文档：本仓库 [origo](https://github.com/51193/origo)（文档位于 `docs/`）
 - 示例项目：[origo.demo](https://github.com/51193/origo.demo)
 
 手册维护规则详见 [META.md](META.md)。顶层 Agent 工作流入口见 [AGENTS.md](../AGENTS.md)。
+
+[↑ 回到 AGENTS.md](../AGENTS.md)

@@ -25,4 +25,4 @@
 
 ---
 
-[↑ 回到 Origo.Core/Utility](README.md)
+[↑ 回到 Origo.Core](../README.md)

@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `IdempotentSkip_UnchangedPayloadAndExtra_SkipHappens` test verifying the corrected skip preserves the hash check.
 - `SndStrategyPool.LogPoolLeaks()` — diagnostic method that logs a warning for every strategy with a non-zero reference count at teardown, helping detect strategy pool leaks in integration tests and production shutdown.
 - `ILogger<TCategory>` — generic logging interface that auto-derives the log tag from the category type name. A default `Logger<T>` wrapper delegates to any existing `ILogger`, so existing log implementations require no changes.
+- `OrigoMeta` dedicated tests: default banner, `ToString`, equality comparisons.
+- `docs/benchmarks/README.md` added.
 
 ### Changed
 
@@ -38,6 +40,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `CombineHashes` always produces a consistent domain-separated format (`P:`/`S:` prefixes) regardless of whether side-channel files exist — no more implicit format switching. `WritePayloadSha` is now the sole `.payload.sha` writer (extracted from `WriteToCurrent`). `StripPathPrefix` replaces 3 identical relative-path-stripping patterns.
 - CodeQL workflow now uses `global-json-file: global.json` (automatic SDK resolution) instead of a hardcoded `dotnet-version: '8.0.x'`, aligning with the main CI pipeline.
 - `GodotPathResolver` path traversal detection and parent extraction logic extracted to `Origo.Core.Utility.PathUtility`. `GodotDirectoryOperations` path normalization and glob suffix parsing also delegated to `PathUtility`. Enables direct unit testing of path manipulation logic without Godot engine dependencies; `GodotPathResolver` remains as a thin forwarding wrapper.
+- `GridParser.ParseCoords` now handles non-string `JsonElement` values (Number, True, Null) by returning `null`.
+- `ConsoleOutputChannel.Publish` now throws `AggregateException` when multiple listeners throw.
+- `ConsoleBridgeServer` fire-and-forget task now has a faulted-continuation to prevent unobserved exceptions.
+- `ConsoleBridgeServer` no longer swallows unexpected exceptions from `HandleConnectionAsync` — the empty catch in `AcceptLoopAsync` is removed.
+- **BREAKING:** `GodotLogger` now requires a non-null handler at construction.
+- `SndEntity` public methods now validate parameters with `ThrowIfNullOrWhiteSpace`/`ThrowIfNull`.
+- `SndEntity.RecoverForLifecycle` throws when `StrategyMetaData` is null instead of silently falling back.
+- `ConsoleCommandHelper.ResolveBlackboardLayer` throws for unknown layer names instead of returning null.
+- `GodotSndEntity.ProcessSnd` and `BindSession` now throw when the backing entity is null.
+- `ConsoleOutputChannel.Publish` throws `ArgumentNullException` for null input.
+- `GodotDirectoryOperations.DeleteRecursive` throws when `DirAccess.Open` fails.
+- `LogMessageBuilder.AddContext` preserves null values in output.
+- `DataSourceNode.EnsureExpanded` throws descriptive error on non-lazy nodes.
+- `GodotSndManager.EnsureReadyForSpawn` checks `_observerTopology`.
+- `ConsoleBridgeServer` accept-handle pipeline now uses `await` serialization instead of fire-and-forget + `Interlocked` polling. Eliminates `_activeClientCount` field and all connection-rejection races, making the single-connection model intrinsically race-free.
 
 ### Removed
 
@@ -56,37 +73,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Exception catch blocks in `SaveStorageFacade.CopyCurrentToTempDirectory`, `SndNodeManager.Recover`, `ProgressRun.LoadFromPayload`, and `ObserverTopology.Mount` now log the original exception via `ILogger` before rewrapping or rethrowing, improving diagnostic visibility for snapshot copy failures, node creation errors, session mount rollbacks, and observer mount rollbacks.
 - `ObserverTopology.Mount` no longer attempts to release a strategy when `GetStrategy` threw before acquiring the pool reference, preventing ref-count corruption and masked exceptions during observer mount rollbacks. The `GetStrategy` call is now inside the try-block with an `acquired` guard flag.
 - `SndNodeManager` constructor now validates the `factory` parameter with `ThrowIfNull`, matching the existing `logger` null check.
-- `GodotDirectoryOperations` path normalization and glob suffix parsing now uniformly delegate through `GodotPathResolver` (which wraps `PathUtility`), rather than calling `PathUtility` directly. This keeps the adapter's file-system module boundary consistent.
-
-### Added (2026-07-02 Audit)
-
-- `OrigoMeta` dedicated tests: default banner, `ToString`, equality comparisons.
-- `GridParser.ParseCoords` now handles non-string `JsonElement` values (Number, True, Null) by returning `null`.
-- `ConsoleOutputChannel.Publish` now throws `AggregateException` when multiple listeners throw.
-- `ConsoleBridgeServer` fire-and-forget task now has a faulted-continuation to prevent unobserved exceptions.
-
-### Changed (2026-07-02 Audit)
-
-- **BREAKING:** `GodotLogger` now requires a non-null handler at construction.
-- `SndEntity` public methods now validate parameters with `ThrowIfNullOrWhiteSpace`/`ThrowIfNull`.
-- `SndEntity.RecoverForLifecycle` throws when `StrategyMetaData` is null instead of silently falling back.
-- `ConsoleCommandHelper.ResolveBlackboardLayer` throws for unknown layer names instead of returning null.
-- `GodotSndEntity.ProcessSnd` and `BindSession` now throw when the backing entity is null.
-- `ConsoleOutputChannel.Publish` throws `ArgumentNullException` for null input.
-- `GodotDirectoryOperations.DeleteRecursive` throws when `DirAccess.Open` fails.
-- `LogMessageBuilder.AddContext` preserves null values in output.
-- `DataSourceNode.EnsureExpanded` throws descriptive error on non-lazy nodes.
-- `GodotSndManager.EnsureReadyForSpawn` checks `_observerTopology`.
-- `ConsoleBridgeServer` accept-handle pipeline now uses `await` serialization instead of fire-and-forget + `Interlocked` polling. Eliminates `_activeClientCount` field and all connection-rejection races, making the single-connection model intrinsically race-free.
-
-### Fixed (2026-07-02 Audit)
-
 - Broken link in `docs/Origo.Core.Tests/Integration/README.md` to Runtime.
 - `docs/README.md` now includes `Utility` subsystem and correct capability count (31).
 - Template placeholder links in docs fixed to not form broken markdown links.
 - `docs/META.md` directory diagram now includes all existing directories.
-- `docs/benchmarks/README.md` added.
-- Removed commented-out code from `FastNoiseLite.cs`.
 - `DateTime.UtcNow` assertion in tests uses tolerance window.
 - `docs/Origo.Core.Tests/` document links to `DisposeSemanticsTests.cs` clarified.
 
