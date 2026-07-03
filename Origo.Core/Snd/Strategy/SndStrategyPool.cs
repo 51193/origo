@@ -108,6 +108,21 @@ internal sealed class SndStrategyPool
     internal int GetPriority(string index) =>
         _priorities.TryGetValue(index, out var priority) ? priority : 0;
 
+    internal void LogPoolLeaks()
+    {
+        foreach (var (index, count) in _refCounts)
+        {
+            if (count > 0)
+            {
+                _logger.Log(LogLevel.Warning, nameof(SndStrategyPool),
+                    new LogMessageBuilder()
+                        .AddContext("strategyIndex", index)
+                        .AddContext("refCount", count)
+                        .Build("Strategy leak detected — non-zero reference count at teardown."));
+            }
+        }
+    }
+
     private static string ResolveRequiredIndex(Type strategyType)
     {
         var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>() ?? throw new InvalidOperationException(

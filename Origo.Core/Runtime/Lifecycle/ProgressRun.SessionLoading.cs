@@ -1,7 +1,9 @@
 using Origo.Core.Runtime.StateMachine;
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
+using Origo.Core.Logging;
 using Origo.Core.Save;
 using Origo.Core.Save.Serialization;
 using Origo.Core.StateMachine;
@@ -52,8 +54,12 @@ internal sealed partial class ProgressRun
                 foreach (var descriptor in topology)
                     MountSessionFromDescriptor(payload, descriptor);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _owner._progressRuntime.Logger.Log(LogLevel.Warning, nameof(ProgressRun),
+                    new LogMessageBuilder()
+                        .AddContext("saveId", _owner.SaveId)
+                        .Build($"Session mount failed during load, all sessions cleared: {ex.Message}"));
                 _owner._sessionManager.Clear();
                 throw;
             }

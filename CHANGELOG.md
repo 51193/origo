@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ComputeExtraDirectoryHash`/`CombineHashes` unit tests (empty dir, no dir, with files, same content, different content).
 - `ExtraFiles_SaveTwice_SameSlot_HasLatestContent` regression test for save idempotency with extra files.
 - `IdempotentSkip_UnchangedPayloadAndExtra_SkipHappens` test verifying the corrected skip preserves the hash check.
+- `SndStrategyPool.LogPoolLeaks()` — diagnostic method that logs a warning for every strategy with a non-zero reference count at teardown, helping detect strategy pool leaks in integration tests and production shutdown.
 
 ### Changed
 
@@ -49,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `Origo.GodotAdapter.Tests.csproj` no longer sets `GodotProjectDir` to a path outside the repository, and no longer declares `GodotDisabledSourceGenerators` / `CompilerVisibleProperty` — these Godot SDK properties are irrelevant for the `Microsoft.NET.Sdk`-based test project and only belong in the `Godot.NET.Sdk`-based adapter project itself.
 - CI format gate (`dotnet format --verify-no-changes --severity info`) now passes with zero violations.
 - **Save idempotency now includes `extra/` files in hash computation.** `WriteSavePayloadToCurrentThenSnapshot` previously computed the idempotent skip hash from `SaveGamePayload` alone, ignoring files written by `ISndArchiveFileAccess` to `current/extra/`. When only extra files changed between saves, the save was silently skipped, causing data loss on next load. The fix adds `ComputeExtraDirectoryHash` (SHA-256 of all `extra/` files, sorted by path) and `CombineHashes` to merge it with the payload hash, ensuring extra file changes trigger a fresh write.
+- Exception catch blocks in `SaveStorageFacade.CopyCurrentToTempDirectory`, `SndNodeManager.Recover`, `ProgressRun.LoadFromPayload`, and `ObserverTopology.Mount` now log the original exception via `ILogger` before rewrapping or rethrowing, improving diagnostic visibility for snapshot copy failures, node creation errors, session mount rollbacks, and observer mount rollbacks.
 
 ### Added (2026-07-02 Audit)
 

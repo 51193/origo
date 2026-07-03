@@ -264,6 +264,12 @@ internal static class SaveStorageFacade
         }
         catch (Exception ex)
         {
+            logger?.Log(LogLevel.Warning, nameof(SaveStorageFacade),
+                new LogMessageBuilder()
+                    .AddContext("currentRel", currentRel)
+                    .AddContext("tempRel", tempRel)
+                    .Build($"Snapshot copy phase failed: {ex.Message}"));
+
             var tempAbs = handle.GetAbsolutePath(tempRel);
             try
             {

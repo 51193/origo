@@ -78,6 +78,7 @@ BaseStrategy
 - **GetStrategy<TBase>(index)**：若池中已有则复用（引用计数 +1），否则通过工厂创建
 - **ReleaseStrategy(index)**：引用计数 -1，归零时从池中移除（但工厂保留，下次可再创建）
 - **GetPriority(index)**：返回策略在实体上的执行优先级（默认 6205）
+- **LogPoolLeaks()**：诊断方法，遍历所有引用计数；若存在非零计数则输出 Warning 日志。供测试或 shutdown 阶段调用，检测策略引用未归还的泄漏
 - **策略排序**：仅被动实体策略按优先级升序排列，同优先级按插入顺序
 
 ### SndStrategyManager

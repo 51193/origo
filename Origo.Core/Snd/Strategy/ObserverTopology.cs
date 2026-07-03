@@ -88,8 +88,15 @@ internal sealed class ObserverTopology
                     .AddContext("observerIndex", observerIndex)
                     .Build("Observer strategy mounted."));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.Log(LogLevel.Warning, nameof(ObserverTopology),
+                new LogMessageBuilder()
+                    .AddContext("observerName", observer.Name)
+                    .AddContext("targetName", target.Name)
+                    .AddContext("observerIndex", observerIndex)
+                    .Build($"Observer mount failed, rolling back: {ex.Message}"));
+
             if (entry is not null)
             {
                 foreach (var (key, wrapper) in entry.DataWrappers)

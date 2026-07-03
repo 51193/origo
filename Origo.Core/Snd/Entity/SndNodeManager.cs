@@ -52,6 +52,11 @@ internal sealed class SndNodeManager : INodeHost
             }
             catch (Exception ex)
             {
+                _logger.Log(LogLevel.Warning, nameof(SndNodeManager),
+                    new LogMessageBuilder()
+                        .AddContext("logicalName", pair.Key)
+                        .AddContext("resourceId", resourceId)
+                        .Build($"Node creation failed: {ex.Message}"));
                 Release();
                 throw new InvalidOperationException(
                     $"Failed to create node logicalName='{pair.Key}', resourceId='{resourceId}'.", ex);
