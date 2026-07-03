@@ -59,6 +59,7 @@ CLR 对象 (TypedData / SndMetaData / etc.)
 - **Fail-fast**：codec 解码失败时，Gateway 将异常包装为包含文件路径的 `InvalidOperationException` 立即抛出
 - **延迟展开**：JSON 大型节点在访问时才展开子节点，避免全量解析
 - **零反射**：所有转换器显式注册，不使用反射自动发现
+- **运行时类型容器**：`DataSourceNode` 是通用序列化容器——整个 Save 系统和 DataSource 流转均通过它传递数据，类型安全推迟到 `DataSourceConverterRegistry` 查找时。这是刻意的设计权衡（"简单优于严格类型"），允许所有子系统共享同一棵数据树，代价是转换错误在运行时而非编译时暴露。
 
 ---
 [↑ 回到 Origo.Core](../README.md)

@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ExtraFiles_SaveTwice_SameSlot_HasLatestContent` regression test for save idempotency with extra files.
 - `IdempotentSkip_UnchangedPayloadAndExtra_SkipHappens` test verifying the corrected skip preserves the hash check.
 - `SndStrategyPool.LogPoolLeaks()` — diagnostic method that logs a warning for every strategy with a non-zero reference count at teardown, helping detect strategy pool leaks in integration tests and production shutdown.
+- `ILogger<TCategory>` — generic logging interface that auto-derives the log tag from the category type name. A default `Logger<T>` wrapper delegates to any existing `ILogger`, so existing log implementations require no changes.
 
 ### Changed
 
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `SavePayloadWriter.WriteToCurrent` no longer writes `.payload.sha` — hash writing is now the sole responsibility of `SaveStorageFacade` (via `WritePayloadSha`), eliminating the fragile double-write pattern.
 - `CombineHashes` always produces a consistent domain-separated format (`P:`/`S:` prefixes) regardless of whether side-channel files exist — no more implicit format switching. `WritePayloadSha` is now the sole `.payload.sha` writer (extracted from `WriteToCurrent`). `StripPathPrefix` replaces 3 identical relative-path-stripping patterns.
 - CodeQL workflow now uses `global-json-file: global.json` (automatic SDK resolution) instead of a hardcoded `dotnet-version: '8.0.x'`, aligning with the main CI pipeline.
+- `GodotPathResolver` path traversal detection and parent extraction logic extracted to `Origo.Core.Utility.PathUtility`. `GodotDirectoryOperations` path normalization and glob suffix parsing also delegated to `PathUtility`. Enables direct unit testing of path manipulation logic without Godot engine dependencies; `GodotPathResolver` remains as a thin forwarding wrapper.
 
 ### Removed
 
@@ -51,6 +53,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CI format gate (`dotnet format --verify-no-changes --severity info`) now passes with zero violations.
 - **Save idempotency now includes `extra/` files in hash computation.** `WriteSavePayloadToCurrentThenSnapshot` previously computed the idempotent skip hash from `SaveGamePayload` alone, ignoring files written by `ISndArchiveFileAccess` to `current/extra/`. When only extra files changed between saves, the save was silently skipped, causing data loss on next load. The fix adds `ComputeExtraDirectoryHash` (SHA-256 of all `extra/` files, sorted by path) and `CombineHashes` to merge it with the payload hash, ensuring extra file changes trigger a fresh write.
 - Exception catch blocks in `SaveStorageFacade.CopyCurrentToTempDirectory`, `SndNodeManager.Recover`, `ProgressRun.LoadFromPayload`, and `ObserverTopology.Mount` now log the original exception via `ILogger` before rewrapping or rethrowing, improving diagnostic visibility for snapshot copy failures, node creation errors, session mount rollbacks, and observer mount rollbacks.
+- `ObserverTopology.Mount` no longer attempts to release a strategy when `GetStrategy` threw before acquiring the pool reference, preventing ref-count corruption and masked exceptions during observer mount rollbacks. The `GetStrategy` call is now inside the try-block with an `acquired` guard flag.
+- `SndNodeManager` constructor now validates the `factory` parameter with `ThrowIfNull`, matching the existing `logger` null check.
+- `GodotDirectoryOperations` path normalization and glob suffix parsing now uniformly delegate through `GodotPathResolver` (which wraps `PathUtility`), rather than calling `PathUtility` directly. This keeps the adapter's file-system module boundary consistent.
 
 ### Added (2026-07-02 Audit)
 
