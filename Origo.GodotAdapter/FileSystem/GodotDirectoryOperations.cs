@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Godot;
-using Origo.Core.Utility;
 
 namespace Origo.GodotAdapter.FileSystem;
 
@@ -16,10 +15,10 @@ internal static class GodotDirectoryOperations
     public static IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
-        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
+        var normalizedDir = GodotPathResolver.NormalizeDirectoryPath(directoryPath);
         IEnumerable<string> fileNames = dir.GetFiles();
 
-        var suffix = PathUtility.ExtractGlobSuffix(searchPattern);
+        var suffix = GodotPathResolver.ExtractGlobSuffix(searchPattern);
         if (suffix is not null)
             fileNames = fileNames.Where(f => f.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
 
@@ -35,7 +34,7 @@ internal static class GodotDirectoryOperations
     public static IEnumerable<string> EnumerateDirectories(string directoryPath)
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
-        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
+        var normalizedDir = GodotPathResolver.NormalizeDirectoryPath(directoryPath);
         return [.. dir.GetDirectories().Select(d => $"{normalizedDir}/{d}")];
     }
 
@@ -57,7 +56,7 @@ internal static class GodotDirectoryOperations
         using var dir = DirAccess.Open(directoryPath) ?? throw new InvalidOperationException(
             $"Failed to open directory for deletion: {directoryPath}");
 
-        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
+        var normalizedDir = GodotPathResolver.NormalizeDirectoryPath(directoryPath);
 
         foreach (var file in dir.GetFiles())
             dir.Remove($"{normalizedDir}/{file}");

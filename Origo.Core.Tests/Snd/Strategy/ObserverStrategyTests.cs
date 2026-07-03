@@ -128,6 +128,18 @@ public class ObserverStrategyTests
         Assert.Empty(ThrowOnMountObserver.DataChangedCalls);
     }
 
+    [Fact]
+    public void Mount_WhenGetStrategyThrows_PropagatesOriginalError()
+    {
+        var (entity, _) = Setup();
+        entity.SpawnSingle(CreateMeta());
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            entity.MountObserverStrategy(entity.Name, "observer.nonexistent"));
+
+        Assert.Contains("observer.nonexistent", ex.Message);
+    }
+
     // ── Data change notification ───────────────────────────────────────
 
     [Fact]

@@ -20,6 +20,7 @@ internal sealed class SndNodeManager : INodeHost
 
     public SndNodeManager(INodeFactory factory, ILogger logger)
     {
+        ArgumentNullException.ThrowIfNull(factory);
         _factory = factory;
         ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;

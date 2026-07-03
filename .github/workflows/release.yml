@@ -46,7 +46,8 @@ jobs:
 
       # GodotAdapter packaging uses continue-on-error because the Godot.NET.Sdk
       # toolchain may not be fully available in the release runner environment,
-      # which would otherwise block the entire release (Core + ConsoleBridge).
+      # which would otherwise block the entire release (Core, ConsoleBridge, and
+      # documentation snapshot).
       - name: Pack Origo.GodotAdapter
         run: dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --no-build --configuration Release --output ./artifacts
         continue-on-error: true

@@ -40,8 +40,10 @@
 薄包装层，委托给 `Origo.Core.Utility.PathUtility`：
 - **Combine** → `PathUtility.Combine`：路径拼接 + 遍历攻击（`..`）检测
 - **GetParentDirectory** → `PathUtility.GetParentDirectory`：父目录提取 + 根路径边界处理
+- **NormalizeDirectoryPath** → `PathUtility.NormalizeDirectoryPath`：去除尾部斜杠
+- **ExtractGlobSuffix** → `PathUtility.ExtractGlobSuffix`：`"*.json"` → `".json"`
 
-路径逻辑本身已移至 Core 层，`GodotPathResolver` 保持为同构转发以满足 GodotAdapter 的内部依赖调用。
+路径逻辑本身已移至 Core 层，`GodotPathResolver` 保持为同构转发以满足 GodotAdapter 内部文件系统模块的调用一致性（所有路径操作统一经此包装层，`GodotDirectoryOperations` 不再直接引用 `PathUtility`）。
 
 ## 设计决策
 

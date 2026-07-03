@@ -49,11 +49,15 @@ internal sealed class ObserverTopology
             throw new ArgumentException("Observer strategy index cannot be null or whitespace.", nameof(observerIndex));
         var ctx = RequireContext();
 
-        var strategy = _pool.GetStrategy<ObserverStrategyBase>(observerIndex);
+        ObserverStrategyBase? strategy = null;
+        var acquired = false;
         ObserverBindingEntry? entry = null;
         var added = false;
         try
         {
+            strategy = _pool.GetStrategy<ObserverStrategyBase>(observerIndex);
+            acquired = true;
+
             var keys = ObserverStrategyMetadata.GetDataKeys(strategy.GetType());
             entry = new ObserverBindingEntry
             {
@@ -105,7 +109,8 @@ internal sealed class ObserverTopology
                     RemoveBinding(entry);
             }
 
-            _pool.ReleaseStrategy(observerIndex);
+            if (acquired)
+                _pool.ReleaseStrategy(observerIndex);
             throw;
         }
     }
