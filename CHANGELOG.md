@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ConsoleBridgeServer` internal threading model replaced with `async`/`await`: `AcceptTcpClientAsync`/`ReadLineAsync` eliminate the 100ms `Monitor.Wait` polling loop, `CancellationToken` replaces `ReceiveTimeout` for clean read cancellation, dedicated threads replaced with `Task`-based `ThreadPool` reuse. Public API (`Start`, `Dispose`) stays synchronous.
 - `SavePayloadWriter.WriteToCurrent` no longer writes `.payload.sha` — hash writing is now the sole responsibility of `SaveStorageFacade` (via `WritePayloadSha`), eliminating the fragile double-write pattern.
 - `CombineHashes` always produces a consistent domain-separated format (`P:`/`S:` prefixes) regardless of whether side-channel files exist — no more implicit format switching. `WritePayloadSha` is now the sole `.payload.sha` writer (extracted from `WriteToCurrent`). `StripPathPrefix` replaces 3 identical relative-path-stripping patterns.
+- CodeQL workflow now uses `global-json-file: global.json` (automatic SDK resolution) instead of a hardcoded `dotnet-version: '8.0.x'`, aligning with the main CI pipeline.
 
 ### Removed
 
