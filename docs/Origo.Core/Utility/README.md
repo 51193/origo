@@ -11,6 +11,7 @@
 | 文件 | 职责 |
 |------|------|
 | `DiffUtility.cs` | 通用集合差异比较：给定新旧两个集合，返回 (新增元素, 移除元素) |
+| `PathUtility.cs` | 路径操作工具：`Combine`（路径拼接 + 遍历攻击检测）、`GetParentDirectory`（父目录提取 + 根路径边界处理）、`NormalizeDirectoryPath`（去除尾部斜杠）、`ExtractGlobSuffix`（`"*.json"` → `".json"`） |
 
 ## 设计决策
 

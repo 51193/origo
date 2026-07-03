@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Godot;
+using Origo.Core.Utility;
 
 namespace Origo.GodotAdapter.FileSystem;
 
@@ -15,14 +16,12 @@ internal static class GodotDirectoryOperations
     public static IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
-        var normalizedDir = directoryPath.TrimEnd('/');
+        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
         IEnumerable<string> fileNames = dir.GetFiles();
 
-        if (!string.IsNullOrEmpty(searchPattern) && searchPattern.StartsWith('*'))
-        {
-            var suffix = searchPattern[1..];
+        var suffix = PathUtility.ExtractGlobSuffix(searchPattern);
+        if (suffix is not null)
             fileNames = fileNames.Where(f => f.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
-        }
 
         var result = fileNames.Select(f => $"{normalizedDir}/{f}").ToList();
 
@@ -36,7 +35,7 @@ internal static class GodotDirectoryOperations
     public static IEnumerable<string> EnumerateDirectories(string directoryPath)
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
-        var normalizedDir = directoryPath.TrimEnd('/');
+        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
         return [.. dir.GetDirectories().Select(d => $"{normalizedDir}/{d}")];
     }
 
@@ -58,20 +57,14 @@ internal static class GodotDirectoryOperations
         using var dir = DirAccess.Open(directoryPath) ?? throw new InvalidOperationException(
             $"Failed to open directory for deletion: {directoryPath}");
 
-        var normalizedDir = directoryPath.TrimEnd('/');
+        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
 
-        // Delete files first
         foreach (var file in dir.GetFiles())
-        {
-            var filePath = $"{normalizedDir}/{file}";
-            dir.Remove(filePath);
-        }
+            dir.Remove($"{normalizedDir}/{file}");
 
-        // Delete subdirectories recursively
         foreach (var subdir in dir.GetDirectories())
             DeleteRecursive($"{normalizedDir}/{subdir}");
 
-        // Delete the directory itself
         var parent = DirAccess.Open(GodotPathResolver.GetParentDirectory(directoryPath));
         if (parent is not null)
             using (parent)

@@ -1,17 +1,18 @@
-# DiffUtility 测试
+# Utility 测试
 
 > [↑ 回到 Origo.Core.Tests](README.md)
 > [↔ 被测模块: Origo.Core/Utility](../Origo.Core/Utility/README.md)
 
 ## 验证能力
 
-`DiffUtility.Diff<T>()` 的行为：泛型集合差异比较（added / removed），基于 `HashSet<T>` 实现，自动去重。
+`DiffUtility.Diff<T>()` 和 `PathUtility` 静态路径操作的行为。
 
 ## 测试文件清单
 
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `Utility/DiffUtilityTests.cs` | Diff 集合差异比较的正确/错误/边界路径 |
+| `Utility/PathUtilityTests.cs` | 路径拼接、遍历攻击检测、父目录提取、glob 后缀解析 |
 
 ## 测试详情
 
@@ -39,6 +40,27 @@
 |---------|-----------|---------|
 | `Diff_NullOld_Throws` | oldItems 为 null | `ArgumentNullException` |
 | `Diff_NullNew_Throws` | newItems 为 null | `ArgumentNullException` |
+
+### PathUtility 正确路径
+
+| 测试方法 | 验证的行为 |
+|---------|-----------|
+| `NormalizeDirectoryPath_StripsTrailingSlashes` | 尾部斜杠去除 |
+| `ExtractGlobSuffix_ReturnsSuffix` | `"*.json"` → `".json"` |
+| `ExtractGlobSuffix_ReturnsNull_WhenNoGlob` | 无通配符模式返回 null |
+| `Combine_NullOrEmptyBase_ReturnsRelative` | 基础路径为空时返回相对路径 |
+| `Combine_NullOrEmptyRelative_ReturnsBase` | 相对路径为空时返回基础路径 |
+| `Combine_JoinsPaths` | 正常路径拼接（去冗余斜杠） |
+| `GetParentDirectory_ReturnsParent` | 父目录提取 |
+| `GetParentDirectory_NullOrEmpty_ReturnsEmpty` | null/空输入返回 string.Empty |
+| `GetParentDirectory_SingleSegment_ReturnsEmpty` | 单段路径无父级返回 string.Empty |
+
+### PathUtility 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Combine_RejectsPathTraversal` | `..` 路径遍历序列 | `ArgumentException` |
+| `GetParentDirectory_AtRoot_Throws` | 根路径无父目录 | `InvalidOperationException` |
 
 ## 已知覆盖缺口
 

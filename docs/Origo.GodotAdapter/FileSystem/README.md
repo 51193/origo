@@ -13,7 +13,7 @@
 | `GodotFileSystem.cs` | `IFileSystem` 的 Godot 实现，委托给分段静态类 |
 | `GodotFileOperations.cs` | 文件级操作：Exists/ReadAllText/WriteAllText/Copy/Delete |
 | `GodotDirectoryOperations.cs` | 目录级操作：Exists/Create/EnumerateFiles/EnumerateDirectories/Rename/DeleteRecursive |
-| `GodotPathResolver.cs` | Godot 路径拼接与父目录提取，含路径遍历防护 |
+| `GodotPathResolver.cs` | 薄转发包装，委托给 `Origo.Core.Utility.PathUtility` 执行路径拼接与父目录提取（含路径遍历防护） |
 
 ## 模块详解
 
@@ -37,8 +37,11 @@
 
 ### GodotPathResolver
 
-- **Combine**：`$"{base.TrimEnd('/')}/{relative.TrimStart('/')}"`，含路径遍历（`..`）拒绝
-- **GetParentDirectory**：截取最后一个 `/` 之前的部分。若路径已在根目录（无父级路径），抛出 `InvalidOperationException`。
+薄包装层，委托给 `Origo.Core.Utility.PathUtility`：
+- **Combine** → `PathUtility.Combine`：路径拼接 + 遍历攻击（`..`）检测
+- **GetParentDirectory** → `PathUtility.GetParentDirectory`：父目录提取 + 根路径边界处理
+
+路径逻辑本身已移至 Core 层，`GodotPathResolver` 保持为同构转发以满足 GodotAdapter 的内部依赖调用。
 
 ## 设计决策
 
