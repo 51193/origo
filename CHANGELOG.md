@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `GameplaySimulationHarness` extended with `SubmitConsoleCommand`, `ClearConsoleOutput`, `SetEntityData`, `InvokeEntityStrategy`, and `MountObserver` methods for richer integration test scenarios.
 - `AdvancedGameplayIntegrationTests` — 10 integration tests covering large-scale entity batch spawn/kill (100 entities), console command routing (`snd_count`, `bb_set`/`bb_get` on system layer), entity data direct API round-trip, multi-strategy entity combinations (Lifecycle+Observer, Lifecycle+Active, all three types), save/load of multiple entities with state preservation, and error path for requesting kill on unknown entities.
 - `ActiveStrategyIntegrationTests` — 7 integration tests covering ActiveStrategy invoke in the full frame loop: direct InvokeStrategy call, Process-triggered self-invoke, peer entity InvokeStrategy cross-entity call, ActiveStrategy indices save/load persistence, AfterLoad invoke verification, hybrid lifecycle+active entity in frame loop, and dynamic AddActiveStrategy/RemoveActiveStrategy lifecycle.
+- `StateMachineIntegrationTests` — 7 integration tests covering state machine in full frame loop: Push/Pop operations with frame driving, OnPushRuntime hook firing, OnPopRuntime hook firing, OnPopBeforeQuit on session destroy, state machine stack save/load with AfterLoad restoration, multiple independent state machine stacks, and lifecycle strategy pushing/popping states across frames.
 
 ### Changed
 
