@@ -3,7 +3,7 @@ using System.Linq;
 using Origo.GodotAdapter.Bootstrap;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.BootstrapTests;
+namespace Origo.GodotAdapter.Tests;
 
 public class GodotSndBootstrapTests
 {

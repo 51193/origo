@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Origo.Core.Snd.Metadata;
-using Origo.Core.Tests.TestSupport;
 using Xunit;
 
-namespace Origo.Core.Tests.Benchmarks;
+namespace Origo.Core.Tests;
 
 [Trait("Category", "Benchmark")]
 public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)

@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Xunit;
 
-namespace Origo.SourceGeneration.Tests.TestSupport;
+namespace Origo.SourceGeneration.Tests;
 
 /// <summary>
 ///     Prints performance comparison tables to both the console and the xUnit test

@@ -2,8 +2,11 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.Node;
 using Origo.Core.Planning;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
 using Origo.Core.Snd.Strategy;
@@ -457,24 +460,24 @@ public class PlanExecutionStrategyBaseTests
     }
 
     [Fact]
-    public void Wire_CalledTwice_DoesNotLeakSubscriptions()
+    public void Wire_MultipleCycles_ManagesSubscriptionsCorrectly()
     {
         var strategy = new SimplePlanStrategy();
-        var entity = new StubSndEntity("e");
-        entity.SetData(_intentKey, "test");
+        var tracking = new SubscriptionTrackingEntity(new StubSndEntity("e"));
+        tracking.SetData(_intentKey, "test");
         ISndContext ctx = NullSndContext.Instance;
 
-        strategy.AfterSpawn(entity, ctx);
-        Assert.Equal(1, entity.GetRawSubscriptionCount(_intentKey));
-        Assert.Equal(1, entity.GetRawSubscriptionCount(_actionStatusKey));
+        strategy.AfterSpawn(tracking, ctx);
+        Assert.Equal(1, tracking.GetSubCount(_intentKey));
+        Assert.Equal(1, tracking.GetSubCount(_actionStatusKey));
 
-        strategy.AfterAdd(entity, ctx);
-        Assert.Equal(1, entity.GetRawSubscriptionCount(_intentKey));
-        Assert.Equal(1, entity.GetRawSubscriptionCount(_actionStatusKey));
+        strategy.AfterAdd(tracking, ctx);
+        Assert.Equal(1, tracking.GetSubCount(_intentKey));
+        Assert.Equal(1, tracking.GetSubCount(_actionStatusKey));
 
-        strategy.BeforeRemove(entity, ctx);
-        Assert.Equal(0, entity.GetRawSubscriptionCount(_intentKey));
-        Assert.Equal(0, entity.GetRawSubscriptionCount(_actionStatusKey));
+        strategy.BeforeRemove(tracking, ctx);
+        Assert.Equal(0, tracking.GetSubCount(_intentKey));
+        Assert.Equal(0, tracking.GetSubCount(_actionStatusKey));
     }
 
     // ── Cleanup ────────────────────────────────────────────────────
@@ -486,5 +489,45 @@ public class PlanExecutionStrategyBaseTests
         FakeAction2Strategy.AfterAddCalls = null;
         FailingPlanStrategy.CompletedCalls = null;
         FailingPlanStrategy.FailedCalls = null;
+    }
+
+    private sealed class SubscriptionTrackingEntity : ISndEntity, ISndEntityRawSubscription
+    {
+        private readonly StubSndEntity _inner;
+        private readonly Dictionary<string, int> _subCounts = new(StringComparer.Ordinal);
+
+        public SubscriptionTrackingEntity(StubSndEntity inner) => _inner = inner;
+
+        public int GetSubCount(string key) => _subCounts.TryGetValue(key, out var c) ? c : 0;
+
+        void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback, Func<ISndEntity, TypedData, TypedData, bool>? filter)
+        {
+            _subCounts[name] = GetSubCount(name) + 1;
+            ((ISndEntityRawSubscription)_inner).SubscribeDataRaw(name, callback, filter);
+        }
+
+        void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback)
+        {
+            _subCounts[name] = Math.Max(0, GetSubCount(name) - 1);
+            ((ISndEntityRawSubscription)_inner).UnsubscribeDataRaw(name, callback);
+        }
+
+        public string Name => _inner.Name;
+        public ISessionRun OwningSession { get => _inner.OwningSession; set => _inner.OwningSession = value; }
+        public bool IsPendingKill { get => _inner.IsPendingKill; set => _inner.IsPendingKill = value; }
+        public void SetData<T>(string name, T value) => _inner.SetData(name, value);
+        public T GetData<T>(string name) => _inner.GetData<T>(name);
+        public (bool found, T? value) TryGetData<T>(string name) => _inner.TryGetData<T>(name);
+        public INodeHandle GetNode(string name) => _inner.GetNode(name);
+        public IReadOnlyCollection<string> GetNodeNames() => _inner.GetNodeNames();
+        public void AddStrategy(string index) => _inner.AddStrategy(index);
+        public void RemoveStrategy(string index) => _inner.RemoveStrategy(index);
+        public void AddActiveStrategy(string index) => _inner.AddActiveStrategy(index);
+        public void RemoveActiveStrategy(string index) => _inner.RemoveActiveStrategy(index);
+        public object? InvokeStrategy(string strategyIndex, object? input = null) => _inner.InvokeStrategy(strategyIndex, input);
+        public void MountObserverStrategy(string targetName, string observerIndex) => _inner.MountObserverStrategy(targetName, observerIndex);
+        public void UnmountObserverStrategy(string targetName, string observerIndex) => _inner.UnmountObserverStrategy(targetName, observerIndex);
+        public void MountObserverStrategy(ISndEntity target, string observerIndex) => _inner.MountObserverStrategy(target, observerIndex);
+        public void UnmountObserverStrategy(ISndEntity target, string observerIndex) => _inner.UnmountObserverStrategy(target, observerIndex);
     }
 }

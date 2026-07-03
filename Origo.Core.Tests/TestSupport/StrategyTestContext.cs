@@ -18,7 +18,7 @@ using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 
-namespace Origo.Core.Tests.TestSupport;
+namespace Origo.Core.Tests;
 
 internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, ISndDeferredActions,
     ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,

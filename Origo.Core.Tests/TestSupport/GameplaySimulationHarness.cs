@@ -12,7 +12,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 
-namespace Origo.Core.Tests.TestSupport;
+namespace Origo.Core.Tests;
 
 internal sealed class GameplaySimulationHarness
 {

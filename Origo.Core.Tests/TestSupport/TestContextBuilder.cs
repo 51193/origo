@@ -5,7 +5,7 @@ using Origo.Core.DataSource;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 
-namespace Origo.Core.Tests.TestSupport;
+namespace Origo.Core.Tests;
 
 /// <summary>
 ///     Fluent builder for constructing <see cref="SndContext" /> instances

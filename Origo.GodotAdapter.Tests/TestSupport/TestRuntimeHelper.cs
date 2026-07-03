@@ -13,7 +13,7 @@ using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 
-namespace Origo.GodotAdapter.Tests.TestSupport;
+namespace Origo.GodotAdapter.Tests;
 
 internal sealed class TestSndSceneHost : ISndSceneHost
 {

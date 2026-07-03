@@ -4,7 +4,7 @@ using Origo.Core.Serialization;
 using Origo.GodotAdapter.Serialization;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.SerializationTests;
+namespace Origo.GodotAdapter.Tests;
 
 public class GodotDataSourceConvertersTests
 {

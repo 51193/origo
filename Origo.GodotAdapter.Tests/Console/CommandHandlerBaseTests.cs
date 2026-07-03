@@ -4,10 +4,9 @@ using Origo.Core.Abstractions.Console;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.GodotAdapter.Console;
-using Origo.GodotAdapter.Tests.TestSupport;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.Console;
+namespace Origo.GodotAdapter.Tests;
 
 public class CommandHandlerBaseTests
 {

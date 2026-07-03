@@ -13,10 +13,9 @@ using Origo.Core.Runtime;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
-using Origo.GodotAdapter.Tests.TestSupport;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.Architecture;
+namespace Origo.GodotAdapter.Tests;
 
 public class AdapterArchitectureGuardrailTests
 {

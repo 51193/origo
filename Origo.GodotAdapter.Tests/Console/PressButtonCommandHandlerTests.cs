@@ -6,10 +6,9 @@ using Origo.Core.Abstractions.Node;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Snd.Metadata;
 using Origo.GodotAdapter.Console;
-using Origo.GodotAdapter.Tests.TestSupport;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.Console;
+namespace Origo.GodotAdapter.Tests;
 
 public class PressButtonCommandHandlerTests
 {

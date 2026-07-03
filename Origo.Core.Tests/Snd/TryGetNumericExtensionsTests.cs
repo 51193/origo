@@ -79,7 +79,7 @@ public class TryGetNumericExtensionsTests
         var entity = new TestNumericEntity();
         entity.SetData("val", 5.5f);
 
-        var value = entity.GetNumeric("val");
+        var value = entity.GetNumeric("val", 0f);
         Assert.Equal(5.5f, value);
     }
 

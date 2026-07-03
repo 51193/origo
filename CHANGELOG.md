@@ -55,6 +55,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `DataSourceNode.EnsureExpanded` throws descriptive error on non-lazy nodes.
 - `GodotSndManager.EnsureReadyForSpawn` checks `_observerTopology`.
 - `ConsoleBridgeServer` accept-handle pipeline now uses `await` serialization instead of fire-and-forget + `Interlocked` polling. Eliminates `_activeClientCount` field and all connection-rejection races, making the single-connection model intrinsically race-free.
+- `StubSndEntity.GetRawSubscriptionCount()` removed — test subscription tracking moved to a test-side wrapper that intercepts `ISndEntityRawSubscription` calls. No production backdoor remains.
+- **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value, eliminating silent `0f` fallback when a key is missing or the type is incompatible.
+- Test projects unified to flat namespaces — 21 files across `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, and `Origo.SourceGeneration.Tests` now use the top-level test namespace instead of sub-namespaces, matching the documented convention.
 
 ### Removed
 

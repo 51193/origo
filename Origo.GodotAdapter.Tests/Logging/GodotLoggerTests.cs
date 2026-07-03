@@ -3,7 +3,7 @@ using Origo.Core.Abstractions.Logging;
 using Origo.GodotAdapter.Logging;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.LoggingTests;
+namespace Origo.GodotAdapter.Tests;
 
 public class GodotLoggerTests
 {

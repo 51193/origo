@@ -5,7 +5,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 
-namespace Origo.Core.Tests.TestSupport;
+namespace Origo.Core.Tests;
 
 public static class StrategyTestScenario
 {

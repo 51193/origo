@@ -1,8 +1,7 @@
 using Origo.GodotAdapter.Console;
-using Origo.GodotAdapter.Tests.TestSupport;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.Console;
+namespace Origo.GodotAdapter.Tests;
 
 public class CameraViewCommandHandlerTests
 {

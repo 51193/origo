@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.FileSystem;
 
-namespace Origo.GodotAdapter.Tests.TestSupport;
+namespace Origo.GodotAdapter.Tests;
 
 internal sealed class NullFileSystem : IFileSystem
 {

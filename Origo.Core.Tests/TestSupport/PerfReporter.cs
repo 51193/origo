@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Xunit;
 
-namespace Origo.Core.Tests.TestSupport;
+namespace Origo.Core.Tests;
 
 public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
 {

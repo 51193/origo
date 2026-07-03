@@ -2,7 +2,7 @@ using System;
 using Origo.GodotAdapter.FileSystem;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.FileSystemTests;
+namespace Origo.GodotAdapter.Tests;
 
 public class GodotFileSystemPathTests
 {

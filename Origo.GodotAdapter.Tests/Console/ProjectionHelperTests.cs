@@ -2,7 +2,7 @@ using Godot;
 using Origo.GodotAdapter.Console;
 using Xunit;
 
-namespace Origo.GodotAdapter.Tests.Console;
+namespace Origo.GodotAdapter.Tests;
 
 public class ProjectionHelperTests
 {
