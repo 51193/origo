@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ObserverTopologyIntegrationTests` — 6 integration tests covering observer topology in frame loop: mount triggers OnMounted+OnDataChanged with correct values, unmount stops notification, target kill triggers OnUnmounted, old/new value correctness on data change, multiple independent target notifications, and frame-driven strategy auto-mounting observer in Process.
 - Extended `GameplaySessionSwitchAndConcurrencyTests` — 4 new cross-session integration tests: entity reading peer in another session via `SessionManager.TryGet`, background session independent save/load with entity state preservation, killing entities in background session during foreground play, and multiple background sessions full save/load cycle.
 - `StrategyStateSaveLoadIntegrationTests` — 6 integration tests covering strategy state persistence across save/load: lifecycle strategy count state survives save/load, entity data + session blackboard both survive, continue processing after reload, 20-entity batch save/load with no loss, save overwrite with correct latest state, and multiple session (foreground+background) all state preserved.
+- `PlanningIntegrationTests` — 5 integration tests covering PlanExecutionStrategyBase in the frame loop: intent-triggered plan start with correct step/status keys, complete two-step plan execution with action status transitions, no-start when intent is absent, data attribute key verification, and independent plan execution for multiple entities.
 
 ### Changed
 
