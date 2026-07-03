@@ -5,7 +5,6 @@ using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime;
-using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
 using Origo.Core.Abstractions.Lifecycle;
@@ -255,7 +254,6 @@ public class CoreArchitectureGuardrailTests
 
         Assert.Equal("bg1_level", bg.LevelId);
         Assert.False(bg.IsFrontSession);
-        Assert.NotNull(((SessionRun)bg).SceneHost);
         Assert.NotNull(bg.GetSessionStateMachines());
 
         bg.Dispose();

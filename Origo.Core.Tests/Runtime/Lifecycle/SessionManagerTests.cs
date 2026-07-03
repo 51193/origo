@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Save;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Strategy;
 using Xunit;
 using Origo.Core.Abstractions.Lifecycle;
 
@@ -130,34 +134,46 @@ public class SessionManagerTests
     // ── ProcessAllSessions ─────────────────────────────────────
 
     [Fact]
-    public void ProcessAllSessions_OnlySynced_SessionsAreProcessed()
+    public void ProcessAllSessions_OnlyProcessesSyncedSessions()
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        ctx.Runtime.SessionManager.CreateBackgroundSession("synced", "synced", true);
-        ctx.Runtime.SessionManager.CreateBackgroundSession("stored", "stored");
 
-        var ex = Record.Exception(() =>
+        ctx.Runtime.SndWorld.RegisterStrategy(() => new ProcessSpyStrategy());
+        ProcessSpyStrategy.ProcessCalls.Clear();
+
+        var synced = ctx.Runtime.SessionManager.CreateBackgroundSession("synced", "synced", true);
+        var stored = ctx.Runtime.SessionManager.CreateBackgroundSession("stored", "stored");
+
+        var meta = new SndMetaData
         {
-            ctx.Runtime.SessionManager.ProcessAllSessions(0.016);
-            ctx.Runtime.SessionManager.ProcessAllSessions(0.016, true);
-        });
+            Name = "entity_synced",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData
+            {
+                LifecycleIndices = [_processSpyIdx]
+            },
+            DataMetaData = new DataMetaData()
+        };
+        synced.Spawn(meta);
 
-        Assert.Null(ex);
-        Assert.Contains("synced", ((SessionManager)ctx.Runtime.SessionManager).ProcessingKeys);
-        Assert.DoesNotContain("stored", ((SessionManager)ctx.Runtime.SessionManager).ProcessingKeys);
-    }
+        var meta2 = new SndMetaData
+        {
+            Name = "entity_stored",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData
+            {
+                LifecycleIndices = [_processSpyIdx]
+            },
+            DataMetaData = new DataMetaData()
+        };
+        stored.Spawn(meta2);
 
-    [Fact]
-    public void ProcessingKeys_OnlyReturnsSyncedKeys()
-    {
-        var (ctx, _) = CreateContext();
-        ctx.Runtime.SessionManager.CreateBackgroundSession("synced", "synced", true);
-        ctx.Runtime.SessionManager.CreateBackgroundSession("stored", "stored");
+        ProcessSpyStrategy.ProcessCalls.Clear();
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016);
 
-        var processingKeys = ((SessionManager)ctx.Runtime.SessionManager).ProcessingKeys;
-        Assert.Contains("synced", processingKeys);
-        Assert.DoesNotContain("stored", processingKeys);
+        Assert.Contains("entity_synced", ProcessSpyStrategy.ProcessCalls);
+        Assert.DoesNotContain("entity_stored", ProcessSpyStrategy.ProcessCalls);
     }
 
     // ── Background level IDs in progress blackboard ───────────────────
@@ -455,5 +471,17 @@ public class SessionManagerTests
             "001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
+    }
+
+    private const string _processSpyIdx = "test.smgr.process_spy";
+
+    [StrategyIndex(_processSpyIdx)]
+    private sealed class ProcessSpyStrategy : LifecycleStrategyBase
+    {
+        private static readonly AsyncLocal<List<string>> _processCalls = new();
+        public static List<string> ProcessCalls => _processCalls.Value ??= [];
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
+            ProcessCalls.Add(entity.Name);
     }
 }

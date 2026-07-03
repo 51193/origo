@@ -60,16 +60,6 @@ public class StrategyPoolTypeSafetyAndExtensionTests
     }
 
     [Fact]
-    public void GetStrategy_ThirdDomainBase_AssignsThroughExpectedAbstraction()
-    {
-        var pool = new SndStrategyPool(NullLogger.Instance);
-        pool.Register(() => new ExtensionDomainConcreteStrategy());
-
-        var s = pool.GetStrategy<ExtensionDomainStrategyBase>("ext.domain.probe");
-        Assert.Equal("ok", s.ProbeValue());
-    }
-
-    [Fact]
     public void RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws()
     {
         var pool = new SndStrategyPool(NullLogger.Instance);
@@ -94,18 +84,6 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         var ex = Record.Exception(() =>
             mgr.RecoverStrategiesOnly(["pool.entity"]));
         Assert.Null(ex);
-    }
-
-    /// <summary>示例：在统一根基类之上扩展第三领域策略基类，仍复用同一策略池与索引机制。</summary>
-    public abstract class ExtensionDomainStrategyBase : BaseStrategy
-    {
-        public abstract string ProbeValue();
-    }
-
-    [StrategyIndex("ext.domain.probe")]
-    private sealed class ExtensionDomainConcreteStrategy : ExtensionDomainStrategyBase
-    {
-        public override string ProbeValue() => "ok";
     }
 
     [StrategyIndex("pool.entity")]

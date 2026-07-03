@@ -98,7 +98,7 @@ internal static class DisposeSemanticsTestInfrastructure
 
             try
             {
-                var _ = ((SessionRun)session).SceneHost;
+                session.FindByName(entity.Name);
                 _events.Value?.Add("SceneHostAccess:OK");
             }
             catch (ObjectDisposedException)

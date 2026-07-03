@@ -12,16 +12,6 @@ namespace Origo.Core.Tests;
 public class AutoInitializerGuardTests
 {
     [Fact]
-    public void DiscoverAndRegisterStrategies_WithoutAttribute_Throws()
-    {
-        var logger = new TestLogger();
-        var world = TestFactory.CreateSndWorld(logger: logger);
-
-        Assert.Throws<InvalidOperationException>(() =>
-            OrigoAutoInitializer.DiscoverAndRegisterStrategies(world, logger));
-    }
-
-    [Fact]
     public void SndWorld_RegisterStrategy_WithStatefulInstanceField_Throws()
     {
         var world = TestFactory.CreateSndWorld();

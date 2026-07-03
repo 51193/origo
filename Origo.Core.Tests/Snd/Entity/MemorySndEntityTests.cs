@@ -27,18 +27,18 @@ public class StubSndEntityTests
     }
 
     [Fact]
-    public void GetData_ThrowsKeyNotFound_WhenMissing()
+    public void GetData_ThrowsInvalidOperation_WhenMissing()
     {
         var entity = new StubSndEntity("e");
-        Assert.Throws<KeyNotFoundException>(() => entity.GetData<int>("missing"));
+        Assert.Throws<InvalidOperationException>(() => entity.GetData<int>("missing"));
     }
 
     [Fact]
-    public void GetData_ThrowsInvalidCast_OnTypeMismatch()
+    public void GetData_ThrowsInvalidOperation_OnTypeMismatch()
     {
         var entity = new StubSndEntity("e");
         entity.SetData("val", "string_value");
-        Assert.Throws<InvalidCastException>(() => entity.GetData<int>("val"));
+        Assert.Throws<InvalidOperationException>(() => entity.GetData<int>("val"));
     }
 
     [Fact]

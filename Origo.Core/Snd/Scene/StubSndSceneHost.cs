@@ -113,10 +113,11 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
     public T GetData<T>(string name)
     {
         if (!_data.TryGetValue(name, out var value))
-            throw new KeyNotFoundException($"Data key '{name}' not found in StubSndSceneHost.");
+            throw new InvalidOperationException(
+                $"Data key '{name}' not found in StubSndEntity '{Name}'.");
         if (value is T cast)
             return cast;
-        throw new InvalidCastException(
+        throw new InvalidOperationException(
             $"Data key '{name}' is of type '{value?.GetType().Name ?? "null"}' but requested as '{typeof(T).Name}'.");
     }
 
