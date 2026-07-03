@@ -20,6 +20,7 @@
 | `AdvancedGameplayIntegrationTests.cs` | 大量实体批量 spawn/kill（100 实体）、控制台命令路由（snd_count / bb_set/bb_get system 层）、实体数据直接 API round-trip、多策略实体组合（Lifecycle+Observer、Lifecycle+Active、三种类型全挂载）、多实体存档/加载状态保持、request kill 未知实体错误路径 |
 | `ActiveStrategyIntegrationTests.cs` | ActiveStrategy 在完整帧循环中的集成测试：直接 InvokeStrategy 调用、Process 触发自调用、跨实体 InvokeStrategy、ActiveStrategy 索引存档/加载持久化、AfterLoad 后 Invoke 验证、Lifecycle+Active 混合实体帧循环、动态 AddActiveStrategy/RemoveActiveStrategy 生命周期 |
 | `StateMachineIntegrationTests.cs` | 状态机在帧循环中的集成测试：Push/Pop 帧驱动、OnPushRuntime/OnPopRuntime 钩子触发、OnPopBeforeQuit 在 session destroy 时触发、状态机栈存档/加载 AfterLoad 恢复、多独立状态机栈、Lifecycle 策略跨帧 Push/Pop 状态 |
+| `ObserverTopologyIntegrationTests.cs` | 观察者拓扑在帧循环中的集成测试：mount 触发 OnMounted+OnDataChanged（带正确旧/新值）、unmount 停止通知、target kill 触发 OnUnmounted、数据变化新旧值正确性、多目标独立通知、帧驱动策略在 Process 中自动挂载观察者 |
 
 ## GameplayIntegrationTests 测试详情
 
