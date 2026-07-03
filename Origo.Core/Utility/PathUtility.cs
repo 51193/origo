@@ -6,6 +6,8 @@ public static class PathUtility
 {
     public static string NormalizeDirectoryPath(string path)
     {
+        if (path is null)
+            return string.Empty;
         return path.TrimEnd('/');
     }
 

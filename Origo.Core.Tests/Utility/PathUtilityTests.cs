@@ -11,29 +11,20 @@ public class PathUtilityTests
     [InlineData("/path/to/dir", "/path/to/dir")]
     [InlineData("no-trailing-slash", "no-trailing-slash")]
     [InlineData("", "")]
-    public void NormalizeDirectoryPath_StripsTrailingSlashes(string input, string expected)
-    {
-        Assert.Equal(expected, PathUtility.NormalizeDirectoryPath(input));
-    }
+    public void NormalizeDirectoryPath_StripsTrailingSlashes(string input, string expected) => Assert.Equal(expected, PathUtility.NormalizeDirectoryPath(input));
 
     [Theory]
     [InlineData("*.json", ".json")]
     [InlineData("*.cs", ".cs")]
     [InlineData("*", "")]
-    public void ExtractGlobSuffix_ReturnsSuffix(string pattern, string expected)
-    {
-        Assert.Equal(expected, PathUtility.ExtractGlobSuffix(pattern));
-    }
+    public void ExtractGlobSuffix_ReturnsSuffix(string pattern, string expected) => Assert.Equal(expected, PathUtility.ExtractGlobSuffix(pattern));
 
     [Theory]
     [InlineData("")]
     [InlineData(null)]
     [InlineData("file.json")]
     [InlineData("some*thing")]
-    public void ExtractGlobSuffix_ReturnsNull_WhenNoGlob(string? pattern)
-    {
-        Assert.Null(PathUtility.ExtractGlobSuffix(pattern!));
-    }
+    public void ExtractGlobSuffix_ReturnsNull_WhenNoGlob(string? pattern) => Assert.Null(PathUtility.ExtractGlobSuffix(pattern!));
 
     [Fact]
     public void Combine_NullOrEmptyBase_ReturnsRelative()
@@ -61,10 +52,7 @@ public class PathUtilityTests
     [InlineData("../etc/passwd")]
     [InlineData("..\\some")]
     [InlineData("foo/../bar")]
-    public void Combine_RejectsPathTraversal(string relative)
-    {
-        Assert.Throws<ArgumentException>(() => PathUtility.Combine("/base", relative));
-    }
+    public void Combine_RejectsPathTraversal(string relative) => Assert.Throws<ArgumentException>(() => PathUtility.Combine("/base", relative));
 
     [Fact]
     public void GetParentDirectory_ReturnsParent()
@@ -85,14 +73,8 @@ public class PathUtilityTests
     [InlineData("/")]
     [InlineData("C:")]
     [InlineData("/root")]
-    public void GetParentDirectory_AtRoot_Throws(string path)
-    {
-        Assert.Throws<InvalidOperationException>(() => PathUtility.GetParentDirectory(path));
-    }
+    public void GetParentDirectory_AtRoot_Throws(string path) => Assert.Throws<InvalidOperationException>(() => PathUtility.GetParentDirectory(path));
 
     [Fact]
-    public void GetParentDirectory_SingleSegment_ReturnsEmpty()
-    {
-        Assert.Equal(string.Empty, PathUtility.GetParentDirectory("file.txt"));
-    }
+    public void GetParentDirectory_SingleSegment_ReturnsEmpty() => Assert.Equal(string.Empty, PathUtility.GetParentDirectory("file.txt"));
 }

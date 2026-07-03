@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Godot;
+using Origo.Core.Utility;
 
 namespace Origo.GodotAdapter.FileSystem;
 
@@ -15,10 +16,10 @@ internal static class GodotDirectoryOperations
     public static IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
-        var normalizedDir = GodotPathResolver.NormalizeDirectoryPath(directoryPath);
+        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
         IEnumerable<string> fileNames = dir.GetFiles();
 
-        var suffix = GodotPathResolver.ExtractGlobSuffix(searchPattern);
+        var suffix = PathUtility.ExtractGlobSuffix(searchPattern);
         if (suffix is not null)
             fileNames = fileNames.Where(f => f.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
 
@@ -34,13 +35,13 @@ internal static class GodotDirectoryOperations
     public static IEnumerable<string> EnumerateDirectories(string directoryPath)
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
-        var normalizedDir = GodotPathResolver.NormalizeDirectoryPath(directoryPath);
+        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
         return [.. dir.GetDirectories().Select(d => $"{normalizedDir}/{d}")];
     }
 
     public static void Rename(string sourcePath, string destinationPath)
     {
-        using var dir = DirAccess.Open(GodotPathResolver.GetParentDirectory(sourcePath)) ?? throw new DirectoryNotFoundException(
+        using var dir = DirAccess.Open(PathUtility.GetParentDirectory(sourcePath)) ?? throw new DirectoryNotFoundException(
                 $"Cannot open parent directory for rename: {sourcePath}");
         var err = dir.Rename(sourcePath, destinationPath);
         if (err != Error.Ok)
@@ -56,7 +57,7 @@ internal static class GodotDirectoryOperations
         using var dir = DirAccess.Open(directoryPath) ?? throw new InvalidOperationException(
             $"Failed to open directory for deletion: {directoryPath}");
 
-        var normalizedDir = GodotPathResolver.NormalizeDirectoryPath(directoryPath);
+        var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
 
         foreach (var file in dir.GetFiles())
             dir.Remove($"{normalizedDir}/{file}");
@@ -64,7 +65,7 @@ internal static class GodotDirectoryOperations
         foreach (var subdir in dir.GetDirectories())
             DeleteRecursive($"{normalizedDir}/{subdir}");
 
-        var parent = DirAccess.Open(GodotPathResolver.GetParentDirectory(directoryPath));
+        var parent = DirAccess.Open(PathUtility.GetParentDirectory(directoryPath));
         if (parent is not null)
             using (parent)
             {

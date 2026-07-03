@@ -74,10 +74,7 @@ internal sealed class GameplaySimulationHarness
 
     public void RequestKillEntity(string entityName) => GameSession.RequestKillEntity(entityName);
 
-    public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = true)
-    {
-        return Runtime.SessionManager.CreateBackgroundSession(key, levelId, syncProcess);
-    }
+    public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = true) => Runtime.SessionManager.CreateBackgroundSession(key, levelId, syncProcess);
 
     public ISessionRun? TryGetSession(string key) => Runtime.SessionManager.TryGet(key);
 

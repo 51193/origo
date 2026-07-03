@@ -61,10 +61,7 @@ public class LoggerGenericTests
     }
 
     [Fact]
-    public void LoggerT_Constructor_NullInner_Throws()
-    {
-        Assert.Throws<System.ArgumentNullException>(() => new Logger<TestCategory>(null!));
-    }
+    public void LoggerT_Constructor_NullInner_Throws() => Assert.Throws<System.ArgumentNullException>(() => new Logger<TestCategory>(null!));
 
     [Fact]
     public void LoggerT_GenericType_TagUsesFriendlyName()

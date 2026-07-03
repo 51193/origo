@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `NullSndContext` removed from production code (`Origo.Core/Snd/`) and relocated to test project (`Origo.Core.Tests/TestSupport/`). Self-referential test files `NullSndContextExtendedTests.cs` and `ContextBoundaryTests.cs` deleted.
 - Unused method parameters removed from `SaveStorageFacade.CopyDirectoryFromSnapshot`, `OrigoAutoHost.CreateAndSetupSndManager`, `PlanExecutionStrategyBase.OnIntentChanged`/`OnActionStatusChanged`, `SetupProgressRun`, `RunDictWrite`, `TryInvoke`, `PrintCompare`, and `MeasureObserverAlloc`.
 - `SessionManager.ClearBackground()` — unused internal method with zero callers.
+- `GodotPathResolver` thin forwarding wrapper deleted. `GodotFileSystem` and `GodotDirectoryOperations` now call `Origo.Core.Utility.PathUtility` directly, removing an unnecessary indirection layer.
 
 ### Fixed
 

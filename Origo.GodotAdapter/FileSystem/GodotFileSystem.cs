@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.Utility;
 
 namespace Origo.GodotAdapter.FileSystem;
 
@@ -34,7 +35,7 @@ public sealed class GodotFileSystem : IFileSystem
     public void Delete(string path) => GodotFileOperations.Delete(path);
 
     public string CombinePath(string basePath, string relativePath) =>
-        GodotPathResolver.Combine(basePath, relativePath);
+        PathUtility.Combine(basePath, relativePath);
 
     public IEnumerable<string> EnumerateDirectories(string directoryPath)
     {
@@ -42,7 +43,7 @@ public sealed class GodotFileSystem : IFileSystem
         return GodotDirectoryOperations.EnumerateDirectories(directoryPath);
     }
 
-    public string GetParentDirectory(string path) => GodotPathResolver.GetParentDirectory(path);
+    public string GetParentDirectory(string path) => PathUtility.GetParentDirectory(path);
 
     public void Rename(string sourcePath, string destinationPath) =>
         GodotDirectoryOperations.Rename(sourcePath, destinationPath);

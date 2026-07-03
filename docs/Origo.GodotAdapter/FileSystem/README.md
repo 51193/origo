@@ -12,8 +12,7 @@
 |------|------|
 | `GodotFileSystem.cs` | `IFileSystem` 的 Godot 实现，委托给分段静态类 |
 | `GodotFileOperations.cs` | 文件级操作：Exists/ReadAllText/WriteAllText/Copy/Delete |
-| `GodotDirectoryOperations.cs` | 目录级操作：Exists/Create/EnumerateFiles/EnumerateDirectories/Rename/DeleteRecursive |
-| `GodotPathResolver.cs` | 薄转发包装，委托给 `Origo.Core.Utility.PathUtility` 执行路径拼接与父目录提取（含路径遍历防护） |
+| `GodotDirectoryOperations.cs` | 目录级操作：Exists/Create/EnumerateFiles/EnumerateDirectories/Rename/DeleteRecursive（路径操作直接调用 `Origo.Core.Utility.PathUtility`） |
 
 ## 模块详解
 
@@ -35,21 +34,11 @@
 - **DeleteRecursive**：先删文件，再递归删子目录，最后删当前目录
 - **Rename**：打开父目录后调用 `DirAccess.Rename`
 
-### GodotPathResolver
-
-薄包装层，委托给 `Origo.Core.Utility.PathUtility`：
-- **Combine** → `PathUtility.Combine`：路径拼接 + 遍历攻击（`..`）检测
-- **GetParentDirectory** → `PathUtility.GetParentDirectory`：父目录提取 + 根路径边界处理
-- **NormalizeDirectoryPath** → `PathUtility.NormalizeDirectoryPath`：去除尾部斜杠
-- **ExtractGlobSuffix** → `PathUtility.ExtractGlobSuffix`：`"*.json"` → `".json"`
-
-路径逻辑本身已移至 Core 层，`GodotPathResolver` 保持为同构转发以满足 GodotAdapter 内部文件系统模块的调用一致性（所有路径操作统一经此包装层，`GodotDirectoryOperations` 不再直接引用 `PathUtility`）。
-
 ## 设计决策
 
-### 为什么文件操作按 File/Directory/Path 三重拆分
+### 为什么文件操作按 File/Directory 二重拆分
 
-单一 `GodotFileSystem` 类如果包含所有实现细节会过长（预期 200+ 行）。按职责拆分后每个静态类聚焦一种操作类型，减少导航成本。`GodotFileSystem` 是唯一公开的 `public` 类型。
+单一 `GodotFileSystem` 类如果包含所有实现细节会过长（预期 200+ 行）。按文件操作与目录操作拆分为两个静态类，减少导航成本。路径处理逻辑位于 `Origo.Core.Utility.PathUtility`（已从 GodotAdapter 层提取），`GodotFileSystem` 和 `GodotDirectoryOperations` 直接调用，无需中间包装层。
 
 ### 为什么 Rename 不是用 FileAccess 实现
 
