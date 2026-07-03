@@ -10,7 +10,7 @@
 
 | 文件 | 职责 |
 |------|------|
-| `ILogger.cs` | 定义 `ILogger` 接口和 `LogLevel` 枚举 |
+| `ILogger.cs` | 定义 `ILogger` 和 `ILogger<TCategory>` 接口，以及 `LogLevel` 枚举 |
 
 ## 接口详细
 
@@ -28,6 +28,15 @@
 | 成员 | 说明 |
 |------|------|
 | `Log(level, tag, message)` | 记录一条带级别、标签和正文的日志 |
+
+### ILogger\<TCategory\>
+
+类型感知的日志接口，标签自动取自 `typeof(TCategory).Name`，继承自 `ILogger` 保持向后兼容。
+
+| 成员 | 说明 |
+|------|------|
+| `Log(level, message)` | 记录一条日志，标签自动为类型名 |
+| `ILogger.Log(level, tag, message)` | 基接口方法（显式实现），兼容手动指定 tag 的场景 |
 
 ## 设计决策
 

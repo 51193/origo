@@ -12,6 +12,7 @@
 |------|------|
 | `LogMessageBuilder.cs` | 流式构建结构化日志消息（上下文 + 耗时） |
 | `NullLogger.cs` | 无输出日志实现，单例模式 |
+| `Logger.cs` | `Logger<T>` 泛型包装器：将任意 `ILogger` 包装为 `ILogger<T>`，自动以 `typeof(T).Name` 作为 tag |
 
 ## 实现详解
 
