@@ -113,34 +113,18 @@ public class GodotDirectoryOperationsIntegrationTests
         da3?.Remove("test_dir_enum_dirs");
     }
 
-    [IntegrationTest(Description = "DeleteRecursive removes all files from the directory")]
-    public void DeleteRecursive_ClearsAllContents()
+    [IntegrationTest(Description = "DeleteRecursive removes the directory and all contents")]
+    public void DeleteRecursive_RemovesDirectory()
     {
-        // Create a nested structure under res:// since DeleteRecursive's parent
-        // removal step has a known limitation with virtual root paths (user://, res://).
-        // The files and subdirectories are still correctly removed.
-        var parent = "res://test_del_parent_temp";
-        var child = $"{parent}/child";
-        GodotDirectoryOperations.Create(parent);
-        GodotDirectoryOperations.Create(child);
-        GodotFileOperations.WriteAllText($"{parent}/root.txt", "r", overwrite: true);
-        GodotFileOperations.WriteAllText($"{child}/sub.txt", "s", overwrite: true);
+        var dir = "res://test_dir_delete";
+        GodotDirectoryOperations.Create(dir);
+        GodotFileOperations.WriteAllText($"{dir}/f.txt", "x", overwrite: true);
 
-        GodotDirectoryOperations.DeleteRecursive(parent);
+        GodotDirectoryOperations.DeleteRecursive(dir);
 
-        // Files and subdirectories should be removed.
-        // The parent directory itself may remain due to a known issue with
-        // DirAccess.Remove using full virtual paths — the method is still
-        // effective at clearing contents.
-        var remainingFiles = GodotDirectoryOperations.EnumerateFiles(parent, "*", recursive: true).ToList();
         IntegrationTestRunner.Assert(
-            remainingFiles.Count == 0,
-            "All files should be removed after DeleteRecursive.");
-
-        // Manual cleanup of the parent directories that may remain.
-        try { GodotDirectoryOperations.DeleteRecursive(parent); } catch { }
-        try { GodotFileOperations.Delete($"{child}/sub.txt"); } catch { }
-        try { GodotFileOperations.Delete($"{parent}/root.txt"); } catch { }
+            !GodotDirectoryOperations.Exists(dir),
+            "Directory should be removed after DeleteRecursive.");
     }
 
     [IntegrationTest(Description = "DeleteRecursive on non-existent directory does not throw")]

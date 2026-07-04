@@ -69,7 +69,11 @@ internal static class GodotDirectoryOperations
         if (parent is not null)
             using (parent)
             {
-                parent.Remove(directoryPath);
+                parent.Remove(System.IO.Path.GetFileName(directoryPath.TrimEnd('/')));
             }
+        else
+        {
+            DirAccess.RemoveAbsolute(directoryPath);
+        }
     }
 }
