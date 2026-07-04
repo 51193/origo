@@ -31,6 +31,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `StubNodeFactory` — `INodeFactory` stub returning `GodotNodeHandle` with a plain `Node`, used by entity construction tests.
 - `Origo.Core` extended `InternalsVisibleTo` to `Origo.GodotAdapter.Integration.Tests` for `ObserverTopology` access.
 
+- Deferred test runner architecture — `[DeferredTest]` attribute and `IDeferredTestFixture` interface enabling frame-driven tests that require `AddChild` to the SceneTree. Tests are queued in `_Ready()` and executed across subsequent `_Process()` frames.
+- `GodotPackedSceneNodeFactory` integration tests — 4 tests covering scene loading from disk (.tscn resources), invalid resource handling, child-parent attachment, and cache reuse for duplicate scene IDs.
+- `GodotSndManager` entity creation integration tests — 5 tests covering `CreateEntity` adds to list and scene tree, `RemoveEntity` removes from list, `BuildMetaList` includes entities, `RequestKillEntity` marks pending kill, and `GetEntities` count reflects creation.
+- `TreeDebugCommandHandler` integration tests — 2 tests covering valid entity tree printing and unknown entity error.
+- `PressButtonCommandHandler` integration tests — 2 tests covering `Button.Pressed` signal emission and unknown button path error.
+- `CameraViewCommandHandler` integration test — 1 test covering output generation in headless mode with a Camera3D and entity Node3D children.
+- `OrigoAutoHost` full bootstrap integration tests — 2 tests covering `_Ready()` creates Runtime, SndManager, ConsoleInput, and ConsoleOutputChannel in a real SceneTree.
+- `OrigoDefaultEntry` export properties test — verifies all 6 `[Export]` property defaults.
+- Test scene resources — `test_empty_node.tscn`, `test_button.tscn`, `test_entry.json` for PackedScene and bootstrap testing.
+
 - `camera_view` console command — displays screen coordinates and depth of all Godot entity nodes visible through the active `Camera3D`. Walks `Node3D` children through frustum culling and world-to-screen projection, and reports `Control` node screen positions.
 - `GameplaySimulationHarness` — integration test harness that creates a fully bootstrapped `OrigoRuntime` + `SndContext` with a background game session (`syncProcess=true`), enabling true frame-driven gameplay simulation via `DriveFrame`/`RunFrames` with real `SndEntity` lifecycle and strategy processing.
 - `GameplayIntegrationTests` — 9 integration tests covering multi-frame entity data accumulation, cross-entity interaction (`FindByName` and `SessionBlackboard`), business deferred action execution, save-to-disk persistence, entity kill lifecycle (BeforeDead + removal), console command processing, full save-dispose-reload round-trip, and observer strategy mount-and-notify through the full `IOrigoFrameDriver.DriveFrame` pipeline.

@@ -13,10 +13,16 @@
 集成测试使用自定义轻量运行器，而非 xUnit：
 
 - **`IntegrationTestRunner`**：`[GlobalClass]` AutoLoad Node，在 `_Ready()` 中
-  通过反射发现所有 `[IntegrationTest]` 标记的方法并执行
-- **`[IntegrationTest]`**：自定义 attribute，标记测试方法
-- **断言**：`IntegrationTestRunner.Assert(condition, message)` / `AssertEqual(expected, actual, name)`，
-  失败时抛出异常
+  通过反射发现所有 `[IntegrationTest]` 标记的方法并执行。
+  支持两种测试模式：
+  - **即时测试**（`[IntegrationTest]`）：在 `_Ready()` 中立即执行，适用于不需要树操作的测试
+  - **延迟测试**（`[DeferredTest]` + `IDeferredTestFixture`）：在 `_Ready()` 中排队，
+    在后续 `_Process()` 帧中执行，适用于需要 `AddChild` 到 SceneTree 的测试。
+    `Setup()` 方法在第一帧调用（添加节点到树），测试体在后续帧执行。
+- **`[IntegrationTest]`**：自定义 attribute，标记即时测试方法
+- **`[DeferredTest]`**：自定义 attribute，标记延迟测试方法
+- **断言**：`IntegrationTestRunner.Assert(condition, message)` / `AssertEqual` /
+  `AssertNotNull` / `AssertThrows<TException>`
 - **输出**：测试结果以 `INTEGRATION_TEST_RESULTS:` 和 `INTEGRATION_TEST_SUMMARY:` 前缀
   输出到 stdout，便于 CI 解析
 
@@ -32,6 +38,11 @@
 | GodotSndBootstrapIntegrationTests | `Tests/GodotSndBootstrapIntegrationTests.cs` | 3 | `GodotSndBootstrap`（null 守卫、正常绑定流程） |
 | GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 8 | `GodotSndEntity`（构造 null 守卫、SetData/GetData/TryGetData、类型安全） |
 | GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager`（BindRuntimeDeps 双重绑定守卫、BindContext 顺序守卫、null 守卫、ProcessAll 空列表和 TickCount） |
+| GodotSndManagerCreationIntegrationTests | `Tests/GodotSndManagerCreationIntegrationTests.cs` | 5 | `GodotSndManager`（CreateEntity/RemoveEntity/BuildMetaList/RequestKillEntity/GetEntities） |
+| GodotPackedSceneNodeFactoryIntegrationTests | `Tests/GodotPackedSceneNodeFactoryIntegrationTests.cs` | 4 | `GodotPackedSceneNodeFactory`（有效/无效场景加载、子节点添加、缓存复用） |
+| OrigoAutoHostBootstrapIntegrationTests | `Tests/OrigoAutoHostBootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` 完整 `_Ready()` 启动（Runtime/SndManager/ConsoleChannels） |
+| AdapterCommandHandlerIntegrationTests | `Tests/AdapterCommandHandlerIntegrationTests.cs` | 5 | `TreeDebugCommandHandler`、`PressButtonCommandHandler`、`CameraViewCommandHandler` |
+| OrigoDefaultEntryBootstrapIntegrationTests | `Tests/OrigoDefaultEntryBootstrapIntegrationTests.cs` | 1 | `OrigoDefaultEntry` 属性完整默认值 |
 | BootstrapIntegrationTests | `Tests/BootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` / `OrigoDefaultEntry` 属性默认值与实例化 |
 | SndEntityNodeExtensionsIntegrationTests | `Tests/SndEntityNodeExtensionsIntegrationTests.cs` | 3 | `SndEntityNodeExtensions`（GetNativeNode/GetNodeFromSnd 类型守卫） |
 | TypedDataInitializerIntegrationTests | `Tests/TypedDataInitializerIntegrationTests.cs` | 1 | `TypedDataInitializer`（IsLoaded 恒真断言） |
@@ -79,7 +90,10 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── GodotSndBootstrapIntegrationTests.cs # Bootstrap 绑定测试
 │   ├── GodotSndEntityIntegrationTests.cs # SND Entity 测试
 │   ├── GodotSndManagerIntegrationTests.cs # SND Manager 测试
-│   ├── BootstrapIntegrationTests.cs       # 启动编排集成测试
+│   ├── GodotSndManagerCreationIntegrationTests.cs # Entity 创建/移除测试
+│   ├── GodotPackedSceneNodeFactoryIntegrationTests.cs # PackedScene 加载测试
+│   ├── OrigoAutoHostBootstrapIntegrationTests.cs # 完整启动测试
+│   ├── AdapterCommandHandlerIntegrationTests.cs # 命令处理器测试
 │   ├── SndEntityNodeExtensionsIntegrationTests.cs # 扩展方法测试
 │   └── TypedDataInitializerIntegrationTests.cs # 类型数据初始化测试
 ├── TestSupport/

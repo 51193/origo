@@ -10,17 +10,173 @@ namespace Origo.GodotAdapter.Integration.Tests.Runner;
 [GlobalClass]
 public partial class IntegrationTestRunner : Node
 {
+    private List<TestResult> _results = [];
+    private readonly Queue<DeferredTestEntry> _deferredQueue = new();
+    private DeferredTestEntry? _currentDeferred;
+    private int _deferredFrameCount;
+    private bool _allInstantDone;
+
     public override void _Ready()
     {
-        var results = RunAllTests();
-        OutputResults(results);
+        _results = RunInstantTests();
+        _allInstantDone = true;
 
-        var allPassed = results.All(r => r.Passed);
-        var exitCode = allPassed ? 0 : 1;
-        GetTree().Quit(exitCode);
+        var types = Assembly.GetExecutingAssembly().GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract
+                && t.GetMethods().Any(m => m.GetCustomAttribute<DeferredTestAttribute>() != null))
+            .ToList();
+
+        foreach (var type in types)
+        {
+            object? instance;
+            try
+            {
+                instance = Activator.CreateInstance(type);
+            }
+            catch (Exception ex)
+            {
+                _results.Add(new TestResult
+                {
+                    Name = $"{type.Name}.ctor",
+                    Passed = false,
+                    Error = $"Failed to instantiate deferred fixture: {ex}",
+                    DurationMs = 0
+                });
+                continue;
+            }
+
+            var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => m.GetCustomAttribute<DeferredTestAttribute>() != null)
+                .ToList();
+
+            foreach (var method in methods)
+            {
+                _deferredQueue.Enqueue(new DeferredTestEntry
+                {
+                    TypeName = type.Name,
+                    MethodName = method.Name,
+                    Instance = instance!,
+                    Method = method
+                });
+            }
+        }
+
+        if (_deferredQueue.Count == 0)
+        {
+            FlushResults();
+            return;
+        }
+
+        SetProcess(true);
     }
 
-    private static List<TestResult> RunAllTests()
+    public override void _Process(double delta)
+    {
+        if (_currentDeferred == null)
+        {
+            if (_deferredQueue.Count == 0)
+            {
+                SetProcess(false);
+                FlushResults();
+                return;
+            }
+            _currentDeferred = _deferredQueue.Dequeue();
+            _deferredFrameCount = 0;
+
+            if (_currentDeferred.Instance is IDeferredTestFixture fixture)
+            {
+                try
+                {
+                    fixture.Setup();
+                }
+                catch (Exception ex)
+                {
+                    _results.Add(new TestResult
+                    {
+                        Name = $"{_currentDeferred.TypeName}.{_currentDeferred.MethodName}.Setup",
+                        Passed = false,
+                        Error = ex is TargetInvocationException tie ? (tie.InnerException?.ToString() ?? ex.ToString()) : ex.ToString(),
+                        DurationMs = 0
+                    });
+                    _currentDeferred = null;
+                    return;
+                }
+            }
+
+            _deferredFrameCount = 1;
+            return;
+        }
+
+        _deferredFrameCount++;
+
+        if (_currentDeferred.Instance is IDeferredTestFixture deferredFixture)
+        {
+            try
+            {
+                deferredFixture.AdvanceFrame();
+            }
+            catch (Exception ex)
+            {
+                _results.Add(new TestResult
+                {
+                    Name = $"{_currentDeferred.TypeName}.{_currentDeferred.MethodName}.Advance",
+                    Passed = false,
+                    Error = ex is TargetInvocationException tie ? (tie.InnerException?.ToString() ?? ex.ToString()) : ex.ToString(),
+                    DurationMs = 0
+                });
+                _currentDeferred = null;
+                return;
+            }
+
+            if (!deferredFixture.IsComplete)
+                return;
+        }
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            _currentDeferred.Method.Invoke(_currentDeferred.Instance, null);
+            sw.Stop();
+            _results.Add(new TestResult
+            {
+                Name = $"{_currentDeferred.TypeName}.{_currentDeferred.MethodName}",
+                Passed = true,
+                DurationMs = sw.Elapsed.TotalMilliseconds
+            });
+        }
+        catch (TargetInvocationException ex)
+        {
+            sw.Stop();
+            _results.Add(new TestResult
+            {
+                Name = $"{_currentDeferred.TypeName}.{_currentDeferred.MethodName}",
+                Passed = false,
+                Error = ex.InnerException?.ToString() ?? ex.ToString(),
+                DurationMs = sw.Elapsed.TotalMilliseconds
+            });
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            _results.Add(new TestResult
+            {
+                Name = $"{_currentDeferred.TypeName}.{_currentDeferred.MethodName}",
+                Passed = false,
+                Error = ex.ToString(),
+                DurationMs = sw.Elapsed.TotalMilliseconds
+            });
+        }
+
+        if (_currentDeferred.Instance is IDisposable disposable)
+        {
+            try { disposable.Dispose(); }
+            catch { }
+        }
+
+        _currentDeferred = null;
+    }
+
+    private static List<TestResult> RunInstantTests()
     {
         var results = new List<TestResult>();
         var assembly = Assembly.GetExecutingAssembly();
@@ -104,11 +260,20 @@ public partial class IntegrationTestRunner : Node
             if (instance is IDisposable disposable)
             {
                 try { disposable.Dispose(); }
-                catch { /* disposal failure does not affect test results */ }
+                catch { }
             }
         }
 
         return results;
+    }
+
+    private void FlushResults()
+    {
+        OutputResults(_results);
+
+        var allPassed = _results.All(r => r.Passed);
+        var exitCode = allPassed ? 0 : 1;
+        GetTree().Quit(exitCode);
     }
 
     private static void OutputResults(List<TestResult> results)
@@ -169,5 +334,13 @@ public partial class IntegrationTestRunner : Node
     {
         if (!EqualityComparer<T>.Default.Equals(expected, actual))
             throw new InvalidOperationException($"Assertion failed for '{name}': expected {expected}, got {actual}");
+    }
+
+    private sealed class DeferredTestEntry
+    {
+        public string TypeName { get; init; } = string.Empty;
+        public string MethodName { get; init; } = string.Empty;
+        public object Instance { get; init; } = null!;
+        public MethodInfo Method { get; init; } = null!;
     }
 }
