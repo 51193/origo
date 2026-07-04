@@ -12,6 +12,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `Origo.GodotAdapter.Integration.Tests` — new Godot headless integration test project using `Godot.NET.Sdk`. Contains a custom `[IntegrationTest]` runner AutoLoad (`IntegrationTestRunner`) that discovers and executes tests in the real Godot runtime. 12 initial tests cover runtime smoke (GD.Print, FileAccess/DirAccess, Vector2, SceneTree), `GodotFileSystem` I/O (read/write/enumerate/delete on `res://` and `user://`), and `OrigoAutoHost`/`OrigoDefaultEntry` property defaults.
+- `scripts/download-godot.sh` — downloads the Godot mono binary matching the `Godot.NET.Sdk` version from `Origo.GodotAdapter.csproj`, with caching in `.godot_binary/`.
+- `scripts/godot-test.sh` — one-command local verification: download Godot binary → run headless integration tests.
+- CI `godot-integration-tests` job — parallel blocking gate that runs Godot headless integration tests on `ubuntu-latest`. Godot binary version is auto-resolved from the `Godot.NET.Sdk` NuGet version, so dependabot updates to the SDK automatically bring the matching binary.
+
+- `GodotNodeHandle` integration tests — 7 tests covering constructor name caching, `Free` lifecycle (valid, double-free safety), `SetVisible` for `CanvasItem` and `Node3D`, post-free `SetVisible` safety, and `UnsafeGetNode` identity.
+- `GodotFileOperations` integration tests — 7 tests covering `ReadAllText` null/whitespace/missing guards, `WriteAllText` no-overwrite guard, `Copy` missing-source guard, write-then-exists round-trip, and copy content duplication.
+- `GodotDirectoryOperations` integration tests — 7 tests covering `Create`+`Exists` round-trip, `EnumerateFiles` with pattern matching (non-recursive and recursive), `EnumerateDirectories`, `DeleteRecursive` content clearing, and no-throw on non-existent input.
+- `SndEntityNodeExtensions` integration tests — 3 tests covering `GetNativeNode` returns null for non-`GodotNodeHandle` and returns the underlying `Node` for real handles, plus `GetNodeFromSnd` returns null for non-`GodotSndEntity`.
+- `TypedDataInitializer` integration test — verifies `IsLoaded` always returns true.
+- `IntegrationTestRunner` extended with `AssertNotNull` and `AssertThrows<TException>` helpers.
+
 - `camera_view` console command — displays screen coordinates and depth of all Godot entity nodes visible through the active `Camera3D`. Walks `Node3D` children through frustum culling and world-to-screen projection, and reports `Control` node screen positions.
 - `GameplaySimulationHarness` — integration test harness that creates a fully bootstrapped `OrigoRuntime` + `SndContext` with a background game session (`syncProcess=true`), enabling true frame-driven gameplay simulation via `DriveFrame`/`RunFrames` with real `SndEntity` lifecycle and strategy processing.
 - `GameplayIntegrationTests` — 9 integration tests covering multi-frame entity data accumulation, cross-entity interaction (`FindByName` and `SessionBlackboard`), business deferred action execution, save-to-disk persistence, entity kill lifecycle (BeforeDead + removal), console command processing, full save-dispose-reload round-trip, and observer strategy mount-and-notify through the full `IOrigoFrameDriver.DriveFrame` pipeline.

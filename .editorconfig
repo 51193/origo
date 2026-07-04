@@ -37,7 +37,7 @@ dotnet_diagnostic.CA1062.severity = suggestion
 # Intentional design — cross-directory type access without extra usings.
 # See docs/Origo.Core.Tests/META-TEST.md §测试命名空间约定.
 # CA1062 (validate public parameters): suppressed for test infrastructure — parameters are supplied by the framework.
-[{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests}/**/*.cs]
+[{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.GodotAdapter.Integration.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests}/**/*.cs]
 dotnet_diagnostic.IDE0130.severity = none
 dotnet_diagnostic.CA1062.severity = none
 

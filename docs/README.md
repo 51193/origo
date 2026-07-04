@@ -62,7 +62,7 @@ Root (this file)
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.md) | TCP 远程控制台桥接（端口 9876） |
 | **使用文档** | [README](usage/README.md) | 从快速入门到深度参考的使用指南 |
 | **测试: Core** | [README](Origo.Core.Tests/README.md) | Core 层 31 个能力的行为测试文档 |
-| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.md) | 适配层 7 个能力测试文档 |
+| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.md) | 适配层 7 个能力测试 + 12 个集成测试 |
 | **测试: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.md) | TCP 桥接服务器行为测试文档 |
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.md) | TypedData 源码生成器的驱动器行为测试文档 |
 | **手册元指令** | [META.md](META.md) | 本手册的编写与维护规范 |

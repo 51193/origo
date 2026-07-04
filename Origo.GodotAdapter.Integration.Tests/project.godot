@@ -1,0 +1,13 @@
+; Godot 4 project for headless integration tests.
+
+config_version=5
+
+[application]
+
+config/name="Origo.GodotAdapter.Integration.Tests"
+config/features=PackedStringArray("4.6", "Dotnet")
+run/main_scene="res://TestScenes/minimal.tscn"
+
+[autoload]
+
+IntegrationTestRunner="*res://Runner/IntegrationTestRunner.cs"

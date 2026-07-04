@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.SourceGeneration", "O
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.SourceGeneration.Tests", "Origo.SourceGeneration.Tests\Origo.SourceGeneration.Tests.csproj", "{E7B4C9A2-3F6D-4A18-9C2E-5B8D1F0A7E63}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.GodotAdapter.Integration.Tests", "Origo.GodotAdapter.Integration.Tests\Origo.GodotAdapter.Integration.Tests.csproj", "{B9B71747-023F-47ED-B063-29184B4E33FA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -122,6 +124,18 @@ Global
 		{E7B4C9A2-3F6D-4A18-9C2E-5B8D1F0A7E63}.Release|x64.Build.0 = Release|Any CPU
 		{E7B4C9A2-3F6D-4A18-9C2E-5B8D1F0A7E63}.Release|x86.ActiveCfg = Release|Any CPU
 		{E7B4C9A2-3F6D-4A18-9C2E-5B8D1F0A7E63}.Release|x86.Build.0 = Release|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Debug|x64.Build.0 = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Debug|x86.Build.0 = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Release|x64.ActiveCfg = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Release|x64.Build.0 = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Release|x86.ActiveCfg = Debug|Any CPU
+		{B9B71747-023F-47ED-B063-29184B4E33FA}.Release|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

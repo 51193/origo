@@ -47,3 +47,40 @@ jobs:
       # Source-generation performance benchmarks, run once in their own step.
       - name: Benchmarks — generated TypedData vs unoptimized boxing
         run: bash scripts/benchmark.sh
+
+  godot-integration-tests:
+    needs: build-and-test
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Cache Godot binary
+        uses: actions/cache@v4
+        with:
+          path: .godot_binary
+          key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
+
+      - name: Install Godot headless dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
+
+      - name: Godot headless integration tests
+        run: bash scripts/godot-test.sh

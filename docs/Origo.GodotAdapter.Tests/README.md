@@ -11,7 +11,18 @@ Origo.GodotAdapter 的测试验证 Godot 4 适配层的正确性。
 
 由于 GodotAdapter 依赖 Godot 引擎运行时，部分涉及 `Godot.Node`/`PackedScene` 等 Godot API 的生产源文件
 （如 `GodotSndEntity.cs`、`GodotNodeHandle.cs`、`GodotPackedSceneNodeFactory.cs`）被 coverlet 排除在外
-（在 `.csproj` 的 `ExcludeByFile` 中配置），其对应逻辑无法在测试中直接覆盖。
+（在 `.csproj` 的 `ExcludeByFile` 中配置），其对应逻辑无法在单元测试中直接覆盖。
+
+引擎依赖文件的行为验证由 [Origo.GodotAdapter.Integration.Tests](../Origo.GodotAdapter.Integration.Tests/README.md)
+在真实的 Godot `--headless` 运行时中执行。集成测试与单元测试互补：单元测试验证 Core 层逻辑与类型序列化，
+集成测试验证 Godot 特定运行时行为（真实文件系统、Node 生命周期、启动编排）。
+
+## 测试层次
+
+| 层次 | 项目 | 运行时 | 覆盖范围 |
+|------|------|--------|---------|
+| 单元测试 | `Origo.GodotAdapter.Tests` | 纯 .NET（`Microsoft.NET.Sdk`） | Core 抽象逻辑、类型序列化、路径处理、控制台命令 |
+| 集成测试 | `Origo.GodotAdapter.Integration.Tests` | Godot `--headless`（`Godot.NET.Sdk`） | 真实文件 I/O、Node 实例化、启动属性、引擎 API 可用性 |
 
 ## 能力文档索引
 

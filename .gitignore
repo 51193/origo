@@ -36,4 +36,7 @@ TestResults/
 # OS
 .DS_Store
 Thumbs.db
+# Godot binary cache (downloaded by scripts/download-godot.sh)
+.godot_binary/
+
 artifacts/
