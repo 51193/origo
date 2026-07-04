@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -74,15 +73,7 @@ public class ActiveStrategyIntegrationTests
         var result = entity.InvokeStrategy("test.int.active.echo", 5);
         Assert.Equal(10, result);
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("active_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.SaveAndReload("active_save");
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -105,15 +96,7 @@ public class ActiveStrategyIntegrationTests
         entity.AddActiveStrategy("test.int.active.echo");
         entity.SetData("counter", 1);
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("active_load_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.SaveAndReload("active_load_save");
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -179,11 +162,7 @@ public class ActiveStrategyIntegrationTests
     // ── test strategies ──────────────────────────────────────────────
 
     [StrategyIndex("test.int.active.echo")]
-    private sealed class EchoActiveStrategy : ActiveStrategyBase
-    {
-        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) =>
-            input is int i ? i * 2 : input;
-    }
+    private sealed class EchoActiveStrategy : SharedEchoActiveStrategy { }
 
     [StrategyIndex("test.int.active.self_invoke")]
     private sealed class SelfInvokeStrategy : LifecycleStrategyBase
@@ -210,15 +189,5 @@ public class ActiveStrategyIntegrationTests
     }
 
     [StrategyIndex("test.int.active.frame_counter")]
-    private sealed class AdvFrameCounterStrategy : LifecycleStrategyBase
-    {
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) =>
-            entity.SetData("count", 0);
-
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            var count = entity.GetData<int>("count");
-            entity.SetData("count", count + 1);
-        }
-    }
+    private sealed class AdvFrameCounterStrategy : SharedFrameCounterStrategy { }
 }

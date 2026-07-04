@@ -151,7 +151,5 @@ public class PlanningIntegrationTests
     }
 
     [StrategyIndex("test.int.plan.noop_action")]
-    private sealed class NoopActionStrategy : LifecycleStrategyBase
-    {
-    }
+    private sealed class NoopActionStrategy : SharedNoopLifecycleStrategy { }
 }

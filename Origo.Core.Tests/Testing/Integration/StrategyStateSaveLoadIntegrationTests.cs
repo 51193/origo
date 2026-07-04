@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -24,15 +23,7 @@ public class StrategyStateSaveLoadIntegrationTests
 
         Assert.Equal(5, harness.GetEntityData<int>("player", "count"));
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("state_lifecycle_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.SaveAndReload("state_lifecycle_save");
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -58,15 +49,7 @@ public class StrategyStateSaveLoadIntegrationTests
         harness.SessionBlackboard.SetValue("level_name", "dungeon_1");
         harness.RunFrames(2);
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("state_data_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.SaveAndReload("state_data_save");
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -94,15 +77,7 @@ public class StrategyStateSaveLoadIntegrationTests
         harness.SpawnEntity("player", ["test.int.state.frame_counter"]);
         harness.RunFrames(3);
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("state_continue_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.SaveAndReload("state_continue_save");
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -129,15 +104,7 @@ public class StrategyStateSaveLoadIntegrationTests
 
         harness.RunFrames(1);
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("state_many_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.SaveAndReload("state_many_save");
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -215,15 +182,7 @@ public class StrategyStateSaveLoadIntegrationTests
 
         harness.RunFrames(3);
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("multi_session_state");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.SaveAndReload("multi_session_state");
 
         var fg = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(fg);
@@ -243,15 +202,5 @@ public class StrategyStateSaveLoadIntegrationTests
     // ── test strategies ──────────────────────────────────────────────
 
     [StrategyIndex("test.int.state.frame_counter")]
-    private sealed class StateFrameCounterStrategy : LifecycleStrategyBase
-    {
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) =>
-            entity.SetData("count", 0);
-
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            var count = entity.GetData<int>("count");
-            entity.SetData("count", count + 1);
-        }
-    }
+    private sealed class StateFrameCounterStrategy : SharedFrameCounterStrategy { }
 }

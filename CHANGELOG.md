@@ -67,6 +67,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `StubSndEntity.GetRawSubscriptionCount()` removed — test subscription tracking moved to a test-side wrapper that intercepts `ISndEntityRawSubscription` calls. No production backdoor remains.
 - **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value, eliminating silent `0f` fallback when a key is missing or the type is incompatible.
 - Test projects unified to flat namespaces — 21 files across `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, and `Origo.SourceGeneration.Tests` now use the top-level test namespace instead of sub-namespaces, matching the documented convention.
+- refactor: extract reusable test strategies into `TestSupport/TestStrategies.cs` — shared abstract `SharedFrameCounterStrategy`, `SharedEchoActiveStrategy`, `SharedKillProbeStrategy`, `SharedNoopLifecycleStrategy`, and `SharedNoopStateMachineStrategy` base classes eliminate 15 duplicated strategy definitions across 8 integration test files.
+- refactor: add `SaveAndReload` helper to `GameplaySimulationHarness` — consolidates the 6-line save-destroy-reload boilerplate duplicated across 13 test methods.
 
 ### Removed
 

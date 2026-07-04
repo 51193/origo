@@ -123,6 +123,21 @@ internal sealed class GameplaySimulationHarness
             return (false, default);
         return entity.TryGetData<T>(key);
     }
+
+    public string SaveAndReload(string saveName)
+    {
+        var saveId = Context.Save.RequestSaveGameAuto(saveName);
+        Context.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        foreach (var key in Context.Runtime.SessionManager.Keys)
+            Context.Runtime.SessionManager.DestroySession(key);
+        Context.SetProgressRun(null);
+
+        Context.Save.RequestLoadGame(saveId);
+        Context.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        return saveId;
+    }
 }
 
 internal sealed class GameplaySimulationBuilder

@@ -146,17 +146,9 @@ public class StateMachineIntegrationTests
 
             Assert.Contains(events, e => e == "on_push_runtime:gameplay");
 
-            var saveId = harness.Context.Save.RequestSaveGameAuto("sm_save");
-            harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-            foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-                harness.Context.Runtime.SessionManager.DestroySession(key);
-            harness.Context.SetProgressRun(null);
-
             events.Clear();
 
-            harness.Context.Save.RequestLoadGame(saveId);
-            harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+            harness.SaveAndReload("sm_save");
 
             Assert.Contains(events, e => e.Contains("on_push_after_load"));
 
@@ -263,9 +255,7 @@ public class StateMachineIntegrationTests
     // ── test strategies ──────────────────────────────────────────────
 
     [StrategyIndex("test.int.sm.push_tracker")]
-    private sealed class PushTrackingStateMachineStrategy : StateMachineStrategyBase
-    {
-    }
+    private sealed class PushTrackingStateMachineStrategy : SharedNoopStateMachineStrategy { }
 
     [StrategyIndex("test.int.sm.hook_recorder")]
     private sealed class HookRecordingStateMachineStrategy : StateMachineStrategyBase

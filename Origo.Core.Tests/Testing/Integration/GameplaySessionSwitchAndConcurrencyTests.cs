@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -194,15 +193,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
         bgNpc.SetData("count", 5);
         bgSession.SessionBlackboard.SetValue("bg_flag", "alive");
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("cross_session_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        var saveId = harness.SaveAndReload("cross_session_save");
 
         var restoredFg = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(restoredFg);
@@ -295,15 +286,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
         bg1.SessionBlackboard.SetValue("a_key", 1);
         bg2.SessionBlackboard.SetValue("b_key", 2);
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("multi_bg_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.SaveAndReload("multi_bg_save");
 
         var r1 = harness.Context.Runtime.SessionManager.TryGet("bg_a");
         var r2 = harness.Context.Runtime.SessionManager.TryGet("bg_b");
@@ -330,30 +313,11 @@ public class GameplaySessionSwitchAndConcurrencyTests
     }
 
     [StrategyIndex("test.bb_marker")]
-    private sealed class BlackboardMarkerStrategy : LifecycleStrategyBase
-    {
-    }
+    private sealed class BlackboardMarkerStrategy : SharedNoopLifecycleStrategy { }
 
     [StrategyIndex("test.killable")]
-    private sealed class KillableTestStrategy : LifecycleStrategyBase
-    {
-        private static readonly AsyncLocal<List<string>?> _events = new();
-        public static List<string>? Events { get => _events.Value; set => _events.Value = value; }
-
-        public override void BeforeDead(ISndEntity entity, ISndContext ctx) =>
-            Events?.Add("before_dead");
-    }
+    private sealed class KillableTestStrategy : SharedKillProbeStrategy { }
 
     [StrategyIndex("test.frame_counter")]
-    private sealed class FrameCounterStrategy : LifecycleStrategyBase
-    {
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) =>
-            entity.SetData("count", 0);
-
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            var count = entity.GetData<int>("count");
-            entity.SetData("count", count + 1);
-        }
-    }
+    private sealed class FrameCounterStrategy : SharedFrameCounterStrategy { }
 }

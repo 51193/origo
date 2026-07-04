@@ -155,17 +155,9 @@ public class GameplayIntegrationTests
         harness.RunFrames(3);
         harness.SessionBlackboard.SetValue("game_flag", "surviving");
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("roundtrip_test");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        var saveId = harness.SaveAndReload("roundtrip_test");
 
         Assert.True(harness.FileSystem.Exists($"root/save_{saveId}/progress.json"));
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -203,16 +195,7 @@ public class GameplayIntegrationTests
     }
 
     [StrategyIndex("test.frame_counter")]
-    private sealed class FrameCounterStrategy : LifecycleStrategyBase
-    {
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => entity.SetData("count", 0);
-
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            var count = entity.GetData<int>("count");
-            entity.SetData("count", count + 1);
-        }
-    }
+    private sealed class FrameCounterStrategy : SharedFrameCounterStrategy { }
 
     [StrategyIndex("test.peer_lookup")]
     private sealed class PeerLookupStrategy : LifecycleStrategyBase
@@ -255,13 +238,7 @@ public class GameplayIntegrationTests
     }
 
     [StrategyIndex("test.kill_probe_int")]
-    private sealed class KillProbeIntegrationStrategy : LifecycleStrategyBase
-    {
-        private static readonly AsyncLocal<List<string>?> _events = new();
-        public static List<string>? Events { get => _events.Value; set => _events.Value = value; }
-
-        public override void BeforeDead(ISndEntity entity, ISndContext ctx) => Events?.Add("before_dead");
-    }
+    private sealed class KillProbeIntegrationStrategy : SharedKillProbeStrategy { }
 
     [StrategyIndex("test.console_cmd")]
     private sealed class ConsoleCommandStrategy : LifecycleStrategyBase

@@ -202,17 +202,9 @@ public class AdvancedGameplayIntegrationTests
 
         harness.SessionBlackboard.SetValue("global_round", 1);
 
-        var saveId = harness.Context.Save.RequestSaveGameAuto("multi_entity_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        var saveId = harness.SaveAndReload("multi_entity_save");
 
         Assert.True(harness.FileSystem.Exists($"root/save_{saveId}/progress.json"));
-
-        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
-            harness.Context.Runtime.SessionManager.DestroySession(key);
-        harness.Context.SetProgressRun(null);
-
-        harness.Context.Save.RequestLoadGame(saveId);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -245,17 +237,7 @@ public class AdvancedGameplayIntegrationTests
     // ── test strategies ──────────────────────────────────────────────
 
     [StrategyIndex("test.int.adv.batch_counter")]
-    private sealed class BatchFrameCounterStrategy : LifecycleStrategyBase
-    {
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) =>
-            entity.SetData("count", 0);
-
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
-        {
-            var count = entity.GetData<int>("count");
-            entity.SetData("count", count + 1);
-        }
-    }
+    private sealed class BatchFrameCounterStrategy : SharedFrameCounterStrategy { }
 
     [StrategyIndex("test.int.adv.data_observer")]
     [ObserveData("count")]
@@ -276,9 +258,5 @@ public class AdvancedGameplayIntegrationTests
     }
 
     [StrategyIndex("test.int.adv.echo")]
-    private sealed class EchoActiveStrategy : ActiveStrategyBase
-    {
-        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) =>
-            input is int i ? i * 2 : input;
-    }
+    private sealed class EchoActiveStrategy : SharedEchoActiveStrategy { }
 }

@@ -53,19 +53,16 @@
 
 | 设施 | 位置 | 用途 |
 |------|------|------|
-| `GameplaySimulationHarness` | `TestSupport/GameplaySimulationHarness.cs` | 一键创建完整运行时：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），提供 DriveFrame/RunFrames/SpawnEntity/RequestKillEntity/CreateBackgroundSession/GetEntityData/SubmitConsoleCommand/SetEntityData/InvokeEntityStrategy/MountObserver |
+| `GameplaySimulationHarness` | `TestSupport/GameplaySimulationHarness.cs` | 一键创建完整运行时：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），提供 DriveFrame/RunFrames/SpawnEntity/RequestKillEntity/CreateBackgroundSession/GetEntityData/SubmitConsoleCommand/SetEntityData/InvokeEntityStrategy/MountObserver/SaveAndReload |
 | `GameplaySimulationBuilder` | `TestSupport/GameplaySimulationHarness.cs` | Fluent Builder：WithStrategy 注册策略、WithSessionConfig 设置会话黑板 |
-| `FrameCounterStrategy` | `GameplayIntegrationTests.cs` | AfterSpawn 初始化 count=0，Process 每帧 count++ |
+| `TestStrategies` | `TestSupport/TestStrategies.cs` | 共享抽象策略基类：`SharedFrameCounterStrategy`（AfterSpawn 初始化 count=0，Process 每帧递增）、`SharedEchoActiveStrategy`（Invoke 返回 input×2）、`SharedKillProbeStrategy`（BeforeDead 记录事件）、`SharedNoopLifecycleStrategy`（空生命周期）、`SharedNoopStateMachineStrategy`（空状态机）。各测试文件通过 `private sealed` 子类引用，赋予独立 `[StrategyIndex]`。 |
 | `PeerLookupStrategy` | `GameplayIntegrationTests.cs` | Process 中通过 OwningSession.FindByName 查找对端实体并读取数据 |
 | `BbWriterStrategy` | `GameplayIntegrationTests.cs` | Process 中向 OwningSession.SessionBlackboard 写入 bridge_value |
 | `BbReaderStrategy` | `GameplayIntegrationTests.cs` | Process 中从 OwningSession.SessionBlackboard 读取 bridge_value 并存入实体 data |
 | `DeferredProbeStrategy` | `GameplayIntegrationTests.cs` | Process 中 EnqueueBusinessDeferred 设置 deferred_ran=true |
-| `KillProbeIntegrationStrategy` | `GameplayIntegrationTests.cs` | BeforeDead 时记录 "before_dead" 事件，验证 Kill 收割触发钩子 |
 | `ConsoleCommandStrategy` | `GameplayIntegrationTests.cs` | Process 中 TrySubmitConsoleCommand("snd_count")，验证命令行经 DriveFrame 处理 |
 | `HpObserverIntegrationStrategy` | `GameplayIntegrationTests.cs` | ObserverStrategyBase：OnDataChanged 记录 "changed:{dataKey}"，验证观察者 Mount/Notify 机制 |
-| `BatchFrameCounterStrategy` | `AdvancedGameplayIntegrationTests.cs` | AfterSpawn 初始化 count=0，Process 每帧 count++，用于大量实体和策略组合测试 |
 | `DataObserverIntegrationStrategy` | `AdvancedGameplayIntegrationTests.cs` | ObserverStrategyBase：ObserveData("count")，OnDataChanged 记录 "changed:{dataKey}"，用于多策略组合测试 |
-| `EchoActiveStrategy` | `AdvancedGameplayIntegrationTests.cs` | ActiveStrategyBase：Invoke 返回 input * 2（int 类型），用于多策略组合和 ActiveStrategy 集成测试 |
 
 ## 使用模式
 
