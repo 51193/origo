@@ -233,6 +233,15 @@ public class AdvancedGameplayIntegrationTests
             () => harness.RequestKillEntity("nonexistent"));
     }
 
+    [Fact]
+    public void ErrorPath_SpawnWithUnregisteredStrategyIndex_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create().Build();
+
+        Assert.ThrowsAny<Exception>(
+            () => harness.SpawnEntity("bad_entity", ["nonexistent.strategy.index"]));
+    }
+
     // ── test strategies ──────────────────────────────────────────────
 
     [StrategyIndex("test.int.adv.batch_counter")]

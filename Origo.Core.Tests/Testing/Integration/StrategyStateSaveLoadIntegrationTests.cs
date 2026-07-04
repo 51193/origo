@@ -199,6 +199,31 @@ public class StrategyStateSaveLoadIntegrationTests
         Assert.Equal("background", bv);
     }
 
+    [Fact]
+    public void ErrorPath_LoadCorruptSave_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new StateFrameCounterStrategy())
+            .Build();
+
+        harness.SpawnEntity("player", ["test.int.state.frame_counter"]);
+        harness.RunFrames(3);
+
+        var saveId = harness.Context.Save.RequestSaveGameAuto("corrupt_save");
+        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        harness.FileSystem.SeedFile(
+            $"root/save_{saveId}/progress.json", "{broken json");
+
+        foreach (var key in harness.Context.Runtime.SessionManager.Keys)
+            harness.Context.Runtime.SessionManager.DestroySession(key);
+        harness.Context.SetProgressRun(null);
+
+        harness.Context.Save.RequestLoadGame(saveId);
+        Assert.ThrowsAny<Exception>(
+            () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
+    }
+
     // ── test strategies ──────────────────────────────────────────────
 
     [StrategyIndex("test.int.state.frame_counter")]

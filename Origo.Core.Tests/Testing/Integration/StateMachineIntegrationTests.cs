@@ -253,6 +253,24 @@ public class StateMachineIntegrationTests
         }
     }
 
+    [Fact]
+    public void ErrorPath_PushStateMachineAfterSessionDestroy_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new HookRecordingStateMachineStrategy())
+            .Build();
+
+        var container = harness.GameSession.GetSessionStateMachines();
+        var sm = container.CreateOrGet("test_sm", "test.int.sm.hook_recorder", "test.int.sm.hook_recorder");
+        sm.Push("active");
+        harness.DriveFrame();
+
+        harness.Context.Runtime.SessionManager.DestroySession("game");
+
+        Assert.Throws<ObjectDisposedException>(() => sm.Peek());
+        Assert.Throws<ObjectDisposedException>(() => sm.Push("after_destroy"));
+    }
+
     // ── test strategies ──────────────────────────────────────────────
 
     [StrategyIndex("test.int.sm.push_tracker")]
