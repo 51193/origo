@@ -9,7 +9,7 @@
     <PropertyGroup>
         <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-        <NoWarn>$(NoWarn);CA1707;CA1822;CA1816</NoWarn>
+        <NoWarn>$(NoWarn);CA1707;CA1822;CA1816;CA1806</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

@@ -29,6 +29,9 @@
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 7 | `GodotFileOperations`（ReadAllText/WriteAllText/Copy/Delete 守卫和正确性） |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 7 | `GodotDirectoryOperations`（Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive） |
 | GodotNodeHandleIntegrationTests | `Tests/GodotNodeHandleIntegrationTests.cs` | 7 | `GodotNodeHandle`（Name 缓存、Free、SetVisible for CanvasItem/Node3D、UnsafeGetNode） |
+| GodotSndBootstrapIntegrationTests | `Tests/GodotSndBootstrapIntegrationTests.cs` | 3 | `GodotSndBootstrap`（null 守卫、正常绑定流程） |
+| GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 8 | `GodotSndEntity`（构造 null 守卫、SetData/GetData/TryGetData、类型安全） |
+| GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager`（BindRuntimeDeps 双重绑定守卫、BindContext 顺序守卫、null 守卫、ProcessAll 空列表和 TickCount） |
 | BootstrapIntegrationTests | `Tests/BootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` / `OrigoDefaultEntry` 属性默认值与实例化 |
 | SndEntityNodeExtensionsIntegrationTests | `Tests/SndEntityNodeExtensionsIntegrationTests.cs` | 3 | `SndEntityNodeExtensions`（GetNativeNode/GetNodeFromSnd 类型守卫） |
 | TypedDataInitializerIntegrationTests | `Tests/TypedDataInitializerIntegrationTests.cs` | 1 | `TypedDataInitializer`（IsLoaded 恒真断言） |
@@ -73,11 +76,16 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── GodotFileOperationsIntegrationTests.cs # 文件操作守卫测试
 │   ├── GodotDirectoryOperationsIntegrationTests.cs # 目录操作测试
 │   ├── GodotNodeHandleIntegrationTests.cs # Node 句柄测试
+│   ├── GodotSndBootstrapIntegrationTests.cs # Bootstrap 绑定测试
+│   ├── GodotSndEntityIntegrationTests.cs # SND Entity 测试
+│   ├── GodotSndManagerIntegrationTests.cs # SND Manager 测试
 │   ├── BootstrapIntegrationTests.cs       # 启动编排集成测试
 │   ├── SndEntityNodeExtensionsIntegrationTests.cs # 扩展方法测试
 │   └── TypedDataInitializerIntegrationTests.cs # 类型数据初始化测试
 ├── TestSupport/
-│   └── StubConsoleOutput.cs
+│   ├── StubConsoleOutput.cs
+│   ├── StubNodeFactory.cs
+│   └── IntegrationTestHarness.cs
 └── TestScenes/
     └── minimal.tscn                       # 最小根场景
 ```

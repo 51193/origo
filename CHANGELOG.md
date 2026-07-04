@@ -24,6 +24,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `TypedDataInitializer` integration test — verifies `IsLoaded` always returns true.
 - `IntegrationTestRunner` extended with `AssertNotNull` and `AssertThrows<TException>` helpers.
 
+- `GodotSndBootstrap` integration tests — 3 tests covering `BindRuntimeAndContext` null guards for manager and world, and valid-args non-throw.
+- `GodotSndEntity` integration tests — 8 tests covering constructor null guards for all 5 parameters (`SndWorld`, `ISndContext`, `ILogger`, `ObserverTopology`, factory lambda), valid construction, `SetData`/`GetData` round-trip, `TryGetData` missing-key and type-mismatch returning false.
+- `GodotSndManager` integration tests — 7 tests covering `BindRuntimeDependencies` double-call guard, `BindContext` before-deps ordering guard, null guards for world/logger/context, `ProcessAll` no-throw on empty list, and `ProcessTickCount` increment.
+- `IntegrationTestHarness` — test support class constructing a minimal `OrigoRuntime` + `GodotSndManager` + `SndContext` chain within the Godot headless scene tree, using real `GodotFileSystem` for I/O.
+- `StubNodeFactory` — `INodeFactory` stub returning `GodotNodeHandle` with a plain `Node`, used by entity construction tests.
+- `Origo.Core` extended `InternalsVisibleTo` to `Origo.GodotAdapter.Integration.Tests` for `ObserverTopology` access.
+
 - `camera_view` console command — displays screen coordinates and depth of all Godot entity nodes visible through the active `Camera3D`. Walks `Node3D` children through frustum culling and world-to-screen projection, and reports `Control` node screen positions.
 - `GameplaySimulationHarness` — integration test harness that creates a fully bootstrapped `OrigoRuntime` + `SndContext` with a background game session (`syncProcess=true`), enabling true frame-driven gameplay simulation via `DriveFrame`/`RunFrames` with real `SndEntity` lifecycle and strategy processing.
 - `GameplayIntegrationTests` — 9 integration tests covering multi-frame entity data accumulation, cross-entity interaction (`FindByName` and `SessionBlackboard`), business deferred action execution, save-to-disk persistence, entity kill lifecycle (BeforeDead + removal), console command processing, full save-dispose-reload round-trip, and observer strategy mount-and-notify through the full `IOrigoFrameDriver.DriveFrame` pipeline.
