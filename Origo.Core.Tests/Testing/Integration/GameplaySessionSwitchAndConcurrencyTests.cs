@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
@@ -310,6 +311,23 @@ public class GameplaySessionSwitchAndConcurrencyTests
         Assert.NotNull(npcB);
         Assert.Equal(1, npcA.GetData<int>("count"));
         Assert.Equal(1, npcB.GetData<int>("count"));
+    }
+
+    [Fact]
+    public void ErrorPath_KillAlreadyKilledEntity_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new KillableTestStrategy())
+            .Build();
+
+        harness.SpawnEntity("victim", ["test.killable"]);
+        harness.RequestKillEntity("victim");
+        harness.DriveFrame();
+
+        Assert.Null(harness.FindEntity("victim"));
+
+        Assert.Throws<InvalidOperationException>(
+            () => harness.RequestKillEntity("victim"));
     }
 
     [StrategyIndex("test.bb_marker")]

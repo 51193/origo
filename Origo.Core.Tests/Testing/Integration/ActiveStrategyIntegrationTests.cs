@@ -179,6 +179,20 @@ public class ActiveStrategyIntegrationTests
             () => entity.InvokeStrategy("test.int.active.echo", 7));
     }
 
+    [Fact]
+    public void ErrorPath_AddDuplicateActiveStrategy_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new EchoActiveStrategy())
+            .Build();
+
+        var entity = harness.SpawnEntity("actor", []);
+        entity.AddActiveStrategy("test.int.active.echo");
+
+        Assert.ThrowsAny<Exception>(
+            () => entity.AddActiveStrategy("test.int.active.echo"));
+    }
+
     // ── test strategies ──────────────────────────────────────────────
 
     [StrategyIndex("test.int.active.echo")]

@@ -25,6 +25,24 @@ public class GameplayIntegrationTests
         Assert.Equal(10, count);
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(100)]
+    public void MultiFrameProcessing_VariousFrameCounts_AccumulatesCorrectly(int frameCount)
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new FrameCounterStrategy())
+            .Build();
+
+        harness.SpawnEntity("counter", ["test.frame_counter"]);
+
+        harness.RunFrames(frameCount);
+
+        var count = harness.GetEntityData<int>("counter", "count");
+        Assert.Equal(frameCount, count);
+    }
+
     [Fact]
     public void EntityInteraction_FindByName_ReadsPeerData()
     {
