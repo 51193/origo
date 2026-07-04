@@ -15,12 +15,14 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `GameplayIntegrationTests.cs` | 多帧数据处理、实体间交互（FindByName / SessionBlackboard）、业务延迟动作执行、存档持久化、实体销毁、控制台命令、观察者 |
-| `GameplaySessionSwitchAndConcurrencyTests.cs` | 会话切换黑板隔离、同帧并发 spawn/kill、kill 后重 spawn、多后台会话并行处理 |
-| `AdvancedGameplayIntegrationTests.cs` | 大量实体批量 spawn/kill（100 实体）、控制台命令路由（snd_count / bb_set/bb_get system 层）、实体数据直接 API round-trip、多策略实体组合（Lifecycle+Observer、Lifecycle+Active、三种类型全挂载）、多实体存档/加载状态保持、request kill 未知实体错误路径 |
-| `ActiveStrategyIntegrationTests.cs` | ActiveStrategy 在完整帧循环中的集成测试：直接 InvokeStrategy 调用、Process 触发自调用、跨实体 InvokeStrategy、ActiveStrategy 索引存档/加载持久化、AfterLoad 后 Invoke 验证、Lifecycle+Active 混合实体帧循环、动态 AddActiveStrategy/RemoveActiveStrategy 生命周期 |
-| `StateMachineIntegrationTests.cs` | 状态机在帧循环中的集成测试：Push/Pop 帧驱动、OnPushRuntime/OnPopRuntime 钩子触发、OnPopBeforeQuit 在 session destroy 时触发、状态机栈存档/加载 AfterLoad 恢复、多独立状态机栈、Lifecycle 策略跨帧 Push/Pop 状态 |
+| `GameplayIntegrationTests.cs` | 多帧数据处理、实体间交互（FindByName / SessionBlackboard）、业务延迟动作执行、存档持久化、实体销毁、控制台命令、观察者；新增错误路径：重复 kill 已死亡实体 |
+| `GameplaySessionSwitchAndConcurrencyTests.cs` | 会话切换黑板隔离、同帧并发 spawn/kill、kill 后重 spawn、多后台会话并行处理；新增错误路径：kill 已收获实体 |
+| `AdvancedGameplayIntegrationTests.cs` | 大量实体批量 spawn/kill（100 实体）、控制台命令路由（snd_count / bb_set/bb_get system 层）、实体数据直接 API round-trip、多策略实体组合（Lifecycle+Observer、Lifecycle+Active、三种类型全挂载）、多实体存档/加载状态保持；错误路径：request kill 未知实体、spawn 未注册策略索引 |
+| `ActiveStrategyIntegrationTests.cs` | ActiveStrategy 在完整帧循环中的集成测试：直接 InvokeStrategy 调用、Process 触发自调用、跨实体 InvokeStrategy、ActiveStrategy 索引存档/加载持久化、AfterLoad 后 Invoke 验证、Lifecycle+Active 混合实体帧循环、动态 AddActiveStrategy/RemoveActiveStrategy 生命周期；错误路径：killed 实体上 InvokeStrategy、重复 AddActiveStrategy |
+| `StateMachineIntegrationTests.cs` | 状态机在帧循环中的集成测试：Push/Pop 帧驱动、OnPushRuntime/OnPopRuntime 钩子触发、OnPopBeforeQuit 在 session destroy 时触发、状态机栈存档/加载 AfterLoad 恢复、多独立状态机栈、Lifecycle 策略跨帧 Push/Pop 状态；错误路径：session destroy 后操作状态机 |
 | `ObserverTopologyIntegrationTests.cs` | 观察者拓扑在帧循环中的集成测试：mount 触发 OnMounted+OnDataChanged（带正确旧/新值）、unmount 停止通知、target kill 触发 OnUnmounted、数据变化新旧值正确性、多目标独立通知、帧驱动策略在 Process 中自动挂载观察者 |
+| `PlanningIntegrationTests.cs` | 意图驱动计划执行：intent 触发计划开始、两步骤计划完成、无 intent 不启动、数据属性键验证、多实体独立计划 |
+| `StrategyStateSaveLoadIntegrationTests.cs` | 策略状态持久化：生命周期 count 状态 survive、实体数据+黑板 survive、重载后继续处理、20 实体批量无丢失、覆盖存档、多 session 全状态保留；错误路径：损坏 progress.json 导致加载失败 |
 
 ## GameplayIntegrationTests 测试详情
 
@@ -38,6 +40,12 @@
 | `FullGameLoopRoundTrip_SaveDisposeReload` | 运行帧 → 设定 session 数据 → Save → 销毁所有 session → Reload → 游戏 session 的 SessionBlackboard 数据恢复 | persistence-flow |
 | `ObserverStrategy_MountAndNotify` | 实体 B MountObserverStrategy(实体A) → 实体A SetData("hp") → 观察者 OnDataChanged 触发 | snd-entity-model |
 
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `MultiFrameProcessing_VariousFrameCounts_AccumulatesCorrectly` | (边界) 1/3/100 帧参数化 | 所有帧数下 count === frameCount |
+
 ## GameplaySessionSwitchAndConcurrencyTests 测试详情
 
 ### 正确路径
@@ -48,6 +56,12 @@
 | `ConcurrentSpawnKill_SameFrame_AllCleanedUp` | 同时 spawn 两个实体 → 同一帧 kill 两个 → 验证 BeforeDead 触发两次 + 实体全部移除 | Runtime: SessionManager |
 | `KillEntity_ThenRespawn_NewEntityIndependent` | 实体 kill → 同名重 spawn → 验证新实体 data 独立（不继承旧实体状态） | ISndEntity lifecycle |
 | `MultipleBackgroundSessions_EntitiesProcessedInParallel` | 创建 3 个 session（1 前台 + 2 后台）→ 每 session 各 spawn 一个 FrameCounter → DriveFrame → 验证各自 count=1 | SessionManager: Multi-session |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `ErrorPath_KillAlreadyKilledEntity_Throws` | kill 已收获的实体 | `InvalidOperationException` |
 
 ## 测试辅助设施
 
@@ -85,8 +99,9 @@ Assert.Equal(10, count);
 |---------|------|---------|
 | 多实体批量 spawn + 帧处理的扩展场景（实体数量 > 100） | 未验证大量实体时帧循环的稳定性 | architecture-overview: 帧循环 |
 | StrategyStateMachine 在帧循环中的跨实体状态机交互 | 未验证状态机变换触发的跨实体作用 | state-machine |
-| ActiveStrategy 在帧循环中通过 InvokeStrategy 的调用模式 | 当前测试未覆盖 ActiveStrategy | strategy-testing |
-| 跨 session 的实体交互（一个 session 的实体通过 SessionManager.TryGet 访问另一个 session 的实体） | 未验证跨 session 实体的策略互操作 | SessionManager |
+| 观察者 mount/unmount 错误路径（死实体 mount、重复 mount、无效 index） | 未验证观察者系统的全部快速失败契约 | snd-entity-model |
+| 延迟动作在 session destroy 后的错误行为 | 未验证 EnqueueDeferred 在 dispose 后的抛出语义 | Scheduling |
+| Save/load 的错误路径集成验证（缺失文件、损坏的 level 数据） | 大部分仅单元测试覆盖，缺少帧管线穿透验证 | persistence-flow |
 
 ---
 
