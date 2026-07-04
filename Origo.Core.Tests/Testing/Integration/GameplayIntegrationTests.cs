@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -171,12 +170,12 @@ public class GameplayIntegrationTests
     [Fact]
     public void ObserverStrategy_MountAndNotify()
     {
-        var events = new List<string>();
+        var events = new List<TestObserverEvent>();
         var harness = GameplaySimulationHarness.Create()
             .WithStrategy(() => new HpObserverIntegrationStrategy())
             .Build();
 
-        HpObserverIntegrationStrategy.Events = events;
+        EventCollector.Events = events;
         try
         {
             var target = harness.SpawnEntity("target", []);
@@ -184,13 +183,15 @@ public class GameplayIntegrationTests
 
             observer.MountObserverStrategy(target, "test.hp_observer_int");
 
-            target.SetData("hp", 50);
+            harness.SetEntityData("target", "hp", 50);
 
-            Assert.Contains(events, e => e.Contains("changed:"));
+            Assert.Contains(events, e => e.EventType == "on_data_changed"
+                                          && e.DataKey == "hp"
+                                          && e.NewValue != null && e.NewValue.Value.AsInt32() == 50);
         }
         finally
         {
-            HpObserverIntegrationStrategy.Events = null;
+            EventCollector.Events = null;
         }
     }
 
@@ -249,14 +250,5 @@ public class GameplayIntegrationTests
 
     [StrategyIndex("test.hp_observer_int")]
     [ObserveData("hp")]
-    private sealed class HpObserverIntegrationStrategy : ObserverStrategyBase
-    {
-        private static readonly AsyncLocal<List<string>?> _events = new();
-        public static List<string>? Events { get => _events.Value; set => _events.Value = value; }
-
-        public override void OnDataChanged(ISndEntity entity, ISndContext ctx,
-            ISndEntity target, string dataKey,
-            TypedData oldValue, TypedData newValue) =>
-            Events?.Add($"changed:{dataKey}");
-    }
+    private sealed class HpObserverIntegrationStrategy : SharedDataChangeObserverStrategy { }
 }

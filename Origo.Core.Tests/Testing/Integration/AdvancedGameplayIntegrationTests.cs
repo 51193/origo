@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -106,13 +105,13 @@ public class AdvancedGameplayIntegrationTests
     [Fact]
     public void MultiStrategyEntity_LifecyclePlusObserver()
     {
-        var events = new List<string>();
+        var events = new List<TestObserverEvent>();
         var harness = GameplaySimulationHarness.Create()
             .WithStrategy(() => new BatchFrameCounterStrategy())
             .WithStrategy(() => new DataObserverIntegrationStrategy())
             .Build();
 
-        DataObserverIntegrationStrategy.Events = events;
+        EventCollector.Events = events;
         try
         {
             var target = harness.SpawnEntity("target", ["test.int.adv.batch_counter"]);
@@ -121,13 +120,13 @@ public class AdvancedGameplayIntegrationTests
 
             harness.DriveFrame();
 
-            Assert.Contains(events, e => e.Contains("changed:count"));
+            Assert.Contains(events, e => e.EventType == "on_data_changed" && e.DataKey == "count");
             var count = harness.GetEntityData<int>("target", "count");
             Assert.Equal(1, count);
         }
         finally
         {
-            DataObserverIntegrationStrategy.Events = null;
+            EventCollector.Events = null;
         }
     }
 
@@ -154,14 +153,14 @@ public class AdvancedGameplayIntegrationTests
     [Fact]
     public void MultiStrategyEntity_AllThreeTypes()
     {
-        var events = new List<string>();
+        var events = new List<TestObserverEvent>();
         var harness = GameplaySimulationHarness.Create()
             .WithStrategy(() => new BatchFrameCounterStrategy())
             .WithStrategy(() => new DataObserverIntegrationStrategy())
             .WithStrategy(() => new EchoActiveStrategy())
             .Build();
 
-        DataObserverIntegrationStrategy.Events = events;
+        EventCollector.Events = events;
         try
         {
             var target = harness.SpawnEntity("triple", ["test.int.adv.batch_counter"]);
@@ -172,7 +171,7 @@ public class AdvancedGameplayIntegrationTests
 
             harness.DriveFrame();
 
-            Assert.Contains(events, e => e.Contains("changed:count"));
+            Assert.Contains(events, e => e.EventType == "on_data_changed" && e.DataKey == "count");
             var count = harness.GetEntityData<int>("triple", "count");
             Assert.Equal(1, count);
 
@@ -181,7 +180,7 @@ public class AdvancedGameplayIntegrationTests
         }
         finally
         {
-            DataObserverIntegrationStrategy.Events = null;
+            EventCollector.Events = null;
         }
     }
 
@@ -241,21 +240,7 @@ public class AdvancedGameplayIntegrationTests
 
     [StrategyIndex("test.int.adv.data_observer")]
     [ObserveData("count")]
-    private sealed class DataObserverIntegrationStrategy : ObserverStrategyBase
-    {
-        private static readonly AsyncLocal<List<string>?> _events = new();
-
-        public static List<string>? Events
-        {
-            get => _events.Value;
-            set => _events.Value = value;
-        }
-
-        public override void OnDataChanged(ISndEntity entity, ISndContext ctx,
-            ISndEntity target, string dataKey,
-            TypedData oldValue, TypedData newValue) =>
-            Events?.Add($"changed:{dataKey}");
-    }
+    private sealed class DataObserverIntegrationStrategy : SharedDataChangeObserverStrategy { }
 
     [StrategyIndex("test.int.adv.echo")]
     private sealed class EchoActiveStrategy : SharedEchoActiveStrategy { }

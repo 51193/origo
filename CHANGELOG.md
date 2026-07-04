@@ -69,6 +69,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Test projects unified to flat namespaces — 21 files across `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, and `Origo.SourceGeneration.Tests` now use the top-level test namespace instead of sub-namespaces, matching the documented convention.
 - refactor: extract reusable test strategies into `TestSupport/TestStrategies.cs` — shared abstract `SharedFrameCounterStrategy`, `SharedEchoActiveStrategy`, `SharedKillProbeStrategy`, `SharedNoopLifecycleStrategy`, and `SharedNoopStateMachineStrategy` base classes eliminate 15 duplicated strategy definitions across 8 integration test files.
 - refactor: add `SaveAndReload` helper to `GameplaySimulationHarness` — consolidates the 6-line save-destroy-reload boilerplate duplicated across 13 test methods.
+- refactor: replace fragile substring-based observer assertions with typed `TestObserverEvent` records — 3 observer strategies in `ObserverTopologyIntegrationTests`, plus `HpObserverIntegrationStrategy` and `DataObserverIntegrationStrategy`, now emit structured events via `EventCollector`. All 11 weak assertions replaced with type-safe `Assert.Contains` on record fields, eliminating dependency on `TypedData.ToString()` format and cross-event false positives.
 
 ### Removed
 

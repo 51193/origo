@@ -27,6 +27,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | `TestContextBuilder` | Fluent Builder | 构造 `SndContext` 实例（集成测试），提供合理默认值和可选覆盖，替代重复的 10 行构造模式 |
 | `GameplaySimulationHarness` | Fluent Builder + Harness | 一键创建完整帧驱动游戏模拟环境：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），支持 DriveFrame/RunFrames/SpawnEntity/GetEntityData/SaveAndReload |
 | `TestStrategies` | 抽象基类集合 | `SharedFrameCounterStrategy`、`SharedEchoActiveStrategy`、`SharedKillProbeStrategy`、`SharedNoopLifecycleStrategy`、`SharedNoopStateMachineStrategy` — 供集成测试文件通过 1 行 sealed 子类引用，消除重复策略定义 |
+| `TestObserverEvents` | 结构化事件记录 | `TestObserverEvent` record（EventType/TargetName/DataKey/OldValue/NewValue）+ `EventCollector` 静态 AsyncLocal 收集器 + `SharedDataChangeObserverStrategy` 抽象基类 — 观察者测试断言从子串匹配升级为类型化字段精确比较 |
 | `PerfReporter` | 静态工具类 | 性能测试输出格式化：Compare/Report 方法，打印时间/吞吐/分配对比。支持双通道输出（`Console.Out` + `ITestOutputHelper`），确保 CI 和本地均可看到结果 |
 | `ConsoleInputBuffer` | `IConsoleInputSource` 实现 | 控制台输入队列（Core 生产代码，测试中直接使用） |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` 实现 | 控制台输出通道（Core 生产代码，测试中直接使用） |

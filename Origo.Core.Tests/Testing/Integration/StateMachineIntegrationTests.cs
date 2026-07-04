@@ -150,7 +150,8 @@ public class StateMachineIntegrationTests
 
             harness.SaveAndReload("sm_save");
 
-            Assert.Contains(events, e => e.Contains("on_push_after_load"));
+            Assert.Contains(events, e => e == "on_push_after_load:menu");
+            Assert.Contains(events, e => e == "on_push_after_load:gameplay");
 
             var restoredSession = harness.Context.Runtime.SessionManager.TryGet("game");
             Assert.NotNull(restoredSession);
