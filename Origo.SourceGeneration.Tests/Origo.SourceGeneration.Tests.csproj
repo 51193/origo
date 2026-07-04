@@ -39,7 +39,9 @@
         <!-- Referenced as a plain library (not an analyzer) so tests can drive TypedDataGenerator directly. -->
         <ProjectReference Include="..\Origo.SourceGeneration\Origo.SourceGeneration.csproj"
                           ReferenceOutputAssembly="true"/>
-        <!-- Referenced for the generated-product performance benchmark (public TypedData API only). -->
+        <!-- Referenced for the generated-product performance benchmark; the benchmark reaches
+             the generated internal fast paths (KindMap, internal constructor, IsString) via
+             Origo.Core's InternalsVisibleTo grant to this project. -->
         <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>
     </ItemGroup>
 

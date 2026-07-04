@@ -22,9 +22,11 @@ namespace Origo.SourceGeneration.Tests;
 ///     slices), one warmup round, and several timed rounds — taking the minimum
 ///     elapsed time per side to drop rounds disturbed by preemption or GC.
 ///
-///     Only the TypedData public API is used for the generated path (explicit
-///     operators, TryGetXxx, TryGetString, TypedDataFactory). The boxed baseline
-///     uses a standalone OldTypedData mock class that stores values through a
+///     The generated path exercises the emitted product directly: explicit operators
+///     and TryGetXxx for inline value types, and — reached through Origo.Core's
+///     InternalsVisibleTo grant to this project — the generated internal fast paths
+///     for reference storage (the KindMap-based constructor and IsString). The boxed
+///     baseline uses a standalone OldTypedData mock class that stores values through a
 ///     plain object property — it never touches real TypedData internals.
 ///     Tagged [Trait("Category", "Benchmark")] so it runs in a dedicated
 ///     CI step (scripts/benchmark.sh) rather than alongside the coverage-gated suite.
