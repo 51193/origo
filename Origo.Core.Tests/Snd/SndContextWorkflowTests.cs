@@ -233,6 +233,30 @@ public class SndContextWorkflowTests
         Assert.Equal(string.Empty, saveId);
     }
 
+    [Fact]
+    public void RequestLoadInitialSave_WithCustomInitialLevelId_UsesConfiguredLevel()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver,
+            "root", "res://initial", "entry.json")
+        { InitialLevelId = "my_level" });
+
+        SeedInitialSave(fs, "res://initial", "my_level");
+
+        ctx.Lifecycle.RequestLoadInitialSave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
+        Assert.NotNull(fg);
+        Assert.Equal("my_level", fg.LevelId);
+    }
+
     // ── RequestSwitchForegroundLevel ──
 
     [Fact]

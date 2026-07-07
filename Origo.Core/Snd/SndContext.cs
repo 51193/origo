@@ -369,7 +369,7 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
         {
             var payload = InitialStorageService.ReadSavePayloadFromSnapshot(
                 SndDefaults.InitialSaveId,
-                SndDefaults.InitialLevelId);
+                _parameters.InitialLevelId);
             payload.SaveId = SndDefaults.InitialSaveId;
 
             StorageService.DeleteCurrentDirectory();

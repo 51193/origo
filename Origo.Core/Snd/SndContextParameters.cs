@@ -41,6 +41,10 @@ public sealed class SndContextParameters
     public string SaveRootPath { get; }
     public string InitialSaveRootPath { get; }
     public string EntryConfigPath { get; }
+
+    /// <summary>初始存档的关卡 ID。默认值为 <c>"default"</c>，对应 initial/save_000/level_default/ 目录结构。</summary>
+    public string InitialLevelId { get; init; } = "default";
+
     public ISaveStorageService? StorageService { get; init; }
     public ISaveStorageService? InitialStorageService { get; init; }
     public ISavePathPolicy? SavePathPolicy { get; init; }
