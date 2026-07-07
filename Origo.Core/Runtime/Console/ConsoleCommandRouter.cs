@@ -19,6 +19,11 @@ internal sealed class ConsoleCommandRouter
         if (string.IsNullOrWhiteSpace(handler.Name))
             throw new ArgumentException("Handler name cannot be empty.", nameof(handler));
 
+        if (_handlers.ContainsKey(handler.Name))
+            throw new InvalidOperationException(
+                $"A command handler for '{handler.Name}' is already registered. " +
+                "Command names must be unique.");
+
         _handlers[handler.Name] = handler;
     }
 

@@ -73,26 +73,16 @@ public class ConsoleCommandRouterTests
     }
 
     [Fact]
-    public void ConsoleCommandRouter_Register_DuplicateName_OverridesPreviousHandler()
+    public void ConsoleCommandRouter_Register_DuplicateName_Throws()
     {
         var router = new ConsoleCommandRouter();
         var oldHandler = new StubHandler("test");
         var newHandler = new StubHandler("test");
         router.Register(oldHandler);
-        router.Register(newHandler);
 
-        var invocation = new CommandInvocation
-        {
-            Command = "test",
-            PositionalArgs = [],
-            NamedArgs = new Dictionary<string, string>()
-        };
-        var channel = new ConsoleOutputChannel();
-
-        var ok = router.TryExecute(invocation, channel, out _);
-        Assert.True(ok);
+        var ex = Assert.Throws<InvalidOperationException>(() => router.Register(newHandler));
+        Assert.Contains("already registered", ex.Message);
         Assert.False(oldHandler.WasExecuted);
-        Assert.True(newHandler.WasExecuted);
     }
 
     private sealed class StubHandler(string name) : IConsoleCommandHandler
