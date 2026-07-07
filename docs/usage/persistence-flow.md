@@ -69,6 +69,66 @@ Origo 的存档系统遵循 **严格读取、显式失败、两阶段写入** �
 | `progress.json` 缺失 | 抛异常 |
 | 所有关卡都不存在 | 视为"尚无存档" |
 
+## JSON 格式参考
+
+### progress.json
+
+流程黑板是一个 flat map，每个 key 是一个 `TypedData` 值。`origo.session_topology` 是必须存在的键。
+
+```json
+{
+  "origo.session_topology": {
+    "type": "String",
+    "data": "__foreground__=default=false"
+  }
+}
+```
+
+### session.json
+
+会话黑板格式与 progress 相同：flat map 的 `{key: TypedData}` 结构。空黑板写为 `{}`。
+
+```json
+{
+  "high_score": { "type": "Int32", "data": 150 }
+}
+```
+
+### snd_scene.json
+
+场景实体是 `SndMetaData` 的 JSON 数组。每个元素包含 `name`、`node`、`strategy`、`data`。
+
+```json
+[
+  {
+    "name": "Player",
+    "node": { "pairs": { "root": "player" } },
+    "strategy": {
+      "lifecycle_indices": ["game.player_control"],
+      "active_indices": [],
+      "observer_indices": []
+    },
+    "data": {
+      "pairs": {
+        "hp": { "type": "Int32", "data": 100 },
+        "position": { "type": "Single", "data": 320.0 }
+      }
+    }
+  }
+]
+```
+
+### TypedData 值格式
+
+```json
+{ "type": "TypeName", "data": value }
+```
+
+- `Int32` / `Single` / `Boolean` / `String` → JSON 原始类型值
+- 数组类型 → JSON 数组
+
+> **注意**：黑板的 TypedData 是 flat map（无 `pairs` 包装），而 `SndMetaData` 和模板中的 entity data 使用 `{ "pairs": { key: TypedData } }` 嵌套结构。两者不可混淆。
+
 ## 存档结构
 
 ### SaveGamePayload

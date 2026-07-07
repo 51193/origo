@@ -50,6 +50,7 @@ OrigoConsole.ProcessPending()
 - **参数校验前置**：`ConsoleCommandHandlerBase.TryExecute` 在执行前校验参数数量，失败时返回清晰错误
 - **线程安全输入**：`ConsoleInputBuffer` 使用 `lock` 保护，支持 TCP 桥接线程并发入队
 - **命令处理器异常立即传播**：`ProcessPending()` 不捕获命令处理器抛出的异常。若处理器执行中抛出异常（如 `InvalidOperationException`），异常直接传播到调用方，不降级为日志或错误消息。这确保开发阶段尽早暴露 bug。
+- **命令名唯一性**：`ConsoleCommandRouter.Register` 要求命令名全局唯一。注册与已有 handler 同名的 handler 会抛出 `InvalidOperationException`。
 - **输出通道监听器隔离**：`ConsoleOutputChannel.Publish()` 将每个订阅者的调用包裹在 try-catch 中。若单个监听器抛出异常，后续订阅者仍能收到该输出行。在所有订阅者调用完成后，第一个异常被重新抛出以保持 fail-fast。这确保输出不会因单个有缺陷的监听器而静默丢失。
 
 ---
