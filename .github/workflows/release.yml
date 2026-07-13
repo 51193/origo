@@ -5,9 +5,6 @@ on:
     tags:
       - 'v*'
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -55,13 +52,8 @@ jobs:
       - name: Pack Origo.Core
         run: dotnet pack Origo.Core/Origo.Core.csproj --no-build --configuration Release --output ./artifacts
 
-      # GodotAdapter packaging uses continue-on-error because the Godot.NET.Sdk
-      # toolchain may not be fully available in the release runner environment,
-      # which would otherwise block the entire release (Core, ConsoleBridge, and
-      # documentation snapshot).
       - name: Pack Origo.GodotAdapter
-        run: dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --no-build --configuration Release --output ./artifacts
-        continue-on-error: true
+        run: dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --configuration Release --output ./artifacts
 
       - name: Pack Origo.ConsoleBridge
         run: dotnet pack Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --no-build --configuration Release --output ./artifacts
