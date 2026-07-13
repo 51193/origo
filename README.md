@@ -168,9 +168,9 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 ## Development
 
 ```bash
-bash scripts/ci.sh        # Build + test + coverage
-bash scripts/validate.sh  # Full CI pipeline (format + ci.sh)
-bash scripts/run-test.sh  # Tests only, no coverage gates
+bash scripts/ci.sh        # Full CI pipeline (format + test + benchmarks + Godot integration)
+bash scripts/test.sh      # Build + test + coverage gates (dev iteration)
+bash scripts/format.sh    # Format check only
 ```
 
 | Module | Description |

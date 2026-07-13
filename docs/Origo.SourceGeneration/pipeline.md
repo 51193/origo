@@ -582,7 +582,7 @@ offset 16: _ref (8B)
 1. 在 `Origo.Core/AssemblyAttributes.cs` 的 `[SndInlineTypes]` 数组中追加 `typeof(...)`
 2. 在 `TypedDataGenerator.cs` 的 `IsInlineCandidate` 和 `GenerateKindName` 中追加对应的 `SpecialType` 匹配
 3. 如果该类型有特殊的读/写逻辑（如 `float` 的 `BitConverter`），在 `ReadInlineBitsValueExpr` 和 `PackInlineBitsExpr` 中追加处理
-4. 运行 `bash scripts/ci.sh` 通过全量测试 + 覆盖率门禁
+4. 运行 `bash scripts/test.sh` 通过全量测试 + 覆盖率门禁
 5. 更新 Changelog 和本文档中的性能数据表
 
 ### 7.2 新增适配层类型（在新适配器程序集中注册）

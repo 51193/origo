@@ -29,9 +29,9 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Format check
-        run: dotnet restore Origo.sln --verbosity quiet && dotnet format Origo.sln --verify-no-changes --severity info
+        run: bash scripts/format.sh
 
-      # scripts/ci.sh: restore + build + dotnet test; all test projects run Coverlet.
+      # scripts/test.sh: restore + build + dotnet test; all test projects run Coverlet.
       # Benchmarks (Category=Benchmark) are excluded here and run in the next step.
       # Coverage gates:
       #   Origo.Core             >= 90% line
@@ -39,7 +39,7 @@ jobs:
       #   Origo.GodotAdapter     >= 85% line (testable subset, engine-dependent code excluded)
       #   Origo.SourceGeneration >= 85% line
       - name: CI — build, tests, line coverage gates (Core >= 90%, ConsoleBridge >= 80%, GodotAdapter >= 85%, SourceGeneration >= 85%)
-        run: bash scripts/ci.sh
+        run: bash scripts/test.sh
 
       # Source-generation performance benchmarks, run once in their own step.
       - name: Benchmarks — generated TypedData vs unoptimized boxing

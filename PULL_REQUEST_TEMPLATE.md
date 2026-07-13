@@ -20,7 +20,7 @@
 
 ## Checklist
 
-- [ ] `bash scripts/validate.sh` passes locally (format + build + test + coverage)
+- [ ] `bash scripts/ci.sh` passes locally (format + build + test + coverage + benchmarks + Godot integration)
 - [ ] New public API has corresponding behavior tests
 - [ ] Bug fix has regression test (red → green)
 - [ ] `docs/` mirror updated (interface list, design decisions, usage docs)

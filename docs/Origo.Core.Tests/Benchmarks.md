@@ -7,7 +7,7 @@
 
 这套基准在贴近真实使用的路径上，对比源生成的 `TypedData`（内联存储 + Kind 分派）与无优化的「装箱进 `Dictionary<string, object>`」实现的吞吐。场景对应 SND 数据层的典型调用形态：数据写入（`SetData`）、数据读取（`TryGetData`）、跨数值类型读取（`TryGetNumeric`）、观察者通知、以及异构字典遍历。
 
-基准标记 `[Trait("Category","Benchmark")]`，从 `ci.sh` 的全量测试运行中以 `--filter "Category!=Benchmark"` 排除，改由独立步骤 `scripts/benchmark.sh` 运行一次。该脚本同时运行本套件与 [SG 纯净微基准](../Origo.SourceGeneration.Tests/README.md)。
+基准标记 `[Trait("Category","Benchmark")]`，从 `test.sh` 的全量测试运行中以 `--filter "Category!=Benchmark"` 排除，改由独立步骤 `scripts/benchmark.sh` 运行一次。该脚本同时运行本套件与 [SG 纯净微基准](../Origo.SourceGeneration.Tests/README.md)。
 
 > **性能数值不记录在本文档。** 易变的绝对吞吐与倍率快照见权威基线 [benchmarks/baseline.md](../benchmarks/baseline.md)，本文档只描述被测能力与设计意图。
 
@@ -53,7 +53,7 @@
 
 ### 为什么标记 `Category=Benchmark` 并独立运行
 
-基准迭代次数大、耗时长，若与受覆盖率门禁约束的测试一起跑会拖慢常规 CI，且不应被统计进行覆盖率。标记 `[Trait("Category","Benchmark")]` 后由 `ci.sh` 以 `--filter "Category!=Benchmark"` 排除，改由 `scripts/benchmark.sh` 在独立步骤运行一次，既打印比对表格又执行宽松断言，避免被运行两次。
+基准迭代次数大、耗时长，若与受覆盖率门禁约束的测试一起跑会拖慢常规 CI，且不应被统计进行覆盖率。标记 `[Trait("Category","Benchmark")]` 后由 `test.sh` 以 `--filter "Category!=Benchmark"` 排除，改由 `scripts/benchmark.sh` 在独立步骤运行一次，既打印比对表格又执行宽松断言，避免被运行两次。
 
 ### 为什么用固定数据集 + 多轮取最小降噪
 

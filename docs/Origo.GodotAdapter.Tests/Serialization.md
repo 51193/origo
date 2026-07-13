@@ -14,7 +14,7 @@ Basis、Transform2D/3D、Rect2/2I、Aabb、Plane。所有类型通过 `DataSourc
 `TypedData.FromObject` / `TryGetXxx` 扩展方法 / `AsXxx` / `TypedDataObjectConverter` 桥接的完整往返，以及与 Core Kind 区间（< 128）无冲突。
 
 `GodotTypedDataPerformanceTests` 标记 `[Trait("Category","Benchmark")]`（类级），仅由 `scripts/benchmark.sh`
-运行；`ci.sh` 全量测试以 `--filter "Category!=Benchmark"` 将其排除，故其 6 个用例不计入常规覆盖率门禁运行。
+运行；`test.sh` 全量测试以 `--filter "Category!=Benchmark"` 将其排除，故其 6 个用例不计入常规覆盖率门禁运行。
 
 ## 测试文件清单
 

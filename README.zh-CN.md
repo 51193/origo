@@ -166,9 +166,9 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 ## 开发
 
 ```bash
-bash scripts/ci.sh        # 构建 + 测试 + 覆盖率
-bash scripts/validate.sh  # 完整 CI 流水线（格式检查 + ci.sh）
-bash scripts/run-test.sh  # 仅测试，无覆盖率门禁
+bash scripts/ci.sh        # 完整 CI 流水线（格式检查 + 测试 + 基准 + Godot 集成）
+bash scripts/test.sh      # 构建 + 测试 + 覆盖率门禁（日常迭代）
+bash scripts/format.sh    # 仅格式检查
 ```
 
 | 模块 | 说明 |

@@ -17,7 +17,7 @@ Every change must follow this cycle (see `AGENTS.md` §2 for details):
 
 1. Develop the source change.
 2. Extend or adapt tests.
-3. Run `bash scripts/validate.sh` (format + build + test + coverage gates).
+3. Run `bash scripts/ci.sh` (format + build + test + coverage gates + benchmarks + Godot integration).
 4. Fix and retest until everything passes.
 5. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing.
 6. Sync `docs/` if public API, design decisions, or module structure changed.

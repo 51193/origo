@@ -57,7 +57,7 @@
 
 ## Benchmarks/TypedDataGeneratedBenchmarkTests 测试详情
 
-> 标记 `[Trait("Category","Benchmark")]`（类级），仅由 `scripts/benchmark.sh` 运行；`ci.sh` 全量测试以 `--filter "Category!=Benchmark"` 排除。每个用例先校验生成路径与装箱基线命中数一致，再断言生成路径不超过基线 8× 且单基准总耗时低于上限，并打印比对表格。
+> 标记 `[Trait("Category","Benchmark")]`（类级），仅由 `scripts/benchmark.sh` 运行；`test.sh` 全量测试以 `--filter "Category!=Benchmark"` 排除。每个用例先校验生成路径与装箱基线命中数一致，再断言生成路径不超过基线 8× 且单基准总耗时低于上限，并打印比对表格。
 
 ### 正确路径（性能基准）
 
@@ -111,7 +111,7 @@
 
 为抵抗 OS 时间片轮转与 GC 带来的测量噪声，每个基准使用固定容量池（位掩码寻址，内存恒定）、较大的迭代次数（使单轮耗时跨多个时间片）、一轮 warmup 加多轮计时并对两侧各取最小耗时（剔除被抢占/GC 的离群轮）。
 
-基准标记 `[Trait("Category","Benchmark")]`，从 `ci.sh` 的全量测试运行中以 `--filter "Category!=Benchmark"` 排除，改由独立步骤 `scripts/benchmark.sh`（以 detailed logger）运行一次：既打印比对表格，又执行宽松断言，避免基准被运行两次。`scripts/benchmark.sh` 在同一步骤中还运行 Core 的[真实模拟性能基准](../Origo.Core.Tests/Benchmarks.md)（字典查找/插入、观察者通知、异构字典迭代等贴近使用的场景）。
+基准标记 `[Trait("Category","Benchmark")]`，从 `test.sh` 的全量测试运行中以 `--filter "Category!=Benchmark"` 排除，改由独立步骤 `scripts/benchmark.sh`（以 detailed logger）运行一次：既打印比对表格，又执行宽松断言，避免基准被运行两次。`scripts/benchmark.sh` 在同一步骤中还运行 Core 的[真实模拟性能基准](../Origo.Core.Tests/Benchmarks.md)（字典查找/插入、观察者通知、异构字典迭代等贴近使用的场景）。
 
 ---
 

@@ -13,7 +13,7 @@
 bash scripts/benchmark.sh
 ```
 
-该脚本依次运行两套基准（均标记 `[Trait("Category","Benchmark")]`，从 `ci.sh` 排除，仅此处运行一次）：
+该脚本依次运行两套基准（均标记 `[Trait("Category","Benchmark")]`，从 `test.sh` 排除，仅此处运行一次）：
 
 - **SG 纯净微基准** — `Origo.SourceGeneration.Tests/Benchmarks/TypedDataGeneratedBenchmarkTests.cs`
 - **Core 真实模拟基准** — `Origo.Core.Tests/Benchmarks/TypedDataRealWorldBenchmarkTests.cs`

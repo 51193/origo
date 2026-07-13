@@ -130,11 +130,11 @@ facilities**, to understand the collaboration contracts between modules.
 ### 1.5 Consistent Code Format — Local Equals CI
 
 - **All C# code must pass `dotnet format --verify-no-changes --severity info`.**
-  This is the first CI gate (see `scripts/validate.sh` and
+  This is the first CI gate (see `scripts/format.sh` and
   `.github/workflows/ci.yml`).
 - `.editorconfig` defines the project's full set of formatting rules:
   naming, whitespace, collection initializers, `var` preferences, primary
-  constructors, etc. CI enforces them; local runs of `scripts/validate.sh`
+  constructors, etc. CI enforces them; local runs of `scripts/ci.sh`
   provide equivalent validation.
 - **Test projects use flat namespaces** (`Origo.Core.Tests`, not
   `Origo.Core.Tests.Snd.Strategy`). This is deliberate xUnit convention
@@ -157,7 +157,7 @@ facilities**, to understand the collaboration contracts between modules.
 |------|------|-------------|
 | 1 | **Develop source** | Implement the feature / fix / refactor, satisfying §0 gate and §1 principles. |
 | 2 | **Extend / adapt tests** | Add or adjust tests for this change: behavior tests for new public API, regression tests for bug fixes (red first), sync existing tests for behavior changes. |
-| 3 | **Execute tests** | During development iteration, run `bash scripts/ci.sh` (restore → build → test + coverage gates). **Before committing, you must run** `bash scripts/validate.sh`, which mirrors CI exactly: format check + ci.sh full suite. |
+| 3 | **Execute tests** | During development iteration, run `bash scripts/test.sh` (restore → build → test + coverage gates). **Before committing, you must run** `bash scripts/ci.sh`, which mirrors CI exactly: format + test + benchmarks + Godot integration. |
 | 4 | **Fix source + re-test loop** | If tests are not all green, go back to fix the source and re-run step 3. **Loop until all pass.** Fixes must still comply with §1 (especially avoid false-positive fixes). |
 | 5 | **Changelog alignment** | Write user-facing significant changes into `CHANGELOG.md` under the `[Unreleased]` section (conventions in §4). |
 | 6 | **Docs sync** | Sync the `docs/` mirror: directory structure, interface lists, design decisions, usage / test docs (rules in §5 and `docs/META.md`). |
@@ -177,13 +177,13 @@ facilities**, to understand the collaboration contracts between modules.
 | Behavior change | Update existing tests to reflect new behavior. |
 | Refactoring | All existing tests must pass; no new tests required. |
 
-- **Run command**: `bash scripts/validate.sh` (repo root, equivalent to CI:
-  format check + build + test + coverage gates). During development iteration,
-  use `bash scripts/ci.sh` (test only) or `bash scripts/run-test.sh`
-  (test only, no coverage gates).
+- **Run command**: `bash scripts/ci.sh` (repo root, full local CI reproduction:
+  format + build + test + coverage gates + benchmarks + Godot integration).
+  During development iteration, use `bash scripts/test.sh` (build + test +
+  coverage gates only).
 - **Test projects**: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`,
   `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`.
-- **Coverage gates** are enforced by Coverlet in `ci.sh` (Core ≥ 90%,
+- **Coverage gates** are enforced by Coverlet in `test.sh` (Core ≥ 90%,
   ConsoleBridge ≥ 80%, GodotAdapter ≥ 85%, SourceGeneration ≥ 85%); falling
   below the threshold causes `dotnet test` to fail directly.
 - Test style conventions, `InternalsVisibleTo` whitelist principles, static
@@ -314,4 +314,4 @@ markers, and commit message conventions, see [`docs/META.md`](docs/META.md).
 | Performance baseline | [`docs/benchmarks/baseline.md`](docs/benchmarks/baseline.md) | TypedData performance snapshot and trade-offs. |
 | Formatting rules | [`.editorconfig`](.editorconfig) | C# code style + IDE/CA diagnostic rules. |
 | CI workflows | [`.github/workflows/`](.github/workflows/) | CI / Release / CodeQL workflow definitions. |
-| Validation script | [`scripts/validate.sh`](scripts/validate.sh) | Local CI equivalent: format + build + test + coverage gates. |
+| CI scripts | [`scripts/ci.sh`](scripts/ci.sh) | Full local CI reproduction; per-step scripts: `format.sh`, `test.sh`, `benchmark.sh`, `godot-test.sh`. |
