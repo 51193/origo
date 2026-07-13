@@ -149,8 +149,6 @@ public class ConsoleBridgeServerTests
         }, TestContext.Current.CancellationToken);
 
         Assert.True(readerBlocked.Wait(ConsoleBridgeTestInfrastructure.CommandTimeoutMs, TestContext.Current.CancellationToken));
-        Thread.Yield();
-        Thread.Sleep(0);
 
         output.Publish("command result here");
 
@@ -294,8 +292,6 @@ public class ConsoleBridgeServerTests
         }, TestContext.Current.CancellationToken);
 
         Assert.True(readerAboutToBlock.Wait(ConsoleBridgeTestInfrastructure.CommandTimeoutMs, TestContext.Current.CancellationToken));
-        Thread.Yield();
-        Thread.Sleep(0);
         output.Publish("log_a");
         output.Publish("log_b");
         output.Publish("log_c");
@@ -351,8 +347,6 @@ public class ConsoleBridgeServerTests
         }, TestContext.Current.CancellationToken);
 
         Assert.True(readerAboutToBlock.Wait(ConsoleBridgeTestInfrastructure.CommandTimeoutMs, TestContext.Current.CancellationToken));
-        Thread.Yield();
-        Thread.Sleep(0);
         server.Dispose();
 
         await readTask.WaitAsync(TimeSpan.FromMilliseconds(3000), TestContext.Current.CancellationToken);
