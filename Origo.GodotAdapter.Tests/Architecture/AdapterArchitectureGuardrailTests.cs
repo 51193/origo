@@ -56,6 +56,15 @@ public class AdapterArchitectureGuardrailTests
 
         ISndArchiveFileAccess archiveFileAccess = ctx.ArchiveFileAccess;
         Assert.False(archiveFileAccess.FileExists("nonexistent.json"));
+
+        var template = ctx.Template;
+        Assert.NotNull(template);
+
+        var sm = ctx.StateMachines;
+        Assert.Null(sm.GetProgressStateMachines());
+
+        var smCtx = ctx.StateMachineContext;
+        Assert.Same(bb.SystemBlackboard, smCtx.SystemBlackboard);
     }
 
     [Fact]

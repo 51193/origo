@@ -67,8 +67,15 @@ public class CoreArchitectureGuardrailTests
 
         var interfaces = type.GetInterfaces();
         Assert.DoesNotContain(typeof(ISndBlackboardAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndDeferredActions), interfaces);
+        Assert.DoesNotContain(typeof(ISndTemplateAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndConsoleAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndStateMachineAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndSaveOperations), interfaces);
+        Assert.DoesNotContain(typeof(ISndLifecycleOperations), interfaces);
         Assert.DoesNotContain(typeof(ISndFileAccess), interfaces);
         Assert.DoesNotContain(typeof(ISndArchiveFileAccess), interfaces);
+        Assert.DoesNotContain(typeof(IStateMachineContext), interfaces);
     }
 
     [Fact]
@@ -314,5 +321,24 @@ public class CoreArchitectureGuardrailTests
         Assert.DoesNotContain(typeof(IStateMachineContext), interfaces);
 
         Assert.Contains(typeof(ISndContext), interfaces);
+    }
+
+    [Fact]
+    public void SndContext_CompanionProperties_ShareConsistentState()
+    {
+        var runtime = TestFactory.CreateRuntime(new TestLogger(), new TestSndSceneHost());
+        var fs = new TestFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+
+        Assert.Same(ctx.Blackboard.SystemBlackboard, ctx.StateMachineContext.SystemBlackboard);
+        Assert.Same(ctx.Blackboard.ProgressBlackboard, ctx.StateMachineContext.ProgressBlackboard);
+
+        var executed = false;
+        ctx.Deferred.EnqueueBusinessDeferred(() => executed = true);
+        ctx.StateMachineContext.FlushDeferredActionsForCurrentFrame();
+        Assert.True(executed);
     }
 }

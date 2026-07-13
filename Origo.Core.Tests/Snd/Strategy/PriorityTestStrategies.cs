@@ -18,7 +18,12 @@ internal static class Rec
     public static IReadOnlyList<string> Log =>
         _log.Value ?? throw new InvalidOperationException("Call Rec.BeginTest() before test");
 
-    public static void Add(string tag) => _log.Value?.Add(tag);
+    public static void Add(string tag)
+    {
+        var log = _log.Value
+                  ?? throw new InvalidOperationException("Call Rec.BeginTest() before adding entries.");
+        log.Add(tag);
+    }
 
     public static void Reset() => _log.Value?.Clear();
 }

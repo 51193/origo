@@ -323,8 +323,9 @@ public class ConsoleBridgeServerCommunicationTests
         var (server, (_, output)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
         var port = server.ActualPort;
 
-        var overflowLineCount = 1500;
-        for (var i = 0; i < overflowLineCount; i++)
+        var bufferLimit = 1000;
+        var totalLines = bufferLimit + 1;
+        for (var i = 0; i < totalLines; i++)
             output.Publish($"pending_{i}");
 
         using var client = new TcpClient();
@@ -333,7 +334,7 @@ public class ConsoleBridgeServerCommunicationTests
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
         var received = new List<string>();
-        for (var i = 0; i < overflowLineCount; i++)
+        for (var i = 0; i < totalLines; i++)
         {
             var line = ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(reader, ConsoleBridgeTestInfrastructure.OutputTimeoutMs);
             if (line is null)
@@ -341,8 +342,10 @@ public class ConsoleBridgeServerCommunicationTests
             received.Add(line);
         }
 
-        Assert.True(received.Count <= overflowLineCount);
-        Assert.True(received.Count > 0);
+        Assert.Equal(bufferLimit, received.Count);
+        Assert.Equal("pending_1", received[0]);
+        Assert.Equal($"pending_{bufferLimit}", received[^1]);
+        Assert.DoesNotContain("pending_0", received);
 
         server.Dispose();
     }
@@ -361,16 +364,18 @@ public class ConsoleBridgeServerCommunicationTests
         client.Connect(IPAddress.Loopback, port);
         using var reader = new StreamReader(client.GetStream());
 
-        var received = 0;
+        var received = new List<string>();
         for (var i = 0; i < lineCount; i++)
         {
             var line = ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(reader, ConsoleBridgeTestInfrastructure.OutputTimeoutMs);
             if (line is null)
                 break;
-            received++;
+            received.Add(line);
         }
 
-        Assert.Equal(lineCount, received);
+        Assert.Equal(lineCount, received.Count);
+        Assert.Equal("pending_0", received[0]);
+        Assert.Equal($"pending_{lineCount - 1}", received[^1]);
 
         server.Dispose();
     }
