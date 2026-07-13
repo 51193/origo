@@ -23,6 +23,8 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | `TestLogger` | `ILogger` 实现 | 收集日志到列表中，支持按级别（Debug/Info/Warning/Error）分类查询 |
 | `TestNodeFactory` | `INodeFactory` 实现 | 可注入失败资源的节点工厂 |
 | `DummySndEntity` | `ISndEntity` 实现 | 内存中的实体实现，提供 SetData/GetData/TryGetData |
+| `NullSndContext` | `ISndContext` 空对象实现 | 纯运行时单测用的空上下文；查询返回空对象，变更操作（存读档/关卡切换等）显式抛异常以满足 fail-fast |
+| `StrategyStateTestsCollection` | xUnit `[CollectionDefinition]` | 定义 `StrategyStateTests` 串行集合（`DisableParallelization`），供含静态可变状态的策略测试类串行运行，防止跨测试污染 |
 | `TestFactory` | 静态工厂类 | 快速创建 OrigoRuntime / SndWorld / ProgressRun / ConverterRegistry 等常用组合 |
 | `TestContextBuilder` | Fluent Builder | 构造 `SndContext` 实例（集成测试），提供合理默认值和可选覆盖，替代重复的 10 行构造模式 |
 | `GameplaySimulationHarness` | Fluent Builder + Harness | 一键创建完整帧驱动游戏模拟环境：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），支持 DriveFrame/RunFrames/SpawnEntity/GetEntityData/SaveAndReload |
@@ -71,6 +73,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 策略测试框架 | [StrategyTestScenario.md](StrategyTestScenario.md) | 三阶段模式（configure/run/assert）、EntityStrategy harness、ActiveStrategy harness |
 | 帧驱动集成测试 | [Integration/README.md](Integration/README.md) | GameplaySimulationHarness 完整运行时模拟：SndContext → Bootstrap → DriveFrame 帧循环 → 实体处理/黑板交互/延迟动作 |
 | 集合差异比较 | [Utility.md](Utility.md) | DiffUtility 泛型集合差异比较（added/removed）+ 去重语义 |
+| 框架元信息 | [Meta.md](Meta.md) | OrigoMeta 记录：默认横幅非空、ToString 含名称与版本、值相等语义 |
 
 ---
 
