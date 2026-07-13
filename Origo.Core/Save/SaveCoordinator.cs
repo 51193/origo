@@ -126,15 +126,8 @@ internal sealed class SaveCoordinator
 
     private void EnsureActiveLevelInvariant(ISessionRun fgSession)
     {
-        var (found, rawTopology) = _progressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
-        if (!found || string.IsNullOrWhiteSpace(rawTopology))
-            throw new InvalidOperationException(
-                $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}' (save id: '{_saveId}').");
-
-        var topologyActiveLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
-        if (!string.Equals(topologyActiveLevelId, fgSession.LevelId, StringComparison.Ordinal))
-            throw new InvalidOperationException(
-                $"Progress '{WellKnownKeys.SessionTopology}' foreground ('{topologyActiveLevelId}') does not match foreground level '{fgSession.LevelId}' (save id: '{_saveId}').");
+        TopologyInvariant.EnsureActiveLevel(_progressBlackboard,
+            fgSession.LevelId, $"save id: '{_saveId}'");
     }
 
     private void AppendBackgroundPayloads(

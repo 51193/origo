@@ -113,15 +113,7 @@ internal sealed partial class ProgressRun : IDisposable
 
     internal void EnsureActiveLevelInvariant()
     {
-        var fgSession = RequireForegroundSession();
-        var (found, rawTopology) = ProgressBlackboard.TryGet<string>(WellKnownKeys.SessionTopology);
-        if (!found || string.IsNullOrWhiteSpace(rawTopology))
-            throw new InvalidOperationException(
-                $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}' (save id: '{SaveId}').");
-
-        var topologyActiveLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
-        if (!string.Equals(topologyActiveLevelId, fgSession.LevelId, StringComparison.Ordinal))
-            throw new InvalidOperationException(
-                $"Progress '{WellKnownKeys.SessionTopology}' foreground ('{topologyActiveLevelId}') does not match foreground level '{fgSession.LevelId}' (save id: '{SaveId}').");
+        TopologyInvariant.EnsureActiveLevel(ProgressBlackboard,
+            RequireForegroundSession().LevelId, $"save id: '{SaveId}'");
     }
 }
