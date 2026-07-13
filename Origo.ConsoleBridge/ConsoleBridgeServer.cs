@@ -25,7 +25,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private readonly IConsoleInputSource _input;
     private readonly ConsoleBridgeOptions _options;
     private readonly IConsoleOutputChannel _output;
-    private readonly List<string> _pendingOutput = [];
+    private readonly Queue<string> _pendingOutput = new();
 
     private readonly object _writerLock = new();
     private readonly CancellationTokenSource _cts = new();
@@ -106,8 +106,9 @@ public sealed class ConsoleBridgeServer : IDisposable
             }
             else
             {
-                if (_pendingOutput.Count < _maxPendingOutputLines)
-                    _pendingOutput.Add(line);
+                if (_pendingOutput.Count >= _maxPendingOutputLines)
+                    _pendingOutput.Dequeue();
+                _pendingOutput.Enqueue(line);
             }
         }
     }
