@@ -24,13 +24,13 @@ public partial class RandomAndStateMachineTests
         pool.Register(() => new SmPushStrategy());
         pool.Register(() => new SmPopStrategy());
 
-        var sm1 = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx);
+        var sm1 = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx.StateMachineContext);
         sm1.Push("p");
         sm1.Push("q");
         sm1.Push("r");
         var snapshot1 = sm1.Snapshot();
 
-        var sm2 = new StackStateMachine("m2", "sm.push.test", "sm.pop.test", pool, ctx);
+        var sm2 = new StackStateMachine("m2", "sm.push.test", "sm.pop.test", pool, ctx.StateMachineContext);
         sm2.RestoreStackWithoutHooks(snapshot1);
         var snapshot2 = sm2.Snapshot();
 
@@ -62,7 +62,7 @@ public partial class RandomAndStateMachineTests
 
         try
         {
-            var sm = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx);
+            var sm = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx.StateMachineContext);
             sm.Push("a");
             sm.Push("b");
             Assert.True(sm.TryPopRuntime(out var p1));
@@ -102,7 +102,7 @@ public partial class RandomAndStateMachineTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
 
         Assert.Throws<InvalidOperationException>(() =>
-            new StackStateMachine("m1", "sm.push.missing", "sm.pop.missing", runtime.SndWorld.StrategyPool, ctx));
+            new StackStateMachine("m1", "sm.push.missing", "sm.pop.missing", runtime.SndWorld.StrategyPool, ctx.StateMachineContext));
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public partial class RandomAndStateMachineTests
 
         try
         {
-            var sm = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx);
+            var sm = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx.StateMachineContext);
             sm.Push("a");
             sm.Push("b");
 
@@ -176,7 +176,7 @@ public partial class RandomAndStateMachineTests
 
         try
         {
-            var sm = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx);
+            var sm = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx.StateMachineContext);
             sm.RestoreStackWithoutHooks(["x", "y", "z"]);
             sm.FlushAfterLoad();
             sm.Dispose();

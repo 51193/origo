@@ -50,7 +50,7 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         var sndContext = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
 
         Assert.Throws<InvalidOperationException>(() =>
-            new StackStateMachine("machine", "pool.sm", "missing.pop", pool, sndContext));
+            new StackStateMachine("machine", "pool.sm", "missing.pop", pool, sndContext.StateMachineContext));
 
         var first = pool.GetStrategy<StateMachineStrategyBase>("pool.sm");
         pool.ReleaseStrategy("pool.sm");

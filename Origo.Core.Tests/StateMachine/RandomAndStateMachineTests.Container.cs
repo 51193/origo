@@ -33,7 +33,7 @@ public partial class RandomAndStateMachineTests
 
         try
         {
-            var container = new StateMachineContainer(pool, ctx);
+            var container = new StateMachineContainer(pool, ctx.StateMachineContext);
             var sm = container.CreateOrGet("ui", "sm.push.test", "sm.pop.test");
             sm.Push("a");
             sm.Push("b");
@@ -79,7 +79,7 @@ public partial class RandomAndStateMachineTests
 
         try
         {
-            var container = new StateMachineContainer(pool, ctx);
+            var container = new StateMachineContainer(pool, ctx.StateMachineContext);
             var sm = container.CreateOrGet("ui", "sm.push.test", "sm.pop.test");
             sm.Push("a");
             sm.Push("b");
@@ -123,7 +123,7 @@ public partial class RandomAndStateMachineTests
 
         try
         {
-            var container = new StateMachineContainer(pool, ctx);
+            var container = new StateMachineContainer(pool, ctx.StateMachineContext);
             // insertion order: b -> a
             var smB = container.CreateOrGet("b", "sm.push.test", "sm.pop.orderprobe");
             var smA = container.CreateOrGet("a", "sm.push.test", "sm.pop.orderprobe");
@@ -155,7 +155,7 @@ public partial class RandomAndStateMachineTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var pool = runtime.SndWorld.StrategyPool;
 
-        var container = new StateMachineContainer(pool, ctx);
+        var container = new StateMachineContainer(pool, ctx.StateMachineContext);
 
         Assert.Throws<ArgumentNullException>(() =>
             container.DeserializeFromNode(null!, TestFactory.CreateRegistry()));
@@ -176,13 +176,13 @@ public partial class RandomAndStateMachineTests
         pool.Register(() => new SmPushStrategy());
         pool.Register(() => new SmPopStrategy());
 
-        var c1 = new StateMachineContainer(pool, ctx);
+        var c1 = new StateMachineContainer(pool, ctx.StateMachineContext);
         var sm = c1.CreateOrGet("ui", "sm.push.test", "sm.pop.test");
         sm.Push("p");
         sm.Push("q");
 
         using var node = c1.SerializeToNode(TestFactory.CreateRegistry());
-        var c2 = new StateMachineContainer(pool, ctx);
+        var c2 = new StateMachineContainer(pool, ctx.StateMachineContext);
         c2.DeserializeFromNode(node, TestFactory.CreateRegistry());
         c2.TryGet("ui", out var restored);
         Assert.NotNull(restored);
@@ -207,7 +207,7 @@ public partial class RandomAndStateMachineTests
         pool.Register(() => new SwapTestPushStrategy());
         pool.Register(() => new SwapTestPopStrategy());
 
-        var container = new StateMachineContainer(pool, ctx);
+        var container = new StateMachineContainer(pool, ctx.StateMachineContext);
 
         // Serialize an empty container, then deserialize back – no-op swap.
         using var emptyNode = container.SerializeToNode(TestFactory.CreateRegistry());
@@ -248,7 +248,7 @@ public partial class RandomAndStateMachineTests
         pool.Register(() => new SmPopStrategy());
         try
         {
-            var c = new StateMachineContainer(pool, ctx);
+            var c = new StateMachineContainer(pool, ctx.StateMachineContext);
             var a = c.CreateOrGet("k", "sm.push.test", "sm.pop.test");
             var b = c.CreateOrGet("k", "sm.push.test", "sm.pop.test");
             Assert.Same(a, b);
@@ -277,7 +277,7 @@ public partial class RandomAndStateMachineTests
         pool.Register(() => new SmPopOrderProbeStrategy());
         try
         {
-            var c = new StateMachineContainer(pool, ctx);
+            var c = new StateMachineContainer(pool, ctx.StateMachineContext);
             c.CreateOrGet("k", "sm.push.test", "sm.pop.test");
             Assert.Throws<InvalidOperationException>(() =>
                 c.CreateOrGet("k", "sm.push.test", "sm.pop.orderprobe"));
@@ -307,7 +307,7 @@ public partial class RandomAndStateMachineTests
         SmPushStrategy.AfterLoadEvents = after;
         try
         {
-            var c = new StateMachineContainer(pool, ctx);
+            var c = new StateMachineContainer(pool, ctx.StateMachineContext);
             var sm = c.CreateOrGet("ui", "sm.push.test", "sm.pop.test");
             sm.RestoreStackWithoutHooks(["x", "y"]);
             c.FlushAllAfterLoad();
@@ -346,7 +346,7 @@ public partial class RandomAndStateMachineTests
             }
             """;
         using var node = TestFactory.NodeFromJson(json);
-        var c = new StateMachineContainer(pool, ctx);
+        var c = new StateMachineContainer(pool, ctx.StateMachineContext);
         Assert.Throws<InvalidOperationException>(() => c.DeserializeFromNode(node, TestFactory.CreateRegistry()));
     }
 

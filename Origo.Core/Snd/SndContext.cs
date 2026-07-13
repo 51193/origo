@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Threading;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.FileSystem;
-using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Abstractions.Lifecycle;
@@ -15,28 +14,19 @@ using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save;
 using Origo.Core.Save.Meta;
 using Origo.Core.Save.Storage;
+using Origo.Core.Snd.Companions;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
 
 namespace Origo.Core.Snd;
 
-/// <summary>
-///     面向策略与游戏层的统一生命周期编排门面。
-///     实现 <see cref="IStateMachineContext" /> 以便状态机钩子统一使用接口而非具体类型。
-///     <para>
-///         运行时分层：SystemRun → ProgressRun → SessionManager → SessionRun，
-///         每层通过结构化参数构造，单向传递运行时能力。
-///     </para>
-/// </summary>
-public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferredActions,
-    ISndTemplateAccess, ISndConsoleAccess, ISndStateMachineAccess, ISndSaveOperations,
-    ISndLifecycleOperations, IStateMachineContext
+public sealed class SndContext : ISndContext
 {
-    private readonly SystemRun _systemRun;
-    private readonly List<ISaveMetaContributor> _saveMetaContributors = [];
+    internal readonly SystemRun _systemRun;
+    internal readonly List<ISaveMetaContributor> _saveMetaContributors = [];
     private readonly SndContextParameters _parameters;
-    private int _pendingPersistenceRequests;
-    private ProgressRun? _progressRun;
+    internal int _pendingPersistenceRequests;
+    internal ProgressRun? _progressRun;
     private bool _workflowInProgress;
 
     public SndContext(SndContextParameters parameters)
@@ -64,22 +54,23 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
         _systemRun = new SystemRun(systemRuntime);
         _parameters = parameters;
 
-        // Runtime 仅触达 SessionManager（再下查 SessionRun），不直达任何 SceneHost。
-        // 该 provider 在构造时建立（不依赖 Bootstrap），延迟解析当前会话管理器。
-        // 尚未加载 ProgressRun 时缓回退到 EmptySessionManager（Null Object 模式），
-        // SessionManager 相关操作在 Bootstrap 之前将会无操作——这是设计性行为，不是缺陷。
         Runtime.SetSessionManagerProvider(() => _progressRun?.SessionManager ?? EmptySessionManager.Instance);
 
         FileAccess = new SndContextFileAccess(DataSourceIo, MetaAccess, Runtime.SndWorld.ConverterRegistry);
         ArchiveFileAccess = new SndContextArchiveFileAccess(
             DataSourceIo, MetaAccess, Runtime.SndWorld.ConverterRegistry,
             PathResolver, SaveRootPath, SavePathPolicy);
+
+        Blackboard = new SndContextBlackboardAccess(this);
+        Deferred = new SndContextDeferredActions(this);
+        Template = new SndContextTemplateAccess(this);
+        ConsoleAccess = new SndContextConsoleAccess(this);
+        StateMachines = new SndContextStateMachineAccess(this);
+        Save = new SndContextSaveOperations(this);
+        Lifecycle = new SndContextLifecycleOperations(this);
+        StateMachineContext = new SndContextStateMachineContext(this);
     }
 
-    /// <summary>
-    ///     执行框架启动流程：策略发现 → 场景别名/模板加载 → 入口存档加载。
-    ///     Adapter 层在创建 SndContext 并绑定场景宿主后仅需调用此方法一次。
-    /// </summary>
     public void Bootstrap()
     {
         _parameters.ConfigureConverters?.Invoke(Runtime.SndWorld.ConverterRegistry);
@@ -94,7 +85,7 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
         if (_parameters.SndTemplateMapPath is not null)
             Runtime.SndWorld.LoadTemplates(_parameters.SndTemplateMapPath, Runtime.Logger);
 
-        RequestLoadMainMenuEntrySave();
+        Lifecycle.RequestLoadMainMenuEntrySave();
     }
 
     internal OrigoRuntime Runtime { get; }
@@ -108,179 +99,16 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
     internal ISaveStorageService InitialStorageService { get; }
     internal ISavePathPolicy SavePathPolicy { get; }
 
-    public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
-    {
-        var template = Runtime.SndWorld.ResolveTemplate(templateKey);
-        var cloned = SndWorld.CloneMetaData(template);
-        if (!string.IsNullOrWhiteSpace(overrideName))
-            cloned.Name = overrideName;
-        return cloned;
-    }
-
-    public bool TrySubmitConsoleCommand(string commandLine)
-    {
-        if (string.IsNullOrWhiteSpace(commandLine))
-            return false;
-
-        Runtime.ConsoleInput?.Enqueue(commandLine.Trim());
-        return Runtime.ConsoleInput is not null;
-    }
-
-    public void ProcessConsolePending() => Runtime.Console?.ProcessPending();
-
-    public long SubscribeConsoleOutput(Action<string> onLine)
-    {
-        ArgumentNullException.ThrowIfNull(onLine);
-        var channel = Runtime.ConsoleOutputChannel
-                      ?? throw new InvalidOperationException("Console output channel is not available.");
-        return channel.Subscribe(line => onLine(line ?? string.Empty));
-    }
-
-    public void UnsubscribeConsoleOutput(long subscriptionId)
-    {
-        if (subscriptionId <= 0)
-            return;
-        Runtime.ConsoleOutputChannel?.Unsubscribe(subscriptionId);
-    }
-
-    public IStateMachineContainer? GetProgressStateMachines() => _progressRun?.GetProgressStateMachines();
-
-    // ── Entry point ─────────────────────────────────────────────────────
-
-    public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)
-    {
-        ArgumentNullException.ThrowIfNull(contributor);
-        _saveMetaContributors.Add(contributor);
-    }
-
-    public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
-    {
-        ArgumentNullException.ThrowIfNull(contribute);
-        _saveMetaContributors.Add(new DelegateSaveMetaContributor(contribute));
-    }
-
-    public IReadOnlyList<string> ListSaves() => StorageService.EnumerateSaveIds();
-
-    public void RequestLoadGame(string saveId)
-    {
-        if (string.IsNullOrWhiteSpace(saveId))
-            throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
-
-        EnqueueTrackedSystemDeferred(() => SetProgressRun(LoadOrContinueStrict(saveId)));
-    }
-
-    public void RequestSaveGame(string newSaveId)
-    {
-        if (string.IsNullOrWhiteSpace(newSaveId))
-            throw new ArgumentException("New save id cannot be null or whitespace.", nameof(newSaveId));
-
-        EnqueueTrackedSystemDeferred(() =>
-        {
-            BeginWorkflow();
-            try
-            {
-                var progressRun = EnsureProgressRun();
-                var metaContext = progressRun.BuildSaveMetaContext(newSaveId);
-                var mergedMeta = SaveMetaMerger.Merge(_saveMetaContributors, in metaContext, null);
-                var payload = progressRun.BuildSavePayload(newSaveId, mergedMeta);
-                StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, newSaveId, Runtime.Logger);
-                progressRun.SetSaveId(newSaveId);
-                _systemRun.SetActiveSaveSlot(newSaveId);
-            }
-            finally
-            {
-                EndWorkflow();
-            }
-        });
-    }
-
-    public string RequestSaveGameAuto(string? newSaveId = null)
-    {
-        var effectiveNewSaveId = string.IsNullOrWhiteSpace(newSaveId)
-            ? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)
-            : newSaveId;
-        RequestSaveGame(effectiveNewSaveId);
-        return effectiveNewSaveId;
-    }
-
-    public void SetContinueTarget(string saveId) => _systemRun.SetActiveSaveSlot(saveId);
-
-    public void RequestSwitchForegroundLevel(string newLevelId)
-    {
-        if (string.IsNullOrWhiteSpace(newLevelId))
-            throw new ArgumentException("New level id cannot be null or whitespace.", nameof(newLevelId));
-        EnqueueSystemDeferred(() => { EnsureProgressRun().SwitchForeground(newLevelId); });
-    }
-
-    public bool HasContinueData()
-    {
-        var (found, saveId) = SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
-        return found && !string.IsNullOrWhiteSpace(saveId);
-    }
-
-    public bool RequestContinueGame()
-    {
-        var (found, saveId) = SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
-        if (!found || string.IsNullOrWhiteSpace(saveId))
-            return false;
-
-        EnqueueSystemDeferred(() => { SetProgressRun(LoadOrContinueStrict(saveId)); });
-        return true;
-    }
-
-    public void RequestLoadInitialSave() => EnqueueSystemDeferred(ExecuteLoadInitialSaveNow);
-
-    public void RequestLoadMainMenuEntrySave() => EnqueueSystemDeferred(ExecuteLoadMainMenuEntrySaveNow);
-
-    /// <summary>
-    ///     Returns the current number of in-flight persistence requests.
-    ///     <c>Interlocked.CompareExchange(ref x, 0, 0)</c> is the standard
-    ///     lock-free atomic read pattern for <see cref="int" /> fields,
-    ///     since <see cref="Interlocked.Read(ref long)" /> is only available
-    ///     for <see cref="long" />.
-    /// </summary>
-    public int GetPendingPersistenceRequestCount() =>
-        Interlocked.CompareExchange(ref _pendingPersistenceRequests, 0, 0);
-
-    public void FlushDeferredActionsForCurrentFrame() => Runtime.FlushEndOfFrameDeferred();
-
-    public IBlackboard SystemBlackboard => _systemRun.SystemBlackboard;
-    public IBlackboard? ProgressBlackboard => _progressRun?.ProgressBlackboard;
-
-    public ISndSceneAccess SceneAccess =>
-        _progressRun?.SessionManager.ForegroundSession is SessionRun fgSession
-            ? fgSession.SceneHost
-            : throw new InvalidOperationException("SceneAccess unavailable without a foreground session.");
-
-    public IBlackboard? SessionBlackboard => _progressRun?.SessionManager.ForegroundSession?.SessionBlackboard;
-
-    // ── Public API ─────────────────────────────────────────────────────
-
-    public void EnqueueBusinessDeferred(Action action) => Runtime.EnqueueBusinessDeferred(action);
-
-    // ── Companion properties ────────────────────────────────────────────
-
-    public ISndBlackboardAccess Blackboard => this;
-
-    public ISndDeferredActions Deferred => this;
-
-    public ISndTemplateAccess Template => this;
-
-    public ISndConsoleAccess ConsoleAccess => this;
-
-    public ISndStateMachineAccess StateMachines => this;
-
-    public ISndSaveOperations Save => this;
-
-    public ISndLifecycleOperations Lifecycle => this;
-
+    public ISndBlackboardAccess Blackboard { get; }
+    public ISndDeferredActions Deferred { get; }
+    public ISndTemplateAccess Template { get; }
+    public ISndConsoleAccess ConsoleAccess { get; }
+    public ISndStateMachineAccess StateMachines { get; }
+    public ISndSaveOperations Save { get; }
+    public ISndLifecycleOperations Lifecycle { get; }
     public ISndFileAccess FileAccess { get; }
-
     public ISndArchiveFileAccess ArchiveFileAccess { get; }
-
-    public IStateMachineContext StateMachineContext => this;
-
-    // ── Internal helpers ──────────────────────────────────────────────
+    public IStateMachineContext StateMachineContext { get; }
 
     internal ProgressRun EnsureProgressRun()
     {
@@ -307,18 +135,9 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
         _progressRun = null;
     }
 
-    private ProgressRun CreateProgressRun(string saveId)
-    {
-        return new ProgressRun(
-            _systemRun.Runtime,
-            new ProgressParameters(saveId),
-            this,
-            this);
-    }
-
     internal void EnqueueSystemDeferred(Action action) => Runtime.EnqueueSystemDeferred(action);
 
-    private void EnqueueTrackedSystemDeferred(Action action)
+    internal void EnqueueTrackedSystemDeferred(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
         Interlocked.Increment(ref _pendingPersistenceRequests);
@@ -335,7 +154,7 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
         });
     }
 
-    private ProgressRun LoadOrContinueStrict(string saveId)
+    internal ProgressRun LoadOrContinueStrict(string saveId)
     {
         return RunWorkflow(() =>
         {
@@ -363,7 +182,7 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
         });
     }
 
-    private void ExecuteLoadInitialSaveNow()
+    internal void ExecuteLoadInitialSaveNow()
     {
         RunWorkflow(() =>
         {
@@ -379,18 +198,14 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
             SetProgressRun(progressRun);
             progressRun.LoadFromPayload(payload);
-            SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
+            _systemRun.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
         });
     }
 
-    private void ExecuteLoadMainMenuEntrySaveNow()
+    internal void ExecuteLoadMainMenuEntrySaveNow()
     {
         RunWorkflow(() =>
         {
-            // 确保 current/ 目录干净：上次非正常退出可能遗留僵尸存档，
-            // 若后续 LoadAndMountForeground 从残留数据恢复实体，则 entry.json
-            // 的 Spawn 会因重名冲突抛异常。
-            // 此清理与 ExecuteLoadInitialSaveNow 中的模式一致。
             StorageService.DeleteCurrentDirectory();
 
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
@@ -404,6 +219,15 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
                 DataSourceIo,
                 Runtime.Logger);
         });
+    }
+
+    private ProgressRun CreateProgressRun(string saveId)
+    {
+        return new ProgressRun(
+            _systemRun.Runtime,
+            new ProgressParameters(saveId),
+            StateMachineContext,
+            this);
     }
 
     private void RunWorkflow(Action body)
@@ -435,6 +259,4 @@ public sealed class SndContext : ISndContext, ISndBlackboardAccess, ISndDeferred
             EndWorkflow();
         }
     }
-
-    // ── End of file ──
 }

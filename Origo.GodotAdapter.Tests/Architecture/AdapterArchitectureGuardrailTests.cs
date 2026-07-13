@@ -30,11 +30,11 @@ public class AdapterArchitectureGuardrailTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
-        ISndBlackboardAccess bb = ctx;
+        var bb = ctx.Blackboard;
         bb.SystemBlackboard.SetValue("k", 1);
         Assert.Equal(1, bb.SystemBlackboard.TryGet<int>("k").value);
 
-        ISndDeferredActions def = ctx;
+        var def = ctx.Deferred;
         var ran = false;
         def.EnqueueBusinessDeferred(() => ran = true);
         def.FlushDeferredActionsForCurrentFrame();
@@ -42,13 +42,13 @@ public class AdapterArchitectureGuardrailTests
 
         Assert.NotNull(ctx.Runtime.SessionManager);
 
-        ISndSaveOperations save = ctx;
+        var save = ctx.Save;
         Assert.Empty(save.ListSaves());
 
-        ISndLifecycleOperations lifecycle = ctx;
+        var lifecycle = ctx.Lifecycle;
         Assert.False(lifecycle.HasContinueData());
 
-        ISndConsoleAccess console = ctx;
+        var console = ctx.ConsoleAccess;
         Assert.False(console.TrySubmitConsoleCommand(""));
 
         ISndFileAccess fileAccess = ctx.FileAccess;

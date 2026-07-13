@@ -127,27 +127,27 @@ public class CoreArchitectureGuardrailTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
-        ISndBlackboardAccess bb = ctx;
+        var bb = ctx.Blackboard;
         bb.SystemBlackboard.SetValue("consumer_key", "consumer_value");
         var (found, val) = bb.SystemBlackboard.TryGet<string>("consumer_key");
         Assert.True(found);
         Assert.Equal("consumer_value", val);
 
-        ISndDeferredActions def = ctx;
+        var def = ctx.Deferred;
         var executed = false;
         def.EnqueueBusinessDeferred(() => executed = true);
         def.FlushDeferredActionsForCurrentFrame();
         Assert.True(executed);
 
-        ISndSaveOperations save = ctx;
+        var save = ctx.Save;
         Assert.Empty(save.ListSaves());
 
-        ISndLifecycleOperations lifecycle = ctx;
+        var lifecycle = ctx.Lifecycle;
         Assert.False(lifecycle.HasContinueData());
 
         Assert.NotNull(ctx.Runtime.SessionManager);
 
-        ISndConsoleAccess console = ctx;
+        var console = ctx.ConsoleAccess;
         Assert.False(console.TrySubmitConsoleCommand(""));
 
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
@@ -221,11 +221,11 @@ public class CoreArchitectureGuardrailTests
         ctx.Save.RequestSaveGameAuto();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        ISndSaveOperations saveOps = ctx;
+        var saveOps = ctx.Save;
         var saves = saveOps.ListSaves();
         Assert.NotEmpty(saves);
 
-        ISndLifecycleOperations lifecycleOps = ctx;
+        var lifecycleOps = ctx.Lifecycle;
         Assert.True(lifecycleOps.HasContinueData());
     }
 
@@ -296,5 +296,23 @@ public class CoreArchitectureGuardrailTests
         Assert.True(type.IsPublic || type.IsNestedPublic,
             "ConsoleCommandHandlerBase must be public so external projects " +
             "(such as origo.demo) can derive custom console command handlers.");
+    }
+
+    [Fact]
+    public void SndContext_ShouldNotImplementRoleInterfaces()
+    {
+        var type = typeof(SndContext);
+        var interfaces = type.GetInterfaces();
+
+        Assert.DoesNotContain(typeof(ISndBlackboardAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndDeferredActions), interfaces);
+        Assert.DoesNotContain(typeof(ISndTemplateAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndConsoleAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndStateMachineAccess), interfaces);
+        Assert.DoesNotContain(typeof(ISndSaveOperations), interfaces);
+        Assert.DoesNotContain(typeof(ISndLifecycleOperations), interfaces);
+        Assert.DoesNotContain(typeof(IStateMachineContext), interfaces);
+
+        Assert.Contains(typeof(ISndContext), interfaces);
     }
 }

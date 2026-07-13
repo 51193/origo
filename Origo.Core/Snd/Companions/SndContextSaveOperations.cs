@@ -1,0 +1,87 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using Origo.Core.Abstractions.Snd;
+using Origo.Core.Save;
+using Origo.Core.Save.Meta;
+using Origo.Core.Save.Storage;
+
+namespace Origo.Core.Snd.Companions;
+
+internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOperations
+{
+    public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)
+    {
+        ArgumentNullException.ThrowIfNull(contributor);
+        owner._saveMetaContributors.Add(contributor);
+    }
+
+    public void RegisterSaveMetaContributor(
+        Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
+    {
+        ArgumentNullException.ThrowIfNull(contribute);
+        owner._saveMetaContributors.Add(new DelegateSaveMetaContributor(contribute));
+    }
+
+    public IReadOnlyList<string> ListSaves() => owner.StorageService.EnumerateSaveIds();
+
+    public void RequestLoadGame(string saveId)
+    {
+        if (string.IsNullOrWhiteSpace(saveId))
+            throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
+
+        owner.EnqueueTrackedSystemDeferred(() =>
+            owner.SetProgressRun(owner.LoadOrContinueStrict(saveId)));
+    }
+
+    public void RequestSaveGame(string newSaveId)
+    {
+        if (string.IsNullOrWhiteSpace(newSaveId))
+            throw new ArgumentException("New save id cannot be null or whitespace.", nameof(newSaveId));
+
+        owner.EnqueueTrackedSystemDeferred(() =>
+        {
+            owner.BeginWorkflow();
+            try
+            {
+                var progressRun = owner.EnsureProgressRun();
+                var metaContext = progressRun.BuildSaveMetaContext(newSaveId);
+                var mergedMeta = SaveMetaMerger.Merge(
+                    owner._saveMetaContributors, in metaContext, null);
+                var payload = progressRun.BuildSavePayload(newSaveId, mergedMeta);
+                owner.StorageService.WriteSavePayloadToCurrentThenSnapshot(
+                    payload, newSaveId, owner.Runtime.Logger);
+                progressRun.SetSaveId(newSaveId);
+                owner._systemRun.SetActiveSaveSlot(newSaveId);
+            }
+            finally
+            {
+                owner.EndWorkflow();
+            }
+        });
+    }
+
+    public string RequestSaveGameAuto(string? newSaveId = null)
+    {
+        var effectiveNewSaveId = string.IsNullOrWhiteSpace(newSaveId)
+            ? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                .ToString(CultureInfo.InvariantCulture)
+            : newSaveId;
+        RequestSaveGame(effectiveNewSaveId);
+        return effectiveNewSaveId;
+    }
+
+    public void SetContinueTarget(string saveId) =>
+        owner._systemRun.SetActiveSaveSlot(saveId);
+
+    public void RequestSwitchForegroundLevel(string newLevelId)
+    {
+        if (string.IsNullOrWhiteSpace(newLevelId))
+            throw new ArgumentException(
+                "New level id cannot be null or whitespace.", nameof(newLevelId));
+        owner.EnqueueSystemDeferred(() =>
+        {
+            owner.EnsureProgressRun().SwitchForeground(newLevelId);
+        });
+    }
+}

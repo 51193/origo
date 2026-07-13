@@ -29,7 +29,7 @@ public class StackStateMachineTests
     public void Push_ValidValue_SetsPeek()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         sm.Push("state_a");
 
@@ -42,7 +42,7 @@ public class StackStateMachineTests
     public void Push_MultipleValues_PeekReturnsLast()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         sm.Push("a");
         sm.Push("b");
@@ -57,7 +57,7 @@ public class StackStateMachineTests
     public void Push_NullValue_Throws()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         Assert.Throws<ArgumentException>(() => sm.Push(null!));
     }
@@ -66,7 +66,7 @@ public class StackStateMachineTests
     public void Push_EmptyString_Throws()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         Assert.Throws<ArgumentException>(() => sm.Push(""));
     }
@@ -75,7 +75,7 @@ public class StackStateMachineTests
     public void Push_WhitespaceString_Throws()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         Assert.Throws<ArgumentException>(() => sm.Push("   "));
     }
@@ -84,7 +84,7 @@ public class StackStateMachineTests
     public void TryPopRuntime_EmptyStack_ReturnsFalse()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         Assert.False(sm.TryPopRuntime(out _));
     }
@@ -93,7 +93,7 @@ public class StackStateMachineTests
     public void TryPopOnQuit_EmptyStack_ReturnsFalse()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         Assert.False(sm.TryPopOnQuit(out _));
     }
@@ -102,7 +102,7 @@ public class StackStateMachineTests
     public void TryPopRuntime_AfterPush_ReturnsTrueAndPopsTop()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         sm.Push("a");
         sm.Push("b");
@@ -117,7 +117,7 @@ public class StackStateMachineTests
     public void Peek_EmptyStack_ReturnsNull()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         var (found, top) = sm.Peek();
         Assert.False(found);
@@ -127,7 +127,7 @@ public class StackStateMachineTests
     public void Push_AfterDispose_Throws()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
         sm.Dispose();
 
         var ex = Assert.Throws<ObjectDisposedException>(() => sm.Push("a"));
@@ -138,7 +138,7 @@ public class StackStateMachineTests
     public void TryPopRuntime_AfterDispose_Throws()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
         sm.Dispose();
 
         var ex = Assert.Throws<ObjectDisposedException>(() => sm.TryPopRuntime(out _));
@@ -149,7 +149,7 @@ public class StackStateMachineTests
     public void Peek_AfterDispose_Throws()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
         sm.Dispose();
 
         var ex = Assert.Throws<ObjectDisposedException>(() => sm.Peek());
@@ -160,7 +160,7 @@ public class StackStateMachineTests
     public void Dispose_IsIdempotent()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
         sm.Dispose();
 
         var ex = Record.Exception(() => sm.Dispose());
@@ -171,7 +171,7 @@ public class StackStateMachineTests
     public void RestoreStackWithoutHooks_NullList_Throws()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         Assert.Throws<ArgumentNullException>(() => sm.RestoreStackWithoutHooks(null!));
     }
@@ -180,7 +180,7 @@ public class StackStateMachineTests
     public void RestoreStackWithoutHooks_EmptyList_ResultsInEmptyStack()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         sm.RestoreStackWithoutHooks([]);
 
@@ -192,7 +192,7 @@ public class StackStateMachineTests
     public void RestoreStackWithoutHooks_ThenPeek_ReturnsTop()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         sm.RestoreStackWithoutHooks(["x", "y"]);
 
@@ -205,7 +205,7 @@ public class StackStateMachineTests
     public void PushPopPush_RoundTrip_PreservesStackState()
     {
         var (pool, ctx) = CreatePoolAndContext();
-        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx);
+        using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
         sm.Push("a");
         sm.Push("b");
