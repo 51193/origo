@@ -120,7 +120,7 @@ InvokeStrategy 'traversability.is_passable' on 'TraversabilityManager': true
 
 ```
 > tree_debug Player
-实体 'Player' 的节点树：
+Node tree of entity 'Player':
   [GodotSndEntity] "Player"
     [Sprite3D] "CharacterSprite"
     [CollisionShape3D] "Collider"
@@ -139,7 +139,7 @@ player / WeaponMesh [3D] screen=(1020, 420) depth=5.5
 enemy_01 / Sprite3D [3D] screen=(300, 350) depth=12.1
 main_ui / MainMenu [UI] screen=(100, 50)
 
-4 个节点 (3 3D, 1 UI) 来自 3 个实体可见。
+4 nodes (3 3D, 1 UI) visible from 3 entities.
 ```
 
 无需参数。自动发现当前活跃 `Camera3D`，遍历所有 Godot 实体的子节点：
