@@ -97,33 +97,27 @@ public sealed class OrigoConsole
                 continue;
             }
 
-            if (invocation is null)
-            {
-                _logger.Log(LogLevel.Warning, nameof(OrigoConsole),
-                    "Internal error: invocation was null after a successful parse.");
-                _output.Publish("Internal error: command invocation was null after a successful parse.");
-                continue;
-            }
+            var inv = invocation!;
 
-            var posArgs = string.Join(", ", invocation.PositionalArgs);
+            var posArgs = string.Join(", ", inv.PositionalArgs);
             var namedArgs = string.Join(", ",
-                invocation.NamedArgs.Select(kv => $"{kv.Key}={kv.Value}"));
+                inv.NamedArgs.Select(kv => $"{kv.Key}={kv.Value}"));
             _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
-                $"Executing command: \"{invocation.Command}\" (positional: [{posArgs}]; named: {{{namedArgs}}})");
+                $"Executing command: \"{inv.Command}\" (positional: [{posArgs}]; named: {{{namedArgs}}})");
 
-            if (_router.TryExecute(invocation, _output, out var execError))
+            if (_router.TryExecute(inv, _output, out var execError))
             {
                 _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
                     new LogMessageBuilder()
                         .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
-                        .Build($"Command \"{invocation.Command}\" executed successfully."));
+                        .Build($"Command \"{inv.Command}\" executed successfully."));
             }
             else
             {
                 _logger.Log(LogLevel.Debug, nameof(OrigoConsole),
                     new LogMessageBuilder()
                         .SetElapsedMs(cmdWatch.Elapsed.TotalMilliseconds)
-                        .Build($"Command \"{invocation.Command}\" failed: {execError}"));
+                        .Build($"Command \"{inv.Command}\" failed: {execError}"));
                 if (!string.IsNullOrEmpty(execError))
                     _output.Publish(execError);
             }

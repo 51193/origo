@@ -50,7 +50,7 @@ internal sealed class TestSndSceneHost : ISndSceneHost
             throw new InvalidOperationException($"No entity with name '{name}'.");
         if (entity.IsPendingKill)
             throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
-        ((dynamic)entity).IsPendingKill = true;
+        ((InMemorySndEntity)entity).IsPendingKill = true;
     }
 
     public void AddEntity(ISndEntity entity) => _entities[entity.Name] = entity;

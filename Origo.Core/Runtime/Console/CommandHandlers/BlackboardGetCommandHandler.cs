@@ -8,7 +8,7 @@ namespace Origo.Core.Runtime.Console.CommandHandlers;
 /// <summary>
 ///     <c>bb_get</c> 命令：读取黑板中指定键的值。
 ///     用法：<c>bb_get &lt;layer&gt; &lt;key&gt;</c>
-///     layer: system | progress | session
+///     layer: system
 /// </summary>
 internal sealed class BlackboardGetCommandHandler : ConsoleCommandHandlerBase
 {

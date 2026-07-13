@@ -15,6 +15,7 @@
         <!-- Coverlet: enforce Origo.Core line coverage in CI and local test runs for this project. -->
         <CollectCoverage>true</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <Include>[Origo.Core]*</Include>
         <!-- Reflection-heavy bootstrap: excluded from line % gate; covered indirectly via LoadAndSpawnFromFile / guard tests. -->
         <ExcludeByFile>**/Runtime/OrigoAutoInitializer.cs,**/Addons/FastNoiseLite/FastNoiseLite.cs,**/*.g.cs</ExcludeByFile>
         <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
