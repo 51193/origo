@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
@@ -73,9 +74,9 @@ public class AutoInitializerGuardTests
     private sealed class StatelessAutoInitStrategy : LifecycleStrategyBase
     {
         public const string IndexConst = "auto.init.stateless.local";
-        private static int _counter;
+        private static readonly AsyncLocal<int> _counter = new();
 
-        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _counter++;
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _counter.Value++;
     }
 
     [StrategyIndex(IndexConst)]

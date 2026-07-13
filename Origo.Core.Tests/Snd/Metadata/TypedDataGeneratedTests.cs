@@ -291,18 +291,18 @@ public class TypedDataGeneratedTests
     public void ObjectConverterFallback_ToObject_IsInvoked()
     {
         TypedData.RegisterKind(202, typeof(DateTime));
-        var now = DateTime.UtcNow;
+        var now = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
         var td = new TypedData(202, 0, now);
 
         var obj = TypedDataObjectConverter.ToObject(td);
-        Assert.Equal(now, (DateTime)obj!, TimeSpan.FromSeconds(1));
+        Assert.Equal(now, (DateTime)obj!);
     }
 
     [Fact]
     public void ObjectConverterFallback_FromObject_IsInvoked()
     {
         TypedData.RegisterKind(203, typeof(Guid));
-        var guid = Guid.NewGuid();
+        var guid = new Guid("0f9e8d7c-6b5a-4938-8271-605f4e3d2c1b");
 
         var (inlineBits, refValue) = TypedDataObjectConverter.FromObject(203, guid);
         Assert.Equal(0L, inlineBits);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -14,7 +15,9 @@ public class ConsoleBridgeServerLifecycleTests
     public void Start_Stop_NoExceptions()
     {
         var (server, _) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
-        server.Dispose();
+        Assert.True(server.ActualPort > 0, "server should bind to a port after Start");
+        var ex = Record.Exception(() => server.Dispose());
+        Assert.Null(ex);
     }
 
     [Fact]
@@ -74,7 +77,7 @@ public class ConsoleBridgeServerLifecycleTests
     }
 
     [Fact]
-    public void SecondConnection_IsRejected()
+    public void SecondConnection_WhileFirstActive_FirstClientStillWorks()
     {
         var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
         var port = server.ActualPort;
@@ -87,53 +90,58 @@ public class ConsoleBridgeServerLifecycleTests
         var ok1 = ConsoleBridgeTestInfrastructure.SpinUntil(() => input.TryDequeueCommand(out var l) && l == "from_first", ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
         Assert.True(ok1, "'from_first' should arrive from first client");
 
-        try
+        // Single-connection model: a second connection is accepted into the OS
+        // backlog but not serviced while the first client holds the slot.
+        using (var client2 = new TcpClient())
         {
-            using var client2 = new TcpClient();
             client2.Connect(IPAddress.Loopback, port);
             using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
             writer2.WriteLine("from_second");
         }
-        catch (IOException)
-        {
-        }
 
         writer1.WriteLine("still_works");
         var ok2 = ConsoleBridgeTestInfrastructure.SpinUntil(() => input.TryDequeueCommand(out var l) && l == "still_works", ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
-        Assert.True(ok2, "'still_works' should arrive - client1 still functional after second rejected");
+        Assert.True(ok2, "'still_works' should arrive - first client stays functional while a second connection waits");
 
         server.Dispose();
     }
 
     [Fact]
-    public void SecondConnection_CommandDoesNotArrive()
+    public void SecondConnection_WhileFirstActive_CommandNotServiced()
     {
         var (server, (input, _)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
         var port = server.ActualPort;
 
         using var client1 = new TcpClient();
         client1.Connect(IPAddress.Loopback, port);
-        var writer1 = new StreamWriter(client1.GetStream()) { AutoFlush = true };
+        using var writer1 = new StreamWriter(client1.GetStream()) { AutoFlush = true };
 
         writer1.WriteLine("from_first");
-        ConsoleBridgeTestInfrastructure.SpinUntil(() => input.TryDequeueCommand(out var l) && l == "from_first", ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
 
-        try
+        using (var client2 = new TcpClient())
         {
-            using var client2 = new TcpClient();
             client2.Connect(IPAddress.Loopback, port);
             using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
             writer2.WriteLine("from_second");
         }
-        catch (IOException)
-        {
-        }
 
-        while (input.TryDequeueCommand(out _))
-        {
-        }
+        // Sentinel is written on the first (serviced) connection after the second
+        // connection's command. Once the sentinel arrives, the server has processed
+        // the first client's stream past this point, so a serviced 'from_second'
+        // would already have been enqueued.
+        writer1.WriteLine("sentinel");
 
-        Assert.False(input.TryDequeueCommand(out _));
+        var received = new List<string>();
+        var sawSentinel = ConsoleBridgeTestInfrastructure.SpinUntil(() =>
+        {
+            while (input.TryDequeueCommand(out var l))
+                received.Add(l);
+            return received.Contains("sentinel");
+        }, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+
+        Assert.True(sawSentinel, "sentinel from first client should be serviced");
+        Assert.Contains("from_first", received);
+        Assert.DoesNotContain("from_second", received);
 
         server.Dispose();
     }
@@ -180,7 +188,8 @@ public class ConsoleBridgeServerLifecycleTests
 
         writer.WriteLine("third");
 
-        ConsoleBridgeTestInfrastructure.SpinUntil(() => input.TryDequeueCommand(out var l) && l == "third", ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        var ok = ConsoleBridgeTestInfrastructure.SpinUntil(() => input.TryDequeueCommand(out var l) && l == "third", ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        Assert.True(ok, "'third' should arrive after two disconnect/reconnect cycles");
 
         server.Dispose();
     }
@@ -200,7 +209,8 @@ public class ConsoleBridgeServerLifecycleTests
         using var writer = new StreamWriter(client2.GetStream()) { AutoFlush = true };
         writer.WriteLine("after_immediate");
 
-        ConsoleBridgeTestInfrastructure.SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_immediate", ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        var ok = ConsoleBridgeTestInfrastructure.SpinUntil(() => input.TryDequeueCommand(out var l) && l == "after_immediate", ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        Assert.True(ok, "'after_immediate' should arrive after immediate disconnect/reconnect");
 
         server.Dispose();
     }

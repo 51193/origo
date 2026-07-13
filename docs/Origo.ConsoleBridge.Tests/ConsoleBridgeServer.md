@@ -60,8 +60,8 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `SecondConnection_IsRejected` | 第二个连接被拒绝，第一个连接不受影响 | ConsoleBridge: 单连接模式 |
-| `SecondConnection_CommandDoesNotArrive` | 第二个连接的命令不被处理 | ConsoleBridge |
+| `SecondConnection_WhileFirstActive_FirstClientStillWorks` | 第一个连接活跃时第二个连接进入 backlog 等待，第一个连接不受影响 | ConsoleBridge: 单连接模式 |
+| `SecondConnection_WhileFirstActive_CommandNotServiced` | 第一个连接活跃时第二个连接的命令不被处理（以 sentinel 顺序确定性验证） | ConsoleBridge |
 | `ClientDisconnect_ServerAcceptsNewConnection` | 断开后新连接可建立 | ConsoleBridge |
 | `ClientDisconnect_ThenThirdAccepted` | 多次断开→重连都正常 | ConsoleBridge |
 | `ClientImmediateDisconnect_ServerRecovers` | 立即断开后服务器恢复正常 | ConsoleBridge |

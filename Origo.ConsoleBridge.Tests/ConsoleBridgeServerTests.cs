@@ -402,7 +402,8 @@ public class ConsoleBridgeServerTests
         var output = new ConsoleOutputChannel();
         var server = new ConsoleBridgeServer(input, output);
         server.Start();
-        server.Start();
+        var ex = Record.Exception(() => server.Start());
+        Assert.Null(ex);
         server.Dispose();
     }
 
