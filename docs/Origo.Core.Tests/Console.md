@@ -129,14 +129,14 @@
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `FindEntityCommand_NotFound_ReportsNotFound` | find_entity 查询不存在实体 | 输出含 "not found" |
-| `FindEntityCommand_MissingArg_ReportsUsage` | find_entity 缺参数 | 输出含 "参数数量不合法" |
+| `FindEntityCommand_MissingArg_ReportsUsage` | find_entity 缺参数 | 输出含 "Invalid argument count." |
 | `BlackboardGet_MissingKey_ReportsNotFound` | bb_get 查询不存在键 | 输出含 "not found" |
 | `BlackboardSet_InvalidLayer_ReportsError` | bb_set 非法层名 | 输出含 "Unknown" |
-| `BlackboardGet_MissingArgs_ReportsUsage` | bb_get 缺参数 | 输出含 "参数数量不合法" |
-| `BlackboardSet_MissingArgs_ReportsUsage` | bb_set 缺参数 | 输出含 "参数数量不合法" |
-| `BlackboardKeys_MissingArgs_ReportsUsage` | bb_keys 缺参数 | 输出含 "参数数量不合法" |
-| `ConsoleCommandHandlerBase_TooFewArgs_ReturnsErrorWithHelpText` | 位置参数少于 Min | 返回 false + error 含 "参数数量不合法" 与 HelpText |
-| `ConsoleCommandHandlerBase_TooManyArgs_ReturnsErrorWithHelpText` | 位置参数多于 Max | 返回 false + error 含 "参数数量不合法" |
+| `BlackboardGet_MissingArgs_ReportsUsage` | bb_get 缺参数 | 输出含 "Invalid argument count." |
+| `BlackboardSet_MissingArgs_ReportsUsage` | bb_set 缺参数 | 输出含 "Invalid argument count." |
+| `BlackboardKeys_MissingArgs_ReportsUsage` | bb_keys 缺参数 | 输出含 "Invalid argument count." |
+| `ConsoleCommandHandlerBase_TooFewArgs_ReturnsErrorWithHelpText` | 位置参数少于 Min | 返回 false + error 含 "Invalid argument count." 与 HelpText |
+| `ConsoleCommandHandlerBase_TooManyArgs_ReturnsErrorWithHelpText` | 位置参数多于 Max | 返回 false + error 含 "Invalid argument count." |
 | `SpawnCommand_NamedMissingTemplate_ReportsError` | spawn 命名参数缺 template | 输出含 "template" |
 | `SpawnCommand_PositionalWrongCount_ReportsUsage` | spawn 位置参数数量错误 | 输出含 "Usage" |
 | `SpawnCommand_PositionalSingleArg_ReportsUsage` | spawn 仅单个位置参数 | 输出含 "Usage" |
@@ -256,8 +256,8 @@
 | `EntitySetData_EntityNotFound_ReportsError` | entity_set_data 实体不存在 | 输出含 "not found" |
 | `EntityGetData_EntityNotFound_ReportsError` | entity_get_data 实体不存在 | 输出含 "not found" |
 | `EntityGetData_NotFound_ReportsNotFound` | entity_get_data 键不存在 | 输出含 "not found on entity" |
-| `EntityGetData_MissingArgs_ReportsUsage` | entity_get_data 缺参数 | 输出含 "参数数量不合法" |
-| `EntitySetData_MissingArgs_ReportsUsage` | entity_set_data 缺参数 | 输出含 "参数数量不合法" |
+| `EntityGetData_MissingArgs_ReportsUsage` | entity_get_data 缺参数 | 输出含 "Invalid argument count." |
+| `EntitySetData_MissingArgs_ReportsUsage` | entity_set_data 缺参数 | 输出含 "Invalid argument count." |
 
 ## InvokeStrategyCommandHandlerTests 测试详情
 

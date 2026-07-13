@@ -20,7 +20,7 @@ internal sealed class InvokeStrategyCommandHandler : ConsoleCommandHandlerBase
     public override string Name => "invoke_strategy";
 
     public override string HelpText =>
-        "invoke_strategy <entity> <strategy_index> [input] — 调用实体的主动策略。input 可选。";
+        "invoke_strategy <entity> <strategy_index> [input] — invoke an entity's active strategy. input is optional.";
 
     public override int MinPositionalArgs => 2;
     public override int MaxPositionalArgs => 3;

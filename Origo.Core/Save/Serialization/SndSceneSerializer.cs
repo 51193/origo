@@ -28,7 +28,7 @@ internal sealed class SndSceneSerializer
         ArgumentNullException.ThrowIfNull(serializedNode);
 
         if (serializedNode.Kind != DataSourceNodeKind.Array)
-            throw new InvalidOperationException("SND 场景序列化数据必须为数组格式。");
+            throw new InvalidOperationException("SND scene serialization data must be in array format.");
 
         var metaList = _world.Mappings.ResolveMetaListFromJsonArray(
             serializedNode,

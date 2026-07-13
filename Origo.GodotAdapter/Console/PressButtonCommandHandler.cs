@@ -11,7 +11,7 @@ internal sealed class PressButtonCommandHandler(OrigoRuntime runtime) : CommandH
 {
     public override string Name => "press_button";
 
-    public override string HelpText => "press_button <entity> <path> — 按下指定实体下某路径的 Button 节点";
+    public override string HelpText => "press_button <entity> <path> — press the Button node at the given path under the entity.";
 
     public override int MinPositionalArgs => 2;
 

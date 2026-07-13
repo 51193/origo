@@ -12,8 +12,8 @@ public class CameraViewCommandHandlerTests
         var handler = new CameraViewCommandHandler(runtime);
 
         Assert.Equal("camera_view", handler.Name);
-        Assert.Contains("屏幕坐标", handler.HelpText);
-        Assert.Contains("深度", handler.HelpText);
+        Assert.Contains("screen coordinates", handler.HelpText);
+        Assert.Contains("depth", handler.HelpText);
         Assert.Equal(0, handler.MinPositionalArgs);
         Assert.Equal(0, handler.MaxPositionalArgs);
     }

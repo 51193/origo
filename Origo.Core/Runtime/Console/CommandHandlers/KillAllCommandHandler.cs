@@ -16,7 +16,7 @@ internal sealed class KillAllCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "kill_all";
-    public override string HelpText => "kill_all — 立即标记当前场景中所有 SND 实体为待销毁（帧末统一执行）。";
+    public override string HelpText => "kill_all — mark all SND entities in the current scene for kill (executed at end of frame).";
     public override int MinPositionalArgs => 0;
     public override int MaxPositionalArgs => 0;
 

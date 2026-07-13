@@ -18,7 +18,7 @@ internal sealed class GetEntityDataCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "entity_get_data";
-    public override string HelpText => "entity_get_data <entity> <key> — 读取实体数据的值及类型。";
+    public override string HelpText => "entity_get_data <entity> <key> — read an entity data value and its type.";
     public override int MinPositionalArgs => 2;
     public override int MaxPositionalArgs => 2;
 

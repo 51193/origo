@@ -17,7 +17,7 @@ internal sealed class HelpCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "help";
-    public override string HelpText => "help — 列出所有可用命令及其帮助信息。";
+    public override string HelpText => "help — list all available commands and their help text.";
     public override int MinPositionalArgs => 0;
     public override int MaxPositionalArgs => 0;
 

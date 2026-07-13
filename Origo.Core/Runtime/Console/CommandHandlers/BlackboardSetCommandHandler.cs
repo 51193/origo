@@ -21,7 +21,7 @@ internal sealed class BlackboardSetCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "bb_set";
-    public override string HelpText => "bb_set <layer> <key> <value> — 向黑板写入值（自动推断类型）。layer: system";
+    public override string HelpText => "bb_set <layer> <key> <value> — write a value to the blackboard (type inferred automatically). layer: system";
     public override int MinPositionalArgs => 3;
     public override int MaxPositionalArgs => 3;
 

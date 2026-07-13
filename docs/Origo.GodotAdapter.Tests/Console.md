@@ -35,8 +35,8 @@
 | `Constructor_NullRuntime_Throws` | 构造时 runtime 为 null | ArgumentNullException |
 | `TryExecute_NullInvocation_Throws` | invocation 为 null | ArgumentNullException |
 | `TryExecute_NullOutputChannel_Throws` | outputChannel 为 null | ArgumentNullException |
-| `TryExecute_TooFewArgs_ReturnsErrorWithHelpText` | 参数数量少于 MinPositionalArgs | 返回 false，error 含 "参数数量不合法" 与 HelpText |
-| `TryExecute_TooManyArgs_ReturnsErrorWithHelpText` | 参数数量超过 MaxPositionalArgs | 返回 false，error 含 "参数数量不合法" |
+| `TryExecute_TooFewArgs_ReturnsErrorWithHelpText` | 参数数量少于 MinPositionalArgs | 返回 false，error 含 "Invalid argument count." 与 HelpText |
+| `TryExecute_TooManyArgs_ReturnsErrorWithHelpText` | 参数数量超过 MaxPositionalArgs | 返回 false，error 含 "Invalid argument count." |
 
 ## PressButtonCommandHandlerTests 测试详情
 
@@ -50,7 +50,7 @@
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `TryExecute_TooFewArgs_ReturnsError` | 仅提供 1 个参数（需 2 个） | 返回 false，error 含 "参数数量不合法" |
+| `TryExecute_TooFewArgs_ReturnsError` | 仅提供 1 个参数（需 2 个） | 返回 false，error 含 "Invalid argument count." |
 | `TryExecute_EntityNotFound_ReturnsError` | 实体名不存在 | 返回 false，error 含 "Entity 'NonExistent' not found" |
 | `TryExecute_EntityNotGodot_ReturnsError` | 实体存在但非 Godot 实体 | 返回 false，error 含 "is not a Godot entity" |
 
@@ -60,7 +60,7 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `Properties_HaveExpectedValues` | Name="camera_view"，HelpText 含 "屏幕坐标"/"深度"，Min/Max 均为 0 | console-commands |
+| `Properties_HaveExpectedValues` | Name="camera_view"，HelpText 含 "screen coordinates"/"depth"，Min/Max 均为 0 | console-commands |
 
 ## ProjectionHelperTests 测试详情
 

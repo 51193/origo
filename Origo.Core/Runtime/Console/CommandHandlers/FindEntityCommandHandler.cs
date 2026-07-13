@@ -18,7 +18,7 @@ internal sealed class FindEntityCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "find_entity";
-    public override string HelpText => "find_entity <name> — 按名称查找 SND 实体并显示其节点信息。";
+    public override string HelpText => "find_entity <name> — find an SND entity by name and show its node info.";
     public override int MinPositionalArgs => 1;
     public override int MaxPositionalArgs => 1;
 

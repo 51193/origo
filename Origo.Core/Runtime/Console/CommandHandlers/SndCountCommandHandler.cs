@@ -14,7 +14,7 @@ internal sealed class SndCountCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "snd_count";
-    public override string HelpText => "snd_count — 显示当前 SND 实体数量。";
+    public override string HelpText => "snd_count — show the current SND entity count.";
     public override int MinPositionalArgs => 0;
     public override int MaxPositionalArgs => 0;
 

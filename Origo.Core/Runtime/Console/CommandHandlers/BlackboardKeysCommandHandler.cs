@@ -20,7 +20,7 @@ internal sealed class BlackboardKeysCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "bb_keys";
-    public override string HelpText => "bb_keys <layer> — 列出指定黑板层的全部键。layer: system";
+    public override string HelpText => "bb_keys <layer> — list all keys in the given blackboard layer. layer: system";
     public override int MinPositionalArgs => 1;
     public override int MaxPositionalArgs => 1;
 

@@ -13,7 +13,7 @@ internal sealed class TreeDebugCommandHandler(OrigoRuntime runtime) : CommandHan
 {
     public override string Name => "tree_debug";
 
-    public override string HelpText => "tree_debug <entity> — 打印实体的完整节点树。";
+    public override string HelpText => "tree_debug <entity> — print the full node tree of an entity.";
 
     public override int MinPositionalArgs => 1;
 
@@ -27,18 +27,18 @@ internal sealed class TreeDebugCommandHandler(OrigoRuntime runtime) : CommandHan
         var entity = Runtime.SessionManager.ForegroundSession?.FindByName(entityName);
         if (entity is null)
         {
-            errorMessage = $"实体 '{entityName}' 未找到。";
+            errorMessage = $"Entity '{entityName}' not found.";
             return false;
         }
 
         if (entity is not GodotSndEntity godotEntity)
         {
-            errorMessage = $"实体 '{entityName}' 不是 Godot 实体。";
+            errorMessage = $"Entity '{entityName}' is not a Godot entity.";
             return false;
         }
 
         var sb = new StringBuilder();
-        sb.AppendLine(CultureInfo.InvariantCulture, $"实体 '{entityName}' 的节点树：");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Node tree of entity '{entityName}':");
         PrintTree(godotEntity, sb, 0);
         outputChannel.Publish(sb.ToString().TrimEnd());
 

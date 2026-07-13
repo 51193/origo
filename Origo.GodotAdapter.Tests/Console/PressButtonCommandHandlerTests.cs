@@ -53,7 +53,7 @@ public class PressButtonCommandHandlerTests
 
         Assert.False(ok);
         Assert.NotNull(error);
-        Assert.Contains("参数数量不合法", error);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, error);
     }
 
     [Fact]

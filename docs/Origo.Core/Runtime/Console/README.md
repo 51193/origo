@@ -20,6 +20,7 @@ Origo 的运行时控制台命令系统。提供命令解析（位置参数 + �
 | `ConsoleCommandRouter.cs` | 命令路由：命令名 → IConsoleCommandHandler 注册与查找 |
 | `ConsoleCommandParser.cs` | 命令解析：字符串 → CommandInvocation（位置参数 + 命名参数）|
 | `ConsoleCommandHandlerBase.cs` | 命令处理器基类：Name/HelpText/参数范围校验/执行 |
+| `ConsoleMessages.cs` | 面向用户的控制台消息常量（英文），供生产处理器与测试断言共同引用，避免硬编码字面量。当前含 `InvalidArgumentCount` |
 | `CommandInvocation.cs` | 命令调用模型：CommandName + PositionalArgs + NamedArgs |
 | `IConsoleCommandHandler.cs` | 命令处理器接口：Name + HelpText + TryExecute |
 | `ConsoleInputBuffer.cs` | IConsoleInputSource 实现：线程安全的命令输入队列，支持 Enqueue/TryDequeue/Clear |

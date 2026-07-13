@@ -21,7 +21,7 @@ internal sealed class BlackboardGetCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "bb_get";
-    public override string HelpText => "bb_get <layer> <key> — 读取指定黑板层的键值。layer: system";
+    public override string HelpText => "bb_get <layer> <key> — read a key value from the given blackboard layer. layer: system";
     public override int MinPositionalArgs => 2;
     public override int MaxPositionalArgs => 2;
 

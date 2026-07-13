@@ -12,7 +12,7 @@ internal sealed class CameraViewCommandHandler(OrigoRuntime runtime) : CommandHa
 {
     public override string Name => "camera_view";
 
-    public override string HelpText => "camera_view — 显示当前摄像头视角下所有可见实体节点的屏幕坐标和深度。";
+    public override string HelpText => "camera_view — show screen coordinates and depth of all visible entity nodes under the current camera.";
 
     public override int MinPositionalArgs => 0;
 
@@ -31,7 +31,7 @@ internal sealed class CameraViewCommandHandler(OrigoRuntime runtime) : CommandHa
         var mainLoop = Engine.GetMainLoop();
         if (mainLoop is not SceneTree sceneTree)
         {
-            errorMessage = "无法获取场景树（可能不在运行中的 Godot 引擎内）。";
+            errorMessage = "Cannot access the scene tree (possibly not running inside a Godot engine).";
             return false;
         }
 
@@ -39,14 +39,14 @@ internal sealed class CameraViewCommandHandler(OrigoRuntime runtime) : CommandHa
         var camera = viewport.GetCamera3D();
         if (camera is null)
         {
-            errorMessage = "当前视口没有活跃的 Camera3D。";
+            errorMessage = "The current viewport has no active Camera3D.";
             return false;
         }
 
         var session = Runtime.SessionManager.ForegroundSession;
         if (session is null)
         {
-            errorMessage = "没有 foreground session。";
+            errorMessage = "No foreground session.";
             return false;
         }
 
@@ -78,21 +78,21 @@ internal sealed class CameraViewCommandHandler(OrigoRuntime runtime) : CommandHa
 
         if (entityCount == 0)
         {
-            outputChannel.Publish("当前没有 Godot 实体可供查看。");
+            outputChannel.Publish("No Godot entities available to view.");
             errorMessage = null;
             return true;
         }
 
         if (visibleCount.Total == 0)
         {
-            outputChannel.Publish("当前摄像头视角内没有可见的实体节点。");
+            outputChannel.Publish("No visible entity nodes under the current camera.");
         }
         else
         {
             sb.AppendLine();
             sb.AppendLine(CultureInfo.InvariantCulture,
-                $"{visibleCount.Total} 个节点 ({visibleCount.ThreeD} 3D, {visibleCount.Ui} UI) "
-                + $"来自 {entityCount} 个实体可见。");
+                $"{visibleCount.Total} nodes ({visibleCount.ThreeD} 3D, {visibleCount.Ui} UI) "
+                + $"visible from {entityCount} entities.");
             outputChannel.Publish(sb.ToString().TrimEnd());
         }
 

@@ -208,7 +208,7 @@ public class EntityDataCommandHandlerTests
         runtime.Console!.ProcessPending();
 
         Assert.Single(messages);
-        Assert.Contains("参数数量不合法", messages[0]);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, messages[0]);
     }
 
     [Fact]
@@ -220,6 +220,6 @@ public class EntityDataCommandHandlerTests
         runtime.Console!.ProcessPending();
 
         Assert.Single(messages);
-        Assert.Contains("参数数量不合法", messages[0]);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, messages[0]);
     }
 }

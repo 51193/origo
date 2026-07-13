@@ -18,7 +18,7 @@ internal sealed class SetEntityDataCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "entity_set_data";
-    public override string HelpText => "entity_set_data <entity> <key> <value> — 设置实体数据（自动推断类型，保留已有键的类型）。";
+    public override string HelpText => "entity_set_data <entity> <key> <value> — set entity data (type inferred automatically; existing keys keep their type).";
     public override int MinPositionalArgs => 3;
     public override int MaxPositionalArgs => 3;
 

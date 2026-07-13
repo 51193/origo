@@ -16,7 +16,7 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
     }
 
     public override string Name => "spawn";
-    public override string HelpText => "spawn <name> <template> — 按模板生成 SND 实体。支持位置参数或命名参数 name=... template=...";
+    public override string HelpText => "spawn <name> <template> — spawn an SND entity from a template. Accepts positional or named arguments name=... template=...";
     public override int MinPositionalArgs => 0;
     public override int MaxPositionalArgs => 2;
 

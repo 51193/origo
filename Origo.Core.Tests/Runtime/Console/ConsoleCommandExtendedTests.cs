@@ -67,7 +67,7 @@ public class ConsoleCommandExtendedTests
         runtime.Console!.ProcessPending();
 
         Assert.Single(messages);
-        Assert.Contains("参数数量不合法", messages[0]);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, messages[0]);
     }
 
     // ── request_clear_entities ──
@@ -195,7 +195,7 @@ public class ConsoleCommandExtendedTests
         input.Enqueue("bb_get");
         runtime.Console!.ProcessPending();
         Assert.Single(messages);
-        Assert.Contains("参数数量不合法", messages[0]);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, messages[0]);
     }
 
     [Fact]
@@ -206,7 +206,7 @@ public class ConsoleCommandExtendedTests
         input.Enqueue("bb_set system");
         runtime.Console!.ProcessPending();
         Assert.Single(messages);
-        Assert.Contains("参数数量不合法", messages[0]);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, messages[0]);
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public class ConsoleCommandExtendedTests
         input.Enqueue("bb_keys");
         runtime.Console!.ProcessPending();
         Assert.Single(messages);
-        Assert.Contains("参数数量不合法", messages[0]);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, messages[0]);
     }
 
     // ── RegisterHandler ──
@@ -276,7 +276,7 @@ public class ConsoleCommandExtendedTests
 
         Assert.False(result);
         Assert.NotNull(error);
-        Assert.Contains("参数数量不合法", error);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, error);
         Assert.Contains(handler.HelpText, error);
     }
 
@@ -295,7 +295,7 @@ public class ConsoleCommandExtendedTests
 
         Assert.False(result);
         Assert.NotNull(error);
-        Assert.Contains("参数数量不合法", error);
+        Assert.Contains(ConsoleMessages.InvalidArgumentCount, error);
     }
 
     [Fact]

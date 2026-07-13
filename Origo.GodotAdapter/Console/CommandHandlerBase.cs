@@ -29,7 +29,7 @@ public abstract class CommandHandlerBase : IConsoleCommandHandler
         var count = invocation.PositionalArgs.Count;
         if (count < MinPositionalArgs || (MaxPositionalArgs >= 0 && count > MaxPositionalArgs))
         {
-            errorMessage = $"参数数量不合法。{HelpText}";
+            errorMessage = $"{ConsoleMessages.InvalidArgumentCount} {HelpText}";
             return false;
         }
 
