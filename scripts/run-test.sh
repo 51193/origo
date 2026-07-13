@@ -3,4 +3,4 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-dotnet test Origo.sln "$@"
+dotnet test Origo.sln --no-build "$@"

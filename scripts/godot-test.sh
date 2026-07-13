@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-GODOT_BIN=$(bash scripts/download-godot.sh | tail -1)
+GODOT_BIN=$(bash scripts/download-godot.sh)
 echo "Using Godot binary: $GODOT_BIN"
 
 echo ""

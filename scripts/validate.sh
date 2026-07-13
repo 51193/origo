@@ -8,7 +8,6 @@ cd "$ROOT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " Phase 1: Format check (dotnet format --severity info)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-dotnet restore Origo.sln --verbosity quiet
 dotnet format Origo.sln --verify-no-changes --severity info
 echo "Format: OK"
 

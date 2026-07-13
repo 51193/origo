@@ -9,32 +9,31 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-echo ""
-echo ">>> SourceGeneration micro-benchmarks — generated TypedData members vs unoptimized boxing"
-echo ""
+EXIT_CODE=0
 
-dotnet test Origo.SourceGeneration.Tests/Origo.SourceGeneration.Tests.csproj \
-  --configuration Release \
-  --filter "Category=Benchmark" \
-  --logger "console;verbosity=detailed" \
-  -p:CollectCoverage=false
+run_benchmark() {
+  local label="$1"
+  local project="$2"
+  echo ""
+  echo ">>> $label"
+  echo ""
+  dotnet test "$project" \
+    --configuration Release \
+    --filter "Category=Benchmark" \
+    --logger "console;verbosity=detailed" \
+    -p:CollectCoverage=false || EXIT_CODE=$?
+}
 
-echo ""
-echo ">>> Core real-world benchmarks — dictionary-backed, observer, serialization simulations"
-echo ""
+run_benchmark \
+  "SourceGeneration micro-benchmarks — generated TypedData members vs unoptimized boxing" \
+  "Origo.SourceGeneration.Tests/Origo.SourceGeneration.Tests.csproj"
 
-dotnet test Origo.Core.Tests/Origo.Core.Tests.csproj \
-  --configuration Release \
-  --filter "Category=Benchmark" \
-  --logger "console;verbosity=detailed" \
-  -p:CollectCoverage=false
+run_benchmark \
+  "Core real-world benchmarks — dictionary-backed, observer, serialization simulations" \
+  "Origo.Core.Tests/Origo.Core.Tests.csproj"
 
-echo ""
-echo ">>> GodotAdapter benchmarks — Godot-typed TypedData write/read/convert throughput"
-echo ""
+run_benchmark \
+  "GodotAdapter benchmarks — Godot-typed TypedData write/read/convert throughput" \
+  "Origo.GodotAdapter.Tests/Origo.GodotAdapter.Tests.csproj"
 
-dotnet test Origo.GodotAdapter.Tests/Origo.GodotAdapter.Tests.csproj \
-  --configuration Release \
-  --filter "Category=Benchmark" \
-  --logger "console;verbosity=detailed" \
-  -p:CollectCoverage=false
+exit $EXIT_CODE

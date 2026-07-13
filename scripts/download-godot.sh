@@ -11,11 +11,11 @@ GODOT_CACHE_DIR="$ROOT/.godot_binary"
 # Parse Godot.NET.Sdk version from csproj, e.g. "4.6.3"
 VERSION=$(grep -oP 'Godot\.NET\.Sdk/\K[0-9]+\.[0-9]+\.[0-9]+' "$CSPROJ" | head -1)
 if [[ -z "$VERSION" ]]; then
-    echo "ERROR: Could not parse Godot.NET.Sdk version from $CSPROJ"
+    echo "ERROR: Could not parse Godot.NET.Sdk version from $CSPROJ" >&2
     exit 1
 fi
 
-echo "Godot.NET.Sdk version: $VERSION"
+echo "Godot.NET.Sdk version: $VERSION" >&2
 
 # Determine platform-specific download
 case "$(uname -s)" in
@@ -23,25 +23,21 @@ case "$(uname -s)" in
         ARCH=$(uname -m)
         if [[ "$ARCH" == "x86_64" ]]; then
             PLATFORM="linux_x86_64"
-            EXE_NAME="Godot_v${VERSION}-stable_mono_linux.x86_64"
         elif [[ "$ARCH" == "aarch64" ]]; then
             PLATFORM="linux_arm64"
-            EXE_NAME="Godot_v${VERSION}-stable_mono_linux.arm64"
         else
-            echo "ERROR: Unsupported Linux architecture: $ARCH"
+            echo "ERROR: Unsupported Linux architecture: $ARCH" >&2
             exit 1
         fi
         ;;
     Darwin)
         PLATFORM="macos.universal"
-        EXE_NAME="Godot_mono.app/Contents/MacOS/Godot"
         ;;
     CYGWIN*|MINGW*|MSYS*)
         PLATFORM="win64"
-        EXE_NAME="Godot_v${VERSION}-stable_mono_win64.exe"
         ;;
     *)
-        echo "ERROR: Unsupported OS: $(uname -s)"
+        echo "ERROR: Unsupported OS: $(uname -s)" >&2
         exit 1
         ;;
 esac
@@ -53,14 +49,14 @@ EXTRACT_DIR="${GODOT_CACHE_DIR}/${VERSION}"
 if [[ -d "$EXTRACT_DIR" ]]; then
     GODOT_BIN=$(find "$EXTRACT_DIR" -type f -name "Godot*" ! -name "*.pdb" ! -name "*.xml" | head -1)
     if [[ -n "$GODOT_BIN" ]] && [[ -x "$GODOT_BIN" ]]; then
-        echo "Godot binary cached: $GODOT_BIN"
+        echo "Godot binary cached: $GODOT_BIN" >&2
         echo "$GODOT_BIN"
         exit 0
     fi
 fi
 
-echo "Downloading Godot $VERSION for $PLATFORM..."
-echo "URL: $DOWNLOAD_URL"
+echo "Downloading Godot $VERSION for $PLATFORM..." >&2
+echo "URL: $DOWNLOAD_URL" >&2
 
 mkdir -p "$EXTRACT_DIR"
 
@@ -69,21 +65,20 @@ if command -v curl &> /dev/null; then
 elif command -v wget &> /dev/null; then
     wget -q --show-progress -O "$EXTRACT_DIR/$ARCHIVE" "$DOWNLOAD_URL"
 else
-    echo "ERROR: Neither curl nor wget found."
+    echo "ERROR: Neither curl nor wget found." >&2
     exit 1
 fi
 
-echo "Extracting..."
+echo "Extracting..." >&2
 unzip -qo "$EXTRACT_DIR/$ARCHIVE" -d "$EXTRACT_DIR"
 
-# Find the Godot binary inside the extracted directory
 GODOT_BIN=$(find "$EXTRACT_DIR" -type f -name "Godot*" ! -name "*.pdb" ! -name "*.xml" ! -name "*.zip" | head -1)
 if [[ -z "$GODOT_BIN" ]]; then
-    echo "ERROR: Could not find Godot binary in extracted files."
-    ls -la "$EXTRACT_DIR"
+    echo "ERROR: Could not find Godot binary in extracted files." >&2
+    ls -la "$EXTRACT_DIR" >&2
     exit 1
 fi
 
 chmod +x "$GODOT_BIN"
-echo "Godot binary ready: $GODOT_BIN"
+echo "Godot binary ready: $GODOT_BIN" >&2
 echo "$GODOT_BIN"

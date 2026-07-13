@@ -22,6 +22,17 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Validate tag matches version
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          PROPS_VERSION=$(grep -oP '<Version>\K[^<]+' Directory.Build.props | head -1)
+          PROPS_VERSION="${PROPS_VERSION%%-*}"
+          if [[ "$TAG_VERSION" != "$PROPS_VERSION" ]]; then
+            echo "ERROR: Tag version 'v$TAG_VERSION' does not match Directory.Build.props version '$PROPS_VERSION'."
+            exit 1
+          fi
+          echo "Tag version v$TAG_VERSION matches Directory.Build.props version $PROPS_VERSION."
+
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
