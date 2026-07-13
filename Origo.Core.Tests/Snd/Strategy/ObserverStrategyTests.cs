@@ -527,29 +527,26 @@ public class ObserverStrategyTests
         host.BindWorld(world);
         var fs = new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
-        var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
+        var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         host.BindContext(ctx);
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var meta = CreateMeta("bob");
-        host.RecoverFromMetaList([meta]);
-        foreach (var e in host.GetEntities())
-            if (e is IEntityLifecycle lc)
-                lc.FireAfterSpawnHooks();
-
-        var entity = host.FindByName("bob")!;
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entity = session.Spawn(CreateMeta("bob"));
         Assert.False(entity.IsPendingKill);
 
-        host.RequestKillEntity("bob");
+        session.RequestKillEntity("bob");
         Assert.True(entity.IsPendingKill);
-        Assert.Single(host.GetEntities());
+        Assert.Single(session.GetEntities());
 
-        host.RemoveEntity("bob");
-        Assert.Empty(host.GetEntities());
+        ctx.Runtime.SessionManager.KillPendingAllSessions();
+        Assert.Empty(session.GetEntities());
     }
 
     // ── ClearAll observer cleanup ─────────────────────────────────────

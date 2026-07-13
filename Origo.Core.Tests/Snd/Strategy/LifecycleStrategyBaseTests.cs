@@ -64,7 +64,8 @@ public class LifecycleStrategyBaseTests
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var entity = host.CreateEntity(new SndMetaData { Name = "e" });
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entity = session.Spawn(new SndMetaData { Name = "e" });
 
         var strategy = new TestLifecycleStrategyKillSelf();
         strategy.Process(entity, 0.016, ctx);
@@ -87,14 +88,15 @@ public class LifecycleStrategyBaseTests
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var entityA = host.CreateEntity(new SndMetaData { Name = "A" });
-        host.CreateEntity(new SndMetaData { Name = "B" });
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entityA = session.Spawn(new SndMetaData { Name = "A" });
+        session.Spawn(new SndMetaData { Name = "B" });
 
         var strategy = new TestLifecycleStrategyKillOther();
         strategy.Process(entityA, 0.016, ctx);
 
         Assert.False(entityA.IsPendingKill);
-        var entityB = host.FindByName("B");
+        var entityB = session.FindByName("B");
         Assert.NotNull(entityB);
         Assert.True(entityB.IsPendingKill);
     }
@@ -103,30 +105,18 @@ public class LifecycleStrategyBaseTests
     public void Process_RequestKillDuringProcess_RemainingStrategiesStillExecuted()
     {
         KillSelfRecordingStrategy.ProcessCalls.Clear();
-        var host = CreateHost(w =>
+        var (_, ctx) = CreateHost(w =>
         {
             w.RegisterStrategy(() => new KillSelfRecordingStrategy());
             w.RegisterStrategy(() => new ProcessCalledStrategy());
         });
 
-        var logger = new TestLogger();
-        var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
-        var io = TestFactory.CreateIoGateway(fs);
-        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
-        var pathResolver = TestFactory.CreatePathResolver(fs);
-        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
-        host.BindContext(ctx);
-        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
-
-        var entity = host.CreateEntity(CreateMeta("E", [_killSelfIdx, _processCalledIdx]));
-        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        session.Spawn(CreateMeta("E", [_killSelfIdx, _processCalledIdx]));
         KillSelfRecordingStrategy.ProcessCalls.Clear();
         ProcessCalledStrategy.Called = false;
 
-        host.ProcessAll(0.016);
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: true);
 
         Assert.Single(KillSelfRecordingStrategy.ProcessCalls);
         Assert.True(ProcessCalledStrategy.Called);
@@ -148,15 +138,15 @@ public class LifecycleStrategyBaseTests
     public void AddStrategy_WhenAfterAddThrows_RollsBackInsertionAndPoolReference()
     {
         ThrowOnAddStrategy.ProcessCalls = 0;
-        var host = CreateHost(w => w.RegisterStrategy(() => new ThrowOnAddStrategy()));
-        var entity = host.CreateEntity(CreateMeta("E"));
-        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+        var (_, ctx) = CreateHost(w => w.RegisterStrategy(() => new ThrowOnAddStrategy()));
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entity = session.Spawn(CreateMeta("E"));
 
         Assert.Throws<InvalidOperationException>(() => entity.AddStrategy(_throwOnAddIdx));
 
         // The rolled-back strategy must not run during Process; it would if it
         // had been left half-attached to the entity's strategy list.
-        host.ProcessAll(0.016);
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: true);
         Assert.Equal(0, ThrowOnAddStrategy.ProcessCalls);
     }
 
@@ -214,7 +204,7 @@ public class LifecycleStrategyBaseTests
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) => Called = true;
     }
 
-    private static FullMemorySndSceneHost CreateHost(Action<SndWorld> configureWorld)
+    private static (FullMemorySndSceneHost host, SndContext ctx) CreateHost(Action<SndWorld> configureWorld)
     {
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);
@@ -230,7 +220,9 @@ public class LifecycleStrategyBaseTests
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         host.BindContext(ctx);
-        return host;
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        return (host, ctx);
     }
 
     private static SndMetaData CreateMeta(string name, string[]? lifecycleIndices = null) => new()

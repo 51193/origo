@@ -4,6 +4,7 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
@@ -24,21 +25,20 @@ public class EntityKillTests
     [Fact]
     public void RequestKillEntity_TriggersBeforeDead_ViaFlush()
     {
-        var logger = new TestLogger();
-        var host = CreateFullMemoryHostWithEntity(logger);
+        var (ctx, _, _) = SetupKillTest(registerKillProbe: true);
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntity(session, "E");
 
         KillProbeStrategy.Events = [];
         try
         {
-            host.RequestKillEntity("E");
-            Assert.True(host.FindByName("E")!.IsPendingKill);
-            Assert.DoesNotContain("before_dead", KillProbeStrategy.Events); // not triggered yet
+            session.RequestKillEntity("E");
+            Assert.True(session.FindByName("E")!.IsPendingKill);
+            Assert.DoesNotContain("before_dead", KillProbeStrategy.Events); // deferred: not triggered yet
 
-            var entity = host.FindByName("E");
-            if (entity is IEntityLifecycle lc)
-                lc.FireBeforeDeadHooks();
-            host.RemoveEntity("E");
+            ctx.Runtime.SessionManager.KillPendingAllSessions();
             Assert.Contains("before_dead", KillProbeStrategy.Events);
+            Assert.Null(session.FindByName("E"));
         }
         finally
         {
@@ -56,15 +56,14 @@ public class EntityKillTests
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
-        var host = ((SessionRun)session).SceneHost;
-        host.CreateEntity(new SndMetaData
+        session.Spawn(new SndMetaData
         {
             Name = "A",
             NodeMetaData = new NodeMetaData(),
             StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         });
-        host.CreateEntity(new SndMetaData
+        session.Spawn(new SndMetaData
         {
             Name = "B",
             NodeMetaData = new NodeMetaData(),
@@ -76,9 +75,9 @@ public class EntityKillTests
             if (!e.IsPendingKill)
                 session.RequestKillEntity(e.Name);
 
-        Assert.True(host.FindByName("E")!.IsPendingKill);
-        Assert.True(host.FindByName("A")!.IsPendingKill);
-        Assert.True(host.FindByName("B")!.IsPendingKill);
+        Assert.True(session.FindByName("E")!.IsPendingKill);
+        Assert.True(session.FindByName("A")!.IsPendingKill);
+        Assert.True(session.FindByName("B")!.IsPendingKill);
     }
 
     [Fact]
@@ -89,8 +88,7 @@ public class EntityKillTests
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
-        var host = ((SessionRun)session).SceneHost;
-        host.CreateEntity(new SndMetaData
+        session.Spawn(new SndMetaData
         {
             Name = "A",
             NodeMetaData = new NodeMetaData(),
@@ -99,23 +97,23 @@ public class EntityKillTests
         });
 
         session.RequestKillEntity("E");
-        Assert.True(host.FindByName("E")!.IsPendingKill);
+        Assert.True(session.FindByName("E")!.IsPendingKill);
 
         foreach (var e in session.GetEntities())
             if (!e.IsPendingKill)
                 session.RequestKillEntity(e.Name);
 
-        Assert.True(host.FindByName("A")!.IsPendingKill);
+        Assert.True(session.FindByName("A")!.IsPendingKill);
     }
 
     [Fact]
     public void RequestKillAll_RemovesAllAfterFlush()
     {
         var (ctx, host, _) = SetupKillTest();
-        SpawnEntityWithoutStrategy(host, "A");
-        SpawnEntityWithoutStrategy(host, "B");
-
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntityWithoutStrategy(session, "A");
+        SpawnEntityWithoutStrategy(session, "B");
+
         foreach (var e in session.GetEntities())
             if (!e.IsPendingKill)
                 session.RequestKillEntity(e.Name);
@@ -133,8 +131,10 @@ public class EntityKillTests
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
-        var host = ((SessionRun)session).SceneHost;
-        host.RemoveAllEntities();
+        foreach (var e in session.GetEntities())
+            session.RequestKillEntity(e.Name);
+        ctx.Runtime.SessionManager.KillPendingAllSessions();
+        Assert.Empty(session.GetEntities());
 
         var ex = Record.Exception(() =>
         {
@@ -151,12 +151,12 @@ public class EntityKillTests
     public void KillPendingEntities_FiresBeforeDead()
     {
         var (ctx, host, _) = SetupKillTest(registerKillProbe: true);
-        SpawnEntity(host, "E");
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntity(session, "E");
 
         KillProbeStrategy.Events = [];
         try
         {
-            var session = ctx.Runtime.SessionManager.ForegroundSession!;
             session.RequestKillEntity("E");
             ctx.Runtime.SessionManager.KillPendingAllSessions();
 
@@ -173,10 +173,10 @@ public class EntityKillTests
     public void KillPendingEntities_BusinessDeferredBeforeKillSweep()
     {
         var (ctx, host, _) = SetupKillTest(registerKillProbe: true);
-        SpawnEntity(host, "A");
-        SpawnEntity(host, "B");
-        var events = new List<string>();
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntity(session, "A");
+        SpawnEntity(session, "B");
+        var events = new List<string>();
 
         KillProbeStrategy.Events = [];
         try
@@ -210,7 +210,8 @@ public class EntityKillTests
     public void KillPendingEntities_NoPendingEntities_DoesNotThrow()
     {
         var (ctx, host, _) = SetupKillTest();
-        SpawnEntityWithoutStrategy(host, "E");
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntityWithoutStrategy(session, "E");
 
         var ex = Record.Exception(() => ctx.Runtime.SessionManager.KillPendingAllSessions());
         Assert.Null(ex);
@@ -223,9 +224,9 @@ public class EntityKillTests
     public void KillPendingAllSessions_RemovesPendingEntities()
     {
         var (ctx, host, _) = SetupKillTest();
-        SpawnEntityWithoutStrategy(host, "E");
-
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntityWithoutStrategy(session, "E");
+
         session.RequestKillEntity("E");
         Assert.True(host.FindByName("E")!.IsPendingKill);
 
@@ -239,19 +240,19 @@ public class EntityKillTests
     [Fact]
     public void DeadByName_TriggersBeforeDead()
     {
-        var logger = new TestLogger();
-        var host = CreateFullMemoryHostWithEntity(logger);
-        Assert.NotNull(host.FindByName("E"));
+        var (ctx, _, _) = SetupKillTest(registerKillProbe: true);
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntity(session, "E");
+        Assert.NotNull(session.FindByName("E"));
 
         KillProbeStrategy.Events = [];
         try
         {
-            var entity = host.FindByName("E");
-            if (entity is IEntityLifecycle lc)
-                lc.FireBeforeDeadHooks();
-            host.RemoveEntity("E");
+            session.RequestKillEntity("E");
+            ctx.Runtime.SessionManager.KillPendingAllSessions();
 
             Assert.Contains("before_dead", KillProbeStrategy.Events);
+            Assert.Null(session.FindByName("E"));
         }
         finally
         {
@@ -337,11 +338,12 @@ public class EntityKillTests
     [Fact]
     public void IsPendingKill_CanBeCheckedByStrategy()
     {
-        var logger = new TestLogger();
-        var host = CreateFullMemoryHostWithEntity(logger);
+        var (ctx, _, _) = SetupKillTest();
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntityWithoutStrategy(session, "E");
 
-        host.RequestKillEntity("E");
-        var entity = host.FindByName("E");
+        session.RequestKillEntity("E");
+        var entity = session.FindByName("E");
         Assert.True(entity!.IsPendingKill);
 
         // Strategy can read it to skip operations on pending-kill entities
@@ -409,15 +411,16 @@ public class EntityKillTests
 
         var runtime = CreateRuntimeWithConsole(logger, host);
         TestFactory.BootstrapForegroundSession(runtime);
+        var session = runtime.SessionManager.ForegroundSession!;
 
-        host.CreateEntity(new SndMetaData { Name = "A" });
-        host.CreateEntity(new SndMetaData { Name = "B" });
+        session.Spawn(new SndMetaData { Name = "A" });
+        session.Spawn(new SndMetaData { Name = "B" });
 
         runtime.ConsoleInput!.Enqueue("kill_all");
         runtime.Console!.ProcessPending();
 
-        Assert.True(host.FindByName("A")!.IsPendingKill);
-        Assert.True(host.FindByName("B")!.IsPendingKill);
+        Assert.True(session.FindByName("A")!.IsPendingKill);
+        Assert.True(session.FindByName("B")!.IsPendingKill);
     }
 
     [Fact]
@@ -428,16 +431,17 @@ public class EntityKillTests
 
         var runtime = CreateRuntimeWithConsole(logger, host);
         TestFactory.BootstrapForegroundSession(runtime);
+        var session = runtime.SessionManager.ForegroundSession!;
 
-        host.CreateEntity(new SndMetaData { Name = "A" });
-        host.CreateEntity(new SndMetaData { Name = "B" });
-        host.RequestKillEntity("A");
+        session.Spawn(new SndMetaData { Name = "A" });
+        session.Spawn(new SndMetaData { Name = "B" });
+        session.RequestKillEntity("A");
 
         runtime.ConsoleInput!.Enqueue("kill_all");
         runtime.Console!.ProcessPending();
 
-        Assert.True(host.FindByName("A")!.IsPendingKill);
-        Assert.True(host.FindByName("B")!.IsPendingKill);
+        Assert.True(session.FindByName("A")!.IsPendingKill);
+        Assert.True(session.FindByName("B")!.IsPendingKill);
     }
 
     // ── Full integration: Process → RequestKill → Flush ────────────────
@@ -446,14 +450,14 @@ public class EntityKillTests
     public void FullCycle_ProcessMarksThenFlushRemoves()
     {
         var (ctx, host, _) = SetupKillTest();
-        SpawnEntityWithoutStrategy(host, "E");
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntityWithoutStrategy(session, "E");
 
         var entity = host.FindByName("E");
         Assert.NotNull(entity);
         entity.SetData("should_kill", true);
 
-        var session = ctx.Runtime.SessionManager.ForegroundSession!;
-        host.ProcessAll(0.016);
+        ctx.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: true);
         session.RequestKillEntity("E");
         Assert.True(entity.IsPendingKill);
 
@@ -490,7 +494,7 @@ public class EntityKillTests
         return (ctx, host, logger);
     }
 
-    private static ISndEntity SpawnEntityWithoutStrategy(FullMemorySndSceneHost host, string name)
+    private static ISndEntity SpawnEntityWithoutStrategy(ISessionRun session, string name)
     {
         var meta = new SndMetaData
         {
@@ -499,13 +503,10 @@ public class EntityKillTests
             StrategyMetaData = new StrategyMetaData(),
             DataMetaData = new DataMetaData()
         };
-        var entity = host.CreateEntity(meta);
-        if (entity is IEntityLifecycle lc)
-            lc.FireAfterSpawnHooks();
-        return entity;
+        return session.Spawn(meta);
     }
 
-    private static ISndEntity SpawnEntity(FullMemorySndSceneHost host, string name)
+    private static ISndEntity SpawnEntity(ISessionRun session, string name)
     {
         var meta = new SndMetaData
         {
@@ -518,10 +519,7 @@ public class EntityKillTests
             },
             DataMetaData = new DataMetaData()
         };
-        var entity = host.CreateEntity(meta);
-        if (entity is IEntityLifecycle lc)
-            lc.FireAfterSpawnHooks();
-        return entity;
+        return session.Spawn(meta);
     }
 
     private static FullMemorySndSceneHost CreateFullMemoryHostWithEntity(TestLogger logger)

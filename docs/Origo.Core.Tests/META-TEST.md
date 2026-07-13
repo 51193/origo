@@ -89,20 +89,27 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 2. **内部编排的正确性契约**：策略池的引用计数、类型分支安全、回滚行为等
    - 示例：`SndStrategyPool` 的 `GetStrategy`/`ReleaseStrategy` 引用计数正确性
    - 示例：`StackStateMachine` 构造时 `SndStrategyPool` 获取失败的回滚行为
+   - 示例：实体分阶段生命周期编排（AfterLoad/AfterSpawn/BeforeSave/BeforeQuit/BeforeDead 的触发时机、LIFO/优先级顺序、跨实体可见性、以及"已创建但钩子未触发""BeforeQuit 已触发但实体仍在集合中"等中间态）通过 `IEntityLifecycle` 分阶段方法 + `FullMemorySndSceneHost` 直接验证（`SndEntityLifecycleBatchTests`）。这些中间态与排序**无法**通过 `ISessionRun` 公共 API 观察，故属白名单。
 
-3. **测试基础设施构造**：`OrigoRuntime`、`SndContextParameters` 等根对象，测试需要构造它们来搭建测试环境
+3. **场景宿主自身契约**：`FullMemorySndSceneHost`/`MemorySndSceneHost`/`StubSndSceneHost` 的 `CreateEntity`/`RemoveEntity`/`RemoveAllEntities`/`ProcessAll`/`RequestKillEntity` 方法契约本身，以及 `SndEntityFactory.Spawn`/`SpawnMany`。这些是被测宿主/工厂的直接 API（见 [Snd-Scene.md](Snd-Scene.md)、[Snd-Entity.md](Snd-Entity.md)）。
 
-4. **静态方法的直接调用**：`OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 等引导期工具方法
+4. **性能基准的精确测量**：基准测试（`[Trait("Category","Benchmark")]`）为避免会话层额外开销混入测量，直接操作 `SndStrategyPool`/`FullMemorySndSceneHost`/`IEntityLifecycle`（`SndStrategyPerformanceTests`）。
+
+5. **测试基础设施构造**：`OrigoRuntime`、`SndContextParameters` 等根对象，测试需要构造它们来搭建测试环境
+
+6. **静态方法的直接调用**：`OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 等引导期工具方法
 
 **禁止使用 InternalsVisibleTo 的情况（应通过公共接口验证）**：
 
 1. **会话生命周期的编排方法**：`SessionRun.PersistLevelState()`、`SessionRun.SerializeToPayload()`、`SessionRun.LoadFromPayload()` 等内部方法的行为应通过 `ISndContext.RequestSaveGame()` + `ISaveStorageService` 公共流程验证
 
-2. **场景宿主的内部方法**：`FullMemorySndSceneHost.ProcessAll()` 应通过 `ISessionManager.ProcessAllSessions()` 触发
+2. **场景宿主内部方法作为行为触发器**：当测试意图是验证实体/策略行为（而非场景宿主自身契约）时，`FullMemorySndSceneHost.ProcessAll()`/`CreateEntity()`/`RemoveEntity()`/`RemoveAllEntities()` 不得作为触发捷径——应通过 `ISessionRun.Spawn`、`ISessionManager.ProcessAllSessions(includeForeground: true)`、`ISessionRun.RequestKillEntity` + `ISessionManager.KillPendingAllSessions()` 公共流程。（验证场景宿主自身契约的测试例外，见上白名单第 3 条。）
 
-3. **会话挂载键的内部属性**：`SessionRun.MountKey` 应通过 `ISessionManager.Contains()` / `ISessionManager.TryGet()` 验证
+3. **实体生成后手工补钩子**：`((IEntityLifecycle)e).FireAfterSpawnHooks()` 等不得用于模拟 spawn——应使用 `ISessionRun.Spawn`（内部已触发 AfterSpawn 钩子）。（验证分阶段编排中间态/排序的批量测试例外，见上白名单第 2 条。）
 
-4. **SessionManager 的 Clear/LoadSessionFromPayload**：应通过 `DestroySession()` / `ISndContext.RequestLoadGame()` 验证
+4. **会话挂载键的内部属性**：`SessionRun.MountKey` 应通过 `ISessionManager.Contains()` / `ISessionManager.TryGet()` 验证
+
+5. **SessionManager 的 Clear/LoadSessionFromPayload**：应通过 `DestroySession()` / `ISndContext.RequestLoadGame()` 验证
 
 **判断标准**：如果我改了内部实现但行为契约不变，这个测试应该仍然通过。如果不能通过公共接口验证到同等的行为语义，则可以使用 `InternalsVisibleTo`。请牢记：`InternalsVisibleTo` 是"白名单"——如无必要，不得使用。
 
