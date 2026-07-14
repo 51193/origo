@@ -164,7 +164,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `RoundTrip_BackgroundTickState_Preserved` | 后台 syncProcess 标志在往返后正确恢复 | session-model |
 | `RoundTrip_SessionBlackboards_Isolated_NoCrossContamination` | 前后台黑板数据在往返后仍隔离 | session-model |
 | `RoundTrip_ProgressBlackboard_Shared_AcrossSessions` | ProgressBlackboard 数据在往返后可跨会话共享 | session-model |
-| `RoundTrip_AllSessionProperties_Restored_Correctly` | 所有会话属性（标志/LevelId/黑板/Tick/ProcessingKeys）在往返后正确恢复 | session-model |
+| `RoundTrip_AllSessionProperties_Restored_Correctly` | 所有会话属性（标志/LevelId/黑板/Tick(syncProcess)）在往返后正确恢复 | session-model |
 | `LoadFromPayload_FullyRestoresFromPayloadOnly` | LoadFromPayload 完全从 Payload 恢复，不从外部黑板注入 | session-model |
 
 ### 边界路径
@@ -270,8 +270,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `TryGet_ForegroundKey_ReturnsForegroundSession` | TryGet(ForegroundKey) 返回前台会话 | ISessionManager |
 | `Contains_ForegroundKey_TrueWhenSessionActive` | 前台存在时 Contains(ForegroundKey) 为 true | ISessionManager |
 | `Keys_IncludesForegroundAndBackground` | Keys 包含前台和后台的键 | ISessionManager |
-| `ProcessAllSessions_OnlySynced_SessionsAreProcessed` | ProcessAllSessions 仅处理 syncProcess=true 的会话 | ISessionManager |
-| `ProcessingKeys_OnlyReturnsSyncedKeys` | ProcessingKeys 仅返回 syncProcess 的键 | ISessionManager |
+| `ProcessAllSessions_OnlyProcessesSyncedSessions` | ProcessAllSessions 仅处理 syncProcess=true 的会话 | ISessionManager |
 | `SessionTopology_WellKnownKey_Exists` | WellKnownKeys.SessionTopology 常量存在 | 常量定义 |
 | `SwitchForeground_AutoHandlesBackgroundSessionCollision` | SwitchForeground 自动处理后台 levelId 碰撞 | ISessionManager |
 | `CreateForegroundSession_DifferentLevelId_Succeeds` | 不同 levelId 的后台可创建后切换前台 | ISessionManager |

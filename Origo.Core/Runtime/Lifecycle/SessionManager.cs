@@ -39,10 +39,6 @@ internal sealed class SessionManager : ISessionManager
         _adapterSceneHost = _managerRuntime.AdapterSceneHost;
     }
 
-    /// <summary>获取所有参与 Process 帧更新的会话的键列表。</summary>
-    internal IReadOnlyCollection<string> ProcessingKeys =>
-        [.. _sessions.Where(kvp => kvp.Value.SyncProcess).Select(kvp => kvp.Key)];
-
     /// <inheritdoc />
     public bool CanCreateSessions => true;
 

@@ -106,7 +106,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 
 **禁止使用 InternalsVisibleTo 的情况（应通过公共接口验证）**：
 
-1. **会话生命周期的编排方法**：`SessionRun.PersistLevelState()`、`SessionRun.SerializeToPayload()`、`ProgressRun.LoadFromPayload()`/`BuildSavePayload()`/`SwitchForeground()`、`SessionManager.PersistSession()`/`ProcessingKeys` 等内部方法/属性的行为应通过 `ISndContext.RequestSaveGame()`/`RequestLoadGame()`/`RequestSwitchForegroundLevel()` + `ISaveStorageService` 公共流程验证（syncProcess 状态通过 `ProcessAllSessions` 是否处理该会话来间接验证）。仅上述白名单第 7 条所列、无公共等价的低层校验情形除外。
+1. **会话生命周期的编排方法**：`SessionRun.PersistLevelState()`、`SessionRun.SerializeToPayload()`、`ProgressRun.LoadFromPayload()`/`BuildSavePayload()`/`SwitchForeground()`、`SessionManager.PersistSession()` 等内部方法的行为应通过 `ISndContext.RequestSaveGame()`/`RequestLoadGame()`/`RequestSwitchForegroundLevel()` + `ISaveStorageService` 公共流程验证（syncProcess 状态通过 `ProcessAllSessions` 是否处理该会话来间接验证）。仅上述白名单第 7 条所列、无公共等价的低层校验情形除外。
 
 2. **场景宿主内部方法作为行为触发器**：当测试意图是验证实体/策略行为（而非场景宿主自身契约）时，`FullMemorySndSceneHost.ProcessAll()`/`CreateEntity()`/`RemoveEntity()`/`RemoveAllEntities()` 不得作为触发捷径——应通过 `ISessionRun.Spawn`、`ISessionManager.ProcessAllSessions(includeForeground: true)`、`ISessionRun.RequestKillEntity` + `ISessionManager.KillPendingAllSessions()` 公共流程。（验证场景宿主自身契约的测试例外，见上白名单第 3 条。）
 
