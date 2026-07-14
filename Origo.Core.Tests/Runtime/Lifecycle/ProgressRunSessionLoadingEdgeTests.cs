@@ -14,7 +14,8 @@ public class ProgressRunSessionLoadingEdgeTests
     [Fact]
     public void LoadFromPayload_WhenTopologyMalformed_ThrowsInvalidOperation()
     {
-        var progressRun = CreateProgressRun();
+        var ctx = CreateContext();
+        var progressRun = TestFactory.CreateProgressRun("001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
 
         var payload = new SaveGamePayload
         {
@@ -33,7 +34,8 @@ public class ProgressRunSessionLoadingEdgeTests
     [Fact]
     public void LoadFromPayload_WhenTopologyMissing_ThrowsInvalidOperation()
     {
-        var progressRun = CreateProgressRun();
+        var ctx = CreateContext();
+        var progressRun = TestFactory.CreateProgressRun("001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
 
         var payload = new SaveGamePayload
         {
@@ -92,7 +94,7 @@ public class ProgressRunSessionLoadingEdgeTests
     [Fact]
     public void LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions()
     {
-        var progressRun = CreateProgressRun();
+        var ctx = CreateContext();
         var payload = new SaveGamePayload
         {
             SaveId = "001",
@@ -119,12 +121,14 @@ public class ProgressRunSessionLoadingEdgeTests
             }
         };
 
-        Assert.ThrowsAny<Exception>(() => progressRun.LoadFromPayload(payload));
-        Assert.Null(progressRun.SessionManager.ForegroundSession);
-        Assert.False(progressRun.SessionManager.Contains("bg"));
+        ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "001", ctx.Runtime.Logger);
+        ctx.Save.RequestLoadGame("001");
+        Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
+        Assert.False(ctx.Runtime.SessionManager.Contains("bg"));
     }
 
-    private static ProgressRun CreateProgressRun()
+    private static SndContext CreateContext()
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
@@ -133,7 +137,6 @@ public class ProgressRunSessionLoadingEdgeTests
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
-        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
-        return TestFactory.CreateProgressRun("001", logger, sndContext.MetaAccess, sndContext.PathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
+        return new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
     }
 }

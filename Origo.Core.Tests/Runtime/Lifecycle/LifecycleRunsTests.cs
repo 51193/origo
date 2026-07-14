@@ -50,8 +50,6 @@ public class LifecycleRunsTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
         var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
-
         var payload = new SaveGamePayload
         {
             SaveId = "001",
@@ -71,8 +69,10 @@ public class LifecycleRunsTests
             }
         };
 
-        progressRun.LoadFromPayload(payload);
-        var (found, value) = progressRun.SessionManager.ForegroundSession!.SessionBlackboard.TryGet<int>("x");
+        sndContext.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "001", sndContext.Runtime.Logger);
+        sndContext.Save.RequestLoadGame("001");
+        sndContext.Deferred.FlushDeferredActionsForCurrentFrame();
+        var (found, value) = sndContext.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.TryGet<int>("x");
 
         Assert.True(found);
         Assert.Equal(3, value);
@@ -109,7 +109,9 @@ public class LifecycleRunsTests
             }
         };
 
-        var ex = Assert.Throws<InvalidOperationException>(() => progressRun.LoadFromPayload(payload));
+        sndContext.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "001", sndContext.Runtime.Logger);
+        sndContext.Save.RequestLoadGame("001");
+        var ex = Assert.Throws<InvalidOperationException>(() => sndContext.Deferred.FlushDeferredActionsForCurrentFrame());
         Assert.Contains(WellKnownKeys.SessionTopology, ex.Message, StringComparison.Ordinal);
     }
 
@@ -125,6 +127,7 @@ public class LifecycleRunsTests
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
         var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
+        sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("a");
 
         // Seed target level payload into current/, as SwitchForeground is strict.
@@ -132,7 +135,8 @@ public class LifecycleRunsTests
         fs.SeedFile("root/current/level_b/session.json", "{}");
         fs.SeedFile("root/current/level_b/session_state_machines.json", "{\"machines\":[]}");
 
-        progressRun.SwitchForeground("b");
+        sndContext.Save.RequestSwitchForegroundLevel("b");
+        sndContext.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Equal("b", progressRun.SessionManager.ForegroundSession!.LevelId);
         Assert.True(progressRun.SessionManager.Contains(ISessionManager.ForegroundKey));
@@ -159,6 +163,7 @@ public class LifecycleRunsTests
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
         var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
+        sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("a");
 
         // Missing target level payload in current/ → enter empty session and clear scene (README contract).
@@ -166,7 +171,8 @@ public class LifecycleRunsTests
         { Name = "Temp", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
         Assert.NotEmpty(host.BuildMetaList());
 
-        progressRun.SwitchForeground("b");
+        sndContext.Save.RequestSwitchForegroundLevel("b");
+        sndContext.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Empty(host.BuildMetaList());
         Assert.Equal("b", progressRun.SessionManager.ForegroundSession?.LevelId);
@@ -216,10 +222,12 @@ public class LifecycleRunsTests
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
         var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
+        sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("alpha");
         progressRun.ProgressBlackboard.SetValue(WellKnownKeys.SessionTopology, "__foreground__=wrong=false");
 
-        Assert.Throws<InvalidOperationException>(() => progressRun.BuildSavePayload("new-save-01"));
+        sndContext.Save.RequestSaveGame("new-save-01");
+        Assert.Throws<InvalidOperationException>(() => sndContext.Deferred.FlushDeferredActionsForCurrentFrame());
     }
 
     // ── SessionRun serialization round-trip ──
@@ -532,8 +540,8 @@ public class LifecycleRunsTests
         sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("default");
 
-        Assert.Throws<ArgumentException>(() => progressRun.SwitchForeground(""));
-        Assert.Throws<ArgumentException>(() => progressRun.SwitchForeground("   "));
+        Assert.Throws<ArgumentException>(() => sndContext.Save.RequestSwitchForegroundLevel(""));
+        Assert.Throws<ArgumentException>(() => sndContext.Save.RequestSwitchForegroundLevel("   "));
     }
 
     [Fact]
@@ -554,6 +562,7 @@ public class LifecycleRunsTests
         // Manually clear the topology from progress blackboard to simulate a missing entry
         progressRun.ProgressBlackboard.SetValue(WellKnownKeys.SessionTopology, string.Empty);
 
-        Assert.Throws<InvalidOperationException>(() => progressRun.BuildSavePayload("no_topology"));
+        sndContext.Save.RequestSaveGame("no_topology");
+        Assert.Throws<InvalidOperationException>(() => sndContext.Deferred.FlushDeferredActionsForCurrentFrame());
     }
 }
