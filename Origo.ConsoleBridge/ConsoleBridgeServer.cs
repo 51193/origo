@@ -128,7 +128,7 @@ public sealed class ConsoleBridgeServer : IDisposable
             TcpClient client;
             try
             {
-                client = await _listener.AcceptTcpClientAsync(ct);
+                client = await _listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -174,7 +174,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                 string? line;
                 try
                 {
-                    line = await reader.ReadLineAsync(ct);
+                    line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {

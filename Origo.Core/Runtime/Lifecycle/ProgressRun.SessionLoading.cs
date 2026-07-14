@@ -190,11 +190,7 @@ internal sealed partial class ProgressRun
                     throw new InvalidOperationException(
                         $"Target level '{levelId}' has invalid {fileName} (empty).");
             }
-            catch (InvalidOperationException)
-            {
-                throw;
-            }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not InvalidOperationException)
             {
                 throw new InvalidOperationException(
                     $"Target level '{levelId}' has invalid {fileName} (empty).", ex);
