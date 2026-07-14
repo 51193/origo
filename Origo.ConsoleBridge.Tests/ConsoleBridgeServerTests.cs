@@ -343,7 +343,18 @@ public class ConsoleBridgeServerTests
         {
             using var reader = new StreamReader(client.GetStream());
             readerAboutToBlock.Set();
-            reader.ReadLine();
+            try
+            {
+                // Disposing the server unblocks the blocked read. Both a graceful
+                // close (ReadLine returns null) and an abrupt reset
+                // (IOException: connection reset by peer) satisfy the contract that
+                // the agent's read does not hang. Only a hang — caught below by the
+                // WaitAsync timeout — is a failure.
+                reader.ReadLine();
+            }
+            catch (IOException)
+            {
+            }
         }, TestContext.Current.CancellationToken);
 
         Assert.True(readerAboutToBlock.Wait(ConsoleBridgeTestInfrastructure.CommandTimeoutMs, TestContext.Current.CancellationToken));
