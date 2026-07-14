@@ -33,6 +33,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private TcpListener _listener = null!;
     private long _outputSubId;
     private int _started;
+    private int _droppedLineCount;
     private StreamWriter? _writer;
     private Task? _acceptTask;
 
@@ -111,7 +112,10 @@ public sealed class ConsoleBridgeServer : IDisposable
             else
             {
                 if (_pendingOutput.Count >= _maxPendingOutputLines)
+                {
                     _pendingOutput.Dequeue();
+                    _droppedLineCount++;
+                }
                 _pendingOutput.Enqueue(line);
             }
         }
@@ -154,6 +158,12 @@ public sealed class ConsoleBridgeServer : IDisposable
             lock (_writerLock)
             {
                 _writer = writer;
+                if (_droppedLineCount > 0)
+                {
+                    writer.WriteLine(
+                        $"[ConsoleBridge] Warning: {_droppedLineCount} output line(s) were dropped due to buffer overflow.");
+                    _droppedLineCount = 0;
+                }
                 foreach (var line in _pendingOutput)
                     writer.WriteLine(line);
                 _pendingOutput.Clear();

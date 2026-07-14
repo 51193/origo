@@ -334,7 +334,7 @@ public class ConsoleBridgeServerCommunicationTests
         using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
         var received = new List<string>();
-        for (var i = 0; i < totalLines; i++)
+        for (var i = 0; i < totalLines + 1; i++)
         {
             var line = ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(reader, ConsoleBridgeTestInfrastructure.OutputTimeoutMs);
             if (line is null)
@@ -342,8 +342,9 @@ public class ConsoleBridgeServerCommunicationTests
             received.Add(line);
         }
 
-        Assert.Equal(bufferLimit, received.Count);
-        Assert.Equal("pending_1", received[0]);
+        Assert.Equal(bufferLimit + 1, received.Count);
+        Assert.Contains("dropped due to buffer overflow", received[0]);
+        Assert.Equal("pending_1", received[1]);
         Assert.Equal($"pending_{bufferLimit}", received[^1]);
         Assert.DoesNotContain("pending_0", received);
 

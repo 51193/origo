@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Origo.Core.Abstractions.Node;
 
@@ -27,7 +28,7 @@ internal sealed class GodotNodeHandle(Node node) : INodeHandle
     public void SetVisible(bool visible)
     {
         if (!GodotObject.IsInstanceValid(_node))
-            return;
+            throw new ObjectDisposedException(nameof(GodotNodeHandle), "Cannot set visibility on a freed node.");
 
         switch (_node)
         {

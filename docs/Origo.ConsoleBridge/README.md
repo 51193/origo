@@ -64,5 +64,9 @@ Origo 的游戏帧循环是单线程的。多连接意味着多条命令流并�
 
 `ConsoleBridgeServer` 不捕获 I/O 异常做静默降级。`Dispose`、`AcceptLoop`、`HandleConnection` 中的 I/O 操作若失败，异常直接传播。客户端断连产生的异常通过 `when (_cts.IsCancellationRequested)` 精确捕获，系统级 socket 错误和写入失败不再被静默吞掉。
 
+### 输出缓冲区溢出
+
+当没有客户端连接时，控制台输出缓冲在内存队列中（上限 1000 行）。超出上限时最旧的行被丢弃，并在客户端下次连接时在输出流最前面写入一条警告消息（`[ConsoleBridge] Warning: N output line(s) were dropped due to buffer overflow.`），以确保数据丢失可被观察到。
+
 ---
 [↑ 回到 Origo.manual](../README.md)

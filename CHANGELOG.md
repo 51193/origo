@@ -13,6 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - `Origo.Core.Runtime.Console.ConsoleMessages` — public constants for user-facing console messages (currently `InvalidArgumentCount`), so callers and tests can reference the message text instead of hard-coding literals.
+
+### Changed
+
+- **BREAKING:** `GodotNodeHandle.SetVisible` now throws `ObjectDisposedException` when called on a freed node instead of silently returning. Callers that previously relied on this silent no-op must guard against disposal before calling `SetVisible`.
+
+### Fixed
+
+- `ConsoleBridgeServer` now emits a warning line when output is dropped due to buffer overflow, ensuring data loss is surfaced to connected clients rather than silently discarded.
 - `Origo.GodotAdapter.Integration.Tests` — new Godot headless integration test project using `Godot.NET.Sdk`. Contains a custom `[IntegrationTest]` runner AutoLoad (`IntegrationTestRunner`) that discovers and executes tests in the real Godot runtime. 12 initial tests cover runtime smoke (GD.Print, FileAccess/DirAccess, Vector2, SceneTree), `GodotFileSystem` I/O (read/write/enumerate/delete on `res://` and `user://`), and `OrigoAutoHost`/`OrigoDefaultEntry` property defaults.
 - `scripts/download-godot.sh` — downloads the Godot mono binary matching the `Godot.NET.Sdk` version from `Origo.GodotAdapter.csproj`, with caching in `.godot_binary/`.
 - `scripts/godot-test.sh` — one-command local verification: download Godot binary → run headless integration tests.

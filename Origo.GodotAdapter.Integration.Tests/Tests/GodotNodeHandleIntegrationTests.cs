@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 using Origo.GodotAdapter.Snd;
@@ -74,15 +75,22 @@ public class GodotNodeHandleIntegrationTests
         node3d.Free();
     }
 
-    [IntegrationTest(Description = "SetVisible after Free does not throw")]
-    public void SetVisible_WhenNodeFreed_DoesNotThrow()
+    [IntegrationTest(Description = "SetVisible after Free throws ObjectDisposedException")]
+    public void SetVisible_WhenNodeFreed_ThrowsObjectDisposedException()
     {
         var node = new Node2D();
         var handle = new GodotNodeHandle(node);
         node.Free();
 
-        handle.SetVisible(false);
-        IntegrationTestRunner.Assert(true, "SetVisible after Free should not throw.");
+        try
+        {
+            handle.SetVisible(false);
+            IntegrationTestRunner.Assert(false, "Expected ObjectDisposedException was not thrown.");
+        }
+        catch (ObjectDisposedException)
+        {
+            IntegrationTestRunner.Assert(true, "SetVisible after Free threw ObjectDisposedException.");
+        }
     }
 
     [IntegrationTest(Description = "UnsafeGetNode returns the original Node reference")]
