@@ -112,7 +112,7 @@ Basis、Transform2D/3D、Rect2/2I、Aabb、Plane。所有类型通过 `DataSourc
 
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
-| 无 | — | 序列化测试不定义辅助策略类；性能测试通过 `ITestOutputHelper` 与私有 `PrintReport`/`PrintCompare` 方法打印对比表格 |
+| 无 | — | 序列化测试不定义辅助策略类；性能测试通过 `PerfReporter.ReportTable` / `PerfReporter.CompareTable` 打印统一汇总表格 |
 
 ## 已知覆盖缺口
 

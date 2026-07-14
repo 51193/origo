@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
-namespace Origo.SourceGeneration.Tests;
+namespace Origo.GodotAdapter.Tests;
 
-/// <summary>
-///     Prints performance comparison tables to both the console and the xUnit test
-///     output so benchmark results are visible in every CI run.
-/// </summary>
 public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
 {
     private readonly TextWriter _output = output;
     private readonly ITestOutputHelper? _testOutput = testOutput;
 
-    public static PerfReporter ForTest(ITestOutputHelper output) => new(Console.Out, output);
+    public static PerfReporter ForTest(ITestOutputHelper output) => new(System.Console.Out, output);
 
     private void WriteLine(string? line = null)
     {
@@ -26,63 +22,6 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         }
         _output.WriteLine(line);
         _testOutput?.WriteLine(line);
-    }
-
-    public void Report(string title, int iterations, TimeSpan elapsed, long allocatedBytes,
-        string? baselineName = null, double? baselineTimeMs = null, long? baselineAlloc = null)
-    {
-        var divider = new string('-', 70);
-        var opsPerSec = iterations / elapsed.TotalSeconds;
-        var nsPerOp = elapsed.Ticks * 100.0 / iterations;
-        var allocStr = FormatBytes(allocatedBytes);
-
-        WriteLine();
-        WriteLine($"  === {title} ===");
-        WriteLine($"  {divider}");
-        WriteLine($"  Iterations   : {iterations:N0}");
-        WriteLine($"  Time         : {FormatTime(elapsed)}");
-        WriteLine($"  Ops/s        : {FormatRate(opsPerSec)}");
-        WriteLine($"  ns/op        : {nsPerOp:F2}");
-        WriteLine($"  Alloc        : {allocStr}");
-
-        if (baselineTimeMs.HasValue)
-        {
-            var ratio = baselineTimeMs.Value / elapsed.TotalMilliseconds;
-            var faster = ratio >= 1.0 ? "faster" : "slower";
-            var absRatio = ratio >= 1.0 ? ratio : 1.0 / ratio;
-            WriteLine($"  vs baseline  : {absRatio:F2}x {faster} ({baselineName})");
-        }
-
-        if (baselineAlloc.HasValue && allocatedBytes > 0)
-        {
-            var allocRatio = (double)baselineAlloc.Value / allocatedBytes;
-            WriteLine($"  Alloc ratio  : {allocRatio:F2}x vs baseline");
-        }
-
-        WriteLine($"  {divider}");
-    }
-
-    public void Compare(string title, string nameA, int iterationsA, TimeSpan timeA, long allocA,
-        string nameB, int iterationsB, TimeSpan timeB, long allocB)
-    {
-        var divider = new string('-', 70);
-        var faster = timeA < timeB ? nameA : nameB;
-        var ratio = timeA < timeB
-            ? timeB.TotalMilliseconds / timeA.TotalMilliseconds
-            : timeA.TotalMilliseconds / timeB.TotalMilliseconds;
-
-        WriteLine();
-        WriteLine($"  === {title} ===");
-        WriteLine($"  {divider}");
-        WriteLine($"  Method                 Iterations   Time         Ops/s         Alloc");
-        WriteLine($"  {divider}");
-
-        PrintRow(nameA, iterationsA, timeA, allocA);
-        PrintRow(nameB, iterationsB, timeB, allocB);
-
-        WriteLine($"  {divider}");
-        WriteLine($"  Result: '{faster}' is {ratio:F2}x faster");
-        WriteLine($"  {divider}");
     }
 
     public void ReportTable(string title, List<(string label, int iterations, TimeSpan elapsed, long alloc)> rows)
@@ -131,12 +70,6 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         }
 
         WriteLine($"  {divider}");
-    }
-
-    private void PrintRow(string name, int iterations, TimeSpan elapsed, long alloc)
-    {
-        var opsPerSec = iterations / elapsed.TotalSeconds;
-        WriteLine($"  {name,-23} {iterations,-12:N0} {FormatTime(elapsed),-11}  {FormatRate(opsPerSec),-13} {FormatBytes(alloc),-12}");
     }
 
     private static string FormatBytes(long bytes)

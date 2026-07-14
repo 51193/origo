@@ -13,7 +13,7 @@ namespace Origo.GodotAdapter.Tests;
 public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 {
     private const int _iterations = 200_000;
-    private readonly ITestOutputHelper _output = output;
+    private readonly PerfReporter _perf = PerfReporter.ForTest(output);
 
     static GodotTypedDataPerformanceTests()
     {
@@ -47,10 +47,13 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         var timeUnregistered = sw.Elapsed;
         var allocUnregistered = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-        PrintCompare(
-            "Godot Vector3 Write: Registered (FromObject) vs Unregistered (kind=255)",
-            "FromObject (kind=130)", timeRegistered, allocRegistered,
-            "new TypedData(255)", timeUnregistered, allocUnregistered);
+        _perf.CompareTable(
+            "Godot Vector3 Write: Registered vs Unregistered",
+            "Registered", "Unregistered",
+            new List<(string, int, TimeSpan, long, TimeSpan, long)>
+            {
+                ("Vector3", _iterations, timeRegistered, allocRegistered, timeUnregistered, allocUnregistered)
+            });
 
         var tdReg = new TypedData(130, 0, v);
         var obj = TypedDataObjectConverter.ToObject(tdReg);
@@ -94,10 +97,13 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         Assert.Equal(sumKind, sumIsT, 0.01f);
 
-        PrintCompare(
-            "Godot Vector3 Read: TryGetVector3 (kind+is) vs Data is Vector3",
-            "TryGetVector3 (kind)", timeKind, allocKind,
-            "Data is Vector3 (is T)", timeIsT, allocIsT);
+        _perf.CompareTable(
+            "Godot Vector3 Read: TryGetVector3 vs Data is Vector3",
+            "TryGet", "Data is T",
+            new List<(string, int, TimeSpan, long, TimeSpan, long)>
+            {
+                ("Vector3", _iterations, timeKind, allocKind, timeIsT, allocIsT)
+            });
     }
 
     [Fact]
@@ -128,10 +134,13 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         var timeData = sw.Elapsed;
         var allocData = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-        PrintCompare(
+        _perf.CompareTable(
             "Godot ToObject: Switch dispatch vs Data property",
-            "ToObject (switch)", timeSwitch, allocSwitch,
-            "Data property", timeData, allocData);
+            "Switch", "Data",
+            new List<(string, int, TimeSpan, long, TimeSpan, long)>
+            {
+                ("ToObject", _iterations, timeSwitch, allocSwitch, timeData, allocData)
+            });
 
         var result = TypedDataObjectConverter.ToObject(td);
         Assert.IsType<Vector3>(result);
@@ -165,10 +174,13 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         var timeFallback = sw.Elapsed;
         var allocFallback = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-        PrintCompare(
+        _perf.CompareTable(
             "Godot FromObject: Kind-switch vs unregistered fallback",
-            "FromObject (kind=137)", timeSwitch, allocSwitch,
-            "FromObject (kind=255)", timeFallback, allocFallback);
+            "FromObject", "Fallback",
+            new List<(string, int, TimeSpan, long, TimeSpan, long)>
+            {
+                ("Color", _iterations, timeSwitch, allocSwitch, timeFallback, allocFallback)
+            });
 
         var (_, refReg) = TypedDataObjectConverter.FromObject(137, v);
         var (_, refUnreg) = TypedDataObjectConverter.FromObject(255, v);
@@ -194,8 +206,12 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         var timeRegistered = sw.Elapsed;
         var allocRegistered = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-        PrintReport("Godot Vector3 Factory Create+Extract (kind-based path)", _iterations * 2,
-            timeRegistered, allocRegistered);
+        _perf.ReportTable(
+            "Godot Vector3 Factory Create+Extract (kind-based path)",
+            new List<(string, int, TimeSpan, long)>
+            {
+                ("Create+Extract", _iterations * 2, timeRegistered, allocRegistered)
+            });
 
         var tdCreated = TypedDataFactory<Vector3>.Create(v);
         var extracted = TypedDataFactory<Vector3>.TryExtract(tdCreated, out var ev);
@@ -257,9 +273,12 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         sw.Stop();
         var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-        PrintReport(
-            $"Godot Entity Simulation: {entityCount} entities × {frames} frames, {readsPerFrame}r+{writesPerFrame}w",
-            (int)totalOps, sw.Elapsed, totalAlloc);
+        _perf.ReportTable(
+            $"Godot Entity Simulation: {entityCount} entities x {frames} frames, {readsPerFrame}r+{writesPerFrame}w",
+            new List<(string, int, TimeSpan, long)>
+            {
+                ("EntitySim", (int)totalOps, sw.Elapsed, totalAlloc)
+            });
 
         var e0 = entityDicts[0];
         Assert.True(e0.TryGetValue("position", out var posCheck));
@@ -267,41 +286,5 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         Assert.True(e0.TryGetValue("alive", out var aliveCheck));
         Assert.True(aliveCheck.TryGetBoolean(out var isAlive));
         Assert.True(isAlive);
-    }
-
-    private void PrintReport(string title, int iterations, TimeSpan elapsed, long allocated)
-    {
-        var opsPerSec = iterations / elapsed.TotalSeconds;
-        var separator = new string('-', 60);
-        _output.WriteLine("");
-        _output.WriteLine($"  === {title} ===");
-        _output.WriteLine($"  {separator}");
-        _output.WriteLine($"  _iterations: {iterations:N0} | Time: {elapsed.TotalMilliseconds:F2} ms | " +
-                          $"Ops/s: {opsPerSec / 1_000_000:F2} M | " +
-                          $"Alloc: {allocated / 1024.0:F2} KB");
-        _output.WriteLine($"  {separator}");
-    }
-
-    private void PrintCompare(string title,
-        string nameA, TimeSpan timeA, long allocA,
-        string nameB, TimeSpan timeB, long allocB)
-    {
-        var ratio = timeA < timeB
-            ? timeB.TotalMilliseconds / timeA.TotalMilliseconds
-            : timeA.TotalMilliseconds / timeB.TotalMilliseconds;
-        var faster = timeA < timeB ? nameA : nameB;
-
-        var separator = new string('-', 60);
-
-        _output.WriteLine("");
-        _output.WriteLine($"  === {title} ===");
-        _output.WriteLine($"  {separator}");
-        _output.WriteLine($"  Method                        Time         Alloc");
-        _output.WriteLine($"  {separator}");
-        _output.WriteLine($"  {nameA,-30} {timeA.TotalMilliseconds,-12:F2} ms {(allocA / 1024.0),-12:F2} KB");
-        _output.WriteLine($"  {nameB,-30} {timeB.TotalMilliseconds,-12:F2} ms {(allocB / 1024.0),-12:F2} KB");
-        _output.WriteLine($"  {separator}");
-        _output.WriteLine($"  '{faster}' is {ratio:F2}x faster");
-        _output.WriteLine($"  {separator}");
     }
 }

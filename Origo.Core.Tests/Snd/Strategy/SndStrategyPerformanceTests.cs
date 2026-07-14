@@ -12,13 +12,12 @@ using Xunit;
 namespace Origo.Core.Tests;
 
 [Collection("StrategyStateTests")]
+[Trait("Category", "Benchmark")]
 public class SndStrategyPerformanceTests(ITestOutputHelper output)
 {
     private readonly PerfReporter _perf = PerfReporter.ForTest(output);
     private const string _poolIdx = "perf.pool.test";
     private const string _process1Idx = "perf.process.1";
-
-    // ── Strategy pool Get/Release throughput ────────────────────────────
 
     [Fact]
     public void StrategyPool_GetRelease_Throughput()
@@ -41,23 +40,23 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
         sw.Stop();
         var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-        _perf.Report(
+        _perf.ReportTable(
             "StrategyPool Get+Release roundtrip",
-            iterations,
-            sw.Elapsed,
-            totalAlloc);
+            new List<(string, int, TimeSpan, long)>
+            {
+                ("Pool Roundtrip", iterations, sw.Elapsed, totalAlloc)
+            });
 
         Assert.True(totalAlloc < 500_000_000,
             $"Pool Get+Release × {iterations}: allocated {totalAlloc} bytes (unexpected)");
     }
-
-    // ── StrategyManager Process scaling by strategy count ───────────────
 
     [Fact]
     public void StrategyManager_Process_StrategyCountScaling()
     {
         const int frames = 10_000;
         var strategyCounts = new[] { 1, 5, 10, 20 };
+        var rows = new List<(string, int, TimeSpan, long)>();
 
         foreach (var sc in strategyCounts)
         {
@@ -99,22 +98,21 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
             sw.Stop();
             var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-            _perf.Report(
-                $"Process {frames} frames with {sc} strategies",
-                frames * sc,
-                sw.Elapsed,
-                totalAlloc);
+            rows.Add(($"{sc} strategies", frames * sc, sw.Elapsed, totalAlloc));
 
             Assert.NotNull(host.FindByName("E"));
         }
-    }
 
-    // ── TriggerAll ToArray allocation ───────────────────────────────────
+        _perf.ReportTable(
+            $"Process {frames} frames — strategy count scaling",
+            rows);
+    }
 
     [Fact]
     public void TriggerAll_AfterSpawn_AllocationByStrategyCount()
     {
         var strategyCounts = new[] { 1, 10 };
+        var rows = new List<(string, int, TimeSpan, long)>();
 
         foreach (var sc in strategyCounts)
         {
@@ -143,17 +141,15 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
             ((IEntityLifecycle)entity).FireAfterSpawnHooks();
             var singleTriggerAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-            _perf.Report(
-                $"TriggerAll AfterSpawn _strategies.ToArray() — {sc} strategies",
-                1,
-                TimeSpan.Zero,
-                singleTriggerAlloc);
+            rows.Add(($"{sc} strategies", 1, TimeSpan.Zero, singleTriggerAlloc));
 
             Assert.Equal("E", entity.Name);
         }
-    }
 
-    // ── Helpers ─────────────────────────────────────────────────────────
+        _perf.ReportTable(
+            "TriggerAll AfterSpawn _strategies.ToArray() allocation",
+            rows);
+    }
 
     private static string[] BuildIndices(int count)
     {
@@ -192,8 +188,6 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
         },
         DataMetaData = new DataMetaData()
     };
-
-    // ── Strategy stubs ──────────────────────────────────────────────────
 
     [StrategyIndex(_poolIdx)]
     private sealed class PerfPoolStrategy : LifecycleStrategyBase

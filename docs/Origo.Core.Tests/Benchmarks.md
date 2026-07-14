@@ -15,18 +15,89 @@
 
 | 文件 | 职责 |
 |------|------|
-| `Benchmarks/TypedDataRealWorldBenchmarkTests.cs` | 五个真实模拟基准：字典查找/插入、数值强转链、观察者通知、异构字典迭代；生成的 `TypedData` vs 装箱字典；固定数据集 + 大迭代 + 多轮取最小降噪，宽松断言 + 比对表格，并对每侧实测分配（`GC.GetAllocatedBytesForCurrentThread`） |
-| `TestSupport/PerfReporter.cs` | 性能比对表格输出器（同时写控制台与 xUnit 测试输出） |
+| `Benchmarks/TypedDataRealWorldBenchmarkTests.cs` | 五个真实模拟基准：字典查找/插入、数值强转链、观察者通知、异构字典迭代；生成的 `TypedData` vs 装箱字典 |
+| `Benchmarks/EntityLifecycleBenchmarkTests.cs` | 实体创建+AfterSpawn 缩放、帧处理（ProcessAll）缩放、SaveSingle 吞吐 |
+| `Benchmarks/ObserverTopologyBenchmarkTests.cs` | ObserverTopology Mount/Unmount 绑定数量缩放 |
+| `Benchmarks/DataSourceNodeBenchmarkTests.cs` | DataSourceNode 树构建、SHA-256 哈希计算、As<T> 类型分派吞吐 |
+| `Benchmarks/BlackboardBenchmarkTests.cs` | 内存 Blackboard 的 SetValue/TryGet 批量吞吐、SerializeAll+DeserializeAll 往返 |
+| `Benchmarks/SavePayloadBenchmarkTests.cs` | SavePayload 哈希计算、WriteToCurrent+ReadFromCurrent 往返、Snapshot 往返 |
+| `Benchmarks/ConcurrentActionQueueBenchmarkTests.cs` | ConcurrentActionQueue Enqueue+ExecuteAll 缩放、Enqueue 吞吐 |
+| `Benchmarks/RandomGeneratorBenchmarkTests.cs` | XorShift128+ NextUInt64/NextInt64/NextInt32 吞吐 |
+| `Snd/Strategy/SndStrategyPerformanceTests.cs` | 策略池 Get/Release 往返、Process 帧处理缩放、TriggerAll 分配 |
+| `TestSupport/PerfReporter.cs` | 性能比对表格输出器（`Report`、`Compare`、`CompareTable`、`ReportTable`），同时写控制台与 xUnit 测试输出 |
 
 ## 基准方法
 
+### TypedDataRealWorldBenchmarkTests
+
 | 基准方法 | 模拟的真实路径 | 对比内容 |
 |---------|---------------|---------|
-| `DictLookup_TryExtract_vs_BoxedDict` | `SndDataManager.TryGetData<T>`：字典查找命中后用 `TryGetXxx` 提取 | `Dictionary<string,TypedData>` + `TryGetXxx` vs `Dictionary<string,object>` + `is T`，覆盖 `string`/`int`/`float`/`bool`（各 2,000,000 迭代） |
-| `DictInsert_FactoryCreate_vs_BoxedDict` | `SndDataManager.SetData<T>`：构造值并写入字典 | 生成工厂 `Create`/隐式转换 + 插入 vs 装箱插入，覆盖 `string`/`int`/`float`/`bool`（各 500,000 迭代） |
-| `MultiTypeExtractionChain_Generated_vs_Boxed` | `TryGetNumeric` 跨数值类型逐一尝试读取 | 生成 `TryGetSingle→TryGetInt32→TryGetInt64→TryGetDouble` 链 vs `is float→is int→is long→is double` 链（int payload，2,000,000 迭代） |
-| `ObserverNotify_Generated_vs_Boxed` | 观察者回调传递新旧值并判型 | 传递 `(TypedData, TypedData)` + `TryGetString` vs 传递 `(object?, object?)` + `is string`（2,000,000 迭代） |
-| `HeterogeneousDictIteration_GeneratedData_vs_BoxedDict` | 遍历异构数据字典，逐项读取 `.Data` | 生成 `.Data`（经 `TypedDataObjectConverter.ToObject`）vs 纯 `object` 直通（2,000 轮 × 1024 项 = 2,048,000 次读取） |
+| `DictLookup_TryExtract_vs_BoxedDict` | `SndDataManager.TryGetData<T>`：字典查找命中后用 `TryGetXxx` 提取 | `Dictionary<string,TypedData>` + `TryGetXxx` vs `Dictionary<string,object>` + `is T` |
+| `DictInsert_FactoryCreate_vs_BoxedDict` | `SndDataManager.SetData<T>`：构造值并写入字典 | 生成工厂 `Create`/隐式转换 + 插入 vs 装箱插入 |
+| `MultiTypeExtractionChain_Generated_vs_Boxed` | `TryGetNumeric` 跨数值类型逐一尝试读取 | 生成 `TryGetSingle→TryGetInt32→TryGetInt64→TryGetDouble` 链 vs `is float→is int→is long→is double` 链 |
+| `ObserverNotify_Generated_vs_Boxed` | 观察者回调传递新旧值并判型 | 传递 `(TypedData, TypedData)` + `TryGetString` vs 传递 `(object?, object?)` + `is string` |
+| `HeterogeneousDictIteration_GeneratedData_vs_BoxedDict` | 遍历异构数据字典，逐项读取 `.Data` | 生成 `.Data`（经 `ToObject`）vs 纯 `object` 直通 |
+
+### EntityLifecycleBenchmarkTests
+
+| 基准方法 | 测试内容 |
+|---------|---------|
+| `EntityCreation_ScalingByEntityCount` | 100/500/2000 实体创建 + `FireAfterSpawnHooks` 的吞吐与分配 |
+| `FrameProcessing_ScalingByEntityAndStrategyCount` | 10e×1s / 50e×5s / 200e×10s 配置下 200 帧 ProcessAll 吞吐 |
+| `EntitySaveSingle_ScalingByEntityCount` | 10/100/500 实体 `SaveSingle` 吞吐 |
+
+### ObserverTopologyBenchmarkTests
+
+| 基准方法 | 测试内容 |
+|---------|---------|
+| `ObserverMount_ScalingByBindingCount` | 10/50/200 绑定 Mount 吞吐 |
+| `ObserverUnmount_ScalingByBindingCount` | 10/50/200 绑定 Unmount 吞吐 |
+
+### DataSourceNodeBenchmarkTests
+
+| 基准方法 | 测试内容 |
+|---------|---------|
+| `TreeBuild_ScalingByDepthAndWidth` | d2w5/d3w8/d4w8 树构建的吞吐与分配 |
+| `TreeTraversalAndHashCompute` | d3w8/d4w8 树 `ComputeSha256Hash` 的吞吐 |
+| `AsT_TypeDispatchThroughput` | 500k 次 × 100 元素数组上的 Number/Text/Bool 类型分派 |
+
+### BlackboardBenchmarkTests
+
+| 基准方法 | 测试内容 |
+|---------|---------|
+| `SetValue_BulkWrite_ThroughputByType` | Int32/Single/String/Boolean 各 100k 次 SetValue 的吞吐与分配 |
+| `TryGet_BulkRead_ThroughputByType` | Int32/Single/String/Boolean 各 500k 次 TryGet 的吞吐与分配 |
+| `SerializedAllDeserializeAll_Roundtrip` | 100/500/1000 key 的 SerializeAll+DeserializeAll 往返吞吐 |
+
+### SavePayloadBenchmarkTests
+
+| 基准方法 | 测试内容 |
+|---------|---------|
+| `PayloadHashCompute_ScalingByEntityCount` | 10/100/500 entity `ComputePayloadHash` 吞吐 |
+| `PayloadWriteAndRead_Roundtrip` | `WriteToCurrent` + `ReadFromCurrent` 往返 |
+| `PayloadSnapshotWriteAndRead_Roundtrip` | `WriteSavePayloadToCurrentThenSnapshot` + `ReadSavePayloadFromSnapshot` 往返 |
+
+### ConcurrentActionQueueBenchmarkTests
+
+| 基准方法 | 测试内容 |
+|---------|---------|
+| `EnqueueAndExecuteAll_ScalingByActionCount` | 100/1000/10000 action `Enqueue`+`ExecuteAll` 吞吐 |
+| `EnqueueThroughput_BulkInsert` | 1000/10000/50000 action `Enqueue` 批量吞吐 |
+
+### RandomGeneratorBenchmarkTests
+
+| 基准方法 | 测试内容 |
+|---------|---------|
+| `NextUInt64_Throughput` | 10M 次 `NextUInt64` 吞吐 |
+| `NextFunctions_ThroughputComparison` | 5M 次 `NextUInt64`/`NextInt64`/`NextInt32` 对比 |
+
+### SndStrategyPerformanceTests
+
+| 基准方法 | 测试内容 |
+|---------|---------|
+| `StrategyPool_GetRelease_Throughput` | 100k 次 Get+Release 往返 |
+| `StrategyManager_Process_StrategyCountScaling` | 1/5/10/20 策略 × 10k 帧 ProcessAll |
+| `TriggerAll_AfterSpawn_AllocationByStrategyCount` | 1/10 策略 AfterSpawn TriggerAll 的分配量 |
 
 每个基准的数据集混合 `int`/`float`/`bool`/`string`/`double` 五种类型（`i % 5` 轮换），以反映异构 SND 数据的真实分布。
 

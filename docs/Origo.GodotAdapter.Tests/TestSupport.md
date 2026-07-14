@@ -15,6 +15,7 @@
 | `TestSndSceneHost` | `ISndSceneHost` 实现 | 内存场景宿主，维护实体字典，支持按名称查找、`AddEntity`、`RemoveEntity` 与 `RequestKillEntity`（重复 kill 抛异常） |
 | `InMemorySndEntity` | `ISndEntity` 实现 | 内存实体替身，基于字典存取 `SetData`/`GetData`/`TryGetData`，策略/节点/观察者方法为空操作 |
 | `TestLogger` | `ILogger` 实现 | 按级别收集日志到列表（Debugs/Infos/Warnings/Errors），条目格式 `[tag] message` |
+| `PerfReporter` | `PerfReporter` | 性能比对表格输出器（`ReportTable`/`CompareTable`），同时写控制台与 xUnit 测试输出，供 `GodotTypedDataPerformanceTests` 使用 |
 | `TestRuntimeHelper` | 静态工厂类 | `CreateRuntime()` 快速创建 `OrigoRuntime` + `TestSndSceneHost`（内置 `NullFileSystem`）；`BootstrapForegroundSession()` 经内存文件系统装载主菜单入口存档并 flush 延迟队列 |
 
 ## 已知覆盖缺口

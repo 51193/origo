@@ -12,6 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Performance benchmark suite expanded** — 7 new benchmark test classes covering entity lifecycle (create + `FireAfterSpawnHooks`, frame processing scaling, `SaveSingle`), `ObserverTopology` mount/unmount scaling, `DataSourceNode` tree build/traversal/SHA-256 hash/`As<T>` dispatch, `Blackboard` bulk read/write/roundtrip, `SavePayload` hash/write/read/snapshot roundtrip, `ConcurrentActionQueue` enqueue/execute scaling, and `RandomNumberGenerator` (XorShift128+) throughput.
+- `PerfReporter.CompareTable` and `ReportTable` — unified multi-row summary table output methods that consolidate multiple per-type `Compare`/`Report` calls into a single terminal-friendly table, reducing benchmark noise and matching the `docs/benchmarks/baseline.md` style.
+
+### Changed
+
+- Benchmark output simplified — each benchmark test method now emits a single consolidated summary table (`CompareTable` / `ReportTable`) instead of one table per type/configuration. SG micro-benchmarks, Core real-world benchmarks, and GodotAdapter benchmarks all refactored.
+- `SndStrategyPerformanceTests` now tagged `[Trait("Category", "Benchmark")]` — strategy pool, frame processing, and `TriggerAll` tests run in dedicated benchmark CI step, excluded from coverage-gated test run.
+- **BREAKING:** `GodotTypedDataPerformanceTests` now uses shared `PerfReporter` (`Origo.GodotAdapter.Tests.TestSupport/PerfReporter.cs`) instead of inline `PrintReport`/`PrintCompare` helper methods.
+
 - `Origo.Core.Runtime.Console.ConsoleMessages` — public constants for user-facing console messages (currently `InvalidArgumentCount`), so callers and tests can reference the message text instead of hard-coding literals.
 - Documentation for the `SndContext` companion classes under `docs/Origo.Core/Snd/Companions/`, explaining the companion object pattern and its design rationale.
 - `Origo.GodotAdapter.Integration.Tests` — new Godot headless integration test project using `Godot.NET.Sdk`. Contains a custom `[IntegrationTest]` runner AutoLoad (`IntegrationTestRunner`) that discovers and executes tests in the real Godot runtime. 12 initial tests cover runtime smoke (GD.Print, FileAccess/DirAccess, Vector2, SceneTree), `GodotFileSystem` I/O (read/write/enumerate/delete on `res://` and `user://`), and `OrigoAutoHost`/`OrigoDefaultEntry` property defaults.

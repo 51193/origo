@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Origo.Core.Snd.Metadata;
@@ -6,31 +7,6 @@ using Xunit;
 
 namespace Origo.SourceGeneration.Tests;
 
-/// <summary>
-///     Performance benchmarks for the source-generated TypedData product: the inline
-///     (zero-boxing) storage and Kind-based dispatch emitted by TypedDataGenerator,
-///     compared against an unoptimized boxed reference implementation, across several
-///     value types and a reference type.
-///
-///     These are lenient benchmarks. They do NOT require the generated path to be
-///     faster than the boxed baseline; they only guard against gross slowdowns
-///     (generated path must stay within a generous multiple of the baseline) and
-///     against runaway durations (per-benchmark absolute time cap).
-///
-///     Noise control: each measurement uses a fixed-capacity pool addressed by a bit
-///     mask, a large iteration count (so a single timed pass spans many OS time
-///     slices), one warmup round, and several timed rounds — taking the minimum
-///     elapsed time per side to drop rounds disturbed by preemption or GC.
-///
-///     The generated path exercises the emitted product directly: explicit operators
-///     and TryGetXxx for inline value types, and — reached through Origo.Core's
-///     InternalsVisibleTo grant to this project — the generated internal fast paths
-///     for reference storage (the KindMap-based constructor and IsString). The boxed
-///     baseline uses a standalone OldTypedData mock class that stores values through a
-///     plain object property — it never touches real TypedData internals.
-///     Tagged [Trait("Category", "Benchmark")] so it runs in a dedicated
-///     CI step (scripts/benchmark.sh) rather than alongside the coverage-gated suite.
-/// </summary>
 [Trait("Category", "Benchmark")]
 public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 {
@@ -61,46 +37,62 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         public object? Data { get; } = data;
     }
 
-    // ─── Value types ───────────────────────────────────────────────
+    // ─── Value types write ─────────────────────────────────────────
 
     [Fact]
     public void ValueTypes_WriteThroughput_GeneratedOperator_vs_BoxedClass()
     {
-        RunWriteBenchmark("Int32", MakeSamples(i => i), static v => (TypedData)v);
-        RunWriteBenchmark("Int64", MakeSamples(i => (long)i), static v => (TypedData)v);
-        RunWriteBenchmark("Single", MakeSamples(i => i * 1.5f), static v => (TypedData)v);
-        RunWriteBenchmark("Double", MakeSamples(i => i * 1.5d), static v => (TypedData)v);
-        RunWriteBenchmark("Boolean", MakeSamples(i => i % 2 == 0), static v => (TypedData)v);
-        RunWriteBenchmark("Char", MakeSamples(i => (char)('A' + i % 26)), static v => (TypedData)v);
+        var rows = new List<(string, int, TimeSpan, long, TimeSpan, long)>
+        {
+            RunWriteMeasurement("Int32", MakeSamples(i => i), static v => (TypedData)v),
+            RunWriteMeasurement("Int64", MakeSamples(i => (long)i), static v => (TypedData)v),
+            RunWriteMeasurement("Single", MakeSamples(i => i * 1.5f), static v => (TypedData)v),
+            RunWriteMeasurement("Double", MakeSamples(i => i * 1.5d), static v => (TypedData)v),
+            RunWriteMeasurement("Boolean", MakeSamples(i => i % 2 == 0), static v => (TypedData)v),
+            RunWriteMeasurement("Char", MakeSamples(i => (char)('A' + i % 26)), static v => (TypedData)v),
+        };
+
+        _perf.CompareTable(
+            $"Write throughput ({_writeIterations:N0} iters, min of {_timedRounds})",
+            "Generated", "Boxed", rows);
     }
+
+    // ─── Value types read ──────────────────────────────────────────
 
     [Fact]
     public void ValueTypes_ReadThroughput_GeneratedKind_vs_BoxedIsT()
     {
-        RunReadBenchmark("Int32", MakeSamples(i => i),
-            static v => (TypedData)v,
-            static (in td, out v) => td.TryGetInt32(out v),
-            static o => o.Data is int);
-        RunReadBenchmark("Int64", MakeSamples(i => (long)i),
-            static v => (TypedData)v,
-            static (in td, out v) => td.TryGetInt64(out v),
-            static o => o.Data is long);
-        RunReadBenchmark("Single", MakeSamples(i => i * 1.5f),
-            static v => (TypedData)v,
-            static (in td, out v) => td.TryGetSingle(out v),
-            static o => o.Data is float);
-        RunReadBenchmark("Double", MakeSamples(i => i * 1.5d),
-            static v => (TypedData)v,
-            static (in td, out v) => td.TryGetDouble(out v),
-            static o => o.Data is double);
-        RunReadBenchmark("Boolean", MakeSamples(i => i % 2 == 0),
-            static v => (TypedData)v,
-            static (in td, out v) => td.TryGetBoolean(out v),
-            static o => o.Data is bool);
-        RunReadBenchmark("Char", MakeSamples(i => (char)('A' + i % 26)),
-            static v => (TypedData)v,
-            static (in td, out v) => td.TryGetChar(out v),
-            static o => o.Data is char);
+        var rows = new List<(string, int, TimeSpan, long, TimeSpan, long)>
+        {
+            RunReadMeasurement("Int32", MakeSamples(i => i),
+                static v => (TypedData)v,
+                static (in td, out v) => td.TryGetInt32(out v),
+                static o => o.Data is int),
+            RunReadMeasurement("Int64", MakeSamples(i => (long)i),
+                static v => (TypedData)v,
+                static (in td, out v) => td.TryGetInt64(out v),
+                static o => o.Data is long),
+            RunReadMeasurement("Single", MakeSamples(i => i * 1.5f),
+                static v => (TypedData)v,
+                static (in td, out v) => td.TryGetSingle(out v),
+                static o => o.Data is float),
+            RunReadMeasurement("Double", MakeSamples(i => i * 1.5d),
+                static v => (TypedData)v,
+                static (in td, out v) => td.TryGetDouble(out v),
+                static o => o.Data is double),
+            RunReadMeasurement("Boolean", MakeSamples(i => i % 2 == 0),
+                static v => (TypedData)v,
+                static (in td, out v) => td.TryGetBoolean(out v),
+                static o => o.Data is bool),
+            RunReadMeasurement("Char", MakeSamples(i => (char)('A' + i % 26)),
+                static v => (TypedData)v,
+                static (in td, out v) => td.TryGetChar(out v),
+                static o => o.Data is char),
+        };
+
+        _perf.CompareTable(
+            $"Read throughput ({_readIterations:N0} iters, min of {_timedRounds})",
+            "Generated", "Boxed", rows);
     }
 
     // ─── Reference type ────────────────────────────────────────────
@@ -110,24 +102,34 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     {
         var samples = MakeSamples(i => "s_" + i);
 
-        RunWriteBenchmark("String", samples,
-            static v => new TypedData(TypedData.KindMap.String, 0, v));
+        var rows = new List<(string, int, TimeSpan, long, TimeSpan, long)>
+        {
+            RunWriteMeasurement("Write String", samples,
+                static v => new TypedData(TypedData.KindMap.String, 0, v)),
+            RunReadMeasurement("Read String", samples,
+                static v => new TypedData(TypedData.KindMap.String, 0, v),
+                static (in td, out v) => td.TryGetString(out v),
+                static o => o.Data is string),
+        };
 
-        RunReadBenchmark("String", samples,
-            static v => new TypedData(TypedData.KindMap.String, 0, v),
-            static (in td, out v) => td.TryGetString(out v),
-            static o => o.Data is string);
+        _perf.CompareTable(
+            $"String ref slot (write {_writeIterations:N0}, read {_readIterations:N0}, min of {_timedRounds})",
+            "Generated", "Boxed", rows);
     }
 
     [Fact]
     public void StringRead_IsString_vs_BoxedIsT()
     {
         var samples = MakeSamples(i => "s_" + i);
-
-        RunIsBenchmark("String", samples,
+        var result = RunIsMeasurement("String", samples,
             static v => new TypedData(TypedData.KindMap.String, 0, v),
             static (in td) => td.IsString,
             static o => o.Data is string);
+
+        _perf.CompareTable(
+            $"IsString check ({_readIterations:N0} iters, min of {_timedRounds})",
+            "Generated", "Boxed",
+            new List<(string, int, TimeSpan, long, TimeSpan, long)> { result });
     }
 
     // ─── Mixed dispatch ────────────────────────────────────────────
@@ -204,22 +206,23 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
             }
         }
 
-        // Allocation is measured in a separate NoInlining helper so the timed
-        // loops above are the only pool-touching code in this method; the
-        // measurement passes never share their codegen.
         var (genAlloc, boxedAlloc) = MeasureMixedAlloc(genPool, boxedPool);
 
-        _perf.Compare(
-            $"Mixed dispatch (int/float/bool/string/double): generated Kind vs boxed 'is T' (min of {_timedRounds})",
-            "Generated TryGetXxx", _readIterations, genBest, genAlloc,
-            "Boxed Data is T", _readIterations, boxedBest, boxedAlloc);
+        _perf.CompareTable(
+            $"Mixed dispatch (int/float/bool/string/double, {_readIterations:N0} iters, min of {_timedRounds})",
+            "Generated", "Boxed",
+            new List<(string, int, TimeSpan, long, TimeSpan, long)>
+            {
+                ("Mixed", _readIterations, genBest, genAlloc, boxedBest, boxedAlloc)
+            });
 
         AssertWithinBudget("Mixed dispatch", genBest, boxedBest);
     }
 
-    // ─── Generic timing helpers ────────────────────────────────────
+    // ─── Timing helpers (return data, no side-effect printing) ─────
 
-    private void RunWriteBenchmark<T>(string typeLabel, T[] samples, GenFactory<T> makeGen)
+    private static (string label, int iter, TimeSpan genTime, long genAlloc, TimeSpan boxedTime, long boxedAlloc)
+        RunWriteMeasurement<T>(string typeLabel, T[] samples, GenFactory<T> makeGen)
     {
         var genPool = new TypedData[_poolSize];
         var boxedPool = new OldTypedData[_poolSize];
@@ -246,20 +249,18 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
             }
         }
 
-        // Defeat dead-store elimination: the pools are read after the timed loops.
         Assert.False(genPool[0].IsNull && boxedPool[0] is null);
 
         var (genAlloc, boxedAlloc) = MeasureWriteAlloc(genPool, boxedPool, samples, makeGen);
 
-        _perf.Compare($"Write {typeLabel}: generated operator vs boxed class (min of {_timedRounds})",
-            $"Generated {typeLabel}", _writeIterations, genBest, genAlloc,
-            $"Boxed {typeLabel}", _writeIterations, boxedBest, boxedAlloc);
-
         AssertWithinBudget($"Write {typeLabel}", genBest, boxedBest);
+
+        return (typeLabel, _writeIterations, genBest, genAlloc, boxedBest, boxedAlloc);
     }
 
-    private void RunReadBenchmark<T>(
-        string typeLabel, T[] samples, GenFactory<T> makeGen, GenReader<T> tryGet, Func<OldTypedData, bool> boxedMatch)
+    private static (string label, int iter, TimeSpan genTime, long genAlloc, TimeSpan boxedTime, long boxedAlloc)
+        RunReadMeasurement<T>(string typeLabel, T[] samples, GenFactory<T> makeGen,
+            GenReader<T> tryGet, Func<OldTypedData, bool> boxedMatch)
     {
         var genPool = new TypedData[_poolSize];
         var boxedPool = new OldTypedData[_poolSize];
@@ -300,15 +301,14 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
         var (genAlloc, boxedAlloc) = MeasureReadAlloc(genPool, boxedPool, tryGet, boxedMatch);
 
-        _perf.Compare($"Read {typeLabel}: generated TryGet vs boxed 'is {typeLabel}' (min of {_timedRounds})",
-            $"Generated {typeLabel}", _readIterations, genBest, genAlloc,
-            $"Boxed is {typeLabel}", _readIterations, boxedBest, boxedAlloc);
-
         AssertWithinBudget($"Read {typeLabel}", genBest, boxedBest);
+
+        return (typeLabel, _readIterations, genBest, genAlloc, boxedBest, boxedAlloc);
     }
 
-    private void RunIsBenchmark<T>(
-        string typeLabel, T[] samples, GenFactory<T> makeGen, IsType isCheck, Func<OldTypedData, bool> boxedMatch)
+    private static (string label, int iter, TimeSpan genTime, long genAlloc, TimeSpan boxedTime, long boxedAlloc)
+        RunIsMeasurement<T>(string typeLabel, T[] samples, GenFactory<T> makeGen,
+            IsType isCheck, Func<OldTypedData, bool> boxedMatch)
     {
         var genPool = new TypedData[_poolSize];
         var boxedPool = new OldTypedData[_poolSize];
@@ -349,11 +349,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
         var (genAlloc, boxedAlloc) = MeasureIsAlloc(genPool, boxedPool, isCheck, boxedMatch);
 
-        _perf.Compare($"Read {typeLabel}: generated IsType vs boxed 'is {typeLabel}' (min of {_timedRounds})",
-            $"Generated {typeLabel}", _readIterations, genBest, genAlloc,
-            $"Boxed is {typeLabel}", _readIterations, boxedBest, boxedAlloc);
-
         AssertWithinBudget($"Read {typeLabel}", genBest, boxedBest);
+
+        return (typeLabel, _readIterations, genBest, genAlloc, boxedBest, boxedAlloc);
     }
 
     private static T[] MakeSamples<T>(Func<int, T> factory)
@@ -365,10 +363,6 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     }
 
     // ─── Allocation measurement (kept out-of-line) ─────────────────
-    // Each measurement runs one untimed pass per side and returns the
-    // GC.GetAllocatedBytesForCurrentThread delta. NoInlining keeps these loop
-    // bodies out of the timed methods, so the measurement never shares codegen
-    // with the timed loops.
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static (long gen, long boxed) MeasureWriteAlloc<T>(
@@ -462,7 +456,6 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         Assert.True(generated < _perBenchmarkCap,
             $"{label}: generated min {generated.TotalMilliseconds:F2}ms exceeds {_perBenchmarkCap.TotalSeconds:F0}s cap");
 
-        // A sub-millisecond baseline cannot form a reliable ratio; the cap above still guards it.
         if (baseline < _baselineFloor)
             return;
 
