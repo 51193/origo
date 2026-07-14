@@ -31,7 +31,8 @@ public class DisposeSemanticsTestsProgressRun
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.PersistProgress();
+        ctx.Save.RequestSaveGame("temp");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/current/progress.json"));
 

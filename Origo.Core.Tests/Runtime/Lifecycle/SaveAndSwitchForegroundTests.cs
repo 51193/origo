@@ -30,14 +30,14 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
-        var progressRun = ctx.EnsureProgressRun();
 
-        progressRun.PersistProgress();
+        ctx.Save.RequestSaveGame("topology_test");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/current/progress.json"));
         Assert.True(fs.Exists("root/current/progress_state_machines.json"));
 
-        var (found, topology) = progressRun.ProgressBlackboard
+        var (found, topology) = ctx.Blackboard.ProgressBlackboard!
             .TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found);
         Assert.Contains("bg1=bg_level=true", topology);
@@ -56,7 +56,8 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("other");
+        ctx.Save.RequestSwitchForegroundLevel("other");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var (found, topology) = progressRun.ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -76,7 +77,8 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("other");
+        ctx.Save.RequestSwitchForegroundLevel("other");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var (found, topology) = progressRun.ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -97,7 +99,8 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("new_fg");
+        ctx.Save.RequestSwitchForegroundLevel("new_fg");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var (found, topology) = progressRun.ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -115,7 +118,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DiskEntity"));
+        bg.Spawn(CreateMeta("DiskEntity"));
 
         ctx.Save.RequestSaveGameAuto();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
@@ -139,7 +142,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity"));
+        bg.Spawn(CreateMeta("Entity"));
 
         ctx.Save.RequestSaveGameAuto();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
@@ -164,36 +167,27 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity1"));
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("Entity2"));
+        bg.Spawn(CreateMeta("Entity1"));
+        bg.Spawn(CreateMeta("Entity2"));
         bg.SessionBlackboard.SetValue("round_key", "round_value");
 
-        ctx.Save.RequestSaveGameAuto();
+        var saveId = ctx.Save.RequestSaveGameAuto();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var progressRun = ctx.EnsureProgressRun();
-        var payload = progressRun.BuildSavePayload(progressRun.SaveId);
-        ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(
-            payload, progressRun.SaveId, ctx.Runtime.Logger);
+        ctx.Save.RequestSaveGame(saveId);
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        foreach (var key in ctx.Runtime.SessionManager.Keys)
-            ctx.Runtime.SessionManager.DestroySession(key);
+        ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
-        var newPr = TestFactory.CreateProgressRun(
-            progressRun.SaveId, ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root",
-            ctx.Runtime, ctx);
-        ctx.SetProgressRun(newPr);
+        ctx.Save.RequestLoadGame(saveId);
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var snapshotPayload = ctx.StorageService.ReadSavePayloadFromSnapshot(
-            progressRun.SaveId, "game");
-        newPr.LoadFromPayload(snapshotPayload);
-
-        var fg = newPr.SessionManager.ForegroundSession;
+        var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -204,7 +198,7 @@ public class SaveAndSwitchForegroundTests
         Assert.True(found);
         Assert.Equal("round_value", val);
 
-        var restoredBg = newPr.SessionManager.TryGet("bg");
+        var restoredBg = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.Null(restoredBg);
     }
 
@@ -216,7 +210,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DirectEntity"));
+        bg.Spawn(CreateMeta("DirectEntity"));
         bg.SessionBlackboard.SetValue("direct_key", 77);
 
         ctx.Save.RequestSaveGameAuto();
@@ -242,10 +236,11 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("DirectEntity"));
+        bg.Spawn(CreateMeta("DirectEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("missing_level");
+        ctx.Save.RequestSwitchForegroundLevel("missing_level");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg = progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -264,7 +259,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("QueueEntity"));
+        bg.Spawn(CreateMeta("QueueEntity"));
         bg.SessionBlackboard.SetValue("queue_val", 123);
 
         ctx.Save.RequestSaveGameAuto();
@@ -299,7 +294,7 @@ public class SaveAndSwitchForegroundTests
 
         var fgBefore = ctx.EnsureProgressRun().SessionManager.ForegroundSession;
         Assert.NotNull(fgBefore);
-        ((SessionRun)fgBefore).SceneHost.CreateEntity(CreateMeta("OldFgEntity"));
+        fgBefore.Spawn(CreateMeta("OldFgEntity"));
         fgBefore.SessionBlackboard.SetValue("old_key", "old_value");
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
@@ -307,7 +302,8 @@ public class SaveAndSwitchForegroundTests
         fs.SeedFile("root/current/level_new/session_state_machines.json",
             "{\"machines\":[]}");
 
-        ctx.EnsureProgressRun().SwitchForeground("new");
+        ctx.Save.RequestSwitchForegroundLevel("new");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/current/level_test_level/snd_scene.json"));
         Assert.True(fs.Exists("root/current/level_test_level/session.json"));
@@ -322,15 +318,16 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgSurvivor1"));
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgSurvivor2"));
+        bg.Spawn(CreateMeta("BgSurvivor1"));
+        bg.Spawn(CreateMeta("BgSurvivor2"));
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_new/session.json", "{}");
         fs.SeedFile("root/current/level_new/session_state_machines.json",
             "{\"machines\":[]}");
 
-        ctx.EnsureProgressRun().SwitchForeground("new");
+        ctx.Save.RequestSwitchForegroundLevel("new");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var bgAlive = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.NotNull(bgAlive);
@@ -352,7 +349,8 @@ public class SaveAndSwitchForegroundTests
         fs.SeedFile("root/current/level_new/session_state_machines.json",
             "{\"machines\":[]}");
 
-        ctx.EnsureProgressRun().SwitchForeground("new");
+        ctx.Save.RequestSwitchForegroundLevel("new");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var (found, topology) = ctx.EnsureProgressRun().ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -438,7 +436,7 @@ public class SaveAndSwitchForegroundTests
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "massive", true);
         for (var i = 0; i < EntityCount; i++)
-            ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta($"Entity_{i:D3}"));
+            bg.Spawn(CreateMeta($"Entity_{i:D3}"));
 
         ctx.Save.RequestSaveGameAuto();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
@@ -464,7 +462,7 @@ public class SaveAndSwitchForegroundTests
 
         var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("OldEntity"));
+        oldFg.Spawn(CreateMeta("OldEntity"));
         oldFg.SessionBlackboard.SetValue("old_key", "old_value");
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
@@ -472,8 +470,8 @@ public class SaveAndSwitchForegroundTests
         fs.SeedFile("root/current/level_new/session_state_machines.json",
             "{\"machines\":[]}");
 
-        var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("new");
+        ctx.Save.RequestSwitchForegroundLevel("new");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // Explicit PersistForegroundLevelState before ResetForeground writes old fg data
         Assert.True(fs.Exists("root/current/level_test_level/snd_scene.json"));
@@ -491,7 +489,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
+        bg.Spawn(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("bg_key", "bg_value");
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
@@ -500,7 +498,8 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("new");
+        ctx.Save.RequestSwitchForegroundLevel("new");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // Background session's level data is NOT auto-persisted by SwitchForeground
         Assert.False(fs.Exists("root/current/level_bg_level/snd_scene.json"));
@@ -514,11 +513,12 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
+        bg.Spawn(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("bg_key", "bg_value");
 
-        // Explicitly persist background session before switch
-        ((SessionManager)ctx.Runtime.SessionManager).PersistSession("bg");
+        // Explicitly persist all session state (including the background session) before switch
+        ctx.Save.RequestSaveGameAuto();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_new/session.json", "{}");
@@ -526,7 +526,8 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("new");
+        ctx.Save.RequestSwitchForegroundLevel("new");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/current/level_bg_level/snd_scene.json"));
         Assert.True(fs.Exists("root/current/level_bg_level/session.json"));
@@ -558,11 +559,12 @@ public class SaveAndSwitchForegroundTests
 
         var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("SameEntity"));
+        oldFg.Spawn(CreateMeta("SameEntity"));
         oldFg.SessionBlackboard.SetValue("same_level_data", 42);
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("test_level");
+        ctx.Save.RequestSwitchForegroundLevel("test_level");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg = progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -597,7 +599,8 @@ public class SaveAndSwitchForegroundTests
             "no_fg", logger, metaAccess, pathResolver, "root", runtime, ctx, sharedDataSourceIo: dataSourceIo);
         ctx.SetProgressRun(progressRun);
 
-        Assert.Throws<InvalidOperationException>(() => progressRun.BuildSavePayload("no_fg"));
+        ctx.Save.RequestSaveGame("no_fg");
+        Assert.Throws<InvalidOperationException>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
     }
 
     // ── Auto-handle background session collision during switch ───────────
@@ -608,7 +611,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
+        bg.Spawn(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("auto_key", 42);
 
         fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
@@ -617,7 +620,8 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("bg"));
 
@@ -632,12 +636,13 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("PreservedEntity"));
+        bg.Spawn(CreateMeta("PreservedEntity"));
         bg.SessionBlackboard.SetValue("preserved_int", 123);
         bg.SessionBlackboard.SetValue("preserved_str", "data");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -664,11 +669,12 @@ public class SaveAndSwitchForegroundTests
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "massive", true);
         for (var i = 0; i < EntityCount; i++)
-            ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta($"Entity_{i:D3}"));
+            bg.Spawn(CreateMeta($"Entity_{i:D3}"));
         bg.SessionBlackboard.SetValue("count", EntityCount);
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("massive");
+        ctx.Save.RequestSwitchForegroundLevel("massive");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -690,7 +696,8 @@ public class SaveAndSwitchForegroundTests
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("empty_bg", "empty_level", true);
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("empty_level");
+        ctx.Save.RequestSwitchForegroundLevel("empty_level");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("empty_bg"));
 
@@ -706,13 +713,14 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
-        ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity"));
+        target.Spawn(CreateMeta("TargetEntity"));
         using var survivor = ctx.Runtime.SessionManager.CreateBackgroundSession("survivor", "other_level", true);
-        ((SessionRun)survivor).SceneHost.CreateEntity(CreateMeta("SurvivorEntity"));
+        survivor.Spawn(CreateMeta("SurvivorEntity"));
         survivor.SessionBlackboard.SetValue("survivor_data", 999);
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("target"));
 
@@ -733,10 +741,11 @@ public class SaveAndSwitchForegroundTests
 
         using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
         using var survivor = ctx.Runtime.SessionManager.CreateBackgroundSession("survivor", "other_level");
-        ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity"));
+        target.Spawn(CreateMeta("TargetEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var (found, topology) = progressRun.ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -753,15 +762,16 @@ public class SaveAndSwitchForegroundTests
 
         var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("OldFgEntity"));
+        oldFg.Spawn(CreateMeta("OldFgEntity"));
         oldFg.SessionBlackboard.SetValue("old_fg_data", "preserved");
 
         using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
-        ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity"));
+        target.Spawn(CreateMeta("TargetEntity"));
         target.SessionBlackboard.SetValue("target_data", "from_bg");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("target"));
 
@@ -786,10 +796,11 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
-        ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity"));
+        target.Spawn(CreateMeta("TargetEntity"));
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/current/progress.json"));
         Assert.True(fs.Exists("root/current/progress_state_machines.json"));
@@ -806,16 +817,17 @@ public class SaveAndSwitchForegroundTests
 
         var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
-        ((SessionRun)oldFg).SceneHost.CreateEntity(CreateMeta("OldFgEntity"));
+        oldFg.Spawn(CreateMeta("OldFgEntity"));
         oldFg.SessionBlackboard.SetValue("fg_key", "fg_value");
 
         using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
-        ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity1"));
-        ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("TargetEntity2"));
+        target.Spawn(CreateMeta("TargetEntity1"));
+        target.Spawn(CreateMeta("TargetEntity2"));
         target.SessionBlackboard.SetValue("bg_key", "bg_value");
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -831,24 +843,16 @@ public class SaveAndSwitchForegroundTests
         var (foundFg, fgVal) = fg.SessionBlackboard.TryGet<string>("fg_key");
         Assert.False(foundFg);
 
-        var payload = progressRun.BuildSavePayload(progressRun.SaveId);
-        ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(
-            payload, progressRun.SaveId, ctx.Runtime.Logger);
+        ctx.Save.RequestSaveGame("roundtrip");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        foreach (var key in ctx.Runtime.SessionManager.Keys)
-            ctx.Runtime.SessionManager.DestroySession(key);
+        ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
-        var newPr = TestFactory.CreateProgressRun(
-            progressRun.SaveId, ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root",
-            ctx.Runtime, ctx);
-        ctx.SetProgressRun(newPr);
+        ctx.Save.RequestLoadGame("roundtrip");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var snapshotPayload = ctx.StorageService.ReadSavePayloadFromSnapshot(
-            progressRun.SaveId, "game");
-        newPr.LoadFromPayload(snapshotPayload);
-
-        var restoredFg = newPr.SessionManager.ForegroundSession;
+        var restoredFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
         Assert.Equal("game", restoredFg.LevelId);
 
@@ -866,7 +870,7 @@ public class SaveAndSwitchForegroundTests
         var (ctx, _) = CreateForegroundContext();
 
         using var target = ctx.Runtime.SessionManager.CreateBackgroundSession("target", "game", true);
-        ((SessionRun)target).SceneHost.CreateEntity(CreateMeta("DeferredEntity"));
+        target.Spawn(CreateMeta("DeferredEntity"));
         target.SessionBlackboard.SetValue("deferred_key", 55);
 
         ctx.Save.RequestSwitchForegroundLevel("game");
@@ -893,16 +897,17 @@ public class SaveAndSwitchForegroundTests
         var (ctx, fs) = CreateForegroundContext();
 
         using var bg1 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "level_a", true);
-        ((SessionRun)bg1).SceneHost.CreateEntity(CreateMeta("EntityA"));
+        bg1.Spawn(CreateMeta("EntityA"));
         bg1.SessionBlackboard.SetValue("which", "a");
 
         using var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "level_b", true);
-        ((SessionRun)bg2).SceneHost.CreateEntity(CreateMeta("EntityB"));
+        bg2.Spawn(CreateMeta("EntityB"));
         bg2.SessionBlackboard.SetValue("which", "b");
 
         var progressRun = ctx.EnsureProgressRun();
 
-        progressRun.SwitchForeground("level_a");
+        ctx.Save.RequestSwitchForegroundLevel("level_a");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         var fgA = progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fgA);
         Assert.Equal("level_a", fgA.LevelId);
@@ -910,7 +915,8 @@ public class SaveAndSwitchForegroundTests
         Assert.Null(ctx.Runtime.SessionManager.TryGet("bg1"));
         Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg2"));
 
-        progressRun.SwitchForeground("level_b");
+        ctx.Save.RequestSwitchForegroundLevel("level_b");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         var fgB = progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fgB);
         Assert.Equal("level_b", fgB.LevelId);

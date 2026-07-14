@@ -20,7 +20,7 @@ public class DisposeSemanticsTestsSessionRun
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("Entity"));
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("Entity"));
 
         var progressRun = ctx.EnsureProgressRun();
         progressRun.PersistProgress();
@@ -42,7 +42,7 @@ public class DisposeSemanticsTestsSessionRun
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.BeforeSaveStrategyIndex));
 
         events.Clear();
@@ -62,7 +62,7 @@ public class DisposeSemanticsTestsSessionRun
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.BeforeQuitStrategyIndex));
 
         events.Clear();
@@ -77,7 +77,7 @@ public class DisposeSemanticsTestsSessionRun
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("Entity"));
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("Entity"));
         bg.SessionBlackboard.SetValue("data", 42);
 
         ctx.Save.RequestSaveGame("explicit1");
@@ -101,7 +101,7 @@ public class DisposeSemanticsTestsSessionRun
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.BeforeSaveStrategyIndex));
 
         events.Clear();
@@ -129,7 +129,7 @@ public class DisposeSemanticsTestsSessionRun
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("DisposedEntity"));
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("DisposedEntity"));
         bg.SessionBlackboard.SetValue("disposed_key", "disposed_val");
         bg.Dispose();
 
@@ -146,7 +146,7 @@ public class DisposeSemanticsTestsSessionRun
 
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.SessionBlackboard.SetValue("data", 42);
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("DisposedEntity"));
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("DisposedEntity"));
         bg.Dispose();
 
         ctx.Save.RequestSaveGame("exclude_disposed");

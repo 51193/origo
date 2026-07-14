@@ -23,7 +23,7 @@ public class DisposeSemanticsTestsRoundTrip
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
 
-        ((SessionRun)fg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("SavedEntity"));
+        fg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("SavedEntity"));
         fg.SessionBlackboard.SetValue("save_key", "save_value");
 
         ctx.Save.RequestSaveGame("test_001");
@@ -32,18 +32,13 @@ public class DisposeSemanticsTestsRoundTrip
         Assert.True(fs.Exists("root/save_test_001/progress.json"));
         Assert.True(fs.Exists("root/save_test_001/level_test_level/snd_scene.json"));
 
-        var progressRun = ctx.EnsureProgressRun();
-        progressRun.Dispose();
+        ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
-        var payload = ctx.StorageService.ReadSavePayloadFromSnapshot("test_001", "test_level");
-        var newPr = TestFactory.CreateProgressRun(
-            "test_001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
-        ctx.SetProgressRun(newPr);
+        ctx.Save.RequestLoadGame("test_001");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        newPr.LoadFromPayload(payload);
-
-        var restoredFg = newPr.SessionManager.ForegroundSession;
+        var restoredFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
 
         var entities = restoredFg.GetEntities();
@@ -64,17 +59,13 @@ public class DisposeSemanticsTestsRoundTrip
         ctx.Save.RequestSaveGame("score_save");
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var progressRun = ctx.EnsureProgressRun();
-        progressRun.Dispose();
+        ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
-        var payload = ctx.StorageService.ReadSavePayloadFromSnapshot("score_save", "test_level");
-        var newPr = TestFactory.CreateProgressRun(
-            "score_save", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
-        ctx.SetProgressRun(newPr);
-        newPr.LoadFromPayload(payload);
+        ctx.Save.RequestLoadGame("score_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var (found, score) = newPr.ProgressBlackboard.TryGet<int>("global_score");
+        var (found, score) = ctx.Blackboard.ProgressBlackboard!.TryGet<int>("global_score");
         Assert.True(found);
         Assert.Equal(9001, score);
     }
@@ -85,7 +76,7 @@ public class DisposeSemanticsTestsRoundTrip
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("gen", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("GameEntity"));
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("GameEntity"));
 
         ctx.Save.RequestSaveGameAuto();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
@@ -113,8 +104,8 @@ public class DisposeSemanticsTestsRoundTrip
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("gen", "game", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("GameEntity1"));
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("GameEntity2"));
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("GameEntity1"));
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("GameEntity2"));
         bg.SessionBlackboard.SetValue("map_seed", 42);
 
         ctx.Save.RequestSaveGameAuto();
@@ -132,17 +123,13 @@ public class DisposeSemanticsTestsRoundTrip
         ctx.Save.RequestSaveGame(saveId);
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var progressRun = ctx.EnsureProgressRun();
-        progressRun.Dispose();
+        ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
-        var payload = ctx.StorageService.ReadSavePayloadFromSnapshot(saveId, "game");
-        var newPr = TestFactory.CreateProgressRun(
-            saveId, ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx);
-        ctx.SetProgressRun(newPr);
-        newPr.LoadFromPayload(payload);
+        ctx.Save.RequestLoadGame(saveId);
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var restoredFg = newPr.SessionManager.ForegroundSession;
+        var restoredFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
         Assert.Equal("game", restoredFg.LevelId);
         Assert.Equal(2, restoredFg.GetEntities().Count);
@@ -160,15 +147,15 @@ public class DisposeSemanticsTestsRoundTrip
         var oldFg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(oldFg);
         oldFg.SessionBlackboard.SetValue("old_data", "old_value");
-        ((SessionRun)oldFg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMeta("OldEntity"));
+        oldFg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("OldEntity"));
 
         fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_game/session.json", "{}");
         fs.SeedFile("root/current/level_game/session_state_machines.json",
             "{\"machines\":[]}");
 
-        var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         Assert.True(fs.Exists("root/current/level_test_level/snd_scene.json"));
         Assert.True(fs.Exists("root/current/level_test_level/session.json"));
@@ -186,7 +173,7 @@ public class DisposeSemanticsTestsRoundTrip
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.SessionAccessStrategyIndex));
 
         events.Clear();
@@ -206,7 +193,7 @@ public class DisposeSemanticsTestsRoundTrip
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.ThrowingQuitStrategyIndex));
 
         var ex = Record.Exception(() => bg.Dispose());
@@ -224,7 +211,7 @@ public class DisposeSemanticsTestsRoundTrip
         });
 
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
-        ((SessionRun)bg).SceneHost.CreateEntity(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.ThrowingQuitStrategyIndex));
 
         Record.Exception(() => bg.Dispose());

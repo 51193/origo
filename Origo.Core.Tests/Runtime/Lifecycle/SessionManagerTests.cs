@@ -221,8 +221,8 @@ public class SessionManagerTests
         fs.SeedFile("root/current/level_game/session_state_machines.json",
             "{\"machines\":[]}");
 
-        var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("game");
+        ctx.Save.RequestSwitchForegroundLevel("game");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var destroyedBg = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.Null(destroyedBg);
@@ -264,7 +264,7 @@ public class SessionManagerTests
         SetupForegroundSession(ctx);
 
         var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "level_x", true);
-        ((SessionRun)bg).SceneHost.CreateEntity(new SndMetaData
+        bg.Spawn(new SndMetaData
         {
             Name = "CollisionEntity",
             NodeMetaData = new NodeMetaData(),
@@ -272,10 +272,10 @@ public class SessionManagerTests
             DataMetaData = new DataMetaData()
         });
 
-        var progressRun = ctx.EnsureProgressRun();
+        ctx.Save.RequestSaveGame("test_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        // Directly add a bogus level payload with the same levelId to simulate collision
-        var payload = progressRun.BuildSavePayload("test_save");
+        var payload = ctx.StorageService.ReadSavePayloadFromSnapshot("test_save", "default");
         Assert.True(payload.Levels.ContainsKey("default"));
         Assert.True(payload.Levels.ContainsKey("level_x"));
     }
