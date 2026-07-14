@@ -75,6 +75,8 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 生成器在生成前对每个注册类型做存储模型校验，违反边界时报告为编译错误（fail-fast），而非生成静默返回 `0`/`default` 的访问器。违规类型从生成中剔除，被报告的错误使构建失败。
 
+诊断消息携带对应的 `SndInlineTypesAttribute` 语法位置，在 IDE 中以红色波浪线标记发生问题的属性行，并支持点击导航到源码位置。
+
 | 诊断 ID | 严重级别 | 触发条件 |
 |---------|---------|---------|
 | `ORIGOSG001` | Error | 系统基础类型在非宿主（适配层）程序集的 `SndInlineTypes` 组中注册。内联基础类型由 Origo.Core 独占，适配层只能注册引用类型或非系统值类型（走 `_ref`）。 |

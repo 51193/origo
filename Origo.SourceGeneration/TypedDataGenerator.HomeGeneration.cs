@@ -25,8 +25,11 @@ public sealed partial class TypedDataGenerator
         sb.AppendLine();
         GenerateHomeKindRegistration(sb, types);
         sb.AppendLine();
-        GenerateStringConversion(sb);
-        sb.AppendLine();
+        if (types.Any(t => t.SpecialType == SpecialType.System_String))
+        {
+            sb.AppendLine();
+            GenerateStringConversion(sb);
+        }
         GenerateIsProperties(sb, types);
         sb.AppendLine();
         GenerateAsMethods(sb, types);

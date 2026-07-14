@@ -16,7 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **BREAKING:** `SndEntity.IsPendingKill` setter is now `internal`. Framework code must use `ISessionRun.RequestKillEntity(name)` to mark entities as pending kill instead of setting the property directly.
+- Release workflow now includes format check, benchmarks, and Godot headless integration tests, matching the CI pipeline's quality gates for shipped releases.
+- Source generator diagnostic messages now carry source locations derived from the `SndInlineTypesAttribute` syntax, giving users IDE squiggles and click-to-navigate in the error list instead of project-level messages.
+
+### Fixed
+
+- `TypedDataGenerator` pipeline types (`GenerationInput`, `TypeGroup`, `InlineTypeInfo`) converted to records so the Roslyn incremental generator can correctly cache intermediate outputs by value comparison, preventing full regeneration on every file change.
+- `GenerateStringConversion` is now emitted only when `string` is among the registered types in the home assembly's `SndInlineTypes`, preventing uncompilable generated code when `string` is omitted from the type list.
 
 ### Removed
 

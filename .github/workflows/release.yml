@@ -39,6 +39,9 @@ jobs:
       - name: Restore
         run: dotnet restore Origo.sln
 
+      - name: Format check
+        run: bash scripts/format.sh
+
       - name: Build
         run: dotnet build Origo.sln --no-restore --configuration Release
 
@@ -48,6 +51,9 @@ jobs:
             --no-build --configuration Release \
             --verbosity normal \
             --filter "Category!=Benchmark"
+
+      - name: Benchmarks — generated TypedData vs unoptimized boxing
+        run: bash scripts/benchmark.sh
 
       - name: Pack Origo.Core
         run: dotnet pack Origo.Core/Origo.Core.csproj --no-build --configuration Release --output ./artifacts
@@ -79,3 +85,35 @@ jobs:
         with:
           files: ./artifacts/*
           generate_release_notes: true
+
+  godot-integration-tests:
+    needs: release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Cache Godot binary
+        uses: actions/cache@v4
+        with:
+          path: .godot_binary
+          key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
+
+      - name: Install Godot headless dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
+
+      - name: Godot headless integration tests
+        run: bash scripts/godot-test.sh

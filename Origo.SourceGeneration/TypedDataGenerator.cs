@@ -66,6 +66,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     {
         var result = new List<InlineTypeInfo>();
         var kindOffset = 0;
+        var attrLocation = attr.ApplicationSyntaxReference?.GetSyntax().GetLocation() ?? Location.None;
 
         foreach (var ctorArg in attr.ConstructorArguments)
         {
@@ -74,9 +75,9 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 foreach (var element in ctorArg.Values)
                 {
                     if (element.Value is INamedTypeSymbol typeSymbol)
-                        result.Add(CreateTypeInfo(typeSymbol, startKind + kindOffset++));
+                        result.Add(CreateTypeInfo(typeSymbol, startKind + kindOffset++, attrLocation));
                     else if (element.Value is ITypeSymbol ts)
-                        result.Add(CreateTypeInfo(ts, startKind + kindOffset++));
+                        result.Add(CreateTypeInfo(ts, startKind + kindOffset++, attrLocation));
                 }
             }
         }
@@ -84,7 +85,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         return result;
     }
 
-    private static InlineTypeInfo CreateTypeInfo(ITypeSymbol typeSymbol, int rawKind)
+    private static InlineTypeInfo CreateTypeInfo(ITypeSymbol typeSymbol, int rawKind, Location location)
     {
         var kindName = GenerateKindName(typeSymbol);
         var clrName = typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat);
@@ -97,7 +98,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             ClrTypeName = clrName,
             IsReferenceType = typeSymbol.IsReferenceType,
             SpecialType = typeSymbol.SpecialType,
-            FitsInline = IsInlineCandidate(typeSymbol)
+            FitsInline = IsInlineCandidate(typeSymbol),
+            Location = location
         };
     }
 
@@ -172,7 +174,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             if (t.RawKind is <= 0 or > 255)
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(_kindOverflow, Location.None, t.ClrTypeName, t.RawKind));
+                    Diagnostic.Create(_kindOverflow, t.Location ?? Location.None, t.ClrTypeName, t.RawKind));
                 continue;
             }
 
@@ -188,13 +190,13 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                     valid.Add(t);
                 else
                     context.ReportDiagnostic(
-                        Diagnostic.Create(_systemPrimitiveInAdapter, Location.None, t.ClrTypeName));
+                        Diagnostic.Create(_systemPrimitiveInAdapter, t.Location ?? Location.None, t.ClrTypeName));
             }
             else
             {
                 if (isHome)
                     context.ReportDiagnostic(
-                        Diagnostic.Create(_unsupportedHomeValueType, Location.None, t.ClrTypeName));
+                        Diagnostic.Create(_unsupportedHomeValueType, t.Location ?? Location.None, t.ClrTypeName));
                 else
                     valid.Add(t);
             }
@@ -224,12 +226,14 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 
         foreach (var kind in collidingKinds)
         {
-            var names = types
+            var colliding = types
                 .Where(t => t.KindValue == kind)
+                .ToArray();
+            var names = colliding
                 .Select(t => t.ClrTypeName)
                 .Distinct();
             context.ReportDiagnostic(Diagnostic.Create(
-                _kindCollision, Location.None, kind, string.Join(", ", names)));
+                _kindCollision, colliding[0].Location ?? Location.None, kind, string.Join(", ", names)));
         }
 
         var result = new List<InlineTypeInfo>();
@@ -244,19 +248,19 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         return result;
     }
 
-    private sealed class GenerationInput
+    private sealed record GenerationInput
     {
         public bool IsHome { get; set; }
         public List<TypeGroup> TypeGroups { get; set; } = [];
     }
 
-    private sealed class TypeGroup
+    private sealed record TypeGroup
     {
         public int StartKind { get; set; }
         public List<InlineTypeInfo> Types { get; set; } = [];
     }
 
-    private sealed class InlineTypeInfo
+    private sealed record InlineTypeInfo
     {
         public string? KindIndex { get; set; }
         public int RawKind { get; set; }
@@ -265,5 +269,6 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         public bool IsReferenceType { get; set; }
         public SpecialType SpecialType { get; set; }
         public bool FitsInline { get; set; }
+        public Location? Location { get; set; }
     }
 }
