@@ -134,7 +134,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         return _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
     }
 
-    public bool IsPendingKill { get; set; }
+    public bool IsPendingKill { get; internal set; }
     public ISessionRun OwningSession => _owningSession ?? throw new InvalidOperationException("Entity is not bound to a session. OwningSession must be set before the entity is used.");
 
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);

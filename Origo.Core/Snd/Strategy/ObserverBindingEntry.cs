@@ -20,13 +20,17 @@ internal sealed class ObserverBindingEntry
 
     internal void FullCleanup(ISndEntity entity, ISndContext ctx, SndStrategyPool pool)
     {
+        if (TargetEntity is null)
+            throw new InvalidOperationException(
+                "Observer binding FullCleanup requires a non-null TargetEntity reference.");
+
         if (TargetEntity is ISndEntityRawSubscription raw)
         {
             foreach (var (key, wrapper) in DataWrappers)
                 raw.UnsubscribeDataRaw(key, wrapper);
         }
 
-        Strategy.OnUnmounted(entity, ctx, TargetEntity!);
+        Strategy.OnUnmounted(entity, ctx, TargetEntity);
 
         pool.ReleaseStrategy(ObserverIndex);
     }

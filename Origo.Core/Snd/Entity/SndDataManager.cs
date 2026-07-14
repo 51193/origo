@@ -79,6 +79,7 @@ internal sealed class SndDataManager
 
     public void SetData<T>(string name, T value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(_data, name, out var exists);
         var newValue = TypedDataFactory<T>.Create(value);
 

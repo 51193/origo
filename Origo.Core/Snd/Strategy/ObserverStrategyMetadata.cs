@@ -15,11 +15,6 @@ internal static class ObserverStrategyMetadata
             return cached;
 
         var attributes = observerStrategyType.GetCustomAttributes<ObserveDataAttribute>(false);
-        if (attributes is null)
-        {
-            _cache[observerStrategyType] = [];
-            return _cache[observerStrategyType];
-        }
 
         var keys = new List<string>();
         foreach (var attr in attributes)
