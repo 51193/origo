@@ -45,12 +45,14 @@
 | `Adapter_SystemPrimitive_ReportsORIGOSG001` | 适配层组注册系统基础类型（`int`） | 报告 `ORIGOSG001`（Error），剔除该基元，不产出其内联访问器 |
 | `KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero` | `StartKind` 偏移使 Kind 超出 byte 范围（256/257，257 会回绕为 1 造成碰撞） | 报告 `ORIGOSG003`（Error），剔除越界类型，范围内类型（`Byte=255`）仍生成 |
 | `OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes` | 两组将同一 Kind 1 分配给不同类型（`int`/`long`） | 报告 `ORIGOSG004`（Error），剔除碰撞的两个类型 |
+| `HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected` | 同一编译中同时存在 Home 属性（系统基础类型）和 Adapter 属性（非系统值类型） | Home 模式生效，系统类型正常生成，非系统值类型报告 `ORIGOSG002`（Error）
 
 ### 边界路径
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
 | `Home_NoAttribute_ProducesNoOutput` | 无 `SndInlineTypes` 特性 | 不产出任何源，无诊断 |
+| `MalformedAttribute_NoTypes_ProducesNoOutput` | 声明 `SndInlineTypes` 但未传入任何类型参数 | 不产出任何源，无诊断 |
 | `Home_OnlyReferenceTypes_NoInlineMethods` | 仅注册引用类型（`string`） | 生成 `KindMap`/`AsString`，但不产出 `explicit operator`/`_inlineBits` 等内联机制 |
 | `Home_DoesNotEmitSilentStubHelpers` | 宿主模式生成（回归守卫） | 永不生成 `BitsFrom`/`ReadBitsAs`/`Pack`/`return default;` 等静默桩辅助 |
 | `Adapter_DoesNotEmitInlineHelpers` | 适配层模式生成（回归守卫） | 不产出 `ReadBitsAs`/`BitsFrom`/`_inlineBits` |
@@ -81,8 +83,6 @@
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| 生成器对畸形/部分构造的 `SndInlineTypes` 特性（如 `null` 类型参数、非类型实参）的处理未直接断言 | 边界输入的诊断行为未覆盖 | Origo.SourceGeneration |
-| 同一编译中 Home 与 Adapter 模式共存的判定路径未单独验证 | 模式判定的混合场景未覆盖 | Origo.SourceGeneration |
 | 性能基准未覆盖适配层非系统值类型（如 Godot 类型）的读写吞吐，仅覆盖系统基元 + `string` | 适配层 `_ref` 路径性能特征未基准化 | Origo.SourceGeneration |
 
 ## 行覆盖率门禁

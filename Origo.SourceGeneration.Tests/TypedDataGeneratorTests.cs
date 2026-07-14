@@ -439,4 +439,38 @@ public class TypedDataGeneratorTests
         Assert.Contains("Int32", second.AllGeneratedText);
         Assert.Contains("Single", second.AllGeneratedText);
     }
+
+    // ─── Edge cases ────────────────────────────────────────────────
+
+    [Fact]
+    public void MalformedAttribute_NoTypes_ProducesNoOutput()
+    {
+        var emptyAttribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes()]
+            """;
+        var output = RunHome(emptyAttribute);
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.GeneratedSources);
+    }
+
+    [Fact]
+    public void HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected()
+    {
+        var source = """
+            public struct StubVec3 { public float X; public float Y; public float Z; }
+            """;
+        var combined = _scaffoldHeader + "\n"
+            + _homePrimitivesAttribute + "\n"
+            + "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(StubVec3))]" + "\n"
+            + source + "\n"
+            + _scaffoldBody;
+        var output = GeneratorTestHarness.Run("Origo.HomeUnderTest", combined);
+
+        Assert.Contains("Int32 = 5;", output.AllGeneratedText);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG002"));
+        Assert.All(output.GeneratorDiagnostics,
+            d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+    }
 }

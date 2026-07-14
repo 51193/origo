@@ -97,10 +97,7 @@ public class ErrorPathIntegrationTests
     [StrategyIndex("test.int.err.deferred_counter")]
     private sealed class DeferredCounterStrategy : LifecycleStrategyBase
     {
-        public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
-        {
-            entity.SetData("count", 0);
-        }
+        public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => entity.SetData("count", 0);
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
