@@ -170,7 +170,7 @@ public partial class IntegrationTestRunner : Node
         if (_currentDeferred.Instance is IDisposable disposable)
         {
             try { disposable.Dispose(); }
-            catch { }
+            catch (Exception ex) { GD.PrintErr($"IntegrationTestRunner: Dispose failed for deferred test: {ex.Message}"); }
         }
 
         _currentDeferred = null;
@@ -260,7 +260,7 @@ public partial class IntegrationTestRunner : Node
             if (instance is IDisposable disposable)
             {
                 try { disposable.Dispose(); }
-                catch { }
+                catch (Exception ex) { GD.PrintErr($"IntegrationTestRunner: Dispose failed for instant test: {ex.Message}"); }
             }
         }
 
