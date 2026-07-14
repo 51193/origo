@@ -13,25 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - `Origo.Core.Runtime.Console.ConsoleMessages` — public constants for user-facing console messages (currently `InvalidArgumentCount`), so callers and tests can reference the message text instead of hard-coding literals.
-
-### Changed
-
-- Release workflow now includes format check, benchmarks, and Godot headless integration tests, matching the CI pipeline's quality gates for shipped releases.
-- Source generator diagnostic messages now carry source locations derived from the `SndInlineTypesAttribute` syntax, giving users IDE squiggles and click-to-navigate in the error list instead of project-level messages.
-
-### Fixed
-
-- `TypedDataGenerator` pipeline types (`GenerationInput`, `TypeGroup`, `InlineTypeInfo`) converted to records so the Roslyn incremental generator can correctly cache intermediate outputs by value comparison, preventing full regeneration on every file change.
-- `GenerateStringConversion` is now emitted only when `string` is among the registered types in the home assembly's `SndInlineTypes`, preventing uncompilable generated code when `string` is omitted from the type list.
-
-### Removed
-
-- Dead null check in `ObserverStrategyMetadata.GetDataKeys`. The `GetCustomAttributes<T>()` API never returns null in .NET.
-
-### Fixed
-
-- `SndDataManager.SetData` now validates its `name` parameter for null or whitespace, consistent with all other data access methods.
-- `ObserverBindingEntry.FullCleanup` now throws `InvalidOperationException` when `TargetEntity` is null instead of relying on the null-forgiving operator alone, making the invariant explicit.
+- Documentation for the `SndContext` companion classes under `docs/Origo.Core/Snd/Companions/`, explaining the companion object pattern and its design rationale.
 - `Origo.GodotAdapter.Integration.Tests` — new Godot headless integration test project using `Godot.NET.Sdk`. Contains a custom `[IntegrationTest]` runner AutoLoad (`IntegrationTestRunner`) that discovers and executes tests in the real Godot runtime. 12 initial tests cover runtime smoke (GD.Print, FileAccess/DirAccess, Vector2, SceneTree), `GodotFileSystem` I/O (read/write/enumerate/delete on `res://` and `user://`), and `OrigoAutoHost`/`OrigoDefaultEntry` property defaults.
 - `scripts/download-godot.sh` — downloads the Godot mono binary matching the `Godot.NET.Sdk` version from `Origo.GodotAdapter.csproj`, with caching in `.godot_binary/`.
 - `scripts/godot-test.sh` — one-command local verification: download Godot binary → run headless integration tests.
@@ -91,6 +73,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - P1 error path integration tests: `ErrorPath_AddDuplicateActiveStrategy_Throws` (duplicate `AddActiveStrategy` throws), `ErrorPath_KillAlreadyKilledEntity_Throws` (`RequestKillEntity` on already-harvested entity throws `InvalidOperationException`).
 - `MultiFrameProcessing_VariousFrameCounts_AccumulatesCorrectly` — `[Theory]` parameterized test covering 1, 3, and 100 frame counts.
 - `SndContextParameters.InitialLevelId` — configurable initial save level ID (defaults to `"default"`). `ExecuteLoadInitialSaveNow` uses this parameter instead of the hardcoded `SndDefaults.InitialLevelId`, allowing initial saves with non-default level directory names.
+
+### Changed
+
+- **BREAKING:** `GodotNodeHandle.SetVisible` now throws `ObjectDisposedException` when called on a freed node instead of silently returning.
+- **BREAKING:** `SndEntity.IsPendingKill` setter is now `internal`. Framework code must use `ISessionRun.RequestKillEntity(name)` to mark entities as pending kill.
+- Release workflow now includes format check, benchmarks, and Godot headless integration tests, matching the CI pipeline's quality gates for shipped releases.
+- Source generator diagnostic messages now carry source locations derived from the `SndInlineTypesAttribute` syntax, providing IDE squiggles and click-to-navigate.
+- `GodotSndManager.ProcessAll` now iterates entities directly instead of copying to an array each frame.
+- `GodotPackedSceneNodeFactory` now uses `Dictionary` instead of `ConcurrentDictionary` for its scene cache.
+
+### Removed
+
+- Dead null check in `ObserverStrategyMetadata.GetDataKeys`. The `GetCustomAttributes<T>()` API never returns null in .NET.
+
+### Fixed
+
+- `ConsoleBridgeServer` now emits a warning line when output is dropped due to buffer overflow.
+- `SndDataManager.SetData` now validates its `name` parameter for null or whitespace, consistent with other data access methods.
+- `ObserverBindingEntry.FullCleanup` now throws `InvalidOperationException` when `TargetEntity` is null instead of relying on the null-forgiving operator alone.
+- `TypedDataGenerator` pipeline types converted to records so the incremental generator can cache intermediate outputs by value comparison.
+- `GenerateStringConversion` is emitted only when `string` is among the registered types in the home assembly.
 
 ### Changed
 

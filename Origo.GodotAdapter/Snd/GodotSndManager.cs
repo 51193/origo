@@ -133,9 +133,8 @@ public partial class GodotSndManager
     {
         ProcessTickCount++;
         ProcessDeltaSum += delta;
-        var snapshot = _entities.ToArray();
-        foreach (var entity in snapshot)
-            entity.ProcessSnd(delta);
+        for (var i = 0; i < _entities.Count; i++)
+            _entities[i].ProcessSnd(delta);
     }
 
     public void RemoveEntity(string name)
