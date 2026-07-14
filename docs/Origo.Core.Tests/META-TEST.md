@@ -99,9 +99,14 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 
 6. **静态方法的直接调用**：`OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 等引导期工具方法
 
+7. **载荷反序列化校验与无公共等价的低层操作**：以下情形没有能忠实复现同一契约的公共路径，故保留内部 API：
+   - `ProgressRun.LoadFromPayload` 对**手工构造的畸形/缺失字段载荷**的校验（畸形/缺失拓扑、null 的 `ProgressStateMachinesNode`）——公共 `RequestLoadGame` 走磁盘，存档写入器会在读档校验前就拒绝这类畸形载荷，无法忠实复现（`ProgressRunSessionLoadingEdgeTests`、`LifecycleRunsTests`）。
+   - `ProgressRun.PersistProgress`（仅持久化 progress、不含会话数据）——公共 `RequestSaveGame` 会连带持久化会话，无"仅 progress"的公共等价（`DisposeSemanticsTests`）。
+   - `ProgressRun.LoadAndMountForeground(levelId)` 以**任意关卡**作为初始前台挂载的测试基础设施——生产中初始挂载只经入口/存档，无任意关卡初始挂载的公共 API。
+
 **禁止使用 InternalsVisibleTo 的情况（应通过公共接口验证）**：
 
-1. **会话生命周期的编排方法**：`SessionRun.PersistLevelState()`、`SessionRun.SerializeToPayload()`、`SessionRun.LoadFromPayload()` 等内部方法的行为应通过 `ISndContext.RequestSaveGame()` + `ISaveStorageService` 公共流程验证
+1. **会话生命周期的编排方法**：`SessionRun.PersistLevelState()`、`SessionRun.SerializeToPayload()`、`ProgressRun.LoadFromPayload()`/`BuildSavePayload()`/`SwitchForeground()`、`SessionManager.PersistSession()`/`ProcessingKeys` 等内部方法/属性的行为应通过 `ISndContext.RequestSaveGame()`/`RequestLoadGame()`/`RequestSwitchForegroundLevel()` + `ISaveStorageService` 公共流程验证（syncProcess 状态通过 `ProcessAllSessions` 是否处理该会话来间接验证）。仅上述白名单第 7 条所列、无公共等价的低层校验情形除外。
 
 2. **场景宿主内部方法作为行为触发器**：当测试意图是验证实体/策略行为（而非场景宿主自身契约）时，`FullMemorySndSceneHost.ProcessAll()`/`CreateEntity()`/`RemoveEntity()`/`RemoveAllEntities()` 不得作为触发捷径——应通过 `ISessionRun.Spawn`、`ISessionManager.ProcessAllSessions(includeForeground: true)`、`ISessionRun.RequestKillEntity` + `ISessionManager.KillPendingAllSessions()` 公共流程。（验证场景宿主自身契约的测试例外，见上白名单第 3 条。）
 

@@ -1,31 +1,38 @@
+using System.Collections.Generic;
+using System.Threading;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
+using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Strategy;
 
 namespace Origo.Core.Tests;
 
 /// <summary>
 ///     Play-Stop-Play 完整往返测试：
-///     验证 ProgressRun 序列化 → Dispose → 重建 → 反序列化 后，
+///     验证 存档 → Dispose → 新进程（共享文件系统）→ 读档 后，
 ///     前台 SessionRun 身份保留、Tick 状态保留、各 SessionBlackBoard 数据互不污染。
 ///     <para>
-///         恢复入口仅需 saveId —— ProgressRun 在内部自行创建空白 ProgressBlackboard，
-///         通过 <see cref="ProgressRun.LoadFromPayload" /> 读取持久化数据并恢复全部状态。
-///         测试不注入预构建的 IBlackboard 实例。
+///         往返通过公共 <see cref="ISndContext" /> 存读档流程完成：ctx1 存档到共享
+///         文件系统，ctx2（模拟重启）从同一文件系统读档。会话的 syncProcess 状态
+///         通过 <see cref="ISessionManager.ProcessAllSessions" /> 是否处理该会话的
+///         探针实体来间接验证，而非直接读取内部属性。
 ///     </para>
 /// </summary>
+[Collection("StrategyStateTests")]
 public class PlayStopPlayRoundTripTests
 {
-    // ── Full round-trip: serialize → dispose → recreate → deserialize ──
+    // ── Full round-trip: save → dispose → recreate → reload ──
 
     [Fact]
     public void RoundTrip_ForegroundIdentity_Preserved()
     {
         // ── PLAY 1 ──────────────────────────────────────────────────────
-        var (ctx1, _) = CreateContext();
+        var (ctx1, fs) = CreateContext();
         var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_a");
 
@@ -33,65 +40,68 @@ public class PlayStopPlayRoundTripTests
         Assert.True(fg1.IsFrontSession);
         Assert.Equal("level_a", fg1.LevelId);
 
-        // Serialize.
-        var payload = pr1.BuildSavePayload("save-001");
+        ctx1.Save.RequestSaveGame("save-001");
+        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
 
-        // ── PLAY 2 ──────────────────────────────────────────────────────
-        var (ctx2, _) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2);
-        pr2.LoadFromPayload(payload);
+        // ── PLAY 2 (shared file system simulates a restart) ─────────────
+        var (ctx2, _) = CreateContext(fs);
+        ctx2.Save.RequestLoadGame("save-001");
+        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg2.IsFrontSession, "Foreground identity must be restored after round-trip.");
         Assert.Equal("level_a", fg2.LevelId);
-
-        pr2.Dispose();
     }
 
     [Fact]
     public void RoundTrip_BackgroundTickState_Preserved()
     {
         // ── PLAY 1 ──────────────────────────────────────────────────────
-        var (ctx1, _) = CreateContext();
+        var (ctx1, fs) = CreateContext();
         var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_a");
 
         // Create background sessions: one with syncProcess=true, one with syncProcess=false.
-        ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_tick", "bg_level_tick", true);
-        ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_store", "bg_level_store");
+        var bgTick = ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_tick", "bg_level_tick", true);
+        var bgStore = ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_store", "bg_level_store");
+        bgTick.Spawn(TickProbeMeta());
+        bgStore.Spawn(TickProbeMeta());
 
-        var sm = (SessionManager)ctx1.Runtime.SessionManager;
-        Assert.Contains("bg_tick", sm.ProcessingKeys);
-        Assert.DoesNotContain("bg_store", sm.ProcessingKeys);
+        // Only the synced background session is processed.
+        TickProbeStrategy.Reset();
+        ctx1.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: false);
+        Assert.Contains("bg_level_tick", TickProbeStrategy.Ticked);
+        Assert.DoesNotContain("bg_level_store", TickProbeStrategy.Ticked);
 
-        // Serialize.
-        var payload = pr1.BuildSavePayload("save-002");
+        ctx1.Save.RequestSaveGame("save-002");
+        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
 
         // ── PLAY 2 ──────────────────────────────────────────────────────
-        var (ctx2, _) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2);
-        pr2.LoadFromPayload(payload);
+        var (ctx2, _) = CreateContext(fs);
+        ctx2.Save.RequestLoadGame("save-002");
+        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var sm2 = (SessionManager)ctx2.Runtime.SessionManager;
-        Assert.Contains("bg_tick", sm2.ProcessingKeys);
-        Assert.DoesNotContain("bg_store", sm2.ProcessingKeys);
         Assert.NotNull(ctx2.Runtime.SessionManager.TryGet("bg_tick"));
         Assert.NotNull(ctx2.Runtime.SessionManager.TryGet("bg_store"));
 
-        pr2.Dispose();
+        // syncProcess is preserved across the round-trip: only bg_tick is processed.
+        TickProbeStrategy.Reset();
+        ctx2.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: false);
+        Assert.Contains("bg_level_tick", TickProbeStrategy.Ticked);
+        Assert.DoesNotContain("bg_level_store", TickProbeStrategy.Ticked);
     }
 
     [Fact]
     public void RoundTrip_SessionBlackboards_Isolated_NoCrossContamination()
     {
         // ── PLAY 1 ──────────────────────────────────────────────────────
-        var (ctx1, _) = CreateContext();
+        var (ctx1, fs) = CreateContext();
         var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_a");
 
@@ -107,16 +117,16 @@ public class PlayStopPlayRoundTripTests
         Assert.False(fg1.SessionBlackboard.TryGet<int>("bg_only").found);
         Assert.False(bg1.SessionBlackboard.TryGet<int>("fg_only").found);
 
-        // Serialize.
-        var payload = pr1.BuildSavePayload("save-003");
+        ctx1.Save.RequestSaveGame("save-003");
+        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
 
         // ── PLAY 2 ──────────────────────────────────────────────────────
-        var (ctx2, _) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2);
-        pr2.LoadFromPayload(payload);
+        var (ctx2, _) = CreateContext(fs);
+        ctx2.Save.RequestLoadGame("save-003");
+        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
         var bg2 = ctx2.Runtime.SessionManager.TryGet("bg1")!;
@@ -142,44 +152,41 @@ public class PlayStopPlayRoundTripTests
             "Foreground blackboard must not contain background-only data.");
         Assert.False(bg2.SessionBlackboard.TryGet<int>("fg_only").found,
             "Background blackboard must not contain foreground-only data.");
-
-        pr2.Dispose();
     }
 
     [Fact]
     public void RoundTrip_ProgressBlackboard_Shared_AcrossSessions()
     {
         // ── PLAY 1 ──────────────────────────────────────────────────────
-        var (ctx1, _) = CreateContext();
+        var (ctx1, fs) = CreateContext();
         var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_a");
         pr1.ProgressBlackboard.SetValue("global_flag", "hello_world");
 
         ctx1.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level");
 
-        var payload = pr1.BuildSavePayload("save-004");
+        ctx1.Save.RequestSaveGame("save-004");
+        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
 
         // ── PLAY 2 ──────────────────────────────────────────────────────
-        var (ctx2, _) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2);
-        pr2.LoadFromPayload(payload);
+        var (ctx2, _) = CreateContext(fs);
+        ctx2.Save.RequestLoadGame("save-004");
+        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // ProgressBlackboard data is restored and shared.
-        var (found, val) = pr2.ProgressBlackboard.TryGet<string>("global_flag");
+        var (found, val) = ctx2.Blackboard.ProgressBlackboard!.TryGet<string>("global_flag");
         Assert.True(found);
         Assert.Equal("hello_world", val);
-
-        pr2.Dispose();
     }
 
     [Fact]
     public void RoundTrip_AllSessionProperties_Restored_Correctly()
     {
         // ── PLAY 1: Create complex topology ─────────────────────────────
-        var (ctx1, _) = CreateContext();
+        var (ctx1, fs) = CreateContext();
         var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("main_level");
 
@@ -189,27 +196,32 @@ public class PlayStopPlayRoundTripTests
         // Tickable background.
         var bgTick = ctx1.Runtime.SessionManager.CreateBackgroundSession("sim", "sim_level", true);
         bgTick.SessionBlackboard.SetValue("step", 7);
+        bgTick.Spawn(TickProbeMeta());
 
         // Non-tickable background.
         var bgStore = ctx1.Runtime.SessionManager.CreateBackgroundSession("cache", "cache_level");
         bgStore.SessionBlackboard.SetValue("cached", true);
+        bgStore.Spawn(TickProbeMeta());
 
         // Verify state before serialization.
         Assert.True(fg1.IsFrontSession);
         Assert.False(bgTick.IsFrontSession);
         Assert.False(bgStore.IsFrontSession);
-        Assert.Contains("sim", ((SessionManager)ctx1.Runtime.SessionManager).ProcessingKeys);
-        Assert.DoesNotContain("cache", ((SessionManager)ctx1.Runtime.SessionManager).ProcessingKeys);
+        TickProbeStrategy.Reset();
+        ctx1.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: false);
+        Assert.Contains("sim_level", TickProbeStrategy.Ticked);
+        Assert.DoesNotContain("cache_level", TickProbeStrategy.Ticked);
 
-        var payload = pr1.BuildSavePayload("save-005");
+        ctx1.Save.RequestSaveGame("save-005");
+        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
 
         // ── PLAY 2: Full restore ────────────────────────────────────────
-        var (ctx2, _) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2);
-        pr2.LoadFromPayload(payload);
+        var (ctx2, _) = CreateContext(fs);
+        ctx2.Save.RequestLoadGame("save-005");
+        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // Foreground identity & data.
         var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
@@ -222,14 +234,18 @@ public class PlayStopPlayRoundTripTests
         Assert.False(sim2.IsFrontSession);
         Assert.Equal("sim_level", sim2.LevelId);
         Assert.Equal(7, sim2.SessionBlackboard.TryGet<int>("step").value);
-        Assert.Contains("sim", ((SessionManager)ctx2.Runtime.SessionManager).ProcessingKeys);
 
         // Non-tickable background: restored with syncProcess=false.
         var cache2 = ctx2.Runtime.SessionManager.TryGet("cache")!;
         Assert.False(cache2.IsFrontSession);
         Assert.Equal("cache_level", cache2.LevelId);
         Assert.True(cache2.SessionBlackboard.TryGet<bool>("cached").value);
-        Assert.DoesNotContain("cache", ((SessionManager)ctx2.Runtime.SessionManager).ProcessingKeys);
+
+        // syncProcess preserved: only sim is processed after restore.
+        TickProbeStrategy.Reset();
+        ctx2.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: false);
+        Assert.Contains("sim_level", TickProbeStrategy.Ticked);
+        Assert.DoesNotContain("cache_level", TickProbeStrategy.Ticked);
 
         // Cross-contamination check.
         Assert.False(fg2.SessionBlackboard.TryGet<int>("step").found);
@@ -238,8 +254,6 @@ public class PlayStopPlayRoundTripTests
         Assert.False(sim2.SessionBlackboard.TryGet<bool>("cached").found);
         Assert.False(cache2.SessionBlackboard.TryGet<int>("score").found);
         Assert.False(cache2.SessionBlackboard.TryGet<int>("step").found);
-
-        pr2.Dispose();
     }
 
     // ── Verify ProgressRun starts clean — no auto-restore from blackboard ──
@@ -273,95 +287,103 @@ public class PlayStopPlayRoundTripTests
     public void LoadFromPayload_FullyRestoresFromPayloadOnly()
     {
         // ── PLAY 1: Create state ────────────────────────────────────────
-        var (ctx1, _) = CreateContext();
+        var (ctx1, fs) = CreateContext();
         var pr1 = SetupProgressRun(ctx1);
         pr1.LoadAndMountForeground("level_x");
         pr1.ProgressBlackboard.SetValue("user_data", "important");
 
-        ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_sim", "sim_level", true);
+        var bgSim = ctx1.Runtime.SessionManager.CreateBackgroundSession("bg_sim", "sim_level", true);
+        bgSim.Spawn(TickProbeMeta());
 
-        var payload = pr1.BuildSavePayload("save-rt");
+        ctx1.Save.RequestSaveGame("save-rt");
+        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
 
-        // ── PLAY 2: Restore from payload only ───────────────────────────
-        var (ctx2, _) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2);
+        // ── PLAY 2: Restore from a fresh context ────────────────────────
+        var (ctx2, _) = CreateContext(fs);
 
-        // Before LoadFromPayload: completely empty.
-        Assert.Null(pr2.SessionManager.ForegroundSession);
-        Assert.Empty(pr2.SessionManager.Keys);
+        // Before load: completely empty.
+        Assert.Null(ctx2.Runtime.SessionManager.ForegroundSession);
+        Assert.Empty(ctx2.Runtime.SessionManager.Keys);
 
-        pr2.LoadFromPayload(payload);
+        ctx2.Save.RequestLoadGame("save-rt");
+        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        // After LoadFromPayload: everything is restored from the payload.
-        Assert.NotNull(pr2.SessionManager.ForegroundSession);
-        Assert.True(pr2.SessionManager.ForegroundSession!.IsFrontSession);
-        Assert.Equal("level_x", pr2.SessionManager.ForegroundSession!.LevelId);
+        // After load: everything is restored from storage.
+        Assert.NotNull(ctx2.Runtime.SessionManager.ForegroundSession);
+        Assert.True(ctx2.Runtime.SessionManager.ForegroundSession!.IsFrontSession);
+        Assert.Equal("level_x", ctx2.Runtime.SessionManager.ForegroundSession!.LevelId);
 
-        var (found, val) = pr2.ProgressBlackboard.TryGet<string>("user_data");
+        var (found, val) = ctx2.Blackboard.ProgressBlackboard!.TryGet<string>("user_data");
         Assert.True(found);
         Assert.Equal("important", val);
 
-        Assert.NotNull(pr2.SessionManager.TryGet("bg_sim"));
-        Assert.Contains("bg_sim", ((SessionManager)pr2.SessionManager).ProcessingKeys);
-
-        pr2.Dispose();
+        Assert.NotNull(ctx2.Runtime.SessionManager.TryGet("bg_sim"));
+        TickProbeStrategy.Reset();
+        ctx2.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: false);
+        Assert.Contains("sim_level", TickProbeStrategy.Ticked);
     }
 
     [Fact]
     public void LoadFromPayload_CanBeCalledMultipleTimes()
     {
-        // Verify that calling LoadFromPayload on an already-loaded ProgressRun
-        // cleanly replaces all state (no residual data from previous load).
-        var (ctx, _) = CreateContext();
+        // Verify that loading twice cleanly replaces all state (no residual
+        // data from the previous load).
+        var (ctx, fs) = CreateContext();
         var pr = SetupProgressRun(ctx);
         pr.LoadAndMountForeground("first_level");
         pr.ProgressBlackboard.SetValue("first_data", "A");
 
-        var payload1 = pr.BuildSavePayload("save-1");
+        ctx.Save.RequestSaveGame("save-1");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         // Create second state.
-        pr.SwitchForeground("second_level");
+        ctx.Save.RequestSwitchForegroundLevel("second_level");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         pr.ProgressBlackboard.SetValue("second_data", "B");
-        ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "bg2_level", true);
+        var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "bg2_level", true);
+        bg2.Spawn(TickProbeMeta());
 
-        var payload2 = pr.BuildSavePayload("save-2");
+        ctx.Save.RequestSaveGame("save-2");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         pr.Dispose();
 
-        // Restore from payload1.
-        var (ctx2, _) = CreateContext();
-        var pr2 = SetupProgressRun(ctx2);
-        pr2.LoadFromPayload(payload1);
+        // Restore from save-1.
+        var (ctx2, _) = CreateContext(fs);
+        ctx2.Save.RequestLoadGame("save-1");
+        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Equal("first_level", pr2.SessionManager.ForegroundSession!.LevelId);
-        Assert.True(pr2.ProgressBlackboard.TryGet<string>("first_data").found);
+        Assert.Equal("first_level", ctx2.Runtime.SessionManager.ForegroundSession!.LevelId);
+        Assert.True(ctx2.Blackboard.ProgressBlackboard!.TryGet<string>("first_data").found);
 
-        // Override with payload2.
-        pr2.LoadFromPayload(payload2);
+        // Override with save-2.
+        ctx2.Save.RequestLoadGame("save-2");
+        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        Assert.Equal("second_level", pr2.SessionManager.ForegroundSession!.LevelId);
-        Assert.True(pr2.ProgressBlackboard.TryGet<string>("second_data").found);
-        Assert.NotNull(pr2.SessionManager.TryGet("bg2"));
-        Assert.Contains("bg2", ((SessionManager)pr2.SessionManager).ProcessingKeys);
-
-        pr2.Dispose();
+        Assert.Equal("second_level", ctx2.Runtime.SessionManager.ForegroundSession!.LevelId);
+        Assert.True(ctx2.Blackboard.ProgressBlackboard!.TryGet<string>("second_data").found);
+        Assert.NotNull(ctx2.Runtime.SessionManager.TryGet("bg2"));
+        TickProbeStrategy.Reset();
+        ctx2.Runtime.SessionManager.ProcessAllSessions(0.016, includeForeground: false);
+        Assert.Contains("bg2_level", TickProbeStrategy.Ticked);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────
 
-    private static (SndContext ctx, TestFileSystem fs) CreateContext()
+    private static (SndContext ctx, TestFileSystem fs) CreateContext(TestFileSystem? sharedFs = null)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = sharedFs ?? new TestFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        runtime.SndWorld.RegisterStrategy(() => new TickProbeStrategy());
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         return (ctx, fs);
@@ -373,5 +395,26 @@ public class PlayStopPlayRoundTripTests
             "001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
         ctx.SetProgressRun(progressRun);
         return progressRun;
+    }
+
+    private static SndMetaData TickProbeMeta() => new()
+    {
+        Name = "tick_probe",
+        NodeMetaData = new NodeMetaData(),
+        StrategyMetaData = new StrategyMetaData { LifecycleIndices = [_tickProbeIndex] },
+        DataMetaData = new DataMetaData()
+    };
+
+    private const string _tickProbeIndex = "play_stop_play.tick_probe";
+
+    [StrategyIndex(_tickProbeIndex)]
+    private sealed class TickProbeStrategy : LifecycleStrategyBase
+    {
+        private static readonly AsyncLocal<HashSet<string>?> _ticked = new();
+        public static HashSet<string> Ticked => _ticked.Value ??= [];
+        public static void Reset() => _ticked.Value = [];
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
+            Ticked.Add(entity.OwningSession.LevelId);
     }
 }
