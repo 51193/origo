@@ -238,29 +238,6 @@ public class EntityKillTests
     // ── DeadByName ─────────────────────────────────────────────────────
 
     [Fact]
-    public void DeadByName_TriggersBeforeDead()
-    {
-        var (ctx, _, _) = SetupKillTest(registerKillProbe: true);
-        var session = ctx.Runtime.SessionManager.ForegroundSession!;
-        SpawnEntity(session, "E");
-        Assert.NotNull(session.FindByName("E"));
-
-        KillProbeStrategy.Events = [];
-        try
-        {
-            session.RequestKillEntity("E");
-            ctx.Runtime.SessionManager.KillPendingAllSessions();
-
-            Assert.Contains("before_dead", KillProbeStrategy.Events);
-            Assert.Null(session.FindByName("E"));
-        }
-        finally
-        {
-            KillProbeStrategy.Events = null;
-        }
-    }
-
-    [Fact]
     public void DeadByName_RemovesEntity()
     {
         var logger = new TestLogger();

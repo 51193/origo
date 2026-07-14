@@ -103,6 +103,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
    - `ProgressRun.LoadFromPayload` 对**手工构造的畸形/缺失字段载荷**的校验（畸形/缺失拓扑、null 的 `ProgressStateMachinesNode`）——公共 `RequestLoadGame` 走磁盘，存档写入器会在读档校验前就拒绝这类畸形载荷，无法忠实复现（`ProgressRunSessionLoadingEdgeTests`、`LifecycleRunsTests`）。
    - `ProgressRun.PersistProgress`（仅持久化 progress、不含会话数据）——公共 `RequestSaveGame` 会连带持久化会话，无"仅 progress"的公共等价（`DisposeSemanticsTests`）。
    - `ProgressRun.LoadAndMountForeground(levelId)` 以**任意关卡**作为初始前台挂载的测试基础设施——生产中初始挂载只经入口/存档，无任意关卡初始挂载的公共 API。
+   - `ProgressRun.BuildSavePayload`/`LoadFromPayload` 的**内存往返编解码契约**（`PayloadCodec_InMemoryRoundTrip_PreservesState`）——隔离验证序列化编解码本身、不经磁盘；公共 `RequestSaveGame`/`RequestLoadGame` 会把编解码与存储管线耦合，无法隔离验证 codec。
 
 **禁止使用 InternalsVisibleTo 的情况（应通过公共接口验证）**：
 

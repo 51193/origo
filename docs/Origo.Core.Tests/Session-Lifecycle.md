@@ -166,6 +166,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `RoundTrip_ProgressBlackboard_Shared_AcrossSessions` | ProgressBlackboard 数据在往返后可跨会话共享 | session-model |
 | `RoundTrip_AllSessionProperties_Restored_Correctly` | 所有会话属性（标志/LevelId/黑板/Tick(syncProcess)）在往返后正确恢复 | session-model |
 | `LoadFromPayload_FullyRestoresFromPayloadOnly` | LoadFromPayload 完全从 Payload 恢复，不从外部黑板注入 | session-model |
+| `PayloadCodec_InMemoryRoundTrip_PreservesState` | 隔离的内存 payload 往返（BuildSavePayload→LoadFromPayload，不经磁盘）保留前后台状态 | session-model |
 
 ### 边界路径
 
@@ -446,6 +447,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `NoOpPopStrategy` | SessionDecouplingTests.cs | 空白 Pop 策略（仅占位，配合 BlackboardProbeStrategy/SceneAccessProbeStrategy） |
 | `PrefixedSavePathPolicy` | SessionDecouplingTests.cs | ISavePathPolicy 实现：所有路径段加前缀，验证策略注入能力 |
 | `TrackingSaveStorageService` | SessionDecouplingTests.cs | ISaveStorageService 装饰器：记录 WriteLevelPayloadOnly 调用次数和最后 Payload |
+| `TickProbeStrategy` | PlayStopPlayRoundTripTests.cs | LifecycleStrategyBase：Process 时将 OwningSession.LevelId 记入 AsyncLocal 集合，用于间接验证 syncProcess（哪些会话被 ProcessAllSessions 处理） |
 
 ## 已知覆盖缺口
 

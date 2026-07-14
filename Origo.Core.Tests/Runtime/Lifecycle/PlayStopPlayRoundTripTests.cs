@@ -371,6 +371,36 @@ public class PlayStopPlayRoundTripTests
         Assert.Contains("bg2_level", TickProbeStrategy.Ticked);
     }
 
+    [Fact]
+    public void PayloadCodec_InMemoryRoundTrip_PreservesState()
+    {
+        // Isolated payload-codec round-trip: BuildSavePayload -> LoadFromPayload
+        // in memory (no storage), verifying the serialization codec alone,
+        // independent of the disk save/load pipeline. Uses the internal payload
+        // methods deliberately (META-TEST white-list §7: codec round-trip
+        // contract with no faithful public isolation).
+        var (ctx1, _) = CreateContext();
+        var pr1 = SetupProgressRun(ctx1);
+        pr1.LoadAndMountForeground("level_a");
+        ctx1.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("k", 7);
+        ctx1.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level", true);
+
+        var payload = pr1.BuildSavePayload("codec");
+        pr1.Dispose();
+
+        // Separate context/file system: the in-memory payload is the only carrier.
+        var (ctx2, _) = CreateContext();
+        var pr2 = SetupProgressRun(ctx2);
+        pr2.LoadFromPayload(payload);
+
+        var fg = pr2.SessionManager.ForegroundSession!;
+        Assert.Equal("level_a", fg.LevelId);
+        Assert.Equal(7, fg.SessionBlackboard.TryGet<int>("k").value);
+        Assert.NotNull(pr2.SessionManager.TryGet("bg"));
+
+        pr2.Dispose();
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
 
     private static (SndContext ctx, TestFileSystem fs) CreateContext(TestFileSystem? sharedFs = null)

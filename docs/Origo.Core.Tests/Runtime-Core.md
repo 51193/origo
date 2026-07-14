@@ -44,7 +44,6 @@
 | `KillPendingEntities_FiresBeforeDead` | 收割触发 BeforeDead 钩子并移除实体 | Runtime: 实体生命周期 |
 | `KillPendingEntities_BusinessDeferredBeforeKillSweep` | 业务延迟动作按入队顺序执行，且收割在其后触发 BeforeDead | Scheduling |
 | `KillPendingAllSessions_RemovesPendingEntities` | KillPendingAllSessions 移除被标记的实体 | Runtime: SessionManager |
-| `DeadByName_TriggersBeforeDead` | FireBeforeDeadHooks + RemoveEntity 触发 BeforeDead | Runtime: 实体生命周期 |
 | `DeadByName_RemovesEntity` | RemoveEntity 后实体从场景移除 | Runtime: 实体生命周期 |
 | `StubSndSceneHost_DeadByName_RemovesEntity` | Stub 宿主 RemoveEntity 移除实体 | Runtime: ISndSceneHost |
 | `StubSndSceneHost_RequestKillEntity_MarksPendingKill` | Stub 宿主 RequestKillEntity 标记 IsPendingKill，实体仍在集合 | Runtime: ISndSceneHost |
