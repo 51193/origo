@@ -82,6 +82,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Source generator diagnostic messages now carry source locations derived from the `SndInlineTypesAttribute` syntax, providing IDE squiggles and click-to-navigate.
 - `GodotSndManager.ProcessAll` now iterates entities directly instead of copying to an array each frame.
 - `GodotPackedSceneNodeFactory` now uses `Dictionary` instead of `ConcurrentDictionary` for its scene cache.
+- `FullMemorySndSceneHost.ProcessAll` now iterates entities directly instead of copying to an array each frame, matching the same optimization applied to `GodotSndManager.ProcessAll` in v0.0.8.
 
 ### Removed
 

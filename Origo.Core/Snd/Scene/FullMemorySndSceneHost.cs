@@ -105,9 +105,8 @@ internal sealed class FullMemorySndSceneHost
 
     public void ProcessAll(double delta)
     {
-        var snapshot = _entries.ToArray();
-        foreach (var entry in snapshot)
-            entry.Entity.Process(delta);
+        for (var i = 0; i < _entries.Count; i++)
+            _entries[i].Entity.Process(delta);
     }
 
     internal void BindWorld(SndWorld world)
