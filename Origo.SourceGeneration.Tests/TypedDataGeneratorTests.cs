@@ -270,6 +270,19 @@ public class TypedDataGeneratorTests
     }
 
     [Fact]
+    public void Home_WithoutString_GeneratesCompilableCode()
+    {
+        var attribute = "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int), typeof(float))]";
+        var output = RunHome(attribute);
+
+        Assert.Empty(output.CompileErrors);
+        Assert.DoesNotContain("KindMap.String", output.AllGeneratedText);
+        Assert.DoesNotContain("IsString", output.AllGeneratedText);
+        Assert.DoesNotContain("AsString(", output.AllGeneratedText);
+        Assert.DoesNotContain("TryGetString(", output.AllGeneratedText);
+    }
+
+    [Fact]
     public void OverlappingStartKinds_SameType_Deduplicated()
     {
         var attribute = """
@@ -321,6 +334,23 @@ public class TypedDataGeneratorTests
         Assert.Equal(first.GeneratedSources.Length, second.GeneratedSources.Length);
         for (var i = 0; i < first.GeneratedSources.Length; i++)
             Assert.Equal(first.GeneratedSources[i], second.GeneratedSources[i]);
+    }
+
+    [Fact]
+    public void Incremental_SameInputTwice_TrackedStepsPresent()
+    {
+        var source = _scaffoldHeader + "\n" + _homePrimitivesAttribute + "\n" + _scaffoldBody;
+        var compilation = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+
+        var (_, driver2) = GeneratorTestHarness.RunIncremental(driver, compilation);
+        var (_, driver3) = GeneratorTestHarness.RunIncremental(driver2, compilation);
+
+        var runResult = driver3.GetRunResult();
+        Assert.True(runResult.Results.Length > 0);
+
+        var trackedSteps = runResult.Results[0].TrackedSteps;
+        Assert.NotEmpty(trackedSteps);
     }
 
     [Fact]

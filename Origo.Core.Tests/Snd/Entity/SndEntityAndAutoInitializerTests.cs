@@ -85,6 +85,23 @@ public class SndEntityAndAutoInitializerTests
     }
 
     [Fact]
+    public void SetData_NullOrWhitespaceName_ThrowsArgumentException()
+    {
+        var logger = new TestLogger();
+        var context = CreateContext(logger);
+        var nodeFactory = new TestNodeFactory();
+        var observerTopology = new ObserverTopology(context.Runtime.SndWorld.StrategyPool, logger);
+        observerTopology.BindContext(context);
+        var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
+        entity.SpawnSingle(new SndMetaData
+        { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
+
+        Assert.Throws<ArgumentNullException>(() => entity.SetData(null!, 42));
+        Assert.Throws<ArgumentException>(() => entity.SetData("", 42));
+        Assert.Throws<ArgumentException>(() => entity.SetData("  ", 42));
+    }
+
+    [Fact]
     public void OrigoAutoInitializer_LoadAndSpawnFromFile_LoadsInlineMetaArray()
     {
         var logger = new TestLogger();

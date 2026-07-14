@@ -692,6 +692,29 @@ public class ObserverStrategyTests
         };
     }
 
+    [Fact]
+    public void FullCleanup_NullTargetEntity_ThrowsInvalidOperation()
+    {
+        var world = TestFactory.CreateSndWorld();
+        world.RegisterStrategy(() => new NoDataKeyObserver());
+        var pool = world.StrategyPool;
+        var strategy = pool.GetStrategy<ObserverStrategyBase>(_noDataKeyIdx);
+
+        var entry = new ObserverBindingEntry
+        {
+            ObserverName = "observer",
+            TargetName = "target",
+            ObserverIndex = _noDataKeyIdx,
+            Strategy = strategy,
+            DataKeys = [],
+            TargetEntity = null
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => entry.FullCleanup(null!, null!, null!));
+        Assert.Contains("TargetEntity", ex.Message, StringComparison.Ordinal);
+    }
+
     // ── Test strategies ────────────────────────────────────────────────
 
     [StrategyIndex(_selfWatchIdx)]
