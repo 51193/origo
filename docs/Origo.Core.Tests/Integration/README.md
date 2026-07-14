@@ -20,7 +20,7 @@
 | `AdvancedGameplayIntegrationTests.cs` | 大量实体批量 spawn/kill（100 实体）、控制台命令路由（snd_count / bb_set/bb_get system 层）、实体数据直接 API round-trip、多策略实体组合（Lifecycle+Observer、Lifecycle+Active、三种类型全挂载）、多实体存档/加载状态保持；错误路径：request kill 未知实体、spawn 未注册策略索引 |
 | `ActiveStrategyIntegrationTests.cs` | ActiveStrategy 在完整帧循环中的集成测试：直接 InvokeStrategy 调用、Process 触发自调用、跨实体 InvokeStrategy、ActiveStrategy 索引存档/加载持久化、AfterLoad 后 Invoke 验证、Lifecycle+Active 混合实体帧循环、动态 AddActiveStrategy/RemoveActiveStrategy 生命周期；错误路径：killed 实体上 InvokeStrategy、重复 AddActiveStrategy |
 | `StateMachineIntegrationTests.cs` | 状态机在帧循环中的集成测试：Push/Pop 帧驱动、OnPushRuntime/OnPopRuntime 钩子触发、OnPopBeforeQuit 在 session destroy 时触发、状态机栈存档/加载 AfterLoad 恢复、多独立状态机栈、Lifecycle 策略跨帧 Push/Pop 状态；错误路径：session destroy 后操作状态机 |
-| `ObserverTopologyIntegrationTests.cs` | 观察者拓扑在帧循环中的集成测试：mount 触发 OnMounted+OnDataChanged（带正确旧/新值）、unmount 停止通知、target kill 触发 OnUnmounted、数据变化新旧值正确性、多目标独立通知、帧驱动策略在 Process 中自动挂载观察者 |
+| `ObserverTopologyIntegrationTests.cs` | 观察者拓扑在帧循环中的集成测试：mount 触发 OnMounted+OnDataChanged（带正确旧/新值）、unmount 停止通知、target kill 触发 OnUnmounted、数据变化新旧值正确性、多目标独立通知、帧驱动策略在 Process 中自动挂载观察者；错误路径：无效索引 mount、重复 mount、killed 实体 mount |
 | `PlanningIntegrationTests.cs` | 意图驱动计划执行：intent 触发计划开始、两步骤计划完成、无 intent 不启动、数据属性键验证、多实体独立计划 |
 | `StrategyStateSaveLoadIntegrationTests.cs` | 策略状态持久化：生命周期 count 状态 survive、实体数据+黑板 survive、重载后继续处理、20 实体批量无丢失、覆盖存档、多 session 全状态保留；错误路径：损坏 progress.json 导致加载失败 |
 
@@ -99,7 +99,6 @@ Assert.Equal(10, count);
 |---------|------|---------|
 | 多实体批量 spawn + 帧处理的扩展场景（实体数量 > 100） | 未验证大量实体时帧循环的稳定性 | architecture-overview: 帧循环 |
 | StrategyStateMachine 在帧循环中的跨实体状态机交互 | 未验证状态机变换触发的跨实体作用 | state-machine |
-| 观察者 mount/unmount 错误路径（死实体 mount、重复 mount、无效 index） | 未验证观察者系统的全部快速失败契约 | snd-entity-model |
 | 延迟动作在 session destroy 后的错误行为 | 未验证 EnqueueDeferred 在 dispose 后的抛出语义 | Scheduling |
 | Save/load 的错误路径集成验证（缺失文件、损坏的 level 数据） | 大部分仅单元测试覆盖，缺少帧管线穿透验证 | persistence-flow |
 

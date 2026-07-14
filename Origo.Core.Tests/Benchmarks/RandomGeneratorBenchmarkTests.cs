@@ -163,15 +163,12 @@ public class RandomGeneratorBenchmarkTests(ITestOutputHelper output)
         var start = GC.GetAllocatedBytesForCurrentThread();
         for (var i = 0; i < iterations; i++)
         {
-            ulong nextS0, nextS1;
-            (_, nextS0, nextS1) = mode switch
-            {
-                0 => RandomNumberGenerator.NextUInt64(s0, s1),
-                1 => RandomNumberGenerator.NextInt64(s0, s1),
-                _ => RandomNumberGenerator.NextInt32(s0, s1),
-            };
-            s0 = nextS0;
-            s1 = nextS1;
+            if (mode == 0)
+                (_, s0, s1) = RandomNumberGenerator.NextUInt64(s0, s1);
+            else if (mode == 1)
+                (_, s0, s1) = RandomNumberGenerator.NextInt64(s0, s1);
+            else
+                (_, s0, s1) = RandomNumberGenerator.NextInt32(s0, s1);
         }
         var alloc = GC.GetAllocatedBytesForCurrentThread() - start;
         return (alloc, s0);

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -191,6 +193,66 @@ public class ObserverTopologyIntegrationTests
         {
             EventCollector.Events = null;
         }
+    }
+
+    // ── error paths ─────────────────────────────────────────────────
+
+    [Fact]
+    public void Observer_MountWithInvalidIndex_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .Build();
+
+        var target = harness.SpawnEntity("target", []);
+        var observer = harness.SpawnEntity("observer", []);
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => observer.MountObserverStrategy(target, "nonexistent.strategy.index"));
+        Assert.Contains("not found", ex.Message);
+    }
+
+    [Fact]
+    public void Observer_DuplicateMount_NotifiesMultipleTimes()
+    {
+        var events = new List<TestObserverEvent>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .Build();
+
+        EventCollector.Events = events;
+        try
+        {
+            var target = harness.SpawnEntity("target", []);
+            var observer = harness.SpawnEntity("observer", []);
+
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+
+            Assert.Single(events, e => e.EventType == "on_mounted");
+
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+
+            Assert.Equal(2, events.Count(e => e.EventType == "on_mounted"));
+        }
+        finally
+        {
+            EventCollector.Events = null;
+        }
+    }
+
+    [Fact]
+    public void Observer_MountToKilledEntity_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .Build();
+
+        var target = harness.SpawnEntity("target", []);
+        var observer = harness.SpawnEntity("observer", []);
+
+        harness.RequestKillEntity("target");
+        harness.DriveFrame();
+
+        Assert.ThrowsAny<Exception>(
+            () => observer.MountObserverStrategy(target, "test.int.obs.topology"));
     }
 
     // ── test strategies ──────────────────────────────────────────────
