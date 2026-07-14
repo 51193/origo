@@ -57,9 +57,13 @@ public sealed class ConsoleBridgeServer : IDisposable
 
         _cts.Cancel();
 
+        // Do not dispose the writer here: it wraps the same NetworkStream the
+        // connection handler owns. _cts.Cancel() already unblocks the handler's
+        // ReadLineAsync, and its finally block closes the stream/client once, in
+        // order (a graceful FIN). Disposing the shared stream from this thread as
+        // well would race that teardown and can reset the connection (RST).
         lock (_writerLock)
         {
-            _writer?.Dispose();
             _writer = null;
         }
 

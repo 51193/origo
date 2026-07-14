@@ -117,6 +117,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- `ConsoleBridgeServer.Dispose()` no longer intermittently resets a connected client's in-flight read. It disposed the output writer (which owns the connection's `NetworkStream`) concurrently with the connection handler's own teardown; that race could send an RST instead of a graceful close. Disposal now relies on cancellation plus the handler's single, ordered close.
 - Community health files (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `PULL_REQUEST_TEMPLATE.md`) moved from `.github/` to repository root so that relative links in `CONTRIBUTING.md` resolve correctly when GitHub renders the contributing guide.
 - Fixed broken documentation links: `docs/README.md` Testing entry pointed to non-existent `Origo.Core/Testing/` (now `Origo.Core.Tests/StrategyTestScenario.md`), Entity README anchor to Blackboard was missing hyphens in slug, Planning README footer link was self-referential.
 - `Origo.GodotAdapter.Tests.csproj` no longer sets `GodotProjectDir` to a path outside the repository, and no longer declares `GodotDisabledSourceGenerators` / `CompilerVisibleProperty` — these Godot SDK properties are irrelevant for the `Microsoft.NET.Sdk`-based test project and only belong in the `Godot.NET.Sdk`-based adapter project itself.
