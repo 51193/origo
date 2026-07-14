@@ -23,6 +23,7 @@
 | `ObserverTopologyIntegrationTests.cs` | 观察者拓扑在帧循环中的集成测试：mount 触发 OnMounted+OnDataChanged（带正确旧/新值）、unmount 停止通知、target kill 触发 OnUnmounted、数据变化新旧值正确性、多目标独立通知、帧驱动策略在 Process 中自动挂载观察者；错误路径：无效索引 mount、重复 mount、killed 实体 mount |
 | `PlanningIntegrationTests.cs` | 意图驱动计划执行：intent 触发计划开始、两步骤计划完成、无 intent 不启动、数据属性键验证、多实体独立计划 |
 | `StrategyStateSaveLoadIntegrationTests.cs` | 策略状态持久化：生命周期 count 状态 survive、实体数据+黑板 survive、重载后继续处理、20 实体批量无丢失、覆盖存档、多 session 全状态保留；错误路径：损坏 progress.json 导致加载失败 |
+| `ErrorPathIntegrationTests.cs` | 延迟动作帧内正确执行；错误路径：损坏 session.json 加载、损坏 snd_scene.json 加载、不存在的存档加载 |
 
 ## GameplayIntegrationTests 测试详情
 
@@ -99,8 +100,6 @@ Assert.Equal(10, count);
 |---------|------|---------|
 | 多实体批量 spawn + 帧处理的扩展场景（实体数量 > 100） | 未验证大量实体时帧循环的稳定性 | architecture-overview: 帧循环 |
 | StrategyStateMachine 在帧循环中的跨实体状态机交互 | 未验证状态机变换触发的跨实体作用 | state-machine |
-| 延迟动作在 session destroy 后的错误行为 | 未验证 EnqueueDeferred 在 dispose 后的抛出语义 | Scheduling |
-| Save/load 的错误路径集成验证（缺失文件、损坏的 level 数据） | 大部分仅单元测试覆盖，缺少帧管线穿透验证 | persistence-flow |
 
 ---
 
