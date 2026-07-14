@@ -480,6 +480,166 @@ public class PlanExecutionStrategyBaseTests
         Assert.Equal(0, tracking.GetSubCount(_actionStatusKey));
     }
 
+    // ── Tests: OnPlanCompleted standalone ───────────────────────────
+
+    [StrategyIndex("test.completing_plan_strategy")]
+    private sealed class CompletingPlanStrategy : PlanExecutionStrategyBase
+    {
+        private static readonly AsyncLocal<List<string>?> _completedCalls = new();
+        public static List<string>? CompletedCalls { get => _completedCalls.Value; set => _completedCalls.Value = value; }
+
+        private static readonly AsyncLocal<List<string>?> _failedCalls = new();
+        public static List<string>? FailedCalls { get => _failedCalls.Value; set => _failedCalls.Value = value; }
+
+        protected override string IntentKey => PlanExecutionStrategyBaseTests._intentKey;
+        protected override string IntentStatusKey => PlanExecutionStrategyBaseTests._intentStatusKey;
+        protected override string PlanStepKey => PlanExecutionStrategyBaseTests._planStepKey;
+        protected override string ActionKey => PlanExecutionStrategyBaseTests._actionKey;
+        protected override string ActionStatusKey => PlanExecutionStrategyBaseTests._actionStatusKey;
+
+        protected override string? ResolveNextStep(string intent, string currentStep, bool failed, ISndEntity entity)
+        {
+            return (intent, currentStep) switch
+            {
+                ("complete_test", "" or null) => "step_a",
+                ("complete_test", "step_a") => null,
+                _ => null,
+            };
+        }
+
+        protected override string? StepToActionIndex(string stepType)
+        {
+            return stepType switch
+            {
+                "step_a" => "test.action.fake",
+                _ => null,
+            };
+        }
+
+        protected override void OnPlanCompleted(ISndEntity entity) => CompletedCalls?.Add(entity.Name);
+
+        protected override void OnPlanFailed(ISndEntity entity) => FailedCalls?.Add(entity.Name);
+    }
+
+    [Fact]
+    public void OnPlanCompleted_SuccessPath_FiresHook()
+    {
+        CompletingPlanStrategy.CompletedCalls = [];
+        CompletingPlanStrategy.FailedCalls = [];
+        FakeActionStrategy.AfterAddCalls = [];
+        FakeActionStrategy.BeforeRemoveCalls = [];
+
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        world.StrategyPool.Register(() => new CompletingPlanStrategy());
+        world.StrategyPool.Register(() => new FakeActionStrategy());
+        host.BindWorld(world);
+
+        var fs = new TestFileSystem();
+        fs.SeedFile("res://entry/entry.json", "[]");
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
+        host.BindContext(ctx);
+
+        var meta = new SndMetaData
+        {
+            Name = "test_entity",
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
+            DataMetaData = new DataMetaData(),
+            NodeMetaData = new NodeMetaData()
+        };
+
+        var entity = host.CreateEntity(meta);
+        entity.SetData(_intentKey, "complete_test");
+
+        entity.AddStrategy("test.completing_plan_strategy");
+
+        // Plan started at step_a
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
+        Assert.True(foundStep);
+        Assert.Equal("step_a", step);
+
+        // Complete step_a → plan finishes
+        entity.SetData(_actionStatusKey, "completed");
+
+        var (foundIntent, intent) = entity.TryGetData<string>(_intentKey);
+        Assert.True(foundIntent);
+        Assert.Equal("", intent);
+
+        var (foundStatus, intentStatus) = entity.TryGetData<string>(_intentStatusKey);
+        Assert.True(foundStatus);
+        Assert.Equal("completed", intentStatus);
+
+        Assert.Single(CompletingPlanStrategy.CompletedCalls!);
+        Assert.Equal("test_entity", CompletingPlanStrategy.CompletedCalls![0]);
+        Assert.Empty(CompletingPlanStrategy.FailedCalls!);
+    }
+
+    [Fact]
+    public void ResolveNextStep_ReturnsNull_NoPathTerminatesPlan()
+    {
+        CompletingPlanStrategy.CompletedCalls = [];
+        CompletingPlanStrategy.FailedCalls = [];
+        FakeActionStrategy.AfterAddCalls = [];
+        FakeActionStrategy.BeforeRemoveCalls = [];
+
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        world.StrategyPool.Register(() => new CompletingPlanStrategy());
+        world.StrategyPool.Register(() => new FakeActionStrategy());
+        host.BindWorld(world);
+
+        var fs = new TestFileSystem();
+        fs.SeedFile("res://entry/entry.json", "[]");
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
+        host.BindContext(ctx);
+
+        var meta = new SndMetaData
+        {
+            Name = "test_entity",
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
+            DataMetaData = new DataMetaData(),
+            NodeMetaData = new NodeMetaData()
+        };
+
+        var entity = host.CreateEntity(meta);
+        entity.SetData(_intentKey, "complete_test");
+
+        entity.AddStrategy("test.completing_plan_strategy");
+
+        // Plan started at step_a
+        Assert.Equal("step_a", entity.GetData<string>(_planStepKey));
+
+        // Complete step_a → ResolveNextStep returns null (no path) → plan terminates cleanly
+        entity.SetData(_actionStatusKey, "completed");
+
+        // Intent cleared, status completed, OnPlanCompleted fired
+        var (foundIntent, intent) = entity.TryGetData<string>(_intentKey);
+        Assert.True(foundIntent);
+        Assert.Equal("", intent);
+
+        var (foundStatus, intentStatus) = entity.TryGetData<string>(_intentStatusKey);
+        Assert.True(foundStatus);
+        Assert.Equal("completed", intentStatus);
+
+        // Plan step cleared
+        var (foundStepAfter, stepAfter) = entity.TryGetData<string>(_planStepKey);
+        Assert.True(foundStepAfter);
+        Assert.Equal("", stepAfter);
+
+        Assert.Single(CompletingPlanStrategy.CompletedCalls!);
+        Assert.Empty(CompletingPlanStrategy.FailedCalls!);
+    }
+
     // ── Cleanup ────────────────────────────────────────────────────
 
     public PlanExecutionStrategyBaseTests()
@@ -489,6 +649,8 @@ public class PlanExecutionStrategyBaseTests
         FakeAction2Strategy.AfterAddCalls = null;
         FailingPlanStrategy.CompletedCalls = null;
         FailingPlanStrategy.FailedCalls = null;
+        CompletingPlanStrategy.CompletedCalls = null;
+        CompletingPlanStrategy.FailedCalls = null;
     }
 
     private sealed class SubscriptionTrackingEntity(StubSndEntity inner) : ISndEntity, ISndEntityRawSubscription

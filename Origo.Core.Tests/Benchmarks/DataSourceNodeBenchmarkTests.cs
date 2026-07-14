@@ -26,11 +26,9 @@ public class DataSourceNodeBenchmarkTests(ITestOutputHelper output)
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
-
-            DataSourceNode root = null!;
             var allocBefore = GC.GetAllocatedBytesForCurrentThread();
             var sw = Stopwatch.StartNew();
-            root = BuildTree(depth, width);
+            DataSourceNode root = BuildTree(depth, width);
             sw.Stop();
             var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
@@ -115,10 +113,9 @@ public class DataSourceNodeBenchmarkTests(ITestOutputHelper output)
         var totalOps = iterations * root.Count;
         _perf.ReportTable(
             $"DataSourceNode As<T> type dispatch ({totalOps:N0} ops)",
-            new List<(string, int, TimeSpan, long)>
-            {
+            [
                 ("As<T> dispatch", totalOps, sw.Elapsed, totalAlloc)
-            });
+            ]);
 
         GC.KeepAlive(total);
         root.Dispose();

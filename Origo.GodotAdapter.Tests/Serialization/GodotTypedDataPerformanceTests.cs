@@ -50,10 +50,9 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         _perf.CompareTable(
             "Godot Vector3 Write: Registered vs Unregistered",
             "Registered", "Unregistered",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)>
-            {
+            [
                 ("Vector3", _iterations, timeRegistered, allocRegistered, timeUnregistered, allocUnregistered)
-            });
+            ]);
 
         var tdReg = new TypedData(130, 0, v);
         var obj = TypedDataObjectConverter.ToObject(tdReg);
@@ -100,10 +99,9 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         _perf.CompareTable(
             "Godot Vector3 Read: TryGetVector3 vs Data is Vector3",
             "TryGet", "Data is T",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)>
-            {
+            [
                 ("Vector3", _iterations, timeKind, allocKind, timeIsT, allocIsT)
-            });
+            ]);
     }
 
     [Fact]
@@ -137,10 +135,9 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         _perf.CompareTable(
             "Godot ToObject: Switch dispatch vs Data property",
             "Switch", "Data",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)>
-            {
+            [
                 ("ToObject", _iterations, timeSwitch, allocSwitch, timeData, allocData)
-            });
+            ]);
 
         var result = TypedDataObjectConverter.ToObject(td);
         Assert.IsType<Vector3>(result);
@@ -177,10 +174,9 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
         _perf.CompareTable(
             "Godot FromObject: Kind-switch vs unregistered fallback",
             "FromObject", "Fallback",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)>
-            {
+            [
                 ("Color", _iterations, timeSwitch, allocSwitch, timeFallback, allocFallback)
-            });
+            ]);
 
         var (_, refReg) = TypedDataObjectConverter.FromObject(137, v);
         var (_, refUnreg) = TypedDataObjectConverter.FromObject(255, v);
@@ -208,10 +204,9 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         _perf.ReportTable(
             "Godot Vector3 Factory Create+Extract (kind-based path)",
-            new List<(string, int, TimeSpan, long)>
-            {
+            [
                 ("Create+Extract", _iterations * 2, timeRegistered, allocRegistered)
-            });
+            ]);
 
         var tdCreated = TypedDataFactory<Vector3>.Create(v);
         var extracted = TypedDataFactory<Vector3>.TryExtract(tdCreated, out var ev);
@@ -275,10 +270,9 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
         _perf.ReportTable(
             $"Godot Entity Simulation: {entityCount} entities x {frames} frames, {readsPerFrame}r+{writesPerFrame}w",
-            new List<(string, int, TimeSpan, long)>
-            {
+            [
                 ("EntitySim", (int)totalOps, sw.Elapsed, totalAlloc)
-            });
+            ]);
 
         var e0 = entityDicts[0];
         Assert.True(e0.TryGetValue("position", out var posCheck));

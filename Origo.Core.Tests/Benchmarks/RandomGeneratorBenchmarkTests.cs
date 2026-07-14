@@ -51,10 +51,9 @@ public class RandomGeneratorBenchmarkTests(ITestOutputHelper output)
 
         _perf.ReportTable(
             $"XorShift128+ NextUInt64 ({iterations:N0} iters, min of {_timedRounds})",
-            new List<(string, int, TimeSpan, long)>
-            {
+            [
                 ("NextUInt64", iterations, best, totalAlloc)
-            });
+            ]);
     }
 
     [Fact]
@@ -165,18 +164,12 @@ public class RandomGeneratorBenchmarkTests(ITestOutputHelper output)
         for (var i = 0; i < iterations; i++)
         {
             ulong nextS0, nextS1;
-            switch (mode)
+            (_, nextS0, nextS1) = mode switch
             {
-                case 0:
-                    (_, nextS0, nextS1) = RandomNumberGenerator.NextUInt64(s0, s1);
-                    break;
-                case 1:
-                    (_, nextS0, nextS1) = RandomNumberGenerator.NextInt64(s0, s1);
-                    break;
-                default:
-                    (_, nextS0, nextS1) = RandomNumberGenerator.NextInt32(s0, s1);
-                    break;
-            }
+                0 => RandomNumberGenerator.NextUInt64(s0, s1),
+                1 => RandomNumberGenerator.NextInt64(s0, s1),
+                _ => RandomNumberGenerator.NextInt32(s0, s1),
+            };
             s0 = nextS0;
             s1 = nextS1;
         }

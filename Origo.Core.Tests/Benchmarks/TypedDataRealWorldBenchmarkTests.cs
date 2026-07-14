@@ -214,10 +214,9 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         _perf.CompareTable(
             $"Numeric coercion chain (float→int→long→double, int payload, {_readIterations:N0} iters, min of {_timedRounds})",
             "TypedData", "Boxed",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)>
-            {
+            [
                 ("NumChain", _readIterations, genBest, genAlloc, boxedBest, boxedAlloc)
-            });
+            ]);
 
         AssertInCap("Numeric chain", genBest);
     }
@@ -300,10 +299,9 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         _perf.CompareTable(
             $"Observer notify (pool-based, {_readIterations:N0} iters, min of {_timedRounds})",
             "TypedData", "Boxed",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)>
-            {
+            [
                 ("Observer", _readIterations, genBest, genAlloc, boxedBest, boxedAlloc)
-            });
+            ]);
 
         AssertInCap("Observer notify", genBest);
     }
@@ -358,10 +356,9 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
         _perf.CompareTable(
             $"Heterogeneous dict iterate (ToObject vs plain object, {total:N0} reads, min of {_timedRounds})",
             "TypedData", "Boxed",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)>
-            {
+            [
                 ("Hetero", total, genBest, genAlloc, boxedBest, boxedAlloc)
-            });
+            ]);
 
         AssertInCap("Heterogeneous dict iterate", genBest);
     }

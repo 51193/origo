@@ -42,10 +42,9 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
 
         _perf.ReportTable(
             "StrategyPool Get+Release roundtrip",
-            new List<(string, int, TimeSpan, long)>
-            {
+            [
                 ("Pool Roundtrip", iterations, sw.Elapsed, totalAlloc)
-            });
+            ]);
 
         Assert.True(totalAlloc < 500_000_000,
             $"Pool Get+Release × {iterations}: allocated {totalAlloc} bytes (unexpected)");

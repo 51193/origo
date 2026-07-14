@@ -32,6 +32,8 @@
 | `StepWithoutAction_DoesNotAddStrategy` | StepToActionIndex 返回 null 时不挂载 Action 策略，但仍记录步骤 | Planning |
 | `BeforeRemove_UnmountsActionStrategy` | 计划策略被移除时 BeforeRemove 清理当前 Action 策略 | Planning |
 | `ActionFailed_AdvancesPlan_AndTerminates` | Action 失败（ActionStatus="failed"）后调用 OnPlanFailed，计划终止 | Planning |
+| `OnPlanCompleted_SuccessPath_FiresHook` | 单步计划完成后 OnPlanCompleted 触发，OnPlanFailed 不触发 | Planning |
+| `ResolveNextStep_ReturnsNull_NoPathTerminatesPlan` | action 完成但 ResolveNextStep 返回 null（无可行路径），计划干净终止，触发 OnPlanCompleted | Planning |
 
 ### 边界路径
 
@@ -49,13 +51,12 @@
 | `FakeActionStrategy` | PlanExecutionStrategyBaseTests.cs | 模拟 Action 策略，通过 AfterAdd/BeforeRemove 收集调用事件 |
 | `FakeAction2Strategy` | PlanExecutionStrategyBaseTests.cs | 模拟第二个 Action 策略，收集 AfterAdd 事件 |
 | `FailingPlanStrategy` | PlanExecutionStrategyBaseTests.cs | 模拟失败计划：step_a 完成后 ResolveNextStep 返回 null 触发 OnPlanFailed |
+| `CompletingPlanStrategy` | PlanExecutionStrategyBaseTests.cs | 模拟完成计划：单步计划 complete_test→step_a→完成，覆写 OnPlanCompleted/OnPlanFailed 记录调用 |
 
 ## 已知覆盖缺口
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| PlanExecutionStrategyBase 的 OnPlanCompleted/OnPlanFailed 派生覆盖独立性 | 仅验证了失败路径调 OnPlanFailed，未独立验证纯完成路径调 OnPlanCompleted | Planning |
-| 部分步成功但后续步骤不可达（NoPathExists）的场景 | ResolveNextStep 返回路径不可达 | Planning |
 
 ---
 

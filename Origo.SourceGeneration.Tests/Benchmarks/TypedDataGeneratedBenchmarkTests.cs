@@ -129,7 +129,7 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         _perf.CompareTable(
             $"IsString check ({_readIterations:N0} iters, min of {_timedRounds})",
             "Generated", "Boxed",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)> { result });
+            [result]);
     }
 
     // ─── Mixed dispatch ────────────────────────────────────────────
@@ -211,10 +211,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         _perf.CompareTable(
             $"Mixed dispatch (int/float/bool/string/double, {_readIterations:N0} iters, min of {_timedRounds})",
             "Generated", "Boxed",
-            new List<(string, int, TimeSpan, long, TimeSpan, long)>
-            {
+            [
                 ("Mixed", _readIterations, genBest, genAlloc, boxedBest, boxedAlloc)
-            });
+            ]);
 
         AssertWithinBudget("Mixed dispatch", genBest, boxedBest);
     }
