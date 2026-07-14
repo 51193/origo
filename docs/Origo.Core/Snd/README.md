@@ -15,7 +15,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | [Scene](Scene/README.md) | 场景宿主与 spawn 工厂 | SndEntityFactory + FullMemorySndSceneHost + StubSndSceneHost |
 | [Strategy](Strategy/README.md) | 策略系统核心 | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase。策略池、被动/主动/观察者三类管理器 + 泛型调用扩展 |
 | [Archetype](Archetype/README.md) | 数值配方加载 | SndArchetypeLoader：键值对文件解析与类型推断 |
-| [Companions](Companions/README.md) | SndContext 角色 companion 对象 | 8 个 internal companion 类实现 ISndBlackboardAccess / ISndSaveOperations 等接口，通过 ISndContext 的 companion 属性暴露 |
+| [Companions](Companions/README.md) | SndContext 角色 companion 对象 | 10 个 internal companion 类实现 ISndBlackboardAccess / ISndSaveOperations 等接口，通过 ISndContext 的 companion 属性暴露 |
 
 ## 本层核心文件
 
