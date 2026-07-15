@@ -43,7 +43,7 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         var pool = new SndStrategyPool(NullLogger.Instance);
         pool.Register(() => new PoolStateMachineStrategy());
         var runtime = TestFactory.CreateRuntime();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);

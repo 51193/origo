@@ -21,7 +21,7 @@ public class SndEntityAfterLoadTests
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
 
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -55,7 +55,7 @@ public class SndEntityAfterLoadTests
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         runtime.SndWorld.RegisterStrategy(() => new ThrowingAfterLoadStrategy());
 
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -89,7 +89,7 @@ public class SndEntityAfterLoadTests
         runtime.SndWorld.RegisterStrategy(() => new AfterLoadProbeAStrategy());
         runtime.SndWorld.RegisterStrategy(() => new AfterLoadProbeBStrategy());
 
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);

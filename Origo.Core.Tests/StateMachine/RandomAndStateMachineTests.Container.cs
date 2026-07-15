@@ -17,7 +17,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -63,7 +63,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -109,7 +109,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -148,7 +148,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -167,7 +167,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -198,7 +198,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -238,7 +238,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -266,7 +266,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -295,7 +295,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -328,7 +328,7 @@ public partial class RandomAndStateMachineTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);

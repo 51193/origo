@@ -17,7 +17,7 @@ public class FullMemorySndSceneHostTests
         var host = new FullMemorySndSceneHost(logger);
         var world = TestFactory.CreateSndWorld(logger: logger);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);

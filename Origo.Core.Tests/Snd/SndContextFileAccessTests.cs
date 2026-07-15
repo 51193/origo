@@ -9,19 +9,19 @@ namespace Origo.Core.Tests;
 
 /// <summary>
 ///     ISndFileAccess behavior tests on SndContext: correct / error / boundary paths.
-///     All file I/O uses TestFileSystem (in-memory), no real disk operations.
+///     All file I/O uses TestMemoryFileSystem (in-memory), no real disk operations.
 /// </summary>
 public class SndContextFileAccessTests
 {
     // ── Helpers ──
 
-    private static SndContext CreateContext(out TestFileSystem fs, out TestLogger logger)
+    private static SndContext CreateContext(out TestMemoryFileSystem fs, out TestLogger logger)
     {
         logger = new TestLogger();
         var host = new TestSndSceneHost();
         var tm = new TypeStringMapping();
         var bb = new Blackboard.Blackboard();
-        fs = new TestFileSystem();
+        fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);

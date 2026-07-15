@@ -525,7 +525,7 @@ public class ObserverStrategyTests
         var host = new FullMemorySndSceneHost(logger);
         var world = TestFactory.CreateSndWorld(logger: logger);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
@@ -559,7 +559,7 @@ public class ObserverStrategyTests
         var host = new FullMemorySndSceneHost(logger);
         var world = TestFactory.CreateSndWorld(logger: logger);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var io = TestFactory.CreateIoGateway(fs);
@@ -642,7 +642,7 @@ public class ObserverStrategyTests
         var world = TestFactory.CreateSndWorld(logger: logger);
         configureWorld(world);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var io = TestFactory.CreateIoGateway(fs);
@@ -669,7 +669,7 @@ public class ObserverStrategyTests
         runtime.SndWorld.RegisterStrategy(() => new NoDataKeyObserver());
         runtime.SndWorld.RegisterStrategy(() => new MemoryObserver());
         runtime.SndWorld.RegisterStrategy(() => new ThrowOnMountObserver());
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -827,7 +827,7 @@ public class ObserverStrategyTests
         world.RegisterStrategy(() => new SelfWatchObserver());
         world.RegisterStrategy(() => new MultiKeyObserver());
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var io = TestFactory.CreateIoGateway(fs);

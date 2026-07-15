@@ -33,7 +33,7 @@ public sealed class TestContextBuilder
 
     public SndContext Build()
     {
-        var fileSystem = new TestFileSystem();
+        var fileSystem = new TestMemoryFileSystem();
         var runtime = TestFactory.CreateRuntime(
             _logger, _sceneHost, new TypeStringMapping(), _systemBlackboard, fileSystem);
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem);

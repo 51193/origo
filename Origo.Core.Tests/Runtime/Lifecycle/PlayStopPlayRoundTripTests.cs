@@ -265,14 +265,14 @@ public class PlayStopPlayRoundTripTests
         // No external blackboard injection is supported.
         var progressRun = TestFactory.CreateProgressRun(
             "001", new TestLogger(),
-            DataSourceFactory.CreateFileMetaAccess(new TestFileSystem()),
-            DataSourceFactory.CreatePathResolver(new TestFileSystem()),
+            DataSourceFactory.CreateFileMetaAccess(new TestMemoryFileSystem()),
+            DataSourceFactory.CreatePathResolver(new TestMemoryFileSystem()),
             "root",
             TestFactory.CreateRuntime(),
             new SndContext(new SndContextParameters(TestFactory.CreateRuntime(),
-                DataSourceFactory.CreateDefaultIoGateway(new TestFileSystem()),
-                DataSourceFactory.CreateFileMetaAccess(new TestFileSystem()),
-                DataSourceFactory.CreatePathResolver(new TestFileSystem()),
+                DataSourceFactory.CreateDefaultIoGateway(new TestMemoryFileSystem()),
+                DataSourceFactory.CreateFileMetaAccess(new TestMemoryFileSystem()),
+                DataSourceFactory.CreatePathResolver(new TestMemoryFileSystem()),
                 "root",
                 "initial", "entry.json")));
 
@@ -403,11 +403,11 @@ public class PlayStopPlayRoundTripTests
 
     // ── Helpers ─────────────────────────────────────────────────────────
 
-    private static (SndContext ctx, TestFileSystem fs) CreateContext(TestFileSystem? sharedFs = null)
+    private static (SndContext ctx, TestMemoryFileSystem fs) CreateContext(TestMemoryFileSystem? sharedFs = null)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = sharedFs ?? new TestFileSystem();
+        var fs = sharedFs ?? new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);

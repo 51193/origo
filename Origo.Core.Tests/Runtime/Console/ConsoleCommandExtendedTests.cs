@@ -363,7 +363,7 @@ public class ConsoleCommandExtendedTests
     [Fact]
     public void SpawnCommand_NamedArgs_SpawnsEntity()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("maps/t.map", "tpl: templates/x.json");
         fs.SeedFile("templates/x.json",
             """

@@ -217,19 +217,19 @@ public class SaveMetaNullAndSessionContextTests
 
 internal static class SndContextTestHelper
 {
-    public static SndContext Create(out TestFileSystem fs)
+    public static SndContext Create(out TestMemoryFileSystem fs)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        fs = new TestFileSystem();
+        fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         return new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
     }
 
-    public static void SetupProgressRun(SndContext ctx, TestFileSystem fs)
+    public static void SetupProgressRun(SndContext ctx, TestMemoryFileSystem fs)
     {
         fs.SeedFile("entry.json", "[]");
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();

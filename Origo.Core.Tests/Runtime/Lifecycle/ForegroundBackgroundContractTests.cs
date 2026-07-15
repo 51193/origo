@@ -289,12 +289,12 @@ public class ForegroundBackgroundContractTests
 
     // ── Helpers ────────────────────────────────────────────────────────
 
-    private static (SndContext ctx, TestFileSystem fs) CreateContext(
+    private static (SndContext ctx, TestMemoryFileSystem fs) CreateContext(
         Action<SndWorld>? configureWorld = null)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);

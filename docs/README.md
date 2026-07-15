@@ -15,6 +15,7 @@
 - [Origo.GodotAdapter.Tests/](Origo.GodotAdapter.Tests/)
 - [Origo.SourceGeneration/](Origo.SourceGeneration/)
 - [Origo.SourceGeneration.Tests/](Origo.SourceGeneration.Tests/)
+- [Origo.TestSupport/](Origo.TestSupport/)
 - [usage/](usage/)
 
 ## English
@@ -30,5 +31,6 @@
 - [Origo.GodotAdapter.Tests/](Origo.GodotAdapter.Tests/)
 - [Origo.SourceGeneration/](Origo.SourceGeneration/)
 - [Origo.SourceGeneration.Tests/](Origo.SourceGeneration.Tests/)
+- [Origo.TestSupport/](Origo.TestSupport/)
 - [usage/](usage/)
 

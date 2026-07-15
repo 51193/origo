@@ -36,6 +36,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Origo.GodotAdapter\Origo.GodotAdapter.csproj"/>
+        <ProjectReference Include="..\Origo.TestSupport\Origo.TestSupport.csproj"/>
     </ItemGroup>
 
 </Project>

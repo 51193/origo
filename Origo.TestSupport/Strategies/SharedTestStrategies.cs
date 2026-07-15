@@ -6,9 +6,9 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 using Origo.Core.StateMachine;
 
-namespace Origo.Core.Tests;
+namespace Origo.TestSupport;
 
-internal abstract class SharedFrameCounterStrategy : LifecycleStrategyBase
+public abstract class SharedFrameCounterStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx) =>
         entity.SetData("count", 0);
@@ -20,13 +20,13 @@ internal abstract class SharedFrameCounterStrategy : LifecycleStrategyBase
     }
 }
 
-internal abstract class SharedEchoActiveStrategy : ActiveStrategyBase
+public abstract class SharedEchoActiveStrategy : ActiveStrategyBase
 {
     public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) =>
         input is int i ? i * 2 : input;
 }
 
-internal abstract class SharedKillProbeStrategy : LifecycleStrategyBase
+public abstract class SharedKillProbeStrategy : LifecycleStrategyBase
 {
     private static readonly AsyncLocal<List<string>?> _events = new();
 
@@ -40,10 +40,10 @@ internal abstract class SharedKillProbeStrategy : LifecycleStrategyBase
         Events?.Add("before_dead");
 }
 
-internal abstract class SharedNoopLifecycleStrategy : LifecycleStrategyBase
+public abstract class SharedNoopLifecycleStrategy : LifecycleStrategyBase
 {
 }
 
-internal abstract class SharedNoopStateMachineStrategy : StateMachineStrategyBase
+public abstract class SharedNoopStateMachineStrategy : StateMachineStrategyBase
 {
 }

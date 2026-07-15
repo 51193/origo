@@ -13,7 +13,7 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_EnsureParentDirectory_CreatesParent()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var parentDir = fs.GetParentDirectory("root/sub/file.txt");
         if (!string.IsNullOrEmpty(parentDir) && !fs.DirectoryExists(parentDir))
             fs.CreateDirectory(parentDir);
@@ -23,7 +23,7 @@ public class SaveFileHandleTests
     [Fact]
     public void SavePathResolver_EnsureParentDirectory_NoOpForRootFile()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var parentDir = fs.GetParentDirectory("file.txt");
         if (!string.IsNullOrEmpty(parentDir) && !fs.DirectoryExists(parentDir))
             fs.CreateDirectory(parentDir);
@@ -119,7 +119,7 @@ public class SaveFileHandleTests
 
     private static SaveFileHandle CreateHandle(string saveRootPath)
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);

@@ -350,7 +350,7 @@ public class ActiveStrategyTests
         runtime.SndWorld.RegisterStrategy(() => new QueryHpStrategy());
         runtime.SndWorld.RegisterStrategy(() => new CmdDamageStrategy());
         runtime.SndWorld.RegisterStrategy(() => new EntityOnlyStrategy());
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);

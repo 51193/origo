@@ -25,7 +25,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void CopyDirectoryFromSnapshot_SeededFiles_AllCopiedToCurrent()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
@@ -43,7 +43,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void CopyDirectoryFromSnapshot_SubdirectoryStructurePreserved()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
@@ -61,7 +61,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void CopyDirectoryFromSnapshot_SourceDirectoryDoesNotExist_ReturnsSilently()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
@@ -75,7 +75,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void CopyDirectoryFromSnapshot_EmptySourceDirectory_DoesNothing()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
@@ -97,7 +97,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void CopyDirectoryFromSnapshot_EmptySaveId_Throws()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
@@ -110,7 +110,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void CopyDirectoryFromSnapshot_EmptyDirName_Throws()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
@@ -123,7 +123,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void CopyDirectoryFromSnapshot_ExistingFilesInCurrent_Overwrites()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
@@ -308,7 +308,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void ComputeSideDirectoryHash_NoExtraDir_ReturnsEmpty()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.CreateDirectory("root/current");
@@ -320,7 +320,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void ComputeSideDirectoryHash_EmptyExtraDir_ReturnsEmpty()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.CreateDirectory("root/current/extra");
@@ -332,7 +332,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void ComputeSideDirectoryHash_WithFiles_ReturnsNonEmpty()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/extra/a.json", """{"k":"v"}""");
@@ -346,7 +346,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void ComputeSideDirectoryHash_SameContent_SameHash()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/extra/data.json", """{"k":"v"}""");
@@ -359,7 +359,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void ComputeSideDirectoryHash_DifferentContent_DifferentHash()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/extra/data.json", """{"k":"v1"}""");
@@ -376,7 +376,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void ComputeSideDirectoryHash_CustomDirectoryName_Works()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/custom/file.json", """{"v":1}""");
@@ -389,7 +389,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void ComputeSideDirectoryHash_CustomDirectory_Empty_ReturnsEmpty()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.CreateDirectory("root/current/custom");
@@ -429,7 +429,7 @@ public class SaveExtraFilesRoundTripTests
     [Fact]
     public void IdempotentSkip_UnchangedPayloadAndExtra_SkipHappens()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", new DefaultSavePathPolicy());
@@ -446,13 +446,13 @@ public class SaveExtraFilesRoundTripTests
 
     // ── Helpers ────────────────────────────────────────────────────────
 
-    private static SndContext CreateContextWithEntry(out TestFileSystem fs)
+    private static SndContext CreateContextWithEntry(out TestMemoryFileSystem fs)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var tm = new TypeStringMapping();
         var bb = new Blackboard.Blackboard();
-        fs = new TestFileSystem();
+        fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);

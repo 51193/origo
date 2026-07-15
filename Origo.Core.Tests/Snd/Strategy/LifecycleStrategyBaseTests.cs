@@ -55,7 +55,7 @@ public class LifecycleStrategyBaseTests
         var host = new StubSndSceneHost();
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -79,7 +79,7 @@ public class LifecycleStrategyBaseTests
         var host = new StubSndSceneHost();
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var io2 = TestFactory.CreateIoGateway(fs);
         var metaAccess2 = TestFactory.CreateFileMetaAccess(fs);
@@ -211,7 +211,7 @@ public class LifecycleStrategyBaseTests
         var world = TestFactory.CreateSndWorld(logger: logger);
         configureWorld(world);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);

@@ -213,7 +213,7 @@ public class GameplayIntegrationTests
         }
     }
 
-    [StrategyIndex("test.frame_counter")]
+    [StrategyIndex(TestStrategyIndices.FrameCounter)]
     private sealed class FrameCounterStrategy : SharedFrameCounterStrategy { }
 
     [StrategyIndex("test.peer_lookup")]
@@ -238,7 +238,7 @@ public class GameplayIntegrationTests
             entity.OwningSession.SessionBlackboard.SetValue("bridge_value", "from_writer");
     }
 
-    [StrategyIndex("test.bb_reader")]
+    [StrategyIndex(TestStrategyIndices.BlackboardReader)]
     private sealed class BbReaderStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)

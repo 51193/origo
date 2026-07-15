@@ -34,7 +34,7 @@ public class SavePathPolicyContractTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("res://entry/entry.json", "[]");
         var customPolicy = new TestPrefixedPathPolicy("cx_");
@@ -72,7 +72,7 @@ public class SavePathPolicyContractTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("res://entry/entry.json", "[]");
         var customPolicy = new TestPrefixedPathPolicy("ix_");
@@ -108,7 +108,7 @@ public class SavePathPolicyContractTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var customPolicy = new TestPrefixedPathPolicy("rf_");
 
@@ -138,7 +138,7 @@ public class SavePathPolicyContractTests
     [Fact]
     public void DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("p_");
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
@@ -155,7 +155,7 @@ public class SavePathPolicyContractTests
     [Fact]
     public void DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("p_");
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
@@ -175,7 +175,7 @@ public class SavePathPolicyContractTests
     [Fact]
     public void DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_Uses_PathPolicy()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("ws_");
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
@@ -200,7 +200,7 @@ public class SavePathPolicyContractTests
     [Fact]
     public void DefaultSaveStorageService_SnapshotCurrentToSave_Uses_PathPolicy()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("sn_");
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
@@ -223,7 +223,7 @@ public class SavePathPolicyContractTests
     [Fact]
     public void DefaultSaveStorageService_WriteSavePayloadToCurrent_Uses_PathPolicy()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("wc_");
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
@@ -240,7 +240,7 @@ public class SavePathPolicyContractTests
     [Fact]
     public void DefaultSaveStorageService_ReadWriteRoundTrip_Uses_PathPolicy()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("rt_");
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
@@ -342,7 +342,7 @@ public class SavePathPolicyContractTests
 
     // ── Helpers ────────────────────────────────────────────────────────
 
-    private static (SndContext ctx, TestFileSystem fs) CreateContext(
+    private static (SndContext ctx, TestMemoryFileSystem fs) CreateContext(
         Action<SndWorld>? configureWorld = null)
     {
         var logger = new TestLogger();
@@ -350,7 +350,7 @@ public class SavePathPolicyContractTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         configureWorld?.Invoke(runtime.SndWorld);
 
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("res://entry/entry.json", "[]");
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",

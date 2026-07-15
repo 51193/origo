@@ -12,6 +12,7 @@ using Origo.Core.Runtime;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.TestSupport;
 
 namespace Origo.GodotAdapter.Tests;
 
@@ -87,34 +88,6 @@ internal sealed class InMemorySndEntity : ISndEntity
     public void AddActiveStrategy(string index) { }
     public void RemoveActiveStrategy(string index) { }
     public object? InvokeStrategy(string strategyIndex, object? input = null) => null;
-}
-
-internal sealed class TestLogger : ILogger
-{
-    public readonly List<string> Debugs = [];
-    public readonly List<string> Errors = [];
-    public readonly List<string> Infos = [];
-    public readonly List<string> Warnings = [];
-
-    public void Log(LogLevel level, string tag, string message)
-    {
-        var entry = $"[{tag}] {message}";
-        switch (level)
-        {
-            case LogLevel.Debug:
-                Debugs.Add(entry);
-                break;
-            case LogLevel.Warning:
-                Warnings.Add(entry);
-                break;
-            case LogLevel.Error:
-                Errors.Add(entry);
-                break;
-            default:
-                Infos.Add(entry);
-                break;
-        }
-    }
 }
 
 internal static class TestRuntimeHelper

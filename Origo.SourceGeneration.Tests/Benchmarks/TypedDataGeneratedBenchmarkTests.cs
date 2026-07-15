@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Origo.Core.Snd.Metadata;
+using Origo.TestSupport;
 using Xunit;
 
 namespace Origo.SourceGeneration.Tests;

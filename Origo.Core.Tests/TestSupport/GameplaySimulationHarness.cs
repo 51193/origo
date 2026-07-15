@@ -23,7 +23,7 @@ internal sealed class GameplaySimulationHarness
         OrigoRuntime runtime,
         SndContext context,
         ISessionRun gameSession,
-        TestFileSystem fileSystem,
+        TestMemoryFileSystem fileSystem,
         TestLogger logger,
         ConsoleOutputChannel consoleOutput)
     {
@@ -39,7 +39,7 @@ internal sealed class GameplaySimulationHarness
     public OrigoRuntime Runtime { get; }
     public SndContext Context { get; }
     public ISessionRun GameSession { get; }
-    public TestFileSystem FileSystem { get; }
+    public TestMemoryFileSystem FileSystem { get; }
     public TestLogger Logger { get; }
     public IReadOnlyList<string> ConsoleOutput => _capturedConsoleOutput;
     public IBlackboard SessionBlackboard => GameSession.SessionBlackboard;
@@ -167,7 +167,7 @@ internal sealed class GameplaySimulationBuilder
     public GameplaySimulationHarness Build()
     {
         var logger = new TestLogger();
-        var fileSystem = new TestFileSystem();
+        var fileSystem = new TestMemoryFileSystem();
         fileSystem.SeedFile(_entryConfigPath, "[]");
 
         var consoleInput = new ConsoleInputBuffer();

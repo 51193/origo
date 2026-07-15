@@ -13,7 +13,7 @@ public class SndContextEntryFlowTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile(
             "res://entry/entry.json",
             """
@@ -46,7 +46,7 @@ public class SndContextEntryFlowTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);

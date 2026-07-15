@@ -322,7 +322,7 @@ public class StrategyTestScenarioTests
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) => ctx.Save.RequestLoadGame("slot_1");
     }
 
-    [StrategyIndex("test.bb_reader")]
+    [StrategyIndex(TestStrategyIndices.BlackboardReader)]
     private sealed class BlackboardReaderStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -406,7 +406,7 @@ public class StrategyTestScenarioTests
             ctx.ConsoleAccess.TrySubmitConsoleCommand("echo hello");
     }
 
-    [StrategyIndex("test.frame_counter")]
+    [StrategyIndex(TestStrategyIndices.FrameCounter)]
     private sealed class FrameCounterStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)

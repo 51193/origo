@@ -5,9 +5,9 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 
-namespace Origo.Core.Tests;
+namespace Origo.TestSupport;
 
-internal sealed record TestObserverEvent(
+public sealed record TestObserverEvent(
     string EventType,
     string? TargetName,
     string? DataKey,
@@ -25,7 +25,7 @@ internal sealed record TestObserverEvent(
         new("on_data_changed", targetName, dataKey, oldValue, newValue);
 }
 
-internal static class EventCollector
+public static class EventCollector
 {
     private static readonly AsyncLocal<List<TestObserverEvent>?> _events = new();
 
@@ -36,7 +36,7 @@ internal static class EventCollector
     }
 }
 
-internal abstract class SharedDataChangeObserverStrategy : ObserverStrategyBase
+public abstract class SharedDataChangeObserverStrategy : ObserverStrategyBase
 {
     public override void OnDataChanged(ISndEntity entity, ISndContext ctx,
         ISndEntity target, string dataKey,

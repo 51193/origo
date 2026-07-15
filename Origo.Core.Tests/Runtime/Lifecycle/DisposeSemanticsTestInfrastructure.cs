@@ -18,12 +18,12 @@ internal static class DisposeSemanticsTestInfrastructure
     public const string SessionAccessStrategyIndex = "dispose_sem.session_access";
     public const string ThrowingQuitStrategyIndex = "dispose_sem.throwing_quit";
 
-    public static (SndContext ctx, TestFileSystem fs) CreateForegroundContext(
+    public static (SndContext ctx, TestMemoryFileSystem fs) CreateForegroundContext(
         Action<SndWorld>? configureWorld = null)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var tm = new TypeStringMapping();

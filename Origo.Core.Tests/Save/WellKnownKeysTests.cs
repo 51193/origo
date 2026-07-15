@@ -16,4 +16,4 @@ public class WellKnownKeysTests
         Assert.Equal("origo.session_topology", WellKnownKeys.SessionTopology);
 }
 
-// ── TestFileSystem coverage ────────────────────────────────────────────
+// ── TestMemoryFileSystem coverage ────────────────────────────────────────────

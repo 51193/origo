@@ -584,7 +584,7 @@ public class SaveAndSwitchForegroundTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var tm = new TypeStringMapping();

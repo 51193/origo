@@ -171,7 +171,7 @@ public class SessionDecouplingTests
     [Fact]
     public void DefaultSaveStorageService_Uses_Injected_PathPolicy()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -207,7 +207,7 @@ public class SessionDecouplingTests
     [Fact]
     public void LevelBuilder_Commit_UsesStorageService()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -230,12 +230,12 @@ public class SessionDecouplingTests
 
     // ── Helpers ────────────────────────────────────────────────────────
 
-    private static (SndContext ctx, TestFileSystem fs) CreateContext(
+    private static (SndContext ctx, TestMemoryFileSystem fs) CreateContext(
         Action<SndWorld>? configureWorld = null)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);

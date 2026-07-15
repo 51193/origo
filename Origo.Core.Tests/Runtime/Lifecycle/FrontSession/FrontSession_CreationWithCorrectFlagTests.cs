@@ -55,12 +55,12 @@ public class FrontSession_CreationWithCorrectFlagTests
         Assert.True(fg2.IsFrontSession);
     }
 
-    private static (SndContext ctx, TestFileSystem fs) CreateContext()
+    private static (SndContext ctx, TestMemoryFileSystem fs) CreateContext()
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);

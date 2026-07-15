@@ -27,6 +27,17 @@
         "en": "benchmarks/README.en.md"
       }
     },
+    "docs/Origo.TestSupport/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.TestSupport/README.zh.md",
+        "en": "Origo.TestSupport/README.en.md"
+      }
+    },
     "META": {
       "status": "synced",
       "revisions": {

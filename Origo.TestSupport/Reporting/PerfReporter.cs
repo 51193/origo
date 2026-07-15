@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
-namespace Origo.SourceGeneration.Tests;
+namespace Origo.TestSupport;
 
-/// <summary>
-///     Prints performance comparison tables to both the console and the xUnit test
-///     output so benchmark results are visible in every CI run.
-/// </summary>
 public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
 {
     private readonly TextWriter _output = output;
     private readonly ITestOutputHelper? _testOutput = testOutput;
+
+    public static PerfReporter ToConsole { get; } = new(Console.Out);
 
     public static PerfReporter ForTest(ITestOutputHelper output) => new(Console.Out, output);
 
@@ -32,8 +30,9 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         string? baselineName = null, double? baselineTimeMs = null, long? baselineAlloc = null)
     {
         var divider = new string('-', 70);
+        var timeMs = elapsed.TotalMilliseconds;
         var opsPerSec = iterations / elapsed.TotalSeconds;
-        var nsPerOp = elapsed.Ticks * 100.0 / iterations;
+        var nsPerOp = elapsed.TotalNanoseconds() / iterations;
         var allocStr = FormatBytes(allocatedBytes);
 
         WriteLine();
@@ -47,7 +46,7 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
 
         if (baselineTimeMs.HasValue)
         {
-            var ratio = baselineTimeMs.Value / elapsed.TotalMilliseconds;
+            var ratio = baselineTimeMs.Value / timeMs;
             var faster = ratio >= 1.0 ? "faster" : "slower";
             var absRatio = ratio >= 1.0 ? ratio : 1.0 / ratio;
             WriteLine($"  vs baseline  : {absRatio:F2}x {faster} ({baselineName})");
@@ -151,7 +150,7 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
     private static string FormatTime(TimeSpan elapsed)
     {
         if (elapsed.TotalMilliseconds < 1)
-            return $"{elapsed.Ticks / 10.0:F2} us";
+            return $"{elapsed.TotalMicroseconds():F2} us";
         if (elapsed.TotalMilliseconds < 1000)
             return $"{elapsed.TotalMilliseconds:F2} ms";
         return $"{elapsed.TotalSeconds:F2} s";
@@ -167,4 +166,10 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
             return $"{opsPerSec / 1_000:F2} Kops/s";
         return $"{opsPerSec:F2} ops/s";
     }
+}
+
+public static class TimeSpanExtensions
+{
+    public static double TotalNanoseconds(this TimeSpan ts) => ts.Ticks * 100.0;
+    public static double TotalMicroseconds(this TimeSpan ts) => ts.Ticks / 10.0;
 }

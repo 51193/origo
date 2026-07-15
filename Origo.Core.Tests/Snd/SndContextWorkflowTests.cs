@@ -15,7 +15,7 @@ public class SndContextWorkflowTests
 {
     /// <summary>Helper: seed a complete save snapshot under root/save_{saveId}/.</summary>
     private static void SeedSaveSnapshot(
-        TestFileSystem fs,
+        TestMemoryFileSystem fs,
         string root,
         string saveId,
         string activeLevelId,
@@ -30,7 +30,7 @@ public class SndContextWorkflowTests
         fs.SeedFile($"{levelDir}/session_state_machines.json", """{"machines":[]}""");
     }
 
-    private static void SeedInitialSave(TestFileSystem fs, string initialRoot, string levelId = "default")
+    private static void SeedInitialSave(TestMemoryFileSystem fs, string initialRoot, string levelId = "default")
     {
         var saveDir = $"{initialRoot}/save_000";
         var levelDir = $"{saveDir}/level_{levelId}";
@@ -239,7 +239,7 @@ public class SndContextWorkflowTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -290,7 +290,7 @@ public class SndContextWorkflowTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         SeedTemplate(fs, "tmpl_a", "OriginalName");
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),
             new Blackboard.Blackboard(), fs);
@@ -310,7 +310,7 @@ public class SndContextWorkflowTests
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         SeedTemplate(fs, "tmpl_b", "KeepMe");
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(),
             new Blackboard.Blackboard(), fs);
@@ -324,7 +324,7 @@ public class SndContextWorkflowTests
         Assert.Equal("KeepMe", cloned.Name);
     }
 
-    private static void SeedTemplate(TestFileSystem fs, string alias, string name)
+    private static void SeedTemplate(TestMemoryFileSystem fs, string alias, string name)
     {
         fs.SeedFile("maps/templates.map", $"{alias}: templates/{alias}.json");
         fs.SeedFile($"templates/{alias}.json",
@@ -463,7 +463,7 @@ public class SndContextWorkflowTests
     [Fact]
     public void Constructor_ThrowsOnNullRuntime()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -475,7 +475,7 @@ public class SndContextWorkflowTests
     public void Constructor_ThrowsOnNullFileSystem()
     {
         var runtime = TestFactory.CreateRuntime();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
         Assert.Throws<ArgumentNullException>(() =>
@@ -486,7 +486,7 @@ public class SndContextWorkflowTests
     public void Constructor_ThrowsOnEmptySaveRootPath()
     {
         var runtime = TestFactory.CreateRuntime();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -498,7 +498,7 @@ public class SndContextWorkflowTests
     public void Constructor_ThrowsOnEmptyInitialSaveRootPath()
     {
         var runtime = TestFactory.CreateRuntime();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -510,7 +510,7 @@ public class SndContextWorkflowTests
     public void Constructor_ThrowsOnEmptyEntryConfigPath()
     {
         var runtime = TestFactory.CreateRuntime();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -552,12 +552,12 @@ public class SndContextWorkflowTests
 
     // ── Helpers ──
 
-    private static SndContext CreateContext(out TestFileSystem fs, out TestLogger logger)
+    private static SndContext CreateContext(out TestMemoryFileSystem fs, out TestLogger logger)
     {
         logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        fs = new TestFileSystem();
+        fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -565,7 +565,7 @@ public class SndContextWorkflowTests
     }
 
     private static SndContext CreateContextWithConsole(
-        out TestFileSystem fs,
+        out TestMemoryFileSystem fs,
         out TestLogger logger,
         out ConsoleOutputChannel output)
     {
@@ -576,14 +576,14 @@ public class SndContextWorkflowTests
         var bb = new Blackboard.Blackboard();
         var tm = new TypeStringMapping();
         var runtime = TestFactory.CreateRuntime(logger, host, tm, bb, input, output);
-        fs = new TestFileSystem();
+        fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
         return new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
     }
 
-    private static void SetupProgressRun(SndContext ctx, TestFileSystem fs)
+    private static void SetupProgressRun(SndContext ctx, TestMemoryFileSystem fs)
     {
         // Load main menu entry to establish a ProgressRun
         fs.SeedFile("entry.json", "[]");

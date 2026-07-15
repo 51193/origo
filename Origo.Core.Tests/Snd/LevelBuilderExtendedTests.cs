@@ -18,7 +18,7 @@ public class LevelBuilderExtendedTests
     public void Build_ProducesLevelPayload()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -38,7 +38,7 @@ public class LevelBuilderExtendedTests
     public void Build_ThenModify_Throws()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -53,7 +53,7 @@ public class LevelBuilderExtendedTests
     public void Commit_WritesToFileSystem()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -68,7 +68,7 @@ public class LevelBuilderExtendedTests
     public void AddEntity_DuplicateName_Throws()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -81,7 +81,7 @@ public class LevelBuilderExtendedTests
     public void AddEntity_NullMeta_Throws()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -93,7 +93,7 @@ public class LevelBuilderExtendedTests
     public void AddEntity_EmptyName_Throws()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -111,7 +111,7 @@ public class LevelBuilderExtendedTests
     public void AddEntities_BatchAdd()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -124,7 +124,7 @@ public class LevelBuilderExtendedTests
     public void AddEntities_NullList_Throws()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -136,7 +136,7 @@ public class LevelBuilderExtendedTests
     public void AddEntityFromTemplate_ClonesAndAdds()
     {
         var logger = new TestLogger();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("maps/templates.map", "tmpl: templates/tmpl.json");
         fs.SeedFile("templates/tmpl.json",
@@ -162,7 +162,7 @@ public class LevelBuilderExtendedTests
     public void AddEntityFromTemplate_EmptyKey_Throws()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -174,7 +174,7 @@ public class LevelBuilderExtendedTests
     public void Constructor_EmptyLevelId_Throws()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         Assert.Throws<ArgumentException>(() => new LevelBuilder("", sndWorld, storage));
@@ -183,7 +183,7 @@ public class LevelBuilderExtendedTests
     [Fact]
     public void Constructor_NullSndWorld_Throws()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         Assert.Throws<ArgumentNullException>(() => new LevelBuilder("lvl", null!, storage));
@@ -200,7 +200,7 @@ public class LevelBuilderExtendedTests
     public void SessionBlackboard_IsAccessible()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("lvl1", sndWorld, storage);
@@ -215,7 +215,7 @@ public class LevelBuilderExtendedTests
     public void LevelId_ExposesConstructedValue()
     {
         var sndWorld = TestFactory.CreateSndWorld();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var builder = new LevelBuilder("my_level", sndWorld, storage);

@@ -10,7 +10,7 @@ public class PersistentBlackboardTests
     [Fact]
     public void PersistentBlackboard_SetAndLoadFromDisk_Works()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var dataSourceIo = TestFactory.CreateIoGateway(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -30,7 +30,7 @@ public class PersistentBlackboardTests
     [Fact]
     public void PersistentBlackboard_Clear_PersistsEmptyData()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var dataSourceIo = TestFactory.CreateIoGateway(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);

@@ -43,6 +43,7 @@
              the generated internal fast paths (KindMap, internal constructor, IsString) via
              Origo.Core's InternalsVisibleTo grant to this project. -->
         <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>
+        <ProjectReference Include="..\Origo.TestSupport\Origo.TestSupport.csproj"/>
     </ItemGroup>
 
 </Project>

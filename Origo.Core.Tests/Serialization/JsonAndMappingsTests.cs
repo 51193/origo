@@ -52,7 +52,7 @@ public class JsonAndMappingsTests
     [Fact]
     public void SndMappings_LoadSceneAliases_DuplicateKey_LastWins()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("maps/dup_scenes.map", "hero: res://first.tscn\nhero: res://second.tscn\n");
         var io = TestFactory.CreateIoGateway(fs);
         var mappings = new SndMappings();
@@ -65,7 +65,7 @@ public class JsonAndMappingsTests
     [Fact]
     public void SndMappings_LoadSceneAliasesAndTemplates_ResolveExpectedValues()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("maps/scenes.map", "# comment\nhero: res://hero.tscn\nui: res://ui/menu.tscn");
         fs.SeedFile("maps/templates.map", "hero_template: templates/hero.json");
         fs.SeedFile("templates/hero.json",
@@ -101,7 +101,7 @@ public class JsonAndMappingsTests
     [Fact]
     public void SndMappings_ResolveMetaListFromJsonArray_SupportsTemplateAndInlineMix()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("maps/templates.map", "enemy_template: templates/enemy.json");
         fs.SeedFile("templates/enemy.json",
             """
@@ -180,7 +180,7 @@ public class JsonAndMappingsTests
     [Fact]
     public void SndMappings_ResolveTemplate_AfterLoadTemplatesWithEmptyMap_Throws()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("maps/empty_templates.map", "# no entries\n");
         var io = TestFactory.CreateIoGateway(fs);
         var registry = TestFactory.CreateRegistry(new TypeStringMapping());
@@ -194,7 +194,7 @@ public class JsonAndMappingsTests
     [Fact]
     public void SndMappings_ResolveTemplate_InvalidJson_Throws()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("maps/templates.map", "bad_template: templates/bad.json");
         fs.SeedFile("templates/bad.json", "{ invalid-json");
         var io = TestFactory.CreateIoGateway(fs);

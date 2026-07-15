@@ -339,7 +339,7 @@ public class EntityKillTests
         var world = TestFactory.CreateSndWorld(logger: logger);
         world.RegisterStrategy(() => new QuitProbeStrategy());
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -458,7 +458,7 @@ public class EntityKillTests
         if (registerKillProbe)
             world.RegisterStrategy(() => new KillProbeStrategy());
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("entry.json", "[]");
         var io = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
@@ -505,7 +505,7 @@ public class EntityKillTests
         var world = TestFactory.CreateSndWorld(logger: logger);
         world.RegisterStrategy(() => new KillProbeStrategy());
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("entry.json", "[]");
         var io = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
@@ -531,7 +531,7 @@ public class EntityKillTests
     {
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var entryJson = """
                         [
                           {
@@ -560,7 +560,7 @@ public class EntityKillTests
             host,
             new TypeStringMapping(),
             DataSourceFactory.CreateDefaultRegistry(new TypeStringMapping()),
-            DataSourceFactory.CreateDefaultIoGateway(new TestFileSystem()),
+            DataSourceFactory.CreateDefaultIoGateway(new TestMemoryFileSystem()),
             new Blackboard.Blackboard(),
             input,
             output);

@@ -39,7 +39,7 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
         SessionManager = new TestSessionManager(session);
         ((IOwningSessionBindable)session.SceneHost).SetOwningSession(session);
 
-        var fileSystem = new MemoryFileSystem();
+        var fileSystem = new TestMemoryFileSystem();
         _metaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
         _dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem);
         _pathResolver = DataSourceFactory.CreatePathResolver(fileSystem);

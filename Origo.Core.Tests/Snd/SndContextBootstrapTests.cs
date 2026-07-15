@@ -173,7 +173,7 @@ public class SndContextBootstrapTests
     // ── Helpers ────────────────────────────────────────────────────────
 
     private static SndContext CreateBootstrapContext(
-        out TestFileSystem fs,
+        out TestMemoryFileSystem fs,
         bool autoDiscover = false,
         string? templateMapPath = null,
         Action<DataSourceConverterRegistry>? configureConverters = null,
@@ -183,7 +183,7 @@ public class SndContextBootstrapTests
         var host = new TestSndSceneHost();
         var tm = new TypeStringMapping();
         var bb = new Blackboard.Blackboard();
-        fs = new TestFileSystem();
+        fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);

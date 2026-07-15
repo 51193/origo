@@ -16,12 +16,12 @@ internal static class SaveAndSwitchForegroundTestInfrastructure
     public const string AfterSpawnEventPrefix = "AfterSpawn:";
     public const string AfterLoadEventPrefix = "AfterLoad:";
 
-    internal static (SndContext ctx, TestFileSystem fs) CreateForegroundContext(
+    internal static (SndContext ctx, TestMemoryFileSystem fs) CreateForegroundContext(
         Action<SndWorld>? configureWorld = null)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var tm = new TypeStringMapping();

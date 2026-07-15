@@ -56,7 +56,7 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
 
         // JIT warmup
         {
-            var wfs = new TestFileSystem();
+            var wfs = new TestMemoryFileSystem();
             var wh = new SaveFileHandle(TestFactory.CreateFileMetaAccess(wfs), TestFactory.CreateIoGateway(wfs),
                 TestFactory.CreatePathResolver(wfs), "_warmup");
             var wp = BuildPayload(1, "_w", "_w");
@@ -69,7 +69,7 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
         foreach (var count in entityCounts)
         {
             var payload = BuildPayload(count, "save_1", "level_1");
-            var fs = new TestFileSystem();
+            var fs = new TestMemoryFileSystem();
             var io = TestFactory.CreateIoGateway(fs);
             var metaAccess = TestFactory.CreateFileMetaAccess(fs);
             var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -102,7 +102,7 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
 
         // JIT warmup
         {
-            var wfs = new TestFileSystem();
+            var wfs = new TestMemoryFileSystem();
             var wh = new SaveFileHandle(TestFactory.CreateFileMetaAccess(wfs), TestFactory.CreateIoGateway(wfs),
                 TestFactory.CreatePathResolver(wfs), "_warmup");
             var wp = BuildPayload(1, "_w", "_w");
@@ -115,7 +115,7 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
         foreach (var count in entityCounts)
         {
             var payload = BuildPayload(count, "save_2", "level_1");
-            var fs = new TestFileSystem();
+            var fs = new TestMemoryFileSystem();
             var io = TestFactory.CreateIoGateway(fs);
             var metaAccess = TestFactory.CreateFileMetaAccess(fs);
             var pathResolver = TestFactory.CreatePathResolver(fs);

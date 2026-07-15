@@ -39,6 +39,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>
+        <ProjectReference Include="..\Origo.TestSupport\Origo.TestSupport.csproj"/>
     </ItemGroup>
 
 </Project>

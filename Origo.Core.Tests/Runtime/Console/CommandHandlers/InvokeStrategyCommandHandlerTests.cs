@@ -90,7 +90,7 @@ public class InvokeStrategyCommandHandlerTests
         world.RegisterStrategy(() => new CmdWithInputStrategy());
         host.BindWorld(world);
 
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);

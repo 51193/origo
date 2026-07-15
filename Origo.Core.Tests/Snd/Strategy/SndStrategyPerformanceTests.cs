@@ -165,7 +165,7 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
         var world = TestFactory.CreateSndWorld(logger: logger);
         configureWorld(world);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);

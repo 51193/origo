@@ -33,7 +33,7 @@ public class SndEntityLifecycleBatchTests
         var world = TestFactory.CreateSndWorld(logger: logger);
         configureWorld(world);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var io = TestFactory.CreateIoGateway(fs);
@@ -704,7 +704,7 @@ public class SndEntityLifecycleBatchTests
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
@@ -737,7 +737,7 @@ public class SndEntityLifecycleBatchTests
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);
         host.BindWorld(world);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);

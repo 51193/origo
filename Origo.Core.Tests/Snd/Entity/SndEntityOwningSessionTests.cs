@@ -26,9 +26,9 @@ public class SndEntityOwningSessionTests
         host.BindWorld(world);
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var ctx = new SndContext(new SndContextParameters(runtime,
-            TestFactory.CreateIoGateway(new TestFileSystem()),
-            TestFactory.CreateFileMetaAccess(new TestFileSystem()),
-            TestFactory.CreatePathResolver(new TestFileSystem()),
+            TestFactory.CreateIoGateway(new TestMemoryFileSystem()),
+            TestFactory.CreateFileMetaAccess(new TestMemoryFileSystem()),
+            TestFactory.CreatePathResolver(new TestMemoryFileSystem()),
             "root", "initial", "entry.json"));
         host.BindContext(ctx);
 
@@ -50,9 +50,9 @@ public class SndEntityOwningSessionTests
         host.BindWorld(world);
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var ctx = new SndContext(new SndContextParameters(runtime,
-            TestFactory.CreateIoGateway(new TestFileSystem()),
-            TestFactory.CreateFileMetaAccess(new TestFileSystem()),
-            TestFactory.CreatePathResolver(new TestFileSystem()),
+            TestFactory.CreateIoGateway(new TestMemoryFileSystem()),
+            TestFactory.CreateFileMetaAccess(new TestMemoryFileSystem()),
+            TestFactory.CreatePathResolver(new TestMemoryFileSystem()),
             "root", "initial", "entry.json"));
         host.BindContext(ctx);
 
@@ -105,9 +105,9 @@ public class SndEntityOwningSessionTests
         host.BindWorld(world);
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var ctx = new SndContext(new SndContextParameters(runtime,
-            TestFactory.CreateIoGateway(new TestFileSystem()),
-            TestFactory.CreateFileMetaAccess(new TestFileSystem()),
-            TestFactory.CreatePathResolver(new TestFileSystem()),
+            TestFactory.CreateIoGateway(new TestMemoryFileSystem()),
+            TestFactory.CreateFileMetaAccess(new TestMemoryFileSystem()),
+            TestFactory.CreatePathResolver(new TestMemoryFileSystem()),
             "root", "initial", "entry.json"));
         host.BindContext(ctx);
         return host;

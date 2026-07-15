@@ -336,6 +336,6 @@ public class GameplaySessionSwitchAndConcurrencyTests
     [StrategyIndex("test.killable")]
     private sealed class KillableTestStrategy : SharedKillProbeStrategy { }
 
-    [StrategyIndex("test.frame_counter")]
+    [StrategyIndex(TestStrategyIndices.FrameCounter)]
     private sealed class FrameCounterStrategy : SharedFrameCounterStrategy { }
 }

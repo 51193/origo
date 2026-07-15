@@ -202,7 +202,7 @@ public class OrigoConsoleLoggingTests
     [Fact]
     public void ProcessPending_NamedArgs_AppearInLog()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("maps/templates.map", "enemy: templates/enemy.json");
         fs.SeedFile("templates/enemy.json",
             """

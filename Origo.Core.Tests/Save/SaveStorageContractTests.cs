@@ -292,7 +292,7 @@ public class SaveStorageContractTests
     public void DefaultSaveStorageService_WithCustomPathPolicy_UsesCustomLayout()
     {
         var policy = new CustomSavePathPolicy();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "custom_root", policy);
 
@@ -432,12 +432,12 @@ public class SaveStorageContractTests
 
     // ── Helpers ──────────────────────────────────────────────────────
 
-    private static (SndContext ctx, TestFileSystem fs) CreateForegroundContext()
+    private static (SndContext ctx, TestMemoryFileSystem fs) CreateForegroundContext()
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         fs.SeedFile("entry.json", "[]");
 

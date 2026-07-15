@@ -95,7 +95,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteToCurrent_CreatesPayloadShaFile()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var payload = CreateMinimalPayload("001", "default");
         var policy = new DefaultSavePathPolicy();
@@ -113,7 +113,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_SamePayloadTwice_SecondSkips()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
@@ -144,7 +144,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_DifferentPayload_Overwrites()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", new DefaultSavePathPolicy());
@@ -165,7 +165,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_NewSaveId_AlwaysWrites()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", new DefaultSavePathPolicy());
@@ -179,7 +179,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_ExistingSaveNoSha_WritesAndCreatesSha()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
@@ -202,7 +202,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_CorruptedShaFile_WritesAndOverwrites()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
@@ -229,7 +229,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_ShaReadError_PropagatesException()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, _, pathResolver) = CreateGateways(fs);
         var policy = new DefaultSavePathPolicy();
         var snapshotRel = policy.GetSaveDirectory("001");
@@ -253,7 +253,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void SnapshotCurrentToSave_CopiesPayloadShaFile()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new DefaultSavePathPolicy();
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
@@ -284,7 +284,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_WhenWriteMarkerExists_StillThrows()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var policy = new DefaultSavePathPolicy();
@@ -361,7 +361,7 @@ public class SaveIdempotencyTests
     [Fact]
     public void WriteSavePayloadToCurrentThenSnapshot_IdempotentSkip_PreservesExistingSnapshot()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var logger = new TestLogger();
         var payload = CreateMinimalPayload("001", "default");
@@ -422,9 +422,9 @@ public class SaveIdempotencyTests
          DataSourceFactory.CreateDefaultIoGateway(fs),
          DataSourceFactory.CreatePathResolver(fs));
 
-    private sealed class ThrowingOnReadFileSystem(TestFileSystem inner, string throwOnReadPath) : IFileSystem
+    private sealed class ThrowingOnReadFileSystem(TestMemoryFileSystem inner, string throwOnReadPath) : IFileSystem
     {
-        private readonly TestFileSystem _inner = inner;
+        private readonly TestMemoryFileSystem _inner = inner;
         private readonly string _throwOnReadPath = throwOnReadPath;
 
         public bool Exists(string path) => _inner.Exists(path);

@@ -75,7 +75,7 @@ public class SaveCoordinatorTests
         var bb = new Blackboard.Blackboard();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var systemParams = new SystemParameters(logger, metaAccess, pathResolver, "root", storageService, new DefaultSavePathPolicy(), runtime.GetAdapterSceneHost());
@@ -90,7 +90,7 @@ public class SaveCoordinatorTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var systemParams = new SystemParameters(logger, metaAccess, pathResolver, "root", storageService, new DefaultSavePathPolicy(), runtime.GetAdapterSceneHost());

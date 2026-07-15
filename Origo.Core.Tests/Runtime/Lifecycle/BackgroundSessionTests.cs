@@ -18,7 +18,7 @@ namespace Origo.Core.Tests;
 /// <summary>
 ///     Tests for background <see cref="ISessionRun" /> (created via
 ///     <see cref="ISessionManager.CreateBackgroundSession" />), <see cref="FullMemorySndSceneHost" />,
-///     <see cref="NullNodeFactory" />, and <see cref="MemoryFileSystem" />.
+///     <see cref="NullNodeFactory" />, and <see cref="TestMemoryFileSystem" />.
 ///     Tests prefer the <see cref="ISndSceneHost" /> interface; concrete
 ///     <see cref="FullMemorySndSceneHost" /> is only used where its extra methods
 ///     (ProcessAll, DeadByName) are under test.
@@ -779,12 +779,12 @@ public class BackgroundSessionTests
 
     // ── Helper methods ────────────────────────────────────────────────
 
-    private static (SndContext ctx, TestFileSystem fs) CreateForegroundContext(
+    private static (SndContext ctx, TestMemoryFileSystem fs) CreateForegroundContext(
         Action<SndWorld>? configureWorld = null)
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "[]");
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var tm = new TypeStringMapping();

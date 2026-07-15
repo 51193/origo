@@ -12,7 +12,7 @@ public class SndTemplateResolverTests
     [Fact]
     public void Resolve_WhenCalledTwice_UsesCacheAndAvoidsSecondRead()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("templates/enemy.json",
             """
             {
@@ -40,7 +40,7 @@ public class SndTemplateResolverTests
     [Fact]
     public void Resolve_TemplateFile_EmptyObject_ReturnsMinimalMetaData()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("templates/empty.json", "{}");
         var resolver = CreateResolver(fs, new Dictionary<string, string>
         {
@@ -56,7 +56,7 @@ public class SndTemplateResolverTests
     [Fact]
     public void Resolve_TemplateFile_MissingNameField_ReturnsEmptyName()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("templates/noname.json", """{"strategy":{"lifecycle_indices":[]},"data":{"pairs":{}}}""");
         var resolver = CreateResolver(fs, new Dictionary<string, string>
         {
@@ -71,7 +71,7 @@ public class SndTemplateResolverTests
     [Fact]
     public void Resolve_CacheThenClone_CloneDoesNotAffectCache()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("templates/base.json",
             """{"name":"BaseTemplate","strategy":{"lifecycle_indices":[]},"data":{"pairs":{}}}""");
         var resolver = CreateResolver(fs, new Dictionary<string, string>
@@ -92,7 +92,7 @@ public class SndTemplateResolverTests
     [Fact]
     public void Resolve_MapFileComments_Skipped()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("templates/simple.json",
             """{"name":"Simple","strategy":{"lifecycle_indices":[]},"data":{"pairs":{}}}""");
         var resolver = CreateResolver(fs, new Dictionary<string, string>
@@ -108,21 +108,21 @@ public class SndTemplateResolverTests
     [Fact]
     public void Resolve_MissingAlias_ThrowsKeyNotFoundException()
     {
-        var resolver = CreateResolver(new TestFileSystem(), []);
+        var resolver = CreateResolver(new TestMemoryFileSystem(), []);
         Assert.Throws<KeyNotFoundException>(() => resolver.Resolve("missing"));
     }
 
     [Fact]
     public void Resolve_WhitespaceAlias_ThrowsArgumentException()
     {
-        var resolver = CreateResolver(new TestFileSystem(), []);
+        var resolver = CreateResolver(new TestMemoryFileSystem(), []);
         Assert.Throws<ArgumentException>(() => resolver.Resolve(" "));
     }
 
     [Fact]
     public void Resolve_InvalidJson_Throws()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("templates/broken.json", "{ not-valid-json");
         var resolver = CreateResolver(fs, new Dictionary<string, string>
         {
@@ -135,7 +135,7 @@ public class SndTemplateResolverTests
     [Fact]
     public void Resolve_ConverterReturnsNull_ThrowsInvalidOperationException()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("templates/null.json", "{}");
         var io = TestFactory.CreateIoGateway(fs);
         var resolver = new SndTemplateResolver(
@@ -147,7 +147,7 @@ public class SndTemplateResolverTests
         Assert.Contains("deserialized to null", ex.Message, StringComparison.Ordinal);
     }
 
-    private static SndTemplateResolver CreateResolver(TestFileSystem fs, Dictionary<string, string> map)
+    private static SndTemplateResolver CreateResolver(TestMemoryFileSystem fs, Dictionary<string, string> map)
     {
         var registry = TestFactory.CreateRegistry();
         return new SndTemplateResolver(TestFactory.CreateIoGateway(fs), registry.Get<SndMetaData>(), map);

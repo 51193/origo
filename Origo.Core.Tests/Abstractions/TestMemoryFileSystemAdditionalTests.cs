@@ -6,37 +6,37 @@ namespace Origo.Core.Tests;
 
 // ── KeyValueFileParser ─────────────────────────────────────────────────
 
-public class TestFileSystemAdditionalTests
+public class TestMemoryFileSystemAdditionalTests
 {
     [Fact]
-    public void TestFileSystem_WriteAllText_And_ReadAllText()
+    public void TestMemoryFileSystem_WriteAllText_And_ReadAllText()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.WriteAllText("root/file.txt", "content", false);
         Assert.Equal("content", fs.ReadAllText("root/file.txt"));
     }
 
     [Fact]
-    public void TestFileSystem_WriteAllText_Overwrite()
+    public void TestMemoryFileSystem_WriteAllText_Overwrite()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.WriteAllText("file.txt", "v1", false);
         fs.WriteAllText("file.txt", "v2", true);
         Assert.Equal("v2", fs.ReadAllText("file.txt"));
     }
 
     [Fact]
-    public void TestFileSystem_WriteAllText_NoOverwrite_Throws()
+    public void TestMemoryFileSystem_WriteAllText_NoOverwrite_Throws()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.WriteAllText("file.txt", "v1", false);
         Assert.Throws<IOException>(() => fs.WriteAllText("file.txt", "v2", false));
     }
 
     [Fact]
-    public void TestFileSystem_Delete_RemovesFile()
+    public void TestMemoryFileSystem_Delete_RemovesFile()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("file.txt", "data");
         Assert.True(fs.Exists("file.txt"));
         fs.Delete("file.txt");
@@ -44,23 +44,23 @@ public class TestFileSystemAdditionalTests
     }
 
     [Fact]
-    public void TestFileSystem_CombinePath_CombinesCorrectly()
+    public void TestMemoryFileSystem_CombinePath_CombinesCorrectly()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         Assert.Equal("root/sub/file.txt", fs.CombinePath("root/sub", "file.txt"));
     }
 
     [Fact]
-    public void TestFileSystem_GetParentDirectory()
+    public void TestMemoryFileSystem_GetParentDirectory()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         Assert.Equal("root/sub", fs.GetParentDirectory("root/sub/file.txt"));
     }
 
     [Fact]
-    public void TestFileSystem_EnumerateDirectories()
+    public void TestMemoryFileSystem_EnumerateDirectories()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("root/a/file1.txt", "");
         fs.SeedFile("root/b/file2.txt", "");
 
@@ -70,9 +70,9 @@ public class TestFileSystemAdditionalTests
     }
 
     [Fact]
-    public void TestFileSystem_Rename_MovesAllFilesAndDirectories()
+    public void TestMemoryFileSystem_Rename_MovesAllFilesAndDirectories()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("src/a.txt", "hello");
         fs.SeedFile("src/sub/b.txt", "world");
 
@@ -87,9 +87,9 @@ public class TestFileSystemAdditionalTests
     }
 
     [Fact]
-    public void TestFileSystem_DeleteDirectory_RemovesAllContents()
+    public void TestMemoryFileSystem_DeleteDirectory_RemovesAllContents()
     {
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         fs.SeedFile("dir/a.txt", "1");
         fs.SeedFile("dir/sub/b.txt", "2");
         fs.CreateDirectory("dir/empty");

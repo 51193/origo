@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsTestProject>false</IsTestProject>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Origo.TestSupport</RootNamespace>
+        <NoWarn>$(NoWarn);CA1051</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="xunit.v3.extensibility.core" PrivateAssets="compile"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Origo.Core.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Integration.Tests"/>
+        <InternalsVisibleTo Include="Origo.ConsoleBridge.Tests"/>
+        <InternalsVisibleTo Include="Origo.SourceGeneration.Tests"/>
+    </ItemGroup>
+
+</Project>

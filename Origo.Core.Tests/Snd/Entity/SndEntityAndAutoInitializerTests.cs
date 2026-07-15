@@ -108,7 +108,7 @@ public class SndEntityAndAutoInitializerTests
         var host = new TestSndSceneHost();
         var session = new StubSessionRun(host);
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         fs.SeedFile("config/entry.json",
             """
@@ -136,7 +136,7 @@ public class SndEntityAndAutoInitializerTests
         var host = new TestSndSceneHost();
         var session = new StubSessionRun(host);
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         Assert.Throws<ArgumentException>(() =>
             OrigoAutoInitializer.LoadAndSpawnFromFile("  ", runtime.SndWorld, session, io, logger));
@@ -150,7 +150,7 @@ public class SndEntityAndAutoInitializerTests
         var host = new TestSndSceneHost();
         var session = new StubSessionRun(host);
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         Assert.Throws<InvalidOperationException>(() =>
             OrigoAutoInitializer.LoadAndSpawnFromFile("missing.json", runtime.SndWorld, session, io, logger));
@@ -163,7 +163,7 @@ public class SndEntityAndAutoInitializerTests
         var host = new TestSndSceneHost();
         var session = new StubSessionRun(host);
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         fs.SeedFile("empty.json", "   ");
         Assert.ThrowsAny<Exception>(() =>
@@ -177,7 +177,7 @@ public class SndEntityAndAutoInitializerTests
         var host = new TestSndSceneHost();
         var session = new StubSessionRun(host);
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         fs.SeedFile("obj.json", """{"not":"array"}""");
         Assert.Throws<InvalidOperationException>(() =>
@@ -188,7 +188,7 @@ public class SndEntityAndAutoInitializerTests
     {
         var host = new TestSndSceneHost();
         var runtime = TestFactory.CreateRuntime(logger, host);
-        var fs = new TestFileSystem();
+        var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
