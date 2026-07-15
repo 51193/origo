@@ -5,39 +5,45 @@ using Origo.Core.Abstractions.Snd;
 namespace Origo.Core.Abstractions.StateMachine;
 
 /// <summary>
-///     状态机策略钩子所需的最小运行时上下文接口。
-///     不包含任何"前台/后台"语义，所有成员在前后台会话中具有对等含义。
+///     Minimum runtime context interface required by state machine strategy hooks.
+///     Contains no foreground / background semantics; all members have equivalent
+///     meaning in both session types.
 ///     <para>
-///         <strong>实现说明：</strong>
+///         <strong>Implementation notes:</strong>
 ///         <list type="bullet">
 ///             <item>
 ///                 <description>
-///                     <see cref="Snd.SndContext" /> 为全局/流程级默认实现，
-///                     <see cref="SessionBlackboard" /> 和 <see cref="SceneAccess" /> 指向前台会话。
-///                     该实现仅作为流程级状态机的上下文入口；会话级状态机不直接使用此实现。
+///                     <see cref="Snd.SndContext" /> provides the global / progress-level default
+///                     implementation, where <see cref="SessionBlackboard" /> and
+///                     <see cref="SceneAccess" /> point to the foreground session.
+///                     This implementation is only used as the context entry for progress-level
+///                     state machines; session-level state machines do not use it directly.
 ///                 </description>
 ///             </item>
 ///             <item>
 ///                 <description>
-///                     <see cref="SessionStateMachineContext" /> 为会话级适配器，
-///                     将 <see cref="SessionBlackboard" /> 和 <see cref="SceneAccess" /> 绑定到当前会话，
-///                     确保前台和后台会话的状态机钩子均指向各自的会话数据——前后台无语义分差。
+///                     <see cref="SessionStateMachineContext" /> is a session-level adapter
+///                     that binds <see cref="SessionBlackboard" /> and <see cref="SceneAccess" />
+///                     to the current session, ensuring that state machine hooks in both
+///                     foreground and background sessions point to their respective session
+///                     data — no semantic divergence between foreground and background.
 ///                 </description>
 ///             </item>
 ///         </list>
 ///     </para>
-///     后台或测试场景可自行提供替代实现，从而与具体前台上下文彻底解耦。
+///     Background or test scenarios can supply alternative implementations,
+///     completely decoupling from the specific foreground context.
 ///     <para>
-///         <strong>接口继承：</strong>
-///         继承 <see cref="ISndBlackboardAccess" /> 提供系统/流程黑板访问，
-///         继承 <see cref="ISndDeferredActions" /> 提供延迟动作队列。
+///         <strong>Interface inheritance:</strong>
+///         Inherits <see cref="ISndBlackboardAccess" /> for system/progress blackboard access,
+///         and <see cref="ISndDeferredActions" /> for the deferred action queue.
 ///     </para>
 /// </summary>
 public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredActions
 {
-    /// <summary>当前会话黑板；无活动会话时为 null。</summary>
+    /// <summary>Current session blackboard; null when no session is active.</summary>
     IBlackboard? SessionBlackboard { get; }
 
-    /// <summary>当前会话的 SND 场景访问；前后台会话各自返回自身的场景宿主。</summary>
+    /// <summary>SND scene access for the current session; foreground and background sessions each return their own scene host.</summary>
     ISndSceneAccess SceneAccess { get; }
 }

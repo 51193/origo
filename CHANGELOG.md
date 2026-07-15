@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - `scripts/download-godot.sh` — added version format validation (regex check for `N.N.N` pattern) after parsing the SDK version from `.csproj`, so malformed extraction produces a clear error instead of a confusing downstream failure.
+- **Public API XML doc comments translated to English** — all previously Chinese `/// <summary>` comments on public interfaces in `Origo.Core.Abstractions` and `Origo.Core.Snd` are now English, improving IDE IntelliSense for non-Chinese readers. Internal classes (e.g., converters, state machine internals) retain their existing comments.
 
 ### Removed
 

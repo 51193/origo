@@ -1,19 +1,20 @@
 namespace Origo.Core.Abstractions.Snd;
 
 /// <summary>
-///     提供存档相关的生命周期入口：继续游戏、初始存档、主菜单入口。
+///     Save-related lifecycle entry points: continue game, initial save,
+///     main menu entry.
 /// </summary>
 public interface ISndLifecycleOperations
 {
-    /// <summary>是否存在可继续游戏的目标存档。</summary>
+    /// <summary>Whether a continue-target save exists.</summary>
     bool HasContinueData();
 
-    /// <summary>请求继续游戏（基于当前 continue 目标）。</summary>
+    /// <summary>Request to continue the game (based on the current continue target).</summary>
     bool RequestContinueGame();
 
-    /// <summary>请求加载初始存档模板。</summary>
+    /// <summary>Request to load the initial save template.</summary>
     void RequestLoadInitialSave();
 
-    /// <summary>按启动流程重新读取主菜单入口配置。</summary>
+    /// <summary>Re-read the main menu entry configuration via the boot sequence.</summary>
     void RequestLoadMainMenuEntrySave();
 }

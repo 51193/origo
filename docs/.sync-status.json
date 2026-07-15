@@ -1020,8 +1020,8 @@
     "Origo.GodotAdapter.Tests/TestSupport": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.GodotAdapter.Tests/TestSupport.zh.md",

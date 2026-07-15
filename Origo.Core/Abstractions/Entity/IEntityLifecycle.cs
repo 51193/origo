@@ -3,58 +3,61 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Abstractions.Entity;
 
 /// <summary>
-///     实体生命周期管理接口。
-///     供框架内部编排实体创建/加载/保存/销毁的两阶段批处理流程。
-///     业务代码不可直接调用此接口。
+///     Entity lifecycle management interface.
+///     Used internally by the framework to orchestrate two-phase batch processing
+///     for entity creation / loading / saving / destruction.
+///     Business code must not call this interface directly.
 ///     <para>
-///         实现者：<see cref="Origo.Core.Snd.Entity.SndEntity" />（Core 内存实体）、
-///         适配层实体（委托给内部 SndEntity）。
+///         Implementors: <see cref="Origo.Core.Snd.Entity.SndEntity" /> (Core in-memory entity),
+///         adapter-layer entities (delegating to an inner SndEntity).
 ///     </para>
 /// </summary>
 public interface IEntityLifecycle
 {
     /// <summary>
-    ///     Phase 1：从元数据恢复实体的数据、节点和所有策略（EntityStrategy + ActiveStrategy），不触发任何钩子。
+    ///     Phase 1: Recover entity data, nodes, and all strategies
+    ///     (EntityStrategy + ActiveStrategy) from metadata without firing hooks.
     /// </summary>
     void RecoverForLifecycle(SndMetaData metaData);
 
     /// <summary>
-    ///     Phase 2：触发实体策略的 AfterSpawn 钩子。
+    ///     Phase 2: Fire AfterSpawn hooks on entity strategies.
     /// </summary>
     void FireAfterSpawnHooks();
 
     /// <summary>
-    ///     Phase 2：触发实体策略的 AfterLoad 钩子。
+    ///     Phase 2: Fire AfterLoad hooks on entity strategies.
     /// </summary>
     void FireAfterLoadHooks();
 
     /// <summary>
-    ///     Phase 2：触发实体策略的 BeforeSave 钩子。
+    ///     Phase 2: Fire BeforeSave hooks on entity strategies.
     /// </summary>
     void FireBeforeSaveHooks();
 
     /// <summary>
-    ///     Phase 2：触发实体策略的 BeforeQuit 钩子。
+    ///     Phase 2: Fire BeforeQuit hooks on entity strategies.
     /// </summary>
     void FireBeforeQuitHooks();
 
     /// <summary>
-    ///     Phase 2：触发实体策略的 BeforeDead 钩子。
+    ///     Phase 2: Fire BeforeDead hooks on entity strategies.
     /// </summary>
     void FireBeforeDeadHooks();
 
     /// <summary>
-    ///     Phase 3：仅释放实体策略和主动策略的引用，不触发钩子。
+    ///     Phase 3: Release entity strategy and active strategy references only,
+    ///     without firing hooks.
     /// </summary>
     void ReleaseStrategiesOnly();
 
     /// <summary>
-    ///     Phase 3：仅释放节点和数据资源，不触发钩子。
+    ///     Phase 3: Release node and data resources only, without firing hooks.
     /// </summary>
     void TeardownOnly();
 
     /// <summary>
-    ///     构建实体元数据，不触发 BeforeSave 钩子。
+    ///     Build entity metadata without firing BeforeSave hooks.
     /// </summary>
     SndMetaData BuildMetaData();
 }

@@ -3,15 +3,15 @@ using Origo.Core.Abstractions.Blackboard;
 namespace Origo.Core.Abstractions.Snd;
 
 /// <summary>
-///     提供系统级和流程级黑板的只读访问。
-///     由 <see cref="Origo.Core.Snd.ISndContext" /> 和
-///     <see cref="Origo.Core.Abstractions.StateMachine.IStateMachineContext" /> 共同消费。
+///     Read-only access to the system-level and progress-level blackboards.
+///     Consumed by both <see cref="Origo.Core.Snd.ISndContext" /> and
+///     <see cref="Origo.Core.Abstractions.StateMachine.IStateMachineContext" />.
 /// </summary>
 public interface ISndBlackboardAccess
 {
-    /// <summary>系统级黑板，生命周期与进程一致。</summary>
+    /// <summary>System-level blackboard, whose lifetime matches the process.</summary>
     IBlackboard SystemBlackboard { get; }
 
-    /// <summary>当前流程级黑板（存档槽级）；无活动流程时为 null。</summary>
+    /// <summary>Current progress-level blackboard (save-slot scope); null when no progress run is active.</summary>
     IBlackboard? ProgressBlackboard { get; }
 }

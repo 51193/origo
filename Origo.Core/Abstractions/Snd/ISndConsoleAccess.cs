@@ -3,20 +3,20 @@ using System;
 namespace Origo.Core.Abstractions.Snd;
 
 /// <summary>
-///     提供控制台命令的提交、处理与输出订阅。
-///     策略可通过此接口与外部控制台交互。
+///     Console command submission, processing, and output subscription.
+///     Strategies can interact with external consoles through this interface.
 /// </summary>
 public interface ISndConsoleAccess
 {
-    /// <summary>提交一条控制台命令。若未注入输入队列则返回 false。</summary>
+    /// <summary>Submit a console command line. Returns false if no input queue is injected.</summary>
     bool TrySubmitConsoleCommand(string commandLine);
 
-    /// <summary>处理控制台待执行命令。</summary>
+    /// <summary>Process pending console commands.</summary>
     void ProcessConsolePending();
 
-    /// <summary>订阅控制台输出，返回订阅 ID。</summary>
+    /// <summary>Subscribe to console output. Returns a subscription ID.</summary>
     long SubscribeConsoleOutput(Action<string> onLine);
 
-    /// <summary>取消控制台输出订阅。</summary>
+    /// <summary>Unsubscribe from console output.</summary>
     void UnsubscribeConsoleOutput(long subscriptionId);
 }

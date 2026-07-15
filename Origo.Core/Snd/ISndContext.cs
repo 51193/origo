@@ -4,65 +4,66 @@ using Origo.Core.Abstractions.StateMachine;
 namespace Origo.Core.Snd;
 
 /// <summary>
-///     面向策略与游戏层的统一业务门面接口。不继承任何角色接口，
-///     所有能力通过类型化 companion 属性访问。
+///     Unified business facade interface for strategies and the game layer.
+///     Does not inherit any role interfaces; all capabilities are accessed
+///     through typed companion properties.
 ///     <para>
-///         companion 属性按职责划分：
-///         <see cref="Blackboard" />（黑板访问）、
-///         <see cref="Deferred" />（延迟动作队列）、
-///         <see cref="Template" />（模板克隆）、
-///         <see cref="ConsoleAccess" />（控制台）、
-///         <see cref="StateMachines" />（状态机）、
-///         <see cref="Save" />（存档/关卡操作）、
-///         <see cref="Lifecycle" />（生命周期入口）、
-///         <see cref="FileAccess" />（静态资源文件访问）、
-///         <see cref="ArchiveFileAccess" />（存档内文件访问）、
-///         <see cref="StateMachineContext" />（状态机上下文）。
-///         策略钩子保持全量 <c>ISndContext ctx</c> 参数，
-///         通过 <c>ctx.Blackboard.SystemBlackboard</c> 等二级访问使用各项能力。
+///         Companion properties by responsibility:
+///         <see cref="Blackboard" /> (blackboard access),
+///         <see cref="Deferred" /> (deferred action queue),
+///         <see cref="Template" /> (template cloning),
+///         <see cref="ConsoleAccess" /> (console I/O),
+///         <see cref="StateMachines" /> (state machines),
+///         <see cref="Save" /> (save / level operations),
+///         <see cref="Lifecycle" /> (lifecycle entry points),
+///         <see cref="FileAccess" /> (static resource file access),
+///         <see cref="ArchiveFileAccess" /> (save-internal file access),
+///         <see cref="StateMachineContext" /> (state machine context).
+///         Strategy hooks receive the full <c>ISndContext ctx</c> parameter and
+///         access capabilities through secondary access like <c>ctx.Blackboard.SystemBlackboard</c>.
 ///     </para>
 /// </summary>
 public interface ISndContext
 {
-    /// <summary>启动流程：策略发现 → 别名/模板加载 → 入口存档加载。</summary>
+    /// <summary>Boot sequence: strategy discovery → alias/template loading → entry save loading.</summary>
     void Bootstrap();
 
-    /// <summary>当前存档根路径。</summary>
+    /// <summary>Current save root path.</summary>
     string SaveRootPath { get; }
 
-    /// <summary>初始存档根路径。</summary>
+    /// <summary>Initial save root path.</summary>
     string InitialSaveRootPath { get; }
 
-    /// <summary>入口配置路径。</summary>
+    /// <summary>Entry configuration path.</summary>
     string EntryConfigPath { get; }
 
-    /// <summary>系统级和流程级黑板访问。</summary>
+    /// <summary>System-level and progress-level blackboard access.</summary>
     ISndBlackboardAccess Blackboard { get; }
 
-    /// <summary>延迟动作队列。</summary>
+    /// <summary>Deferred action queue.</summary>
     ISndDeferredActions Deferred { get; }
 
-    /// <summary>模板克隆。</summary>
+    /// <summary>Template cloning.</summary>
     ISndTemplateAccess Template { get; }
 
-    /// <summary>控制台命令提交、处理与输出订阅。</summary>
+    /// <summary>Console command submission, processing, and output subscription.</summary>
     ISndConsoleAccess ConsoleAccess { get; }
 
-    /// <summary>流程级状态机容器访问。</summary>
+    /// <summary>Progress-level state machine container access.</summary>
     ISndStateMachineAccess StateMachines { get; }
 
-    /// <summary>存档读写与关卡切换。</summary>
+    /// <summary>Save read/write and level switching.</summary>
     ISndSaveOperations Save { get; }
 
-    /// <summary>存档生命周期入口：继续游戏、初始存档、主菜单入口。</summary>
+    /// <summary>Save lifecycle entry points: continue game, initial save, main menu entry.</summary>
     ISndLifecycleOperations Lifecycle { get; }
 
-    /// <summary>静态资源文件访问（策略范围，路径相对于项目配置目录）。</summary>
+    /// <summary>Static resource file access (strategy scope, paths relative to project config directory).</summary>
     ISndFileAccess FileAccess { get; }
 
-    /// <summary>存档内文件访问（路径相对于存档的 extra/ 子目录）。</summary>
+    /// <summary>Save-internal file access (paths relative to the save's extra/ subdirectory).</summary>
     ISndArchiveFileAccess ArchiveFileAccess { get; }
 
-    /// <summary>状态机上下文（黑板访问 + 延迟动作 + 会话/场景访问）。</summary>
+    /// <summary>State machine context (blackboard access + deferred actions + session/scene access).</summary>
     IStateMachineContext StateMachineContext { get; }
 }

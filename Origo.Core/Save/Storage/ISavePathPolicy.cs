@@ -1,44 +1,45 @@
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
-///     存档路径策略接口。提供存档目录和文件路径的拼装规则，
-///     使路径布局与业务逻辑解耦，可按环境注入不同路径策略。
+///     Save path policy interface. Provides path assembly rules for save
+///     directories and files, decoupling the path layout from business logic
+///     so different path strategies can be injected per environment.
 /// </summary>
 public interface ISavePathPolicy
 {
-    /// <summary>获取活动存档目录的相对路径。</summary>
+    /// <summary>Get the relative path of the active save directory (current/).</summary>
     string GetCurrentDirectory();
 
-    /// <summary>根据存档 ID 获取快照目录的相对路径。</summary>
+    /// <summary>Get the relative path of a snapshot directory by save ID.</summary>
     string GetSaveDirectory(string saveId);
 
-    /// <summary>获取 Progress 黑板 JSON 文件的相对路径。</summary>
+    /// <summary>Get the relative path of the progress blackboard JSON file.</summary>
     string GetProgressFile(string baseDirectory);
 
-    /// <summary>获取 Progress 状态机快照 JSON 文件的相对路径。</summary>
+    /// <summary>Get the relative path of the progress state machine snapshot JSON file.</summary>
     string GetProgressStateMachinesFile(string baseDirectory);
 
-    /// <summary>获取自定义元数据文件的相对路径。</summary>
+    /// <summary>Get the relative path of the custom metadata file.</summary>
     string GetCustomMetaFile(string baseDirectory);
 
-    /// <summary>获取关卡存档子目录的相对路径。</summary>
+    /// <summary>Get the relative path of a level save subdirectory.</summary>
     string GetLevelDirectory(string baseDirectory, string levelId);
 
-    /// <summary>获取关卡 SND 场景 JSON 文件的相对路径。</summary>
+    /// <summary>Get the relative path of the level SND scene JSON file.</summary>
     string GetLevelSndSceneFile(string levelDirectory);
 
-    /// <summary>获取关卡 Session 黑板 JSON 文件的相对路径。</summary>
+    /// <summary>Get the relative path of the level session blackboard JSON file.</summary>
     string GetLevelSessionFile(string levelDirectory);
 
-    /// <summary>获取关卡 Session 状态机快照 JSON 文件的相对路径。</summary>
+    /// <summary>Get the relative path of the level session state machine snapshot JSON file.</summary>
     string GetLevelSessionStateMachinesFile(string levelDirectory);
 
-    /// <summary>获取写入进行中标记文件的相对路径。</summary>
+    /// <summary>Get the relative path of the write-in-progress marker file.</summary>
     string GetWriteInProgressMarker(string baseDirectory);
 
-    /// <summary>获取 Payload SHA 摘要文件的相对路径。</summary>
+    /// <summary>Get the relative path of the payload SHA digest file.</summary>
     string GetPayloadShaFile(string baseDirectory);
 
-    /// <summary>获取策略/二次开发者自定义数据子目录的相对路径（如 current/extra）。</summary>
+    /// <summary>Get the relative path of the extra data subdirectory (e.g. current/extra).</summary>
     string GetExtraDirectory(string baseDirectory);
 }

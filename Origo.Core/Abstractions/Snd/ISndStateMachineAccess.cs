@@ -3,10 +3,10 @@ using Origo.Core.Abstractions.StateMachine;
 namespace Origo.Core.Abstractions.Snd;
 
 /// <summary>
-///     提供流程级字符串栈状态机的访问。
+///     Provides access to progress-level string-stack state machines.
 /// </summary>
 public interface ISndStateMachineAccess
 {
-    /// <summary>流程级字符串栈状态机容器；无活动流程时为 null。</summary>
+    /// <summary>Progress-level string-stack state machine container; null when no progress run is active.</summary>
     IStateMachineContainer? GetProgressStateMachines();
 }

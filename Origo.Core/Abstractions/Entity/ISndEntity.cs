@@ -2,16 +2,23 @@ using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Abstractions.Entity;
 
+/// <summary>
+///     Root interface for an SND entity, composing all per-entity role interfaces
+///     (data, node, strategy, active strategy, observer strategy).
+/// </summary>
 public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess, ISndActiveStrategyAccess,
     ISndObserverStrategyAccess
 {
+    /// <summary>Unique stable name of this entity within its session.</summary>
     string Name { get; }
 
+    /// <summary>Whether this entity has been marked for removal at the end of the current frame.</summary>
     bool IsPendingKill { get; }
 
     /// <summary>
-    ///     该实体所属的会话。实体由 <see cref="ISessionRun" /> 的宿主创建时注入，
-    ///     运行期间必非空；策略经此访问同会话实体与会话级能力。
+    ///     The session this entity belongs to. Injected by the session host at creation
+    ///     and never null during runtime. Strategies use this to access peer entities
+    ///     and session-level capabilities.
     /// </summary>
     ISessionRun OwningSession { get; }
 }
