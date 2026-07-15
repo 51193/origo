@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构总览
 
@@ -11,8 +11,8 @@ Origo 框架遵循以下核心设计约束：
 
 - **平台无关**：Core 零引擎依赖，所有 I/O 通过 `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver`（`IFileSystem` 内部化）
 - **适配层隔离**：适配层仅提供能力封装和桥接，不得触发策略钩子、管理策略生命周期
-- **接口隔离（ISP）**：`ISndContext` 拆分为 9 个角色接口；`ISessionRun` 返回抽象 `IStateMachineContainer`
-- **依赖方向单向**：Abstractions → Core 实现 → Adapter，反向严格禁止
+- **接口隔离（ISP）**：`ISndContext` 通过 10 个伴生属性暴露能力；`ISessionRun` 返回抽象 `IStateMachineContainer`
+- **依赖方向单向**：Adapter → Core → Abstractions，反向严格禁止
 - **public 白名单**：每个 public 接口必须有明确的跨程序集消费者
 - **策略一等公民**：策略可访问 `ISndContext` 全部 30+ 成员，不限制框架能力
 - **单线程帧模型**：一帧 = 一个逻辑原子边界
@@ -140,7 +140,7 @@ Core 层所有文件操作通过三个接口完成：
 
 ### 接口抽象设计
 
-Core 层遵循接口隔离原则（ISP），`ISndContext` 拆分为 9 个角色接口：
+Core 层遵循接口隔离原则（ISP），`ISndContext` 通过 10 个伴生属性暴露能力：
 
 | 角色接口 | 职责 |
 |---------|------|
@@ -200,10 +200,14 @@ Godot._Process
 ## 项目结构
 
 ```
-Origo.Core/           # 平台无关核心 (~90 个 .cs 文件)
+Origo.Core/           # 平台无关核心（~198 个 .cs 文件）
 ├── Abstractions/     # 公共接口（Blackboard/Entity/StateMachine/...）
+├── Addons/           # 外部算法库（FastNoiseLite）
 ├── Blackboard/       # 黑板实现
 ├── DataSource/       # JSON/Map 编解码 + 类型转换
+├── Grid/             # 网格坐标系统 + A* 寻路
+├── Logging/          # 日志实现
+├── Planning/         # 规划/行为策略扩展
 ├── Random/           # 随机数 + 噪声
 ├── Runtime/          # 运行时四层生命周期 + 控制台
 ├── Save/             # 持久化存储
@@ -211,12 +215,12 @@ Origo.Core/           # 平台无关核心 (~90 个 .cs 文件)
 ├── Serialization/    # 类型 ↔ 字符串映射
 ├── Snd/              # SND 实体系统（策略 + 数据 + 节点）
 ├── StateMachine/     # 字符串栈状态机
-└── Testing/          # 策略测试框架
+└── Utility/          # 工具类（Diff/Path）
 
-Origo.SourceGeneration/  # Roslyn 源码生成器 (~1 个 .cs 文件)
-└── TypedDataGenerator.cs  # Home/Adapter 双模式代码生成
+Origo.SourceGeneration/  # Roslyn 源码生成器（5 个 .cs 文件）
+└── TypedDataGenerator*.cs  # Home/Adapter 双模式代码生成（1 主文件 + 4 partial）
 
-Origo.GodotAdapter/   # Godot 4 适配层 (~18 个 .cs 文件)
+Origo.GodotAdapter/   # Godot 4 适配层（~23 个 .cs 文件）
 ├── Bootstrap/        # 启动编排
 ├── Console/          # Godot 命令
 ├── FileSystem/       # Godot 文件系统

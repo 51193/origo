@@ -1,12 +1,12 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd](../../Snd/README.en.md)
 
 ## Overview
-Role interface decomposition of ISndContext. 10 narrow interfaces decomposed by responsibility (ISP). ISndContext does not inherit any role interfaces; all capabilities are accessed through typed companion properties.
+Role interface decomposition of ISndContext. 9 Snd role interfaces + `IStateMachineContext` (from the StateMachine module) decomposed by responsibility (ISP). ISndContext does not inherit any role interfaces; all capabilities are accessed through typed companion properties.
 
 ## Included Files
 
@@ -24,6 +24,17 @@ Role interface decomposition of ISndContext. 10 narrow interfaces decomposed by 
 
 ## ISndContext Companion Properties
 
+Beyond its 10 companion properties, ISndContext directly exposes the following members:
+
+| Member | Description |
+|------|------|
+| `Bootstrap()` | Entry point: strategy discovery → alias/template loading → entry save loading |
+| `SaveRootPath` | Current save root path |
+| `InitialSaveRootPath` | Initial save root path |
+| `EntryConfigPath` | Entry configuration file path |
+
+ISndContext does not inherit any role interfaces; all capabilities are accessed through 10 companion properties:
+
 | Companion Property | Type | Responsibility |
 |---------------|------|------|
 | `Blackboard` | `ISndBlackboardAccess` | System + progress blackboard |
@@ -40,7 +51,15 @@ Role interface decomposition of ISndContext. 10 narrow interfaces decomposed by 
 ## Design Decisions
 
 ### Why decompose ISndContext
-Narrow interfaces let consumers depend only on what they need. Strategy hooks retain `ISndContext ctx` as first-class citizens.
+
+Decomposing the interface into narrow interfaces (9 Snd role interfaces + IStateMachineContext), each consumer can depend only on the narrow interfaces they need:
+
+- Code that only needs blackboard access depends on `ISndBlackboardAccess`
+- Code that only needs deferred queue depends on `ISndDeferredActions`
+- Code that only needs save operations depends on `ISndSaveOperations`
+- etc.
+
+Strategy hooks (`LifecycleStrategyBase`'s 8 virtual methods) retain `ISndContext ctx` as a full parameter — strategies as first-class citizens should be able to access all framework capabilities.
 
 ### Why companion properties rather than interface inheritance
 Eliminates naming conflicts between role interfaces (e.g., multiple `Clear()`) and provides clearer call semantics (`ctx.Save.RequestLoadGame(...)`).

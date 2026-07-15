@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter
 
@@ -14,7 +14,7 @@
 | 子系统 | 能力 | 详情 |
 |--------|------|------|
 | [Bootstrap](Bootstrap/README.zh.md) | 启动编排 | OrigoAutoHost → OrigoDefaultEntry → Runtime 创建 + 策略发现 + Context 绑定 |
-| [Console](Console/README.zh.md) | Godot 控制台命令 | press_button / tree_debug 命令 + 适配层 CommandHandlerBase |
+| [Console](Console/README.zh.md) | Godot 控制台命令 | press_button / tree_debug / camera_view 命令 + 适配层 CommandHandlerBase |
 | [FileSystem](FileSystem/README.zh.md) | Godot 文件系统 | IFileSystem 实现：FileAccess/DirAccess + res:// 和 user:// 支持 |
 | [Logging](Logging/README.zh.md) | Godot 日志 | ILogger 实现：委托注入 GD.Print/PushWarning/PushError |
 | [Serialization](Serialization/README.zh.md) | Godot 类型序列化 | 14 种上帝类型 → DataSourceNode 转换器 |

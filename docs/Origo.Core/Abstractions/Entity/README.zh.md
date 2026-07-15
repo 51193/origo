@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity (Abstractions)
 
@@ -90,7 +90,7 @@
 | `FireBeforeSaveHooks()` | Phase 2 | 触发策略 BeforeSave |
 | `FireBeforeQuitHooks()` | Phase 2 | 触发策略 BeforeQuit |
 | `FireBeforeDeadHooks()` | Phase 2 | 触发策略 BeforeDead |
-| `ReleaseStrategiesOnly()` | Phase 3 | 释放 EntityStrategy + ActiveStrategy + ObserverStrategy 引用 |
+| `ReleaseStrategiesOnly()` | Phase 3 | 释放 EntityStrategy + ActiveStrategy 引用 |
 | `TeardownOnly()` | Phase 3 | 释放 Node + Data 资源 |
 | `BuildMetaData()` | 序列化 | 构建元数据（不触发 BeforeSave） |
 

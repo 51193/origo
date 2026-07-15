@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -18,7 +18,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | [Scene](Scene/README.en.md) | Scene host & spawn factory | SndEntityFactory + FullMemorySndSceneHost + StubSndSceneHost |
 | [Strategy](Strategy/README.en.md) | Strategy system core | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase. Strategy pool, passive/active/observer three kinds of managers + generic invocation extensions |
 | [Archetype](Archetype/README.en.md) | Numeric recipe loading | SndArchetypeLoader: key-value pair file parsing and type inference |
-| [Companions](Companions/README.en.md) | SndContext role companion objects | 10 internal companion classes implementing ISndBlackboardAccess / ISndSaveOperations etc., exposed through ISndContext's companion properties |
+| [Companions](Companions/README.en.md) | SndContext role companion objects | 8 internal companion classes in the `Companions/` subdirectory, 2 (FileAccess, ArchiveFileAccess) at the Snd/ root. Together implement ISndBlackboardAccess / ISndSaveOperations etc., exposed through ISndContext's companion properties |
 
 ## This Layer's Core Files
 

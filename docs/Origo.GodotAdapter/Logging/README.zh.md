@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Logging/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Logging
 
@@ -20,22 +20,22 @@
 ```csharp
 public sealed class GodotLogger : ILogger
 {
-    private readonly Action<LogLevel, string, string>? _handler;
+    private readonly Action<LogLevel, string, string> _handler;
     private readonly LogLevel _minimumLevel;
 
     public GodotLogger(
-        Action<LogLevel, string, string>? handler = null,
+        Action<LogLevel, string, string> handler,
         LogLevel minimumLevel = LogLevel.Info);
 
     public void Log(LogLevel level, string tag, string message)
     {
         if (level < _minimumLevel) return;
-        _handler?.Invoke(level, tag, message);
+        _handler.Invoke(level, tag, message);
     }
 }
 ```
 
-不包含任何静态状态。实际的输出行为（格式化、级别路由）由外部委托控制。`minimumLevel` 默认为 `Info`，低于此级别的 `Debug` 消息不触发委托。典型用法（来自 `OrigoAutoHost`）：
+不包含任何静态状态。实际的输出行为（格式化、级别路由）由外部委托控制。`minimumLevel` 默认为 `Info`，低于此级别的 `Debug` 消息不触发委托。`handler` 不可为空（构造时 `ArgumentNullException.ThrowIfNull` 校验）。典型用法（来自 `OrigoAutoHost`）：
 
 ```csharp
 new GodotLogger((level, tag, message) =>
@@ -54,10 +54,6 @@ new GodotLogger((level, tag, message) =>
 ### 为什么用委托而非直接硬编码 GD.Print
 
 不同使用场景可能需要不同的日志路由（Godot 编辑器控制台、文件日志、远程日志）。委托注入让调用方决定输出策略，`GodotLogger` 本身只负责接口适配。
-
-### 为什么 handler 可为 null
-
-启动早期（构造 `OrigoAutoHost` 时）`GodotLogger` 实例先创建，但 Godot 的 `GD` API 在特定初始化阶段可能不可用。允许 null handler 使日志在"静默"和"活跃"之间切换，无需重建实例。
 
 ### 为什么不在 Log 方法中做格式化
 

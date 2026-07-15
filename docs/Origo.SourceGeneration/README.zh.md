@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration
 
@@ -15,7 +15,11 @@
 
 | 文件 | 职责 |
 |------|------|
-| `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`：双模式代码生成器 |
+| `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`：双模式代码生成器（主入口 + 属性解析 + 顶级语法接收） |
+| `TypedDataGenerator.AdapterGeneration.cs` | partial — Adapter 模式代码生成（Godot 引擎类型扩展方法） |
+| `TypedDataGenerator.HomeGeneration.cs` | partial — Home 模式代码生成（Core BCL 类型扩展方法） |
+| `TypedDataGenerator.FactoryGeneration.cs` | partial — 工厂注册代码生成（类型映射与 Kind 分配） |
+| `TypedDataGenerator.Diagnostics.cs` | partial — 诊断定义（ORIGOSG001-004） |
 | `AnalyzerReleases.Shipped.md` | 分析器发布跟踪（已发布规则，当前为空） |
 | `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`、`ORIGOSG002`、`ORIGOSG003`、`ORIGOSG004`） |
 | `pipeline.md` | 全链路性能解析：从装箱问题到编译期优化的完整推理与基准说明 |

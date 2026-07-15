@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Runtime
 
@@ -40,7 +40,7 @@ OrigoRuntime
 │   └── ProgressRuntime
 │       └── SessionManagerRuntime
 │           └── SessionRun (foreground + background)
-└── IScheduler (frame loop driver)
+└── IOrigoFrameDriver (frame loop driver)
 ```
 
 ## Runtime Four Layers

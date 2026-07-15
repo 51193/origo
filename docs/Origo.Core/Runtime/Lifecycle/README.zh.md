@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -29,6 +29,7 @@
 | `SessionStateMachineContext.cs` | internal：会话级状态机上下文适配器，将 SessionBlackboard/SceneAccess 绑定到当前会话 |
 | `EmptySessionManager.cs` | 无操作会话管理器（测试/空场景）|
 | `RunStateScope.cs` | 运行时状态作用域工具 |
+| `TopologyInvariant.cs` | internal — 拓扑不变量校验工具 |
 
 > `ISessionManager` 和 `ISessionRun` 接口已移至 `Origo.Core.Abstractions.Lifecycle` 命名空间，确保 Abstractions 层不依赖 Runtime 层。本层保留具体实现。
 
@@ -54,7 +55,7 @@ SystemRuntime
 
 ### 启动
 
-1. `OrigoAutoHost` 创建 `SystemParameters` → `SystemRun.Create()`
+1. `OrigoAutoHost`（GodotAdapter 层，提供引擎初始化）创建 `SystemParameters` → `new SystemRun(...)` 构造
 2. `SystemRun` 创建 `SndWorld`（策略池 + 配置）→ `ProgressRuntime`
 3. 加载初始关卡时：`ProgressRun` 创建 `SessionManager` → `SessionRun`（前台 + 后台）
 
@@ -66,8 +67,8 @@ SystemRuntime
 ### 持久化
 
 - `SaveCoordinator`：独立类（`Origo.Core.Save.SaveCoordinator`），负责构建存档 payload、持久化 progress 状态、管理元数据。从 `ProgressRun` 嵌套类提取为独立类以便测试和职责分离。
-- `ProgressRun.RequestSaveGame` → `SaveCoordinator.BuildSavePayload` → `SavePayloadWriter.WriteToCurrent(handle, ...)` → snapshot
-- `ProgressRun.RequestLoadGame` → `SavePayloadReader.ReadFromCurrent(handle, ...)` / `ReadFromSnapshot(handle, ...)` → 恢复黑板 + 场景
+- `ISndSaveOperations.RequestSaveGame` → `SaveCoordinator.BuildSavePayload` → `SavePayloadWriter.WriteToCurrent(handle, ...)` → snapshot
+- `ISndSaveOperations.RequestLoadGame` → `SavePayloadReader.ReadFromCurrent(handle, ...)` / `ReadFromSnapshot(handle, ...)` → 恢复黑板 + 场景
 - `SaveFileHandle`：统一 I/O 上下文（`Origo.Core.Save.Storage.SaveFileHandle`），封装 `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver` + `saveRootPath` + `ISavePathPolicy`。所有 Writer/Reader 方法通过 `SaveFileHandle` 参数接收依赖，消除多参数重载链。
 - `PersistProgress`：将流程黑板与完整会话拓扑（前台 + 所有后台）序列化写入 `current/progress.json`。若当前无前台会话则抛出 `InvalidOperationException`，不静默写入部分数据。
 - `SessionRun.BuildLevelPayload`：先批量触发 BeforeSave 钩子（`FireBeforeSaveHooks`）在所有实体上，再通过 `SaveContext.BuildSndScene` 构建场景元数据。这确保任何策略在存档前有最后的机会将内存状态刷新到实体 Data 中。

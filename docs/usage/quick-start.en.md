@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Quick Start
 
@@ -125,7 +125,7 @@ OrigoAutoHost._Ready()
   → BindRuntimeDependencies → SndManager
 
 OrigoDefaultEntry._Ready()
-  → Register adapter-layer command handlers (press_button, tree_debug)
+  → Register adapter-layer command handlers (press_button, tree_debug, camera_view)
   → Create SndContext
   → SndManager.BindContext(context)
   → ConfigureSaveMetadataContributors(context)

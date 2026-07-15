@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Abstractions
 
@@ -20,15 +20,15 @@ The stable public abstraction layer of Origo.Core. All interfaces are defined in
 | [Lifecycle](Lifecycle/README.en.md) | Session management abstraction interfaces | `ISessionManager` (session lifecycle) + `ISessionRun` (session runtime facade) |
 | [Logging](Logging/README.en.md) | Engine-agnostic logging interface | `ILogger` + `LogLevel` enum (Debug/Info/Warning/Error) |
 | [Node](Node/README.en.md) | Abstract engine node operations | `INodeFactory` + `INodeHandle` + `INodeHost` (internal) |
-| [Runtime](Runtime/README.en.md) | Abstract scheduling interface | `IScheduler`: Enqueue/Tick/Clear |
-| [Scene](Scene/README.en.md) | SND scene access and host | `ISndSceneAccess` + `ISndSceneHost` (SpawnEntity/FindByName/ProcessAll) |
-| [Snd](Snd/README.en.md) | ISndContext 9 role interfaces | IStateMachineContext also inherits some of them |
+| [Runtime](Runtime/README.en.md) | Abstract frame driver interface | `IOrigoFrameDriver`: DriveFrame/EnqueueBusinessDeferred/EnqueueSystemDeferred |
+| [Scene](Scene/README.en.md) | SND scene access and host | `ISndSceneAccess` + `ISndSceneHost` (CreateEntity/FindByName/ProcessAll) |
+| [Snd](Snd/README.en.md) | ISndContext 10 companion properties | IStateMachineContext also inherits some of them |
 | [StateMachine](StateMachine/README.en.md) | String-stack state machine system | `IStateMachine` + `IStateMachineContext` + `IStateMachineContainer` |
 
 ## Interface Hierarchy
 
 ```
-IBlackboard  IConsole*  IFileSystem  ILogger  IScheduler  INode*
+IBlackboard  IConsole*  IFileSystem  ILogger  IOrigoFrameDriver  INode*
 
 ISessionManager  ISessionRun → IStateMachineContainer
 
@@ -37,10 +37,11 @@ ISndEntity ─── ISndDataAccess + ISndNodeAccess + ISndStrategyAccess
 
 IEntityLifecycle                (Standalone interface, framework-internal, not a sub-interface of ISndEntity)
 
-ISndContext ─── ISndBlackboardAccess + ISndDeferredActions
-               + ISndTemplateAccess + ISndConsoleAccess + ISndStateMachineAccess
-               + ISndSaveOperations + ISndLifecycleOperations
-               + ISndFileAccess + ISndArchiveFileAccess
+ISndContext ··· companion properties › ISndBlackboardAccess + ISndDeferredActions
+                + ISndTemplateAccess + ISndConsoleAccess + ISndStateMachineAccess
+                + ISndSaveOperations + ISndLifecycleOperations
+                + ISndFileAccess + ISndArchiveFileAccess
+                + IStateMachineContext
 
 ISndSceneHost ─── ISndSceneAccess
 

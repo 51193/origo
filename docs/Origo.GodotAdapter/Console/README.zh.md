@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Console
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-Godot 适配层的控制台命令扩展。一个适配层的命令处理器基类（提供 `OrigoRuntime` 引用），以及两个 Godot 特有的命令——`press_button` 模拟 Button 点击，`tree_debug` 打印实体节点树。
+Godot 适配层的控制台命令扩展。一个适配层的命令处理器基类（提供 `OrigoRuntime` 引用），以及三个 Godot 特有的命令——`press_button` 模拟 Button 点击，`tree_debug` 打印实体节点树，`camera_view` 输出摄像机坐标信息。
 
 ## 包含文件
 
@@ -32,7 +32,7 @@ press_button <entity> <path>
 ```
 
 流程：
-1. `Runtime.Snd.FindByName(entity)` 找到实体
+1. `Runtime.SessionManager.ForegroundSession?.FindByName(entity)` 找到实体
 2. 检查实体是否为 `GodotSndEntity` 类型
 3. 通过 `godotEntity.GetNodeOrNull<Button>(path)` 查找 Button 节点
 4. `button.EmitSignal(BaseButton.SignalName.Pressed)` 模拟按下
@@ -44,7 +44,7 @@ tree_debug <entity>
 ```
 
 流程：
-1. `Runtime.Snd.FindByName(entity)` 找到实体
+1. `Runtime.SessionManager.ForegroundSession?.FindByName(entity)` 找到实体
 2. 检查实体是否为 `GodotSndEntity` 类型
 3. 递归遍历实体的 Godot 节点树，打印每个节点的 `[类型] "名称"`
 4. 输出完整节点树信息，用于调试路径解析问题
@@ -74,7 +74,7 @@ Core 的 `ConsoleCommandHandlerBase` 要求子类持有对 `OrigoRuntime` 的引
 
 ### 为什么 PressButton 需要 Godot 实体类型检查
 
-`Runtime.Snd.FindByName` 返回 `ISndEntity` 抽象接口，但 `GetNodeOrNull<Button>` 是 Godot.Node 的方法。运行时检查确保类型安全——如果实体是纯内存实体（如 `StubSndEntity`），提前用清晰错误信息告知而非 NullReferenceException。
+`Runtime.SessionManager.ForegroundSession?.FindByName` 返回 `ISndEntity` 抽象接口，但 `GetNodeOrNull<Button>` 是 Godot.Node 的方法。运行时检查确保类型安全——如果实体是纯内存实体（如 `StubSndEntity`），提前用清晰错误信息告知而非 NullReferenceException。
 
 ---
 [↑ 回到 Origo.GodotAdapter](../README.zh.md)

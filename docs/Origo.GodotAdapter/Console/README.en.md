@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console
 
@@ -7,7 +7,7 @@
 
 ## Overview
 
-Console command extensions for the Godot adapter layer. An adapter-layer command handler base class (providing an `OrigoRuntime` reference), plus two Godot-specific commands — `press_button` to simulate Button clicks, and `tree_debug` to print entity node trees.
+Console command extensions for the Godot adapter layer. An adapter-layer command handler base class (providing an `OrigoRuntime` reference), plus three Godot-specific commands — `press_button` to simulate Button clicks, `tree_debug` to print entity node trees, and `camera_view` to output camera coordinate information.
 
 ## Files
 
@@ -32,7 +32,7 @@ press_button <entity> <path>
 ```
 
 Flow:
-1. `Runtime.Snd.FindByName(entity)` finds the entity
+1. `Runtime.SessionManager.ForegroundSession?.FindByName(entity)` finds the entity
 2. Checks if the entity is of type `GodotSndEntity`
 3. Uses `godotEntity.GetNodeOrNull<Button>(path)` to find the Button node
 4. `button.EmitSignal(BaseButton.SignalName.Pressed)` simulates the press
@@ -44,7 +44,7 @@ tree_debug <entity>
 ```
 
 Flow:
-1. `Runtime.Snd.FindByName(entity)` finds the entity
+1. `Runtime.SessionManager.ForegroundSession?.FindByName(entity)` finds the entity
 2. Checks if the entity is of type `GodotSndEntity`
 3. Recursively traverses the entity's Godot node tree, printing `[Type] "Name"` for each node
 4. Outputs the full node tree for debugging path resolution issues
@@ -74,7 +74,7 @@ Core's `ConsoleCommandHandlerBase` requires subclasses to hold a reference to `O
 
 ### Why PressButton needs Godot entity type checking
 
-`Runtime.Snd.FindByName` returns the abstract `ISndEntity` interface, but `GetNodeOrNull<Button>` is a method on `Godot.Node`. Runtime checks ensure type safety — if the entity is a pure in-memory entity (e.g., `StubSndEntity`), a clear error message is given early rather than a NullReferenceException.
+`Runtime.SessionManager.ForegroundSession?.FindByName` returns the abstract `ISndEntity` interface, but `GetNodeOrNull<Button>` is a method on `Godot.Node`. Runtime checks ensure type safety — if the entity is a pure in-memory entity (e.g., `StubSndEntity`), a clear error message is given early rather than a NullReferenceException.
 
 ---
 [↑ Back to Origo.GodotAdapter](../README.en.md)

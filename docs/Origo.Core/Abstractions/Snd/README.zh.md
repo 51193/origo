@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd (Abstractions)
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-ISndContext 的角色接口拆分。10 个窄接口按职责分解，遵循接口隔离原则（ISP）。ISndContext 不继承任何角色接口，所有能力通过类型化 companion 属性访问。
+ISndContext 的角色接口拆分。9 个 Snd 角色接口 + `IStateMachineContext`（来自 StateMachine 模块）按职责分解，遵循接口隔离原则（ISP）。ISndContext 不继承任何角色接口，所有能力通过类型化 companion 属性访问。
 
 ## 包含文件
 
@@ -26,6 +26,15 @@ ISndContext 的角色接口拆分。10 个窄接口按职责分解，遵循接�
 > `ISndSessionAccess` 和 `ISndEntityOperations` 现已不再使用。`CurrentSession`、`IsFrontSession`、`SessionManager`、`RequestKillAll`/`RequestKillEntity` 不在 `ISndContext` 上。`IsFrontSession` 在 `ISessionRun` 上（经 `entity.OwningSession.IsFrontSession` 访问）。`SessionManager` 可通过 `entity.OwningSession.SessionManager` 或 `OrigoRuntime.SessionManager`（public）访问。实体销毁经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行。
 
 ## ISndContext Companion 属性
+
+ISndContext 除 10 个 companion 属性外，还直接暴露以下成员：
+
+| 成员 | 说明 |
+|------|------|
+| `Bootstrap()` | 启动入口：策略发现 → 别名/模板加载 → 入口存档加载 |
+| `SaveRootPath` | 当前存档根路径 |
+| `InitialSaveRootPath` | 初始存档根路径 |
+| `EntryConfigPath` | 入口配置文件路径 |
 
 ISndContext 不继承任何角色接口，所有能力通过 10 个 companion 属性访问：
 
@@ -57,7 +66,7 @@ IStateMachineContext : ISndBlackboardAccess + ISndDeferredActions
 
 ### 为什么拆分 ISndContext
 
-将接口拆分为 10 个窄接口，每个消费者可按需依赖窄接口：
+将接口拆分为窄接口（9 个 Snd 角色接口 + IStateMachineContext），每个消费者可按需依赖窄接口：
 
 - 仅需黑板访问的代码可依赖 `ISndBlackboardAccess`
 - 仅需延迟队列的代码可依赖 `ISndDeferredActions`

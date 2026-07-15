@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Runtime
 
@@ -40,7 +40,7 @@ OrigoRuntime
 │   └── ProgressRuntime
 │       └── SessionManagerRuntime
 │           └── SessionRun (foreground + background)
-└── IScheduler (帧循环驱动)
+└── IOrigoFrameDriver (帧循环驱动)
 ```
 
 ## 运行时四层

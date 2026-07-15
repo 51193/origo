@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Serialization/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Serialization (Save)
 
@@ -27,7 +27,7 @@ Save serialization layer implementation. `BlackboardSerializer` and `SndSceneSer
 - **RecoverInto**: DataSourceNode (Array format) → `RecoverFromMetaList` (no AfterLoad hooks, no ClearAll)
 
 ### SaveContext
-Core orchestration object held by `ProgressRun`. Provides `BuildSndScene`, `RecoverSndScene`, `SaveGame`.
+Core orchestration object held by `ProgressRun`. Provides `BuildSndScene(ISndSceneAccess)`, `RecoverSndScene(ISndSceneAccess, DataSourceNode)`, `SaveGame`.
 
 ## Design Decisions
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Serialization/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Serialization (Save)
 
@@ -48,7 +48,7 @@ SaveContext = IBlackboard(Progress) + IBlackboard(Session) + SndWorld
 | 方法 | 说明 |
 |------|------|
 | `BuildSndScene(ISndSceneAccess)` | 构建场景元数据（不触发 BeforeSave） |
-| `RecoverSndScene(ISndSceneHost, DataSourceNode)` | 恢复场景（不触发 AfterLoad，不做 ClearAll） |
+| `RecoverSndScene(ISndSceneAccess, DataSourceNode)` | 恢复场景（不触发 AfterLoad，不做 ClearAll） |
 | `SaveGame(...)` | 收集全部数据构建 `SaveGamePayload` |
 
 ## 设计决策

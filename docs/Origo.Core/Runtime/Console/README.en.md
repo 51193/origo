@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console
 
@@ -23,7 +23,7 @@ Origo's runtime console command system. Provides command parsing (positional + n
 | `ConsoleCommandParser.cs` | Command parsing: string → CommandInvocation |
 | `ConsoleCommandHandlerBase.cs` | Handler base: Name/HelpText/arg validation/execution |
 | `ConsoleMessages.cs` | User-facing message constants (English) |
-| `CommandInvocation.cs` | Invocation model: CommandName + PositionalArgs + NamedArgs |
+| `CommandInvocation.cs` | Invocation model: Command + PositionalArgs + NamedArgs |
 | `IConsoleCommandHandler.cs` | Handler interface: Name + HelpText + TryExecute |
 | `ConsoleInputBuffer.cs` | Thread-safe input queue (Enqueue/TryDequeue/Clear) |
 | `ConsoleOutputChannel.cs` | Subscribe/publish output channel |
@@ -41,7 +41,9 @@ ConsoleInputBuffer.Enqueue(line)
 OrigoConsole.ProcessPending()
     ├── TryDequeueCommand → line
     ├── ConsoleCommandParser.Parse(line)
+    │   └── CommandInvocation { Command, PositionalArgs, NamedArgs }
     ├── ConsoleCommandRouter.TryExecute(invocation, outputChannel)
+    │   └── handler.TryExecute(invocation, outputChannel)
     └── outputChannel.Publish(result)
 ```
 

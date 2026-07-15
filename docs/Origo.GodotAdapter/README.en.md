@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter
 
@@ -14,7 +14,7 @@
 | Subsystem | Capability | Details |
 |--------|------|------|
 | [Bootstrap](Bootstrap/README.en.md) | Startup orchestration | OrigoAutoHost → OrigoDefaultEntry → Runtime creation + strategy discovery + Context binding |
-| [Console](Console/README.en.md) | Godot console commands | press_button / tree_debug commands + adapter layer CommandHandlerBase |
+| [Console](Console/README.en.md) | Godot console commands | press_button / tree_debug / camera_view commands + adapter layer CommandHandlerBase |
 | [FileSystem](FileSystem/README.en.md) | Godot file system | IFileSystem implementation: FileAccess/DirAccess + res:// and user:// support |
 | [Logging](Logging/README.en.md) | Godot logging | ILogger implementation: delegate-injected GD.Print/PushWarning/PushError |
 | [Serialization](Serialization/README.en.md) | Godot type serialization | 14 Godot types → DataSourceNode converters |

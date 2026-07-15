@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # FileSystem (Abstractions)
 
@@ -14,6 +14,7 @@
 | 文件 | 职责 |
 |------|------|
 | `IFileSystem.cs` | 文件系统完整抽象：读写、遍历、目录管理、路径拼接 |
+| `IPathResolver.cs` | 平台路径运算：CombinePath、GetParentDirectory |
 
 ## 接口成员
 

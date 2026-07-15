@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Logging/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Logging
 
@@ -20,22 +20,22 @@ The Godot implementation of the `ILogger` interface. Injects output delegates vi
 ```csharp
 public sealed class GodotLogger : ILogger
 {
-    private readonly Action<LogLevel, string, string>? _handler;
+    private readonly Action<LogLevel, string, string> _handler;
     private readonly LogLevel _minimumLevel;
 
     public GodotLogger(
-        Action<LogLevel, string, string>? handler = null,
+        Action<LogLevel, string, string> handler,
         LogLevel minimumLevel = LogLevel.Info);
 
     public void Log(LogLevel level, string tag, string message)
     {
         if (level < _minimumLevel) return;
-        _handler?.Invoke(level, tag, message);
+        _handler.Invoke(level, tag, message);
     }
 }
 ```
 
-Contains no static state. The actual output behavior (formatting, level routing) is controlled by external delegates. `minimumLevel` defaults to `Info`; `Debug` messages below this level do not trigger the delegate. Typical usage (from `OrigoAutoHost`):
+Contains no static state. The actual output behavior (formatting, level routing) is controlled by external delegates. `minimumLevel` defaults to `Info`; `Debug` messages below this level do not trigger the delegate. `handler` cannot be null (validated by `ArgumentNullException.ThrowIfNull` at construction). Typical usage (from `OrigoAutoHost`):
 
 ```csharp
 new GodotLogger((level, tag, message) =>
@@ -54,10 +54,6 @@ new GodotLogger((level, tag, message) =>
 ### Why use delegates instead of hardcoding GD.Print
 
 Different usage scenarios may require different log routing (Godot editor console, file logging, remote logging). Delegate injection lets the caller decide the output strategy; `GodotLogger` itself is only responsible for interface adaptation.
-
-### Why handler can be null
-
-In early startup (when constructing `OrigoAutoHost`), the `GodotLogger` instance is created first, but Godot's `GD` API may not be available during certain initialization phases. Allowing a null handler lets logging switch between "silent" and "active" without recreating the instance.
 
 ### Why not format inside the Log method
 

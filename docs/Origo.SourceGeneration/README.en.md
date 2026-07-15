@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration
 
@@ -15,7 +15,11 @@
 
 | File | Responsibility |
 |------|------|
-| `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`: dual-mode code generator |
+| `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`: dual-mode code generator (main entry + attribute parsing + top-level syntax reception) |
+| `TypedDataGenerator.AdapterGeneration.cs` | partial — Adapter mode code generation (Godot engine type extension methods) |
+| `TypedDataGenerator.HomeGeneration.cs` | partial — Home mode code generation (Core BCL type extension methods) |
+| `TypedDataGenerator.FactoryGeneration.cs` | partial — Factory registration code generation (type mapping and Kind allocation) |
+| `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-004) |
 | `AnalyzerReleases.Shipped.md` | Analyzer release tracking (shipped rules, currently empty) |
 | `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (unshipped rules: `ORIGOSG001`, `ORIGOSG002`, `ORIGOSG003`, `ORIGOSG004`) |
 | `pipeline.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |

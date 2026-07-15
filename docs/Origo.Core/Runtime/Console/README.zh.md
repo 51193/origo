@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Console
 
@@ -24,7 +24,7 @@ Origo 的运行时控制台命令系统。提供命令解析（位置参数 + �
 | `ConsoleCommandParser.cs` | 命令解析：字符串 → CommandInvocation（位置参数 + 命名参数）|
 | `ConsoleCommandHandlerBase.cs` | 命令处理器基类：Name/HelpText/参数范围校验/执行 |
 | `ConsoleMessages.cs` | 面向用户的控制台消息常量（英文），供生产处理器与测试断言共同引用，避免硬编码字面量。当前含 `InvalidArgumentCount` |
-| `CommandInvocation.cs` | 命令调用模型：CommandName + PositionalArgs + NamedArgs |
+| `CommandInvocation.cs` | 命令调用模型：Command + PositionalArgs + NamedArgs |
 | `IConsoleCommandHandler.cs` | 命令处理器接口：Name + HelpText + TryExecute |
 | `ConsoleInputBuffer.cs` | IConsoleInputSource 实现：线程安全的命令输入队列，支持 Enqueue/TryDequeue/Clear |
 | `ConsoleOutputChannel.cs` | IConsoleOutputChannel 实现：订阅/发布 |
@@ -42,7 +42,7 @@ ConsoleInputBuffer.Enqueue(line)
 OrigoConsole.ProcessPending()
     ├── TryDequeueCommand → line
     ├── ConsoleCommandParser.Parse(line)
-    │   └── CommandInvocation { Name, PositionalArgs, NamedArgs }
+    │   └── CommandInvocation { Command, PositionalArgs, NamedArgs }
     ├── ConsoleCommandRouter.TryExecute(invocation, outputChannel)
     │   └── handler.TryExecute(invocation, outputChannel)
     └── outputChannel.Publish(result)

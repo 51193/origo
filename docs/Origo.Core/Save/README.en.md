@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Save
 
@@ -31,7 +31,7 @@ Origo's persistence system. Responsible for the complete save lifecycle: payload
 ## Persistence Flow
 
 ```
-ProgressRun.RequestSaveGame(saveId)
+ISndSaveOperations.RequestSaveGame(saveId)
     │
     ▼
 SaveCoordinator.BuildSavePayload(...)

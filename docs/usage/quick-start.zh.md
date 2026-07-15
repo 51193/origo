@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 快速开始
 
@@ -125,7 +125,7 @@ OrigoAutoHost._Ready()
   → BindRuntimeDependencies → SndManager
 
 OrigoDefaultEntry._Ready()
-  → 注册适配层命令处理器 (press_button, tree_debug)
+  → 注册适配层命令处理器 (press_button, tree_debug, camera_view)
   → 创建 SndContext
   → SndManager.BindContext(context)
   → ConfigureSaveMetadataContributors(context)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # FileSystem (Abstractions)
 
@@ -13,6 +13,7 @@ Defines the platform-independent file system abstraction interface `IFileSystem`
 | File | Responsibility |
 |------|------|
 | `IFileSystem.cs` | Complete file system abstraction: read/write, enumeration, directory management, path joining |
+| `IPathResolver.cs` | Platform path computation: CombinePath, GetParentDirectory |
 
 ## Interface Members
 

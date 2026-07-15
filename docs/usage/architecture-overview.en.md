@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Overview
 
@@ -11,8 +11,8 @@ The Origo framework follows these core design constraints:
 
 - **Platform-agnostic**: Core has zero engine dependencies; all I/O goes through `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver` (internalized by `IFileSystem`)
 - **Adapter-layer isolation**: The adapter layer only provides capability encapsulation and bridging; it must not fire strategy hooks or manage strategy lifecycles
-- **Interface Segregation (ISP)**: `ISndContext` is split into 9 role interfaces; `ISessionRun` returns an abstract `IStateMachineContainer`
-- **Unidirectional dependency**: Abstractions → Core implementations → Adapter; reverse is strictly forbidden
+- **Interface Segregation (ISP)**: `ISndContext` exposes capabilities through 10 companion properties; `ISessionRun` returns an abstract `IStateMachineContainer`
+- **Unidirectional dependency**: Adapter → Core → Abstractions; reverse is strictly forbidden
 - **public whitelist**: Every public interface must have a clear cross-assembly consumer
 - **Strategy as first-class citizen**: Strategies can access all 30+ members of `ISndContext` without restricting framework capabilities
 - **Single-threaded frame model**: One frame = one logical atomic boundary
@@ -140,7 +140,7 @@ The separation of the adapter layer and Core layer is the core architectural con
 
 ### Interface Abstraction Design
 
-The Core layer follows the Interface Segregation Principle (ISP); `ISndContext` is split into 9 role interfaces:
+The Core layer follows the Interface Segregation Principle (ISP); `ISndContext` exposes capabilities through 10 companion properties:
 
 | Role Interface | Responsibility |
 |---------------|---------------|
@@ -200,10 +200,14 @@ The frame loop entry is in the adapter layer (Godot's `_Process` callback), but 
 ## Project Structure
 
 ```
-Origo.Core/           # Platform-agnostic core (~90 .cs files)
+Origo.Core/           # Platform-agnostic core (~198 .cs files)
 ├── Abstractions/     # Public interfaces (Blackboard/Entity/StateMachine/...)
+├── Addons/           # External algorithm library (FastNoiseLite)
 ├── Blackboard/       # Blackboard implementation
 ├── DataSource/       # JSON/Map codec + type conversion
+├── Grid/             # Grid coordinate system + A* pathfinding
+├── Logging/          # Logging implementation
+├── Planning/         # Planning/behavior strategy extensions
 ├── Random/           # Random numbers + noise
 ├── Runtime/          # Runtime four-layer lifecycle + console
 ├── Save/             # Persistent storage
@@ -211,12 +215,12 @@ Origo.Core/           # Platform-agnostic core (~90 .cs files)
 ├── Serialization/    # Type ↔ string mapping
 ├── Snd/              # SND entity system (Strategy + Data + Node)
 ├── StateMachine/     # String-stack state machine
-└── Testing/          # Strategy testing framework
+└── Utility/          # Utility classes (Diff/Path)
 
-Origo.SourceGeneration/  # Roslyn source generator (~1 .cs file)
-└── TypedDataGenerator.cs  # Home/Adapter dual-mode code generation
+Origo.SourceGeneration/  # Roslyn source generator (5 .cs files)
+└── TypedDataGenerator*.cs  # Home/Adapter dual-mode code generation (1 main file + 4 partial)
 
-Origo.GodotAdapter/   # Godot 4 adapter layer (~18 .cs files)
+Origo.GodotAdapter/   # Godot 4 adapter layer (~23 .cs files)
 ├── Bootstrap/        # Startup orchestration
 ├── Console/          # Godot commands
 ├── FileSystem/       # Godot file system

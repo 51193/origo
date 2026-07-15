@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Lifecycle/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle (Abstractions)
 
@@ -14,7 +14,7 @@
 | 文件 | 职责 |
 |------|------|
 | `ISessionManager.cs` | 会话管理器接口：创建/销毁/查找会话，管理前台与后台会话的完整生命周期 |
-| `ISessionRun.cs` | 会话运行时接口：SessionBlackboard + 实体操作门面（FindByName/GetEntities/Spawn/SpawnMany/RequestKillEntity）+ SessionManager + LevelId + IsFrontSession + 状态机容器 |
+| `ISessionRun.cs` | 会话运行时接口（`: IDisposable`）：SessionBlackboard + 实体操作门面（FindByName/GetEntities/Spawn/SpawnMany/RequestKillEntity）+ SessionManager + LevelId + IsFrontSession + 状态机容器 |
 
 ## ISessionManager 成员
 
@@ -29,6 +29,7 @@
 | `CreateBackgroundSession(key, levelId, syncProcess)` | 创建后台关卡会话并自动挂载 |
 | `DestroySession(key)` | 销毁指定键的会话（Dispose 并从管理器移除） |
 | `ProcessAllSessions(delta, includeForeground)` | 对所有配置为参与 Process 的会话执行帧更新 |
+| `KillPendingAllSessions()` | 对所有会话触发 observer 解绑 + BeforeDead 钩子 + 物理移除 |
 
 ## ISessionRun 成员
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Entity
 
@@ -29,7 +29,7 @@ Strategy lifecycle hooks are triggered via phased methods exposed by the `IEntit
 
 ### SndEntity (Aggregate Root)
 
-The **constructor** requires injection of `INodeFactory`, `SndStrategyPool`, `Func<string, string> sceneAliasResolver`, `ISndContext`, and `ILogger`. No parameterless constructor is exposed. `sceneAliasResolver` is a scene alias resolution function (extracted from `SndMappings.ResolveSceneAlias`), avoiding passing the entire `SndMappings` object into the entity layer.
+The **constructor** requires injection of `INodeFactory`, `SndStrategyPool`, `Func<string, string> sceneAliasResolver`, `ISndContext`, `ILogger`, and `ObserverTopology`. No parameterless constructor is exposed. `sceneAliasResolver` is a scene alias resolution function (extracted from `SndMappings.ResolveSceneAlias`), avoiding passing the entire `SndMappings` object into the entity layer. `ObserverTopology` is the core observer binding topology, held by the scene host and shared across entities.
 
 **Observer wiring**:
 

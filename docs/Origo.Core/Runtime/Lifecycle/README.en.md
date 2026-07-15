@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -20,6 +20,8 @@ The implementation layer for the runtime's four-tier lifecycle. Defines the comp
 | `SessionRun.cs` | ISessionRun implementation |
 | `SessionTopologyCodec.cs` | Session topology codec |
 | `EmptySessionManager.cs` | No-op session manager (testing) |
+| `RunStateScope.cs` | Runtime state scope utility |
+| `TopologyInvariant.cs` | internal — Topology invariant validation utility |
 
 ## Four-Tier Container Model
 
@@ -32,7 +34,7 @@ Each tier container holds core object references for its layer. SystemRuntime ho
 ## Key Lifecycle Flows
 
 ### Startup
-1. `OrigoAutoHost` creates `SystemRun` via `SystemParameters`
+1. `OrigoAutoHost` creates `SystemParameters` → `new SystemRun(...)` constructor
 2. `SystemRun` creates `SndWorld` → `ProgressRuntime`
 3. Loading initial level: `ProgressRun` → `SessionManager` → `SessionRun`
 
@@ -41,8 +43,8 @@ Each tier container holds core object references for its layer. SystemRuntime ho
 
 ### Persistence
 - `SaveCoordinator`: standalone class for building save payloads
-- Save: `RequestSaveGame` → `SaveCoordinator.BuildSavePayload` → two-phase write
-- Load: `RequestLoadGame` → restore blackboard + scene
+- Save: `ISndSaveOperations.RequestSaveGame` → `SaveCoordinator.BuildSavePayload` → two-phase write
+- Load: `ISndSaveOperations.RequestLoadGame` → restore blackboard + scene
 - BeforeSave hooks batch-triggered by `SessionRun.BuildLevelPayload` before serialization
 - AfterLoad hooks batch-triggered after recovery; all entities fully restored before any hook fires
 

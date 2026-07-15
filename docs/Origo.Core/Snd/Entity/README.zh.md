@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity
 
@@ -29,7 +29,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 ### SndEntity（聚合根）
 
-**构造函数**要求注入 `INodeFactory`、`SndStrategyPool`、`Func<string, string> sceneAliasResolver`、`ISndContext`、`ILogger`。不暴露无参构造。`sceneAliasResolver` 是场景别名解析函数（从 `SndMappings.ResolveSceneAlias` 提取），避免将整个 `SndMappings` 对象传递到实体层。
+**构造函数**要求注入 `INodeFactory`、`SndStrategyPool`、`Func<string, string> sceneAliasResolver`、`ISndContext`、`ILogger`、`ObserverTopology`。不暴露无参构造。`sceneAliasResolver` 是场景别名解析函数（从 `SndMappings.ResolveSceneAlias` 提取），避免将整个 `SndMappings` 对象传递到实体层。`ObserverTopology` 是观察者绑定的核心拓扑，由场景宿主持有并在实体间共享。
 
 **观察者接线**：
 

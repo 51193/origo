@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Abstractions
 
@@ -20,9 +20,9 @@ Origo.Core 的稳定公共抽象层。所有接口在此层定义为平台无关
 | [Lifecycle](Lifecycle/README.zh.md) | 会话管理抽象接口 | `ISessionManager`（会话生命周期）+ `ISessionRun`（会话运行时门面） |
 | [Logging](Logging/README.zh.md) | 引擎无关日志接口 | `ILogger` + `LogLevel` 枚举（Debug/Info/Warning/Error）|
 | [Node](Node/README.zh.md) | 抽象引擎节点操作 | `INodeFactory` + `INodeHandle` + `INodeHost`(internal) |
-| [Runtime](Runtime/README.zh.md) | 抽象调度接口 | `IScheduler`：Enqueue/Tick/Clear |
-| [Scene](Scene/README.zh.md) | SND 场景访问与宿主 | `ISndSceneAccess` + `ISndSceneHost`（SpawnEntity/FindByName/ProcessAll）|
-| [Snd](Snd/README.zh.md) | ISndContext 9 个角色接口 | IStateMachineContext 也继承其中部分 |
+| [Runtime](Runtime/README.zh.md) | 抽象帧驱动接口 | `IOrigoFrameDriver`：DriveFrame/EnqueueBusinessDeferred/EnqueueSystemDeferred |
+| [Scene](Scene/README.zh.md) | SND 场景访问与宿主 | `ISndSceneAccess` + `ISndSceneHost`（CreateEntity/FindByName/ProcessAll）|
+| [Snd](Snd/README.zh.md) | ISndContext 10 个伴生属性 | IStateMachineContext 也继承其中部分 |
 | [StateMachine](StateMachine/README.zh.md) | 字符串栈状态机体系 | `IStateMachine` + `IStateMachineContext` + `IStateMachineContainer` |
 
 ## 接口层级
@@ -37,15 +37,16 @@ ISndEntity ─── ISndDataAccess + ISndNodeAccess + ISndStrategyAccess
 
 IEntityLifecycle                (独立接口，框架内部，非 ISndEntity 子接口)
 
-ISndContext ─── ISndBlackboardAccess + ISndDeferredActions
+ISndContext ··· 伴生属性 › ISndBlackboardAccess + ISndDeferredActions
                + ISndTemplateAccess + ISndConsoleAccess + ISndStateMachineAccess
                + ISndSaveOperations + ISndLifecycleOperations
                + ISndFileAccess + ISndArchiveFileAccess
+               + IStateMachineContext
 
 ISndSceneHost ─── ISndSceneAccess
 
 IStateMachine ⟷ IStateMachineContext ⟷ IStateMachineContainer
-                    │ (inherits ISndBlackboardAccess + ISndDeferredActions)
+                            │ (inherits ISndBlackboardAccess + ISndDeferredActions)
 ```
 
 ## 设计原则

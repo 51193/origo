@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Save
 
@@ -31,7 +31,7 @@ Origo 的持久化系统。负责存档的完整生命周期：Payload 构建、
 ## 持久化流程
 
 ```
-ProgressRun.RequestSaveGame(saveId)
+ISndSaveOperations.RequestSaveGame(saveId)
     │
     ▼
 SaveCoordinator.BuildSavePayload(...)
