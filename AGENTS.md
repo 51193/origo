@@ -8,8 +8,8 @@
 > developers working on this repository. It is automatically injected at the
 > start of every session.
 > Any **reading or modification** of this repository must comply with this
-> file and the documents it directs you to read (`docs/META.md`, each module's
-> `docs/.../README.md`).
+> file and the documents it directs you to read (`docs/META.zh.md`, each module's
+> `docs/.../README.zh.md`).
 > Documentation lives inside the repo under `docs/` and does not depend on
 > any external documentation repository.
 
@@ -20,20 +20,37 @@
 **Before reading or modifying any source code in this project, you must
 read the following in full:**
 
-1. **This file** — development loop, core principles, document index.
-2. **[`docs/META.md`](docs/META.md)** — documentation maintenance rules
-   (writing conventions + Git commit message conventions).
+1. **This file** — development loop, core principles, document index,
+   bilingual documentation mechanism (§1.6).
+2. **[`docs/META.md`](docs/META.zh.md)** — documentation maintenance rules
+   (writing conventions + Git commit message conventions + DocSyncTool
+   usage).
 3. **The documentation for the module you are changing**:
-   `docs/<mirror-path>/README.md`, **as well as the documentation for its
-   upstream/downstream and related facilities** (per §1.3 full-chain principle).
+   `docs/<mirror-path>/README.zh.md` (Chinese) or
+   `docs/<mirror-path>/README.en.md` (English), **as well as the
+   documentation for its upstream/downstream and related facilities**
+   (per §1.3 full-chain principle).
 
-`docs/` is a **structural mirror** of the source code: documentation for
-`Origo.Core/Snd/Entity/` lives at `docs/Origo.Core/Snd/Entity/README.md`.
+`docs/` is a **structural mirror** of the source code published in two
+languages side by side. Every directory contains:
+
+| File | Purpose |
+|------|---------|
+| `README.md` | **Auto-generated** navigation hub (lists all `.zh.md` / `.en.md` files). **Do not edit.** |
+| `README.zh.md` | Chinese documentation content |
+| `README.en.md` | English documentation content |
+
+Documentation for `Origo.Core/Snd/Entity/` lives at
+`docs/Origo.Core/Snd/Entity/README.zh.md` (Chinese) and
+`docs/Origo.Core/Snd/Entity/README.en.md` (English).
+The auto-generated `docs/Origo.Core/Snd/Entity/README.md` is a bilingual
+navigation hub — it links to both language versions.
+
 **Do not bypass the docs and start reading raw source.** Follow the chain
-"this file → [`docs/README.md`](docs/README.md) index → module READMEs
-drilling down" to get the full context. Every README includes design rationale
-and "why / why not" trade-offs — these are prerequisites for safe changes,
-not optional reading.
+"this file → [`docs/README.md`](docs/README.md) (auto-generated hub)
+→ language-specific README → module READMEs drilling down" to get the full
+context. Every README includes design rationale and "why / why not"
+trade-offs — these are prerequisites for safe changes, not optional reading.
 
 ---
 
@@ -140,11 +157,104 @@ facilities**, to understand the collaboration contracts between modules.
   `Origo.Core.Tests.Snd.Strategy`). This is deliberate xUnit convention
   design — it enables cross-directory type access. IDE0130 is suppressed
   for test paths in `.editorconfig`. See
-  [`docs/Origo.Core.Tests/META-TEST.md`](docs/Origo.Core.Tests/META-TEST.md)
+  [`docs/Origo.Core.Tests/META-TEST.zh.md`](docs/Origo.Core.Tests/META-TEST.zh.md)
   §测试命名空间约定.
 - **Do not abuse `.editorconfig` exclusion rules**: they exist only for
   documented deliberate designs (e.g., flat test namespaces). Do not
   temporarily disable rules to bypass format checks.
+
+### 1.6 Bilingual Documentation — Co-located Side-by-Side
+
+> **Every documentation file exists in at least one language version.
+> Links within a language stay within that language. Drift is detected
+> automatically and CI-enforced.**
+
+`docs/` uses **co-located language suffixed files**:
+
+```
+docs/Origo.Core/Snd/
+├── README.md           ← auto-generated bilingual nav hub (DO NOT EDIT)
+├── README.zh.md        ← Chinese content (source-authored)
+├── README.en.md        ← English content (translated / independently authored)
+└── Entity/
+    ├── README.md       ← auto-generated
+    ├── README.zh.md
+    └── README.en.md
+```
+
+Two files of the same base name with different language suffixes form a
+**sync pair**. Sync is tracked by metadata headers at the top of every
+content file:
+
+```markdown
+<!-- docsync-pair: docs/Origo.Core/Snd/README -->
+<!-- docsync-revision: 7 -->
+<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+```
+
+| Field | Meaning |
+|-------|---------|
+| `docsync-pair` | Globally unique pair identifier (file path minus language suffix). Derived automatically; must match across languages. |
+| `docsync-revision` | Monotonic integer. **Two files of a pair are in sync when their revisions are equal.** The trailing comment is a mandatory reminder — validated by CI. |
+
+**Revision rules** (enforced by developer, verified by CI):
+
+| Action | What to do |
+|--------|-----------|
+| You change content in a `.zh.md` file | **Increment** `docsync-revision` in that file. The `.en.md` is now stale. |
+| You translate the `.zh.md` changes into `.en.md` | **Set** `docsync-revision` in `.en.md` to match `.zh.md` |
+| You add new original content to `.en.md` (not a translation) | **Set** `docsync-revision` in `.en.md` to `max(zh.rev, old_en.rev) + 1`. Now `.zh.md` is stale. |
+| You create a brand new doc file | Start at `docsync-revision: 1` |
+
+After any doc content or revision change, you **must** run:
+
+```bash
+dotnet run --project tools/DocSyncTool -- generate
+```
+
+This produces two kinds of derived files (commit them together with your change):
+
+1. **`README.md`** navigation hubs in every directory — auto-generated
+   index listing all `.zh.md` / `.en.md` files grouped by language.
+2. **`docs/.sync-status.json`** — machine-readable snapshot of every pair's
+   revision state.
+
+**DocSyncTool cheat-sheet** (run from repo root):
+
+| Command | What it does |
+|---------|-------------|
+| `dotnet run --project tools/DocSyncTool -- generate` | Regenerates all `README.md` hubs + `.sync-status.json`. Always succeeds. |
+| `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: all pairs have matching revisions across configured languages, all links point to same-language files, no broken links. **Exit code 1 on failure.** |
+| `dotnet run --project tools/DocSyncTool -- init` | **One-time migration only** — renames `.md` → `.zh.md`, injects metadata, updates links. Already executed; do not re-run. |
+
+**Link discipline** (validated as ERROR by `validate`):
+
+- Chinese docs (`.zh.md`) link only to `.zh.md` targets
+- English docs (`.en.md`) link only to `.en.md` targets
+- Cross-language links are **forbidden**
+- Bare `.md` links without language suffix are **forbidden** (after migration)
+
+**Configured languages** are defined in
+`tools/DocSyncTool/docsync-config.json`:
+
+```json
+{ "languages": ["zh", "en"], "docs_root": "docs" }
+```
+
+**CI enforcement**: `scripts/doc-sync.sh` (called by `scripts/ci.sh`) runs
+`generate` then `validate`. On `push` to main, CI auto-commits stale
+generated files; on `pull_request`, it fails with instructions to run
+`generate` locally. Validation failures (revision mismatch, broken links,
+missing language files) always fail the build.
+
+**Rules summary for agents**:
+
+- When you change a doc file → bump its `docsync-revision`
+- When you add a new doc file → create it as `.zh.md` (or `.en.md`) with
+  `docsync-revision: 1` and a `docsync-pair` header
+- When you sync a translation → match the peer's revision
+- After any doc change → run `generate` and commit the result
+- **Never edit** auto-generated `README.md` hubs or `.sync-status.json`
 
 ---
 
@@ -157,10 +267,10 @@ facilities**, to understand the collaboration contracts between modules.
 |------|------|-------------|
 | 1 | **Develop source** | Implement the feature / fix / refactor, satisfying §0 gate and §1 principles. |
 | 2 | **Extend / adapt tests** | Add or adjust tests for this change: behavior tests for new public API, regression tests for bug fixes (red first), sync existing tests for behavior changes. |
-| 3 | **Execute tests** | During development iteration, run `bash scripts/test.sh` (restore → build → test + coverage gates). **Before committing, you must run** `bash scripts/ci.sh`, which mirrors CI exactly: format + test + benchmarks + Godot integration. |
+| 3 | **Execute tests** | During development iteration, run `bash scripts/test.sh` (restore → build → test + coverage gates). **Before committing, you must run** `bash scripts/ci.sh`, which mirrors CI exactly: format + doc-sync + test + benchmarks + Godot integration. |
 | 4 | **Fix source + re-test loop** | If tests are not all green, go back to fix the source and re-run step 3. **Loop until all pass.** Fixes must still comply with §1 (especially avoid false-positive fixes). |
 | 5 | **Changelog alignment** | Write user-facing significant changes into `CHANGELOG.md` under the `[Unreleased]` section (conventions in §4). |
-| 6 | **Docs sync** | Sync the `docs/` mirror: directory structure, interface lists, design decisions, usage / test docs (rules in §5 and `docs/META.md`). |
+| 6 | **Docs sync** | Sync the `docs/` mirror: directory structure, interface lists, design decisions, usage / test docs (rules in §5 and `docs/META.zh.md`). **After any doc change, bump `docsync-revision`, run `DocSyncTool generate`, and commit all derived files** (per §1.6). |
 
 **Partial completion is forbidden.** If a step is genuinely not applicable
 (e.g., pure internal refactor with no public API or doc impact), you must
@@ -188,7 +298,7 @@ facilities**, to understand the collaboration contracts between modules.
   below the threshold causes `dotnet test` to fail directly.
 - Test style conventions, `InternalsVisibleTo` whitelist principles, static
   mutable state isolation, etc. are documented in
-  [`docs/Origo.Core.Tests/META-TEST.md`](docs/Origo.Core.Tests/META-TEST.md).
+  [`docs/Origo.Core.Tests/META-TEST.zh.md`](docs/Origo.Core.Tests/META-TEST.zh.md).
 
 ---
 
@@ -277,7 +387,7 @@ that do not change external semantics.
 - [ ] Do `docs/usage/` and test docs cover new scenarios / capabilities?
 
 For documentation hierarchy, link conventions, prohibition of evolution
-markers, and commit message conventions, see [`docs/META.md`](docs/META.md).
+markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md).
 
 ---
 
@@ -297,13 +407,13 @@ markers, and commit message conventions, see [`docs/META.md`](docs/META.md).
 ## 7. Document Index
 
 > So agents can read all relevant information without self-directed
-> exploration. When changing source under `X/`, read `docs/X/README.md`
+> exploration. When changing source under `X/`, read `docs/X/README.zh.md`
 > and its upstream/downstream first.
 
 | Entry | Path | Purpose |
 |-------|------|---------|
 | Manual index | [`docs/README.md`](docs/README.md) | Top-level navigation for all modules / usage / test docs. |
-| Docs maintenance | [`docs/META.md`](docs/META.md) | Documentation conventions + Git commit message conventions. |
+| Docs maintenance | [`docs/META.zh.md`](docs/META.zh.md) | Documentation conventions + Git commit message conventions. |
 | Changelog | [`CHANGELOG.md`](CHANGELOG.md) | User-facing change log. |
 | Core module | [`docs/Origo.Core/README.md`](docs/Origo.Core/README.md) | Platform-agnostic core: SND entities, runtime, persistence, state machines, etc. |
 | Source generation | [`docs/Origo.SourceGeneration/README.md`](docs/Origo.SourceGeneration/README.md) | TypedData incremental source generator. |
@@ -311,7 +421,8 @@ markers, and commit message conventions, see [`docs/META.md`](docs/META.md).
 | ConsoleBridge | [`docs/Origo.ConsoleBridge/README.md`](docs/Origo.ConsoleBridge/README.md) | TCP remote console bridge. |
 | Usage guide | [`docs/usage/README.md`](docs/usage/README.md) | From quick start to deep reference. |
 | Test docs | [`docs/Origo.Core.Tests/README.md`](docs/Origo.Core.Tests/README.md) | Test coverage by capability. |
-| Performance baseline | [`docs/benchmarks/baseline.md`](docs/benchmarks/baseline.md) | TypedData performance snapshot and trade-offs. |
+| Performance baseline | [`docs/benchmarks/baseline.zh.md`](docs/benchmarks/baseline.zh.md) | TypedData performance snapshot and trade-offs. |
+| DocSyncTool | [`tools/DocSyncTool/`](tools/DocSyncTool/) | Bilingual doc sync tool (generate, validate, init). |
 | Formatting rules | [`.editorconfig`](.editorconfig) | C# code style + IDE/CA diagnostic rules. |
 | CI workflows | [`.github/workflows/`](.github/workflows/) | CI / Release / CodeQL workflow definitions. |
-| CI scripts | [`scripts/ci.sh`](scripts/ci.sh) | Full local CI reproduction; per-step scripts: `format.sh`, `test.sh`, `benchmark.sh`, `godot-test.sh`. |
+| CI scripts | [`scripts/ci.sh`](scripts/ci.sh) | Full local CI reproduction; per-step scripts: `format.sh`, `doc-sync.sh`, `test.sh`, `benchmark.sh`, `godot-test.sh`. |

@@ -7,6 +7,48 @@ on:
     branches: [main, master]
 
 jobs:
+  doc-sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: DocSync — generate & validate
+        run: |
+          dotnet run --project tools/DocSyncTool -- generate
+          dotnet run --project tools/DocSyncTool -- validate
+
+      - name: Commit auto-generated files (push only)
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          if ! git diff --staged --quiet; then
+            git commit -m "docs: auto-sync navigation and status files"
+            git push
+          fi
+
+      - name: Check generated files (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git diff --quiet -- docs/; then
+            echo "ERROR: Generated doc files (README.md hubs, .sync-status.json) are out of date."
+            echo ""
+            echo "Run the following command locally and commit the results:"
+            echo "  dotnet run --project tools/DocSyncTool -- generate"
+            echo ""
+            exit 1
+          fi
+
   build-and-test:
     strategy:
       matrix:
