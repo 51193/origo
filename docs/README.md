@@ -3,8 +3,8 @@
 # docs
 
 ## 中文
-- [README](README.zh.md)
 - [META](META.zh.md)
+- [README](README.zh.md)
 - [benchmarks/](benchmarks/)
 - [Origo.ConsoleBridge/](Origo.ConsoleBridge/)
 - [Origo.ConsoleBridge.Tests/](Origo.ConsoleBridge.Tests/)
@@ -18,8 +18,8 @@
 - [usage/](usage/)
 
 ## English
-- [README](README.en.md)
 - [META](META.en.md)
+- [README](README.en.md)
 - [benchmarks/](benchmarks/)
 - [Origo.ConsoleBridge/](Origo.ConsoleBridge/)
 - [Origo.ConsoleBridge.Tests/](Origo.ConsoleBridge.Tests/)

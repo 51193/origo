@@ -79,7 +79,7 @@ internal static class Generator
 
                 var langFiles = dirFiles.Where(f => f.Language == lang).ToList();
 
-                foreach (var file in langFiles)
+                foreach (var file in langFiles.OrderBy(f => Path.GetFileName(f.RelativePath)))
                 {
                     var name = Path.GetFileName(file.RelativePath);
                     var display = Path.GetFileNameWithoutExtension(name);

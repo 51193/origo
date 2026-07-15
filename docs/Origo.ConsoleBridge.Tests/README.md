@@ -3,10 +3,10 @@
 # docs/Origo.ConsoleBridge.Tests
 
 ## 中文
-- [README](README.zh.md)
 - [ConsoleBridgeServer](ConsoleBridgeServer.zh.md)
+- [README](README.zh.md)
 
 ## English
-- [README](README.en.md)
 - [ConsoleBridgeServer](ConsoleBridgeServer.en.md)
+- [README](README.en.md)
 
