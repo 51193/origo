@@ -107,13 +107,21 @@ internal static class Generator
             if (readmeDir is not null && !Directory.Exists(readmeDir))
                 Directory.CreateDirectory(readmeDir);
 
-            File.WriteAllText(readmePath, sb.ToString());
+            var newContent = sb.ToString();
+            var oldContent = File.Exists(readmePath) ? File.ReadAllText(readmePath) : null;
             var hubRel = string.IsNullOrEmpty(dirRel) ? "README.md" : $"{dirRel}/README.md";
-            Console.WriteLine($"  GENERATED: {hubRel}");
+            if (oldContent != newContent)
+            {
+                File.WriteAllText(readmePath, newContent);
+                Console.WriteLine($"  GENERATED: {hubRel}");
+            }
+            else
+            {
+                Console.WriteLine($"  SKIPPED (unchanged): {hubRel}");
+            }
         }
 
         GenerateStatusFile(config, allFiles);
-        Console.WriteLine($"  GENERATED: .sync-status.json");
     }
 
     private static List<string> GetAllDirectories(string docsRoot)
@@ -212,7 +220,6 @@ internal static class Generator
         var statusData = new StatusFile
         {
             SchemaVersion = 1,
-            GeneratedAt = DateTime.UtcNow.ToString("o"),
             Languages = config.Languages,
             Pairs = new Dictionary<string, StatusPairEntry>()
         };
@@ -246,7 +253,16 @@ internal static class Generator
 
         var json = JsonSerializer.Serialize(statusData, JsonOptions);
         var statusPath = Path.Combine(config.DocsFullPath, ".sync-status.json");
-        File.WriteAllText(statusPath, json);
+        var oldJson = File.Exists(statusPath) ? File.ReadAllText(statusPath) : null;
+        if (oldJson != json)
+        {
+            File.WriteAllText(statusPath, json);
+            Console.WriteLine($"  GENERATED: .sync-status.json");
+        }
+        else
+        {
+            Console.WriteLine($"  SKIPPED (unchanged): .sync-status.json");
+        }
     }
 
     private static string DetermineStatus(Dictionary<string, int> revisions, List<string> languages)
@@ -270,9 +286,6 @@ internal static class Generator
     {
         [JsonPropertyName("schema_version")]
         public int SchemaVersion { get; set; }
-
-        [JsonPropertyName("generated_at")]
-        public string GeneratedAt { get; set; } = "";
 
         [JsonPropertyName("languages")]
         public List<string> Languages { get; set; } = [];
