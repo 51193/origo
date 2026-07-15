@@ -215,9 +215,9 @@ public class SaveIdempotencyTests
 
         // Compute expected hash before the save mutates the nodes.
         var freshPayload = CreateMinimalPayload("001", "default");
-        var expectedHash = SaveStorageFacade.CombineHashes(
+        var expectedHash = SaveAtomicWriter.CombineHashes(
             SavePayloadWriter.ComputePayloadHash(freshPayload),
-            SaveStorageFacade.ComputeSideDirectoryHash(handle, SavePathLayout.ExtraDirectoryName));
+            SaveAtomicWriter.ComputeSideDirectoryHash(handle, SavePathLayout.ExtraDirectoryName));
 
         SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, freshPayload, "001", logger);
 

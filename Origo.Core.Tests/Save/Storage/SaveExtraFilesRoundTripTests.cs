@@ -313,7 +313,7 @@ public class SaveExtraFilesRoundTripTests
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.CreateDirectory("root/current");
 
-        var hash = SaveStorageFacade.ComputeSideDirectoryHash(handle, "extra");
+        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
         Assert.Equal(string.Empty, hash);
     }
 
@@ -325,7 +325,7 @@ public class SaveExtraFilesRoundTripTests
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.CreateDirectory("root/current/extra");
 
-        var hash = SaveStorageFacade.ComputeSideDirectoryHash(handle, "extra");
+        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
         Assert.Equal(string.Empty, hash);
     }
 
@@ -338,7 +338,7 @@ public class SaveExtraFilesRoundTripTests
         fs.SeedFile("root/current/extra/a.json", """{"k":"v"}""");
         fs.SeedFile("root/current/extra/b.json", """{"x":1}""");
 
-        var hash = SaveStorageFacade.ComputeSideDirectoryHash(handle, "extra");
+        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
         Assert.NotEmpty(hash);
         Assert.Matches("^[0-9a-f]{64}$", hash);
     }
@@ -351,8 +351,8 @@ public class SaveExtraFilesRoundTripTests
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/extra/data.json", """{"k":"v"}""");
 
-        var h1 = SaveStorageFacade.ComputeSideDirectoryHash(handle, "extra");
-        var h2 = SaveStorageFacade.ComputeSideDirectoryHash(handle, "extra");
+        var h1 = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
+        var h2 = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
         Assert.Equal(h1, h2);
     }
 
@@ -364,12 +364,12 @@ public class SaveExtraFilesRoundTripTests
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/extra/data.json", """{"k":"v1"}""");
 
-        var h1 = SaveStorageFacade.ComputeSideDirectoryHash(handle, "extra");
+        var h1 = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
 
         fs.Delete("root/current/extra/data.json");
         fs.SeedFile("root/current/extra/data.json", """{"k":"v2"}""");
 
-        var h2 = SaveStorageFacade.ComputeSideDirectoryHash(handle, "extra");
+        var h2 = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "extra");
         Assert.NotEqual(h1, h2);
     }
 
@@ -381,7 +381,7 @@ public class SaveExtraFilesRoundTripTests
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.SeedFile("root/current/custom/file.json", """{"v":1}""");
 
-        var hash = SaveStorageFacade.ComputeSideDirectoryHash(handle, "custom");
+        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "custom");
         Assert.NotEmpty(hash);
         Assert.Matches("^[0-9a-f]{64}$", hash);
     }
@@ -394,7 +394,7 @@ public class SaveExtraFilesRoundTripTests
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
         fs.CreateDirectory("root/current/custom");
 
-        var hash = SaveStorageFacade.ComputeSideDirectoryHash(handle, "custom");
+        var hash = SaveAtomicWriter.ComputeSideDirectoryHash(handle, "custom");
         Assert.Equal(string.Empty, hash);
     }
 
@@ -402,7 +402,7 @@ public class SaveExtraFilesRoundTripTests
     public void CombineHashes_EmptySide_ProducesConsistentFormat()
     {
         var payloadHash = "abc123";
-        var combined = SaveStorageFacade.CombineHashes(payloadHash, string.Empty);
+        var combined = SaveAtomicWriter.CombineHashes(payloadHash, string.Empty);
         Assert.NotEqual(payloadHash, combined);
         Assert.Matches("^[0-9a-f]{64}$", combined);
     }
@@ -411,8 +411,8 @@ public class SaveExtraFilesRoundTripTests
     public void CombineHashes_SamePayload_EmptyAndNonEmptySide_DifferentResult()
     {
         var payloadHash = "abc123";
-        var emptySide = SaveStorageFacade.CombineHashes(payloadHash, string.Empty);
-        var withSide = SaveStorageFacade.CombineHashes(payloadHash, "def456");
+        var emptySide = SaveAtomicWriter.CombineHashes(payloadHash, string.Empty);
+        var withSide = SaveAtomicWriter.CombineHashes(payloadHash, "def456");
         Assert.NotEqual(emptySide, withSide);
     }
 
@@ -421,7 +421,7 @@ public class SaveExtraFilesRoundTripTests
     {
         var payloadHash = "abc123";
         var extraHash = "def456";
-        var combined = SaveStorageFacade.CombineHashes(payloadHash, extraHash);
+        var combined = SaveAtomicWriter.CombineHashes(payloadHash, extraHash);
         Assert.NotEqual(payloadHash, combined);
         Assert.Matches("^[0-9a-f]{64}$", combined);
     }
