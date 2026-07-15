@@ -3,8 +3,8 @@
 # docs/Origo.SourceGeneration
 
 ## 中文
-- [pipeline](pipeline.zh.md)
 - [README](README.zh.md)
+- [pipeline](pipeline.zh.md)
 
 ## English
 - [README](README.en.md)

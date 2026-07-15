@@ -3,8 +3,8 @@
 # docs
 
 ## 中文
-- [META](META.zh.md)
 - [README](README.zh.md)
+- [META](META.zh.md)
 - [benchmarks/](benchmarks/)
 - [Origo.ConsoleBridge/](Origo.ConsoleBridge/)
 - [Origo.ConsoleBridge.Tests/](Origo.ConsoleBridge.Tests/)

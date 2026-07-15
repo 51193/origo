@@ -3,22 +3,22 @@
 # docs/Origo.GodotAdapter.Tests
 
 ## 中文
-- [Logging](Logging.zh.md)
-- [Serialization](Serialization.zh.md)
-- [TestSupport](TestSupport.zh.md)
-- [Bootstrap](Bootstrap.zh.md)
-- [Architecture](Architecture.zh.md)
-- [Console](Console.zh.md)
 - [README](README.zh.md)
+- [Architecture](Architecture.zh.md)
 - [FileSystem](FileSystem.zh.md)
+- [TestSupport](TestSupport.zh.md)
+- [Logging](Logging.zh.md)
+- [Bootstrap](Bootstrap.zh.md)
+- [Console](Console.zh.md)
+- [Serialization](Serialization.zh.md)
 
 ## English
-- [FileSystem](FileSystem.en.md)
-- [Architecture](Architecture.en.md)
-- [Console](Console.en.md)
 - [Serialization](Serialization.en.md)
 - [README](README.en.md)
-- [TestSupport](TestSupport.en.md)
 - [Logging](Logging.en.md)
 - [Bootstrap](Bootstrap.en.md)
+- [Architecture](Architecture.en.md)
+- [TestSupport](TestSupport.en.md)
+- [Console](Console.en.md)
+- [FileSystem](FileSystem.en.md)
 

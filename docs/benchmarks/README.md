@@ -3,8 +3,8 @@
 # docs/benchmarks
 
 ## 中文
-- [baseline](baseline.zh.md)
 - [README](README.zh.md)
+- [baseline](baseline.zh.md)
 
 ## English
 - [baseline](baseline.en.md)
