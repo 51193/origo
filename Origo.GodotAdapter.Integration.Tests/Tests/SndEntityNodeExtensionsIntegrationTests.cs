@@ -13,7 +13,7 @@ public class SndEntityNodeExtensionsIntegrationTests
     {
         var stubHandle = new StubNodeHandle("test");
         var result = stubHandle.GetNativeNode();
-        IntegrationTestRunner.Assert(result is null, "Non-GodotNodeHandle should return null.");
+        IntegrationTestRunner.AssertNull(result, "result");
     }
 
     [IntegrationTest(Description = "GetNativeNode on GodotNodeHandle returns the underlying Node")]
@@ -37,7 +37,7 @@ public class SndEntityNodeExtensionsIntegrationTests
     {
         var stubEntity = new StubSndEntity("stub");
         var result = stubEntity.GetNodeFromSnd<Node>("any");
-        IntegrationTestRunner.Assert(result is null, "Non-GodotSndEntity should return null.");
+        IntegrationTestRunner.AssertNull(result, "result");
     }
 
     private sealed class StubNodeHandle(string name) : INodeHandle

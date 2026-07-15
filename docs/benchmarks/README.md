@@ -4,20 +4,20 @@
 
 ## 概述
 
-TypedData 生成产物 vs 装箱的性能现状快照，以及框架核心子系统（实体生命周期、Observer 拓扑、DataSource 树、Blackboard、Save 持久化、并发队列、随机数）的性能数据。
+Origo 框架的性能基线数据与设计权衡分析，覆盖 TypedData 内联存储、实体生命周期、Observer 拓扑、DataSourceNode 树、Blackboard、Save 持久化、并发队列、随机数、Strategy 性能等子系统。
 
 ## 包含文件
 
 | 文件 | 说明 |
 |------|------|
-| `baseline.md` | TypedData 内联存储模型的性能基线数据与设计权衡分析 |
+| `baseline.md` | Origo 框架各子系统的性能基线数据与设计权衡分析 |
 | `README.md` | 性能基准文档概览（本文件） |
 
 ## 基准测试文件
 
 | 文件 | 被测模块 | 说明 |
 |------|---------|------|
-| `Origo.SourceGeneration.Tests/Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | 源生成 | TypedData 内联 vs 装箱的纯净微基准：值类型+引用类型读写、混合分派 |
+| `Origo.SourceGeneration.Tests/Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | 源生成 | TypedData 内联 vs 装箱的纯净微基准：值类型 / 引用类型读写、混合分派 |
 | `Origo.Core.Tests/Benchmarks/TypedDataRealWorldBenchmarkTests.cs` | TypedData | 真实 SND 路径模拟：字典查找/插入、数值强转链、观察者通知、异构迭代 |
 | `Origo.Core.Tests/Benchmarks/EntityLifecycleBenchmarkTests.cs` | 实体生命周期 | 实体创建+AfterSpawn、帧处理缩放、SaveSingle 吞吐 |
 | `Origo.Core.Tests/Benchmarks/ObserverTopologyBenchmarkTests.cs` | Observer 拓扑 | Mount/Unmount 绑定数量缩放 |
@@ -38,7 +38,7 @@ bash scripts/benchmark.sh
 该脚本依次运行三套基准（均标记 `[Trait("Category","Benchmark")]`，从 `test.sh` 排除）：
 
 - **SG 纯净微基准** — `Origo.SourceGeneration.Tests`
-- **Core 基准** — `Origo.Core.Tests`（TypedData 真实模拟 + 7 个子系统基准 + Strategy 性能）
+- **Core 基准** — `Origo.Core.Tests`（TypedData 真实模拟 + 实体生命周期 + Observer 拓扑 + DataSourceNode + Blackboard + Save + 并发队列 + 随机数 + Strategy 性能）
 - **Godot 适配器基准** — `Origo.GodotAdapter.Tests`
 
 ---

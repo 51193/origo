@@ -67,7 +67,7 @@ Root (this file)
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.md) | TypedData 源码生成器的驱动器行为测试文档 |
 | **手册元指令** | [META.md](META.md) | 本手册的编写与维护规范 |
 | **Agent 工作流** | [AGENTS.md](../AGENTS.md) | 强制开发循环（源码→测试扩展→测试执行→修复重测→Changelog→文档）、核心原则与文档总索引 |
-| **性能基线** | [benchmarks/baseline.md](benchmarks/baseline.md) | TypedData 生成产物 vs 装箱的性能现状快照与设计权衡 |
+| **性能基线** | [benchmarks/baseline.md](benchmarks/baseline.md) | TypedData 内联存储 + 框架子系统性能基线与设计权衡 |
 
 ## Origo.Core 子系统
 

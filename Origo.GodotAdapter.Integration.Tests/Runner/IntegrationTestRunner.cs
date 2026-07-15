@@ -336,6 +336,31 @@ public partial class IntegrationTestRunner : Node
             throw new InvalidOperationException($"Assertion failed for '{name}': expected {expected}, got {actual}");
     }
 
+    public static void AssertNull(object? value, string name)
+    {
+        if (value is not null)
+            throw new InvalidOperationException($"Assertion failed: {name} should be null, but was {value}.");
+    }
+
+    public static void AssertContains(string expectedSubstring, string actual, string name)
+    {
+        if (!actual.Contains(expectedSubstring, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                $"Assertion failed for '{name}': expected to contain \"{expectedSubstring}\", but got \"{actual}\".");
+    }
+
+    public static void AssertEmpty<T>(IEnumerable<T> collection, string name)
+    {
+        if (collection.Any())
+            throw new InvalidOperationException($"Assertion failed: {name} should be empty, but has {collection.Count()} element(s).");
+    }
+
+    public static void AssertNotEmpty<T>(IEnumerable<T> collection, string name)
+    {
+        if (!collection.Any())
+            throw new InvalidOperationException($"Assertion failed: {name} should not be empty.");
+    }
+
     private sealed class DeferredTestEntry
     {
         public string TypeName { get; init; } = string.Empty;

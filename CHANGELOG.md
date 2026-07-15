@@ -14,8 +14,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Performance benchmark suite expanded** — 7 new benchmark test classes covering entity lifecycle (create + `FireAfterSpawnHooks`, frame processing scaling, `SaveSingle`), `ObserverTopology` mount/unmount scaling, `DataSourceNode` tree build/traversal/SHA-256 hash/`As<T>` dispatch, `Blackboard` bulk read/write/roundtrip, `SavePayload` hash/write/read/snapshot roundtrip, `ConcurrentActionQueue` enqueue/execute scaling, and `RandomNumberGenerator` (XorShift128+) throughput.
 - `PerfReporter.CompareTable` and `ReportTable` — unified multi-row summary table output methods that consolidate multiple per-type `Compare`/`Report` calls into a single terminal-friendly table, reducing benchmark noise and matching the `docs/benchmarks/baseline.md` style.
+- `IntegrationTestRunner.AssertNull`, `AssertContains`, `AssertEmpty`, `AssertNotEmpty` — four new assertion methods on the Godot headless integration test runner, replacing manual null-check and substring-search patterns with named assertions for clearer failure messages.
+- `docs/benchmarks/baseline.md` — subsystem performance baseline data fully populated (entity lifecycle, observer topology, DataSourceNode tree, blackboard, save persistence, concurrent queue, random number generator, strategy performance). Hardware metadata updated to current development machine.
 
 ### Changed
+
+- `scripts/download-godot.sh` — added version format validation (regex check for `N.N.N` pattern) after parsing the SDK version from `.csproj`, so malformed extraction produces a clear error instead of a confusing downstream failure.
+
+### Removed
 
 - Benchmark output simplified — each benchmark test method now emits a single consolidated summary table (`CompareTable` / `ReportTable`) instead of one table per type/configuration. SG micro-benchmarks, Core real-world benchmarks, and GodotAdapter benchmarks all refactored.
 - `SndStrategyPerformanceTests` now tagged `[Trait("Category", "Benchmark")]` — strategy pool, frame processing, and `TriggerAll` tests run in dedicated benchmark CI step, excluded from coverage-gated test run.

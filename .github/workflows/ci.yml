@@ -41,8 +41,10 @@ jobs:
       - name: CI — build, tests, line coverage gates (Core >= 90%, ConsoleBridge >= 80%, GodotAdapter >= 85%, SourceGeneration >= 85%)
         run: bash scripts/test.sh
 
-      # Source-generation performance benchmarks, run once in their own step.
-      - name: Benchmarks — generated TypedData vs unoptimized boxing
+      # Performance benchmarks covering TypedData and core subsystems (entity lifecycle,
+      # observer topology, DataSourceNode, Blackboard, save persistence, concurrent queue,
+      # random number generator, strategy performance, and Godot adapter throughput).
+      - name: Benchmarks — TypedData + subsystem baselines
         run: bash scripts/benchmark.sh
 
   godot-integration-tests:

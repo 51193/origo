@@ -53,7 +53,7 @@ jobs:
             --verbosity normal \
             --filter "Category!=Benchmark"
 
-      - name: Benchmarks — generated TypedData vs unoptimized boxing
+      - name: Benchmarks — TypedData + subsystem baselines
         run: bash scripts/benchmark.sh
 
       - name: Pack Origo.Core

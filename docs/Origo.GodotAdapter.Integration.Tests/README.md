@@ -22,7 +22,8 @@
 - **`[IntegrationTest]`**：自定义 attribute，标记即时测试方法
 - **`[DeferredTest]`**：自定义 attribute，标记延迟测试方法
 - **断言**：`IntegrationTestRunner.Assert(condition, message)` / `AssertEqual` /
-  `AssertNotNull` / `AssertThrows<TException>`
+  `AssertNotNull` / `AssertNull` / `AssertThrows<TException>` /
+  `AssertContains` / `AssertEmpty` / `AssertNotEmpty`
 - **输出**：测试结果以 `INTEGRATION_TEST_RESULTS:` 和 `INTEGRATION_TEST_SUMMARY:` 前缀
   输出到 stdout，便于 CI 解析
 

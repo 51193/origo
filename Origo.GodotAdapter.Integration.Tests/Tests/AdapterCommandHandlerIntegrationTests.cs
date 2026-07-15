@@ -78,10 +78,8 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture
 
         var success = handler.TryExecute(invocation, output, out var error);
         IntegrationTestRunner.Assert(success, "TryExecute should succeed.");
-        IntegrationTestRunner.Assert(output.PublishedLines.Count > 0, "Should have output lines.");
-        IntegrationTestRunner.Assert(
-            string.Join("\n", output.PublishedLines).Contains("ChildA"),
-            "Output should contain child node name.");
+        IntegrationTestRunner.AssertNotEmpty(output.PublishedLines, "output.PublishedLines");
+        IntegrationTestRunner.AssertContains("ChildA", string.Join("\n", output.PublishedLines), "output");
     }
 
     [DeferredTest(Description = "TreeDebug handler errors on unknown entity")]
@@ -199,7 +197,7 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture
 
         var success = handler.TryExecute(invocation, output, out var error);
         IntegrationTestRunner.Assert(success, "TryExecute should succeed in headless.");
-        IntegrationTestRunner.Assert(output.PublishedLines.Count > 0, "Should have some output.");
+        IntegrationTestRunner.AssertNotEmpty(output.PublishedLines, "output.PublishedLines");
     }
 
     private sealed class StubSessionManager(ISndEntity? entity) : ISessionManager

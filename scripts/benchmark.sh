@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Origo performance benchmarks.
-# Runs both micro-benchmarks (SG-generated TypedData members vs boxing) and
-# real-world-simulation benchmarks (dictionary-backed, observer, serialization).
+# Runs TypedData micro-benchmarks (SG-generated inline vs boxing), core subsystem
+# benchmarks (entity lifecycle, observer topology, DataSourceNode, Blackboard, save
+# persistence, concurrent queue, random, strategy performance), and Godot adapter
+# throughput benchmarks.
 #
 # Tagged [Trait("Category","Benchmark")], these run here only (a dedicated CI step)
 # and are excluded from scripts/ci.sh so they execute exactly once.
@@ -25,7 +27,7 @@ run_benchmark() {
 }
 
 run_benchmark \
-  "SourceGeneration micro-benchmarks — generated TypedData members vs unoptimized boxing" \
+  "SourceGeneration micro-benchmarks — TypedData inline vs boxing (value + reference types)" \
   "Origo.SourceGeneration.Tests/Origo.SourceGeneration.Tests.csproj"
 
 run_benchmark \

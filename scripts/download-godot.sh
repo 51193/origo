@@ -15,6 +15,11 @@ if [[ -z "$VERSION" ]]; then
     exit 1
 fi
 
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "ERROR: Parsed version '$VERSION' does not match expected N.N.N format." >&2
+    exit 1
+fi
+
 echo "Godot.NET.Sdk version: $VERSION" >&2
 
 # Determine platform-specific download

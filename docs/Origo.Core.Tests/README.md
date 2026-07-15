@@ -61,7 +61,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 持久化：元数据 | [Save-Meta.md](Save-Meta.md) | ISaveMetaContributor、SaveMetaMerger、meta.map 编解码 |
 | SND 实体 | [Snd-Entity.md](Snd-Entity.md) | SndEntity CRUD、AfterLoad 钩子、AutoInitializer 恢复、批量生命周期、所属会话绑定 |
 | SND 元数据 | [Snd-Metadata.md](Snd-Metadata.md) | TypedData struct 值语义与 IEquatable、SndMetaData 深拷贝、SG 输出验证、Fluent 构建、TypedData 集成 |
-| 真实模拟性能基准 | [Benchmarks.md](Benchmarks.md) | `[Category=Benchmark]` 套件（`benchmark.sh` 独立运行）：字典查找/插入、数值强转链、观察者通知、异构字典迭代，生成 `TypedData` vs 装箱字典 |
+| 性能基准 | [Benchmarks.md](Benchmarks.md) | `[Category=Benchmark]` 套件（`benchmark.sh` 独立运行）：TypedData 真实模拟 + 实体生命周期 + Observer 拓扑 + DataSourceNode + Blackboard + Save + 并发队列 + 随机数 + Strategy 性能 |
 | SND 场景 | [Snd-Scene.md](Snd-Scene.md) | MemorySndSceneHost 与 FullMemorySndSceneHost 的 Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity、NullNodeFactory |
 | SND 策略 | [Snd-Strategy.md](Snd-Strategy.md) | 策略优先级排序、池引用计数/回收、实体策略生命周期钩子、观察者策略、主动策略 Invoke、策略池 Get/Release 与 Process 缩放性能测量 |
 | SND 上下文 | [Snd-Context.md](Snd-Context.md) | SndContext save/load/continue 工作流、LevelBuilder、模板解析、Archetype 加载 |
