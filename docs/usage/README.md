@@ -17,3 +17,18 @@
 - [persistence-flow](persistence-flow.zh.md)
 - [state-machine](state-machine.zh.md)
 
+## English
+- [strategy-lifecycle](strategy-lifecycle.en.md)
+- [quick-start](quick-start.en.md)
+- [session-model](session-model.en.md)
+- [snd-entity-model](snd-entity-model.en.md)
+- [persistence-flow](persistence-flow.en.md)
+- [console-commands](console-commands.en.md)
+- [architecture-overview](architecture-overview.en.md)
+- [README](README.en.md)
+- [capabilities](capabilities.en.md)
+- [agent-reference](agent-reference.en.md)
+- [strategy-testing](strategy-testing.en.md)
+- [design-patterns](design-patterns.en.md)
+- [state-machine](state-machine.en.md)
+

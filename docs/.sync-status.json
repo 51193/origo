@@ -1,1052 +1,1285 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-15T05:23:07.8614431Z",
+  "generated_at": "2026-07-15T06:25:15.3529521Z",
   "languages": [
-    "zh"
+    "zh",
+    "en"
   ],
   "pairs": {
     "benchmarks/baseline": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "benchmarks/baseline.zh.md"
+        "zh": "benchmarks/baseline.zh.md",
+        "en": "benchmarks/baseline.en.md"
       }
     },
     "benchmarks/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "benchmarks/README.zh.md"
+        "zh": "benchmarks/README.zh.md",
+        "en": "benchmarks/README.en.md"
       }
     },
     "META": {
       "status": "synced",
       "revisions": {
-        "zh": 2
+        "zh": 2,
+        "en": 2
       },
       "files": {
-        "zh": "META.zh.md"
+        "zh": "META.zh.md",
+        "en": "META.en.md"
       }
     },
     "Origo.ConsoleBridge.Tests/ConsoleBridgeServer": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.ConsoleBridge.Tests/ConsoleBridgeServer.zh.md"
+        "zh": "Origo.ConsoleBridge.Tests/ConsoleBridgeServer.zh.md",
+        "en": "Origo.ConsoleBridge.Tests/ConsoleBridgeServer.en.md"
       }
     },
     "Origo.ConsoleBridge.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.ConsoleBridge.Tests/README.zh.md"
+        "zh": "Origo.ConsoleBridge.Tests/README.zh.md",
+        "en": "Origo.ConsoleBridge.Tests/README.en.md"
       }
     },
     "Origo.ConsoleBridge/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.ConsoleBridge/README.zh.md"
+        "zh": "Origo.ConsoleBridge/README.zh.md",
+        "en": "Origo.ConsoleBridge/README.en.md"
       }
     },
     "Origo.Core.Tests/Abstractions": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Abstractions.zh.md"
+        "zh": "Origo.Core.Tests/Abstractions.zh.md",
+        "en": "Origo.Core.Tests/Abstractions.en.md"
       }
     },
     "Origo.Core.Tests/Architecture": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Architecture.zh.md"
+        "zh": "Origo.Core.Tests/Architecture.zh.md",
+        "en": "Origo.Core.Tests/Architecture.en.md"
       }
     },
     "Origo.Core.Tests/Benchmarks": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Benchmarks.zh.md"
+        "zh": "Origo.Core.Tests/Benchmarks.zh.md",
+        "en": "Origo.Core.Tests/Benchmarks.en.md"
       }
     },
     "Origo.Core.Tests/Blackboard": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Blackboard.zh.md"
+        "zh": "Origo.Core.Tests/Blackboard.zh.md",
+        "en": "Origo.Core.Tests/Blackboard.en.md"
       }
     },
     "Origo.Core.Tests/Console": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Console.zh.md"
+        "zh": "Origo.Core.Tests/Console.zh.md",
+        "en": "Origo.Core.Tests/Console.en.md"
       }
     },
     "Origo.Core.Tests/DataObserver": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/DataObserver.zh.md"
+        "zh": "Origo.Core.Tests/DataObserver.zh.md",
+        "en": "Origo.Core.Tests/DataObserver.en.md"
       }
     },
     "Origo.Core.Tests/DataSource": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/DataSource.zh.md"
+        "zh": "Origo.Core.Tests/DataSource.zh.md",
+        "en": "Origo.Core.Tests/DataSource.en.md"
       }
     },
     "Origo.Core.Tests/Grid": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Grid.zh.md"
+        "zh": "Origo.Core.Tests/Grid.zh.md",
+        "en": "Origo.Core.Tests/Grid.en.md"
       }
     },
     "Origo.Core.Tests/Integration/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Integration/README.zh.md"
+        "zh": "Origo.Core.Tests/Integration/README.zh.md",
+        "en": "Origo.Core.Tests/Integration/README.en.md"
       }
     },
     "Origo.Core.Tests/Logging": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Logging.zh.md"
+        "zh": "Origo.Core.Tests/Logging.zh.md",
+        "en": "Origo.Core.Tests/Logging.en.md"
       }
     },
     "Origo.Core.Tests/Meta": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Meta.zh.md"
+        "zh": "Origo.Core.Tests/Meta.zh.md",
+        "en": "Origo.Core.Tests/Meta.en.md"
       }
     },
     "Origo.Core.Tests/META-TEST": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/META-TEST.zh.md"
+        "zh": "Origo.Core.Tests/META-TEST.zh.md",
+        "en": "Origo.Core.Tests/META-TEST.en.md"
       }
     },
     "Origo.Core.Tests/Planning": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Planning.zh.md"
+        "zh": "Origo.Core.Tests/Planning.zh.md",
+        "en": "Origo.Core.Tests/Planning.en.md"
       }
     },
     "Origo.Core.Tests/Random": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Random.zh.md"
+        "zh": "Origo.Core.Tests/Random.zh.md",
+        "en": "Origo.Core.Tests/Random.en.md"
       }
     },
     "Origo.Core.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/README.zh.md"
+        "zh": "Origo.Core.Tests/README.zh.md",
+        "en": "Origo.Core.Tests/README.en.md"
       }
     },
     "Origo.Core.Tests/Runtime-Core": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Runtime-Core.zh.md"
+        "zh": "Origo.Core.Tests/Runtime-Core.zh.md",
+        "en": "Origo.Core.Tests/Runtime-Core.en.md"
       }
     },
     "Origo.Core.Tests/Save-Meta": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Save-Meta.zh.md"
+        "zh": "Origo.Core.Tests/Save-Meta.zh.md",
+        "en": "Origo.Core.Tests/Save-Meta.en.md"
       }
     },
     "Origo.Core.Tests/Save-Serialization": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Save-Serialization.zh.md"
+        "zh": "Origo.Core.Tests/Save-Serialization.zh.md",
+        "en": "Origo.Core.Tests/Save-Serialization.en.md"
       }
     },
     "Origo.Core.Tests/Save-Storage": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Save-Storage.zh.md"
+        "zh": "Origo.Core.Tests/Save-Storage.zh.md",
+        "en": "Origo.Core.Tests/Save-Storage.en.md"
       }
     },
     "Origo.Core.Tests/Scheduling": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Scheduling.zh.md"
+        "zh": "Origo.Core.Tests/Scheduling.zh.md",
+        "en": "Origo.Core.Tests/Scheduling.en.md"
       }
     },
     "Origo.Core.Tests/Session-Lifecycle": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Session-Lifecycle.zh.md"
+        "zh": "Origo.Core.Tests/Session-Lifecycle.zh.md",
+        "en": "Origo.Core.Tests/Session-Lifecycle.en.md"
       }
     },
     "Origo.Core.Tests/Snd-ArchiveFileAccess": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Snd-ArchiveFileAccess.zh.md"
+        "zh": "Origo.Core.Tests/Snd-ArchiveFileAccess.zh.md",
+        "en": "Origo.Core.Tests/Snd-ArchiveFileAccess.en.md"
       }
     },
     "Origo.Core.Tests/Snd-Context": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Snd-Context.zh.md"
+        "zh": "Origo.Core.Tests/Snd-Context.zh.md",
+        "en": "Origo.Core.Tests/Snd-Context.en.md"
       }
     },
     "Origo.Core.Tests/Snd-Entity": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Snd-Entity.zh.md"
+        "zh": "Origo.Core.Tests/Snd-Entity.zh.md",
+        "en": "Origo.Core.Tests/Snd-Entity.en.md"
       }
     },
     "Origo.Core.Tests/Snd-Extensions": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Snd-Extensions.zh.md"
+        "zh": "Origo.Core.Tests/Snd-Extensions.zh.md",
+        "en": "Origo.Core.Tests/Snd-Extensions.en.md"
       }
     },
     "Origo.Core.Tests/Snd-FileAccess": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Snd-FileAccess.zh.md"
+        "zh": "Origo.Core.Tests/Snd-FileAccess.zh.md",
+        "en": "Origo.Core.Tests/Snd-FileAccess.en.md"
       }
     },
     "Origo.Core.Tests/Snd-Metadata": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Snd-Metadata.zh.md"
+        "zh": "Origo.Core.Tests/Snd-Metadata.zh.md",
+        "en": "Origo.Core.Tests/Snd-Metadata.en.md"
       }
     },
     "Origo.Core.Tests/Snd-Scene": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Snd-Scene.zh.md"
+        "zh": "Origo.Core.Tests/Snd-Scene.zh.md",
+        "en": "Origo.Core.Tests/Snd-Scene.en.md"
       }
     },
     "Origo.Core.Tests/Snd-Strategy": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Snd-Strategy.zh.md"
+        "zh": "Origo.Core.Tests/Snd-Strategy.zh.md",
+        "en": "Origo.Core.Tests/Snd-Strategy.en.md"
       }
     },
     "Origo.Core.Tests/StateMachine": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/StateMachine.zh.md"
+        "zh": "Origo.Core.Tests/StateMachine.zh.md",
+        "en": "Origo.Core.Tests/StateMachine.en.md"
       }
     },
     "Origo.Core.Tests/StrategyTestContext-FileAccess": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/StrategyTestContext-FileAccess.zh.md"
+        "zh": "Origo.Core.Tests/StrategyTestContext-FileAccess.zh.md",
+        "en": "Origo.Core.Tests/StrategyTestContext-FileAccess.en.md"
       }
     },
     "Origo.Core.Tests/StrategyTestScenario": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/StrategyTestScenario.zh.md"
+        "zh": "Origo.Core.Tests/StrategyTestScenario.zh.md",
+        "en": "Origo.Core.Tests/StrategyTestScenario.en.md"
       }
     },
     "Origo.Core.Tests/TypeStringMapping": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/TypeStringMapping.zh.md"
+        "zh": "Origo.Core.Tests/TypeStringMapping.zh.md",
+        "en": "Origo.Core.Tests/TypeStringMapping.en.md"
       }
     },
     "Origo.Core.Tests/Utility": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core.Tests/Utility.zh.md"
+        "zh": "Origo.Core.Tests/Utility.zh.md",
+        "en": "Origo.Core.Tests/Utility.en.md"
       }
     },
     "Origo.Core/Abstractions/Blackboard/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Blackboard/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Blackboard/README.zh.md",
+        "en": "Origo.Core/Abstractions/Blackboard/README.en.md"
       }
     },
     "Origo.Core/Abstractions/Console/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Console/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Console/README.zh.md",
+        "en": "Origo.Core/Abstractions/Console/README.en.md"
       }
     },
     "Origo.Core/Abstractions/Entity/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Entity/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Entity/README.zh.md",
+        "en": "Origo.Core/Abstractions/Entity/README.en.md"
       }
     },
     "Origo.Core/Abstractions/FileSystem/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/FileSystem/README.zh.md"
+        "zh": "Origo.Core/Abstractions/FileSystem/README.zh.md",
+        "en": "Origo.Core/Abstractions/FileSystem/README.en.md"
       }
     },
     "Origo.Core/Abstractions/Lifecycle/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Lifecycle/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Lifecycle/README.zh.md",
+        "en": "Origo.Core/Abstractions/Lifecycle/README.en.md"
       }
     },
     "Origo.Core/Abstractions/Logging/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Logging/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Logging/README.zh.md",
+        "en": "Origo.Core/Abstractions/Logging/README.en.md"
       }
     },
     "Origo.Core/Abstractions/Node/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Node/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Node/README.zh.md",
+        "en": "Origo.Core/Abstractions/Node/README.en.md"
       }
     },
     "Origo.Core/Abstractions/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/README.zh.md"
+        "zh": "Origo.Core/Abstractions/README.zh.md",
+        "en": "Origo.Core/Abstractions/README.en.md"
       }
     },
     "Origo.Core/Abstractions/Runtime/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Runtime/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Runtime/README.zh.md",
+        "en": "Origo.Core/Abstractions/Runtime/README.en.md"
       }
     },
     "Origo.Core/Abstractions/Scene/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Scene/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Scene/README.zh.md",
+        "en": "Origo.Core/Abstractions/Scene/README.en.md"
       }
     },
     "Origo.Core/Abstractions/Snd/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/Snd/README.zh.md"
+        "zh": "Origo.Core/Abstractions/Snd/README.zh.md",
+        "en": "Origo.Core/Abstractions/Snd/README.en.md"
       }
     },
     "Origo.Core/Abstractions/StateMachine/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Abstractions/StateMachine/README.zh.md"
+        "zh": "Origo.Core/Abstractions/StateMachine/README.zh.md",
+        "en": "Origo.Core/Abstractions/StateMachine/README.en.md"
       }
     },
     "Origo.Core/Addons/FastNoiseLite/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Addons/FastNoiseLite/README.zh.md"
+        "zh": "Origo.Core/Addons/FastNoiseLite/README.zh.md",
+        "en": "Origo.Core/Addons/FastNoiseLite/README.en.md"
       }
     },
     "Origo.Core/Addons/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Addons/README.zh.md"
+        "zh": "Origo.Core/Addons/README.zh.md",
+        "en": "Origo.Core/Addons/README.en.md"
       }
     },
     "Origo.Core/Blackboard/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Blackboard/README.zh.md"
+        "zh": "Origo.Core/Blackboard/README.zh.md",
+        "en": "Origo.Core/Blackboard/README.en.md"
       }
     },
     "Origo.Core/DataSource/Codec/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/DataSource/Codec/README.zh.md"
+        "zh": "Origo.Core/DataSource/Codec/README.zh.md",
+        "en": "Origo.Core/DataSource/Codec/README.en.md"
       }
     },
     "Origo.Core/DataSource/Converters/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/DataSource/Converters/README.zh.md"
+        "zh": "Origo.Core/DataSource/Converters/README.zh.md",
+        "en": "Origo.Core/DataSource/Converters/README.en.md"
       }
     },
     "Origo.Core/DataSource/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/DataSource/README.zh.md"
+        "zh": "Origo.Core/DataSource/README.zh.md",
+        "en": "Origo.Core/DataSource/README.en.md"
       }
     },
     "Origo.Core/Grid/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Grid/README.zh.md"
+        "zh": "Origo.Core/Grid/README.zh.md",
+        "en": "Origo.Core/Grid/README.en.md"
       }
     },
     "Origo.Core/Logging/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Logging/README.zh.md"
+        "zh": "Origo.Core/Logging/README.zh.md",
+        "en": "Origo.Core/Logging/README.en.md"
       }
     },
     "Origo.Core/Planning/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Planning/README.zh.md"
+        "zh": "Origo.Core/Planning/README.zh.md",
+        "en": "Origo.Core/Planning/README.en.md"
       }
     },
     "Origo.Core/Random/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Random/README.zh.md"
+        "zh": "Origo.Core/Random/README.zh.md",
+        "en": "Origo.Core/Random/README.en.md"
       }
     },
     "Origo.Core/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/README.zh.md"
+        "zh": "Origo.Core/README.zh.md",
+        "en": "Origo.Core/README.en.md"
       }
     },
     "Origo.Core/Runtime/Console/CommandHandlers/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Runtime/Console/CommandHandlers/README.zh.md"
+        "zh": "Origo.Core/Runtime/Console/CommandHandlers/README.zh.md",
+        "en": "Origo.Core/Runtime/Console/CommandHandlers/README.en.md"
       }
     },
     "Origo.Core/Runtime/Console/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Runtime/Console/README.zh.md"
+        "zh": "Origo.Core/Runtime/Console/README.zh.md",
+        "en": "Origo.Core/Runtime/Console/README.en.md"
       }
     },
     "Origo.Core/Runtime/Lifecycle/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Runtime/Lifecycle/README.zh.md"
+        "zh": "Origo.Core/Runtime/Lifecycle/README.zh.md",
+        "en": "Origo.Core/Runtime/Lifecycle/README.en.md"
       }
     },
     "Origo.Core/Runtime/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Runtime/README.zh.md"
+        "zh": "Origo.Core/Runtime/README.zh.md",
+        "en": "Origo.Core/Runtime/README.en.md"
       }
     },
     "Origo.Core/Runtime/StateMachine/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Runtime/StateMachine/README.zh.md"
+        "zh": "Origo.Core/Runtime/StateMachine/README.zh.md",
+        "en": "Origo.Core/Runtime/StateMachine/README.en.md"
       }
     },
     "Origo.Core/Save/Meta/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Save/Meta/README.zh.md"
+        "zh": "Origo.Core/Save/Meta/README.zh.md",
+        "en": "Origo.Core/Save/Meta/README.en.md"
       }
     },
     "Origo.Core/Save/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Save/README.zh.md"
+        "zh": "Origo.Core/Save/README.zh.md",
+        "en": "Origo.Core/Save/README.en.md"
       }
     },
     "Origo.Core/Save/Serialization/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Save/Serialization/README.zh.md"
+        "zh": "Origo.Core/Save/Serialization/README.zh.md",
+        "en": "Origo.Core/Save/Serialization/README.en.md"
       }
     },
     "Origo.Core/Save/Storage/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Save/Storage/README.zh.md"
+        "zh": "Origo.Core/Save/Storage/README.zh.md",
+        "en": "Origo.Core/Save/Storage/README.en.md"
       }
     },
     "Origo.Core/Scheduling/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Scheduling/README.zh.md"
+        "zh": "Origo.Core/Scheduling/README.zh.md",
+        "en": "Origo.Core/Scheduling/README.en.md"
       }
     },
     "Origo.Core/Serialization/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Serialization/README.zh.md"
+        "zh": "Origo.Core/Serialization/README.zh.md",
+        "en": "Origo.Core/Serialization/README.en.md"
       }
     },
     "Origo.Core/Snd/Archetype/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Snd/Archetype/README.zh.md"
+        "zh": "Origo.Core/Snd/Archetype/README.zh.md",
+        "en": "Origo.Core/Snd/Archetype/README.en.md"
       }
     },
     "Origo.Core/Snd/Companions/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Snd/Companions/README.zh.md"
+        "zh": "Origo.Core/Snd/Companions/README.zh.md",
+        "en": "Origo.Core/Snd/Companions/README.en.md"
       }
     },
     "Origo.Core/Snd/Entity/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Snd/Entity/README.zh.md"
+        "zh": "Origo.Core/Snd/Entity/README.zh.md",
+        "en": "Origo.Core/Snd/Entity/README.en.md"
       }
     },
     "Origo.Core/Snd/Metadata/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Snd/Metadata/README.zh.md"
+        "zh": "Origo.Core/Snd/Metadata/README.zh.md",
+        "en": "Origo.Core/Snd/Metadata/README.en.md"
       }
     },
     "Origo.Core/Snd/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Snd/README.zh.md"
+        "zh": "Origo.Core/Snd/README.zh.md",
+        "en": "Origo.Core/Snd/README.en.md"
       }
     },
     "Origo.Core/Snd/Scene/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Snd/Scene/README.zh.md"
+        "zh": "Origo.Core/Snd/Scene/README.zh.md",
+        "en": "Origo.Core/Snd/Scene/README.en.md"
       }
     },
     "Origo.Core/Snd/Strategy/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Snd/Strategy/README.zh.md"
+        "zh": "Origo.Core/Snd/Strategy/README.zh.md",
+        "en": "Origo.Core/Snd/Strategy/README.en.md"
       }
     },
     "Origo.Core/StateMachine/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/StateMachine/README.zh.md"
+        "zh": "Origo.Core/StateMachine/README.zh.md",
+        "en": "Origo.Core/StateMachine/README.en.md"
       }
     },
     "Origo.Core/Utility/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.Core/Utility/README.zh.md"
+        "zh": "Origo.Core/Utility/README.zh.md",
+        "en": "Origo.Core/Utility/README.en.md"
       }
     },
     "Origo.GodotAdapter.Integration.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Integration.Tests/README.zh.md"
+        "zh": "Origo.GodotAdapter.Integration.Tests/README.zh.md",
+        "en": "Origo.GodotAdapter.Integration.Tests/README.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/Architecture": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Tests/Architecture.zh.md"
+        "zh": "Origo.GodotAdapter.Tests/Architecture.zh.md",
+        "en": "Origo.GodotAdapter.Tests/Architecture.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/Bootstrap": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Tests/Bootstrap.zh.md"
+        "zh": "Origo.GodotAdapter.Tests/Bootstrap.zh.md",
+        "en": "Origo.GodotAdapter.Tests/Bootstrap.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/Console": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Tests/Console.zh.md"
+        "zh": "Origo.GodotAdapter.Tests/Console.zh.md",
+        "en": "Origo.GodotAdapter.Tests/Console.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/FileSystem": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Tests/FileSystem.zh.md"
+        "zh": "Origo.GodotAdapter.Tests/FileSystem.zh.md",
+        "en": "Origo.GodotAdapter.Tests/FileSystem.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/Logging": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Tests/Logging.zh.md"
+        "zh": "Origo.GodotAdapter.Tests/Logging.zh.md",
+        "en": "Origo.GodotAdapter.Tests/Logging.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Tests/README.zh.md"
+        "zh": "Origo.GodotAdapter.Tests/README.zh.md",
+        "en": "Origo.GodotAdapter.Tests/README.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/Serialization": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Tests/Serialization.zh.md"
+        "zh": "Origo.GodotAdapter.Tests/Serialization.zh.md",
+        "en": "Origo.GodotAdapter.Tests/Serialization.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/TestSupport": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter.Tests/TestSupport.zh.md"
+        "zh": "Origo.GodotAdapter.Tests/TestSupport.zh.md",
+        "en": "Origo.GodotAdapter.Tests/TestSupport.en.md"
       }
     },
     "Origo.GodotAdapter/Bootstrap/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter/Bootstrap/README.zh.md"
+        "zh": "Origo.GodotAdapter/Bootstrap/README.zh.md",
+        "en": "Origo.GodotAdapter/Bootstrap/README.en.md"
       }
     },
     "Origo.GodotAdapter/Console/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter/Console/README.zh.md"
+        "zh": "Origo.GodotAdapter/Console/README.zh.md",
+        "en": "Origo.GodotAdapter/Console/README.en.md"
       }
     },
     "Origo.GodotAdapter/FileSystem/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter/FileSystem/README.zh.md"
+        "zh": "Origo.GodotAdapter/FileSystem/README.zh.md",
+        "en": "Origo.GodotAdapter/FileSystem/README.en.md"
       }
     },
     "Origo.GodotAdapter/Logging/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter/Logging/README.zh.md"
+        "zh": "Origo.GodotAdapter/Logging/README.zh.md",
+        "en": "Origo.GodotAdapter/Logging/README.en.md"
       }
     },
     "Origo.GodotAdapter/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter/README.zh.md"
+        "zh": "Origo.GodotAdapter/README.zh.md",
+        "en": "Origo.GodotAdapter/README.en.md"
       }
     },
     "Origo.GodotAdapter/Serialization/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter/Serialization/README.zh.md"
+        "zh": "Origo.GodotAdapter/Serialization/README.zh.md",
+        "en": "Origo.GodotAdapter/Serialization/README.en.md"
       }
     },
     "Origo.GodotAdapter/Snd/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.GodotAdapter/Snd/README.zh.md"
+        "zh": "Origo.GodotAdapter/Snd/README.zh.md",
+        "en": "Origo.GodotAdapter/Snd/README.en.md"
       }
     },
     "Origo.SourceGeneration.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.SourceGeneration.Tests/README.zh.md"
+        "zh": "Origo.SourceGeneration.Tests/README.zh.md",
+        "en": "Origo.SourceGeneration.Tests/README.en.md"
       }
     },
     "Origo.SourceGeneration/pipeline": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.SourceGeneration/pipeline.zh.md"
+        "zh": "Origo.SourceGeneration/pipeline.zh.md",
+        "en": "Origo.SourceGeneration/pipeline.en.md"
       }
     },
     "Origo.SourceGeneration/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "Origo.SourceGeneration/README.zh.md"
+        "zh": "Origo.SourceGeneration/README.zh.md",
+        "en": "Origo.SourceGeneration/README.en.md"
       }
     },
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "README.zh.md"
+        "zh": "README.zh.md",
+        "en": "README.en.md"
       }
     },
     "usage/agent-reference": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/agent-reference.zh.md"
+        "zh": "usage/agent-reference.zh.md",
+        "en": "usage/agent-reference.en.md"
       }
     },
     "usage/architecture-overview": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/architecture-overview.zh.md"
+        "zh": "usage/architecture-overview.zh.md",
+        "en": "usage/architecture-overview.en.md"
       }
     },
     "usage/capabilities": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/capabilities.zh.md"
+        "zh": "usage/capabilities.zh.md",
+        "en": "usage/capabilities.en.md"
       }
     },
     "usage/console-commands": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/console-commands.zh.md"
+        "zh": "usage/console-commands.zh.md",
+        "en": "usage/console-commands.en.md"
       }
     },
     "usage/design-patterns": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/design-patterns.zh.md"
+        "zh": "usage/design-patterns.zh.md",
+        "en": "usage/design-patterns.en.md"
       }
     },
     "usage/persistence-flow": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/persistence-flow.zh.md"
+        "zh": "usage/persistence-flow.zh.md",
+        "en": "usage/persistence-flow.en.md"
       }
     },
     "usage/quick-start": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/quick-start.zh.md"
+        "zh": "usage/quick-start.zh.md",
+        "en": "usage/quick-start.en.md"
       }
     },
     "usage/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/README.zh.md"
+        "zh": "usage/README.zh.md",
+        "en": "usage/README.en.md"
       }
     },
     "usage/session-model": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/session-model.zh.md"
+        "zh": "usage/session-model.zh.md",
+        "en": "usage/session-model.en.md"
       }
     },
     "usage/snd-entity-model": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/snd-entity-model.zh.md"
+        "zh": "usage/snd-entity-model.zh.md",
+        "en": "usage/snd-entity-model.en.md"
       }
     },
     "usage/state-machine": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/state-machine.zh.md"
+        "zh": "usage/state-machine.zh.md",
+        "en": "usage/state-machine.en.md"
       }
     },
     "usage/strategy-lifecycle": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/strategy-lifecycle.zh.md"
+        "zh": "usage/strategy-lifecycle.zh.md",
+        "en": "usage/strategy-lifecycle.en.md"
       }
     },
     "usage/strategy-testing": {
       "status": "synced",
       "revisions": {
-        "zh": 1
+        "zh": 1,
+        "en": 1
       },
       "files": {
-        "zh": "usage/strategy-testing.zh.md"
+        "zh": "usage/strategy-testing.zh.md",
+        "en": "usage/strategy-testing.en.md"
       }
     }
   }

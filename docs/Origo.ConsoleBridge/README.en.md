@@ -1,0 +1,75 @@
+<!-- docsync-pair: Origo.ConsoleBridge/README -->
+<!-- docsync-revision: 1 -->
+<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+# Origo.ConsoleBridge
+
+> [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Runtime/Console](../Origo.Core/Runtime/Console/README.en.md)
+
+## Overview
+
+A TCP remote console bridge server. Allows connecting via telnet/nc (default port 9876) to remotely execute Origo console commands and receive output. Single-connection mode: only one client connection is allowed at a time.
+
+## Files
+
+| File | Responsibility |
+|------|------|
+| `ConsoleBridgeOptions.cs` | Configuration options: port number (default 9876) |
+| `ConsoleBridgeServer.cs` | TCP console bridge: internal async I/O for accepting connections and reading commands |
+
+## Architecture
+
+```
+telnet client ──TCP:9876──> ConsoleBridgeServer
+                                ├── input:  ConsoleInputBuffer.Enqueue(line)
+                                └── output: ConsoleOutputChannel.Subscribe(OnConsoleOutput)
+                                              → StreamWriter.WriteLine
+```
+
+**Threading model**:
+- **Async I/O**: `AcceptTcpClientAsync` and `ReadLineAsync` run on the ThreadPool without occupying dedicated threads. CancellationToken replaces `Monitor.Wait` polling and `ReceiveTimeout`, enabling immediate cancellation response.
+- **Output path is synchronous**: `StreamWriter.WriteLine` in the `OnConsoleOutput` callback remains synchronous — console output involves short kernel calls, and the TCP send buffer will not fill up in practice; async would be a net loss.
+
+## Usage
+
+```bash
+# Start the server (in Godot project code)
+var server = new ConsoleBridgeServer(consoleInput, consoleOutput);
+server.Start();
+
+# Client connection
+nc localhost 9876
+> help
+> spawn my_entity template_basic
+> snd_count
+```
+
+## Design Decisions
+
+### Why single-connection mode
+
+Origo's game frame loop is single-threaded. Multiple connections mean multiple command streams enter `ConsoleInputBuffer` concurrently, but command execution is serial within a frame — in a multi-client scenario, the order of command execution is indeterminate, leading to unpredictable results.
+
+### Why output uses publish-subscribe instead of writing directly to the socket
+
+`ConsoleBridgeServer` subscribes to `IConsoleOutputChannel`, so all logs and console output (not just command output from the bridge-connected client) are pushed to the connection. This lets the remote operator see the full game log stream for easier debugging.
+
+### Why async I/O instead of manual threading
+
+`AcceptTcpClientAsync` and `ReadLineAsync` wait at the OS level via IOCP without occupying dedicated thread stacks. Compared to the previous manual `Thread` + `Monitor.Wait(100ms)` polling model:
+
+- Zero CPU overhead when idle (no 100ms wake-up to check state)
+- `Dispose()` shutdown latency reduced from worst-case 6 seconds (two `Thread.Join(3000)`) to sub-second (`CancellationToken` immediately interrupts async I/O)
+- No need for `ReceiveTimeout` read timeout fallback — cancellation tokens directly interrupt `ReadLineAsync`
+
+The output path keeps synchronous `StreamWriter.WriteLine` to avoid changing the `Action<string>` callback to `Func<string, Task>` (which would cascade into polluting the `IConsoleOutputChannel` interface).
+
+### Exception propagation strategy (fail-fast)
+
+`ConsoleBridgeServer` does not catch I/O exceptions for silent degradation. If I/O operations in `Dispose`, `AcceptLoop`, or `HandleConnection` fail, exceptions propagate directly. Client disconnection exceptions are precisely caught via `when (_cts.IsCancellationRequested)`; system-level socket errors and write failures are no longer silently swallowed.
+
+### Output buffer overflow
+
+When no client is connected, console output is buffered in an in-memory queue (max 1000 lines). When the limit is exceeded, the oldest lines are dropped, and a warning message (`[ConsoleBridge] Warning: N output line(s) were dropped due to buffer overflow.`) is prepended to the output stream when the client next connects, ensuring data loss is observable.
+
+---
+[↑ Back to Origo.manual](../README.en.md)

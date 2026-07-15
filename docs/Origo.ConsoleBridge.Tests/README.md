@@ -6,3 +6,7 @@
 - [README](README.zh.md)
 - [ConsoleBridgeServer](ConsoleBridgeServer.zh.md)
 
+## English
+- [README](README.en.md)
+- [ConsoleBridgeServer](ConsoleBridgeServer.en.md)
+

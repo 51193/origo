@@ -1,4 +1,4 @@
 {
-  "languages": ["zh"],
-  "docs_root": "docs"
+  "Languages": ["zh", "en"],
+  "DocsRoot": "docs"
 }

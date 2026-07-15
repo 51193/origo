@@ -17,3 +17,18 @@
 - [Origo.SourceGeneration.Tests/](Origo.SourceGeneration.Tests/)
 - [usage/](usage/)
 
+## English
+- [README](README.en.md)
+- [META](META.en.md)
+- [benchmarks/](benchmarks/)
+- [Origo.ConsoleBridge/](Origo.ConsoleBridge/)
+- [Origo.ConsoleBridge.Tests/](Origo.ConsoleBridge.Tests/)
+- [Origo.Core/](Origo.Core/)
+- [Origo.Core.Tests/](Origo.Core.Tests/)
+- [Origo.GodotAdapter/](Origo.GodotAdapter/)
+- [Origo.GodotAdapter.Integration.Tests/](Origo.GodotAdapter.Integration.Tests/)
+- [Origo.GodotAdapter.Tests/](Origo.GodotAdapter.Tests/)
+- [Origo.SourceGeneration/](Origo.SourceGeneration/)
+- [Origo.SourceGeneration.Tests/](Origo.SourceGeneration.Tests/)
+- [usage/](usage/)
+

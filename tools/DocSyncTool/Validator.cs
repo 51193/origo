@@ -15,7 +15,7 @@ internal static partial class Validator
     {
         var docsRoot = config.DocsFullPath;
         var errors = new List<string>();
-        var fileMetadatas = new Dictionary<string, DocFile>(StringComparer.OrdinalIgnoreCase);
+        var fileMetadatas = new List<DocFile>();
 
         var docFiles = FindAllDocFiles(docsRoot, config.Languages);
 
@@ -27,7 +27,7 @@ internal static partial class Validator
             ValidateLinks(docFile, content, config.Languages, docsRoot, errors);
 
             if (!string.IsNullOrEmpty(docFile.PairId))
-                fileMetadatas[docFile.PairId] = docFile;
+                fileMetadatas.Add(docFile);
         }
 
         ValidatePairs(fileMetadatas, config.Languages, errors);
@@ -222,10 +222,10 @@ internal static partial class Validator
         });
     }
 
-    private static void ValidatePairs(Dictionary<string, DocFile> fileMetadatas, List<string> languages,
+    private static void ValidatePairs(List<DocFile> fileMetadatas, List<string> languages,
         List<string> errors)
     {
-        var pairs = fileMetadatas.Values
+        var pairs = fileMetadatas
             .GroupBy(f => f.PairId)
             .ToDictionary(g => g.Key, g => g.ToList());
 

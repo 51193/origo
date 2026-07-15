@@ -6,3 +6,7 @@
 - [README](README.zh.md)
 - [CommandHandlers/](CommandHandlers/)
 
+## English
+- [README](README.en.md)
+- [CommandHandlers/](CommandHandlers/)
+

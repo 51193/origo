@@ -6,3 +6,7 @@
 - [README](README.zh.md)
 - [FastNoiseLite/](FastNoiseLite/)
 
+## English
+- [README](README.en.md)
+- [FastNoiseLite/](FastNoiseLite/)
+
