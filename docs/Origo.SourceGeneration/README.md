@@ -7,6 +7,6 @@
 - [README](README.zh.md)
 
 ## English
-- [pipeline](pipeline.en.md)
 - [README](README.en.md)
+- [pipeline](pipeline.en.md)
 
