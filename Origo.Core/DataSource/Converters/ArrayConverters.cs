@@ -2,6 +2,7 @@ using System.Globalization;
 
 namespace Origo.Core.DataSource.Converters;
 
+/// <summary><see cref="byte" /> array bidirectional converter.</summary>
 internal sealed class ByteArrayDataSourceConverter : DataSourceConverter<byte[]>
 {
     public override byte[] Read(DataSourceNode node)

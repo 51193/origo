@@ -3,6 +3,7 @@ using Origo.Core.Save;
 
 namespace Origo.Core.Snd.Companions;
 
+/// <summary>Lifecycle entry points (continue game, initial save, main menu) for <see cref="SndContext" />.</summary>
 internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLifecycleOperations
 {
     public bool HasContinueData()

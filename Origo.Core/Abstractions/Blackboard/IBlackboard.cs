@@ -4,8 +4,10 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Abstractions.Blackboard;
 
 /// <summary>
-///     通用键值黑板接口，面向 Core 层的全局/进度/会话级共享状态。
-///     内部使用 <see cref="TypedData" /> 保留类型信息，确保序列化/反序列化后类型不丢失。
+///     General-purpose key-value blackboard interface for Core-layer
+///     global/progress/session-level shared state. Uses
+///     <see cref="TypedData" /> internally to preserve type information,
+///     ensuring types survive serialization/deserialization.
 /// </summary>
 public interface IBlackboard
 {
@@ -18,12 +20,14 @@ public interface IBlackboard
     IReadOnlyCollection<string> GetKeys();
 
     /// <summary>
-    ///     导出全部条目（带类型信息），用于序列化持久化。
+    ///     Export all entries with type information, for serialization
+    ///     and persistence.
     /// </summary>
     IReadOnlyDictionary<string, TypedData> SerializeAll();
 
     /// <summary>
-    ///     从带类型信息的字典恢复全部条目，替换当前内容。
+    ///     Restore all entries from a type-annotated dictionary,
+    ///     replacing current contents.
     /// </summary>
     void DeserializeAll(IReadOnlyDictionary<string, TypedData> data);
 }

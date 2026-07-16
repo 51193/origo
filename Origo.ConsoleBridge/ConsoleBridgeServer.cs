@@ -12,10 +12,10 @@ using Origo.Core.Runtime.Console;
 namespace Origo.ConsoleBridge;
 
 /// <summary>
-///     TCP 控制台桥接服务器。
-///     单连接模式：一次只处理一个客户端连接。
-///     Accept 循环在 handler 完成后才继续接受下一个连接，
-///     新连接在此期间进入 OS backlog 队列自然等待。
+///     TCP console bridge server. Single-connection mode: handles one
+///     client connection at a time. The accept loop waits for the current
+///     handler to finish before accepting the next connection;
+///     new connections naturally wait in the OS backlog queue.
 /// </summary>
 public sealed class ConsoleBridgeServer : IDisposable
 {

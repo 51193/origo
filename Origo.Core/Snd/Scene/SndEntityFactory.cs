@@ -6,6 +6,13 @@ using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Snd.Scene;
 
+/// <summary>
+///     Static factory that wraps <see cref="ISndSceneHost.CreateEntity" />
+///     with automatic AfterSpawn hook dispatch. Single-entity spawn fires
+///     hooks immediately; batch spawn stages all entities first, then fires
+///     hooks in a second pass so that hooks can assume a fully-constructed
+///     scene graph.
+/// </summary>
 public static class SndEntityFactory
 {
     public static ISndEntity Spawn(ISndSceneHost host, SndMetaData meta)

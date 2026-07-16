@@ -3,6 +3,7 @@ using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Snd.Companions;
 
+/// <summary>Template cloning and metadata resolution for <see cref="SndContext" />.</summary>
 internal sealed class SndContextTemplateAccess(SndContext owner) : ISndTemplateAccess
 {
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)

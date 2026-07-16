@@ -4,7 +4,8 @@ using Origo.Core.Abstractions.Node;
 namespace Origo.Core.Abstractions.Entity;
 
 /// <summary>
-///     节点访问能力，从 <see cref="ISndEntity" /> 中拆分，遵循接口隔离原则。
+///     Node access capability extracted from <see cref="ISndEntity" />,
+///     following the interface segregation principle.
 /// </summary>
 public interface ISndNodeAccess
 {

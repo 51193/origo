@@ -5,6 +5,10 @@ using Origo.Core.Abstractions.Entity;
 
 namespace Origo.Core.Runtime.Console;
 
+/// <summary>
+///     Shared utilities for console command handlers: entity lookup,
+///     blackboard layer resolution, and type-inferred data setting.
+/// </summary>
 internal static class ConsoleCommandHelper
 {
     public static bool TryFindEntity(

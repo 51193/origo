@@ -3,7 +3,8 @@ using System.Collections.Generic;
 namespace Origo.Core.Abstractions.StateMachine;
 
 /// <summary>
-///     字符串栈状态机：栈内仅存储字符串，Push/Pop 语义由策略钩子实现。
+///     A string-stack state machine. The stack stores only strings;
+///     Push/Pop semantics are implemented by strategy hooks.
 /// </summary>
 public interface IStateMachine
 {
@@ -16,29 +17,30 @@ public interface IStateMachine
     void Push(string value);
 
     /// <summary>
-    ///     运行时出栈：触发 pop 策略的 <c>BeforeRemove</c> 语义。
+    ///     Runtime pop: triggers the pop strategy's <c>BeforeRemove</c> semantics.
     /// </summary>
     bool TryPopRuntime(out string? popped);
 
     /// <summary>
-    ///     退出逐级出栈：触发 pop 策略的 <c>BeforeQuit</c> 语义。
+    ///     Quit-time pop: triggers the pop strategy's <c>BeforeQuit</c> semantics.
     /// </summary>
     bool TryPopOnQuit(out string? popped);
 
     (bool found, string? top) Peek();
 
     /// <summary>
-    ///     自栈底至栈顶的字符串快照。
+    ///     String snapshot from stack bottom to top.
     /// </summary>
     IReadOnlyList<string> Snapshot();
 
     /// <summary>
-    ///     读档恢复后，在场景构建完成时按入栈顺序调用 Push 策略的 <c>AfterLoad</c>。
+    ///     After loading from a save, invokes Push strategy <c>AfterLoad</c>
+    ///     in stack-push order once scene construction is complete.
     /// </summary>
     void FlushAfterLoad();
 
     /// <summary>
-    ///     从存档恢复栈内容，不触发任何策略钩子。
+    ///     Restore stack contents from a save without triggering any strategy hooks.
     /// </summary>
     void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop);
 }

@@ -4,7 +4,8 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Abstractions.Node;
 
 /// <summary>
-///     抽象 SND 节点容器行为，负责节点恢复、查询、回收与导出。
+///     Abstract SND node container behavior: responsible for node recovery,
+///     lookup, release, and export.
 /// </summary>
 internal interface INodeHost
 {

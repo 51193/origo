@@ -2,6 +2,10 @@ using System.Text.Json;
 
 namespace Origo.Core.Grid;
 
+/// <summary>
+///     Parses grid coordinates from various input formats
+///     (<c>string</c>, <c>JsonElement</c>) into (X, Z) tuples.
+/// </summary>
 public static class GridParser
 {
     public static (int X, int Z)? ParseCoords(object? input)

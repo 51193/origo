@@ -3,6 +3,12 @@ using Origo.Core.DataSource;
 
 namespace Origo.GodotAdapter.Serialization;
 
+/// <summary>
+///     Bidirectional converters for Godot engine types
+///     (Vector2, Vector2I, Vector3, Vector3I, Vector4, Vector4I,
+///     Color, Transform2D, Transform3D) via <see cref="DataSourceNode" />.
+/// </summary>
+
 internal sealed class Vector2DataSourceConverter : DataSourceConverter<Vector2>
 {
     public override Vector2 Read(DataSourceNode node) => new(node["x"].As<float>(), node["y"].As<float>());

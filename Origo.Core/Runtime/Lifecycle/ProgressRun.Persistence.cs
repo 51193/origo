@@ -9,6 +9,11 @@ using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
+/// <summary>
+///     Persistence partial for <see cref="ProgressRun" />: save coordination
+///     (build metadata, build payload, persist progress). Delegates to
+///     <see cref="SaveCoordinator" />.
+/// </summary>
 internal sealed partial class ProgressRun
 {
     internal SaveMetaBuildContext BuildSaveMetaContext(string saveId) => _saveCoordinator.BuildSaveMetaContext(saveId);

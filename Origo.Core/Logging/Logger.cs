@@ -3,6 +3,11 @@ using Origo.Core.Abstractions.Logging;
 
 namespace Origo.Core.Logging;
 
+/// <summary>
+///     Generic logger adapter: derives the log tag from
+///     <typeparamref name="T" />'s type name and delegates to
+///     an underlying <see cref="ILogger" />.
+/// </summary>
 public sealed class Logger<T> : ILogger<T>
 {
     private readonly ILogger _inner;

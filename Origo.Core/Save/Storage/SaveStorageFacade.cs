@@ -10,9 +10,11 @@ using Origo.Core.Save.Meta;
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
-///     存档 I/O 编排层：枚举、读写编排、快照复制。
-///     纯编排逻辑，具体文件解析/序列化委托给 SavePayloadReader / SavePayloadWriter，
-///     原子写入逻辑委托给 SaveAtomicWriter。
+///     Save I/O orchestration layer: enumeration, read/write orchestration,
+///     and snapshot copying. Pure orchestration logic delegates file parsing
+///     to <see cref="SavePayloadReader" />, serialization to
+///     <see cref="SavePayloadWriter" />, and atomic writes to
+///     <see cref="SaveAtomicWriter" />.
 /// </summary>
 internal static class SaveStorageFacade
 {
@@ -158,8 +160,9 @@ internal static class SaveStorageFacade
     }
 
     /// <summary>
-    ///     从指定 save_* 快照中复制一个子目录到 current/ 对应位置。
-    ///     若源子目录不存在则静默返回（无错误）。
+    ///     Copy a subdirectory from a save snapshot into the corresponding
+    ///     location under current/. Silently returns if the source
+    ///     directory does not exist.
     /// </summary>
     public static void CopyDirectoryFromSnapshot(
         SaveFileHandle handle,

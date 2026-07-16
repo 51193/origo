@@ -8,6 +8,11 @@ using Origo.Core.Save.Storage;
 
 namespace Origo.Core.Snd.Companions;
 
+/// <summary>
+///     Save game operations (list, load, save, auto-save, continue target,
+///     level switch) for <see cref="SndContext" />. All save/load operations
+///     are dispatched via deferred actions.
+/// </summary>
 internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOperations
 {
     public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)

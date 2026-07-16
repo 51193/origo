@@ -2,6 +2,8 @@ using System.Globalization;
 
 namespace Origo.Core.DataSource.Converters;
 
+/// <summary>Primitive type converters for <c>string</c>, numeric types, and <c>bool</c>.</summary>
+
 internal sealed class StringDataSourceConverter : DataSourceConverter<string>
 {
     public override string Read(DataSourceNode node) => node.AsString();

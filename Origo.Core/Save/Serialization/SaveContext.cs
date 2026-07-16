@@ -8,6 +8,13 @@ using Origo.Core.Snd;
 
 namespace Origo.Core.Save.Serialization;
 
+/// <summary>
+///     Save/load context for a single ProgressRun. Composes
+///     <see cref="BlackboardSerializer" />, <see cref="SndSceneSerializer" />,
+///     and <see cref="SaveGamePayloadFactory" />. Progress and session
+///     blackboard deserialization is transactionally safe: on failure,
+///     the original state is restored.
+/// </summary>
 internal sealed class SaveContext
 {
     private readonly BlackboardSerializer _blackboardSerializer;

@@ -4,6 +4,11 @@ using Origo.Core.Save;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
+/// <summary>
+///     Validates that the session topology stored on the progress blackboard
+///     matches an expected foreground level, failing fast with a descriptive
+///     message when the invariant is violated.
+/// </summary>
 internal static class TopologyInvariant
 {
     public static void EnsureActiveLevel(IBlackboard blackboard, string expectedLevelId, string context)

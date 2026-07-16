@@ -11,6 +11,13 @@ using Origo.Core.Snd.Strategy;
 
 namespace Origo.Core.Snd.Scene;
 
+/// <summary>
+///     Pure in-memory <see cref="ISndSceneHost" /> implementation for
+///     background sessions and tests. Uses a <see cref="NullNodeFactory" />
+///     (no real engine nodes), manages entities in a flat list, and exposes
+///     an <see cref="ObserverTopology" /> shared across all entities in
+///     the scene.
+/// </summary>
 internal sealed class FullMemorySndSceneHost
     : ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable
 {

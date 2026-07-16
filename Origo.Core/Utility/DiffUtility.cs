@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace Origo.Core.Utility;
 
+/// <summary>
+///     Computes the symmetric set difference of two collections,
+///     returning the added and removed items.
+/// </summary>
 public static class DiffUtility
 {
     public static (List<T> Added, List<T> Removed) Diff<T>(

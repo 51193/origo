@@ -5,6 +5,10 @@ using FileAccess = Godot.FileAccess;
 
 namespace Origo.GodotAdapter.FileSystem;
 
+/// <summary>
+///     Static helper wrapping Godot <c>FileAccess</c> for file
+///     existence checks, read, write, copy, delete, and rename.
+/// </summary>
 internal static class GodotFileOperations
 {
     public static bool Exists(string path) => FileAccess.FileExists(path);

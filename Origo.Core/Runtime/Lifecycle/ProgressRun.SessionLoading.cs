@@ -11,6 +11,11 @@ using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Runtime.Lifecycle;
 
+/// <summary>
+///     Session loading partial for <see cref="ProgressRun" />: load from
+///     payload, mount foreground sessions, and switch foreground levels.
+///     Delegates to <see cref="SessionLifecycle" />.
+/// </summary>
 internal sealed partial class ProgressRun
 {
     internal void LoadFromPayload(SaveGamePayload payload) => _sessionLifecycle.LoadFromPayload(payload);

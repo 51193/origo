@@ -5,6 +5,11 @@ using Origo.Core.Snd;
 
 namespace Origo.Core.Save.Serialization;
 
+/// <summary>
+///     Bidirectional SND scene serializer: collects entity metadata from
+///     a scene host into a <see cref="DataSourceNode" /> array, and
+///     recovers entities from a serialized array back into a scene host.
+/// </summary>
 internal sealed class SndSceneSerializer
 {
     private readonly SndWorld _world;

@@ -4,6 +4,12 @@ using Origo.Core.DataSource;
 
 namespace Origo.Core.Snd;
 
+/// <summary>
+///     File access companion for <see cref="SndContext" />.
+///     Delegates tree I/O to <see cref="IDataSourceIoGateway" />,
+///     file existence checks to <see cref="IFileMetaAccess" />,
+///     and typed object conversion to <see cref="DataSourceConverterRegistry" />.
+/// </summary>
 internal sealed class SndContextFileAccess(
     IDataSourceIoGateway dataSourceIo,
     IFileMetaAccess metaAccess,

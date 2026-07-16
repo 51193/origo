@@ -3,23 +3,26 @@ using System;
 namespace Origo.Core.Abstractions.Runtime;
 
 /// <summary>
-///     抽象调度接口，由宿主环境驱动一帧或一周期的执行。
+///     Abstract scheduling interface, driven by the host environment
+///     for per-frame or per-cycle execution.
 /// </summary>
 internal interface IScheduler
 {
     /// <summary>
-    ///     将一个动作安排在本帧或之后的某个阶段执行，具体策略由实现定义。
+    ///     Schedule an action for execution in the current frame or a
+    ///     later phase; the specific policy is implementation-defined.
     /// </summary>
-    /// <param name="action">要执行的行为。</param>
+    /// <param name="action">The action to execute.</param>
     void Enqueue(Action action);
 
     /// <summary>
-    ///     执行已排队动作；返回本周期内执行的动作数量。
+    ///     Execute queued actions; returns the number of actions executed
+    ///     this cycle.
     /// </summary>
     int Tick();
 
     /// <summary>
-    ///     清空尚未执行的动作队列。
+    ///     Clear the pending action queue without executing.
     /// </summary>
     void Clear();
 }

@@ -20,6 +20,18 @@ using Origo.Core.Snd.Scene;
 
 namespace Origo.Core.Snd;
 
+/// <summary>
+///     Unified SND runtime context. Serves as the primary facade through which
+///     strategies interact with the framework: blackboard access, deferred
+///     actions, template resolution, console I/O, state machines, file I/O,
+///     save/load operations, and lifecycle orchestration.
+///     <para>
+///         Owns the <see cref="SystemRun" /> for system-level state and
+///         manages <see cref="ProgressRun" /> lifecycle transitions (create,
+///         load, save, dispose). Exposes nine capability facets as companion
+///         objects, each implementing a dedicated <c>ISnd*</c> interface.
+///     </para>
+/// </summary>
 public sealed class SndContext : ISndContext
 {
     internal readonly SystemRun _systemRun;
@@ -29,6 +41,18 @@ public sealed class SndContext : ISndContext
     internal ProgressRun? _progressRun;
     private bool _workflowInProgress;
 
+    /// <summary>
+    ///     Constructs the SND context and initializes all companion objects,
+    ///     the system runtime, and storage services.
+    /// </summary>
+    /// <param name="parameters">
+    ///     Configuration parameters including runtime, data source I/O,
+    ///     file metadata access, path resolver, save paths, storage services,
+    ///     and optional bootstrap hooks.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="parameters" /> is null.
+    /// </exception>
     public SndContext(SndContextParameters parameters)
     {
         ArgumentNullException.ThrowIfNull(parameters);
@@ -71,6 +95,11 @@ public sealed class SndContext : ISndContext
         StateMachineContext = new SndContextStateMachineContext(this);
     }
 
+    /// <summary>
+    ///     Bootstrap the SND subsystem: register custom converters, auto-discover
+    ///     strategies, load scene alias and template mappings, then invoke the
+    ///     main menu entry workflow.
+    /// </summary>
     public void Bootstrap()
     {
         _parameters.ConfigureConverters?.Invoke(Runtime.SndWorld.ConverterRegistry);
@@ -88,6 +117,8 @@ public sealed class SndContext : ISndContext
         Lifecycle.RequestLoadMainMenuEntrySave();
     }
 
+    // ── Infrastructure (internal) ──
+
     internal OrigoRuntime Runtime { get; }
     internal IDataSourceIoGateway DataSourceIo { get; }
     internal IFileMetaAccess MetaAccess { get; }
@@ -99,25 +130,52 @@ public sealed class SndContext : ISndContext
     internal ISaveStorageService InitialStorageService { get; }
     internal ISavePathPolicy SavePathPolicy { get; }
 
+    // ── Capability facets (public, each delegates to a companion object) ──
+
+    /// <summary>System and progress-level blackboard access.</summary>
     public ISndBlackboardAccess Blackboard { get; }
+    /// <summary>Deferred action scheduling (business queue, frame flush, persistence tracking).</summary>
     public ISndDeferredActions Deferred { get; }
+    /// <summary>Template cloning and metadata resolution.</summary>
     public ISndTemplateAccess Template { get; }
+    /// <summary>Console command submission and output subscription.</summary>
     public ISndConsoleAccess ConsoleAccess { get; }
+    /// <summary>Progress-level state machine container access.</summary>
     public ISndStateMachineAccess StateMachines { get; }
+    /// <summary>Save game operations (list, load, save, auto-save, continue target).</summary>
     public ISndSaveOperations Save { get; }
+    /// <summary>Lifecycle entry points (continue, initial save, main menu).</summary>
     public ISndLifecycleOperations Lifecycle { get; }
+    /// <summary>File access for reading/writing DataSourceNode trees and typed objects.</summary>
     public ISndFileAccess FileAccess { get; }
+    /// <summary>Save-archive-scoped file access with path traversal protection.</summary>
     public ISndArchiveFileAccess ArchiveFileAccess { get; }
+    /// <summary>State machine context that composes system, progress, and session blackboards.</summary>
     public IStateMachineContext StateMachineContext { get; }
 
+    /// <summary>
+    ///     Returns the active <see cref="ProgressRun" />, throwing if none is active.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when no ProgressRun is active (call
+    ///     <see cref="RequestLoadMainMenuEntrySave" /> first).
+    /// </exception>
     internal ProgressRun EnsureProgressRun()
     {
         return _progressRun ?? throw new InvalidOperationException(
             "No active ProgressRun. Call RequestLoadMainMenuEntrySave first.");
     }
 
+    /// <summary>Swap the active ProgressRun (used during lifecycle transitions).</summary>
     internal void SetProgressRun(ProgressRun? progressRun) => _progressRun = progressRun;
 
+    /// <summary>
+    ///     Enter a lifecycle workflow guard. Ensures only one workflow
+    ///     (load/save/change-level) executes at a time.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if a workflow is already in progress.
+    /// </exception>
     internal void BeginWorkflow()
     {
         if (_workflowInProgress)
@@ -127,16 +185,27 @@ public sealed class SndContext : ISndContext
         _workflowInProgress = true;
     }
 
+    /// <summary>Exit the lifecycle workflow guard.</summary>
     internal void EndWorkflow() => _workflowInProgress = false;
 
+    /// <summary>
+    ///     Dispose the current ProgressRun and clear the reference.
+    ///     Called at the start of every lifecycle workflow.
+    /// </summary>
     internal void ShutdownCurrentProgressAndScene()
     {
         _progressRun?.Dispose();
         _progressRun = null;
     }
 
+    /// <summary>Enqueue an action on the system deferred queue.</summary>
     internal void EnqueueSystemDeferred(Action action) => Runtime.EnqueueSystemDeferred(action);
 
+    /// <summary>
+    ///     Enqueue a system deferred action with a tracked persistence request
+    ///     counter. The counter is incremented before execution and decremented
+    ///     after (on both success and failure paths).
+    /// </summary>
     internal void EnqueueTrackedSystemDeferred(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -154,6 +223,13 @@ public sealed class SndContext : ISndContext
         });
     }
 
+    /// <summary>
+    ///     Load a save game from a snapshot or continue an existing save.
+    ///     Reads the session topology to determine the foreground level,
+    ///     restores the payload into the current directory, creates a
+    ///     ProgressRun, and marks the active save slot.
+    /// </summary>
+    /// <returns>The recovered <see cref="ProgressRun" />.</returns>
     internal ProgressRun LoadOrContinueStrict(string saveId)
     {
         return RunWorkflow(() =>
@@ -182,6 +258,11 @@ public sealed class SndContext : ISndContext
         });
     }
 
+    /// <summary>
+    ///     Execute the initial-save workflow: load the initial level payload
+    ///     from initial storage, create a ProgressRun, and clear the
+    ///     active save slot.
+    /// </summary>
     internal void ExecuteLoadInitialSaveNow()
     {
         RunWorkflow(() =>
@@ -202,6 +283,11 @@ public sealed class SndContext : ISndContext
         });
     }
 
+    /// <summary>
+    ///     Execute the main-menu entry workflow: load the entry config JSON
+    ///     and auto-initialize entities into a fresh foreground session
+    ///     at the main menu level.
+    /// </summary>
     internal void ExecuteLoadMainMenuEntrySaveNow()
     {
         RunWorkflow(() =>

@@ -6,6 +6,11 @@ using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Save.Serialization;
 
+/// <summary>
+///     Serializes and deserializes <see cref="IBlackboard" /> instances
+///     through the <see cref="DataSourceConverterRegistry" /> using
+///     typed data-aware converters.
+/// </summary>
 internal sealed class BlackboardSerializer
 {
     private readonly DataSourceConverterRegistry _registry;

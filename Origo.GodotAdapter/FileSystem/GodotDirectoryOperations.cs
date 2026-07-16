@@ -7,6 +7,10 @@ using Origo.Core.Utility;
 
 namespace Origo.GodotAdapter.FileSystem;
 
+/// <summary>
+///     Static helper wrapping Godot <c>DirAccess</c> for directory
+///     existence checks, creation, enumeration, and deletion.
+/// </summary>
 internal static class GodotDirectoryOperations
 {
     public static bool Exists(string path) => DirAccess.DirExistsAbsolute(path);

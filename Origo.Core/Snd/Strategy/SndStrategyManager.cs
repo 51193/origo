@@ -7,6 +7,17 @@ using Origo.Core.Logging;
 
 namespace Origo.Core.Snd.Strategy;
 
+/// <summary>
+///     Per-entity passive strategy manager. Stores strategies acquired from
+///     the <see cref="SndStrategyPool" /> in priority-sorted order and
+///     dispatches lifecycle hooks (AfterSpawn, AfterLoad, BeforeSave,
+///     BeforeQuit, BeforeDead) via snapshot iteration.
+///     <para>
+///         Recovery is all-or-nothing: if any strategy fails validation
+///         during <c>RecoverStrategiesOnly</c>, all previously recovered
+///         strategies are released before the exception propagates.
+///     </para>
+/// </summary>
 internal sealed class SndStrategyManager
 {
     private const string _logTag = nameof(SndStrategyManager);

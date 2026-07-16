@@ -3,6 +3,7 @@ using Origo.Core.Abstractions.Snd;
 
 namespace Origo.Core.Snd.Companions;
 
+/// <summary>Console command submission and output subscription for <see cref="SndContext" />.</summary>
 internal sealed class SndContextConsoleAccess(SndContext owner) : ISndConsoleAccess
 {
     public bool TrySubmitConsoleCommand(string commandLine)

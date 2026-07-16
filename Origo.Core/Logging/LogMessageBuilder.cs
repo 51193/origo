@@ -6,6 +6,10 @@ using System.Text;
 
 namespace Origo.Core.Logging;
 
+/// <summary>
+///     Fluent builder for structured log messages with optional elapsed
+///     time and contextual key-value pairs.
+/// </summary>
 public sealed class LogMessageBuilder
 {
     private readonly Dictionary<string, object?> _context = new(StringComparer.Ordinal);

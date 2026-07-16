@@ -2,6 +2,10 @@ using Godot;
 
 namespace Origo.GodotAdapter.Console;
 
+/// <summary>
+///     Projects a world-space position to screen-space coordinates
+///     using a Godot Camera3D transform and projection matrix.
+/// </summary>
 internal static class ProjectionHelper
 {
     public static Vector3? ProjectWorldToScreen(

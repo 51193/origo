@@ -8,6 +8,7 @@ using Origo.GodotAdapter.Snd;
 
 namespace Origo.GodotAdapter.Console;
 
+/// <summary><c>camera_view</c> — show screen-space coordinates and depth of visible entity nodes.</summary>
 internal sealed class CameraViewCommandHandler(OrigoRuntime runtime) : CommandHandlerBase(runtime)
 {
     public override string Name => "camera_view";

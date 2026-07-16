@@ -6,6 +6,10 @@ using Origo.Core.Runtime.Lifecycle;
 
 namespace Origo.Core.Snd.Companions;
 
+/// <summary>
+///     State machine context that composes system, progress, and foreground
+///     session blackboards and scene access for <see cref="SndContext" />.
+/// </summary>
 internal sealed class SndContextStateMachineContext(SndContext owner) : IStateMachineContext
 {
     public IBlackboard SystemBlackboard => owner._systemRun.SystemBlackboard;

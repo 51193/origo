@@ -9,8 +9,9 @@ public enum LogLevel
 }
 
 /// <summary>
-///     提供与具体引擎无关的基础日志接口。
-///     由宿主环境（例如 Godot、控制台应用等）提供实际实现。
+///     Engine-agnostic base logging interface.
+///     The host environment (e.g., Godot, console application) provides
+///     the actual implementation.
 /// </summary>
 public interface ILogger
 {
@@ -18,9 +19,10 @@ public interface ILogger
 }
 
 /// <summary>
-///     带类型感知的日志接口。标签自动取自 <typeparamref name="TCategory"/> 的类型名，
-///     无需调用方手动指定 tag 字符串。
-///     同时继承 <see cref="ILogger"/> 以兼容需要手动 tag 的场景。
+///     Type-aware logging interface. The tag is automatically derived from
+///     the type name of <typeparamref name="TCategory"/>, eliminating manual
+///     tag string specification by callers. Also inherits <see cref="ILogger"/>
+///     for compatibility with manual-tag scenarios.
 /// </summary>
 public interface ILogger<out TCategory> : ILogger
 {

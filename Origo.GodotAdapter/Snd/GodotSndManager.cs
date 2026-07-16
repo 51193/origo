@@ -15,6 +15,12 @@ using Origo.Core.Snd.Strategy;
 
 namespace Origo.GodotAdapter.Snd;
 
+/// <summary>
+///     Godot engine adapter scene host. Manages <see cref="GodotSndEntity" />
+///     instances in a Godot scene tree and implements
+///     <see cref="ISndSceneHost" />, <see cref="IObserverTopologyHost" />,
+///     and <see cref="IOwningSessionBindable" />.
+/// </summary>
 [GlobalClass]
 public partial class GodotSndManager
     : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable

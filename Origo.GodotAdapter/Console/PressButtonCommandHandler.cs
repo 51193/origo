@@ -7,6 +7,7 @@ using Origo.GodotAdapter;
 
 namespace Origo.GodotAdapter.Console;
 
+/// <summary><c>press_button &lt;entity&gt; &lt;path&gt;</c> — simulate pressing a Button node under an entity.</summary>
 internal sealed class PressButtonCommandHandler(OrigoRuntime runtime) : CommandHandlerBase(runtime)
 {
     public override string Name => "press_button";

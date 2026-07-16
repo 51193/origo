@@ -3,6 +3,7 @@ using Origo.Core.Abstractions.Console;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
+/// <summary><c>snd_count</c> — show the current SND entity count.</summary>
 internal sealed class SndCountCommandHandler : ConsoleCommandHandlerBase
 {
     private readonly OrigoRuntime _runtime;

@@ -2,6 +2,10 @@ using System;
 
 namespace Origo.Core.Utility;
 
+/// <summary>
+///     Platform-agnostic path utilities: normalization, combining with
+///     traversal guard, suffix extraction, and parent directory lookup.
+/// </summary>
 public static class PathUtility
 {
     public static string NormalizeDirectoryPath(string path)

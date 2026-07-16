@@ -1,7 +1,8 @@
 namespace Origo.Core.Abstractions.Entity;
 
 /// <summary>
-///     策略管理能力，从 <see cref="ISndEntity" /> 中拆分，遵循接口隔离原则。
+///     Strategy management capability extracted from <see cref="ISndEntity" />,
+///     following the interface segregation principle.
 /// </summary>
 public interface ISndStrategyAccess
 {

@@ -1,7 +1,7 @@
 namespace Origo.Core.Abstractions.Node;
 
 /// <summary>
-///     按资源标识创建节点实例并挂载到宿主。
+///     Create a node instance by resource identifier and attach it to the host.
 /// </summary>
 public interface INodeFactory
 {

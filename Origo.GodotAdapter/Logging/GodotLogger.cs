@@ -3,6 +3,11 @@ using Origo.Core.Abstractions.Logging;
 
 namespace Origo.GodotAdapter.Logging;
 
+/// <summary>
+///     Godot engine adapter for <see cref="ILogger" />. Accepts a handler
+///     delegate and a minimum log level. Messages below the minimum level
+///     are silently dropped.
+/// </summary>
 public sealed class GodotLogger : ILogger
 {
     private readonly Action<LogLevel, string, string> _handler;

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Origo.Core.Grid;
 
+/// <summary>
+///     A* pathfinding on a square grid with 4-directional neighbors.
+/// </summary>
 public static class Astar
 {
     private static readonly (int X, int Z)[] _neighbors = [(1, 0), (-1, 0), (0, 1), (0, -1)];

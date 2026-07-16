@@ -4,22 +4,30 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Abstractions.Scene;
 
 /// <summary>
-///     抽象 SND 场景访问能力，供 Core 层编排存读档流程。
-///     仅负责数据转换（元数据列表的序列化/恢复），不触发策略生命周期钩子。
-///     钩子触发由上层（<see cref="Origo.Core.Snd.Scene.SndEntityFactory" /> / <see cref="Origo.Core.Runtime.Lifecycle.SessionRun" />）在调用前后统一编排。
+///     Abstract SND scene access capability for Core-layer save/load
+///     orchestration. Only responsible for data transformation
+///     (serialization/restoration of metadata lists); does not trigger
+///     strategy lifecycle hooks. Hook triggering is orchestrated by
+///     upper layers
+///     (<see cref="Origo.Core.Snd.Scene.SndEntityFactory" /> /
+///     <see cref="Origo.Core.Runtime.Lifecycle.SessionRun" />)
+///     before and after calls.
 /// </summary>
 public interface ISndSceneAccess
 {
     /// <summary>
-    ///     收集当前场景中所有实体的元数据列表。
-    ///     不触发 BeforeSave 钩子——钩子应由调用方在调用此方法前批量触发。
+    ///     Collect a metadata list of all entities in the current scene.
+    ///     Does not trigger BeforeSave hooks — hooks should be triggered
+    ///     in batch by the caller before calling this method.
     /// </summary>
     IReadOnlyList<SndMetaData> BuildMetaList();
 
     /// <summary>
-    ///     按元数据列表恢复所有实体（数据、节点、策略）。
-    ///     不触发 AfterLoad 钩子——钩子应由调用方在调用此方法后批量触发。
-    ///     不自动清除已有实体——调用方应在调用此方法前自行处理旧实体清理。
+    ///     Restore all entities (data, nodes, strategies) from a metadata list.
+    ///     Does not trigger AfterLoad hooks — hooks should be triggered
+    ///     in batch by the caller after calling this method.
+    ///     Does not automatically clear existing entities — the caller
+    ///     should handle old entity cleanup before calling this method.
     /// </summary>
     void RecoverFromMetaList(IEnumerable<SndMetaData> metaList);
 }

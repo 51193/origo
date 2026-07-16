@@ -7,6 +7,11 @@ using Origo.Core.Save.Storage;
 
 namespace Origo.Core.Snd;
 
+/// <summary>
+///     Save-archive-scoped file access companion for <see cref="SndContext" />.
+///     Resolves relative paths into the current save's <c>extra/</c> subdirectory
+///     and rejects path traversal attempts.
+/// </summary>
 internal sealed class SndContextArchiveFileAccess(
     IDataSourceIoGateway dataSourceIo,
     IFileMetaAccess metaAccess,

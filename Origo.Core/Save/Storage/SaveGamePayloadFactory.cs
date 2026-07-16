@@ -8,6 +8,11 @@ using Origo.Core.Save.Serialization;
 
 namespace Origo.Core.Save.Storage;
 
+/// <summary>
+///     Constructs <see cref="SaveGamePayload" /> from progress/session blackboards,
+///     SND scene metadata, and state machine nodes. Validates topology invariants
+///     before serialization.
+/// </summary>
 internal sealed class SaveGamePayloadFactory
 {
     private readonly BlackboardSerializer _blackboardSerializer;

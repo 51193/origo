@@ -9,6 +9,7 @@ using Origo.GodotAdapter;
 
 namespace Origo.GodotAdapter.Console;
 
+/// <summary><c>tree_debug &lt;entity&gt;</c> — print the full Godot node tree of an entity.</summary>
 internal sealed class TreeDebugCommandHandler(OrigoRuntime runtime) : CommandHandlerBase(runtime)
 {
     public override string Name => "tree_debug";

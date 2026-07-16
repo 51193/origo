@@ -5,6 +5,12 @@ using Origo.GodotAdapter.Console;
 
 namespace Origo.GodotAdapter.Bootstrap;
 
+/// <summary>
+///     Bootstrap partial for <see cref="OrigoDefaultEntry" />:
+///     registers Godot-specific console command handlers (tree_debug,
+///     press_button, camera_view) after the runtime and SndContext
+///     are initialized.
+/// </summary>
 public partial class OrigoDefaultEntry
 {
     public override void _Ready()

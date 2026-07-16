@@ -5,6 +5,7 @@ using Origo.Core.Snd.Scene;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
+/// <summary><c>spawn &lt;name&gt; &lt;template&gt;</c> — spawn an SND entity from a template.</summary>
 internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
 {
     private readonly OrigoRuntime _runtime;

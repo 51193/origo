@@ -6,6 +6,10 @@ using Origo.Core.Logging;
 
 namespace Origo.Core.Save.Storage;
 
+/// <summary>
+///     Reads save game payloads from the <c>current/</c> directory or a save
+///     snapshot. Detects write-in-progress markers and validates required files.
+/// </summary>
 internal static class SavePayloadReader
 {
     public static SaveGamePayload ReadFromCurrent(

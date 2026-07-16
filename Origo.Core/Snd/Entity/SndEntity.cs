@@ -10,6 +10,20 @@ using Origo.Core.Snd.Strategy;
 
 namespace Origo.Core.Snd.Entity;
 
+/// <summary>
+///     Entity aggregate root in the SND model. Composes four internal managers
+///     (data, node, passive strategy, active strategy) and holds a reference
+///     to the per-scene-host <see cref="ObserverTopology" /> for observer
+///     bindings.
+///     <para>
+///         Implements three interfaces at different visibility levels:
+///         <see cref="ISndEntity" /> (business-facing),
+///         <see cref="IEntityLifecycle" /> (framework-facing lifecycle hooks,
+///         explicit implementation), and
+///         <see cref="ISndEntityRawSubscription" /> (internal raw data
+///         subscription channel for ObserverTopology, explicit implementation).
+///     </para>
+/// </summary>
 public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubscription
 {
     private const string _logTag = nameof(SndEntity);
@@ -22,7 +36,14 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     private ISessionRun? _owningSession;
     private readonly SndStrategyManager _strategyManager;
 
+    /// <summary>Bind the owning session after entity creation.</summary>
     internal void BindSession(ISessionRun session) => _owningSession = session;
+
+    /// <summary>
+    ///     Constructs the entity and creates all four internal managers.
+    ///     The <paramref name="observerTopology" /> is injected by the scene
+    ///     host and shared across entities within the same scene.
+    /// </summary>
     internal SndEntity(
         INodeFactory nodeFactory,
         SndStrategyPool strategyPool,
@@ -49,6 +70,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _activeStrategyManager = new ActiveStrategyManager(strategyPool);
     }
 
+    /// <summary>Unique stable name of this entity within its session.</summary>
     public string Name { get; internal set; } = string.Empty;
 
     public void SetData<T>(string name, T value) => _dataManager.SetData(name, value);
@@ -134,7 +156,15 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         return _activeStrategyManager.Invoke(this, _context, strategyIndex, input);
     }
 
+    /// <summary>
+    ///     Whether this entity has been marked for removal at the end of
+    ///     the current frame.
+    /// </summary>
     public bool IsPendingKill { get; internal set; }
+    /// <summary>
+    ///     The session this entity belongs to. Throws if accessed before
+    ///     <see cref="BindSession" /> has been called.
+    /// </summary>
     public ISessionRun OwningSession => _owningSession ?? throw new InvalidOperationException("Entity is not bound to a session. OwningSession must be set before the entity is used.");
 
     public void Process(double delta) => _strategyManager.Process(this, delta, _context);
@@ -209,6 +239,10 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         };
     }
 
+    /// <summary>
+    ///     Full spawn sequence: recover data/strategies/nodes from metadata,
+    ///     then fire AfterSpawn hooks. Used by <see cref="SndEntityFactory" />.
+    /// </summary>
     public void SpawnSingle(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
@@ -216,6 +250,10 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         ((IEntityLifecycle)this).FireAfterSpawnHooks();
     }
 
+    /// <summary>
+    ///     Full load sequence: recover data/strategies/nodes from metadata,
+    ///     then fire AfterLoad hooks.
+    /// </summary>
     public void LoadSingle(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
@@ -223,6 +261,10 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         ((IEntityLifecycle)this).FireAfterLoadHooks();
     }
 
+    /// <summary>
+    ///     Full quit teardown: FireBeforeQuit → observer unbind →
+    ///     release strategies → teardown nodes/data.
+    /// </summary>
     public void QuitSingle()
     {
         ((IEntityLifecycle)this).FireBeforeQuitHooks();
@@ -232,6 +274,10 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity quit."));
     }
 
+    /// <summary>
+    ///     Full death teardown: FireBeforeDead → observer unbind →
+    ///     release strategies → teardown nodes/data.
+    /// </summary>
     public void DeadSingle()
     {
         ((IEntityLifecycle)this).FireBeforeDeadHooks();
@@ -243,6 +289,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     private void TeardownObserverBindingsForDeath() => _observerTopology.TeardownAllBindingsFor((ISndEntity)this);
 
+    /// <summary>Fire BeforeSave hooks, then build metadata snapshot.</summary>
     public SndMetaData SaveSingle()
     {
         ((IEntityLifecycle)this).FireBeforeSaveHooks();

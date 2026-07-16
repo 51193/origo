@@ -7,6 +7,11 @@ using Origo.Core.DataSource;
 
 namespace Origo.Core.Save.Storage;
 
+/// <summary>
+///     Writes save game payloads to the <c>current/</c> directory with a
+///     write-in-progress marker for atomicity. Also provides payload content
+///     hashing for idempotent write detection.
+/// </summary>
 internal static class SavePayloadWriter
 {
     public static void WriteProgressOnlyToCurrent(
@@ -149,9 +154,10 @@ internal static class SavePayloadWriter
     }
 
     /// <summary>
-    ///     计算 SaveGamePayload 的内容 SHA-256 摘要（十六进制小写）。
-    ///     将各节点树的哈希、CustomMeta 中的键值对、以及关卡顺序组合后做最终哈希。
-    ///     用于写入幂等性去重判断。
+    ///     Compute a SHA-256 content digest (lowercase hex) for a
+    ///     <see cref="SaveGamePayload" />. Combines node tree hashes,
+    ///     CustomMeta key-value pairs, and ordered level payloads.
+    ///     Used for write idempotency deduplication.
     /// </summary>
     internal static string ComputePayloadHash(SaveGamePayload payload)
     {

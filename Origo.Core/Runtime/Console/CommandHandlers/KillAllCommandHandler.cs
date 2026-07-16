@@ -5,6 +5,7 @@ using Origo.Core.Abstractions.Entity;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
+/// <summary><c>kill_all</c> — mark all entities in the current scene for deferred destruction.</summary>
 internal sealed class KillAllCommandHandler : ConsoleCommandHandlerBase
 {
     private readonly OrigoRuntime _runtime;

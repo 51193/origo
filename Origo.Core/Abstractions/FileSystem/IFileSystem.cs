@@ -3,8 +3,10 @@ using System.Collections.Generic;
 namespace Origo.Core.Abstractions.FileSystem;
 
 /// <summary>
-///     抽象文件系统访问接口，屏蔽具体平台与引擎 API。
-///     路径操作（拼接、取父目录等）也由实现负责，以正确处理引擎虚拟路径（如 Godot 的 res://、user://）。
+///     Abstract file system access interface that abstracts away platform-
+///     and engine-specific APIs. Path operations (combining, parent directory
+///     lookup, etc.) are also handled by the implementation to correctly
+///     process engine virtual paths (e.g., Godot's res://, user://).
 /// </summary>
 public interface IFileSystem
 {
@@ -23,33 +25,39 @@ public interface IFileSystem
     void CreateDirectory(string directoryPath);
 
     /// <summary>
-    ///     删除指定路径的文件。若不存在则忽略。
+    ///     Delete the file at the specified path. Ignored if the file
+    ///     does not exist.
     /// </summary>
     void Delete(string path);
 
     /// <summary>
-    ///     将基路径和相对路径拼接在一起，使用平台正确的分隔符。
+    ///     Combine a base path and a relative path using platform-appropriate
+    ///     separators.
     /// </summary>
     string CombinePath(string basePath, string relativePath);
 
     /// <summary>
-    ///     获取指定路径的父目录路径。
+    ///     Get the parent directory path of the specified path.
     /// </summary>
     string GetParentDirectory(string path);
 
     /// <summary>
-    ///     枚举指定目录下的直接子目录，返回完整路径列表。
+    ///     Enumerate immediate subdirectories under the specified directory,
+    ///     returning a full path list.
     /// </summary>
     IEnumerable<string> EnumerateDirectories(string directoryPath);
 
     /// <summary>
-    ///     原子地将目录或文件从 <paramref name="sourcePath" /> 重命名/移动到 <paramref name="destinationPath" />。
-    ///     若目标已存在，行为由实现决定（可覆盖或抛异常）。
+    ///     Atomically rename/move a directory or file from
+    ///     <paramref name="sourcePath" /> to <paramref name="destinationPath" />.
+    ///     If the destination already exists, behavior is
+    ///     implementation-defined (may overwrite or throw).
     /// </summary>
     void Rename(string sourcePath, string destinationPath);
 
     /// <summary>
-    ///     递归删除指定目录及其全部内容。若目录不存在则忽略。
+    ///     Recursively delete the specified directory and all its contents.
+    ///     Ignored if the directory does not exist.
     /// </summary>
     void DeleteDirectory(string directoryPath);
 }

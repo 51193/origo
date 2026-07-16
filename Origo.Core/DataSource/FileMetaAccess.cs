@@ -4,6 +4,11 @@ using Origo.Core.Abstractions.FileSystem;
 
 namespace Origo.Core.DataSource;
 
+/// <summary>
+///     Adapts <see cref="IFileSystem" /> to <see cref="IFileMetaAccess" />
+///     for Core-layer file metadata operations (existence, enumeration,
+///     creation, deletion, copy, rename).
+/// </summary>
 internal sealed class FileMetaAccess(IFileSystem fileSystem) : IFileMetaAccess
 {
     private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
