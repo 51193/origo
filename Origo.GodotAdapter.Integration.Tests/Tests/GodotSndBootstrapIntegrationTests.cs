@@ -1,11 +1,12 @@
 using System;
-using Origo.GodotAdapter.Bootstrap;
+using Origo.Core.Abstractions.Logging;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 using Origo.GodotAdapter.Integration.Tests.TestSupport;
+using Origo.GodotAdapter.Snd;
 
 namespace Origo.GodotAdapter.Integration.Tests;
 
-public class GodotSndBootstrapIntegrationTests
+public class GodotSndManagerInitializationTests
 {
     private static IntegrationTestHarness CreateHarness()
     {
@@ -15,41 +16,44 @@ public class GodotSndBootstrapIntegrationTests
         return h;
     }
 
-    [IntegrationTest(Description = "BindRuntimeAndContext with null manager throws ArgumentNullException")]
-    public void BindRuntimeAndContext_NullManager_Throws()
+    [IntegrationTest(Description = "BindRuntimeDependencies with null world throws ArgumentNullException")]
+    public void BindRuntimeDependencies_NullWorld_Throws()
     {
         using var harness = CreateHarness();
         IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => GodotSndBootstrap.BindRuntimeAndContext(
-                null!, harness.SndWorld, harness.Logger, harness.SndManager.Context!),
-            "null manager should throw");
-    }
-
-    [IntegrationTest(Description = "BindRuntimeAndContext with null world throws ArgumentNullException")]
-    public void BindRuntimeAndContext_NullWorld_Throws()
-    {
-        using var harness = new IntegrationTestHarness();
-        IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => GodotSndBootstrap.BindRuntimeAndContext(
-                harness.SndManager, null!, harness.Logger, null!),
+            () => new GodotSndManager().BindRuntimeDependencies(null!, harness.Logger),
             "null world should throw");
     }
 
-    [IntegrationTest(Description = "BindRuntimeAndContext with valid args does not throw")]
+    [IntegrationTest(Description = "BindRuntimeDependencies with null logger throws ArgumentNullException")]
+    public void BindRuntimeDependencies_NullLogger_Throws()
+    {
+        using var harness = CreateHarness();
+        IntegrationTestRunner.AssertThrows<ArgumentNullException>(
+            () => new GodotSndManager().BindRuntimeDependencies(harness.SndWorld, null!),
+            "null logger should throw");
+    }
+
+    [IntegrationTest(Description = "BindContext with null context throws ArgumentNullException")]
+    public void BindContext_NullContext_Throws()
+    {
+        using var harness = CreateHarness();
+        var manager = new GodotSndManager();
+        manager.BindRuntimeDependencies(harness.SndWorld, harness.Logger);
+        IntegrationTestRunner.AssertThrows<ArgumentNullException>(
+            () => manager.BindContext(null!),
+            "null context should throw");
+    }
+
+    [IntegrationTest(Description = "Chained BindRuntimeDependencies + BindContext with valid args does not throw")]
     public void BindRuntimeAndContext_ValidArgs_DoesNotThrow()
     {
-        using var harness = new IntegrationTestHarness();
-        harness.BindRuntimeDependencies();
-        harness.BindContext();
+        using var harness = CreateHarness();
 
-        // Use a fresh manager with no prior bindings.
-        var freshManager = new Origo.GodotAdapter.Snd.GodotSndManager();
-        GodotSndBootstrap.BindRuntimeAndContext(
-            freshManager,
-            harness.SndWorld,
-            harness.Logger,
-            harness.SndManager.Context!);
+        var freshManager = new GodotSndManager();
+        freshManager.BindRuntimeDependencies(harness.SndWorld, harness.Logger);
+        freshManager.BindContext(harness.SndManager.Context!);
 
-        IntegrationTestRunner.Assert(true, "BindRuntimeAndContext should not throw with valid args.");
+        IntegrationTestRunner.Assert(true, "chained BindRuntimeDependencies + BindContext should not throw with valid args.");
     }
 }

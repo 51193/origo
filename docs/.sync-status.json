@@ -965,8 +965,8 @@
     "Origo.GodotAdapter.Integration.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.GodotAdapter.Integration.Tests/README.zh.md",
@@ -982,17 +982,6 @@
       "files": {
         "zh": "Origo.GodotAdapter.Tests/Architecture.zh.md",
         "en": "Origo.GodotAdapter.Tests/Architecture.en.md"
-      }
-    },
-    "Origo.GodotAdapter.Tests/Bootstrap": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.GodotAdapter.Tests/Bootstrap.zh.md",
-        "en": "Origo.GodotAdapter.Tests/Bootstrap.en.md"
       }
     },
     "Origo.GodotAdapter.Tests/Console": {
@@ -1031,8 +1020,8 @@
     "Origo.GodotAdapter.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.GodotAdapter.Tests/README.zh.md",
@@ -1064,8 +1053,8 @@
     "Origo.GodotAdapter/Bootstrap/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.GodotAdapter/Bootstrap/README.zh.md",
@@ -1262,8 +1251,8 @@
     "usage/architecture-overview": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "usage/architecture-overview.zh.md",

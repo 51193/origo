@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -40,7 +40,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 7 | `GodotFileOperations` (ReadAllText/WriteAllText/Copy/Delete guards and correctness) |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 7 | `GodotDirectoryOperations` (Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive) |
 | GodotNodeHandleIntegrationTests | `Tests/GodotNodeHandleIntegrationTests.cs` | 7 | `GodotNodeHandle` (Name cache, Free, SetVisible for CanvasItem/Node3D, UnsafeGetNode) |
-| GodotSndBootstrapIntegrationTests | `Tests/GodotSndBootstrapIntegrationTests.cs` | 3 | `GodotSndBootstrap` (null guards, normal binding flow) |
+| GodotSndManagerInitializationTests | `Tests/GodotSndBootstrapIntegrationTests.cs` | 4 | `GodotSndManager.BindRuntimeDependencies` / `BindContext` (null guards, normal chained binding flow) |
 | GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 8 | `GodotSndEntity` (construction null guards, SetData/GetData/TryGetData, type safety) |
 | GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager` (BindRuntimeDeps double bind guard, BindContext order guard, null guards, ProcessAll empty list and TickCount) |
 | GodotSndManagerCreationIntegrationTests | `Tests/GodotSndManagerCreationIntegrationTests.cs` | 5 | `GodotSndManager` (CreateEntity/RemoveEntity/BuildMetaList/RequestKillEntity/GetEntities) |
@@ -92,7 +92,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── GodotFileOperationsIntegrationTests.cs # File operation guard tests
 │   ├── GodotDirectoryOperationsIntegrationTests.cs # Directory operation tests
 │   ├── GodotNodeHandleIntegrationTests.cs # Node handle tests
-│   ├── GodotSndBootstrapIntegrationTests.cs # Bootstrap binding tests
+│   ├── GodotSndBootstrapIntegrationTests.cs # BindRuntimeDependencies/BindContext initialization tests
 │   ├── GodotSndEntityIntegrationTests.cs # SND Entity tests
 │   ├── GodotSndManagerIntegrationTests.cs # SND Manager tests
 │   ├── GodotSndManagerCreationIntegrationTests.cs # Entity create/remove tests

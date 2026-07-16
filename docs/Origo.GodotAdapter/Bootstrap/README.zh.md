@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Bootstrap
 
@@ -16,7 +16,6 @@ Godot 适配层的启动与编排。负责创建完整的运行时栈（`OrigoRu
 | `OrigoAutoHost.cs` | Godot Node，创建运行时：GodotFileSystem + TypeStringMapping + ConverterRegistry + PersistentBlackboard + ConsoleInput/Output。`_Process` 委托给 `IOrigoFrameDriver.DriveFrame(delta)` |
 | `OrigoDefaultEntry.cs` | 继承 OrigoAutoHost，持有启动配置属性（`AutoDiscoverStrategies`、`_godotSkipPrefixes`（`private static readonly` 字段）、`SceneAliasMapPath` 等） |
 | `OrigoDefaultEntry.Bootstrap.cs` | partial class，`_Ready` 实现：注册命令处理器 → 创建 SndContext → 调用 `Bootstrap()` |
-| `GodotSndBootstrap.cs` | 工具方法：将 Runtime 依赖和 SessionContext 分步绑定到 GodotSndManager |
 
 ## 启动流程
 

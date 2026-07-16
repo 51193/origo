@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter.Tests
 
@@ -32,7 +32,6 @@ Origo.GodotAdapter 的测试验证 Godot 4 适配层的正确性。
 | 能力 | 文档 | 文件数 | 测试数 | 验证重点 |
 |------|------|-------|-------|---------|
 | 架构守卫 | [Architecture.md](Architecture.zh.md) | 1 | 3 | SndContext 公共角色接口完整性、会话创建/销毁、CommandHandlerBase 公共可见性 |
-| 启动编排 | [Bootstrap.md](Bootstrap.zh.md) | 1 | 2 | GodotSndBootstrap.BindRuntimeAndContext 守卫与四参数契约 |
 | 控制台 | [Console.md](Console.zh.md) | 4 | 22 | press_button/camera_view 命令、CommandHandlerBase 参数校验与守卫、ProjectionHelper 世界→屏幕投影 |
 | 文件系统 | [FileSystem.md](FileSystem.zh.md) | 1 | 3 | GodotFileSystem 的 res:// / user:// 路径处理（委托给 PathUtility） |
 | 日志 | [Logging.md](Logging.zh.md) | 1 | 9 | GodotLogger 委托注入、null handler 安全与级别过滤 |

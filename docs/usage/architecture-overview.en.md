@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Overview
 
@@ -161,7 +161,7 @@ Additionally, `ISessionManager` and `ISessionRun` live in the Abstractions layer
 | Responsibility | Description | Example |
 |---------------|-------------|---------|
 | **Capability Provision** | Encapsulate engine-native capabilities as implementations of Core abstraction interfaces | `GodotFileSystem : IFileSystem`, `GodotLogger : ILogger`, `GodotNodeHandle : INodeHandle`, `GodotPackedSceneNodeFactory : INodeFactory` |
-| **Bridging** | Inject adapter-layer implementations into the Core layer during startup to complete assembly | `OrigoAutoHost` (creates Runtime + SndManager), `GodotSndBootstrap` (dependency binding), `OrigoDefaultEntry` (default entry orchestration) |
+| **Bridging** | Inject adapter-layer implementations into the Core layer during startup to complete assembly | `OrigoAutoHost` (creates Runtime + SndManager), `OrigoDefaultEntry` (default entry orchestration) |
 
 ### Adapter Layer Forbidden Actions
 

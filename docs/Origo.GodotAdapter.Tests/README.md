@@ -4,7 +4,6 @@
 
 ## 中文
 - [Architecture](Architecture.zh.md)
-- [Bootstrap](Bootstrap.zh.md)
 - [Console](Console.zh.md)
 - [FileSystem](FileSystem.zh.md)
 - [Logging](Logging.zh.md)
@@ -14,7 +13,6 @@
 
 ## English
 - [Architecture](Architecture.en.md)
-- [Bootstrap](Bootstrap.en.md)
 - [Console](Console.en.md)
 - [FileSystem](FileSystem.en.md)
 - [Logging](Logging.en.md)

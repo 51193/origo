@@ -63,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. This was a test-only convenience wrapper that exposed production code solely for test convenience (violates AGENTS.md §1.2). Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
 - `NullSndContext` relocated from production code to test project. `NullSndContextExtendedTests.cs` and `ContextBoundaryTests.cs` deleted.
 - Unused method parameters removed from 8 methods across production code.
 - `SessionManager.ClearBackground()` — unused internal method removed.

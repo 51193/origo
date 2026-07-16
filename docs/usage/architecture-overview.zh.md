@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构总览
 
@@ -161,7 +161,7 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 通过 10 个伴生属
 | 职责 | 说明 | 示例 |
 |------|------|------|
 | **能力提供** | 将引擎原生能力封装为 Core 层抽象接口的实现 | `GodotFileSystem : IFileSystem`、`GodotLogger : ILogger`、`GodotNodeHandle : INodeHandle`、`GodotPackedSceneNodeFactory : INodeFactory` |
-| **桥接** | 在启动期将适配层实现注入 Core 层，完成装配 | `OrigoAutoHost`（创建 Runtime + SndManager）、`GodotSndBootstrap`（依赖绑定）、`OrigoDefaultEntry`（默认入口编排） |
+| **桥接** | 在启动期将适配层实现注入 Core 层，完成装配 | `OrigoAutoHost`（创建 Runtime + SndManager）、`OrigoDefaultEntry`（默认入口编排） |
 
 ### 适配层禁止事项
 
