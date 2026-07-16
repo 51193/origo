@@ -7,8 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="Origo.Core.Tests"/>
+        <!-- Origo.GodotAdapter needs internal access to ObserverTopology, IObserverTopologyHost,
+             ISndEntityRawSubscription, and SndWorld.StrategyPool. These form a cross-module
+             collaboration chain (per-scene-host observer topology pattern) documented in
+             docs/Origo.Core/Snd/Strategy/ and docs/Origo.Core/Snd/Scene/.
+             This is deliberate co-design, not a backdoor — see AGENTS.md §1.3. -->
         <InternalsVisibleTo Include="Origo.GodotAdapter"/>
+        <!-- Test projects: standard InternalsVisibleTo for unit/integration test access. -->
+        <InternalsVisibleTo Include="Origo.Core.Tests"/>
         <InternalsVisibleTo Include="Origo.GodotAdapter.Tests"/>
         <InternalsVisibleTo Include="Origo.GodotAdapter.Integration.Tests"/>
         <InternalsVisibleTo Include="Origo.SourceGeneration.Tests"/>

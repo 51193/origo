@@ -44,7 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING:** `SndEntity.IsPendingKill` setter is now `internal`. Use `ISessionRun.RequestKillEntity(name)` instead.
 - **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value.
 - **BREAKING:** `GodotTypedDataPerformanceTests` now uses shared `PerfReporter` instead of inline helpers.
-- **Public API XML doc comments translated to English** — all previously Chinese `<summary>` comments on public interfaces in `Origo.Core.Abstractions` and `Origo.Core.Snd`. Remaining subsystems pending translation.
+- **Public API XML doc comments translated to English** — all previously Chinese `<summary>` comments across Origo.Core (all subsystems: Runtime, Save, Snd, DataSource, StateMachine, Blackboard, plus internal classes), Origo.GodotAdapter, Origo.ConsoleBridge, and Origo.SourceGeneration are now in English. Zero Chinese characters remain in production source XML doc comments.
 - `ConsoleBridgeServer` threading model replaced with `async`/`await`, eliminating the 100ms polling loop and making the single-connection model race-free.
 - **Save idempotency now includes `extra/` files in hash computation**, preventing silent skip of changed side-channel files.
 - `SavePayloadWriter` responsibilities split: `.payload.sha` writing moved solely to `SaveStorageFacade`.

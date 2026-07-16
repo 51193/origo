@@ -38,6 +38,28 @@
         "en": "META.en.md"
       }
     },
+    "docs/Origo.ConsoleBridge.Tests/Architecture": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.ConsoleBridge.Tests/Architecture.zh.md",
+        "en": "Origo.ConsoleBridge.Tests/Architecture.en.md"
+      }
+    },
+    "docs/Origo.ConsoleBridge.Tests/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "files": {
+        "zh": "Origo.ConsoleBridge.Tests/README.zh.md",
+        "en": "Origo.ConsoleBridge.Tests/README.en.md"
+      }
+    },
     "docs/Origo.Core.Tests/META-TEST": {
       "status": "synced",
       "revisions": {
@@ -71,6 +93,28 @@
         "en": "Origo.Core.Tests/Testing/Integration/Integration.en.md"
       }
     },
+    "docs/Origo.SourceGeneration.Tests/Benchmarks": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.SourceGeneration.Tests/Benchmarks.zh.md",
+        "en": "Origo.SourceGeneration.Tests/Benchmarks.en.md"
+      }
+    },
+    "docs/Origo.SourceGeneration.Tests/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "files": {
+        "zh": "Origo.SourceGeneration.Tests/README.zh.md",
+        "en": "Origo.SourceGeneration.Tests/README.en.md"
+      }
+    },
     "docs/Origo.TestSupport/README": {
       "status": "synced",
       "revisions": {
@@ -91,17 +135,6 @@
       "files": {
         "zh": "Origo.ConsoleBridge.Tests/ConsoleBridgeServer.zh.md",
         "en": "Origo.ConsoleBridge.Tests/ConsoleBridgeServer.en.md"
-      }
-    },
-    "Origo.ConsoleBridge.Tests/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.ConsoleBridge.Tests/README.zh.md",
-        "en": "Origo.ConsoleBridge.Tests/README.en.md"
       }
     },
     "Origo.ConsoleBridge/README": {
@@ -1103,17 +1136,6 @@
       "files": {
         "zh": "Origo.GodotAdapter/Snd/README.zh.md",
         "en": "Origo.GodotAdapter/Snd/README.en.md"
-      }
-    },
-    "Origo.SourceGeneration.Tests/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.SourceGeneration.Tests/README.zh.md",
-        "en": "Origo.SourceGeneration.Tests/README.en.md"
       }
     },
     "Origo.SourceGeneration/pipeline": {

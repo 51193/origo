@@ -9,8 +9,9 @@ using Origo.Core.StateMachine;
 namespace Origo.Core.Runtime.StateMachine;
 
 /// <summary>
-///     按字符串 key 管理多个 <see cref="StackStateMachine" />，生命周期与策略池引用计数对齐。
-///     依赖 <see cref="IStateMachineContext" /> 而非具体上下文类型，确保前后台可共用同一状态机语义。
+///     Manages multiple <see cref="StackStateMachine" /> instances by string key, with lifecycle aligned
+///     to strategy pool reference counts. Depends on <see cref="IStateMachineContext" /> rather than a
+///     concrete context type, ensuring frontend and backend can share the same state machine semantics.
 /// </summary>
 public sealed class StateMachineContainer : IStateMachineContainer
 {
@@ -27,7 +28,7 @@ public sealed class StateMachineContainer : IStateMachineContainer
         _ctx = ctx;
     }
 
-    /// <summary>按 key 创建或获取一个 <see cref="StackStateMachine" />。若 key 已存在但策略索引不同，则抛异常。</summary>
+    /// <summary>Creates or retrieves a <see cref="StackStateMachine" /> by key. Throws if the key already exists with different strategy indices.</summary>
     public StackStateMachine CreateOrGet(string machineKey, string pushStrategyIndex, string popStrategyIndex)
     {
         if (string.IsNullOrWhiteSpace(machineKey))
@@ -53,11 +54,11 @@ public sealed class StateMachineContainer : IStateMachineContainer
         return sm;
     }
 
-    /// <summary>按 key 查找已有的状态机实例。</summary>
+    /// <summary>Looks up an existing state machine instance by key.</summary>
     public bool TryGet(string machineKey, out StackStateMachine? machine) =>
         _machines.TryGetValue(machineKey, out machine);
 
-    /// <summary>按 key 移除并释放一个状态机。</summary>
+    /// <summary>Removes and disposes a state machine by key.</summary>
     public void Remove(string machineKey)
     {
         if (!_machines.TryGetValue(machineKey, out var sm)) return;
@@ -66,7 +67,7 @@ public sealed class StateMachineContainer : IStateMachineContainer
         _machineOrder.Remove(machineKey);
     }
 
-    /// <summary>释放所有状态机并清空容器。</summary>
+    /// <summary>Disposes all state machines and clears the container.</summary>
     public void Clear()
     {
         foreach (var sm in _machines.Values)
@@ -76,15 +77,15 @@ public sealed class StateMachineContainer : IStateMachineContainer
         _machineOrder.Clear();
     }
 
-    /// <summary>读档恢复后，按插入顺序对所有状态机执行 <see cref="StackStateMachine.FlushAfterLoad" />。</summary>
+    /// <summary>Executes <see cref="StackStateMachine.FlushAfterLoad" /> for all state machines in insertion order after loading.</summary>
     public void FlushAllAfterLoad()
         => ForEachMachine(sm => sm.FlushAfterLoad());
 
-    /// <summary>运行时逐个弹空所有状态机栈。</summary>
+    /// <summary>Pops all state machine stacks at runtime, one by one.</summary>
     public void PopAllRuntime()
         => ForEachMachine(sm => { while (sm.TryPopRuntime(out _)) { } });
 
-    /// <summary>退出流程逐个弹空所有状态机栈。</summary>
+    /// <summary>Pops all state machine stacks during the quit process, one by one.</summary>
     public void PopAllOnQuit()
         => ForEachMachine(sm => { while (sm.TryPopOnQuit(out _)) { } });
 
@@ -94,7 +95,7 @@ public sealed class StateMachineContainer : IStateMachineContainer
             action(sm);
     }
 
-    /// <summary>将所有状态机序列化为 DataSource 节点。</summary>
+    /// <summary>Serializes all state machines to a DataSource node.</summary>
     public DataSourceNode SerializeToNode(DataSourceConverterRegistry registry)
     {
         ArgumentNullException.ThrowIfNull(registry);
@@ -116,7 +117,7 @@ public sealed class StateMachineContainer : IStateMachineContainer
         return registry.Write(payload);
     }
 
-    /// <summary>从 DataSource 节点恢复所有状态机（不触发钩子），配合 <see cref="FlushAllAfterLoad" /> 使用。</summary>
+    /// <summary>Restores all state machines from a DataSource node (without triggering hooks). Use together with <see cref="FlushAllAfterLoad" />.</summary>
     public void DeserializeFromNode(DataSourceNode serializedNode,
         DataSourceConverterRegistry registry)
     {
