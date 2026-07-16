@@ -8,9 +8,10 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Snd;
 
 /// <summary>
-///     管理与 SND 相关的运行时映射：
-///     场景资源别名 → 引擎具体资源路径，以及模板别名 → SndMetaData 模板。
-///     作为实例挂载在 <see cref="SndWorld" /> 上，随运行时生命周期管理。
+///     Manages SND-related runtime mappings:
+///     scene resource aliases → engine-specific resource paths,
+///     and template aliases → SndMetaData templates.
+///     Attached as an instance on <see cref="SndWorld" /> and managed alongside the runtime lifecycle.
 /// </summary>
 internal sealed class SndMappings
 {
@@ -28,8 +29,9 @@ internal sealed class SndMappings
     private SndTemplateResolver? _templateResolver;
 
     /// <summary>
-    ///     从指定文本文件加载场景资源别名映射。
-    ///     文件格式为按行的 <c>key: value</c>，忽略空行与以 # 开头的注释行。
+    ///     Loads scene resource alias mappings from the specified text file.
+    ///     The file format is line-based <c>key: value</c> pairs;
+    ///     blank lines and lines starting with # are ignored.
     /// </summary>
     public void LoadSceneAliases(IDataSourceIoGateway dataSourceIo, string mapFilePath, ILogger logger)
     {
@@ -49,8 +51,9 @@ internal sealed class SndMappings
     }
 
     /// <summary>
-    ///     将节点资源标识解析为具体资源路径。
-    ///     严格模式：若不是显式资源路径（例如 res://、user://）且别名不存在则抛异常。
+    ///     Resolves a node resource identifier into a concrete resource path.
+    ///     Strict mode: if it is not an explicit resource path (e.g., res://, user://)
+    ///     and the alias does not exist, an exception is thrown.
     /// </summary>
     public string ResolveSceneAlias(string id)
     {
@@ -67,7 +70,8 @@ internal sealed class SndMappings
     }
 
     /// <summary>
-    ///     从映射文件加载模板别名到 JSON 文件路径的映射，并配置内部使用的编解码器。
+    ///     Loads the mapping from template aliases to JSON file paths from the map file,
+    ///     and configures the internal codec.
     /// </summary>
     public void LoadTemplates(
         IDataSourceIoGateway dataSourceIo,
@@ -98,7 +102,8 @@ internal sealed class SndMappings
     }
 
     /// <summary>
-    ///     按别名解析并加载一个 SndMetaData 模板（严格模式：缺失/未初始化/解析失败直接抛异常）。
+    ///     Resolves and loads an SndMetaData template by alias
+    ///     (strict mode: throws immediately on missing/uninitialized/resolution failure).
     /// </summary>
     public SndMetaData ResolveTemplate(string alias)
     {
@@ -117,8 +122,9 @@ internal sealed class SndMappings
     }
 
     /// <summary>
-    ///     将 DataSourceNode 数组（可能包含模板引用简写）解析为 SndMetaData 列表。
-    ///     支持两种形式：完整的 SndMetaData 对象，或 { "sndName": "...", "templateKey": "..." } 简写。
+    ///     Resolves a DataSourceNode array (which may contain template reference shorthand)
+    ///     into an SndMetaData list. Supports two forms: full SndMetaData objects,
+    ///     or { "sndName": "...", "templateKey": "..." } shorthand.
     /// </summary>
     public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(
         DataSourceNode root,

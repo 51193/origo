@@ -9,8 +9,9 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Snd.Entity;
 
 /// <summary>
-///     负责管理单个 SND 实体的数据字典与变更通知。
-///     此类型不依赖具体的引擎实体，仅通过 ISndEntity 接口交互。
+///     Manages the data dictionary and change notifications for a single SND entity.
+///     This type does not depend on a specific engine entity and interacts solely
+///     through the ISndEntity interface.
 /// </summary>
 internal sealed class SndDataManager
 {

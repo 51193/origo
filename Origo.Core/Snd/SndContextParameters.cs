@@ -42,29 +42,30 @@ public sealed class SndContextParameters
     public string InitialSaveRootPath { get; }
     public string EntryConfigPath { get; }
 
-    /// <summary>初始存档的关卡 ID。默认值为 <c>"default"</c>，对应 initial/save_000/level_default/ 目录结构。</summary>
+    /// <summary>The level ID for the initial save. Default value is <c>"default"</c>, corresponding to the initial/save_000/level_default/ directory structure.</summary>
     public string InitialLevelId { get; init; } = "default";
 
     public ISaveStorageService? StorageService { get; init; }
     public ISaveStorageService? InitialStorageService { get; init; }
     public ISavePathPolicy? SavePathPolicy { get; init; }
 
-    /// <summary>是否自动发现并注册程序集中的策略类型。</summary>
+    /// <summary>Whether to automatically discover and register strategy types from assemblies.</summary>
     public bool AutoDiscoverStrategies { get; init; } = true;
 
-    /// <summary>策略自动发现时跳过的程序集名前缀。</summary>
+    /// <summary>Assembly name prefixes to skip during automatic strategy discovery.</summary>
     public IReadOnlyList<string>? DiscoverySkipPrefixes { get; init; }
 
-    /// <summary>场景别名映射文件路径。若设置则 Bootstrap 时自动加载。</summary>
+    /// <summary>Scene alias mapping file path. If set, it is automatically loaded during Bootstrap.</summary>
     public string? SceneAliasMapPath { get; init; }
 
-    /// <summary>SND 模板映射文件路径。若设置则 Bootstrap 时自动加载。</summary>
+    /// <summary>SND template mapping file path. If set, it is automatically loaded during Bootstrap.</summary>
     public string? SndTemplateMapPath { get; init; }
 
     /// <summary>
-    ///     Bootstrap 前调用的 Converter 注册回调。
-    ///     二次开发者可在此注册自定义 <see cref="DataSourceConverter{T}" />，
-    ///     确保自定义类型在策略自动发现、模板加载和入口存档加载之前可用。
+    ///     Converter registration callback invoked before Bootstrap.
+    ///     Extension developers can register custom <see cref="DataSourceConverter{T}" /> here,
+    ///     ensuring custom types are available before automatic strategy discovery,
+    ///     template loading, and entry save loading.
     /// </summary>
     public Action<DataSourceConverterRegistry>? ConfigureConverters { get; init; }
 

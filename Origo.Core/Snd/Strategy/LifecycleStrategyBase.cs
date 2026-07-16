@@ -3,7 +3,7 @@ using Origo.Core.Abstractions.Entity;
 namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
-///     挂载在 SND 实体上的生命周期策略基类，提供实体生命周期钩子。
+///     Base class for lifecycle strategies attached to SND entities, providing entity lifecycle hooks.
 /// </summary>
 public abstract class LifecycleStrategyBase : BaseStrategy
 {

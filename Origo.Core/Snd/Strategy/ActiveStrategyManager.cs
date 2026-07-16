@@ -5,10 +5,10 @@ using Origo.Core.Abstractions.Entity;
 namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
-///     管理单个实体上的主动策略集合。
-///     与 <see cref="SndStrategyManager" />（实体被动策略）完全独立，
-///     共享 <see cref="SndStrategyPool" /> 作为策略实例来源。
-///     内部使用 Dictionary 实现 O(1) 索引查找，不参与帧遍历。
+///     Manages the collection of active strategies on a single entity.
+///     Completely independent from <see cref="SndStrategyManager" /> (entity passive strategies),
+///     sharing <see cref="SndStrategyPool" /> as the source of strategy instances.
+///     Internally uses a Dictionary for O(1) index lookup and does not participate in frame traversal.
 /// </summary>
 internal sealed class ActiveStrategyManager
 {
@@ -22,10 +22,11 @@ internal sealed class ActiveStrategyManager
     }
 
     /// <summary>
-    ///     从 metadata 批量恢复主动策略（Spawn/Load 时调用）。
-    ///     遍历全部 indices；遇到非 ActiveStrategyBase 类型视为存档/代码不一致的
-    ///     数据损坏，立即释放该策略并抛 <see cref="InvalidOperationException" />。
-    ///     恢复中途失败时回滚已获取的全部主动策略，不残留半初始化状态。
+    ///     Bulk-recovers active strategies from metadata (called during Spawn/Load).
+    ///     Iterates all indices; encountering a non-ActiveStrategyBase type is treated as data
+    ///     corruption due to save/code inconsistency, immediately releasing the strategy and
+    ///     throwing <see cref="InvalidOperationException" />. On partial failure during recovery,
+    ///     rolls back all acquired active strategies, leaving no half-initialized state.
     /// </summary>
     public void Recover(IEnumerable<string> indices)
     {
@@ -42,7 +43,7 @@ internal sealed class ActiveStrategyManager
         }
     }
 
-    /// <summary>动态添加主动策略。</summary>
+    /// <summary>Dynamically adds an active strategy.</summary>
     public void Add(string index)
     {
         if (string.IsNullOrWhiteSpace(index))
@@ -53,14 +54,14 @@ internal sealed class ActiveStrategyManager
             throw new InvalidOperationException($"Strategy '{index}' is not an ActiveStrategyBase.");
     }
 
-    /// <summary>动态移除主动策略。不存在的 index 静默忽略。</summary>
+    /// <summary>Dynamically removes an active strategy. Non-existent indices are silently ignored.</summary>
     public void Remove(string index)
     {
         if (_active.Remove(index, out _))
             _pool.ReleaseStrategy(index);
     }
 
-    /// <summary>主动调用策略并返回结果。</summary>
+    /// <summary>Invokes the strategy actively and returns the result.</summary>
     public object? Invoke(ISndEntity entity, ISndContext ctx, string index, object? input)
     {
         if (!_active.TryGetValue(index, out var active))
@@ -69,10 +70,10 @@ internal sealed class ActiveStrategyManager
         return active.Invoke(entity, ctx, input);
     }
 
-    /// <summary>序列化当前持有的全部主动策略索引。</summary>
+    /// <summary>Serializes all currently held active strategy indices.</summary>
     public IReadOnlyCollection<string> SerializeIndices() => _active.Keys;
 
-    /// <summary>释放全部主动策略（Quit/Dead 时调用）。</summary>
+    /// <summary>Releases all active strategies (called during Quit/Dead).</summary>
     public void ReleaseAll()
     {
         foreach (var index in _active.Keys)

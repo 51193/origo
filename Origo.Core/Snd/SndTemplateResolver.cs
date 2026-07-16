@@ -6,7 +6,8 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Snd;
 
 /// <summary>
-///     在已加载的模板路径映射上解析 <see cref="SndMetaData" />，带内存缓存。
+///     Resolves <see cref="SndMetaData" /> against the loaded template path mapping,
+///     with in-memory caching.
 /// </summary>
 internal sealed class SndTemplateResolver
 {

@@ -11,9 +11,10 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Snd.Scene;
 
 /// <summary>
-///     纯内存 <see cref="ISndSceneHost" /> 实现，不依赖任何引擎适配层。
-///     用于 <see cref="LevelBuilder" /> 等 Core 层离线构建关卡场景，
-///     以及单元测试中需要完全内存化的场景宿主。
+///     Pure in-memory <see cref="ISndSceneHost" /> implementation that does not depend
+///     on any engine adapter layer. Used by <see cref="LevelBuilder" /> and other Core-layer
+///     offline level scene construction, as well as for fully in-memory scene hosts
+///     needed in unit tests.
 /// </summary>
 internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
 {

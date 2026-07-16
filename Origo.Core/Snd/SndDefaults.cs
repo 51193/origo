@@ -1,7 +1,8 @@
 namespace Origo.Core.Snd;
 
 /// <summary>
-///     与内置初始存档、默认关卡 ID 相关的约定值（供 Core 与适配层共享）。
+///     Convention values related to built-in initial saves and default level IDs
+///     (shared between Core and adapter layers).
 /// </summary>
 internal static class SndDefaults
 {

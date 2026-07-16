@@ -8,7 +8,8 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Snd.Entity;
 
 /// <summary>
-///     与引擎无关的节点元数据恢复器，具体节点创建由 INodeFactory 提供。
+///     Engine-agnostic node metadata restorer;
+///     actual node creation is provided by INodeFactory.
 /// </summary>
 internal sealed class SndNodeManager : INodeHost
 {

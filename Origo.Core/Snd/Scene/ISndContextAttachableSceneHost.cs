@@ -1,8 +1,9 @@
 namespace Origo.Core.Snd.Scene;
 
 /// <summary>
-///     可在运行时切换策略上下文的场景宿主。
-///     SessionRun 创建后会把会话上下文绑定到宿主，确保实体策略在正确会话内执行。
+///     A scene host that can bind the strategy context at runtime.
+///     After SessionRun is created, it binds the session context to the host,
+///     ensuring entity strategies execute within the correct session.
 /// </summary>
 public interface ISndContextAttachableSceneHost
 {

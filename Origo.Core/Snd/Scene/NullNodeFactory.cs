@@ -4,9 +4,11 @@ using Origo.Core.Abstractions.Node;
 namespace Origo.Core.Snd.Scene;
 
 /// <summary>
-///     纯内存 <see cref="INodeFactory" /> 实现，不依赖任何引擎适配层。
-///     创建的节点句柄仅占位，不绑定引擎节点。
-///     用于 <see cref="FullMemorySndSceneHost" /> 等 Core 层内存级场景（如后台关卡）。
+///     Pure in-memory <see cref="INodeFactory" /> implementation that does not depend
+///     on any engine adapter layer. Created node handles are placeholders only
+///     and do not bind to engine nodes.
+///     Used by Core-layer in-memory scenes such as <see cref="FullMemorySndSceneHost" />
+///     (e.g., background levels).
 /// </summary>
 internal sealed class NullNodeFactory : INodeFactory
 {
@@ -15,8 +17,8 @@ internal sealed class NullNodeFactory : INodeFactory
 }
 
 /// <summary>
-///     纯内存 <see cref="INodeHandle" /> 实现，不绑定引擎节点。
-///     所有操作均为空操作，仅用于 Core 层内存场景。
+///     Pure in-memory <see cref="INodeHandle" /> implementation that does not bind
+///     to engine nodes. All operations are no-ops, used only for Core-layer in-memory scenes.
 /// </summary>
 internal sealed class NullNodeHandle(string name) : INodeHandle
 {

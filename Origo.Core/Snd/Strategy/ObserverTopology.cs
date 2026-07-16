@@ -10,13 +10,15 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
-///     per-scene-host 的观察者绑定拓扑：以双向索引（_incoming / _outgoing）集中管理
-///     "谁观察谁"的有向图。跨实体的接线、拆线、序列化与读档恢复均在本类闭环，
-///     实体无需反向暴露内部观察者状态。
+///     Per-scene-host observer binding topology: centrally manages the "who observes whom"
+///     directed graph via bidirectional indices (_incoming / _outgoing). Cross-entity wiring,
+///     unwiring, serialization, and load-time recovery are all handled within this class in a
+///     self-contained manner, so entities do not need to expose their internal observer state.
 ///     <para>
-///         数据变更信号源由 target 实体的 <see cref="ISndEntityRawSubscription" /> 驱动；
-///         拓扑负责绑定生命周期的编排——挂载/卸载钩子分发、读写档恢复、死亡时拆线——
-///         但不持有或代理数据订阅本身。
+///         Data change signal sources are driven by the target entity's
+///         <see cref="ISndEntityRawSubscription" />; the topology handles binding lifecycle
+///         orchestration — mount/unmount hook dispatch, save/load recovery, teardown on death —
+///         but does not hold or proxy the data subscriptions themselves.
 ///     </para>
 /// </summary>
 internal sealed class ObserverTopology
@@ -142,8 +144,9 @@ internal sealed class ObserverTopology
     }
 
     /// <summary>
-    ///     释放某观察者持有的全部观察者策略引用并清空其出边（不触发 OnUnmounted、不退订）。
-    ///     对应实体整体销毁流程中的 <c>ReleaseStrategiesOnly</c> 阶段。
+    ///     Releases all observer strategy references held by a given observer and clears its
+    ///     outgoing edges (without triggering OnUnmounted, without unsubscribing). Corresponds to
+    ///     the <c>ReleaseStrategiesOnly</c> phase in the entity's overall destruction flow.
     /// </summary>
     internal void ReleaseStrategiesFor(ISndEntity observer)
     {

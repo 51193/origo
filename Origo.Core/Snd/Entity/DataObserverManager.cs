@@ -5,8 +5,9 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Snd.Entity;
 
 /// <summary>
-///     管理针对单个 SND 实体的数据变更订阅与通知。
-///     仅作为 Core 内部实现细节，对程序集外不可见。
+///     Manages data change subscriptions and notifications for a single SND entity.
+///     Serves only as an internal Core implementation detail
+///     and is not visible outside the assembly.
 /// </summary>
 internal sealed class DataObserverManager
 {

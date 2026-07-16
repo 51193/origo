@@ -12,7 +12,8 @@ using Origo.Core.Snd.Strategy;
 namespace Origo.Core.Snd;
 
 /// <summary>
-///     面向上层游戏的 SND 统一入口，封装策略池、序列化配置与映射。
+///     Unified SND entry point for upper-layer game code,
+///     encapsulating the strategy pool, serialization configuration, and mappings.
 /// </summary>
 public sealed class SndWorld
 {
@@ -37,25 +38,28 @@ public sealed class SndWorld
     }
 
     /// <summary>
-    ///     策略对象池，管理所有已注册策略的创建、共享与引用计数。
+    ///     Strategy object pool that manages creation, sharing, and reference counting
+    ///     of all registered strategies.
     /// </summary>
     internal SndStrategyPool StrategyPool { get; }
 
     /// <summary>
-    ///     类型名与 .NET 类型之间的双向映射，用于 TypedData 的序列化。
-    ///     适配层可在启动时注册引擎特有类型。
+    ///     Bidirectional mapping between type names and .NET types, used for TypedData serialization.
+    ///     The adapter layer can register engine-specific types at startup.
     /// </summary>
     internal TypeStringMapping TypeMapping { get; }
 
     /// <summary>
-    ///     数据源转换器注册表，负责 DataSourceNode 与强类型 C# 对象之间的双向转换。
+    ///     Data source converter registry responsible for bidirectional conversion
+    ///     between DataSourceNode and strongly-typed C# objects.
     /// </summary>
     public DataSourceConverterRegistry ConverterRegistry { get; }
 
     public IDataSourceIoGateway DataSourceIo { get; }
 
     /// <summary>
-    ///     SND 映射管理器，维护场景别名与模板别名的映射关系。
+    ///     SND mapping manager that maintains the mapping relationships
+    ///     for scene aliases and template aliases.
     /// </summary>
     internal SndMappings Mappings { get; }
 
@@ -63,7 +67,7 @@ public sealed class SndWorld
         StrategyPool.Register(factory);
 
     /// <summary>
-    ///     检查指定索引的策略是否已注册。
+    ///     Checks whether the strategy with the specified index is registered.
     /// </summary>
     public bool IsStrategyRegistered(string index)
     {
@@ -73,7 +77,7 @@ public sealed class SndWorld
     }
 
     /// <summary>
-    ///     获取所有已注册的策略索引集合（只读）。
+    ///     Gets a read-only collection of all registered strategy indices.
     /// </summary>
     public IReadOnlyCollection<string> GetRegisteredStrategyIndices() =>
         StrategyPool.EnumerateRegisteredIndices();
@@ -87,7 +91,8 @@ public sealed class SndWorld
     public SndMetaData ResolveTemplate(string alias) => Mappings.ResolveTemplate(alias);
 
     /// <summary>
-    ///     克隆 SND 元数据（与模板解析路径一致，便于将来统一替换实现）。
+    ///     Clones SND metadata (consistent with the template resolution path,
+    ///     facilitating future unified implementation replacement).
     /// </summary>
     public static SndMetaData CloneMetaData(SndMetaData meta)
     {

@@ -12,13 +12,15 @@ using Origo.Core.StateMachine;
 namespace Origo.Core.Snd;
 
 /// <summary>
-///     结构化关卡构建器，提供流式 API 在 Core 层离线构建关卡场景。
-///     使用 <see cref="StubSndSceneHost" /> 作为内存场景宿主，
-///     支持添加实体、设置会话黑板键值对，最终通过 <see cref="Build" /> 生成
-///     <see cref="LevelPayload" /> 或通过 <see cref="Commit" /> 直接持久化到磁盘。
+///     Structured level builder that provides a fluent API for offline level scene construction
+///     at the Core layer. Uses <see cref="StubSndSceneHost" /> as an in-memory scene host,
+///     supports adding entities and setting session blackboard key-value pairs,
+///     and ultimately produces a <see cref="LevelPayload" /> via <see cref="Build" />
+///     or directly persists to disk via <see cref="Commit" />.
 ///     <para>
-///         通过 <see cref="ISaveStorageService" /> 与存储实现解耦，
-///         与 SessionRun 共享同一套存储抽象，不直接依赖 SavePathLayout 或静态 Writer。
+///         Decoupled from storage implementation via <see cref="ISaveStorageService" />,
+///         sharing the same storage abstraction as SessionRun without directly depending
+///         on SavePathLayout or static Writer.
 ///     </para>
 /// </summary>
 internal sealed class LevelBuilder
@@ -30,11 +32,11 @@ internal sealed class LevelBuilder
     private bool _built;
 
     /// <summary>
-    ///     创建关卡构建器实例。
+    ///     Creates a level builder instance.
     /// </summary>
-    /// <param name="levelId">关卡唯一标识符。</param>
-    /// <param name="sndWorld">SND 世界实例，提供序列化支持。</param>
-    /// <param name="storageService">存档读写服务，用于 <see cref="Commit" /> 持久化。</param>
+    /// <param name="levelId">The unique identifier of the level.</param>
+    /// <param name="sndWorld">The SND world instance providing serialization support.</param>
+    /// <param name="storageService">The save storage service used by <see cref="Commit" /> for persistence.</param>
     public LevelBuilder(
         string levelId,
         SndWorld sndWorld,
@@ -51,22 +53,22 @@ internal sealed class LevelBuilder
     }
 
     /// <summary>
-    ///     关卡唯一标识符。
+    ///     The unique identifier of the level.
     /// </summary>
     public string LevelId { get; }
 
     /// <summary>
-    ///     内存场景宿主，允许外部直接查询已添加的实体。
+    ///     In-memory scene host that allows external code to directly query added entities.
     /// </summary>
     public ISndSceneHost SceneHost => _sceneHost;
 
     /// <summary>
-    ///     会话级黑板，允许外部直接读取已设置的键值对。
+    ///     Session-level blackboard that allows external code to directly read set key-value pairs.
     /// </summary>
     public IBlackboard SessionBlackboard => _sessionBlackboard;
 
     /// <summary>
-    ///     向关卡添加一个实体。
+    ///     Adds an entity to the level.
     /// </summary>
     public LevelBuilder AddEntity(SndMetaData metaData)
     {
@@ -82,7 +84,7 @@ internal sealed class LevelBuilder
     }
 
     /// <summary>
-    ///     按模板名称与可选名称覆盖添加实体。
+    ///     Adds an entity by template key with an optional name override.
     /// </summary>
     public LevelBuilder AddEntityFromTemplate(string templateKey, string? overrideName = null)
     {
@@ -99,7 +101,7 @@ internal sealed class LevelBuilder
     }
 
     /// <summary>
-    ///     批量添加多个实体。
+    ///     Adds multiple entities in batch.
     /// </summary>
     public LevelBuilder AddEntities(IEnumerable<SndMetaData> metaList)
     {
@@ -111,7 +113,7 @@ internal sealed class LevelBuilder
     }
 
     /// <summary>
-    ///     向会话黑板设置键值对。
+    ///     Sets a key-value pair on the session blackboard.
     /// </summary>
     public LevelBuilder SetSessionData<T>(string key, T value)
     {
@@ -121,8 +123,8 @@ internal sealed class LevelBuilder
     }
 
     /// <summary>
-    ///     生成 <see cref="LevelPayload" /> 并标记为已构建。
-    ///     构建后不可再修改（添加实体或设置黑板）。
+    ///     Produces a <see cref="LevelPayload" /> and marks the builder as built.
+    ///     No further modifications (adding entities or setting blackboard) are allowed after building.
     /// </summary>
     public LevelPayload Build()
     {
@@ -143,8 +145,8 @@ internal sealed class LevelBuilder
     }
 
     /// <summary>
-    ///     生成 <see cref="LevelPayload" /> 并写入 current/ 目录。
-    ///     等效于 <c>Build()</c> + <see cref="ISaveStorageService.WriteLevelPayloadOnly" />。
+    ///     Produces a <see cref="LevelPayload" /> and writes it to the current/ directory.
+    ///     Equivalent to <c>Build()</c> + <see cref="ISaveStorageService.WriteLevelPayloadOnly" />.
     /// </summary>
     public LevelPayload Commit()
     {

@@ -8,9 +8,11 @@ using Origo.Core.Logging;
 namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
-///     负责按索引管理与复用策略实例的池。
-///     不使用反射自动收集，而是通过显式注册提升可控性与可测试性。
-///     仅允许通过泛型 <see cref="GetStrategy{TBase}" /> 获取实例；若索引对应的实例类型与泛型参数不匹配则抛异常，不做兜底。
+///     Pool responsible for managing and reusing strategy instances by index.
+///     Does not use reflection-based auto-collection; instead, explicit registration
+///     is used to improve controllability and testability. Only allows acquiring instances
+///     via the generic <see cref="GetStrategy{TBase}" />; if the instance type corresponding
+///     to the index does not match the generic type parameter, an exception is thrown with no fallback.
 /// </summary>
 internal sealed class SndStrategyPool
 {
