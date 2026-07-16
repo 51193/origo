@@ -3,20 +3,13 @@ using System.IO;
 
 namespace DocSyncTool;
 
-internal sealed class DocFile
+internal sealed class DocFile(string fullPath, string relativePath, string language)
 {
-    public string FullPath { get; }
-    public string RelativePath { get; }
-    public string Language { get; }
+    public string FullPath { get; } = fullPath;
+    public string RelativePath { get; } = relativePath;
+    public string Language { get; } = language;
     public string PairId { get; set; } = "";
     public int Revision { get; set; }
-
-    public DocFile(string fullPath, string relativePath, string language)
-    {
-        FullPath = fullPath;
-        RelativePath = relativePath;
-        Language = language;
-    }
 
     public static string ExtractLanguage(string fileName)
     {

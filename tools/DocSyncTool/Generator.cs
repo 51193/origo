@@ -11,7 +11,7 @@ namespace DocSyncTool;
 
 internal static class Generator
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -133,7 +133,7 @@ internal static class Generator
             var rel = Path.GetRelativePath(docsRoot, dir).Replace('\\', '/');
             dirs.Add(rel);
         }
-        return dirs.OrderBy(d => d.Length).ThenBy(d => d).ToList();
+        return [.. dirs.OrderBy(d => d.Length).ThenBy(d => d)];
     }
 
     private static List<string> GetSubDirectories(string docsRoot, string parentRel)
@@ -143,11 +143,10 @@ internal static class Generator
             return [];
 
         var subDirs = Directory.GetDirectories(parentDir);
-        return subDirs
+        return [.. subDirs
             .Select(d => Path.GetRelativePath(docsRoot, d).Replace('\\', '/'))
             .Where(d => HasDocFiles(Path.Combine(docsRoot, d)))
-            .OrderBy(d => d)
-            .ToList();
+            .OrderBy(d => d)];
     }
 
     private static bool HasDocFiles(string fullPath)
@@ -221,7 +220,7 @@ internal static class Generator
         {
             SchemaVersion = 1,
             Languages = config.Languages,
-            Pairs = new Dictionary<string, StatusPairEntry>()
+            Pairs = []
         };
 
         foreach (var (pairId, langDict) in pairs.OrderBy(p => p.Key))
@@ -251,7 +250,7 @@ internal static class Generator
             };
         }
 
-        var json = JsonSerializer.Serialize(statusData, JsonOptions);
+        var json = JsonSerializer.Serialize(statusData, _jsonOptions);
         var statusPath = Path.Combine(config.DocsFullPath, ".sync-status.json");
         var oldJson = File.Exists(statusPath) ? File.ReadAllText(statusPath) : null;
         if (oldJson != json)

@@ -24,7 +24,7 @@ internal static partial class Validator
             var content = File.ReadAllText(docFile.FullPath);
             ParseMetadata(docFile, content, errors);
 
-            ValidateLinks(docFile, content, config.Languages, docsRoot, errors);
+            ValidateLinks(docFile, content, docsRoot, errors);
 
             if (!string.IsNullOrEmpty(docFile.PairId))
                 fileMetadatas.Add(docFile);
@@ -128,7 +128,7 @@ internal static partial class Validator
     [GeneratedRegex(@"\x60{3}[\s\S]*?\x60{3}|\x60{2}[^\n]*?\x60{2}|\x60[^\x60\r\n]+\x60", RegexOptions.Compiled)]
     private static partial Regex CodeSpanRegex();
 
-    private static void ValidateLinks(DocFile docFile, string content, List<string> languages,
+    private static void ValidateLinks(DocFile docFile, string content,
         string docsRoot, List<string> errors)
     {
         var cleanContent = StripCodeSpans(content);
