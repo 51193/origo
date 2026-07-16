@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Storage
 
@@ -22,7 +22,8 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 | `SavePayloadWriter.cs` | Save write orchestration (two-phase write + marker management) |
 | `SavePayloadReader.cs` | Save read orchestration (strict reading + integrity validation) |
 | `SaveGamePayloadFactory.cs` | Constructs SaveGamePayload (business data aggregation) |
-| `SaveStorageFacade.cs` | Save I/O orchestration layer (internal static): EnumerateSaveIds / EnumerateSavesWithMetaData / read/write orchestration / SHA-256 idempotent deduplication / snapshot copy. Pure orchestration logic; concrete file parsing/serialization delegated to SavePayloadReader / SavePayloadWriter |
+| `SaveStorageFacade.cs` | Save I/O orchestration layer (internal static): EnumerateSaveIds / EnumerateSavesWithMetaData / read/write orchestration / snapshot copy. Pure orchestration logic; concrete file parsing/serialization delegated to SavePayloadReader / SavePayloadWriter; atomic write logic delegated to SaveAtomicWriter |
+| `SaveAtomicWriter.cs` | Atomic write helper (internal static): SHA-256 idempotent dedup, write-in-progress marker management, temp directory preparation, backup-replace snapshot swap. Called exclusively by SaveStorageFacade |
 
 ## File Layout
 

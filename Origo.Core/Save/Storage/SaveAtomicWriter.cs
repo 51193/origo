@@ -10,6 +10,14 @@ using Origo.Core.Logging;
 
 namespace Origo.Core.Save.Storage;
 
+/// <summary>
+///     Atomic write helpers for the save storage layer. Extracted from
+///     <see cref="SaveStorageFacade" /> to isolate idempotent dedup
+///     (SHA-256 hash comparison), write-in-progress marker management,
+///     temp directory preparation, and backup-replace snapshot swapping.
+///     Called exclusively by <see cref="SaveStorageFacade" />; no external
+///     caller should use this class directly.
+/// </summary>
 internal static class SaveAtomicWriter
 {
     public static string ComputeCombinedHash(SaveFileHandle handle, SaveGamePayload payload)
