@@ -1,11 +1,11 @@
-<!-- docsync-pair: Origo.Core.Tests/Integration/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: docs/Origo.Core.Tests/Testing/Integration/Integration -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 帧驱动游戏模拟集成测试
 
-> [↑ 回到 Origo.Core.Tests](../README.zh.md)
-> [↔ 被测行为: usage/architecture-overview](../../usage/architecture-overview.zh.md)
-> [↔ 被测模块: Origo.Core/Runtime](../../Origo.Core/Runtime/README.zh.md)
+> [↑ 回到 Origo.Core.Tests](../../README.zh.md)
+> [↔ 被测行为: usage/architecture-overview](../../../usage/architecture-overview.zh.md)
+> [↔ 被测模块: Origo.Core/Runtime](../../../Origo.Core/Runtime/README.zh.md)
 
 ## 被测行为概览
 
@@ -106,4 +106,4 @@ Assert.Equal(10, count);
 
 ---
 
-[↑ 回到 Origo.Core.Tests](../README.zh.md)
+[↑ 回到 Origo.Core.Tests](../../README.zh.md)

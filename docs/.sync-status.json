@@ -49,6 +49,28 @@
         "en": "Origo.Core.Tests/META-TEST.en.md"
       }
     },
+    "docs/Origo.Core.Tests/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "files": {
+        "zh": "Origo.Core.Tests/README.zh.md",
+        "en": "Origo.Core.Tests/README.en.md"
+      }
+    },
+    "docs/Origo.Core.Tests/Testing/Integration/Integration": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "files": {
+        "zh": "Origo.Core.Tests/Testing/Integration/Integration.zh.md",
+        "en": "Origo.Core.Tests/Testing/Integration/Integration.en.md"
+      }
+    },
     "docs/Origo.TestSupport/README": {
       "status": "synced",
       "revisions": {
@@ -181,17 +203,6 @@
         "en": "Origo.Core.Tests/Grid.en.md"
       }
     },
-    "Origo.Core.Tests/Integration/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.Core.Tests/Integration/README.zh.md",
-        "en": "Origo.Core.Tests/Integration/README.en.md"
-      }
-    },
     "Origo.Core.Tests/Logging": {
       "status": "synced",
       "revisions": {
@@ -234,17 +245,6 @@
       "files": {
         "zh": "Origo.Core.Tests/Random.zh.md",
         "en": "Origo.Core.Tests/Random.en.md"
-      }
-    },
-    "Origo.Core.Tests/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.Core.Tests/README.zh.md",
-        "en": "Origo.Core.Tests/README.en.md"
       }
     },
     "Origo.Core.Tests/Runtime-Core": {

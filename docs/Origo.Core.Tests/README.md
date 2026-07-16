@@ -36,7 +36,7 @@
 - [StrategyTestScenario](StrategyTestScenario.zh.md)
 - [TypeStringMapping](TypeStringMapping.zh.md)
 - [Utility](Utility.zh.md)
-- [Integration/](Integration/)
+- [Testing/](Testing/)
 
 ## English
 - [Abstractions](Abstractions.en.md)
@@ -72,5 +72,5 @@
 - [StrategyTestScenario](StrategyTestScenario.en.md)
 - [TypeStringMapping](TypeStringMapping.en.md)
 - [Utility](Utility.en.md)
-- [Integration/](Integration/)
+- [Testing/](Testing/)
 

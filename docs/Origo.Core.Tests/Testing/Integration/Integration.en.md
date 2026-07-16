@@ -1,11 +1,11 @@
-<!-- docsync-pair: Origo.Core.Tests/Integration/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: docs/Origo.Core.Tests/Testing/Integration/Integration -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Frame-Driven Game Simulation Integration Tests
 
-> [↑ Back to Origo.Core.Tests](../README.en.md)
-> [↔ Behavior under test: usage/architecture-overview](../../usage/architecture-overview.en.md)
-> [↔ Module under test: Origo.Core/Runtime](../../Origo.Core/Runtime/README.en.md)
+> [↑ Back to Origo.Core.Tests](../../README.en.md)
+> [↔ Behavior under test: usage/architecture-overview](../../../usage/architecture-overview.en.md)
+> [↔ Module under test: Origo.Core/Runtime](../../../Origo.Core/Runtime/README.en.md)
 
 ## Behavior Under Test Overview
 
@@ -105,4 +105,4 @@ Assert.Equal(10, count);
 
 ---
 
-[↑ Back to Origo.Core.Tests](../README.en.md)
+[↑ Back to Origo.Core.Tests](../../README.en.md)
