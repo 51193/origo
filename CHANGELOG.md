@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Release workflow now includes format check, benchmarks, and Godot integration tests.
 - Source generator diagnostic messages carry source locations from `SndInlineTypesAttribute` syntax.
 - `GodotSndManager.ProcessAll` and `FullMemorySndSceneHost.ProcessAll` iterate entities directly instead of allocating per-frame arrays.
+- **BREAKING:** `DataSourceNode.AsChar` now throws `InvalidOperationException` on `Map`/`Array` nodes instead of silently returning `'\0'`, per fail-fast principle.
 - `GodotPackedSceneNodeFactory` uses `Dictionary` instead of `ConcurrentDictionary` for scene cache.
 - `GodotPathResolver` path logic extracted to `Origo.Core.Utility.PathUtility` for unit testability without Godot dependencies.
 - `ConsoleOutputChannel.Publish` throws `AggregateException` when multiple listeners throw.
@@ -90,6 +91,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Various fail-fast hardening: `GodotSndEntity`, `ConsoleOutputChannel`, `GodotDirectoryOperations`, `DataSourceNode`, `GridParser`, `LogMessageBuilder`.
 - `TypedDataGenerator` pipeline types converted to records for cacheable value comparison; `GenerateStringConversion` emitted conditionally.
 - `docs/META.md` directory diagram includes all existing directories. `docs/README.md` includes `Utility` subsystem.
+- `GodotDirectoryOperations.Create` now checks `MakeDirRecursiveAbsolute` error code instead of discarding it (fail-fast).
+- `GodotDirectoryOperations.DeleteRecursive` now checks `Remove`/`RemoveAbsolute` error codes instead of discarding them (fail-fast).
+- `ISndDataAccess.GetData<T>` XML doc now correctly describes the throw-on-mismatch behavior (implementation was always throwing; only the doc was wrong).
+- `SaveCoordinator.EnsureActiveLevelInvariant` error messages now use the current `saveId` parameter instead of the construction-time value.
+- `GodotSndManager.RecoverFromMetaList` removed redundant double-free cleanup in the catch block and narrowed bare `catch` to `catch (Exception)`.
 
 ## [0.0.8] - 2026-06-30
 

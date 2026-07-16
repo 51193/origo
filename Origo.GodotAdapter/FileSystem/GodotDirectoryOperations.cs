@@ -15,7 +15,12 @@ internal static class GodotDirectoryOperations
 {
     public static bool Exists(string path) => DirAccess.DirExistsAbsolute(path);
 
-    public static void Create(string directoryPath) => DirAccess.MakeDirRecursiveAbsolute(directoryPath);
+    public static void Create(string directoryPath)
+    {
+        var err = DirAccess.MakeDirRecursiveAbsolute(directoryPath);
+        if (err != Error.Ok)
+            throw new IOException($"Failed to create directory '{directoryPath}': {err}");
+    }
 
     public static IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
     {
@@ -64,7 +69,11 @@ internal static class GodotDirectoryOperations
         var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
 
         foreach (var file in dir.GetFiles())
-            dir.Remove($"{normalizedDir}/{file}");
+        {
+            var fileErr = dir.Remove($"{normalizedDir}/{file}");
+            if (fileErr != Error.Ok)
+                throw new IOException($"Failed to delete file '{file}' in '{directoryPath}': {fileErr}");
+        }
 
         foreach (var subdir in dir.GetDirectories())
             DeleteRecursive($"{normalizedDir}/{subdir}");
@@ -73,11 +82,15 @@ internal static class GodotDirectoryOperations
         if (parent is not null)
             using (parent)
             {
-                parent.Remove(System.IO.Path.GetFileName(directoryPath.TrimEnd('/')));
+                var parentErr = parent.Remove(System.IO.Path.GetFileName(directoryPath.TrimEnd('/')));
+                if (parentErr != Error.Ok)
+                    throw new IOException($"Failed to remove directory '{directoryPath}' via parent: {parentErr}");
             }
         else
         {
-            DirAccess.RemoveAbsolute(directoryPath);
+            var absErr = DirAccess.RemoveAbsolute(directoryPath);
+            if (absErr != Error.Ok)
+                throw new IOException($"Failed to remove directory '{directoryPath}': {absErr}");
         }
     }
 }

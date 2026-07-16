@@ -175,6 +175,14 @@ public sealed class DataSourceNode : IDisposable
     public char AsChar()
     {
         EnsureExpanded();
+        if (_kind is not DataSourceNodeKind.Text
+            and not DataSourceNodeKind.Number
+            and not DataSourceNodeKind.Bool
+            and not DataSourceNodeKind.Null)
+        {
+            throw new InvalidOperationException(
+                $"Cannot get char value from a {_kind} DataSourceNode.");
+        }
         return _value is not null && _value.Length > 0 ? _value[0] : '\0';
     }
 

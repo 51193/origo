@@ -82,17 +82,9 @@ public partial class GodotSndManager
                 if (_owningSession is not null)
                     snd.BindSession(_owningSession);
             }
-            catch
+            catch (Exception)
             {
                 RollbackPartialLoad(staged);
-                if (snd is not null && IsInstanceValid(snd))
-                {
-                    _entities.Remove(snd);
-                    if (snd.GetParent() == this)
-                        RemoveChild(snd);
-                    snd.Free();
-                }
-
                 throw;
             }
         }

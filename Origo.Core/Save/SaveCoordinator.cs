@@ -24,7 +24,6 @@ internal sealed class SaveCoordinator
     private readonly IBlackboard _progressBlackboard;
     private readonly IStateMachineContainer _progressStateMachines;
     private readonly ProgressRuntime _progressRuntime;
-    private readonly string _saveId;
 
     internal SaveCoordinator(
         SessionManager sessionManager,
@@ -37,11 +36,11 @@ internal sealed class SaveCoordinator
         ArgumentNullException.ThrowIfNull(progressBlackboard);
         ArgumentNullException.ThrowIfNull(progressStateMachines);
         ArgumentNullException.ThrowIfNull(progressRuntime);
+        ArgumentNullException.ThrowIfNull(saveId);
         _sessionManager = sessionManager;
         _progressBlackboard = progressBlackboard;
         _progressStateMachines = progressStateMachines;
         _progressRuntime = progressRuntime;
-        _saveId = saveId ?? throw new ArgumentNullException(nameof(saveId));
     }
 
     internal SaveMetaBuildContext BuildSaveMetaContext(string saveId)
@@ -60,7 +59,7 @@ internal sealed class SaveCoordinator
         IReadOnlyDictionary<string, string>? mergedMeta)
     {
         var fgSession = RequireForegroundSession();
-        EnsureActiveLevelInvariant(fgSession);
+        EnsureActiveLevelInvariant(fgSession, newSaveId);
 
         var bgSessions = _sessionManager.GetBackgroundSessions();
         var topologyItems = BuildSessionTopology(fgSession);
@@ -126,10 +125,10 @@ internal sealed class SaveCoordinator
         return topologyItems;
     }
 
-    private void EnsureActiveLevelInvariant(ISessionRun fgSession)
+    private void EnsureActiveLevelInvariant(ISessionRun fgSession, string saveId)
     {
         TopologyInvariant.EnsureActiveLevel(_progressBlackboard,
-            fgSession.LevelId, $"save id: '{_saveId}'");
+            fgSession.LevelId, $"save id: '{saveId}'");
     }
 
     private void AppendBackgroundPayloads(
