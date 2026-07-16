@@ -256,6 +256,29 @@ missing language files) always fail the build.
 - After any doc change → run `generate` and commit the result
 - **Never edit** auto-generated `README.md` hubs or `.sync-status.json`
 
+### 1.7 Source Code Comments — English Only, IntelliSense-Ready
+
+> **All XML doc comments on public and protected API surfaces must be in
+> English. Comments serve IntelliSense discoverability in the IDE — not as
+> a substitute for hand-written documentation.**
+
+- **Every `public` and `protected` type and member** must carry a
+  `<summary>` XML doc comment in English. This is the primary source of
+  IDE tooltip content for library consumers.
+- **`internal` classes that implement public interfaces** should also have
+  English comments describing their role and any non-trivial contracts
+  (e.g., constructor preconditions, disposal semantics, thread safety).
+- **Existing Chinese XML doc comments on public API surfaces are a defect**
+  and must be translated to English. Implementation files with Chinese
+  comments are lower-priority but should trend toward English over time.
+- **Test files are exempt** from this rule. Test methods may carry comments
+  in either language or none at all.
+- **Forbidden**: API documentation generation tools (DocFX, Sandcastle, etc.).
+  The project maintains hand-written bilingual documentation under `docs/`;
+  source comments complement it at the IDE level. No duplicate generated
+  API reference is needed.
+- This rule is enforced by developer discipline and code review.
+
 ---
 
 ## 2. Development Loop (Mandatory Order)

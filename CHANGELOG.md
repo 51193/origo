@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **XML doc comment mandatory rule for public and protected API surfaces** — AGENTS.md §1.7 requires every `public` and `protected` type and member to carry an English `<summary>` XML doc comment for IDE IntelliSense discoverability. Test files are exempt. Existing Chinese comments on public APIs are treated as defects to be remediated. No API doc generation tooling (DocFX/Sandcastle) is introduced; source comments complement the hand-written bilingual `docs/`.
 - **Complete English documentation** — 116 English `.en.md` files alongside existing Chinese `.zh.md` files. DocSyncTool configuration updated to `["zh", "en"]`. All navigation hubs (`README.md`) now list both languages. Translation covers modules (Abstractions, Snd, Runtime, Save, DataSource, etc.), usage guides, test documentation, adapter layer docs, and benchmarks.
 - **Performance benchmark suite expanded** — 7 new benchmark test classes covering entity lifecycle (create + `FireAfterSpawnHooks`, frame processing scaling, `SaveSingle`), `ObserverTopology` mount/unmount scaling, `DataSourceNode` tree build/traversal/SHA-256 hash/`As<T>` dispatch, `Blackboard` bulk read/write/roundtrip, `SavePayload` hash/write/read/snapshot roundtrip, `ConcurrentActionQueue` enqueue/execute scaling, and `RandomNumberGenerator` (XorShift128+) throughput.
 - `PerfReporter.CompareTable` and `ReportTable` — unified multi-row summary table output methods that consolidate multiple per-type `Compare`/`Report` calls into a single terminal-friendly table, reducing benchmark noise and matching the `docs/benchmarks/baseline.md` style.
@@ -34,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Benchmark output simplified — each benchmark test method now emits a single consolidated summary table (`CompareTable` / `ReportTable`) instead of one table per type/configuration. SG micro-benchmarks, Core real-world benchmarks, and GodotAdapter benchmarks all refactored.
 - `SndStrategyPerformanceTests` now tagged `[Trait("Category", "Benchmark")]` — strategy pool, frame processing, and `TriggerAll` tests run in dedicated benchmark CI step, excluded from coverage-gated test run.
 - **BREAKING:** `GodotTypedDataPerformanceTests` now uses shared `PerfReporter` (`Origo.GodotAdapter.Tests.TestSupport/PerfReporter.cs`) instead of inline `PrintReport`/`PrintCompare` helper methods.
+- **Orphan `Origo.Core.Abstractions/` duplicate source directory removed** — contained exact (MD5-identical) duplicates of `Origo.Core/Abstractions/Lifecycle/ISessionManager.cs` and `ISessionRun.cs` with no `.csproj` or `.sln` reference.
 
 - `Origo.Core.Runtime.Console.ConsoleMessages` — public constants for user-facing console messages (currently `InvalidArgumentCount`), so callers and tests can reference the message text instead of hard-coding literals.
 - Documentation for the `SndContext` companion classes under `docs/Origo.Core/Snd/Companions/`, explaining the companion object pattern and its design rationale.

@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -120,6 +120,7 @@ This produces two kinds of derived files (commit them together):
 3. **Design decision change** → update the design decisions section
 4. **New config key/command** → update relevant README and usage docs
 5. **Inter-module dependency change** → update module README links
+6. **AGENTS.md meta-instruction changes** → synchronize references to new rules in this document (e.g., AGENTS.md §1.7 comment language requirements)
 
 ### Situations NOT Requiring Sync
 
