@@ -1,5 +1,5 @@
-<!-- docsync-pair: META -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-pair: docs/META -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Documentation Maintenance Meta-Instructions
 

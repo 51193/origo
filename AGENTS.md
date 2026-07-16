@@ -8,8 +8,8 @@
 > developers working on this repository. It is automatically injected at the
 > start of every session.
 > Any **reading or modification** of this repository must comply with this
-> file and the documents it directs you to read (`docs/META.zh.md`, each module's
-> `docs/.../README.zh.md`).
+> file and the documents it directs you to read (`docs/META.zh.md` or `docs/META.en.md`,
+> each module's `docs/.../README.zh.md` or `.en.md`).
 > Documentation lives inside the repo under `docs/` and does not depend on
 > any external documentation repository.
 
@@ -22,7 +22,7 @@ read the following in full:**
 
 1. **This file** — development loop, core principles, document index,
    bilingual documentation mechanism (§1.6).
-2. **[`docs/META.md`](docs/META.zh.md)** — documentation maintenance rules
+2. **`docs/META.zh.md`** (or [`docs/META.en.md`](docs/META.en.md)) — documentation maintenance rules
    (writing conventions + Git commit message conventions + DocSyncTool
    usage).
 3. **The documentation for the module you are changing**:
@@ -158,6 +158,7 @@ facilities**, to understand the collaboration contracts between modules.
   design — it enables cross-directory type access. IDE0130 is suppressed
   for test paths in `.editorconfig`. See
   [`docs/Origo.Core.Tests/META-TEST.zh.md`](docs/Origo.Core.Tests/META-TEST.zh.md)
+  (or [META-TEST.en.md](docs/Origo.Core.Tests/META-TEST.en.md))
   §测试命名空间约定.
 - **Do not abuse `.editorconfig` exclusion rules**: they exist only for
   documented deliberate designs (e.g., flat test namespaces). Do not
@@ -293,7 +294,7 @@ missing language files) always fail the build.
 | 3 | **Execute tests** | During development iteration, run `bash scripts/test.sh` (restore → build → test + coverage gates). **Before committing, you must run** `bash scripts/ci.sh`, which mirrors CI exactly: format + doc-sync + test + benchmarks + Godot integration. |
 | 4 | **Fix source + re-test loop** | If tests are not all green, go back to fix the source and re-run step 3. **Loop until all pass.** Fixes must still comply with §1 (especially avoid false-positive fixes). |
 | 5 | **Changelog alignment** | Write user-facing significant changes into `CHANGELOG.md` under the `[Unreleased]` section (conventions in §4). |
-| 6 | **Docs sync** | Sync the `docs/` mirror: directory structure, interface lists, design decisions, usage / test docs (rules in §5 and `docs/META.zh.md`). **After any doc change, bump `docsync-revision`, run `DocSyncTool generate`, and commit all derived files** (per §1.6). |
+| 6 | **Docs sync** | Sync the `docs/` mirror: directory structure, interface lists, design decisions,   usage / test docs (rules in §5 and `docs/META.zh.md` / `docs/META.en.md`). **After any doc change, bump `docsync-revision`, run `DocSyncTool generate`, and commit all derived files** (per §1.6). |
 
 **Partial completion is forbidden.** If a step is genuinely not applicable
 (e.g., pure internal refactor with no public API or doc impact), you must
@@ -321,7 +322,8 @@ missing language files) always fail the build.
   below the threshold causes `dotnet test` to fail directly.
 - Test style conventions, `InternalsVisibleTo` whitelist principles, static
   mutable state isolation, etc. are documented in
-  [`docs/Origo.Core.Tests/META-TEST.zh.md`](docs/Origo.Core.Tests/META-TEST.zh.md).
+  [`docs/Origo.Core.Tests/META-TEST.zh.md`](docs/Origo.Core.Tests/META-TEST.zh.md)
+  (or [META-TEST.en.md](docs/Origo.Core.Tests/META-TEST.en.md)).
 
 ---
 
@@ -410,7 +412,8 @@ that do not change external semantics.
 - [ ] Do `docs/usage/` and test docs cover new scenarios / capabilities?
 
 For documentation hierarchy, link conventions, prohibition of evolution
-markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md).
+markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md)
+  (or [`docs/META.en.md`](docs/META.en.md)).
 
 ---
 
@@ -431,12 +434,12 @@ markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md
 
 > So agents can read all relevant information without self-directed
 > exploration. When changing source under `X/`, read `docs/X/README.zh.md`
-> and its upstream/downstream first.
+> (or `.en.md`) and its upstream/downstream first.
 
 | Entry | Path | Purpose |
 |-------|------|---------|
 | Manual index | [`docs/README.md`](docs/README.md) | Top-level navigation for all modules / usage / test docs. |
-| Docs maintenance | [`docs/META.zh.md`](docs/META.zh.md) | Documentation conventions + Git commit message conventions. |
+| Docs maintenance | [`docs/META.zh.md`](docs/META.zh.md) (or [META.en.md](docs/META.en.md)) | Documentation conventions + Git commit message conventions. |
 | Changelog | [`CHANGELOG.md`](CHANGELOG.md) | User-facing change log. |
 | Core module | [`docs/Origo.Core/README.md`](docs/Origo.Core/README.md) | Platform-agnostic core: SND entities, runtime, persistence, state machines, etc. |
 | Source generation | [`docs/Origo.SourceGeneration/README.md`](docs/Origo.SourceGeneration/README.md) | TypedData incremental source generator. |
@@ -444,7 +447,7 @@ markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md
 | ConsoleBridge | [`docs/Origo.ConsoleBridge/README.md`](docs/Origo.ConsoleBridge/README.md) | TCP remote console bridge. |
 | Usage guide | [`docs/usage/README.md`](docs/usage/README.md) | From quick start to deep reference. |
 | Test docs | [`docs/Origo.Core.Tests/README.md`](docs/Origo.Core.Tests/README.md) | Test coverage by capability. |
-| Performance baseline | [`docs/benchmarks/baseline.zh.md`](docs/benchmarks/baseline.zh.md) | TypedData performance snapshot and trade-offs. |
+| Performance baseline | [`docs/benchmarks/baseline.zh.md`](docs/benchmarks/baseline.zh.md) (or [baseline.en.md](docs/benchmarks/baseline.en.md)) | TypedData performance snapshot and trade-offs. |
 | DocSyncTool | [`tools/DocSyncTool/`](tools/DocSyncTool/) | Bilingual doc sync tool (generate, validate, init). |
 | Formatting rules | [`.editorconfig`](.editorconfig) | C# code style + IDE/CA diagnostic rules. |
 | CI workflows | [`.github/workflows/`](.github/workflows/) | CI / Release / CodeQL workflow definitions. |

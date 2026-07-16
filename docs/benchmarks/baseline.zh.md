@@ -1,5 +1,5 @@
-<!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: docs/benchmarks/baseline -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo 性能基线
 

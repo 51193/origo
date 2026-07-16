@@ -1,5 +1,5 @@
-<!-- docsync-pair: META -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-pair: docs/META -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 手册维护元指令
 

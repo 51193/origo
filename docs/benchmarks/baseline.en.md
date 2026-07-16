@@ -1,5 +1,5 @@
-<!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: docs/benchmarks/baseline -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Performance Baseline
 

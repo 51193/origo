@@ -5,17 +5,6 @@
     "en"
   ],
   "pairs": {
-    "benchmarks/baseline": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "benchmarks/baseline.zh.md",
-        "en": "benchmarks/baseline.en.md"
-      }
-    },
     "benchmarks/README": {
       "status": "synced",
       "revisions": {
@@ -27,6 +16,39 @@
         "en": "benchmarks/README.en.md"
       }
     },
+    "docs/benchmarks/baseline": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "files": {
+        "zh": "benchmarks/baseline.zh.md",
+        "en": "benchmarks/baseline.en.md"
+      }
+    },
+    "docs/META": {
+      "status": "synced",
+      "revisions": {
+        "zh": 4,
+        "en": 4
+      },
+      "files": {
+        "zh": "META.zh.md",
+        "en": "META.en.md"
+      }
+    },
+    "docs/Origo.Core.Tests/META-TEST": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "files": {
+        "zh": "Origo.Core.Tests/META-TEST.zh.md",
+        "en": "Origo.Core.Tests/META-TEST.en.md"
+      }
+    },
     "docs/Origo.TestSupport/README": {
       "status": "synced",
       "revisions": {
@@ -36,17 +58,6 @@
       "files": {
         "zh": "Origo.TestSupport/README.zh.md",
         "en": "Origo.TestSupport/README.en.md"
-      }
-    },
-    "META": {
-      "status": "synced",
-      "revisions": {
-        "zh": 3,
-        "en": 3
-      },
-      "files": {
-        "zh": "META.zh.md",
-        "en": "META.en.md"
       }
     },
     "Origo.ConsoleBridge.Tests/ConsoleBridgeServer": {
@@ -201,17 +212,6 @@
       "files": {
         "zh": "Origo.Core.Tests/Meta.zh.md",
         "en": "Origo.Core.Tests/Meta.en.md"
-      }
-    },
-    "Origo.Core.Tests/META-TEST": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.Core.Tests/META-TEST.zh.md",
-        "en": "Origo.Core.Tests/META-TEST.en.md"
       }
     },
     "Origo.Core.Tests/Planning": {
