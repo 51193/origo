@@ -127,6 +127,21 @@ public class GodotDirectoryOperationsIntegrationTests
             "Directory should be removed after DeleteRecursive.");
     }
 
+    [IntegrationTest(Description = "DeleteRecursive removes a user:// directory with files and subdirectories")]
+    public void DeleteRecursive_UserPath_RemovesDirectory()
+    {
+        var dir = "user://test_dir_delete_user";
+        GodotDirectoryOperations.Create(dir);
+        GodotFileOperations.WriteAllText($"{dir}/f.txt", "x", overwrite: true);
+        GodotDirectoryOperations.Create($"{dir}/sub");
+
+        GodotDirectoryOperations.DeleteRecursive(dir);
+
+        IntegrationTestRunner.Assert(
+            !GodotDirectoryOperations.Exists(dir),
+            "user:// directory should be removed after DeleteRecursive.");
+    }
+
     [IntegrationTest(Description = "DeleteRecursive on non-existent directory does not throw")]
     public void DeleteRecursive_NonExistent_DoesNotThrow()
     {

@@ -106,6 +106,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `Origo.sln` — `Origo.GodotAdapter.Integration.Tests` Release configurations corrected from Debug to Release.
 - `ConsoleOutputChannel.Publish` logs each subscriber failure via an optional `ILogger` parameter (defaults to `NullLogger.Instance`), preserving backward compatibility.
 - `SndEntity.QuitSingle` and `DeadSingle` now delegate shared teardown to a single `ReleaseAndTeardown` helper, keeping the two lifecycle paths symmetric.
+- `GodotFileOperations.Delete` now checks `DirAccess.RemoveAbsolute` error code instead of discarding it (fail-fast).
+- `GodotDirectoryOperations.DeleteRecursive` now resolves `user://` paths to real OS paths via `ProjectSettings.GlobalizePath` before removing the emptied directory, working around a Godot engine defect where `DirAccess.Remove`/`RemoveAbsolute` returns `Error.Failed` for `user://` directory deletion.
 
 ## [0.0.8] - 2026-06-30
 

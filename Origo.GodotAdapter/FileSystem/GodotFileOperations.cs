@@ -39,7 +39,11 @@ internal static class GodotFileOperations
 
     public static void Delete(string path)
     {
-        if (FileAccess.FileExists(path))
-            DirAccess.RemoveAbsolute(path);
+        if (!FileAccess.FileExists(path))
+            return;
+
+        var err = DirAccess.RemoveAbsolute(path);
+        if (err != Error.Ok)
+            throw new IOException($"Failed to delete file '{path}': {err}");
     }
 }
