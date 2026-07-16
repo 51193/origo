@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Origo.Core.Snd.Metadata;
 
 /// <summary>
-///     用于序列化与反序列化 SND 关联的数据字典。
+///     Data dictionary for serialization and deserialization of SND-associated data.
 /// </summary>
 public sealed class DataMetaData
 {

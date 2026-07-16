@@ -8,8 +8,8 @@ namespace Origo.GodotAdapter;
 public static class SndEntityNodeExtensions
 {
     /// <summary>
-    ///     从 SND 节点句柄获取原生 Godot 节点（适配器层专用）。
-    ///     仅在 INodeHandle 是 GodotNodeHandle 时生效；否则返回 null。
+    ///     Gets the native Godot node from an SND node handle (adapter layer only).
+    ///     Only works when INodeHandle is a GodotNodeHandle; otherwise returns null.
     /// </summary>
     public static Node? GetNativeNode(this INodeHandle handle)
     {
@@ -19,8 +19,9 @@ public static class SndEntityNodeExtensions
     }
 
     /// <summary>
-    ///     Godot 适配层便利方法：遍历 Godot 场景树按名称查找节点并转换为指定类型。
-    ///     仅在 entity 是 GodotSndEntity 时生效。
+    ///     Godot adapter layer convenience method: traverses the Godot scene tree
+    ///     to find a node by name and casts it to the specified type.
+    ///     Only works when entity is a GodotSndEntity.
     /// </summary>
     public static TNode? GetNodeFromSnd<TNode>(this ISndEntity entity, string name) where TNode : Node
     {

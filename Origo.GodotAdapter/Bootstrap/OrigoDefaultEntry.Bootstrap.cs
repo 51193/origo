@@ -38,7 +38,7 @@ public partial class OrigoDefaultEntry
         SndManager.BindContext(_sndContext);
         ConfigureSaveMetadataContributors(_sndContext);
 
-        // 委托 Core 执行完整启动流程：策略发现 → 别名/模板加载 → 入口存档
+        // Delegate to Core to execute the complete startup flow: strategy discovery → alias/template loading → entry save
         _sndContext.Bootstrap();
     }
 

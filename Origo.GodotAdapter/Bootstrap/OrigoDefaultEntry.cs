@@ -5,9 +5,10 @@ using Origo.Core.Snd;
 namespace Origo.GodotAdapter.Bootstrap;
 
 /// <summary>
-///     默认程序入口节点。继承 <see cref="OrigoAutoHost" /> 获得运行时自绑定能力，
-///     并将自动初始化编排委托给 Core 层的 <see cref="OrigoAutoInitializer" />。
-///     Adapter 层仅提供 Godot 特有的 I/O 实现与引擎程序集过滤前缀，不包含任何编排逻辑。
+///     Default program entry node. Inherits <see cref="OrigoAutoHost" /> to gain runtime self-binding capability,
+///     and delegates automatic initialization orchestration to the Core layer's <see cref="OrigoAutoInitializer" />.
+///     The Adapter layer only provides Godot-specific I/O implementations and engine assembly filtering prefixes,
+///     containing no orchestration logic.
 /// </summary>
 [GlobalClass]
 public partial class OrigoDefaultEntry : OrigoAutoHost
@@ -24,20 +25,20 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     [Export] public bool AutoDiscoverStrategies { get; set; } = true;
 
     /// <summary>
-    ///     在 <see cref="SndContext" /> 创建并绑定到 <see cref="GodotSndManager" /> 之后调用；
-    ///     子类可覆写并在其中通过
-    ///     <c>context.RegisterSaveMetaContributor(ISaveMetaContributor)</c> 或
-    ///     <c>context.RegisterSaveMetaContributor(Action&lt;...&gt;)</c>
-    ///     注册展示用 <c>meta.map</c> 贡献者。
+    ///     Called after <see cref="SndContext" /> is created and bound to <see cref="GodotSndManager" />;
+    ///     subclasses can override and register display <c>meta.map</c> contributors via
+    ///     <c>context.RegisterSaveMetaContributor(ISaveMetaContributor)</c> or
+    ///     <c>context.RegisterSaveMetaContributor(Action&lt;...&gt;)</c>.
     /// </summary>
     protected virtual void ConfigureSaveMetadataContributors(ISndContext context)
     {
     }
 
     /// <summary>
-    ///     自定义类型转换器注册钩子。在 <see cref="SndContext.Bootstrap" /> 之前调用。
-    ///     Override 此方法以注册自定义 <see cref="DataSourceConverter{T}" />，
-    ///     确保自定义类型在策略自动发现、模板加载和入口存档加载之前可用。
+    ///     Custom type converter registration hook. Called before <see cref="SndContext.Bootstrap" />.
+    ///     Override this method to register custom <see cref="DataSourceConverter{T}" />,
+    ///     ensuring custom types are available before strategy auto-discovery, template loading,
+    ///     and entry save loading.
     /// </summary>
     protected virtual void RegisterCustomConverters(DataSourceConverterRegistry registry)
     {

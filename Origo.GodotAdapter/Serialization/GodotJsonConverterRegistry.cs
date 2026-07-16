@@ -6,7 +6,7 @@ using Origo.Core.Serialization;
 namespace Origo.GodotAdapter.Serialization;
 
 /// <summary>
-///     一站式注册所有 Godot 内置类型的 <see cref="TypeStringMapping" /> 映射与 JsonConverter。
+///     One-stop registration of all Godot built-in type <see cref="TypeStringMapping" /> mappings and JsonConverters.
 /// </summary>
 public static class GodotJsonConverterRegistry
 {

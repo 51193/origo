@@ -23,7 +23,7 @@ using Origo.GodotAdapter;
 namespace Origo.GodotAdapter.Bootstrap;
 
 /// <summary>
-///     自建 Runtime 与 SndManager 的唯一启动入口节点。
+///     The sole startup entry point node for self-built Runtime and SndManager.
 /// </summary>
 [GlobalClass]
 public partial class OrigoAutoHost : Node
@@ -34,27 +34,28 @@ public partial class OrigoAutoHost : Node
     public GodotSndManager SndManager { get; private set; } = null!;
 
     /// <summary>
-    ///     控制台命令输入队列；UI 将提交的行通过 <see cref="IConsoleInputSource.Enqueue" /> 投递。
+    ///     Console command input queue; the UI delivers submitted lines via <see cref="IConsoleInputSource.Enqueue" />.
     /// </summary>
     public IConsoleInputSource? ConsoleInput { get; private set; }
 
     /// <summary>
-    ///     控制台输出发布通道；外部消费者（ConsoleBridge、UI）通过 Subscribe 订阅接收输出。
+    ///     Console output publishing channel; external consumers (ConsoleBridge, UI)
+    ///     subscribe via Subscribe to receive output.
     /// </summary>
     public IConsoleOutputChannel? ConsoleOutputChannel { get; private set; }
 
     /// <summary>
-    ///     文件元数据访问接口（与当前运行时同源）。
+    ///     File metadata access interface (same source as the current runtime).
     /// </summary>
     protected IFileMetaAccess SharedMetaAccess { get; private set; } = null!;
 
     /// <summary>
-    ///     路径解析接口（与当前运行时同源）。
+    ///     Path resolution interface (same source as the current runtime).
     /// </summary>
     protected IPathResolver SharedPathResolver { get; private set; } = null!;
 
     /// <summary>
-    ///     DataSource I/O 网关（与当前运行时同源）。
+    ///     DataSource I/O gateway (same source as the current runtime).
     /// </summary>
     protected IDataSourceIoGateway SharedDataSourceIo { get; private set; } = null!;
 

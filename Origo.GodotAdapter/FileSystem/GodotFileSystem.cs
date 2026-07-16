@@ -6,9 +6,10 @@ using Origo.Core.Utility;
 namespace Origo.GodotAdapter.FileSystem;
 
 /// <summary>
-///     基于 Godot <see cref="FileAccess" /> 与 <see cref="DirAccess" /> 的
-///     <see cref="IFileSystem" /> 实现，支持 <c>res://</c> 和 <c>user://</c> 路径。
-///     路径拼接和父目录操作也在此实现，以正确处理 Godot 虚拟路径。
+///     Implementation of <see cref="IFileSystem" /> based on Godot <see cref="FileAccess" />
+///     and <see cref="DirAccess" />, supporting <c>res://</c> and <c>user://</c> paths.
+///     Path concatenation and parent directory operations are also implemented here
+///     to correctly handle Godot virtual paths.
 /// </summary>
 public sealed class GodotFileSystem : IFileSystem
 {
