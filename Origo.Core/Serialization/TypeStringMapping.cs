@@ -5,9 +5,9 @@ using System.Collections.ObjectModel;
 namespace Origo.Core.Serialization;
 
 /// <summary>
-///     在 JSON 中为常用类型分配稳定的字符串标识。
-///     作为实例挂载在 <see cref="Snd.SndWorld" /> 上，生命周期随运行时管理。
-///     引擎适配层可在启动时通过 <see cref="RegisterType{T}" /> 注册额外类型。
+///     Assigns stable string identifiers to common types for use in JSON.
+///     Mounted as an instance on <see cref="Snd.SndWorld" />, with lifecycle managed by the runtime.
+///     Engine adapter layers can register additional types at startup via <see cref="RegisterType{T}" />.
 /// </summary>
 public sealed class TypeStringMapping
 {

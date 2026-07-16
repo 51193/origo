@@ -3,7 +3,7 @@ using Origo.Core.Abstractions.Logging;
 namespace Origo.Core.Logging;
 
 /// <summary>
-///     无输出日志实现，用于测试或不需要日志的调用方。
+///     No-op logging implementation for testing or callers that do not require logging.
 /// </summary>
 public sealed class NullLogger : ILogger
 {

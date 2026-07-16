@@ -6,7 +6,7 @@ using Origo.Core.Logging;
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     解析按行的 <c>key: value</c> 文本（忽略空行与 <c>#</c> 注释行）。
+///     Parses line-based <c>key: value</c> text (ignoring blank lines and <c>#</c> comment lines).
 /// </summary>
 internal static class KeyValueFileParser
 {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     管理 <see cref="DataSourceConverter{T}" /> 实例的注册表，按类型进行存取。
+///     A registry that manages <see cref="DataSourceConverter{T}" /> instances, accessed by type.
 /// </summary>
 public sealed class DataSourceConverterRegistry
 {

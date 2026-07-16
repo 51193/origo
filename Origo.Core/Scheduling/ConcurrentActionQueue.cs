@@ -6,12 +6,15 @@ using Origo.Core.Logging;
 namespace Origo.Core.Scheduling;
 
 /// <summary>
-///     线程安全的延迟执行队列，可在调度器或主循环中按批次执行入队的 Action。
-///     仅作为 Core 内部实现细节，对程序集外不可见。
+///     Thread-safe deferred execution queue that executes enqueued actions in batches
+///     within a scheduler or main loop. Internal Core implementation detail, not visible
+///     outside the assembly.
 ///     <para>
-///         <b>Fail-fast 语义：</b>当单个延迟操作抛出异常时，该异常会被记录并通过 <c>throw</c>
-///         立即传播，导致当前批次中剩余的操作 <em>全部放弃执行</em>。调用方必须保证入队的
-///         Action 自身健壮。如需部分失败继续执行的语义，请在 Action 内部自行捕获异常。
+///         <b>Fail-fast semantics:</b> when a single deferred action throws an exception,
+///         it is logged and immediately propagated via <c>throw</c>, causing all remaining
+///         actions in the current batch to be <em>abandoned</em>. Callers must ensure
+///         enqueued actions are robust. If partial-failure-continue semantics are needed,
+///         catch exceptions within the action itself.
 ///     </para>
 /// </summary>
 internal class ConcurrentActionQueue
@@ -26,9 +29,9 @@ internal class ConcurrentActionQueue
     private readonly ILogger _logger;
 
     /// <summary>
-    ///     创建一个新的并发动作队列。
+    ///     Creates a new concurrent action queue.
     /// </summary>
-    /// <param name="logger">日志接口，用于记录异常情况。</param>
+    /// <param name="logger">Logger instance for recording exceptions.</param>
     public ConcurrentActionQueue(ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
@@ -47,9 +50,9 @@ internal class ConcurrentActionQueue
     }
 
     /// <summary>
-    ///     入队一个待执行的动作。
+    ///     Enqueues an action for deferred execution.
     /// </summary>
-    /// <param name="action">要执行的动作。</param>
+    /// <param name="action">The action to execute.</param>
     public void Enqueue(Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -61,15 +64,18 @@ internal class ConcurrentActionQueue
     }
 
     /// <summary>
-    ///     以批次方式执行队列中的所有动作。
-    ///     如果在某批执行过程中又有新的动作入队，将在下一轮批处理中继续执行。
+    ///     Executes all queued actions in batched mode.
+    ///     If new actions are enqueued during execution of a batch, they will be processed
+    ///     in the next round of batch processing.
     ///     <para>
-    ///         <b>注意：</b>采用 fail-fast 策略。若任一 Action 抛出异常，该异常在记录日志后
-    ///         立刻重新抛出，队列中尚未执行的 Action 将被丢弃。调用方应确保入队 Action 不会抛出
-    ///         未处理异常，或在 Action 内部自行捕获。
+    ///         <b>Note:</b> uses fail-fast strategy. If any action throws an exception,
+    ///         it is re-thrown immediately after logging, and remaining unexecuted actions
+    ///         in the queue are discarded. Callers should ensure enqueued actions do not
+    ///         throw unhandled exceptions, or catch them within the action itself.
     ///     </para>
     /// </summary>
-    /// <returns>本次调用中执行的总动作数量（含异常抛出前已成功执行的数量）。</returns>
+    /// <returns>Total number of actions executed in this call (including those successfully
+    /// executed before an exception was thrown).</returns>
     public int ExecuteAll()
     {
         var executeCount = 0;
@@ -109,7 +115,7 @@ internal class ConcurrentActionQueue
     }
 
     /// <summary>
-    ///     清空队列中的所有待执行动作。
+    ///     Clears all pending actions in the queue.
     /// </summary>
     public void Clear()
     {

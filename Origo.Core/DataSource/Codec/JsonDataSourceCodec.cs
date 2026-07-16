@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace Origo.Core.DataSource.Codec;
 
 /// <summary>
-///     基于 System.Text.Json 的 JSON 编解码器，支持延迟展开。
+///     JSON codec based on System.Text.Json, supporting lazy expansion.
 /// </summary>
 internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSourceCodec
 {

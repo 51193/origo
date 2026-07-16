@@ -6,10 +6,10 @@ using Origo.Core.Snd.Strategy;
 namespace Origo.Core.StateMachine;
 
 /// <summary>
-///     字符串栈状态机：运行时 <see cref="Push" /> 调用 Push 策略的 <see cref="StateMachineStrategyBase.OnPushRuntime" />；
-///     读档刷新调用 <see cref="StateMachineStrategyBase.OnPushAfterLoad" />；
-///     运行时出栈调用 Pop 策略的 <see cref="StateMachineStrategyBase.OnPopRuntime" />；
-///     退出逐级出栈调用 <see cref="StateMachineStrategyBase.OnPopBeforeQuit" />。
+///     A string-stack state machine: runtime <see cref="Push" /> invokes the push strategy's <see cref="StateMachineStrategyBase.OnPushRuntime" />;
+///     post-load flush invokes <see cref="StateMachineStrategyBase.OnPushAfterLoad" />;
+///     runtime pop invokes the Pop strategy's <see cref="StateMachineStrategyBase.OnPopRuntime" />;
+///     quit-time staged pop invokes <see cref="StateMachineStrategyBase.OnPopBeforeQuit" />.
 /// </summary>
 public sealed class StackStateMachine : IStateMachine, IDisposable
 {
@@ -50,7 +50,7 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
         }
     }
 
-    /// <summary>释放 Push/Pop 策略的池引用。</summary>
+    /// <summary>Releases the pool references for the Push and Pop strategies.</summary>
     public void Dispose()
     {
         if (_disposed) return;
@@ -60,16 +60,16 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
         _disposed = true;
     }
 
-    /// <summary>此状态机在容器中的逻辑键。</summary>
+    /// <summary>The logical key of this state machine in the container.</summary>
     public string MachineKey { get; }
 
-    /// <summary>入栈策略在策略池中的索引。</summary>
+    /// <summary>The index of the push strategy in the strategy pool.</summary>
     public string PushStrategyIndex { get; }
 
-    /// <summary>出栈策略在策略池中的索引。</summary>
+    /// <summary>The index of the pop strategy in the strategy pool.</summary>
     public string PopStrategyIndex { get; }
 
-    /// <summary>运行时入栈：将值压入栈顶，然后调用 Push 策略的 <see cref="StateMachineStrategyBase.OnPushRuntime" />。</summary>
+    /// <summary>Runtime push: pushes the value to the top of the stack, then invokes the push strategy's <see cref="StateMachineStrategyBase.OnPushRuntime" />.</summary>
     public void Push(string value)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -84,14 +84,14 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
         _pushStrategy.OnPushRuntime(context, _ctx);
     }
 
-    /// <summary>运行时出栈：调用 Pop 策略的 <see cref="StateMachineStrategyBase.OnPopRuntime" />，然后移除栈顶。</summary>
+    /// <summary>Runtime pop: invokes the Pop strategy's <see cref="StateMachineStrategyBase.OnPopRuntime" />, then removes the top of the stack.</summary>
     public bool TryPopRuntime(out string? popped)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         return TryPopCore(out popped, (c) => _popStrategy.OnPopRuntime(c, _ctx));
     }
 
-    /// <summary>退出流程出栈：调用 Pop 策略的 <see cref="StateMachineStrategyBase.OnPopBeforeQuit" />，然后移除栈顶。</summary>
+    /// <summary>Quit-time pop: invokes the Pop strategy's <see cref="StateMachineStrategyBase.OnPopBeforeQuit" />, then removes the top of the stack.</summary>
     public bool TryPopOnQuit(out string? popped)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -117,7 +117,7 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
         return true;
     }
 
-    /// <summary>查看栈顶元素，不弹出。空栈时 found 为 false。</summary>
+    /// <summary>Peeks at the top element without popping. found is false when the stack is empty.</summary>
     public (bool found, string? top) Peek()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -126,14 +126,14 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
         return (true, _stack[^1]);
     }
 
-    /// <summary>返回栈的只读快照（从栈底到栈顶）。</summary>
+    /// <summary>Returns a read-only snapshot of the stack (from bottom to top).</summary>
     public IReadOnlyList<string> Snapshot()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         return [.. _stack];
     }
 
-    /// <summary>从快照恢复栈内容，不触发任何策略钩子。配合 <see cref="FlushAfterLoad" /> 使用。</summary>
+    /// <summary>Restores stack contents from a snapshot without triggering any strategy hooks. Use together with <see cref="FlushAfterLoad" />.</summary>
     public void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -148,7 +148,7 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
         }
     }
 
-    /// <summary>读档恢复后，按从栈底到栈顶顺序对每层调用 Push 策略的 <see cref="StateMachineStrategyBase.OnPushAfterLoad" />。</summary>
+    /// <summary>After loading, invokes the push strategy's <see cref="StateMachineStrategyBase.OnPushAfterLoad" /> for each layer in bottom-to-top order.</summary>
     public void FlushAfterLoad()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);

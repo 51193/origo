@@ -6,7 +6,8 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Blackboard;
 
 /// <summary>
-///     默认的内存黑板实现，使用 TypedData 存储键值对以保留类型信息。
+///     Default in-memory blackboard implementation using TypedData to store key-value pairs
+///     while preserving type information.
 /// </summary>
 public sealed class Blackboard : IBlackboard
 {

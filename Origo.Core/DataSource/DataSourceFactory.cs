@@ -8,7 +8,7 @@ using Origo.Core.Serialization;
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     创建预配置的 <see cref="DataSourceConverterRegistry" /> 与编解码器实例的工厂。
+///     Factory that creates pre-configured <see cref="DataSourceConverterRegistry" /> and codec instances.
 /// </summary>
 public static class DataSourceFactory
 {

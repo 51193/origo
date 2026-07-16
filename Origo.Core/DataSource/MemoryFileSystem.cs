@@ -7,8 +7,9 @@ using Origo.Core.Abstractions.FileSystem;
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     纯内存 <see cref="IFileSystem" /> 实现，不依赖任何物理文件系统或引擎 API。
-///     用于后台关卡等 Core 层内存运行场景，以及单元测试。
+///     A pure in-memory <see cref="IFileSystem" /> implementation, with no dependency on any physical
+///     file system or engine API. Used for Core-layer in-memory scenarios such as background levels,
+///     as well as unit tests.
 /// </summary>
 public sealed class MemoryFileSystem : IFileSystem
 {

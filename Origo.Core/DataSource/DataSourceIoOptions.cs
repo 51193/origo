@@ -5,7 +5,7 @@ using System.IO;
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     DataSource I/O 路由配置中心：按文件后缀选择编解码器。
+///     DataSource I/O routing configuration center: selects codecs by file suffix.
 /// </summary>
 internal sealed class DataSourceIoOptions
 {

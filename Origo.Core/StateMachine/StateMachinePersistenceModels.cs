@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Origo.Core.StateMachine;
 
 /// <summary>
-///     可序列化的状态机容器快照（存档 / 读档）。
+///     Serializable state machine container snapshot (save / load).
 /// </summary>
 internal sealed class StateMachineContainerPayload
 {

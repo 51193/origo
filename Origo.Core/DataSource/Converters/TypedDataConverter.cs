@@ -5,8 +5,8 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.DataSource.Converters;
 
 /// <summary>
-///     TypedData 与 DataSourceNode 之间的转换器。
-///     JSON 格式：{ "type": "System.Int32", "data": 42 }
+///     Converter between TypedData and DataSourceNode.
+///     JSON format: { "type": "System.Int32", "data": 42 }
 /// </summary>
 internal sealed class TypedDataConverter : DataSourceConverter<TypedData>
 {

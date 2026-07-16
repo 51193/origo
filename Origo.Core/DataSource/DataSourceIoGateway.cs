@@ -5,9 +5,10 @@ using Origo.Core.Abstractions.FileSystem;
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     DataSource 文件 I/O 中间层默认实现。
-///     所有文件内容的读写均通过后缀路由到对应的 <see cref="IDataSourceCodec" />，
-///     编码/解码异常统一包装为 <see cref="InvalidOperationException" />（含文件路径与后缀信息）。
+///     Default implementation of the DataSource file I/O intermediate layer. All file content read/write
+///     operations are routed to the corresponding <see cref="IDataSourceCodec" /> via suffix, and
+///     encode/decode exceptions are uniformly wrapped as <see cref="InvalidOperationException" />
+///     (including file path and suffix information).
 /// </summary>
 internal sealed class DataSourceIoGateway : IDataSourceIoGateway
 {

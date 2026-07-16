@@ -1,8 +1,9 @@
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     数据源编解码器接口，负责原始文本与 <see cref="DataSourceNode" /> 之间的双向转换。
-///     不同的文件格式（JSON、map 等）各自提供实现。
+///     Data source codec interface, responsible for bidirectional conversion between raw text and
+///     <see cref="DataSourceNode" />. Different file formats (JSON, map, etc.) each provide their
+///     own implementation.
 /// </summary>
 internal interface IDataSourceCodec
 {

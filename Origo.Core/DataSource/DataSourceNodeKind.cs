@@ -1,7 +1,7 @@
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     数据源节点的类型，描述节点持有的数据结构。
+///     The kind of a data source node, describing the data structure the node holds.
 /// </summary>
 public enum DataSourceNodeKind
 {

@@ -6,8 +6,8 @@ using Origo.Core.Logging;
 namespace Origo.Core.DataSource.Codec;
 
 /// <summary>
-///     简单 key: value 格式的编解码器（.map 文件）。
-///     不支持延迟加载，因为 .map 文件始终较小且扁平。
+///     Codec for the simple key: value format (.map files). Lazy loading is not supported because .map files
+///     are always small and flat.
 /// </summary>
 internal sealed class MapDataSourceCodec : IDataSourceCodec
 {

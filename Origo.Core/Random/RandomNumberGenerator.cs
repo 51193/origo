@@ -3,7 +3,8 @@ using System;
 namespace Origo.Core.Random;
 
 /// <summary>
-///     基于 XorShift128+ 的可复现随机数实现，随机状态由调用方显式维护。
+///     Reproducible random number generator based on XorShift128+, with random state
+///     explicitly maintained by the caller.
 /// </summary>
 public static class RandomNumberGenerator
 {
@@ -12,7 +13,7 @@ public static class RandomNumberGenerator
     private const ulong _defaultStateValue = 0xBAD5EED;
 
     /// <summary>
-    ///     由字符串种子生成可复现的初始随机状态。
+    ///     Generates a reproducible initial random state from a string seed.
     /// </summary>
     public static (ulong s0, ulong s1) CreateStateFromSeed(string seed)
     {
@@ -25,7 +26,7 @@ public static class RandomNumberGenerator
     }
 
     /// <summary>
-    ///     从传入状态计算下一个 UInt64，并返回下一状态。
+    ///     Computes the next UInt64 from the given state and returns the next state.
     /// </summary>
     public static (ulong value, ulong nextS0, ulong nextS1) NextUInt64(ulong s0, ulong s1)
     {

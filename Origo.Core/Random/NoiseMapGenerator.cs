@@ -4,7 +4,8 @@ using Origo.Core.Addons.FastNoiseLite;
 namespace Origo.Core.Random;
 
 /// <summary>
-///     生成二维噪声图（行优先一维数组），用于应用层快速获取可复现地形噪声。
+///     Generates 2D noise maps (row-major 1D array) for fast reproducible terrain noise
+///     in application layers.
 /// </summary>
 public static class NoiseMapGenerator
 {
@@ -14,21 +15,22 @@ public static class NoiseMapGenerator
     private const float _defaultFrequency = 0.01f;
 
     /// <summary>
-    ///     生成 Simplex + Worley(70/30) 混合噪声图，返回长度为 <c>size*size</c> 的行优先数组，值域为 <c>0..1</c>。
+    ///     Generates a Simplex + Worley (70/30) blended noise map, returning a row-major array
+    ///     of length <c>size*size</c> with values in <c>0..1</c>.
     /// </summary>
     public static float[] GenerateSimplexWorleyBlendMap(int size, int seed = _defaultSeed,
         float frequency = _defaultFrequency) => GenerateSimplexWorleyBlendMap(size, seed, frequency, 1, 2f, 0.5f, 1f);
 
     /// <summary>
-    ///     生成 Simplex + Worley(70/30) 混合噪声图（扩展参数版本）。
+    ///     Generates a Simplex + Worley (70/30) blended noise map (extended parameter version).
     /// </summary>
-    /// <param name="size">网格边长</param>
-    /// <param name="seed">随机种子</param>
-    /// <param name="frequency">噪声频率</param>
-    /// <param name="octaves">分形叠加层数</param>
-    /// <param name="lacunarity">分形间隙系数</param>
-    /// <param name="gain">分形增益系数</param>
-    /// <param name="worleyFrequencyMultiplier">Worley 噪声频率倍率（相对 simplex frequency）</param>
+    /// <param name="size">Grid side length</param>
+    /// <param name="seed">Random seed</param>
+    /// <param name="frequency">Noise frequency</param>
+    /// <param name="octaves">Number of fractal octaves</param>
+    /// <param name="lacunarity">Fractal lacunarity</param>
+    /// <param name="gain">Fractal gain</param>
+    /// <param name="worleyFrequencyMultiplier">Worley noise frequency multiplier (relative to simplex frequency)</param>
     public static float[] GenerateSimplexWorleyBlendMap(int size, int seed, float frequency,
         int octaves, float lacunarity, float gain, float worleyFrequencyMultiplier)
     {

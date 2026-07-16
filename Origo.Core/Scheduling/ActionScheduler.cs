@@ -5,8 +5,9 @@ using Origo.Core.Abstractions.Runtime;
 namespace Origo.Core.Scheduling;
 
 /// <summary>
-///     基于 ConcurrentActionQueue 的简单调度器实现。
-///     宿主环境负责在合适的时间调用 Tick 执行排队的动作。
+///     Simple scheduler implementation based on ConcurrentActionQueue.
+///     The host environment is responsible for calling Tick to execute queued actions
+///     at appropriate times.
 /// </summary>
 internal sealed class ActionScheduler(ILogger logger) : IScheduler
 {
@@ -15,7 +16,7 @@ internal sealed class ActionScheduler(ILogger logger) : IScheduler
     public void Enqueue(Action action) => _queue.Enqueue(action);
 
     /// <summary>
-    ///     由宿主循环调用，用于执行已排队的所有动作。
+    ///     Called by the host loop to execute all queued actions.
     /// </summary>
     public int Tick() => _queue.ExecuteAll();
 

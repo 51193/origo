@@ -1,7 +1,7 @@
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     数据源转换器的非泛型基类，用于在注册表中进行运行时类型分发。
+///     Non-generic base class for data source converters, used for runtime type dispatch in the registry.
 /// </summary>
 public abstract class DataSourceConverterBase
 {
@@ -10,7 +10,8 @@ public abstract class DataSourceConverterBase
 }
 
 /// <summary>
-///     数据源转换器基类，负责在 <see cref="DataSourceNode" /> 与强类型对象之间双向转换。
+///     Base class for data source converters, responsible for bidirectional conversion between
+///     <see cref="DataSourceNode" /> and strongly-typed objects.
 /// </summary>
 public abstract class DataSourceConverter<T> : DataSourceConverterBase
 {

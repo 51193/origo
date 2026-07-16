@@ -8,9 +8,10 @@ using System.Text;
 namespace Origo.Core.DataSource;
 
 /// <summary>
-///     数据源树中的单个节点，支持延迟展开。
-///     实现 <see cref="IDisposable" /> 以显式释放节点树所持有的资源（子节点、延迟展开闭包等），
-///     防止大型节点树在不再需要时继续占用内存。
+///     A single node in the data source tree, supporting lazy expansion.
+///     Implements <see cref="IDisposable" /> to explicitly release resources held by the node tree
+///     (child nodes, lazy expansion closures, etc.), preventing large node trees from continuing
+///     to occupy memory when no longer needed.
 /// </summary>
 public sealed class DataSourceNode : IDisposable
 {
@@ -42,7 +43,7 @@ public sealed class DataSourceNode : IDisposable
     }
 
     /// <summary>
-    ///     节点类型，访问时触发延迟展开。
+    ///     The node kind. Triggers lazy expansion on access.
     /// </summary>
     public DataSourceNodeKind Kind
     {
@@ -114,8 +115,8 @@ public sealed class DataSourceNode : IDisposable
     }
 
     /// <summary>
-    ///     释放此节点及其所有子节点所持有的资源。
-    ///     释放后任何访问操作将抛出 <see cref="ObjectDisposedException" />。
+    ///     Releases resources held by this node and all its child nodes.
+    ///     After disposal, any access operation will throw <see cref="ObjectDisposedException" />.
     /// </summary>
     public void Dispose()
     {
@@ -226,8 +227,8 @@ public sealed class DataSourceNode : IDisposable
     }
 
     /// <summary>
-    ///     计算整个节点树的 SHA-256 哈希（十六进制小写）。
-    ///     用于写入幂等性校验——同一数据树产生相同 hash。
+    ///     Computes the SHA-256 hash of the entire node tree (lowercase hexadecimal).
+    ///     Used for write idempotency verification — the same data tree produces the same hash.
     /// </summary>
     public string ComputeSha256Hash()
     {
@@ -283,7 +284,7 @@ public sealed class DataSourceNode : IDisposable
     public static DataSourceNode CreateNull() => new(DataSourceNodeKind.Null);
 
     /// <summary>
-    ///     创建延迟展开节点，仅供编解码器内部使用。
+    ///     Creates a lazy-expansion node, for internal codec use only.
     /// </summary>
     internal static DataSourceNode CreateLazy(string rawText, Func<string, DataSourceNode> expander) =>
         new(rawText, expander);
