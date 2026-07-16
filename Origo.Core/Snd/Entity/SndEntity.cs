@@ -269,8 +269,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     {
         ((IEntityLifecycle)this).FireBeforeQuitHooks();
         TeardownObserverBindingsForDeath();
-        ((IEntityLifecycle)this).ReleaseStrategiesOnly();
-        ((IEntityLifecycle)this).TeardownOnly();
+        ReleaseAndTeardown();
         _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity quit."));
     }
 
@@ -282,9 +281,14 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     {
         ((IEntityLifecycle)this).FireBeforeDeadHooks();
         TeardownObserverBindingsForDeath();
+        ReleaseAndTeardown();
+        _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity dead."));
+    }
+
+    private void ReleaseAndTeardown()
+    {
         ((IEntityLifecycle)this).ReleaseStrategiesOnly();
         ((IEntityLifecycle)this).TeardownOnly();
-        _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity dead."));
     }
 
     private void TeardownObserverBindingsForDeath() => _observerTopology.TeardownAllBindingsFor((ISndEntity)this);

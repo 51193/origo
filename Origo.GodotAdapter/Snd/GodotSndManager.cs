@@ -11,6 +11,7 @@ using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Logging;
 using Origo.Core.Snd.Strategy;
 
 namespace Origo.GodotAdapter.Snd;
@@ -82,8 +83,10 @@ public partial class GodotSndManager
                 if (_owningSession is not null)
                     snd.BindSession(_owningSession);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
+                    new LogMessageBuilder().AddContext("entityName", meta.Name).Build($"Entity recovery failed, rolling back partial load: {ex.Message}"));
                 RollbackPartialLoad(staged);
                 throw;
             }
@@ -100,6 +103,7 @@ public partial class GodotSndManager
 
     public ISndEntity CreateEntity(SndMetaData metaData)
     {
+        ArgumentNullException.ThrowIfNull(metaData);
         var staged = new List<GodotSndEntity>();
         try
         {
@@ -112,8 +116,10 @@ public partial class GodotSndManager
                 snd.BindSession(_owningSession);
             return snd;
         }
-        catch
+        catch (Exception ex)
         {
+            SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
+                new LogMessageBuilder().AddContext("entityName", metaData.Name).Build($"Entity creation failed, rolling back: {ex.Message}"));
             RollbackPartialLoad(staged);
             throw;
         }

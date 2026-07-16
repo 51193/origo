@@ -102,6 +102,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ConsoleBridgeServer.Start` added cancellation re-validation between `Interlocked` gate and `TcpListener` creation to close TOCTOU race with `Dispose`.
 - Broken bare `.md` links in root `README.md` and `README.zh-CN.md` replaced with language-suffixed `.en.md` / `.zh.md` targets.
 - Broken `docs/META.md` link in `CONTRIBUTING.md` fixed to point to `docs/META.en.md`.
+- `GodotSndManager` rollback paths now log the original exception via `SharedLogger` before rethrowing, providing diagnostic context for partial entity load failures.
+- `Origo.sln` — `Origo.GodotAdapter.Integration.Tests` Release configurations corrected from Debug to Release.
+- `ConsoleOutputChannel.Publish` logs each subscriber failure via an optional `ILogger` parameter (defaults to `NullLogger.Instance`), preserving backward compatibility.
+- `SndEntity.QuitSingle` and `DeadSingle` now delegate shared teardown to a single `ReleaseAndTeardown` helper, keeping the two lifecycle paths symmetric.
 
 ## [0.0.8] - 2026-06-30
 

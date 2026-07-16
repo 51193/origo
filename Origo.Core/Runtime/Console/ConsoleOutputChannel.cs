@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Console;
+using Origo.Core.Abstractions.Logging;
+using Origo.Core.Logging;
 
 namespace Origo.Core.Runtime.Console;
 
@@ -8,8 +10,10 @@ namespace Origo.Core.Runtime.Console;
 ///     Console output publishing channel (producer-consumer).
 ///     The Core does not retain history; it only broadcasts output to current subscribers.
 /// </summary>
-public sealed class ConsoleOutputChannel : IConsoleOutputChannel
+/// <param name="logger">Optional logger; defaults to <see cref="NullLogger.Instance" />.</param>
+public sealed class ConsoleOutputChannel(ILogger? logger = null) : IConsoleOutputChannel
 {
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
     private readonly Dictionary<long, Action<string>> _listeners = [];
     private readonly object _lock = new();
     private long _nextId = 1;
@@ -55,6 +59,10 @@ public sealed class ConsoleOutputChannel : IConsoleOutputChannel
             {
                 firstError ??= ex;
                 errorCount++;
+                _logger.Log(LogLevel.Warning, nameof(ConsoleOutputChannel),
+                    new LogMessageBuilder()
+                        .AddContext("subscriberErrorCount", errorCount)
+                        .Build($"Subscriber threw during Publish: {ex.Message}"));
             }
         }
 
