@@ -1,0 +1,28 @@
+<!-- docsync-pair: Origo.TestSupport/Node/README -->
+<!-- docsync-revision: 1 -->
+<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+
+# Node
+
+> [↑ 回到 TestSupport](../README.zh.md)
+
+## 概述
+
+SND 节点抽象的测试替身：`INodeHandle` 和 `INodeFactory`，支持调用计数验证和模拟失败。
+
+## 包含文件
+
+| 文件 | 职责 |
+|------|------|
+| `TestNodeHandle.cs` | 实现 `INodeHandle`。提供 `FreeCount` 计数器、`IsVisible` 状态追踪和 `Name` 属性。 |
+| `TestNodeFactory.cs` | 实现 `INodeFactory`。接受可选的 `IEnumerable<string>` 资源 ID 列表用于模拟创建失败。记录所有创建的 `TestNodeHandle` 实例，并提供 `FailCount` 计数器。 |
+
+## 设计决策
+
+### 为什么 Node 替身与 SndSceneHost 替身分离
+
+节点生命周期（创建 → 查询 → 释放）和场景宿主生命周期（实体容器管理）是两个正交关注点。分离替身允许测试在仅需要节点 mock 时无需引入场景宿主依赖。
+
+---
+
+[↑ 回到 TestSupport](../README.zh.md)

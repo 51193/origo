@@ -1,5 +1,5 @@
 <!-- docsync-pair: docs/Origo.TestSupport/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Origo.TestSupport
@@ -9,14 +9,15 @@
 
 ## 模块
 
-- **`Logging/TestLogger`** — 内存日志采集器，支持按级别过滤和消息记录
-- **`Reporting/PerfReporter`** — 性能基准报告工具，支持单方法报告和多方法对比
-- **`FileSystem/TestMemoryFileSystem`** — `IFileSystem` 的内存实现，支持完整文件系统操作
-- **`Node/TestNodeHandle`** — `INodeHandle` 的测试替身
-- **`Node/TestNodeFactory`** — `INodeFactory` 的测试替身，可模拟创建失败
-- **`Scene/TestSndSceneHost`** — `ISndSceneHost` 的测试替身（含 `DummySndEntity`）
-- **`Strategies/SharedTestStrategies`** — 共享测试策略抽象基类
-- **`Observer/TestObserverEvents`** — 观察者事件采集工具
+| 子模块 | 说明 |
+|--------|------|
+| [FileSystem](FileSystem/README.zh.md) | `IFileSystem` 纯内存测试替身 |
+| [Logging](Logging/README.zh.md) | `ILogger` 内存日志采集器 |
+| [Node](Node/README.zh.md) | `INodeHandle` / `INodeFactory` 测试替身 |
+| [Observer](Observer/README.zh.md) | 观察者事件采集基础设施 |
+| [Reporting](Reporting/README.zh.md) | 性能基准报告工具 |
+| [Scene](Scene/README.zh.md) | `ISndSceneHost` 测试替身 |
+| [Strategies](Strategies/README.zh.md) | 共享测试策略基类和索引常量 |
 
 ## 使用
 

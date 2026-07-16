@@ -1,5 +1,5 @@
 <!-- docsync-pair: docs/Origo.TestSupport/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Origo.TestSupport
@@ -10,14 +10,15 @@ base classes.
 
 ## Modules
 
-- **`Logging/TestLogger`** — In-memory log collector with level filtering and message recording
-- **`Reporting/PerfReporter`** — Performance benchmark reporter supporting single-method reports and comparisons
-- **`FileSystem/TestMemoryFileSystem`** — In-memory `IFileSystem` implementation supporting full file system operations
-- **`Node/TestNodeHandle`** — Test double for `INodeHandle`
-- **`Node/TestNodeFactory`** — Test double for `INodeFactory`, supports simulated creation failures
-- **`Scene/TestSndSceneHost`** — Test double for `ISndSceneHost` (includes `DummySndEntity`)
-- **`Strategies/SharedTestStrategies`** — Shared abstract test strategy base classes
-- **`Observer/TestObserverEvents`** — Observer event collection utilities
+| Sub-module | Description |
+|------------|-------------|
+| [FileSystem](FileSystem/README.en.md) | Pure in-memory `IFileSystem` test double |
+| [Logging](Logging/README.en.md) | `ILogger` in-memory log collector |
+| [Node](Node/README.en.md) | `INodeHandle` / `INodeFactory` test doubles |
+| [Observer](Observer/README.en.md) | Observer event collection infrastructure |
+| [Reporting](Reporting/README.en.md) | Performance benchmark reporter |
+| [Scene](Scene/README.en.md) | `ISndSceneHost` test double |
+| [Strategies](Strategies/README.en.md) | Shared test strategy base classes and index constants |
 
 ## Usage
 

@@ -30,8 +30,8 @@
     "docs/Origo.TestSupport/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.TestSupport/README.zh.md",
@@ -1136,6 +1136,83 @@
       "files": {
         "zh": "Origo.SourceGeneration/README.zh.md",
         "en": "Origo.SourceGeneration/README.en.md"
+      }
+    },
+    "Origo.TestSupport/FileSystem/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.TestSupport/FileSystem/README.zh.md",
+        "en": "Origo.TestSupport/FileSystem/README.en.md"
+      }
+    },
+    "Origo.TestSupport/Logging/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.TestSupport/Logging/README.zh.md",
+        "en": "Origo.TestSupport/Logging/README.en.md"
+      }
+    },
+    "Origo.TestSupport/Node/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.TestSupport/Node/README.zh.md",
+        "en": "Origo.TestSupport/Node/README.en.md"
+      }
+    },
+    "Origo.TestSupport/Observer/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.TestSupport/Observer/README.zh.md",
+        "en": "Origo.TestSupport/Observer/README.en.md"
+      }
+    },
+    "Origo.TestSupport/Reporting/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.TestSupport/Reporting/README.zh.md",
+        "en": "Origo.TestSupport/Reporting/README.en.md"
+      }
+    },
+    "Origo.TestSupport/Scene/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.TestSupport/Scene/README.zh.md",
+        "en": "Origo.TestSupport/Scene/README.en.md"
+      }
+    },
+    "Origo.TestSupport/Strategies/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "Origo.TestSupport/Strategies/README.zh.md",
+        "en": "Origo.TestSupport/Strategies/README.en.md"
       }
     },
     "README": {
