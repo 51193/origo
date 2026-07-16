@@ -1,5 +1,5 @@
-<!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: docs/Origo.SourceGeneration.Tests/README -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration.Tests
 
@@ -62,17 +62,7 @@
 
 ## Benchmarks/TypedDataGeneratedBenchmarkTests 测试详情
 
-> 标记 `[Trait("Category","Benchmark")]`（类级），仅由 `scripts/benchmark.sh` 运行；`test.sh` 全量测试以 `--filter "Category!=Benchmark"` 排除。每个用例先校验生成路径与装箱基线命中数一致，再断言生成路径不超过基线 8× 且单基准总耗时低于上限，并打印比对表格。
-
-### 正确路径（性能基准）
-
-| 测试方法 | 验证的行为 | 文档出处 |
-|---------|-----------|---------|
-| `ValueTypes_WriteThroughput_GeneratedOperator_vs_BoxedClass` | 值类型（`int`/`long`/`float`/`double`/`bool`/`char`）写入：生成的 `explicit operator` vs 装箱类，在预算内 | Origo.SourceGeneration |
-| `ValueTypes_ReadThroughput_GeneratedKind_vs_BoxedIsT` | 值类型读取：生成的 `TryGetXxx`（Kind 分发）vs 装箱 `Data is T`，命中数一致且在预算内 | Origo.SourceGeneration |
-| `ReferenceType_String_GeneratedRefSlot_vs_BoxedClass` | `string` 通过 `_ref` 槽的写入与读取 vs 装箱类 | Origo.SourceGeneration |
-| `StringRead_IsString_vs_BoxedIsT` | `string` 的 `IsString` 判定 vs 装箱 `Data is string` | Origo.SourceGeneration |
-| `MixedDispatch_GeneratedKind_vs_BoxedIsT` | 混合类型池（int/float/bool/string/double）的 Kind 分发 vs 装箱 `is T`，命中数一致且在预算内 | Origo.SourceGeneration |
+> 详见 [Benchmarks.zh.md](Benchmarks.zh.md)。基准标记 `[Trait("Category","Benchmark")]`（类级），仅由 `scripts/benchmark.sh` 运行。
 
 ## 测试辅助策略
 

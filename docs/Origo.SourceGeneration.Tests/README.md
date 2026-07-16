@@ -3,8 +3,10 @@
 # docs/Origo.SourceGeneration.Tests
 
 ## 中文
+- [Benchmarks](Benchmarks.zh.md)
 - [README](README.zh.md)
 
 ## English
+- [Benchmarks](Benchmarks.en.md)
 - [README](README.en.md)
 

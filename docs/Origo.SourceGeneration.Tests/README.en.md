@@ -1,5 +1,5 @@
-<!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: docs/Origo.SourceGeneration.Tests/README -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration.Tests
 
@@ -62,17 +62,7 @@
 
 ## Benchmarks/TypedDataGeneratedBenchmarkTests Test Details
 
-> Marked `[Trait("Category","Benchmark")]` (class-level), run only by `scripts/benchmark.sh`; `test.sh` full test run excludes with `--filter "Category!=Benchmark"`. Each case first validates that generated path and boxing baseline hit counts match, then asserts generated path does not exceed baseline by 8× and single benchmark total elapsed is below upper limit, and prints comparison tables.
-
-### Happy Paths (Performance Benchmarks)
-
-| Test Method | Verified Behavior | Doc Source |
-|---------|-----------|---------|
-| `ValueTypes_WriteThroughput_GeneratedOperator_vs_BoxedClass` | Value type (`int`/`long`/`float`/`double`/`bool`/`char`) writes: generated `explicit operator` vs boxed class, within budget | Origo.SourceGeneration |
-| `ValueTypes_ReadThroughput_GeneratedKind_vs_BoxedIsT` | Value type reads: generated `TryGetXxx` (Kind dispatch) vs boxed `Data is T`, hit counts match and within budget | Origo.SourceGeneration |
-| `ReferenceType_String_GeneratedRefSlot_vs_BoxedClass` | `string` write and read via `_ref` slot vs boxed class | Origo.SourceGeneration |
-| `StringRead_IsString_vs_BoxedIsT` | `string` `IsString` check vs boxed `Data is string` | Origo.SourceGeneration |
-| `MixedDispatch_GeneratedKind_vs_BoxedIsT` | Mixed type pool (int/float/bool/string/double) Kind dispatch vs boxed `is T`, hit counts match and within budget | Origo.SourceGeneration |
+> See [Benchmarks.en.md](Benchmarks.en.md). Marked `[Trait("Category","Benchmark")]` (class-level), run only by `scripts/benchmark.sh`.
 
 ## Test Support Infrastructure
 
