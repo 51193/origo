@@ -4,8 +4,8 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
-///     <c>find_entity</c> 命令：按名称查找 SND 实体并显示其数据键。
-///     用法：<c>find_entity &lt;name&gt;</c>
+///     <c>find_entity</c> command: finds an SND entity by name and displays its node info.
+///     Usage: <c>find_entity &lt;name&gt;</c>
 /// </summary>
 internal sealed class FindEntityCommandHandler : ConsoleCommandHandlerBase
 {

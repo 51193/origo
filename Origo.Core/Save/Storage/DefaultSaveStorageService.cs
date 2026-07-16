@@ -8,10 +8,11 @@ using Origo.Core.Save.Meta;
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
-///     <see cref="ISaveStorageService" /> 的默认实现。
-///     通过 <see cref="SaveFileHandle" /> 统一持有 I/O 依赖，委托给
-///     <see cref="SavePayloadWriter" /> / <see cref="SavePayloadReader" /> /
-///     <see cref="SaveStorageFacade" />，使调用方无需重复传递 I/O 参数。
+///     Default implementation of <see cref="ISaveStorageService" />.
+///     Holds I/O dependencies through a single <see cref="SaveFileHandle" />
+///     and delegates to <see cref="SavePayloadWriter" /> /
+///     <see cref="SavePayloadReader" /> / <see cref="SaveStorageFacade" />,
+///     freeing callers from repeating I/O parameter passing.
 /// </summary>
 internal sealed class DefaultSaveStorageService : ISaveStorageService
 {

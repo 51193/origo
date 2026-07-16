@@ -5,10 +5,10 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
-///     <c>bb_set</c> 命令：向黑板写入一个字符串值。
-///     用法：<c>bb_set &lt;layer&gt; &lt;key&gt; &lt;value&gt;</c>
+///     <c>bb_set</c> command: writes a string value to the blackboard.
+///     Usage: <c>bb_set &lt;layer&gt; &lt;key&gt; &lt;value&gt;</c>
 ///     layer: system
-///     值将自动推断类型：整数 → Int32、浮点 → Single、"true"/"false" → Boolean、其余 → String。
+///     The value type is automatically inferred: integer → Int32, float → Single, "true"/"false" → Boolean, other → String.
 /// </summary>
 internal sealed class BlackboardSetCommandHandler : ConsoleCommandHandlerBase
 {

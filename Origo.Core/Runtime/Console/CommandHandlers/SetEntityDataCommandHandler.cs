@@ -4,8 +4,8 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
-///     <c>entity_set_data</c> 命令：按名称、键和值设置 SND 实体数据，自动推断类型并保留已有键的类型。
-///     用法：<c>entity_set_data &lt;entity&gt; &lt;key&gt; &lt;value&gt;</c>
+///     <c>entity_set_data</c> command: sets SND entity data by name, key, and value, auto-infers type and preserves the type of existing keys.
+///     Usage: <c>entity_set_data &lt;entity&gt; &lt;key&gt; &lt;value&gt;</c>
 /// </summary>
 internal sealed class SetEntityDataCommandHandler : ConsoleCommandHandlerBase
 {

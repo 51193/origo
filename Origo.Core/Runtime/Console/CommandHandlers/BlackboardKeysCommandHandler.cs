@@ -5,8 +5,8 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
-///     <c>bb_keys</c> 命令：列出指定黑板层的全部键。
-///     用法：<c>bb_keys &lt;layer&gt;</c>
+///     <c>bb_keys</c> command: lists all keys in the given blackboard layer.
+///     Usage: <c>bb_keys &lt;layer&gt;</c>
 ///     layer: system
 /// </summary>
 internal sealed class BlackboardKeysCommandHandler : ConsoleCommandHandlerBase

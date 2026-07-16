@@ -3,35 +3,38 @@ using System;
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
-///     提供与存档相关的标准相对路径拼装规则。
-///     所有返回值均为相对于存档根目录的相对路径，具体根由适配层或系统级黑板决定。
+///     Provides standard relative path assembly rules for save data.
+///     All return values are relative paths measured from the save root
+///     directory; the concrete root is determined by the adapter layer or
+///     system-level blackboard.
 /// </summary>
 internal static class SavePathLayout
 {
     internal const char PathSeparator = '/';
 
-    /// <summary>活动存档目录名称常量。</summary>
+    /// <summary>The active save directory name constant.</summary>
     public const string CurrentDirectoryName = "current";
 
-    /// <summary>写入进行中标记文件的名称常量。</summary>
+    /// <summary>The write-in-progress marker file name constant.</summary>
     public const string WriteInProgressMarkerName = ".write_in_progress";
 
-    /// <summary>Payload SHA 摘要文件的名称常量。</summary>
+    /// <summary>The payload SHA digest file name constant.</summary>
     public const string PayloadShaFileName = ".payload.sha";
 
-    /// <summary>关卡目录名称前缀常量。</summary>
+    /// <summary>The level directory name prefix constant.</summary>
     public const string LevelDirectoryPrefix = "level_";
 
-    /// <summary>策略/二次开发者自定义数据子目录名称常量。</summary>
+    /// <summary>The strategy/secondary developer custom data subdirectory name constant.</summary>
     public const string ExtraDirectoryName = "extra";
 
     /// <summary>
-    ///     获取活动存档目录的相对路径（即 <c>current</c>）。
+    ///     Gets the relative path of the active save directory (i.e., <c>current</c>).
     /// </summary>
     public static string GetCurrentDirectory() => CurrentDirectoryName;
 
     /// <summary>
-    ///     根据存档 ID 获取对应快照目录的相对路径（如 <c>save_001</c>）。
+    ///     Gets the relative path of the snapshot directory corresponding to
+    ///     a save ID (e.g., <c>save_001</c>).
     /// </summary>
     public static string GetSaveDirectory(string saveId)
     {
@@ -42,7 +45,7 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取 Progress 黑板 JSON 文件的相对路径。
+    ///     Gets the relative path of the Progress blackboard JSON file.
     /// </summary>
     public static string GetProgressFile(string baseDirectory)
     {
@@ -53,7 +56,7 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取 Progress 状态机快照 JSON 文件的相对路径。
+    ///     Gets the relative path of the Progress state machine snapshot JSON file.
     /// </summary>
     public static string GetProgressStateMachinesFile(string baseDirectory)
     {
@@ -64,7 +67,7 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取自定义元数据文件（meta.map）的相对路径。
+    ///     Gets the relative path of the custom metadata file (meta.map).
     /// </summary>
     public static string GetCustomMetaFile(string baseDirectory)
     {
@@ -75,7 +78,8 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     根据关卡 ID 获取该关卡存档子目录的相对路径。
+    ///     Gets the relative path of the level save subdirectory for a given
+    ///     level ID.
     /// </summary>
     public static string GetLevelDirectory(string baseDirectory, string levelId)
     {
@@ -88,7 +92,7 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取关卡 SND 场景 JSON 文件的相对路径。
+    ///     Gets the relative path of the level SND scene JSON file.
     /// </summary>
     public static string GetLevelSndSceneFile(string levelDirectory)
     {
@@ -99,7 +103,7 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取关卡 Session 黑板 JSON 文件的相对路径。
+    ///     Gets the relative path of the level Session blackboard JSON file.
     /// </summary>
     public static string GetLevelSessionFile(string levelDirectory)
     {
@@ -110,7 +114,8 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取关卡 Session 状态机快照 JSON 文件的相对路径。
+    ///     Gets the relative path of the level Session state machine snapshot
+    ///     JSON file.
     /// </summary>
     public static string GetLevelSessionStateMachinesFile(string levelDirectory)
     {
@@ -121,7 +126,7 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取写入进行中标记文件的相对路径。
+    ///     Gets the relative path of the write-in-progress marker file.
     /// </summary>
     public static string GetWriteInProgressMarker(string baseDirectory)
     {
@@ -132,7 +137,7 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取 Payload SHA 摘要文件的相对路径。
+    ///     Gets the relative path of the payload SHA digest file.
     /// </summary>
     public static string GetPayloadShaFile(string baseDirectory)
     {
@@ -143,7 +148,8 @@ internal static class SavePathLayout
     }
 
     /// <summary>
-    ///     获取策略/二次开发者自定义数据子目录的相对路径。
+    ///     Gets the relative path of the strategy/secondary developer custom
+    ///     data subdirectory.
     /// </summary>
     public static string GetExtraDirectory(string baseDirectory)
     {

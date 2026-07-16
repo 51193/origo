@@ -9,8 +9,9 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Save;
 
 /// <summary>
-///     装饰器黑板：包装内部 <see cref="IBlackboard" />，每次 mutation 自动序列化到指定文件路径。
-///     所有 mutation 操作通过锁保证线程安全。
+///     Decorator blackboard: wraps an inner <see cref="IBlackboard" /> and
+///     automatically serializes to a specified file path on every mutation.
+///     All mutation operations are thread-safe via a lock.
 /// </summary>
 public sealed class PersistentBlackboard : IBlackboard
 {
@@ -23,7 +24,8 @@ public sealed class PersistentBlackboard : IBlackboard
     private readonly DataSourceConverterRegistry _registry;
 
     /// <summary>
-    ///     创建持久化黑板实例，包装指定的内部黑板并绑定到磁盘文件路径。
+    ///     Creates a persistent blackboard instance, wrapping the specified
+    ///     inner blackboard and binding it to a disk file path.
     /// </summary>
     public PersistentBlackboard(
         IFileMetaAccess metaAccess,
@@ -49,7 +51,7 @@ public sealed class PersistentBlackboard : IBlackboard
     }
 
     /// <summary>
-    ///     设置键值并自动持久化到磁盘。
+    ///     Sets a key-value pair and automatically persists to disk.
     /// </summary>
     public void SetValue<T>(string key, T value)
     {
@@ -61,7 +63,8 @@ public sealed class PersistentBlackboard : IBlackboard
     }
 
     /// <summary>
-    ///     尝试获取指定键的值；未找到时 found 为 false。
+    ///     Attempts to get the value of the specified key; found is false
+    ///     when not found.
     /// </summary>
     public (bool found, T value) TryGet<T>(string key)
     {
@@ -72,7 +75,8 @@ public sealed class PersistentBlackboard : IBlackboard
     }
 
     /// <summary>
-    ///     清空黑板中所有键值并持久化空状态到磁盘。
+    ///     Clears all key-value pairs from the blackboard and persists
+    ///     the empty state to disk.
     /// </summary>
     public void Clear()
     {
@@ -84,7 +88,7 @@ public sealed class PersistentBlackboard : IBlackboard
     }
 
     /// <summary>
-    ///     获取黑板中所有已注册的键集合。
+    ///     Gets the set of all registered keys in the blackboard.
     /// </summary>
     public IReadOnlyCollection<string> GetKeys()
     {
@@ -95,7 +99,8 @@ public sealed class PersistentBlackboard : IBlackboard
     }
 
     /// <summary>
-    ///     将黑板中所有键值序列化为带类型信息的字典。
+    ///     Serializes all key-value pairs in the blackboard to a typed-data
+    ///     dictionary.
     /// </summary>
     public IReadOnlyDictionary<string, TypedData> SerializeAll()
     {
@@ -106,7 +111,8 @@ public sealed class PersistentBlackboard : IBlackboard
     }
 
     /// <summary>
-    ///     从带类型信息的字典恢复黑板全部键值并持久化到磁盘。
+    ///     Restores all blackboard key-value pairs from a typed-data
+    ///     dictionary and persists to disk.
     /// </summary>
     public void DeserializeAll(IReadOnlyDictionary<string, TypedData> data)
     {
@@ -118,7 +124,8 @@ public sealed class PersistentBlackboard : IBlackboard
     }
 
     /// <summary>
-    ///     启动时从磁盘恢复状态。若文件不存在则不做任何操作。
+    ///     Restores state from disk at startup. If the file does not exist,
+    ///     this is a no-op.
     /// </summary>
     public void LoadFromDisk()
     {

@@ -5,9 +5,11 @@ using Origo.Core.DataSource;
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
-///     统一的存档 I/O 操作句柄，封装 <see cref="IFileMetaAccess" />、<see cref="IDataSourceIoGateway" />、
-///     <see cref="IPathResolver" />、保存根路径和 <see cref="ISavePathPolicy" />，
-///     并合并了路径解析的辅助逻辑。
+///     Unified save I/O operation handle, encapsulating
+///     <see cref="IFileMetaAccess" />, <see cref="IDataSourceIoGateway" />,
+///     <see cref="IPathResolver" />, the save root path, and
+///     <see cref="ISavePathPolicy" />, along with consolidated path
+///     resolution helper logic.
 /// </summary>
 internal sealed class SaveFileHandle
 {

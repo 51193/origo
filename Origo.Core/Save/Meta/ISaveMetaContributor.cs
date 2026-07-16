@@ -3,10 +3,14 @@ using System.Collections.Generic;
 namespace Origo.Core.Save.Meta;
 
 /// <summary>
-///     在每次 <c>RequestSaveGame</c> 对应的实际保存执行时向展示用 <c>meta.map</c> 贡献键值。
-///     贡献者返回自己产出的键值对字典（不可修改他人贡献），由框架合并器统一合并。
-///     多个贡献者按注册顺序执行，同名键后者覆盖前者；
-///     最后由调用方传入的 <c>customMeta</c> 再次键级覆盖。
+///     Contributes key-value pairs to the display <c>meta.map</c> during each
+///     actual save execution corresponding to <c>RequestSaveGame</c>.
+///     Each contributor returns its own dictionary of produced key-value
+///     pairs (must not modify others' contributions); the framework merger
+///     combines them all. Multiple contributors execute in registration order;
+///     same-name keys from later contributors override earlier ones. Finally,
+///     <c>customMeta</c> provided by the caller performs key-level overrides
+///     once more.
 /// </summary>
 public interface ISaveMetaContributor
 {

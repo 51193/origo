@@ -6,90 +6,100 @@ using Origo.Core.Save.Meta;
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
-///     存档读写服务抽象。封装存储布局与 I/O 操作为可替换接口，
-///     使 SessionRun / ProgressRun / Workflow 等调用方与具体存储实现解耦，
-///     可在不同运行模式（前台/后台/测试/云存档）间平滑替换。
-///     所有路径拼装由实现内部的 <see cref="ISavePathPolicy" /> 决定，调用方无需感知布局。
+///     Abstraction for save read/write operations. Encapsulates storage layout
+///     and I/O as a replaceable interface, decoupling callers such as
+///     SessionRun / ProgressRun / Workflow from the concrete storage
+///     implementation, enabling smooth substitution across different run modes
+///     (foreground/background/test/cloud save). All path assembly is governed by
+///     the implementation's internal <see cref="ISavePathPolicy" />; callers
+///     do not need to be aware of the layout.
 /// </summary>
 public interface ISaveStorageService
 {
-    /// <summary>枚举所有存档槽 ID。</summary>
+    /// <summary>Enumerates all save slot IDs.</summary>
     IReadOnlyList<string> EnumerateSaveIds();
 
-    /// <summary>枚举所有存档槽及其元数据。</summary>
+    /// <summary>Enumerates all save slots with their metadata.</summary>
     IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData();
 
-    /// <summary>将存档 payload 写入 current/ 目录。</summary>
+    /// <summary>Writes a save payload to the current/ directory.</summary>
     void WriteSavePayloadToCurrent(SaveGamePayload payload);
 
-    /// <summary>将存档 payload 写入 current/ 后快照到 save_* 目录。</summary>
+    /// <summary>Writes a save payload to current/, then snapshots it to the save_* directory.</summary>
     void WriteSavePayloadToCurrentThenSnapshot(
         SaveGamePayload payload,
         string newSaveId,
         ILogger logger);
 
-    /// <summary>仅写入单个关卡 payload 到指定基目录。</summary>
+    /// <summary>Writes only a single level payload to the specified base directory.</summary>
     void WriteLevelPayloadOnly(
         string baseDirectoryRel,
         LevelPayload levelPayload,
         bool overwrite = true);
 
-    /// <summary>仅写入单个关卡 payload 到 current/ 目录。</summary>
+    /// <summary>Writes only a single level payload to the current/ directory.</summary>
     void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload, bool overwrite = true);
 
-    /// <summary>仅写入 Progress 相关文件到 current/ 目录。</summary>
+    /// <summary>Writes only Progress-related files to the current/ directory.</summary>
     void WriteProgressOnlyToCurrent(
         DataSourceNode progressNode,
         DataSourceNode progressStateMachinesNode,
         bool overwrite = true);
 
-    /// <summary>从 current/ 读取完整存档 payload。</summary>
+    /// <summary>Reads a complete save payload from current/.</summary>
     SaveGamePayload ReadSavePayloadFromCurrent(
         string saveId,
         string activeLevelId,
         ILogger? logger = null);
 
-    /// <summary>从 save_* 快照目录读取完整存档 payload。</summary>
+    /// <summary>Reads a complete save payload from a save_* snapshot directory.</summary>
     SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
         string activeLevelId);
 
-    /// <summary>从 save_* 快照目录仅读取 Progress 节点。</summary>
+    /// <summary>Reads only the Progress node from a save_* snapshot directory.</summary>
     DataSourceNode? ReadProgressNodeFromSnapshot(string saveId);
 
-    /// <summary>从 current/ 中尝试读取指定关卡的 payload，不存在时返回 null。</summary>
+    /// <summary>Attempts to read the payload of the specified level from current/; returns null when not found.</summary>
     LevelPayload? TryReadLevelPayloadFromCurrent(string levelId);
 
-    /// <summary>从 save_* 快照目录中尝试读取指定关卡的 payload，不存在时返回 null。</summary>
+    /// <summary>Attempts to read the payload of the specified level from a save_* snapshot directory; returns null when not found.</summary>
     LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId);
 
     /// <summary>
-    ///     按优先级解析并读取指定关卡的 payload：优先从 current/ 目录读取，不存在时回退到 save_* 快照。
-    ///     两处都不存在时返回 null。
-    ///     此方法封装了存档模块的内部存储层级（current/ vs snapshot），外部调用方无需感知存储位置。
+    ///     Resolves and reads the payload of the specified level by priority:
+    ///     reads from current/ first, falling back to the save_* snapshot when
+    ///     not found. Returns null when neither location has data. This method
+    ///     encapsulates the internal storage tier (current/ vs snapshot) of the
+    ///     save module; external callers do not need to be aware of the storage
+    ///     location.
     /// </summary>
-    /// <param name="saveId">当前存档槽 ID（用于快照回退时定位 save_* 目录）。</param>
-    /// <param name="levelId">目标关卡 ID。</param>
-    /// <returns>解析到的 LevelPayload，或 null（两处均无数据时）。</returns>
+    /// <param name="saveId">The current save slot ID (used to locate the save_* directory during snapshot fallback).</param>
+    /// <param name="levelId">The target level ID.</param>
+    /// <returns>The resolved LevelPayload, or null if neither location has data.</returns>
     LevelPayload? ResolveLevelPayload(string saveId, string levelId);
 
-    /// <summary>将 current/ 快照到 save_* 目录。</summary>
+    /// <summary>Snapshots current/ to a save_* directory.</summary>
     void SnapshotCurrentToSave(string newSaveId);
 
     /// <summary>
-    ///     删除 current/ 临时活动目录及其全部内容。
-    ///     设计意图：
-    ///     - 在从快照读取并拷贝到 current/ 之前，先清理上一次的临时数据，避免旧文件残留；
-    ///     - 在 ProgressRun 生命周期结束（退出当前流程）后，清理 current/ 以释放空间并避免误用。
-    ///     实现应是幂等的：若目录不存在则不抛异常。
+    ///     Deletes the current/ temporary active directory and all its contents.
+    ///     Design intent:
+    ///     - before reading from a snapshot and copying to current/, clean up
+    ///       the previous temporary data to avoid stale file leftovers;
+    ///     - after the ProgressRun lifecycle ends (exiting the current workflow),
+    ///       clean up current/ to free space and avoid misuse.
+    ///     The implementation should be idempotent: no exception is thrown if
+    ///     the directory does not exist.
     /// </summary>
     void DeleteCurrentDirectory();
 
     /// <summary>
-    ///     从指定 save_* 快照中回拷 extra/ 子目录到 current/。
-    ///     用于 load 时恢复策略通过 ISndArchiveFileAccess 写入的文件。
-    ///     此操作与 <see cref="WriteSavePayloadToCurrent" /> 互为对称。
-    ///     若快照中不存在 extra/ 目录则静默跳过。
+    ///     Copies the extra/ subdirectory from a specified save_* snapshot back
+    ///     to current/. Used during load to restore files written by the strategy
+    ///     via ISndArchiveFileAccess. This operation is symmetric with
+    ///     <see cref="WriteSavePayloadToCurrent" />. Silently skipped if the
+    ///     extra/ directory does not exist in the snapshot.
     /// </summary>
     void RestoreExtraFilesFromSnapshot(string saveId);
 }

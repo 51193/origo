@@ -4,12 +4,16 @@ using System.Collections.Generic;
 namespace Origo.Core.Save.Meta;
 
 /// <summary>
-///     合并已注册贡献者与存档入参：先贡献者（按顺序，同名键后者覆盖前者），再 <paramref name="overrides" />。
+///     Merges registered contributors with the save request overrides:
+///     contributors first (in registration order, same-name keys from later
+///     contributors override earlier ones), then <paramref name="overrides" />.
 /// </summary>
 internal static class SaveMetaMerger
 {
     /// <summary>
-    ///     返回合并后的字典；若无任何键则返回 <c>null</c>，与未提供自定义 meta 的语义一致。
+    ///     Returns the merged dictionary; returns <c>null</c> when there are
+    ///     no keys, consistent with the semantics of not providing custom
+    ///     meta.
     /// </summary>
     public static IReadOnlyDictionary<string, string>? Merge(
         IReadOnlyList<ISaveMetaContributor> contributors,

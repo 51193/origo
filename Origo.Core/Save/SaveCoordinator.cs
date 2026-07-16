@@ -13,8 +13,10 @@ using Origo.Core.Save.Serialization;
 namespace Origo.Core.Save;
 
 /// <summary>
-///     存档协调器，负责构建存档 payload、持久化 progress 状态，以及管理元数据。
-///     从 <see cref="Runtime.Lifecycle.ProgressRun" /> 中提取为独立类以便测试和职责分离。
+///     Save coordinator responsible for building save payloads, persisting
+///     progress state, and managing metadata. Extracted from
+///     <see cref="Runtime.Lifecycle.ProgressRun" /> as a standalone class
+///     for testability and separation of concerns.
 /// </summary>
 internal sealed class SaveCoordinator
 {

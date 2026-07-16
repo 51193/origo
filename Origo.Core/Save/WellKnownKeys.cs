@@ -6,9 +6,11 @@ internal static class WellKnownKeys
     public const string SessionTopology = "origo.session_topology";
 
     /// <summary>
-    ///     进度黑板键：已挂载的后台会话信息（逗号分隔）。
-    ///     格式：<c>mountKey=levelId=syncProcess,mountKey=levelId=syncProcess,...</c>。
-    ///     用于存档 / 读档时持久化后台会话信息及其帧更新参与标识。
+    ///     Progress blackboard key: information about mounted background
+    ///     sessions (comma-separated).
+    ///     Format: <c>mountKey=levelId=syncProcess,mountKey=levelId=syncProcess,...</c>.
+    ///     Used to persist background session info and its frame-update
+    ///     participation flags during save/load.
     /// </summary>
     public const string BackgroundLevelIds = "origo.background_level_ids";
 }

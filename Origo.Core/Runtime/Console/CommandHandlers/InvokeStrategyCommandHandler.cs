@@ -4,8 +4,8 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
-///     <c>invoke_strategy</c> 命令：按实体名调用主动策略并输出返回值。
-///     用法：<c>invoke_strategy &lt;entity&gt; &lt;strategy_index&gt; [input]</c>
+///     <c>invoke_strategy</c> command: invokes an entity's active strategy by name and outputs the return value.
+///     Usage: <c>invoke_strategy &lt;entity&gt; &lt;strategy_index&gt; [input]</c>
 /// </summary>
 internal sealed class InvokeStrategyCommandHandler : ConsoleCommandHandlerBase
 {

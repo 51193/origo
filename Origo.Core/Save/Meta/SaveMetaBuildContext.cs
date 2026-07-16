@@ -5,7 +5,9 @@ using Origo.Core.Abstractions.Scene;
 namespace Origo.Core.Save.Meta;
 
 /// <summary>
-///     单次存档时传给 <see cref="ISaveMetaContributor" /> 的只读上下文（展示用 meta.map，与业务载荷序列化无关）。
+///     Read-only context passed to <see cref="ISaveMetaContributor" /> during
+///     a single save operation (for display meta.map, unrelated to business
+///     payload serialization).
 /// </summary>
 public readonly struct SaveMetaBuildContext
 {
@@ -28,18 +30,19 @@ public readonly struct SaveMetaBuildContext
         SceneAccess = sceneAccess;
     }
 
-    /// <summary>当前存档操作的目标槽位 ID。</summary>
+    /// <summary>The target slot ID of the current save operation.</summary>
     public string SaveId { get; }
 
-    /// <summary>当前激活的关卡 ID。</summary>
+    /// <summary>The currently active level ID.</summary>
     public string CurrentLevelId { get; }
 
-    /// <summary>流程级黑板（只读快照）。</summary>
+    /// <summary>The progress-level blackboard (read-only snapshot).</summary>
     public IBlackboard Progress { get; }
 
-    /// <summary>当前会话级黑板（只读快照）。</summary>
+    /// <summary>The current session-level blackboard (read-only snapshot).</summary>
     public IBlackboard Session { get; }
 
-    /// <summary>当前场景的只读访问接口，可用于序列化实体元数据列表。</summary>
+    /// <summary>Read-only access interface for the current scene; can be used
+    /// to serialize entity metadata lists.</summary>
     public ISndSceneAccess SceneAccess { get; }
 }

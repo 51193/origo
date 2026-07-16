@@ -4,7 +4,7 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
-///     <c>help</c> 命令：列出所有已注册的控制台命令及其帮助信息。
+///     <c>help</c> command: lists all registered console commands and their help text.
 /// </summary>
 internal sealed class HelpCommandHandler : ConsoleCommandHandlerBase
 {

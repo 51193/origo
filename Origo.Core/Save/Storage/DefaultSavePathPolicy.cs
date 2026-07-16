@@ -1,7 +1,8 @@
 namespace Origo.Core.Save.Storage;
 
 /// <summary>
-///     <see cref="ISavePathPolicy" /> 的默认实现，委托给 <see cref="SavePathLayout" /> 静态方法。
+///     Default implementation of <see cref="ISavePathPolicy" />, delegating
+///     to <see cref="SavePathLayout" /> static methods.
 /// </summary>
 internal sealed class DefaultSavePathPolicy : ISavePathPolicy
 {

@@ -4,74 +4,84 @@ using Origo.Core.DataSource;
 namespace Origo.Core.Save;
 
 /// <summary>
-///     单个关卡在存档中的表示，包含 SND 场景与 Session 黑板的序列化结果。
+///     Represents a single level within a save, containing the serialized
+///     SND scene and Session blackboard.
 /// </summary>
 public sealed class LevelPayload
 {
     /// <summary>
-    ///     关卡唯一标识符。
+    ///     The unique identifier of the level.
     /// </summary>
     public string LevelId { get; set; } = string.Empty;
 
     /// <summary>
-    ///     该关卡 SND 场景的序列化节点。
+    ///     The serialized node of the SND scene for this level.
     /// </summary>
     public DataSourceNode SndSceneNode { get; set; } = DataSourceNode.CreateNull();
 
     /// <summary>
-    ///     该关卡 Session 黑板的序列化节点。
+    ///     The serialized node of the Session blackboard for this level.
     /// </summary>
     public DataSourceNode SessionNode { get; set; } = DataSourceNode.CreateNull();
 
     /// <summary>
-    ///     会话级字符串栈状态机快照节点（与 <c>session.json</c> 同目录的 <c>session_state_machines.json</c> 对应）。
+    ///     The session-level string-stack state machine snapshot node
+    ///     (corresponds to <c>session_state_machines.json</c> in the same
+    ///     directory as <c>session.json</c>).
     /// </summary>
     public DataSourceNode SessionStateMachinesNode { get; set; } = DataSourceNode.CreateNull();
 }
 
 /// <summary>
-///     一次完整存档所需的数据包，领域载荷为 <see cref="DataSourceNode" />；磁盘编码由 <see cref="IDataSourceIoGateway" /> 负责。
+///     The data package required for a complete save. The domain payload is
+///     <see cref="DataSourceNode" />; on-disk encoding is handled by
+///     <see cref="IDataSourceIoGateway" />.
 /// </summary>
 public sealed class SaveGamePayload
 {
     /// <summary>
-    ///     当前存档格式版本号。变更时递增，用于启动时校验格式兼容性。
+    ///     The current save format version number. Incremented on change,
+    ///     used at startup to validate format compatibility.
     /// </summary>
     public const int CurrentFormatVersion = 1;
 
     /// <summary>
-    ///     存档格式版本号，用于加载时校验兼容性。
+    ///     The save format version number, used to validate compatibility
+    ///     when loading.
     /// </summary>
     public int FormatVersion { get; set; } = CurrentFormatVersion;
 
     /// <summary>
-    ///     存档槽唯一标识符。
+    ///     The unique identifier of the save slot.
     /// </summary>
     public string SaveId { get; set; } = string.Empty;
 
     /// <summary>
-    ///     当前活跃关卡的标识符。
+    ///     The identifier of the currently active level.
     /// </summary>
     public string ActiveLevelId { get; set; } = string.Empty;
 
     /// <summary>
-    ///     流程级黑板的序列化节点。
+    ///     The serialized node of the progress-level blackboard.
     /// </summary>
     public DataSourceNode ProgressNode { get; set; } = DataSourceNode.CreateNull();
 
     /// <summary>
-    ///     流程级字符串栈状态机快照节点（与 <c>progress.json</c> 同目录的 <c>progress_state_machines.json</c> 对应）。
+    ///     The progress-level string-stack state machine snapshot node
+    ///     (corresponds to <c>progress_state_machines.json</c> in the same
+    ///     directory as <c>progress.json</c>).
     /// </summary>
     public DataSourceNode ProgressStateMachinesNode { get; set; } = DataSourceNode.CreateNull();
 
     /// <summary>
-    ///     可选的存档展示元数据（sidecar map 内容）。
-    ///     不参与 ProgressBlackboard 语义，仅用于独立快速读取。
+    ///     Optional save display metadata (sidecar map content).
+    ///     Does not participate in ProgressBlackboard semantics; used only for
+    ///     standalone fast reads.
     /// </summary>
     public IReadOnlyDictionary<string, string>? CustomMeta { get; set; }
 
     /// <summary>
-    ///     按关卡 ID 索引的所有关卡存档数据。
+    ///     All level save data indexed by level ID.
     /// </summary>
     public Dictionary<string, LevelPayload> Levels { get; set; } = [];
 }

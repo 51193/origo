@@ -52,10 +52,12 @@ internal static class SaveAtomicWriter
     }
 
     /// <summary>
-    ///     将 payload 写入 current/ 并放置 write-in-progress marker。
-    ///     payload.sha 写入合并哈希（payload + extra/ 文件）。
-    ///     marker 在写入完成后刷新：若后续 snapshot 阶段失败，marker 有意保留在磁盘上，
-    ///     以便后续 ReadFromCurrent 拒绝 updated-but-unsnapshotted current/。
+    ///     Writes the payload to current/ and places the write-in-progress
+    ///     marker. The payload.sha is written with the combined hash
+    ///     (payload + extra/ files). The marker is refreshed after writing
+    ///     completes: if the subsequent snapshot phase fails, the marker is
+    ///     intentionally left on disk so that later ReadFromCurrent can
+    ///     reject an updated-but-unsnapshotted current/.
     /// </summary>
     public static string WriteCurrentWithMarker(
         SaveFileHandle handle, SaveGamePayload payload, string currentRel, string combinedHash)
@@ -86,8 +88,10 @@ internal static class SaveAtomicWriter
     }
 
     /// <summary>
-    ///     通过 backup-then-rename 替换已有 snapshot，确保旧数据在新数据到位前永不被删除：
-    ///     先将旧目录移开 → 将新构建的 temp 重命名到位 → 再删除 backup。
+    ///     Replaces the existing snapshot through backup-then-rename to ensure
+    ///     the old data is never deleted before the new data is in place:
+    ///     first move the old directory aside → rename the newly built temp
+    ///     into place → then delete the backup.
     /// </summary>
     public static void SwapSnapshotDirectory(
         SaveFileHandle handle, string saveAbs, string tempAbs, string saveRel)

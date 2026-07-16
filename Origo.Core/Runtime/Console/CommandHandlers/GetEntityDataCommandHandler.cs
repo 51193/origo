@@ -4,8 +4,8 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
 /// <summary>
-///     <c>entity_get_data</c> 命令：按名称和键读取 SND 实体数据。
-///     用法：<c>entity_get_data &lt;entity&gt; &lt;key&gt;</c>
+///     <c>entity_get_data</c> command: reads SND entity data by name and key.
+///     Usage: <c>entity_get_data &lt;entity&gt; &lt;key&gt;</c>
 /// </summary>
 internal sealed class GetEntityDataCommandHandler : ConsoleCommandHandlerBase
 {
