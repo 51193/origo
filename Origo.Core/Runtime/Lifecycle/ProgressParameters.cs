@@ -1,11 +1,11 @@
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     ProgressRun 启动所需的配置参数。
+///     Configuration parameters required for starting a ProgressRun.
 ///     <para>
-///         仅传递标识符（SaveId），不注入任何已构建的运行时对象（如 IBlackboard）。
-///         ProgressRun 在内部自行创建 ProgressBlackboard 并通过 <see cref="ProgressRun.LoadFromPayload" />
-///         从持久化数据中恢复全部状态（包括会话拓扑）。
+///         Only passes the identifier (SaveId); no pre-constructed runtime objects (such as IBlackboard)
+///         are injected. ProgressRun internally creates its own ProgressBlackboard and restores all state
+///         (including session topology) from persistent data via <see cref="ProgressRun.LoadFromPayload" />.
 ///     </para>
 /// </summary>
 internal readonly record struct ProgressParameters(string SaveId);

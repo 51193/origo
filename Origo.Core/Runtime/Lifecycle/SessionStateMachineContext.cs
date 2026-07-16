@@ -6,10 +6,11 @@ using Origo.Core.Abstractions.StateMachine;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     会话级状态机上下文适配器。将全局上下文（系统/流程黑板、延迟队列）
-///     与当前会话的黑板和场景访问组合在一起，使每个 SessionRun 的状态机钩子
-///     拿到的 <see cref="IStateMachineContext.SessionBlackboard" /> 和 <see cref="IStateMachineContext.SceneAccess" /> 都指向自身会话，
-///     前后台会话语义一致。
+///     Session-level state machine context adapter. Composes the global context (system/progress blackboard,
+///     deferred queue) with the current session's blackboard and scene access, so that
+///     <see cref="IStateMachineContext.SessionBlackboard" /> and <see cref="IStateMachineContext.SceneAccess" />
+///     presented to each SessionRun's state machine hooks both point to the owning session,
+///     providing consistent semantics across foreground and background sessions.
 /// </summary>
 internal sealed class SessionStateMachineContext : IStateMachineContext
 {

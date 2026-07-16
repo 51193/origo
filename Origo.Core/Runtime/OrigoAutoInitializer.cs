@@ -16,9 +16,9 @@ using Origo.Core.Snd.Strategy;
 namespace Origo.Core.Runtime;
 
 /// <summary>
-///     提供运行时自动初始化能力：
-///     反射扫描 <see cref="BaseStrategy" /> 子类并注册到策略池，
-///     从 JSON 配置文件加载 SndMetaData 数组并自动 Spawn 实体。
+///     Provides runtime auto-initialization capabilities:
+///     reflectively scans <see cref="BaseStrategy" /> subclasses and registers them in the strategy pool,
+///     loads SndMetaData arrays from JSON configuration files and automatically spawns entities.
 /// </summary>
 public static class OrigoAutoInitializer
 {
@@ -66,8 +66,8 @@ public static class OrigoAutoInitializer
     }
 
     /// <summary>
-    ///     从单个 JSON 文件中读取 SndMetaData 数组并通过 <see cref="ISessionRun" /> 批量 Spawn 到当前会话。
-    ///     支持完整的 SndMetaData 对象和模板引用简写。
+    ///     Reads an array of SndMetaData from a single JSON file and bulk-spawns them into the current session
+    ///     via <see cref="ISessionRun" />. Supports both complete SndMetaData objects and template reference shorthands.
     /// </summary>
     public static int LoadAndSpawnFromFile(
         string filePath,

@@ -11,11 +11,13 @@ using Origo.Core.Snd.Scene;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     系统层运行时容器，持有整个应用生命周期内共享的运行时对象。
-///     由 <see cref="SystemRun" /> 持有，作为下层 <see cref="ProgressRun" /> 的构造依赖。
+///     System-layer runtime container, holding runtime objects shared across the entire application lifecycle.
+///     Held by <see cref="SystemRun" /> and serves as a construction dependency for the lower
+///     <see cref="ProgressRun" />.
 ///     <para>
-///         暴露面控制：对外仅提供 ProgressRun 构建所需的最小子集，
-///         System 层独有能力（如 SystemBlackboard、ActiveSaveSlot 管理）不向下层暴露。
+///         Surface control: only exposes the minimal subset needed for ProgressRun construction;
+///         System-layer exclusive capabilities (such as SystemBlackboard and ActiveSaveSlot management)
+///         are not exposed to lower layers.
 ///     </para>
 /// </summary>
 internal sealed class SystemRuntime

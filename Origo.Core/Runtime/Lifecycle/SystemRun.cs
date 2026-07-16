@@ -5,8 +5,8 @@ using Origo.Core.Save;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     系统级运行时层，持有 <see cref="SystemRuntime" /> 与系统黑板。
-///     负责系统级索引维护（如活动存档槽）。
+///     System-level runtime layer, holding <see cref="SystemRuntime" /> and the system blackboard.
+///     Responsible for system-level index maintenance (such as the active save slot).
 /// </summary>
 internal sealed class SystemRun
 {

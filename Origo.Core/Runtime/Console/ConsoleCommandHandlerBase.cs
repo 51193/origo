@@ -4,8 +4,9 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console;
 
 /// <summary>
-///     控制台命令处理器基类。派生类只需声明 Name、HelpText、MinPositionalArgs、MaxPositionalArgs，
-///     并实现 ExecuteCore 方法。基类自动处理参数数量校验与非法输入提示。
+///     Base class for console command handlers. Derived classes only need to declare
+///     Name, HelpText, MinPositionalArgs, and MaxPositionalArgs, and implement the ExecuteCore method.
+///     The base class automatically handles argument count validation and invalid input messaging.
 /// </summary>
 public abstract class ConsoleCommandHandlerBase : IConsoleCommandHandler
 {
@@ -31,7 +32,8 @@ public abstract class ConsoleCommandHandlerBase : IConsoleCommandHandler
     }
 
     /// <summary>
-    ///     子类实现具体命令逻辑；到达此处时参数数量已通过校验。
+    ///     Implemented by subclasses for command-specific logic; argument counts have already been validated
+    ///     by this point.
     /// </summary>
     protected abstract bool ExecuteCore(CommandInvocation invocation, IConsoleOutputChannel outputChannel,
         out string? errorMessage);

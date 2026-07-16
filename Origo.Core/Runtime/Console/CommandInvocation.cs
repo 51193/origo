@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Origo.Core.Runtime.Console;
 
 /// <summary>
-///     解析后的一条控制台调用：命令名 + 位置参数 + 命名参数。
+///     A parsed console invocation: command name + positional arguments + named arguments.
 /// </summary>
 public sealed class CommandInvocation
 {

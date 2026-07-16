@@ -5,7 +5,7 @@ using Origo.Core.Runtime.StateMachine;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     将黑板与字符串栈状态机容器绑定在同一生命周期内。
+///     Binds a blackboard and a string-stack state machine container within the same lifetime.
 /// </summary>
 internal sealed class RunStateScope
 {

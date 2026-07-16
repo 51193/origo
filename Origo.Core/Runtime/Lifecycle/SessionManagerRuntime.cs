@@ -11,15 +11,16 @@ using Origo.Core.Snd.Scene;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     SessionManager 层运行时容器，由 <see cref="SessionManager" /> 基于 <see cref="ProgressRuntime" /> 构建。
-///     持有 SessionManager 及下层 <see cref="SessionRun" /> 构造所需的运行时依赖。
+///     SessionManager-layer runtime container, built by <see cref="SessionManager" /> based on
+///     <see cref="ProgressRuntime" />. Holds the runtime dependencies needed for SessionManager
+///     and the lower <see cref="SessionRun" /> construction.
 ///     <para>
-///         双重职责：
+///         Dual responsibilities:
 ///         <list type="number">
-///             <item>Session 层所需的私有运行时能力（向下传递给 SessionRun）</item>
-///             <item>跨多个 Session 共享的能力组件（SndWorld、StrategyPool 等）</item>
+///             <item>Private runtime capabilities needed by the Session layer (passed down to SessionRun)</item>
+///             <item>Capability components shared across multiple Sessions (SndWorld, StrategyPool, etc.)</item>
 ///         </list>
-///         这些共享能力以只读或受控接口形式存在，供下层使用。
+///         These shared capabilities exist as read-only or controlled interfaces for use by lower layers.
 ///     </para>
 /// </summary>
 internal sealed class SessionManagerRuntime

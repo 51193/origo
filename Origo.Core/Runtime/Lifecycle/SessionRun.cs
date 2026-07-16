@@ -21,12 +21,13 @@ using Origo.Core.Abstractions.Lifecycle;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     关卡会话级运行时实现，持有关卡会话黑板与 SND 场景访问。
-///     构造时接收 <see cref="SessionManagerRuntime" /> 与 <see cref="SessionParameters" />。
+///     Level-session-level runtime implementation, holding the level session blackboard and SND scene access.
+///     Receives <see cref="SessionManagerRuntime" /> and <see cref="SessionParameters" /> at construction.
 ///     <para>
-///         能力边界：SessionRun 拥有对自身内部的完全支配权（黑板读写、场景操作、状态机），
-///         但生命周期（创建 / 销毁 / 序列化）由 <see cref="SessionManager" /> 管理。
-///         资源回收遵循 RAII 原则：SessionRun 在 Dispose 中回收自己的所有资源。
+///         Capability boundary: SessionRun has full control over its own internals (blackboard read/write,
+///         scene operations, state machines), but lifecycle (creation / destruction / serialization) is
+///         managed by <see cref="SessionManager" />. Resource reclamation follows the RAII principle:
+///         SessionRun reclaims all its own resources in Dispose.
 ///     </para>
 /// </summary>
 internal sealed class SessionRun : ISessionRun
@@ -101,7 +102,9 @@ internal sealed class SessionRun : ISessionRun
     }
 
     /// <summary>
-    ///     内部场景宿主。仅框架层(SaveContext/SessionManager/SndSceneSerializer)编排用,策略不可见。
+    ///     Internal scene host. For framework-level orchestration only
+    ///     (<c>SaveContext</c> / <c>SessionManager</c> / <c>SndSceneSerializer</c>);
+    ///     not visible to strategies.
     /// </summary>
     internal ISndSceneHost SceneHost => _sceneHost;
 
@@ -249,8 +252,10 @@ internal sealed class SessionRun : ISessionRun
     }
 
     /// <summary>
-    ///     收割本会话场景中标记为待销毁的实体：先做观察者双向拆线，再触发 BeforeDead 钩子，最后物理移除。
-    ///     由 <see cref="SessionManager.KillPendingAllSessions" /> 在帧末对每个会话统一调用。
+    ///     Harvests entities in this session's scene that are marked as pending kill:
+    ///     first tears down observer bindings bidirectionally, then fires <c>BeforeDead</c> hooks,
+    ///     and finally removes them physically.
+    ///     Called by <see cref="SessionManager.KillPendingAllSessions" /> at end of frame for each session.
     /// </summary>
     internal void KillPending()
     {

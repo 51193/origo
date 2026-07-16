@@ -5,8 +5,8 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console;
 
 /// <summary>
-///     线程安全的内存命令队列；适配层通过 <see cref="Enqueue" /> 投递，Core 通过
-///     <see cref="TryDequeueCommand" /> 消费。
+///     Thread-safe in-memory command queue; the adapter layer enqueues commands via <see cref="Enqueue" />,
+///     while the Core consumes them via <see cref="TryDequeueCommand" />.
 /// </summary>
 public sealed class ConsoleInputBuffer : IConsoleInputSource
 {

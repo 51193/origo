@@ -4,11 +4,11 @@ using Origo.Core.Abstractions.Scene;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     SessionRun 启动所需的配置参数。
+///     Configuration parameters required for starting a SessionRun.
 ///     <para>
-///         <see cref="IsFrontSession" /> 由 <see cref="SessionManager" /> 在创建时赋值，
-///         标识该 Session 是否为前台会话。该标志在 SessionRun 构造后固化到运行时中，
-///         策略钩子通过 <see cref="ISessionRun.IsFrontSession" /> 获取。
+///         <see cref="IsFrontSession" /> is assigned by <see cref="SessionManager" /> at creation time
+///         and indicates whether this session is the foreground session. This flag is pinned into the runtime
+///         after SessionRun construction; strategy hooks retrieve it via <see cref="ISessionRun.IsFrontSession" />.
 ///     </para>
 /// </summary>
 internal readonly record struct SessionParameters(

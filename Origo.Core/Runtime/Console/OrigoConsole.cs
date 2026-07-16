@@ -10,7 +10,8 @@ using Origo.Core.Runtime.Console.CommandHandlers;
 namespace Origo.Core.Runtime.Console;
 
 /// <summary>
-///     控制台门面：从输入队列取行、解析、路由到已注册命令；结果通过通道发布。
+///     Console facade: pulls lines from the input queue, parses them, routes to registered commands,
+///     and publishes results through the output channel.
 /// </summary>
 public sealed class OrigoConsole
 {
@@ -71,12 +72,13 @@ public sealed class OrigoConsole
     }
 
     /// <summary>
-    ///     注册额外的控制台命令处理器（供 <see cref="Snd.SndContext" /> 等延迟创建的组件使用）。
+    ///     Registers additional console command handlers (for use by lazily-created components such as
+    ///     <see cref="Snd.SndContext" />).
     /// </summary>
     public void RegisterHandler(IConsoleCommandHandler handler) => _router.Register(handler);
 
     /// <summary>
-    ///     处理当前队列中的全部待执行命令（通常每帧或提交时调用一次）。
+    ///     Processes all pending commands currently in the queue (typically invoked once per frame or on commit).
     /// </summary>
     public void ProcessPending()
     {

@@ -14,12 +14,13 @@ using Origo.Core.Abstractions.Lifecycle;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     流程级运行时实现。
-///     构造时接收 <see cref="SystemRuntime" /> 与 <see cref="ProgressParameters" />，
-///     内部基于 SystemRuntime 构建 <see cref="ProgressRuntime" /> 作为本层唯一运行时容器。
+///     Progress-level runtime implementation.
+///     Receives <see cref="SystemRuntime" /> and <see cref="ProgressParameters" /> at construction,
+///     internally builds <see cref="ProgressRuntime" /> based on SystemRuntime as the sole runtime container
+///     for this layer.
 ///     <para>
-///         SessionManager 作为独立的运行时构造层，由 ProgressRun 创建并持有。
-///         所有会话操作均委托给 <see cref="SessionManager" />。
+///         SessionManager serves as an independent runtime construction layer, created and held by
+///         ProgressRun. All session operations are delegated to <see cref="SessionManager" />.
 ///     </para>
 /// </summary>
 internal sealed partial class ProgressRun : IDisposable

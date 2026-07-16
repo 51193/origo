@@ -14,10 +14,11 @@ using Origo.Core.Abstractions.Lifecycle;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     <see cref="ISessionManager" /> 的默认实现。
-///     构造时接收 <see cref="ProgressRuntime" /> 与 <see cref="IBlackboard" />，
-///     内部构建 <see cref="SessionManagerRuntime" /> 作为本层唯一运行时容器。
-///     全权管理所有 <see cref="ISessionRun" /> 的生命周期：创建、持有、序列化/反序列化、销毁。
+///     Default implementation of <see cref="ISessionManager" />.
+///     Receives <see cref="ProgressRuntime" /> and <see cref="IBlackboard" /> at construction,
+///     internally builds <see cref="SessionManagerRuntime" /> as the sole runtime container for this layer.
+///     Fully manages the lifecycle of all <see cref="ISessionRun" /> instances: creation, holding,
+///     serialization/deserialization, and destruction.
 /// </summary>
 internal sealed class SessionManager : ISessionManager
 {
@@ -120,7 +121,8 @@ internal sealed class SessionManager : ISessionManager
     // ── Internal methods for ProgressRun ──────────────────────────────
 
     /// <summary>
-    ///     创建前台会话并自动挂载。若已有前台会话，先销毁旧的。
+    ///     Creates a foreground session and mounts it automatically. If a foreground session already exists,
+    ///     destroys the old one first.
     /// </summary>
     internal ISessionRun CreateForegroundSession(string levelId)
     {
@@ -136,7 +138,8 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     创建前台会话，从 payload 恢复状态，并自动挂载。若已有前台会话，先销毁旧的。
+    ///     Creates a foreground session, restores state from the payload, and mounts it automatically.
+    ///     If a foreground session already exists, destroys the old one first.
     /// </summary>
     internal ISessionRun CreateForegroundFromPayload(string levelId, LevelPayload payload)
     {
@@ -147,17 +150,18 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     销毁当前前台会话（若存在）。
+    ///     Destroys the current foreground session (if any).
     /// </summary>
     internal void DestroyForeground() => DestroySession(ISessionManager.ForegroundKey);
 
     /// <summary>
-    ///     清空 adapter 场景宿主上的所有实体（用于首次挂载前台前，或前台会话不存在时的清理）。
+    ///     Clears all entities on the adapter scene host (used before mounting the first foreground session,
+    ///     or for cleanup when no foreground session exists).
     /// </summary>
     internal void ClearAdapterScene() => _adapterSceneHost.RemoveAllEntities();
 
     /// <summary>
-    ///     将指定键的会话序列化为 <see cref="LevelPayload" />。
+    ///     Serializes the session with the specified key into a <see cref="LevelPayload" />.
     /// </summary>
     internal LevelPayload SerializeSession(string key)
     {
@@ -166,7 +170,7 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     将指定键的会话状态持久化到 current/ 目录。
+    ///     Persists the session state for the specified key to the <c>current/</c> directory.
     /// </summary>
     internal void PersistSession(string key)
     {
@@ -175,7 +179,7 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     从 <see cref="LevelPayload" /> 恢复指定键的会话状态。
+    ///     Restores the session state for the specified key from a <see cref="LevelPayload" />.
     /// </summary>
     internal void LoadSessionFromPayload(string key, LevelPayload payload)
     {
@@ -184,7 +188,7 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     清除所有会话（Dispose 并移除）。
+    ///     Clears all sessions (disposes and removes them).
     /// </summary>
     internal void Clear()
     {
@@ -194,14 +198,14 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     获取指定键的会话是否参与 Process 帧更新。
-    ///     若键不存在则返回 false。
+    ///     Returns whether the session with the specified key participates in <c>Process</c> frame updates.
+    ///     Returns <c>false</c> if the key does not exist.
     /// </summary>
     internal bool GetSyncProcess(string key) => !string.IsNullOrWhiteSpace(key) &&
                                                 _sessions.TryGetValue(key, out var mounted) && mounted.SyncProcess;
 
     /// <summary>
-    ///     获取所有已挂载的后台会话（不含前台）。
+    ///     Gets all mounted background sessions (excluding the foreground session).
     /// </summary>
     internal IReadOnlyList<KeyValuePair<string, ISessionRun>> GetBackgroundSessions()
     {
@@ -211,7 +215,7 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     将所有后台会话序列化为 LevelPayload 字典（key → LevelPayload）。
+    ///     Serializes all background sessions into a dictionary of key → <see cref="LevelPayload" />.
     /// </summary>
     internal IReadOnlyDictionary<string, LevelPayload> SerializeBackgroundSessions()
     {
@@ -231,7 +235,7 @@ internal sealed class SessionManager : ISessionManager
     private SessionRun CreateBackgroundSessionCore(string levelId)
     {
         if (string.IsNullOrWhiteSpace(levelId))
-            throw new ArgumentException("Level id cannot be null or whitespace.", nameof(levelId));
+            throw new ArgumentException("Level id cannot be null or whitespace.");
 
         var sceneHost = new FullMemorySndSceneHost(_managerRuntime.Logger);
         sceneHost.BindWorld(_managerRuntime.SndWorld);

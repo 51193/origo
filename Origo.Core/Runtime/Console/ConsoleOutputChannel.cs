@@ -5,8 +5,8 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console;
 
 /// <summary>
-///     控制台输出发布通道（生产者-消费者）。
-///     Core 不保存历史，仅将输出广播给当前订阅者。
+///     Console output publishing channel (producer-consumer).
+///     The Core does not retain history; it only broadcasts output to current subscribers.
 /// </summary>
 public sealed class ConsoleOutputChannel : IConsoleOutputChannel
 {

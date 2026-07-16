@@ -5,9 +5,9 @@ using Origo.Core.Abstractions.Lifecycle;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     空会话管理器（Null Object 模式），在 ProgressRun 尚未建立时作为占位实例返回。
-///     不持有任何会话。调用方应先检查 <see cref="CanCreateSessions" />，
-///     在无活动 ProgressRun 时创建会话将返回 null。
+///     Empty session manager (Null Object pattern), returned as a placeholder when no ProgressRun has been established.
+///     Holds no sessions. Callers should check <see cref="CanCreateSessions" /> first;
+///     creating a session without an active ProgressRun will return null.
 /// </summary>
 internal sealed class EmptySessionManager : ISessionManager
 {

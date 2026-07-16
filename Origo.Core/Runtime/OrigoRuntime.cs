@@ -17,11 +17,13 @@ using Origo.Core.Snd.Scene;
 namespace Origo.Core.Runtime;
 
 /// <summary>
-///     Origo 在宿主游戏中的统一运行时入口。
-///     聚合 SND 子系统与系统级黑板。
+///     Unified runtime entry point for Origo within the host game.
+///     Aggregates the SND subsystem and system-level blackboard.
 ///     <para>
-///         线程模型：未做跨线程同步；<see cref="EnqueueBusinessDeferred" /> 与 <see cref="EnqueueSystemDeferred" />
-///         应在宿主主线程（或单线程游戏主循环）上调用，与 <see cref="FlushEndOfFrameDeferred" /> 成对使用。
+///         Threading model: no cross-thread synchronization is performed;
+///         <see cref="EnqueueBusinessDeferred" /> and <see cref="EnqueueSystemDeferred" />
+///         should be called on the host main thread (or single-threaded game main loop),
+///         paired with <see cref="FlushEndOfFrameDeferred" />.
 ///     </para>
 /// </summary>
 public sealed class OrigoRuntime : IOrigoFrameDriver
@@ -69,64 +71,69 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     }
 
     /// <summary>
-    ///     日志服务实例，贯穿整个运行时，供所有子系统记录日志。
+    ///     Logger service instance used throughout the runtime, available to all subsystems for logging.
     /// </summary>
     public ILogger Logger { get; }
 
     public OrigoMeta Meta { get; }
 
     /// <summary>
-    ///     SND 世界实例，管理策略池、类型映射、编解码器和模板配置。
-    ///     是 SND 子系统的核心数据层。注意：Snd.World 与此属性指向同一实例。
+    ///     SND world instance that manages the strategy pool, type mapping, codecs, and template configuration.
+    ///     Serves as the core data layer of the SND subsystem. Note: Snd.World points to the same instance as this property.
     /// </summary>
     public SndWorld SndWorld { get; }
 
     /// <summary>
-    ///     Adapter 层注入的场景宿主，仅在 Bootstrap 时由 SndContext 读取一次
-    ///     并下传到 SessionManager 构造链。
+    ///     The scene host injected by the adapter layer. Read once by SndContext during bootstrap
+    ///     and passed down the SessionManager construction chain.
     /// </summary>
     internal ISndSceneHost GetAdapterSceneHost() => _adapterSceneHost;
 
     /// <summary>
-    ///     系统级黑板，生命周期跨越整个应用运行期。
-    ///     存储全局状态（如 continue slot ID、active save ID）。与 SndContext.Blackboard.SystemBlackboard 指向同一实例。
+    ///     System-level blackboard whose lifetime spans the entire application run.
+    ///     Stores global state (e.g., continue slot ID, active save ID).
+    ///     Points to the same instance as SndContext.Blackboard.SystemBlackboard.
     /// </summary>
     public IBlackboard SystemBlackboard { get; }
 
     /// <summary>
-    ///     控制台输入队列，若启动时未注入则为 null。线程安全。
-    ///     适配层通过 Enqueue 投递命令行，Core 通过 Console.ProcessPending() 消费。
+    ///     Console input queue. Null if not injected at startup. Thread-safe.
+    ///     The adapter layer posts command lines via Enqueue; Core consumes them via Console.ProcessPending().
     /// </summary>
     public IConsoleInputSource? ConsoleInput { get; }
 
     /// <summary>
-    ///     控制台输出发布通道，若启动时未注入则为 null。
-    ///     Core 发布消息，适配层/策略订阅接收。
+    ///     Console output publishing channel. Null if not injected at startup.
+    ///     Core publishes messages; the adapter layer / strategies subscribe and receive.
     /// </summary>
     public IConsoleOutputChannel? ConsoleOutputChannel { get; }
 
     /// <summary>
-    ///     控制台门面实例，仅在同时注入输入队列和输出通道时创建。
-    ///     内部持有 ConsoleInput 和 ConsoleOutputChannel 的引用。
+    ///     Console facade instance, created only when both the input queue and output channel are injected.
+    ///     Internally holds references to ConsoleInput and ConsoleOutputChannel.
     /// </summary>
     public OrigoConsole? Console { get; }
 
     /// <summary>
-    ///     将一个业务逻辑延迟动作加入队列，在下次 FlushEndOfFrameDeferred() 时执行。
-    ///     适用于需要延迟到帧末执行的游戏逻辑。
+    ///     Enqueues a business-logic deferred action to be executed on the next
+    ///     <see cref="FlushEndOfFrameDeferred" />.
+    ///     Suitable for game logic that should run at end of frame.
     /// </summary>
     public void EnqueueBusinessDeferred(Action action) => _businessDeferredScheduler.Enqueue(action);
 
     /// <summary>
-    ///     将一个系统级延迟动作加入队列，在下次 FlushEndOfFrameDeferred() 时执行（在业务队列之后）。
-    ///     适用于存档、关卡切换等系统编排操作。
+    ///     Enqueues a system-level deferred action to be executed on the next
+    ///     <see cref="FlushEndOfFrameDeferred" /> (after the business queue).
+    ///     Suitable for system orchestration operations such as saving and level transitions.
     /// </summary>
     public void EnqueueSystemDeferred(Action action) => _systemDeferredScheduler.Enqueue(action);
 
     /// <summary>
-    ///     注入"当前会话管理器"的提供者。帧驱动与会话作用域操作经此解析 <see cref="ISessionManager" />，
-    ///     从而 Runtime 仅触达 SessionManager（再由它下查 SessionRun），不直达任何 SceneHost。
-    ///     由 <see cref="Snd.SndContext" /> 在 Bootstrap 时注入。
+    ///     Injects a provider for the current session manager.
+    ///     Frame driver and session-scoped operations resolve <see cref="ISessionManager" />
+    ///     through this, ensuring the Runtime only reaches SessionManager (which in turn resolves
+    ///     SessionRun) without directly touching any SceneHost.
+    ///     Injected by <see cref="Snd.SndContext" /> during bootstrap.
     /// </summary>
     internal void SetSessionManagerProvider(Func<ISessionManager> provider)
     {
@@ -135,15 +142,15 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     }
 
     /// <summary>
-    ///     当前会话管理器。非实体代码（如控制台命令处理器）通过此属性访问
-    ///     <see cref="ISessionManager" />；策略代码应使用
-    ///     <see cref="ISndEntity.OwningSession" />。SessionManager 本身返回 public。
+    ///     The current session manager. Non-entity code (such as console command handlers)
+    ///     accesses <see cref="ISessionManager" /> through this property; strategy code should use
+    ///     <see cref="ISndEntity.OwningSession" />. SessionManager itself is returned as public.
     /// </summary>
     public ISessionManager SessionManager => _sessionManagerProvider();
 
     /// <summary>
-    ///     依次执行业务延迟队列和系统延迟队列中的所有待执行动作。
-    ///     通常在每帧结束时由宿主主循环调用。
+    ///     Executes all pending actions in the business deferred queue and system deferred queue
+    ///     in sequence. Typically called by the host main loop at the end of each frame.
     /// </summary>
     public void FlushEndOfFrameDeferred()
     {
@@ -153,10 +160,11 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     }
 
     /// <summary>
-    ///     由宿主环境的帧边界触发。Core 内部按固定顺序驱动：
-    ///     实体帧处理 → 业务延迟队列 → 清理待杀实体 → 系统延迟队列 → 控制台 pump。
-    ///     Adapter 不应直接调用 FlushEndOfFrameDeferred、ProcessAll 或 ProcessPending，
-    ///     只应调用此方法将帧控制权移交给 Core。
+    ///     Triggered by the host environment's frame boundary. Core internally drives in a fixed order:
+    ///     entity frame processing → business deferred queue → cleanup of pending-kill entities →
+    ///     system deferred queue → console pump.
+    ///     Adapters should not directly call FlushEndOfFrameDeferred, ProcessAll, or ProcessPending;
+    ///     they should only call this method to hand frame control to Core.
     /// </summary>
     void IOrigoFrameDriver.DriveFrame(double delta)
     {
@@ -166,8 +174,8 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     }
 
     /// <summary>
-    ///     重置控制台状态：清空待执行输入队列。
-    ///     输出已改为发布-订阅模型，不在 Core 中保留历史。
+    ///     Resets console state: clears the pending input queue.
+    ///     Output has been moved to a publish-subscribe model and no longer retains history in Core.
     /// </summary>
     public void ResetConsoleState() => ConsoleInput?.Clear();
 }

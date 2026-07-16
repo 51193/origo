@@ -6,7 +6,7 @@ using Origo.Core.Abstractions.Console;
 namespace Origo.Core.Runtime.Console;
 
 /// <summary>
-///     基于字典的手动命令路由。
+///     Dictionary-based manual command router.
 /// </summary>
 internal sealed class ConsoleCommandRouter
 {
@@ -28,13 +28,13 @@ internal sealed class ConsoleCommandRouter
     }
 
     /// <summary>
-    ///     返回所有已注册命令名称（有序）。
+    ///     Returns all registered command names (ordered).
     /// </summary>
     public IReadOnlyList<string> GetRegisteredNames() =>
         [.. _handlers.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase)];
 
     /// <summary>
-    ///     返回所有已注册的命令处理器（有序）。
+    ///     Returns all registered command handlers (ordered).
     /// </summary>
     public IReadOnlyList<IConsoleCommandHandler> GetRegisteredHandlers() => [.. _handlers.Values.OrderBy(h => h.Name, StringComparer.OrdinalIgnoreCase)];
 

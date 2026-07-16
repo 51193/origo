@@ -4,10 +4,11 @@ using System.Collections.Generic;
 namespace Origo.Core.Runtime.Console;
 
 /// <summary>
-///     将一行文本解析为 <see cref="CommandInvocation" />。
-///     仅含命令名、无后续 token 时也合法（参数约束由各 <see cref="IConsoleCommandHandler" /> 自行校验）。
-///     支持位置参数：<c>spawn myName myTemplate</c>；
-///     或命名参数：<c>spawn name=myName template=myTemplate</c>（不可与位置参数混用）。
+///     Parses a single line of text into a <see cref="CommandInvocation" />.
+///     A command name with no subsequent tokens is also valid (argument constraints are validated
+///     independently by each <see cref="IConsoleCommandHandler" />).
+///     Supports positional arguments: <c>spawn myName myTemplate</c>;
+///     or named arguments: <c>spawn name=myName template=myTemplate</c> (cannot be mixed with positional arguments).
 /// </summary>
 public static class ConsoleCommandParser
 {

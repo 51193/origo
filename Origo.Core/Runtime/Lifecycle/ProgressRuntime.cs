@@ -10,11 +10,13 @@ using Origo.Core.Snd.Scene;
 namespace Origo.Core.Runtime.Lifecycle;
 
 /// <summary>
-///     流程层运行时容器，由 <see cref="ProgressRun" /> 基于 <see cref="SystemRuntime" /> 构建。
-///     持有 ProgressRun 内部以及下层 <see cref="SessionManager" /> 构造所需的运行时依赖。
+///     Progress-layer runtime container, built by <see cref="ProgressRun" /> based on
+///     <see cref="SystemRuntime" />. Holds the runtime dependencies needed for ProgressRun internals
+///     and the lower <see cref="SessionManager" /> construction.
 ///     <para>
-///         暴露面控制：不包含 System 层独有的能力（SystemBlackboard、ActiveSaveSlot），
-///         仅暴露 ProgressRun 及其下层所需的子集。
+///         Surface control: does not include System-layer exclusive capabilities
+///         (SystemBlackboard, ActiveSaveSlot); only exposes the subset needed by ProgressRun
+///         and its lower layers.
 ///     </para>
 /// </summary>
 internal sealed class ProgressRuntime
