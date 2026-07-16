@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Origo.Core.Abstractions.Console;
+using Origo.Core.Abstractions.Logging;
+using Origo.Core.Logging;
 using Origo.Core.Runtime.Console;
 
 namespace Origo.ConsoleBridge;
@@ -23,6 +25,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private const int _disposeJoinTimeoutMs = 3000;
 
     private readonly IConsoleInputSource _input;
+    private readonly ILogger _logger;
     private readonly ConsoleBridgeOptions _options;
     private readonly IConsoleOutputChannel _output;
     private readonly Queue<string> _pendingOutput = new();
@@ -40,13 +43,15 @@ public sealed class ConsoleBridgeServer : IDisposable
     public ConsoleBridgeServer(
         IConsoleInputSource input,
         IConsoleOutputChannel output,
-        ConsoleBridgeOptions? options = null)
+        ConsoleBridgeOptions? options = null,
+        ILogger? logger = null)
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(output);
         _input = input;
         _output = output;
         _options = options ?? new ConsoleBridgeOptions();
+        _logger = logger ?? NullLogger.Instance;
     }
 
     public int ActualPort { get; private set; }
@@ -77,7 +82,7 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 _acceptTask.Wait(_disposeJoinTimeoutMs);
             }
-            catch (AggregateException ex) when (ex.InnerExceptions.Count > 0 && ex.InnerExceptions.All(e => e is OperationCanceledException))
+            catch (AggregateException)
             {
             }
         }
@@ -90,6 +95,12 @@ public sealed class ConsoleBridgeServer : IDisposable
         ObjectDisposedException.ThrowIf(_cts.IsCancellationRequested, this);
         if (Interlocked.CompareExchange(ref _started, 1, 0) != 0)
             return;
+
+        if (_cts.IsCancellationRequested)
+        {
+            _started = 0;
+            throw new ObjectDisposedException(nameof(ConsoleBridgeServer));
+        }
 
         _listener = new TcpListener(IPAddress.Loopback, _options.Port);
         _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -143,7 +154,15 @@ public sealed class ConsoleBridgeServer : IDisposable
                 break;
             }
 
-            await HandleConnectionAsync(client, ct);
+            try
+            {
+                await HandleConnectionAsync(client, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                    $"Connection handler failed: {ex.Message}");
+            }
         }
     }
 

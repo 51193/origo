@@ -144,7 +144,7 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 
 `OrigoDefaultEntry._Ready()` discovers all `[StrategyIndex]` strategies, loads aliases and templates, and boots the game.
 
-> Full walkthrough: [Quick Start](docs/usage/quick-start.md) &middot; [Architecture Overview](docs/usage/architecture-overview.md) &middot; [SND Entity Model](docs/usage/snd-entity-model.md)
+> Full walkthrough: [Quick Start](docs/usage/quick-start.en.md) &middot; [Architecture Overview](docs/usage/architecture-overview.en.md) &middot; [SND Entity Model](docs/usage/snd-entity-model.en.md)
 
 ## Documentation
 
@@ -156,14 +156,14 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 
 | I want to... | Go to |
 |---|---|
-| Browse all capabilities | [Capabilities](docs/usage/capabilities.md) |
-| Understand the architecture | [Architecture Overview](docs/usage/architecture-overview.md) |
-| Learn the SND model | [SND Entity Model](docs/usage/snd-entity-model.md) |
-| Test my strategies | [Strategy Testing](docs/usage/strategy-testing.md) |
-| Use the save system | [Persistence Flow](docs/usage/persistence-flow.md) |
-| Use the state machine | [State Machine](docs/usage/state-machine.md) |
-| Use the console | [Console Commands](docs/usage/console-commands.md) |
-| Reference for AI agents | [Agent Reference](docs/usage/agent-reference.md) |
+| Browse all capabilities | [Capabilities](docs/usage/capabilities.en.md) |
+| Understand the architecture | [Architecture Overview](docs/usage/architecture-overview.en.md) |
+| Learn the SND model | [SND Entity Model](docs/usage/snd-entity-model.en.md) |
+| Test my strategies | [Strategy Testing](docs/usage/strategy-testing.en.md) |
+| Use the save system | [Persistence Flow](docs/usage/persistence-flow.en.md) |
+| Use the state machine | [State Machine](docs/usage/state-machine.en.md) |
+| Use the console | [Console Commands](docs/usage/console-commands.en.md) |
+| Reference for AI agents | [Agent Reference](docs/usage/agent-reference.en.md) |
 
 ## Development
 

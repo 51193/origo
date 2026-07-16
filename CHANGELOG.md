@@ -97,6 +97,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ISndDataAccess.GetData<T>` XML doc now correctly describes the throw-on-mismatch behavior (implementation was always throwing; only the doc was wrong).
 - `SaveCoordinator.EnsureActiveLevelInvariant` error messages now use the current `saveId` parameter instead of the construction-time value.
 - `GodotSndManager.RecoverFromMetaList` removed redundant double-free cleanup in the catch block and narrowed bare `catch` to `catch (Exception)`.
+- `ConsoleBridgeServer` accept loop now survives unhandled connection handler exceptions via try/catch with `ILogger`-backed warning logging.
+- `ConsoleBridgeServer.Dispose` no longer re-throws non-`OperationCanceledException` task faults.
+- `ConsoleBridgeServer.Start` added cancellation re-validation between `Interlocked` gate and `TcpListener` creation to close TOCTOU race with `Dispose`.
+- Broken bare `.md` links in root `README.md` and `README.zh-CN.md` replaced with language-suffixed `.en.md` / `.zh.md` targets.
+- Broken `docs/META.md` link in `CONTRIBUTING.md` fixed to point to `docs/META.en.md`.
 
 ## [0.0.8] - 2026-06-30
 
