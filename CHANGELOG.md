@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING:** `SndEntity.IsPendingKill` setter is now `internal`. Use `ISessionRun.RequestKillEntity(name)` instead.
 - **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value.
 - **BREAKING:** `GodotTypedDataPerformanceTests` now uses shared `PerfReporter` instead of inline helpers.
+- **BREAKING:** `ISndDataAccess.GetData<T>` and `ISndDataAccess.SetData<T>` now require `T : notnull`. `SetData<T>` throws `ArgumentNullException` when `value` is null for reference types. `GetData<T>` returns a compiler-guaranteed non-null value.
 - **Public API XML doc comments translated to English** — all previously Chinese `<summary>` comments across Origo.Core (all subsystems: Runtime, Save, Snd, DataSource, StateMachine, Blackboard, plus internal classes), Origo.GodotAdapter, Origo.ConsoleBridge, and Origo.SourceGeneration are now in English. Zero Chinese characters remain in production source XML doc comments.
 - `ConsoleBridgeServer` threading model replaced with `async`/`await`, eliminating the 100ms polling loop and making the single-connection model race-free.
 - **Save idempotency now includes `extra/` files in hash computation**, preventing silent skip of changed side-channel files.
@@ -108,6 +109,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ConsoleOutputChannel.Publish` logs each subscriber failure via an optional `ILogger` parameter (defaults to `NullLogger.Instance`), preserving backward compatibility.
 - `SndEntity.QuitSingle` and `DeadSingle` now delegate shared teardown to a single `ReleaseAndTeardown` helper, keeping the two lifecycle paths symmetric.
 - `GodotFileOperations.Delete` now checks `DirAccess.RemoveAbsolute` error code instead of discarding it (fail-fast).
+- `PersistentBlackboard` now uses atomic write (temp file + rename) to prevent `system.json` corruption on crash. Stale temp files from interrupted writes are cleaned up automatically on load.
 
 ## [0.0.8] - 2026-06-30
 

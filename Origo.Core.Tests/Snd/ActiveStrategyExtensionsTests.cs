@@ -59,7 +59,7 @@ public class ActiveStrategyExtensionsTests
             => _invokeResult(input);
 
         public void SetData<T>(string name, T value) => throw new System.NotImplementedException();
-        public T GetData<T>(string name) => throw new System.NotImplementedException();
+        public T GetData<T>(string name) where T : notnull => throw new System.NotImplementedException();
         public (bool found, T? value) TryGetData<T>(string name) => throw new System.NotImplementedException();
         public void MountObserverStrategy(string targetName, string observerIndex) { }
 

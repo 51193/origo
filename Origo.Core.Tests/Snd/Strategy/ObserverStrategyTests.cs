@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
-public class ObserverStrategyTests
+public class ObserverStrategyTests : IDisposable
 {
     private const string _selfWatchIdx = "observer.test.self_watch";
     private const string _multiKeyIdx = "observer.test.multi_key";
@@ -713,6 +713,18 @@ public class ObserverStrategyTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => entry.FullCleanup(null!, null!, null!));
         Assert.Contains("TargetEntity", ex.Message, StringComparison.Ordinal);
+    }
+
+    public void Dispose()
+    {
+        SelfWatchObserver.DataChangedCalls.Clear();
+        MultiKeyObserver.HpChangedCalls.Clear();
+        MultiKeyObserver.MpChangedCalls.Clear();
+        MemoryObserver.MountedCalls.Clear();
+        MemoryObserver.UnmountedCalls.Clear();
+        ThrowOnMountObserver.DataChangedCalls.Clear();
+
+        GC.SuppressFinalize(this);
     }
 
     // ── Test strategies ────────────────────────────────────────────────

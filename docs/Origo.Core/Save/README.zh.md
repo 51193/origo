@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Save
 
@@ -22,7 +22,7 @@ Origo 的持久化系统。负责存档的完整生命周期：Payload 构建、
 
 | 文件 | 职责 |
 |------|------|
-| `PersistentBlackboard.cs` | 持久化黑板：自动从磁盘加载/保存，修改写入 `current/` 目录 |
+| `PersistentBlackboard.cs` | 持久化黑板：自动从磁盘加载/保存；每次修改通过原子写入（临时文件 + 重命名）防止崩溃导致文件损坏。中断写入的残留临时文件在加载时自动清理。 |
 | `SavePayloads.cs` | 存档载荷模型：`SaveGamePayload` / `LevelPayload` / 序列化容器 |
 | `WellKnownKeys.cs` | `internal` — 黑板键常量：`SessionTopology` / `ActiveSaveSlot` 等 |
 | `SaveCoordinator.cs` | 存档协调器：从 ProgressRun 提取的独立类，负责构建存档 payload、持久化 progress 状态、管理元数据 |

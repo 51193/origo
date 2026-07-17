@@ -675,7 +675,7 @@ public class PlanExecutionStrategyBaseTests
         public ISessionRun OwningSession { get => inner.OwningSession; set => inner.OwningSession = value; }
         public bool IsPendingKill { get => inner.IsPendingKill; set => inner.IsPendingKill = value; }
         public void SetData<T>(string name, T value) => inner.SetData(name, value);
-        public T GetData<T>(string name) => inner.GetData<T>(name);
+        public T GetData<T>(string name) where T : notnull => inner.GetData<T>(name);
         public (bool found, T? value) TryGetData<T>(string name) => inner.TryGetData<T>(name);
         public INodeHandle GetNode(string name) => inner.GetNode(name);
         public IReadOnlyCollection<string> GetNodeNames() => inner.GetNodeNames();

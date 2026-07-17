@@ -3,7 +3,13 @@ namespace Origo.Core.Abstractions.Entity;
 /// <summary>Strongly-typed data access on an SND entity.</summary>
 public interface ISndDataAccess
 {
-    /// <summary>Set a typed data value by key.</summary>
+    /// <summary>
+    /// Sets a typed data value by key. The value must not be null when
+    /// <typeparamref name="T"/> is a reference type.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="value"/> is null and <typeparamref name="T"/> is a reference type.
+    /// </exception>
     void SetData<T>(string name, T value);
 
     /// <summary>Try to get a typed data value by key. Returns (false, default) if not found or type mismatch.</summary>
@@ -14,6 +20,7 @@ public interface ISndDataAccess
     /// Throws <see cref="InvalidOperationException"/> if the key is not found
     /// or the value is not of type <typeparamref name="T"/>.
     /// </summary>
+    /// <typeparam name="T">Must be a non-nullable type.</typeparam>
     /// <exception cref="InvalidOperationException">The key is not found or the value is not of the expected type.</exception>
-    T GetData<T>(string name);
+    T GetData<T>(string name) where T : notnull;
 }

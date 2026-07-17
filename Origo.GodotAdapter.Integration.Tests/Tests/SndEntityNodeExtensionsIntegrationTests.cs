@@ -50,7 +50,7 @@ public class SndEntityNodeExtensionsIntegrationTests
     private sealed class StubSndEntity(string name) : ISndEntity
     {
         public void SetData<T>(string name, T value) { }
-        public T GetData<T>(string name) => default!;
+        public T GetData<T>(string name) where T : notnull => default!;
         public (bool found, T? value) TryGetData<T>(string name) => (false, default);
         public INodeHandle GetNode(string name) => new StubNodeHandle(name);
         public System.Collections.Generic.IReadOnlyCollection<string> GetNodeNames() => [];

@@ -111,7 +111,7 @@ internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
 
     public void SetData<T>(string name, T value) => _data[name] = value;
 
-    public T GetData<T>(string name)
+    public T GetData<T>(string name) where T : notnull
     {
         if (!_data.TryGetValue(name, out var value))
             throw new InvalidOperationException(

@@ -763,7 +763,7 @@ public class SndEntityLifecycleBatchTests
     // ── Error path: hook throws ─────────────────────────────────────────
 
     [Fact]
-    public void BatchLoad_HookThrows_EntitiesCleanedUp()
+    public void BatchLoad_HookThrows_PropagatesException()
     {
         ProbeStrategy.Events.Clear();
         var host = CreateHost(w =>
@@ -779,12 +779,19 @@ public class SndEntityLifecycleBatchTests
             CreateMeta("After", [_probeIdx])
         ]);
 
-        Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<InvalidOperationException>(() =>
         {
             foreach (var e in host.GetEntities())
                 if (e is IEntityLifecycle lc)
                     lc.FireAfterLoadHooks();
         });
+        Assert.Equal("simulated hook failure", ex.Message);
+
+        Assert.NotNull(host.FindByName("Good"));
+        Assert.NotNull(host.FindByName("Bad"));
+        Assert.NotNull(host.FindByName("After"));
+        Assert.Contains("after_load:Good", ProbeStrategy.Events);
+        Assert.DoesNotContain("after_load:After", ProbeStrategy.Events);
     }
 
     // ── SndEntityFactory.SpawnMany batch behavior ─────────────────────────────
@@ -1050,5 +1057,13 @@ public class SndEntityLifecycleBatchTests
         Assert.Null(host.FindByName("E"));
         Assert.Empty(host.GetEntities());
         Assert.Throws<InvalidOperationException>(() => host.RemoveEntity("E"));
+    }
+
+    [Fact]
+    public void SetData_WithNullValue_ThrowsArgumentNullException()
+    {
+        var host = CreateHost(w => { });
+        var entity = host.CreateEntity(CreateMeta("E"));
+        Assert.Throws<ArgumentNullException>(() => entity.SetData<string>("key", null!));
     }
 }

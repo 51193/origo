@@ -75,7 +75,7 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     public void SetData<T>(string name, T value) => Entity.SetData(name, value);
 
-    public T GetData<T>(string name) => Entity.GetData<T>(name);
+    public T GetData<T>(string name) where T : notnull => Entity.GetData<T>(name);
 
     public (bool found, T? value) TryGetData<T>(string name) => Entity.TryGetData<T>(name);
 

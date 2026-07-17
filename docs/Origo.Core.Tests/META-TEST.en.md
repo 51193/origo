@@ -1,5 +1,5 @@
 <!-- docsync-pair: docs/Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -218,6 +218,25 @@ private static ICollection<string>? EventSink { get; set; }
 
 This principle ensures spy strategies satisfy framework constraints while each test has its own
 independent event collector.
+
+When a test class uses multiple `AsyncLocal<T>`-backed test spies, implement `IDisposable`
+on the test class and clear all shared state in `Dispose()`. xUnit calls `Dispose()` after
+each test method (regardless of pass/fail), ensuring cleanup even when assertions fail:
+
+```csharp
+public class MyTests : IDisposable
+{
+    public void Dispose()
+    {
+        SpyStrategyA.Events.Clear();
+        SpyStrategyB.MountedCalls.Clear();
+        GC.SuppressFinalize(this);
+    }
+}
+```
+
+This is preferred over per-test `try/finally` blocks when many tests share the same cleanup
+pattern — it centralizes cleanup and guarantees execution after every test.
 
 ## Sync Rules
 

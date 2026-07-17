@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Save
 
@@ -22,7 +22,7 @@ Origo's persistence system. Responsible for the complete save lifecycle: payload
 
 | File | Responsibility |
 |------|---------------|
-| `PersistentBlackboard.cs` | Persistent blackboard: auto loads/saves from disk; modifications write to the `current/` directory |
+| `PersistentBlackboard.cs` | Persistent blackboard: auto loads/saves from disk; uses atomic write (temp file + rename) on every mutation to prevent file corruption on crash. Stale temp files from interrupted writes are cleaned up on load. |
 | `SavePayloads.cs` | Save payload model: `SaveGamePayload` / `LevelPayload` / serialization containers |
 | `WellKnownKeys.cs` | `internal` — Blackboard key constants: `SessionTopology` / `ActiveSaveSlot`, etc. |
 | `SaveCoordinator.cs` | Save coordinator: an independent class extracted from ProgressRun; responsible for building save payloads, persisting progress state, managing metadata |

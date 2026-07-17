@@ -123,14 +123,21 @@ public sealed class PersistentBlackboard : IBlackboard
         }
     }
 
+    private const string _tempSuffix = ".tmp.json";
+
     /// <summary>
     ///     Restores state from disk at startup. If the file does not exist,
-    ///     this is a no-op.
+    ///     this is a no-op. Stale temporary files from an interrupted atomic
+    ///     write are cleaned up automatically.
     /// </summary>
     public void LoadFromDisk()
     {
         lock (_lock)
         {
+            var tempPath = _filePath + _tempSuffix;
+            if (_metaAccess.FileExists(tempPath))
+                _metaAccess.Delete(tempPath);
+
             if (!_metaAccess.FileExists(_filePath))
                 return;
 
@@ -149,6 +156,10 @@ public sealed class PersistentBlackboard : IBlackboard
 
         var data = _inner.SerializeAll();
         using var node = _registry.Write<IReadOnlyDictionary<string, TypedData>>(data);
-        _dataSourceIo.WriteTree(_filePath, node);
+        var tempPath = _filePath + _tempSuffix;
+        _dataSourceIo.WriteTree(tempPath, node);
+        if (_metaAccess.FileExists(_filePath))
+            _metaAccess.Delete(_filePath);
+        _metaAccess.Rename(tempPath, _filePath);
     }
 }

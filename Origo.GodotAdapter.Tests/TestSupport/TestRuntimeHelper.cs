@@ -71,7 +71,7 @@ internal sealed class InMemorySndEntity : ISndEntity
     public ISessionRun OwningSession { get; set; } = null!;
 
     public void SetData<T>(string name, T value) => _data[name] = value;
-    public T GetData<T>(string name) => _data.TryGetValue(name, out var v) && v is T c ? c : default!;
+    public T GetData<T>(string name) where T : notnull => _data.TryGetValue(name, out var v) && v is T c ? c : default!;
     public (bool found, T? value) TryGetData<T>(string name) =>
         _data.TryGetValue(name, out var v) && v is T c ? (true, c) : (false, default);
 

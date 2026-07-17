@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity
 
@@ -70,8 +70,8 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 ### SndDataManager
 
 - **存储**：`Dictionary<string, TypedData>`
-- **SetData**：用 `CollectionsMarshal.GetValueRefOrAddDefault` 原地写入，旧值相同时跳过通知（避免无意义事件）
-- **GetData / GetRequiredData vs TryGetData**：前者 KeyNotFound 或类型不符时抛 `InvalidOperationException`，后者安全返回 `(found, value?)`
+- **SetData**：用 `CollectionsMarshal.GetValueRefOrAddDefault` 原地写入，旧值相同时跳过通知（避免无意义事件）。引用类型值为 null 时抛出 `ArgumentNullException`。
+- **GetData / GetRequiredData vs TryGetData**：`GetData` 和 `GetRequiredData` 要求 `T : notnull`。前者 KeyNotFound 或类型不符时抛 `InvalidOperationException`，后者安全返回 `(found, value?)`
 - **Subscribe/Unsubscribe**：接收 `Action<ISndEntity, TypedData, TypedData>`（`(target, old, new)`），内部包装为 `Action<TypedData, TypedData>` 适配 `DataObserverManager`；`_subscriptionMap` 存 `(OriginalCallback, WrappedCallback)` 对用于退订匹配。该数据订阅通道经 `ISndEntityRawSubscription` 由 `ObserverTopology` 驱动，不直接暴露给业务策略
 - **Recover / Release / SerializeMeta**：存档恢复/清理/序列化
 

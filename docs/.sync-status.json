@@ -63,8 +63,8 @@
     "docs/Origo.Core.Tests/META-TEST": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.Core.Tests/META-TEST.zh.md",
@@ -811,8 +811,8 @@
     "Origo.Core/Save/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.Core/Save/README.zh.md",
@@ -888,8 +888,8 @@
     "Origo.Core/Snd/Entity/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.Core/Snd/Entity/README.zh.md",

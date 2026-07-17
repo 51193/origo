@@ -81,6 +81,9 @@ internal sealed class SndDataManager
     public void SetData<T>(string name, T value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (value is null)
+            throw new ArgumentNullException(nameof(value),
+                $"Cannot store a null value for key '{name}'. Data values must be non-null.");
         ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(_data, name, out var exists);
         var newValue = TypedDataFactory<T>.Create(value);
 
@@ -98,9 +101,9 @@ internal sealed class SndDataManager
         return (false, default);
     }
 
-    public T GetData<T>(string name) => GetRequiredData<T>(name);
+    public T GetData<T>(string name) where T : notnull => GetRequiredData<T>(name);
 
-    public T GetRequiredData<T>(string name)
+    public T GetRequiredData<T>(string name) where T : notnull
     {
         if (_data.TryGetValue(name, out var td) && TypedDataFactory<T>.TryExtract(td, out var value))
             return value;

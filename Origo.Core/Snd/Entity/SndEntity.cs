@@ -75,7 +75,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     public void SetData<T>(string name, T value) => _dataManager.SetData(name, value);
 
-    public T GetData<T>(string name) => _dataManager.GetData<T>(name);
+    public T GetData<T>(string name) where T : notnull => _dataManager.GetData<T>(name);
 
     public (bool found, T? value) TryGetData<T>(string name) => _dataManager.TryGetData<T>(name);
 

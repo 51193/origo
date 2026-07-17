@@ -1,5 +1,5 @@
 <!-- docsync-pair: docs/Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试文档维护元指令
 
@@ -151,6 +151,24 @@ private static ICollection<string>? EventSink { get; set; }
 ```
 
 此原则确保 spy 策略在满足框架约束的同时，各测试拥有独立的事件收集器。
+
+当测试类使用多个基于 `AsyncLocal<T>` 的 spy 策略时，应在测试类上实现 `IDisposable`
+并在 `Dispose()` 中统一清理共享状态。xUnit 在每个测试方法之后（无论通过或失败）都会调用 `Dispose()`，
+确保即使断言失败也能执行清理：
+
+```csharp
+public class MyTests : IDisposable
+{
+    public void Dispose()
+    {
+        SpyStrategyA.Events.Clear();
+        SpyStrategyB.MountedCalls.Clear();
+        GC.SuppressFinalize(this);
+    }
+}
+```
+
+相比为每个测试单独包裹 `try/finally`，这是更推荐的模式——集中清理并保证始终执行。
 
 ## 同步规则
 

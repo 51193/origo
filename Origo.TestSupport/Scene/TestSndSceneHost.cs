@@ -88,7 +88,7 @@ public sealed class DummySndEntity : ISndEntity
 
     public void SetData<T>(string name, T value) => _data[name] = value;
 
-    public T GetData<T>(string name) => _data.TryGetValue(name, out var value) && value is T cast ? cast : default!;
+    public T GetData<T>(string name) where T : notnull => _data.TryGetValue(name, out var value) && value is T cast ? cast : default!;
 
     public (bool found, T? value) TryGetData<T>(string name)
     {

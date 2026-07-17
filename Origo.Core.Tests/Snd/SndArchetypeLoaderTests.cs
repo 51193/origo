@@ -191,7 +191,7 @@ public class SndArchetypeLoaderTests
         public bool IsPendingKill => false;
 
         public void SetData<T>(string name, T value) => _data[name] = value!;
-        public T GetData<T>(string name) => throw new System.NotImplementedException();
+        public T GetData<T>(string name) where T : notnull => throw new System.NotImplementedException();
 
         public (bool found, T? value) TryGetData<T>(string name)
         {
