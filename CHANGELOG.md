@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CodeQL workflow uses `global.json` SDK resolution instead of hardcoded version.
 - Benchmark output simplified: each test method emits one consolidated `CompareTable`/`ReportTable` instead of per-type tables.
 - Test projects unified to flat namespaces per documented convention.
+- **Godot upgraded to 4.7.1** — `Godot.NET.Sdk` version bumped from 4.6.3 to 4.7.1 across all projects and demo. `scripts/download-godot.sh` binary detection improved to exclude `.dll` files. `config/features` in `project.godot` updated from `"4.6"` to `"4.7"`.
 
 ### Removed
 

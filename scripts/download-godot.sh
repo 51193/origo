@@ -52,7 +52,7 @@ DOWNLOAD_URL="https://github.com/godotengine/godot-builds/releases/download/${VE
 EXTRACT_DIR="${GODOT_CACHE_DIR}/${VERSION}"
 
 if [[ -d "$EXTRACT_DIR" ]]; then
-    GODOT_BIN=$(find "$EXTRACT_DIR" -type f -name "Godot*" ! -name "*.pdb" ! -name "*.xml" | head -1)
+    GODOT_BIN=$(find "$EXTRACT_DIR" -maxdepth 2 -type f -name "Godot*" ! -name "*.pdb" ! -name "*.xml" ! -name "*.dll" ! -name "*.zip" | head -1)
     if [[ -n "$GODOT_BIN" ]] && [[ -x "$GODOT_BIN" ]]; then
         echo "Godot binary cached: $GODOT_BIN" >&2
         echo "$GODOT_BIN"
@@ -77,7 +77,7 @@ fi
 echo "Extracting..." >&2
 unzip -qo "$EXTRACT_DIR/$ARCHIVE" -d "$EXTRACT_DIR"
 
-GODOT_BIN=$(find "$EXTRACT_DIR" -type f -name "Godot*" ! -name "*.pdb" ! -name "*.xml" ! -name "*.zip" | head -1)
+GODOT_BIN=$(find "$EXTRACT_DIR" -maxdepth 2 -type f -name "Godot*" ! -name "*.pdb" ! -name "*.xml" ! -name "*.dll" ! -name "*.zip" | head -1)
 if [[ -z "$GODOT_BIN" ]]; then
     echo "ERROR: Could not find Godot binary in extracted files." >&2
     ls -la "$EXTRACT_DIR" >&2
