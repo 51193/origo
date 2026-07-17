@@ -113,7 +113,7 @@ public class GodotDirectoryOperationsIntegrationTests
         da3?.Remove("test_dir_enum_dirs");
     }
 
-    [IntegrationTest(Description = "DeleteRecursive removes the directory and all contents")]
+    [IntegrationTest(Description = "DeleteRecursive clears the directory contents but leaves the container intact")]
     public void DeleteRecursive_RemovesDirectory()
     {
         var dir = "res://test_dir_delete";
@@ -123,23 +123,44 @@ public class GodotDirectoryOperationsIntegrationTests
         GodotDirectoryOperations.DeleteRecursive(dir);
 
         IntegrationTestRunner.Assert(
-            !GodotDirectoryOperations.Exists(dir),
-            "Directory should be removed after DeleteRecursive.");
+            GodotDirectoryOperations.Exists(dir),
+            "Directory container should still exist after DeleteRecursive.");
+        IntegrationTestRunner.AssertEmpty(
+            GodotDirectoryOperations.EnumerateFiles(dir, "*", false),
+            "files in directory");
+        IntegrationTestRunner.AssertEmpty(
+            GodotDirectoryOperations.EnumerateDirectories(dir),
+            "subdirectories in directory");
+
+        // Cleanup: remove the empty container.
+        using var da = DirAccess.Open("res://");
+        var rmErr = da!.Remove("test_dir_delete");
+        IntegrationTestRunner.Assert(rmErr == Error.Ok, $"Cleanup should succeed: {rmErr}");
     }
 
-    [IntegrationTest(Description = "DeleteRecursive removes a user:// directory with files and subdirectories")]
+    [IntegrationTest(Description = "DeleteRecursive clears a user:// directory contents including subdirectories, leaves all containers intact")]
     public void DeleteRecursive_UserPath_RemovesDirectory()
     {
         var dir = "user://test_dir_delete_user";
         GodotDirectoryOperations.Create(dir);
         GodotFileOperations.WriteAllText($"{dir}/f.txt", "x", overwrite: true);
         GodotDirectoryOperations.Create($"{dir}/sub");
+        GodotFileOperations.WriteAllText($"{dir}/sub/f2.txt", "x", overwrite: true);
 
         GodotDirectoryOperations.DeleteRecursive(dir);
 
         IntegrationTestRunner.Assert(
-            !GodotDirectoryOperations.Exists(dir),
-            "user:// directory should be removed after DeleteRecursive.");
+            GodotDirectoryOperations.Exists(dir),
+            "user:// directory container should still exist after DeleteRecursive.");
+        IntegrationTestRunner.AssertEmpty(
+            GodotDirectoryOperations.EnumerateFiles(dir, "*", false),
+            "files in user:// directory");
+
+        // Cleanup: remove the empty containers (parent + sub).
+        GodotDirectoryOperations.DeleteRecursive($"{dir}/sub");
+        using var da = DirAccess.Open("user://");
+        da!.Remove("test_dir_delete_user/sub");
+        da.Remove("test_dir_delete_user");
     }
 
     [IntegrationTest(Description = "DeleteRecursive on non-existent directory does not throw")]

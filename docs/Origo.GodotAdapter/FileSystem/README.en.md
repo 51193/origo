@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # FileSystem
 
@@ -34,7 +34,7 @@ A thin facade that delegates all `IFileSystem` methods to the appropriate static
 
 - **Create**: `DirAccess.MakeDirRecursiveAbsolute`
 - **EnumerateFiles**: Supports `*pattern` suffix filtering and recursive mode
-- **DeleteRecursive**: Delete files first, then recursively delete subdirectories, finally delete the current directory
+- **DeleteRecursive**: Clears directory contents (recursively deletes files and subdirectories), leaving the container directory itself intact
 - **Rename**: Opens the parent directory then calls `DirAccess.Rename`
 
 ## Design Decisions
@@ -50,6 +50,10 @@ Godot directory rename/move operations require opening the target's parent direc
 ### Why Copy uses read-then-write instead of streaming
 
 Current save files (JSON, map) are small (KB-level), and read-then-write is simple and reliable. If large resource file copying is needed in the future, streaming can be introduced at a higher level (e.g., `SaveStorageFacade`) without modifying the low-level interface.
+
+### Why DeleteRecursive Does Not Remove the Directory Container
+
+Godot's `DirAccess.Remove`/`RemoveAbsolute` is unreliable for `user://` paths within the editor process: the engine holds file descriptors to directories created at runtime, so `RemoveAbsolute` returns `Error.Failed` even after all contents have been cleared. An empty directory container is harmless and is naturally overwritten by subsequent save operations. This approach also avoids introducing non-adapter APIs such as `System.IO`, keeping the adapter layer constrained to Godot APIs for filesystem operations. This issue does not affect exported games — the standalone process does not hold the editor's fd references.
 
 ---
 [↑ Back to Origo.GodotAdapter](../README.en.md)

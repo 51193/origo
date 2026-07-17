@@ -93,7 +93,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `TypedDataGenerator` pipeline types converted to records for cacheable value comparison; `GenerateStringConversion` emitted conditionally.
 - `docs/META.md` directory diagram includes all existing directories. `docs/README.md` includes `Utility` subsystem.
 - `GodotDirectoryOperations.Create` now checks `MakeDirRecursiveAbsolute` error code instead of discarding it (fail-fast).
-- `GodotDirectoryOperations.DeleteRecursive` now checks `Remove`/`RemoveAbsolute` error codes instead of discarding them (fail-fast).
+- `GodotDirectoryOperations.DeleteRecursive` now clears directory contents (files and subdirectories) but leaves the container directory intact. Previously the method also attempted to remove the emptied directory container via `RemoveAbsolute`/`parent.Remove`, which fails when the Godot editor process holds file descriptors to `user://` paths. The directory container is harmless when empty and is naturally overwritten by subsequent save operations. Error codes on content-deletion operations are checked (fail-fast).
 - `ISndDataAccess.GetData<T>` XML doc now correctly describes the throw-on-mismatch behavior (implementation was always throwing; only the doc was wrong).
 - `SaveCoordinator.EnsureActiveLevelInvariant` error messages now use the current `saveId` parameter instead of the construction-time value.
 - `GodotSndManager.RecoverFromMetaList` removed redundant double-free cleanup in the catch block and narrowed bare `catch` to `catch (Exception)`.
@@ -107,7 +107,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ConsoleOutputChannel.Publish` logs each subscriber failure via an optional `ILogger` parameter (defaults to `NullLogger.Instance`), preserving backward compatibility.
 - `SndEntity.QuitSingle` and `DeadSingle` now delegate shared teardown to a single `ReleaseAndTeardown` helper, keeping the two lifecycle paths symmetric.
 - `GodotFileOperations.Delete` now checks `DirAccess.RemoveAbsolute` error code instead of discarding it (fail-fast).
-- `GodotDirectoryOperations.DeleteRecursive` now resolves `user://` paths to real OS paths via `ProjectSettings.GlobalizePath` before removing the emptied directory, working around a Godot engine defect where `DirAccess.Remove`/`RemoveAbsolute` returns `Error.Failed` for `user://` directory deletion.
 
 ## [0.0.8] - 2026-06-30
 

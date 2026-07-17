@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # FileSystem
 
@@ -34,7 +34,7 @@
 
 - **Create**：`DirAccess.MakeDirRecursiveAbsolute`
 - **EnumerateFiles**：支持 `*pattern` 后缀过滤和递归模式
-- **DeleteRecursive**：先删文件，再递归删子目录，最后删当前目录
+- **DeleteRecursive**：清除目录内容（递归删除文件和子目录），保留目录容器本身
 - **Rename**：打开父目录后调用 `DirAccess.Rename`
 
 ## 设计决策
@@ -50,6 +50,10 @@ Godot 目录的 rename/move 操作需要打开目标所在父目录，然后对�
 ### 为什么 Copy 使用 read-then-write 而非流式传输
 
 当前存档文件（JSON、map）体积小（KB 级），read-then-write 简单可靠。若未来有大型资源文件复制需求，可在上层（如 `SaveStorageFacade`）引入流式传输，不修改底层接口。
+
+### 为什么 DeleteRecursive 不删除目录容器本身
+
+`DirAccess.Remove`/`RemoveAbsolute` 在 Godot 编辑器进程内对 `user://` 路径不可靠：引擎在运行时持有已创建目录的文件描述符，即使目录内容已清空，`RemoveAbsolute` 仍返回 `Error.Failed`。目录内容清空后容器为空无害，后续存档写入操作会自然覆盖。同时避开此问题也无需引入 `System.IO` 等非适配层 API，保持适配层仅通过 Godot API 操作文件系统的约束。此问题不影响导出游戏——因为独立进程中不存在编辑器持有的 fd 引用。
 
 ---
 [↑ 回到 Origo.GodotAdapter](../README.zh.md)

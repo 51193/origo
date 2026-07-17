@@ -58,6 +58,11 @@ internal static class GodotDirectoryOperations
                 $"Failed to rename '{sourcePath}' to '{destinationPath}': {err}");
     }
 
+    /// <summary>
+    ///     Recursively deletes all files and subdirectory contents under the
+    ///     given directory. The directory container itself is left intact —
+    ///     only its contents are removed.
+    /// </summary>
     public static void DeleteRecursive(string directoryPath)
     {
         if (!DirAccess.DirExistsAbsolute(directoryPath))
@@ -77,35 +82,5 @@ internal static class GodotDirectoryOperations
 
         foreach (var subdir in dir.GetDirectories())
             DeleteRecursive($"{normalizedDir}/{subdir}");
-
-        // Godot's DirAccess.Remove/RemoveAbsolute is unreliable for user://
-        // directory removal. Resolve to real OS path and use RemoveAbsolute
-        // with the globalized path so the engine does not need to translate
-        // the virtual prefix during the remove call.
-        if (directoryPath.StartsWith("user://", StringComparison.Ordinal))
-        {
-            var realPath = ProjectSettings.GlobalizePath(directoryPath);
-            var realErr = DirAccess.RemoveAbsolute(realPath);
-            if (realErr != Error.Ok)
-                throw new IOException(
-                    $"Failed to remove user:// directory '{directoryPath}' " +
-                    $"(resolved to '{realPath}'): {realErr}");
-            return;
-        }
-
-        var parent = DirAccess.Open(PathUtility.GetParentDirectory(directoryPath));
-        if (parent is not null)
-            using (parent)
-            {
-                var parentErr = parent.Remove(System.IO.Path.GetFileName(directoryPath.TrimEnd('/')));
-                if (parentErr != Error.Ok)
-                    throw new IOException($"Failed to remove directory '{directoryPath}' via parent: {parentErr}");
-            }
-        else
-        {
-            var absErr = DirAccess.RemoveAbsolute(directoryPath);
-            if (absErr != Error.Ok)
-                throw new IOException($"Failed to remove directory '{directoryPath}': {absErr}");
-        }
     }
 }
