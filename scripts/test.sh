@@ -12,7 +12,7 @@ print_coverage_banner() {
   echo " Origo LINE COVERAGE GATES (enforced in CI and local runs)"
   echo " ────────────────────────────────────────────────────────────────────"
   echo " • Tool: Coverlet (coverlet.msbuild) on all test projects"
-  echo " • Thresholds are configured in each test project's .csproj file"
+  echo " • Unified threshold: >= 90% line coverage across all projects"
   echo " • If coverage is below threshold, 'dotnet test' fails with a Coverlet error."
   echo " • Below, after tests, Coverlet prints a summary table (Line / Branch / Method)."
   echo "══════════════════════════════════════════════════════════════════════"
@@ -22,7 +22,7 @@ print_coverage_banner() {
 print_coverage_banner
 
 if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
-  echo "::notice title=Origo line coverage::Coverlet enforces line coverage: Origo.Core >= 90%, ConsoleBridge >= 80%, GodotAdapter >= 85% (testable subset), SourceGeneration >= 85%. Summary table is printed after tests."
+  echo "::notice title=Origo line coverage::Coverlet enforces >= 90% line coverage across all test projects. Summary table is printed after tests."
 fi
 
 dotnet restore Origo.sln

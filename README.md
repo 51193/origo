@@ -182,10 +182,7 @@ bash scripts/format.sh    # Format check only
 
 | Test project | Coverage gate |
 |---|---|
-| `Origo.Core.Tests` | ≥ 90% |
-| `Origo.GodotAdapter.Tests` | ≥ 85% |
-| `Origo.ConsoleBridge.Tests` | ≥ 80% |
-| `Origo.SourceGeneration.Tests` | ≥ 85% |
+| All test projects | ≥ 90% |
 
 ## License
 

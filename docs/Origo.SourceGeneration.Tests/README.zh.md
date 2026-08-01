@@ -80,7 +80,7 @@
 
 ## 行覆盖率门禁
 
-由 Coverlet 强制 `Origo.SourceGeneration` 行覆盖率 ≥ 85%（在 CI 与本地 `dotnet test` 运行中生效）。
+由 Coverlet 强制 `Origo.SourceGeneration` 行覆盖率 ≥ 90%（在 CI 与本地 `dotnet test` 运行中生效）。
 
 ## 设计决策
 

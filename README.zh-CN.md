@@ -180,10 +180,7 @@ bash scripts/format.sh    # 仅格式检查
 
 | 测试项目 | 覆盖率门禁 |
 |---|---|
-| `Origo.Core.Tests` | ≥ 90% |
-| `Origo.GodotAdapter.Tests` | ≥ 85% |
-| `Origo.ConsoleBridge.Tests` | ≥ 80% |
-| `Origo.SourceGeneration.Tests` | ≥ 85% |
+| 所有测试项目 | ≥ 90% |
 
 ## 许可证
 

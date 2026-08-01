@@ -317,8 +317,8 @@ missing language files) always fail the build.
   coverage gates only).
 - **Test projects**: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`,
   `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`.
-- **Coverage gates** are enforced by Coverlet in `test.sh` (Core ≥ 90%,
-  ConsoleBridge ≥ 80%, GodotAdapter ≥ 85%, SourceGeneration ≥ 85%); falling
+- **Coverage gates** are enforced by Coverlet in `test.sh` (≥ 90% line coverage
+  across all test projects); falling
   below the threshold causes `dotnet test` to fail directly.
 - Test style conventions, `InternalsVisibleTo` whitelist principles, static
   mutable state isolation, etc. are documented in

@@ -13,7 +13,7 @@
         <CollectCoverage>true</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <Include>[Origo.ConsoleBridge]*</Include>
-        <Threshold>80</Threshold>
+        <Threshold>90</Threshold>
         <ThresholdType>line</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
     </PropertyGroup>

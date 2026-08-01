@@ -80,7 +80,7 @@
 
 ## Line Coverage Gate
 
-Coverlet enforces `Origo.SourceGeneration` line coverage ≥ 85% (effective in CI and local `dotnet test` runs).
+Coverlet enforces `Origo.SourceGeneration` line coverage ≥ 90% (effective in CI and local `dotnet test` runs).
 
 ## Design Decisions
 
