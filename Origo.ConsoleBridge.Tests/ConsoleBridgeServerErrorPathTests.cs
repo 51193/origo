@@ -156,8 +156,6 @@ public class ConsoleBridgeServerErrorPathTests
             client.Connect(IPAddress.Loopback, port);
         }
 
-        Thread.Sleep(100);
-
         using var client2 = ConsoleBridgeTestInfrastructure.Connect(port,
             ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
         using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };

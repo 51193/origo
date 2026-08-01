@@ -34,4 +34,4 @@ echo ""
 
 # Benchmarks are tagged [Trait("Category","Benchmark")] and run separately via
 # scripts/benchmark.sh (a dedicated CI step) so they are not executed twice.
-dotnet test Origo.sln --no-build --configuration Release --verbosity normal --filter "Category!=Benchmark"
+dotnet test Origo.sln --no-build --configuration Release --verbosity normal --filter "Category!=Benchmark" --logger "console;verbosity=detailed"
