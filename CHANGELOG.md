@@ -81,6 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ConsoleBridgeServer.Dispose()` no longer intermittently resets a connected client's in-flight read via concurrent stream disposal.
 - `ConsoleBridgeServer` output buffer overflow now emits a warning line. Drop-head strategy prevents stale data.
 - `ConsoleBridgeServer` fire-and-forget task now has faulted-continuation; exception swallowing removed from accept-handle pipeline.
+- `Concurrent_PublishWhileReading_NoDeadlock` test no longer fails intermittently on Windows due to `Thread.Yield()` scheduling overhead in the publisher loop.
 - Community health files moved from `.github/` to repository root for correct link resolution.
 - Broken documentation links fixed: Testing entry, Entity Blackboard anchor, Planning footer, and Runtime integration link.
 - `Origo.GodotAdapter.Tests.csproj` no longer sets irrelevant Godot SDK properties.

@@ -28,10 +28,7 @@ public class ConsoleBridgeServerTests
         var pubTask = Task.Run(() =>
         {
             for (var i = 0; i < 50; i++)
-            {
                 output.Publish($"pub_{i}");
-                Thread.Yield();
-            }
 
             pubDone.Set();
         }, TestContext.Current.CancellationToken);
