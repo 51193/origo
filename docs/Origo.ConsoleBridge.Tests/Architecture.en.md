@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.ConsoleBridge.Tests/Architecture -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: Origo.ConsoleBridge.Tests/Architecture -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Assembly Architecture Guardrail Tests
 

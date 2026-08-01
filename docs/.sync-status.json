@@ -5,6 +5,17 @@
     "en"
   ],
   "pairs": {
+    "benchmarks/baseline": {
+      "status": "synced",
+      "revisions": {
+        "zh": 3,
+        "en": 3
+      },
+      "files": {
+        "zh": "benchmarks/baseline.zh.md",
+        "en": "benchmarks/baseline.en.md"
+      }
+    },
     "benchmarks/README": {
       "status": "synced",
       "revisions": {
@@ -16,114 +27,26 @@
         "en": "benchmarks/README.en.md"
       }
     },
-    "docs/benchmarks/baseline": {
+    "META": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "benchmarks/baseline.zh.md",
-        "en": "benchmarks/baseline.en.md"
-      }
-    },
-    "docs/META": {
-      "status": "synced",
-      "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "META.zh.md",
         "en": "META.en.md"
       }
     },
-    "docs/Origo.ConsoleBridge.Tests/Architecture": {
+    "Origo.ConsoleBridge.Tests/Architecture": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.ConsoleBridge.Tests/Architecture.zh.md",
         "en": "Origo.ConsoleBridge.Tests/Architecture.en.md"
-      }
-    },
-    "docs/Origo.ConsoleBridge.Tests/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "Origo.ConsoleBridge.Tests/README.zh.md",
-        "en": "Origo.ConsoleBridge.Tests/README.en.md"
-      }
-    },
-    "docs/Origo.Core.Tests/META-TEST": {
-      "status": "synced",
-      "revisions": {
-        "zh": 3,
-        "en": 3
-      },
-      "files": {
-        "zh": "Origo.Core.Tests/META-TEST.zh.md",
-        "en": "Origo.Core.Tests/META-TEST.en.md"
-      }
-    },
-    "docs/Origo.Core.Tests/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "Origo.Core.Tests/README.zh.md",
-        "en": "Origo.Core.Tests/README.en.md"
-      }
-    },
-    "docs/Origo.Core.Tests/Testing/Integration/Integration": {
-      "status": "synced",
-      "revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "Origo.Core.Tests/Testing/Integration/Integration.zh.md",
-        "en": "Origo.Core.Tests/Testing/Integration/Integration.en.md"
-      }
-    },
-    "docs/Origo.SourceGeneration.Tests/Benchmarks": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.SourceGeneration.Tests/Benchmarks.zh.md",
-        "en": "Origo.SourceGeneration.Tests/Benchmarks.en.md"
-      }
-    },
-    "docs/Origo.SourceGeneration.Tests/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "Origo.SourceGeneration.Tests/README.zh.md",
-        "en": "Origo.SourceGeneration.Tests/README.en.md"
-      }
-    },
-    "docs/Origo.TestSupport/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "Origo.TestSupport/README.zh.md",
-        "en": "Origo.TestSupport/README.en.md"
       }
     },
     "Origo.ConsoleBridge.Tests/ConsoleBridgeServer": {
@@ -135,6 +58,17 @@
       "files": {
         "zh": "Origo.ConsoleBridge.Tests/ConsoleBridgeServer.zh.md",
         "en": "Origo.ConsoleBridge.Tests/ConsoleBridgeServer.en.md"
+      }
+    },
+    "Origo.ConsoleBridge.Tests/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 3,
+        "en": 3
+      },
+      "files": {
+        "zh": "Origo.ConsoleBridge.Tests/README.zh.md",
+        "en": "Origo.ConsoleBridge.Tests/README.en.md"
       }
     },
     "Origo.ConsoleBridge/README": {
@@ -258,6 +192,17 @@
         "en": "Origo.Core.Tests/Meta.en.md"
       }
     },
+    "Origo.Core.Tests/META-TEST": {
+      "status": "synced",
+      "revisions": {
+        "zh": 4,
+        "en": 4
+      },
+      "files": {
+        "zh": "Origo.Core.Tests/META-TEST.zh.md",
+        "en": "Origo.Core.Tests/META-TEST.en.md"
+      }
+    },
     "Origo.Core.Tests/Planning": {
       "status": "synced",
       "revisions": {
@@ -278,6 +223,17 @@
       "files": {
         "zh": "Origo.Core.Tests/Random.zh.md",
         "en": "Origo.Core.Tests/Random.en.md"
+      }
+    },
+    "Origo.Core.Tests/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 3,
+        "en": 3
+      },
+      "files": {
+        "zh": "Origo.Core.Tests/README.zh.md",
+        "en": "Origo.Core.Tests/README.en.md"
       }
     },
     "Origo.Core.Tests/Runtime-Core": {
@@ -465,6 +421,17 @@
       "files": {
         "zh": "Origo.Core.Tests/StrategyTestScenario.zh.md",
         "en": "Origo.Core.Tests/StrategyTestScenario.en.md"
+      }
+    },
+    "Origo.Core.Tests/Testing/Integration/Integration": {
+      "status": "synced",
+      "revisions": {
+        "zh": 3,
+        "en": 3
+      },
+      "files": {
+        "zh": "Origo.Core.Tests/Testing/Integration/Integration.zh.md",
+        "en": "Origo.Core.Tests/Testing/Integration/Integration.en.md"
       }
     },
     "Origo.Core.Tests/TypeStringMapping": {
@@ -1127,6 +1094,28 @@
         "en": "Origo.GodotAdapter/Snd/README.en.md"
       }
     },
+    "Origo.SourceGeneration.Tests/Benchmarks": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "files": {
+        "zh": "Origo.SourceGeneration.Tests/Benchmarks.zh.md",
+        "en": "Origo.SourceGeneration.Tests/Benchmarks.en.md"
+      }
+    },
+    "Origo.SourceGeneration.Tests/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 3,
+        "en": 3
+      },
+      "files": {
+        "zh": "Origo.SourceGeneration.Tests/README.zh.md",
+        "en": "Origo.SourceGeneration.Tests/README.en.md"
+      }
+    },
     "Origo.SourceGeneration/pipeline": {
       "status": "synced",
       "revisions": {
@@ -1191,6 +1180,17 @@
       "files": {
         "zh": "Origo.TestSupport/Observer/README.zh.md",
         "en": "Origo.TestSupport/Observer/README.en.md"
+      }
+    },
+    "Origo.TestSupport/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 3,
+        "en": 3
+      },
+      "files": {
+        "zh": "Origo.TestSupport/README.zh.md",
+        "en": "Origo.TestSupport/README.en.md"
       }
     },
     "Origo.TestSupport/Reporting/README": {

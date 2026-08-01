@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-pair: Origo.Core.Tests/META-TEST -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试文档维护元指令
 

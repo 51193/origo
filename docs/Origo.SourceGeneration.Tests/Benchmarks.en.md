@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.SourceGeneration.Tests/Benchmarks -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: Origo.SourceGeneration.Tests/Benchmarks -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Generated Product Performance Benchmarks
 

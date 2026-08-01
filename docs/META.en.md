@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/META -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-pair: META -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -58,8 +58,8 @@
 Two files with the same base name but different language suffixes form a **sync pair**. Sync status is tracked through metadata headers at the top of each content file:
 
 ```markdown
-<!-- docsync-pair: docs/Origo.Core/Snd/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-pair: Origo.Core/Snd/README -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 ```
 

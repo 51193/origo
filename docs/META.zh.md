@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/META -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-pair: META -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 手册维护元指令
 
@@ -58,8 +58,8 @@
 同名不同语言后缀的两个文件组成一个 **sync pair**。同步状态通过每个内容文件头部的元数据追踪：
 
 ```markdown
-<!-- docsync-pair: docs/Origo.Core/Snd/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-pair: Origo.Core/Snd/README -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 ```
 

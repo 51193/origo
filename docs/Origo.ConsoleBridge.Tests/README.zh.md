@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.ConsoleBridge.Tests/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.ConsoleBridge.Tests/README -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.ConsoleBridge.Tests
 

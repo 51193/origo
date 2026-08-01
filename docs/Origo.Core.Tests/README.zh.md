@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.Core.Tests/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Tests/README -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.Core.Tests
 

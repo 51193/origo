@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.Core.Tests/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Tests/README -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.Core.Tests
 

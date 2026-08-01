@@ -33,6 +33,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Origo.ConsoleBridge\Origo.ConsoleBridge.csproj"/>
+        <ProjectReference Include="..\Origo.TestSupport\Origo.TestSupport.csproj"/>
     </ItemGroup>
 
 </Project>

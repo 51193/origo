@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Frame-Driven Game Simulation Integration Tests
 

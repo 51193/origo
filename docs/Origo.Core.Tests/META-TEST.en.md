@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-pair: Origo.Core.Tests/META-TEST -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Documentation Maintenance Meta-Instructions
 

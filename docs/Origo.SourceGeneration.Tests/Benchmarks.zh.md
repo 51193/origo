@@ -1,5 +1,5 @@
-<!-- docsync-pair: docs/Origo.SourceGeneration.Tests/Benchmarks -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-pair: Origo.SourceGeneration.Tests/Benchmarks -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 生成产物性能基准 测试
 
