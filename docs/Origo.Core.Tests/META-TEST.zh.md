@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试文档维护元指令
 
@@ -110,7 +110,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 
 **禁止使用 InternalsVisibleTo 的情况（应通过公共接口验证）**：
 
-1. **会话生命周期的编排方法**：`SessionRun.PersistLevelState()`、`SessionRun.SerializeToPayload()`、`ProgressRun.LoadFromPayload()`/`BuildSavePayload()`/`SwitchForeground()`、`SessionManager.PersistSession()` 等内部方法的行为应通过 `ISndContext.RequestSaveGame()`/`RequestLoadGame()`/`RequestSwitchForegroundLevel()` + `ISaveStorageService` 公共流程验证（syncProcess 状态通过 `ProcessAllSessions` 是否处理该会话来间接验证）。仅上述白名单第 7 条所列、无公共等价的低层校验情形除外。
+1. **会话生命周期的编排方法**：`SessionRun.PersistLevelState()`、`SessionRun.SerializeToPayload()`、`ProgressRun.LoadFromPayload()`/`BuildSavePayload()`/`SwitchForeground()`、`SessionManager.PersistSession()` 等内部方法的行为应通过 `ctx.Save.RequestSaveGame()`/`RequestLoadGame()`/`RequestSwitchForegroundLevel()` + `ISaveStorageService` 公共流程验证（syncProcess 状态通过 `ProcessAllSessions` 是否处理该会话来间接验证）。仅上述白名单第 7 条所列、无公共等价的低层校验情形除外。
 
 2. **场景宿主内部方法作为行为触发器**：当测试意图是验证实体/策略行为（而非场景宿主自身契约）时，`FullMemorySndSceneHost.ProcessAll()`/`CreateEntity()`/`RemoveEntity()`/`RemoveAllEntities()` 不得作为触发捷径——应通过 `ISessionRun.Spawn`、`ISessionManager.ProcessAllSessions(includeForeground: true)`、`ISessionRun.RequestKillEntity` + `ISessionManager.KillPendingAllSessions()` 公共流程。（验证场景宿主自身契约的测试例外，见上白名单第 3 条。）
 
@@ -118,7 +118,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 
 4. **会话挂载键的内部属性**：`SessionRun.MountKey` 应通过 `ISessionManager.Contains()` / `ISessionManager.TryGet()` 验证
 
-5. **SessionManager 的 Clear/LoadSessionFromPayload**：应通过 `DestroySession()` / `ISndContext.RequestLoadGame()` 验证
+5. **SessionManager 的 Clear/LoadSessionFromPayload**：应通过 `DestroySession()` / `ctx.Save.RequestLoadGame()` 验证
 
 **判断标准**：如果我改了内部实现但行为契约不变，这个测试应该仍然通过。如果不能通过公共接口验证到同等的行为语义，则可以使用 `InternalsVisibleTo`。请牢记：`InternalsVisibleTo` 是"白名单"——如无必要，不得使用。
 

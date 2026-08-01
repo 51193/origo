@@ -26,7 +26,7 @@ public class HealthStrategy : LifecycleStrategyBase
     {
         var (found, hp) = entity.TryGetData<int>("hp");
         if (found && hp <= 0)
-            ctx.RequestKillEntity(entity.Id);
+            entity.OwningSession.RequestKillEntity(entity.Name);
     }
 }
 ```

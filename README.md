@@ -26,7 +26,7 @@ public class HealthStrategy : LifecycleStrategyBase
     {
         var (found, hp) = entity.TryGetData<int>("hp");
         if (found && hp <= 0)
-            ctx.RequestKillEntity(entity.Id);
+            entity.OwningSession.RequestKillEntity(entity.Name);
     }
 }
 ```
@@ -152,7 +152,7 @@ Full documentation lives in this repository under **[`docs/`](docs/README.md)** 
 
 Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 
-> Documentation is written in Chinese. Non-Chinese readers can feed the `docs/` tree to an AI agent as a knowledge base and query the agent for answers.
+> Documentation is available in Chinese and English — browse [`docs/`](docs/README.md) in either language.
 
 | I want to... | Go to |
 |---|---|

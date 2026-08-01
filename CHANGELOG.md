@@ -12,106 +12,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **XML doc comment standard** — AGENTS.md §1.7 requires every `public` and `protected` type and member to carry an English `<summary>` XML doc comment for IDE IntelliSense. Existing Chinese comments on public APIs are treated as defects.
-- **Complete English documentation** — 116 English `.en.md` files alongside existing Chinese `.zh.md` files, covering modules, usage guides, test docs, adapter layer, and benchmarks.
-- **DocSyncTool** — bilingual documentation sync tool (`generate`, `validate`, `init` commands) with CI enforcement via `scripts/doc-sync.sh`. Auto-generates navigation hubs and `.sync-status.json`.
-- **Performance benchmark suite** — 7 new benchmark classes: entity lifecycle, `ObserverTopology` mount/unmount scaling, `DataSourceNode` tree operations, `Blackboard` bulk read/write, `SavePayload` roundtrip, `ConcurrentActionQueue` enqueue/execute, and `RandomNumberGenerator` throughput. Each emits a single consolidated `CompareTable` / `ReportTable` via shared `PerfReporter`.
+- **Complete English documentation** — 116 English `.en.md` files alongside existing Chinese `.zh.md` files.
 - **`camera_view` console command** — displays screen coordinates and depth of Godot entity nodes visible through the active `Camera3D`.
-- **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name. `Logger<T>` wrapper delegates to any existing `ILogger`.
-- **`SndContextParameters.InitialLevelId`** — configurable initial save level ID (defaults to `"default"`), replacing the hardcoded `SndDefaults.InitialLevelId`.
-- **`SndStrategyPool.LogPoolLeaks()`** — diagnostic method that logs warnings for strategies with non-zero reference counts at teardown.
-- **`Origo.Core.Runtime.Console.ConsoleMessages`** — public constants for console messages (e.g. `InvalidArgumentCount`), so callers can reference message text instead of hard-coding literals.
-- **`Origo.GodotAdapter.Integration.Tests`** — new Godot headless integration test project using `Godot.NET.Sdk` with custom `[IntegrationTest]`/`[DeferredTest]` runner. 37+ tests cover runtime smoke, file I/O, SND entity lifecycle, entity creation, packed scene factories, console commands, bootstrap flow, and export property defaults.
-- **Frame-driven gameplay integration tests** — `GameplaySimulationHarness` with fluent `GameplaySimulationBuilder` and `TestContextBuilder`. 9 `GameplayIntegrationTests`, 10 `AdvancedGameplayIntegrationTests`, 7 `ActiveStrategyIntegrationTests`, 7 `StateMachineIntegrationTests`, 6 `ObserverTopologyIntegrationTests`, 5 `PlanningIntegrationTests`, 6 `StrategyStateSaveLoadIntegrationTests`, and cross-session concurrency tests. Covers full `IOrigoFrameDriver.DriveFrame` pipeline with real `SndEntity` lifecycle.
-- **Error path integration tests** — P0 tests for corrupt save loading, state machine operations after session destroy, active strategy invoke on killed entities, and spawn with unregistered strategy indices. P1 tests for duplicate active strategy addition and re-kill of harvested entities.
-- **`SaveExtraFilesRoundTripTests`** — 14 tests for `CopyDirectoryFromSnapshot` behavior and `ISndArchiveFileAccess` save/load cycles.
-- **`SndContextBootstrapTests`** — 15 tests for `Bootstrap()` flow, auto-discover, template loading, `IStateMachineContext` casting, and path getter contracts.
-- **Save hash computation tests** — `ComputeExtraDirectoryHash`/`CombineHashes` unit tests and idempotent skip regression tests for `extra/` files.
-- **ConsoleBridgeServer boundary tests** — buffer overflow behavior, within-limit delivery on connect, subscription edge cases, and `ISessionManager` key edge cases.
-- **CI `godot-integration-tests` job** — parallel blocking gate running Godot headless tests with auto-resolved binary version.
-- **`scripts/download-godot.sh` / `scripts/godot-test.sh`** — download Godot binary matching `Godot.NET.Sdk` version and run headless integration tests locally.
-- **`IntegrationTestRunner` assertions** — `AssertNull`, `AssertContains`, `AssertEmpty`, `AssertNotEmpty`, `AssertNotNull`, `AssertThrows<TException>`.
+- **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name.
+- **`SndContextParameters.InitialLevelId`** — configurable initial save level ID (defaults to `"default"`).
 
 ### Changed
 
-- **BREAKING:** `SndContext` no longer directly implements role interfaces. All 9 role interfaces plus `IStateMachineContext` are exposed through typed companion properties (`Blackboard`, `Deferred`, `Template`, `ConsoleAccess`, `StateMachines`, `Save`, `Lifecycle`, `FileAccess`, `ArchiveFileAccess`, `StateMachineContext`). Callers use `ctx.Save.RequestSaveGame(id)` instead of `((ISndSaveOperations)ctx).RequestSaveGame(id)`.
-- **BREAKING:** `ISndContext` no longer inherits any role interfaces. `ISndEntityRawSubscription` made `internal`.
-- **BREAKING:** `DataSourceNode.AsByte`/`AsSByte`/`AsShort`/`AsUShort`/`AsInt`/`AsUInt`/`AsLong`/`AsULong`/`AsFloat`/`AsDouble`/`AsDecimal`/`AsBool` (12 methods) replaced by a single unified `As<T>()` generic method. `AsString()` and `AsChar()` retained.
+- **BREAKING:** `SndContext` and `ISndContext` refactored to companion-object pattern. All role interfaces (`ISndSaveOperations`, `ISndBlackboardAccess`, `ISndDeferredActions`, etc.) are now exposed through typed companion properties (`ctx.Save`, `ctx.Blackboard`, `ctx.Deferred`, etc.) instead of direct interface inheritance. `ISndEntityRawSubscription` made `internal`.
+- **BREAKING:** `DataSourceNode.AsByte`/`AsInt`/`AsFloat`/... (12 numeric-typed methods) replaced by a single unified `As<T>()` generic method. `AsString()` and `AsChar()` retained.
+- **BREAKING:** `DataSourceNode.AsChar` now throws `InvalidOperationException` on `Map`/`Array` nodes instead of silently returning `'\0'`.
+- **BREAKING:** `ISndDataAccess.GetData<T>` and `SetData<T>` now require `T : notnull`. `SetData<T>` throws `ArgumentNullException` when `value` is null for reference types.
+- **BREAKING:** `SndEntity.IsPendingKill` setter is now `internal` — use `ISessionRun.RequestKillEntity(name)` instead.
 - **BREAKING:** `ConsoleCommandRouter.Register` throws `InvalidOperationException` on duplicate command names instead of silently overwriting.
-- **BREAKING:** All console messages are now in English. Every built-in command's `HelpText`, error messages, and `tree_debug`/`camera_view` output strings are in English.
+- **BREAKING:** All console messages are now in English (built-in commands, error messages, `tree_debug`, `camera_view` output).
 - **BREAKING:** `GodotLogger` requires a non-null handler at construction.
 - **BREAKING:** `GodotNodeHandle.SetVisible` throws `ObjectDisposedException` on freed nodes instead of silently returning.
-- **BREAKING:** `SndEntity.IsPendingKill` setter is now `internal`. Use `ISessionRun.RequestKillEntity(name)` instead.
 - **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value.
-- **BREAKING:** `GodotTypedDataPerformanceTests` now uses shared `PerfReporter` instead of inline helpers.
-- **BREAKING:** `ISndDataAccess.GetData<T>` and `ISndDataAccess.SetData<T>` now require `T : notnull`. `SetData<T>` throws `ArgumentNullException` when `value` is null for reference types. `GetData<T>` returns a compiler-guaranteed non-null value.
-- **Public API XML doc comments translated to English** — all previously Chinese `<summary>` comments across Origo.Core (all subsystems: Runtime, Save, Snd, DataSource, StateMachine, Blackboard, plus internal classes), Origo.GodotAdapter, Origo.ConsoleBridge, and Origo.SourceGeneration are now in English. Zero Chinese characters remain in production source XML doc comments.
-- `ConsoleBridgeServer` threading model replaced with `async`/`await`, eliminating the 100ms polling loop and making the single-connection model race-free.
+- **Public API XML doc comments translated to English** — all previously Chinese `<summary>` comments are now in English for IDE IntelliSense.
+- **Godot upgraded to 4.7.1** — `Godot.NET.Sdk` version bumped from 4.6.3 to 4.7.1.
+- **ConsoleBridgeServer** uses `async`/`await` for the accept/read loop, eliminating the 100ms polling loop. Connection handling is race-free and survives hard client disconnects and handler exceptions.
 - **Save idempotency now includes `extra/` files in hash computation**, preventing silent skip of changed side-channel files.
-- `SavePayloadWriter` responsibilities split: `.payload.sha` writing moved solely to `SaveStorageFacade`.
-- `CombineHashes` produces consistent domain-separated format regardless of side-channel file presence.
-- Release workflow now includes format check, benchmarks, and Godot integration tests.
-- Source generator diagnostic messages carry source locations from `SndInlineTypesAttribute` syntax.
-- `GodotSndManager.ProcessAll` and `FullMemorySndSceneHost.ProcessAll` iterate entities directly instead of allocating per-frame arrays.
-- **BREAKING:** `DataSourceNode.AsChar` now throws `InvalidOperationException` on `Map`/`Array` nodes instead of silently returning `'\0'`, per fail-fast principle.
-- `GodotPackedSceneNodeFactory` uses `Dictionary` instead of `ConcurrentDictionary` for scene cache.
-- `GodotPathResolver` path logic extracted to `Origo.Core.Utility.PathUtility` for unit testability without Godot dependencies.
-- `ConsoleOutputChannel.Publish` throws `AggregateException` when multiple listeners throw.
-- `scripts/download-godot.sh` validates extracted SDK version format before use.
-- CodeQL workflow uses `global.json` SDK resolution instead of hardcoded version.
-- Benchmark output simplified: each test method emits one consolidated `CompareTable`/`ReportTable` instead of per-type tables.
-- Test projects unified to flat namespaces per documented convention.
-- **Godot upgraded to 4.7.1** — `Godot.NET.Sdk` version bumped from 4.6.3 to 4.7.1 across all projects and demo. `scripts/download-godot.sh` binary detection improved to exclude `.dll` files. `config/features` in `project.godot` updated from `"4.6"` to `"4.7"`.
-- **Unify line coverage gates to ≥ 90% across all test projects** — Origo.ConsoleBridge.Tests raises from 80% to 90% (new error-path tests added), Origo.GodotAdapter.Tests and Origo.SourceGeneration.Tests raise from 85% to 90%. CI step name, test.sh banner, and README tables simplified to a single threshold.
+- Source generator diagnostic messages carry source locations from `SndInlineTypesAttribute` syntax, so build errors point to the exact attribute location.
 
 ### Removed
 
-- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. This was a test-only convenience wrapper that exposed production code solely for test convenience (violates AGENTS.md §1.2). Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
-- `NullSndContext` relocated from production code to test project. `NullSndContextExtendedTests.cs` and `ContextBoundaryTests.cs` deleted.
-- Unused method parameters removed from 8 methods across production code.
-- `SessionManager.ClearBackground()` — unused internal method removed.
-- `GodotPathResolver` thin forwarding wrapper deleted (logic moved to `PathUtility`).
-- `StubSndEntity.GetRawSubscriptionCount()` removed (test tracking moved to test-side wrapper).
-- **Orphan `Origo.Core.Abstractions/` duplicate source directory removed** — contained MD5-identical duplicates of lifecycle interfaces with no build reference.
-- Dead null check in `ObserverStrategyMetadata.GetDataKeys` (API never returns null).
+- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
 
 ### Fixed
 
-- **DocSyncTool Validator** — `fileMetadatas` changed to `List<DocFile>` to prevent language collision; JSON config keys now use PascalCase.
-- **20 documentation files aligned with source** — constructor parameters, interface members, namespace paths, and diagram corrections.
-- `ConsoleBridgeServer.Dispose()` no longer intermittently resets a connected client's in-flight read via concurrent stream disposal.
-- `ConsoleBridgeServer` output buffer overflow now emits a warning line. Drop-head strategy prevents stale data.
-- `ConsoleBridgeServer` fire-and-forget task now has faulted-continuation; exception swallowing removed from accept-handle pipeline.
-- `Concurrent_PublishWhileReading_NoDeadlock` test no longer fails intermittently on Windows due to `Thread.Yield()` scheduling overhead in the publisher loop.
-- Community health files moved from `.github/` to repository root for correct link resolution.
-- Broken documentation links fixed: Testing entry, Entity Blackboard anchor, Planning footer, and Runtime integration link.
-- `Origo.GodotAdapter.Tests.csproj` no longer sets irrelevant Godot SDK properties.
-- CI format gate passes with zero violations.
-- Exception catch blocks in save, node, session, and observer operations now log original exceptions before rewrapping.
-- `ObserverTopology.Mount` rollback guard prevents ref-count corruption when `GetStrategy` throws before pool acquisition.
-- `SndDataManager.SetData` validates `name` for null/whitespace. `SndNodeManager` constructor validates `factory` parameter.
-- `ObserverBindingEntry.FullCleanup` throws on null `TargetEntity`. `GodotSndManager.EnsureReadyForSpawn` validates topology.
-- `SndEntity` public methods validate parameters; `RecoverForLifecycle` throws on null `StrategyMetaData`.
-- `ConsoleCommandHelper.ResolveBlackboardLayer` throws for unknown layers instead of returning null.
-- Various fail-fast hardening: `GodotSndEntity`, `ConsoleOutputChannel`, `GodotDirectoryOperations`, `DataSourceNode`, `GridParser`, `LogMessageBuilder`.
-- `TypedDataGenerator` pipeline types converted to records for cacheable value comparison; `GenerateStringConversion` emitted conditionally.
-- `docs/META.md` directory diagram includes all existing directories. `docs/README.md` includes `Utility` subsystem.
-- `GodotDirectoryOperations.Create` now checks `MakeDirRecursiveAbsolute` error code instead of discarding it (fail-fast).
-- `GodotDirectoryOperations.DeleteRecursive` now clears directory contents (files and subdirectories) but leaves the container directory intact. Previously the method also attempted to remove the emptied directory container via `RemoveAbsolute`/`parent.Remove`, which fails when the Godot editor process holds file descriptors to `user://` paths. The directory container is harmless when empty and is naturally overwritten by subsequent save operations. Error codes on content-deletion operations are checked (fail-fast).
-- `ISndDataAccess.GetData<T>` XML doc now correctly describes the throw-on-mismatch behavior (implementation was always throwing; only the doc was wrong).
-- `SaveCoordinator.EnsureActiveLevelInvariant` error messages now use the current `saveId` parameter instead of the construction-time value.
-- `GodotSndManager.RecoverFromMetaList` removed redundant double-free cleanup in the catch block and narrowed bare `catch` to `catch (Exception)`.
-- `ConsoleBridgeServer` accept loop now survives unhandled connection handler exceptions via try/catch with `ILogger`-backed warning logging.
-- `ConsoleBridgeServer.Dispose` no longer re-throws non-`OperationCanceledException` task faults.
-- `ConsoleBridgeServer.Start` added cancellation re-validation between `Interlocked` gate and `TcpListener` creation to close TOCTOU race with `Dispose`.
-- Broken bare `.md` links in root `README.md` and `README.zh-CN.md` replaced with language-suffixed `.en.md` / `.zh.md` targets.
-- Broken `docs/META.md` link in `CONTRIBUTING.md` fixed to point to `docs/META.en.md`.
-- `GodotSndManager` rollback paths now log the original exception via `SharedLogger` before rethrowing, providing diagnostic context for partial entity load failures.
-- `Origo.sln` — `Origo.GodotAdapter.Integration.Tests` Release configurations corrected from Debug to Release.
-- `ConsoleOutputChannel.Publish` logs each subscriber failure via an optional `ILogger` parameter (defaults to `NullLogger.Instance`), preserving backward compatibility.
-- `SndEntity.QuitSingle` and `DeadSingle` now delegate shared teardown to a single `ReleaseAndTeardown` helper, keeping the two lifecycle paths symmetric.
-- `GodotFileOperations.Delete` now checks `DirAccess.RemoveAbsolute` error code instead of discarding it (fail-fast).
-- `PersistentBlackboard` now uses atomic write (temp file + rename) to prevent `system.json` corruption on crash. Stale temp files from interrupted writes are cleaned up automatically on load.
+- **`ObserverTopology.Mount` rollback guard** — prevents strategy reference-count corruption when `GetStrategy` throws before pool acquisition.
+- **`GodotDirectoryOperations.Create` / `DeleteRecursive`** — error codes from Godot API calls are checked (fail-fast) instead of discarded. `DeleteRecursive` now clears directory contents but leaves the container intact, avoiding failures when the Godot editor holds file descriptors to `user://` paths.
+- **`GodotFileOperations.Delete`** — error code from `DirAccess.RemoveAbsolute` is checked instead of discarded.
+- **`PersistentBlackboard` atomic write** — uses temp-file + rename to prevent `system.json` corruption on crash. Stale temp files from interrupted writes are cleaned up automatically.
+- **`ConsoleBridgeServer` connection robustness** — no longer intermittently resets an in-flight read via concurrent stream disposal on `Dispose()`. Output buffer overflow now emits a warning instead of dropping lines silently.
 
 ## [0.0.8] - 2026-06-30
 

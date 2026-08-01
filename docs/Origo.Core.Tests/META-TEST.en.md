@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -151,7 +151,7 @@ but must observe the following whitelist principle:
    `SessionRun.PersistLevelState()`, `SessionRun.SerializeToPayload()`,
    `ProgressRun.LoadFromPayload()`/`BuildSavePayload()`/`SwitchForeground()`,
    `SessionManager.PersistSession()` should be verified through the public flow of
-   `ISndContext.RequestSaveGame()`/`RequestLoadGame()`/`RequestSwitchForegroundLevel()` +
+   `ISndSaveOperations.RequestSaveGame()`/`RequestLoadGame()`/`RequestSwitchForegroundLevel()` +
    `ISaveStorageService` (syncProcess state indirectly verified by whether `ProcessAllSessions`
    processes that session). Exceptions only for cases listed in whitelist item 7 above with no public equivalent.
 
@@ -170,7 +170,7 @@ but must observe the following whitelist principle:
    `ISessionManager.Contains()` / `ISessionManager.TryGet()`
 
 5. **SessionManager's Clear / LoadSessionFromPayload**: Should be verified through `DestroySession()` /
-   `ISndContext.RequestLoadGame()`
+   `ISndSaveOperations.RequestLoadGame()`
 
 **Judgment criterion**: If I change the internal implementation but the behavioral contract remains unchanged,
 this test should still pass. If the equivalent behavioral semantics cannot be verified through public interfaces,
