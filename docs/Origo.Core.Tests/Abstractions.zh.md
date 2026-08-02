@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Abstractions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试替身 测试
 
@@ -20,7 +20,7 @@
 | `MemoryFileSystemTests.cs` | TestFileSystem: 读写/枚举/复制/重命名/删除/父目录/路径拼接 |
 | `NullLoggerTests.cs` | NullLogger.Instance 不抛异常 |
 | `TestLoggerFilterTests.cs` (in `TestSupport/`) | TestLogger 日志级别过滤行为 |
-| `TestFileSystemAdditionalTests.cs` | TestFileSystem 额外边缘路径 |
+| `TestMemoryFileSystemAdditionalTests.cs` | TestMemoryFileSystem 额外边缘路径 |
 
 ## MemoryFileSystemTests 测试详情
 
@@ -67,7 +67,7 @@
 |---------|---------|---------|
 | `NullLogger_Instance_IsSingleton` | 两次获取 Instance | 返回同一实例 |
 
-## TestFileSystemAdditionalTests 测试详情
+## TestMemoryFileSystemAdditionalTests 测试详情
 
 ### 正确路径
 

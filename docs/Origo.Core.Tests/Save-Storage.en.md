@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Storage Tests
 
@@ -26,6 +26,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SavePathResolverTests.cs` | Path resolution: SaveFileHandle relative path extraction, parent directory creation, traversal attack rejection, leaf directory name |
 | `SaveGamePayloadTests.cs` | Data model: SaveGamePayload/LevelPayload defaults, multi-level access, CustomMeta |
 | `WellKnownKeysTests.cs` | Constants: ActiveSaveId, SessionTopology key name correctness |
+| `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
 
 ## SaveStorageContractTests Details
 
@@ -253,6 +254,30 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 |-------------|-----------------|-----------|
 | `WellKnownKeys_ActiveSaveId_HasExpectedValue` | ActiveSaveId = "origo.active_save_id" | WellKnownKeys |
 | `WellKnownKeys_SessionTopology_HasExpectedValue` | SessionTopology = "origo.session_topology" | WellKnownKeys |
+
+## SaveExtraFilesRoundTripTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `CopyDirectoryFromSnapshot_SeededFiles_AllCopiedToCurrent` | All seeded files under snapshot save_001/extra are copied to current/extra | SaveStorageFacade.CopyDirectoryFromSnapshot |
+| `CopyDirectoryFromSnapshot_SubdirectoryStructurePreserved` | Subdirectory hierarchy preserved after copy | SaveStorageFacade.CopyDirectoryFromSnapshot |
+
+### Boundary Path
+
+| Test Method | Boundary Condition | Expected Behavior |
+|-------------|-------------------|-------------------|
+| `CopyDirectoryFromSnapshot_SourceDirectoryDoesNotExist_ReturnsSilently` | No extra/ directory in snapshot | Returns silently, no exception |
+| `CopyDirectoryFromSnapshot_EmptySourceDirectory_DoesNothing` | extra/ is an empty directory | current/extra created but stays empty |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `CopyDirectoryFromSnapshot_NullHandle_Throws` | handle is null | ArgumentNullException |
+| `CopyDirectoryFromSnapshot_EmptySaveId_Throws` | saveId is empty string | ArgumentException |
+| `CopyDirectoryFromSnapshot_EmptyDirName_Throws` | relativeDirName is empty string | ArgumentException |
 
 ## Test Helper Strategies
 

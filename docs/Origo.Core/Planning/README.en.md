@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Planning
 
@@ -14,6 +14,8 @@ The Planning subsystem provides intent-driven entity-level plan execution infras
 Intent-driven plan execution base class. Encapsulates the complete lifecycle from intent generation to plan decomposition, action mount/unmount, and plan advancement.
 
 **Design philosophy:** The framework manages wiring (subscription pairing, Action strategy insertion/removal, state machine control flow); users only provide two domain mapping functions. Any step type (including idle, patrol, etc.) should be implemented as an independent `LifecycleStrategyBase` Action strategy, registered via `StepToActionIndex`, treated no differently from other actions in the framework.
+
+> **Prerequisite constraint:** `PlanExecutionStrategyBase` subscribes to entity intent/action-status data changes via `ISndEntityRawSubscription` (an `internal` interface). Plan strategies therefore only work with framework entities implementing it — `SndEntity` (Core in-memory entity), `GodotSndEntity` (adapter bridge entity), and `StubSndEntity` (test host). Mounting a plan strategy on a custom `ISndEntity` implementation throws `InvalidCastException` at runtime.
 
 #### Abstract Members Users Must Implement
 

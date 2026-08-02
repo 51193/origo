@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -138,6 +138,35 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 |-------------|------------------|---------------------|
 | `RequestLoadMainMenuEntrySave_MountsForegroundAndSpawnsEntryEntities` | After loading the entry save, ProgressBlackboard is non-null, ForegroundSession is non-null, and entry entities are findable in the host | ISndLifecycleOperations |
 | `RequestLoadMainMenuEntrySave_ClearsPreviousForegroundEntities` | Entities leftover from before loading the entry save are cleared after load | ISndLifecycleOperations |
+
+## SndContextBootstrapTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `Bootstrap_CompletesWithoutError` | Bootstrap executes fully without exception when entry.json is present | ISndContext.Bootstrap |
+| `Bootstrap_AfterCall_ForegroundSessionIsEstablished` | After Bootstrap + deferred flush, a foreground session is mounted | ISndContext.Bootstrap |
+| `Bootstrap_WithConfigureConverters_CallbackIsInvoked` | ConfigureConverters callback invoked before strategy discovery | ISndContext.Bootstrap |
+| `Bootstrap_AutoDiscoverDisabled_SkipsStrategyDiscovery` | AutoDiscoverStrategies=false skips the strategy scan | SndContextParameters.AutoDiscoverStrategies |
+| `Bootstrap_WithTemplates_LoadsAndAllowsCloning` | CloneTemplate works after configuring a template path | SndWorld.LoadTemplates |
+| `IStateMachineContext_SceneAccess_AfterBootstrap_NotNull` | State machine context SceneAccess available after Bootstrap | IStateMachineContext |
+| `IStateMachineContext_SystemBlackboard_AfterBootstrap_NotNull` | System blackboard accessible after Bootstrap | IStateMachineContext |
+| `IStateMachineContext_ProgressBlackboard_AfterBootstrap_NotNull` | Progress blackboard accessible after Bootstrap | IStateMachineContext |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | entry.json missing | Deferred flush throws (fail-fast) |
+
+### Boundary Path
+
+| Test Method | Boundary Condition | Expected Behavior |
+|-------------|-------------------|-------------------|
+| `SaveRootPath_ReturnsConstructorValue` | Constructor parameter | Returns the save root path passed to the constructor |
+| `InitialSaveRootPath_ReturnsConstructorValue` | Constructor parameter | Returns the initial save root path |
+| `EntryConfigPath_ReturnsConstructorValue` | Constructor parameter | Returns the entry config path |
 
 ## SndArchetypeLoaderTests Details
 

@@ -5,8 +5,9 @@
 # persistence, concurrent queue, random, strategy performance), and Godot adapter
 # throughput benchmarks.
 #
-# Tagged [Trait("Category","Benchmark")], these run here only (a dedicated CI step)
-# and are excluded from scripts/ci.sh so they execute exactly once.
+# Tagged [Trait("Category","Benchmark")], these run here only: they are excluded
+# from the regular test run (scripts/test.sh filters them out) and executed once
+# by this dedicated CI step, which scripts/ci.sh invokes.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

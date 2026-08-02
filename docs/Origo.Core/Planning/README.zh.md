@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning
 
@@ -14,6 +14,8 @@
 意图驱动的计划执行基类。封装了从 intent 产生到 plan 拆解、action 挂载/卸载、计划推进的完整生命周期。
 
 **设计理念：** 框架管理 wiring（订阅配对、Action 策略插拔、状态机控制流），用户仅提供两个领域映射函数。任何步骤类型（包括 idle、patrol 等）都应实现为独立的 `LifecycleStrategyBase` Action 策略，通过 `StepToActionIndex` 注册，与框架的其他 action 无差别对待。
+
+> **前置约束**：`PlanExecutionStrategyBase` 内部经 `ISndEntityRawSubscription`（`internal` 接口）订阅实体的意图/动作状态数据变更。因此计划策略仅适用于实现了该接口的框架实体——`SndEntity`（Core 内存实体）、`GodotSndEntity`（适配层桥接实体）及 `StubSndEntity`（测试宿主）。对自定义 `ISndEntity` 实现挂载计划策略会在运行时抛 `InvalidCastException`。
 
 #### 用户必须实现的抽象成员
 

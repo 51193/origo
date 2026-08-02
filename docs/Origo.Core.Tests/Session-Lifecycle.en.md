@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -24,10 +24,11 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `EmptySessionManagerTests.cs` | No-op behavior of EmptySessionManager |
 | `PlayStopPlayRoundTripTests.cs` | Round-trip consistency of multiple Play→Stop→Play cycles (identity/blackboard/Tick/Progress) |
 | `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun load error paths (topology format errors/file missing/background load failure) |
-| `SaveAndSwitchForegroundTests.cs` | Combined save + switch level operations, collision handling, deferred queue orchestration |
+| `SaveAndSwitchForegroundIntegrationTests.cs` | Combined save + switch level operations, collision handling, deferred queue orchestration |
 | `SessionDecouplingTests.cs` | Sessions run independently without interference (SessionStateMachineContext, SceneHost, path policy) |
 | `SessionManagerTests.cs` | ISessionManager: create/find/destroy/enumerate/ProcessAll/KillPending |
 | `SessionTopologyCodecTests.cs` | SessionTopology codec round-trip |
+| `TopologyInvariantTests.cs` | Topology invariant validation: EnsureActiveLevel happy/missing/empty/whitespace/mismatched topologies (fail-fast) |
 | `BackgroundSessionTests.cs` | Independent background session tests (entities/Process/serialization/persistence round-trip) |
 | `BackgroundSession_CreationWithCorrectFlagTests.cs` | Background IsFrontSession=false |
 | `BackgroundSession_MultipleInstancesAllowedTests.cs` | Background allows multiple instances |
@@ -190,7 +191,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json syntax error | Exception |
 | `LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions` | Background session snd_scene invalid format causes load failure | Foreground set to null, no background keys |
 
-## SaveAndSwitchForegroundTests Details
+## SaveAndSwitchForegroundIntegrationTests Details
 
 ### Happy Path
 
@@ -325,6 +326,25 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `Join_EmptyEntries_ReturnsEmptyString` | Empty entry list | Returns empty string |
 | `Parse_IgnoreEmptyEntries` | Consecutive commas between entries (empty entries) | Empty entries ignored |
 
+## TopologyInvariantTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `EnsureActiveLevel_ValidTopology_DoesNotThrow` | Blackboard topology contains expected levelId | Does not throw; validation passes | TopologyInvariant |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `EnsureActiveLevel_MissingTopology_Throws` | No topology key in blackboard | InvalidOperationException |
+| `EnsureActiveLevel_EmptyTopology_Throws` | Topology is empty string | InvalidOperationException |
+| `EnsureActiveLevel_WhitespaceTopology_Throws` | Topology is whitespace | InvalidOperationException |
+| `EnsureActiveLevel_MismatchedLevelId_Throws` | Foreground levelId in topology differs from expected | InvalidOperationException |
+| `EnsureActiveLevel_NullBlackboard_Throws` | Blackboard is null | ArgumentNullException |
+| `EnsureActiveLevel_EmptyExpectedLevelId_Throws` | Expected levelId is empty string | ArgumentException |
+
 ## BackgroundSessionTests Details
 
 ### Happy Path
@@ -444,7 +464,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `TrackingStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: records all hooks AfterSpawn/AfterLoad/AfterAdd/BeforeRemove/BeforeSave/BeforeQuit/BeforeDead |
 | `ProcessCounterStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Process hook calls AsyncLocal<Action> |
 | `SessionContextSpyStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Process hook records OwningSession.LevelId |
-| `FindByNameStrategy` | SaveAndSwitchForegroundTests.cs | LifecycleStrategyBase: Looks up self and sibling entities via OwningSession.FindByName during AfterSpawn/AfterLoad hooks |
+| `FindByNameStrategy` | SaveAndSwitchForegroundIntegrationTests.cs | LifecycleStrategyBase: Looks up self and sibling entities via OwningSession.FindByName during AfterSpawn/AfterLoad hooks |
 | `BlackboardProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase: OnPushRuntime reads marker key from SessionBlackboard |
 | `SceneAccessProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase: OnPushRuntime reads all entity names from SceneAccess |
 | `NoOpPopStrategy` | SessionDecouplingTests.cs | Empty Pop strategy (placeholder, paired with BlackboardProbeStrategy/SceneAccessProbeStrategy) |

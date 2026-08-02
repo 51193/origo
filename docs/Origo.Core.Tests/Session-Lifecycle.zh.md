@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -24,10 +24,11 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `EmptySessionManagerTests.cs` | EmptySessionManager 的无操作行为 |
 | `PlayStopPlayRoundTripTests.cs` | 多次 Play→Stop→Play 的往返一致性（身份/黑板/Tick/Progress） |
 | `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun 加载错误路径（拓扑格式错误/文件缺失/后台加载失败） |
-| `SaveAndSwitchForegroundTests.cs` | 保存+切换关卡的组合操作、碰撞处理、延迟队列编排 |
+| `SaveAndSwitchForegroundIntegrationTests.cs` | 保存+切换关卡的组合操作、碰撞处理、延迟队列编排 |
 | `SessionDecouplingTests.cs` | 会话独立运行互不干扰（SessionStateMachineContext、SceneHost、路径策略） |
 | `SessionManagerTests.cs` | ISessionManager：创建/查找/销毁/枚举/ProcessAll/KillPending |
 | `SessionTopologyCodecTests.cs` | SessionTopology 编解码往返 |
+| `TopologyInvariantTests.cs` | 拓扑不变量校验：EnsureActiveLevel 对有效/缺失/空/空白/不匹配拓扑的验证（fail-fast） |
 | `BackgroundSessionTests.cs` | 后台会话独立测试（实体/Process/序列化/持久化往返） |
 | `BackgroundSession_CreationWithCorrectFlagTests.cs` | 后台 IsFrontSession=false |
 | `BackgroundSession_MultipleInstancesAllowedTests.cs` | 后台可多实例 |
@@ -190,7 +191,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json 语法错误 | Exception |
 | `LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions` | 后台会话 snd_scene 格式无效致加载失败 | 前台置 null、不含后台 key |
 
-## SaveAndSwitchForegroundTests 测试详情
+## SaveAndSwitchForegroundIntegrationTests 测试详情
 
 ### 正确路径
 
@@ -322,6 +323,25 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 |---------|---------|---------|
 | `Parse_LevelIdContainsExtraSeparator_UsesSecondFieldAsLevelId` | levelId 中含 `=` 分隔符 | 不含等号的第二字段作为 levelId |
 | `Parse_SyncFieldParsing_FollowsBoolTryParseRules` | syncProcess 字段为 TRUE/true/False/not_bool | 按 bool.TryParse 规则解析 |
+
+## TopologyInvariantTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `EnsureActiveLevel_ValidTopology_DoesNotThrow` | 黑板中拓扑含目标 levelId | 不抛异常，校验通过 | TopologyInvariant |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `EnsureActiveLevel_MissingTopology_Throws` | 黑板无拓扑键 | InvalidOperationException |
+| `EnsureActiveLevel_EmptyTopology_Throws` | 拓扑为空字符串 | InvalidOperationException |
+| `EnsureActiveLevel_WhitespaceTopology_Throws` | 拓扑为空白字符串 | InvalidOperationException |
+| `EnsureActiveLevel_MismatchedLevelId_Throws` | 拓扑前台 levelId 与期望不一致 | InvalidOperationException |
+| `EnsureActiveLevel_NullBlackboard_Throws` | 黑板为 null | ArgumentNullException |
+| `EnsureActiveLevel_EmptyExpectedLevelId_Throws` | 期望 levelId 为空字符串 | ArgumentException |
 | `Join_EmptyEntries_ReturnsEmptyString` | 空条目列表 | 返回空字符串 |
 | `Parse_IgnoreEmptyEntries` | 条目间有连续逗号（空条目） | 空条目被忽略 |
 
@@ -444,7 +464,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `TrackingStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase：记录 AfterSpawn/AfterLoad/AfterAdd/BeforeRemove/BeforeSave/BeforeQuit/BeforeDead 全部钩子调用 |
 | `ProcessCounterStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase：Process 钩子调用 AsyncLocal<Action> |
 | `SessionContextSpyStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase：Process 钩子记录 OwningSession.LevelId |
-| `FindByNameStrategy` | SaveAndSwitchForegroundTests.cs | LifecycleStrategyBase：在 AfterSpawn/AfterLoad 钩子中通过 OwningSession.FindByName 查找自身和兄弟实体 |
+| `FindByNameStrategy` | SaveAndSwitchForegroundIntegrationTests.cs | LifecycleStrategyBase：在 AfterSpawn/AfterLoad 钩子中通过 OwningSession.FindByName 查找自身和兄弟实体 |
 | `BlackboardProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase：OnPushRuntime 读取 SessionBlackboard 中的 marker 键 |
 | `SceneAccessProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase：OnPushRuntime 读取 SceneAccess 中的全部实体名称 |
 | `NoOpPopStrategy` | SessionDecouplingTests.cs | 空白 Pop 策略（仅占位，配合 BlackboardProbeStrategy/SceneAccessProbeStrategy） |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Abstractions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Double Tests
 
@@ -20,7 +20,7 @@ operations, and `NullLogger`'s silent behavior.
 | `MemoryFileSystemTests.cs` | TestFileSystem: read/write/enumerate/copy/rename/delete/parent directory/path combination |
 | `NullLoggerTests.cs` | NullLogger.Instance does not throw |
 | `TestLoggerFilterTests.cs` (in `TestSupport/`) | TestLogger log level filtering behavior |
-| `TestFileSystemAdditionalTests.cs` | TestFileSystem additional edge paths |
+| `TestMemoryFileSystemAdditionalTests.cs` | TestMemoryFileSystem additional edge paths |
 
 ## MemoryFileSystemTests Test Details
 
@@ -67,7 +67,7 @@ operations, and `NullLogger`'s silent behavior.
 |------------|-------------------|-------------------|
 | `NullLogger_Instance_IsSingleton` | Accessing Instance twice | Returns same instance |
 
-## TestFileSystemAdditionalTests Test Details
+## TestMemoryFileSystemAdditionalTests Test Details
 
 ### Happy Path
 

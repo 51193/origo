@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Strategy Tests
 
@@ -22,6 +22,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `ObserverStrategyTests.cs` | Observer registration & statelessness enforcement; Mount/Unmount lifecycle and parameter correctness; data change notifications (correct key/non-observed key/after unmount) and old/new values; multi-key observation; serialization (ObserverIndices population/empty bindings/grouping); Dead/Quit release and OnUnmounted; attribute reflection extraction; cross-entity mount rejection; null/empty/unknown parameter defenses; RecoverBindings fault tolerance; Has/Remove topology queries; Teardown/KillPending/ClearAll cleanup paths |
 | `StrategyPriorityTests.cs` | Strategies sorted ascending by Priority, same priority preserves insertion order FIFO, all lifecycle hooks respect priority, serialization/recovery preserves order |
 | `StrategyPoolTypeSafetyAndExtensionTests.cs` | Strategy pool type-branch safety (generic GetStrategy type mismatch does not leak ref count), StackStateMachine two-phase acquisition failure rollback, third-domain base class extension, RecoverStrategiesOnly rejects non-Lifecycle strategies |
+| `SndStrategyPoolLeakDetectionTests.cs` | Strategy pool leak detection: refcounts return to zero on normal release / mid-failure teardown; LogPoolLeaks emits no residual warnings |
 | `SndStrategyPerformanceTests.cs` | Strategy pool Get/Release throughput, Process strategy count scaling, TriggerAll ToArray allocation (performance measurement, not benchmark-tagged) |
 
 ## ActiveStrategyTests Details
@@ -262,6 +263,23 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `PerfPoolStrategy` | SndStrategyPerformanceTests.cs | LifecycleStrategyBase empty implementation for strategy pool Get/Release performance measurement |
 | `PerfProcessBase` (abstract) | SndStrategyPerformanceTests.cs | Abstract LifecycleStrategy with empty Process method; performance strategies 1–20 all inherit this base |
 | `PerfProcess1Strategy` ~ `PerfProcess20Strategy` | SndStrategyPerformanceTests.cs | 20 identically-named Process empty-implementation strategies for Process strategy count scaling and TriggerAll allocation measurement |
+
+## SndStrategyPoolLeakDetectionTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `LogPoolLeaks_AllReleased_ProducesNoWarnings` | Get then Release returns refcount to zero; LogPoolLeaks emits no warnings | Strategy README: LogPoolLeaks |
+| `LogPoolLeaks_NoStrategiesRegistered_ProducesNoWarnings` | LogPoolLeaks on an empty pool emits nothing | Strategy README: LogPoolLeaks |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `LogPoolLeaks_UnreleasedStrategy_LogsWarning` | Strategy acquired but not released; refcount non-zero | Warning containing strategy index and refCount |
+| `LogPoolLeaks_MultipleLeaks_LogsWarningForEach` | Multiple strategies left unreleased | One warning per leaked strategy |
+
 
 ## Known Coverage Gaps
 

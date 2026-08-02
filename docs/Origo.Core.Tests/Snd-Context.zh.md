@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -20,7 +20,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 |------|-----------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch 全链路工作流 |
 | `SndContextEntryFlowTests.cs` | SndContext 从入口配置开始的工作流 |
-| `NullSndContextExtendedTests.cs` | NullSndContext 所有方法为无操作 |
+| `SndContextBootstrapTests.cs` | Bootstrap 启动流程：策略发现、别名/模板加载、入口存档加载的顺序与配置开关 |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder 构建和写入关卡数据 |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad 解析与 ApplyAttributes 类型推断 |
 | `SndTemplateResolverTests.cs` | 模板别名解析、缓存、克隆不影响缓存 |
@@ -142,6 +142,35 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 |---------|-----------|---------|
 | `RequestLoadMainMenuEntrySave_MountsForegroundAndSpawnsEntryEntities` | 加载入口存档后 ProgressBlackboard 非 null、ForegroundSession 非 null、host 中可找到入口实体 | ISndLifecycleOperations |
 | `RequestLoadMainMenuEntrySave_ClearsPreviousForegroundEntities` | 加载入口存档前遗留的实体在加载后被清除 | ISndLifecycleOperations |
+
+## SndContextBootstrapTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `Bootstrap_CompletesWithoutError` | 提供 entry.json 时 Bootstrap 完整执行无异常 | ISndContext.Bootstrap |
+| `Bootstrap_AfterCall_ForegroundSessionIsEstablished` | Bootstrap 后冲刷延迟队列，前台会话已挂载 | ISndContext.Bootstrap |
+| `Bootstrap_WithConfigureConverters_CallbackIsInvoked` | ConfigureConverters 回调在策略发现前被调用 | ISndContext.Bootstrap |
+| `Bootstrap_AutoDiscoverDisabled_SkipsStrategyDiscovery` | AutoDiscoverStrategies=false 时跳过策略扫描 | SndContextParameters.AutoDiscoverStrategies |
+| `Bootstrap_WithTemplates_LoadsAndAllowsCloning` | 配置模板路径后可 CloneTemplate | SndWorld.LoadTemplates |
+| `IStateMachineContext_SceneAccess_AfterBootstrap_NotNull` | Bootstrap 后状态机上下文 SceneAccess 可用 | IStateMachineContext |
+| `IStateMachineContext_SystemBlackboard_AfterBootstrap_NotNull` | Bootstrap 后系统黑板可访问 | IStateMachineContext |
+| `IStateMachineContext_ProgressBlackboard_AfterBootstrap_NotNull` | Bootstrap 后流程黑板可访问 | IStateMachineContext |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | 缺少 entry.json | 冲刷延迟队列时抛出异常（fail-fast） |
+
+### 边界路径
+
+| 测试方法 | 边界条件 | 预期行为 |
+|---------|---------|---------|
+| `SaveRootPath_ReturnsConstructorValue` | 构造参数 | 返回构造时传入的存档根路径 |
+| `InitialSaveRootPath_ReturnsConstructorValue` | 构造参数 | 返回初始存档根路径 |
+| `EntryConfigPath_ReturnsConstructorValue` | 构造参数 | 返回入口配置路径 |
 
 ## SndArchetypeLoaderTests 测试详情
 

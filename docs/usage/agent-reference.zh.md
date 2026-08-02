@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -26,11 +26,12 @@ public interface ISndDataAccess
 {
     void SetData<T>(string name, T value);
     (bool found, T? value) TryGetData<T>(string name);
+    T GetData<T>(string name) where T : notnull;
 }
 
 // TryGetNumeric 扩展方法（Origo.Core.Snd.TryGetNumericExtensions）：
 // bool entity.TryGetNumeric(string key, out float value)
-// float entity.GetNumeric(string key, float fallback = 0f)
+// float entity.GetNumeric(string key, float fallback)
 // 按 float → int → long → double 顺序尝试读取，桥接类型不匹配。
 
 public interface ISndObserverStrategyAccess

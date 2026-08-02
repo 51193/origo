@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 策略 测试
 
@@ -22,6 +22,7 @@
 | `ObserverStrategyTests.cs` | 观察者注册/无状态校验；Mount/Unmount 生命周期与参数正确性；数据变更通知（正确键/非观察键/卸载后）及新旧值；多键观察；序列化（ObserverIndices 填充/空绑定/分组）；Dead/Quit 释放与 OnUnmounted；属性反射提取；跨实体挂载拒绝；null/空/未知参数防御；RecoverBindings 容错；Has/Remove 拓扑查询；Teardown/KillPending/ClearAll 清理路径 |
 | `StrategyPriorityTests.cs` | 策略按 Priority 升序排列、同优先级按插入顺序 FIFO、所有生命周期钩子遵循优先级、序列化/恢复保持顺序 |
 | `StrategyPoolTypeSafetyAndExtensionTests.cs` | 策略池类型分支安全（泛型 GetStrategy 类型不匹配不泄漏 ref count）、StackStateMachine 二阶段获取失败回滚、第三领域根基类扩展、RecoverStrategiesOnly 拒绝非 Lifecycle 策略 |
+| `SndStrategyPoolLeakDetectionTests.cs` | 策略池泄漏检测：实体正常释放/异常中途失败时策略引用计数归零、无泄漏；LogPoolLeaks 无残留告警 |
 | `SndStrategyPerformanceTests.cs` | 策略池 Get/Release 吞吐、Process 策略数缩放、TriggerAll ToArray 分配（性能测量，非基准标签） |
 
 ## ActiveStrategyTests 测试详情
@@ -219,6 +220,22 @@
 | `StrategyPool_GetRelease_Throughput` | 100,000 次 Get+Release 往返吞吐与分配量在可接受范围内（< 500MB） | — |
 | `StrategyManager_Process_StrategyCountScaling` | 1/5/10/20 策略 × 10,000 帧 Process 的吞吐与分配：断言 ProcessAll 后实体仍存活 | — |
 | `TriggerAll_AfterSpawn_AllocationByStrategyCount` | 1/10 策略 AfterSpawn TriggerAll 的 ToArray 分配量：断言 AfterSpawn 后实体名称正确 | — |
+
+## SndStrategyPoolLeakDetectionTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `LogPoolLeaks_AllReleased_ProducesNoWarnings` | Get 后 Release，引用计数归零，LogPoolLeaks 无 Warning | Strategy README: LogPoolLeaks |
+| `LogPoolLeaks_NoStrategiesRegistered_ProducesNoWarnings` | 空池调用 LogPoolLeaks 无输出 | Strategy README: LogPoolLeaks |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `LogPoolLeaks_UnreleasedStrategy_LogsWarning` | Get 后不 Release，引用计数非零 | 输出含策略索引与 refCount 的 Warning |
+| `LogPoolLeaks_MultipleLeaks_LogsWarningForEach` | 多个策略均未释放 | 每个泄漏策略各输出一条 Warning |
 
 ## 测试辅助策略
 

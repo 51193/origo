@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：存储 测试
 
@@ -25,6 +25,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SavePathPolicyContractTests.cs` | 路径策略接口契约：ISavePathPolicy 注入与全部存储方法的策略感知验证 |
 | `SavePathResolverTests.cs` | 路径解析：SaveFileHandle 相对路径提取、父目录创建、遍历攻击拒绝、叶目录名 |
 | `SaveGamePayloadTests.cs` | 数据模型：SaveGamePayload/LevelPayload 默认值、多关卡访问、CustomMeta |
+| `SaveExtraFilesRoundTripTests.cs` | extra/ 侧信道文件：快照→current 复制往返、目录结构保留、缺失/空目录容错、参数校验 |
 | `WellKnownKeysTests.cs` | 常量：ActiveSaveId、SessionTopology 键名正确性 |
 
 ## SaveStorageContractTests 测试详情
@@ -253,6 +254,30 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 |---------|-----------|---------|
 | `WellKnownKeys_ActiveSaveId_HasExpectedValue` | ActiveSaveId = "origo.active_save_id" | WellKnownKeys |
 | `WellKnownKeys_SessionTopology_HasExpectedValue` | SessionTopology = "origo.session_topology" | WellKnownKeys |
+
+## SaveExtraFilesRoundTripTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `CopyDirectoryFromSnapshot_SeededFiles_AllCopiedToCurrent` | 快照 save_001/extra 下种子文件全部复制到 current/extra | SaveStorageFacade.CopyDirectoryFromSnapshot |
+| `CopyDirectoryFromSnapshot_SubdirectoryStructurePreserved` | 子目录层级结构在复制后原样保留 | SaveStorageFacade.CopyDirectoryFromSnapshot |
+
+### 边界路径
+
+| 测试方法 | 边界条件 | 预期行为 |
+|---------|---------|---------|
+| `CopyDirectoryFromSnapshot_SourceDirectoryDoesNotExist_ReturnsSilently` | 快照中无 extra/ 目录 | 静默返回，不抛异常 |
+| `CopyDirectoryFromSnapshot_EmptySourceDirectory_DoesNothing` | extra/ 为空目录 | current/extra 创建但内容为空 |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `CopyDirectoryFromSnapshot_NullHandle_Throws` | handle 为 null | ArgumentNullException |
+| `CopyDirectoryFromSnapshot_EmptySaveId_Throws` | saveId 为空字符串 | ArgumentException |
+| `CopyDirectoryFromSnapshot_EmptyDirName_Throws` | relativeDirName 为空字符串 | ArgumentException |
 
 ## 测试辅助策略
 
