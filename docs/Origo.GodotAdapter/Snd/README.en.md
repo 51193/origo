@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -66,7 +66,7 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 
 ### Why GodotSndManager does not own a _Process loop
 
-Entity frame processing is a Core orchestration responsibility. If `GodotSndManager` held its own `_Process` loop iterating entities and calling `ProcessSnd(delta)`, it would duplicate Core's frame processing logic and bypass the formal processing pipeline. Therefore frame processing is uniformly executed by Core's `SessionManager.ProcessAllSessions(delta)` via `SceneHost.ProcessAll(delta)`, through `IOrigoFrameDriver.DriveFrame(delta)`. `ProcessTickCount` and `ProcessDeltaSum` are also maintained within `ProcessAll`.
+Entity frame processing is a Core orchestration responsibility. If `GodotSndManager` held its own `_Process` loop iterating entities and calling `ProcessSnd(delta)`, it would duplicate Core's frame processing logic and bypass the formal processing pipeline. Therefore frame processing is uniformly executed by Core's `SessionManager.ProcessAllSessions(delta)` via `SceneHost.ProcessAll(delta)`, through `IOrigoFrameDriver.DriveFrame(delta)`. `ProcessTickCount` and `ProcessDeltaSum` are also maintained within `ProcessAll`. `ProcessSnd` and `SpawnSingle`/`LoadSingle`/`SaveSingle` are `internal` — lifecycle orchestration can only be triggered via Core's `ISessionRun` and the batch hook pipeline; external code must not call them through the concrete `GodotSndEntity` type.
 
 ### Why GodotSndEntity uses lazy creation for the Core Entity
 

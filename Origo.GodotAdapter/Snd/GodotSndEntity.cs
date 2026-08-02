@@ -149,7 +149,7 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     internal SndMetaData BuildSndMetaData() => ((IEntityLifecycle)Entity).BuildMetaData();
 
-    public void SpawnSingle(SndMetaData metaData)
+    internal void SpawnSingle(SndMetaData metaData)
     {
         ThrowIfReleasedFromManager();
         ArgumentNullException.ThrowIfNull(metaData);
@@ -160,7 +160,7 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         Name = Entity.Name;
     }
 
-    public void LoadSingle(SndMetaData metaData)
+    internal void LoadSingle(SndMetaData metaData)
     {
         ThrowIfReleasedFromManager();
         ArgumentNullException.ThrowIfNull(metaData);
@@ -179,9 +179,9 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         Free();
     }
 
-    public SndMetaData SaveSingle() => Entity.SaveSingle();
+    internal SndMetaData SaveSingle() => Entity.SaveSingle();
 
-    public void ProcessSnd(double delta)
+    internal void ProcessSnd(double delta)
     {
         ThrowIfReleasedFromManager();
         _entity!.Process(delta);

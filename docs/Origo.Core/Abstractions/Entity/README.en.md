@@ -1,12 +1,12 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Entity (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Entity](../../Snd/Entity/README.en.md)
 
 ## Overview
-Defines the abstract interface system for SND entities following ISP. Five capabilities (data, nodes, passive strategies, active strategies, observer strategies) are split into independent interfaces, composed by `ISndEntity`. `IEntityLifecycle` is defined separately for framework/adapter-layer shared implementation.
+Defines the abstract interface system for SND entities following ISP. Five capabilities (data, nodes, passive strategies, active strategies, observer strategies) are split into independent interfaces, composed by `ISndEntity`. `IEntityLifecycle` is an `internal` interface defined separately for framework/adapter-layer shared implementation.
 
 ## Included Files
 
@@ -18,7 +18,7 @@ Defines the abstract interface system for SND entities following ISP. Five capab
 | `ISndActiveStrategyAccess.cs` | Active strategy add/remove/invoke |
 | `ISndObserverStrategyAccess.cs` | Observer strategy mount/unmount (self and cross-entity) |
 | `ISndEntity.cs` | Composite: inherits five capability interfaces + `Name` + `IsPendingKill` + `OwningSession` |
-| `IEntityLifecycle.cs` | Framework-internal lifecycle: phased recovery/hook/teardown methods |
+| `IEntityLifecycle.cs` | `internal` framework-internal lifecycle: phased recovery/hook/teardown methods. Implemented by `SndEntity` (Core in-memory entity) and adapter-layer entities (bridging to an inner `SndEntity`); adapter and test projects access it via `InternalsVisibleTo` |
 
 ## Interface Details
 
@@ -71,8 +71,8 @@ Composite interface with own members:
 | `OwningSession { get; }` | Belonging ISessionRun (non-null, fail-fast). Auto-bound on creation |
 | `IsPendingKill { get; }` | Marked pending destruction. Strategies check before operating |
 
-### IEntityLifecycle
-**Framework-internal interface** for two-phase batch orchestration. Business code must not call directly.
+ ### IEntityLifecycle
+**`internal` framework-internal interface** for two-phase batch orchestration, implemented by `SndEntity` and adapter-layer entities (such as `GodotSndEntity`) for bridge delegation. Business code must not call it directly and cannot reference it outside the Core assembly (adapter and test projects access it via `InternalsVisibleTo`).
 
 | Method | Phase | Description |
 |------|------|------|

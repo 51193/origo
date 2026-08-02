@@ -167,7 +167,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     /// </summary>
     public ISessionRun OwningSession => _owningSession ?? throw new InvalidOperationException("Entity is not bound to a session. OwningSession must be set before the entity is used.");
 
-    public void Process(double delta) => _strategyManager.Process(this, delta, _context);
+    internal void Process(double delta) => _strategyManager.Process(this, delta, _context);
 
     void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
         Func<ISndEntity, TypedData, TypedData, bool>? filter) => _dataManager.Subscribe(name, callback, filter);
@@ -243,7 +243,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     ///     Full spawn sequence: recover data/strategies/nodes from metadata,
     ///     then fire AfterSpawn hooks. Used by <see cref="SndEntityFactory" />.
     /// </summary>
-    public void SpawnSingle(SndMetaData metaData)
+    internal void SpawnSingle(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
         ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
@@ -254,7 +254,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     ///     Full load sequence: recover data/strategies/nodes from metadata,
     ///     then fire AfterLoad hooks.
     /// </summary>
-    public void LoadSingle(SndMetaData metaData)
+    internal void LoadSingle(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
         ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
@@ -265,7 +265,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     ///     Full quit teardown: FireBeforeQuit → observer unbind →
     ///     release strategies → teardown nodes/data.
     /// </summary>
-    public void QuitSingle()
+    internal void QuitSingle()
     {
         ((IEntityLifecycle)this).FireBeforeQuitHooks();
         TeardownObserverBindingsForDeath();
@@ -277,7 +277,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     ///     Full death teardown: FireBeforeDead → observer unbind →
     ///     release strategies → teardown nodes/data.
     /// </summary>
-    public void DeadSingle()
+    internal void DeadSingle()
     {
         ((IEntityLifecycle)this).FireBeforeDeadHooks();
         TeardownObserverBindingsForDeath();
@@ -294,7 +294,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     private void TeardownObserverBindingsForDeath() => _observerTopology.TeardownAllBindingsFor((ISndEntity)this);
 
     /// <summary>Fire BeforeSave hooks, then build metadata snapshot.</summary>
-    public SndMetaData SaveSingle()
+    internal SndMetaData SaveSingle()
     {
         ((IEntityLifecycle)this).FireBeforeSaveHooks();
         return ((IEntityLifecycle)this).BuildMetaData();

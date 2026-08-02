@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING:** `DataSourceNode.AsChar` now throws `InvalidOperationException` on `Map`/`Array` nodes instead of silently returning `'\0'`.
 - **BREAKING:** `ISndDataAccess.GetData<T>` and `SetData<T>` now require `T : notnull`. `SetData<T>` throws `ArgumentNullException` when `value` is null for reference types.
 - **BREAKING:** `SndEntity.IsPendingKill` setter is now `internal` — use `ISessionRun.RequestKillEntity(name)` instead.
+- **BREAKING:** Concrete entity lifecycle methods are now `internal` — `SndEntity.Process`/`SpawnSingle`/`LoadSingle`/`QuitSingle`/`DeadSingle`/`SaveSingle`, `GodotSndEntity.SpawnSingle`/`LoadSingle`/`SaveSingle`/`ProcessSnd`, and the `IEntityLifecycle` interface are no longer public. Entity lifecycle must be driven through `ISessionRun` (`Spawn`/`SpawnMany`/`RequestKillEntity`) and the framework's batch hook pipeline; concrete-type casts no longer expose lifecycle orchestration.
 - **BREAKING:** `ConsoleCommandRouter.Register` throws `InvalidOperationException` on duplicate command names instead of silently overwriting.
 - **BREAKING:** All console messages are now in English (built-in commands, error messages, `tree_debug`, `camera_view` output).
 - **BREAKING:** `GodotLogger` requires a non-null handler at construction.

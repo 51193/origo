@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Entity;
 using Xunit;
 using Origo.Core.Abstractions.Lifecycle;
 
@@ -340,5 +342,39 @@ public class CoreArchitectureGuardrailTests
         ctx.Deferred.EnqueueBusinessDeferred(() => executed = true);
         ctx.StateMachineContext.FlushDeferredActionsForCurrentFrame();
         Assert.True(executed);
+    }
+
+    [Fact]
+    public void SndEntity_LifecycleMethods_ShouldBeInternal()
+    {
+        var type = typeof(SndEntity);
+        var lifecycleMethods = new[]
+        {
+            nameof(SndEntity.Process),
+            nameof(SndEntity.SpawnSingle),
+            nameof(SndEntity.LoadSingle),
+            nameof(SndEntity.QuitSingle),
+            nameof(SndEntity.DeadSingle),
+            nameof(SndEntity.SaveSingle)
+        };
+
+        foreach (var methodName in lifecycleMethods)
+        {
+            var method = type.GetMethod(methodName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.NotNull(method);
+            Assert.False(method!.IsPublic,
+                $"SndEntity.{methodName} must be internal: lifecycle orchestration is driven " +
+                "by ISessionRun / SndEntityFactory, not through concrete-type casts.");
+        }
+    }
+
+    [Fact]
+    public void IEntityLifecycle_ShouldBeInternal()
+    {
+        var type = typeof(IEntityLifecycle);
+        Assert.True(type.IsNotPublic,
+            "IEntityLifecycle must be internal: business code must not trigger lifecycle " +
+            "hooks directly; framework and adapter projects reach it via InternalsVisibleTo.");
     }
 }

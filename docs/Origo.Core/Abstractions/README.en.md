@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Abstractions
 
@@ -15,7 +15,7 @@ The stable public abstraction layer of Origo.Core. All interfaces are defined in
 |-----------|-----------|---------|
 | [Blackboard](Blackboard/README.en.md) | General key-value blackboard interface, preserves type info | `IBlackboard`: SetValue/Get + serialization |
 | [Console](Console/README.en.md) | Console input/output abstraction | `IConsoleInputSource` (polling) + `IConsoleOutputChannel` (publish-subscribe) |
-| [Entity](Entity/README.en.md) | SND entity's five capability interfaces + standalone lifecycle interface | `ISndEntity` = `ISndDataAccess` + `ISndNodeAccess` + `ISndStrategyAccess` + `ISndActiveStrategyAccess` + `ISndObserverStrategyAccess`; `IEntityLifecycle` is a standalone interface (for internal framework use) |
+| [Entity](Entity/README.en.md) | SND entity's five capability interfaces + standalone lifecycle interface | `ISndEntity` = `ISndDataAccess` + `ISndNodeAccess` + `ISndStrategyAccess` + `ISndActiveStrategyAccess` + `ISndObserverStrategyAccess`; `IEntityLifecycle` is a standalone `internal` interface (for internal framework use) |
 | [FileSystem](FileSystem/README.en.md) | Platform-agnostic file system abstraction | `IFileSystem`: 13 file/directory operations, including path combination and parent directory. Strategies do not use this interface directly; they go through `ISndFileAccess` (via the `IDataSourceIoGateway` boundary) |
 | [Lifecycle](Lifecycle/README.en.md) | Session management abstraction interfaces | `ISessionManager` (session lifecycle) + `ISessionRun` (session runtime facade) |
 | [Logging](Logging/README.en.md) | Engine-agnostic logging interface | `ILogger` + `LogLevel` enum (Debug/Info/Warning/Error) |
@@ -35,7 +35,7 @@ ISessionManager  ISessionRun → IStateMachineContainer
 ISndEntity ─── ISndDataAccess + ISndNodeAccess + ISndStrategyAccess
                 + ISndActiveStrategyAccess + ISndObserverStrategyAccess
 
-IEntityLifecycle                (Standalone interface, framework-internal, not a sub-interface of ISndEntity)
+IEntityLifecycle                (Standalone internal interface, framework-internal, not a sub-interface of ISndEntity)
 
 ISndContext ··· companion properties › ISndBlackboardAccess + ISndDeferredActions
                 + ISndTemplateAccess + ISndConsoleAccess + ISndStateMachineAccess

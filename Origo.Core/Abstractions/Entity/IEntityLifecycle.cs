@@ -10,9 +10,10 @@ namespace Origo.Core.Abstractions.Entity;
 ///     <para>
 ///         Implementors: <see cref="Origo.Core.Snd.Entity.SndEntity" /> (Core in-memory entity),
 ///         adapter-layer entities (delegating to an inner SndEntity).
+///         Adapter and test projects access it via <c>InternalsVisibleTo</c>.
 ///     </para>
 /// </summary>
-public interface IEntityLifecycle
+internal interface IEntityLifecycle
 {
     /// <summary>
     ///     Phase 1: Recover entity data, nodes, and all strategies

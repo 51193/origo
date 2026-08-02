@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity
 
@@ -43,7 +43,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 `ObserverTopology` 维护本宿主内所有实体的观察者绑定拓扑，挂载时经目标实体的 `ISndEntityRawSubscription.SubscribeDataRaw` 接入数据变更（由 `[ObserveData]` 声明的键），并将本实体的出边通过 `BuildBindingsFor(Name)` 序列化到 `StrategyMetaData.ObserverIndices`、读档时由 `SessionRun` 经宿主拓扑 `RecoverBindingsFor()` 恢复。
 
-**`IEntityLifecycle` 分阶段方法**：
+**`IEntityLifecycle` 分阶段方法**（`internal` 接口）：
 
 这些方法供框架层批量编排使用，业务代码不应直接调用：
 
@@ -59,9 +59,11 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 | `TeardownOnly()` | Phase 3: 拆卸 | 释放 Node + Data 资源 |
 | `BuildMetaData()` | 序列化 | 构建元数据（含 ObserverIndices，不触发 BeforeSave） |
 
+> **可见性**：`IEntityLifecycle` 及单实体便捷方法（`SpawnSingle` / `LoadSingle` / `QuitSingle` / `DeadSingle` / `SaveSingle` / `Process`）均为 `internal`——实体生命周期编排只能经 `ISessionRun`（`Spawn` / `SpawnMany` / `RequestKillEntity`）与框架内部的批量钩子管线触发。适配层与测试项目经 `InternalsVisibleTo` 访问。
+
 `QuitSingle` / `DeadSingle` 的拆卸顺序：先 `FireBeforeQuit/DeadHooks`，再卸载观察者绑定（`OnUnmounted`），然后 `ReleaseStrategiesOnly`，最后 `TeardownOnly`。
 
-`Process(delta)` 按优先级 + 快照迭代触发策略 Process。
+`Process(delta)` 按优先级 + 快照迭代触发策略 Process（`internal`，由场景宿主 `ProcessAll` 与适配层帧处理调用）。
 
 `IsPendingKill` 标记由 `RequestKillEntity()` 立即设置。BeforeDead 钩子由 `SessionRun.KillPending()` 批量触发，`RemoveEntity()` 仅做拆解。
 

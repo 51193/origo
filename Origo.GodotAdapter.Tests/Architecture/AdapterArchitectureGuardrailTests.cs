@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Origo.Core;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
@@ -13,6 +14,7 @@ using Origo.Core.Runtime;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.GodotAdapter.Snd;
 using Xunit;
 
 namespace Origo.GodotAdapter.Tests;
@@ -163,5 +165,43 @@ public class CommandHandlerBaseVisibilityTests
         Assert.True(type.IsPublic || type.IsNestedPublic,
             "CommandHandlerBase must be public so external projects " +
             "(such as origo.demo) can derive custom adapter console command handlers.");
+    }
+}
+
+public class GodotSndEntityLifecycleVisibilityTests
+{
+    [Fact]
+    public void GodotSndEntity_LifecycleMethods_ShouldBeInternal()
+    {
+        var type = typeof(GodotSndEntity);
+        var lifecycleMethods = new[]
+        {
+            nameof(GodotSndEntity.SpawnSingle),
+            nameof(GodotSndEntity.LoadSingle),
+            nameof(GodotSndEntity.SaveSingle),
+            nameof(GodotSndEntity.ProcessSnd)
+        };
+
+        foreach (var methodName in lifecycleMethods)
+        {
+            var method = type.GetMethod(methodName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.NotNull(method);
+            Assert.False(method!.IsPublic,
+                $"GodotSndEntity.{methodName} must be internal: lifecycle orchestration is driven " +
+                "by Core (ISessionRun / SndEntityFactory), not through adapter node casts.");
+        }
+    }
+
+    [Fact]
+    public void GodotSndEntity_GetNodeFromSnd_ShouldRemainPublic()
+    {
+        var method = typeof(GodotSndEntity).GetMethod(
+            nameof(GodotSndEntity.GetNodeFromSnd),
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        Assert.True(method!.IsPublic,
+            "GetNodeFromSnd<TNode> is the documented adapter-layer convenience API " +
+            "(used by SndEntityNodeExtensions) and must stay public.");
     }
 }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity (Abstractions)
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-定义 SND 实体的抽象接口体系。所有接口遵循接口隔离原则（ISP），将实体的数据、节点、被动策略、主动策略、观察者策略五种能力拆分为独立接口，再由 `ISndEntity` 组合统一入口。`IEntityLifecycle` 单独定义，供框架与适配层实体共同实现。
+定义 SND 实体的抽象接口体系。所有接口遵循接口隔离原则（ISP），将实体的数据、节点、被动策略、主动策略、观察者策略五种能力拆分为独立接口，再由 `ISndEntity` 组合统一入口。`IEntityLifecycle` 为 `internal` 接口，单独定义，供框架与适配层实体共同实现。
 
 ## 包含文件
 
@@ -19,7 +19,7 @@
 | `ISndActiveStrategyAccess.cs` | 主动策略：添加/移除/调用 |
 | `ISndObserverStrategyAccess.cs` | 观察者策略的挂载/卸载（自观察与跨实体观察） |
 | `ISndEntity.cs` | 组合接口：继承上述五个能力接口 + `Name` 属性 + `IsPendingKill` + `OwningSession` 属性 |
-| `IEntityLifecycle.cs` | 框架内部生命周期接口：分阶段恢复/钩子/拆卸方法。实现者：`SndEntity`（Core 内存实体）、适配层实体（桥接委托给内部 `SndEntity`） |
+| `IEntityLifecycle.cs` | `internal` 框架内部生命周期接口：分阶段恢复/钩子/拆卸方法。实现者：`SndEntity`（Core 内存实体）、适配层实体（桥接委托给内部 `SndEntity`）。适配层与测试项目经 `InternalsVisibleTo` 访问 |
 
 ## 接口详细
 
@@ -80,7 +80,7 @@
 
 ### IEntityLifecycle
 
-**框架内部使用的接口**，供 `SndEntityFactory` 和 `SessionRun` 进行两阶段批处理编排，也供适配层实体（如 `GodotSndEntity`）实现以桥接委托。业务代码不应直接调用此接口。
+**`internal` 框架内部使用的接口**，供 `SndEntityFactory` 和 `SessionRun` 进行两阶段批处理编排，也供适配层实体（如 `GodotSndEntity`）实现以桥接委托。业务代码不应直接调用此接口，也无法在 Core 程序集外引用它（适配层与测试项目经 `InternalsVisibleTo` 访问）。
 
 | 方法 | 阶段 | 说明 |
 |------|------|------|

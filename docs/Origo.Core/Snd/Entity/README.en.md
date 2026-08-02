@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Entity
 
@@ -43,7 +43,7 @@ Observation is implemented via observer strategies, with the mount entry points 
 
 `ObserverTopology` maintains the observer binding topology for all entities within this host. During mounting, it wires into the target entity's data changes via `ISndEntityRawSubscription.SubscribeDataRaw` (using keys declared by `[ObserveData]`), and serializes this entity's outgoing edges via `BuildBindingsFor(Name)` into `StrategyMetaData.ObserverIndices`. On load, `SessionRun` restores them through the host topology's `RecoverBindingsFor()`.
 
-**`IEntityLifecycle` phased methods**:
+**`IEntityLifecycle` phased methods** (`internal` interface):
 
 These methods are used by the framework layer for batch orchestration; business code should not call them directly:
 
@@ -59,9 +59,11 @@ These methods are used by the framework layer for batch orchestration; business 
 | `TeardownOnly()` | Phase 3: Teardown | Release Node + Data resources |
 | `BuildMetaData()` | Serialization | Build metadata (including ObserverIndices; does not trigger BeforeSave) |
 
+> **Visibility**: `IEntityLifecycle` and the single-entity convenience methods (`SpawnSingle` / `LoadSingle` / `QuitSingle` / `DeadSingle` / `SaveSingle` / `Process`) are `internal` — entity lifecycle orchestration can only be triggered via `ISessionRun` (`Spawn` / `SpawnMany` / `RequestKillEntity`) and the framework's internal batch hook pipeline. Adapter and test projects access them via `InternalsVisibleTo`.
+
 Teardown order for `QuitSingle` / `DeadSingle`: first `FireBeforeQuit/DeadHooks`, then unmount observer bindings (`OnUnmounted`), then `ReleaseStrategiesOnly`, and finally `TeardownOnly`.
 
-`Process(delta)` triggers strategy Process by priority + snapshot iteration.
+`Process(delta)` triggers strategy Process by priority + snapshot iteration (internal; invoked by scene host `ProcessAll` and adapter-layer frame processing).
 
 `IsPendingKill` flag is set immediately by `RequestKillEntity()`. BeforeDead hooks are triggered in batch by `SessionRun.KillPending()`; `RemoveEntity()` only performs teardown.
 
