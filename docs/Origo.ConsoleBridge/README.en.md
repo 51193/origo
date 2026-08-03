@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.ConsoleBridge
 
@@ -65,7 +65,7 @@ The output path keeps synchronous `StreamWriter.WriteLine` to avoid changing the
 
 ### Exception propagation strategy (fail-fast)
 
-`ConsoleBridgeServer` does not catch I/O exceptions for silent degradation. If I/O operations in `Dispose`, `AcceptLoop`, or `HandleConnection` fail, exceptions propagate directly. Client disconnection exceptions are precisely caught via `when (_cts.IsCancellationRequested)`; system-level socket errors and write failures are no longer silently swallowed.
+`ConsoleBridgeServer` does not swallow I/O exceptions for silent degradation, but distinguishes fault levels: connection-level exceptions (client disconnect, `ReadLineAsync` I/O errors) are isolated and logged as `Warning` (with the full stack trace) before the server continues accepting; a non-cancellation system-level socket error in the accept loop is logged as `Error` and stops the listener (to be restarted by the host process); `Dispose` checks the accept task state and logs an `Error` instead of swallowing a fault.
 
 ### Output buffer overflow
 

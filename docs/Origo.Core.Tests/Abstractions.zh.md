@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Abstractions -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试替身 测试
 
@@ -10,14 +10,14 @@
 ## 被测行为概览
 
 验证测试辅助设施本身的正确性——这些设施是其他所有测试的基础。
-覆盖 `TestFileSystem`（内存中的 IFileSystem 实现）的全部 12 种文件/目录操作、
+覆盖 `TestMemoryFileSystem`（内存中的 IFileSystem 实现）的全部 12 种文件/目录操作、
 `NullLogger` 的静默行为。
 
 ## 测试文件清单
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `MemoryFileSystemTests.cs` | TestFileSystem: 读写/枚举/复制/重命名/删除/父目录/路径拼接 |
+| `MemoryFileSystemTests.cs` | TestMemoryFileSystem: 读写/枚举/复制/重命名/删除/父目录/路径拼接 |
 | `NullLoggerTests.cs` | NullLogger.Instance 不抛异常 |
 | `TestLoggerFilterTests.cs` (in `TestSupport/`) | TestLogger 日志级别过滤行为 |
 | `TestMemoryFileSystemAdditionalTests.cs` | TestMemoryFileSystem 额外边缘路径 |
@@ -73,20 +73,20 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `TestFileSystem_WriteAllText_And_ReadAllText` | WriteAllText 后 ReadAllText 读回一致 | IFileSystem |
-| `TestFileSystem_WriteAllText_Overwrite` | overwrite=true 覆盖已存在文件 | IFileSystem |
-| `TestFileSystem_Delete_RemovesFile` | Delete 移除文件后 Exists 返回 false | IFileSystem |
-| `TestFileSystem_CombinePath_CombinesCorrectly` | 路径拼接正确 | IFileSystem |
-| `TestFileSystem_GetParentDirectory` | 从文件路径提取父目录 | IFileSystem |
-| `TestFileSystem_EnumerateDirectories` | 从显式目录枚举子目录 | IFileSystem |
-| `TestFileSystem_Rename_MovesAllFilesAndDirectories` | 重命名目录后所有文件/子目录迁移，数据不变 | IFileSystem |
-| `TestFileSystem_DeleteDirectory_RemovesAllContents` | 递归删除目录及全部内容 | IFileSystem |
+| `TestMemoryFileSystem_WriteAllText_And_ReadAllText` | WriteAllText 后 ReadAllText 读回一致 | IFileSystem |
+| `TestMemoryFileSystem_WriteAllText_Overwrite` | overwrite=true 覆盖已存在文件 | IFileSystem |
+| `TestMemoryFileSystem_Delete_RemovesFile` | Delete 移除文件后 Exists 返回 false | IFileSystem |
+| `TestMemoryFileSystem_CombinePath_CombinesCorrectly` | 路径拼接正确 | IFileSystem |
+| `TestMemoryFileSystem_GetParentDirectory` | 从文件路径提取父目录 | IFileSystem |
+| `TestMemoryFileSystem_EnumerateDirectories` | 从显式目录枚举子目录 | IFileSystem |
+| `TestMemoryFileSystem_Rename_MovesAllFilesAndDirectories` | 重命名目录后所有文件/子目录迁移，数据不变 | IFileSystem |
+| `TestMemoryFileSystem_DeleteDirectory_RemovesAllContents` | 递归删除目录及全部内容 | IFileSystem |
 
 ### 错误路径
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `TestFileSystem_WriteAllText_NoOverwrite_Throws` | overwrite=false 写入已存在文件 | IOException |
+| `TestMemoryFileSystem_WriteAllText_NoOverwrite_Throws` | overwrite=false 写入已存在文件 | IOException |
 
 ## TestLoggerFilterTests 测试详情
 

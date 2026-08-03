@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter.Tests
 
@@ -20,6 +20,13 @@ Origo.GodotAdapter 的测试验证 Godot 4 适配层的正确性。
 在真实的 Godot `--headless` 运行时中执行。集成测试与单元测试互补：单元测试验证 Core 层逻辑与类型序列化，
 集成测试验证 Godot 特定运行时行为（真实文件系统、Node 生命周期、启动编排）。
 
+> **覆盖率门禁口径**：`Origo.GodotAdapter.Tests` 的 90% 行覆盖率门禁
+> （`ThresholdStat=total`）只统计**未排除**的源文件——即不依赖 Godot 运行时、
+> 可被纯 .NET 单元测试覆盖的代码。排除面（上述桥接/启动/命令处理文件）
+> 约占全程序集行数的一半，其行为由集成测试兜底；因此"93%+ 行覆盖"的表述
+> 指门禁统计范围内的行覆盖，而非全程序集覆盖。移除排除面会使门禁统计到
+> 无法在无引擎环境下测试的代码行，覆盖率骤降至约 47%，故排除是刻意设计。
+
 ## 测试层次
 
 | 层次 | 项目 | 运行时 | 覆盖范围 |
@@ -31,7 +38,7 @@ Origo.GodotAdapter 的测试验证 Godot 4 适配层的正确性。
 
 | 能力 | 文档 | 文件数 | 测试数 | 验证重点 |
 |------|------|-------|-------|---------|
-| 架构守卫 | [Architecture.md](Architecture.zh.md) | 1 | 3 | SndContext 公共角色接口完整性、会话创建/销毁、CommandHandlerBase 公共可见性 |
+| 架构守卫 | [Architecture.md](Architecture.zh.md) | 1 | 5 | SndContext 公共角色接口完整性、会话创建/销毁、CommandHandlerBase 公共可见性 |
 | 控制台 | [Console.md](Console.zh.md) | 4 | 22 | press_button/camera_view 命令、CommandHandlerBase 参数校验与守卫、ProjectionHelper 世界→屏幕投影 |
 | 文件系统 | [FileSystem.md](FileSystem.zh.md) | 1 | 3 | GodotFileSystem 的 res:// / user:// 路径处理（委托给 PathUtility） |
 | 日志 | [Logging.md](Logging.zh.md) | 1 | 9 | GodotLogger 委托注入、null handler 安全与级别过滤 |

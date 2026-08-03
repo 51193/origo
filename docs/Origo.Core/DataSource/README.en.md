@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # DataSource
 
@@ -26,7 +26,7 @@ Origo's data source abstraction layer — the codec bridge between Core and exte
 | `IDataSourceCodec.cs` | Codec interface: Decode/Encode |
 | `IDataSourceIoGateway.cs` | I/O gateway interface: only `ReadTree` / `WriteTree` two methods; reads/writes files after routing codecs by suffix (Core's sole content contact point with files). All file content I/O is routed through codecs; zero bypass. |
 | `DataSourceIoGateway.cs` | I/O gateway implementation: suffix → CodecKind mapping + read/write |
-| `DataSourceIoOptions.cs` | I/O options: whether to indent output |
+| `DataSourceIoOptions.cs` | I/O routing config: suffix → codec mapping (indentation is controlled by `DataSourceFactory.BuildDefaultCodecs(bool)`) |
 | `DataSourceFactory.cs` | Factory: creates default Registry + IoGateway |
 | `DataSourceConverter.cs` | Generic converter base class: `Read(DataSourceNode)` / `Write(T)` |
 | `DataSourceConverterRegistry.cs` | Converter registry: look up Converter by Type + generic Read/Write. When an exact type is not registered, automatically backtracks along base class and interface chains. |

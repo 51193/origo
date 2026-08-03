@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -45,9 +45,9 @@ SystemRuntime
 ```
 
 每层容器持有本层的核心对象引用和公共访问入口：
-- `SystemRuntime` 持有 `SystemBlackboard`、`SndWorld`、`IScheduler`，以及 adapter 注入的 `AdapterSceneHost`
-- `ProgressRuntime` 持有 `ProgressBlackboard`、`SaveContext`、`SessionManager`，以及透传的 `AdapterSceneHost`
-- `SessionManagerRuntime` 持有 `ISessionManager` 和 `AdapterSceneHost`
+- `SystemRuntime` 持有 `SndWorld`、`ConverterRegistry`、`AdapterSceneHost` 与调度器（调度器实例实际由 `OrigoRuntime` 持有，经 `IScheduler` 注入）
+- `ProgressRuntime` 持有 `Logger`、`StorageService`、`SndWorld`、`AdapterSceneHost`、`StateMachineContext`、`SndContext`、`SavePathPolicy`（进度黑板与状态机容器由 `SessionManager`/`ProgressRun` 分层持有，SaveContext 为瞬态对象按需创建）
+- `SessionManagerRuntime` 持有 `SndWorld`、`SndContext`、`ProgressBlackboard` 等运行时依赖（`ISessionManager` 由 `ProgressRun` 持有）
 - `SessionManager` 构造时读取 `AdapterSceneHost` 并存储，用于创建前台 session
 - `SessionRun` 持有 `SessionBlackboard`、内部 `ISndSceneHost`（`internal`，框架内部使用）、`StateMachineContainer`、实体操作门面
 
@@ -71,7 +71,7 @@ SystemRuntime
 - `ISndSaveOperations.RequestLoadGame` → `SavePayloadReader.ReadFromCurrent(handle, ...)` / `ReadFromSnapshot(handle, ...)` → 恢复黑板 + 场景
 - `SaveFileHandle`：统一 I/O 上下文（`Origo.Core.Save.Storage.SaveFileHandle`），封装 `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver` + `saveRootPath` + `ISavePathPolicy`。所有 Writer/Reader 方法通过 `SaveFileHandle` 参数接收依赖，消除多参数重载链。
 - `PersistProgress`：将流程黑板与完整会话拓扑（前台 + 所有后台）序列化写入 `current/progress.json`。若当前无前台会话则抛出 `InvalidOperationException`，不静默写入部分数据。
-- `SessionRun.BuildLevelPayload`：先批量触发 BeforeSave 钩子（`FireBeforeSaveHooks`）在所有实体上，再通过 `SaveContext.BuildSndScene` 构建场景元数据。这确保任何策略在存档前有最后的机会将内存状态刷新到实体 Data 中。
+- `SessionRun.BuildLevelPayload`：先批量触发 BeforeSave 钩子（`FireBeforeSaveHooks`）在所有实体上，再通过 `SaveContext.BuildSndScene` 构建场景元数据。这确保任何策略在存档前有最后的机会将内存状态刷新到实体 Data 中。完整存档路径（`SaveCoordinator.BuildSavePayload`）在序列化前台场景前同样批量触发 `FireBeforeSaveHooks`，与后台会话语义一致。 钩子内覆写框架管理的黑板键（如 `SessionTopology`）会被持久化流程在序列化前以框架计算值覆盖，覆写不生效。
 - `SessionRun.LoadFromPayload`：先通过 `SaveContext.RecoverSndScene` 恢复所有实体数据/策略/节点，再批量触发 AfterLoad 钩子（`FireAfterLoadHooks`），最后 Flush 状态机 AfterLoad。这确保所有实体和 ActiveStrategy 已完全恢复后才触发任何策略的 AfterLoad，实现加载顺序无关的跨实体互操作。
 
 ### 关卡切换

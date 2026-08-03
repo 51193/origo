@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Save
 
@@ -24,7 +24,7 @@ Origo's persistence system. Responsible for the complete save lifecycle: payload
 |------|---------------|
 | `PersistentBlackboard.cs` | Persistent blackboard: auto loads/saves from disk; uses atomic write (temp file + rename) on every mutation to prevent file corruption on crash. Stale temp files from interrupted writes are cleaned up on load. |
 | `SavePayloads.cs` | Save payload model: `SaveGamePayload` / `LevelPayload` / serialization containers |
-| `WellKnownKeys.cs` | `internal` — Blackboard key constants: `SessionTopology` / `ActiveSaveSlot`, etc. |
+| `WellKnownKeys.cs` | `internal` — Blackboard key constants: `SessionTopology` / `ActiveSaveId`, etc. |
 | `SaveCoordinator.cs` | Save coordinator: an independent class extracted from ProgressRun; responsible for building save payloads, persisting progress state, managing metadata |
 | `SaveFileHandle.cs` | Unified I/O context (in the Storage sub-module): encapsulates FileSystem + IoGateway + SaveRootPath + PathPolicy |
 
@@ -47,13 +47,13 @@ SaveGamePayload (complete save object)
     ▼
 SavePayloadWriter.WriteToCurrent(handle, payload)
     ├── Create .write_in_progress marker
-    ├── Write current/progress.json
+    ├── Write current/progress.json + progress_state_machines.json
     ├── Write current/level_*/snd_scene.json
     ├── Write current/level_*/session.json
     ├── Write current/level_*/session_state_machines.json
     ├── Write current/meta.map
-    ├── Write current/.payload.sha
     └── Delete .write_in_progress
+    (current/.payload.sha is written separately by SaveAtomicWriter.WritePayloadSha, recording the combined hash)
     │
     ▼
 DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)

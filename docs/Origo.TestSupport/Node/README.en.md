@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Node/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Node
@@ -15,7 +15,7 @@ Test doubles for SND node abstractions: `INodeHandle` and `INodeFactory`, with i
 | File | Responsibility |
 |------|---------------|
 | `TestNodeHandle.cs` | Implements `INodeHandle`. Exposes `FreeCount`, `IsVisible` state tracking, and `Name`. |
-| `TestNodeFactory.cs` | Implements `INodeFactory`. Accepts an optional `IEnumerable<string>` of resource IDs to simulate creation failures. Records all created `TestNodeHandle` instances and exposes a `FailCount` counter. |
+| `TestNodeFactory.cs` | Implements `INodeFactory`. Accepts an optional `IEnumerable<string>` of resource IDs to simulate creation failures. Records all created `TestNodeHandle` instances (`CreatedHandles`) and the number of creation requests (`Requests`); creation failures are simulated via the constructor-injected resource ID list. |
 
 ## Design Decisions
 

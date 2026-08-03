@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -29,7 +29,7 @@ The implementation layer for the runtime's four-tier lifecycle. Defines the comp
 SystemRuntime → SystemRun → ProgressRuntime → ProgressRun → SessionManager → SessionRun (foreground + background)
 ```
 
-Each tier container holds core object references for its layer. SystemRuntime holds SystemBlackboard, SndWorld, IScheduler, and the adapter-injected AdapterSceneHost.
+Each tier container holds core object references for its layer. SystemRuntime holds SndWorld, ConverterRegistry, AdapterSceneHost, and the scheduler (the scheduler instance is actually held by OrigoRuntime and injected via IScheduler). ProgressRuntime holds Logger, StorageService, SndWorld, AdapterSceneHost, StateMachineContext, SndContext, and SavePathPolicy — the progress blackboard and state machine container are held by SessionManager/ProgressRun, and SaveContext is a transient object created on demand. SessionManagerRuntime holds runtime dependencies such as SndWorld, SndContext, and ProgressBlackboard; ISessionManager is held by ProgressRun.
 
 ## Key Lifecycle Flows
 
@@ -45,7 +45,7 @@ Each tier container holds core object references for its layer. SystemRuntime ho
 - `SaveCoordinator`: standalone class for building save payloads
 - Save: `ISndSaveOperations.RequestSaveGame` → `SaveCoordinator.BuildSavePayload` → two-phase write
 - Load: `ISndSaveOperations.RequestLoadGame` → restore blackboard + scene
-- BeforeSave hooks batch-triggered by `SessionRun.BuildLevelPayload` before serialization
+- BeforeSave hooks batch-triggered by `SessionRun.BuildLevelPayload` before serialization. The full-save path (`SaveCoordinator.BuildSavePayload`) also batch-triggers `FireBeforeSaveHooks` before serializing the foreground scene, matching the background session semantics. This ensures every strategy has a final chance to flush in-memory state into entity Data before saving. Overwrites of framework-managed blackboard keys (such as `SessionTopology`) inside hooks are overridden by the framework-computed value before serialization, so such writes take no effect.
 - AfterLoad hooks batch-triggered after recovery; all entities fully restored before any hook fires
 
 ### Level Switching

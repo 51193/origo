@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Addons/FastNoiseLite/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # FastNoiseLite
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-第三方噪声库 **FastNoiseLite v1.1.1**，由 Jordan Peck 开发，MIT 许可。提供 OpenSimplex2、Cellular (Worley)、Perlin、Value 等多种噪声类型，以及域扭曲（Domain Warp）功能。本项目仅作 vendor 引入，未修改源码。
+第三方噪声库 **FastNoiseLite v1.1.1**，由 Jordan Peck 开发，MIT 许可。提供 OpenSimplex2、Cellular (Worley)、Perlin、Value 等多种噪声类型，以及域扭曲（Domain Warp）功能。本项目作 vendor 引入，仅注入 `namespace Origo.Core.Addons.FastNoiseLite;` 以纳入项目命名空间（上游单文件无命名空间），逻辑源码未改动。
 
 ## 包含文件
 

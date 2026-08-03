@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Observer/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Observer
@@ -14,14 +14,15 @@ Event collection infrastructure for observer strategy testing. Provides a typed 
 
 | File | Responsibility |
 |------|---------------|
-| `TestObserverEvents.cs` | Defines `TestObserverEvent` record (event type, target name, data key, old value, new value) and a `TestObserverEvents` collector class backed by a thread-safe `ConcurrentQueue`. |
+| `TestObserverEvents.cs` | Defines the `TestObserverEvent` record (event type, target name, data key, old value, new value) and the static `EventCollector` collector (backed by `AsyncLocal`, isolated per test context). Event types are lowercase strings (`"on_mounted"` / `"on_unmounted"` / `"on_data_changed"`). |
 
 ## Usage Pattern
 
 ```csharp
-var events = new TestObserverEvents();
+var events = new List<TestObserverEvent>();
+EventCollector.Events = events;
 // ... mount observer, trigger data changes ...
-Assert.Contains(events.Events, e => e.EventType == "OnDataChanged");
+Assert.Contains(events, e => e.EventType == "on_data_changed");
 ```
 
 ---

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration
 
@@ -22,7 +22,7 @@
 | `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-004) |
 | `AnalyzerReleases.Shipped.md` | Analyzer release tracking (shipped rules, currently empty) |
 | `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (unshipped rules: `ORIGOSG001`, `ORIGOSG002`, `ORIGOSG003`, `ORIGOSG004`) |
-| `pipeline.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |
+| `pipeline.en.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |
 
 ## Dual-Mode Architecture
 
@@ -88,7 +88,7 @@ Diagnostic messages carry the corresponding `SndInlineTypesAttribute` syntax loc
 |---------|---------|---------|
 | `ORIGOSG001` | Error | A system primitive type is registered in a non-home (adapter layer) assembly's `SndInlineTypes` group. Inlined primitive types are exclusive to Origo.Core; adapter layers may only register reference types or non-system value types (going through `_ref`). |
 | `ORIGOSG002` | Error | An uninlinable and unsupported value type (such as `decimal` or a custom struct) is registered in the home assembly. The home assembly only permits registering supported system primitive types and reference types. |
-| `ORIGOSG003` | Error | A registered type's Kind value (`startKind` + position within group) falls outside the `byte` valid range `[1, 255]`. This includes cases where a Kind overflow wraps around to an already-occupied value, silently conflicting with another type. |
+| `ORIGOSG003` | Error | A registered type's Kind value (`startKind` + position within group) falls outside the `byte` valid range `[1, 254]`. This includes cases where a Kind overflow wraps around to an already-occupied value, silently conflicting with another type. |
 | `ORIGOSG004` | Error | Multiple `SndInlineTypes` groups have overlapping `startKind` ranges, causing the same Kind byte to be assigned to multiple different types. Each inlined type must map to a unique Kind. |
 
 ## Registration Mechanism
@@ -150,7 +150,7 @@ The storage model has only two paths: inlining (home system primitives) and `_re
 
 ### Why Kind space range and uniqueness are validated at compile time
 
-Kind is a `byte`; at runtime `TypedData.RegisterKind` writes directly into `KindTypeMap[kind]` without duplicate checking — multiple types mapped to the same Kind silently overwrite each other, causing TypedData access corruption. Kinds are computed as `startKind` plus intra-group position; if `startKind` is too large or there are too many types, the Kind value overflows past 255 and wraps around to an already-occupied small value, conflicting with existing types. The generator therefore enforces two invariants at compile time: Kind must fall within `[1, 255]` (`ORIGOSG003`, evaluated on the true value, not relying on `byte` truncation), and each Kind must be uniquely mapped (`ORIGOSG004`, detecting overlapping `startKind` ranges). Violating types are excluded and build errors are reported, so Kind conflicts are exposed at build time rather than corrupting saves at runtime.
+Kind is a `byte`; at runtime `TypedData.RegisterKind` writes directly into `KindTypeMap[kind]` without duplicate checking — multiple types mapped to the same Kind silently overwrite each other, causing TypedData access corruption. Kinds are computed as `startKind` plus intra-group position; if `startKind` is too large or there are too many types, the Kind value overflows past 255 and wraps around to an already-occupied small value, conflicting with existing types. The generator therefore enforces two invariants at compile time: Kind must fall within `[1, 254]` (`ORIGOSG003`, evaluated on the true value, not relying on `byte` truncation), and each Kind must be uniquely mapped (`ORIGOSG004`, detecting overlapping `startKind` ranges). Violating types are excluded and build errors are reported, so Kind conflicts are exposed at build time rather than corrupting saves at runtime.
 
 ---
 

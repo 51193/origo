@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # File Access Tests
 
@@ -11,7 +11,7 @@
 
 Validates the full behavior of `ISndFileAccess` on `SndContext`: DataSourceNode file read/write round-trips, strongly-typed object read/write round-trips, file existence checks, overwrite semantics, Map format parsing, nested JSON parsing, error paths (non-existent files, null paths, invalid JSON), and boundary paths (empty objects, Null nodes, Boolean values).
 
-All file I/O uses the shared `TestFileSystem` (in-memory implementation); no real disk operations are involved.
+All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); no real disk operations are involved.
 
 ## Test File List
 

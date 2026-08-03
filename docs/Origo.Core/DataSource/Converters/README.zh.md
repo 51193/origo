@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Converters/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Converters
 
@@ -15,7 +15,14 @@
 |------|------|
 | `PrimitiveConverters.cs` | 14 种基础类型转换器（string, byte, int, float, bool 等） |
 | `ArrayConverters.cs` | 14 种基础类型数组转换器（byte[], int[], float[] 等） |
-| `DomainConverters.cs` | 领域类型转换器（SndMetaData, Blackboard, StateMachine 等） |
+| `BlackboardDataConverter.cs` | Blackboard ↔ DataSourceNode |
+| `DataMetaDataConverter.cs` | DataMetaData ↔ DataSourceNode |
+| `NodeMetaDataConverter.cs` | NodeMetaData ↔ DataSourceNode |
+| `SndMetaDataConverter.cs` | SndMetaData ↔ DataSourceNode |
+| `SndMetaDataListConverter.cs` | SndMetaData 列表 ↔ DataSourceNode |
+| `StrategyMetaDataConverter.cs` | StrategyMetaData ↔ DataSourceNode |
+| `StateMachineContainerPayloadConverter.cs` | 状态机容器载荷 ↔ DataSourceNode |
+| `StringDictionaryConverter.cs` | 字符串字典 ↔ DataSourceNode |
 | `TypedDataConverter.cs` | TypedData ↔ DataSourceNode，携带类型元数据 |
 
 ## 转换器一览
@@ -30,7 +37,7 @@
 
 每个基础类型的数组对应一个转换器。Read 遍历 `node.Elements` 逐个转换，Write 构建 `DataSourceNode.CreateArray()` 并填充元素。
 
-### DomainConverters
+### 领域转换器（DomainConverters）
 
 | 转换器 | 处理类型 |
 |------|------|
@@ -61,9 +68,9 @@
 
 数组是复合类型，其 Read/Write 需要遍历语义（foreach over `Elements`），与标量类型（直接 AsXxx）差异显著。合并会导致转换器内部出现类型分支，违反单一职责。
 
-### 为什么 DomainConverters 共享同一个文件
+### 为什么领域转换器按类型拆分为独立文件
 
-领域类型转换器之间存在层级依赖（如 `SndMetaDataConverter` 依赖 `DataMetaDataConverter`），放在同一文件有助于保持依赖关系的可见性，且每个转换器体量较小（30-60 行）。
+每个领域转换器独立成文件，文件即类型，检索与维护成本低；层级依赖通过明确的构造注入保持可见。
 
 ---
 [↑ 回到 DataSource](../README.zh.md)

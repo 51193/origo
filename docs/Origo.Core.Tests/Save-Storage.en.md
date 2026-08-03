@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Storage Tests
 
@@ -301,7 +301,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 
 ## Design Decisions
 
-### Why use TestFileSystem instead of the real file system
+### Why use TestMemoryFileSystem instead of the real file system
 
 Per the documentation: all file operations in the Core layer go through `IFileSystem`; direct `File.*` API is forbidden.
 Therefore tests should not depend on the real file system — this would break the Core layer's platform independence.

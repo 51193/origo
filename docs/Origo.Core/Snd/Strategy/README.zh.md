@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -28,6 +28,9 @@ SND 策略系统的完整实现。策略是实体行为逻辑的载体，遵循"
 | `SndStrategyPool.cs` | `internal` — 策略池：注册、实例化、引用计数、无状态校验 |
 | `SndStrategyManager.cs` | `internal` — 单实体被动策略管理器：策略容器的增删 + 生命周期钩子协调 |
 | `StrategyIndexAttribute.cs` | 策略索引声明特性：`[StrategyIndex("core.health")]` |
+| `ActiveStrategyJsonBase.cs` | 主动策略 JSON 契约基类：输入/输出经 JSON 序列化的主动策略基类 |
+| `ActiveStrategyResults.cs` | 主动策略调用结果包装：统一成功/失败与输出值传递 |
+| `EntityStrategyExtensions.cs` | 实体策略扩展：`EnsureReplaceableStrategy` 等策略挂载辅助 |
 
 ## 模块详解
 
@@ -99,7 +102,7 @@ BaseStrategy
 | `TriggerBeforeDead(entity, ctx)` | 快照迭代触发 BeforeDead |
 | `GetStrategyIndices()` | 返回当前持有的所有策略索引 |
 | `Process(entity, delta, ctx)` | 帧更新（快照迭代） |
-| `Add(entity, index, ctx)` | 动态添加策略并触发 `AfterAdd`；若 `AfterAdd` 抛异常，回滚插入并归还池引用后再传播（添加是原子的） |
+| `Add(entity, index, ctx)` | 动态添加策略并触发 `AfterAdd`；若 `AfterAdd` 抛异常，回滚插入并归还池引用后再传播（添加是原子的）。同一 index 重复挂载会抛 `InvalidOperationException`；计划引擎（`PlanExecutionStrategyBase`）在目标 action 已挂载时会复用而不是重复挂载，因此计划管理的 action 也可出现在 `LifecycleIndices` 中 |
 | `Remove(entity, index, ctx)` | 动态移除策略（触发 BeforeRemove） |
 
 - **Recover**：从池获取时进行类型过滤，仅保留 `LifecycleStrategyBase` 子类；非 `LifecycleStrategyBase` 类型（如 `ActiveStrategyBase`、`ObserverStrategyBase`）立即抛 `InvalidOperationException`
@@ -198,7 +201,7 @@ public class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 ### 为什么策略强制无状态（注册期校验）
 
-策略实例在多个实体间共享，若持有实例字段（如 `int _hp`），多实体间会互相污染。注册期通过反射检查 `BaseStrategy` 到具体类型之间的所有层级，拒绝声明实例字段或可写属性的策略，从源头阻止此错误。
+策略实例在多个实体间共享，若持有实例字段（如 `int _hp`），多实体间会互相污染。注册期通过反射检查 `BaseStrategy` 到具体类型之间的所有层级，拒绝声明可变实例字段或可写属性的策略，从源头阻止此错误；`readonly` 实例字段（`IsInitOnly`）作为例外被豁免。
 
 此约束的一个副作用：**测试策略无法使用实例字段作为事件接收器**，必须使用静态字段（`static List<string>?`）在各策略实例间共享事件收集。使用静态字段的测试类必须通过 `[Collection]` 属性串行化执行，或通过 `[assembly: CollectionBehavior(DisableTestParallelization = true)]` 全局禁用并行，以防止并行测试间的竞态。详见 `Origo.Core.Tests/Architecture.md`。
 

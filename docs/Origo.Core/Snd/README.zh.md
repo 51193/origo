@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -13,7 +13,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 
 | 子模块 | 能力 | 详情 |
 |--------|------|------|
-| [Entity](Entity/README.zh.md) | 运行时实体聚合根 | SndEntity + 数据/节点/策略三个内部管理器 |
+| [Entity](Entity/README.zh.md) | 运行时实体聚合根 | SndEntity + 数据/节点/被动策略/主动策略四个内部管理器 |
 | [Metadata](Metadata/README.zh.md) | 实体元数据模型 | TypedData / SndMetaData / NodeMetaData / StrategyMetaData / DataMetaData / SndMetaFluentBuilder |
 | [Scene](Scene/README.zh.md) | 场景宿主与 spawn 工厂 | SndEntityFactory + FullMemorySndSceneHost + StubSndSceneHost |
 | [Strategy](Strategy/README.zh.md) | 策略系统核心 | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase。策略池、被动/主动/观察者三类管理器 + 泛型调用扩展 |
@@ -25,7 +25,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | 文件 | 职责 |
 |------|------|
 | `ISndContext.cs` | SND 上下文统一门面接口：通过 10 个 companion 属性暴露所有能力（[详见 Abstractions/Snd](../Abstractions/Snd/README.zh.md)） |
-| `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→别名/模板加载→入口存档加载。实现 `ISndFileAccess`，将文件读写委托给 `SndWorld.DataSourceIo` + `ConverterRegistry` |
+| `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→别名/模板加载→入口存档加载。经 companion 对象 `SndContextFileAccess` 提供 `ISndFileAccess`（文件读写委托 `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`） |
 | `SndContextParameters.cs` | SndContext 构造参数对象。含 `AutoDiscoverStrategies`、`DiscoverySkipPrefixes`、`SceneAliasMapPath`、`SndTemplateMapPath`、`InitialLevelId` 等启动配置属性 |
 | `SndWorld.cs` | SND 世界：策略池 + 类型映射 + 转换器注册表 + 模板/别名 |
 | `SndDefaults.cs` | `internal` — SND 系统默认值常量。定义 `InitialSaveId`（"000"）、`InitialLevelId`（"default"）、`MainMenuLevelId`（"main_menu"），供 Core 内部持久化流程和启动编排使用。 |
@@ -34,6 +34,9 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | `TryGetNumericExtensions.cs` | 实体数据数值类型兼容读取扩展：桥接 int/float 等类型存取不匹配 |
 | `ActiveStrategyExtensions.cs` | 泛型 ActiveStrategy 调用扩展：消除 `InvokeStrategy` 侧的 JSON 序列化样板 |
 | `LevelBuilder.cs` | `internal` — 离线关卡构建工具。仅框架测试和 StubSndSceneHost 内部使用；业务代码应通过模板和 entry.json 构建关卡。 |
+| `EntityExtensions.cs` | `IsSameEntityAs` 等实体身份比较扩展方法 |
+| `SndContextFileAccess.cs` | `internal` — `ISndFileAccess` companion 实现（见 Companions） |
+| `SndContextArchiveFileAccess.cs` | `internal` — `ISndArchiveFileAccess` companion 实现（见 Companions） |
 
 ## 实体模型
 

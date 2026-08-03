@@ -15,18 +15,21 @@ public sealed class LogMessageBuilder
     private readonly Dictionary<string, object?> _context = new(StringComparer.Ordinal);
     private double? _elapsedMs;
 
+    /// <summary>Attaches an elapsed-time prefix (<c>[+N.NNms]</c>) to the built message.</summary>
     public LogMessageBuilder SetElapsedMs(double elapsedMs)
     {
         _elapsedMs = elapsedMs;
         return this;
     }
 
+    /// <summary>Adds a contextual <c>key=value</c> pair, appended to the built message in insertion order.</summary>
     public LogMessageBuilder AddContext(string key, object? value)
     {
         if (!string.IsNullOrWhiteSpace(key)) _context[key] = value;
         return this;
     }
 
+    /// <summary>Builds the final message string with the optional elapsed prefix and context pairs.</summary>
     public string Build(string message)
     {
         var builder = new StringBuilder();

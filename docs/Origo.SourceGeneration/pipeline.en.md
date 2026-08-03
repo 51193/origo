@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
@@ -176,7 +176,7 @@ Compile-time validation (fail-fast):
 |---------|---------|
 | `ORIGOSG001` | System primitive type registered in a non-home (adapter) assembly |
 | `ORIGOSG002` | Home assembly registers an uninlinable value type (e.g., `decimal`) |
-| `ORIGOSG003` | Kind out of range (not in `[1, 255]`) |
+| `ORIGOSG003` | Kind out of range (not in `[1, 254]`) |
 | `ORIGOSG004` | Kind range overlap, multiple types mapped to the same Kind |
 
 These diagnostics are reported as Errors at compile time, causing build failure. Issues like Kind conflicts or out-of-range values **never reach runtime**.
@@ -591,7 +591,7 @@ If the framework needs to support a new type (e.g., C# `nint`, a future BCL ≤8
 ### 7.2 Adding Adapter Layer Types (Register in a New Adapter Assembly)
 
 1. Add `[assembly: SndInlineTypes(startKind: <unoccupied range>, typeof(NewType), ...)]` to the new assembly
-2. Choose Kind range: check the validation range in `TypedDataGenerator.cs`'s `KindValue` (1-255), ensure no overlap with other adapters
+2. Choose Kind range: check the validation range in `TypedDataGenerator.cs`'s `KindValue` (1-254), ensure no overlap with other adapters
 3. Source Generator will auto-detect this assembly is not Home → use Adapter mode → generate complete extension methods + ModuleInitializer registration chain
 4. Adapter layer types go through `_ref` path (unless they are ≤8-byte system primitive types, but such types should not be registered by adapters — `ORIGOSG001` will block them)
 

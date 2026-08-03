@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Utility/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility
 
@@ -7,7 +7,7 @@
 
 ## 功能概述
 
-通用工具函数，提供跨模块使用的辅助能力。
+通用工具函数，提供集合差异比较等纯函数辅助能力（当前框架内部未直接引用，作为基础工具公开供业务代码使用）。
 
 ## 文件清单
 

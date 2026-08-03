@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -26,7 +26,7 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 
 适配层的核心入口节点（`[GlobalClass]`），直接挂载在 Godot 场景树中：
 
-- **实现 ISndSceneHost**：CreateEntity / LoadFromMetaList / ClearAll（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / GetEntities / FindByName / ProcessAll。`ClearAll()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
+- **实现 ISndSceneHost**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / GetEntities / FindByName / ProcessAll。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
 - **实现 ISndContextAttachableSceneHost**：支持运行时切换上下文
 - **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，回滚释放所有已创建的实体
 - **EntityView**：惰性创建 `IReadOnlyList<ISndEntity>` 包装，缓存引用避免重复分配
@@ -76,7 +76,7 @@ Core `SndEntity` 需要 `INodeFactory` 注入，而 `INodeFactory` 需要 GodotS
 
 Godot 场景树中如果存在同名节点，Godot 会自动在 Name 后追加 `@2`、`@3` 等后缀。SND 的实体查找依赖稳定名称，不能使用被 Godot 篡改的 Name。`StableName` 在 Spawn/Load 时设置，不受 Godot 对 `Node.Name` 自动改名的影响。
 
-### 为什么 LoadFromMetaList 使用回滚机制
+### 为什么 RecoverFromMetaList 使用回滚机制
 
 如果加载 100 个实体时第 50 个失败，前 49 个已创建的实体处于不完整状态（可能已触发 AfterLoad 钩子但场景不完整）。回滚全部释放防止残留损坏的实体污染后续操作。
 
@@ -86,7 +86,7 @@ Godot 场景树中如果存在同名节点，Godot 会自动在 Name 后追加 `
 
 ### 适配层实体桥接：为什么 GodotSndEntity 必须手写转发
 
-`GodotSndEntity`（290 行）的代码可分解为三类：
+`GodotSndEntity`（约 206 行）的代码可分解为三类：
 
 | 类别 | 行数 | 占比 | 说明 |
 |------|------|------|------|

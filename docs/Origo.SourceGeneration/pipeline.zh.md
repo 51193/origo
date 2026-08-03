@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 编译期优化全链路解析
 
@@ -176,7 +176,7 @@ Kind 分配规则：
 |---------|---------|
 | `ORIGOSG001` | 系统基础类型被注册到非宿主（适配器）程序集 |
 | `ORIGOSG002` | 宿主程序集注册了无法内联的值类型（如 `decimal`） |
-| `ORIGOSG003` | Kind 越界（不在 `[1, 255]` 内） |
+| `ORIGOSG003` | Kind 越界（不在 `[1, 254]` 内） |
 | `ORIGOSG004` | Kind 区间重叠，多类型映射到同一 Kind |
 
 这些诊断在编译期报告为 Error，使构建失败。Kind 冲突或越界之类的问题**不会进入运行时**。
@@ -591,7 +591,7 @@ offset 16: _ref (8B)
 ### 7.2 新增适配层类型（在新适配器程序集中注册）
 
 1. 在新程序集中添加 `[assembly: SndInlineTypes(startKind: <未占用号段>, typeof(NewType), ...)]`
-2. 选择 Kind 号段：检查 `TypedDataGenerator.cs` 中 `KindValue` 的校验范围（1-255），确保不与其他适配器重叠
+2. 选择 Kind 号段：检查 `TypedDataGenerator.cs` 中 `KindValue` 的校验范围（1-254），确保不与其他适配器重叠
 3. Source Generator 会自动检测此程序集非 Home → 走 Adapter 模式 → 生成完整的扩展方法 + ModuleInitializer 注册链
 4. 适配层类型走 `_ref` 路径（除非是 ≤8 字节的系统基础类型，但这类类型不应被适配器注册——会被 ORIGOSG001 挡住）
 

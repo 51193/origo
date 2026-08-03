@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration
 
@@ -22,7 +22,7 @@
 | `TypedDataGenerator.Diagnostics.cs` | partial — 诊断定义（ORIGOSG001-004） |
 | `AnalyzerReleases.Shipped.md` | 分析器发布跟踪（已发布规则，当前为空） |
 | `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`、`ORIGOSG002`、`ORIGOSG003`、`ORIGOSG004`） |
-| `pipeline.md` | 全链路性能解析：从装箱问题到编译期优化的完整推理与基准说明 |
+| `pipeline.zh.md` | 全链路性能解析：从装箱问题到编译期优化的完整推理与基准说明 |
 
 ## 双模式架构
 
@@ -49,7 +49,7 @@ Source Generator 在编译时检测当前程序集是否为 TypedData 的"宿主
 
 | 生成类别 | 生成内容 | 说明 |
 |---------|---------|------|
-| **扩展方法** | `TypedDataLayeredExtensions` 静态类 | `this TypedData` 扩展方法：`TryGetVector3`、`AsVector3` 等，按类型体积选择内联或 `_ref` 读取路径 |
+| **扩展方法** | `TypedDataLayeredExtensions` 静态类 | `this TypedData` 扩展方法：`TryGetVector3`、`AsVector3` 等，适配层类型一律经 `_ref` 读取（非系统值类型体积无法在编译期确定，见下节） |
 | **Kind 注册** | `TypedDataAdapterKindRegistration` + `[ModuleInitializer]` | 调用 `TypedData.RegisterKind(startKind + i, typeof(T))` |
 | **转换桥接** | `TypedDataAdapterConverterRegistration` + `[ModuleInitializer]` | 调用 `TypedDataLayeredRegistry.RegisterFromObjectFallback` / `RegisterToObjectFallback` |
 | **类型解析** | `TypedDataAdapterTypeMapRegistration` + `[ModuleInitializer]` | 调用 `TypedDataLayeredRegistry.RegisterKindResolver`，提供 `Type → kind` 的 if-else 链 |
@@ -88,7 +88,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 |---------|---------|---------|
 | `ORIGOSG001` | Error | 系统基础类型在非宿主（适配层）程序集的 `SndInlineTypes` 组中注册。内联基础类型由 Origo.Core 独占，适配层只能注册引用类型或非系统值类型（走 `_ref`）。 |
 | `ORIGOSG002` | Error | 宿主程序集中注册了无法内联且不受支持的值类型（如 `decimal` 或自定义结构体）。宿主程序集仅允许注册受支持的系统基础类型与引用类型。 |
-| `ORIGOSG003` | Error | 注册类型的 Kind 值（`startKind` + 组内位置）落在 `byte` 有效范围 `[1, 255]` 之外。包含 Kind 越界后会回绕到某个已占用值、从而与其它类型静默冲突的情形。 |
+| `ORIGOSG003` | Error | 注册类型的 Kind 值（`startKind` + 组内位置）落在 `byte` 有效范围 `[1, 254]` 之外。包含 Kind 越界后会回绕到某个已占用值、从而与其它类型静默冲突的情形。 |
 | `ORIGOSG004` | Error | 多个 `SndInlineTypes` 组的 `startKind` 区间重叠，导致同一个 Kind 字节被分配给多个不同类型。每个内联类型必须映射到唯一的 Kind。 |
 
 ## 注册机制
@@ -150,7 +150,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 ### 为什么在编译期校验 Kind 空间的范围与唯一性
 
-Kind 是 `byte`，运行时 `TypedData.RegisterKind` 直接写入 `KindTypeMap[kind]` 而不校验重复——多个类型映射到同一 Kind 会静默互相覆盖，造成 TypedData 存取错乱。Kind 由 `startKind` 加组内位置算出，若 `startKind` 偏大或类型过多，Kind 会越过 255 并回绕到某个已占用的小值，与既有类型冲突。生成器因此在编译期强制两条不变量：Kind 必须落在 `[1, 255]`（`ORIGOSG003`，按真实值判定，不依赖 `byte` 截断结果），且每个 Kind 必须唯一映射（`ORIGOSG004`，检测重叠的 `startKind` 区间）。违规类型被剔除并报构建错误，使 Kind 冲突在构建期暴露而非运行期损坏存档。
+Kind 是 `byte`，运行时 `TypedData.RegisterKind` 直接写入 `KindTypeMap[kind]` 而不校验重复——多个类型映射到同一 Kind 会静默互相覆盖，造成 TypedData 存取错乱。Kind 由 `startKind` 加组内位置算出，若 `startKind` 偏大或类型过多，Kind 会越过 255 并回绕到某个已占用的小值，与既有类型冲突。生成器因此在编译期强制两条不变量：Kind 必须落在 `[1, 254]`（`ORIGOSG003`，按真实值判定，不依赖 `byte` 截断结果），且每个 Kind 必须唯一映射（`ORIGOSG004`，检测重叠的 `startKind` 区间）。违规类型被剔除并报构建错误，使 Kind 冲突在构建期暴露而非运行期损坏存档。
 
 ---
 

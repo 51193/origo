@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -13,7 +13,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 
 | Sub-Module | Capability | Details |
 |-----------|-----------|---------|
-| [Entity](Entity/README.en.md) | Runtime entity aggregate root | SndEntity + three internal managers (data/node/strategy) |
+| [Entity](Entity/README.en.md) | Runtime entity aggregate root | SndEntity + four internal managers (data/node/passive/active strategy) |
 | [Metadata](Metadata/README.en.md) | Entity metadata model | TypedData / SndMetaData / NodeMetaData / StrategyMetaData / DataMetaData / SndMetaFluentBuilder |
 | [Scene](Scene/README.en.md) | Scene host & spawn factory | SndEntityFactory + FullMemorySndSceneHost + StubSndSceneHost |
 | [Strategy](Strategy/README.en.md) | Strategy system core | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase. Strategy pool, passive/active/observer three kinds of managers + generic invocation extensions |
@@ -25,7 +25,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | File | Responsibility |
 |------|---------------|
 | `ISndContext.cs` | SND context unified facade interface: exposes all capabilities through 10 companion properties ([see Abstractions/Snd](../Abstractions/Snd/README.en.md)) |
-| `SndContext.cs` | Default ISndContext implementation (global/progress-level). `Bootstrap()` method executes the complete startup flow: strategy discovery → alias/template loading → entry save loading. Implements `ISndFileAccess`, delegating file read/write to `SndWorld.DataSourceIo` + `ConverterRegistry` |
+| `SndContext.cs` | Default ISndContext implementation (global/progress-level). `Bootstrap()` method executes the complete startup flow: strategy discovery → alias/template loading → entry save loading. Provides `ISndFileAccess` through the companion `SndContextFileAccess` (file read/write delegated to `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`) |
 | `SndContextParameters.cs` | SndContext construction parameter object. Contains startup configuration properties such as `AutoDiscoverStrategies`, `DiscoverySkipPrefixes`, `SceneAliasMapPath`, `SndTemplateMapPath`, `InitialLevelId` |
 | `SndWorld.cs` | SND world: strategy pool + type mapping + converter registry + templates/aliases |
 | `SndDefaults.cs` | `internal` — SND system default value constants. Defines `InitialSaveId` ("000"), `InitialLevelId` ("default"), `MainMenuLevelId` ("main_menu"), used by Core's internal persistence flow and startup orchestration. |
@@ -34,6 +34,9 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | `TryGetNumericExtensions.cs` | Entity data numeric type compatible read extension: bridges int/float type access mismatches |
 | `ActiveStrategyExtensions.cs` | Generic ActiveStrategy invocation extension: eliminates JSON serialization boilerplate on the `InvokeStrategy` side |
 | `LevelBuilder.cs` | `internal` — Offline level building tool. Only used internally by framework tests and StubSndSceneHost; business code should build levels via templates and entry.json. |
+| `EntityExtensions.cs` | Entity identity comparison extension methods such as `IsSameEntityAs` |
+| `SndContextFileAccess.cs` | `internal` — `ISndFileAccess` companion implementation (see Companions) |
+| `SndContextArchiveFileAccess.cs` | `internal` — `ISndArchiveFileAccess` companion implementation (see Companions) |
 
 ## Entity Model
 

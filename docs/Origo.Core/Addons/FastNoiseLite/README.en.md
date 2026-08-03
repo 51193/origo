@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Addons/FastNoiseLite/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # FastNoiseLite
 

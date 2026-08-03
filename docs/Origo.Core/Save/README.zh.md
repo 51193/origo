@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Save
 
@@ -24,7 +24,7 @@ Origo 的持久化系统。负责存档的完整生命周期：Payload 构建、
 |------|------|
 | `PersistentBlackboard.cs` | 持久化黑板：自动从磁盘加载/保存；每次修改通过原子写入（临时文件 + 重命名）防止崩溃导致文件损坏。中断写入的残留临时文件在加载时自动清理。 |
 | `SavePayloads.cs` | 存档载荷模型：`SaveGamePayload` / `LevelPayload` / 序列化容器 |
-| `WellKnownKeys.cs` | `internal` — 黑板键常量：`SessionTopology` / `ActiveSaveSlot` 等 |
+| `WellKnownKeys.cs` | `internal` — 黑板键常量：`SessionTopology` / `ActiveSaveId` 等 |
 | `SaveCoordinator.cs` | 存档协调器：从 ProgressRun 提取的独立类，负责构建存档 payload、持久化 progress 状态、管理元数据 |
 | `SaveFileHandle.cs` | 统一 I/O 上下文（位于 Storage 子模块）：封装 FileSystem + IoGateway + SaveRootPath + PathPolicy |
 
@@ -47,13 +47,13 @@ SaveGamePayload (完整存档对象)
     ▼
 SavePayloadWriter.WriteToCurrent(handle, payload)
     ├── 创建 .write_in_progress marker
-    ├── 写入 current/progress.json
+    ├── 写入 current/progress.json + progress_state_machines.json
     ├── 写入 current/level_*/snd_scene.json
     ├── 写入 current/level_*/session.json
     ├── 写入 current/level_*/session_state_machines.json
     ├── 写入 current/meta.map
-    ├── 写入 current/.payload.sha
     └── 删除 .write_in_progress
+    （current/.payload.sha 由 SaveAtomicWriter.WritePayloadSha 单独写入，记录 combined hash）
     │
     ▼
 DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Strategies/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Strategies
@@ -14,7 +14,7 @@ Shared test strategy base classes and strategy index constants for all test proj
 
 | File | Responsibility |
 |------|---------------|
-| `SharedTestStrategies.cs` | Abstract strategy base classes: `SharedFrameCounterStrategy` (increments count data each frame), `SharedBlackboardReaderStrategy` (reads blackboard value into entity data), `SharedBlackboardWriterStrategy` (writes entity data to blackboard), `SharedKillOnProcessStrategy` (requests Kill on first Process), `SharedPeerLookupStrategy` (peer lookup via Session.FindByName), `SharedDeferredProbeStrategy` (verifies deferred actions via Deferred.EnqueueBusinessDeferred), `SharedConsoleCommandStrategy` (subscribes to console output). |
+| `SharedTestStrategies.cs` | Shared test strategy base classes: `SharedFrameCounterStrategy` (increments count data each frame), `SharedEchoActiveStrategy` (active strategy echoing its input), `SharedKillProbeStrategy` (records BeforeDead events), `SharedNoopLifecycleStrategy` (no-op lifecycle strategy), `SharedNoopStateMachineStrategy` (no-op state machine strategy). |
 | `TestStrategyIndices.cs` | Static constant collection of all test strategy indices (`test.frame_counter`, `test.bb_reader`, `test.bb_writer`, etc.) with automatic duplicate detection. |
 
 ## Design Decisions

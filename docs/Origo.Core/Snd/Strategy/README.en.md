@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -28,6 +28,9 @@ Strategies are divided into four categories: passive entity strategies (frame-dr
 | `SndStrategyPool.cs` | `internal` — Strategy pool: registration, instantiation, reference counting, statelessness validation |
 | `SndStrategyManager.cs` | `internal` — per-entity passive strategy manager: strategy container add/remove + lifecycle hook coordination |
 | `StrategyIndexAttribute.cs` | Strategy index declaration attribute: `[StrategyIndex("core.health")]` |
+| `ActiveStrategyJsonBase.cs` | JSON-contract active strategy base class: active strategies serializing input/output through JSON |
+| `ActiveStrategyResults.cs` | Active strategy invocation result wrapper: unified success/failure and output value passing |
+| `EntityStrategyExtensions.cs` | Entity strategy extensions: `EnsureReplaceableStrategy` and other mount helpers |
 
 ## Module Details
 
@@ -99,7 +102,7 @@ Each `SndEntity` holds one manager instance, managing passive entity strategies.
 | `TriggerBeforeDead(entity, ctx)` | Snapshot-iterate to trigger BeforeDead |
 | `GetStrategyIndices()` | Return all currently held strategy indices |
 | `Process(entity, delta, ctx)` | Frame update (snapshot iteration) |
-| `Add(entity, index, ctx)` | Dynamically add strategy and trigger `AfterAdd`; if `AfterAdd` throws, roll back insertion and return pool reference before propagating (addition is atomic) |
+| `Add(entity, index, ctx)` | Dynamically add strategy and trigger `AfterAdd`; if `AfterAdd` throws, roll back insertion and return pool reference before propagating (addition is atomic). Mounting the same index twice throws `InvalidOperationException`; the plan engine (`PlanExecutionStrategyBase`) reuses an already-mounted action instead of remounting it, so plan-managed actions may also appear in `LifecycleIndices` |
 | `Remove(entity, index, ctx)` | Dynamically remove strategy (triggers BeforeRemove) |
 
 - **Recover**: Type filter on pool acquisition, keeping only `LifecycleStrategyBase` subclasses; non-`LifecycleStrategyBase` types (such as `ActiveStrategyBase`, `ObserverStrategyBase`) immediately throw `InvalidOperationException`

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.Core.Tests
 
@@ -17,7 +17,7 @@ The tests for Origo.Core follow the "**behavior-oriented, documentation-contract
   [Test Documentation Meta-Instructions — InternalsVisibleTo Whitelist Principle](META-TEST.en.md#internalsvisibleto-whitelist-principle).
 - **Happy path, error path, boundary path equally covered**: Each capability document organizes test
   methods by these three path categories.
-- **Use TestFileSystem**: All file I/O tests use the in-memory file system (`TestFileSystem`), no real
+- **Use TestMemoryFileSystem**: All file I/O tests use the in-memory file system (`TestMemoryFileSystem`), no real
   disk operations. Strategy test context (`StrategyTestContext`) has built-in `MemoryFileSystem` full
   pipeline, supporting ISndFileAccess behavioral verification.
 - **Strategy isolation testing**: `StrategyTestScenario` framework allows testing individual strategy
@@ -30,7 +30,7 @@ The test project provides the following core support facilities via `TestSupport
 
 | Facility | Type | Purpose |
 |----------|------|---------|
-| `TestFileSystem` | `IFileSystem` implementation | In-memory file system supporting full read/write/enumerate/copy/rename/delete, for I/O tests |
+| `TestMemoryFileSystem` | `IFileSystem` implementation | In-memory file system supporting full read/write/enumerate/copy/rename/delete, for I/O tests |
 | `TestSndSceneHost` | `ISndSceneHost` implementation | Render-free scene host, maintains entity list, records Spawn/ClearAll calls |
 | `TestLogger` | `ILogger` implementation | Collects logs into lists, supports categorized queries by level (Debug/Info/Warning/Error) |
 | `TestNodeFactory` | `INodeFactory` implementation | Node factory capable of injecting failing resources |
@@ -55,7 +55,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | Capability | Document | Verification Focus |
 |-----------|----------|-------------------|
 | Architecture Guardrails | [Architecture.md](Architecture.en.md) | Layer isolation (Core does not reference Godot), interface composition (ISndContext pure composition), strategy statelessness validation |
-| Test Doubles | [Abstractions.md](Abstractions.en.md) | TestFileSystem / NullLogger / TestFileSystemAdditional correctness |
+| Test Doubles | [Abstractions.md](Abstractions.en.md) | TestMemoryFileSystem / NullLogger / TestMemoryFileSystemAdditional correctness |
 | Blackboard | [Blackboard.md](Blackboard.en.md) | Set/Get/TryGet/Clear/SerializeAll/DeserializeAll full lifecycle + key validation |
 | Data Observer | [DataObserver.md](DataObserver.en.md) | Subscribe/Unsubscribe/Notify/Multiple subscribers/Re-entrancy safety/Clear |
 | Data Source | [DataSource.md](DataSource.en.md) | DataSourceNode creation/access/lazy expansion, JSON encoding/decoding, Map encoding/decoding, type converter registration, TypedData converters, SndMetaData converters, IDisposable |

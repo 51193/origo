@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -26,7 +26,7 @@ The concrete implementation of the SND entity system in the Godot engine. Bridge
 
 The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in the Godot scene tree:
 
-- **Implements ISndSceneHost**: CreateEntity / LoadFromMetaList / ClearAll (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / GetEntities / FindByName / ProcessAll. `ClearAll()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
+- **Implements ISndSceneHost**: CreateEntity / RecoverFromMetaList / RemoveAllEntities (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / GetEntities / FindByName / ProcessAll. `RemoveAllEntities()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
 - **Implements ISndContextAttachableSceneHost**: Supports runtime context switching
 - **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, all already-created entities are rolled back and released
 - **EntityView**: Lazily creates an `IReadOnlyList<ISndEntity>` wrapper, caching the reference to avoid reallocation
@@ -76,7 +76,7 @@ Core `SndEntity` requires `INodeFactory` injection, and `INodeFactory` needs the
 
 If nodes with the same name exist in Godot's scene tree, Godot automatically appends suffixes like `@2`, `@3` to the Name. SND entity lookups depend on stable names and cannot use Godot-modified Names. `StableName` is set at Spawn/Load time and is unaffected by Godot's automatic renaming of `Node.Name`.
 
-### Why LoadFromMetaList uses a rollback mechanism
+### Why RecoverFromMetaList uses a rollback mechanism
 
 If loading 100 entities and the 50th fails, the first 49 created entities are in an incomplete state (AfterLoad hooks may have fired but the scene is incomplete). Rollback releases all of them to prevent residual corrupted entities from contaminating subsequent operations.
 
@@ -86,7 +86,7 @@ If the node is directly released during iteration over `_entities`, Godot's node
 
 ### Adapter layer entity bridging: Why GodotSndEntity must hand-write forwarding
 
-The code in `GodotSndEntity` (290 lines) can be broken down into three categories:
+The code in `GodotSndEntity` (~206 lines) can be broken down into three categories:
 
 | Category | Lines | Share | Notes |
 |------|------|------|------|

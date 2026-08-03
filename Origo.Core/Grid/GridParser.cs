@@ -8,6 +8,11 @@ namespace Origo.Core.Grid;
 /// </summary>
 public static class GridParser
 {
+    /// <summary>
+    ///     Parses grid coordinates from a <c>string</c> (<c>"x,z"</c>) or string
+    ///     <see cref="JsonElement" />. Returns <c>null</c> when the input is not
+    ///     parseable; extra comma-separated tokens beyond the first two are ignored.
+    /// </summary>
     public static (int X, int Z)? ParseCoords(object? input)
     {
         var str = input switch

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity (Abstractions)
 
@@ -28,7 +28,8 @@
 | 成员 | 说明 |
 |------|------|
 | `SetData<T>(name, value)` | 写入命名数据。值与旧值相同则跳过变更通知 |
-| `TryGetData<T>(name)` | 安全读取，返回 `(found, value?)`。适用于数据可能不存在或类型不确定的场景 |
+| `TryGetData<T>(name)` | 安全读取，返回 `(found, value?)` 元组。适用于数据可能不存在或类型不确定的场景 |
+| `TryGetData<T>(name, out value)` | 安全读取的 out 参数变体，支持 `if (TryGetData("hp", out var hp))` 惯用法，避免丢弃 found 标志 |
 | `GetData<T>(name)` | 强断言读取，数据缺失或类型不匹配时抛出 `InvalidOperationException`。适用于调用方已知数据必定存在的场景（fail-fast） |
 
 > 数据变更的观察不在此接口上。响应数据变更通过 `ObserverStrategyBase` 的 `OnDataChanged` 钩子实现，由 `ISndObserverStrategyAccess` 挂载。详见 [Snd/Strategy](../../Snd/Strategy/README.zh.md)。

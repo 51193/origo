@@ -8,8 +8,8 @@ namespace Origo.Core.DataSource;
 
 /// <summary>
 ///     A pure in-memory <see cref="IFileSystem" /> implementation, with no dependency on any physical
-///     file system or engine API. Used for Core-layer in-memory scenarios such as background levels,
-///     as well as unit tests.
+///     file system or engine API. Exposed as a dependency-free reference implementation for tests
+///     and adapter layers (see CHANGELOG for the public-status rationale).
 /// </summary>
 public sealed class MemoryFileSystem : IFileSystem
 {

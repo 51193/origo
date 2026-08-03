@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Strategies/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Strategies
@@ -14,7 +14,7 @@
 
 | 文件 | 职责 |
 |------|------|
-| `SharedTestStrategies.cs` | 抽象策略基类：`SharedFrameCounterStrategy`（每帧自增 count 数据）、`SharedBlackboardReaderStrategy`（读黑板值到实体数据）、`SharedBlackboardWriterStrategy`（写实体数据到黑板）、`SharedKillOnProcessStrategy`（首次 Process 时请求 Kill）、`SharedPeerLookupStrategy`（通过 Session.FindByName 互查）、`SharedDeferredProbeStrategy`（通过 Deferred.EnqueueBusinessDeferred 验证延迟动作）、`SharedConsoleCommandStrategy`（订阅控制台输出）。 |
+| `SharedTestStrategies.cs` | 共享测试策略基类：`SharedFrameCounterStrategy`（每帧自增 count 数据）、`SharedEchoActiveStrategy`（主动策略回显输入）、`SharedKillProbeStrategy`（记录 BeforeDead 事件）、`SharedNoopLifecycleStrategy`（无操作生命周期策略）、`SharedNoopStateMachineStrategy`（无操作状态机策略）。 |
 | `TestStrategyIndices.cs` | 所有测试策略索引的静态常量集合（`test.frame_counter`、`test.bb_reader`、`test.bb_writer` 等），带自动重复检测。 |
 
 ## 设计决策

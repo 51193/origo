@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Abstractions -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Double Tests
 
@@ -10,14 +10,14 @@
 ## Behavior Under Test Overview
 
 Verifies the correctness of the test support facilities themselves — these facilities are the foundation
-for all other tests. Covers `TestFileSystem` (in-memory IFileSystem implementation) with all 12 file/directory
+for all other tests. Covers `TestMemoryFileSystem` (in-memory IFileSystem implementation) with all 12 file/directory
 operations, and `NullLogger`'s silent behavior.
 
 ## Test File List
 
 | File | Verification Focus |
 |------|-------------------|
-| `MemoryFileSystemTests.cs` | TestFileSystem: read/write/enumerate/copy/rename/delete/parent directory/path combination |
+| `MemoryFileSystemTests.cs` | TestMemoryFileSystem: read/write/enumerate/copy/rename/delete/parent directory/path combination |
 | `NullLoggerTests.cs` | NullLogger.Instance does not throw |
 | `TestLoggerFilterTests.cs` (in `TestSupport/`) | TestLogger log level filtering behavior |
 | `TestMemoryFileSystemAdditionalTests.cs` | TestMemoryFileSystem additional edge paths |
@@ -73,20 +73,20 @@ operations, and `NullLogger`'s silent behavior.
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
-| `TestFileSystem_WriteAllText_And_ReadAllText` | WriteAllText followed by ReadAllText reads back consistently | IFileSystem |
-| `TestFileSystem_WriteAllText_Overwrite` | overwrite=true overwrites existing file | IFileSystem |
-| `TestFileSystem_Delete_RemovesFile` | Delete removes file, Exists returns false | IFileSystem |
-| `TestFileSystem_CombinePath_CombinesCorrectly` | Path combination is correct | IFileSystem |
-| `TestFileSystem_GetParentDirectory` | Extracting parent directory from file path | IFileSystem |
-| `TestFileSystem_EnumerateDirectories` | Enumerating subdirectories from explicit directories | IFileSystem |
-| `TestFileSystem_Rename_MovesAllFilesAndDirectories` | After directory rename, all files/subdirectories migrated, data unchanged | IFileSystem |
-| `TestFileSystem_DeleteDirectory_RemovesAllContents` | Recursively deletes directory and all contents | IFileSystem |
+| `TestMemoryFileSystem_WriteAllText_And_ReadAllText` | WriteAllText followed by ReadAllText reads back consistently | IFileSystem |
+| `TestMemoryFileSystem_WriteAllText_Overwrite` | overwrite=true overwrites existing file | IFileSystem |
+| `TestMemoryFileSystem_Delete_RemovesFile` | Delete removes file, Exists returns false | IFileSystem |
+| `TestMemoryFileSystem_CombinePath_CombinesCorrectly` | Path combination is correct | IFileSystem |
+| `TestMemoryFileSystem_GetParentDirectory` | Extracting parent directory from file path | IFileSystem |
+| `TestMemoryFileSystem_EnumerateDirectories` | Enumerating subdirectories from explicit directories | IFileSystem |
+| `TestMemoryFileSystem_Rename_MovesAllFilesAndDirectories` | After directory rename, all files/subdirectories migrated, data unchanged | IFileSystem |
+| `TestMemoryFileSystem_DeleteDirectory_RemovesAllContents` | Recursively deletes directory and all contents | IFileSystem |
 
 ### Error Path
 
 | Test Method | Triggered Error | Expected Behavior |
 |------------|-----------------|-------------------|
-| `TestFileSystem_WriteAllText_NoOverwrite_Throws` | overwrite=false writing to existing file | IOException |
+| `TestMemoryFileSystem_WriteAllText_NoOverwrite_Throws` | overwrite=false writing to existing file | IOException |
 
 ## TestLoggerFilterTests Test Details
 

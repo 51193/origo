@@ -10,6 +10,13 @@ public static class Astar
 {
     private static readonly (int X, int Z)[] _neighbors = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
+    /// <summary>
+    ///     Finds a shortest path from <paramref name="start" /> to <paramref name="end" />
+    ///     on a <paramref name="gridSize" /> × <paramref name="gridSize" /> grid.
+    ///     The returned path excludes the start cell and includes the end cell;
+    ///     returns <c>null</c> when start or end is out of bounds, the end cell is
+    ///     blocked, or no path exists within the search limit.
+    /// </summary>
     public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize,
         Func<GridPos, bool> isBlocked)
     {

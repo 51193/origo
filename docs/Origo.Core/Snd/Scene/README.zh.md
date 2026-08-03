@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene
 
@@ -50,9 +50,9 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 - **实体容器管理**：只负责创建、查找、移除实体，不触发任何策略钩子
 - **CreateEntity**：创建实体，恢复数据/策略/节点（通过 `RecoverForLifecycle`），绑定归属会话，不触发 AfterSpawn 钩子
 - **RecoverFromMetaList**：仅恢复实体数据/策略/节点（不触发 AfterLoad 钩子），用于存档加载场景。先通过 `entity.Name = metaData.Name` 设置实体名，再将实体注册到内部集合，最后调用 `RecoverForLifecycle(meta)`。因此钩子执行前，`FindByName` 可查找所有已注册实体。
-- **RemoveEntity**：从集合移除实体并释放引擎资源（节点/数据），不释放策略引用，不触发钩子
+- **RemoveEntity**：仅从集合移除实体，不释放策略引用、不释放引擎资源、不触发钩子（策略释放与资源回收由 `SessionRun.KillPending` 在调用前完成）
 - **RemoveAllEntities**：仅清空内部集合
-- **ProcessAll**：基于快照迭代所有实体
+- **ProcessAll**：按索引循环迭代所有存活实体（迭代期间宿主容器不应被修改）
 
 ### StubSndSceneHost
 

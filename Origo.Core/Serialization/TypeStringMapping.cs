@@ -14,6 +14,7 @@ public sealed class TypeStringMapping
     private readonly Dictionary<Type, string> _reverseTypeMap = [];
     private readonly Dictionary<string, Type> _typeMap = [];
 
+    /// <summary>Creates a mapping pre-populated with BCL primitive, array, and collection type names.</summary>
     public TypeStringMapping()
     {
         RegisterType<byte>(BclTypeNames.Byte);
@@ -52,6 +53,7 @@ public sealed class TypeStringMapping
         RegisterType<ReadOnlyDictionary<string, string>>(BclTypeNames.ReadOnlyDictionaryStringString);
     }
 
+    /// <summary>Registers a type-to-name mapping, throwing on collisions with an existing name.</summary>
     public void RegisterType<T>(string typeName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(typeName);
@@ -71,6 +73,7 @@ public sealed class TypeStringMapping
         _reverseTypeMap[type] = typeName;
     }
 
+    /// <summary>Resolves a registered name to its type, throwing when the name is unknown.</summary>
     public Type GetTypeByName(string typeName)
     {
         return _typeMap.TryGetValue(typeName, out var type)
@@ -78,6 +81,7 @@ public sealed class TypeStringMapping
             : throw new InvalidOperationException($"Type name '{typeName}' is not registered.");
     }
 
+    /// <summary>Resolves a type to its registered stable name, throwing when the type is unknown.</summary>
     public string GetNameByType(Type type)
     {
         ArgumentNullException.ThrowIfNull(type);

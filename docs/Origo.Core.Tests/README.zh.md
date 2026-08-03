@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.Core.Tests
 
@@ -12,7 +12,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 
 - **不测试 internal 实现细节**：每个测试验证 `usage/` 或模块文档中描述的某条行为契约，而非代码的内部形状。原则：若可通过 `ISndContext`/`ISessionManager` 等公共接口验证行为，则不应使用 `InternalsVisibleTo` 直接访问 internal 类型。详见 [测试文档元指令 — InternalsVisibleTo 白名单原则](META-TEST.zh.md#internalsvisibleto-白名单原则)。
 - **正确路径、错误路径、边界路径同等覆盖**：每个能力文档按三类路径组织测试方法。
-- **使用 TestFileSystem**：所有文件 I/O 测试使用内存文件系统（`TestFileSystem`），不涉及真实磁盘操作。策略测试上下文（`StrategyTestContext`）内置 `MemoryFileSystem` 全链路，支持 ISndFileAccess 行为验证。
+- **使用 TestMemoryFileSystem**：所有文件 I/O 测试使用内存文件系统（`TestMemoryFileSystem`），不涉及真实磁盘操作。策略测试上下文（`StrategyTestContext`）内置 `MemoryFileSystem` 全链路，支持 ISndFileAccess 行为验证。
 - **策略隔离测试**：`StrategyTestScenario` 框架允许在完全无运行时的环境下测试单个策略的生命周期。`TestContextBuilder` 提供集成测试场景下的 SndContext 构造。
 
 ## 测试辅助设施
@@ -21,7 +21,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 
 | 设施 | 类型 | 用途 |
 |------|------|------|
-| `TestFileSystem` | `IFileSystem` 实现 | 内存文件系统，支持完整的读写/枚举/复制/重命名/删除，用于 I/O 测试 |
+| `TestMemoryFileSystem` | `IFileSystem` 实现 | 内存文件系统，支持完整的读写/枚举/复制/重命名/删除，用于 I/O 测试 |
 | `TestSndSceneHost` | `ISndSceneHost` 实现 | 无渲染的场景宿主，维护实体列表，记录 Spawn/ClearAll 调用 |
 | `TestLogger` | `ILogger` 实现 | 收集日志到列表中，支持按级别（Debug/Info/Warning/Error）分类查询 |
 | `TestNodeFactory` | `INodeFactory` 实现 | 可注入失败资源的节点工厂 |
@@ -37,7 +37,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | `ConsoleInputBuffer` | `IConsoleInputSource` 实现 | 控制台输入队列（Core 生产代码，测试中直接使用） |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` 实现 | 控制台输出通道（Core 生产代码，测试中直接使用） |
 
-所有测试辅助设施均为 `internal`，通过 `InternalsVisibleTo` 暴露给测试项目。
+框架内部的测试辅助设施（如 `SndEntity` 的生命周期方法）为 `internal`，通过 `InternalsVisibleTo` 暴露给测试项目；独立的 `Origo.TestSupport` 程序集则提供可公开复用的测试支撑类型（TestMemoryFileSystem、TestSndSceneHost、TestLogger 等）。
 
 ## 能力文档索引
 
@@ -46,7 +46,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 能力 | 文档 | 验证重点 |
 |------|------|---------|
 | 架构守卫 | [Architecture.md](Architecture.zh.md) | 分层隔离（Core 不引用 Godot）、接口组合（ISndContext 纯组合）、策略无状态校验 |
-| 测试替身 | [Abstractions.md](Abstractions.zh.md) | TestFileSystem / NullLogger / TestFileSystemAdditional 的正确性 |
+| 测试替身 | [Abstractions.md](Abstractions.zh.md) | TestMemoryFileSystem / NullLogger / TestMemoryFileSystemAdditional 的正确性 |
 | 黑板 | [Blackboard.md](Blackboard.zh.md) | Set/Get/TryGet/Clear/SerializeAll/DeserializeAll 全生命周期 + 键校验 |
 | 数据观察者 | [DataObserver.md](DataObserver.zh.md) | Subscribe/Unsubscribe/Notify/多订阅者/重入安全/Clear |
 | 数据源 | [DataSource.md](DataSource.zh.md) | DataSourceNode 创建/访问/懒展开、JSON 编解码、Map 编解码、类型转换器注册、TypedData 转换器、SndMetaData 转换器、IDisposable |

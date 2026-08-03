@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Scene
 
@@ -50,9 +50,9 @@ The default scene host for background sessions. Key characteristics:
 - **Entity container management**: only responsible for creating, finding, and removing entities; does not trigger any strategy hooks
 - **CreateEntity**: creates entity, recovers data/strategies/nodes (via `RecoverForLifecycle`), binds owning session; does not trigger AfterSpawn hooks
 - **RecoverFromMetaList**: only recovers entity data/strategies/nodes (does not trigger AfterLoad hooks), used for save loading scenarios. First sets entity name via `entity.Name = metaData.Name`, then registers entity in the internal collection, and finally calls `RecoverForLifecycle(meta)`. Therefore, before hooks execute, `FindByName` can find all registered entities.
-- **RemoveEntity**: removes entity from collection and releases engine resources (nodes/data); does not release strategy references; does not trigger hooks
+- **RemoveEntity**: only removes the entity from the collection; does not release strategy references, does not release engine resources, and does not trigger hooks (strategy release and resource reclamation are completed by `SessionRun.KillPending` before this method is called)
 - **RemoveAllEntities**: only clears the internal collection
-- **ProcessAll**: iterates all entities based on snapshot
+- **ProcessAll**: iterates all alive entities with an index loop (the host container must not be modified during iteration)
 
 ### StubSndSceneHost
 

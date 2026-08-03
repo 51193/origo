@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：存储 测试
 
@@ -301,7 +301,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 
 ## 设计决策
 
-### 为什么使用 TestFileSystem 而非真实文件系统
+### 为什么使用 TestMemoryFileSystem 而非真实文件系统
 
 文档明确：Core 层所有文件操作通过 `IFileSystem` 进行，禁止直接 `File.*` API。
 因此测试不应依赖真实文件系统——这会破坏 Core 层的平台无关性。

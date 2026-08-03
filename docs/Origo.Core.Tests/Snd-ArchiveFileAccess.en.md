@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Archive File Access Tests
 
@@ -11,7 +11,7 @@
 
 Validates the full behavior of `ISndArchiveFileAccess` on `SndContext`: DataSourceNode file read/write round-trips (paths relative to the archive active directory's `extra/` subdirectory), strongly-typed object read/write round-trips, file existence checks, file deletion, overwrite semantics, Map format parsing, nested JSON parsing, error paths (non-existent files, path traversal, type mismatch, null nodes), and boundary paths (empty objects, Null nodes, Boolean values), as well as archive save/load round-trip persistence.
 
-All file I/O uses the shared `TestFileSystem` (in-memory implementation); no real disk operations are involved.
+All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); no real disk operations are involved.
 
 ## Test File List
 

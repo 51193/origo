@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 存档文件访问 测试
 
@@ -11,7 +11,7 @@
 
 验证 `ISndArchiveFileAccess` 在 `SndContext` 上的全部行为：DataSourceNode 文件读写往返（路径相对于存档活动目录的 `extra/` 子目录）、强类型对象读写往返、文件存在检查、删除文件、覆盖语义（overwrite）、Map 格式解析、嵌套 JSON 解析、错误路径（不存在文件、路径穿越、类型不匹配、null 节点）和边界路径（空对象、Null 节点、Boolean 值），以及存档 save/load 往返保持。
 
-所有文件 I/O 使用共享的 `TestFileSystem`（内存实现），不涉及真实磁盘操作。
+所有文件 I/O 使用共享的 `TestMemoryFileSystem`（内存实现），不涉及真实磁盘操作。
 
 ## 测试文件清单
 

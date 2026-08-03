@@ -57,13 +57,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `OrigoAutoInitializer.LoadAndSpawnFromFile` keeps its array semantics for direct use.
 - **BREAKING:** `ISndDataAccess` gained the `TryGetData<T>(string, out T?)` member;
   all implementers (including test doubles) were updated.
+- **BREAKING: Session level IDs and keys are restricted to ASCII letters, digits, `.`, `_`, `-`** — creating a session with other characters throws `ArgumentException`, and the session-topology parser rejects entries with extra fields or non-boolean sync values. Saves written with special characters in level IDs fail to load with an explicit error instead of silently mis-parsing.
+- **`SndWorld.ResolveTemplate` returns a deep copy** — mutating the returned metadata no longer pollutes the template cache.
+- **Mounting the same strategy index twice on an entity now throws** — previously the passive strategy manager silently ran the strategy twice per frame.
+- **Attaching a second `PlanExecutionStrategyBase`-derived strategy to the same entity now throws** — previously it silently unsubscribed the first plan strategy's callbacks.
+- **BREAKING: TypedData kind 255 rejected by the source generator** — `ORIGOSG003` now limits the valid range to `[1, 254]`; 255 is the reserved `UnregisteredKind` sentinel, and registering it used to corrupt `DataType` resolution and extraction.
+- **Session checkpoint writes (`WriteProgressOnlyToCurrent` / `WriteLevelPayloadOnlyToCurrent`) leave a write-in-progress marker on failure** — readers now reject partially written checkpoints instead of accepting them.
 
 ### Removed
 
 - **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
+- **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
 
 ### Fixed
 
+- **`DataSourceNode.ComputeSha256Hash` expands lazy subtrees recursively** — the save idempotency hash previously treated unexpanded nested JSON children as empty maps, so deep changes inside `extra/` files produced identical hashes and the whole save could be silently skipped.
+- **Save topology is re-solidified after `BeforeSave` hooks** — the framework-computed `SessionTopology` value is written after hooks fire, so hook writes to framework-owned blackboard keys cannot corrupt the persisted save topology.
+- **Plan actions already mounted via `LifecycleIndices` are reused** — `PlanExecutionStrategyBase` no longer fails when the action strategy for a plan step is already mounted on the entity; it reuses the existing mount instead of throwing a duplicate-mount exception.
+- **Foreground sessions now fire `BeforeSave` hooks on full save** — `RequestSaveGame` previously serialized foreground entities without triggering `BeforeSave`, so hook-written data never reached the save file; background sessions already fired them.
+- **`ConsoleBridgeServer` accept-loop faults are observable** — a non-cancellation socket error now logs `Error` and stops the listener (instead of dying silently), `Dispose` logs accept-task faults and join timeouts instead of swallowing them, and connection-handler logs include full stack traces.
+- **`entity_set_data` reports parse failures** — a value that cannot be converted to an existing key's type now returns an error message and keeps the original value, instead of reporting success.
+- **Level-switch checkpoints are marker-protected** — `WriteProgressOnlyToCurrent` / `WriteLevelPayloadOnlyToCurrent` now use the write-in-progress marker, so a crash between the two files leaves a state that readers reject instead of silently accepting a mixed generation.
+- **`PersistentBlackboard` writes are backup-swapped** — crash between the old delete+rename steps no longer loses `system.json`; the previous version is kept in a `.bak.json` file and restored by `LoadFromDisk` when the primary is missing.
+- **`PersistentRandom.NextFloat` stays in `[0, 1)`** — the raw-value upper bound could previously round up to exactly `1.0f` (~1-in-16-million chance per call).
 - **`ObserverTopology.Mount` rollback guard** — prevents strategy reference-count corruption when `GetStrategy` throws before pool acquisition.
 - **`GodotDirectoryOperations.Create` / `DeleteRecursive`** — error codes from Godot API calls are checked (fail-fast) instead of discarded. `DeleteRecursive` now clears directory contents but leaves the container intact, avoiding failures when the Godot editor holds file descriptors to `user://` paths.
 - **`GodotFileOperations.Delete`** — error code from `DirAccess.RemoveAbsolute` is checked instead of discarded.

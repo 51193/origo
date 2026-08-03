@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Converters/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Converters
 
@@ -14,7 +14,14 @@ Collection of registered `DataSourceConverter<T>` implementations. All converter
 |------|------|
 | `PrimitiveConverters.cs` | 14 primitive type converters (string, byte, int, float, bool, etc.) |
 | `ArrayConverters.cs` | 14 primitive array converters (byte[], int[], float[], etc.) |
-| `DomainConverters.cs` | Domain type converters (SndMetaData, Blackboard, StateMachine, etc.) |
+| `BlackboardDataConverter.cs` | Blackboard ↔ DataSourceNode |
+| `DataMetaDataConverter.cs` | DataMetaData ↔ DataSourceNode |
+| `NodeMetaDataConverter.cs` | NodeMetaData ↔ DataSourceNode |
+| `SndMetaDataConverter.cs` | SndMetaData ↔ DataSourceNode |
+| `SndMetaDataListConverter.cs` | SndMetaData list ↔ DataSourceNode |
+| `StrategyMetaDataConverter.cs` | StrategyMetaData ↔ DataSourceNode |
+| `StateMachineContainerPayloadConverter.cs` | State machine container payload ↔ DataSourceNode |
+| `StringDictionaryConverter.cs` | String dictionary ↔ DataSourceNode |
 | `TypedDataConverter.cs` | TypedData ↔ DataSourceNode, carrying type metadata |
 
 ## Converter Overview
@@ -25,7 +32,7 @@ Collection of registered `DataSourceConverter<T>` implementations. All converter
 ### ArrayConverters
 One per primitive type array. Read iterates `node.Elements`; Write builds `CreateArray()`.
 
-### DomainConverters
+### Domain converters
 
 | Converter | Handled Type |
 |------|------|
@@ -47,8 +54,8 @@ Avoids reflection-based generic instantiation. Each explicitly implemented, stat
 ### Why array converters are separate
 Arrays need traversal semantics (foreach over `Elements`), significantly different from scalars.
 
-### Why DomainConverters share a single file
-Hierarchical dependencies visible; each converter is small (30-60 lines).
+### Why domain converters are split into one file per type
+One file per type keeps lookup and maintenance cheap; hierarchical dependencies stay visible through explicit constructor injection.
 
 ---
 [↑ Back to DataSource](../README.en.md)

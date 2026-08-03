@@ -67,11 +67,12 @@ public interface ISndSceneHost : ISndSceneAccess
     void RequestKillEntity(string name);
 
     /// <summary>
-    ///     Remove a single entity by name (only removes from the collection
-    ///     and releases engine resources; does not trigger hooks or release
-    ///     strategies). Hooks and strategy release are executed in batch by
-    ///     the framework before calling this method. Only called internally
-    ///     by the framework during lifecycle transitions.
+    ///     Remove a single entity by name (only removes the entity from the
+    ///     collection; does not trigger hooks, release strategies, or release
+    ///     engine resources). Hook triggering and strategy release are
+    ///     executed in batch by the framework before calling this method.
+    ///     Only called internally by the framework during lifecycle
+    ///     transitions.
     /// </summary>
     void RemoveEntity(string name);
 

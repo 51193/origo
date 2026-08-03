@@ -7,7 +7,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 /// <summary>
 ///     Empty session manager (Null Object pattern), returned as a placeholder when no ProgressRun has been established.
 ///     Holds no sessions. Callers should check <see cref="CanCreateSessions" /> first;
-///     creating a session without an active ProgressRun will return null.
+///     creating a session without an active ProgressRun throws <see cref="InvalidOperationException" />.
 /// </summary>
 internal sealed class EmptySessionManager : ISessionManager
 {

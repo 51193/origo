@@ -6,13 +6,14 @@ using Origo.Core.Snd.Metadata;
 namespace Origo.Core.Blackboard;
 
 /// <summary>
-///     Default in-memory blackboard implementation using TypedData to store key-value pairs
-///     while preserving type information.
+///     Default in-memory <see cref="IBlackboard" /> implementation backed by a typed-data dictionary
+///     that preserves type information for serialization.
 /// </summary>
 public sealed class Blackboard : IBlackboard
 {
     private readonly Dictionary<string, TypedData> _data = new(StringComparer.Ordinal);
 
+    /// <inheritdoc />
     public void SetValue<T>(string key, T value)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -21,6 +22,7 @@ public sealed class Blackboard : IBlackboard
         _data[key] = TypedDataFactory<T>.Create(value);
     }
 
+    /// <inheritdoc />
     public (bool found, T value) TryGet<T>(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -32,13 +34,17 @@ public sealed class Blackboard : IBlackboard
         return (false, default!);
     }
 
+    /// <inheritdoc />
     public void Clear() => _data.Clear();
 
+    /// <inheritdoc />
     public IReadOnlyCollection<string> GetKeys() => _data.Keys;
 
+    /// <inheritdoc />
     public IReadOnlyDictionary<string, TypedData> SerializeAll() =>
         new Dictionary<string, TypedData>(_data, StringComparer.Ordinal);
 
+    /// <inheritdoc />
     public void DeserializeAll(IReadOnlyDictionary<string, TypedData> data)
     {
         ArgumentNullException.ThrowIfNull(data);

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -17,7 +17,6 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 |------|-------------------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch full-chain workflows |
 | `SndContextEntryFlowTests.cs` | SndContext workflow starting from entry configuration |
-| `NullSndContextExtendedTests.cs` | NullSndContext all methods are no-ops |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder building and writing level data |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad parsing and ApplyAttributes type inference |
 | `SndTemplateResolverTests.cs` | Template alias resolution, caching, clone does not affect cache |

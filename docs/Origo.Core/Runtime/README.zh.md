@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Runtime
 
@@ -14,7 +14,7 @@ Origo 的运行时核心。管理从系统级到会话级的四层生命周期�
 | 子模块 | 能力 | 详情 |
 |--------|------|------|
 | [Console](Console/README.zh.md) | 控制台命令系统 | 命令解析/路由 + 输入队列 + 输出通道 |
-| [Console/CommandHandlers](Console/CommandHandlers/README.zh.md) | 内置命令 | help / bb_get/set/keys / spawn / find_entity / kill_all / snd_count |
+| [Console/CommandHandlers](Console/CommandHandlers/README.zh.md) | 内置命令 | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy（共 11 个） |
 | [Lifecycle](Lifecycle/README.zh.md) | 四层运行时生命周期 | SystemRun → ProgressRun → SessionManager → SessionRun |
 | [StateMachine](StateMachine/README.zh.md) | 状态机容器 | `StateMachineContainer`：CreateOrGet / 序列化 / 批量操作 |
 
