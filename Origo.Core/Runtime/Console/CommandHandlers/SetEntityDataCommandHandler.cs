@@ -34,7 +34,8 @@ internal sealed class SetEntityDataCommandHandler : ConsoleCommandHandlerBase
         if (!ConsoleCommandHelper.TryFindEntity(_runtime, entityName, out var entity, out errorMessage))
             return false;
 
-        ConsoleCommandHelper.SetDataPreservingExistingType(entity!, key, raw);
+        if (!ConsoleCommandHelper.TrySetDataPreservingExistingType(entity!, key, raw, out errorMessage))
+            return false;
 
         outputChannel.Publish($"[{entityName}] {key} = {raw}");
         errorMessage = null;

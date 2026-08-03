@@ -231,6 +231,27 @@ public class ConsoleTypeInferenceTests
         Assert.Contains("not found", err, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void EntitySetData_ExistingKeyUnparseableValue_ReturnsErrorAndKeepsValue()
+    {
+        var (runtime, host) = CreateRuntimeWithConsoleAndEntity("player");
+        var entity = host.FindByName("player")!;
+        entity.SetData("hunger", 50);
+
+        var handler = new SetEntityDataCommandHandler(runtime);
+        var output = new ConsoleOutputChannel();
+
+        var ok = handler.TryExecute(
+            CreateInvocation("entity_set_data", "player", "hunger", "not_a_number"), output, out var err);
+
+        Assert.False(ok);
+        Assert.NotNull(err);
+        Assert.Contains("Cannot parse", err, StringComparison.OrdinalIgnoreCase);
+        var (found, value) = entity.TryGetData<int>("hunger");
+        Assert.True(found);
+        Assert.Equal(50, value);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────
 
     private static (OrigoRuntime runtime, TestSndSceneHost host) CreateRuntimeWithConsole()

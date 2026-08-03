@@ -80,10 +80,21 @@ public sealed class ConsoleBridgeServer : IDisposable
         {
             try
             {
-                _acceptTask.Wait(_disposeJoinTimeoutMs);
+                var completed = _acceptTask.Wait(_disposeJoinTimeoutMs);
+                if (!completed)
+                    _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                        new LogMessageBuilder().Build("Accept loop did not stop within the join timeout."));
             }
-            catch (AggregateException)
+            catch (AggregateException ex)
             {
+                foreach (var inner in ex.InnerExceptions)
+                    _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
+                        new LogMessageBuilder().Build($"Accept loop faulted: {inner.Message}"));
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
+                    new LogMessageBuilder().Build($"Accept loop join failed: {ex.Message}"));
             }
         }
 
@@ -153,6 +164,13 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 break;
             }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
+                    new LogMessageBuilder().Build(
+                        $"Accept loop stopped after a non-cancellation error: {ex.Message}"));
+                break;
+            }
 
             try
             {
@@ -161,7 +179,7 @@ public sealed class ConsoleBridgeServer : IDisposable
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
-                    $"Connection handler failed: {ex.Message}");
+                    new LogMessageBuilder().Build($"Connection handler failed: {ex}"));
             }
         }
     }

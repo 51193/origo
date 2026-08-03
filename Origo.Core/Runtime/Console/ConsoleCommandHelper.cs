@@ -49,13 +49,55 @@ internal static class ConsoleCommandHelper
             entity.SetData(key, raw);
     }
 
-    public static void SetDataPreservingExistingType(ISndEntity entity, string key, string raw)
+    public static bool TrySetDataPreservingExistingType(
+        ISndEntity entity, string key, string raw, out string? errorMessage)
     {
         var (existing, existingObj) = entity.TryGetData<object>(key);
         if (existing && existingObj != null)
-            SetByExistingType(entity, key, raw, existingObj.GetType());
-        else
-            SetDataWithTypeInference(entity, key, raw);
+        {
+            var targetType = existingObj.GetType();
+            if (TrySetByExistingType(entity, key, raw, targetType))
+            {
+                errorMessage = null;
+                return true;
+            }
+
+            errorMessage = $"Cannot parse '{raw}' as {targetType.Name} for key '{key}'.";
+            return false;
+        }
+
+        SetDataWithTypeInference(entity, key, raw);
+        errorMessage = null;
+        return true;
+    }
+
+    private static bool TrySetByExistingType(ISndEntity entity, string key, string raw, Type targetType)
+    {
+        if (targetType == typeof(int) && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
+        {
+            entity.SetData(key, iv);
+            return true;
+        }
+
+        if (targetType == typeof(float) && float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var fv))
+        {
+            entity.SetData(key, fv);
+            return true;
+        }
+
+        if (targetType == typeof(bool) && bool.TryParse(raw, out var bv))
+        {
+            entity.SetData(key, bv);
+            return true;
+        }
+
+        if (targetType == typeof(string))
+        {
+            entity.SetData(key, raw);
+            return true;
+        }
+
+        return false;
     }
 
     public static void SetBlackboardWithTypeInference(IBlackboard bb, string key, string raw)
@@ -68,17 +110,5 @@ internal static class ConsoleCommandHelper
             bb.SetValue(key, bv);
         else
             bb.SetValue(key, raw);
-    }
-
-    private static void SetByExistingType(ISndEntity entity, string key, string raw, Type targetType)
-    {
-        if (targetType == typeof(int) && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
-            entity.SetData(key, iv);
-        else if (targetType == typeof(float) && float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var fv))
-            entity.SetData(key, fv);
-        else if (targetType == typeof(bool) && bool.TryParse(raw, out var bv))
-            entity.SetData(key, bv);
-        else if (targetType == typeof(string))
-            entity.SetData(key, raw);
     }
 }

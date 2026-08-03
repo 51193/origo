@@ -1,9 +1,12 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Runtime.Console;
 using Origo.TestSupport;
@@ -220,5 +223,71 @@ public class ConsoleBridgeServerErrorPathTests
             ConsoleBridgeTestInfrastructure.CommandTimeoutMs));
 
         server.Dispose();
+    }
+
+    // ── Accept-loop fault observability (regression: faults used to be swallowed) ──
+
+    [Fact]
+    public void Dispose_FaultedAcceptTask_LogsErrorInsteadOfSwallowing()
+    {
+        var logger = new TestLogger();
+        var server = new ConsoleBridgeServer(new ConsoleInputBuffer(), new ConsoleOutputChannel(), logger: logger);
+
+        var acceptTaskField = typeof(ConsoleBridgeServer)
+            .GetField("_acceptTask", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        acceptTaskField.SetValue(server, Task.FromException(new SocketException(1234)));
+
+        server.Dispose();
+
+        Assert.Contains(logger.Errors, e => e.Contains("Accept loop faulted"));
+    }
+
+    [Fact]
+    public void Dispose_AcceptTaskStillRunning_LogsTimeoutWarning()
+    {
+        var logger = new TestLogger();
+        var server = new ConsoleBridgeServer(new ConsoleInputBuffer(), new ConsoleOutputChannel(), logger: logger);
+
+        var acceptTaskField = typeof(ConsoleBridgeServer)
+            .GetField("_acceptTask", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        acceptTaskField.SetValue(server,
+            Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        server.Dispose();
+        sw.Stop();
+
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(6), "Dispose should not wait for the full accept-task lifetime.");
+        Assert.Contains(logger.Warnings, e => e.Contains("Accept loop did not stop within the join timeout"));
+    }
+
+    [Fact]
+    public void Start_AfterDispose_ThrowsObjectDisposed()
+    {
+        var server = new ConsoleBridgeServer(new ConsoleInputBuffer(), new ConsoleOutputChannel());
+        server.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => server.Start());
+    }
+
+    [Fact]
+    public async Task AcceptLoop_NonCancellationListenerError_LogsErrorAndStops()
+    {
+        var logger = new TestLogger();
+        var server = new ConsoleBridgeServer(new ConsoleInputBuffer(), new ConsoleOutputChannel(), logger: logger);
+        server.Start();
+
+        // Stop the listener out from under the accept loop: the pending
+        // AcceptTcpClientAsync fails with a non-cancellation socket error.
+        var listenerField = typeof(ConsoleBridgeServer)
+            .GetField("_listener", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        ((TcpListener)listenerField.GetValue(server)!).Stop();
+
+        Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+            () => logger.Errors.Any(e => e.Contains("Accept loop stopped")),
+            ConsoleBridgeTestInfrastructure.CommandTimeoutMs));
+
+        server.Dispose();
+        Assert.DoesNotContain(logger.Errors, e => e.Contains("Accept loop faulted"));
     }
 }
