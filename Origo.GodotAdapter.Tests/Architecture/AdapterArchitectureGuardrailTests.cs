@@ -75,7 +75,9 @@ public class AdapterArchitectureGuardrailTests
         var runtime = CreateSimpleOrigoRuntime();
         var fs = new MemoryFileSystem();
 
-        fs.WriteAllText("entry.json", "[]", true);
+        fs.WriteAllText("entry.json",
+            "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }", true);
+        fs.WriteAllText("res://levels/main_menu.json", "[]", true);
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);

@@ -168,7 +168,9 @@ internal sealed class GameplaySimulationBuilder
     {
         var logger = new TestLogger();
         var fileSystem = new TestMemoryFileSystem();
-        fileSystem.SeedFile(_entryConfigPath, "[]");
+        fileSystem.SeedFile(_entryConfigPath,
+            "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fileSystem.SeedFile("res://levels/main_menu.json", "[]");
 
         var consoleInput = new ConsoleInputBuffer();
         var consoleOutput = new ConsoleOutputChannel();

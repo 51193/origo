@@ -145,7 +145,8 @@ internal static class TestFactory
         IDataSourceIoGateway? dataSourceIo = null)
     {
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var io = dataSourceIo ?? CreateIoGateway(fs);
         var metaAccess = CreateFileMetaAccess(fs);
         var pathResolver = CreatePathResolver(fs);

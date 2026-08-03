@@ -285,8 +285,10 @@ public sealed class SndContext : ISndContext
 
     /// <summary>
     ///     Execute the main-menu entry workflow: load the entry config JSON
-    ///     and auto-initialize entities into a fresh foreground session
-    ///     at the main menu level.
+    ///     (levels structure: <c>{ "levels": { "&lt;id&gt;": { "snd_scene":
+    ///     "..." } }, "main_menu_level": "&lt;id&gt;" }</c>), resolve the
+    ///     main-menu level's snd_scene file, and auto-initialize entities
+    ///     from it into a fresh foreground session at the main menu level.
     /// </summary>
     internal void ExecuteLoadMainMenuEntrySaveNow()
     {
@@ -298,13 +300,49 @@ public sealed class SndContext : ISndContext
             SetProgressRun(progressRun);
             progressRun.LoadAndMountForeground(SndDefaults.MainMenuLevelId);
 
+            var sndScenePath = ResolveMainMenuSndScenePath();
             OrigoAutoInitializer.LoadAndSpawnFromFile(
-                EntryConfigPath,
+                sndScenePath,
                 Runtime.SndWorld,
                 progressRun.SessionManager.ForegroundSession!,
                 DataSourceIo,
                 Runtime.Logger);
         });
+    }
+
+    /// <summary>
+    ///     Resolves the main-menu level's snd_scene file path from the
+    ///     entry config. The config must use the levels structure; a bare
+    ///     entity array is rejected with a clear error.
+    /// </summary>
+    private string ResolveMainMenuSndScenePath()
+    {
+        using var entry = DataSourceIo.ReadTree(EntryConfigPath);
+        if (entry.Kind != DataSourceNodeKind.Map)
+            throw new InvalidOperationException(
+                $"Entry config '{EntryConfigPath}' must be a levels map " +
+                $"({{ \"levels\": {{ \"<id>\": {{ \"snd_scene\": \"...\" }} }}, \"main_menu_level\": \"<id>\" }}), " +
+                $"but found {entry.Kind}.");
+
+        if (!entry.ContainsKey("main_menu_level"))
+            throw new InvalidOperationException(
+                $"Entry config '{EntryConfigPath}' is missing the 'main_menu_level' key.");
+
+        var mainMenuLevel = entry["main_menu_level"].AsString();
+        if (string.IsNullOrWhiteSpace(mainMenuLevel))
+            throw new InvalidOperationException(
+                $"Entry config '{EntryConfigPath}' has an empty 'main_menu_level'.");
+
+        if (!entry.ContainsKey("levels") || !entry["levels"].ContainsKey(mainMenuLevel))
+            throw new InvalidOperationException(
+                $"Entry config '{EntryConfigPath}' does not define level '{mainMenuLevel}' under 'levels'.");
+
+        var sndScenePath = entry["levels"][mainMenuLevel]["snd_scene"].AsString();
+        if (string.IsNullOrWhiteSpace(sndScenePath))
+            throw new InvalidOperationException(
+                $"Entry config '{EntryConfigPath}' level '{mainMenuLevel}' has an empty 'snd_scene' path.");
+
+        return sndScenePath;
     }
 
     private ProgressRun CreateProgressRun(string saveId)
