@@ -161,7 +161,10 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 
     private void Wire(ISndEntity entity, bool initialize)
     {
-        Unwire(entity);
+        if (_wiredCallbacks.TryGetValue(entity, out _))
+            throw new InvalidOperationException(
+                $"A PlanExecutionStrategyBase-derived strategy is already wired to entity '{entity.Name}'. " +
+                "An entity can be driven by at most one plan strategy; remove the existing plan strategy first.");
 
         var raw = (ISndEntityRawSubscription)entity;
 
@@ -273,8 +276,16 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
         OnStepStarted(entity, stepType);
 
         var strategyIndex = StepToActionIndex(stepType);
-        if (!string.IsNullOrEmpty(strategyIndex))
-            entity.AddStrategy(strategyIndex);
+        if (string.IsNullOrEmpty(strategyIndex))
+            return;
+
+        // Idempotent mount: the action strategy may already be mounted on the
+        // entity (e.g. it is listed in the entity's LifecycleIndices). Reuse it
+        // instead of failing with a duplicate-mount exception.
+        if (entity is SndEntity sndEntity && sndEntity.HasStrategyMounted(strategyIndex))
+            return;
+
+        entity.AddStrategy(strategyIndex);
     }
 
     private void RemoveCurrentAction(ISndEntity entity)

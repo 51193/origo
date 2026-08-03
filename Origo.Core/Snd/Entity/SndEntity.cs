@@ -171,6 +171,8 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     internal void Process(double delta) => _strategyManager.Process(this, delta, _context);
 
+    internal bool HasStrategyMounted(string index) => _strategyManager.HasMounted(index);
+
     void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
         Func<ISndEntity, TypedData, TypedData, bool>? filter) => _dataManager.Subscribe(name, callback, filter);
 
@@ -262,38 +264,6 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
         ((IEntityLifecycle)this).FireAfterLoadHooks();
     }
-
-    /// <summary>
-    ///     Full quit teardown: FireBeforeQuit → observer unbind →
-    ///     release strategies → teardown nodes/data.
-    /// </summary>
-    internal void QuitSingle()
-    {
-        ((IEntityLifecycle)this).FireBeforeQuitHooks();
-        TeardownObserverBindingsForDeath();
-        ReleaseAndTeardown();
-        _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity quit."));
-    }
-
-    /// <summary>
-    ///     Full death teardown: FireBeforeDead → observer unbind →
-    ///     release strategies → teardown nodes/data.
-    /// </summary>
-    internal void DeadSingle()
-    {
-        ((IEntityLifecycle)this).FireBeforeDeadHooks();
-        TeardownObserverBindingsForDeath();
-        ReleaseAndTeardown();
-        _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder().AddContext("entityName", Name).Build("Entity dead."));
-    }
-
-    private void ReleaseAndTeardown()
-    {
-        ((IEntityLifecycle)this).ReleaseStrategiesOnly();
-        ((IEntityLifecycle)this).TeardownOnly();
-    }
-
-    private void TeardownObserverBindingsForDeath() => _observerTopology.TeardownAllBindingsFor((ISndEntity)this);
 
     /// <summary>Fire BeforeSave hooks, then build metadata snapshot.</summary>
     internal SndMetaData SaveSingle()

@@ -99,6 +99,27 @@ public class JsonAndMappingsTests
     }
 
     [Fact]
+    public void SndWorld_ResolveTemplate_MutationDoesNotPolluteTemplateCache()
+    {
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("maps/templates.map", "hero_template: templates/hero.json");
+        fs.SeedFile("templates/hero.json",
+            """{"name":"TemplateHero","node":{"pairs":{"root":"hero"}}}""");
+
+        var world = TestFactory.CreateSndWorld(fileSystem: fs);
+        world.LoadTemplates("maps/templates.map", new TestLogger());
+
+        var first = world.ResolveTemplate("hero_template");
+        Assert.Equal("TemplateHero", first.Name);
+        first.Name = "Mutated";
+        first.DataMetaData = null;
+
+        var second = world.ResolveTemplate("hero_template");
+        Assert.Equal("TemplateHero", second.Name);
+        Assert.NotNull(second.DataMetaData);
+    }
+
+    [Fact]
     public void SndMappings_ResolveMetaListFromJsonArray_SupportsTemplateAndInlineMix()
     {
         var fs = new TestMemoryFileSystem();

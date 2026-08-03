@@ -92,8 +92,7 @@ internal sealed class LevelBuilder
         if (string.IsNullOrWhiteSpace(templateKey))
             throw new ArgumentException("Template key cannot be null or whitespace.", nameof(templateKey));
 
-        var template = _sndWorld.ResolveTemplate(templateKey);
-        var cloned = SndWorld.CloneMetaData(template);
+        var cloned = _sndWorld.ResolveTemplate(templateKey);
         if (!string.IsNullOrWhiteSpace(overrideName))
             cloned.Name = overrideName;
 

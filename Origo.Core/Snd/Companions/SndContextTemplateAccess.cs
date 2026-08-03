@@ -8,8 +8,7 @@ internal sealed class SndContextTemplateAccess(SndContext owner) : ISndTemplateA
 {
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
     {
-        var template = owner.Runtime.SndWorld.ResolveTemplate(templateKey);
-        var cloned = SndWorld.CloneMetaData(template);
+        var cloned = owner.Runtime.SndWorld.ResolveTemplate(templateKey);
         if (!string.IsNullOrWhiteSpace(overrideName))
             cloned.Name = overrideName;
         return cloned;

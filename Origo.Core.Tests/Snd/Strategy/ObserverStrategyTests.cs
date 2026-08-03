@@ -281,12 +281,12 @@ public class ObserverStrategyTests : IDisposable
     [Fact]
     public void Dead_ReleasesObserverStrategies()
     {
-        var (entity, _) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
         SelfWatchObserver.DataChangedCalls.Clear();
 
-        entity.DeadSingle();
+        DestroySingleEntity(entity, topology, quit: false);
 
         // After dead, no data change notifications should fire
         // (entity is dead, no observer callbacks)
@@ -296,13 +296,13 @@ public class ObserverStrategyTests : IDisposable
     [Fact]
     public void Dead_TriggersOnUnmounted()
     {
-        var (entity, _) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
-        entity.DeadSingle();
+        DestroySingleEntity(entity, topology, quit: false);
 
         Assert.Single(MemoryObserver.UnmountedCalls);
     }
@@ -366,13 +366,13 @@ public class ObserverStrategyTests : IDisposable
     [Fact]
     public void Quit_TriggersOnUnmounted()
     {
-        var (entity, _) = Setup();
+        var (entity, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMeta());
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
-        entity.QuitSingle();
+        DestroySingleEntity(entity, topology, quit: true);
 
         Assert.Single(MemoryObserver.UnmountedCalls);
     }
@@ -682,6 +682,22 @@ public class ObserverStrategyTests : IDisposable
         topology.BindContext(ctx);
         var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, topology);
         return (entity, ctx, topology);
+    }
+
+    /// <summary>
+    ///     Test-side single-entity teardown matching the production
+    ///     <c>SessionRun.KillPending</c> sequence for a session-less entity:
+    ///     quit/dead hooks → observer unbind → release strategies → teardown.
+    /// </summary>
+    private static void DestroySingleEntity(SndEntity entity, ObserverTopology topology, bool quit)
+    {
+        if (quit)
+            ((IEntityLifecycle)entity).FireBeforeQuitHooks();
+        else
+            ((IEntityLifecycle)entity).FireBeforeDeadHooks();
+        topology.TeardownAllBindingsFor(entity);
+        ((IEntityLifecycle)entity).ReleaseStrategiesOnly();
+        ((IEntityLifecycle)entity).TeardownOnly();
     }
 
     private static SndMetaData CreateMeta(string name = "E")

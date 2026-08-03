@@ -102,9 +102,9 @@ public class ActiveStrategyTests
     [Fact]
     public void Quit_ReleasesAllActiveStrategies()
     {
-        var (entity, _, _) = Setup();
+        var (entity, _, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
-        entity.QuitSingle();
+        DestroySingleEntity(entity, topology, quit: true);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.InvokeStrategy(_queryHpIndex));
@@ -114,9 +114,9 @@ public class ActiveStrategyTests
     [Fact]
     public void Dead_ReleasesAllActiveStrategies()
     {
-        var (entity, _, _) = Setup();
+        var (entity, _, _, topology) = SetupWithTopology();
         entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
-        entity.DeadSingle();
+        DestroySingleEntity(entity, topology, quit: false);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.InvokeStrategy(_queryHpIndex));
@@ -360,6 +360,42 @@ public class ActiveStrategyTests
         observerTopology.BindContext(ctx);
         var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, observerTopology);
         return (entity, ctx, logger);
+    }
+
+    private static (SndEntity entity, ISndContext ctx, TestLogger logger, ObserverTopology topology)
+        SetupWithTopology()
+    {
+        var logger = new TestLogger();
+        var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
+        runtime.SndWorld.RegisterStrategy(() => new QueryHpStrategy());
+        runtime.SndWorld.RegisterStrategy(() => new CmdDamageStrategy());
+        runtime.SndWorld.RegisterStrategy(() => new EntityOnlyStrategy());
+        var fs = new TestMemoryFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var nodeFactory = new TestNodeFactory();
+        var observerTopology = new ObserverTopology(runtime.SndWorld.StrategyPool, logger);
+        observerTopology.BindContext(ctx);
+        var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, observerTopology);
+        return (entity, ctx, logger, observerTopology);
+    }
+
+    /// <summary>
+    ///     Test-side single-entity teardown matching the production
+    ///     <c>SessionRun.KillPending</c> sequence for a session-less entity:
+    ///     quit/dead hooks → observer unbind → release strategies → teardown.
+    /// </summary>
+    private static void DestroySingleEntity(SndEntity entity, ObserverTopology topology, bool quit)
+    {
+        if (quit)
+            ((IEntityLifecycle)entity).FireBeforeQuitHooks();
+        else
+            ((IEntityLifecycle)entity).FireBeforeDeadHooks();
+        topology.TeardownAllBindingsFor(entity);
+        ((IEntityLifecycle)entity).ReleaseStrategiesOnly();
+        ((IEntityLifecycle)entity).TeardownOnly();
     }
 
     private static SndMetaData CreateMeta(string[] lifecycleIndices,

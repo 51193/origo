@@ -358,8 +358,6 @@ public class CoreArchitectureGuardrailTests
             nameof(SndEntity.Process),
             nameof(SndEntity.SpawnSingle),
             nameof(SndEntity.LoadSingle),
-            nameof(SndEntity.QuitSingle),
-            nameof(SndEntity.DeadSingle),
             nameof(SndEntity.SaveSingle)
         };
 

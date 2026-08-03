@@ -86,18 +86,28 @@ public class PlanExecutionStrategyBaseTests
     public void DefaultHooks_DoNotMutateEntityData()
     {
         var strategy = new SimplePlanStrategy();
-        var entity = new StubSndEntity("e");
-        entity.SetData("score", 42);
         ISndContext ctx = NullSndContext.Instance;
 
-        strategy.AfterSpawn(entity, ctx);
-        strategy.AfterLoad(entity, ctx);
-        strategy.AfterAdd(entity, ctx);
-        strategy.BeforeRemove(entity, ctx);
-        strategy.BeforeQuit(entity, ctx);
-        strategy.BeforeDead(entity, ctx);
+        var spawnEntity = new StubSndEntity("spawn_entity");
+        spawnEntity.SetData("score", 42);
+        var loadEntity = new StubSndEntity("load_entity");
+        loadEntity.SetData("score", 42);
+        var addEntity = new StubSndEntity("add_entity");
+        addEntity.SetData("score", 42);
 
-        Assert.Equal(42, entity.GetData<int>("score"));
+        strategy.AfterSpawn(spawnEntity, ctx);
+        strategy.AfterLoad(loadEntity, ctx);
+        strategy.AfterAdd(addEntity, ctx);
+
+        strategy.BeforeRemove(spawnEntity, ctx);
+        strategy.BeforeRemove(loadEntity, ctx);
+        strategy.BeforeRemove(addEntity, ctx);
+        strategy.BeforeQuit(spawnEntity, ctx);
+        strategy.BeforeDead(loadEntity, ctx);
+
+        Assert.Equal(42, spawnEntity.GetData<int>("score"));
+        Assert.Equal(42, loadEntity.GetData<int>("score"));
+        Assert.Equal(42, addEntity.GetData<int>("score"));
     }
 
     [Fact]
@@ -260,6 +270,53 @@ public class PlanExecutionStrategyBaseTests
 
         Assert.Single(FakeActionStrategy.BeforeRemoveCalls!);
         Assert.Single(FakeAction2Strategy.AfterAddCalls!);
+    }
+
+    [Fact]
+    public void PushAction_ActionAlreadyMountedInLifecycleIndices_ReusesItInsteadOfThrowing()
+    {
+        FakeActionStrategy.AfterAddCalls = [];
+
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        world.StrategyPool.Register(() => new SimplePlanStrategy());
+        world.StrategyPool.Register(() => new FakeActionStrategy());
+        world.StrategyPool.Register(() => new FakeAction2Strategy());
+        host.BindWorld(world);
+
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]");
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
+        host.BindContext(ctx);
+
+        // step_a's action strategy is statically mounted through LifecycleIndices.
+        var meta = new SndMetaData
+        {
+            Name = "test_entity",
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["test.action.fake"] },
+            DataMetaData = new DataMetaData(),
+            NodeMetaData = new NodeMetaData()
+        };
+
+        var entity = host.CreateEntity(meta);
+        entity.SetData(_intentKey, "test");
+
+        // Mounting the plan strategy must not throw despite the duplicate action index.
+        var ex = Record.Exception(() => entity.AddStrategy("test.plan_strategy"));
+        Assert.Null(ex);
+
+        var (foundStep, step) = entity.TryGetData<string>(_planStepKey);
+        Assert.True(foundStep);
+        Assert.Equal("step_a", step);
+
+        // The statically mounted action is reused, not mounted a second time.
+        Assert.Empty(FakeActionStrategy.AfterAddCalls!);
     }
 
     [Fact]
@@ -475,6 +532,10 @@ public class PlanExecutionStrategyBaseTests
         Assert.Equal(1, tracking.GetSubCount(_intentKey));
         Assert.Equal(1, tracking.GetSubCount(_actionStatusKey));
 
+        strategy.BeforeRemove(tracking, ctx);
+        Assert.Equal(0, tracking.GetSubCount(_intentKey));
+        Assert.Equal(0, tracking.GetSubCount(_actionStatusKey));
+
         strategy.AfterAdd(tracking, ctx);
         Assert.Equal(1, tracking.GetSubCount(_intentKey));
         Assert.Equal(1, tracking.GetSubCount(_actionStatusKey));
@@ -482,6 +543,20 @@ public class PlanExecutionStrategyBaseTests
         strategy.BeforeRemove(tracking, ctx);
         Assert.Equal(0, tracking.GetSubCount(_intentKey));
         Assert.Equal(0, tracking.GetSubCount(_actionStatusKey));
+    }
+
+    [Fact]
+    public void Wire_SecondPlanStrategyOnSameEntity_Throws()
+    {
+        var strategy = new SimplePlanStrategy();
+        var other = new FailingPlanStrategy();
+        var entity = new StubSndEntity("e");
+        ISndContext ctx = NullSndContext.Instance;
+
+        strategy.AfterSpawn(entity, ctx);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => other.AfterAdd(entity, ctx));
+        Assert.Contains("plan strategy", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     // ── Tests: OnPlanCompleted standalone ───────────────────────────

@@ -33,8 +33,7 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
         }
 
         var template = _runtime.SndWorld.ResolveTemplate(templateKey);
-        var cloned = SndWorld.CloneMetaData(template);
-        cloned.Name = entityName;
+        template.Name = entityName;
 
         var session = _runtime.SessionManager.ForegroundSession;
         if (session is null)
@@ -43,7 +42,7 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
             return false;
         }
 
-        session.Spawn(cloned);
+        session.Spawn(template);
 
         var msg = $"Spawned '{entityName}' from template '{templateKey}'.";
         outputChannel.Publish(msg);

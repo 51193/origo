@@ -88,11 +88,16 @@ public sealed class SndWorld
         registerMappings(TypeMapping);
     }
 
-    public SndMetaData ResolveTemplate(string alias) => Mappings.ResolveTemplate(alias);
+    /// <summary>
+    ///     Resolves and loads an SndMetaData template by alias. Returns a
+    ///     deep clone so callers may freely mutate the returned metadata
+    ///     without polluting the template cache.
+    /// </summary>
+    public SndMetaData ResolveTemplate(string alias) => CloneMetaData(Mappings.ResolveTemplate(alias));
 
     /// <summary>
-    ///     Clones SND metadata (consistent with the template resolution path,
-    ///     facilitating future unified implementation replacement).
+    ///     Creates a deep copy of SND metadata. Used by template resolution
+    ///     so callers can mutate the returned metadata freely.
     /// </summary>
     public static SndMetaData CloneMetaData(SndMetaData meta)
     {
