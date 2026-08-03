@@ -17,6 +17,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name.
 - **`SndContextParameters.InitialLevelId`** — configurable initial save level ID (defaults to `"default"`).
 
+- **`ActiveStrategyJsonBase<TInput>`** — active strategy base class that owns the JSON
+  serialization contract: input strings are deserialized to `TInput` and `Execute` results
+  are serialized back, so subclasses implement strongly-typed logic with plain object
+  returns. Use `ActiveStrategyResults.Ok()` / `Err(message)` for the conventional
+  success/error markers.
+- **`ISndDataAccess.TryGetData<T>(string, out T?)`** — out-parameter variant of the
+  tuple-returning `TryGetData`, enabling the idiomatic `if (TryGetData("hp", out var hp))`
+  pattern without nullable propagation traps.
+- **`EntityExtensions.IsSameEntityAs`** — reliable entity identity comparison across
+  inner/wrapper references (name + owning session), where `ReferenceEquals` is unreliable.
+- **Levels-based entry config** — `RequestLoadMainMenuEntrySave` now resolves the main-menu
+  level's `snd_scene` from a levels-structured `entry.json`
+  (`{ "levels": { "<id>": { "snd_scene": "..." } }, "main_menu_level": "<id>" }`).
+- **`InvokeStrategy<TInput, TOutput>` bare-string tolerance** — string results that are
+  not valid JSON are returned as-is when the expected output type is `string`, instead of
+  throwing opaque `JsonException`s at the call site.
+
 ### Changed
 
 - **BREAKING:** `SndContext` and `ISndContext` refactored to companion-object pattern. All role interfaces (`ISndSaveOperations`, `ISndBlackboardAccess`, `ISndDeferredActions`, etc.) are now exposed through typed companion properties (`ctx.Save`, `ctx.Blackboard`, `ctx.Deferred`, etc.) instead of direct interface inheritance. `ISndEntityRawSubscription` made `internal`.
@@ -35,6 +52,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **ConsoleBridgeServer** uses `async`/`await` for the accept/read loop, eliminating the 100ms polling loop. Connection handling is race-free and survives hard client disconnects and handler exceptions.
 - **Save idempotency now includes `extra/` files in hash computation**, preventing silent skip of changed side-channel files.
 - Source generator diagnostic messages carry source locations from `SndInlineTypesAttribute` syntax, so build errors point to the exact attribute location.
+- **BREAKING:** `RequestLoadMainMenuEntrySave` requires the levels-based entry config
+  structure; a bare entity array in `entry.json` is rejected with an explicit error.
+  `OrigoAutoInitializer.LoadAndSpawnFromFile` keeps its array semantics for direct use.
+- **BREAKING:** `ISndDataAccess` gained the `TryGetData<T>(string, out T?)` member;
+  all implementers (including test doubles) were updated.
 
 ### Removed
 
@@ -47,6 +69,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`GodotFileOperations.Delete`** — error code from `DirAccess.RemoveAbsolute` is checked instead of discarded.
 - **`PersistentBlackboard` atomic write** — uses temp-file + rename to prevent `system.json` corruption on crash. Stale temp files from interrupted writes are cleaned up automatically.
 - **`ConsoleBridgeServer` connection robustness** — no longer intermittently resets an in-flight read via concurrent stream disposal on `Dispose()`. Output buffer overflow now emits a warning instead of dropping lines silently.
+
+- **Documentation examples now match the real API** — `ctx.RequestSaveGame`,
+  `ctx.RequestKillEntity`, and `ctx.CloneTemplate` usages in docs were corrected to
+  `ctx.Save.RequestSaveGame`, `entity.OwningSession.RequestKillEntity`, and
+  `ctx.Template.CloneTemplate`.
 
 ## [0.0.8] - 2026-06-30
 
