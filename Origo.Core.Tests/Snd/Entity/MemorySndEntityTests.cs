@@ -69,6 +69,32 @@ public class StubSndEntityTests
     }
 
     [Fact]
+    public void TryGetDataOut_ReturnsTrueAndValueWhenFound()
+    {
+        var entity = new StubSndEntity("e");
+        entity.SetData("score", 42);
+        Assert.True(entity.TryGetData<int>("score", out var value));
+        Assert.Equal(42, value);
+    }
+
+    [Fact]
+    public void TryGetDataOut_ReturnsFalseAndDefaultWhenMissing()
+    {
+        var entity = new StubSndEntity("e");
+        Assert.False(entity.TryGetData<int>("nope", out var value));
+        Assert.Equal(0, value);
+    }
+
+    [Fact]
+    public void TryGetDataOut_ReturnsFalseForTypeMismatch()
+    {
+        var entity = new StubSndEntity("e");
+        entity.SetData("val", "string_value");
+        Assert.False(entity.TryGetData<int>("val", out var value));
+        Assert.Equal(0, value);
+    }
+
+    [Fact]
     public void GetNode_ThrowsInvalidOperation()
     {
         var entity = new StubSndEntity("e");

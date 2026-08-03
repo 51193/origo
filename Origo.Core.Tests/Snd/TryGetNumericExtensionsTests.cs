@@ -105,5 +105,12 @@ public class TryGetNumericExtensionsTests
             return (false, default);
         }
 
+        public bool TryGetData<T>(string name, out T? value)
+        {
+            var (found, stored) = TryGetData<T>(name);
+            value = stored;
+            return found;
+        }
+
     }
 }

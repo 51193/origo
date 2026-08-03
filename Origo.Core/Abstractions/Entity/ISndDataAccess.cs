@@ -16,6 +16,12 @@ public interface ISndDataAccess
     (bool found, T? value) TryGetData<T>(string name);
 
     /// <summary>
+    ///     Try to get a typed data value by key into <paramref name="value" />.
+    ///     Returns false (with default) if not found or the type mismatches.
+    /// </summary>
+    bool TryGetData<T>(string name, out T? value);
+
+    /// <summary>
     /// Gets a strongly-typed data value by key.
     /// Throws <see cref="InvalidOperationException"/> if the key is not found
     /// or the value is not of type <typeparamref name="T"/>.

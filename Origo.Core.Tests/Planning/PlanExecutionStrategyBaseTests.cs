@@ -222,7 +222,8 @@ public class PlanExecutionStrategyBaseTests
         host.BindWorld(world);
 
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -277,7 +278,8 @@ public class PlanExecutionStrategyBaseTests
         host.BindWorld(world);
 
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -334,7 +336,8 @@ public class PlanExecutionStrategyBaseTests
         host.BindWorld(world);
 
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -421,7 +424,8 @@ public class PlanExecutionStrategyBaseTests
         host.BindWorld(world);
 
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -537,7 +541,8 @@ public class PlanExecutionStrategyBaseTests
         host.BindWorld(world);
 
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -595,7 +600,8 @@ public class PlanExecutionStrategyBaseTests
         host.BindWorld(world);
 
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -677,6 +683,8 @@ public class PlanExecutionStrategyBaseTests
         public void SetData<T>(string name, T value) => inner.SetData(name, value);
         public T GetData<T>(string name) where T : notnull => inner.GetData<T>(name);
         public (bool found, T? value) TryGetData<T>(string name) => inner.TryGetData<T>(name);
+
+        public bool TryGetData<T>(string name, out T? value) => inner.TryGetData<T>(name, out value);
         public INodeHandle GetNode(string name) => inner.GetNode(name);
         public IReadOnlyCollection<string> GetNodeNames() => inner.GetNodeNames();
         public void AddStrategy(string index) => inner.AddStrategy(index);

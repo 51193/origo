@@ -97,6 +97,18 @@ public sealed class DummySndEntity : ISndEntity
         return (false, default);
     }
 
+    public bool TryGetData<T>(string name, out T? value)
+    {
+        if (_data.TryGetValue(name, out var stored) && stored is T cast)
+        {
+            value = cast;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
     public void MountObserverStrategy(string targetName, string observerIndex) { }
 
     public void UnmountObserverStrategy(string targetName, string observerIndex) { }

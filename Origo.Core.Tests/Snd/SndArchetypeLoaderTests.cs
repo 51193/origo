@@ -200,6 +200,13 @@ public class SndArchetypeLoaderTests
             return (false, default);
         }
 
+        public bool TryGetData<T>(string name, out T? value)
+        {
+            var (found, stored) = TryGetData<T>(name);
+            value = stored;
+            return found;
+        }
+
         public void MountObserverStrategy(string targetName, string observerIndex) { }
 
         public void UnmountObserverStrategy(string targetName, string observerIndex) { }

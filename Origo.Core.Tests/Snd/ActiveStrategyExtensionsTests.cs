@@ -63,6 +63,13 @@ public class ActiveStrategyExtensionsTests
         public (bool found, T? value) TryGetData<T>(string name) => throw new System.NotImplementedException();
         public void MountObserverStrategy(string targetName, string observerIndex) { }
 
+        public bool TryGetData<T>(string name, out T? value)
+        {
+            var (found, stored) = TryGetData<T>(name);
+            value = stored;
+            return found;
+        }
+
         public void UnmountObserverStrategy(string targetName, string observerIndex) { }
         public void MountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }
         public void UnmountObserverStrategy(Origo.Core.Abstractions.Entity.ISndEntity target, string observerIndex) { }

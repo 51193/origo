@@ -101,6 +101,18 @@ internal sealed class SndDataManager
         return (false, default);
     }
 
+    public bool TryGetData<T>(string name, out T? value)
+    {
+        if (_data.TryGetValue(name, out var td) && TypedDataFactory<T>.TryExtract(td, out var extracted))
+        {
+            value = extracted;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
     public T GetData<T>(string name) where T : notnull => GetRequiredData<T>(name);
 
     public T GetRequiredData<T>(string name) where T : notnull

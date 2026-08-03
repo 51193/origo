@@ -278,6 +278,13 @@ internal sealed class MinimalTestEntity : ISndEntity
         return (false, default);
     }
 
+    public bool TryGetData<T>(string name, out T? value)
+    {
+        var (found, stored) = TryGetData<T>(name);
+        value = stored;
+        return found;
+    }
+
     public bool IsPendingKill { get; set; }
 
     public void MountObserverStrategy(string targetName, string observerIndex) { }

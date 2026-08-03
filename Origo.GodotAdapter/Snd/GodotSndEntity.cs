@@ -79,6 +79,8 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     public (bool found, T? value) TryGetData<T>(string name) => Entity.TryGetData<T>(name);
 
+    public bool TryGetData<T>(string name, out T? value) => Entity.TryGetData<T>(name, out value);
+
     public void MountObserverStrategy(string targetName, string observerIndex) => Entity.MountObserverStrategy(targetName, observerIndex);
 
     public void UnmountObserverStrategy(string targetName, string observerIndex) => Entity.UnmountObserverStrategy(targetName, observerIndex);
