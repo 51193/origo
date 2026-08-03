@@ -267,12 +267,16 @@ public sealed class DataSourceNode : IDisposable
 
     // ── Factory methods ──
 
+    /// <summary>Creates an empty map (object) node.</summary>
     public static DataSourceNode CreateObject() => new(DataSourceNodeKind.Map);
 
+    /// <summary>Creates an empty array node.</summary>
     public static DataSourceNode CreateArray() => new(DataSourceNodeKind.Array);
 
+    /// <summary>Creates a text node carrying the given string value.</summary>
     public static DataSourceNode CreateString(string value) => new(DataSourceNodeKind.Text, value);
 
+    /// <summary>Creates a number node from its invariant-culture string representation.</summary>
     public static DataSourceNode CreateNumber(string value) => new(DataSourceNodeKind.Number, value);
 
     public static DataSourceNode CreateNumber(int value) =>
@@ -287,8 +291,10 @@ public sealed class DataSourceNode : IDisposable
     public static DataSourceNode CreateNumber(double value) =>
         new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
+    /// <summary>Creates a boolean node.</summary>
     public static DataSourceNode CreateBoolean(bool value) => new(DataSourceNodeKind.Bool, value ? "true" : "false");
 
+    /// <summary>Creates a null node.</summary>
     public static DataSourceNode CreateNull() => new(DataSourceNodeKind.Null);
 
     /// <summary>
@@ -311,6 +317,7 @@ public sealed class DataSourceNode : IDisposable
         while (stack.Count > 0)
         {
             var node = stack.Pop();
+            node.EnsureExpanded();
             order.Add(node);
 
             if (node._kind == DataSourceNodeKind.Map)

@@ -209,4 +209,51 @@ public class DataSourceNodeSha256Tests
 
         Assert.Equal(a.ComputeSha256Hash(), b.ComputeSha256Hash());
     }
+
+    // ── Lazy-decoded trees (regression: hash used to ignore nested lazy subtrees) ──
+
+    [Fact]
+    public void DecodedNestedTree_DeepValueChange_ProducesDifferentHash()
+    {
+        using var a = TestFactory.NodeFromJson("""{"root":{"nested":{"b":1}}}""");
+        using var b = TestFactory.NodeFromJson("""{"root":{"nested":{"b":2}}}""");
+
+        Assert.NotEqual(a.ComputeSha256Hash(), b.ComputeSha256Hash());
+    }
+
+    [Fact]
+    public void DecodedNestedTree_DeepKeyChange_ProducesDifferentHash()
+    {
+        using var a = TestFactory.NodeFromJson("""{"root":{"nested":{"b":1}}}""");
+        using var c = TestFactory.NodeFromJson("""{"root":{"different_key":9}}""");
+
+        Assert.NotEqual(a.ComputeSha256Hash(), c.ComputeSha256Hash());
+    }
+
+    [Fact]
+    public void DecodedNestedTree_SameContent_ProducesSameHash()
+    {
+        using var a = TestFactory.NodeFromJson("""{"root":{"nested":{"b":1},"arr":[1,2,3]}}""");
+        using var b = TestFactory.NodeFromJson("""{"root":{"nested":{"b":1},"arr":[1,2,3]}}""");
+
+        Assert.Equal(a.ComputeSha256Hash(), b.ComputeSha256Hash());
+    }
+
+    [Fact]
+    public void DecodedNestedTree_ArrayDeepChange_ProducesDifferentHash()
+    {
+        using var a = TestFactory.NodeFromJson("""{"root":{"list":[{"x":1},{"x":2}]}}""");
+        using var b = TestFactory.NodeFromJson("""{"root":{"list":[{"x":1},{"x":99}]}}""");
+
+        Assert.NotEqual(a.ComputeSha256Hash(), b.ComputeSha256Hash());
+    }
+
+    [Fact]
+    public void DecodedDeeplyNestedTree_AllLevelsExpanded_DepthThreeHashDiffers()
+    {
+        using var a = TestFactory.NodeFromJson("""{"a":{"b":{"c":{"d":1}}}}""");
+        using var b = TestFactory.NodeFromJson("""{"a":{"b":{"c":{"d":2}}}}""");
+
+        Assert.NotEqual(a.ComputeSha256Hash(), b.ComputeSha256Hash());
+    }
 }
