@@ -87,14 +87,11 @@ public sealed class ConsoleBridgeServer : IDisposable
             }
             catch (AggregateException ex)
             {
+                // Task.Wait only ever throws AggregateException; unexpected
+                // exceptions propagate to the caller (fail-fast).
                 foreach (var inner in ex.InnerExceptions)
                     _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
                         new LogMessageBuilder().Build($"Accept loop faulted: {inner.Message}"));
-            }
-            catch (Exception ex)
-            {
-                _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
-                    new LogMessageBuilder().Build($"Accept loop join failed: {ex.Message}"));
             }
         }
 
@@ -107,20 +104,24 @@ public sealed class ConsoleBridgeServer : IDisposable
         if (Interlocked.CompareExchange(ref _started, 1, 0) != 0)
             return;
 
-        if (_cts.IsCancellationRequested)
+        try
         {
-            _started = 0;
-            throw new ObjectDisposedException(nameof(ConsoleBridgeServer));
+            _listener = new TcpListener(IPAddress.Loopback, _options.Port);
+            _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            _listener.Start();
+            ActualPort = ((IPEndPoint)_listener.LocalEndpoint).Port;
+
+            _outputSubId = _output.Subscribe(OnConsoleOutput);
+
+            _acceptTask = Task.Run(() => AcceptLoopAsync(_cts.Token), _cts.Token);
         }
-
-        _listener = new TcpListener(IPAddress.Loopback, _options.Port);
-        _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        _listener.Start();
-        ActualPort = ((IPEndPoint)_listener.LocalEndpoint).Port;
-
-        _outputSubId = _output.Subscribe(OnConsoleOutput);
-
-        _acceptTask = Task.Run(() => AcceptLoopAsync(_cts.Token), _cts.Token);
+        catch
+        {
+            // Roll the started flag back so a failed Start (e.g. port in use)
+            // can be retried after the cause is resolved.
+            _started = 0;
+            throw;
+        }
     }
 
     private void OnConsoleOutput(string line)
@@ -156,16 +157,12 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 break;
             }
-            catch (SocketException) when (ct.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (ObjectDisposedException) when (ct.IsCancellationRequested)
-            {
-                break;
-            }
             catch (Exception ex)
             {
+                // A cancellation makes AcceptTcpClientAsync throw
+                // OperationCanceledException (handled above); anything else is a
+                // genuine system-level socket error — log it and stop the
+                // listener so the host can restart it.
                 _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
                     new LogMessageBuilder().Build(
                         $"Accept loop stopped after a non-cancellation error: {ex.Message}"));
@@ -219,10 +216,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                 }
                 catch (IOException)
                 {
-                    break;
-                }
-                catch (ObjectDisposedException)
-                {
+                    // Client disconnect or stream reset: end this connection.
                     break;
                 }
 

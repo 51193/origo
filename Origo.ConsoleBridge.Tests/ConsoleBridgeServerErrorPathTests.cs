@@ -271,6 +271,23 @@ public class ConsoleBridgeServerErrorPathTests
     }
 
     [Fact]
+    public void Start_Failure_RollsBackAndAllowsRetry()
+    {
+        // An invalid port fails during listener construction inside Start;
+        // the rolled-back started flag must allow a later Start to succeed.
+        var options = new ConsoleBridgeOptions { Port = -1 };
+        var server = new ConsoleBridgeServer(new ConsoleInputBuffer(), new ConsoleOutputChannel(), options);
+
+        Assert.ThrowsAny<Exception>(() => server.Start());
+
+        options.Port = 0;
+        server.Start();
+        Assert.True(server.ActualPort > 0);
+
+        server.Dispose();
+    }
+
+    [Fact]
     public async Task AcceptLoop_NonCancellationListenerError_LogsErrorAndStops()
     {
         var logger = new TestLogger();

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.ConsoleBridge
 
@@ -65,7 +65,7 @@ Origo 的游戏帧循环是单线程的。多连接意味着多条命令流并�
 
 ### 异常传播策略（fail-fast）
 
-`ConsoleBridgeServer` 不捕获 I/O 异常做静默降级，但区分故障层级：连接级异常（客户端断连、`ReadLineAsync` 的 I/O 错误）被隔离并记录 `Warning` 日志（含完整堆栈）后继续接受新连接；accept 循环遇到非取消的系统级 socket 错误时记录 `Error` 日志并停止监听（由宿主进程重启）；`Dispose` 会检查 accept 任务状态，fault 时记录 `Error` 日志而非吞掉。
+`ConsoleBridgeServer` 不捕获 I/O 异常做静默降级，但区分故障层级：连接级异常（客户端断连、`ReadLineAsync` 的 I/O 错误）被隔离并记录 `Warning` 日志（含完整堆栈）后继续接受新连接；accept 循环遇到非取消的系统级 socket 错误时记录 `Error` 日志并停止监听（由宿主进程重启）；`Dispose` 会检查 accept 任务状态，fault 时记录 `Error` 日志而非吞掉。 `Start` 失败（如端口被占用）会回滚内部状态，可在释放资源后重试同一实例。
 
 ### 输出缓冲区溢出
 
