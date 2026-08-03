@@ -231,6 +231,16 @@ internal static partial class Validator
 
         foreach (var (pairId, files) in pairs)
         {
+            foreach (var file in files)
+            {
+                var derived = DocFile.DerivePairId(file.RelativePath);
+                if (!string.Equals(pairId, derived, StringComparison.Ordinal))
+                    errors.Add(
+                        $"ERROR: pair '{pairId}' — file '{file.RelativePath}' declares a docsync-pair header " +
+                        $"that does not match its path (expected '{derived}'). " +
+                        "Fix the header or move the file so both match.");
+            }
+
             if (files.Count != languages.Count)
             {
                 var presentLangs = files.Select(f => f.Language).OrderBy(l => l).ToList();
