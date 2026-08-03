@@ -56,7 +56,23 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     public void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload, bool overwrite = true)
     {
         var currentRel = _handle.PathPolicy.GetCurrentDirectory();
-        WriteLevelPayloadOnly(currentRel, levelPayload, overwrite);
+        var markerRel = _handle.PathPolicy.GetWriteInProgressMarker(currentRel);
+        var markerAbs = _handle.GetAbsolutePath(markerRel);
+        _handle.MetaAccess.CreateDirectory(_handle.GetAbsolutePath(currentRel));
+        _handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
+
+        try
+        {
+            WriteLevelPayloadOnly(currentRel, levelPayload, overwrite);
+        }
+        catch
+        {
+            // The marker is intentionally left on disk so that readers reject
+            // the partially written level checkpoint.
+            throw;
+        }
+
+        _handle.MetaAccess.Delete(markerAbs);
     }
 
     public void WriteProgressOnlyToCurrent(

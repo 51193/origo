@@ -97,4 +97,43 @@ public class PersistentBlackboardTests
 
         Assert.False(fs.Exists(tmpPath), "Stale temp file should be deleted on load.");
     }
+
+    [Fact]
+    public void PersistentBlackboard_SuccessfulWrite_LeavesNoBackupFile()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, pathResolver, dataSourceIo, registry) = CreateDeps(fs);
+        var path = "user://origo/system.json";
+        var board = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
+
+        board.SetValue("k", 1);
+        board.SetValue("k", 2);
+
+        Assert.False(fs.Exists(path + ".bak.json"), "Backup file should be deleted after a successful write.");
+    }
+
+    [Fact]
+    public void PersistentBlackboard_LoadFromDisk_RecoversPreviousVersionFromBackup()
+    {
+        // Simulates a crash between "rename primary to backup" and
+        // "rename temp to primary": the primary file is missing and the
+        // backup still holds the previous version.
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, pathResolver, dataSourceIo, registry) = CreateDeps(fs);
+        var path = "user://origo/system.json";
+        var board = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
+        board.SetValue("k", 42);
+
+        fs.Rename(path, path + ".bak.json");
+        Assert.False(fs.Exists(path));
+
+        var recovered = new PersistentBlackboard(metaAccess, pathResolver, path, dataSourceIo, registry, new Blackboard.Blackboard());
+        recovered.LoadFromDisk();
+
+        Assert.True(fs.Exists(path), "Primary file should be restored from the backup.");
+        Assert.False(fs.Exists(path + ".bak.json"), "Backup should be consumed by recovery.");
+        var (found, v) = recovered.TryGet<int>("k");
+        Assert.True(found);
+        Assert.Equal(42, v);
+    }
 }

@@ -29,6 +29,29 @@ internal static class SavePayloadWriter
         var currentAbs = handle.GetAbsolutePath(currentRel);
         handle.MetaAccess.CreateDirectory(currentAbs);
 
+        var markerAbs = WriteCheckpointMarker(handle, currentRel);
+        try
+        {
+            WriteProgressFilesToCurrent(handle, progressNode, progressStateMachinesNode, overwrite);
+        }
+        catch
+        {
+            // The marker is intentionally left on disk so that readers reject
+            // the partially written checkpoint.
+            throw;
+        }
+
+        handle.MetaAccess.Delete(markerAbs);
+    }
+
+    private static void WriteProgressFilesToCurrent(
+        SaveFileHandle handle,
+        DataSourceNode progressNode,
+        DataSourceNode progressStateMachinesNode,
+        bool overwrite)
+    {
+        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+
         var progressRel = handle.PathPolicy.GetProgressFile(currentRel);
         var progressAbs = handle.GetAbsolutePath(progressRel);
         handle.EnsureParentDirectory(progressRel);
@@ -38,6 +61,15 @@ internal static class SavePayloadWriter
         var progressSmAbs = handle.GetAbsolutePath(progressSmRel);
         handle.EnsureParentDirectory(progressSmRel);
         handle.IoGateway.WriteTree(progressSmAbs, progressStateMachinesNode, overwrite);
+    }
+
+    private static string WriteCheckpointMarker(SaveFileHandle handle, string currentRel)
+    {
+        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
+        var markerAbs = handle.GetAbsolutePath(markerRel);
+        handle.MetaAccess.CreateDirectory(handle.GetAbsolutePath(currentRel));
+        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
+        return markerAbs;
     }
 
     public static void WriteToCurrent(
@@ -62,10 +94,11 @@ internal static class SavePayloadWriter
         var markerAbs = handle.GetAbsolutePath(markerRel);
         handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
 
-        WriteProgressOnlyToCurrent(
+        WriteProgressFilesToCurrent(
             handle,
             payload.ProgressNode,
-            payload.ProgressStateMachinesNode);
+            payload.ProgressStateMachinesNode,
+            overwrite: true);
 
         WriteCustomMetaToCurrent(handle, currentRel, payload.CustomMeta);
 

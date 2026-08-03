@@ -124,11 +124,13 @@ public sealed class PersistentBlackboard : IBlackboard
     }
 
     private const string _tempSuffix = ".tmp.json";
+    private const string _backupSuffix = ".bak.json";
 
     /// <summary>
     ///     Restores state from disk at startup. If the file does not exist,
     ///     this is a no-op. Stale temporary files from an interrupted atomic
-    ///     write are cleaned up automatically.
+    ///     write are cleaned up automatically, and a previous version left in
+    ///     the backup file is restored when the primary file is missing.
     /// </summary>
     public void LoadFromDisk()
     {
@@ -137,6 +139,10 @@ public sealed class PersistentBlackboard : IBlackboard
             var tempPath = _filePath + _tempSuffix;
             if (_metaAccess.FileExists(tempPath))
                 _metaAccess.Delete(tempPath);
+
+            var backupPath = _filePath + _backupSuffix;
+            if (!_metaAccess.FileExists(_filePath) && _metaAccess.FileExists(backupPath))
+                _metaAccess.Rename(backupPath, _filePath);
 
             if (!_metaAccess.FileExists(_filePath))
                 return;
@@ -157,9 +163,20 @@ public sealed class PersistentBlackboard : IBlackboard
         var data = _inner.SerializeAll();
         using var node = _registry.Write<IReadOnlyDictionary<string, TypedData>>(data);
         var tempPath = _filePath + _tempSuffix;
+        var backupPath = _filePath + _backupSuffix;
         _dataSourceIo.WriteTree(tempPath, node);
-        if (_metaAccess.FileExists(_filePath))
-            _metaAccess.Delete(_filePath);
+
+        var hadExisting = _metaAccess.FileExists(_filePath);
+        if (hadExisting)
+        {
+            if (_metaAccess.FileExists(backupPath))
+                _metaAccess.Delete(backupPath);
+            _metaAccess.Rename(_filePath, backupPath);
+        }
+
         _metaAccess.Rename(tempPath, _filePath);
+
+        if (hadExisting)
+            _metaAccess.Delete(backupPath);
     }
 }

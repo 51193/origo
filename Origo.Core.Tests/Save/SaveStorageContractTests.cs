@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -60,6 +62,72 @@ public class SaveStorageContractTests
 
         Assert.NotNull(payload);
         Assert.Equal("test_level", payload.ActiveLevelId);
+    }
+
+    // ── Checkpoint write marker 契约 (regression: checkpoints used to be marker-less) ──
+
+    [Fact]
+    public void WriteProgressOnlyToCurrent_RemovesMarkerOnSuccess()
+    {
+        var (ctx, fs) = CreateForegroundContext();
+
+        ctx.StorageService.WriteProgressOnlyToCurrent(
+            BuildNode("""{"origo.session_topology":{"type":"String","data":"__foreground__=test_level=false"}}"""),
+            BuildNode("""{"machines":[]}"""));
+
+        Assert.False(fs.Exists("root/current/.write_in_progress"));
+        Assert.True(fs.Exists("root/current/progress.json"));
+        Assert.True(fs.Exists("root/current/progress_state_machines.json"));
+    }
+
+    [Fact]
+    public void WriteProgressOnlyToCurrent_Failure_LeavesMarkerSoReadersReject()
+    {
+        var inner = new TestMemoryFileSystem();
+        var fs = new FailOnSecondWriteFileSystem(inner);
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
+
+        Assert.Throws<IOException>(() =>
+            storage.WriteProgressOnlyToCurrent(
+                BuildNode("""{"origo.session_topology":{"type":"String","data":"__foreground__=test_level=false"}}"""),
+                BuildNode("""{"machines":[]}""")));
+
+        Assert.True(fs.Exists("root/current/.write_in_progress"));
+        Assert.Throws<InvalidOperationException>(() =>
+            storage.TryReadLevelPayloadFromCurrent("test_level"));
+    }
+
+    [Fact]
+    public void WriteLevelPayloadOnlyToCurrent_RemovesMarkerOnSuccess()
+    {
+        var (ctx, fs) = CreateForegroundContext();
+
+        ctx.StorageService.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload("checkpoint_level"));
+
+        Assert.False(fs.Exists("root/current/.write_in_progress"));
+        Assert.NotNull(ctx.StorageService.TryReadLevelPayloadFromCurrent("checkpoint_level"));
+    }
+
+    [Fact]
+    public void WriteLevelPayloadOnlyToCurrent_Failure_LeavesMarkerSoReadersReject()
+    {
+        var (ctx, fs) = CreateForegroundContext();
+
+        var invalidPayload = new LevelPayload
+        {
+            LevelId = "broken_level",
+            SndSceneNode = DataSourceNode.CreateNull(),
+            SessionNode = DataSourceNode.CreateNull(),
+            SessionStateMachinesNode = DataSourceNode.CreateNull()
+        };
+
+        Assert.Throws<InvalidOperationException>(() =>
+            ctx.StorageService.WriteLevelPayloadOnlyToCurrent(invalidPayload));
+
+        Assert.True(fs.Exists("root/current/.write_in_progress"));
+        Assert.Throws<InvalidOperationException>(() =>
+            ctx.StorageService.TryReadLevelPayloadFromCurrent("broken_level"));
     }
 
     // ── 关卡三件套完整性契约 ──────────────────────────────────────────
@@ -482,6 +550,17 @@ public class SaveStorageContractTests
 
     private static DataSourceNode BuildNode(string json) => TestFactory.NodeFromJson(json);
 
+    private static LevelPayload BuildLevelPayload(string levelId)
+    {
+        return new LevelPayload
+        {
+            LevelId = levelId,
+            SndSceneNode = DataSourceNode.CreateArray(),
+            SessionNode = DataSourceNode.CreateObject(),
+            SessionStateMachinesNode = BuildNode("""{"machines":[]}""")
+        };
+    }
+
     // ── Custom path policy for testing ────────────────────────────────
 
     private sealed class CustomSavePathPolicy : ISavePathPolicy
@@ -519,4 +598,50 @@ public class SaveStorageContractTests
         (DataSourceFactory.CreateFileMetaAccess(fs),
          DataSourceFactory.CreateDefaultIoGateway(fs),
          DataSourceFactory.CreatePathResolver(fs));
+
+    /// <summary>
+    ///     Wraps an <see cref="IFileSystem" /> and fails the second
+    ///     <see cref="IFileSystem.WriteAllText" /> call, simulating an I/O
+    ///     failure in the middle of a two-file checkpoint write.
+    /// </summary>
+    private sealed class FailOnSecondWriteFileSystem(IFileSystem inner) : IFileSystem
+    {
+        private int _writeCount;
+
+        public void WriteAllText(string path, string content, bool overwrite)
+        {
+            if (Interlocked.Increment(ref _writeCount) == 2)
+                throw new IOException("Simulated checkpoint write failure.");
+            inner.WriteAllText(path, content, overwrite);
+        }
+
+        public bool Exists(string path) => inner.Exists(path);
+
+        public bool DirectoryExists(string path) => inner.DirectoryExists(path);
+
+        public string ReadAllText(string path) => inner.ReadAllText(path);
+
+        public void Copy(string sourcePath, string destinationPath, bool overwrite) =>
+            inner.Copy(sourcePath, destinationPath, overwrite);
+
+        public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive) =>
+            inner.EnumerateFiles(directoryPath, searchPattern, recursive);
+
+        public void CreateDirectory(string directoryPath) => inner.CreateDirectory(directoryPath);
+
+        public void Delete(string path) => inner.Delete(path);
+
+        public string CombinePath(string basePath, string relativePath) =>
+            inner.CombinePath(basePath, relativePath);
+
+        public string GetParentDirectory(string path) => inner.GetParentDirectory(path);
+
+        public IEnumerable<string> EnumerateDirectories(string directoryPath) =>
+            inner.EnumerateDirectories(directoryPath);
+
+        public void Rename(string sourcePath, string destinationPath) =>
+            inner.Rename(sourcePath, destinationPath);
+
+        public void DeleteDirectory(string directoryPath) => inner.DeleteDirectory(directoryPath);
+    }
 }
