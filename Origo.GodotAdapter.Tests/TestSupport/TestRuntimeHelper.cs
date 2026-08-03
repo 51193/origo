@@ -74,6 +74,13 @@ internal sealed class InMemorySndEntity : ISndEntity
     public T GetData<T>(string name) where T : notnull => _data.TryGetValue(name, out var v) && v is T c ? c : default!;
     public (bool found, T? value) TryGetData<T>(string name) =>
         _data.TryGetValue(name, out var v) && v is T c ? (true, c) : (false, default);
+    public bool TryGetData<T>(string name, out T? value)
+    {
+        var (found, stored) = TryGetData<T>(name);
+        value = stored;
+        return found;
+    }
+
 
     public void MountObserverStrategy(string targetName, string observerIndex) { }
     public void UnmountObserverStrategy(string targetName, string observerIndex) { }

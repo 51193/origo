@@ -21,20 +21,37 @@ public static class ActiveStrategyExtensions
         ArgumentNullException.ThrowIfNull(entity);
         var serializedInput = JsonSerializer.Serialize(input, _defaultOptions);
         var result = entity.InvokeStrategy(strategyIndex, serializedInput);
-        if (result is null)
-            return default;
-        var resultJson = result is string s ? s : JsonSerializer.Serialize(result, _defaultOptions);
-        return JsonSerializer.Deserialize<TOutput>(resultJson, _defaultOptions);
+        return DeserializeResult<TOutput>(result);
     }
 
     public static TOutput? InvokeStrategy<TOutput>(this ISndEntity entity, string strategyIndex)
     {
         ArgumentNullException.ThrowIfNull(entity);
         var result = entity.InvokeStrategy(strategyIndex);
+        return DeserializeResult<TOutput>(result);
+    }
+
+    /// <summary>
+    ///     Deserializes a strategy result into <typeparamref name="TOutput" />.
+    ///     String results are treated as JSON; when they are not valid JSON
+    ///     and the expected output is a string, the raw string is returned
+    ///     as-is so strategies that return bare strings (e.g. "ok") remain
+    ///     callable without throwing opaque JsonExceptions.
+    /// </summary>
+    private static TOutput? DeserializeResult<TOutput>(object? result)
+    {
         if (result is null)
             return default;
+
         var resultJson = result is string s ? s : JsonSerializer.Serialize(result, _defaultOptions);
-        return JsonSerializer.Deserialize<TOutput>(resultJson, _defaultOptions);
+        try
+        {
+            return JsonSerializer.Deserialize<TOutput>(resultJson, _defaultOptions);
+        }
+        catch (JsonException) when (typeof(TOutput) == typeof(string))
+        {
+            return (TOutput)(object)resultJson;
+        }
     }
 
     public static bool EnsureStrategy(this ISndEntity entity, string dataKey, string strategyIndex)
