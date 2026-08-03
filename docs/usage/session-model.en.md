@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Model
 
@@ -93,7 +93,7 @@ ctx.FlushDeferredActionsForCurrentFrame();
 var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
 
-ctx.RequestSaveGameAuto();
+ctx.Save.RequestSaveGameAuto();
 ctx.FlushDeferredActionsForCurrentFrame();
 
 sessionManager.DestroySession("gen");

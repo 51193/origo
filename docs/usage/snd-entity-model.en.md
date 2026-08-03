@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Model
 
@@ -104,7 +104,7 @@ public class DamageTickStrategy : LifecycleStrategyBase
         entity.SetData("hp", hp - 5f * (float)delta);
 
         if (hp <= 0)
-            ctx.RequestSaveGame("player_died");
+            ctx.Save.RequestSaveGame("player_died");
     }
 }
 ```
@@ -116,6 +116,50 @@ public class DamageTickStrategy : LifecycleStrategyBase
 - **Index naming**: Dot-separated namespace + lowercase snake_case segments (e.g., `core.player.health`)
 - **Priority**: The `Priority` attribute determines execution order of multiple strategies on the same entity (default 6205; lower executes earlier)
 - **Reference counting**: When the same strategy is referenced by multiple entities, count increments; only recycled when all are released
+
+
+### JSON contract for active strategies (ActiveStrategyJsonBase)
+
+Active strategies (`ActiveStrategyBase`) exchange JSON payloads with callers through the
+generic `InvokeStrategy<TInput, TOutput>` extension methods. **Return values must be valid
+JSON**: a bare string (e.g. `"ok"`) is parsed as JSON by the generic extensions and throws a
+`JsonException` (it is only returned as-is when the expected output type is string). Prefer
+inheriting `ActiveStrategyJsonBase<TInput>` — the base class owns input deserialization and
+output serialization, and subclasses implement strongly-typed `Execute` returning plain
+objects (strings / bool / POCOs):
+
+```csharp
+[StrategyIndex("shop.buy")]
+public sealed class ShopBuyStrategy : ActiveStrategyJsonBase<int>
+{
+    protected override object? Execute(ISndEntity entity, ISndContext ctx, int? slot)
+    {
+        if (slot is null || slot < 0)
+            return ActiveStrategyResults.Err("invalid request");
+        // ...
+        return ActiveStrategyResults.Ok();
+    }
+}
+```
+
+See `ActiveStrategyResults` for the success/error conventions (`Ok()` / `Err(message)`,
+error messages prefixed with `err:`).
+
+### Entity identity comparison
+
+The `ISndEntity` a strategy receives (the inner `SndEntity`) and the entities returned by
+`ISessionRun.GetEntities()` (adapter wrappers such as `GodotSndEntity`) are **not guaranteed
+to be the same reference**, so `ReferenceEquals` is unreliable. Use the `IsSameEntityAs()`
+extension (name + owning session double check) to test whether two references denote the same
+entity:
+
+```csharp
+if (other.IsSameEntityAs(entity)) continue;  // skip self
+```
+
+> Unique entity names within a session are an implicit framework requirement (`FindByName`,
+> observer topology, and save recovery all key on names); business code must not create
+> duplicate-named entities in the same session.
 
 ### Forbidden Actions in Strategies
 
@@ -179,7 +223,7 @@ public sealed class HpWatcher : ObserverStrategyBase
         TypedData oldValue, TypedData newValue)
     {
         if (newValue.TryGetInt32(out var hp) && hp <= 0)
-            ctx.RequestSaveGame("entity_died");
+            ctx.Save.RequestSaveGame("entity_died");
     }
 }
 ```

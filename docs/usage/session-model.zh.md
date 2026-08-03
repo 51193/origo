@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话模型
 
@@ -93,7 +93,7 @@ ctx.FlushDeferredActionsForCurrentFrame();
 var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
 
-ctx.RequestSaveGameAuto();
+ctx.Save.RequestSaveGameAuto();
 ctx.FlushDeferredActionsForCurrentFrame();
 
 sessionManager.DestroySession("gen");

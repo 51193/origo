@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化流程
 
@@ -160,8 +160,8 @@ SaveGamePayload {
 
 ```csharp
 // 在策略中：
-ctx.RequestSaveGame("my_save_id");
-ctx.RequestSaveGameAuto();  // 自动生成时间戳 ID
+ctx.Save.RequestSaveGame("my_save_id");
+ctx.Save.RequestSaveGameAuto();  // 自动生成时间戳 ID
 
 // ProgressRun 会处理这些请求：
 // - 收集 Progress 黑板

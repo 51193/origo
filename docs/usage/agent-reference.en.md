@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -331,7 +331,7 @@ public sealed class HpWatcherStrategy : ObserverStrategyBase
         TypedData oldValue, TypedData newValue)
     {
         if (newValue.TryGetInt32(out var hp) && hp <= 0)
-            ctx.RequestSaveGame("entity_died");
+            ctx.Save.RequestSaveGame("entity_died");
     }
 }
 ```

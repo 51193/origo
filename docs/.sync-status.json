@@ -866,8 +866,8 @@
     "Origo.Core/Snd/Metadata/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.Core/Snd/Metadata/README.zh.md",
@@ -1064,8 +1064,8 @@
     "Origo.GodotAdapter/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 4,
+        "en": 4
       },
       "files": {
         "zh": "Origo.GodotAdapter/README.zh.md",
@@ -1240,8 +1240,8 @@
     "usage/agent-reference": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "usage/agent-reference.zh.md",
@@ -1295,8 +1295,8 @@
     "usage/persistence-flow": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "usage/persistence-flow.zh.md",
@@ -1306,8 +1306,8 @@
     "usage/quick-start": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "usage/quick-start.zh.md",
@@ -1328,8 +1328,8 @@
     "usage/session-model": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "usage/session-model.zh.md",
@@ -1339,8 +1339,8 @@
     "usage/snd-entity-model": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "usage/snd-entity-model.zh.md",

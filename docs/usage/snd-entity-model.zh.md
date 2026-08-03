@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体模型
 
@@ -104,7 +104,7 @@ public class DamageTickStrategy : LifecycleStrategyBase
         entity.SetData("hp", hp - 5f * (float)delta);
 
         if (hp <= 0)
-            ctx.RequestSaveGame("player_died");
+            ctx.Save.RequestSaveGame("player_died");
     }
 }
 ```
@@ -116,6 +116,44 @@ public class DamageTickStrategy : LifecycleStrategyBase
 - **索引命名**：点分命名空间 + 小写蛇形分段（如 `core.player.health`）
 - **优先级**：`Priority` 属性决定同实体上多策略的执行序（默认 6205，越小越先执行）
 - **引用计数**：同一策略被多实体引用时计数 +1，全部释放后才回收
+
+
+### 主动策略的 JSON 契约（ActiveStrategyJsonBase）
+
+主动策略（`ActiveStrategyBase`）通过 `InvokeStrategy<TInput, TOutput>` 泛型扩展与调用方交换
+JSON 负载。**返回值必须是合法 JSON**：裸字符串（如 `"ok"`）会被泛型扩展当作 JSON 解析并抛
+`JsonException`（仅在期望输出为 string 时原样返回）。推荐直接继承
+`ActiveStrategyJsonBase<TInput>`——基类统一完成输入反序列化与输出序列化，子类只实现强类型
+`Execute`，返回普通对象（字符串 / bool / POCO）即可：
+
+```csharp
+[StrategyIndex("shop.buy")]
+public sealed class ShopBuyStrategy : ActiveStrategyJsonBase<int>
+{
+    protected override object? Execute(ISndEntity entity, ISndContext ctx, int? slot)
+    {
+        if (slot is null || slot < 0)
+            return ActiveStrategyResults.Err("非法请求");
+        // ...
+        return ActiveStrategyResults.Ok();
+    }
+}
+```
+
+成功/失败约定见 `ActiveStrategyResults`（`Ok()` / `Err(message)`，失败消息以 `err:` 前缀）。
+
+### 实体身份比较
+
+策略收到的 `ISndEntity`（内部 `SndEntity`）与 `ISessionRun.GetEntities()` 返回的实体
+（适配层包装，如 `GodotSndEntity`）**不保证是同一引用**，`ReferenceEquals` 不可靠。比较两个
+实体是否为同一个时使用 `IsSameEntityAs()` 扩展（名称 + 所属会话双重校验）：
+
+```csharp
+if (other.IsSameEntityAs(entity)) continue;  // 排除自己
+```
+
+> 同会话内实体名称唯一是框架的隐式要求（`FindByName`、观察者拓扑、存档恢复均按名称键控），
+> 业务代码须保证同一会话内不创建重名实体。
 
 ### 策略中禁止的行为
 
@@ -179,7 +217,7 @@ public sealed class HpWatcher : ObserverStrategyBase
         TypedData oldValue, TypedData newValue)
     {
         if (newValue.TryGetInt32(out var hp) && hp <= 0)
-            ctx.RequestSaveGame("entity_died");
+            ctx.Save.RequestSaveGame("entity_died");
     }
 }
 ```

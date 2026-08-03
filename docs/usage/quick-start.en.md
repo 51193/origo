@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Quick Start
 
@@ -77,7 +77,7 @@ public class HealthInitStrategy : LifecycleStrategyBase
     {
         var (found, hp) = entity.TryGetData<int>("hp");
         if (found && hp <= 0)
-            ctx.RequestSaveGame("game_over");
+            ctx.Save.RequestSaveGame("game_over");
     }
 }
 ```

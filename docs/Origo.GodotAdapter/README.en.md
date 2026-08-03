@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter
 
@@ -61,6 +61,34 @@ All this orchestration is the unified responsibility of the Core layer's session
 ### Bridge Pattern
 
 `GodotSndEntity` embodies the bridge pattern: it implements both `ISndEntity` (Core public interface) and `IEntityLifecycle` (Core internal interface), internally holding a `SndEntity` instance and transparently delegating to it. It contains no business logic of its own — it serves solely as an adapter between the Godot Node and the Core SndEntity.
+
+
+### Usage notes (common pitfalls)
+
+Verified integration notes for embedding Origo into a Godot project:
+
+- **Export override timing**: Setting Export properties (e.g. `ConfigPath`) on an
+  `OrigoDefaultEntry` subclass inside the constructor has no effect — Godot re-assigns
+  defaults when instantiating the scene. Assign them inside `_Ready`, before calling
+  `base._Ready()`.
+- **Command line runs do not rebuild C#**: `godot --path .` loads the previously built
+  DLL. The editor rebuilds automatically; from the command line run `dotnet build` first
+  (or use `dotnet build && godot --path .`).
+- **Full-screen UI swallows 3D clicks**: A Control covering the whole screen defaults to
+  `mouse_filter = Stop`, blocking all mouse events so 3D interactions (e.g. board clicks)
+  stop working. Set `MouseFilter = Ignore` on the UI root; keep child panels at Stop so
+  their buttons respond.
+- **Input stage selection**: Right-button presses can be consumed by the GUI system before
+  reaching `_UnhandledInput`. Use `_Input` for global fallback input (camera drag/zoom)
+  and `_UnhandledInput` for scene-object interaction.
+- **`LookAt` colinear warning**: With the camera directly above the target,
+  `LookAt(target, Vector3.Up)` warns "Target and up vectors are colinear" every frame.
+  Use a horizontal up vector (e.g. `Vector3.Back`) when the pitch is near vertical.
+- **Anchor presets**: `SetAnchorsPreset(RightWide)` only sets anchors, leaving offsets at
+  zero (zero-width panel). Use `SetAnchorsAndOffsetsPreset` and set `OffsetLeft` etc.
+- **Headless viewport**: In headless mode the viewport size is 0 and screen↔world
+  conversions (`Camera3D.UnprojectPosition`) return invalid values. Tests that depend on
+  a real viewport (e.g. click chains) must run in GUI mode.
 
 ## Bridges with Core
 

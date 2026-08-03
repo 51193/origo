@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Metadata
 
@@ -103,10 +103,10 @@ var meta = new SndMetaFluentBuilder("Player")
 
 流式链式 API 构建 `SndMetaData`，消除手动 `meta.DataMetaData ??= new DataMetaData()` + `meta.DataMetaData.Pairs["key"] = new TypedData(typeof(T), value)` 的样板代码。
 
-提供 `SndMetaFluentBuilder.From(SndMetaData)` 静态工厂，在 `ctx.CloneTemplate` 后流式添加数据：
+提供 `SndMetaFluentBuilder.From(SndMetaData)` 静态工厂，在 `ctx.Template.CloneTemplate` 后流式添加数据：
 
 ```csharp
-var meta = SndMetaFluentBuilder.From(ctx.CloneTemplate("player_template", "Player"))
+var meta = SndMetaFluentBuilder.From(ctx.Template.CloneTemplate("player_template", "Player"))
     .SetInt("hp", 100)
     .Build();
 ```

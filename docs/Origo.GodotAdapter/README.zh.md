@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter
 
@@ -58,6 +58,31 @@ OrigoDefaultEntry._Ready()
 ### 桥接模式
 
 `GodotSndEntity` 是桥接模式的体现：它同时实现 `ISndEntity`（Core 公开接口）和 `IEntityLifecycle`（Core internal 接口），内部持有 `SndEntity` 实例并全部透明委托。它本身不包含任何业务逻辑——仅作为 Godot Node 与 Core SndEntity 之间的适配器。
+
+
+### 使用注意事项（常见坑）
+
+以下为集成 Origo 到 Godot 项目时的常见问题与约定，均已在示例项目验证：
+
+- **Export 属性覆写时机**：`OrigoDefaultEntry` 子类在构造函数中设置 `ConfigPath` 等
+  Export 属性不会生效（Godot 场景实例化时会重新赋默认值）。必须在 `_Ready` 中、
+  `base._Ready()` 调用**之前**赋值。
+- **命令行运行不重新编译 C#**：`godot --path .` 直接运行加载的是上次构建的 DLL。
+  编辑器模式会自动构建；命令行方式需先 `dotnet build`（或使用
+  `dotnet build && godot --path .`）。
+- **UI 根节点吞掉 3D 点击**：覆盖全屏的 Control 默认 `mouse_filter = Stop`，会拦截所有
+  鼠标事件导致 3D 交互（如棋盘点击）失效。UI 根节点应设 `MouseFilter = Ignore`，
+  子面板保持默认 Stop 以正常响应按钮。
+- **输入事件阶段选择**：右键按下等事件可能在被 `_UnhandledInput` 接收前已被 GUI 系统
+  消费。需要全局兜底的输入（如摄像机拖动/缩放）应使用 `_Input`；场景对象交互用
+  `_UnhandledInput`。
+- **`LookAt` 垂直视角共线**：相机位于目标正上方时 `LookAt(target, Vector3.Up)` 会每帧
+  报 "Target and up vectors are colinear" 警告。俯仰接近垂直时应改用水平 up 向量
+  （如 `Vector3.Back`）。
+- **锚点布局**：`SetAnchorsPreset(RightWide)` 只设置锚点不设置偏移，面板宽度为 0。
+  应使用 `SetAnchorsAndOffsetsPreset` 并显式设置 `OffsetLeft` 等。
+- **headless 视口**：headless 模式下视口尺寸为 0，`Camera3D.UnprojectPosition` 等
+  屏幕↔世界换算返回无效值。依赖真实视口的测试（如鼠标点击链路）需在 GUI 模式运行。
 
 ## 与 Core 的桥接
 

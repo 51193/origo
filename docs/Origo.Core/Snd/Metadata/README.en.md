@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Metadata
 
@@ -103,10 +103,10 @@ var meta = new SndMetaFluentBuilder("Player")
 
 Fluent chained API for building `SndMetaData`, eliminating the manual `meta.DataMetaData ??= new DataMetaData()` + `meta.DataMetaData.Pairs["key"] = new TypedData(typeof(T), value)` boilerplate.
 
-Provides a `SndMetaFluentBuilder.From(SndMetaData)` static factory for fluent data addition after `ctx.CloneTemplate`:
+Provides a `SndMetaFluentBuilder.From(SndMetaData)` static factory for fluent data addition after `ctx.Template.CloneTemplate`:
 
 ```csharp
-var meta = SndMetaFluentBuilder.From(ctx.CloneTemplate("player_template", "Player"))
+var meta = SndMetaFluentBuilder.From(ctx.Template.CloneTemplate("player_template", "Player"))
     .SetInt("hp", 100)
     .Build();
 ```

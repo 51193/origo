@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence Flow
 
@@ -160,8 +160,8 @@ SaveGamePayload {
 
 ```csharp
 // In a strategy:
-ctx.RequestSaveGame("my_save_id");
-ctx.RequestSaveGameAuto();  // Auto-generate timestamp ID
+ctx.Save.RequestSaveGame("my_save_id");
+ctx.Save.RequestSaveGameAuto();  // Auto-generate timestamp ID
 
 // ProgressRun handles these requests:
 // - Collect Progress blackboard
