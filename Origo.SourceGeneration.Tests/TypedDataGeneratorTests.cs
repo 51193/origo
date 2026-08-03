@@ -234,11 +234,12 @@ public class TypedDataGeneratorTests
     [Fact]
     public void KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero()
     {
-        // startKind 255 + 3 primitives: byte->255 (valid), sbyte->256, short->257.
-        // Both 256 and 257 exceed the byte range. 257 in particular would wrap to
-        // byte 1 and silently collide with another type — it must be reported.
+        // startKind 254 + 3 primitives: byte->254 (valid), sbyte->255, short->256.
+        // Both 255 and 256 exceed the byte range. 256 in particular would wrap to
+        // byte 0 and silently collide with another type — it must be reported.
+        // Kind 255 is reserved as the UnregisteredKind sentinel and must be reported too.
         var attribute =
-            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(255, typeof(byte), typeof(sbyte), typeof(short))]";
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(254, typeof(byte), typeof(sbyte), typeof(short))]";
         var output = RunHome(attribute);
 
         Assert.True(output.HasGeneratorDiagnostic("ORIGOSG003"));
@@ -248,7 +249,7 @@ public class TypedDataGeneratorTests
 
         var text = output.AllGeneratedText;
         // The in-range type is still generated; both out-of-range types are dropped.
-        Assert.Contains("public const byte Byte = 255;", text);
+        Assert.Contains("public const byte Byte = 254;", text);
         Assert.DoesNotContain("AsSByte", text);
         Assert.DoesNotContain("AsInt16", text);
     }

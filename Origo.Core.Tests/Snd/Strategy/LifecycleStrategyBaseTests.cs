@@ -152,6 +152,25 @@ public class LifecycleStrategyBaseTests
         Assert.Equal(0, ThrowOnAddStrategy.ProcessCalls);
     }
 
+    private const string _duplicateIdx = "test.duplicate_add";
+
+    [StrategyIndex(_duplicateIdx)]
+    private sealed class DuplicateAddTestStrategy : LifecycleStrategyBase
+    {
+    }
+
+    [Fact]
+    public void AddStrategy_SameIndexTwice_Throws()
+    {
+        var (_, ctx) = CreateHost(w => w.RegisterStrategy(() => new DuplicateAddTestStrategy()));
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entity = session.Spawn(CreateMeta("E"));
+
+        entity.AddStrategy(_duplicateIdx);
+        var ex = Assert.Throws<InvalidOperationException>(() => entity.AddStrategy(_duplicateIdx));
+        Assert.Contains("already mounted", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private const string _throwOnAddIdx = "test.throw_on_add";
 
     [StrategyIndex(_throwOnAddIdx)]

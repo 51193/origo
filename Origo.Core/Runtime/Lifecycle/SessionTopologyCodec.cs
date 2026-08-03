@@ -38,13 +38,16 @@ internal static class SessionTopologyCodec
         foreach (var entry in entries)
         {
             var parts = entry.Split(_fieldSeparator);
-            if (parts.Length < _requiredFieldCount)
+            if (parts.Length != _requiredFieldCount)
                 throw new InvalidOperationException(
-                    $"Malformed session topology entry '{entry}': expected format 'key=levelId=syncProcess'.");
+                    $"Malformed session topology entry '{entry}': expected exactly 'key=levelId=syncProcess' " +
+                    $"(found {parts.Length} fields).");
 
             var key = parts[0];
             var levelId = parts[1];
-            var sync = bool.TryParse(parts[2], out var parsed) && parsed;
+            if (!bool.TryParse(parts[2], out var sync))
+                throw new InvalidOperationException(
+                    $"Malformed session topology entry '{entry}': syncProcess must be 'true' or 'false'.");
 
             if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(levelId))
                 throw new InvalidOperationException(

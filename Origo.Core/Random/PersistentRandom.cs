@@ -18,6 +18,7 @@ public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key =
     private readonly string _state1Key = string.IsNullOrWhiteSpace(state1Key) ? _defaultState1Key : state1Key;
     private readonly string _state2Key = string.IsNullOrWhiteSpace(state2Key) ? _defaultState2Key : state2Key;
 
+    /// <summary>Initializes the random state from a string seed, overwriting any existing state.</summary>
     public bool InitSeed(string seed)
     {
         var (s0, s1) = RandomNumberGenerator.CreateStateFromSeed(seed);
@@ -26,6 +27,7 @@ public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key =
         return true;
     }
 
+    /// <summary>Advances the generator once and returns the raw 32-bit value; <c>false</c> when state is not initialized.</summary>
     public bool TryNextInt32(out int value)
     {
         value = 0;
@@ -41,6 +43,7 @@ public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key =
         return true;
     }
 
+    /// <summary>Returns a random integer in <c>[minInclusive, maxExclusive)</c>; throws when state is not initialized.</summary>
     public int NextInt32(int minInclusive, int maxExclusive)
     {
         if (maxExclusive <= minInclusive)
@@ -51,10 +54,15 @@ public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key =
         return (int)(((long)(uint)raw % (long)(maxExclusive - minInclusive)) + minInclusive);
     }
 
+    /// <summary>Returns a random float in <c>[0, 1)</c>; throws when state is not initialized.</summary>
     public float NextFloat()
     {
         if (!TryNextInt32(out var raw))
             throw new InvalidOperationException("Random state not initialized. Call InitSeed first.");
-        return (float)((uint)raw / (double)uint.MaxValue);
+        // Division by 2^32 keeps the raw value in [0, 1) as a double, but the float
+        // conversion of raw values in [2^32 - 2^7, 2^32) rounds up to exactly 1.0f;
+        // clamp that edge so the documented [0, 1) range holds.
+        var result = (float)((uint)raw / 4294967296.0);
+        return result >= 1.0f ? MathF.BitDecrement(1.0f) : result;
     }
 }

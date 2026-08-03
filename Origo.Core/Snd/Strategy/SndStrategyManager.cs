@@ -97,8 +97,15 @@ internal sealed class SndStrategyManager
 
     internal IReadOnlyCollection<string> GetStrategyIndices() => [.. _strategies.Select(s => s.Index)];
 
+    internal bool HasMounted(string index) => _strategies.Any(s => s.Index == index);
+
     public void Add(ISndEntity entity, string index, ISndContext ctx)
     {
+        if (_strategies.Any(s => s.Index == index))
+            throw new InvalidOperationException(
+                $"Strategy '{index}' is already mounted on entity '{entity.Name}'. " +
+                "Remove the existing strategy before adding it again.");
+
         var strategy = _pool.GetStrategy<LifecycleStrategyBase>(index);
         var entry = new StrategyEntry { Index = index, Strategy = strategy };
 

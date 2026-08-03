@@ -27,7 +27,12 @@ public sealed class DataSourceConverterRegistry
 
     public T Read<T>(DataSourceNode node) => Get<T>().Read(node);
 
-    public DataSourceNode Write<T>(T value) => Get<T>().Write(value);
+    public DataSourceNode Write<T>(T value)
+    {
+        if (value is null)
+            return DataSourceNode.CreateNull();
+        return Get<T>().Write(value);
+    }
 
     public object? Read(Type type, DataSourceNode node)
     {

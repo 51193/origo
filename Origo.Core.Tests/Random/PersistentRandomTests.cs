@@ -120,6 +120,56 @@ public class PersistentRandomTests
     }
 
     [Fact]
+    public void NextFloat_IsStrictlyLessThanOne()
+    {
+        var bb = new Origo.Core.Blackboard.Blackboard();
+        var pr = new PersistentRandom(bb);
+        pr.InitSeed("float_upper_bound");
+
+        for (var i = 0; i < 10000; i++)
+        {
+            var val = pr.NextFloat();
+            Assert.True(val < 1.0f, $"NextFloat produced {val} which violates the [0, 1) contract.");
+            Assert.True(val >= 0.0f);
+        }
+    }
+
+    [Fact]
+    public void NextFloat_EdgeRawValuesThatRoundToOne_AreClamped()
+    {
+        // Raw values in [2^32 - 2^7, 2^32) convert to a double just below 1.0 but
+        // round to exactly 1.0f. Search the XorShift state space for a state whose
+        // next value falls in that range (probability 2^-25 per step), then verify
+        // NextFloat clamps the result below 1.0.
+        var s0 = 0x9E3779B97F4A7C15ul;
+        var s1 = 0x243F6A8885A308D3ul;
+        (ulong S0, ulong S1)? hit = null;
+        const uint edgeStart = 4294967168u; // 2^32 - 2^7
+
+        for (var i = 0; i < 50_000_000; i++)
+        {
+            var (value, nextS0, nextS1) = RandomNumberGenerator.NextUInt64(s0, s1);
+            if ((uint)value >= edgeStart)
+            {
+                hit = (s0, s1);
+                break;
+            }
+            s0 = nextS0;
+            s1 = nextS1;
+        }
+
+        Assert.True(hit is not null, "Failed to find an XorShift128+ state producing an edge raw value.");
+        var bb = new Origo.Core.Blackboard.Blackboard();
+        bb.SetValue("rand.state1", hit.Value.S0);
+        bb.SetValue("rand.state2", hit.Value.S1);
+        var pr = new PersistentRandom(bb, "rand.state1", "rand.state2");
+
+        var raw = (uint)RandomNumberGenerator.NextUInt64(hit.Value.S0, hit.Value.S1).value;
+        Assert.True(raw >= edgeStart, "Search hit should produce an edge raw value.");
+        Assert.True(pr.NextFloat() < 1.0f, "NextFloat must clamp edge raw values below 1.0f.");
+    }
+
+    [Fact]
     public void NextInt32_BeforeInit_Throws()
     {
         var bb = new Origo.Core.Blackboard.Blackboard();

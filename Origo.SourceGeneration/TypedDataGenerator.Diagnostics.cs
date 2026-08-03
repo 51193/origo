@@ -28,9 +28,9 @@ public sealed partial class TypedDataGenerator
         id: "ORIGOSG003",
         title: "TypedData kind byte out of range",
         messageFormat:
-        "'{0}' resolves to kind {1}, which is outside the valid byte range [1, 255]. " +
+        "'{0}' resolves to kind {1}, which is outside the valid byte range [1, 254]. " +
         "Each registered type's kind is startKind plus its position in the SndInlineTypes group; "
-        + "keep startKind plus the type count within [1, 255].",
+        + "keep startKind plus the type count within [1, 254].",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

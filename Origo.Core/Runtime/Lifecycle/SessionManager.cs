@@ -249,18 +249,36 @@ internal sealed class SessionManager : ISessionManager
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Session key cannot be null or whitespace.", nameof(key));
+        ValidateTopologyToken(key, nameof(key));
         if (TryGetMountedSession(key) is not null)
             throw new InvalidOperationException($"A session with key '{key}' is already mounted.");
     }
 
     private void ValidateLevelIdUnique(string levelId, string newSessionKey)
     {
+        ValidateTopologyToken(levelId, nameof(levelId));
         foreach (var (existingKey, mounted) in _sessions)
             if (string.Equals(mounted.Session.LevelId, levelId, StringComparison.Ordinal))
                 throw new InvalidOperationException(
                     $"Cannot create session '{newSessionKey}' with levelId '{levelId}': " +
                     $"session '{existingKey}' already manages this level. " +
                     "Destroy the existing session before reusing its levelId.");
+    }
+
+    private static void ValidateTopologyToken(string value, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("Value cannot be null or whitespace.", paramName);
+
+        foreach (var ch in value)
+        {
+            if (char.IsAsciiLetterOrDigit(ch) || ch is '.' or '_' or '-')
+                continue;
+            throw new ArgumentException(
+                $"'{value}' contains character '{ch}' which is not allowed in session topology tokens " +
+                "(allowed: ASCII letters, digits, '.', '_', '-').",
+                paramName);
+        }
     }
 
     private void MountInternal(string key, SessionRun session, bool syncProcess)

@@ -94,7 +94,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         {
             KindIndex = kindName,
             RawKind = rawKind,
-            KindValue = rawKind is > 0 and <= 255 ? (byte)rawKind : (byte)0,
+            KindValue = rawKind is > 0 and <= 254 ? (byte)rawKind : (byte)0,
             ClrTypeName = clrName,
             IsReferenceType = typeSymbol.IsReferenceType,
             SpecialType = typeSymbol.SpecialType,
@@ -171,7 +171,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 
         foreach (var t in allTypes)
         {
-            if (t.RawKind is <= 0 or > 255)
+            if (t.RawKind is <= 0 or > 254)
             {
                 context.ReportDiagnostic(
                     Diagnostic.Create(_kindOverflow, t.Location ?? Location.None, t.ClrTypeName, t.RawKind));

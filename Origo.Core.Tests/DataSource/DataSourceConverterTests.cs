@@ -79,6 +79,19 @@ public class DataSourceConverterTests
         Assert.True(node.IsNull);
     }
 
+    [Fact]
+    public void Registry_GenericWrite_NullReturnsNullNodeLikeRuntimeOverload()
+    {
+        var registry = new DataSourceConverterRegistry();
+        registry.Register(new StringDataSourceConverter());
+
+        using var genericNull = registry.Write<string?>(null);
+        using var runtimeNull = registry.Write(typeof(string), null);
+
+        Assert.True(genericNull.IsNull);
+        Assert.Equal(runtimeNull.ComputeSha256Hash(), genericNull.ComputeSha256Hash());
+    }
+
     // ── 12. Primitive converters ──
 
     [Fact]

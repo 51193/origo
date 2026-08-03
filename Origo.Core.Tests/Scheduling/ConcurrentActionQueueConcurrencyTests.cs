@@ -47,6 +47,34 @@ public class ConcurrentActionQueueConcurrencyTests
     }
 
     [Fact]
+    public void ExecuteAll_ExactlyMaxDepthBatches_ThenQueueEmpty_DoesNotThrow()
+    {
+        // Regression: exactly 100 batches with the queue becoming empty right
+        // after the 100th batch used to trigger the depth exception on the
+        // next loop iteration, which should instead terminate normally.
+        const int chainDepth = 100;
+        var queue = new ConcurrentActionQueue(new TestLogger());
+        var executed = 0;
+
+        Action action = () => executed++;
+        for (var i = 0; i < chainDepth - 1; i++)
+        {
+            var next = action;
+            action = () =>
+            {
+                executed++;
+                queue.Enqueue(next);
+            };
+        }
+
+        queue.Enqueue(action);
+
+        var ex = Record.Exception(() => queue.ExecuteAll());
+        Assert.Null(ex);
+        Assert.Equal(chainDepth, executed);
+    }
+
+    [Fact]
     public void ExecuteAll_EmptyQueue_IsIdempotent()
     {
         var queue = new ConcurrentActionQueue(new TestLogger());

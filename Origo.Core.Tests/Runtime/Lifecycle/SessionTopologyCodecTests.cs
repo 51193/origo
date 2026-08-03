@@ -19,8 +19,7 @@ public class SessionTopologyCodecTests
     {
         { "bg=alpha=TRUE", true },
         { "bg=alpha=true", true },
-        { "bg=alpha=False", false },
-        { "bg=alpha=not_bool", false }
+        { "bg=alpha=False", false }
     };
 
     [Fact]
@@ -49,15 +48,8 @@ public class SessionTopologyCodecTests
         Assert.Throws<InvalidOperationException>(() => SessionTopologyCodec.Parse(raw));
 
     [Fact]
-    public void Parse_LevelIdContainsExtraSeparator_UsesSecondFieldAsLevelId()
-    {
-        var descriptors = SessionTopologyCodec.Parse("bg=world=1=true");
-
-        var descriptor = Assert.Single(descriptors);
-        Assert.Equal("bg", descriptor.Key);
-        Assert.Equal("world", descriptor.LevelId);
-        Assert.False(descriptor.SyncProcess);
-    }
+    public void Parse_ExtraFields_ThrowsInvalidOperation() =>
+        Assert.Throws<InvalidOperationException>(() => SessionTopologyCodec.Parse("bg=world=1=true"));
 
     [Theory]
     [MemberData(nameof(Parse_SyncFieldParsing_Data))]
@@ -66,6 +58,10 @@ public class SessionTopologyCodecTests
         var descriptor = Assert.Single(SessionTopologyCodec.Parse(raw));
         Assert.Equal(expectedSync, descriptor.SyncProcess);
     }
+
+    [Fact]
+    public void Parse_NonBooleanSyncField_ThrowsInvalidOperation() =>
+        Assert.Throws<InvalidOperationException>(() => SessionTopologyCodec.Parse("bg=alpha=not_bool"));
 
     [Fact]
     public void Join_EmptyEntries_ReturnsEmptyString()

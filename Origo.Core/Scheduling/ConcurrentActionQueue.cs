@@ -83,14 +83,13 @@ internal class ConcurrentActionQueue
 
         while (true)
         {
-            if (executeBatchCount >= _maxReentrantDrainDepth)
-                throw new InvalidOperationException(
-                    $"ConcurrentActionQueue exceeded max re-entrant drain depth ({_maxReentrantDrainDepth}).");
-
             List<Action> currentBatch;
             lock (_lock)
             {
                 if (_actionQueue.Count == 0) break;
+                if (executeBatchCount >= _maxReentrantDrainDepth)
+                    throw new InvalidOperationException(
+                        $"ConcurrentActionQueue exceeded max re-entrant drain depth ({_maxReentrantDrainDepth}).");
                 currentBatch = [.. _actionQueue];
                 _actionQueue.Clear();
             }
