@@ -269,6 +269,14 @@ public partial class IntegrationTestRunner : Node
 
     private void FlushResults()
     {
+        if (_results.Count == 0)
+        {
+            GD.PrintErr("INTEGRATION_TEST_RESULTS: 0 total — no tests were discovered. Failing the run.");
+            OutputResults(_results);
+            GetTree().Quit(1);
+            return;
+        }
+
         OutputResults(_results);
 
         var allPassed = _results.All(r => r.Passed);

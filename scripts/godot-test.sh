@@ -30,17 +30,30 @@ dotnet build "$ROOT/Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Inte
 echo ""
 
 set +e
-"$GODOT_BIN" --headless --path "$ROOT/Origo.GodotAdapter.Integration.Tests" 2>&1
+GODOT_OUTPUT=$("$GODOT_BIN" --headless --path "$ROOT/Origo.GodotAdapter.Integration.Tests" 2>&1)
 EXIT_CODE=$?
 set -e
+
+# Parse the runner's own result summary line. The runner fails itself
+# (exit code 1) when zero tests are discovered; this parse is a second
+# guard so CI cannot silently pass on "0 total".
+TOTAL_TESTS=$(echo "$GODOT_OUTPUT" | sed -n 's/.*INTEGRATION_TEST_RESULTS: \([0-9][0-9]*\) total.*/\1/p' | tail -1)
+
+if [[ -z "$TOTAL_TESTS" || "$TOTAL_TESTS" -eq 0 ]]; then
+    echo ""
+    echo "Integration tests FAILED: no results line with a positive test count was produced."
+    echo "$GODOT_OUTPUT" | tail -20
+    exit 1
+fi
 
 # Parse and display test results
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo ""
-    echo "All integration tests passed."
+    echo "All $TOTAL_TESTS integration tests passed."
 else
     echo ""
-    echo "Integration tests FAILED (exit code: $EXIT_CODE)."
+    echo "Integration tests FAILED (exit code: $EXIT_CODE, total: $TOTAL_TESTS)."
+    echo "$GODOT_OUTPUT" | tail -30
 fi
 
 exit $EXIT_CODE
