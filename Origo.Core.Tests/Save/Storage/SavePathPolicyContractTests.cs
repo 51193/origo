@@ -36,7 +36,8 @@ public class SavePathPolicyContractTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var customPolicy = new TestPrefixedPathPolicy("cx_");
 
         var ctx = new SndContext(new SndContextParameters(
@@ -74,7 +75,8 @@ public class SavePathPolicyContractTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var customPolicy = new TestPrefixedPathPolicy("ix_");
 
         var ctx = new SndContext(new SndContextParameters(
@@ -352,7 +354,8 @@ public class SavePathPolicyContractTests
 
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         return (ctx, fs);

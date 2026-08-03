@@ -12,7 +12,8 @@ public class SndContextBootstrapTests
     public void Bootstrap_CompletesWithoutError()
     {
         var ctx = CreateBootstrapContext(out var fs);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
 
         var ex = Record.Exception(() => ctx.Bootstrap());
         Assert.Null(ex);
@@ -22,7 +23,8 @@ public class SndContextBootstrapTests
     public void Bootstrap_AfterCall_ForegroundSessionIsEstablished()
     {
         var ctx = CreateBootstrapContext(out var fs);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
 
         ctx.Bootstrap();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
@@ -36,7 +38,8 @@ public class SndContextBootstrapTests
         var invoked = false;
         var ctx = CreateBootstrapContext(out var fs,
             configureConverters: _ => invoked = true);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
 
         ctx.Bootstrap();
 
@@ -47,7 +50,8 @@ public class SndContextBootstrapTests
     public void Bootstrap_AutoDiscoverDisabled_SkipsStrategyDiscovery()
     {
         var ctx = CreateBootstrapContext(out var fs, autoDiscover: false);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
 
         ctx.Bootstrap();
 
@@ -69,7 +73,8 @@ public class SndContextBootstrapTests
                 "data": { "pairs": {} }
             }
             """);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
 
         ctx.Bootstrap();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
@@ -115,7 +120,8 @@ public class SndContextBootstrapTests
     public void IStateMachineContext_SceneAccess_AfterBootstrap_NotNull()
     {
         var ctx = CreateBootstrapContext(out var fs);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Bootstrap();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
@@ -127,7 +133,8 @@ public class SndContextBootstrapTests
     public void IStateMachineContext_SystemBlackboard_AfterBootstrap_NotNull()
     {
         var ctx = CreateBootstrapContext(out var fs);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Bootstrap();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
@@ -139,7 +146,8 @@ public class SndContextBootstrapTests
     public void IStateMachineContext_ProgressBlackboard_AfterBootstrap_NotNull()
     {
         var ctx = CreateBootstrapContext(out var fs);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Bootstrap();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 

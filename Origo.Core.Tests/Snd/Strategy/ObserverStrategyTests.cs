@@ -526,7 +526,8 @@ public class ObserverStrategyTests : IDisposable
         var world = TestFactory.CreateSndWorld(logger: logger);
         host.BindWorld(world);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -560,7 +561,8 @@ public class ObserverStrategyTests : IDisposable
         var world = TestFactory.CreateSndWorld(logger: logger);
         host.BindWorld(world);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -643,7 +645,8 @@ public class ObserverStrategyTests : IDisposable
         configureWorld(world);
         host.BindWorld(world);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
@@ -840,7 +843,8 @@ public class ObserverStrategyTests : IDisposable
         world.RegisterStrategy(() => new MultiKeyObserver());
         host.BindWorld(world);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);

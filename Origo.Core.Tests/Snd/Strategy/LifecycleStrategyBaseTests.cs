@@ -56,7 +56,8 @@ public class LifecycleStrategyBaseTests
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver = TestFactory.CreatePathResolver(fs);
@@ -80,7 +81,8 @@ public class LifecycleStrategyBaseTests
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var io2 = TestFactory.CreateIoGateway(fs);
         var metaAccess2 = TestFactory.CreateFileMetaAccess(fs);
         var pathResolver2 = TestFactory.CreatePathResolver(fs);
@@ -212,7 +214,8 @@ public class LifecycleStrategyBaseTests
         configureWorld(world);
         host.BindWorld(world);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var runtime = TestFactory.CreateRuntime(logger, host);
         var io = TestFactory.CreateIoGateway(fs);
         var metaAccess = TestFactory.CreateFileMetaAccess(fs);

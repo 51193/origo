@@ -439,7 +439,8 @@ public class SaveStorageContractTests
         var runtime = TestFactory.CreateRuntime(logger, host);
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
 
         var storageService = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root");
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",

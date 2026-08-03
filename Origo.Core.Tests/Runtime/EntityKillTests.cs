@@ -459,7 +459,8 @@ public class EntityKillTests
             world.RegisterStrategy(() => new KillProbeStrategy());
         host.BindWorld(world);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var io = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -506,7 +507,8 @@ public class EntityKillTests
         world.RegisterStrategy(() => new KillProbeStrategy());
         host.BindWorld(world);
         var fs = new TestMemoryFileSystem();
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var io = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -533,16 +535,26 @@ public class EntityKillTests
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         var fs = new TestMemoryFileSystem();
         var entryJson = """
-                        [
-                          {
-                            "name": "E",
-                            "node": { "pairs": {} },
-                            "strategy": { "lifecycle_indices": [], "active_indices": [] },
-                            "data": { "pairs": {} }
-                          }
-                        ]
+                        {
+                          "levels": {
+                            "main_menu": { "snd_scene": "res://levels/main_menu.json", "type": "main_menu" }
+                          },
+                          "main_menu_level": "main_menu"
+                        }
                         """;
         fs.SeedFile("entry.json", entryJson);
+        fs.SeedFile(
+            "res://levels/main_menu.json",
+            """
+            [
+              {
+                "name": "E",
+                "node": { "pairs": {} },
+                "strategy": { "lifecycle_indices": [], "active_indices": [] },
+                "data": { "pairs": {} }
+              }
+            ]
+            """);
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);

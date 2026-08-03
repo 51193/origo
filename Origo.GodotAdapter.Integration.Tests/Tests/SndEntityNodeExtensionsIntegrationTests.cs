@@ -52,6 +52,12 @@ public class SndEntityNodeExtensionsIntegrationTests
         public void SetData<T>(string name, T value) { }
         public T GetData<T>(string name) where T : notnull => default!;
         public (bool found, T? value) TryGetData<T>(string name) => (false, default);
+
+        public bool TryGetData<T>(string name, out T? value)
+        {
+            value = default;
+            return false;
+        }
         public INodeHandle GetNode(string name) => new StubNodeHandle(name);
         public System.Collections.Generic.IReadOnlyCollection<string> GetNodeNames() => [];
         public void AddStrategy(string index) { }

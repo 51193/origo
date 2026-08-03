@@ -109,7 +109,8 @@ public class CoreArchitectureGuardrailTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
@@ -193,7 +194,8 @@ public class CoreArchitectureGuardrailTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
@@ -220,7 +222,8 @@ public class CoreArchitectureGuardrailTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
@@ -250,7 +253,8 @@ public class CoreArchitectureGuardrailTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
@@ -280,7 +284,8 @@ public class CoreArchitectureGuardrailTests
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 

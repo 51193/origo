@@ -408,7 +408,8 @@ public class PlayStopPlayRoundTripTests
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
         var fs = sharedFs ?? new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "[]");
+        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);

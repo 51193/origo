@@ -231,7 +231,8 @@ internal static class SndContextTestHelper
 
     public static void SetupProgressRun(SndContext ctx, TestMemoryFileSystem fs)
     {
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
     }

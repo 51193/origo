@@ -586,7 +586,8 @@ public class SndContextWorkflowTests
     private static void SetupProgressRun(SndContext ctx, TestMemoryFileSystem fs)
     {
         // Load main menu entry to establish a ProgressRun
-        fs.SeedFile("entry.json", "[]");
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
     }
