@@ -29,6 +29,8 @@ public class BackgroundSessionTests
     private const string _trackingStrategyIndex = "test.tracking";
     private const string _processStrategyIndex = "test.process";
     private const string _sessionContextStrategyIndex = "test.session_context";
+    private const string _beforeSaveWriterStrategyIndex = "test.before_save_writer";
+    private const string _topologyOverwriteStrategyIndex = "test.topology_overwrite";
 
     public static TheoryData<string?> CreateBackgroundSession_InvalidLevelIds_Data { get; } =
         CreateBackgroundSessionInvalidLevelIds();
@@ -410,6 +412,77 @@ public class BackgroundSessionTests
         Assert.True(fs.Exists("root/save_full_workflow_save/level_generated_level/session_state_machines.json"));
     }
 
+    // ── Foreground BeforeSave on full save (regression: hooks used to be skipped) ──
+
+    [Fact]
+    public void FullSave_FiresBeforeSaveHooks_OnForegroundEntities()
+    {
+        var events = new List<string>();
+        var (ctx, fs) = CreateForegroundContext(
+            world =>
+            {
+                TrackingStrategy.Bind(events);
+                world.RegisterStrategy(() => new TrackingStrategy());
+            },
+            new FullMemorySndSceneHost(new TestLogger()));
+
+        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
+        var spawned = fg.Spawn(CreateMetaWithIndices("hero_01", _trackingStrategyIndex));
+        Assert.NotNull(spawned);
+        Assert.Single(fg.GetEntities());
+
+        events.Clear();
+        ctx.Save.RequestSaveGame("fg_before_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        Assert.True(fs.Exists("root/save_fg_before_save/level_test_level/snd_scene.json"));
+        Assert.Contains("BeforeSave:hero_01", events);
+    }
+
+    [Fact]
+    public void FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins()
+    {
+        var events = new List<string>();
+        var (ctx, fs) = CreateForegroundContext(
+            world => world.RegisterStrategy(() => new TopologyOverwriteStrategy()),
+            new FullMemorySndSceneHost(new TestLogger()));
+
+        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
+        fg.Spawn(CreateMetaWithIndices("hero_01", _topologyOverwriteStrategyIndex));
+
+        ctx.Save.RequestSaveGame("fg_topology_guard");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        // The persisted topology must be the framework-computed one, not the
+        // value written by the hook.
+        var progressJson = fs.ReadAllText("root/save_fg_topology_guard/progress.json");
+        Assert.Contains("__foreground__=test_level=false", progressJson);
+        Assert.DoesNotContain("__foreground__=corrupted_level=false", progressJson);
+    }
+
+    [Fact]
+    public void FullSave_BeforeSaveHookWrites_ArePersistedIntoForegroundSceneData()
+    {
+        var events = new List<string>();
+        var (ctx, fs) = CreateForegroundContext(
+            world =>
+            {
+                BeforeSaveDataWriterStrategy.Bind(events);
+                world.RegisterStrategy(() => new BeforeSaveDataWriterStrategy());
+            },
+            new FullMemorySndSceneHost(new TestLogger()));
+
+        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
+        fg.Spawn(CreateMetaWithIndices("guard_01", _beforeSaveWriterStrategyIndex));
+
+        ctx.Save.RequestSaveGame("fg_before_save_write");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        Assert.Contains("BeforeSaveWrite:guard_01", events);
+        var sndJson = fs.ReadAllText("root/save_fg_before_save_write/level_test_level/snd_scene.json");
+        Assert.Contains("flushed_flag", sndJson);
+    }
+
     // ── SerializeToPayload / LoadFromPayload ─────────────────────────
 
     [Fact]
@@ -780,10 +853,11 @@ public class BackgroundSessionTests
     // ── Helper methods ────────────────────────────────────────────────
 
     private static (SndContext ctx, TestMemoryFileSystem fs) CreateForegroundContext(
-        Action<SndWorld>? configureWorld = null)
+        Action<SndWorld>? configureWorld = null,
+        ISndSceneHost? sceneHost = null)
     {
         var logger = new TestLogger();
-        var host = new TestSndSceneHost();
+        var host = sceneHost ?? new TestSndSceneHost();
         var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
@@ -792,6 +866,9 @@ public class BackgroundSessionTests
         var systemBb = new Blackboard.Blackboard();
         var runtime = TestFactory.CreateRuntime(logger, host, tm, systemBb, dataSourceIo);
         configureWorld?.Invoke(runtime.SndWorld);
+
+        if (host is FullMemorySndSceneHost fullMemoryHost)
+            fullMemoryHost.BindWorld(runtime.SndWorld);
 
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
@@ -845,7 +922,12 @@ public class BackgroundSessionTests
         {
             default(string?),
             "",
-            "   "
+            "   ",
+            "level/../evil",
+            "level=one",
+            "level,one",
+            "level with space",
+            "中文关卡"
         };
         return d;
     }
@@ -879,6 +961,31 @@ public class BackgroundSessionTests
 
         public override void BeforeDead(ISndEntity entity, ISndContext ctx) =>
             _events.Value?.Add($"BeforeDead:{entity.Name}");
+    }
+
+    [StrategyIndex(_beforeSaveWriterStrategyIndex)]
+    private sealed class BeforeSaveDataWriterStrategy : LifecycleStrategyBase
+    {
+        private static readonly AsyncLocal<List<string>?> _events = new();
+
+        public static void Bind(List<string> events) => _events.Value = events;
+
+        public override void BeforeSave(ISndEntity entity, ISndContext ctx)
+        {
+            entity.SetData("flushed_flag", true);
+            _events.Value?.Add($"BeforeSaveWrite:{entity.Name}");
+        }
+    }
+
+    [StrategyIndex(_topologyOverwriteStrategyIndex)]
+    private sealed class TopologyOverwriteStrategy : LifecycleStrategyBase
+    {
+        public override void BeforeSave(ISndEntity entity, ISndContext ctx)
+        {
+            // Deliberately attempts to corrupt the framework-owned topology key.
+            ctx.Blackboard.ProgressBlackboard!.SetValue(
+                WellKnownKeys.SessionTopology, "__foreground__=corrupted_level=false");
+        }
     }
 
     [StrategyIndex(_processStrategyIndex)]

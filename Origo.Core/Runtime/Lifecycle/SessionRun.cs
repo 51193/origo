@@ -311,11 +311,22 @@ internal sealed class SessionRun : ISessionRun
         });
     }
 
-    private LevelPayload BuildLevelPayload()
+    /// <summary>
+    ///     Fires BeforeSave hooks on all entities in this session's scene,
+    ///     giving strategies a final chance to flush in-memory state into
+    ///     entity Data before serialization.
+    /// </summary>
+    internal void FireBeforeSaveHooks()
     {
+        ThrowIfDisposed();
         foreach (var entity in _sceneHost.GetEntities())
             if (entity is IEntityLifecycle lifecycle)
                 lifecycle.FireBeforeSaveHooks();
+    }
+
+    private LevelPayload BuildLevelPayload()
+    {
+        FireBeforeSaveHooks();
 
         return new LevelPayload
         {

@@ -63,7 +63,13 @@ internal sealed class SaveCoordinator
 
         var bgSessions = _sessionManager.GetBackgroundSessions();
         var topologyItems = BuildSessionTopology(fgSession);
-        _progressBlackboard.SetValue(WellKnownKeys.SessionTopology, SessionTopologyCodec.Join(topologyItems));
+        var topologyValue = SessionTopologyCodec.Join(topologyItems);
+
+        // BeforeSave hooks may write blackboard data; the topology is a
+        // framework-owned key, so it is written AFTER hooks fire to guarantee
+        // the serialized value is the framework-computed one.
+        ((SessionRun)fgSession).FireBeforeSaveHooks();
+        _progressBlackboard.SetValue(WellKnownKeys.SessionTopology, topologyValue);
 
         var saveContext = new SaveContext(
             _progressBlackboard, fgSession.SessionBlackboard, _progressRuntime.SndWorld);
