@@ -109,6 +109,22 @@ public class ConsoleTypeInferenceTests
     }
 
     [Fact]
+    public void BlackboardSet_BeyondIntRange_StoredAsInt64()
+    {
+        var (runtime, _) = CreateRuntimeWithConsole();
+        var handler = new BlackboardSetCommandHandler(runtime);
+        var output = new ConsoleOutputChannel();
+
+        handler.TryExecute(
+            CreateInvocation("bb_set", "system", "big", "3000000000"), output, out var err);
+
+        Assert.Null(err);
+        var (found, value) = runtime.SystemBlackboard.TryGet<long>("big");
+        Assert.True(found);
+        Assert.Equal(3000000000L, value);
+    }
+
+    [Fact]
     public void BlackboardSet_UnknownLayer_ReturnsError()
     {
         var (runtime, _) = CreateRuntimeWithConsole();
@@ -195,6 +211,24 @@ public class ConsoleTypeInferenceTests
         var (found, value) = entity!.TryGetData<string>("tag");
         Assert.True(found);
         Assert.Equal("hero", value);
+    }
+
+    [Fact]
+    public void EntitySetData_NewKey_BeyondIntRange_StoredAsInt64()
+    {
+        var (runtime, host) = CreateRuntimeWithConsoleAndEntity("player");
+        var handler = new SetEntityDataCommandHandler(runtime);
+        var output = new ConsoleOutputChannel();
+
+        handler.TryExecute(
+            CreateInvocation("entity_set_data", "player", "coins", "3000000000"), output, out var err);
+
+        Assert.Null(err);
+        var entity = host.FindByName("player");
+        Assert.NotNull(entity);
+        var (found, value) = entity!.TryGetData<long>("coins");
+        Assert.True(found);
+        Assert.Equal(3000000000L, value);
     }
 
     [Fact]

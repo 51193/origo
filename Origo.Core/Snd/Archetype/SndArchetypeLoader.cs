@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.DataSource;
+using Origo.Core.Utility;
 
 namespace Origo.Core.Snd.Archetype;
 
@@ -45,19 +45,7 @@ public static class SndArchetypeLoader
 
         foreach (var (key, rawValue) in attributes)
         {
-            if (int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
-                entity.SetData(key, i);
-            else if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l))
-                entity.SetData(key, l);
-            else if (float.TryParse(rawValue,
-                         NumberStyles.Float,
-                         CultureInfo.InvariantCulture,
-                         out var f))
-                entity.SetData(key, f);
-            else if (bool.TryParse(rawValue, out var b))
-                entity.SetData(key, b);
-            else
-                entity.SetData(key, rawValue);
+            ValueInference.SetData(entity, key, rawValue);
         }
     }
 }
