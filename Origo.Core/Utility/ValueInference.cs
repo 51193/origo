@@ -12,13 +12,13 @@ namespace Origo.Core.Utility;
 ///     raw input identically: int is preferred over long, and long over
 ///     float, so integers beyond int range never degrade to float precision.
 /// </summary>
-public static class ValueInference
+internal static class ValueInference
 {
     /// <summary>
     ///     Parses a raw string into the first matching typed value.
     ///     Falls back to the raw string itself when no type matches.
     /// </summary>
-    public static object Infer(string raw)
+    internal static object Infer(string raw)
     {
         ArgumentNullException.ThrowIfNull(raw);
         if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
@@ -37,7 +37,7 @@ public static class ValueInference
     ///     entity under <paramref name="key" /> with a strongly typed
     ///     <c>SetData</c> call, preserving the inferred runtime type.
     /// </summary>
-    public static void SetData(ISndEntity entity, string key, string raw)
+    internal static void SetData(ISndEntity entity, string key, string raw)
     {
         ArgumentNullException.ThrowIfNull(entity);
         switch (Infer(raw))
@@ -65,7 +65,7 @@ public static class ValueInference
     ///     blackboard under <paramref name="key" /> with a strongly typed
     ///     <c>SetValue</c> call, preserving the inferred runtime type.
     /// </summary>
-    public static void SetBlackboard(IBlackboard blackboard, string key, string raw)
+    internal static void SetBlackboard(IBlackboard blackboard, string key, string raw)
     {
         ArgumentNullException.ThrowIfNull(blackboard);
         switch (Infer(raw))

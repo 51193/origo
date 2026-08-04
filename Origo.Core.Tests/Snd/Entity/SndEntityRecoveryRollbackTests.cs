@@ -21,7 +21,6 @@ namespace Origo.Core.Tests;
 public class SndEntityRecoveryRollbackTests
 {
     private const string _lifecycleOnlyIndex = "rollback.lifecycle.only";
-    private const string _activeOnlyIndex = "rollback.active.only";
 
     [Fact]
     public void RecoverForLifecycle_ActivePhaseFails_ReleasesPreviouslyAcquiredPassiveStrategies()
@@ -29,7 +28,6 @@ public class SndEntityRecoveryRollbackTests
         var logger = new TestLogger();
         var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
         runtime.SndWorld.RegisterStrategy(() => new LifecycleOnlyStrategy());
-        runtime.SndWorld.RegisterStrategy(() => new ActiveOnlyStrategy());
         var ctx = CreateContext(runtime);
 
         var entity = runtime.SndWorld.CreateEntity(
@@ -123,11 +121,5 @@ public class SndEntityRecoveryRollbackTests
     [StrategyIndex(_lifecycleOnlyIndex)]
     private sealed class LifecycleOnlyStrategy : LifecycleStrategyBase
     {
-    }
-
-    [StrategyIndex(_activeOnlyIndex)]
-    private sealed class ActiveOnlyStrategy : ActiveStrategyBase
-    {
-        public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => null;
     }
 }
