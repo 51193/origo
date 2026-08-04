@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -31,7 +31,7 @@
 | `RunStateScope.cs` | 运行时状态作用域工具 |
 | `TopologyInvariant.cs` | internal — 拓扑不变量校验工具 |
 
-> `ISessionManager` 和 `ISessionRun` 接口已移至 `Origo.Core.Abstractions.Lifecycle` 命名空间，确保 Abstractions 层不依赖 Runtime 层。本层保留具体实现。
+> `ISessionManager` 和 `ISessionRun` 接口定义在 `Origo.Core.Abstractions.Lifecycle` 命名空间，确保 Abstractions 层不依赖 Runtime 层。本层保留具体实现。
 
 ## 四层容器模型
 
@@ -91,7 +91,7 @@ SystemRun (由 SndContext 构造并持有)
 
 - `Dispose` 级联：SessionRun → SessionManager → ProgressRun → SystemRun
 - `SessionRun.Dispose` 使用两阶段标志：先设 `_disposing`（防重入），执行 BeforeQuit 钩子（此时会话资源仍可访问）和释放策略，再通过 `try/finally` 保证场景集合清空和黑板清除必定执行，最后设 `_disposed`（外部访问正式禁止）
-- Dispose 中的清理操作不捕获异常：若 `StateMachines.Clear()`、`ReleaseAllEntities`、`RemoveAllEntities` 或 `Blackboard.Clear()` 抛出异常，异常直接传播到调用方。不再累积 `firstError` 或包装为 `AggregateException`。
+- Dispose 中的清理操作不捕获异常：若 `StateMachines.Clear()`、`ReleaseAllEntities`、`RemoveAllEntities` 或 `Blackboard.Clear()` 抛出异常，异常直接传播到调用方，不累积 `firstError` 或包装为 `AggregateException`。
 - `ProgressRun.Dispose` 中 `SessionManager.Clear()` 和 `DeleteCurrentDirectory()` 的异常同样直接传播，不被静默吞掉。
 - 退出前的数据保存应由应用层显式调用 `RequestSaveGame` 完成；`current/` 目录作为临时工作区，在退出时被安全清理
 
@@ -103,11 +103,11 @@ SystemRun (由 SndContext 构造并持有)
 
 ### 为什么 Dispose 不自动持久化
 
-早期设计中 `SessionRun.Dispose` 和 `ProgressRun.Dispose` 会触发 auto-persist，将数据写入 `current/` 后由 `DeleteCurrentDirectory()` 立即删除。这导致：
-- 写入 `current/` 随后被删，纯浪费 I/O
-- `BeforeSave` 钩子在即将销毁的实体上执行，语义错误且有副作用风险
+持久化职责完全由调用方显式负责，`SessionRun.Dispose` 和 `ProgressRun.Dispose` 不触发 auto-persist。若 Dispose 自动写盘：
+- 写入 `current/` 随后被 `DeleteCurrentDirectory()` 删除，纯浪费 I/O
+- `BeforeSave` 钩子会在即将销毁的实体上执行，语义错误且有副作用风险
 
-现在持久化职责完全由调用方显式负责：
+因此：
 - 用户存档：`RequestSaveGame` → `BuildSavePayload` → `WriteSavePayloadToCurrentThenSnapshot`
 - 关卡切换：`SwitchForeground` 在销毁旧前台之前**显式**调用 `PersistForegroundLevelState`
 - 退出/销毁：只做清理，不做持久化

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：存储 测试
 
@@ -313,9 +313,9 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 
 ### 为什么需要单独的 SaveStorageContractTests
 
-原来的持久化测试分散在 `LifecycleRunsTests`、`DisposeSemanticsTests`、
-`SndContextWorkflowTests` 中。`SaveStorageContractTests` 将文档中描述的 7 条
-严格读取规则集中测试，使契约验证成为独立的、可审计的测试单元。
+`SaveStorageContractTests` 将文档中描述的 7 条严格读取规则集中测试
+（其余持久化行为测试位于 `LifecycleRunsTests`、`DisposeSemanticsTests`、
+`SndContextWorkflowTests` 等文件中），使契约验证成为独立的、可审计的测试单元。
 
 ---
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration
 
@@ -60,7 +60,7 @@ Kind values are `byte`s, with each layer's starting value controlled by `SndInli
 
 | Layer | StartKind | Kind Range | Type Count |
 |----|-----------|----------|--------|
-| Core | 1 (default) | 0–13 | 13 BCL primitive types |
+| Core | 1 (default) | 1–13 | 13 BCL primitive types |
 | GodotAdapter | 128 | 128–141 | 14 Godot engine types |
 | Reserved (future adapters) | 192 | 192–254 | — |
 | Fallback | — | `TypedData.UnregisteredKind` | Fallback for unregistered types |
@@ -112,7 +112,7 @@ Diagnostic messages carry the corresponding `SndInlineTypesAttribute` syntax loc
 )]
 ```
 
-`SndInlineTypesAttribute` is defined in the `Origo.Core.Snd.Metadata` namespace. The new `StartKind` parameter (default `1`) controls the Kind start offset.
+`SndInlineTypesAttribute` is defined in the `Origo.Core.Snd.Metadata` namespace. The `StartKind` parameter (default `1`) controls the Kind start offset.
 
 ## Multi-Layer Runtime Extensions
 

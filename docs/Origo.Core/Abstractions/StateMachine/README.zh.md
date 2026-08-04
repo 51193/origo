@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # StateMachine (Abstractions)
 
@@ -57,7 +57,7 @@
 
 ### 为什么 SessionStateMachineContext 是 internal 且不在 Abstractions 层
 
-`SessionStateMachineContext` 是具体实现类，不属于 Abstractions 层的接口契约，因此在代码清理中移至 `Origo.Core.Runtime.Lifecycle` 命名空间。外部代码只需依赖 `IStateMachineContext` 接口。会话级的上下文绑定由 `SessionManager` 在构造 `SessionRun` 时内部完成。
+`SessionStateMachineContext` 是具体实现类，定义在 `Origo.Core.Runtime.Lifecycle` 命名空间，不属于 Abstractions 层的接口契约。外部代码只需依赖 `IStateMachineContext` 接口。会话级的上下文绑定由 `SessionManager` 在构造 `SessionRun` 时内部完成。
 
 ### 为什么需要 IStateMachineContainer
 

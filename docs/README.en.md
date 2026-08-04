@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Manual
 
@@ -16,7 +16,7 @@ The Origo framework follows these core design constraints; all module implementa
 |-----------|-------------|
 | **Platform-agnostic** | Origo.Core has zero engine dependencies. All game logic, persistence, and entity models use only `System.*` types |
 | **Adapter-layer isolation** | Engine integration is exclusively through `Origo.GodotAdapter` implementing Core abstraction interfaces. The adapter layer must not fire strategy hooks, manage strategy lifecycles, flush deferred pipelines, or hold Core orchestration state |
-| **Interface Segregation (ISP)** | `ISndContext` is split into 9 narrow-role interfaces; `ISessionRun` returns an abstract `IStateMachineContainer` rather than a concrete type |
+| **Interface Segregation (ISP)** | `ISndContext` is split into 10 narrow-role companion interfaces; `ISessionRun` returns an abstract `IStateMachineContainer` rather than a concrete type |
 | **Unidirectional dependency** | Abstractions → Core implementations → Adapter; reverse dependencies are strictly forbidden |
 | **public whitelist** | Do not expose interfaces preemptively for "maybe useful in the future"; every public interface must have a clear cross-assembly consumer |
 | **Explicit failure first** | Throw exceptions rather than silent degradation when interface contracts are violated; save/load strictly validate integrity |
@@ -42,7 +42,7 @@ Root (this file)
   │
   ├── I need to know "what capabilities are covered by tests"
   │   ├── Origo.Core.Tests/README.md → view Core tests by capability
-  │   ├── Origo.GodotAdapter.Tests/README.md → adapter layer 7 capability tests
+  │   ├── Origo.GodotAdapter.Tests/README.md → adapter layer 6 capability tests
   │   ├── Origo.ConsoleBridge.Tests/README.md → TCP bridge tests
   │   └── Origo.SourceGeneration.Tests/README.md → source generator tests
   │
@@ -64,8 +64,8 @@ Each directory's `README.md` contains:
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.en.md) | Godot 4 adapter layer: file system, logging, serialization, bootstrap |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.en.md) | TCP remote console bridge (port 9876) |
 | **Usage Docs** | [README](usage/README.en.md) | Usage guide from quick start to deep reference |
-| **Tests: Core** | [README](Origo.Core.Tests/README.en.md) | Behavioral test documentation for Core layer's 31 capabilities |
-| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 7 capability tests + 12 integration tests |
+| **Tests: Core** | [README](Origo.Core.Tests/README.en.md) | Behavioral test documentation for Core layer's 32 capabilities |
+| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 6 capability tests + 17 integration tests |
 | **Tests: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.en.md) | TCP bridge server behavioral test documentation |
 | **Tests: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.en.md) | TypedData source generator driver behavioral test documentation |
 | **Manual Meta-Instructions** | [META.md](META.en.md) | Writing and maintenance conventions for this manual |

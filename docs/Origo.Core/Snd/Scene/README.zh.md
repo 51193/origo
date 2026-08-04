@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene
 
@@ -92,7 +92,7 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 
 ### 为什么观察者拓扑按场景宿主划分
 
-观察者绑定是 session 内的有向图（target 解析始终在单一宿主的 `FindByName` 范围内）。每个创建真实 `SndEntity` 的宿主（`FullMemorySndSceneHost`、`GodotSndManager`）持有一个 `ObserverTopology` 并实现 `IObserverTopologyHost`，拓扑与宿主同生命周期。`SessionRun` 经该接口获取宿主拓扑，对其中 `SndEntity` 类型的实体编排 kill/clear 双向 teardown 与读档恢复；宿主内非裸 `SndEntity` 的包装实体类型（如 Godot 前台实体）按既有约定不参与 `SessionRun.KillPending` 的 observer 双向 teardown。`StubSndSceneHost` 不创建真实实体，不实现该接口。集中到宿主级拓扑后，实体不再需要反向暴露内部观察者管理器即可完成跨实体的接线、拆线与恢复。
+观察者绑定是 session 内的有向图（target 解析始终在单一宿主的 `FindByName` 范围内）。每个创建真实 `SndEntity` 的宿主（`FullMemorySndSceneHost`、`GodotSndManager`）持有一个 `ObserverTopology` 并实现 `IObserverTopologyHost`，拓扑与宿主同生命周期。`SessionRun` 经该接口获取宿主拓扑，对其中 `SndEntity` 类型的实体编排 kill/clear 双向 teardown 与读档恢复；宿主内非裸 `SndEntity` 的包装实体类型（如 Godot 前台实体）按约定不参与 `SessionRun.KillPending` 的 observer 双向 teardown。`StubSndSceneHost` 不创建真实实体，不实现该接口。集中到宿主级拓扑后，实体无需反向暴露内部观察者管理器即可完成跨实体的接线、拆线与恢复。
 
 ### 为什么实体在创建期绑定归属会话
 

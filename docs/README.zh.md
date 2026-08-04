@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo Manual
 
@@ -16,7 +16,7 @@ Origo 框架遵循以下核心设计约束，所有模块实现和接口设计�
 |------|------|
 | **平台无关** | Origo.Core 零引擎依赖，所有游戏逻辑、持久化、实体模型仅使用 `System.*` 类型 |
 | **适配层隔离** | 引擎集成仅通过 `Origo.GodotAdapter` 实现 Core 抽象接口，适配层不得触发策略钩子、管理策略生命周期、冲刷延迟管线、持有 Core 编排状态 |
-| **接口隔离（ISP）** | `ISndContext` 拆分为 9 个窄角色接口，`ISessionRun` 返回抽象 `IStateMachineContainer` 而非具体类型 |
+| **接口隔离（ISP）** | `ISndContext` 拆分为 10 个窄角色 companion 接口，`ISessionRun` 返回抽象 `IStateMachineContainer` 而非具体类型 |
 | **依赖方向单向** | Abstractions → Core 实现 → Adapter，反向依赖严格禁止 |
 | **public 白名单** | 不为"可能未来有用"提前公开接口；每个 public 接口必须有明确的跨程序集消费者 |
 | **显式失败优先** | 接口契约被违反时抛异常而非静默降级；存档/读档严格校验完整性 |
@@ -64,8 +64,8 @@ Root (this file)
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.zh.md) | Godot 4 适配层：文件系统、日志、序列化、启动 |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.zh.md) | TCP 远程控制台桥接（端口 9876） |
 | **使用文档** | [README](usage/README.zh.md) | 从快速入门到深度参考的使用指南 |
-| **测试: Core** | [README](Origo.Core.Tests/README.zh.md) | Core 层 31 个能力的行为测试文档 |
-| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.zh.md) | 适配层 7 个能力测试 + 12 个集成测试 |
+| **测试: Core** | [README](Origo.Core.Tests/README.zh.md) | Core 层 32 个能力的行为测试文档 |
+| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.zh.md) | 适配层 6 个能力测试 + 17 个集成测试 |
 | **测试: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.zh.md) | TCP 桥接服务器行为测试文档 |
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.zh.md) | TypedData 源码生成器的驱动器行为测试文档 |
 | **手册元指令** | [META.md](META.zh.md) | 本手册的编写与维护规范 |

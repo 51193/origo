@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.Core.Tests
 
@@ -55,7 +55,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 规划 | [Planning.md](Planning.zh.md) | PlanExecutionStrategyBase：意图驱动计划执行、Action 策略自动插拔、步骤推进 |
 | 类型序列化 | [TypeStringMapping.md](TypeStringMapping.zh.md) | TypeStringMapping 双向映射、BCL 预注册、冲突检测 |
 | 调度 | [Scheduling.md](Scheduling.zh.md) | ConcurrentActionQueue 入队/排空/并发安全/递归深度保护 |
-| 控制台 | [Console.md](Console.zh.md) | 命令解析器/路由器/输入队列/输出通道、13 个内置命令处理（11 Core + 2 GodotAdapter）、类型推断 |
+| 控制台 | [Console.md](Console.zh.md) | 命令解析器/路由器/输入队列/输出通道、14 个内置命令处理（11 Core + 3 GodotAdapter）、类型推断 |
 | 运行时核心 | [Runtime-Core.md](Runtime-Core.zh.md) | OrigoRuntime 构造、控制台注入、帧延迟动作执行 |
 | 会话生命周期 | [Session-Lifecycle.md](Session-Lifecycle.zh.md) | 会话创建/销毁/切换、Dispose 语义、前后台协议一致、拓扑编解码 |
 | 持久化：存储 | [Save-Storage.md](Save-Storage.zh.md) | 两阶段写入、write_in_progress marker 契约、关卡三件套完整性、路径策略、快照读写、幂等去重 |

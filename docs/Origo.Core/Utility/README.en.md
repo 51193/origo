@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Utility/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Utility
 

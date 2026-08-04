@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # FileSystem
 
@@ -33,8 +33,8 @@ A thin facade that delegates all `IFileSystem` methods to the appropriate static
 ### GodotDirectoryOperations
 
 - **Create**: `DirAccess.MakeDirRecursiveAbsolute`
-- **EnumerateFiles**: Supports `*pattern` suffix filtering and recursive mode
-- **DeleteRecursive**: Clears directory contents (recursively deletes files and subdirectories), leaving the container directory itself intact
+- **EnumerateFiles**: Supports `*pattern` suffix filtering and recursive mode, including hidden (dot-prefixed) files such as the `.write_in_progress` marker
+- **DeleteRecursive**: Clears directory contents (recursively deletes files and subdirectories, including hidden files), leaving the container directory itself intact
 - **Rename**: Opens the parent directory then calls `DirAccess.Rename`
 
 ## Design Decisions

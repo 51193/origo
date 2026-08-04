@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -37,10 +37,10 @@
 | GodotRuntimeSmokeTests | `Tests/GodotRuntimeSmokeTests.cs` | 5 | Godot 运行时冒烟（GD.Print、FileAccess/DirAccess 静态类、Vector2 类型、SceneTree） |
 | GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 5 | `GodotFileSystem`（`res://`/`user://` 读写、目录创建、文件枚举、删除） |
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 7 | `GodotFileOperations`（ReadAllText/WriteAllText/Copy/Delete 守卫和正确性） |
-| GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 7 | `GodotDirectoryOperations`（Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive） |
+| GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 9 | `GodotDirectoryOperations`（Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive、隐藏文件枚举/删除） |
 | GodotNodeHandleIntegrationTests | `Tests/GodotNodeHandleIntegrationTests.cs` | 7 | `GodotNodeHandle`（Name 缓存、Free、SetVisible for CanvasItem/Node3D、UnsafeGetNode） |
 | GodotSndManagerInitializationTests | `Tests/GodotSndBootstrapIntegrationTests.cs` | 4 | `GodotSndManager.BindRuntimeDependencies` / `BindContext`（null 守卫、正常链接绑定流程） |
-| GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 8 | `GodotSndEntity`（构造 null 守卫、SetData/GetData/TryGetData、类型安全） |
+| GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 9 | `GodotSndEntity`（构造 null 守卫、SetData/GetData/TryGetData、类型安全、释放后 fail-fast） |
 | GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager`（BindRuntimeDeps 双重绑定守卫、BindContext 顺序守卫、null 守卫、ProcessAll 空列表和 TickCount） |
 | GodotSndManagerCreationIntegrationTests | `Tests/GodotSndManagerCreationIntegrationTests.cs` | 5 | `GodotSndManager`（CreateEntity/RemoveEntity/BuildMetaList/RequestKillEntity/GetEntities） |
 | GodotPackedSceneNodeFactoryIntegrationTests | `Tests/GodotPackedSceneNodeFactoryIntegrationTests.cs` | 4 | `GodotPackedSceneNodeFactory`（有效/无效场景加载、子节点添加、缓存复用） |
@@ -49,7 +49,9 @@
 | OrigoDefaultEntryBootstrapIntegrationTests | `Tests/OrigoDefaultEntryBootstrapIntegrationTests.cs` | 1 | `OrigoDefaultEntry` 属性完整默认值 |
 | BootstrapIntegrationTests | `Tests/BootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` / `OrigoDefaultEntry` 属性默认值与实例化 |
 | SndEntityNodeExtensionsIntegrationTests | `Tests/SndEntityNodeExtensionsIntegrationTests.cs` | 3 | `SndEntityNodeExtensions`（GetNativeNode/GetNodeFromSnd 类型守卫） |
-| TypedDataInitializerIntegrationTests | `Tests/TypedDataInitializerIntegrationTests.cs` | 1 | `TypedDataInitializer`（IsLoaded 恒真断言） |
+| TypedDataInitializerIntegrationTests | `Tests/TypedDataInitializerIntegrationTests.cs` | 1 | `TypedDataInitializer`（EnsureLoaded 触发 adapter kind 注册） |
+| ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 2 | 观察者绑定跨存档/读档恢复 + 会话销毁触发 OnUnmounted |
+| UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | 测试进程启动前 user:// 清理：残留写中标记/前缀产物清除、非测试内容与 Godot 系统内容保留、幂等 |
 
 ## 运行
 

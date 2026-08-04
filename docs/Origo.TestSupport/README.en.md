@@ -1,8 +1,10 @@
 <!-- docsync-pair: Origo.TestSupport/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Origo.TestSupport
+
+> [↑ Back to Origo.manual](../README.en.md)
 
 Shared test infrastructure for all test projects. Provides unified test doubles,
 an in-memory file system, performance reporting utilities, and shared strategy

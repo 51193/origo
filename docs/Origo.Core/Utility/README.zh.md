@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Utility/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility
 
@@ -7,7 +7,7 @@
 
 ## 功能概述
 
-通用工具函数，提供集合差异比较等纯函数辅助能力（当前框架内部未直接引用，作为基础工具公开供业务代码使用）。
+通用工具函数，提供集合差异比较（`DiffUtility`）与路径规范化（`PathUtility`，被 `GodotDirectoryOperations` 等适配层消费）等纯函数辅助能力。
 
 ## 文件清单
 

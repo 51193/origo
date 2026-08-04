@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration
 
@@ -60,7 +60,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 | 层 | StartKind | Kind 范围 | 类型数 |
 |----|-----------|----------|--------|
-| Core | 1（默认） | 0–13 | 13 种 BCL 基础类型 |
+| Core | 1（默认） | 1–13 | 13 种 BCL 基础类型 |
 | GodotAdapter | 128 | 128–141 | 14 种 Godot 引擎类型 |
 | 预留（未来适配器） | 192 | 192–254 | — |
 | Fallback | — | `TypedData.UnregisteredKind` | 未注册类型兜底 |
@@ -112,7 +112,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 )]
 ```
 
-`SndInlineTypesAttribute` 定义在 `Origo.Core.Snd.Metadata` 命名空间。新增 `StartKind` 参数（默认 `1`）控制 Kind 起始偏移。
+`SndInlineTypesAttribute` 定义在 `Origo.Core.Snd.Metadata` 命名空间。`StartKind` 参数（默认 `1`）控制 Kind 起始偏移。
 
 ## 多层运行时扩展
 
@@ -128,7 +128,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 ### TypedData.RegisterKind
 
-`TypedData` 新增 `internal static void RegisterKind(byte kind, Type type)` 方法，允许外部程序集（通过 `InternalsVisibleTo`）向全局 `KindTypeMap[256]` 数组中写入 kind → Type 映射。各层的 `[ModuleInitializer]` 按程序集加载顺序调用此方法。
+`TypedData` 提供 `internal static void RegisterKind(byte kind, Type type)` 方法，允许外部程序集（通过 `InternalsVisibleTo`）向全局 `KindTypeMap[256]` 数组中写入 kind → Type 映射。各层的 `[ModuleInitializer]` 按程序集加载顺序调用此方法。
 
 ## 设计决策
 
@@ -150,7 +150,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 ### 为什么在编译期校验 Kind 空间的范围与唯一性
 
-Kind 是 `byte`，运行时 `TypedData.RegisterKind` 直接写入 `KindTypeMap[kind]` 而不校验重复——多个类型映射到同一 Kind 会静默互相覆盖，造成 TypedData 存取错乱。Kind 由 `startKind` 加组内位置算出，若 `startKind` 偏大或类型过多，Kind 会越过 255 并回绕到某个已占用的小值，与既有类型冲突。生成器因此在编译期强制两条不变量：Kind 必须落在 `[1, 254]`（`ORIGOSG003`，按真实值判定，不依赖 `byte` 截断结果），且每个 Kind 必须唯一映射（`ORIGOSG004`，检测重叠的 `startKind` 区间）。违规类型被剔除并报构建错误，使 Kind 冲突在构建期暴露而非运行期损坏存档。
+Kind 是 `byte`，运行时 `TypedData.RegisterKind` 对同一 Kind 注册不同类型时抛 `InvalidOperationException`（相同类型重复注册幂等），避免多个类型映射到同一 Kind 时互相覆盖造成 TypedData 存取错乱。Kind 由 `startKind` 加组内位置算出，若 `startKind` 偏大或类型过多，Kind 会越过 255 并回绕到某个已占用的小值，与其他类型冲突。生成器因此在编译期强制不变量：Kind 必须落在 `[1, 254]`（`ORIGOSG003`，按真实值判定，不依赖 `byte` 截断结果），每个 Kind 必须唯一映射（`ORIGOSG004`，检测重叠的 `startKind` 区间），且每个生成标识符必须唯一（`ORIGOSG005`，检测跨命名空间/泛型实例化的同名类型）。违规类型被剔除并报构建错误，使 Kind 冲突在构建期暴露而非运行期损坏存档。
 
 ---
 

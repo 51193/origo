@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console System Tests
 
@@ -11,7 +11,7 @@
 
 Validates the full chain of the console command system: command parsing (positional/named/mixed arguments), command routing (register/dispatch/not found/case-insensitive/duplicate overwrite),
 input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interface contract, output channel (publish-subscribe, exception propagation),
-13 built-in command handlers (11 Core + 2 GodotAdapter), type inference (bb_set/entity_set_data), console logging (level/order/Tag/content integrity).
+14 built-in command handlers (11 Core + 3 GodotAdapter), type inference (bb_set/entity_set_data), console logging (level/order/Tag/content integrity).
 
 ## Test File List
 

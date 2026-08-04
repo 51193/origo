@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Lifecycle/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle (Abstractions)
 
@@ -46,7 +46,7 @@
 | `SpawnMany(metaList)` | 批量创建多个实体并统一触发 AfterSpawn 钩子 |
 | `RequestKillEntity(name)` | 标记指定实体为待销毁（帧末统一执行） |
 
-> **注意**：`ISndSceneHost SceneHost` 已从 `ISessionRun` 公共接口移除。策略不应直接接触 SceneHost（它是会话的内部实现容器）。实体操作请使用上表中的 `FindByName`/`GetEntities`/`Spawn`/`SpawnMany`/`RequestKillEntity`。需要底层 `ISndSceneHost` 的场景（如 `CreateEntity` 不触发钩子）仅限框架内部通过 `SessionRun`（具体类型）访问。
+> **注意**：`ISndSceneHost SceneHost` 不在 `ISessionRun` 公共接口上。策略不应直接接触 SceneHost（它是会话的内部实现容器）。实体操作请使用上表中的 `FindByName`/`GetEntities`/`Spawn`/`SpawnMany`/`RequestKillEntity`。需要底层 `ISndSceneHost` 的场景（如 `CreateEntity` 不触发钩子）仅限框架内部通过 `SessionRun`（具体类型）访问。
 
 ## 设计决策
 

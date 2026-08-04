@@ -40,3 +40,6 @@ Thumbs.db
 .godot_binary/
 
 artifacts/
+
+# Rider IDE
+*.cs.uid

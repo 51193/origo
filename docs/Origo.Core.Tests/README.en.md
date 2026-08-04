@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.Core.Tests
 
@@ -63,7 +63,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | Planning | [Planning.md](Planning.en.md) | PlanExecutionStrategyBase: intent-driven plan execution, Action strategy auto plug/unplug, step progression |
 | Type Serialization | [TypeStringMapping.md](TypeStringMapping.en.md) | TypeStringMapping bidirectional mapping, BCL pre-registration, conflict detection |
 | Scheduling | [Scheduling.md](Scheduling.en.md) | ConcurrentActionQueue enqueue/drain/concurrency safety/recursive depth protection |
-| Console | [Console.md](Console.en.md) | Command parser/router/input queue/output channel, 13 built-in command handlers (11 Core + 2 GodotAdapter), type inference |
+| Console | [Console.md](Console.en.md) | Command parser/router/input queue/output channel, 14 built-in command handlers (11 Core + 3 GodotAdapter), type inference |
 | Runtime Core | [Runtime-Core.md](Runtime-Core.en.md) | OrigoRuntime construction, console injection, deferred frame action execution |
 | Session Lifecycle | [Session-Lifecycle.md](Session-Lifecycle.en.md) | Session creation/destruction/switching, Dispose semantics, foreground/background protocol consistency, topology encoding/decoding |
 | Persistence: Storage | [Save-Storage.md](Save-Storage.en.md) | Two-phase write, write_in_progress marker contract, level three-piece set integrity, path strategy, snapshot read/write, idempotent dedup |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity
 
@@ -57,9 +57,10 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 | `FireBeforeDeadHooks()` | Phase 2: 钩子 | 按优先级触发策略 BeforeDead |
 | `ReleaseStrategiesOnly()` | Phase 3: 拆卸 | 释放被动策略 + 主动策略 + 观察者策略引用（不触发钩子） |
 | `TeardownOnly()` | Phase 3: 拆卸 | 释放 Node + Data 资源 |
+| `TeardownObserverBindings()` | Phase 3: 拆卸 | 经宿主 `ObserverTopology` 卸载本实体全部观察者绑定（退订目标数据通道） |
 | `BuildMetaData()` | 序列化 | 构建元数据（含 ObserverIndices，不触发 BeforeSave） |
 
-> **可见性**：`IEntityLifecycle` 与 `SndEntity.Process` 均为 `internal`——实体生命周期编排只能经 `ISessionRun`（`Spawn` / `SpawnMany` / `RequestKillEntity`）与框架内部的批量钩子管线触发。适配层与测试项目经 `InternalsVisibleTo` 访问。单实体便捷方法（`SpawnSingle` / `LoadSingle` / `SaveSingle` 等）已移除：spawn/load/save 统一走 `SndEntityFactory` / `SessionRun` / 序列化管线的批量路径。
+> **可见性**：`IEntityLifecycle` 与 `SndEntity.Process` 均为 `internal`——实体生命周期编排只能经 `ISessionRun`（`Spawn` / `SpawnMany` / `RequestKillEntity`）与框架内部的批量钩子管线触发。适配层与测试项目经 `InternalsVisibleTo` 访问。spawn/load/save 统一经 `SndEntityFactory` / `SessionRun` / 序列化管线的批量路径，不提供单实体便捷方法。
 
 会话退出（quit）的拆卸顺序（`SessionRun.ReleaseAllEntitiesAndClear`）：先批量触发 `FireBeforeQuitHooks`，再卸载全部观察者绑定（`TeardownObserverBindings`，触发 `OnUnmounted` 并退订目标数据通道），然后批量 `ReleaseStrategiesOnly`，最后 `TeardownOnly`。实体销毁（kill）路径（`SessionRun.KillPending`）先做观察者双向拆线，再触发 `FireBeforeDeadHooks`，最后释放并移除。
 

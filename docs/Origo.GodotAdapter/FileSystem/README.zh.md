@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # FileSystem
 
@@ -33,8 +33,8 @@
 ### GodotDirectoryOperations
 
 - **Create**：`DirAccess.MakeDirRecursiveAbsolute`
-- **EnumerateFiles**：支持 `*pattern` 后缀过滤和递归模式
-- **DeleteRecursive**：清除目录内容（递归删除文件和子目录），保留目录容器本身
+- **EnumerateFiles**：支持 `*pattern` 后缀过滤和递归模式，包含隐藏文件（点前缀，如 `.write_in_progress` 写中标记）
+- **DeleteRecursive**：清除目录内容（递归删除文件和子目录，含隐藏文件），保留目录容器本身
 - **Rename**：打开父目录后调用 `DirAccess.Rename`
 
 ## 设计决策

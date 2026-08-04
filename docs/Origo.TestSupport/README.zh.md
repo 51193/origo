@@ -1,8 +1,10 @@
 <!-- docsync-pair: Origo.TestSupport/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Origo.TestSupport
+
+> [↑ 回到 Origo.manual](../README.zh.md)
 
 供所有测试项目共享的测试基础设施。提供统一的测试替身（Test Double）、
 内存文件系统、性能报告工具和共享测试策略基类。

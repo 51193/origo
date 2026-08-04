@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Entity
 
@@ -60,8 +60,6 @@ These methods are used by the framework layer for batch orchestration; business 
 | `BuildMetaData()` | Serialization | Build metadata (including ObserverIndices; does not trigger BeforeSave) |
 
 > **Visibility**: `IEntityLifecycle` and the single-entity convenience methods (`SpawnSingle` / `LoadSingle` / `QuitSingle` / `DeadSingle` / `SaveSingle` / `Process`) are `internal` — entity lifecycle orchestration can only be triggered via `ISessionRun` (`Spawn` / `SpawnMany` / `RequestKillEntity`) and the framework's internal batch hook pipeline. Adapter and test projects access them via `InternalsVisibleTo`.
-
-Teardown order for `QuitSingle` / `DeadSingle`: first `FireBeforeQuit/DeadHooks`, then unmount observer bindings (`OnUnmounted`), then `ReleaseStrategiesOnly`, and finally `TeardownOnly`.
 
 `Process(delta)` triggers strategy Process by priority + snapshot iteration (internal; invoked by scene host `ProcessAll` and adapter-layer frame processing).
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -23,7 +23,7 @@ SND 策略系统的完整实现。策略是实体行为逻辑的载体，遵循"
 | `ObserverBindingEntry.cs` | `internal` — 单条观察者绑定记录（observerName / targetName / observerIndex / 策略 / 数据订阅包装），`FullCleanup` 退订 + 触发 `OnUnmounted` + 归还策略 |
 | `ObserverStrategyMetadata.cs` | `internal` — 按类型反射缓存 `[ObserveData]` 声明的观察数据键 |
 | `ObserveDataAttribute.cs` | 观察数据键声明特性：`[ObserveData("key")]`，支持多重声明 |
-| `ActiveStrategyExtensions.cs` | `ISndEntity` 扩展方法：泛型 `InvokeStrategy<TInput, TOutput>` 消除 JSON 序列化样板；`EnsureStrategy` 惰性策略挂载 + 幂等守卫 |
+| `ActiveStrategyExtensions.cs` | `ISndEntity` 扩展方法：泛型 `InvokeStrategy<TInput, TOutput>` 消除 JSON 序列化样板；`EnsureStrategy` 惰性策略挂载 + 幂等守卫。物理位置在 `Origo.Core/Snd/` 根目录（非 Strategy/ 子目录） |
 | `ActiveStrategyManager.cs` | `internal` — 单实体主动策略管理器：Dictionary 容器 + 增删 + 序列化 |
 | `SndStrategyPool.cs` | `internal` — 策略池：注册、实例化、引用计数、无状态校验 |
 | `SndStrategyManager.cs` | `internal` — 单实体被动策略管理器：策略容器的增删 + 生命周期钩子协调 |

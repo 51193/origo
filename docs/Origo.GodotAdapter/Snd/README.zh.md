@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -15,10 +15,11 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 |------|------|
 | `GodotSndManager.cs` | Godot 场景宿主：管理 GodotSndEntity 集合，实现 ISndSceneHost。实体帧处理由 Core 的 `SessionManager.ProcessAllSessions` 经 `SceneHost.ProcessAll` 通过 `IOrigoFrameDriver.DriveFrame` 统一驱动 |
 | `GodotSndEntity.cs` | Godot 实体：将 Core SndEntity 绑定到 Godot Node 生命周期，委托所有 ISndEntity 调用 |
+| `SndEntityCollection.cs` | internal — 纯 C# 实体集合：实体增删、批量恢复回滚、击杀标记、帧处理编排，无 Godot 依赖，由测试直接覆盖 |
 | `GodotPackedSceneNodeFactory.cs` | INodeFactory 实现：通过 PackedScene.Instantiate 创建 Godot Node |
 | `GodotNodeHandle.cs` | INodeHandle 实现：包装 Godot.Node，提供 Free / SetVisible / UnsafeGetNode |
 | `SndEntityNodeExtensions.cs` | 适配层便利扩展：`GetNativeNode()`（从 INodeHandle 提取 Godot Node）、`GetNodeFromSnd<T>()`（从 ISndEntity 遍历 Godot 场景树）。物理位置在项目根 `Origo.GodotAdapter/SndEntityNodeExtensions.cs`（非 Snd/ 子目录），命名空间归属 `Origo.GodotAdapter` |
-| `TypedDataInitializer.cs` | 程序集加载强制入口：访问 `IsLoaded` 属性触发所有 `[ModuleInitializer]` 执行 |
+| `TypedDataInitializer.cs` | internal — 程序集加载强制入口：调用 `EnsureLoaded()` 触发所有 `[ModuleInitializer]` 执行（测试项目经 InternalsVisibleTo 访问） |
 
 ## 模块详解
 

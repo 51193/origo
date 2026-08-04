@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd (Abstractions)
 
@@ -23,7 +23,7 @@ ISndContext 的角色接口拆分。9 个 Snd 角色接口 + `IStateMachineConte
 | `ISndFileAccess.cs` | 文件访问：结构化读写 + 强类型读写 + 存在检查（5 成员）。所有文件内容读写统一通过 `IDataSourceIoGateway` 边界，策略无需自行处理原始文本解析 |
 | `ISndArchiveFileAccess.cs` | 存档内文件访问：结构化读写 + 强类型读写 + 存在检查 + 删除（6 成员）。路径相对于存档活动目录的 extra/ 子目录，随存档生命周期 |
 
-> `ISndSessionAccess` 和 `ISndEntityOperations` 现已不再使用。`CurrentSession`、`IsFrontSession`、`SessionManager`、`RequestKillAll`/`RequestKillEntity` 不在 `ISndContext` 上。`IsFrontSession` 在 `ISessionRun` 上（经 `entity.OwningSession.IsFrontSession` 访问）。`SessionManager` 可通过 `entity.OwningSession.SessionManager` 或 `OrigoRuntime.SessionManager`（public）访问。实体销毁经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行。
+> `CurrentSession`、`IsFrontSession`、`SessionManager`、`RequestKillAll`/`RequestKillEntity` 不在 `ISndContext` 上。`IsFrontSession` 在 `ISessionRun` 上（经 `entity.OwningSession.IsFrontSession` 访问）。`SessionManager` 可通过 `entity.OwningSession.SessionManager` 或 `OrigoRuntime.SessionManager`（public）访问。实体销毁经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行。
 
 ## ISndContext Companion 属性
 
@@ -87,11 +87,11 @@ ISndContext 本身是统一业务门面，不继承任何角色接口。所有�
 
 `ISessionManager` 是跨会话操作的入口。策略通过 `entity.OwningSession.SessionManager` 访问，实体自身知道所属 session，无需通过全局上下文按 key 查找。将其留在 `ISndContext` 上鼓励了 `ctx.SessionManager` 的用法，这要求调用方知道目标 session 的 key——不如 `entity.OwningSession.SessionManager` 安全。
 
-### 为什么移除 ISndSessionAccess 和 ISndEntityOperations
+### 为什么 ISndContext 不提供会话与实体销毁成员
 
-- `CurrentSession` 从公共接口移除：策略应使用 `entity.OwningSession` 访问所属会话，而非经全局 `ctx.CurrentSession` 反查。
-- `IsFrontSession` 移除：便捷属性，可从 `SessionManager.ForegroundSession` 推导。
-- `RequestKillAll`/`RequestKillEntity` 从 `ISndContext` 移除：实体销毁统一经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行，不再通过全局上下文。
+- 会话访问：策略使用 `entity.OwningSession` 访问所属会话，实体自身知道所属 session，无需经全局上下文按 key 反查。
+- 前台会话判断：`IsFrontSession` 为便捷属性，可从 `SessionManager.ForegroundSession` 推导。
+- 实体销毁：统一经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行，不提供全局上下文入口。
 
 ### 为什么 IStateMachineContext 也继承了角色接口
 

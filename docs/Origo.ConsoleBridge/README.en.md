@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.ConsoleBridge
 
@@ -72,11 +72,11 @@ Origo's game frame loop is single-threaded. Multiple connections mean multiple c
 
 ### Why async I/O instead of manual threading
 
-`AcceptTcpClientAsync` and `ReadLineAsync` wait at the OS level via IOCP without occupying dedicated thread stacks. Compared to the previous manual `Thread` + `Monitor.Wait(100ms)` polling model:
+`AcceptTcpClientAsync` and `ReadLineAsync` wait at the OS level via IOCP without occupying dedicated thread stacks. 
 
 - Zero CPU overhead when idle (no 100ms wake-up to check state)
 - `Dispose()` shutdown latency reduced from worst-case 6 seconds (two `Thread.Join(3000)`) to sub-second (`CancellationToken` immediately interrupts async I/O)
-- No need for `ReceiveTimeout` read timeout fallback — cancellation tokens directly interrupt `ReadLineAsync`
+- No `ReceiveTimeout` read timeout fallback is needed — cancellation tokens directly interrupt `ReadLineAsync`
 
 The output path keeps synchronous `StreamWriter.WriteLine` to avoid changing the `Action<string>` callback to `Func<string, Task>` (which would cascade into polluting the `IConsoleOutputChannel` interface).
 

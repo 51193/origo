@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -63,7 +63,7 @@ Composite save-destroy-load: persist old foreground → destroy conflicting back
 ## Design Decisions
 
 ### Why Dispose does not auto-persist
-Previously Dispose triggered auto-persist writes to `current/` immediately followed by deletion, wasting I/O with incorrect semantics. Now persistence is entirely explicit.
+Persistence is entirely explicit: `SessionRun.Dispose` and `ProgressRun.Dispose` do not trigger auto-persist. Auto-persisting on dispose would write to `current/` only to be deleted by `DeleteCurrentDirectory()` (wasted I/O) and would fire `BeforeSave` hooks on entities about to be destroyed (wrong semantics with side-effect risk).
 
 ### Why loading a save does not roll back on failure
 `LoadFromPayload` operates on a freshly-created ProgressRun not yet in service. Disk data remains intact. No pollution of existing runtime state.
