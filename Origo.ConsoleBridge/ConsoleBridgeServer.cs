@@ -130,7 +130,22 @@ public sealed class ConsoleBridgeServer : IDisposable
         {
             if (_writer is not null)
             {
-                _writer.WriteLine(line);
+                try
+                {
+                    _writer.WriteLine(line);
+                }
+                catch (Exception ex) when (ex is IOException or ObjectDisposedException or SocketException)
+                {
+                    // A hard client disconnect (RST) breaks the socket write
+                    // path while the handler thread is still inside its read
+                    // loop. This is a connection-level failure: detach the
+                    // dead writer so subsequent lines buffer again, and never
+                    // let it propagate into the game frame loop.
+                    _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                        new LogMessageBuilder()
+                            .Build($"Output write failed; connection considered dead and detached: {ex.Message}"));
+                    _writer = null;
+                }
             }
             else
             {

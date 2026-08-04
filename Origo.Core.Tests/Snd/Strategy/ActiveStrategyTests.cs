@@ -22,7 +22,7 @@ public class ActiveStrategyTests
     public void Invoke_ReturnsResult()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var result = entity.InvokeStrategy(_queryHpIndex);
 
@@ -34,7 +34,7 @@ public class ActiveStrategyTests
     public void Invoke_EntityPassedCorrectly()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var name = (string?)entity.InvokeStrategy(_queryHpIndex, "get_name");
 
@@ -45,7 +45,7 @@ public class ActiveStrategyTests
     public void Invoke_InputPassedCorrectly()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive([_cmdDamageIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_cmdDamageIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var result = entity.InvokeStrategy(_cmdDamageIndex, 42);
 
@@ -57,7 +57,7 @@ public class ActiveStrategyTests
     public void Invoke_UnregisteredIndex_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.InvokeStrategy("not.exist"));
@@ -68,7 +68,7 @@ public class ActiveStrategyTests
     public void Invoke_LifecycleStrategyIndex_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([_entityOnlyIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([_entityOnlyIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.InvokeStrategy(_entityOnlyIndex));
@@ -81,7 +81,7 @@ public class ActiveStrategyTests
     public void Spawn_RecoversActiveStrategies()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var result = entity.InvokeStrategy(_queryHpIndex);
 
@@ -92,7 +92,7 @@ public class ActiveStrategyTests
     public void Load_RecoversActiveStrategies()
     {
         var (entity, _, _) = Setup();
-        entity.LoadSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterLoadHooks();
 
         var result = entity.InvokeStrategy(_queryHpIndex);
 
@@ -103,7 +103,7 @@ public class ActiveStrategyTests
     public void Quit_ReleasesAllActiveStrategies()
     {
         var (entity, _, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         DestroySingleEntity(entity, topology, quit: true);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -115,7 +115,7 @@ public class ActiveStrategyTests
     public void Dead_ReleasesAllActiveStrategies()
     {
         var (entity, _, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         DestroySingleEntity(entity, topology, quit: false);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -131,7 +131,7 @@ public class ActiveStrategyTests
         var (entity, _, _) = Setup();
         var meta = CreateMeta([], [_entityOnlyIndex]);
 
-        var ex = Assert.Throws<InvalidOperationException>(() => entity.LoadSingle(meta));
+        var ex = Assert.Throws<InvalidOperationException>(() => { ((IEntityLifecycle)entity).RecoverForLifecycle(meta); ((IEntityLifecycle)entity).FireAfterLoadHooks(); });
 
         Assert.Contains(_entityOnlyIndex, ex.Message, StringComparison.Ordinal);
         Assert.Contains("ActiveStrategyBase", ex.Message, StringComparison.Ordinal);
@@ -145,7 +145,7 @@ public class ActiveStrategyTests
         // roll it back so no active strategy remains attached after the failure.
         var meta = CreateMeta([], [_queryHpIndex, _entityOnlyIndex]);
 
-        Assert.Throws<InvalidOperationException>(() => entity.LoadSingle(meta));
+        Assert.Throws<InvalidOperationException>(() => { ((IEntityLifecycle)entity).RecoverForLifecycle(meta); ((IEntityLifecycle)entity).FireAfterLoadHooks(); });
 
         var ex = Assert.Throws<InvalidOperationException>(() => entity.InvokeStrategy(_queryHpIndex));
         Assert.Contains(_queryHpIndex, ex.Message, StringComparison.Ordinal);
@@ -157,7 +157,7 @@ public class ActiveStrategyTests
     public void AddActiveStrategy_Then_Invoke_Works()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.AddActiveStrategy(_queryHpIndex);
 
         var result = entity.InvokeStrategy(_queryHpIndex);
@@ -169,7 +169,7 @@ public class ActiveStrategyTests
     public void AddActiveStrategy_Duplicate_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.AddActiveStrategy(_queryHpIndex));
@@ -180,7 +180,7 @@ public class ActiveStrategyTests
     public void AddActiveStrategy_NonActiveType_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.AddActiveStrategy(_entityOnlyIndex));
@@ -191,7 +191,7 @@ public class ActiveStrategyTests
     public void AddActiveStrategy_NullOrWhitespace_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Throws<ArgumentNullException>(() => entity.AddActiveStrategy(null!));
         Assert.Throws<ArgumentException>(() => entity.AddActiveStrategy("  "));
@@ -201,7 +201,7 @@ public class ActiveStrategyTests
     public void RemoveActiveStrategy_Then_Invoke_Throws()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.RemoveActiveStrategy(_queryHpIndex);
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -213,7 +213,7 @@ public class ActiveStrategyTests
     public void RemoveActiveStrategy_NotExists_Noop()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var ex = Record.Exception(() => entity.RemoveActiveStrategy("not.exist"));
         Assert.Null(ex);
@@ -225,9 +225,10 @@ public class ActiveStrategyTests
     public void SerializeMetaData_IncludesActiveIndices()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex, _cmdDamageIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex, _cmdDamageIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
         var activeIndices = meta.StrategyMetaData!.ActiveIndices;
 
         Assert.Contains(_queryHpIndex, activeIndices);
@@ -238,9 +239,10 @@ public class ActiveStrategyTests
     public void SerializeMetaData_EntityAndActive_Separated()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([_entityOnlyIndex], [_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([_entityOnlyIndex], [_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
 
         Assert.Contains(_entityOnlyIndex, meta.StrategyMetaData!.LifecycleIndices);
         Assert.DoesNotContain(_queryHpIndex, meta.StrategyMetaData!.LifecycleIndices);
@@ -252,10 +254,11 @@ public class ActiveStrategyTests
     public void SerializeMetaData_DynamicAdd_Then_Serialized()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.AddActiveStrategy(_queryHpIndex);
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
 
         Assert.Contains(_queryHpIndex, meta.StrategyMetaData!.ActiveIndices);
     }
@@ -264,10 +267,11 @@ public class ActiveStrategyTests
     public void SerializeMetaData_DynamicRemove_NotSerialized()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMetaWithActive([_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMetaWithActive([_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.RemoveActiveStrategy(_queryHpIndex);
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
 
         Assert.Empty(meta.StrategyMetaData!.ActiveIndices);
     }
@@ -278,7 +282,7 @@ public class ActiveStrategyTests
     public void SameEntity_HasBothTypeStrategies()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([_entityOnlyIndex], [_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([_entityOnlyIndex], [_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var processEx = Record.Exception(() => entity.Process(0.016));
         Assert.Null(processEx);
@@ -291,7 +295,7 @@ public class ActiveStrategyTests
     public void RemoveLifecycleStrategy_LeavesActiveStrategy()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([_entityOnlyIndex], [_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([_entityOnlyIndex], [_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.RemoveStrategy(_entityOnlyIndex);
 
         var result = entity.InvokeStrategy(_queryHpIndex);
@@ -302,7 +306,7 @@ public class ActiveStrategyTests
     public void RemoveActiveStrategy_LeavesLifecycleStrategy()
     {
         var (entity, _, _) = Setup();
-        entity.SpawnSingle(CreateMeta([_entityOnlyIndex], [_queryHpIndex]));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([_entityOnlyIndex], [_queryHpIndex])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.RemoveActiveStrategy(_queryHpIndex);
 
         var ex = Record.Exception(() => entity.Process(0.016));

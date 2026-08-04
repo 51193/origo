@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化流程
 
@@ -174,10 +174,10 @@ ctx.Save.RequestSaveGameAuto();  // 自动生成时间戳 ID
 ### 请求加载
 
 ```csharp
-ctx.RequestLoadGame("my_save_id");    // 加载指定槽位
-ctx.RequestContinueGame();            // 尝试继续游戏
-ctx.RequestLoadInitialSave();         // 加载初始存档
-ctx.RequestLoadMainMenuEntrySave();   // 加载主菜单入口存档
+ctx.Save.RequestLoadGame("my_save_id");        // 加载指定槽位
+ctx.Lifecycle.RequestContinueGame();           // 尝试继续游戏
+ctx.Lifecycle.RequestLoadInitialSave();        // 加载初始存档
+ctx.Lifecycle.RequestLoadMainMenuEntrySave();  // 加载主菜单入口存档
 ```
 
 ### 枚举存档

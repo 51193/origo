@@ -44,7 +44,7 @@ public class SndEntityAfterLoadTests
         observerTopology.BindContext(ctx);
         var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, observerTopology);
 
-        var ex = Record.Exception(() => entity.LoadSingle(meta));
+        var ex = Record.Exception(() => { ((IEntityLifecycle)entity).RecoverForLifecycle(meta); ((IEntityLifecycle)entity).FireAfterLoadHooks(); });
         Assert.Null(ex);
     }
 
@@ -78,7 +78,7 @@ public class SndEntityAfterLoadTests
         observerTopology.BindContext(ctx);
         var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, observerTopology);
 
-        Assert.Throws<InvalidOperationException>(() => entity.LoadSingle(meta));
+        Assert.Throws<InvalidOperationException>(() => { ((IEntityLifecycle)entity).RecoverForLifecycle(meta); ((IEntityLifecycle)entity).FireAfterLoadHooks(); });
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class SndEntityAfterLoadTests
             var observerTopology = new ObserverTopology(runtime.SndWorld.StrategyPool, logger);
             observerTopology.BindContext(ctx);
             var entity = runtime.SndWorld.CreateEntity(nodeFactory, ctx, logger, observerTopology);
-            entity.LoadSingle(meta);
+            ((IEntityLifecycle)entity).RecoverForLifecycle(meta); ((IEntityLifecycle)entity).FireAfterLoadHooks();
 
             Assert.Equal(new[] { "afterload:a", "afterload:b" }, AfterLoadProbeAStrategy.Events);
         }

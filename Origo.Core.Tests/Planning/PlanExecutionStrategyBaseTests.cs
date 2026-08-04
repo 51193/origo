@@ -518,6 +518,10 @@ public class PlanExecutionStrategyBaseTests
         Assert.Single(FailingPlanStrategy.FailedCalls!);
         Assert.Equal("test_entity", FailingPlanStrategy.FailedCalls![0]);
         Assert.Empty(FailingPlanStrategy.CompletedCalls!);
+
+        var (foundStatus, status) = entity.TryGetData<string>(_intentStatusKey);
+        Assert.True(foundStatus);
+        Assert.Equal("failed", status);
     }
 
     [Fact]
@@ -740,17 +744,11 @@ public class PlanExecutionStrategyBaseTests
 
         public int GetSubCount(string key) => _subCounts.TryGetValue(key, out var c) ? c : 0;
 
-        void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback, Func<ISndEntity, TypedData, TypedData, bool>? filter)
-        {
+        void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback, Func<ISndEntity, TypedData, TypedData, bool>? filter) =>
             _subCounts[name] = GetSubCount(name) + 1;
-            ((ISndEntityRawSubscription)inner).SubscribeDataRaw(name, callback, filter);
-        }
 
-        void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback)
-        {
+        void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback) =>
             _subCounts[name] = Math.Max(0, GetSubCount(name) - 1);
-            ((ISndEntityRawSubscription)inner).UnsubscribeDataRaw(name, callback);
-        }
 
         public string Name => inner.Name;
         public ISessionRun OwningSession { get => inner.OwningSession; set => inner.OwningSession = value; }

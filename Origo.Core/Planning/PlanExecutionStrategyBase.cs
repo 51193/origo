@@ -51,6 +51,9 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     /// <summary>Status value written when a plan completes successfully.</summary>
     protected virtual string IntentStatusCompleted => "completed";
 
+    /// <summary>Status value written when a plan terminates on failure.</summary>
+    protected virtual string IntentStatusFailed => "failed";
+
     /// <summary>Status value written when an action step begins execution.</summary>
     protected virtual string ActionStatusExecuting => "executing";
 
@@ -248,11 +251,17 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
             RemoveCurrentAction(entity);
             entity.SetData(PlanStepKey, "");
             entity.SetData(IntentKey, "");
-            entity.SetData(IntentStatusKey, IntentStatusCompleted);
             if (failed)
+            {
+                entity.SetData(IntentStatusKey, IntentStatusFailed);
                 OnPlanFailed(entity);
+            }
             else
+            {
+                entity.SetData(IntentStatusKey, IntentStatusCompleted);
                 OnPlanCompleted(entity);
+            }
+
             return;
         }
 

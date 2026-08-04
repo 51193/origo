@@ -5,6 +5,7 @@ using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Save.Serialization;
 
@@ -80,7 +81,14 @@ internal sealed class SaveContext
 
     public DataSourceNode BuildSndScene(ISndSceneAccess sceneAccess) => _sceneSerializer.Build(sceneAccess);
 
-    public void RecoverSndScene(ISndSceneAccess sceneHost, DataSourceNode serializedNode) =>
+    /// <summary>
+    ///     Recovers entities from a serialized scene node and returns the
+    ///     recovered metadata list, so callers can restore per-entity state
+    ///     that is carried in <see cref="SndMetaData" /> but not applied by
+    ///     entity recovery itself (e.g. observer binding topology).
+    /// </summary>
+    public IReadOnlyList<SndMetaData> RecoverSndScene(ISndSceneAccess sceneHost,
+        DataSourceNode serializedNode) =>
         _sceneSerializer.RecoverInto(sceneHost, serializedNode);
 
     public SaveGamePayload SaveGame(

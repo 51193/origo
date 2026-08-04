@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence Flow
 
@@ -174,10 +174,10 @@ ctx.Save.RequestSaveGameAuto();  // Auto-generate timestamp ID
 ### Requesting a Load
 
 ```csharp
-ctx.RequestLoadGame("my_save_id");    // Load a specific slot
-ctx.RequestContinueGame();            // Try to continue the game
-ctx.RequestLoadInitialSave();         // Load the initial save
-ctx.RequestLoadMainMenuEntrySave();   // Load the main menu entry save
+ctx.Save.RequestLoadGame("my_save_id");        // Load a specific slot
+ctx.Lifecycle.RequestContinueGame();           // Try to continue the game
+ctx.Lifecycle.RequestLoadInitialSave();        // Load the initial save
+ctx.Lifecycle.RequestLoadMainMenuEntrySave();  // Load the main menu entry save
 ```
 
 ### Enumerating Saves

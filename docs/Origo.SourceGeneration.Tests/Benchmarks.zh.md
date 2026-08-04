@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/Benchmarks -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 生成产物性能基准 测试
 
 > [↑ 回到 Origo.SourceGeneration.Tests](README.zh.md)
 > [↔ 被测模块: Origo.SourceGeneration](../Origo.SourceGeneration/README.zh.md)
-> [↔ 性能基线: baseline](../../benchmarks/baseline.zh.md)
+> [↔ 性能基线: baseline](../benchmarks/baseline.zh.md)
 
 ## 被测行为概览
 

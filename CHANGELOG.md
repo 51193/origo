@@ -93,6 +93,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `ctx.RequestKillEntity`, and `ctx.CloneTemplate` usages in docs were corrected to
   `ctx.Save.RequestSaveGame`, `entity.OwningSession.RequestKillEntity`, and
   `ctx.Template.CloneTemplate`.
+- **Observer bindings are actually restored across save/load** — `SessionRun.LoadFromPayload` now restores bindings from the deserialized metadata instead of the (empty) live topology, so mounted observers resume firing after a reload. Previously the restore loop read the freshly-created topology and silently did nothing.
+- **Session teardown unmounts observers** — quitting a session now fires `OnUnmounted` on all mounted observer strategies and unsubscribes their target data channels before strategies are released (previously observers were silently released without notification).
+- **Session ids are validated** — `RequestSaveGame` / `RequestLoadGame` / `SetContinueTarget` reject ids outside `[A-Za-z0-9._-]` with `ArgumentException`, matching session/level key validation; ids with path separators previously created nested or escaped save directories.
+- **Save format version is written and validated** — every save with user meta now records `origo.format_version` in `meta.map`; loading a save written by a newer framework version fails with an explicit error instead of mis-parsing.
+- **Snapshots no longer contain the write-in-progress marker** — the transient marker was previously copied into the snapshot directory, falsely marking completed snapshots as interrupted writes.
+- **`DataSourceNode.AsString`/`AsChar` fail fast on wrong shapes** — `AsString` throws on `Map`/`Array` nodes (previously returned `""`) and `AsChar` throws on empty text (previously returned `'\0'`), matching the `AsChar` shape-check precedent.
+- **`DataSourceConverterRegistry.Read<T>`/`Write<T>` fall back along base-class/interface chains** — matching the non-generic paths and the documented behavior; previously only the exact type was looked up.
+- **`IsSameEntityAs` degrades to name equality for unbound entities** — concrete entities throw from `OwningSession` before session binding; the comparison now treats that as "unbound" per its documented contract instead of crashing.
+- **`ObserverTopology.Unmount` releases the pool reference even when `OnUnmounted` throws** — a throwing hook previously leaked the strategy reference count permanently.
+- **Observer mounting rejects dead or cross-session targets** — mounting on a pending-kill entity, or across sessions (different scene hosts), now throws `InvalidOperationException`; cross-session mounts previously leaked subscriptions that teardown could not resolve.
+- **Strategy registration rejects abstract types and duplicate indices** — registering an abstract strategy type (allowed through until first acquire) or re-registering an existing index now throws at registration time.
+- **`PlanExecutionStrategyBase` writes a distinct failed status** — a plan terminated by failure now records `IntentStatusFailed` ("failed") instead of reusing the success status.
+- **`PersistentRandom.NextInt32` removes modulo bias** — rejection sampling keeps the range uniformly distributed (the previous `% range` skewed small ranges).
+- **`LogMessageBuilder` keeps context order explicitly** — context pairs are stored in a list (insertion order is now a documented contract instead of relying on dictionary behavior).
+- **`FullMemorySndSceneHost` rolls back failed entity recovery** — a recovery exception now removes the half-initialized entity and releases its strategies before rethrowing (previously the broken entity stayed findable).
+- **`EnumerateSaveIds` skips staging/backup directories** — `.tmp`/`.bak` leftovers from interrupted snapshots are no longer listed as save slots.
+- **Level payload key/`LevelId` mismatch is rejected at write time** — writing a payload whose dictionary key differs from `LevelId` now throws instead of writing to the wrong directory.
+- **`PathUtility.NormalizeDirectoryPath` handles backslashes** — consistent with `SaveFileHandle` path handling on Windows-style paths.
+- **`SndMetaFluentBuilder` validates before constructing** — an invalid name no longer allocates a throwaway metadata object.
+- **`ConsoleBridgeServer` isolates output-write failures** — a hard client disconnect during `Publish` no longer propagates into the game frame loop; the dead writer is detached and output buffers again.
+- **`GodotFileOperations.WriteAllText` checks the write result** — a failed `StoreString` now throws `IOException` instead of silently losing data.
+- **`GodotSndManager` error logs no longer mask the original error** — entity creation/recovery failure paths guard against an unbound logger (previously a `NullReferenceException` replaced the intended error message).
+- **`OrigoAutoHost` fails loudly after bootstrap failure** — frame driving after a failed `_Ready` throws instead of silently running without a runtime.
+- **`TestSndSceneHost.RemoveEntity` keeps the metadata view in sync** — removed entities no longer linger in `BuildMetaList`.
+- **The TypedData source generator is truly incremental** — the generation input now has value equality, so an unchanged declaration set over a new `Compilation` (every editor keystroke) skips regeneration instead of re-extracting and regenerating everything.
+- **`GodotAdapter.CommandHandlerBase` inherits Core's handler base** — argument validation and error messaging are no longer duplicated; the adapter base only adds the runtime reference.
+- **Orphaned Godot `.uid` files removed** — 30 stale editor metadata files whose source files had been deleted.
+
+### Removed
+
+- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
+- **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
+- **`SndEntity.SpawnSingle` / `LoadSingle` / `SaveSingle` and their `GodotSndEntity` counterparts removed** — these internal single-entity shortcuts had no production callers (spawn/load/save uniformly go through `SndEntityFactory` / `SessionRun` / the serialization pipeline) and were only used by tests, which now drive the `IEntityLifecycle` phased methods directly.
+- **BREAKING: `SaveGamePayload.FormatVersion` property removed** — the framework neither read nor wrote it (the on-disk version always comes from `CurrentFormatVersion` via `meta.map`); only `CurrentFormatVersion` and the `FormatVersionMetaKey` constant remain.
 
 ## [0.0.8] - 2026-06-30
 
@@ -157,7 +191,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`TestSceneHost` now implements `IOwningSessionBindable`** — consistent with `StubSndSceneHost` and `FullMemorySndSceneHost`. Entities created through `TestSceneHost.CreateEntity()` now have `OwningSession` bound.
 
 - **`OrigoRuntime.SessionManager` changed from `internal` to `public`** — non-entity code (e.g. console command handlers in external assemblies) now has a public path to `ISessionManager`. Strategies should still use `entity.OwningSession.SessionManager`.
-- **`GodotAdapter.Tests` coverage exclusions expanded** — `GodotFileSystem.cs`, `GodotSndBootstrap.cs`, and `PressButtonCommandHandler.cs` are now excluded from line coverage measurement. These files are thin passthrough delegates to Godot engine APIs with no independently testable logic.
+- **`GodotAdapter.Tests` coverage exclusions expanded** — `GodotFileSystem.cs`, `GodotSndBootstrap.cs`, and `CameraViewCommandHandler.cs` are now excluded from line coverage measurement. These files are thin passthrough delegates to Godot engine APIs with no independently testable logic.
 
 ### Removed
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.Core.Tests
 
@@ -21,8 +21,7 @@ The tests for Origo.Core follow the "**behavior-oriented, documentation-contract
   disk operations. Strategy test context (`StrategyTestContext`) has built-in `MemoryFileSystem` full
   pipeline, supporting ISndFileAccess behavioral verification.
 - **Strategy isolation testing**: `StrategyTestScenario` framework allows testing individual strategy
-  lifecycles in a completely runtime-free environment. `TestContextBuilder` provides SndContext
-  construction for integration test scenarios.
+  lifecycles in a completely runtime-free environment.
 
 ## Test Support Facilities
 
@@ -38,7 +37,6 @@ The test project provides the following core support facilities via `TestSupport
 | `NullSndContext` | `ISndContext` null object implementation | Null context for runtime-only unit tests; queries return empty objects, mutation operations (save/load/level switch, etc.) explicitly throw for fail-fast |
 | `StrategyStateTestsCollection` | xUnit `[CollectionDefinition]` | Defines `StrategyStateTests` serial collection (`DisableParallelization`), for strategy test classes with static mutable state to run serially, preventing cross-test pollution |
 | `TestFactory` | Static factory class | Quickly creates commonly used compositions: OrigoRuntime / SndWorld / ProgressRun / ConverterRegistry, etc. |
-| `TestContextBuilder` | Fluent Builder | Constructs `SndContext` instances (integration tests), provides sensible defaults and optional overrides, replacing repetitive 10-line construction patterns |
 | `GameplaySimulationHarness` | Fluent Builder + Harness | One-click creation of complete frame-driven game simulation environment: OrigoRuntime + SndContext + background game session (syncProcess=true), supports DriveFrame/RunFrames/SpawnEntity/GetEntityData/SaveAndReload |
 | `TestStrategies` | Abstract base class collection | `SharedFrameCounterStrategy`, `SharedEchoActiveStrategy`, `SharedKillProbeStrategy`, `SharedNoopLifecycleStrategy`, `SharedNoopStateMachineStrategy` — referenced by integration test files via 1-line sealed subclass, eliminating duplicate strategy definitions |
 | `TestObserverEvents` | Structured event recording | `TestObserverEvent` record (EventType/TargetName/DataKey/OldValue/NewValue) + `EventCollector` static AsyncLocal collector + `SharedDataChangeObserverStrategy` abstract base class — observer test assertions upgrade from substring matching to typed field exact comparison |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -55,7 +55,7 @@ Each scene host that creates real `SndEntity` instances (`FullMemorySndSceneHost
 - **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`
 - **BuildBindingsFor(observerName)**: Serialize an observer's full outgoing edges as `List<ObserverBinding>` (grouped by target) into `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**: Clean an observer's full outgoing edges; if target is resolvable, full `Unmount`; otherwise return strategy and remove record
-- **TeardownAllBindingsFor(observer)**: Self-contained cleanup path for `DeadSingle`/`QuitSingle`, calls `FullCleanup` on all outgoing edges (unsubscribe + `OnUnmounted` + release strategy), does not depend on the scene host — binding entries already hold `TargetEntity` references
+- **TeardownAllBindingsFor(observer)**: Self-contained cleanup path that calls `FullCleanup` on all outgoing edges of the observer (unsubscribe + `OnUnmounted` + release strategy), not depending on the scene host — binding entries already hold `TargetEntity` references. Invoked by `SessionRun.ReleaseAllEntitiesAndClear` through `IEntityLifecycle.TeardownObserverBindings` when a session quits
 - **HasBindingTargetingFrom(observerName, targetName)** / **RemoveBindingsTargetingFor(observer, targetName)**: Incoming teardown support — query/clean bindings where a specific observer points to a specific target
 - **Bidirectional teardown**: `SessionRun.KillPending` handles both outgoing (killed entity as observer) and incoming (killed entity as target, located via incoming index), preventing re-entrant modification in `OnUnmounted` callbacks through snapshots
 

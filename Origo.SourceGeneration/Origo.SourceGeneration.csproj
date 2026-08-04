@@ -7,9 +7,14 @@
         <IsRoslynComponent>true</IsRoslynComponent>
         <IsPackable>false</IsPackable>
         <RootNamespace>Origo.SourceGeneration</RootNamespace>
+        <!-- Analyzers are loaded by file reference; copy runtime dependencies
+             (Microsoft.Bcl.HashCode) next to the generator dll so every
+             compiler host can resolve them. -->
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.Bcl.HashCode" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all"/>
     </ItemGroup>

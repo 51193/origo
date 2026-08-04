@@ -32,8 +32,7 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
 
     public void RequestLoadGame(string saveId)
     {
-        if (string.IsNullOrWhiteSpace(saveId))
-            throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
+        SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
 
         owner.EnqueueTrackedSystemDeferred(() =>
             owner.SetProgressRun(owner.LoadOrContinueStrict(saveId)));
@@ -41,8 +40,7 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
 
     public void RequestSaveGame(string newSaveId)
     {
-        if (string.IsNullOrWhiteSpace(newSaveId))
-            throw new ArgumentException("New save id cannot be null or whitespace.", nameof(newSaveId));
+        SavePathLayout.ValidateSaveId(newSaveId, nameof(newSaveId));
 
         owner.EnqueueTrackedSystemDeferred(() =>
         {
@@ -76,8 +74,11 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
         return effectiveNewSaveId;
     }
 
-    public void SetContinueTarget(string saveId) =>
+    public void SetContinueTarget(string saveId)
+    {
+        SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
         owner._systemRun.SetActiveSaveSlot(saveId);
+    }
 
     public void RequestSwitchForegroundLevel(string newLevelId)
     {

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning
 
@@ -35,6 +35,7 @@
 |------|--------|------|
 | `IntentStatusActive` | `"active"` | 意图激活状态值 |
 | `IntentStatusCompleted` | `"completed"` | 意图完成状态值 |
+| `IntentStatusFailed` | `"failed"` | 意图失败终止状态值（计划步骤失败且无后续步骤时写入） |
 | `ActionStatusExecuting` | `"executing"` | 动作执行中状态值 |
 | `ActionStatusCompleted` | `"completed"` | 动作完成状态值 |
 | `ActionStatusFailed` | `"failed"` | 动作失败状态值 |

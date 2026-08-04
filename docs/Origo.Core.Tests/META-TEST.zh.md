@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试文档维护元指令
 
@@ -114,7 +114,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 
 2. **场景宿主内部方法作为行为触发器**：当测试意图是验证实体/策略行为（而非场景宿主自身契约）时，`FullMemorySndSceneHost.ProcessAll()`/`CreateEntity()`/`RemoveEntity()`/`RemoveAllEntities()` 不得作为触发捷径——应通过 `ISessionRun.Spawn`、`ISessionManager.ProcessAllSessions(includeForeground: true)`、`ISessionRun.RequestKillEntity` + `ISessionManager.KillPendingAllSessions()` 公共流程。（验证场景宿主自身契约的测试例外，见上白名单第 3 条。）
 
-3. **实体生成后手工补钩子**：`((IEntityLifecycle)e).FireAfterSpawnHooks()` 等不得用于模拟 spawn——应使用 `ISessionRun.Spawn`（内部已触发 AfterSpawn 钩子）。（验证分阶段编排中间态/排序的批量测试例外，见上白名单第 2 条。）
+3. **实体生成后手工补钩子**：`((IEntityLifecycle)e).FireAfterSpawnHooks()` 等不得用于模拟 spawn——应使用 `ISessionRun.Spawn`（内部已触发 AfterSpawn 钩子）。（验证分阶段编排中间态/排序的批量测试例外，见上白名单第 2 条。**单元级裸实体**（经 `SndWorld.CreateEntity` 直接构造、无宿主/会话包装，用于隔离测试策略挂载行为）因无 `ISessionRun` 公共路径可用，允许直接调用 `IEntityLifecycle` 的分阶段方法（`RecoverForLifecycle`/`FireAfterSpawnHooks`/`FireAfterLoadHooks`/`BuildMetaData`）完成"实体就绪"——`SndEntityFactory.Spawn` 需场景宿主，`ISessionRun.Spawn` 需会话。集成场景（有宿主/会话）仍必须走公共 API。）
 
 4. **会话挂载键的内部属性**：`SessionRun.MountKey` 应通过 `ISessionManager.Contains()` / `ISessionManager.TryGet()` 验证
 

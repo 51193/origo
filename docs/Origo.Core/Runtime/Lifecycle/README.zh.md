@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -36,16 +36,18 @@
 ## 四层容器模型
 
 ```
-SystemRuntime
-├── SystemRun
-│   └── ProgressRuntime
-│       └── ProgressRun
-│           └── SessionManagerRuntime (via SessionManager)
-│               └── SessionRun (foreground + background)
+SystemRun (由 SndContext 构造并持有)
+├── SystemRuntime (持有 SndWorld 转发、SystemBlackboard、调度器)
+│   └── ProgressRun (由 SndContext 创建)
+│       ├── ProgressRuntime (持有 SndWorld、SndContext、StorageService)
+│       └── SessionManager (由 ProgressRun 持有)
+│           ├── SessionManagerRuntime (持有 SndWorld、SndContext、ProgressBlackboard)
+│           └── SessionRun (foreground + background)
 ```
 
 每层容器持有本层的核心对象引用和公共访问入口：
-- `SystemRuntime` 持有 `SndWorld`、`ConverterRegistry`、`AdapterSceneHost` 与调度器（调度器实例实际由 `OrigoRuntime` 持有，经 `IScheduler` 注入）
+- `SndContext` 是全局/流程级聚合器：构造 `SystemRun`，并在每次流程生命周期转换（加载/保存/切关卡）时创建/销毁 `ProgressRun`
+- `SystemRuntime` 持有 `SndWorld` 转发、`ConverterRegistry`、`AdapterSceneHost` 与调度器（调度器实例实际由 `OrigoRuntime` 持有，经 `IScheduler` 注入）
 - `ProgressRuntime` 持有 `Logger`、`StorageService`、`SndWorld`、`AdapterSceneHost`、`StateMachineContext`、`SndContext`、`SavePathPolicy`（进度黑板与状态机容器由 `SessionManager`/`ProgressRun` 分层持有，SaveContext 为瞬态对象按需创建）
 - `SessionManagerRuntime` 持有 `SndWorld`、`SndContext`、`ProgressBlackboard` 等运行时依赖（`ISessionManager` 由 `ProgressRun` 持有）
 - `SessionManager` 构造时读取 `AdapterSceneHost` 并存储，用于创建前台 session
@@ -55,9 +57,8 @@ SystemRuntime
 
 ### 启动
 
-1. `OrigoAutoHost`（GodotAdapter 层，提供引擎初始化）创建 `SystemParameters` → `new SystemRun(...)` 构造
-2. `SystemRun` 创建 `SndWorld`（策略池 + 配置）→ `ProgressRuntime`
-3. 加载初始关卡时：`ProgressRun` 创建 `SessionManager` → `SessionRun`（前台 + 后台）
+1. `SndContext` 构造时创建 `SystemRun`（`OrigoRuntime` 构造时已创建 `SndWorld`，经 `SystemParameters` 传入）
+2. `SndContext.Bootstrap()`（或 `RequestLoadMainMenuEntrySave`）时创建 `ProgressRun` → `ProgressRun` 创建 `SessionManager` → `SessionRun`（前台 + 后台）
 
 ### 运行
 

@@ -122,6 +122,16 @@ internal static class SaveAtomicWriter
             {
                 var relFromRoot = handle.GetRelativePath(srcAbs);
                 var relFromCurrent = StripPathPrefix(relFromRoot, currentRel);
+
+                // The write-in-progress marker is a transient synchronization
+                // file that only exists in current/ while a write is in flight;
+                // it must not be copied into snapshots, where it would falsely
+                // mark the completed snapshot as an interrupted write.
+                var fileName = SaveFileHandle.GetLeafDirectoryName(relFromCurrent);
+                if (string.Equals(fileName, SavePathLayout.WriteInProgressMarkerName,
+                        StringComparison.Ordinal))
+                    continue;
+
                 var destRel = $"{tempRel}/{relFromCurrent}";
                 var destAbs = handle.GetAbsolutePath(destRel);
                 handle.EnsureParentDirectory(destRel);

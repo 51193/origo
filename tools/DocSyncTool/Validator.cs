@@ -160,7 +160,21 @@ internal static partial class Validator
             }
 
             if (!resolved.StartsWith(docsRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                // A language-suffixed doc link that escapes the docs mirror
+                // is always broken: the mirror is self-contained, so any
+                // .zh.md/.en.md target must live under docs/. Bare .md links
+                // may legitimately point at repo-root documents (AGENTS.md).
+                var escapedName = Path.GetFileName(resolved);
+                if (escapedName.EndsWith(".zh.md", StringComparison.OrdinalIgnoreCase)
+                    || escapedName.EndsWith(".en.md", StringComparison.OrdinalIgnoreCase))
+                {
+                    var lineHint = FindLineNumber(content, match.Index);
+                    errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — language-suffixed link escapes the docs mirror: '{displayText}' resolves outside {docsRoot}");
+                }
+
                 continue;
+            }
 
             var relResolved = Path.GetRelativePath(docsRoot, resolved).Replace('\\', '/');
 

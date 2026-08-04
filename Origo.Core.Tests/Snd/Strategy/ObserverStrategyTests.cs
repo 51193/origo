@@ -20,6 +20,7 @@ public class ObserverStrategyTests : IDisposable
     private const string _noDataKeyIdx = "observer.test.no_data_key";
     private const string _memoryObservedIdx = "observer.test.memory";
     private const string _throwOnMountIdx = "observer.test.throw_on_mount";
+    private const string _throwOnUnmountIdx = "observer.test.throw_on_unmount";
 
     // ── Registration ───────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ public class ObserverStrategyTests : IDisposable
     public void Mount_TriggersOnMounted_WithCorrectParameters()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
@@ -73,7 +74,7 @@ public class ObserverStrategyTests : IDisposable
     public void Unmount_TriggersOnUnmounted_WithCorrectParameters()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
@@ -87,7 +88,7 @@ public class ObserverStrategyTests : IDisposable
     public void Mount_Duplicate_DoesNotThrow()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MemoryObserver.MountedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
@@ -100,7 +101,7 @@ public class ObserverStrategyTests : IDisposable
     public void Unmount_OnlyRemovesOneInstance()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MemoryObserver.UnmountedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
@@ -116,7 +117,7 @@ public class ObserverStrategyTests : IDisposable
     public void Mount_WhenOnMountedThrows_RollsBackAndReturnsToPool()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         ThrowOnMountObserver.DataChangedCalls.Clear();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -132,12 +133,42 @@ public class ObserverStrategyTests : IDisposable
     public void Mount_WhenGetStrategyThrows_PropagatesOriginalError()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.MountObserverStrategy(entity.Name, "observer.nonexistent"));
 
         Assert.Contains("observer.nonexistent", ex.Message);
+    }
+
+    [Fact]
+    public void Unmount_WhenOnUnmountedThrows_PoolReferenceStillReleased()
+    {
+        var logger = new TestLogger();
+        var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
+        runtime.SndWorld.RegisterStrategy(() => new ThrowOnUnmountObserver());
+        var fs = new TestMemoryFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var topology = new ObserverTopology(runtime.SndWorld.StrategyPool, logger);
+        topology.BindContext(ctx);
+        var entity = runtime.SndWorld.CreateEntity(new TestNodeFactory(), ctx, logger, topology);
+
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+        entity.MountObserverStrategy(entity.Name, _throwOnUnmountIdx);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            entity.UnmountObserverStrategy(entity.Name, _throwOnUnmountIdx));
+        Assert.Contains("OnUnmounted boom", ex.Message);
+
+        // The failed Unmount must still return the strategy to the pool;
+        // otherwise the reference count stays non-zero and LogPoolLeaks
+        // reports a leak at teardown.
+        ((IEntityLifecycle)entity).ReleaseStrategiesOnly();
+        runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, w => w.Contains("leak", StringComparison.OrdinalIgnoreCase));
     }
 
     // ── Data change notification ───────────────────────────────────────
@@ -146,7 +177,7 @@ public class ObserverStrategyTests : IDisposable
     public void SetData_TriggersOnDataChanged_ForObservedKey()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         SelfWatchObserver.DataChangedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
@@ -160,7 +191,7 @@ public class ObserverStrategyTests : IDisposable
     public void SetData_DoesNotTrigger_ForUnobservedKey()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         SelfWatchObserver.DataChangedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
@@ -173,7 +204,7 @@ public class ObserverStrategyTests : IDisposable
     public void SetData_DoesNotTrigger_AfterUnmount()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         SelfWatchObserver.DataChangedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
@@ -187,7 +218,7 @@ public class ObserverStrategyTests : IDisposable
     public void SetData_TriggersForMultipleKeys()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MultiKeyObserver.HpChangedCalls.Clear();
         MultiKeyObserver.MpChangedCalls.Clear();
 
@@ -203,7 +234,7 @@ public class ObserverStrategyTests : IDisposable
     public void SetData_OldAndNewValuesCorrect()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         SelfWatchObserver.DataChangedCalls.Clear();
 
         entity.SetData("character.hp", 100);
@@ -222,7 +253,7 @@ public class ObserverStrategyTests : IDisposable
     public void NoDataKeyObserver_CanMountAndUnmount()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var ex1 = Record.Exception(() =>
             entity.MountObserverStrategy(entity.Name, _noDataKeyIdx));
@@ -239,10 +270,11 @@ public class ObserverStrategyTests : IDisposable
     public void BuildMetaData_IncludesObserverBindings()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
 
         Assert.NotNull(meta.StrategyMetaData);
         Assert.Single(meta.StrategyMetaData.ObserverIndices);
@@ -254,9 +286,10 @@ public class ObserverStrategyTests : IDisposable
     public void BuildMetaData_EmptyBindings_WhenNoObservers()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
 
         Assert.NotNull(meta.StrategyMetaData);
         Assert.Empty(meta.StrategyMetaData.ObserverIndices);
@@ -266,11 +299,12 @@ public class ObserverStrategyTests : IDisposable
     public void BuildMetaData_MultipleTargets_GroupedCorrectly()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
         entity.MountObserverStrategy(entity.Name, _multiKeyIdx);
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
 
         Assert.Single(meta.StrategyMetaData!.ObserverIndices);
         Assert.Equal(2, meta.StrategyMetaData.ObserverIndices[0].ObserverIndices.Count);
@@ -282,7 +316,7 @@ public class ObserverStrategyTests : IDisposable
     public void Dead_ReleasesObserverStrategies()
     {
         var (entity, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
         SelfWatchObserver.DataChangedCalls.Clear();
 
@@ -297,7 +331,7 @@ public class ObserverStrategyTests : IDisposable
     public void Dead_TriggersOnUnmounted()
     {
         var (entity, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
@@ -342,7 +376,7 @@ public class ObserverStrategyTests : IDisposable
     public void MountObserverStrategy_WithSelfTargetName_Succeeds()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta("test_hero"));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta("test_hero")); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MemoryObserver.MountedCalls.Clear();
 
         entity.MountObserverStrategy("test_hero", _memoryObservedIdx);
@@ -354,7 +388,7 @@ public class ObserverStrategyTests : IDisposable
     public void MountObserverStrategy_WithDifferentTargetName_Throws()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta("observer"));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta("observer")); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
             entity.MountObserverStrategy("other_entity", _memoryObservedIdx));
@@ -367,7 +401,7 @@ public class ObserverStrategyTests : IDisposable
     public void Quit_TriggersOnUnmounted()
     {
         var (entity, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MemoryObserver.MountedCalls.Clear();
         MemoryObserver.UnmountedCalls.Clear();
 
@@ -383,10 +417,11 @@ public class ObserverStrategyTests : IDisposable
     public void DeepClone_PreservesObserverBindings()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
         var clone = meta.DeepClone();
 
         Assert.NotNull(clone.StrategyMetaData);
@@ -400,13 +435,14 @@ public class ObserverStrategyTests : IDisposable
     public void SaveSingle_ThenRecover_PreservesObserverBindings()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
 
         var (entity2, _, topology2) = SetupWithTopology();
-        entity2.SpawnSingle(meta);
+        ((IEntityLifecycle)entity2).RecoverForLifecycle(meta); ((IEntityLifecycle)entity2).FireAfterSpawnHooks();
         var bindings = meta.StrategyMetaData!.ObserverIndices;
         topology2.RecoverBindingsFor(entity2, bindings, n => n == entity2.Name ? entity2 : null);
 
@@ -421,7 +457,7 @@ public class ObserverStrategyTests : IDisposable
     public void Mount_NullTargetName_Throws()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Throws<ArgumentNullException>(
             () => entity.MountObserverStrategy((string)null!, _memoryObservedIdx));
@@ -431,7 +467,7 @@ public class ObserverStrategyTests : IDisposable
     public void Mount_EmptyObserverIndex_Throws()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Throws<ArgumentException>(
             () => entity.MountObserverStrategy(entity.Name, ""));
@@ -441,7 +477,7 @@ public class ObserverStrategyTests : IDisposable
     public void Mount_UnknownObserverIndex_Throws()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Throws<InvalidOperationException>(
             () => entity.MountObserverStrategy(entity.Name, "nonexistent"));
@@ -453,7 +489,7 @@ public class ObserverStrategyTests : IDisposable
     public void RecoverBindings_TargetNotFound_Skips()
     {
         var (entity, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         var bindings = new List<StrategyMetaData.ObserverBinding>
         {
@@ -472,7 +508,7 @@ public class ObserverStrategyTests : IDisposable
     public void HasObserverBindingTargeting_ExistingTarget_ReturnsTrue()
     {
         var (entity, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
 
         Assert.True(topology.HasBindingTargetingFrom(entity.Name, entity.Name));
@@ -482,7 +518,7 @@ public class ObserverStrategyTests : IDisposable
     public void HasObserverBindingTargeting_NonexistentTarget_ReturnsFalse()
     {
         var (entity, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.False(topology.HasBindingTargetingFrom(entity.Name, "ghost"));
     }
@@ -491,7 +527,7 @@ public class ObserverStrategyTests : IDisposable
     public void RemoveAllObserverBindingsTargeting_ClearsBindings()
     {
         var (entity, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
         entity.MountObserverStrategy(entity.Name, _selfWatchIdx);
 
@@ -506,7 +542,7 @@ public class ObserverStrategyTests : IDisposable
     public void TeardownOutgoingObserverBindings_TriggersOnUnmounted()
     {
         var (entity, _, topology) = SetupWithTopology();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         MemoryObserver.UnmountedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
@@ -589,7 +625,7 @@ public class ObserverStrategyTests : IDisposable
     public void DataChange_OnlyTargetEntityNotified()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta("alice"));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta("alice")); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy("alice", _selfWatchIdx);
         SelfWatchObserver.DataChangedCalls.Clear();
 
@@ -604,11 +640,12 @@ public class ObserverStrategyTests : IDisposable
     public void BuildObserverBindings_TwoTargets_GroupsCorrectly()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta("self"));
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta("self")); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy("self", _selfWatchIdx);
         entity.MountObserverStrategy("self", _multiKeyIdx);
 
-        var meta = entity.SaveSingle();
+        ((IEntityLifecycle)entity).FireBeforeSaveHooks();
+        var meta = ((IEntityLifecycle)entity).BuildMetaData();
         var bindings = meta.StrategyMetaData!.ObserverIndices;
 
         Assert.Single(bindings);
@@ -622,7 +659,7 @@ public class ObserverStrategyTests : IDisposable
     public void OnDataChanged_OldAndNewValues_Correct()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.SetData("character.hp", 100);
         SelfWatchObserver.DataChangedCalls.Clear();
 
@@ -847,6 +884,14 @@ public class ObserverStrategyTests : IDisposable
             string dataKey, TypedData oldValue, TypedData newValue) => DataChangedCalls.Add(dataKey);
     }
 
+    [StrategyIndex(_throwOnUnmountIdx)]
+    [ObserveData("character.hp")]
+    private sealed class ThrowOnUnmountObserver : ObserverStrategyBase
+    {
+        public override void OnUnmounted(ISndEntity entity, ISndContext ctx, ISndEntity target) =>
+            throw new InvalidOperationException("OnUnmounted boom");
+    }
+
     // ── Cross-entity observer (ISndEntity overload) ────────────────────
 
     [Fact]
@@ -893,7 +938,7 @@ public class ObserverStrategyTests : IDisposable
     public void MountObserverStrategy_ByEntityOverload_NullTarget_Throws()
     {
         var (entity, _) = Setup();
-        entity.SpawnSingle(CreateMeta());
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Throws<ArgumentNullException>(() =>
             entity.MountObserverStrategy((ISndEntity)null!, _memoryObservedIdx));

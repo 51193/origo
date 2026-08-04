@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.Save.Serialization;
 
@@ -27,7 +29,14 @@ internal sealed class SndSceneSerializer
         return _world.WriteMetaListNode(metaList);
     }
 
-    public void RecoverInto(ISndSceneAccess sceneHost, DataSourceNode serializedNode)
+    /// <summary>
+    ///     Recovers entities from a serialized array into the scene host and
+    ///     returns the recovered metadata list. Entity recovery itself does
+    ///     not apply all metadata fields (e.g. observer binding topology),
+    ///     so the returned list lets callers restore that state.
+    /// </summary>
+    public IReadOnlyList<SndMetaData> RecoverInto(ISndSceneAccess sceneHost,
+        DataSourceNode serializedNode)
     {
         ArgumentNullException.ThrowIfNull(sceneHost);
         ArgumentNullException.ThrowIfNull(serializedNode);
@@ -40,5 +49,6 @@ internal sealed class SndSceneSerializer
             _world.ConverterRegistry);
 
         sceneHost.RecoverFromMetaList(metaList);
+        return metaList;
     }
 }

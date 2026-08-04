@@ -28,7 +28,8 @@ internal static class GodotFileOperations
             throw new IOException($"File already exists and overwrite is disabled: {path}");
 
         using var file = FileAccess.Open(path, FileAccess.ModeFlags.Write) ?? throw new IOException($"Cannot open file for writing: {path}");
-        file.StoreString(content);
+        if (!file.StoreString(content))
+            throw new IOException($"Failed to write file '{path}'.");
     }
 
     public static void Copy(string sourcePath, string destinationPath, bool overwrite)

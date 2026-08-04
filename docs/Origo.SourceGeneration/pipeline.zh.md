@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 编译期优化全链路解析
 
@@ -216,7 +216,7 @@ Source Generator 通过 Roslyn `IIncrementalGenerator` 管线在编译期被调�
 
 #### 源码生成器代码位置
 
-生成器源码位于 `Origo.SourceGeneration/TypedDataGenerator.cs`（~983 行）。核心是 `GenerateTypedDataFactory` 方法（第 814–892 行），它遍历所有注册类型并逐条生成 `typeof(T) == typeof(...)` 风格的分支。
+生成器源码位于 `Origo.SourceGeneration/` 下，拆分为 5 个 partial 文件（共 ~1000 行）：`TypedDataGenerator.cs`（管线与输入提取）、`TypedDataGenerator.HomeGeneration.cs`（Home 程序集生成）、`TypedDataGenerator.AdapterGeneration.cs`（适配层生成）、`TypedDataGenerator.FactoryGeneration.cs`（`TypedDataFactory<T>` 分支生成）、`TypedDataGenerator.Diagnostics.cs`（诊断定义）。核心的 `GenerateTypedDataFactory`（`FactoryGeneration.cs`）遍历所有注册类型并逐条生成 `typeof(T) == typeof(...)` 风格的分支。
 
 ---
 

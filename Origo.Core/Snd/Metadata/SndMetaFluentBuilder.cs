@@ -11,9 +11,10 @@ public sealed class SndMetaFluentBuilder
 {
     private readonly SndMetaData _meta;
 
-    public SndMetaFluentBuilder(string name) : this(new SndMetaData { Name = name })
+    public SndMetaFluentBuilder(string name) : this(new SndMetaData())
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        _meta.Name = name;
     }
 
     private SndMetaFluentBuilder(SndMetaData meta)

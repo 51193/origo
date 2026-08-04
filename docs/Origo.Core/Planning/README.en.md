@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Planning
 
@@ -35,6 +35,7 @@ Intent-driven plan execution base class. Encapsulates the complete lifecycle fro
 |--------|---------|-------------|
 | `IntentStatusActive` | `"active"` | Intent active status value |
 | `IntentStatusCompleted` | `"completed"` | Intent completed status value |
+| `IntentStatusFailed` | `"failed"` | Intent failed-termination status value (written when a plan step fails and no further step exists) |
 | `ActionStatusExecuting` | `"executing"` | Action executing status value |
 | `ActionStatusCompleted` | `"completed"` | Action completed status value |
 | `ActionStatusFailed` | `"failed"` | Action failed status value |

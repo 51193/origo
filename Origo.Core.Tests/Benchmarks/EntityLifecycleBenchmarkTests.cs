@@ -126,7 +126,7 @@ public class EntityLifecycleBenchmarkTests(ITestOutputHelper output)
             });
             var we = wh.CreateEntity(CreateMeta("_w", ["perf.lifecycle", "perf.savehook"]));
             ((IEntityLifecycle)we).FireAfterSpawnHooks();
-            ((SndEntity)we).SaveSingle();
+            ((IEntityLifecycle)we).BuildMetaData();
         }
 
         var rows = new List<(string, int, TimeSpan, long)>();
@@ -154,7 +154,7 @@ public class EntityLifecycleBenchmarkTests(ITestOutputHelper output)
             var allocBefore = GC.GetAllocatedBytesForCurrentThread();
             var sw = Stopwatch.StartNew();
             for (var i = 0; i < count; i++)
-                ((SndEntity)entities[i]).SaveSingle();
+                ((IEntityLifecycle)entities[i]).BuildMetaData();
             sw.Stop();
             var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 

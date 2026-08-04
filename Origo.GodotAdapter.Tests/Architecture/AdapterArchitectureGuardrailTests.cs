@@ -178,9 +178,6 @@ public class GodotSndEntityLifecycleVisibilityTests
         var type = typeof(GodotSndEntity);
         var lifecycleMethods = new[]
         {
-            nameof(GodotSndEntity.SpawnSingle),
-            nameof(GodotSndEntity.LoadSingle),
-            nameof(GodotSndEntity.SaveSingle),
             nameof(GodotSndEntity.ProcessSnd)
         };
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Logging;
 using Origo.Core.Snd.Entity;
@@ -50,6 +51,25 @@ internal sealed class ObserverTopology
         if (string.IsNullOrWhiteSpace(observerIndex))
             throw new ArgumentException("Observer strategy index cannot be null or whitespace.", nameof(observerIndex));
         var ctx = RequireContext();
+
+        if (observer.IsPendingKill)
+            throw new InvalidOperationException(
+                $"Observer entity '{observer.Name}' is pending kill and cannot mount observer strategies.");
+        if (target.IsPendingKill)
+            throw new InvalidOperationException(
+                $"Target entity '{target.Name}' is pending kill; observer strategies cannot be mounted on it.");
+
+        // Observer bindings are scoped to a single scene host (one session).
+        // Cross-session mounts would leak subscriptions that teardown cannot
+        // resolve; reject them up front. Entities that are not session-bound
+        // yet (offline construction, unit tests) skip this check.
+        var observerSession = TryGetOwningSession(observer);
+        var targetSession = TryGetOwningSession(target);
+        if (observerSession is not null && targetSession is not null
+            && !ReferenceEquals(observerSession, targetSession))
+            throw new InvalidOperationException(
+                $"Observer '{observer.Name}' and target '{target.Name}' belong to different sessions; " +
+                "observer bindings are scoped to a single scene host.");
 
         ObserverStrategyBase? strategy = null;
         var acquired = false;
@@ -128,12 +148,20 @@ internal sealed class ObserverTopology
 
         RemoveBinding(binding);
 
-        foreach (var (key, wrapper) in binding.DataWrappers)
-            ((ISndEntityRawSubscription)target).UnsubscribeDataRaw(key, wrapper);
+        try
+        {
+            foreach (var (key, wrapper) in binding.DataWrappers)
+                ((ISndEntityRawSubscription)target).UnsubscribeDataRaw(key, wrapper);
 
-        binding.Strategy.OnUnmounted(observer, ctx, target);
-
-        _pool.ReleaseStrategy(observerIndex);
+            binding.Strategy.OnUnmounted(observer, ctx, target);
+        }
+        finally
+        {
+            // The pool reference must be released even when unsubscription or
+            // OnUnmounted throws; the binding is already removed from the
+            // topology, so nothing else would release it.
+            _pool.ReleaseStrategy(observerIndex);
+        }
 
         _logger.Log(LogLevel.Debug, nameof(ObserverTopology),
             new LogMessageBuilder()
@@ -279,6 +307,20 @@ internal sealed class ObserverTopology
         return _context
                ?? throw new InvalidOperationException(
                    "ObserverTopology context is not bound. The scene host must call BindContext before mounting observers.");
+    }
+
+    private static ISessionRun? TryGetOwningSession(ISndEntity entity)
+    {
+        try
+        {
+            return entity.OwningSession;
+        }
+        catch (InvalidOperationException)
+        {
+            // Entities created before session binding throw from
+            // OwningSession; treat them as unbound.
+            return null;
+        }
     }
 
     private ObserverBindingEntry? FindBinding(string observerName, string targetName, string observerIndex)

@@ -224,6 +224,9 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _dataManager.Release();
     }
 
+    void IEntityLifecycle.TeardownObserverBindings() =>
+        _observerTopology.TeardownAllBindingsFor((ISndEntity)this);
+
     SndMetaData IEntityLifecycle.BuildMetaData()
     {
         var lifecycleIndices = _strategyManager.GetStrategyIndices();
@@ -241,34 +244,5 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             },
             DataMetaData = _dataManager.SerializeMeta()
         };
-    }
-
-    /// <summary>
-    ///     Full spawn sequence: recover data/strategies/nodes from metadata,
-    ///     then fire AfterSpawn hooks. Used by <see cref="SndEntityFactory" />.
-    /// </summary>
-    internal void SpawnSingle(SndMetaData metaData)
-    {
-        ArgumentNullException.ThrowIfNull(metaData);
-        ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
-        ((IEntityLifecycle)this).FireAfterSpawnHooks();
-    }
-
-    /// <summary>
-    ///     Full load sequence: recover data/strategies/nodes from metadata,
-    ///     then fire AfterLoad hooks.
-    /// </summary>
-    internal void LoadSingle(SndMetaData metaData)
-    {
-        ArgumentNullException.ThrowIfNull(metaData);
-        ((IEntityLifecycle)this).RecoverForLifecycle(metaData);
-        ((IEntityLifecycle)this).FireAfterLoadHooks();
-    }
-
-    /// <summary>Fire BeforeSave hooks, then build metadata snapshot.</summary>
-    internal SndMetaData SaveSingle()
-    {
-        ((IEntityLifecycle)this).FireBeforeSaveHooks();
-        return ((IEntityLifecycle)this).BuildMetaData();
     }
 }

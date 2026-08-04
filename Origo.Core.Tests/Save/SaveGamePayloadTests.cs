@@ -14,7 +14,6 @@ public class SaveGamePayloadTests
     public void DefaultValues()
     {
         var payload = new SaveGamePayload();
-        Assert.Equal(SaveGamePayload.CurrentFormatVersion, payload.FormatVersion);
         Assert.Equal(string.Empty, payload.SaveId);
         Assert.Equal(string.Empty, payload.ActiveLevelId);
         Assert.True(payload.ProgressNode.IsNull);

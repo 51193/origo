@@ -25,13 +25,25 @@ public sealed class DataSourceConverterRegistry
             $"No DataSourceConverter registered for type '{typeof(T).FullName}'.");
     }
 
-    public T Read<T>(DataSourceNode node) => Get<T>().Read(node);
+    public T Read<T>(DataSourceNode node)
+    {
+        if (_converters.TryGetValue(typeof(T), out var converter))
+            return ((DataSourceConverter<T>)converter).Read(node);
+
+        // Fall back along the base-class and interface chains so a derived
+        // type reads through its registered base converter.
+        return (T)FindConverter(typeof(T)).ReadObject(node)!;
+    }
 
     public DataSourceNode Write<T>(T value)
     {
         if (value is null)
             return DataSourceNode.CreateNull();
-        return Get<T>().Write(value);
+
+        if (_converters.TryGetValue(typeof(T), out var converter))
+            return ((DataSourceConverter<T>)converter).Write(value);
+
+        return FindConverter(typeof(T)).WriteObject(value);
     }
 
     public object? Read(Type type, DataSourceNode node)

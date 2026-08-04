@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
@@ -216,7 +216,7 @@ The generated content falls into two sets based on **whether the current compila
 
 #### Source Generator Code Location
 
-The generator source is located at `Origo.SourceGeneration/TypedDataGenerator.cs` (~983 lines). The core is the `GenerateTypedDataFactory` method (lines 814–892), which iterates all registered types and generates branches in `typeof(T) == typeof(...)` style one by one.
+The generator source lives under `Origo.SourceGeneration/` as 5 partial files (~1000 lines total): `TypedDataGenerator.cs` (pipeline and input extraction), `TypedDataGenerator.HomeGeneration.cs` (home-assembly generation), `TypedDataGenerator.AdapterGeneration.cs` (adapter generation), `TypedDataGenerator.FactoryGeneration.cs` (`TypedDataFactory<T>` branch generation), and `TypedDataGenerator.Diagnostics.cs` (diagnostic definitions). The core `GenerateTypedDataFactory` (`FactoryGeneration.cs`) iterates all registered types and generates `typeof(T) == typeof(...)`-style branches one by one.
 
 ---
 

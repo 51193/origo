@@ -32,6 +32,8 @@ public class ObserverTopologyBenchmarkTests(ITestOutputHelper output)
             wt.BindContext(NullSndContext.Instance);
             var wo = ww.CreateEntity(new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), wt);
             var wt2 = ww.CreateEntity(new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), wt);
+            wo.BindSession(BenchmarkSession.Instance);
+            wt2.BindSession(BenchmarkSession.Instance);
             ((IEntityLifecycle)wo).RecoverForLifecycle(
                 new SndMetaData { Name = "_wo", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["perf.stub"] } });
             ((IEntityLifecycle)wt2).RecoverForLifecycle(
@@ -52,6 +54,7 @@ public class ObserverTopologyBenchmarkTests(ITestOutputHelper output)
 
             var observer = world.CreateEntity(
                 new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), topology);
+            ((Origo.Core.Snd.Entity.SndEntity)observer).BindSession(BenchmarkSession.Instance);
             ((IEntityLifecycle)observer).RecoverForLifecycle(
                 new SndMetaData
                 {
@@ -65,6 +68,7 @@ public class ObserverTopologyBenchmarkTests(ITestOutputHelper output)
             {
                 targets[i] = world.CreateEntity(
                     new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), topology);
+                ((Origo.Core.Snd.Entity.SndEntity)targets[i]).BindSession(BenchmarkSession.Instance);
                 ((IEntityLifecycle)targets[i]).RecoverForLifecycle(
                     new SndMetaData
                     {
@@ -107,6 +111,8 @@ public class ObserverTopologyBenchmarkTests(ITestOutputHelper output)
             wt.BindContext(NullSndContext.Instance);
             var wo = ww.CreateEntity(new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), wt);
             var wt2 = ww.CreateEntity(new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), wt);
+            wo.BindSession(BenchmarkSession.Instance);
+            wt2.BindSession(BenchmarkSession.Instance);
             ((IEntityLifecycle)wo).RecoverForLifecycle(
                 new SndMetaData { Name = "_wo", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["perf.stub"] } });
             ((IEntityLifecycle)wt2).RecoverForLifecycle(
@@ -127,6 +133,7 @@ public class ObserverTopologyBenchmarkTests(ITestOutputHelper output)
 
             var observer = world.CreateEntity(
                 new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), topology);
+            ((Origo.Core.Snd.Entity.SndEntity)observer).BindSession(BenchmarkSession.Instance);
             ((IEntityLifecycle)observer).RecoverForLifecycle(
                 new SndMetaData
                 {
@@ -140,6 +147,7 @@ public class ObserverTopologyBenchmarkTests(ITestOutputHelper output)
             {
                 targets[i] = world.CreateEntity(
                     new NullNodeFactory(), NullSndContext.Instance, new TestLogger(), topology);
+                ((Origo.Core.Snd.Entity.SndEntity)targets[i]).BindSession(BenchmarkSession.Instance);
                 ((IEntityLifecycle)targets[i]).RecoverForLifecycle(
                     new SndMetaData
                     {
@@ -165,6 +173,34 @@ public class ObserverTopologyBenchmarkTests(ITestOutputHelper output)
         }
 
         _perf.ReportTable("ObserverTopology.Unmount — scaling by binding count", rows);
+    }
+
+    /// <summary>
+    ///     Minimal session binding for benchmark entities: real production
+    ///     entities are always session-bound, so the benchmark must model
+    ///     that (the Mount validation reads the owning session).
+    /// </summary>
+    private sealed class BenchmarkSession : Origo.Core.Abstractions.Lifecycle.ISessionRun
+    {
+        public static readonly BenchmarkSession Instance = new();
+
+        public Origo.Core.Abstractions.Blackboard.IBlackboard SessionBlackboard =>
+            throw new NotSupportedException();
+        public string LevelId => "bench";
+        public bool IsFrontSession => true;
+        public Origo.Core.Abstractions.Lifecycle.ISessionManager SessionManager =>
+            throw new NotSupportedException();
+
+        public Origo.Core.Abstractions.Entity.ISndEntity? FindByName(string name) => null;
+        public IReadOnlyCollection<Origo.Core.Abstractions.Entity.ISndEntity> GetEntities() => [];
+        public Origo.Core.Abstractions.Entity.ISndEntity Spawn(Origo.Core.Snd.Metadata.SndMetaData meta) =>
+            throw new NotSupportedException();
+        public void SpawnMany(params Origo.Core.Snd.Metadata.SndMetaData[] metaList) =>
+            throw new NotSupportedException();
+        public void RequestKillEntity(string entityName) => throw new NotSupportedException();
+        public Origo.Core.Abstractions.StateMachine.IStateMachineContainer GetSessionStateMachines() =>
+            throw new NotSupportedException();
+        public void Dispose() { }
     }
 
     [StrategyIndex("perf.observer")]

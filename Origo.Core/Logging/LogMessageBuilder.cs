@@ -12,7 +12,7 @@ namespace Origo.Core.Logging;
 /// </summary>
 public sealed class LogMessageBuilder
 {
-    private readonly Dictionary<string, object?> _context = new(StringComparer.Ordinal);
+    private readonly List<KeyValuePair<string, object?>> _context = [];
     private double? _elapsedMs;
 
     /// <summary>Attaches an elapsed-time prefix (<c>[+N.NNms]</c>) to the built message.</summary>
@@ -25,7 +25,15 @@ public sealed class LogMessageBuilder
     /// <summary>Adds a contextual <c>key=value</c> pair, appended to the built message in insertion order.</summary>
     public LogMessageBuilder AddContext(string key, object? value)
     {
-        if (!string.IsNullOrWhiteSpace(key)) _context[key] = value;
+        if (string.IsNullOrWhiteSpace(key))
+            return this;
+
+        var index = _context.FindIndex(kv => string.Equals(kv.Key, key, StringComparison.Ordinal));
+        if (index >= 0)
+            _context[index] = new KeyValuePair<string, object?>(key, value);
+        else
+            _context.Add(new KeyValuePair<string, object?>(key, value));
+
         return this;
     }
 

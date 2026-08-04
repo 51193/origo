@@ -206,24 +206,27 @@ internal sealed class SessionRun : ISessionRun
                     payload.SessionStateMachinesNode,
                     _saveContext.SndWorld.ConverterRegistry);
 
+            IReadOnlyList<SndMetaData>? recoveredSceneMeta = null;
             if (!payload.SndSceneNode.IsNull)
-                _saveContext.RecoverSndScene(_sceneHost, payload.SndSceneNode);
+                recoveredSceneMeta = _saveContext.RecoverSndScene(_sceneHost, payload.SndSceneNode);
 
             foreach (var entity in _sceneHost.GetEntities())
                 if (entity is IEntityLifecycle lifecycle)
                     lifecycle.FireAfterLoadHooks();
 
             var observerTopology = (_sceneHost as IObserverTopologyHost)?.ObserverTopology;
-            if (observerTopology is not null)
-                foreach (var entity in _sceneHost.GetEntities())
-                    if (entity is SndEntity se)
-                    {
-                        var meta = ((IEntityLifecycle)se).BuildMetaData();
-                        var observerBindings = meta.StrategyMetaData?.ObserverIndices;
-                        if (observerBindings is not null && observerBindings.Count > 0)
-                            observerTopology.RecoverBindingsFor(se, observerBindings,
-                                targetName => _sceneHost.FindByName(targetName));
-                    }
+            if (observerTopology is not null && recoveredSceneMeta is not null)
+                foreach (var meta in recoveredSceneMeta)
+                {
+                    var observerBindings = meta.StrategyMetaData?.ObserverIndices;
+                    if (observerBindings is null || observerBindings.Count == 0)
+                        continue;
+                    var entity = _sceneHost.FindByName(meta.Name);
+                    if (entity is null)
+                        continue;
+                    observerTopology.RecoverBindingsFor(entity, observerBindings,
+                        targetName => _sceneHost.FindByName(targetName));
+                }
 
             _sessionScope.StateMachines.FlushAllAfterLoad();
 
@@ -346,13 +349,27 @@ internal sealed class SessionRun : ISessionRun
         _sessionScope.Blackboard.Clear();
     }
 
+    /// <summary>
+    ///     Releases every entity in the session: fires quit hooks (when requested),
+    ///     tears down observer bindings bidirectionally (so observers receive
+    ///     <c>OnUnmounted</c> and stop listening to target data), then releases
+    ///     strategies and engine resources.
+    /// </summary>
     private void ReleaseAllEntitiesAndClear(bool fireQuitHooks)
     {
-        foreach (var entity in _sceneHost.GetEntities())
+        var entities = _sceneHost.GetEntities();
+
+        foreach (var entity in entities)
+            if (fireQuitHooks && entity is IEntityLifecycle lifecycle)
+                lifecycle.FireBeforeQuitHooks();
+
+        foreach (var entity in entities)
+            if (entity is IEntityLifecycle lifecycle)
+                lifecycle.TeardownObserverBindings();
+
+        foreach (var entity in entities)
             if (entity is IEntityLifecycle lifecycle)
             {
-                if (fireQuitHooks)
-                    lifecycle.FireBeforeQuitHooks();
                 lifecycle.ReleaseStrategiesOnly();
                 lifecycle.TeardownOnly();
             }

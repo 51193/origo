@@ -355,10 +355,7 @@ public class CoreArchitectureGuardrailTests
         var type = typeof(SndEntity);
         var lifecycleMethods = new[]
         {
-            nameof(SndEntity.Process),
-            nameof(SndEntity.SpawnSingle),
-            nameof(SndEntity.LoadSingle),
-            nameof(SndEntity.SaveSingle)
+            nameof(SndEntity.Process)
         };
 
         foreach (var methodName in lifecycleMethods)

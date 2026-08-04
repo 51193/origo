@@ -70,9 +70,13 @@ public partial class GodotSndManager
     {
         ArgumentNullException.ThrowIfNull(metaList);
         _collection.RecoverFromMetaList(metaList, (meta, ex) =>
+        {
+            if (SharedLogger is null)
+                return;
             SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
                 new LogMessageBuilder().AddContext("entityName", meta.Name)
-                    .Build($"Entity recovery failed, rolling back partial load: {ex.Message}")));
+                    .Build($"Entity recovery failed, rolling back partial load: {ex.Message}"));
+        });
     }
 
     public void RemoveAllEntities() => _collection.RemoveAllEntities();
@@ -86,7 +90,7 @@ public partial class GodotSndManager
         }
         catch (Exception ex)
         {
-            SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
+            SharedLogger?.Log(LogLevel.Warning, nameof(GodotSndManager),
                 new LogMessageBuilder().AddContext("entityName", metaData.Name).Build($"Entity creation failed, rolling back: {ex.Message}"));
             throw;
         }

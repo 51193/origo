@@ -130,7 +130,21 @@ internal sealed class FullMemorySndSceneHost
         var entity = _world!.CreateEntity(_nodeFactory, _context!, _logger, _observerTopology!);
         entity.Name = metaData.Name;
         _entries.Add(new MemoryEntityEntry(entity));
-        ((IEntityLifecycle)entity).RecoverForLifecycle(metaData);
+        try
+        {
+            ((IEntityLifecycle)entity).RecoverForLifecycle(metaData);
+        }
+        catch
+        {
+            // Fail-fast is not enough: a failed recovery must not leave a
+            // half-initialized entity behind (FindByName would surface it and
+            // its strategy references would leak). Roll back before rethrowing.
+            _entries.RemoveAt(_entries.Count - 1);
+            ((IEntityLifecycle)entity).ReleaseStrategiesOnly();
+            ((IEntityLifecycle)entity).TeardownOnly();
+            throw;
+        }
+
         if (_owningSession is not null)
             entity.BindSession(_owningSession);
         return entity;

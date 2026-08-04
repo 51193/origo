@@ -58,6 +58,15 @@ internal interface IEntityLifecycle
     void TeardownOnly();
 
     /// <summary>
+    ///     Phase 3: Tear down all observer bindings for which this entity is
+    ///     the observer — unsubscribes target data channels and fires
+    ///     <c>OnUnmounted</c> on the bound observer strategies. Must run
+    ///     before <see cref="ReleaseStrategiesOnly" /> so released strategies
+    ///     are no longer reachable from target data channels.
+    /// </summary>
+    void TeardownObserverBindings();
+
+    /// <summary>
     ///     Build entity metadata without firing BeforeSave hooks.
     /// </summary>
     SndMetaData BuildMetaData();

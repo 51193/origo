@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/Benchmarks -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Generated Product Performance Benchmarks
 
 > [↑ Back to Origo.SourceGeneration.Tests](README.en.md)
 > [↔ Module under test: Origo.SourceGeneration](../Origo.SourceGeneration/README.en.md)
-> [↔ Performance baseline: baseline](../../benchmarks/baseline.en.md)
+> [↔ Performance baseline: baseline](../benchmarks/baseline.en.md)
 
 ## Behavior Under Test Overview
 

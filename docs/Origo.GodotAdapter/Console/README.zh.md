@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Console
 
@@ -23,7 +23,7 @@ Godot 适配层的控制台命令扩展。一个适配层的命令处理器基�
 
 ### CommandHandlerBase
 
-继承自 Core 的 `IConsoleCommandHandler`，提供与 Core `ConsoleCommandHandlerBase` 相同的参数校验逻辑。区别在于此基类直接持有 `OrigoRuntime` 引用（而非子类注入），简化 Godot 侧的命令实现。
+继承自 Core 的 `ConsoleCommandHandlerBase`（参数数量校验与错误消息由基类提供），在此之上直接持有 `OrigoRuntime` 引用，简化 Godot 侧的命令实现。
 
 ### PressButtonCommandHandler
 

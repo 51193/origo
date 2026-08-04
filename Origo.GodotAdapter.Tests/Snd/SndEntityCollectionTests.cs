@@ -97,18 +97,13 @@ public class SndEntityCollectionTests
     [Fact]
     public void CreateEntity_RecoverFailure_RollsBackAndPropagates()
     {
-        var collection = CreateCollection(out var detached);
         var failing = new FakeSndEntity { FailRecover = true };
-
         var collection2 = new SndEntityCollection<FakeSndEntity>(() => failing);
 
         var ex = Assert.Throws<InvalidOperationException>(() => collection2.CreateEntity(Meta("boom")));
         Assert.Contains("recover failed", ex.Message);
         Assert.Empty(collection2);
         Assert.Equal(1, failing.DetachCount);
-
-        _ = collection;
-        _ = detached;
     }
 
     [Fact]

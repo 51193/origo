@@ -171,7 +171,6 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
 
         return new SaveGamePayload
         {
-            FormatVersion = SaveGamePayload.CurrentFormatVersion,
             SaveId = saveId,
             ActiveLevelId = levelId,
             ProgressNode = DataSourceNode.CreateObject(),

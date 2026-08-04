@@ -162,14 +162,10 @@ public sealed class DataSourceNode : IDisposable
     public string AsString()
     {
         EnsureExpanded();
-        return _kind switch
-        {
-            DataSourceNodeKind.Text => _value ?? string.Empty,
-            DataSourceNodeKind.Number => _value ?? string.Empty,
-            DataSourceNodeKind.Bool => _value ?? string.Empty,
-            DataSourceNodeKind.Null => string.Empty,
-            _ => _value ?? string.Empty
-        };
+        if (_kind is DataSourceNodeKind.Map or DataSourceNodeKind.Array)
+            throw new InvalidOperationException(
+                $"Cannot get string value from a {_kind} DataSourceNode.");
+        return _value ?? string.Empty;
     }
 
     public char AsChar()
@@ -183,7 +179,10 @@ public sealed class DataSourceNode : IDisposable
             throw new InvalidOperationException(
                 $"Cannot get char value from a {_kind} DataSourceNode.");
         }
-        return _value is not null && _value.Length > 0 ? _value[0] : '\0';
+        if (_value is null || _value.Length == 0)
+            throw new InvalidOperationException(
+                "Cannot get char value from an empty DataSourceNode.");
+        return _value[0];
     }
 
     /// <summary>

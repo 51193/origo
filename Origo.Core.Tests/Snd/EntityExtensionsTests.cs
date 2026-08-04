@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Scene;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -72,6 +73,27 @@ public class EntityExtensionsTests
         var unbound = new StubEntity("hero") { OwningSession = null! };
 
         Assert.False(bound.IsSameEntityAs(unbound));
+    }
+
+    [Fact]
+    public void IsSameEntityAs_RealUnboundEntities_SameName_ReturnsTrue()
+    {
+        // Real production entities (StubSndEntity) throw from OwningSession
+        // before session binding; the comparison must degenerate to name
+        // equality instead of crashing.
+        var first = new StubSndEntity("hero");
+        var second = new StubSndEntity("hero");
+
+        Assert.True(first.IsSameEntityAs(second));
+    }
+
+    [Fact]
+    public void IsSameEntityAs_RealUnboundEntities_DifferentName_ReturnsFalse()
+    {
+        var first = new StubSndEntity("hero");
+        var second = new StubSndEntity("villain");
+
+        Assert.False(first.IsSameEntityAs(second));
     }
     private sealed class StubEntity(string name) : Origo.Core.Abstractions.Entity.ISndEntity
     {

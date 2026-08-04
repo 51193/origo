@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Runtime
 
@@ -22,7 +22,7 @@ Origo's runtime core. Manages the four-layer lifecycle from system-level to sess
 
 | File | Responsibility |
 |------|---------------|
-| `OrigoRuntime.cs` | Runtime aggregation container: holds SystemRun, SystemBlackboard, SndWorld, Console, Logger |
+| `OrigoRuntime.cs` | Runtime aggregation container: holds SystemBlackboard, SndWorld, Console, Logger; SndContext constructs SystemRun and ProgressRun on top of it |
 | `OrigoAutoInitializer.cs` | Automatic strategy discovery and registration (reflection-based assembly scanning) |
 
 ### OrigoRuntime
@@ -36,11 +36,11 @@ OrigoRuntime
 ├── IBlackboard (SystemBlackboard + PersistentBlackboard)
 ├── SndWorld (strategy pool + type mapping + converters)
 ├── OrigoConsole (console command routing)
-├── SystemRun (system-level lifecycle)
-│   └── ProgressRuntime
-│       └── SessionManagerRuntime
-│           └── SessionRun (foreground + background)
-└── IOrigoFrameDriver (frame loop driver)
+├── IOrigoFrameDriver (frame loop driver)
+└── (held by SndContext) SystemRun (system-level lifecycle)
+    └── ProgressRuntime → ProgressRun
+        └── SessionManagerRuntime → SessionManager
+            └── SessionRun (foreground + background)
 ```
 
 ## Runtime Four Layers

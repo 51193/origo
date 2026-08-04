@@ -534,4 +534,30 @@ public class TypedDataGeneratorTests
         Assert.Contains("TypedData.RegisterKind(128, typeof(StubRefA));", text);
         Assert.Contains("TypedData.RegisterKind(129, typeof(StubRefB));", text);
     }
+
+    [Fact]
+    public void Incremental_SameInputTwice_GenerationStepIsCached()
+    {
+        // Two distinct compilation instances with identical sources model the
+        // real editor scenario (every keystroke produces a new Compilation).
+        // The pipeline must recognize the generation input as unchanged and
+        // skip regeneration.
+        var source = _scaffoldHeader + "\n" + _homePrimitivesAttribute + "\n" + _scaffoldBody;
+        var compilationA = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
+        var compilationB = GeneratorTestHarness.CreateCompilation("Origo.HomeUnderTest", source);
+        var driver = GeneratorTestHarness.CreateTrackedDriver();
+
+        var (_, driver2) = GeneratorTestHarness.RunIncremental(driver, compilationA);
+        var (_, driver3) = GeneratorTestHarness.RunIncremental(driver2, compilationB);
+
+        // The second run must not re-execute the source-output step: an
+        // unchanged compilation produces an equal generation input, which the
+        // pipeline caches instead of regenerating.
+        var runResult = driver3.GetRunResult();
+        var sourceOutputSteps = runResult.Results[0].TrackedSteps
+            .Single(kvp => kvp.Key == "SourceOutput").Value;
+        Assert.All(sourceOutputSteps,
+            step => Assert.All(step.Outputs,
+                o => Assert.Equal(IncrementalStepRunReason.Cached, o.Reason)));
+    }
 }

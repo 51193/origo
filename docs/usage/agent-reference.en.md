@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -349,16 +349,16 @@ public class ConfigLoadStrategy : LifecycleStrategyBase
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
         // Read JSON config as a DataSourceNode tree
-        if (!ctx.FileExists("res://configs/enemies.json"))
+        if (!ctx.FileAccess.FileExists("res://configs/enemies.json"))
             return;
-        var cfg = ctx.ReadFile("res://configs/enemies.json");
-        var baseHp = cfg["orc"]["base_hp"].AsInt();
+        var cfg = ctx.FileAccess.ReadFile("res://configs/enemies.json");
+        var baseHp = cfg["orc"]["base_hp"].As<int>();
         entity.SetData("orc_base_hp", baseHp);
 
         // Strongly-typed read/write
-        var prefs = ctx.ReadObject<PlayerPrefs>("user://prefs.json");
+        var prefs = ctx.FileAccess.ReadObject<PlayerPrefs>("user://prefs.json");
         prefs.Volume = 0.8f;
-        ctx.WriteObject("user://prefs.json", prefs);
+        ctx.FileAccess.WriteObject("user://prefs.json", prefs);
     }
 }
 ```

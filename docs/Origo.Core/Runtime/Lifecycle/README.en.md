@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -26,17 +26,22 @@ The implementation layer for the runtime's four-tier lifecycle. Defines the comp
 ## Four-Tier Container Model
 
 ```
-SystemRuntime → SystemRun → ProgressRuntime → ProgressRun → SessionManager → SessionRun (foreground + background)
+SystemRun (constructed and held by SndContext)
+├── SystemRuntime (holds SndWorld forwarding, SystemBlackboard, scheduler)
+│   └── ProgressRun (created by SndContext)
+│       ├── ProgressRuntime (holds SndWorld, SndContext, StorageService)
+│       └── SessionManager (held by ProgressRun)
+│           ├── SessionManagerRuntime (holds SndWorld, SndContext, ProgressBlackboard)
+│           └── SessionRun (foreground + background)
 ```
 
-Each tier container holds core object references for its layer. SystemRuntime holds SndWorld, ConverterRegistry, AdapterSceneHost, and the scheduler (the scheduler instance is actually held by OrigoRuntime and injected via IScheduler). ProgressRuntime holds Logger, StorageService, SndWorld, AdapterSceneHost, StateMachineContext, SndContext, and SavePathPolicy — the progress blackboard and state machine container are held by SessionManager/ProgressRun, and SaveContext is a transient object created on demand. SessionManagerRuntime holds runtime dependencies such as SndWorld, SndContext, and ProgressBlackboard; ISessionManager is held by ProgressRun.
+`SndContext` is the global/process-level aggregator: it constructs `SystemRun` and creates/disposes `ProgressRun` on every lifecycle transition (load/save/level switch). SystemRuntime holds SndWorld forwarding, ConverterRegistry, AdapterSceneHost, and the scheduler (the scheduler instance is actually held by OrigoRuntime and injected via IScheduler). ProgressRuntime holds Logger, StorageService, SndWorld, AdapterSceneHost, StateMachineContext, SndContext, and SavePathPolicy — the progress blackboard and state machine container are held by SessionManager/ProgressRun, and SaveContext is a transient object created on demand. SessionManagerRuntime holds runtime dependencies such as SndWorld, SndContext, and ProgressBlackboard; ISessionManager is held by ProgressRun.
 
 ## Key Lifecycle Flows
 
 ### Startup
-1. `OrigoAutoHost` creates `SystemParameters` → `new SystemRun(...)` constructor
-2. `SystemRun` creates `SndWorld` → `ProgressRuntime`
-3. Loading initial level: `ProgressRun` → `SessionManager` → `SessionRun`
+1. `SndContext`'s constructor creates `SystemRun` (`SndWorld` was already created by the `OrigoRuntime` constructor and is passed via `SystemParameters`)
+2. `SndContext.Bootstrap()` (or `RequestLoadMainMenuEntrySave`) creates `ProgressRun` → `ProgressRun` creates `SessionManager` → `SessionRun` (foreground + background)
 
 ### Runtime
 - Per-frame: `IScheduler.Tick()` → deferred queue → `SessionManager.ProcessAllSessions()` → `KillPendingAllSessions()` → system queue → console

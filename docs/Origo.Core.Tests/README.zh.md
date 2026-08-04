@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.Core.Tests
 
@@ -13,7 +13,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 - **不测试 internal 实现细节**：每个测试验证 `usage/` 或模块文档中描述的某条行为契约，而非代码的内部形状。原则：若可通过 `ISndContext`/`ISessionManager` 等公共接口验证行为，则不应使用 `InternalsVisibleTo` 直接访问 internal 类型。详见 [测试文档元指令 — InternalsVisibleTo 白名单原则](META-TEST.zh.md#internalsvisibleto-白名单原则)。
 - **正确路径、错误路径、边界路径同等覆盖**：每个能力文档按三类路径组织测试方法。
 - **使用 TestMemoryFileSystem**：所有文件 I/O 测试使用内存文件系统（`TestMemoryFileSystem`），不涉及真实磁盘操作。策略测试上下文（`StrategyTestContext`）内置 `MemoryFileSystem` 全链路，支持 ISndFileAccess 行为验证。
-- **策略隔离测试**：`StrategyTestScenario` 框架允许在完全无运行时的环境下测试单个策略的生命周期。`TestContextBuilder` 提供集成测试场景下的 SndContext 构造。
+- **策略隔离测试**：`StrategyTestScenario` 框架允许在完全无运行时的环境下测试单个策略的生命周期。
 
 ## 测试辅助设施
 
@@ -29,7 +29,6 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | `NullSndContext` | `ISndContext` 空对象实现 | 纯运行时单测用的空上下文；查询返回空对象，变更操作（存读档/关卡切换等）显式抛异常以满足 fail-fast |
 | `StrategyStateTestsCollection` | xUnit `[CollectionDefinition]` | 定义 `StrategyStateTests` 串行集合（`DisableParallelization`），供含静态可变状态的策略测试类串行运行，防止跨测试污染 |
 | `TestFactory` | 静态工厂类 | 快速创建 OrigoRuntime / SndWorld / ProgressRun / ConverterRegistry 等常用组合 |
-| `TestContextBuilder` | Fluent Builder | 构造 `SndContext` 实例（集成测试），提供合理默认值和可选覆盖，替代重复的 10 行构造模式 |
 | `GameplaySimulationHarness` | Fluent Builder + Harness | 一键创建完整帧驱动游戏模拟环境：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），支持 DriveFrame/RunFrames/SpawnEntity/GetEntityData/SaveAndReload |
 | `TestStrategies` | 抽象基类集合 | `SharedFrameCounterStrategy`、`SharedEchoActiveStrategy`、`SharedKillProbeStrategy`、`SharedNoopLifecycleStrategy`、`SharedNoopStateMachineStrategy` — 供集成测试文件通过 1 行 sealed 子类引用，消除重复策略定义 |
 | `TestObserverEvents` | 结构化事件记录 | `TestObserverEvent` record（EventType/TargetName/DataKey/OldValue/NewValue）+ `EventCollector` 静态 AsyncLocal 收集器 + `SharedDataChangeObserverStrategy` 抽象基类 — 观察者测试断言从子串匹配升级为类型化字段精确比较 |

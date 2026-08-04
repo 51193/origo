@@ -46,7 +46,7 @@ public class EntityKillTests
         }
     }
 
-    // ── RequestKillAll ─────────────────────────────────────────────────
+    // ── Manual iteration kill-all (RequestKillAll was removed from ISndContext) ──
 
     [Fact]
     public void ManualIterateAndRequestKillEntity_MarksAllAliveEntities()
@@ -81,7 +81,7 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void RequestKillAll_SkipsAlreadyPendingEntities()
+    public void ManualKillAll_SkipsAlreadyPendingEntities()
     {
         var (ctx, _) = Setup();
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
@@ -107,7 +107,7 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void RequestKillAll_RemovesAllAfterFlush()
+    public void ManualKillAll_RemovesAllAfterFlush()
     {
         var (ctx, host, _) = SetupKillTest();
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
@@ -124,7 +124,7 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void RequestKillAll_EmptyScene_DoesNotThrow()
+    public void ManualKillAll_EmptyScene_DoesNotThrow()
     {
         var (ctx, _) = Setup();
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();

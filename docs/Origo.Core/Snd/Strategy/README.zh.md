@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -55,7 +55,7 @@ BaseStrategy
 - **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`
 - **BuildBindingsFor(observerName)**：序列化某 observer 的全部出边为 `List<ObserverBinding>`（按 target 分组）写入 `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**：清理某 observer 的全部出边；目标可解析则完整 `Unmount`，否则归还策略并移除记录
-- **TeardownAllBindingsFor(observer)**：`DeadSingle`/`QuitSingle` 的自包含清理路径，对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略），不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用
+- **TeardownAllBindingsFor(observer)**：对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略）的自包含清理路径，不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用。由 `SessionRun.ReleaseAllEntitiesAndClear` 在会话退出时经 `IEntityLifecycle.TeardownObserverBindings` 调用
 - **HasBindingTargetingFrom(observerName, targetName)** / **RemoveBindingsTargetingFor(observer, targetName)**：incoming 拆线支撑——查询/清理某 observer 指向特定 target 的绑定
 - **双向 teardown**：`SessionRun.KillPending` 同时处理 outgoing（被杀实体作为 observer）与 incoming（被杀实体作为 target，经入边索引定位观察者），通过快照防止 `OnUnmounted` 回调中的重入修改
 
@@ -83,7 +83,7 @@ BaseStrategy
 - **Register**：`Register(Type strategyType, Func<BaseStrategy> factory)` —— 注册类型前通过反射校验无状态性（检查实例字段和可写属性）
 - **GetStrategy<TBase>(index)**：若池中已有则复用（引用计数 +1），否则通过工厂创建
 - **ReleaseStrategy(index)**：引用计数 -1，归零时从池中移除（但工厂保留，下次可再创建）
-- **GetPriority(index)**：返回策略在实体上的执行优先级（默认 6205）
+- **GetPriority(index)**：返回策略在实体上的执行优先级（注册时未显式指定 Priority 则取默认 6205；未注册索引返回 0 哨兵）
 - **LogPoolLeaks()**：诊断方法，遍历所有引用计数；若存在非零计数则输出 Warning 日志。供测试或 shutdown 阶段调用，检测策略引用未归还的泄漏
 - **策略排序**：仅被动实体策略按优先级升序排列，同优先级按插入顺序
 

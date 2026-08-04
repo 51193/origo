@@ -18,14 +18,14 @@ internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLife
         if (!found || string.IsNullOrWhiteSpace(saveId))
             return false;
 
-        owner.EnqueueSystemDeferred(
+        owner.EnqueueTrackedSystemDeferred(
             () => { owner.SetProgressRun(owner.LoadOrContinueStrict(saveId)); });
         return true;
     }
 
     public void RequestLoadInitialSave() =>
-        owner.EnqueueSystemDeferred(owner.ExecuteLoadInitialSaveNow);
+        owner.EnqueueTrackedSystemDeferred(owner.ExecuteLoadInitialSaveNow);
 
     public void RequestLoadMainMenuEntrySave() =>
-        owner.EnqueueSystemDeferred(owner.ExecuteLoadMainMenuEntrySaveNow);
+        owner.EnqueueTrackedSystemDeferred(owner.ExecuteLoadMainMenuEntrySaveNow);
 }

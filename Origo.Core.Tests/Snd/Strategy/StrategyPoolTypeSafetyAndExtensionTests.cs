@@ -86,6 +86,26 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         Assert.Null(ex);
     }
 
+    [Fact]
+    public void Register_AbstractStrategyType_Throws()
+    {
+        var pool = new SndStrategyPool(NullLogger.Instance);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            pool.Register(typeof(AbstractPoolStrategy), () => new PoolEntityStrategy()));
+    }
+
+    [Fact]
+    public void Register_DuplicateIndex_Throws()
+    {
+        var pool = new SndStrategyPool(NullLogger.Instance);
+        pool.Register(() => new PoolEntityStrategy());
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            pool.Register(() => new PoolEntityStrategy()));
+        Assert.Contains("already registered", ex.Message, StringComparison.Ordinal);
+    }
+
     [StrategyIndex("pool.entity")]
     private sealed class PoolEntityStrategy : LifecycleStrategyBase
     {
@@ -101,4 +121,9 @@ public class StrategyPoolTypeSafetyAndExtensionTests
     {
         public override object? Invoke(ISndEntity entity, ISndContext ctx, object? input) => null;
     }
+}
+
+[StrategyIndex("pool.abstract")]
+public abstract class AbstractPoolStrategy : LifecycleStrategyBase
+{
 }

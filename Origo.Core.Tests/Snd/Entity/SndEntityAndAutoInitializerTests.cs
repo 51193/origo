@@ -30,13 +30,14 @@ public class SndEntityAndAutoInitializerTests
         observerTopology.BindContext(context);
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
 
-        entity.SpawnSingle(new SndMetaData
+        ((IEntityLifecycle)entity).RecoverForLifecycle(new SndMetaData
         {
             Name = "E",
             NodeMetaData = new NodeMetaData { Pairs = new Dictionary<string, string> { ["root"] = "res://e.tscn" } },
             StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
             DataMetaData = new DataMetaData()
         });
+        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Contains("root", entity.GetNodeNames());
         var handle = entity.GetNode("root");
@@ -56,14 +57,15 @@ public class SndEntityAndAutoInitializerTests
         var observerTopology = new ObserverTopology(context.Runtime.SndWorld.StrategyPool, logger);
         observerTopology.BindContext(context);
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
-        entity.SpawnSingle(new SndMetaData
+        ((IEntityLifecycle)entity).RecoverForLifecycle(new SndMetaData
         { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
+        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         entity.AddStrategy(_lifecycleStrategyIndex);
-        Assert.Contains(_lifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
+        Assert.Contains(_lifecycleStrategyIndex, ((IEntityLifecycle)entity).BuildMetaData().StrategyMetaData!.LifecycleIndices);
 
         entity.RemoveStrategy(_lifecycleStrategyIndex);
-        Assert.DoesNotContain(_lifecycleStrategyIndex, entity.SaveSingle().StrategyMetaData!.LifecycleIndices);
+        Assert.DoesNotContain(_lifecycleStrategyIndex, ((IEntityLifecycle)entity).BuildMetaData().StrategyMetaData!.LifecycleIndices);
 
         // Removing a missing strategy should not throw.
         entity.RemoveStrategy(_lifecycleStrategyIndex);
@@ -78,8 +80,9 @@ public class SndEntityAndAutoInitializerTests
         var observerTopology = new ObserverTopology(context.Runtime.SndWorld.StrategyPool, logger);
         observerTopology.BindContext(context);
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
-        entity.SpawnSingle(new SndMetaData
+        ((IEntityLifecycle)entity).RecoverForLifecycle(new SndMetaData
         { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
+        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Throws<InvalidOperationException>(() => entity.GetData<int>("missing"));
     }
@@ -93,8 +96,9 @@ public class SndEntityAndAutoInitializerTests
         var observerTopology = new ObserverTopology(context.Runtime.SndWorld.StrategyPool, logger);
         observerTopology.BindContext(context);
         var entity = context.Runtime.SndWorld.CreateEntity(nodeFactory, context, logger, observerTopology);
-        entity.SpawnSingle(new SndMetaData
+        ((IEntityLifecycle)entity).RecoverForLifecycle(new SndMetaData
         { Name = "E", NodeMetaData = new NodeMetaData(), StrategyMetaData = new StrategyMetaData() });
+        ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
         Assert.Throws<ArgumentNullException>(() => entity.SetData(null!, 42));
         Assert.Throws<ArgumentException>(() => entity.SetData("", 42));

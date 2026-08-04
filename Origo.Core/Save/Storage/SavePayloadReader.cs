@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Globalization;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -42,6 +44,8 @@ internal static class SavePayloadReader
             $"Missing required progress.json in current (path='{progressRel}').",
             $"Missing required progress_state_machines.json in current (path='{progressSmRel}').");
 
+        ValidateFormatVersion(baseRel, customMeta);
+
         var levels = CreateLevelPayloadMap(handle, baseRel, activeLevelId);
         ReadRemainingLevelPayloads(handle, baseRel, levels);
 
@@ -50,7 +54,7 @@ internal static class SavePayloadReader
             activeLevelId,
             progressNode,
             progressStateMachinesNode,
-            customMeta,
+            StripFrameworkMetaKeys(customMeta),
             levels);
     }
 
@@ -69,6 +73,8 @@ internal static class SavePayloadReader
             $"Missing required progress.json in save '{saveId}' (path='{progressRel}').",
             $"Missing required progress_state_machines.json in save '{saveId}' (path='{progressSmRel}').");
 
+        ValidateFormatVersion(baseRel, customMeta);
+
         var levels = CreateLevelPayloadMap(handle, baseRel, activeLevelId);
         ReadRemainingLevelPayloads(handle, baseRel, levels);
 
@@ -77,8 +83,30 @@ internal static class SavePayloadReader
             activeLevelId,
             progressNode,
             progressStateMachinesNode,
-            customMeta,
+            StripFrameworkMetaKeys(customMeta),
             levels);
+    }
+
+    /// <summary>
+    ///     Rejects saves whose stored format version exceeds the current
+    ///     framework version (a future format cannot be safely parsed).
+    ///     A missing version key is treated as version 1 (the initial format).
+    /// </summary>
+    private static void ValidateFormatVersion(string baseRel, IReadOnlyDictionary<string, string>? customMeta)
+    {
+        var storedVersion = SaveGamePayload.CurrentFormatVersion;
+        if (customMeta is not null
+            && customMeta.TryGetValue(SaveGamePayload.FormatVersionMetaKey, out var raw)
+            && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+        {
+            storedVersion = parsed;
+        }
+
+        if (storedVersion > SaveGamePayload.CurrentFormatVersion)
+            throw new InvalidOperationException(
+                $"Save at '{baseRel}' uses format version {storedVersion}, but the current " +
+                $"framework only supports up to version {SaveGamePayload.CurrentFormatVersion}. " +
+                "The save was written by a newer Origo version and cannot be loaded.");
     }
 
     public static DataSourceNode? ReadProgressNodeFromSnapshot(
@@ -195,6 +223,23 @@ internal static class SavePayloadReader
         var customMeta = TryReadStringMap(handle, customMetaAbs);
 
         return (progressNode, progressStateMachinesNode, customMeta);
+    }
+
+    /// <summary>
+    ///     Removes framework-reserved meta keys (the <c>origo.</c> namespace,
+    ///     e.g. the format version) so exposed <c>CustomMeta</c> only carries
+    ///     user meta.
+    /// </summary>
+    private static IReadOnlyDictionary<string, string>? StripFrameworkMetaKeys(
+        IReadOnlyDictionary<string, string>? customMeta)
+    {
+        if (customMeta is null
+            || !customMeta.Keys.Any(k => k.StartsWith("origo.", StringComparison.Ordinal)))
+            return customMeta;
+
+        return customMeta
+            .Where(kv => !kv.Key.StartsWith("origo.", StringComparison.Ordinal))
+            .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
     }
 
     private static LevelPayload? TryReadLevelPayload(

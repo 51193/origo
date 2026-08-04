@@ -49,9 +49,20 @@ public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key =
         if (maxExclusive <= minInclusive)
             throw new ArgumentOutOfRangeException(nameof(maxExclusive),
                 "maxExclusive must be greater than minInclusive.");
-        if (!TryNextInt32(out var raw))
-            throw new InvalidOperationException("Random state not initialized. Call InitSeed first.");
-        return (int)(((long)(uint)raw % (long)(maxExclusive - minInclusive)) + minInclusive);
+
+        // Rejection sampling removes modulo bias so every value in the range
+        // is equally likely (the raw XorShift128+ output is a uniform
+        // 32-bit value).
+        var range = (uint)(maxExclusive - minInclusive);
+        var limit = (uint.MaxValue - range + 1u) % range;
+        while (true)
+        {
+            if (!TryNextInt32(out var raw))
+                throw new InvalidOperationException("Random state not initialized. Call InitSeed first.");
+            var r = (uint)raw;
+            if (r >= limit)
+                return (int)(r % range) + minInclusive;
+        }
     }
 
     /// <summary>Returns a random float in <c>[0, 1)</c>; throws when state is not initialized.</summary>

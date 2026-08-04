@@ -395,11 +395,13 @@ public class ConsoleBridgeServerTests
     {
         var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
-        var options = new ConsoleBridgeOptions { Port = 9876 };
+        // Port 0 selects an ephemeral port; the ActualPort reflects the
+        // configured value while avoiding collisions with other processes.
+        var options = new ConsoleBridgeOptions { Port = 0 };
 
         var server = new ConsoleBridgeServer(input, output, options);
         server.Start();
-        Assert.Equal(9876, server.ActualPort);
+        Assert.True(server.ActualPort > 0);
         server.Dispose();
     }
 

@@ -20,6 +20,12 @@ internal static class SaveStorageFacade
 {
     public const string SaveDirectoryPrefix = "save_";
 
+    /// <summary>Suffix of the staging directory used during snapshot writes.</summary>
+    public const string SaveTempDirectorySuffix = ".tmp";
+
+    /// <summary>Suffix of the backup directory kept while swapping a snapshot.</summary>
+    public const string SaveBackupDirectorySuffix = ".bak";
+
     public static IReadOnlyList<string> EnumerateSaveIds(SaveFileHandle handle)
     {
         ArgumentNullException.ThrowIfNull(handle);
@@ -36,6 +42,14 @@ internal static class SaveStorageFacade
             var id = leaf[SaveDirectoryPrefix.Length..];
             if (id.Length == 0)
                 continue;
+
+            // Directories left over from an interrupted snapshot (save_X.tmp
+            // staging / save_X.bak backup) are not valid slots; the swap logic
+            // only cleans them on the next write to the same id.
+            if (id.EndsWith(SaveTempDirectorySuffix, StringComparison.Ordinal)
+                || id.EndsWith(SaveBackupDirectorySuffix, StringComparison.Ordinal))
+                continue;
+
             result.Add(id);
         }
 
@@ -54,9 +68,16 @@ internal static class SaveStorageFacade
             var saveRel = handle.PathPolicy.GetSaveDirectory(id);
             var metaRel = handle.PathPolicy.GetCustomMetaFile(saveRel);
             var metaAbs = handle.GetAbsolutePath(metaRel);
-            var meta = SavePayloadReader.TryReadStringMap(handle, metaAbs) ??
-                       new Dictionary<string, string>();
-            list.Add(new SaveMetaDataEntry { SaveId = id, MetaData = meta });
+            var rawMeta = SavePayloadReader.TryReadStringMap(handle, metaAbs) ??
+                          new Dictionary<string, string>();
+
+            // Framework-reserved keys (the origo. namespace, e.g. the format
+            // version) are internal bookkeeping and are not display metadata.
+            var displayMeta = rawMeta
+                .Where(kv => !kv.Key.StartsWith("origo.", StringComparison.Ordinal))
+                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
+
+            list.Add(new SaveMetaDataEntry { SaveId = id, MetaData = displayMeta });
         }
 
         return list;

@@ -31,6 +31,12 @@
             <_PackageFiles Include="..\Origo.SourceGeneration\bin\$(Configuration)\netstandard2.0\Origo.SourceGeneration.dll">
                 <PackagePath>analyzers/dotnet/cs</PackagePath>
             </_PackageFiles>
+            <!-- Runtime dependency of the generator (official HashCode polyfill);
+                 analyzers are loaded by file reference, so the dependency must
+                 ship next to the generator dll. -->
+            <_PackageFiles Include="..\Origo.SourceGeneration\bin\$(Configuration)\netstandard2.0\Microsoft.Bcl.HashCode.dll">
+                <PackagePath>analyzers/dotnet/cs</PackagePath>
+            </_PackageFiles>
         </ItemGroup>
     </Target>
 

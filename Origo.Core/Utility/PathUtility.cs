@@ -12,7 +12,7 @@ public static class PathUtility
     {
         if (path is null)
             return string.Empty;
-        return path.TrimEnd('/');
+        return path.TrimEnd('/', '\\');
     }
 
     public static string? ExtractGlobSuffix(string searchPattern)

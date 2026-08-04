@@ -41,15 +41,16 @@ public sealed class SaveGamePayload
 {
     /// <summary>
     ///     The current save format version number. Incremented on change,
-    ///     used at startup to validate format compatibility.
+    ///     used to validate format compatibility when loading.
     /// </summary>
     public const int CurrentFormatVersion = 1;
 
     /// <summary>
-    ///     The save format version number, used to validate compatibility
-    ///     when loading.
+    ///     Framework-reserved <c>meta.map</c> key carrying the save format
+    ///     version written by <see cref="Origo.Core.Save.Storage.SavePayloadWriter" />
+    ///     and validated by the reader.
     /// </summary>
-    public int FormatVersion { get; set; } = CurrentFormatVersion;
+    public const string FormatVersionMetaKey = "origo.format_version";
 
     /// <summary>
     ///     The unique identifier of the save slot.

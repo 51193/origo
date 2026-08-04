@@ -167,4 +167,32 @@ public class ValidatorTests
 
         Assert.Equal(0, Validator.Run(repo.LoadConfig()));
     }
+
+    [Fact]
+    public void Validate_LanguageLinkEscapingDocsMirror_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        // Resolves outside docs/ (to the repo-root benchmarks/ directory) —
+        // the mirror is self-contained, so a language-suffixed target there
+        // is always broken.
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") +
+            "# A\n\n[baseline](../../benchmarks/baseline.zh.md)\n");
+
+        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_BareMdLinkEscapingDocsMirror_Allowed()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        // Bare .md links may legitimately point at repo-root documents
+        // (e.g. AGENTS.md referenced from META docs).
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[AGENTS](../AGENTS.md)\n");
+
+        Assert.Equal(0, Validator.Run(repo.LoadConfig()));
+    }
 }

@@ -691,7 +691,7 @@ public class SndEntityLifecycleBatchTests
     // ── Single convenience methods ──────────────────────────────────────
 
     [Fact]
-    public void SpawnSingle_ActiveStrategyAvailableDuringAfterSpawn()
+    public void Spawn_ActiveStrategyAvailableDuringAfterSpawn()
     {
         QueryActiveProxy.Events.Clear();
         QueryActiveProxy.InvokeTarget = "SelfSpawn";
@@ -725,7 +725,7 @@ public class SndEntityLifecycleBatchTests
     }
 
     [Fact]
-    public void LoadSingle_ActiveStrategyAvailableDuringAfterLoad()
+    public void Load_ActiveStrategyAvailableDuringAfterLoad()
     {
         QueryActiveProxy.Events.Clear();
         QueryActiveProxy.InvokeTarget = "SelfLoad";

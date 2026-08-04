@@ -147,31 +147,12 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     void IEntityLifecycle.TeardownOnly() => ((IEntityLifecycle)Entity).TeardownOnly();
 
+    void IEntityLifecycle.TeardownObserverBindings() =>
+        ((IEntityLifecycle)Entity).TeardownObserverBindings();
+
     SndMetaData IEntityLifecycle.BuildMetaData() => ((IEntityLifecycle)Entity).BuildMetaData();
 
     internal SndMetaData BuildSndMetaData() => ((IEntityLifecycle)Entity).BuildMetaData();
-
-    internal void SpawnSingle(SndMetaData metaData)
-    {
-        ThrowIfReleasedFromManager();
-        ArgumentNullException.ThrowIfNull(metaData);
-        StableName = metaData.Name;
-        Name = metaData.Name;
-        Entity.SpawnSingle(metaData);
-        StableName = Entity.Name;
-        Name = Entity.Name;
-    }
-
-    internal void LoadSingle(SndMetaData metaData)
-    {
-        ThrowIfReleasedFromManager();
-        ArgumentNullException.ThrowIfNull(metaData);
-        StableName = metaData.Name;
-        Name = metaData.Name;
-        Entity.LoadSingle(metaData);
-        StableName = Entity.Name;
-        Name = Entity.Name;
-    }
 
     internal void DetachFromManager()
     {
@@ -194,8 +175,6 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     void ISndEntityFacade.DetachFromManager() => DetachFromManager();
 
     void ISndEntityFacade.MarkPendingKill() => MarkPendingKill();
-
-    internal SndMetaData SaveSingle() => Entity.SaveSingle();
 
     internal void ProcessSnd(double delta)
     {

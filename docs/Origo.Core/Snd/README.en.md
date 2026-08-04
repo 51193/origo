@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -96,7 +96,8 @@ Observer binding topology is serialized with entities through `StrategyMetaData.
 
 `SndContext.Bootstrap()` executes all Core initialization operations in a fixed order:
 
-1. **Strategy discovery**: If `SndContextParameters.AutoDiscoverStrategies` is true, scans assemblies for `[StrategyIndex]` annotated types via `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, using `DiscoverySkipPrefixes` to filter adapter-layer assemblies
+1. **Converter registration**: if `SndContextParameters.ConfigureConverters` is set, it is invoked to register custom `DataSourceConverter`s
+2. **Strategy discovery**: If `SndContextParameters.AutoDiscoverStrategies` is true, scans assemblies for `[StrategyIndex]` annotated types via `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, using `DiscoverySkipPrefixes` to filter adapter-layer assemblies
 2. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls `SndWorld.LoadSceneAliases()`
 3. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls `SndWorld.LoadTemplates()`
 4. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`

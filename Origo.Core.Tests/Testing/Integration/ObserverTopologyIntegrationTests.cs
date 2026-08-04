@@ -243,6 +243,7 @@ public class ObserverTopologyIntegrationTests
     public void Observer_MountToKilledEntity_Throws()
     {
         var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
             .Build();
 
         var target = harness.SpawnEntity("target", []);
@@ -251,8 +252,174 @@ public class ObserverTopologyIntegrationTests
         harness.RequestKillEntity("target");
         harness.DriveFrame();
 
-        Assert.ThrowsAny<Exception>(
+        var ex = Assert.Throws<InvalidOperationException>(
             () => observer.MountObserverStrategy(target, "test.int.obs.topology"));
+        Assert.Contains("pending kill", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Observer_KilledObserverCannotMount_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .Build();
+
+        var target = harness.SpawnEntity("target", []);
+        var observer = harness.SpawnEntity("observer", []);
+
+        harness.RequestKillEntity("observer");
+        harness.DriveFrame();
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => observer.MountObserverStrategy(target, "test.int.obs.topology"));
+        Assert.Contains("pending kill", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Observer_MountAcrossSessions_Throws()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .Build();
+
+        var target = harness.SpawnEntity("target", []);
+        var otherSession = harness.CreateBackgroundSession("other", "other_level");
+        var foreignObserver = otherSession.Spawn(new SndMetaData
+        {
+            Name = "foreign_observer",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        });
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => foreignObserver.MountObserverStrategy(target, "test.int.obs.topology"));
+        Assert.Contains("different sessions", ex.Message, StringComparison.Ordinal);
+    }
+
+    // ── Save/load round-trip restoration ─────────────────────────────
+
+    [Fact]
+    public void Observer_Bindings_RestoredAcrossSaveAndReload()
+    {
+        var events = new List<TestObserverEvent>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .Build();
+
+        EventCollector.Events = events;
+        try
+        {
+            var target = harness.SpawnEntity("target", []);
+            var observer = harness.SpawnEntity("observer", []);
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+
+            harness.SetEntityData("target", "hp", 50);
+            Assert.Contains(events, e => e.EventType == "on_data_changed" && e.TargetName == "target");
+
+            harness.SaveAndReload("obs_roundtrip");
+
+            var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
+            Assert.NotNull(gameSession);
+            events.Clear();
+            var reloadedTarget = gameSession.FindByName("target");
+            Assert.NotNull(reloadedTarget);
+            Assert.NotNull(gameSession.FindByName("observer"));
+
+            reloadedTarget.SetData("hp", 75);
+            Assert.Contains(events, e => e.EventType == "on_data_changed" && e.TargetName == "target");
+        }
+        finally
+        {
+            EventCollector.Events = null;
+        }
+    }
+
+    [Fact]
+    public void Observer_OnMounted_FiresAgainAfterReload()
+    {
+        var events = new List<TestObserverEvent>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .Build();
+
+        EventCollector.Events = events;
+        try
+        {
+            var target = harness.SpawnEntity("target", []);
+            var observer = harness.SpawnEntity("observer", []);
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+
+            var mountedBeforeReload = events.Count(e => e.EventType == "on_mounted");
+            Assert.Equal(1, mountedBeforeReload);
+
+            harness.SaveAndReload("obs_roundtrip");
+
+            var mountedAfterReload = events.Count(e => e.EventType == "on_mounted" && e.TargetName == "target");
+            Assert.Equal(mountedBeforeReload + 1, mountedAfterReload);
+        }
+        finally
+        {
+            EventCollector.Events = null;
+        }
+    }
+
+    // ── Session quit teardown ─────────────────────────────────────────
+
+    [Fact]
+    public void Observer_OnUnmounted_FiresWhenSessionIsDestroyed()
+    {
+        var events = new List<TestObserverEvent>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .Build();
+
+        EventCollector.Events = events;
+        try
+        {
+            var target = harness.SpawnEntity("target", []);
+            var observer = harness.SpawnEntity("observer", []);
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+
+            events.Clear();
+            harness.Context.Runtime.SessionManager.DestroySession("game");
+
+            Assert.Contains(events, e => e.EventType == "on_unmounted" && e.TargetName == "target");
+        }
+        finally
+        {
+            EventCollector.Events = null;
+        }
+    }
+
+    [Fact]
+    public void Observer_TargetDataNoLongerNotifiesAfterSessionDestroyed()
+    {
+        var events = new List<TestObserverEvent>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .Build();
+
+        EventCollector.Events = events;
+        try
+        {
+            var target = harness.SpawnEntity("target", []);
+            var observer = harness.SpawnEntity("observer", []);
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+
+            harness.SetEntityData("target", "hp", 50);
+            Assert.Contains(events, e => e.EventType == "on_data_changed");
+
+            harness.Context.Runtime.SessionManager.DestroySession("game");
+
+            events.Clear();
+            target.SetData("hp", 60);
+            Assert.DoesNotContain(events, e => e.EventType == "on_data_changed");
+        }
+        finally
+        {
+            EventCollector.Events = null;
+        }
     }
 
     // ── test strategies ──────────────────────────────────────────────

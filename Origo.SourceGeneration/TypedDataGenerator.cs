@@ -16,7 +16,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var inputProvider = context.CompilationProvider
-            .Select((compilation, ct) => ExtractGenerationInput(compilation));
+            .Select((compilation, ct) => ExtractGenerationInput(compilation))
+            .WithComparer(GenerationInputEqualityComparer.Instance);
 
         context.RegisterSourceOutput(inputProvider, GenerateTypedDataExtensions);
     }
@@ -99,7 +100,10 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             IsReferenceType = typeSymbol.IsReferenceType,
             SpecialType = typeSymbol.SpecialType,
             FitsInline = IsInlineCandidate(typeSymbol),
-            Location = location
+            Location = location,
+            LocationKey = location.SourceTree is null
+                ? location.GetLineSpan().ToString()
+                : $"{location.SourceTree.FilePath}:{location.SourceSpan.Start}-{location.SourceSpan.End}"
         };
     }
 
@@ -254,6 +258,73 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         public List<TypeGroup> TypeGroups { get; set; } = [];
     }
 
+    /// <summary>
+    ///     Value-based equality for <see cref="GenerationInput" />, so the
+    ///     incremental pipeline can recognize an unchanged declaration set
+    ///     (e.g. a new <see cref="Compilation" /> instance over identical
+    ///     sources) and skip regeneration entirely.
+    /// </summary>
+    private sealed class GenerationInputEqualityComparer : IEqualityComparer<GenerationInput>
+    {
+        public static readonly GenerationInputEqualityComparer Instance = new();
+
+        public bool Equals(GenerationInput? x, GenerationInput? y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (x is null || y is null) return false;
+            if (x.IsHome != y.IsHome) return false;
+            if (x.TypeGroups.Count != y.TypeGroups.Count) return false;
+
+            for (var i = 0; i < x.TypeGroups.Count; i++)
+            {
+                var gx = x.TypeGroups[i];
+                var gy = y.TypeGroups[i];
+                if (gx.StartKind != gy.StartKind || gx.Types.Count != gy.Types.Count)
+                    return false;
+
+                for (var j = 0; j < gx.Types.Count; j++)
+                {
+                    var tx = gx.Types[j];
+                    var ty = gy.Types[j];
+                    if (tx.RawKind != ty.RawKind
+                        || tx.KindValue != ty.KindValue
+                        || !string.Equals(tx.ClrTypeName, ty.ClrTypeName, StringComparison.Ordinal)
+                        || tx.IsReferenceType != ty.IsReferenceType
+                        || tx.SpecialType != ty.SpecialType
+                        || tx.FitsInline != ty.FitsInline
+                        || !string.Equals(tx.LocationKey, ty.LocationKey, StringComparison.Ordinal))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        public int GetHashCode(GenerationInput obj)
+        {
+            var hash = new HashCode();
+            hash.Add(obj.IsHome);
+            hash.Add(obj.TypeGroups.Count);
+            foreach (var g in obj.TypeGroups)
+            {
+                hash.Add(g.StartKind);
+                hash.Add(g.Types.Count);
+                foreach (var t in g.Types)
+                {
+                    hash.Add(t.RawKind);
+                    hash.Add(t.KindValue);
+                    hash.Add(t.ClrTypeName);
+                    hash.Add(t.IsReferenceType);
+                    hash.Add(t.SpecialType);
+                    hash.Add(t.FitsInline);
+                    hash.Add(t.LocationKey);
+                }
+            }
+
+            return hash.ToHashCode();
+        }
+    }
+
     private sealed record TypeGroup
     {
         public int StartKind { get; set; }
@@ -270,5 +341,13 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         public SpecialType SpecialType { get; set; }
         public bool FitsInline { get; set; }
         public Location? Location { get; set; }
+
+        /// <summary>
+        ///     Stable string key for <see cref="Location" />, used by the
+        ///     generation-input comparer so moved-but-unchanged declarations
+        ///     are still detected (the raw <see cref="Location" /> object has
+        ///     no value equality across compilations).
+        /// </summary>
+        public string LocationKey { get; set; } = string.Empty;
     }
 }

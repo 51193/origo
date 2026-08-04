@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -67,7 +67,7 @@ Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 
 ### 为什么 GodotSndManager 不拥有 _Process 循环
 
-实体帧处理是 Core 编排职责。若 `GodotSndManager` 自持 `_Process` 循环遍历实体调用 `ProcessSnd(delta)`，会重复 Core 的帧处理逻辑并绕过正式处理管线。因此帧处理统一由 Core 的 `SessionManager.ProcessAllSessions(delta)` 经 `SceneHost.ProcessAll(delta)`、通过 `IOrigoFrameDriver.DriveFrame(delta)` 执行，`ProcessTickCount` 和 `ProcessDeltaSum` 也在 `ProcessAll` 中维护。`ProcessSnd` 与 `SpawnSingle`/`LoadSingle`/`SaveSingle` 均为 `internal`——生命周期编排只能经 Core 的 `ISessionRun` 与批量钩子管线触发，外部代码不得经 `GodotSndEntity` 具体类型直接调用。
+实体帧处理是 Core 编排职责。若 `GodotSndManager` 自持 `_Process` 循环遍历实体调用 `ProcessSnd(delta)`，会重复 Core 的帧处理逻辑并绕过正式处理管线。因此帧处理统一由 Core 的 `SessionManager.ProcessAllSessions(delta)` 经 `SceneHost.ProcessAll(delta)`、通过 `IOrigoFrameDriver.DriveFrame(delta)` 执行，`ProcessTickCount` 和 `ProcessDeltaSum` 也在 `ProcessAll` 中维护。`ProcessSnd` 为 `internal`——生命周期编排只能经 Core 的 `ISessionRun` 与批量钩子管线触发，外部代码不得经 `GodotSndEntity` 具体类型直接调用。
 
 ### 为什么 GodotSndEntity 使用延迟创建 Core Entity
 

@@ -31,7 +31,7 @@ internal sealed class SndStrategyPool
     public void Register(Type strategyType, Func<BaseStrategy> factory)
     {
         ArgumentNullException.ThrowIfNull(strategyType);
-        if (!strategyType.IsAbstract && !strategyType.IsSealed)
+        if (strategyType.IsAbstract || !strategyType.IsSealed)
             throw new InvalidOperationException(
                 $"Strategy type '{strategyType.FullName}' must be sealed. " +
                 "Shared pooled strategies are singletons and must not be inheritable.");
@@ -42,6 +42,10 @@ internal sealed class SndStrategyPool
                 "shared pooled strategies must be stateless.");
         var index = ResolveRequiredIndex(strategyType);
         ArgumentNullException.ThrowIfNull(factory);
+        if (_factories.ContainsKey(index))
+            throw new InvalidOperationException(
+                $"Strategy index '{index}' is already registered. " +
+                "Each strategy index must map to exactly one strategy type.");
         _factories[index] = factory;
         _priorities[index] = ResolvePriority(strategyType);
     }

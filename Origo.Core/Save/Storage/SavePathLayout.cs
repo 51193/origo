@@ -33,13 +33,42 @@ internal static class SavePathLayout
     public static string GetCurrentDirectory() => CurrentDirectoryName;
 
     /// <summary>
+    ///     Validates a save ID against the allowed character set
+    ///     (ASCII letters, digits, <c>.</c>, <c>_</c>, <c>-</c>). Save IDs
+    ///     are embedded in directory names, so arbitrary characters would
+    ///     allow path traversal or directory structure injection.
+    /// </summary>
+    public static void ValidateSaveId(string saveId, string paramName) =>
+        ValidateToken(saveId, paramName, "save id");
+
+    /// <summary>
+    ///     Shared token validation for identifiers embedded in directory or
+    ///     file names (save ids, session keys, level ids). Allows only ASCII
+    ///     letters, digits, <c>.</c>, <c>_</c>, <c>-</c>.
+    /// </summary>
+    internal static void ValidateToken(string value, string paramName, string kind)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException($"{kind} cannot be null or whitespace.", paramName);
+
+        foreach (var ch in value)
+        {
+            if (char.IsAsciiLetterOrDigit(ch) || ch is '.' or '_' or '-')
+                continue;
+            throw new ArgumentException(
+                $"'{value}' contains character '{ch}' which is not allowed in {kind} " +
+                "(allowed: ASCII letters, digits, '.', '_', '-').",
+                paramName);
+        }
+    }
+
+    /// <summary>
     ///     Gets the relative path of the snapshot directory corresponding to
     ///     a save ID (e.g., <c>save_001</c>).
     /// </summary>
     public static string GetSaveDirectory(string saveId)
     {
-        if (string.IsNullOrWhiteSpace(saveId))
-            throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
+        ValidateSaveId(saveId, nameof(saveId));
 
         return $"save_{saveId}";
     }

@@ -56,6 +56,12 @@ public sealed class TestSndSceneHost : ISndSceneHost
         var entity = _entities.FirstOrDefault(e => e.Name == name);
         if (entity is not null)
             _entities.Remove(entity);
+
+        // Keep the metadata view in sync with the entity view so
+        // BuildMetaList never returns removed entities.
+        var meta = _metaList.FirstOrDefault(m => m.Name == name);
+        if (meta is not null)
+            _metaList.Remove(meta);
     }
 
     public void RequestKillEntity(string name)

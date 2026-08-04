@@ -102,8 +102,16 @@ internal static class SavePayloadWriter
 
         WriteCustomMetaToCurrent(handle, currentRel, payload.CustomMeta);
 
-        foreach (var level in payload.Levels.Values)
-            WriteLevelPayload(handle, currentRel, level, true);
+        foreach (var level in payload.Levels)
+        {
+            // The dictionary key is the level id used for the on-disk path;
+            // a mismatch between key and LevelId would write to the wrong
+            // directory while readers index by directory name.
+            if (!string.Equals(level.Key, level.Value.LevelId, StringComparison.Ordinal))
+                throw new InvalidOperationException(
+                    $"Level payload dictionary key '{level.Key}' does not match LevelId '{level.Value.LevelId}'.");
+            WriteLevelPayload(handle, currentRel, level.Value, true);
+        }
 
         handle.MetaAccess.Delete(markerAbs);
     }
@@ -159,6 +167,14 @@ internal static class SavePayloadWriter
             throw new InvalidOperationException("Missing required ProgressStateMachinesNode (strict mode).");
     }
 
+    /// <summary>
+    ///     Framework-reserved meta.map key carrying the save format version.
+    ///     Injected whenever a meta.map is written so loaders can validate
+    ///     format compatibility. Saves without user meta have no meta.map
+    ///     (the reader treats a missing version key as version 1).
+    /// </summary>
+    private const string _formatVersionMetaKey = "origo.format_version";
+
     private static void WriteCustomMetaToCurrent(
         SaveFileHandle handle,
         string currentRel,
@@ -166,23 +182,29 @@ internal static class SavePayloadWriter
     {
         var customMetaRel = handle.PathPolicy.GetCustomMetaFile(currentRel);
         var customMetaAbs = handle.GetAbsolutePath(customMetaRel);
-        if (customMeta is not null && customMeta.Count > 0)
+
+        if (customMeta is null || customMeta.Count == 0)
         {
-            var mapNode = BuildStringMapNode(customMeta);
-            handle.EnsureParentDirectory(customMetaRel);
-            handle.IoGateway.WriteTree(customMetaAbs, mapNode);
+            if (handle.MetaAccess.FileExists(customMetaAbs))
+                handle.MetaAccess.Delete(customMetaAbs);
+            return;
         }
-        else if (handle.MetaAccess.FileExists(customMetaAbs))
-        {
-            handle.MetaAccess.Delete(customMetaAbs);
-        }
+
+        var mapNode = BuildStringMapNode(customMeta);
+        mapNode.Add(_formatVersionMetaKey,
+            DataSourceNode.CreateString(SaveGamePayload.CurrentFormatVersion.ToString(
+                System.Globalization.CultureInfo.InvariantCulture)));
+
+        handle.EnsureParentDirectory(customMetaRel);
+        handle.IoGateway.WriteTree(customMetaAbs, mapNode);
     }
 
-    private static DataSourceNode BuildStringMapNode(IReadOnlyDictionary<string, string> map)
+    private static DataSourceNode BuildStringMapNode(IReadOnlyDictionary<string, string>? map)
     {
         var root = DataSourceNode.CreateObject();
-        foreach (var pair in map)
-            root.Add(pair.Key, DataSourceNode.CreateString(pair.Value));
+        if (map is not null)
+            foreach (var pair in map)
+                root.Add(pair.Key, DataSourceNode.CreateString(pair.Value));
         return root;
     }
 

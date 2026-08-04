@@ -29,6 +29,7 @@ namespace Origo.GodotAdapter.Bootstrap;
 public partial class OrigoAutoHost : Node
 {
     private const string _logTag = nameof(OrigoAutoHost);
+    private bool _readyFailed;
 
     [Export] public string SystemBlackboardSaveRoot { get; set; } = "user://origo_saves";
     public GodotSndManager SndManager { get; private set; } = null!;
@@ -81,11 +82,22 @@ public partial class OrigoAutoHost : Node
             bootstrapLogger.Log(LogLevel.Error, _logTag,
                 new LogMessageBuilder().SetElapsedMs(readyWatch.Elapsed.TotalMilliseconds)
                     .Build($"_Ready failed: {ex.Message}"));
+            _readyFailed = true;
             throw;
         }
     }
 
-    public override void _Process(double delta) => ((IOrigoFrameDriver?)Runtime)?.DriveFrame(delta);
+    public override void _Process(double delta)
+    {
+        // A failed _Ready leaves the node alive in the scene tree; drive
+        // frames explicitly fail instead of silently running without a
+        // runtime (fail-fast).
+        if (_readyFailed)
+            throw new InvalidOperationException(
+                "OrigoAutoHost bootstrap failed in _Ready; frame driving is disabled. " +
+                "Fix the bootstrap error before running the scene.");
+        ((IOrigoFrameDriver?)Runtime)?.DriveFrame(delta);
+    }
 
     [MemberNotNull(nameof(SndManager), nameof(SharedMetaAccess), nameof(SharedPathResolver), nameof(SharedDataSourceIo))]
     private OrigoRuntime CreateRuntime()

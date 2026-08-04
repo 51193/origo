@@ -307,4 +307,130 @@ public class ConsoleBridgeServerErrorPathTests
         server.Dispose();
         Assert.DoesNotContain(logger.Errors, e => e.Contains("Accept loop faulted"));
     }
+
+    // ── Output-side isolation (regression: RST during Publish crashed the caller) ──
+
+    [Fact]
+    public void OnConsoleOutput_BrokenWriter_DoesNotThrowToCaller()
+    {
+        var logger = new TestLogger();
+        var server = new ConsoleBridgeServer(new ConsoleInputBuffer(), new ConsoleOutputChannel(), logger: logger);
+
+        // Simulate a connection whose client stream died (RST) while the
+        // handler thread is still inside its read loop: the writer targets
+        // a stream whose writes always throw.
+        var brokenWriter = new StreamWriter(new ThrowingWriteStream()) { AutoFlush = true };
+
+        var writerField = typeof(ConsoleBridgeServer)
+            .GetField("_writer", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        writerField.SetValue(server, brokenWriter);
+
+        var onOutputField = typeof(ConsoleBridgeServer)
+            .GetMethod("OnConsoleOutput", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        for (var i = 0; i < 5; i++)
+        {
+            try
+            {
+                onOutputField.Invoke(server, ["burst_line_" + i]);
+            }
+            catch (TargetInvocationException ex)
+            {
+                Assert.Fail($"OnConsoleOutput threw for a broken client writer: {ex.InnerException}");
+            }
+        }
+
+        Assert.Null(writerField.GetValue(server));
+        Assert.Contains(logger.Warnings,
+            w => w.Contains(nameof(ConsoleBridgeServer)) && w.Contains("write"));
+    }
+
+    [Fact]
+    public void Publish_BrokenClientWriter_DoesNotThrowToCaller()
+    {
+        var logger = new TestLogger();
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var server = new ConsoleBridgeServer(input, output, logger: logger);
+        server.Start();
+        var port = server.ActualPort;
+
+        // Connect and immediately hard-disconnect (RST) so the handler's
+        // writer targets a dead stream.
+        using (var client = new TcpClient())
+        {
+            client.Connect(IPAddress.Loopback, port);
+            client.Client.Shutdown(SocketShutdown.Both);
+            client.Client.Close();
+        }
+
+        // Give the handler time to enter the connection and hold the broken
+        // stream, then publish from the game side. The publish call itself
+        // must not throw: a dead client writer is a connection-level failure
+        // and must be isolated from the game frame loop.
+        Thread.Sleep(150);
+
+        var published = false;
+        for (var i = 0; i < 5; i++)
+        {
+            try
+            {
+                output.Publish($"burst_line_{i}");
+                published = true;
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Publish threw for a broken client writer: {ex}");
+            }
+        }
+
+        Assert.True(published, "Publish should have completed for all lines");
+
+        // The server must still accept new connections afterwards.
+        using var client2 = ConsoleBridgeTestInfrastructure.Connect(port,
+            ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        using var writer2 = new StreamWriter(client2.GetStream()) { AutoFlush = true };
+        writer2.WriteLine("recovered_after_write_failure");
+        Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+            () => input.TryDequeueCommand(out var l) && l == "recovered_after_write_failure",
+            ConsoleBridgeTestInfrastructure.CommandTimeoutMs));
+
+        server.Dispose();
+    }
+
+    /// <summary>
+    ///     Test double: writes fail with an <see cref="IOException" />,
+    ///     simulating a socket whose peer hard-disconnected (RST). The first
+    ///     flushes succeed so the writer can be constructed with
+    ///     <c>AutoFlush</c> (its setter flushes immediately).
+    /// </summary>
+    private sealed class ThrowingWriteStream : Stream
+    {
+        private int _flushCalls;
+
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => throw new NotSupportedException();
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush()
+        {
+            if (Interlocked.Increment(ref _flushCalls) > 2)
+                throw new IOException("Simulated socket write failure");
+        }
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new IOException("Simulated socket write failure");
+    }
 }

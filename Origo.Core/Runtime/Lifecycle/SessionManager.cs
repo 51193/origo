@@ -7,6 +7,7 @@ using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Logging;
 using Origo.Core.Save;
+using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
 using Origo.Core.Abstractions.Lifecycle;
@@ -265,21 +266,8 @@ internal sealed class SessionManager : ISessionManager
                     "Destroy the existing session before reusing its levelId.");
     }
 
-    private static void ValidateTopologyToken(string value, string paramName)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("Value cannot be null or whitespace.", paramName);
-
-        foreach (var ch in value)
-        {
-            if (char.IsAsciiLetterOrDigit(ch) || ch is '.' or '_' or '-')
-                continue;
-            throw new ArgumentException(
-                $"'{value}' contains character '{ch}' which is not allowed in session topology tokens " +
-                "(allowed: ASCII letters, digits, '.', '_', '-').",
-                paramName);
-        }
-    }
+    private static void ValidateTopologyToken(string value, string paramName) =>
+        SavePathLayout.ValidateToken(value, paramName, "session topology token");
 
     private void MountInternal(string key, SessionRun session, bool syncProcess)
     {

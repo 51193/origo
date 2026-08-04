@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Metadata
 
@@ -34,7 +34,6 @@ public readonly partial struct TypedData : IEquatable<TypedData>
     internal object? _ref;        // Reference type or large value type fallback
 
     public Type DataType { get; }
-    public object? Data { get; }
     public bool IsNull { get; }
 }
 ```

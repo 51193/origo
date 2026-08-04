@@ -1,5 +1,6 @@
 using System;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 
 namespace Origo.Core.Snd;
 
@@ -33,8 +34,34 @@ public static class EntityExtensions
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
 
-        return ReferenceEquals(a, b)
-               || (string.Equals(a.Name, b.Name, StringComparison.Ordinal)
-                   && ReferenceEquals(a.OwningSession, b.OwningSession));
+        if (ReferenceEquals(a, b))
+            return true;
+
+        if (!string.Equals(a.Name, b.Name, StringComparison.Ordinal))
+            return false;
+
+        static ISessionRun? SessionOf(ISndEntity e)
+        {
+            try
+            {
+                return e.OwningSession;
+            }
+            catch (InvalidOperationException)
+            {
+                // Concrete entities throw before session binding; treat an
+                // unbound entity as having no owning session.
+                return null;
+            }
+        }
+
+        var aSession = SessionOf(a);
+        var bSession = SessionOf(b);
+
+        // Both unbound: degenerate to name equality (unbound containers
+        // enforce unique names).
+        if (aSession is null && bSession is null)
+            return true;
+
+        return ReferenceEquals(aSession, bSession);
     }
 }

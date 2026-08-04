@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console
 
@@ -23,7 +23,7 @@ Console command extensions for the Godot adapter layer. An adapter-layer command
 
 ### CommandHandlerBase
 
-Inherits from Core's `IConsoleCommandHandler`, providing the same argument validation logic as Core's `ConsoleCommandHandlerBase`. The difference is that this base class directly holds an `OrigoRuntime` reference (rather than requiring subclass injection), simplifying command implementation on the Godot side.
+Inherits from Core's `ConsoleCommandHandlerBase` (argument-count validation and error messaging come from the base class) and additionally holds an `OrigoRuntime` reference directly, simplifying command implementation on the Godot side.
 
 ### PressButtonCommandHandler
 

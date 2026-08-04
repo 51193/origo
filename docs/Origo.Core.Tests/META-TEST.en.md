@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -164,7 +164,13 @@ but must observe the following whitelist principle:
 
 3. **Manually patching hooks after entity spawn**: `((IEntityLifecycle)e).FireAfterSpawnHooks()` and similar
    must not be used to simulate spawn — use `ISessionRun.Spawn` (internally already triggers AfterSpawn hooks).
-   (Exceptions for batch tests verifying phased orchestration intermediate states/ordering, see whitelist item 2 above.)
+   (Exceptions for batch tests verifying phased orchestration intermediate states/ordering, see whitelist item 2 above.
+   Unit-level bare entities — constructed directly via `SndWorld.CreateEntity`, without host/session wrapping, used
+   for isolated strategy-mounting tests — have no `ISessionRun` public path available, so they may call
+   `IEntityLifecycle` phased methods directly (`RecoverForLifecycle` / `FireAfterSpawnHooks` /
+   `FireAfterLoadHooks` / `BuildMetaData`) to make the entity ready; `SndEntityFactory.Spawn` requires a scene
+   host and `ISessionRun.Spawn` requires a session. Integration scenarios with a host/session must still use the
+   public API.)
 
 4. **Internal properties of session mount keys**: `SessionRun.MountKey` should be verified through
    `ISessionManager.Contains()` / `ISessionManager.TryGet()`

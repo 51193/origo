@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Metadata
 
@@ -34,7 +34,6 @@ public readonly partial struct TypedData : IEquatable<TypedData>
     internal object? _ref;        // 引用类型或大值类型兜底
 
     public Type DataType { get; }
-    public object? Data { get; }
     public bool IsNull { get; }
 }
 ```
