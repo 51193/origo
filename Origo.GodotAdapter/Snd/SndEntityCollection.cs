@@ -67,18 +67,25 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         return list;
     }
 
-    public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
+    public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList,
+        Action<SndMetaData, Exception>? onFailure = null)
     {
         ArgumentNullException.ThrowIfNull(metaList);
         var staged = new List<T>();
+        SndMetaData? failingMeta = null;
         try
         {
             foreach (var meta in metaList)
+            {
+                failingMeta = meta;
                 CreateAndStage(meta, staged);
+            }
         }
-        catch
+        catch (Exception ex)
         {
             RollbackPartialLoad(staged);
+            if (failingMeta is not null)
+                onFailure?.Invoke(failingMeta, ex);
             throw;
         }
     }

@@ -69,16 +69,10 @@ public partial class GodotSndManager
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
-        try
-        {
-            _collection.RecoverFromMetaList(metaList);
-        }
-        catch (Exception ex)
-        {
+        _collection.RecoverFromMetaList(metaList, (meta, ex) =>
             SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
-                new LogMessageBuilder().AddContext("entityName", "unknown").Build($"Entity recovery failed, rolling back partial load: {ex.Message}"));
-            throw;
-        }
+                new LogMessageBuilder().AddContext("entityName", meta.Name)
+                    .Build($"Entity recovery failed, rolling back partial load: {ex.Message}")));
     }
 
     public void RemoveAllEntities() => _collection.RemoveAllEntities();

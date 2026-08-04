@@ -150,6 +150,29 @@ public class SndEntityCollectionTests
     }
 
     [Fact]
+    public void RecoverFromMetaList_Failure_ReportsFailingMeta()
+    {
+        var collection = CreateCollection(out _);
+        var failing = new FakeSndEntity { FailRecover = true };
+        var factories = new Queue<FakeSndEntity>([new FakeSndEntity(), failing]);
+        var collection2 = new SndEntityCollection<FakeSndEntity>(() => factories.Dequeue());
+        SndMetaData? reported = null;
+        Exception? reportedException = null;
+
+        Assert.Throws<InvalidOperationException>(() =>
+            collection2.RecoverFromMetaList([Meta("a"), Meta("boom")],
+                (meta, ex) =>
+                {
+                    reported = meta;
+                    reportedException = ex;
+                }));
+
+        Assert.Equal("boom", reported?.Name);
+        Assert.NotNull(reportedException);
+        Assert.Contains("recover failed", reportedException!.Message);
+    }
+
+    [Fact]
     public void RecoverFromMetaList_Null_Throws()
     {
         var collection = CreateCollection(out _);
