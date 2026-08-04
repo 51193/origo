@@ -96,7 +96,7 @@ public partial class OrigoAutoHost : Node
             throw new InvalidOperationException(
                 "OrigoAutoHost bootstrap failed in _Ready; frame driving is disabled. " +
                 "Fix the bootstrap error before running the scene.");
-        ((IOrigoFrameDriver?)Runtime)?.DriveFrame(delta);
+        ((IOrigoFrameDriver)Runtime).DriveFrame(delta);
     }
 
     [MemberNotNull(nameof(SndManager), nameof(SharedMetaAccess), nameof(SharedPathResolver), nameof(SharedDataSourceIo))]

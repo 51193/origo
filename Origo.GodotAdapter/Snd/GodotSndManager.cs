@@ -17,8 +17,9 @@ namespace Origo.GodotAdapter.Snd;
 /// <summary>
 ///     Godot engine adapter scene host. Manages <see cref="GodotSndEntity" />
 ///     instances in a Godot scene tree and implements
-///     <see cref="ISndSceneHost" />, <see cref="IObserverTopologyHost" />,
-///     and <see cref="IOwningSessionBindable" />. Entity collection logic is
+///     <see cref="ISndSceneHost" />, <see cref="ISndContextAttachableSceneHost" />,
+///     <see cref="IObserverTopologyHost" />, and
+///     <see cref="IOwningSessionBindable" />. Entity collection logic is
 ///     delegated to <see cref="SndEntityCollection{T}" /> (pure C#); this
 ///     class only bridges it to the Godot node tree.
 /// </summary>

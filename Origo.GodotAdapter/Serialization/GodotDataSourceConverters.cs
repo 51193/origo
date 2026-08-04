@@ -5,8 +5,9 @@ namespace Origo.GodotAdapter.Serialization;
 
 /// <summary>
 ///     Bidirectional converters for Godot engine types
-///     (Vector2, Vector2I, Vector3, Vector3I, Vector4, Vector4I,
-///     Color, Transform2D, Transform3D) via <see cref="DataSourceNode" />.
+///     (Vector2, Vector2I, Vector3, Vector3I, Vector4, Quaternion, Basis,
+///     Transform2D, Transform3D, Color, Rect2, Rect2I, Aabb, Plane)
+///     via <see cref="DataSourceNode" />.
 /// </summary>
 
 internal sealed class Vector2DataSourceConverter : DataSourceConverter<Vector2>

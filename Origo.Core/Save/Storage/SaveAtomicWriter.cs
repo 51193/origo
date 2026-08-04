@@ -121,7 +121,7 @@ internal static class SaveAtomicWriter
             foreach (var srcAbs in handle.MetaAccess.EnumerateFiles(currentAbs, "*", true))
             {
                 var relFromRoot = handle.GetRelativePath(srcAbs);
-                var relFromCurrent = StripPathPrefix(relFromRoot, currentRel);
+                var relFromCurrent = SavePathLayout.StripPathPrefix(relFromRoot, currentRel);
 
                 // The write-in-progress marker is a transient synchronization
                 // file that only exists in current/ while a write is in flight;
@@ -197,7 +197,7 @@ internal static class SaveAtomicWriter
         foreach (var fileAbs in files)
         {
             var relFromRoot = handle.GetRelativePath(fileAbs);
-            var relFromDir = StripPathPrefix(relFromRoot, dirRel);
+            var relFromDir = SavePathLayout.StripPathPrefix(relFromRoot, dirRel);
 
             sha.AppendData(Encoding.UTF8.GetBytes(relFromDir));
             try
@@ -213,14 +213,6 @@ internal static class SaveAtomicWriter
         }
 
         return Convert.ToHexString(sha.GetHashAndReset()).ToLowerInvariant();
-    }
-
-    private static string StripPathPrefix(string fullPath, string prefix)
-    {
-        var normalized = prefix + SavePathLayout.PathSeparator;
-        return fullPath.StartsWith(normalized, StringComparison.Ordinal)
-            ? fullPath[normalized.Length..]
-            : fullPath;
     }
 
     internal static void WritePayloadSha(SaveFileHandle handle, string currentRel, string hash)

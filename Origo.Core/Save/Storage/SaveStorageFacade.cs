@@ -74,7 +74,7 @@ internal static class SaveStorageFacade
             // Framework-reserved keys (the origo. namespace, e.g. the format
             // version) are internal bookkeeping and are not display metadata.
             var displayMeta = rawMeta
-                .Where(kv => !kv.Key.StartsWith("origo.", StringComparison.Ordinal))
+                .Where(kv => !kv.Key.StartsWith(WellKnownKeys.FrameworkMetaKeyPrefix, StringComparison.Ordinal))
                 .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
 
             list.Add(new SaveMetaDataEntry { SaveId = id, MetaData = displayMeta });
@@ -83,6 +83,14 @@ internal static class SaveStorageFacade
         return list;
     }
 
+    /// <summary>
+    ///     Writes a payload to current/ without the write-in-progress marker
+    ///     dance. The .payload.sha is written with the payload-only hash:
+    ///     this method is used by tests, where no extra/ side channel exists,
+    ///     so the combined hash computed by the snapshot path would be stale.
+    ///     The load-recovery path (see <see cref="ISaveStorageService" />)
+    ///     writes without a hash at all — it has no idempotency contract.
+    /// </summary>
     public static void WriteSavePayloadToCurrent(SaveFileHandle handle, SaveGamePayload payload)
     {
         SavePayloadWriter.WriteToCurrent(handle, payload);
@@ -212,19 +220,11 @@ internal static class SaveStorageFacade
         foreach (var srcFileAbs in handle.MetaAccess.EnumerateFiles(srcAbs, "*", true))
         {
             var relFromRoot = handle.GetRelativePath(srcFileAbs);
-            var relFromSrc = StripPathPrefix(relFromRoot, srcRel);
+            var relFromSrc = SavePathLayout.StripPathPrefix(relFromRoot, srcRel);
             var destFileRel = $"{destRel}/{relFromSrc}";
             var destFileAbs = handle.GetAbsolutePath(destFileRel);
             handle.EnsureParentDirectory(destFileRel);
             handle.MetaAccess.Copy(srcFileAbs, destFileAbs, true);
         }
-    }
-
-    private static string StripPathPrefix(string fullPath, string prefix)
-    {
-        var normalized = prefix + SavePathLayout.PathSeparator;
-        return fullPath.StartsWith(normalized, StringComparison.Ordinal)
-            ? fullPath[normalized.Length..]
-            : fullPath;
     }
 }

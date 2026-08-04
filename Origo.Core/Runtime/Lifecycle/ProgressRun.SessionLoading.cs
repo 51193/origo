@@ -195,8 +195,13 @@ internal sealed partial class ProgressRun
                     throw new InvalidOperationException(
                         $"Target level '{levelId}' has invalid {fileName} (empty).");
             }
-            catch (Exception ex) when (ex is not InvalidOperationException)
+            catch (Exception ex)
             {
+                // IsNull forces lazy expansion of a DataSourceNode; expansion
+                // failures must surface as an invalid-payload error carrying
+                // the original parsing exception, not as an unrelated one.
+                if (ex is InvalidOperationException)
+                    throw;
                 throw new InvalidOperationException(
                     $"Target level '{levelId}' has invalid {fileName} (empty).", ex);
             }

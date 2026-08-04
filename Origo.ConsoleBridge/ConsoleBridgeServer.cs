@@ -86,10 +86,11 @@ public sealed class ConsoleBridgeServer : IDisposable
 
         if (_acceptTask is not null)
         {
+            var acceptLoopCompleted = false;
             try
             {
-                var completed = _acceptTask.Wait(_disposeJoinTimeoutMs);
-                if (!completed)
+                acceptLoopCompleted = _acceptTask.Wait(_disposeJoinTimeoutMs);
+                if (!acceptLoopCompleted)
                     _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
                         new LogMessageBuilder().Build("Accept loop did not stop within the join timeout."));
             }
@@ -97,13 +98,23 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 // Task.Wait only ever throws AggregateException; unexpected
                 // exceptions propagate to the caller (fail-fast).
+                acceptLoopCompleted = true;
                 foreach (var inner in ex.InnerExceptions)
                     _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
                         new LogMessageBuilder().Build($"Accept loop faulted: {inner.Message}"));
             }
-        }
 
-        _cts.Dispose();
+            // Only dispose the CTS once the accept loop has actually stopped.
+            // Disposing it while the loop is still running makes the task
+            // register callbacks on a disposed token and surface a misleading
+            // "non-cancellation error" log for a normal shutdown race.
+            if (acceptLoopCompleted)
+                _cts.Dispose();
+        }
+        else
+        {
+            _cts.Dispose();
+        }
     }
 
     /// <summary>

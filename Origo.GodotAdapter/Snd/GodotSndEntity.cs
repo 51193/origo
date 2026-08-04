@@ -18,9 +18,11 @@ namespace Origo.GodotAdapter.Snd;
 ///     SND entities participate in the Godot scene tree.
 ///     <para>
 ///         Implements <see cref="ISndEntity" /> (delegating to the inner
-///         SndEntity) and <see cref="IEntityLifecycle" /> +
+///         SndEntity), <see cref="IEntityLifecycle" /> +
 ///         <see cref="ISndEntityRawSubscription" /> (explicit interface
-///         implementations, also delegating to the inner entity).
+///         implementations, also delegating to the inner entity), and the
+///         adapter-internal <see cref="ISndEntityFacade" /> contract consumed
+///         by <see cref="SndEntityCollection{T}" />.
 ///     </para>
 /// </summary>
 [GlobalClass]

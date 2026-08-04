@@ -27,8 +27,8 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     /// <summary>
     ///     Called after <see cref="SndContext" /> is created and bound to <see cref="GodotSndManager" />;
     ///     subclasses can override and register display <c>meta.map</c> contributors via
-    ///     <c>context.RegisterSaveMetaContributor(ISaveMetaContributor)</c> or
-    ///     <c>context.RegisterSaveMetaContributor(Action&lt;...&gt;)</c>.
+    ///     <c>context.Save.RegisterSaveMetaContributor(ISaveMetaContributor)</c> or
+    ///     <c>context.Save.RegisterSaveMetaContributor(Func&lt;SaveMetaBuildContext, IReadOnlyDictionary&lt;string, string&gt;&gt;)</c>.
     /// </summary>
     protected virtual void ConfigureSaveMetadataContributors(ISndContext context)
     {

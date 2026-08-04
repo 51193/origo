@@ -196,4 +196,16 @@ internal static class SavePathLayout
             return left;
         return $"{left}{PathSeparator}{right}";
     }
+
+    /// <summary>
+    ///     Removes a path prefix (plus the trailing separator) from a full
+    ///     path when it matches; returns the full path unchanged otherwise.
+    /// </summary>
+    internal static string StripPathPrefix(string fullPath, string prefix)
+    {
+        var normalized = prefix + PathSeparator;
+        return fullPath.StartsWith(normalized, StringComparison.Ordinal)
+            ? fullPath[normalized.Length..]
+            : fullPath;
+    }
 }

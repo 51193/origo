@@ -234,11 +234,11 @@ internal static class SavePayloadReader
         IReadOnlyDictionary<string, string>? customMeta)
     {
         if (customMeta is null
-            || !customMeta.Keys.Any(k => k.StartsWith("origo.", StringComparison.Ordinal)))
+            || !customMeta.Keys.Any(k => k.StartsWith(WellKnownKeys.FrameworkMetaKeyPrefix, StringComparison.Ordinal)))
             return customMeta;
 
         return customMeta
-            .Where(kv => !kv.Key.StartsWith("origo.", StringComparison.Ordinal))
+            .Where(kv => !kv.Key.StartsWith(WellKnownKeys.FrameworkMetaKeyPrefix, StringComparison.Ordinal))
             .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
     }
 

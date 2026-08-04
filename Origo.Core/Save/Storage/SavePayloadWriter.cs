@@ -30,17 +30,9 @@ internal static class SavePayloadWriter
         handle.MetaAccess.CreateDirectory(currentAbs);
 
         var markerAbs = WriteCheckpointMarker(handle, currentRel);
-        try
-        {
-            WriteProgressFilesToCurrent(handle, progressNode, progressStateMachinesNode, overwrite);
-        }
-        catch
-        {
-            // The marker is intentionally left on disk so that readers reject
-            // the partially written checkpoint.
-            throw;
-        }
-
+        // If the write throws, the marker is intentionally left on disk so
+        // that readers reject the partially written checkpoint.
+        WriteProgressFilesToCurrent(handle, progressNode, progressStateMachinesNode, overwrite);
         handle.MetaAccess.Delete(markerAbs);
     }
 
@@ -167,14 +159,6 @@ internal static class SavePayloadWriter
             throw new InvalidOperationException("Missing required ProgressStateMachinesNode (strict mode).");
     }
 
-    /// <summary>
-    ///     Framework-reserved meta.map key carrying the save format version.
-    ///     Injected whenever a meta.map is written so loaders can validate
-    ///     format compatibility. Saves without user meta have no meta.map
-    ///     (the reader treats a missing version key as version 1).
-    /// </summary>
-    private const string _formatVersionMetaKey = "origo.format_version";
-
     private static void WriteCustomMetaToCurrent(
         SaveFileHandle handle,
         string currentRel,
@@ -191,7 +175,7 @@ internal static class SavePayloadWriter
         }
 
         var mapNode = BuildStringMapNode(customMeta);
-        mapNode.Add(_formatVersionMetaKey,
+        mapNode.Add(SaveGamePayload.FormatVersionMetaKey,
             DataSourceNode.CreateString(SaveGamePayload.CurrentFormatVersion.ToString(
                 System.Globalization.CultureInfo.InvariantCulture)));
 

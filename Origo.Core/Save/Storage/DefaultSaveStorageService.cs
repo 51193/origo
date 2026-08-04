@@ -36,6 +36,13 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData() =>
         SaveStorageFacade.EnumerateSavesWithMetaData(_handle);
 
+    /// <summary>
+    ///     Writes a payload to current/ without touching .payload.sha: this
+    ///     is the load-recovery path, where the snapshot that follows is
+    ///     deduplicated via the idempotent-skip hash written by
+    ///     <see cref="WriteSavePayloadToCurrentThenSnapshot" />. A recovery
+    ///     write has no idempotency contract of its own.
+    /// </summary>
     public void WriteSavePayloadToCurrent(SaveGamePayload payload) =>
         SavePayloadWriter.WriteToCurrent(_handle, payload);
 
@@ -61,16 +68,9 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         _handle.MetaAccess.CreateDirectory(_handle.GetAbsolutePath(currentRel));
         _handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
 
-        try
-        {
-            WriteLevelPayloadOnly(currentRel, levelPayload, overwrite);
-        }
-        catch
-        {
-            // The marker is intentionally left on disk so that readers reject
-            // the partially written level checkpoint.
-            throw;
-        }
+        // If the write throws, the marker is intentionally left on disk so
+        // that readers reject the partially written level checkpoint.
+        WriteLevelPayloadOnly(currentRel, levelPayload, overwrite);
 
         _handle.MetaAccess.Delete(markerAbs);
     }
