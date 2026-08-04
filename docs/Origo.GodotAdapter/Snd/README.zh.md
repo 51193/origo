@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -28,9 +28,10 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 
 - **实现 ISndSceneHost**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / GetEntities / FindByName / ProcessAll。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
 - **实现 ISndContextAttachableSceneHost**：支持运行时切换上下文
-- **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，回滚释放所有已创建的实体
-- **EntityView**：惰性创建 `IReadOnlyList<ISndEntity>` 包装，缓存引用避免重复分配
-- **BuildMetaList()**：调用实体的 `BuildSndMetaData()` 收集元数据
+- **集合逻辑委托**：实体增删、批量恢复回滚、击杀标记、帧处理等编排逻辑集中在纯 C# 的 `SndEntityCollection<T>`（internal，无 Godot 依赖），由测试直接覆盖；GodotSndManager 仅桥接集合与 Godot 节点树（`AddChild`/`RemoveChild`/`Free` 经 `DetachAndFree` 回调注入）
+- **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，集合回滚释放所有已创建的实体（经 `SndEntityCollection` 的 staged 列表）
+- **GetEntities()**：惰性创建 `IReadOnlyCollection<ISndEntity>` 视图，缓存引用避免重复分配
+- **BuildMetaList()**：经集合调用实体的 `BuildSndMetaData()` 收集元数据
 - **ProcessAll(delta)**：实现 `ISndSceneHost.ProcessAll` 的统一入口，由 Core 的 `SessionManager.ProcessAllSessions` 调用，维护 `ProcessTickCount` 和 `ProcessDeltaSum` 统计
 
 ### GodotSndEntity

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -28,8 +28,9 @@ The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in
 
 - **Implements ISndSceneHost**: CreateEntity / RecoverFromMetaList / RemoveAllEntities (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / GetEntities / FindByName / ProcessAll. `RemoveAllEntities()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
 - **Implements ISndContextAttachableSceneHost**: Supports runtime context switching
-- **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, all already-created entities are rolled back and released
-- **EntityView**: Lazily creates an `IReadOnlyList<ISndEntity>` wrapper, caching the reference to avoid reallocation
+- **Collection logic delegated**: entity add/remove, batch recovery rollback, kill marking, and frame processing orchestration live in pure C# `SndEntityCollection<T>` (internal, no Godot dependency) and are covered by unit tests directly; GodotSndManager only bridges the collection to the Godot node tree (`AddChild` / `RemoveChild` / `Free` injected via the `DetachAndFree` callback)
+- **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, the collection rolls back and releases all already-created entities (via the staged list in `SndEntityCollection`)
+- **GetEntities()**: Lazily creates an `IReadOnlyCollection<ISndEntity>` view, caching the reference to avoid reallocation
 - **BuildMetaList()**: Calls entities' `BuildSndMetaData()` to collect metadata
 - **ProcessAll(delta)**: Implements the unified entry for `ISndSceneHost.ProcessAll`, called by Core's `SessionManager.ProcessAllSessions`, maintaining `ProcessTickCount` and `ProcessDeltaSum` statistics
 

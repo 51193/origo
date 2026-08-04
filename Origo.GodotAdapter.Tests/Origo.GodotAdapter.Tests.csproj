@@ -15,7 +15,26 @@
         <CollectCoverage>true</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <Include>[Origo.GodotAdapter]*</Include>
-        <ExcludeByFile>**/Godot.SourceGenerators/**,**/Snd/GodotSndManager.cs,**/Snd/GodotSndEntity.cs,**/Snd/GodotNodeHandle.cs,**/Snd/GodotPackedSceneNodeFactory.cs,**/FileSystem/GodotFileOperations.cs,**/FileSystem/GodotDirectoryOperations.cs,**/FileSystem/GodotFileSystem.cs,**/Bootstrap/OrigoAutoHost.cs,**/Bootstrap/OrigoDefaultEntry.cs,**/Bootstrap/OrigoDefaultEntry.Bootstrap.cs,**/Console/TreeDebugCommandHandler.cs,**/Console/PressButtonCommandHandler.cs,**/Console/CameraViewCommandHandler.cs,**/Snd/TypedDataInitializer.cs,**/SndEntityNodeExtensions.cs,**/*.g.cs</ExcludeByFile>
+        <!-- Engine-bound files are exempt with documented technical reasons
+             (every statement is a Godot native call; the xUnit host has no engine,
+             and calling any Godot API there SIGSEGVs the test process):
+             - GodotSndEntity/GodotSndManager/OrigoAutoHost/OrigoDefaultEntry*:
+               Godot Node subclasses; node creation, scene-tree and GD.* calls
+               are unreachable outside the engine. Their orchestration logic is
+               extracted into SndEntityCollection (pure C#, tested) and the Core
+               session pipeline (tested in Origo.Core.Tests); the engine bridge
+               itself is exercised by Origo.GodotAdapter.Integration.Tests.
+             - FileSystem/*: every member body is a FileAccess/DirAccess call;
+               static Godot APIs cannot be mocked or invoked headlessly.
+             - Snd/GodotNodeHandle, Snd/GodotPackedSceneNodeFactory: constructed
+               from live Godot nodes/resources; ResourceLoader requires the engine.
+             - Console/CameraViewCommandHandler: ExecuteCore's first statement is
+               Engine.GetMainLoop(), so no error path is reachable headlessly.
+             - Godot source-generator products (.godot/.../Godot.SourceGenerators/)
+               are tool-generated, unannotated, and untestable outside the engine.
+             TypedData.g.cs (Origo.SourceGeneration) is NOT excluded: it is
+             exercised heavily by the adapter tests. -->
+        <ExcludeByFile>**/Godot.SourceGenerators/**,**/Snd/GodotSndManager.cs,**/Snd/GodotSndEntity.cs,**/Snd/GodotNodeHandle.cs,**/Snd/GodotPackedSceneNodeFactory.cs,**/FileSystem/GodotFileOperations.cs,**/FileSystem/GodotDirectoryOperations.cs,**/FileSystem/GodotFileSystem.cs,**/Bootstrap/OrigoAutoHost.cs,**/Bootstrap/OrigoDefaultEntry.cs,**/Bootstrap/OrigoDefaultEntry.Bootstrap.cs,**/Console/CameraViewCommandHandler.cs</ExcludeByFile>
         <Threshold>90</Threshold>
         <ThresholdType>line</ThresholdType>
         <ThresholdStat>total</ThresholdStat>

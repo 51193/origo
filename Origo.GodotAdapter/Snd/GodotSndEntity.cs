@@ -24,7 +24,7 @@ namespace Origo.GodotAdapter.Snd;
 ///     </para>
 /// </summary>
 [GlobalClass]
-public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEntityRawSubscription
+public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEntityRawSubscription, ISndEntityFacade
 {
     private readonly ISndContext _context;
     private readonly ILogger _logger;
@@ -180,6 +180,20 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         _entity = null;
         Free();
     }
+
+    string ISndEntityFacade.StableName => StableName;
+
+    SndMetaData ISndEntityFacade.BuildSndMetaData() => BuildSndMetaData();
+
+    void ISndEntityFacade.RecoverForLifecycle(SndMetaData meta) => RecoverForLifecycle(meta);
+
+    void ISndEntityFacade.BindSession(ISessionRun session) => BindSession(session);
+
+    void ISndEntityFacade.ProcessSnd(double delta) => ProcessSnd(delta);
+
+    void ISndEntityFacade.DetachFromManager() => DetachFromManager();
+
+    void ISndEntityFacade.MarkPendingKill() => MarkPendingKill();
 
     internal SndMetaData SaveSingle() => Entity.SaveSingle();
 

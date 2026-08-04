@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Godot;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
@@ -20,14 +18,15 @@ namespace Origo.GodotAdapter.Snd;
 ///     Godot engine adapter scene host. Manages <see cref="GodotSndEntity" />
 ///     instances in a Godot scene tree and implements
 ///     <see cref="ISndSceneHost" />, <see cref="IObserverTopologyHost" />,
-///     and <see cref="IOwningSessionBindable" />.
+///     and <see cref="IOwningSessionBindable" />. Entity collection logic is
+///     delegated to <see cref="SndEntityCollection{T}" /> (pure C#); this
+///     class only bridges it to the Godot node tree.
 /// </summary>
 [GlobalClass]
 public partial class GodotSndManager
     : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable
 {
-    private readonly List<GodotSndEntity> _entities = [];
-    private EntityView? _entityView;
+    private readonly SndEntityCollection<GodotSndEntity> _collection;
     private ObserverTopology? _observerTopology;
     private ISessionRun? _owningSession;
 
@@ -39,6 +38,11 @@ public partial class GodotSndManager
     public int ProcessTickCount { get; private set; }
     public double ProcessDeltaSum { get; private set; }
 
+    public GodotSndManager()
+    {
+        _collection = new SndEntityCollection<GodotSndEntity>(CreateSndEntity, DetachAndFree);
+    }
+
     ObserverTopology IObserverTopologyHost.ObserverTopology =>
         _observerTopology ?? throw new InvalidOperationException(
             "ObserverTopology is not available. Call BindRuntimeDependencies before accessing the observer topology.");
@@ -47,7 +51,9 @@ public partial class GodotSndManager
     {
         ArgumentNullException.ThrowIfNull(session);
         _owningSession = session;
+        _collection.OwningSession = session;
     }
+
     public void BindContext(ISndContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -58,104 +64,54 @@ public partial class GodotSndManager
         _observerTopology!.BindContext(context);
     }
 
-    public IReadOnlyList<SndMetaData> BuildMetaList()
-    {
-        var list = new List<SndMetaData>(_entities.Count);
-        for (var i = 0; i < _entities.Count; i++)
-            list.Add(_entities[i].BuildSndMetaData());
-        return list;
-    }
+    public IReadOnlyList<SndMetaData> BuildMetaList() => _collection.BuildMetaList();
 
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
-        var staged = new List<GodotSndEntity>();
-        foreach (var meta in metaList)
+        try
         {
-            GodotSndEntity? snd = null;
-            try
-            {
-                snd = CreateSndEntity();
-                AddChild(snd);
-                _entities.Add(snd);
-                staged.Add(snd);
-                snd.RecoverForLifecycle(meta);
-                if (_owningSession is not null)
-                    snd.BindSession(_owningSession);
-            }
-            catch (Exception ex)
-            {
-                SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
-                    new LogMessageBuilder().AddContext("entityName", meta.Name).Build($"Entity recovery failed, rolling back partial load: {ex.Message}"));
-                RollbackPartialLoad(staged);
-                throw;
-            }
+            _collection.RecoverFromMetaList(metaList);
+        }
+        catch (Exception ex)
+        {
+            SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
+                new LogMessageBuilder().AddContext("entityName", "unknown").Build($"Entity recovery failed, rolling back partial load: {ex.Message}"));
+            throw;
         }
     }
 
-    public void RemoveAllEntities()
-    {
-        for (var i = _entities.Count - 1; i >= 0; i--)
-            _entities[i].DetachFromManager();
-        _entities.Clear();
-        _entityView = null;
-    }
+    public void RemoveAllEntities() => _collection.RemoveAllEntities();
 
     public ISndEntity CreateEntity(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
-        var staged = new List<GodotSndEntity>();
         try
         {
-            var snd = CreateSndEntity();
-            AddChild(snd);
-            _entities.Add(snd);
-            staged.Add(snd);
-            snd.RecoverForLifecycle(metaData);
-            if (_owningSession is not null)
-                snd.BindSession(_owningSession);
-            return snd;
+            return _collection.CreateEntity(metaData);
         }
         catch (Exception ex)
         {
             SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
                 new LogMessageBuilder().AddContext("entityName", metaData.Name).Build($"Entity creation failed, rolling back: {ex.Message}"));
-            RollbackPartialLoad(staged);
             throw;
         }
     }
 
-    public IReadOnlyCollection<ISndEntity> GetEntities() => _entityView ??= new EntityView(_entities);
+    public IReadOnlyCollection<ISndEntity> GetEntities() => _collection.GetEntities();
 
-    public ISndEntity? FindByName(string name)
-    {
-        var entity = _entities.FirstOrDefault(s => s.StableName == name);
-        return entity;
-    }
+    public ISndEntity? FindByName(string name) => _collection.FindByName(name);
 
     public void ProcessAll(double delta)
     {
         ProcessTickCount++;
         ProcessDeltaSum += delta;
-        for (var i = 0; i < _entities.Count; i++)
-            _entities[i].ProcessSnd(delta);
+        _collection.ProcessAll(delta);
     }
 
-    public void RemoveEntity(string name)
-    {
-        var snd = _entities.FirstOrDefault(s => s.StableName == name) ?? throw new InvalidOperationException($"No entity with StableName '{name}'.");
-        _entities.Remove(snd);
-        snd.DetachFromManager();
-    }
+    public void RemoveEntity(string name) => _collection.RemoveEntity(name);
 
-    public void RequestKillEntity(string name)
-    {
-        var snd = _entities.FirstOrDefault(s => s.StableName == name) ?? throw new InvalidOperationException($"No entity with StableName '{name}'.");
-        if (snd.IsPendingKill)
-            throw new InvalidOperationException($"Entity '{name}' is already pending kill.");
-
-        snd.MarkPendingKill();
-    }
+    public void RequestKillEntity(string name) => _collection.RequestKillEntity(name);
 
     [MemberNotNull(nameof(SharedWorld), nameof(SharedLogger))]
     public void BindRuntimeDependencies(SndWorld world, ILogger logger)
@@ -171,24 +127,21 @@ public partial class GodotSndManager
         _runtimeDepsBound = true;
     }
 
-    private void RollbackPartialLoad(List<GodotSndEntity> staged)
-    {
-        for (var i = staged.Count - 1; i >= 0; i--)
-        {
-            var s = staged[i];
-            _entities.Remove(s);
-            if (IsInstanceValid(s) && s.GetParent() == this)
-                RemoveChild(s);
-            if (IsInstanceValid(s))
-                s.Free();
-        }
-    }
-
     private GodotSndEntity CreateSndEntity()
     {
         EnsureReadyForSpawn();
-        return new GodotSndEntity(SharedWorld, Context!, SharedLogger, _observerTopology!,
-            entity => new GodotPackedSceneNodeFactory(entity));
+        var entity = new GodotSndEntity(SharedWorld, Context!, SharedLogger, _observerTopology!,
+            factoryParent => new GodotPackedSceneNodeFactory(factoryParent));
+        AddChild(entity);
+        return entity;
+    }
+
+    private void DetachAndFree(GodotSndEntity entity)
+    {
+        if (IsInstanceValid(entity) && entity.GetParent() == this)
+            RemoveChild(entity);
+        if (IsInstanceValid(entity))
+            entity.Free();
     }
 
     private void EnsureReadyForSpawn()
@@ -196,20 +149,5 @@ public partial class GodotSndManager
         if (!_runtimeDepsBound || Context is null || _observerTopology is null)
             throw new InvalidOperationException(
                 "GodotSndManager is not ready: call BindRuntimeDependencies and BindContext before spawning entities.");
-    }
-
-    private sealed class EntityView(List<GodotSndEntity> inner) : IReadOnlyList<ISndEntity>
-    {
-        public int Count => inner.Count;
-
-        public ISndEntity this[int index] => inner[index];
-
-        public IEnumerator<ISndEntity> GetEnumerator()
-        {
-            for (var i = 0; i < inner.Count; i++)
-                yield return inner[i];
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
