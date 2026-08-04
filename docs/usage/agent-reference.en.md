@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -378,7 +378,7 @@ public sealed class BossHpWatcherStrategy : ObserverStrategyBase
         TypedData oldValue, TypedData newValue)
     {
         // entity = observer, target = the observed boss
-        entity.SetData("boss_hp", newValue.AsInt32());
+        if (newValue.TryGetInt32(out var hp)) entity.SetData("boss_hp", hp);
     }
 
     public override void OnUnmounted(ISndEntity entity, ISndContext ctx, ISndEntity target)

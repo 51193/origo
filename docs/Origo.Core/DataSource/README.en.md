@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # DataSource
 
@@ -56,7 +56,7 @@ DataSourceConverterRegistry (type conversion)
 CLR objects (TypedData / SndMetaData / etc.)
 ```
 
-## Design Principles
+## Design Decisions
 
 - **IDataSourceIoGateway hard boundary**: All file content I/O in Core must go through the Gateway's `ReadTree`/`WriteTree`; direct `File.*` API is forbidden; zero bypass
 - **Fail-fast**: On codec decode failure, the Gateway wraps the exception as an `InvalidOperationException` containing the file path and immediately throws

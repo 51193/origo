@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -38,9 +38,9 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | GodotRuntimeSmokeTests | `Tests/GodotRuntimeSmokeTests.cs` | 5 | Godot runtime smoke (GD.Print, FileAccess/DirAccess static classes, Vector2 type, SceneTree) |
 | GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 5 | `GodotFileSystem` (`res://`/`user://` read/write, directory creation, file enumeration, deletion) |
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 7 | `GodotFileOperations` (ReadAllText/WriteAllText/Copy/Delete guards and correctness) |
-| GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 9 | `GodotDirectoryOperations` (Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive, hidden-file enumeration/deletion) |
+| GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 10 | `GodotDirectoryOperations` (Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive, hidden-file enumeration/deletion) |
 | GodotNodeHandleIntegrationTests | `Tests/GodotNodeHandleIntegrationTests.cs` | 7 | `GodotNodeHandle` (Name cache, Free, SetVisible for CanvasItem/Node3D, UnsafeGetNode) |
-| GodotSndManagerInitializationTests | `Tests/GodotSndBootstrapIntegrationTests.cs` | 4 | `GodotSndManager.BindRuntimeDependencies` / `BindContext` (null guards, normal chained binding flow) |
+| GodotSndManagerInitializationTests | `Tests/GodotSndManagerInitializationTests.cs` | 4 | `GodotSndManager.BindRuntimeDependencies` / `BindContext` (null guards, normal chained binding flow) |
 | GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 9 | `GodotSndEntity` (construction null guards, SetData/GetData/TryGetData, type safety, fail-fast after release) |
 | GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager` (BindRuntimeDeps double bind guard, BindContext order guard, null guards, ProcessAll empty list and TickCount) |
 | GodotSndManagerCreationIntegrationTests | `Tests/GodotSndManagerCreationIntegrationTests.cs` | 5 | `GodotSndManager` (CreateEntity/RemoveEntity/BuildMetaList/RequestKillEntity/GetEntities) |
@@ -87,6 +87,8 @@ Origo.GodotAdapter.Integration.Tests/
 ├── Runner/
 │   ├── IntegrationTestRunner.cs           # AutoLoad test runner
 │   ├── IntegrationTestAttribute.cs        # [IntegrationTest] attribute
+│   ├── DeferredTestAttribute.cs           # [DeferredTest] attribute (frame-advanced tests)
+│   ├── IDeferredTestFixture.cs            # Deferred test fixture interface
 │   └── TestResult.cs                      # Result DTO
 ├── Tests/
 │   ├── GodotRuntimeSmokeTests.cs          # Runtime smoke tests
@@ -94,7 +96,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── GodotFileOperationsIntegrationTests.cs # File operation guard tests
 │   ├── GodotDirectoryOperationsIntegrationTests.cs # Directory operation tests
 │   ├── GodotNodeHandleIntegrationTests.cs # Node handle tests
-│   ├── GodotSndBootstrapIntegrationTests.cs # BindRuntimeDependencies/BindContext initialization tests
+│   ├── GodotSndManagerInitializationTests.cs # BindRuntimeDependencies/BindContext initialization tests
 │   ├── GodotSndEntityIntegrationTests.cs # SND Entity tests
 │   ├── GodotSndManagerIntegrationTests.cs # SND Manager tests
 │   ├── GodotSndManagerCreationIntegrationTests.cs # Entity create/remove tests

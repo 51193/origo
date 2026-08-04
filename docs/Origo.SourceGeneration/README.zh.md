@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration
 
@@ -15,13 +15,13 @@
 
 | 文件 | 职责 |
 |------|------|
-| `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`：双模式代码生成器（主入口 + 属性解析 + 顶级语法接收） |
+| `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`：双模式代码生成器（主入口 + 属性解析 + 编译输入提取） |
 | `TypedDataGenerator.AdapterGeneration.cs` | partial — Adapter 模式代码生成（Godot 引擎类型扩展方法） |
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home 模式代码生成（Core BCL 类型扩展方法） |
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — 工厂注册代码生成（类型映射与 Kind 分配） |
-| `TypedDataGenerator.Diagnostics.cs` | partial — 诊断定义（ORIGOSG001-004） |
+| `TypedDataGenerator.Diagnostics.cs` | partial — 诊断定义（ORIGOSG001-005） |
 | `AnalyzerReleases.Shipped.md` | 分析器发布跟踪（已发布规则，当前为空） |
-| `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`、`ORIGOSG002`、`ORIGOSG003`、`ORIGOSG004`） |
+| `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`、`ORIGOSG002`、`ORIGOSG003`、`ORIGOSG004`、`ORIGOSG005`） |
 | `pipeline.zh.md` | 全链路性能解析：从装箱问题到编译期优化的完整推理与基准说明 |
 
 ## 双模式架构
@@ -40,7 +40,7 @@ Source Generator 在编译时检测当前程序集是否为 TypedData 的"宿主
 | **KindMap** | `partial struct TypedData { internal static class KindMap { const byte Int32 = 5; ... } }` | 每种注册类型的 `const byte` 判别值，从 `StartKind` 开始编号 |
 | **Kind 注册** | `TypedDataHomeKindRegistration` + `[ModuleInitializer]` | 调用 `TypedData.RegisterKind()` 填充全局 `KindTypeMap[]`，独立于任何静态构造器，允许多程序集各自注册类型 |
 | **强类型构造** | `explicit operator TypedData(...)` | 每种系统类型的显式转换运算符，将值内联写入结构体字段 |
-| **强类型读取** | `AsXxx()` / `TryGetXxx()` | 内部/公开访问器方法，通过 Kind 判别值直接字段读取 |
+| **强类型读取** | `AsXxx()`（`internal`）/ `TryGetXxx()`（`public`） | 访问器方法，通过 Kind 判别值直接字段读取；`AsXxx` 无 Kind 守卫（仅框架内部在 switch 匹配后调用），业务读取使用 `TryGetXxx` |
 | **泛型工厂** | `TypedDataFactory<T>` | `Create(T)` / `TryExtract(TypedData, out T)`，if-else 链经 JIT 常量折叠 |
 | **序列化桥接** | `TypedDataObjectConverter` | `ToObject` / `FromObject`，switch 分发 + `TypedDataLayeredRegistry` fallback 链 |
 | **类型映射** | `TypedDataTypeMap` | `GetKindForType(Type)`，if-else 链 + `TypedDataLayeredRegistry.ResolveKind` fallback |
@@ -49,7 +49,7 @@ Source Generator 在编译时检测当前程序集是否为 TypedData 的"宿主
 
 | 生成类别 | 生成内容 | 说明 |
 |---------|---------|------|
-| **扩展方法** | `TypedDataLayeredExtensions` 静态类 | `this TypedData` 扩展方法：`TryGetVector3`、`AsVector3` 等，适配层类型一律经 `_ref` 读取（非系统值类型体积无法在编译期确定，见下节） |
+| **扩展方法** | `TypedDataLayeredExtensions` 静态类（`internal`） | `this TypedData` 扩展方法：`TryGetVector3`、`AsVector3` 等，适配层类型一律经 `_ref` 读取（非系统值类型体积无法在编译期确定，见下节）。与 Home 模式的 `AsXxx` 一致，整个类为 `internal`——无 Kind 守卫的读取路径不向业务代码开放，业务读取使用 `ISndEntity.TryGetData<T>` 或 `TryGetXxx` |
 | **Kind 注册** | `TypedDataAdapterKindRegistration` + `[ModuleInitializer]` | 调用 `TypedData.RegisterKind(startKind + i, typeof(T))` |
 | **转换桥接** | `TypedDataAdapterConverterRegistration` + `[ModuleInitializer]` | 调用 `TypedDataLayeredRegistry.RegisterFromObjectFallback` / `RegisterToObjectFallback` |
 | **类型解析** | `TypedDataAdapterTypeMapRegistration` + `[ModuleInitializer]` | 调用 `TypedDataLayeredRegistry.RegisterKindResolver`，提供 `Type → kind` 的 if-else 链 |
@@ -74,7 +74,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 | 宿主（Origo.Core）程序集声明的系统基础值类型（`byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`char`） | `_inlineBits : long` 字段内联 | 零堆分配，零装箱；内联仅限宿主程序集 |
 | 引用类型（`string`） | `_ref : object?` 字段存储 | 内置 KindMap 兜底 |
 | 适配器注册类型（非系统值类型） | `_ref : object?` 字段存储 | 非系统值类型体积不可在编译期确定，走 `_ref` 兜底 |
-| 未注册类型 | `_ref : object?` 兜底 | Kind=`TypedData.UnregisteredKind`，通过 `FromObject(Type, object?)` 构造 |
+| 未注册类型 | `_ref : object?` 兜底 | Kind=`TypedData.UnregisteredKind`，反序列化经 `TypedDataObjectConverter.FromObject` 恢复 |
 
 > 判别值 `0` 固定为 `Null` 哨兵值（`default(TypedData)`）。内联候选由 `SpecialType` 白名单精确判定（上表第一行枚举的 12 种系统基础类型），不依赖类型显示名匹配。
 
@@ -90,6 +90,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 | `ORIGOSG002` | Error | 宿主程序集中注册了无法内联且不受支持的值类型（如 `decimal` 或自定义结构体）。宿主程序集仅允许注册受支持的系统基础类型与引用类型。 |
 | `ORIGOSG003` | Error | 注册类型的 Kind 值（`startKind` + 组内位置）落在 `byte` 有效范围 `[1, 254]` 之外。包含 Kind 越界后会回绕到某个已占用值、从而与其它类型静默冲突的情形。 |
 | `ORIGOSG004` | Error | 多个 `SndInlineTypes` 组的 `startKind` 区间重叠，导致同一个 Kind 字节被分配给多个不同类型。每个内联类型必须映射到唯一的 Kind。 |
+| `ORIGOSG005` | Error | 多个注册类型产生相同的生成标识符（KindName）：不同命名空间的同名类型、泛型实例化后名称折叠为同一标识符的类型、以及同一类型重复注册（相同或不同 Kind）。生成访问器标识符派生自类型名，任何标识符冲突都会产出不可编译的重复成员。 |
 
 ## 注册机制
 
@@ -128,7 +129,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 ### TypedData.RegisterKind
 
-`TypedData` 提供 `internal static void RegisterKind(byte kind, Type type)` 方法，允许外部程序集（通过 `InternalsVisibleTo`）向全局 `KindTypeMap[256]` 数组中写入 kind → Type 映射。各层的 `[ModuleInitializer]` 按程序集加载顺序调用此方法。
+`TypedData` 提供 `internal static void RegisterKind(byte kind, Type type)` 方法，允许外部程序集（通过 `InternalsVisibleTo`）向全局 `KindTypeMap[256]` 数组中写入 kind → Type 映射。各层的 `[ModuleInitializer]` 按程序集加载顺序调用此方法。校验规则：Kind `0`（Null 哨兵）被忽略；Kind `255`（`UnregisteredKind` 哨兵）被拒绝并抛 `ArgumentOutOfRangeException`；null 类型抛 `ArgumentNullException`；同一 Kind 注册不同类型抛 `InvalidOperationException`（相同类型重复注册幂等）。
 
 ## 设计决策
 

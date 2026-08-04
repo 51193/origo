@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Node/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Node
@@ -15,7 +15,7 @@ SND 节点抽象的测试替身：`INodeHandle` 和 `INodeFactory`，支持调�
 | 文件 | 职责 |
 |------|------|
 | `TestNodeHandle.cs` | 实现 `INodeHandle`。提供 `FreeCount` 计数器、`IsVisible` 状态追踪和 `Name` 属性。 |
-| `TestNodeFactory.cs` | 实现 `INodeFactory`。接受可选的 `IEnumerable<string>` 资源 ID 列表用于模拟创建失败。记录所有创建的 `TestNodeHandle` 实例（`CreatedHandles`）与创建请求次数（`Requests`）；创建失败通过构造函数注入的资源 ID 列表模拟。 |
+| `TestNodeFactory.cs` | 实现 `INodeFactory`。接受可选的 `IEnumerable<string>` 资源 ID 列表用于模拟创建失败。记录所有创建的 `TestNodeHandle` 实例（`CreatedHandles`）与每次创建的请求记录列表（`Requests`）；创建失败通过构造函数注入的资源 ID 列表模拟。 |
 
 ## 设计决策
 

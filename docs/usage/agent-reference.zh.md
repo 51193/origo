@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -378,7 +378,7 @@ public sealed class BossHpWatcherStrategy : ObserverStrategyBase
         TypedData oldValue, TypedData newValue)
     {
         // entity = 观察者，target = 被观察的 boss
-        entity.SetData("boss_hp", newValue.AsInt32());
+        if (newValue.TryGetInt32(out var hp)) entity.SetData("boss_hp", hp);
     }
 
     public override void OnUnmounted(ISndEntity entity, ISndContext ctx, ISndEntity target)

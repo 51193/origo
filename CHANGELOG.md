@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Complete English documentation** — 116 English `.en.md` files alongside existing Chinese `.zh.md` files.
+- **Complete English documentation** — 126 English `.en.md` files alongside existing Chinese `.zh.md` files.
 - **`camera_view` console command** — displays screen coordinates and depth of Godot entity nodes visible through the active `Camera3D`.
 - **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name.
 - **`SndContextParameters.InitialLevelId`** — configurable initial save level ID (defaults to `"default"`).
@@ -61,7 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   entity detached from its manager now throws `InvalidOperationException` (consistent with
   the other members) instead of silently returning `false`.
 
-- **BREAKING: Target framework upgraded from `net8.0` to `net10.0`** — all projects (Origo.Core, Origo.ConsoleBridge, Origo.GodotAdapter, and test projects) now target `net10.0`; consumers must build with the .NET 10 SDK and run on the .NET 10 runtime. `Origo.SourceGeneration` keeps `netstandard2.0` (Roslyn analyzer constraint). GodotAdapter verified against Godot 4.7.1 mono (74 headless integration tests pass on `net10.0`).
+- **BREAKING: Target framework upgraded from `net8.0` to `net10.0`** — all projects (Origo.Core, Origo.ConsoleBridge, Origo.GodotAdapter, and test projects) now target `net10.0`; consumers must build with the .NET 10 SDK and run on the .NET 10 runtime. `Origo.SourceGeneration` keeps `netstandard2.0` (Roslyn analyzer constraint). GodotAdapter verified against Godot 4.7.1 mono (84 headless integration tests pass on `net10.0`).
 - **BREAKING:** `SndContext` and `ISndContext` refactored to companion-object pattern. All role interfaces (`ISndSaveOperations`, `ISndBlackboardAccess`, `ISndDeferredActions`, etc.) are now exposed through typed companion properties (`ctx.Save`, `ctx.Blackboard`, `ctx.Deferred`, etc.) instead of direct interface inheritance. `ISndEntityRawSubscription` made `internal`.
 - **BREAKING:** `DataSourceNode.AsByte`/`AsInt`/`AsFloat`/... (12 numeric-typed methods) replaced by a single unified `As<T>()` generic method. `AsString()` and `AsChar()` retained.
 - **BREAKING:** `DataSourceNode.AsChar` now throws `InvalidOperationException` on `Map`/`Array` nodes instead of silently returning `'\0'`.
@@ -89,7 +89,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Mounting the same strategy index twice on an entity now throws** — previously the passive strategy manager silently ran the strategy twice per frame.
 - **Attaching a second `PlanExecutionStrategyBase`-derived strategy to the same entity now throws** — previously it silently unsubscribed the first plan strategy's callbacks.
 - **BREAKING: TypedData kind 255 rejected by the source generator** — `ORIGOSG003` now limits the valid range to `[1, 254]`; 255 is the reserved `UnregisteredKind` sentinel, and registering it used to corrupt `DataType` resolution and extraction.
-- **Session checkpoint writes (`WriteProgressOnlyToCurrent` / `WriteLevelPayloadOnlyToCurrent`) leave a write-in-progress marker on failure** — readers now reject partially written checkpoints instead of accepting them.
+
+### Removed
+
+- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
+- **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
+- **`SndEntity.SpawnSingle` / `LoadSingle` / `SaveSingle` and their `GodotSndEntity` counterparts removed** — these internal single-entity shortcuts had no production callers (spawn/load/save uniformly go through `SndEntityFactory` / `SessionRun` / the serialization pipeline) and were only used by tests, which now drive the `IEntityLifecycle` phased methods directly.
+- **BREAKING: `SaveGamePayload.FormatVersion` property removed** — the framework neither read nor wrote it (the on-disk version always comes from `CurrentFormatVersion` via `meta.map`); only `CurrentFormatVersion` and the `FormatVersionMetaKey` constant remain.
 
 ### Fixed
 
@@ -100,14 +106,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`GodotSndEntity.DetachFromManager` no longer frees the Godot node itself** — engine teardown (`RemoveChild`/`Free`) is now consistently performed by the manager's detach callback; previously the entity freed itself first, making the callback dead code and leaving the "engine work injected via callback" contract unfulfilled.
 - **`ConsoleBridgeServer.Start` failure now rolls back fully** — a failed start stops and disposes the listener and unsubscribes the output channel, so a retry starts from a clean state instead of leaking the socket or subscription.
 - **`GodotPackedSceneNodeFactory` no longer caches failed scene loads** — a missing `PackedScene` resource can be retried after it becomes available instead of being pinned as a permanent failure.
-
-### Removed
-
-- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
-- **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
-
-### Fixed
-
 - **`DataSourceNode.ComputeSha256Hash` expands lazy subtrees recursively** — the save idempotency hash previously treated unexpanded nested JSON children as empty maps, so deep changes inside `extra/` files produced identical hashes and the whole save could be silently skipped.
 - **Save topology is re-solidified after `BeforeSave` hooks** — the framework-computed `SessionTopology` value is written after hooks fire, so hook writes to framework-owned blackboard keys cannot corrupt the persisted save topology.
 - **Plan actions already mounted via `LifecycleIndices` are reused** — `PlanExecutionStrategyBase` no longer fails when the action strategy for a plan step is already mounted on the entity; it reuses the existing mount instead of throwing a duplicate-mount exception.
@@ -158,13 +156,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **The TypedData source generator is truly incremental** — the generation input now has value equality, so an unchanged declaration set over a new `Compilation` (every editor keystroke) skips regeneration instead of re-extracting and regenerating everything.
 - **`GodotAdapter.CommandHandlerBase` inherits Core's handler base** — argument validation and error messaging are no longer duplicated; the adapter base only adds the runtime reference.
 - **Orphaned Godot `.uid` files removed** — 30 stale editor metadata files whose source files had been deleted.
-
-### Removed
-
-- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
-- **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
-- **`SndEntity.SpawnSingle` / `LoadSingle` / `SaveSingle` and their `GodotSndEntity` counterparts removed** — these internal single-entity shortcuts had no production callers (spawn/load/save uniformly go through `SndEntityFactory` / `SessionRun` / the serialization pipeline) and were only used by tests, which now drive the `IEntityLifecycle` phased methods directly.
-- **BREAKING: `SaveGamePayload.FormatVersion` property removed** — the framework neither read nor wrote it (the on-disk version always comes from `CurrentFormatVersion` via `meta.map`); only `CurrentFormatVersion` and the `FormatVersionMetaKey` constant remain.
 
 ## [0.0.8] - 2026-06-30
 

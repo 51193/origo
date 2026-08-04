@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Metadata
 
@@ -29,7 +29,7 @@ The data model for SND entity metadata. These models are pure data containers wi
 ```csharp
 public readonly partial struct TypedData : IEquatable<TypedData>
 {
-    internal byte _kind;          // Type discriminant value (0 = Null)
+    internal readonly byte _kind;   // Type discriminant value (0 = Null)
     internal long _inlineBits;    // Value type inline storage (≤ 8 bytes)
     internal object? _ref;        // Reference type or large value type fallback
 
@@ -54,7 +54,7 @@ At serialization boundaries (during deserialization), construction occurs throug
 
 | Mode | Prerequisite | Boxing | Applicable |
 |------|-------------|--------|------------|
-| Generated strongly-typed accessors like `TryGetInt32(out int)` / `TryGetString(out string)` / `AsXxx()` | Known target type at compile time | **Zero boxing** | **Hot paths, known-type reads and type checks** (data change handling, per-frame reads/writes, replacing `is T` checks) |
+| Generated strongly-typed accessors like `TryGetInt32(out int)` / `TryGetString(out string)` | Known target type at compile time | **Zero boxing** | **Hot paths, known-type reads and type checks** (data change handling, per-frame reads/writes, replacing `is T` checks). `AsXxx()` (`internal` in both Home and Adapter modes) has no Kind guard and is reserved for framework-internal use after a switch match |
 | `TypedDataObjectConverter.ToObject(td)` | Type-erased | Value types **boxed** | **Framework-internal cold paths only**: serialization, console/debug output, `ToString`. `internal`, external code cannot access |
 
 **Recommended usage**:
@@ -100,7 +100,7 @@ var meta = new SndMetaFluentBuilder("Player")
     .Build();
 ```
 
-Fluent chained API for building `SndMetaData`, eliminating the manual `meta.DataMetaData ??= new DataMetaData()` + `meta.DataMetaData.Pairs["key"] = new TypedData(typeof(T), value)` boilerplate.
+Fluent chained API for building `SndMetaData`, eliminating the manual `meta.DataMetaData ??= new DataMetaData()` + `meta.DataMetaData.Pairs["key"] = <TypedData explicit conversion>` boilerplate (`TypedData` exposes no `new TypedData(Type, object?)` universal constructor, see below).
 
 Provides a `SndMetaFluentBuilder.From(SndMetaData)` static factory for fluent data addition after `ctx.Template.CloneTemplate`:
 
@@ -116,7 +116,7 @@ Typed Set methods include `SetInt`, `SetFloat`, `SetDouble`, `SetLong`, `SetBool
 
 ### Why TypedData is a value type (readonly partial struct)
 
-TypedData stores entity runtime mutable state (e.g., `hp = 100`, `speed = 3.5f`), the vast majority of which are value types. Using a class (reference type) would mean every `SetData` requires a heap allocation of `new TypedData(typeof(T), value)`, generating significant GC pressure for frequently updated game entities (multiple reads/writes per frame).
+TypedData stores entity runtime mutable state (e.g., `hp = 100`, `speed = 3.5f`), the vast majority of which are value types. Using a class (reference type) would mean every `SetData` requires a heap allocation of a TypedData value (constructed via the `(TypedData)value` explicit conversion), generating significant GC pressure for frequently updated game entities (multiple reads/writes per frame).
 
 As a value type, inline storage eliminates heap allocations. `Dictionary<string, TypedData>` values are directly embedded in dictionary entries; value types live on the stack or inline in collections without producing standalone GC objects.
 

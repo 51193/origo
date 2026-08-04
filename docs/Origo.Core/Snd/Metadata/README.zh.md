@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Metadata
 
@@ -29,7 +29,7 @@ SND 实体元数据的数据模型。这些模型是纯数据容器，不包含�
 ```csharp
 public readonly partial struct TypedData : IEquatable<TypedData>
 {
-    internal byte _kind;          // 类型判别值（0 = Null）
+    internal readonly byte _kind;   // 类型判别值（0 = Null）
     internal long _inlineBits;    // 值类型内联存储（≤ 8 字节）
     internal object? _ref;        // 引用类型或大值类型兜底
 
@@ -54,7 +54,7 @@ SND 系统的核心类型保留与内联存储机制。值类型（`int`、`floa
 
 | 方式 | 前提 | 装箱 | 适用 |
 |------|------|------|------|
-| `TryGetInt32(out int)` / `TryGetString(out string)` / `AsXxx()` 等生成的强类型访问器 | 编译期已知目标类型 | **零装箱** | **热路径、已知类型的读取与类型判定**（数据变更处理、每帧读写、替代 `is T` 判定） |
+| `TryGetInt32(out int)` / `TryGetString(out string)` 等生成的 `TryGetXxx` 访问器 | 编译期已知目标类型 | **零装箱** | **热路径、已知类型的读取与类型判定**（数据变更处理、每帧读写、替代 `is T` 判定）。`AsXxx()`（Home 与 Adapter 均为 `internal`）无 Kind 守卫，仅供框架内部在 switch 匹配后调用 |
 | `TypedDataObjectConverter.ToObject(td)` | 类型擦除 | 值类型**装箱** | **仅框架内部冷路径**：序列化、控制台/调试输出、`ToString`。`internal`，外部代码不可访问 |
 
 **推荐用法**：
@@ -100,7 +100,7 @@ var meta = new SndMetaFluentBuilder("Player")
     .Build();
 ```
 
-流式链式 API 构建 `SndMetaData`，消除手动 `meta.DataMetaData ??= new DataMetaData()` + `meta.DataMetaData.Pairs["key"] = new TypedData(typeof(T), value)` 的样板代码。
+流式链式 API 构建 `SndMetaData`，消除手动 `meta.DataMetaData ??= new DataMetaData()` + `meta.DataMetaData.Pairs["key"] = <TypedData 显式转换>` 的样板代码（`TypedData` 不暴露 `new TypedData(Type, object?)` 万能构造器，见下节）。
 
 提供 `SndMetaFluentBuilder.From(SndMetaData)` 静态工厂，在 `ctx.Template.CloneTemplate` 后流式添加数据：
 
@@ -116,7 +116,7 @@ var meta = SndMetaFluentBuilder.From(ctx.Template.CloneTemplate("player_template
 
 ### 为什么 TypedData 是值类型（readonly partial struct）
 
-TypedData 存储实体运行时可变状态（如 `hp = 100`、`speed = 3.5f`），其中绝大多数是值类型。使用 class（引用类型）意味着每次 `SetData` 都需要堆分配 `new TypedData(typeof(T), value)`，对频繁更新的游戏实体（每帧多次读写）产生显著的 GC 压力。
+TypedData 存储实体运行时可变状态（如 `hp = 100`、`speed = 3.5f`），其中绝大多数是值类型。使用 class（引用类型）意味着每次 `SetData` 都需要堆分配一个 TypedData 值（经 `(TypedData)value` 显式转换构造），对频繁更新的游戏实体（每帧多次读写）产生显著的 GC 压力。
 
 作为值类型，内联存储消除堆分配。`Dictionary<string, TypedData>` 的值直接嵌入字典条目，值类型在栈上或内联在集合中，不产生独立 GC 对象。
 

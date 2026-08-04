@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Reporting/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Reporting
@@ -14,7 +14,7 @@
 
 | 文件 | 职责 |
 |------|------|
-| `PerfReporter.cs` | 封装 `TextWriter` 和 `ITestOutputHelper` 的性能报告器。提供 `CompareTable`（多类型对比表格）、`ReportTable`（单方法报告表格）、`newline()` 分隔等输出方法。 |
+| `PerfReporter.cs` | 封装 `TextWriter` 和 `ITestOutputHelper` 的性能报告器。提供 `CompareTable`（多类型对比表格）、`ReportTable`（单方法报告表格）等输出方法。 |
 
 ## 设计决策
 

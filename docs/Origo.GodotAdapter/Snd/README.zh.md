@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -33,14 +33,14 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 - **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，集合回滚释放所有已创建的实体（经 `SndEntityCollection` 的 staged 列表）
 - **GetEntities()**：惰性创建 `IReadOnlyCollection<ISndEntity>` 视图，缓存引用避免重复分配
 - **BuildMetaList()**：经集合调用实体的 `BuildSndMetaData()` 收集元数据
-- **ProcessAll(delta)**：实现 `ISndSceneHost.ProcessAll` 的统一入口，由 Core 的 `SessionManager.ProcessAllSessions` 调用，维护 `ProcessTickCount` 和 `ProcessDeltaSum` 统计
+- **ProcessAll(delta)**：实现 `ISndSceneHost.ProcessAll` 的统一入口，由 Core 的 `SessionManager.ProcessAllSessions` 调用，维护 `ProcessTickCount`（框架内部可观测性，测试项目经 `InternalsVisibleTo` 访问）统计
 
 ### GodotSndEntity
 
 Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 
 - **延迟初始化**：`_entity` 在首次访问时通过 `SndWorld.CreateEntity` 创建
-- **Lifecycle 分离**：`DetachFromManager()` 仅由 GodotSndManager 调用，设置 released 标志、置空 entity 引用、调用 `Free()` 释放节点
+- **Lifecycle 分离**：`DetachFromManager()` 设置 released 标志并置空 entity 引用；引擎级释放（`RemoveChild`/`Free`）由 GodotSndManager 的 `DetachAndFree` 回调执行（`SndEntityCollection` 的"引擎工作委托注入"契约）
 - **BuildSndMetaData()**：公开包装 `BuildMetaData()`，供 GodotSndManager 收集元数据
 - **IEntityLifecycle 实现**：各方法包含 `EnsureEntity()` 守卫（先用再创建）
 - **StableName**：独立存储实体稳定名（Godot Node 的 Name 可能因重名自动修改后缀）
@@ -68,7 +68,7 @@ Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 
 ### 为什么 GodotSndManager 不拥有 _Process 循环
 
-实体帧处理是 Core 编排职责。若 `GodotSndManager` 自持 `_Process` 循环遍历实体调用 `ProcessSnd(delta)`，会重复 Core 的帧处理逻辑并绕过正式处理管线。因此帧处理统一由 Core 的 `SessionManager.ProcessAllSessions(delta)` 经 `SceneHost.ProcessAll(delta)`、通过 `IOrigoFrameDriver.DriveFrame(delta)` 执行，`ProcessTickCount` 和 `ProcessDeltaSum` 也在 `ProcessAll` 中维护。`ProcessSnd` 为 `internal`——生命周期编排只能经 Core 的 `ISessionRun` 与批量钩子管线触发，外部代码不得经 `GodotSndEntity` 具体类型直接调用。
+实体帧处理是 Core 编排职责。若 `GodotSndManager` 自持 `_Process` 循环遍历实体调用 `ProcessSnd(delta)`，会重复 Core 的帧处理逻辑并绕过正式处理管线。因此帧处理统一由 Core 的 `SessionManager.ProcessAllSessions(delta)` 经 `SceneHost.ProcessAll(delta)`、通过 `IOrigoFrameDriver.DriveFrame(delta)` 执行，`ProcessTickCount` 也在 `ProcessAll` 中维护。`ProcessSnd` 为 `internal`——生命周期编排只能经 Core 的 `ISessionRun` 与批量钩子管线触发，外部代码不得经 `GodotSndEntity` 具体类型直接调用。
 
 ### 为什么 GodotSndEntity 使用延迟创建 Core Entity
 
@@ -92,9 +92,9 @@ Godot 场景树中如果存在同名节点，Godot 会自动在 Name 后追加 `
 
 | 类别 | 行数 | 占比 | 说明 |
 |------|------|------|------|
-| 纯转发样板 | ~130 | 45% | `ISndEntity`（~20 个方法）、`IEntityLifecycle`（8 个钩子）、`ISndEntityRawSubscription`（2 个方法）全部形如 `EnsureEntity(); _entity!.Foo(...)`，每个方法 4~6 行 |
-| 引擎特有逻辑 | ~60 | 21% | `StableName` ↔ `Node.Name` 同步、`Free()` 清理、`GetNodeFromSnd<TNode>()` Godot 节点转义、`EnsureEntity()` 延迟创建 |
-| 基础设施 | ~100 | 34% | 字段声明、构造函数、Guard 方法、using |
+| 纯转发样板 | ~120 | 60% | `ISndEntity`（~20 个方法）、`IEntityLifecycle`（10 个方法）、`ISndEntityRawSubscription`（2 个方法）全部形如 `Entity.Foo(...)`，每个方法 1~6 行 |
+| 引擎特有逻辑 | ~60 | 30% | `StableName` ↔ `Node.Name` 同步、`DetachFromManager()` 状态清理、`GetNodeFromSnd<TNode>()` Godot 节点转义、`EnsureEntity()` 延迟创建 |
+| 基础设施 | ~20 | 10% | 字段声明、构造函数、Guard 方法、using |
 
 #### 为什么不能提取基类或自动生成
 
@@ -121,9 +121,9 @@ ISndEntity:
   MountObserverStrategy / UnmountObserverStrategy（两组重载）
 
 IEntityLifecycle（显式接口实现）:
-  FireAfterSpawnHooks / FireAfterLoadHooks / FireBeforeSaveHooks
-  FireBeforeQuitHooks / FireBeforeDeadHooks
-  ReleaseStrategiesOnly / TeardownOnly / BuildMetaData
+  RecoverForLifecycle / FireAfterSpawnHooks / FireAfterLoadHooks
+  FireBeforeSaveHooks / FireBeforeQuitHooks / FireBeforeDeadHooks
+  ReleaseStrategiesOnly / TeardownOnly / TeardownObserverBindings / BuildMetaData
 
 ISndEntityRawSubscription（显式接口实现）:
   SubscribeDataRaw / UnsubscribeDataRaw

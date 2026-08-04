@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter
 
@@ -103,9 +103,9 @@ Verified integration notes for embedding Origo into a Godot project:
 
 ## TypedData Multi-Layer Inlining
 
-Origo.GodotAdapter references the `Origo.SourceGeneration` source generator and registers 14 Godot engine types at the assembly level via `[assembly: SndInlineTypes(startKind: 128, ...)]`. At compile time, the SG automatically generates extension methods (`TryGetVector2` / `AsVector3`, etc.), `[ModuleInitializer]` registration logic, and KindResolver/Converter bridges.
+Origo.GodotAdapter references the `Origo.SourceGeneration` source generator and registers 14 Godot engine types at the assembly level via `[assembly: SndInlineTypes(startKind: 128, ...)]`. At compile time, the SG automatically generates extension methods (`TryGetVector2` / `AsVector3`, etc., inside the `internal` `TypedDataLayeredExtensions` class), `[ModuleInitializer]` registration logic, and KindResolver/Converter bridges.
 
-- **TypedDataInitializer** (`Origo.GodotAdapter.Snd`): The public `IsLoaded` entry point; accessing this type triggers GodotAdapter assembly loading, ensuring all `[ModuleInitializer]` methods have executed. Test projects use this class to force-load the adapter layer.
+- **TypedDataInitializer** (`Origo.GodotAdapter.Snd`): an `internal` static class; `EnsureLoaded()` triggers GodotAdapter assembly loading, ensuring all `[ModuleInitializer]` methods have executed. Test projects call it via `InternalsVisibleTo` to force-load the adapter layer.
 - **Kind range 128–141**: Does not conflict with Core layer's 1–13, ensuring that `(TypedData)42` created in Core won't be misinterpreted as `Vector2` in GodotAdapter.
 
 See [Origo.SourceGeneration documentation](../Origo.SourceGeneration/README.en.md) for details.

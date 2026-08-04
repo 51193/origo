@@ -316,7 +316,11 @@ missing language files) always fail the build.
   During development iteration, use `bash scripts/test.sh` (build + test +
   coverage gates only).
 - **Test projects**: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`,
-  `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`.
+  `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`,
+  `Origo.GodotAdapter.Integration.Tests` (Godot headless integration,
+  run via `scripts/godot-test.sh`), and `tools/DocSyncTool.Tests`.
+  `Origo.TestSupport` is a test support library (not a test project)
+  referenced by `Origo.Core.Tests` and `Origo.GodotAdapter.Tests`.
 - **Coverage gates** are enforced by Coverlet in `test.sh` (≥ 90% line coverage
   across all test projects); falling
   below the threshold causes `dotnet test` to fail directly.
@@ -453,7 +457,7 @@ markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md
 | Godot adapter | [`docs/Origo.GodotAdapter/README.md`](docs/Origo.GodotAdapter/README.md) | Godot 4 adapter layer. |
 | ConsoleBridge | [`docs/Origo.ConsoleBridge/README.md`](docs/Origo.ConsoleBridge/README.md) | TCP remote console bridge. |
 | Usage guide | [`docs/usage/README.md`](docs/usage/README.md) | From quick start to deep reference. |
-| Test docs | [`docs/Origo.Core.Tests/README.md`](docs/Origo.Core.Tests/README.md) | Test coverage by capability. |
+| Test docs | [`docs/Origo.Core.Tests/README.md`](docs/Origo.Core.Tests/README.md), [`docs/Origo.GodotAdapter.Tests/README.md`](docs/Origo.GodotAdapter.Tests/README.md), [`docs/Origo.ConsoleBridge.Tests/README.md`](docs/Origo.ConsoleBridge.Tests/README.md), [`docs/Origo.SourceGeneration.Tests/README.md`](docs/Origo.SourceGeneration.Tests/README.md), [`docs/Origo.GodotAdapter.Integration.Tests/README.md`](docs/Origo.GodotAdapter.Integration.Tests/README.md), [`docs/Origo.TestSupport/README.md`](docs/Origo.TestSupport/README.md) | Test coverage by capability. |
 | Performance baseline | [`docs/benchmarks/baseline.zh.md`](docs/benchmarks/baseline.zh.md) (or [baseline.en.md](docs/benchmarks/baseline.en.md)) | TypedData performance snapshot and trade-offs. |
 | DocSyncTool | [`tools/DocSyncTool/`](tools/DocSyncTool/) | Bilingual doc sync tool (generate, validate, init). |
 | Formatting rules | [`.editorconfig`](.editorconfig) | C# code style + IDE/CA diagnostic rules. |

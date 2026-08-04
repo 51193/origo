@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # DataSource
 
@@ -56,7 +56,7 @@ DataSourceConverterRegistry (类型转换)
 CLR 对象 (TypedData / SndMetaData / etc.)
 ```
 
-## 设计原则
+## 设计决策
 
 - **IDataSourceIoGateway 硬边界**：Core 中所有文件内容 I/O 必须经过 Gateway 的 `ReadTree`/`WriteTree`，禁止直接 `File.*` API，零旁路
 - **Fail-fast**：codec 解码失败时，Gateway 将异常包装为包含文件路径的 `InvalidOperationException` 立即抛出

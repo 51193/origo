@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter.Tests
 
@@ -14,7 +14,7 @@ Origo.GodotAdapter 的测试验证 Godot 4 适配层的正确性。
 
 由于 GodotAdapter 依赖 Godot 引擎运行时，**任何 Godot API 调用（含 `new Node()`、`GD.Print`）在无引擎的单元测试宿主中都会导致测试进程 SIGSEGV 崩溃**，因此直接调用引擎 API 的源文件被 coverlet 排除（在 `.csproj` 的 `ExcludeByFile` 中配置）。每个排除文件都有文档化的技术理由（见 csproj 注释）：`GodotSndEntity.cs`/`GodotSndManager.cs`/`OrigoAutoHost.cs`/`OrigoDefaultEntry*.cs`（Godot Node 子类，节点创建与场景树操作不可达）、`FileSystem/` 三文件（方法体全部是 `FileAccess`/`DirAccess` 静态调用）、`GodotNodeHandle.cs`/`GodotPackedSceneNodeFactory.cs`（需真实节点/资源）、`CameraViewCommandHandler.cs`（`ExecuteCore` 首行即 `Engine.GetMainLoop()`）。
 
-为缩小排除面，`GodotSndManager` 的实体集合编排逻辑（增删、查找、批量恢复回滚、帧处理、击杀标记）已提取到纯 C# 的 `SndEntityCollection<T>`（`Origo.GodotAdapter/Snd/SndEntityCollection.cs`），由 `SndEntityCollectionTests` 全覆盖（98.8%）；生成代码 `TypedData.g.cs` 的 14 个 Godot 类型访问器由 `GodotTypedDataGeneratedCoverageTests` 逐类型覆盖。门禁统计范围内行覆盖率 ≥ 94%（`ThresholdStat=total`）。
+为缩小排除面，`GodotSndManager` 的实体集合编排逻辑（增删、查找、批量恢复回滚、帧处理、击杀标记）已提取到纯 C# 的 `SndEntityCollection<T>`（`Origo.GodotAdapter/Snd/SndEntityCollection.cs`），由 `SndEntityCollectionTests` 全覆盖（98.8%）；生成代码 `TypedData.g.cs` 的 14 个 Godot 类型访问器由 `GodotTypedDataGeneratedCoverageTests` 逐类型覆盖。门禁统计范围内行覆盖率 ≥ 90%（`ThresholdStat=total`，实测约 94%）。
 
 引擎依赖文件的行为验证由 [Origo.GodotAdapter.Integration.Tests](../Origo.GodotAdapter.Integration.Tests/README.zh.md)
 在真实的 Godot `--headless` 运行时中执行。集成测试与单元测试互补：单元测试验证 Core 层逻辑与类型序列化，

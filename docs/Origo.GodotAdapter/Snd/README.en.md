@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -33,14 +33,14 @@ The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in
 - **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, the collection rolls back and releases all already-created entities (via the staged list in `SndEntityCollection`)
 - **GetEntities()**: Lazily creates an `IReadOnlyCollection<ISndEntity>` view, caching the reference to avoid reallocation
 - **BuildMetaList()**: Calls entities' `BuildSndMetaData()` to collect metadata
-- **ProcessAll(delta)**: Implements the unified entry for `ISndSceneHost.ProcessAll`, called by Core's `SessionManager.ProcessAllSessions`, maintaining `ProcessTickCount` and `ProcessDeltaSum` statistics
+- **ProcessAll(delta)**: Implements the unified entry for `ISndSceneHost.ProcessAll`, called by Core's `SessionManager.ProcessAllSessions`, maintaining `ProcessTickCount` (framework-internal observability, accessed by test projects via `InternalsVisibleTo`) statistics
 
 ### GodotSndEntity
 
 A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 
 - **Lazy initialization**: `_entity` is created on first access via `SndWorld.CreateEntity`
-- **Lifecycle separation**: `DetachFromManager()` is called only by GodotSndManager, setting the released flag, nulling the entity reference, and calling `Free()` to release the node
+- **Lifecycle separation**: `DetachFromManager()` sets the released flag and nulls the entity reference; engine-level release (`RemoveChild`/`Free`) is performed by the GodotSndManager `DetachAndFree` callback (the `SndEntityCollection` "engine work delegated via callback" contract)
 - **BuildSndMetaData()**: Public wrapper for `BuildMetaData()`, used by GodotSndManager to collect metadata
 - **IEntityLifecycle implementation**: Each method includes an `EnsureEntity()` guard (creates before use)
 - **StableName**: Independently stores the entity's stable name (Godot Node's Name may be auto-modified with suffixes due to name conflicts)
@@ -68,7 +68,7 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 
 ### Why GodotSndManager does not own a _Process loop
 
-Entity frame processing is a Core orchestration responsibility. If `GodotSndManager` held its own `_Process` loop iterating entities and calling `ProcessSnd(delta)`, it would duplicate Core's frame processing logic and bypass the formal processing pipeline. Therefore frame processing is uniformly executed by Core's `SessionManager.ProcessAllSessions(delta)` via `SceneHost.ProcessAll(delta)`, through `IOrigoFrameDriver.DriveFrame(delta)`. `ProcessTickCount` and `ProcessDeltaSum` are also maintained within `ProcessAll`. `ProcessSnd` is `internal` — lifecycle orchestration can only be triggered via Core's `ISessionRun` and the batch hook pipeline; external code must not call it through the concrete `GodotSndEntity` type.
+Entity frame processing is a Core orchestration responsibility. If `GodotSndManager` held its own `_Process` loop iterating entities and calling `ProcessSnd(delta)`, it would duplicate Core's frame processing logic and bypass the formal processing pipeline. Therefore frame processing is uniformly executed by Core's `SessionManager.ProcessAllSessions(delta)` via `SceneHost.ProcessAll(delta)`, through `IOrigoFrameDriver.DriveFrame(delta)`. `ProcessTickCount` is also maintained within `ProcessAll`. `ProcessSnd` is `internal` — lifecycle orchestration can only be triggered via Core's `ISessionRun` and the batch hook pipeline; external code must not call it through the concrete `GodotSndEntity` type.
 
 ### Why GodotSndEntity uses lazy creation for the Core Entity
 
@@ -92,7 +92,7 @@ The code in `GodotSndEntity` (~206 lines) can be broken down into three categori
 
 | Category | Lines | Share | Notes |
 |------|------|------|------|
-| Pure forwarding boilerplate | ~130 | 45% | `ISndEntity` (~20 methods), `IEntityLifecycle` (8 hooks), `ISndEntityRawSubscription` (2 methods) — all follow the pattern `EnsureEntity(); _entity!.Foo(...)`, each method 4–6 lines |
+| Pure forwarding boilerplate | ~120 | 60% | `ISndEntity` (~20 methods), `IEntityLifecycle` (10 methods), `ISndEntityRawSubscription` (2 methods) — all follow the pattern `Entity.Foo(...)`, each method 1–6 lines |
 | Engine-specific logic | ~60 | 21% | `StableName` ↔ `Node.Name` sync, `Free()` cleanup, `GetNodeFromSnd<TNode>()` Godot node escape, `EnsureEntity()` lazy creation |
 | Infrastructure | ~100 | 34% | Field declarations, constructors, guard methods, usings |
 
@@ -121,9 +121,9 @@ ISndEntity:
   MountObserverStrategy / UnmountObserverStrategy (two overload groups)
 
 IEntityLifecycle (explicit interface implementation):
-  FireAfterSpawnHooks / FireAfterLoadHooks / FireBeforeSaveHooks
-  FireBeforeQuitHooks / FireBeforeDeadHooks
-  ReleaseStrategiesOnly / TeardownOnly / BuildMetaData
+  RecoverForLifecycle / FireAfterSpawnHooks / FireAfterLoadHooks
+  FireBeforeSaveHooks / FireBeforeQuitHooks / FireBeforeDeadHooks
+  ReleaseStrategiesOnly / TeardownOnly / TeardownObserverBindings / BuildMetaData
 
 ISndEntityRawSubscription (explicit interface implementation):
   SubscribeDataRaw / UnsubscribeDataRaw

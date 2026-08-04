@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration
 
@@ -15,13 +15,13 @@
 
 | File | Responsibility |
 |------|------|
-| `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`: dual-mode code generator (main entry + attribute parsing + top-level syntax reception) |
+| `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`: dual-mode code generator (main entry + attribute parsing + generation input extraction) |
 | `TypedDataGenerator.AdapterGeneration.cs` | partial — Adapter mode code generation (Godot engine type extension methods) |
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home mode code generation (Core BCL type extension methods) |
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — Factory registration code generation (type mapping and Kind allocation) |
-| `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-004) |
+| `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-005) |
 | `AnalyzerReleases.Shipped.md` | Analyzer release tracking (shipped rules, currently empty) |
-| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (unshipped rules: `ORIGOSG001`, `ORIGOSG002`, `ORIGOSG003`, `ORIGOSG004`) |
+| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (unshipped rules: `ORIGOSG001`, `ORIGOSG002`, `ORIGOSG003`, `ORIGOSG004`, `ORIGOSG005`) |
 | `pipeline.en.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |
 
 ## Dual-Mode Architecture
@@ -40,7 +40,7 @@ The Source Generator detects at compile time whether the current assembly is the
 | **KindMap** | `partial struct TypedData { internal static class KindMap { const byte Int32 = 5; ... } }` | One `const byte` discriminator per registered type, numbered from `StartKind` |
 | **Kind registration** | `TypedDataHomeKindRegistration` + `[ModuleInitializer]` | Calls `TypedData.RegisterKind()` to populate the global `KindTypeMap[]`, independent of any static constructor, allowing multiple assemblies to each register their own types |
 | **Strongly-typed construction** | `explicit operator TypedData(...)` | Explicit conversion operators for each system type, writing values inline into struct fields |
-| **Strongly-typed reads** | `AsXxx()` / `TryGetXxx()` | Internal/public accessor methods, direct field reads via Kind discriminator |
+| **Strongly-typed reads** | `AsXxx()` (`internal`) / `TryGetXxx()` (`public`) | Accessor methods, direct field reads via Kind discriminator; `AsXxx` has no Kind guard (framework-internal, called only after a switch match), business reads use `TryGetXxx` |
 | **Generic factory** | `TypedDataFactory<T>` | `Create(T)` / `TryExtract(TypedData, out T)`, if-else chain with JIT constant folding |
 | **Serialization bridge** | `TypedDataObjectConverter` | `ToObject` / `FromObject`, switch dispatch + `TypedDataLayeredRegistry` fallback chain |
 | **Type mapping** | `TypedDataTypeMap` | `GetKindForType(Type)`, if-else chain + `TypedDataLayeredRegistry.ResolveKind` fallback |
@@ -49,7 +49,7 @@ The Source Generator detects at compile time whether the current assembly is the
 
 | Category | Generated Content | Notes |
 |---------|---------|------|
-| **Extension methods** | `TypedDataLayeredExtensions` static class | `this TypedData` extension methods: `TryGetVector3`, `AsVector3`, etc., choosing inline or `_ref` read path based on type size |
+| **Extension methods** | `TypedDataLayeredExtensions` static class (`internal`) | `this TypedData` extension methods: `TryGetVector3`, `AsVector3`, etc., reading adapter-layer types through `_ref` (non-system value type size cannot be determined at compile time, see below). Consistent with the home assembly's internal `AsXxx`, the whole class is `internal` — unguarded read paths are not exposed to business code, which reads via `ISndEntity.TryGetData<T>` or `TryGetXxx` |
 | **Kind registration** | `TypedDataAdapterKindRegistration` + `[ModuleInitializer]` | Calls `TypedData.RegisterKind(startKind + i, typeof(T))` |
 | **Conversion bridges** | `TypedDataAdapterConverterRegistration` + `[ModuleInitializer]` | Calls `TypedDataLayeredRegistry.RegisterFromObjectFallback` / `RegisterToObjectFallback` |
 | **Type resolution** | `TypedDataAdapterTypeMapRegistration` + `[ModuleInitializer]` | Calls `TypedDataLayeredRegistry.RegisterKindResolver`, providing a `Type → kind` if-else chain |
@@ -74,7 +74,7 @@ There are only two storage paths: system primitive value types in the home assem
 | System primitive value types declared in the home (Origo.Core) assembly (`byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`char`) | Inlined in `_inlineBits : long` field | Zero heap allocation, zero boxing; inlining limited to home assembly |
 | Reference types (`string`) | Stored in `_ref : object?` field | Built-in KindMap fallback |
 | Adapter-registered types (non-system value types) | Stored in `_ref : object?` field | Non-system value type size cannot be reliably determined at compile time, fall back to `_ref` |
-| Unregistered types | `_ref : object?` fallback | Kind=`TypedData.UnregisteredKind`, constructed via `FromObject(Type, object?)` |
+| Unregistered types | `_ref : object?` fallback | Kind=`TypedData.UnregisteredKind`, restored through `TypedDataObjectConverter.FromObject` during deserialization |
 
 > Discriminator `0` is fixed as the `Null` sentinel value (`default(TypedData)`). Inlining candidates are determined precisely by a `SpecialType` whitelist (the 12 system primitive types enumerated in the first row of the table above), not by type display name matching.
 
@@ -90,6 +90,7 @@ Diagnostic messages carry the corresponding `SndInlineTypesAttribute` syntax loc
 | `ORIGOSG002` | Error | An uninlinable and unsupported value type (such as `decimal` or a custom struct) is registered in the home assembly. The home assembly only permits registering supported system primitive types and reference types. |
 | `ORIGOSG003` | Error | A registered type's Kind value (`startKind` + position within group) falls outside the `byte` valid range `[1, 254]`. This includes cases where a Kind overflow wraps around to an already-occupied value, silently conflicting with another type. |
 | `ORIGOSG004` | Error | Multiple `SndInlineTypes` groups have overlapping `startKind` ranges, causing the same Kind byte to be assigned to multiple different types. Each inlined type must map to a unique Kind. |
+| `ORIGOSG005` | Error | Multiple registered types produce the same generated identifier (KindName): same-named types from different namespaces, generic instantiations whose names collapse to one identifier, and the same type registered more than once (same or different kinds). Generated accessor identifiers derive from the type name; any identifier collision would emit uncompilable duplicate members. |
 
 ## Registration Mechanism
 
@@ -128,7 +129,7 @@ Located in `Origo.Core.Snd.Metadata`, provides a chained callback registration m
 
 ### TypedData.RegisterKind
 
-`TypedData` adds the `internal static void RegisterKind(byte kind, Type type)` method, allowing external assemblies (via `InternalsVisibleTo`) to write kind → Type mappings into the global `KindTypeMap[256]` array. Each layer's `[ModuleInitializer]` calls this method in assembly load order.
+`TypedData` provides the `internal static void RegisterKind(byte kind, Type type)` method, allowing external assemblies (via `InternalsVisibleTo`) to write kind → Type mappings into the global `KindTypeMap[256]` array. Each layer's `[ModuleInitializer]` calls this method in assembly load order. Validation rules: Kind `0` (Null sentinel) is ignored; Kind `255` (`UnregisteredKind` sentinel) is rejected with `ArgumentOutOfRangeException`; a null type throws `ArgumentNullException`; registering a different type to an already-occupied kind throws `InvalidOperationException` (idempotent re-registration of the same type is allowed).
 
 ## Design Decisions
 
@@ -150,7 +151,7 @@ The storage model has only two paths: inlining (home system primitives) and `_re
 
 ### Why Kind space range and uniqueness are validated at compile time
 
-Kind is a `byte`; at runtime `TypedData.RegisterKind` writes directly into `KindTypeMap[kind]` without duplicate checking — multiple types mapped to the same Kind silently overwrite each other, causing TypedData access corruption. Kinds are computed as `startKind` plus intra-group position; if `startKind` is too large or there are too many types, the Kind value overflows past 255 and wraps around to an already-occupied small value, conflicting with existing types. The generator therefore enforces two invariants at compile time: Kind must fall within `[1, 254]` (`ORIGOSG003`, evaluated on the true value, not relying on `byte` truncation), and each Kind must be uniquely mapped (`ORIGOSG004`, detecting overlapping `startKind` ranges). Violating types are excluded and build errors are reported, so Kind conflicts are exposed at build time rather than corrupting saves at runtime.
+Kind is a `byte`; at runtime `TypedData.RegisterKind` throws `InvalidOperationException` when a kind is registered to a different type than an existing mapping (idempotent re-registration of the same type is allowed), so types can never silently overwrite each other. Kinds are computed as `startKind` plus intra-group position; if `startKind` is too large or there are too many types, the Kind value overflows past 255 and wraps around to an already-occupied small value, conflicting with existing types. The generator therefore enforces three invariants at compile time: Kind must fall within `[1, 254]` (`ORIGOSG003`, evaluated on the true value, not relying on `byte` truncation), each Kind must be uniquely mapped (`ORIGOSG004`, detecting overlapping `startKind` ranges), and every generated identifier must be unique (`ORIGOSG005`, detecting same-named types across namespaces, collapsing generic instantiations, and duplicate registrations of the same type). Violating types are excluded and build errors are reported, so Kind conflicts are exposed at build time rather than corrupting saves at runtime.
 
 ---
 

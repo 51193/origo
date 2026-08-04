@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 编译期优化全链路解析
 
@@ -178,12 +178,13 @@ Kind 分配规则：
 | `ORIGOSG002` | 宿主程序集注册了无法内联的值类型（如 `decimal`） |
 | `ORIGOSG003` | Kind 越界（不在 `[1, 254]` 内） |
 | `ORIGOSG004` | Kind 区间重叠，多类型映射到同一 Kind |
+| `ORIGOSG005` | 生成标识符（KindName）冲突：不同命名空间同名类型、名称折叠的泛型实例、或同一类型重复注册（相同或不同 Kind） |
 
 这些诊断在编译期报告为 Error，使构建失败。Kind 冲突或越界之类的问题**不会进入运行时**。
 
 #### 为什么在编译期校验 Kind
 
-`TypedData.RegisterKind` 直接写入 `KindTypeMap[256]` 数组，不检查是否被覆盖。两个类型竞争同一个 Kind 槽 → 静默损坏 → 存档错乱。运行时排查这类问题几乎不可能——损坏可能在存档后才暴露。编译期强制检查，Kind 冲突在构建时就报错。
+运行时 `TypedData.RegisterKind` 已能检测冲突——同一 Kind 注册不同类型时抛 `InvalidOperationException`（相同类型重复注册幂等）。但 Kind 冲突若依赖运行时才暴露，损坏风险已进入运行期。编译期强制检查（范围、数值唯一性、生成标识符唯一性），Kind 冲突在构建时就报错。
 
 ---
 
@@ -584,7 +585,7 @@ offset 16: _ref (8B)
 
 1. 在 `Origo.Core/AssemblyAttributes.cs` 的 `[SndInlineTypes]` 数组中追加 `typeof(...)`
 2. 在 `TypedDataGenerator.cs` 的 `IsInlineCandidate` 和 `GenerateKindName` 中追加对应的 `SpecialType` 匹配
-3. 如果该类型有特殊的读/写逻辑（如 `float` 的 `BitConverter`），在 `ReadInlineBitsValueExpr` 和 `PackInlineBitsExpr` 中追加处理
+3. 如果该类型有特殊的读/写逻辑（如 `float` 的 `BitConverter`），在 `TypedDataGenerator.cs` 的 `InlineTypeExprs`（`Pack` / `Unpack` / `FromObject`）中追加处理——该 helper 是所有位模式表达式的单一来源，Home 访问器、转换与工厂生成共用
 4. 运行 `bash scripts/test.sh` 通过全量测试 + 覆盖率门禁
 5. 更新 Changelog 和本文档中的性能数据表
 

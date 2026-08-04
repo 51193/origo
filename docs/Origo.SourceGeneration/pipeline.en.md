@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
@@ -178,12 +178,13 @@ Compile-time validation (fail-fast):
 | `ORIGOSG002` | Home assembly registers an uninlinable value type (e.g., `decimal`) |
 | `ORIGOSG003` | Kind out of range (not in `[1, 254]`) |
 | `ORIGOSG004` | Kind range overlap, multiple types mapped to the same Kind |
+| `ORIGOSG005` | Generated identifier (KindName) collisions: same-named types from different namespaces, collapsing generic instantiations, or the same type registered more than once (same or different kinds) |
 
 These diagnostics are reported as Errors at compile time, causing build failure. Issues like Kind conflicts or out-of-range values **never reach runtime**.
 
 #### Why Validate Kind at Compile Time
 
-`TypedData.RegisterKind` writes directly into the `KindTypeMap[256]` array without checking for overwrites. Two types competing for the same Kind slot → silent corruption → save data corruption. Debugging this at runtime is nearly impossible — corruption may only surface after a save. Compile-time enforcement means Kind conflicts are caught at build time.
+At runtime `TypedData.RegisterKind` already detects conflicts — registering a different type to an occupied kind throws `InvalidOperationException` (idempotent re-registration of the same type is allowed). But relying on runtime detection alone would let the corruption risk reach runtime. Compile-time enforcement (range, numeric uniqueness, and generated-identifier uniqueness) means Kind conflicts are caught at build time.
 
 ---
 
@@ -584,7 +585,7 @@ If the framework needs to support a new type (e.g., C# `nint`, a future BCL ≤8
 
 1. Append `typeof(...)` to the `[SndInlineTypes]` array in `Origo.Core/AssemblyAttributes.cs`
 2. Add the corresponding `SpecialType` match in `TypedDataGenerator.cs`'s `IsInlineCandidate` and `GenerateKindName`
-3. If the type has special read/write logic (e.g., `float`'s `BitConverter`), add handling in `ReadInlineBitsValueExpr` and `PackInlineBitsExpr`
+3. If the type has special read/write logic (e.g., `float`'s `BitConverter`), add handling in the `InlineTypeExprs` helper in `TypedDataGenerator.cs` (`Pack` / `Unpack` / `FromObject`) — the single source for all bit-pattern expressions, shared by the home accessor, conversion, and factory generation
 4. Run `bash scripts/test.sh` to pass full test suite + coverage gate
 5. Update Changelog and performance data tables in this document
 

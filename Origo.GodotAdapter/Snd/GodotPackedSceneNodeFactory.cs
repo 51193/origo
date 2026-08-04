@@ -18,9 +18,8 @@ public sealed class GodotPackedSceneNodeFactory(Node parent) : INodeFactory
     {
         if (!_cache.TryGetValue(resourceId, out var scene))
         {
-            scene = ResourceLoader.Load<PackedScene>(resourceId);
-            if (scene is null)
-                throw new InvalidOperationException(
+            scene = ResourceLoader.Load<PackedScene>(resourceId)
+                ?? throw new InvalidOperationException(
                     $"PackedScene not found for logicalName='{logicalName}', resourceId='{resourceId}'.");
             // Cache only successful loads; a failed resource id stays out of
             // the cache so it can be retried after the resource becomes
