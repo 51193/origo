@@ -54,7 +54,7 @@ public class ActiveStrategyJsonBaseTests
             null!, NullSndContext.Instance, "not-json");
 
         var json = Assert.IsType<string>(result);
-        Assert.StartsWith("\"err:", json);
+        Assert.Equal("\"err:Invalid request\"", json);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class ActiveStrategyJsonBaseTests
             null!, NullSndContext.Instance, new object());
 
         var json = Assert.IsType<string>(result);
-        Assert.StartsWith("\"err:", json);
+        Assert.Equal("\"err:Invalid request\"", json);
     }
 
     [Fact]

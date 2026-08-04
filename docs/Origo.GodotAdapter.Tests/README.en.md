@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter.Tests
 
@@ -14,7 +14,7 @@ adapter-layer console command extensions, bootstrap orchestration, and log proxy
 
 Since GodotAdapter depends on the Godot engine runtime, **any Godot API call (including `new Node()` and `GD.Print`) SIGSEGVs the test process** in the engine-less unit-test host, so source files that call engine APIs directly are excluded by coverlet (configured in `.csproj` via `ExcludeByFile`). Every excluded file has a documented technical reason (see the csproj comment): `GodotSndEntity.cs` / `GodotSndManager.cs` / `OrigoAutoHost.cs` / `OrigoDefaultEntry*.cs` (Godot Node subclasses; node creation and scene-tree operations are unreachable), `FileSystem/` (every member body is a `FileAccess` / `DirAccess` static call), `GodotNodeHandle.cs` / `GodotPackedSceneNodeFactory.cs` (require live nodes/resources), `CameraViewCommandHandler.cs` (`ExecuteCore`'s first statement is `Engine.GetMainLoop()`).
 
-To shrink the exclusion surface, `GodotSndManager`'s entity-collection orchestration (add/remove, lookup, batch recovery rollback, frame processing, kill marking) is extracted into pure C# `SndEntityCollection<T>` (`Origo.GodotAdapter/Snd/SndEntityCollection.cs`), fully covered by `SndEntityCollectionTests` (98.7%); the 14 Godot-type accessors in the generated `TypedData.g.cs` are covered per-type by `GodotTypedDataGeneratedCoverageTests`. Line coverage within the gated scope is ≥ 94% (`ThresholdStat=total`).
+To shrink the exclusion surface, `GodotSndManager`'s entity-collection orchestration (add/remove, lookup, batch recovery rollback, frame processing, kill marking) is extracted into pure C# `SndEntityCollection<T>` (`Origo.GodotAdapter/Snd/SndEntityCollection.cs`), fully covered by `SndEntityCollectionTests` (98.8%); the 14 Godot-type accessors in the generated `TypedData.g.cs` are covered per-type by `GodotTypedDataGeneratedCoverageTests`. Line coverage within the gated scope is ≥ 94% (`ThresholdStat=total`).
 
 Behavior verification for engine-dependent files is performed by
 [Origo.GodotAdapter.Integration.Tests](../Origo.GodotAdapter.Integration.Tests/README.en.md)
