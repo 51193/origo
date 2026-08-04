@@ -23,10 +23,9 @@ jobs:
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
           PROPS_VERSION=$(grep -oP '<Version>\K[^<]+' Directory.Build.props | head -1)
-          TAG_BASE="${TAG_VERSION%%-*}"
-          PROPS_BASE="${PROPS_VERSION%%-*}"
-          if [[ "$TAG_BASE" != "$PROPS_BASE" ]]; then
-            echo "ERROR: Tag version 'v$TAG_VERSION' base ($TAG_BASE) does not match Directory.Build.props version base ($PROPS_BASE)."
+          if [[ "$TAG_VERSION" != "$PROPS_VERSION" ]]; then
+            echo "ERROR: Tag version 'v$TAG_VERSION' does not exactly match Directory.Build.props version '$PROPS_VERSION'."
+            echo "Update <Version> in Directory.Build.props (including the nightly suffix, if any) before tagging."
             exit 1
           fi
           echo "Tag version v$TAG_VERSION matches Directory.Build.props version $PROPS_VERSION."
