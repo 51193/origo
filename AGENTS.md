@@ -423,10 +423,17 @@ markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md
    suffix, etc.).
 2. Move `[Unreleased]` content into a `## [x.y.z] - YYYY-MM-DD` block.
 3. Clear `[Unreleased]`.
-4. Update `<Version>` in `Directory.Build.props`.
+4. Update `<Version>` in `Directory.Build.props` — the full version string
+   (including any `-nightly` suffix) must exactly match the tag name, or the
+   release workflow fails its tag/version consistency check.
 5. Commit and tag (tag name `vx.y.z`). Pushing the tag triggers the
-   `release` workflow: publishes NuGet packages and attaches a compressed
-   archive of `docs/` as a documentation snapshot.
+   `release` workflow: packs Origo.Core / Origo.GodotAdapter /
+   Origo.ConsoleBridge as NuGet packages and attaches them — together
+   with a compressed archive of `docs/` as a documentation snapshot —
+   to the GitHub Release. Packages are distributed as release artifacts
+   (not pushed to nuget.org); consumers install them via a local package
+   source pointing at the release downloads, as described in
+   `README.md`.
 
 ---
 
