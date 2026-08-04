@@ -47,6 +47,14 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         ThrowIfReleasedFromManager();
         Entity.BindSession(session);
     }
+
+    /// <summary>
+    ///     The session this entity belongs to. Unlike the other members, this
+    ///     does not lazily create the backing entity: it throws
+    ///     <see cref="InvalidOperationException" /> when the entity has no
+    ///     backing Core entity (released from its manager, or accessed before
+    ///     recovery), because a session cannot exist before the entity itself.
+    /// </summary>
     public ISessionRun OwningSession => _entity?.OwningSession ?? throw new InvalidOperationException("GodotSndEntity has no backing SndEntity.");
     private bool _releasedFromManager;
 
@@ -73,20 +81,28 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     string ISndEntity.Name => StableName;
 
+    /// <inheritdoc/>
     public void SetData<T>(string name, T value) => Entity.SetData(name, value);
 
+    /// <inheritdoc/>
     public T GetData<T>(string name) where T : notnull => Entity.GetData<T>(name);
 
+    /// <inheritdoc/>
     public (bool found, T? value) TryGetData<T>(string name) => Entity.TryGetData<T>(name);
 
+    /// <inheritdoc/>
     public bool TryGetData<T>(string name, out T? value) => Entity.TryGetData<T>(name, out value);
 
+    /// <inheritdoc/>
     public void MountObserverStrategy(string targetName, string observerIndex) => Entity.MountObserverStrategy(targetName, observerIndex);
 
+    /// <inheritdoc/>
     public void UnmountObserverStrategy(string targetName, string observerIndex) => Entity.UnmountObserverStrategy(targetName, observerIndex);
 
+    /// <inheritdoc/>
     public void MountObserverStrategy(ISndEntity target, string observerIndex) => Entity.MountObserverStrategy(target, observerIndex);
 
+    /// <inheritdoc/>
     public void UnmountObserverStrategy(ISndEntity target, string observerIndex) => Entity.UnmountObserverStrategy(target, observerIndex);
 
     void ISndEntityRawSubscription.SubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback,
@@ -94,26 +110,40 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     void ISndEntityRawSubscription.UnsubscribeDataRaw(string name, Action<ISndEntity, TypedData, TypedData> callback) => ((ISndEntityRawSubscription)Entity).UnsubscribeDataRaw(name, callback);
 
+    /// <inheritdoc/>
     public INodeHandle GetNode(string name) => Entity.GetNode(name);
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<string> GetNodeNames() => Entity.GetNodeNames();
 
+    /// <inheritdoc/>
     public void AddStrategy(string index) => Entity.AddStrategy(index);
 
+    /// <inheritdoc/>
     public void RemoveStrategy(string index) => Entity.RemoveStrategy(index);
 
+    /// <inheritdoc/>
     public void AddActiveStrategy(string index) => Entity.AddActiveStrategy(index);
 
+    /// <inheritdoc/>
     public void RemoveActiveStrategy(string index) => Entity.RemoveActiveStrategy(index);
 
+    /// <inheritdoc/>
     public object? InvokeStrategy(string strategyIndex, object? input = null) => Entity.InvokeStrategy(strategyIndex, input);
 
+    /// <inheritdoc/>
     public bool IsPendingKill => _entity?.IsPendingKill
         ?? throw new InvalidOperationException(
             "GodotSndEntity has been released from GodotSndManager and cannot be used.");
 
     internal void MarkPendingKill() => Entity.IsPendingKill = true;
 
+    /// <summary>
+    ///     Returns the underlying Godot node for the given logical name,
+    ///     cast to <typeparamref name="TNode" />, or <c>null</c> when the
+    ///     node handle is not a <see cref="GodotNodeHandle" /> or the cast
+    ///     fails.
+    /// </summary>
     public TNode? GetNodeFromSnd<TNode>(string name) where TNode : Node
     {
         var handle = GetNode(name);

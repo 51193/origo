@@ -55,6 +55,7 @@ public partial class GodotSndManager
         _collection.OwningSession = session;
     }
 
+    /// <inheritdoc/>
     public void BindContext(ISndContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -65,8 +66,10 @@ public partial class GodotSndManager
         _observerTopology!.BindContext(context);
     }
 
+    /// <inheritdoc/>
     public IReadOnlyList<SndMetaData> BuildMetaList() => _collection.BuildMetaList();
 
+    /// <inheritdoc/>
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
@@ -80,8 +83,10 @@ public partial class GodotSndManager
         });
     }
 
+    /// <inheritdoc/>
     public void RemoveAllEntities() => _collection.RemoveAllEntities();
 
+    /// <inheritdoc/>
     public ISndEntity CreateEntity(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
@@ -97,20 +102,33 @@ public partial class GodotSndManager
         }
     }
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<ISndEntity> GetEntities() => _collection.GetEntities();
 
+    /// <inheritdoc/>
     public ISndEntity? FindByName(string name) => _collection.FindByName(name);
 
+    /// <inheritdoc/>
     public void ProcessAll(double delta)
     {
         ProcessTickCount++;
         _collection.ProcessAll(delta);
     }
 
+    /// <inheritdoc/>
     public void RemoveEntity(string name) => _collection.RemoveEntity(name);
 
+    /// <inheritdoc/>
     public void RequestKillEntity(string name) => _collection.RequestKillEntity(name);
 
+    /// <summary>
+    ///     Binds the Core <see cref="SndWorld" /> and logger, and creates the
+    ///     per-scene-host observer topology. Must be called before
+    ///     <see cref="BindContext" />; calling it twice throws.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when runtime dependencies are already bound.
+    /// </exception>
     [MemberNotNull(nameof(SharedWorld), nameof(SharedLogger))]
     public void BindRuntimeDependencies(SndWorld world, ILogger logger)
     {

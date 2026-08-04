@@ -14,6 +14,16 @@ public sealed class GodotPackedSceneNodeFactory(Node parent) : INodeFactory
     private readonly Node _parent = parent;
     private readonly Dictionary<string, PackedScene> _cache = [];
 
+    /// <summary>
+    ///     Instantiates the scene identified by <paramref name="resourceId" />
+    ///     as a child node named <paramref name="logicalName" />. Successful
+    ///     loads are cached by resource id; failed loads are not cached, so a
+    ///     missing resource can be retried after it becomes available.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the <paramref name="resourceId" /> does not resolve to a
+    ///     <see cref="PackedScene" /> resource.
+    /// </exception>
     public INodeHandle Create(string logicalName, string resourceId)
     {
         if (!_cache.TryGetValue(resourceId, out var scene))

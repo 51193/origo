@@ -54,8 +54,16 @@ public sealed class ConsoleBridgeServer : IDisposable
         _logger = logger ?? NullLogger.Instance;
     }
 
+    /// <summary>
+    ///     The port the server is actually listening on (may differ from the
+    ///     configured port when the configured one is 0/auto-assigned).
+    /// </summary>
     public int ActualPort { get; private set; }
 
+    /// <summary>
+    ///     Stops the listener, cancels the accept loop, and releases the
+    ///     output subscription. Idempotent.
+    /// </summary>
     public void Dispose()
     {
         if (_cts.IsCancellationRequested)
@@ -98,6 +106,14 @@ public sealed class ConsoleBridgeServer : IDisposable
         _cts.Dispose();
     }
 
+    /// <summary>
+    ///     Starts listening for a single console connection. Idempotent; a
+    ///     failed start rolls back its acquired resources so the same
+    ///     instance can be retried.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">
+    ///     Thrown when called after <see cref="Dispose" />.
+    /// </exception>
     public void Start()
     {
         ObjectDisposedException.ThrowIf(_cts.IsCancellationRequested, this);
