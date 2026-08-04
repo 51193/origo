@@ -474,4 +474,64 @@ public class TypedDataGeneratorTests
         Assert.All(output.GeneratorDiagnostics,
             d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
     }
+
+    // ─── Attribute parsing boundaries ────────────────────────────────
+
+    [Fact]
+    public void Attribute_NoTypes_ProducesNoOutput()
+    {
+        var output = RunHome("[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128)]");
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+        Assert.Equal("", output.AllGeneratedText);
+    }
+
+    [Fact]
+    public void Attribute_DefaultStartKind_StartsAtOne()
+    {
+        var output = RunHome(
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int), typeof(string))]");
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+        Assert.Contains("Int32 = 1;", output.AllGeneratedText);
+        Assert.Contains("String = 2;", output.AllGeneratedText);
+        Assert.Contains("TypedData.RegisterKind(1, typeof(int));", output.AllGeneratedText);
+        Assert.Contains("TypedData.RegisterKind(2, typeof(string));", output.AllGeneratedText);
+    }
+
+    [Fact]
+    public void Attribute_NullArrayElement_SkippedWithoutCrash()
+    {
+        var output = RunHome(
+            "[assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(int), null, typeof(string))]");
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+        Assert.Contains("Int32 = 1;", output.AllGeneratedText);
+        Assert.Contains("String = 2;", output.AllGeneratedText);
+    }
+
+    [Fact]
+    public void Adapter_ReferenceOnlyTypes_HaveNoInlineHelpers()
+    {
+        var adapterSource = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(StubRefA), typeof(StubRefB))]
+            public sealed class StubRefA { public int Value; }
+            public sealed class StubRefB { public int Value; }
+            """;
+        var output = RunAdapter(adapterSource);
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+
+        var text = output.AllGeneratedText;
+        Assert.DoesNotContain("ReadBitsAs", text);
+        Assert.DoesNotContain("BitsFrom", text);
+        Assert.DoesNotContain("_inlineBits", text);
+        Assert.Contains("public static StubRefA? AsStubRefA(this TypedData td)", text);
+        Assert.Contains("TypedData.RegisterKind(128, typeof(StubRefA));", text);
+        Assert.Contains("TypedData.RegisterKind(129, typeof(StubRefB));", text);
+    }
 }
