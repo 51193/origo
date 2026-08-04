@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.ConsoleBridge
 
@@ -42,6 +42,15 @@ nc localhost 9876
 > spawn my_entity template_basic
 > snd_count
 ```
+
+## 安全边界
+
+> ⚠️ **无认证、无加密**。`ConsoleBridgeServer` 是明文 TCP 协议：不校验客户端身份、不加密命令与输出内容，且单连接模式意味着先到先得（占用连接的客户端可执行任意控制台命令）。
+
+- **适用场景**：本机（`localhost`）或受信任局域网内的开发调试、Agent 驱动开发与自动化测试。
+- **禁止**：将端口直接暴露到公网或不可信网络。
+- **如需远程安全访问**：通过 SSH 隧道（`ssh -L 9876:localhost:9876 ...`）、VPN 或反向代理等既有安全通道接入，由外层通道提供认证与加密。
+- 若产品化需要认证/加密，应作为独立的安全层实现，不改变本模块的调试定位。
 
 ## 设计决策
 

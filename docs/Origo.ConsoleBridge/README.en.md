@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.ConsoleBridge
 
@@ -42,6 +42,23 @@ nc localhost 9876
 > spawn my_entity template_basic
 > snd_count
 ```
+
+## Security Boundary
+
+> ⚠️ **No authentication, no encryption.** `ConsoleBridgeServer` is a plaintext
+> TCP protocol: it does not verify client identity, does not encrypt commands
+> or output, and single-connection mode is first-come-first-served (a client
+> that holds the connection can execute any console command).
+
+- **Intended use**: local (`localhost`) or trusted-LAN development/debugging,
+  agent-driven development, and automated testing.
+- **Forbidden**: exposing the port directly to the public internet or an
+  untrusted network.
+- **For remote access**: tunnel through existing secure channels such as SSH
+  (`ssh -L 9876:localhost:9876 ...`), a VPN, or a reverse proxy; let the outer
+  channel provide authentication and encryption.
+- If a product needs authentication/encryption, it should be implemented as a
+  separate security layer; this module keeps its debugging-oriented scope.
 
 ## Design Decisions
 
