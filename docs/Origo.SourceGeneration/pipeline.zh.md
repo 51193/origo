@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 编译期优化全链路解析
 
@@ -178,7 +178,7 @@ Kind 分配规则：
 | `ORIGOSG002` | 宿主程序集注册了无法内联的值类型（如 `decimal`） |
 | `ORIGOSG003` | Kind 越界（不在 `[1, 254]` 内） |
 | `ORIGOSG004` | Kind 区间重叠，多类型映射到同一 Kind |
-| `ORIGOSG005` | 生成标识符（KindName）冲突：不同命名空间同名类型、名称折叠的泛型实例、或同一类型重复注册（相同或不同 Kind） |
+| `ORIGOSG005` | 生成标识符（KindName）冲突：不同命名空间同名类型、名称折叠的泛型实例、或同一类型以不同 Kind 值重复注册（相同 Kind 的重复注册属幂等，被静默去重） |
 
 这些诊断在编译期报告为 Error，使构建失败。Kind 冲突或越界之类的问题**不会进入运行时**。
 

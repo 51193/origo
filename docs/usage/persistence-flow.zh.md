@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化流程
 
@@ -203,7 +203,7 @@ play_time: 2h30m
 player_name: Alice
 ```
 
-通过 `ISaveMetaContributor` 贡献者接口自定义元数据，然后通过 `ctx.RegisterSaveMetaContributor(...)` 注册：
+通过 `ISaveMetaContributor` 贡献者接口自定义元数据，然后通过 `ctx.Save.RegisterSaveMetaContributor(...)` 注册：
 
 ```csharp
 // 贡献者实现
@@ -220,9 +220,9 @@ class MySaveMetaContributor : ISaveMetaContributor
 }
 
 // 注册（在 OrigoDefaultEntry.ConfigureSaveMetadataContributors 或策略中）
-ctx.RegisterSaveMetaContributor(new MySaveMetaContributor());
+ctx.Save.RegisterSaveMetaContributor(new MySaveMetaContributor());
 // 也可使用委托重载：
-ctx.RegisterSaveMetaContributor((context) => new Dictionary<string, string>
+ctx.Save.RegisterSaveMetaContributor((context) => new Dictionary<string, string>
 {
     ["custom"] = "value"
 });
@@ -241,9 +241,9 @@ public interface ISavePathPolicy
     string GetProgressStateMachinesFile(string baseDir);
     string GetCustomMetaFile(string baseDir);
     string GetLevelDirectory(string baseDir, string levelId);
-    string GetLevelSndSceneFile(string baseDir, string levelId);
-    string GetLevelSessionFile(string baseDir, string levelId);
-    string GetLevelSessionStateMachinesFile(string baseDir, string levelId);
+    string GetLevelSndSceneFile(string levelDirectory);
+    string GetLevelSessionFile(string levelDirectory);
+    string GetLevelSessionStateMachinesFile(string levelDirectory);
     string GetWriteInProgressMarker(string baseDir);
     string GetPayloadShaFile(string baseDir);
     string GetExtraDirectory(string baseDir);

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity
 
@@ -49,7 +49,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 | 方法 | 阶段 | 说明 |
 |------|------|------|
-| `RecoverForLifecycle(meta)` | Phase 1: 恢复 | 恢复 Name + Data + Node + EntityStrategy + ActiveStrategy，不触发任何钩子 |
+| `RecoverForLifecycle(meta)` | Phase 1: 恢复 | 恢复 Name + Data + Node + EntityStrategy + ActiveStrategy，不触发任何钩子。失败时跨阶段原子回滚：已获取的策略引用归还池、已创建的节点释放后异常再传播 |
 | `FireAfterSpawnHooks()` | Phase 2: 钩子 | 按优先级触发策略 AfterSpawn |
 | `FireAfterLoadHooks()` | Phase 2: 钩子 | 按优先级触发策略 AfterLoad |
 | `FireBeforeSaveHooks()` | Phase 2: 钩子 | 按优先级触发策略 BeforeSave |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Frame-Driven Game Simulation Integration Tests
 
@@ -17,8 +17,8 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 
 | File | Verification Focus |
 |------|-------------------|
-| `GameplayIntegrationTests.cs` | Multi-frame data processing, inter-entity interaction (FindByName / SessionBlackboard), business deferred action execution, save persistence, entity destruction, console commands, observers; new error path: duplicate kill on already-dead entity |
-| `GameplaySessionSwitchAndConcurrencyTests.cs` | Session switch blackboard isolation, same-frame concurrent spawn/kill, respawn after kill, parallel processing of multiple background sessions; new error path: kill already-harvested entity |
+| `GameplayIntegrationTests.cs` | Multi-frame data processing, inter-entity interaction (FindByName / SessionBlackboard), business deferred action execution, save persistence, entity destruction, console commands, observers; error path coverage: duplicate kill on already-dead entity |
+| `GameplaySessionSwitchAndConcurrencyTests.cs` | Session switch blackboard isolation, same-frame concurrent spawn/kill, respawn after kill, parallel processing of multiple background sessions; error path coverage: kill already-harvested entity |
 | `AdvancedGameplayIntegrationTests.cs` | Batch spawn/kill of many entities (100 entities), console command routing (snd_count / bb_set/bb_get system layer), entity data direct API round-trip, multi-strategy entity combinations (Lifecycle+Observer, Lifecycle+Active, all three types mounted), multi-entity save/load state preservation; error paths: request kill unknown entity, spawn unregistered strategy index |
 | `ActiveStrategyIntegrationTests.cs` | ActiveStrategy integration in full frame loop: direct InvokeStrategy calls, self-invocation triggered by Process, cross-entity InvokeStrategy, ActiveStrategy index save/load persistence, AfterLoad Invoke verification, Lifecycle+Active hybrid entity frame loop, dynamic AddActiveStrategy/RemoveActiveStrategy lifecycle; error paths: InvokeStrategy on killed entity, duplicate AddActiveStrategy |
 | `StateMachineIntegrationTests.cs` | State machine integration in frame loop: Push/Pop frame-driven, OnPushRuntime/OnPopRuntime hook triggers, OnPopBeforeQuit triggers on session destroy, state machine stack save/load AfterLoad recovery, multiple independent state machine stacks, Lifecycle strategy cross-frame Push/Pop states; error path: operate state machine after session destroy |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Model
 
@@ -86,19 +86,19 @@ bg.Spawn(new SndMetaData { Name = "entity" });
 bg.SessionBlackboard.SetValue("data", value);
 
 // Direct switch; SwitchForeground automatically saves and destroys bg
-ctx.RequestSwitchForegroundLevel("game");
-ctx.FlushDeferredActionsForCurrentFrame();
+ctx.Save.RequestSwitchForegroundLevel("game");
+ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
 // Method 2: Manual control — caller explicitly saves and destroys step by step for finer control
 var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
 
 ctx.Save.RequestSaveGameAuto();
-ctx.FlushDeferredActionsForCurrentFrame();
+ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
 sessionManager.DestroySession("gen");
-ctx.RequestSwitchForegroundLevel("game");
-ctx.FlushDeferredActionsForCurrentFrame();
+ctx.Save.RequestSwitchForegroundLevel("game");
+ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 ```
 
 ## Session Topology
@@ -147,7 +147,7 @@ Create background session:
 
 Create foreground session:
   SessionManager holds the adapter-injected scene host at construction time
-  SessionManager.CreateForegroundSession(levelId)    // no longer takes a host parameter
+  SessionManager.CreateForegroundSession(levelId)    // foreground host injected at SessionManager construction
     → Use the stored adapter scene host to create SessionRun
     → Mount into _sessions dictionary under `__foreground__`
     → The adapter scene host is only used by the foreground session; background sessions always use FullMemorySndSceneHost

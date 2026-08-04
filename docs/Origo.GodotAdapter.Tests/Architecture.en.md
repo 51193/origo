@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Guardrail Tests (Adapter Layer)
 
@@ -31,6 +31,8 @@ and guards the public visibility of the adapter-layer `CommandHandlerBase`, allo
 | `SndContext_AllRoleInterfaces_AreAccessibleThroughISndContext` | ISndContext can be cast to each role interface (Blackboard / Deferred / Save / Lifecycle / Console / FileAccess / ArchiveFileAccess) and used | Abstractions: ISndContext |
 | `SndContext_ViaSessionManager_CanCreateAndDestroyBackgroundSessions` | Create background session via ISessionManager, read/write session blackboard, Contains check, DestroySession | session-model |
 | `CommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | `Origo.GodotAdapter.Console.CommandHandlerBase` is public (or nested public), external projects can derive from it | Origo.GodotAdapter/Console |
+| `GodotSndEntity_LifecycleMethods_ShouldBeInternal` | `GodotSndEntity` implements `IEntityLifecycle` via explicit interface implementation, invisible to reflection; lifecycle is driven only by Core orchestration | Origo.GodotAdapter/Snd |
+| `GodotSndEntity_GetNodeFromSnd_ShouldRemainPublic` | `SndEntityNodeExtensions.GetNodeFromSnd<T>()` stays public so external projects can reach Godot nodes | Origo.GodotAdapter/Snd |
 
 ## Test Support Strategy
 

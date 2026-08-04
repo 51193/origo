@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Storage
 
@@ -93,6 +93,8 @@
 - 任何关卡数据变更 → hash 不同 → 重写
 - CustomMeta 键值变更 → hash 不同 → 重写
 - 仅 SaveId 不同（写入不同槽）→ 总是写入（新槽位无 .sha 可比较）
+
+`current/.payload.sha` 的写入有三种刻意语义，互不冲突：快照写入路径（`WriteSavePayloadToCurrentThenSnapshot`）写 **combined hash**（payload + `extra/`），供下一次幂等去重比对；测试路径（`SaveStorageFacade.WriteSavePayloadToCurrent`）写 **payload-only hash**（测试无 `extra/` 侧通道，combined 会失真）；加载恢复路径（`DefaultSaveStorageService.WriteSavePayloadToCurrent`）**不写 sha**——恢复写入无幂等契约，快照阶段才承担去重。`.payload.sha` 的唯一消费方是快照目录中 `TryIdempotentSkip` 的比对，`current/` 自身的 sha 仅随快照复制被间接消费。
 
 ### 为什么 DataSourceNode 计算 Canonical Hash 而非序列化后 Hash
 

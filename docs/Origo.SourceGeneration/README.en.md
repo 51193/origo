@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration
 
@@ -90,7 +90,7 @@ Diagnostic messages carry the corresponding `SndInlineTypesAttribute` syntax loc
 | `ORIGOSG002` | Error | An uninlinable and unsupported value type (such as `decimal` or a custom struct) is registered in the home assembly. The home assembly only permits registering supported system primitive types and reference types. |
 | `ORIGOSG003` | Error | A registered type's Kind value (`startKind` + position within group) falls outside the `byte` valid range `[1, 254]`. This includes cases where a Kind overflow wraps around to an already-occupied value, silently conflicting with another type. |
 | `ORIGOSG004` | Error | Multiple `SndInlineTypes` groups have overlapping `startKind` ranges, causing the same Kind byte to be assigned to multiple different types. Each inlined type must map to a unique Kind. |
-| `ORIGOSG005` | Error | Multiple registered types produce the same generated identifier (KindName): same-named types from different namespaces, generic instantiations whose names collapse to one identifier, and the same type registered more than once (same or different kinds). Generated accessor identifiers derive from the type name; any identifier collision would emit uncompilable duplicate members. |
+| `ORIGOSG005` | Error | Multiple registered types produce the same generated identifier (KindName): same-named types from different namespaces, generic instantiations whose names collapse to one identifier, and the same type registered more than once with different kind values (re-registering the same type with the same kind is idempotent and silently deduplicated, matching the runtime `RegisterKind` semantics). Generated accessor identifiers derive from the type name; any identifier collision would emit uncompilable duplicate members. |
 
 ## Registration Mechanism
 
@@ -151,7 +151,7 @@ The storage model has only two paths: inlining (home system primitives) and `_re
 
 ### Why Kind space range and uniqueness are validated at compile time
 
-Kind is a `byte`; at runtime `TypedData.RegisterKind` throws `InvalidOperationException` when a kind is registered to a different type than an existing mapping (idempotent re-registration of the same type is allowed), so types can never silently overwrite each other. Kinds are computed as `startKind` plus intra-group position; if `startKind` is too large or there are too many types, the Kind value overflows past 255 and wraps around to an already-occupied small value, conflicting with existing types. The generator therefore enforces three invariants at compile time: Kind must fall within `[1, 254]` (`ORIGOSG003`, evaluated on the true value, not relying on `byte` truncation), each Kind must be uniquely mapped (`ORIGOSG004`, detecting overlapping `startKind` ranges), and every generated identifier must be unique (`ORIGOSG005`, detecting same-named types across namespaces, collapsing generic instantiations, and duplicate registrations of the same type). Violating types are excluded and build errors are reported, so Kind conflicts are exposed at build time rather than corrupting saves at runtime.
+Kind is a `byte`; at runtime `TypedData.RegisterKind` throws `InvalidOperationException` when a kind is registered to a different type than an existing mapping (idempotent re-registration of the same type is allowed), so types can never silently overwrite each other. Kinds are computed as `startKind` plus intra-group position; if `startKind` is too large or there are too many types, the Kind value overflows past 255 and wraps around to an already-occupied small value, conflicting with existing types. The generator therefore enforces three invariants at compile time: Kind must fall within `[1, 254]` (`ORIGOSG003`, evaluated on the true value, not relying on `byte` truncation), each Kind must be uniquely mapped (`ORIGOSG004`, detecting overlapping `startKind` ranges), and every generated identifier must be unique (`ORIGOSG005`, detecting same-named types across namespaces, collapsing generic instantiations, and duplicate registrations of the same type with different kinds). Violating types are excluded and build errors are reported, so Kind conflicts are exposed at build time rather than corrupting saves at runtime.
 
 ---
 

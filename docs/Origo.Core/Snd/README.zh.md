@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -99,8 +99,8 @@ SND 的观察统一由观察者策略（`ObserverStrategyBase`）承载，自观
 1. **转换器注册**：若 `SndContextParameters.ConfigureConverters` 非空，调用之注册自定义 `DataSourceConverter`
 2. **策略发现**：若 `SndContextParameters.AutoDiscoverStrategies` 为 true，通过 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 扫描程序集中的 `[StrategyIndex]` 注解类型，使用 `DiscoverySkipPrefixes` 过滤适配层程序集
 3. **场景别名加载**：若 `SceneAliasMapPath` 非空，调用 `SndWorld.LoadSceneAliases()`
-3. **SND 模板加载**：若 `SndTemplateMapPath` 非空，调用 `SndWorld.LoadTemplates()`
-4. **入口存档加载**：调用 `RequestLoadMainMenuEntrySave()`
+4. **SND 模板加载**：若 `SndTemplateMapPath` 非空，调用 `SndWorld.LoadTemplates()`
+5. **入口存档加载**：调用 `RequestLoadMainMenuEntrySave()`
 
 适配层仅通过 `SndContextParameters` 传入配置，不需要知道上述步骤的执行顺序和内部实现。
 

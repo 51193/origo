@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.ConsoleBridge
 
@@ -75,7 +75,7 @@ Origo's game frame loop is single-threaded. Multiple connections mean multiple c
 `AcceptTcpClientAsync` and `ReadLineAsync` wait at the OS level via IOCP without occupying dedicated thread stacks. 
 
 - Zero CPU overhead when idle (no 100ms wake-up to check state)
-- `Dispose()` shutdown latency reduced from worst-case 6 seconds (two `Thread.Join(3000)`) to sub-second (`CancellationToken` immediately interrupts async I/O)
+- `Dispose()` shutdown latency reduced from worst-case 6 seconds (two `Thread.Join(3000)`); `Dispose` joins the accept loop with a worst-case timeout of 3 seconds (`_disposeJoinTimeoutMs`), logging a warning on timeout
 - No `ReceiveTimeout` read timeout fallback is needed — cancellation tokens directly interrupt `ReadLineAsync`
 
 The output path keeps synchronous `StreamWriter.WriteLine` to avoid changing the `Action<string>` callback to `Func<string, Task>` (which would cascade into polluting the `IConsoleOutputChannel` interface).

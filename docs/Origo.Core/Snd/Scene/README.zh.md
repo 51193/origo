@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene
 
@@ -56,7 +56,7 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 
 ### StubSndSceneHost
 
-轻量实现，直接使用内嵌的 `StubSndEntity` 类。这个实体不支持节点访问、策略和订阅，仅支持基础键值数据存取。用于单元测试和 `LevelBuilder` 离线构建。
+轻量实现，直接使用内嵌的 `StubSndEntity` 类。这个实体不支持节点访问和策略执行（节点访问抛异常，策略/观察者操作静默 no-op），仅支持基础键值数据存取。用于单元测试和 `LevelBuilder` 离线构建。
 
 > `StubSndSceneHost` 的命名表达其"存根"语义——无策略/无节点的轻量占位实现，非完整内存宿主。
 

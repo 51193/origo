@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -52,7 +52,7 @@ BaseStrategy
 - **Mount(observer, target, observerIndex)**：获取策略实例 → 按 `[ObserveData]` 属性为每个 key 在 target 上建立 `SubscribeDataRaw` 接线 → 记录绑定 → 触发 `OnMounted`。挂载是原子的：若接线或 `OnMounted` 抛异常，已建立的订阅全部取消、半加入的绑定被移除、策略引用归还池后异常再传播
 - **Unmount(observer, target, observerIndex)**：拆线 `UnsubscribeDataRaw` → 触发 `OnUnmounted` → 释放池引用 → 移除绑定记录
 - **ReleaseStrategiesFor(observer)**：释放某 observer 持有的全部策略引用并清空其出边（不触发 `OnUnmounted`、不退订），对应实体整体销毁流程的 `ReleaseStrategiesOnly` 阶段
-- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`
+- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`。目标实体缺失（存档拓扑不一致）时抛 `InvalidOperationException`（fail-fast），不静默跳过
 - **BuildBindingsFor(observerName)**：序列化某 observer 的全部出边为 `List<ObserverBinding>`（按 target 分组）写入 `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**：清理某 observer 的全部出边；目标可解析则完整 `Unmount`，否则归还策略并移除记录
 - **TeardownAllBindingsFor(observer)**：对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略）的自包含清理路径，不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用。由 `SessionRun.ReleaseAllEntitiesAndClear` 在会话退出时经 `IEntityLifecycle.TeardownObserverBindings` 调用

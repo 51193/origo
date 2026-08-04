@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console Commands
 
@@ -48,7 +48,7 @@ Currently only the `system` layer is supported.
 [system] debug_mode = true
 ```
 
-Type inference rules: integer → Int32, floating point → Single, true/false → Boolean, everything else → String.
+Type inference rules: integer → Int32, integer beyond Int32 range → Int64, floating point → Single, true/false → Boolean, everything else → String.
 
 ### spawn
 
@@ -103,7 +103,7 @@ Reads entity data of any type via `TryGetData<object>`, displaying the value and
 [player] health = 50
 ```
 
-Type inference rules are the same as `bb_set` (int/float/bool/string). If the key already exists, **the existing key's type is preserved** when writing (e.g., if `hunger` key already has type `float`, `entity_set_data player hunger 15` writes as `Single(15)` rather than `Int32(15)`).
+Type inference rules are the same as `bb_set` (int/long/float/bool/string). If the key already exists, **the existing key's type is preserved** when writing (e.g., if `hunger` key already has type `float`, `entity_set_data player hunger 15` writes as `Single(15)` rather than `Int32(15)`).
 
 ### invoke_strategy
 

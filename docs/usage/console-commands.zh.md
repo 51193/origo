@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台命令
 
@@ -48,7 +48,7 @@ Origo 内置的控制台命令系统。支持通过 Godot 控制台或 TCP 桥�
 [system] debug_mode = true
 ```
 
-类型推断规则：整数 → Int32、浮点数 → Single、true/false → Boolean、其余 → String。
+类型推断规则：整数 → Int32、超 Int32 范围的整数 → Int64、浮点数 → Single、true/false → Boolean、其余 → String。
 
 ### spawn
 
@@ -103,7 +103,7 @@ health = 100 (type: Int32)
 [player] health = 50
 ```
 
-类型推断规则同 `bb_set`（int/float/bool/string）。若键已存在，则**保留已有键的类型**再写入（如已有 `float` 类型的 `hunger` 键，执行 `entity_set_data player hunger 15` 会写为 `Single(15)` 而非 `Int32(15)`）。
+类型推断规则同 `bb_set`（int/long/float/bool/string）。若键已存在，则**保留已有键的类型**再写入（如已有 `float` 类型的 `hunger` 键，执行 `entity_set_data player hunger 15` 会写为 `Single(15)` 而非 `Int32(15)`）。
 
 ### invoke_strategy
 

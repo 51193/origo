@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.ConsoleBridge
 
@@ -67,7 +67,7 @@ Origo 的游戏帧循环是单线程的。多连接意味着多条命令流并�
 `AcceptTcpClientAsync` 和 `ReadLineAsync` 在操作系统层面通过 IOCP 等待，不占用专用线程栈：
 
 - 空闲时零 CPU 开销（无需每 100ms 唤醒检查状态）
-- `Dispose()` 关闭延迟从最坏 6 秒（两个 `Thread.Join(3000)`）降至亚秒级（`CancellationToken` 立即中断异步 I/O）
+- `Dispose()` 关闭延迟从最坏 6 秒（两个 `Thread.Join(3000)`）大幅降低（`CancellationToken` 立即中断异步 I/O）；`Dispose` 会等待 accept 循环加入，最坏超时上限为 3 秒（`_disposeJoinTimeoutMs`），超时仅记录警告日志
 - 无需 `ReceiveTimeout` 读超时兜底——取消令牌直接中断 `ReadLineAsync`
 
 输出路径保持同步 `StreamWriter.WriteLine`，避免将 `Action<string>` 回调改为 `Func<string, Task>`（会级联污染 `IConsoleOutputChannel` 接口）。

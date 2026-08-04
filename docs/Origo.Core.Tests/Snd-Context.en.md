@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -100,7 +100,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 
 ## NullSndContext (Test Infrastructure)
 
-`NullSndContext` has been migrated from production code (`Origo.Core/Snd/`) to the test project (`Origo.Core.Tests/TestSupport/`) for use as a test utility class. The self-referencing test file `NullSndContextExtendedTests.cs` has been removed as part of the migration.
+`NullSndContext` lives in the test project (`Origo.Core.Tests/TestSupport/`) and is used as a test utility class.
 
 ## LevelBuilderExtendedTests Details
 

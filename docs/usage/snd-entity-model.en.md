@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Model
 
@@ -201,7 +201,7 @@ public readonly partial struct TypedData : IEquatable<TypedData>
 ### Safe Reading
 
 ```csharp
-// The interface only provides TryGetData<T>; check found before using the value
+// Safe reads use TryGetData<T>; check found before using the value (strong assertion via GetData<T>)
 var (found, hp) = entity.TryGetData<int>("hp");
 if (found) { /* use hp */ }
 

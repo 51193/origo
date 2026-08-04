@@ -41,7 +41,7 @@ A thin facade that delegates all `IFileSystem` methods to the appropriate static
 
 ### Why file operations are split into File/Directory
 
-A single `GodotFileSystem` class containing all implementation details would be too long (expected 200+ lines). Splitting into two static classes by file vs. directory operations reduces navigation cost. Path handling logic resides in `Origo.Core.Utility.PathUtility` (already extracted from the GodotAdapter layer); `GodotFileSystem` and `GodotDirectoryOperations` call it directly without an intermediate wrapper layer.
+A single `GodotFileSystem` class containing all implementation details would be too long (expected 200+ lines). Splitting into two static classes by file vs. directory operations reduces navigation cost. Path handling logic resides in `Origo.Core.Utility.PathUtility`; `GodotFileSystem` and `GodotDirectoryOperations` call it directly without an intermediate wrapper layer.
 
 ### Why Rename is not implemented with FileAccess
 

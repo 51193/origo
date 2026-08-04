@@ -39,6 +39,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `TypedData.AsString` is now `internal`** — the generated accessor was the only
+  unguarded (no kind check) public read path on `TypedData`, inconsistent with the documented
+  design where all `AsXxx` accessors are `internal`. No in-repo caller used it; business reads go
+  through `TryGetString(out string)` or `ISndEntity.TryGetData<string>`. External consumers must
+  migrate.
 - **`GodotSndManager.SharedWorld` / `SharedLogger` / `Context` are now `internal`** — observability properties with no production consumers are no longer public (test projects reach them via `InternalsVisibleTo`), closing a side door to framework internals.
 - **BREAKING: `TypedDataLayeredExtensions` is now `internal`** — the adapter-generated `AsXxx`/`TryGetXxx` extension methods on `TypedData` are no longer public, matching the home assembly's internal `AsXxx` accessors. They are unguarded (no kind check) and were the only public read path that could misread a wrong kind. Business reads go through `ISndEntity.TryGetData<T>` or the generated typed `TryGetXxx` accessors; external consumers must migrate.
 - **Benchmark regression gates run only on the baseline machine** — `scripts/benchmark.sh`
@@ -71,6 +76,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING:** `ConsoleCommandRouter.Register` throws `InvalidOperationException` on duplicate command names instead of silently overwriting.
 - **BREAKING:** All console messages are now in English (built-in commands, error messages, `tree_debug`, `camera_view` output).
 - **`ActiveStrategyJsonBase<TInput>` invalid-input error message is now English** — the error result for invalid/non-JSON input is `"err:Invalid request"` instead of the previous Chinese string.
+- **Console type inference supports `long`** — `entity_set_data` / `bb_set` values beyond `Int32` range are now stored as `Int64` (matching archetype loading) instead of degrading to `Single` with precision loss.
 - **BREAKING:** `GodotLogger` requires a non-null handler at construction.
 - **BREAKING:** `GodotNodeHandle.SetVisible` throws `ObjectDisposedException` on freed nodes instead of silently returning.
 - **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value.
@@ -99,6 +105,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Dangling observer bindings now fail the load** — `ObserverTopology.RecoverBindingsFor` and
+  `SessionRun.LoadFromPayload` throw `InvalidOperationException` when an archived observer binding
+  references an entity that does not exist in the recovered scene, instead of silently skipping the
+  binding (inconsistent save data surfaces as an explicit load failure).
+- **Entity recovery failure now releases all previously acquired strategies** — `SndEntity.RecoverForLifecycle`
+  rolls back across all phases (passive strategies, active strategies, nodes) when a later phase fails, so
+  no strategy pool reference or node handle leaks regardless of which scene host performed the recovery.
 - **`TypedDataConverter` rejects null data for registered value types** — a save entry like `{"type":"Int32","data":null}` now throws `InvalidOperationException` instead of silently coercing the value to `0` (data loss); reference types still load null values through the `_ref` slot.
 - **`TryGetData<string>` finds null-string entries** — `TypedDataFactory<T>.TryExtract` for a reference-kind `TypedData` now reports found=true with a null value when the stored `_ref` is null, consistent with the generated `TryGetString` accessor.
 - **`TypedData.RegisterKind` validates its inputs** — a null type now throws `ArgumentNullException`, and the reserved kind 255 (`UnregisteredKind` sentinel) is rejected with `ArgumentOutOfRangeException`.

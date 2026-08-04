@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体模型
 
@@ -195,7 +195,7 @@ public readonly partial struct TypedData : IEquatable<TypedData>
 ### 安全读取
 
 ```csharp
-// 接口仅提供 TryGetData<T>，先判断 found 再取值
+// 安全读取用 TryGetData<T>，先判断 found 再取值（强断言用 GetData<T>）
 var (found, hp) = entity.TryGetData<int>("hp");
 if (found) { /* 使用 hp */ }
 

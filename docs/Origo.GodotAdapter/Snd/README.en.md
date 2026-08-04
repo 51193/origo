@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -88,7 +88,7 @@ If the node is directly released during iteration over `_entities`, Godot's node
 
 ### Adapter layer entity bridging: Why GodotSndEntity must hand-write forwarding
 
-The code in `GodotSndEntity` (~206 lines) can be broken down into three categories:
+The code in `GodotSndEntity` (236 lines) can be broken down into three categories:
 
 | Category | Lines | Share | Notes |
 |------|------|------|------|

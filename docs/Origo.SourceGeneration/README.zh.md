@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration
 
@@ -90,7 +90,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 | `ORIGOSG002` | Error | 宿主程序集中注册了无法内联且不受支持的值类型（如 `decimal` 或自定义结构体）。宿主程序集仅允许注册受支持的系统基础类型与引用类型。 |
 | `ORIGOSG003` | Error | 注册类型的 Kind 值（`startKind` + 组内位置）落在 `byte` 有效范围 `[1, 254]` 之外。包含 Kind 越界后会回绕到某个已占用值、从而与其它类型静默冲突的情形。 |
 | `ORIGOSG004` | Error | 多个 `SndInlineTypes` 组的 `startKind` 区间重叠，导致同一个 Kind 字节被分配给多个不同类型。每个内联类型必须映射到唯一的 Kind。 |
-| `ORIGOSG005` | Error | 多个注册类型产生相同的生成标识符（KindName）：不同命名空间的同名类型、泛型实例化后名称折叠为同一标识符的类型、以及同一类型重复注册（相同或不同 Kind）。生成访问器标识符派生自类型名，任何标识符冲突都会产出不可编译的重复成员。 |
+| `ORIGOSG005` | Error | 多个注册类型产生相同的生成标识符（KindName）：不同命名空间的同名类型、泛型实例化后名称折叠为同一标识符的类型、以及同一类型以不同 Kind 值重复注册。同一类型以相同 Kind 重复注册属幂等操作，被静默去重（与运行时 `RegisterKind` 的幂等语义一致）。生成访问器标识符派生自类型名，任何标识符冲突都会产出不可编译的重复成员。 |
 
 ## 注册机制
 

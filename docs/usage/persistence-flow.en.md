@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence Flow
 
@@ -203,7 +203,7 @@ play_time: 2h30m
 player_name: Alice
 ```
 
-Custom metadata is contributed through the `ISaveMetaContributor` interface, registered via `ctx.RegisterSaveMetaContributor(...)`:
+Custom metadata is contributed through the `ISaveMetaContributor` interface, registered via `ctx.Save.RegisterSaveMetaContributor(...)`:
 
 ```csharp
 // Contributor implementation
@@ -220,9 +220,9 @@ class MySaveMetaContributor : ISaveMetaContributor
 }
 
 // Registration (in OrigoDefaultEntry.ConfigureSaveMetadataContributors or in a strategy)
-ctx.RegisterSaveMetaContributor(new MySaveMetaContributor());
+ctx.Save.RegisterSaveMetaContributor(new MySaveMetaContributor());
 // A delegate overload can also be used:
-ctx.RegisterSaveMetaContributor((context) => new Dictionary<string, string>
+ctx.Save.RegisterSaveMetaContributor((context) => new Dictionary<string, string>
 {
     ["custom"] = "value"
 });
@@ -241,9 +241,9 @@ public interface ISavePathPolicy
     string GetProgressStateMachinesFile(string baseDir);
     string GetCustomMetaFile(string baseDir);
     string GetLevelDirectory(string baseDir, string levelId);
-    string GetLevelSndSceneFile(string baseDir, string levelId);
-    string GetLevelSessionFile(string baseDir, string levelId);
-    string GetLevelSessionStateMachinesFile(string baseDir, string levelId);
+    string GetLevelSndSceneFile(string levelDirectory);
+    string GetLevelSessionFile(string levelDirectory);
+    string GetLevelSessionStateMachinesFile(string levelDirectory);
     string GetWriteInProgressMarker(string baseDir);
     string GetPayloadShaFile(string baseDir);
     string GetExtraDirectory(string baseDir);

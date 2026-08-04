@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Scene
 
@@ -56,7 +56,7 @@ The default scene host for background sessions. Key characteristics:
 
 ### StubSndSceneHost
 
-Lightweight implementation using an embedded `StubSndEntity` class directly. This entity does not support node access, strategies, or subscriptions; only basic key-value data access is supported. Used for unit tests and `LevelBuilder` offline construction.
+Lightweight implementation using an embedded `StubSndEntity` class directly. This entity does not support node access or strategy execution (node access throws, strategy/observer operations are silent no-ops); only basic key-value data access is supported. Used for unit tests and `LevelBuilder` offline construction.
 
 > `StubSndSceneHost`'s naming expresses its "stub" semantics — a lightweight placeholder implementation without strategies/nodes, not a full in-memory host.
 

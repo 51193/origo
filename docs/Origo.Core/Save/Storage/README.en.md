@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Storage
 
@@ -92,6 +92,8 @@ When the same game state is written to the same save slot multiple times, SHA-25
 - Any level data change → hash differs → rewrite
 - CustomMeta key-value change → hash differs → rewrite
 - Only SaveId differs (writing to a different slot) → always write (new slot has no .sha to compare)
+
+The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + `extra/`), which the next idempotency comparison consumes; the test path (`SaveStorageFacade.WriteSavePayloadToCurrent`) writes the **payload-only hash** (tests have no `extra/` side channel, so a combined hash would be stale); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
 
 ### Why DataSourceNode computes a Canonical Hash rather than a post-serialization hash
 

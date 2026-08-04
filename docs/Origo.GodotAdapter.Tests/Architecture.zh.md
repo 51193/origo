@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构守卫 测试（适配层）
 
@@ -29,6 +29,8 @@
 | `SndContext_AllRoleInterfaces_AreAccessibleThroughISndContext` | ISndContext 可 cast 为各角色接口（Blackboard/Deferred/Save/Lifecycle/Console/FileAccess/ArchiveFileAccess）并使用 | Abstractions: ISndContext |
 | `SndContext_ViaSessionManager_CanCreateAndDestroyBackgroundSessions` | 通过 ISessionManager 创建后台会话、读写会话黑板、Contains 校验、DestroySession 销毁 | session-model |
 | `CommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | `Origo.GodotAdapter.Console.CommandHandlerBase` 为 public（或嵌套 public），外部项目可派生 | Origo.GodotAdapter/Console |
+| `GodotSndEntity_LifecycleMethods_ShouldBeInternal` | `GodotSndEntity` 的 `IEntityLifecycle` 实现为显式接口实现，经反射不可见，生命周期只能经 Core 编排 | Origo.GodotAdapter/Snd |
+| `GodotSndEntity_GetNodeFromSnd_ShouldRemainPublic` | `SndEntityNodeExtensions.GetNodeFromSnd<T>()` 保持 public，外部项目可访问 Godot 节点 | Origo.GodotAdapter/Snd |
 
 ## 测试辅助策略
 

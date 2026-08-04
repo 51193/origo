@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
@@ -178,7 +178,7 @@ Compile-time validation (fail-fast):
 | `ORIGOSG002` | Home assembly registers an uninlinable value type (e.g., `decimal`) |
 | `ORIGOSG003` | Kind out of range (not in `[1, 254]`) |
 | `ORIGOSG004` | Kind range overlap, multiple types mapped to the same Kind |
-| `ORIGOSG005` | Generated identifier (KindName) collisions: same-named types from different namespaces, collapsing generic instantiations, or the same type registered more than once (same or different kinds) |
+| `ORIGOSG005` | Generated identifier (KindName) collisions: same-named types from different namespaces, collapsing generic instantiations, or the same type registered more than once with different kind values (same-kind re-registration is idempotent and silently deduplicated) |
 
 These diagnostics are reported as Errors at compile time, causing build failure. Issues like Kind conflicts or out-of-range values **never reach runtime**.
 

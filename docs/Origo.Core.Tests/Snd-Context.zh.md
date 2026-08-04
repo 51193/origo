@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -104,8 +104,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 
 ## NullSndContext（测试基础设施）
 
-`NullSndContext` 已从生产代码（`Origo.Core/Snd/`）迁移到测试项目（`Origo.Core.Tests/TestSupport/`），作为测试辅助类使用。
-自引用测试文件 `NullSndContextExtendedTests.cs` 已随迁移删除。
+`NullSndContext` 位于测试项目（`Origo.Core.Tests/TestSupport/`），作为测试辅助类使用。
 
 ## LevelBuilderExtendedTests 测试详情
 

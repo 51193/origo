@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Entity
 
@@ -49,7 +49,7 @@ These methods are used by the framework layer for batch orchestration; business 
 
 | Method | Phase | Description |
 |--------|-------|-------------|
-| `RecoverForLifecycle(meta)` | Phase 1: Recovery | Recover Name + Data + Node + EntityStrategy + ActiveStrategy; does not trigger any hooks |
+| `RecoverForLifecycle(meta)` | Phase 1: Recovery | Recover Name + Data + Node + EntityStrategy + ActiveStrategy; does not trigger any hooks. On failure, rolls back atomically across phases: acquired strategy references are returned to the pool and created nodes are freed before the exception propagates |
 | `FireAfterSpawnHooks()` | Phase 2: Hooks | Trigger strategy AfterSpawn by priority |
 | `FireAfterLoadHooks()` | Phase 2: Hooks | Trigger strategy AfterLoad by priority |
 | `FireBeforeSaveHooks()` | Phase 2: Hooks | Trigger strategy BeforeSave by priority |

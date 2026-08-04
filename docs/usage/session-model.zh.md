@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话模型
 
@@ -86,19 +86,19 @@ bg.Spawn(new SndMetaData { Name = "entity" });
 bg.SessionBlackboard.SetValue("data", value);
 
 // 直接切换，SwitchForeground 会自动保存并销毁 bg
-ctx.RequestSwitchForegroundLevel("game");
-ctx.FlushDeferredActionsForCurrentFrame();
+ctx.Save.RequestSwitchForegroundLevel("game");
+ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
 // 方式二：手动控制——调用方显式逐步保存和销毁，获得更细粒度控制
 var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
 
 ctx.Save.RequestSaveGameAuto();
-ctx.FlushDeferredActionsForCurrentFrame();
+ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
 sessionManager.DestroySession("gen");
-ctx.RequestSwitchForegroundLevel("game");
-ctx.FlushDeferredActionsForCurrentFrame();
+ctx.Save.RequestSwitchForegroundLevel("game");
+ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 ```
 
 ## 会话拓扑
@@ -147,7 +147,7 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
 
 创建前台会话:
   SessionManager 构造时持有 adapter 注入的场景宿主
-  SessionManager.CreateForegroundSession(levelId)    // 不再接收 host 参数
+  SessionManager.CreateForegroundSession(levelId)    // 前台宿主由 SessionManager 构造时注入持有
     → 使用存储的 adapter scene host 创建 SessionRun
     → 以 `__foreground__` 为键挂载到 _sessions 字典
     → adapter scene host 仅前台 session 使用；后台 session 始终使用 FullMemorySndSceneHost
