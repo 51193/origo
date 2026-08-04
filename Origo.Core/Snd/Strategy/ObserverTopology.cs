@@ -200,16 +200,15 @@ internal sealed class ObserverTopology
             if (string.IsNullOrWhiteSpace(b.Target))
                 continue;
 
-            var target = resolveTarget(b.Target);
-            if (target is null)
-            {
-                _logger.Log(LogLevel.Debug, nameof(ObserverTopology),
-                    new LogMessageBuilder()
-                        .AddContext("observerName", observer.Name)
-                        .AddContext("targetName", b.Target)
-                        .Build("Observer binding target not found, skipping recovery."));
-                continue;
-            }
+            // A binding whose target cannot be resolved means the saved
+            // topology references an entity that does not exist in the
+            // recovered scene — inconsistent save data. Fail fast instead
+            // of silently dropping the binding.
+            var target = resolveTarget(b.Target)
+                ?? throw new InvalidOperationException(
+                    $"Observer binding for '{observer.Name}' targets '{b.Target}', " +
+                    "but no entity with that name exists in the recovered scene. " +
+                    "The save topology is inconsistent and cannot be recovered.");
 
             foreach (var index in b.ObserverIndices)
                 Mount(observer, target, index);
@@ -262,6 +261,19 @@ internal sealed class ObserverTopology
     {
         return _outgoing.TryGetValue(observerName, out var list)
                && list.Any(b => string.Equals(b.TargetName, targetName, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     Returns the names of all observers that currently hold a binding
+    ///     targeting the given entity name. O(1) lookup through the incoming
+    ///     index maintained by <see cref="AddBinding" /> and
+    ///     <see cref="RemoveBinding" />. The returned snapshot is safe to
+    ///     iterate while bindings are being removed.
+    /// </summary>
+    internal IReadOnlyList<string> GetObserverNamesTargeting(string targetName)
+    {
+        ArgumentNullException.ThrowIfNull(targetName);
+        return _incoming.TryGetValue(targetName, out var observers) ? [.. observers] : [];
     }
 
     internal void RemoveBindingsTargetingFor(ISndEntity observer, string targetName)

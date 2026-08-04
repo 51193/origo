@@ -486,7 +486,7 @@ public class ObserverStrategyTests : IDisposable
     // ── RecoverBindings edge cases ───────────────────────────────────
 
     [Fact]
-    public void RecoverBindings_TargetNotFound_Skips()
+    public void RecoverBindings_TargetNotFound_Throws()
     {
         var (entity, _, topology) = SetupWithTopology();
         ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
@@ -496,10 +496,9 @@ public class ObserverStrategyTests : IDisposable
             new() { Target = "ghost", ObserverIndices = [_selfWatchIdx] }
         };
 
-        var ex = Record.Exception(() =>
+        var ex = Assert.Throws<InvalidOperationException>(() =>
             topology.RecoverBindingsFor(entity, bindings, _ => null));
-
-        Assert.Null(ex);
+        Assert.Contains("ghost", ex.Message, StringComparison.Ordinal);
     }
 
     // ── Has / Remove observer bindings by target ──────────────────────
@@ -534,6 +533,40 @@ public class ObserverStrategyTests : IDisposable
         topology.RemoveBindingsTargetingFor(entity, entity.Name);
 
         Assert.False(topology.HasBindingTargetingFrom(entity.Name, entity.Name));
+    }
+
+    // ── Incoming index (O(1) observer lookup by target) ───────────────
+
+    [Fact]
+    public void GetObserverNamesTargeting_MountedObserver_ReturnsObserverName()
+    {
+        var (entity, _, topology) = SetupWithTopology();
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
+
+        Assert.Equal([entity.Name], topology.GetObserverNamesTargeting(entity.Name));
+    }
+
+    [Fact]
+    public void GetObserverNamesTargeting_NoBindings_ReturnsEmpty()
+    {
+        var (entity, _, topology) = SetupWithTopology();
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+
+        Assert.Empty(topology.GetObserverNamesTargeting(entity.Name));
+        Assert.Empty(topology.GetObserverNamesTargeting("ghost"));
+    }
+
+    [Fact]
+    public void GetObserverNamesTargeting_AfterUnmount_IndexCleared()
+    {
+        var (entity, _, topology) = SetupWithTopology();
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
+
+        entity.UnmountObserverStrategy(entity.Name, _memoryObservedIdx);
+
+        Assert.Empty(topology.GetObserverNamesTargeting(entity.Name));
     }
 
     // ── TeardownOutgoingObserverBindings ──────────────────────────────

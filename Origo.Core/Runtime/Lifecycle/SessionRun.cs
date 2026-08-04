@@ -160,14 +160,14 @@ internal sealed class SessionRun : ISessionRun
         _logger.Log(LogLevel.Info, _logTag,
             $"Disposing SessionRun for level '{LevelId}' (mount key: {MountKey ?? "none"}).");
 
-        Disposing?.Invoke();
-        MountKey = null;
-
-        _sessionScope.StateMachines.PopAllOnQuit();
-        _sessionScope.StateMachines.Clear();
-
         try
         {
+            Disposing?.Invoke();
+            MountKey = null;
+
+            _sessionScope.StateMachines.PopAllOnQuit();
+            _sessionScope.StateMachines.Clear();
+
             ReleaseAllEntitiesAndClear(true);
         }
         finally
@@ -221,9 +221,11 @@ internal sealed class SessionRun : ISessionRun
                     var observerBindings = meta.StrategyMetaData?.ObserverIndices;
                     if (observerBindings is null || observerBindings.Count == 0)
                         continue;
-                    var entity = _sceneHost.FindByName(meta.Name);
-                    if (entity is null)
-                        continue;
+                    var entity = _sceneHost.FindByName(meta.Name)
+                        ?? throw new InvalidOperationException(
+                            $"Observer binding recovery references entity '{meta.Name}', " +
+                            "but no entity with that name exists in the recovered scene. " +
+                            "The save topology is inconsistent and cannot be recovered.");
                     observerTopology.RecoverBindingsFor(entity, observerBindings,
                         targetName => _sceneHost.FindByName(targetName));
                 }
@@ -235,8 +237,15 @@ internal sealed class SessionRun : ISessionRun
                     .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
                     .Build($"Payload loaded for level '{LevelId}'."));
         }
-        catch
+        catch (Exception ex)
         {
+            // Record the original load failure before cleanup: cleanup steps
+            // (ResetAfterLoadFailure) can throw on their own and would
+            // otherwise mask the exception that triggered them.
+            _logger.Log(LogLevel.Error, _logTag,
+                new LogMessageBuilder()
+                    .AddContext("levelId", LevelId)
+                    .Build($"Payload load failed: {ex.Message}"));
             ResetAfterLoadFailure();
             throw;
         }
@@ -275,15 +284,25 @@ internal sealed class SessionRun : ISessionRun
 
         if (topology is not null)
         {
-            foreach (var e in pending)
-                if (e is SndEntity se)
-                    TeardownOutgoingObserverBindings(se, entities, topology);
+            // Resolve entity names to instances once; the same dictionary
+            // serves outgoing target resolution and incoming observer lookup.
+            var entitiesByName = new Dictionary<string, ISndEntity>(entities.Count, StringComparer.Ordinal);
+            foreach (var other in entities)
+                entitiesByName[other.Name] = other;
 
             foreach (var e in pending)
-                foreach (var other in entities)
-                    if (other is SndEntity otherSe && otherSe != e
-                        && topology.HasBindingTargetingFrom(otherSe.Name, e.Name))
-                        topology.RemoveBindingsTargetingFor(otherSe, e.Name);
+                if (e is SndEntity se)
+                    TeardownOutgoingObserverBindings(se, entitiesByName, topology);
+
+            // Incoming teardown via the topology's O(1) incoming index: a
+            // dying entity may be the target of other entities' bindings.
+            // Only bare SndEntity observers participate (documented contract).
+            foreach (var e in pending)
+                if (e is SndEntity)
+                    foreach (var observerName in topology.GetObserverNamesTargeting(e.Name))
+                        if (entitiesByName.TryGetValue(observerName, out var observer)
+                            && observer is SndEntity)
+                            topology.RemoveBindingsTargetingFor(observer, e.Name);
         }
 
         foreach (var e in pending)
@@ -303,15 +322,10 @@ internal sealed class SessionRun : ISessionRun
     }
 
     private static void TeardownOutgoingObserverBindings(SndEntity entity,
-        IReadOnlyCollection<ISndEntity> entities, ObserverTopology topology)
+        Dictionary<string, ISndEntity> entitiesByName, ObserverTopology topology)
     {
         topology.TeardownOutgoingFor(entity, targetName =>
-        {
-            foreach (var other in entities)
-                if (other.Name == targetName)
-                    return other;
-            return null;
-        });
+            entitiesByName.TryGetValue(targetName, out var target) ? target : null);
     }
 
     /// <summary>

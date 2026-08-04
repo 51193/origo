@@ -124,6 +124,24 @@ public class DisposeSemanticsTestsSessionRun
     }
 
     [Fact]
+    public void SessionRun_Dispose_DisposingSubscriberThrows_PropagatesAndSessionStillReleases()
+    {
+        var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
+
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("Entity"));
+        bg.Disposing += () => throw new InvalidOperationException("subscriber failure");
+
+        Assert.Throws<InvalidOperationException>(() => bg.Dispose());
+
+        // The dispose state must still be committed: a second dispose is a
+        // no-op and post-dispose access fails fast (no half-disposed session).
+        var second = Record.Exception(() => bg.Dispose());
+        Assert.Null(second);
+        Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
+    }
+
+    [Fact]
     public void SessionRun_AfterDispose_SaveDoesNotPersistSessionData()
     {
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();

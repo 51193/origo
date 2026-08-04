@@ -180,15 +180,31 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
 
     void IEntityLifecycle.RecoverForLifecycle(SndMetaData metaData)
     {
-        Name = metaData.Name;
-        _dataManager.Recover(metaData.DataMetaData ??
-                             throw new InvalidOperationException("DataMetaData is required."));
-        _nodeHost.Recover(metaData.NodeMetaData ??
-                          throw new InvalidOperationException("NodeMetaData is required."));
-        if (metaData.StrategyMetaData is null)
-            throw new InvalidOperationException("StrategyMetaData is required during entity recovery.");
-        _strategyManager.RecoverStrategiesOnly(metaData.StrategyMetaData.LifecycleIndices);
-        _activeStrategyManager.Recover(metaData.StrategyMetaData.ActiveIndices);
+        try
+        {
+            Name = metaData.Name;
+            _dataManager.Recover(metaData.DataMetaData ??
+                                 throw new InvalidOperationException("DataMetaData is required."));
+            _nodeHost.Recover(metaData.NodeMetaData ??
+                              throw new InvalidOperationException("NodeMetaData is required."));
+            if (metaData.StrategyMetaData is null)
+                throw new InvalidOperationException("StrategyMetaData is required during entity recovery.");
+            _strategyManager.RecoverStrategiesOnly(metaData.StrategyMetaData.LifecycleIndices);
+            _activeStrategyManager.Recover(metaData.StrategyMetaData.ActiveIndices);
+        }
+        catch
+        {
+            // Each sub-manager rolls back its own partial state, but a failure
+            // in a later phase (e.g. active strategy recovery) leaves the
+            // acquisitions of earlier phases (passive strategies, nodes) in
+            // place. Release everything before rethrowing so no global pool
+            // reference or node handle leaks, regardless of which scene host
+            // invoked this method. All releases are idempotent.
+            _activeStrategyManager.ReleaseAll();
+            _strategyManager.ReleaseStrategiesOnly();
+            _nodeHost.Release();
+            throw;
+        }
     }
 
     void IEntityLifecycle.FireAfterSpawnHooks()
