@@ -36,7 +36,7 @@ public sealed partial class TypedDataGenerator
         sb.AppendLine();
         GenerateTryGetMethods(sb, types);
         sb.AppendLine();
-        GenerateImplicitConversions(sb, types);
+        GenerateExplicitConversions(sb, types);
         sb.AppendLine();
         GenerateTypedDataTypeMap(sb, types);
         sb.AppendLine();
@@ -88,7 +88,7 @@ public sealed partial class TypedDataGenerator
         sb.AppendLine("    internal readonly bool IsString => _kind == KindMap.String;");
         sb.AppendLine();
         sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        sb.AppendLine("    public readonly string? AsString() => (string?)_ref;");
+        sb.AppendLine("    internal readonly string? AsString() => (string?)_ref;");
         sb.AppendLine();
         sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("    public readonly bool TryGetString(out string value)");
@@ -168,7 +168,7 @@ public sealed partial class TypedDataGenerator
         sb.AppendLine("}");
     }
 
-    private static void GenerateImplicitConversions(StringBuilder sb, List<InlineTypeInfo> types)
+    private static void GenerateExplicitConversions(StringBuilder sb, List<InlineTypeInfo> types)
     {
         var inlineTypes = types.Where(t => t.FitsInline).ToList();
         if (inlineTypes.Count == 0) return;

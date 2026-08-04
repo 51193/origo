@@ -122,7 +122,7 @@ public class TypedDataGeneratorTests
         var output = RunHome(_homePrimitivesAttribute);
         var text = output.AllGeneratedText;
 
-        Assert.Contains("public readonly string? AsString() => (string?)_ref;", text);
+        Assert.Contains("internal readonly string? AsString() => (string?)_ref;", text);
         Assert.Contains("case 13: return td._ref;", text);
     }
 
