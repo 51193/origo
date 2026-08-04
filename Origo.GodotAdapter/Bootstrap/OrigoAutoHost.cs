@@ -128,7 +128,6 @@ public partial class OrigoAutoHost : Node
             consoleOutputChannel
         );
         sndManager.BindRuntimeDependencies(runtime.SndWorld, runtime.Logger);
-        sndManager.SetProcess(true);
 
         ConsoleInput = consoleInput;
         ConsoleOutputChannel = consoleOutputChannel;

@@ -45,7 +45,7 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     internal void BindSession(ISessionRun session)
     {
         ThrowIfReleasedFromManager();
-        _entity!.BindSession(session);
+        Entity.BindSession(session);
     }
     public ISessionRun OwningSession => _entity?.OwningSession ?? throw new InvalidOperationException("GodotSndEntity has no backing SndEntity.");
     private bool _releasedFromManager;
@@ -156,12 +156,17 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     internal SndMetaData BuildSndMetaData() => ((IEntityLifecycle)Entity).BuildMetaData();
 
+    /// <summary>
+    ///     Detaches this entity from its manager: marks it released and drops
+    ///     the backing Core entity. Engine-level teardown (RemoveChild/Free)
+    ///     is the responsibility of the manager's detach callback, which
+    ///     always runs right after this method.
+    /// </summary>
     internal void DetachFromManager()
     {
         if (_releasedFromManager) return;
         _releasedFromManager = true;
         _entity = null;
-        Free();
     }
 
     string ISndEntityFacade.StableName => StableName;

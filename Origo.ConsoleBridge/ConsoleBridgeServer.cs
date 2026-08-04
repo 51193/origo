@@ -118,8 +118,18 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
         catch
         {
-            // Roll the started flag back so a failed Start (e.g. port in use)
-            // can be retried after the cause is resolved.
+            // Roll back everything a failed Start acquired (listener, output
+            // subscription) so a retry after the cause is resolved starts
+            // from a clean state instead of leaking the socket or the
+            // subscription.
+            _listener?.Stop();
+            _listener?.Dispose();
+            if (_outputSubId != 0)
+            {
+                _output.Unsubscribe(_outputSubId);
+                _outputSubId = 0;
+            }
+
             _started = 0;
             throw;
         }

@@ -32,9 +32,9 @@ public partial class GodotSndManager
 
     private bool _runtimeDepsBound;
 
-    public SndWorld SharedWorld { get; private set; } = null!;
-    public ILogger SharedLogger { get; private set; } = null!;
-    public ISndContext? Context { get; private set; }
+    internal SndWorld SharedWorld { get; private set; } = null!;
+    internal ILogger SharedLogger { get; private set; } = null!;
+    internal ISndContext? Context { get; private set; }
 
     /// <summary>Number of <see cref="ProcessAll" /> invocations. Framework-internal observability (test projects access via InternalsVisibleTo).</summary>
     internal int ProcessTickCount { get; private set; }

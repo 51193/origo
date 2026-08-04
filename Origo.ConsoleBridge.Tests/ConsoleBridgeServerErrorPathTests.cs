@@ -283,7 +283,28 @@ public class ConsoleBridgeServerErrorPathTests
         options.Port = 0;
         server.Start();
         Assert.True(server.ActualPort > 0);
+        server.Dispose();
+    }
 
+    [Fact]
+    public void Start_PortInUse_RollsBackListenerAndAllowsRetryAfterRelease()
+    {
+        // A failed Start must fully roll back the acquired listener and
+        // output subscription; otherwise the retry leaks the old socket (or
+        // fails again) and the subscription stays subscribed.
+        using var blocker = new TcpListener(IPAddress.Loopback, 0);
+        blocker.Start();
+        var occupiedPort = ((IPEndPoint)blocker.LocalEndpoint).Port;
+
+        var options = new ConsoleBridgeOptions { Port = occupiedPort };
+        var server = new ConsoleBridgeServer(new ConsoleInputBuffer(), new ConsoleOutputChannel(), options);
+
+        Assert.Throws<SocketException>(() => server.Start());
+
+        blocker.Stop();
+
+        server.Start();
+        Assert.Equal(occupiedPort, server.ActualPort);
         server.Dispose();
     }
 

@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **`GodotSndManager.SharedWorld` / `SharedLogger` / `Context` are now `internal`** — observability properties with no production consumers are no longer public (test projects reach them via `InternalsVisibleTo`), closing a side door to framework internals.
 - **BREAKING: `TypedDataLayeredExtensions` is now `internal`** — the adapter-generated `AsXxx`/`TryGetXxx` extension methods on `TypedData` are no longer public, matching the home assembly's internal `AsXxx` accessors. They are unguarded (no kind check) and were the only public read path that could misread a wrong kind. Business reads go through `ISndEntity.TryGetData<T>` or the generated typed `TryGetXxx` accessors; external consumers must migrate.
 - **Benchmark regression gates run only on the baseline machine** — `scripts/benchmark.sh`
   skips all numeric gates (throughput and allocation) when the current machine's id does not
@@ -96,6 +97,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`TryGetData<string>` finds null-string entries** — `TypedDataFactory<T>.TryExtract` for a reference-kind `TypedData` now reports found=true with a null value when the stored `_ref` is null, consistent with the generated `TryGetString` accessor.
 - **`TypedData.RegisterKind` validates its inputs** — a null type now throws `ArgumentNullException`, and the reserved kind 255 (`UnregisteredKind` sentinel) is rejected with `ArgumentOutOfRangeException`.
 - **Source generator diagnostic `ORIGOSG005` also rejects duplicate registrations of the same type** — the same type listed twice (same or different kinds) previously produced uncompilable duplicate identifiers in generated code; it now fails the build with the diagnostic.
+- **`GodotSndEntity.DetachFromManager` no longer frees the Godot node itself** — engine teardown (`RemoveChild`/`Free`) is now consistently performed by the manager's detach callback; previously the entity freed itself first, making the callback dead code and leaving the "engine work injected via callback" contract unfulfilled.
+- **`ConsoleBridgeServer.Start` failure now rolls back fully** — a failed start stops and disposes the listener and unsubscribes the output channel, so a retry starts from a clean state instead of leaking the socket or subscription.
+- **`GodotPackedSceneNodeFactory` no longer caches failed scene loads** — a missing `PackedScene` resource can be retried after it becomes available instead of being pinned as a permanent failure.
 
 ### Removed
 
