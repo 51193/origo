@@ -169,4 +169,44 @@ public class GodotDirectoryOperationsIntegrationTests
         GodotDirectoryOperations.DeleteRecursive("user://nonexistent_dir_del");
         IntegrationTestRunner.Assert(true, "DeleteRecursive on non-existent dir should not throw.");
     }
+
+    [IntegrationTest(Description = "DeleteRecursive removes hidden (dot-prefixed) files")]
+    public void DeleteRecursive_RemovesHiddenFiles()
+    {
+        // The write-in-progress marker is a dot-prefixed file; a cleanup that
+        // skips hidden files would leave it behind and fail strict readers.
+        var dir = "user://test_dir_hidden_del";
+        GodotDirectoryOperations.Create(dir);
+        GodotFileOperations.WriteAllText($"{dir}/.write_in_progress", "", overwrite: true);
+        GodotFileOperations.WriteAllText($"{dir}/visible.txt", "v", overwrite: true);
+
+        GodotDirectoryOperations.DeleteRecursive(dir);
+
+        IntegrationTestRunner.Assert(
+            !GodotFileOperations.Exists($"{dir}/.write_in_progress"),
+            "hidden files must be removed by DeleteRecursive");
+        IntegrationTestRunner.Assert(
+            !GodotFileOperations.Exists($"{dir}/visible.txt"),
+            "visible files must be removed by DeleteRecursive");
+    }
+
+    [IntegrationTest(Description = "EnumerateFiles includes hidden (dot-prefixed) files")]
+    public void EnumerateFiles_IncludesHiddenFiles()
+    {
+        var dir = "user://test_dir_hidden_enum";
+        GodotDirectoryOperations.Create(dir);
+        GodotFileOperations.WriteAllText($"{dir}/.hidden.txt", "h", overwrite: true);
+        GodotFileOperations.WriteAllText($"{dir}/visible.txt", "v", overwrite: true);
+
+        var files = GodotDirectoryOperations.EnumerateFiles(dir, "*", recursive: false).ToList();
+
+        IntegrationTestRunner.AssertContains(
+            "hidden.txt", string.Join(",", files),
+            "hidden files must be enumerated");
+
+        // Cleanup
+        GodotDirectoryOperations.DeleteRecursive(dir);
+        using var da = DirAccess.Open("user://");
+        da!.Remove("test_dir_hidden_enum");
+    }
 }

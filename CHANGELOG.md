@@ -33,8 +33,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`InvokeStrategy<TInput, TOutput>` bare-string tolerance** — string results that are
   not valid JSON are returned as-is when the expected output type is `string`, instead of
   throwing opaque `JsonException`s at the call site.
+- **Source generator diagnostic `ORIGOSG005`** — reports kind-name collisions (same-named
+  types from different namespaces, or generic instantiations whose sanitized names collapse
+  to one identifier) as build errors instead of emitting uncompilable code.
 
 ### Changed
+
+- **Benchmark regression gates run only on the baseline machine** — `scripts/benchmark.sh`
+  skips all numeric gates (throughput and allocation) when the current machine's id does not
+  match the baseline's `machine_id` (CI runners are random VMs; allocation counts also vary
+  across machines/runtime builds because JIT inlining decisions change per-instruction
+  allocation, so cross-machine comparison was producing false failures). On the baseline
+  machine the full gates still apply; CI benchmark steps act as smoke tests.
+- **BREAKING:** `TypedDataInitializer` is now `internal` — adapter layers no longer get a
+  public entry point; test projects access it via `InternalsVisibleTo` and call
+  `TypedDataInitializer.EnsureLoaded()` instead of the always-true `IsLoaded` property.
+- **BREAKING:** `GodotSndManager.ProcessTickCount` is now `internal` and
+  `ProcessDeltaSum` is removed — these were observability members with no production
+  consumer.
+- **BREAKING:** `TypedData.RegisterKind` throws `InvalidOperationException` when a kind is
+  registered to a different type than an existing mapping (idempotent re-registration of the
+  same type is still allowed) — two adapter layers using overlapping kind ranges now fail
+  loudly at assembly load instead of silently corrupting TypedData type interpretation.
+- **`GodotSndEntity.IsPendingKill` throws after release** — accessing the property on an
+  entity detached from its manager now throws `InvalidOperationException` (consistent with
+  the other members) instead of silently returning `false`.
 
 - **BREAKING: Target framework upgraded from `net8.0` to `net10.0`** — all projects (Origo.Core, Origo.ConsoleBridge, Origo.GodotAdapter, and test projects) now target `net10.0`; consumers must build with the .NET 10 SDK and run on the .NET 10 runtime. `Origo.SourceGeneration` keeps `netstandard2.0` (Roslyn analyzer constraint). GodotAdapter verified against Godot 4.7.1 mono (74 headless integration tests pass on `net10.0`).
 - **BREAKING:** `SndContext` and `ISndContext` refactored to companion-object pattern. All role interfaces (`ISndSaveOperations`, `ISndBlackboardAccess`, `ISndDeferredActions`, etc.) are now exposed through typed companion properties (`ctx.Save`, `ctx.Blackboard`, `ctx.Deferred`, etc.) instead of direct interface inheritance. `ISndEntityRawSubscription` made `internal`.
@@ -88,6 +111,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`GodotFileOperations.Delete`** — error code from `DirAccess.RemoveAbsolute` is checked instead of discarded.
 - **`PersistentBlackboard` atomic write** — uses temp-file + rename to prevent `system.json` corruption on crash. Stale temp files from interrupted writes are cleaned up automatically.
 - **`ConsoleBridgeServer` connection robustness** — no longer intermittently resets an in-flight read via concurrent stream disposal on `Dispose()`. Output buffer overflow now emits a warning instead of dropping lines silently.
+- **`ConsoleBridgeServer` accept-loop faults stop the listener and allow restart** — a non-cancellation socket error in the accept loop now stops the listener and rolls back the started flag, so the same server instance can be restarted by the host; previously the port stayed bound behind a dead accept loop and new connections hung forever.
+- **`SndDataManager.SetData` leaves no residual entry on conversion failure** — the value is converted before the dictionary slot is created, so a throwing adapter converter no longer leaves a default (null) data entry behind that would leak into serialized saves.
+- **`GodotDirectoryOperations` enumerates and deletes hidden files** — `EnumerateFiles`/`EnumerateDirectories`/`DeleteRecursive` now include dot-prefixed files (`DirAccess.IncludeHidden`), so a leftover `.write_in_progress` marker (from an interrupted save write) is actually removed by directory cleanup instead of silently surviving and causing strict readers to reject the save. Save-file snapshot copies now also include hidden files under `extra/`.
 
 - **Documentation examples now match the real API** — `ctx.RequestSaveGame`,
   `ctx.RequestKillEntity`, and `ctx.CloneTemplate` usages in docs were corrected to

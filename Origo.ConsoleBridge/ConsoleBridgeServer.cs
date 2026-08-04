@@ -111,7 +111,8 @@ public sealed class ConsoleBridgeServer : IDisposable
             _listener.Start();
             ActualPort = ((IPEndPoint)_listener.LocalEndpoint).Port;
 
-            _outputSubId = _output.Subscribe(OnConsoleOutput);
+            if (_outputSubId == 0)
+                _outputSubId = _output.Subscribe(OnConsoleOutput);
 
             _acceptTask = Task.Run(() => AcceptLoopAsync(_cts.Token), _cts.Token);
         }
@@ -176,11 +177,23 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 // A cancellation makes AcceptTcpClientAsync throw
                 // OperationCanceledException (handled above); anything else is a
-                // genuine system-level socket error — log it and stop the
-                // listener so the host can restart it.
+                // genuine system-level socket error — stop the listener so the
+                // host can restart the server (Start rolls the started flag
+                // back and is retryable).
                 _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
                     new LogMessageBuilder().Build(
                         $"Accept loop stopped after a non-cancellation error: {ex.Message}"));
+                try
+                {
+                    _listener.Stop();
+                }
+                catch (Exception stopEx)
+                {
+                    _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                        new LogMessageBuilder().Build($"Failed to stop listener: {stopEx.Message}"));
+                }
+
+                Interlocked.Exchange(ref _started, 0);
                 break;
             }
 

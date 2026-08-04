@@ -320,6 +320,41 @@ public class TypedDataGeneratorTests
         Assert.DoesNotContain("AsInt64", text);
     }
 
+    [Fact]
+    public void SameTypeNameDifferentNamespaces_ReportORIGOSG005_AndDropCollidingTypes()
+    {
+        // Two types named 'Dup' from different namespaces sanitize to the same
+        // kind name; the generator must report ORIGOSG005 instead of emitting
+        // uncompilable duplicate identifiers.
+        var attribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(A.Dup), typeof(B.Dup))]
+            namespace A { public class Dup { } }
+            namespace B { public class Dup { } }
+            """;
+        var output = RunHome(attribute);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.All(
+            output.GeneratorDiagnostics.Where(d => d.Id == "ORIGOSG005"),
+            d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+
+        Assert.DoesNotContain("Dup", output.AllGeneratedText);
+    }
+
+    [Fact]
+    public void GenericInstantiations_WithSameName_ReportORIGOSG005()
+    {
+        // List<int> and List<string> share the Name 'List'; without the name
+        // collision check the generator would emit duplicate 'List' identifiers.
+        var attribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(System.Collections.Generic.List<int>), typeof(System.Collections.Generic.List<string>))]
+            """;
+        var output = RunHome(attribute);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.DoesNotContain("List", output.AllGeneratedText);
+    }
+
     // ─── Incremental generator behaviour ────────────────────────────
 
     [Fact]

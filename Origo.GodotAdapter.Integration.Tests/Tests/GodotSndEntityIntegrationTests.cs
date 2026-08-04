@@ -123,6 +123,20 @@ public class GodotSndEntityIntegrationTests
             entity.Free();
         }
     }
+
+    [IntegrationTest(Description = "IsPendingKill throws after release from manager instead of silently returning false")]
+    public void IsPendingKill_AfterDetachFromManager_Throws()
+    {
+        var (harness, entity) = CreateEntity();
+        using (harness)
+        {
+            entity.Name = "test_entity";
+            entity.DetachFromManager();
+            IntegrationTestRunner.AssertThrows<InvalidOperationException>(
+                () => _ = entity.IsPendingKill,
+                "IsPendingKill after release should throw (fail-fast), not silently return false.");
+        }
+    }
 }
 
 internal static class GodotSndManagerExtensions

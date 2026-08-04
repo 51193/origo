@@ -11,7 +11,7 @@ public class GodotTypedDataLayeredTests
 {
     static GodotTypedDataLayeredTests()
     {
-        _ = TypedDataInitializer.IsLoaded;
+        TypedDataInitializer.EnsureLoaded();
     }
     [Fact]
     public void Godot_Vector2_Kind_Is_Resolved()

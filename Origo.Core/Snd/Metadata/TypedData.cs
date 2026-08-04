@@ -42,6 +42,12 @@ public readonly partial struct TypedData : IEquatable<TypedData>
     internal static void RegisterKind(byte kind, Type type)
     {
         if (kind == 0) return;
+        var existing = KindTypeMap[kind];
+        if (existing is not null && existing != type)
+            throw new InvalidOperationException(
+                $"TypedData kind {kind} is already registered to '{existing.FullName}'; " +
+                $"cannot register '{type.FullName}' to the same kind. " +
+                "Adapter layers must use non-overlapping kind ranges (see SndInlineTypesAttribute StartKind).");
         KindTypeMap[kind] = type ?? typeof(object);
     }
 

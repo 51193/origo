@@ -45,4 +45,16 @@ public sealed partial class TypedDataGenerator
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor _kindNameCollision = new(
+        id: "ORIGOSG005",
+        title: "TypedData kind name collision",
+        messageFormat:
+        "'{0}' and '{1}' produce the same kind name '{2}'. "
+        + "Generated accessor identifiers are derived from the type name, so types of the same name "
+        + "from different namespaces (or generic instantiations with the same name) cannot coexist in one "
+        + "SndInlineTypes registration; register only one of them.",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

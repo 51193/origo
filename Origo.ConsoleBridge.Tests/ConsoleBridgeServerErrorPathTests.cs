@@ -308,6 +308,51 @@ public class ConsoleBridgeServerErrorPathTests
         Assert.DoesNotContain(logger.Errors, e => e.Contains("Accept loop faulted"));
     }
 
+    [Fact]
+    public void AcceptLoop_NonCancellationError_StopsListenerAndAllowsRestart()
+    {
+        var logger = new TestLogger();
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var options = new ConsoleBridgeOptions { Port = 0 };
+        var server = new ConsoleBridgeServer(input, output, options, logger: logger);
+        server.Start();
+
+        // Stop the listener out from under the accept loop, forcing a
+        // non-cancellation accept error.
+        var listenerField = typeof(ConsoleBridgeServer)
+            .GetField("_listener", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var originalListener = (TcpListener)listenerField.GetValue(server)!;
+        var originalPort = ((IPEndPoint)originalListener.LocalEndpoint).Port;
+        originalListener.Stop();
+
+        Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+            () => logger.Errors.Any(e => e.Contains("Accept loop stopped")),
+            ConsoleBridgeTestInfrastructure.CommandTimeoutMs));
+
+        // Documented contract: the fault path rolls the started flag back so
+        // the same instance can be restarted by the host.
+        var startedField = typeof(ConsoleBridgeServer)
+            .GetField("_started", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        Assert.Equal(0, (int)startedField.GetValue(server)!);
+
+        // The same instance is restartable: Start binds a fresh listener that
+        // accepts connections.
+        server.Start();
+        Assert.True(server.ActualPort > 0);
+        Assert.NotEqual(originalPort, server.ActualPort);
+
+        using var client = new TcpClient();
+        client.Connect(IPAddress.Loopback, server.ActualPort);
+        using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+        writer.WriteLine("restart_cmd");
+        Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+            () => input.TryDequeueCommand(out var line) && line == "restart_cmd",
+            ConsoleBridgeTestInfrastructure.CommandTimeoutMs));
+
+        server.Dispose();
+    }
+
     // ── Output-side isolation (regression: RST during Publish crashed the caller) ──
 
     [Fact]

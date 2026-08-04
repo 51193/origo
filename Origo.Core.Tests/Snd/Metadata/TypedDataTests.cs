@@ -142,4 +142,36 @@ public class TypedDataTests
         var b = (TypedData)42L;
         Assert.NotEqual(a, b);
     }
+
+    // ── RegisterKind conflict detection (cross-assembly kind collisions) ──
+
+    [Fact]
+    public void RegisterKind_SameTypeTwice_IsIdempotent()
+    {
+        TypedData.RegisterKind(200, typeof(DateTime));
+        TypedData.RegisterKind(200, typeof(DateTime));
+        Assert.Equal(typeof(DateTime), TypedData.KindTypeMap[200]);
+    }
+
+    [Fact]
+    public void RegisterKind_DifferentTypeSameKind_Throws()
+    {
+        TypedData.RegisterKind(201, typeof(DateTime));
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => TypedData.RegisterKind(201, typeof(Guid)));
+        Assert.Contains("201", ex.Message);
+        Assert.Contains("DateTime", ex.Message);
+        Assert.Contains("Guid", ex.Message);
+
+        // The original mapping must survive the failed registration.
+        Assert.Equal(typeof(DateTime), TypedData.KindTypeMap[201]);
+    }
+
+    [Fact]
+    public void RegisterKind_KindZero_IsIgnored()
+    {
+        TypedData.RegisterKind(0, typeof(DateTime));
+        Assert.Null(TypedData.KindTypeMap[0]);
+    }
 }

@@ -1,12 +1,18 @@
 namespace Origo.GodotAdapter.Snd;
 
 /// <summary>
-///     Public entry point that forces the Origo.GodotAdapter assembly to load,
-///     triggering all <c>[ModuleInitializer]</c> registrations for the TypedData
-///     layered kind system.  Tests should call <see cref="IsLoaded"/> in their
-///     static constructor before exercising registered adapter types.
+///     Forces the Origo.GodotAdapter assembly to load, triggering all
+///     <c>[ModuleInitializer]</c> registrations for the TypedData layered
+///     kind system. Framework-internal: test projects reach it via
+///     <c>InternalsVisibleTo</c>.
 /// </summary>
-public static class TypedDataInitializer
+internal static class TypedDataInitializer
 {
-    public static bool IsLoaded => true;
+    /// <summary>
+    ///     Referencing this member forces the adapter assembly to load so its
+    ///     module initializers run before TypedData adapter kinds are used.
+    /// </summary>
+    internal static void EnsureLoaded()
+    {
+    }
 }

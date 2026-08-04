@@ -108,7 +108,9 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     public object? InvokeStrategy(string strategyIndex, object? input = null) => Entity.InvokeStrategy(strategyIndex, input);
 
-    public bool IsPendingKill => _entity?.IsPendingKill ?? false;
+    public bool IsPendingKill => _entity?.IsPendingKill
+        ?? throw new InvalidOperationException(
+            "GodotSndEntity has been released from GodotSndManager and cannot be used.");
 
     internal void MarkPendingKill() => Entity.IsPendingKill = true;
 

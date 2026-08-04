@@ -160,6 +160,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 
         var validTypes = ValidateAndFilter(context, input.IsHome, allTypes);
         validTypes = RejectKindCollisions(context, validTypes);
+        validTypes = RejectKindNameCollisions(context, validTypes);
         if (validTypes.Count == 0) return;
 
         if (input.IsHome)
@@ -246,6 +247,56 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         {
             if (collidingKinds.Contains(t.KindValue)) continue;
             if (!emitted.Add(t.KindValue)) continue;
+            result.Add(t);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    ///     Rejects types whose generated kind names collide (same type name from
+    ///     different namespaces, or generic instantiations whose sanitized names
+    ///     collapse to the same identifier). Numeric kind collisions are handled
+    ///     by <see cref="RejectKindCollisions" />; this covers identifier-level
+    ///     collisions that would otherwise emit uncompilable code.
+    /// </summary>
+    private static List<InlineTypeInfo> RejectKindNameCollisions(
+        SourceProductionContext context, List<InlineTypeInfo> types)
+    {
+        var firstTypeByKindName = new Dictionary<string, InlineTypeInfo>(StringComparer.Ordinal);
+        var collidingKindNames = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var t in types)
+        {
+            if (t.KindIndex is null) continue;
+            if (firstTypeByKindName.TryGetValue(t.KindIndex, out var existing))
+            {
+                if (existing.ClrTypeName != t.ClrTypeName)
+                    collidingKindNames.Add(t.KindIndex);
+            }
+            else
+            {
+                firstTypeByKindName[t.KindIndex] = t;
+            }
+        }
+
+        foreach (var kindName in collidingKindNames)
+        {
+            var colliding = types
+                .Where(t => string.Equals(t.KindIndex, kindName, StringComparison.Ordinal))
+                .ToArray();
+            context.ReportDiagnostic(Diagnostic.Create(
+                _kindNameCollision,
+                colliding[0].Location ?? Location.None,
+                colliding[0].ClrTypeName,
+                colliding[1].ClrTypeName,
+                kindName));
+        }
+
+        var result = new List<InlineTypeInfo>();
+        foreach (var t in types)
+        {
+            if (t.KindIndex is not null && collidingKindNames.Contains(t.KindIndex)) continue;
             result.Add(t);
         }
 

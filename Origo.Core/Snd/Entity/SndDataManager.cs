@@ -84,9 +84,12 @@ internal sealed class SndDataManager
         if (value is null)
             throw new ArgumentNullException(nameof(value),
                 $"Cannot store a null value for key '{name}'. Data values must be non-null.");
-        ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(_data, name, out var exists);
+
+        // Create the value before touching the dictionary: if conversion
+        // throws (adapter converter failure), no default entry is left behind.
         var newValue = TypedDataFactory<T>.Create(value);
 
+        ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(_data, name, out var exists);
         if (exists && slot.Equals(newValue)) return;
 
         var oldValue = slot;

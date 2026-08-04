@@ -18,7 +18,7 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
     static GodotTypedDataPerformanceTests()
     {
-        _ = TypedDataInitializer.IsLoaded;
+        TypedDataInitializer.EnsureLoaded();
     }
 
     [Fact]

@@ -35,8 +35,9 @@ public partial class GodotSndManager
     public SndWorld SharedWorld { get; private set; } = null!;
     public ILogger SharedLogger { get; private set; } = null!;
     public ISndContext? Context { get; private set; }
-    public int ProcessTickCount { get; private set; }
-    public double ProcessDeltaSum { get; private set; }
+
+    /// <summary>Number of <see cref="ProcessAll" /> invocations. Framework-internal observability (test projects access via InternalsVisibleTo).</summary>
+    internal int ProcessTickCount { get; private set; }
 
     public GodotSndManager()
     {
@@ -103,7 +104,6 @@ public partial class GodotSndManager
     public void ProcessAll(double delta)
     {
         ProcessTickCount++;
-        ProcessDeltaSum += delta;
         _collection.ProcessAll(delta);
     }
 

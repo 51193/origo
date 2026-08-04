@@ -25,6 +25,7 @@ internal static class GodotDirectoryOperations
     public static IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive)
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
+        dir.IncludeHidden = true;
         var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
         IEnumerable<string> fileNames = dir.GetFiles();
 
@@ -44,6 +45,7 @@ internal static class GodotDirectoryOperations
     public static IEnumerable<string> EnumerateDirectories(string directoryPath)
     {
         using var dir = DirAccess.Open(directoryPath) ?? throw new DirectoryNotFoundException($"Cannot open directory: {directoryPath}");
+        dir.IncludeHidden = true;
         var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
         return [.. dir.GetDirectories().Select(d => $"{normalizedDir}/{d}")];
     }
@@ -60,8 +62,9 @@ internal static class GodotDirectoryOperations
 
     /// <summary>
     ///     Recursively deletes all files and subdirectory contents under the
-    ///     given directory. The directory container itself is left intact —
-    ///     only its contents are removed.
+    ///     given directory, including hidden (dot-prefixed) files such as the
+    ///     save write-in-progress marker. The directory container itself is
+    ///     left intact — only its contents are removed.
     /// </summary>
     public static void DeleteRecursive(string directoryPath)
     {
@@ -70,6 +73,7 @@ internal static class GodotDirectoryOperations
 
         using var dir = DirAccess.Open(directoryPath) ?? throw new InvalidOperationException(
             $"Failed to open directory for deletion: {directoryPath}");
+        dir.IncludeHidden = true;
 
         var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
 

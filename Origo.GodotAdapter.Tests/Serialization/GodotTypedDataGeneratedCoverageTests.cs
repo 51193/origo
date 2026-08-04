@@ -17,7 +17,7 @@ public class GodotTypedDataGeneratedCoverageTests
 {
     static GodotTypedDataGeneratedCoverageTests()
     {
-        _ = TypedDataInitializer.IsLoaded;
+        TypedDataInitializer.EnsureLoaded();
     }
 
     public static IEnumerable<(byte Kind, object Value)> AllTypes()
