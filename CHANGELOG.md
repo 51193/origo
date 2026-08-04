@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING:** Concrete entity lifecycle methods are now `internal` — `SndEntity.Process`/`SpawnSingle`/`LoadSingle`/`QuitSingle`/`DeadSingle`/`SaveSingle`, `GodotSndEntity.SpawnSingle`/`LoadSingle`/`SaveSingle`/`ProcessSnd`, and the `IEntityLifecycle` interface are no longer public. Entity lifecycle must be driven through `ISessionRun` (`Spawn`/`SpawnMany`/`RequestKillEntity`) and the framework's batch hook pipeline; concrete-type casts no longer expose lifecycle orchestration.
 - **BREAKING:** `ConsoleCommandRouter.Register` throws `InvalidOperationException` on duplicate command names instead of silently overwriting.
 - **BREAKING:** All console messages are now in English (built-in commands, error messages, `tree_debug`, `camera_view` output).
+- **`ActiveStrategyJsonBase<TInput>` invalid-input error message is now English** — the error result for invalid/non-JSON input is `"err:Invalid request"` instead of the previous Chinese string.
 - **BREAKING:** `GodotLogger` requires a non-null handler at construction.
 - **BREAKING:** `GodotNodeHandle.SetVisible` throws `ObjectDisposedException` on freed nodes instead of silently returning.
 - **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value.

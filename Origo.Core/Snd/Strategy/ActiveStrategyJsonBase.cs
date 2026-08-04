@@ -20,7 +20,7 @@ namespace Origo.Core.Snd.Strategy;
 ///     </para>
 ///     <para>
 ///         Invalid or non-JSON input yields the conventional error result
-///         <c>"err:非法请求"</c> instead of throwing, matching the
+///         <c>"err:Invalid request"</c> instead of throwing, matching the
 ///         fail-fast contract at the strategy boundary.
 ///     </para>
 /// </summary>
@@ -56,7 +56,7 @@ public abstract class ActiveStrategyJsonBase<TInput> : ActiveStrategyBase
         }
 
         if (input is not string json)
-            return JsonSerializer.Serialize(ActiveStrategyResults.Err("非法请求"));
+            return JsonSerializer.Serialize(ActiveStrategyResults.Err("Invalid request"));
 
         TInput? parsed;
         try
@@ -65,7 +65,7 @@ public abstract class ActiveStrategyJsonBase<TInput> : ActiveStrategyBase
         }
         catch (JsonException)
         {
-            return JsonSerializer.Serialize(ActiveStrategyResults.Err("非法请求"));
+            return JsonSerializer.Serialize(ActiveStrategyResults.Err("Invalid request"));
         }
 
         var executeResult = Execute(entity, ctx, parsed ?? default!);

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体模型
 
@@ -133,7 +133,7 @@ public sealed class ShopBuyStrategy : ActiveStrategyJsonBase<int>
     protected override object? Execute(ISndEntity entity, ISndContext ctx, int? slot)
     {
         if (slot is null || slot < 0)
-            return ActiveStrategyResults.Err("非法请求");
+            return ActiveStrategyResults.Err("Invalid request");
         // ...
         return ActiveStrategyResults.Ok();
     }

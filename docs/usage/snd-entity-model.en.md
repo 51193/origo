@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Model
 
@@ -135,7 +135,7 @@ public sealed class ShopBuyStrategy : ActiveStrategyJsonBase<int>
     protected override object? Execute(ISndEntity entity, ISndContext ctx, int? slot)
     {
         if (slot is null || slot < 0)
-            return ActiveStrategyResults.Err("invalid request");
+            return ActiveStrategyResults.Err("Invalid request");
         // ...
         return ActiveStrategyResults.Ok();
     }
