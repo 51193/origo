@@ -3,7 +3,7 @@ using Origo.Core.Snd;
 using System;
 using Xunit;
 
-namespace Origo.Core.Tests.Save;
+namespace Origo.Core.Tests;
 
 public class SaveSnapshotMarkerTests
 {

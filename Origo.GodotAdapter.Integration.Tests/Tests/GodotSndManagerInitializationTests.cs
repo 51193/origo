@@ -46,7 +46,7 @@ public class GodotSndManagerInitializationTests
     }
 
     [IntegrationTest(Description = "Chained BindRuntimeDependencies + BindContext with valid args does not throw")]
-    public void BindRuntimeAndContext_ValidArgs_DoesNotThrow()
+    public void BindDependenciesAndContext_ValidArgs_DoesNotThrow()
     {
         using var harness = CreateHarness();
 

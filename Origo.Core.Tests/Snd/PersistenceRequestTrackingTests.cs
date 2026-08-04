@@ -1,7 +1,7 @@
 using Origo.Core.Snd;
 using Xunit;
 
-namespace Origo.Core.Tests.Snd;
+namespace Origo.Core.Tests;
 
 public class PersistenceRequestTrackingTests
 {
