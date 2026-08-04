@@ -59,7 +59,7 @@ jobs:
         run: dotnet pack Origo.Core/Origo.Core.csproj --no-build --configuration Release --output ./artifacts
 
       - name: Pack Origo.GodotAdapter
-        run: dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --configuration Release --output ./artifacts
+        run: dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --no-build --configuration Release --output ./artifacts
 
       - name: Pack Origo.ConsoleBridge
         run: dotnet pack Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --no-build --configuration Release --output ./artifacts

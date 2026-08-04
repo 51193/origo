@@ -149,14 +149,22 @@ for key, cur in sorted(current.items()):
         continue
     if not same_machine:
         continue
-    alloc_ratio = cur["alloc"] / base["alloc"] if base["alloc"] > 0 else 1.0
-    if alloc_ratio > 1.0 + alloc_th:
-        fails.append(f"  FAIL allocation: {key} {cur['alloc']} B vs baseline {base['alloc']} B ({alloc_ratio*100:.0f}%)")
+    if base["alloc"] == 0:
+        # A zero baseline with any positive current allocation is a
+        # regression by definition (something now allocates where nothing
+        # did before); the ratio would otherwise collapse to 1.0 and hide it.
+        alloc_regressed = cur["alloc"] > 0
+    else:
+        alloc_regressed = cur["alloc"] / base["alloc"] > 1.0 + alloc_th
+    if alloc_regressed:
+        fails.append(f"  FAIL allocation: {key} {cur['alloc']} B vs baseline {base['alloc']} B")
     kind = key.split("|", 1)[0]
     if kind in THROUGHPUT_GATED_KINDS:
-        ops_ratio = cur["ops"] / base["ops"] if base["ops"] > 0 else 1.0
-        if ops_ratio < 1.0 - ops_th:
-            fails.append(f"  FAIL throughput: {key} {cur['ops']:.0f} ops/s vs baseline {base['ops']:.0f} ({ops_ratio*100:.0f}%)")
+        # A zero throughput baseline is not comparable; keep the metric
+        # gated only when a meaningful baseline exists.
+        ops_regressed = base["ops"] > 0 and cur["ops"] / base["ops"] < 1.0 - ops_th
+        if ops_regressed:
+            fails.append(f"  FAIL throughput: {key} {cur['ops']:.0f} ops/s vs baseline {base['ops']:.0f}")
 
 if skipped:
     print(f"  {skipped} metric(s) without baseline entries (new benchmarks).")

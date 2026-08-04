@@ -41,7 +41,14 @@ dotnet_diagnostic.CA1062.severity = error
 # Test projects and test support: flat namespace for cross-directory type access.
 # Intentional design — see docs/Origo.Core.Tests/META-TEST.md §测试命名空间约定.
 # CA1062 (validate public parameters): suppressed — parameters are supplied by the framework.
-[{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.GodotAdapter.Integration.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests,Origo.TestSupport,DocSyncTool.Tests}/**/*.cs]
+[{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.GodotAdapter.Integration.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests,Origo.TestSupport}/**/*.cs]
+dotnet_diagnostic.IDE0130.severity = none
+dotnet_diagnostic.CA1062.severity = none
+
+# tools/DocSyncTool.Tests is exempt for the same reasons (flat namespaces and
+# framework-supplied parameters), but lives under tools/ so it needs its own
+# glob — EditorConfig sections match paths relative to this file's directory.
+[tools/DocSyncTool.Tests/**/*.cs]
 dotnet_diagnostic.IDE0130.severity = none
 dotnet_diagnostic.CA1062.severity = none
 
