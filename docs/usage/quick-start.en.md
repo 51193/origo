@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Quick Start
 
@@ -12,7 +12,7 @@ The shortest path to integrating the Origo framework into a Godot 4 project.
 ## Prerequisites
 
 - Godot 4.7 project (.NET version)
-- .NET 8.0 SDK
+- .NET 10.0 SDK (or later)
 - Project already references Origo (via NuGet package or ProjectReference)
 
 ## Steps

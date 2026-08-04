@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Performance Baseline
 
@@ -28,7 +28,7 @@ This script runs three benchmark suites sequentially (all marked `[Trait("Catego
 |----|----|
 | CPU | Intel Core i7-8550U (4C/8T, 1.80 GHz base / 4.00 GHz turbo) |
 | Memory / OS | 7.7 GiB / Ubuntu 26.04 LTS (Linux 7.0.0-27-generic) |
-| .NET | SDK 10.0.301, runtime **10.0.9** (test target `net8.0`, running on .NET 10 via roll-forward) |
+| .NET | SDK 10.0.301, runtime **10.0.9** (test target `net10.0`) |
 | Build | `Release` |
 | Sampling | Single run (min-of-rounds internally takes `min of 5`) |
 | Ratio convention | `Ratio` = faster throughput / slower throughput; "Winner" indicates the faster side |
@@ -142,7 +142,7 @@ Documents why the current state is as it is, what trade-offs were made, and dire
 
 1. **CPU dynamic frequency scaling (scaling ≈ 75%)** introduces run-to-run jitter; for marginal items ≤ 1.3x and the fastest loops (boxed side heterogeneous iteration 6.3–8.4x, writes), retesting at fixed frequency/performance mode is recommended.
 2. **Absolute throughput is affected by code alignment**: writes and other ultra-trivial loops are sensitive to method layout/alignment, with ~±8% jitter; **allocation counts and relative trends are unaffected by this** and should be the primary criteria.
-3. **Runtime is .NET 10.0.9** (not the target `net8.0`); conclusions must be retested under the same runtime.
+3. **Runtime is .NET 10.0.9**, matching the `net10.0` test target; conclusions must be retested under the same runtime.
 4. **Micro-benchmarks use min-of-rounds**, favoring ideal JIT steady state; real-world simulation suites are more representative.
 5. High-variance items: String `TryGetString` read, mixed dispatch, boxed side heterogeneous iteration, boxed side value type insertion; for these items, increase sampling rounds (≥ 8 rounds) to converge before drawing conclusions.
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 快速开始
 
@@ -12,7 +12,7 @@
 ## 前提
 
 - Godot 4.7 项目（.NET 版本）
-- .NET 8.0 SDK
+- .NET 10.0 SDK（或更高）
 - 项目中已引用 Origo（NuGet 包或 ProjectReference）
 
 ## 步骤

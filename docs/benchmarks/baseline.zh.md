@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo 性能基线
 
@@ -28,7 +28,7 @@ bash scripts/benchmark.sh
 |----|----|
 | CPU | Intel Core i7-8550U（4C/8T，1.80 GHz base / 4.00 GHz turbo） |
 | 内存 / OS | 7.7 GiB / Ubuntu 26.04 LTS（Linux 7.0.0-27-generic） |
-| .NET | SDK 10.0.301，运行时 **10.0.9**（测试目标 `net8.0`，经 roll-forward 运行于 .NET 10） |
+| .NET | SDK 10.0.301，运行时 **10.0.9**（测试目标 `net10.0`） |
 | 构建 | `Release` |
 | 采样 | 单次运行（min-of-rounds 内部取 `min of 5`） |
 | 倍率口径 | `Ratio` = 快者吞吐 / 慢者吞吐；「胜方」标注更快的一侧 |
@@ -142,7 +142,7 @@ bash scripts/benchmark.sh
 
 1. **CPU 动态调频（scaling ≈ 75%）** 引入运行间抖动；针对 ≤ 1.3x 的边际项与最快循环（异构迭代装箱侧 6.3–8.4x、写入），建议固定频率/性能模式后复测。
 2. **绝对吞吐受代码对齐影响**：写入等超平凡循环对方法布局/对齐敏感，存在 ~±8% 抖动；**分配量与相对趋势不受此影响**，应作为主要判据。
-3. **运行时为 .NET 10.0.9**（非目标 `net8.0`）；结论须在同一运行时下复测。
+3. **运行时为 .NET 10.0.9**，与测试目标 `net10.0` 一致；结论须在同一运行时下复测。
 4. **微基准取 min-of-rounds**，偏向理想 JIT 稳态；真实模拟套件更具代表性。
 5. 高方差项：String `TryGetString` 读取、混合分派、异构迭代装箱侧、值类型插入装箱侧；对该些项下结论前应增加采样轮数（≥ 8 轮）收敛。
 
