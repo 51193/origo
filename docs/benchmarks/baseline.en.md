@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Performance Baseline
 
@@ -31,12 +31,13 @@ lines emitted by `PerfReporter.EmitMetric`):
 - **Allocation growth over 20%**: fails on any machine (allocation is
   CPU-independent and comparable across machines)
 - **Throughput drop over 50%**: fails only when the run machine matches the
-  baseline's `machine_id` (CI runners are random machines; throughput is not
-  comparable across machines, while local same-machine runs catch real
-  regressions)
-- Single-shot subsystem benchmarks fluctuate up to ±50% from CPU frequency
-  scaling, so the gate is tuned for "severe regression detection" (complexity
-  regressions, allocation leaks) rather than noise-level sensitivity
+  baseline's `machine_id` **and** the metric is a min-of-rounds measurement
+  (`CompareTable` / `Compare` / `Report`) (CI runners are random machines;
+  throughput is not comparable across machines, while local same-machine runs
+  catch real regressions)
+- Single-shot subsystem benchmark rows (`ReportTable`) swing with CPU
+  frequency scaling by up to ±50% or more; their throughput is not gated,
+  only their allocation is
 - After a confirmed improvement or an environment change, run
   `bash scripts/benchmark.sh --update-baseline` and commit the refreshed baseline
 

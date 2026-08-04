@@ -15,7 +15,9 @@
 #   - allocation growth over ALLOC_THRESHOLD (20%) always fails (machine-independent)
 #   - ops/s drop over OPS_THRESHOLD (50%) fails only on the same machine the
 #     baseline was captured on (CI runners are random machines; throughput is
-#     not comparable across machines, allocation is)
+#     not comparable across machines, allocation is) AND only for min-of-rounds
+#     measurements (CompareTable/Compare/Report); single-shot ReportTable rows
+#     swing with CPU frequency scaling, so only their allocation is gated
 # Pass --update-baseline to refresh baseline.json from the current run
 # (e.g. after a confirmed improvement or an environment change).
 set -euo pipefail
@@ -121,6 +123,12 @@ machine_id = sys.argv[5]
 current = json.load(open(current_path))
 baseline = json.load(open(baseline_path))
 
+# Throughput gates only apply to min-of-rounds measurements (CompareTable /
+# Compare / Report kinds). ReportTable rows are single-shot measurements whose
+# ops/s swing with CPU frequency scaling (documented in baseline docs); only
+# their allocation is gated.
+THROUGHPUT_GATED_KINDS = {"CompareTable", "Compare", "Report"}
+
 same_machine = baseline.get("machine_id") == machine_id
 if not same_machine:
     print(f"  Baseline machine '{baseline.get('machine_id')}' != current '{machine_id}':")
@@ -137,7 +145,8 @@ for key, cur in sorted(current.items()):
     alloc_ratio = cur["alloc"] / base["alloc"] if base["alloc"] > 0 else 1.0
     if alloc_ratio > 1.0 + alloc_th:
         fails.append(f"  FAIL allocation: {key} {cur['alloc']} B vs baseline {base['alloc']} B ({alloc_ratio*100:.0f}%)")
-    if same_machine:
+    kind = key.split("|", 1)[0]
+    if same_machine and kind in THROUGHPUT_GATED_KINDS:
         ops_ratio = cur["ops"] / base["ops"] if base["ops"] > 0 else 1.0
         if ops_ratio < 1.0 - ops_th:
             fails.append(f"  FAIL throughput: {key} {cur['ops']:.0f} ops/s vs baseline {base['ops']:.0f} ({ops_ratio*100:.0f}%)")

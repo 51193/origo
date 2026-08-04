@@ -8,8 +8,8 @@
     "benchmarks/baseline": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "files": {
         "zh": "benchmarks/baseline.zh.md",
