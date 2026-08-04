@@ -1237,6 +1237,17 @@
         "en": "README.en.md"
       }
     },
+    "tools/DocSyncTool.Tests/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "tools/DocSyncTool.Tests/README.zh.md",
+        "en": "tools/DocSyncTool.Tests/README.en.md"
+      }
+    },
     "usage/agent-reference": {
       "status": "synced",
       "revisions": {

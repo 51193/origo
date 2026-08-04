@@ -8,6 +8,11 @@ namespace DocSyncTool;
 
 internal sealed class Config
 {
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public List<string> Languages { get; set; } = ["zh"];
     public string DocsRoot { get; set; } = "docs";
 
@@ -23,7 +28,7 @@ internal sealed class Config
             throw new InvalidOperationException($"Config file not found: {configPath}");
 
         var json = File.ReadAllText(configPath);
-        var config = JsonSerializer.Deserialize<Config>(json)
+        var config = JsonSerializer.Deserialize<Config>(json, _jsonOptions)
             ?? throw new InvalidOperationException("Failed to parse docsync-config.json");
 
         config.RepoRoot = repoRoot;

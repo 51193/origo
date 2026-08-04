@@ -16,6 +16,7 @@
 - [Origo.SourceGeneration/](Origo.SourceGeneration/)
 - [Origo.SourceGeneration.Tests/](Origo.SourceGeneration.Tests/)
 - [Origo.TestSupport/](Origo.TestSupport/)
+- [tools/](tools/)
 - [usage/](usage/)
 
 ## English
@@ -32,5 +33,6 @@
 - [Origo.SourceGeneration/](Origo.SourceGeneration/)
 - [Origo.SourceGeneration.Tests/](Origo.SourceGeneration.Tests/)
 - [Origo.TestSupport/](Origo.TestSupport/)
+- [tools/](tools/)
 - [usage/](usage/)
 
