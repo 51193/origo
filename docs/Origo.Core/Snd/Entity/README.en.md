@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Entity
 
@@ -115,6 +115,8 @@ Notification callbacks may trigger Subscribe/Unsubscribe/SetData (and thus Notif
 ### Why observation goes through per-scene-host ObserverTopology rather than entity subscription APIs
 
 Observer strategies, like passive/active strategies, are stateless and poolable. Delegating observer wiring to the scene-host-level `ObserverTopology` for unified governance allows the binding topology to be serialized with entities (`ObserverIndices`) and auto-restored on load, eliminating the need for business code to manually reconnect in `AfterLoad` or manually unsubscribe in `BeforeDead` — the topology auto-unmounts all bindings when an entity quits or dies. Cross-entity bindings form a directed graph rather than per-entity private state; centralizing them to the per-scene-host topology means `SessionRun`'s kill/clear bidirectional teardown locates observers via the incoming edge index without entities needing to expose their internal managers in reverse.
+
+> **⚠️ Adapter integration contract**: `SessionRun.KillPending`'s observer bidirectional teardown and load recovery apply only to entities that are bare `SndEntity` types inside the host. Non-bare wrapper entity types (e.g. Godot's `GodotSndEntity`) intentionally do not participate in that bidirectional teardown — new adapter implementations must handle observer unwiring for their wrapper entities themselves, or transcribe the bare-`SndEntity` semantics at the wrapper layer (see [Scene/README](../Scene/README.en.md)).
 
 ### Why SndDataManager stores (OriginalCallback, WrappedCallback) pairs
 
