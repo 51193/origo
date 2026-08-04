@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo 性能基线
 
@@ -26,9 +26,9 @@ bash scripts/benchmark.sh
 
 `scripts/benchmark.sh` 会把每次运行的测量值与 `docs/benchmarks/baseline.json` 比对（机器可读基线，由 `PerfReporter.EmitMetric` 输出的 `BENCH|kind|label|side|ops|alloc` 行生成）：
 
-- **分配增长超 20%**：任何机器上都判定失败（分配与 CPU 无关，跨机器可比）
-- **吞吐下降超 50%**：仅当运行机器与基线记录的 `machine_id` 相同**且指标为 min-of-rounds 测量**（`CompareTable`/`Compare`/`Report`）时判定失败（CI runner 是随机机器，吞吐跨机器不可比；本地同机器运行可捕捉真实退化）
-- 单次测量的子系统基准（`ReportTable`）受 CPU 调频影响波动可达 ±50% 以上，其吞吐不参与门禁，仅分配参与门禁
+- **仅当运行机器与基线记录的 `machine_id` 相同时执行回归门禁**：吞吐下降超 50%（限 min-of-rounds 测量 `CompareTable`/`Compare`/`Report`）与分配增长超 20% 均在此时判定失败
+- **机器不匹配时跳过全部数值门禁**（CI runner 是随机机器、全新 VM，吞吐与分配都受 CPU 调频、tiered-JIT 内联决策与运行时构建影响，跨机器均不可比）：benchmark 步骤仅作冒烟测试，确认基准代码可运行
+- 本地 `scripts/ci.sh` 在同机器运行，可捕捉真实的吞吐与分配退化
 - 确认改进或环境变更后，运行 `bash scripts/benchmark.sh --update-baseline` 刷新基线并提交
 
 ## 采样元信息

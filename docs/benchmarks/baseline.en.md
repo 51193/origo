@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Performance Baseline
 
@@ -28,16 +28,17 @@ This script runs three benchmark suites sequentially (all marked `[Trait("Catego
 (a machine-readable baseline generated from the `BENCH|kind|label|side|ops|alloc`
 lines emitted by `PerfReporter.EmitMetric`):
 
-- **Allocation growth over 20%**: fails on any machine (allocation is
-  CPU-independent and comparable across machines)
-- **Throughput drop over 50%**: fails only when the run machine matches the
-  baseline's `machine_id` **and** the metric is a min-of-rounds measurement
-  (`CompareTable` / `Compare` / `Report`) (CI runners are random machines;
-  throughput is not comparable across machines, while local same-machine runs
-  catch real regressions)
-- Single-shot subsystem benchmark rows (`ReportTable`) swing with CPU
-  frequency scaling by up to ±50% or more; their throughput is not gated,
-  only their allocation is
+- **Regression gates run only when the run machine matches the baseline's
+  `machine_id`**: throughput drop over 50% (min-of-rounds measurements
+  `CompareTable` / `Compare` / `Report` only) and allocation growth over 20%
+  both fail at that point
+- **On a machine mismatch all numeric gates are skipped** (CI runners are
+  random machines / fresh VMs; both throughput and allocation depend on CPU
+  frequency scaling, tiered-JIT inlining decisions, and runtime builds, so
+  neither is comparable across machines): the benchmark step acts as a smoke
+  test that the benchmarks still run
+- Local `scripts/ci.sh` runs on the baseline machine and catches real
+  throughput and allocation regressions
 - After a confirmed improvement or an environment change, run
   `bash scripts/benchmark.sh --update-baseline` and commit the refreshed baseline
 

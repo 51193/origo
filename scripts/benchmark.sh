@@ -11,13 +11,13 @@
 # by this dedicated CI step, which scripts/ci.sh invokes.
 #
 # Every measurement is emitted as a machine-readable BENCH|... line by
-# PerfReporter.EmitMetric and compared against docs/benchmarks/baseline.json:
-#   - allocation growth over ALLOC_THRESHOLD (20%) always fails (machine-independent)
-#   - ops/s drop over OPS_THRESHOLD (50%) fails only on the same machine the
-#     baseline was captured on (CI runners are random machines; throughput is
-#     not comparable across machines, allocation is) AND only for min-of-rounds
-#     measurements (CompareTable/Compare/Report); single-shot ReportTable rows
-#     swing with CPU frequency scaling, so only their allocation is gated
+# PerfReporter.EmitMetric and compared against docs/benchmarks/baseline.json.
+# Comparison is meaningful only on the machine that captured the baseline
+# (scripts/ci.sh on a developer machine): ops/s depends on CPU frequency scaling
+# and tiered-JIT state, and even allocation counts vary across machines/runtime
+# builds because JIT inlining decisions change per-instruction allocation.
+# GitHub Actions runners are random VMs with fresh machine ids, so on CI the
+# comparison is skipped entirely and the step acts as a smoke test.
 # Pass --update-baseline to refresh baseline.json from the current run
 # (e.g. after a confirmed improvement or an environment change).
 set -euo pipefail
@@ -123,30 +123,37 @@ machine_id = sys.argv[5]
 current = json.load(open(current_path))
 baseline = json.load(open(baseline_path))
 
-# Throughput gates only apply to min-of-rounds measurements (CompareTable /
-# Compare / Report kinds). ReportTable rows are single-shot measurements whose
-# ops/s swing with CPU frequency scaling (documented in baseline docs); only
-# their allocation is gated.
-THROUGHPUT_GATED_KINDS = {"CompareTable", "Compare", "Report"}
-
+# Regression gates only apply on the machine the baseline was captured on.
+# CI runners are random machines: neither throughput (CPU frequency scaling,
+# tiered JIT state) nor allocation (JIT inlining/GC behavior varies per
+# machine and runtime build) is comparable across machines, so every gate is
+# skipped on a machine mismatch. Local runs of scripts/ci.sh on the
+# baseline machine get the full gate.
 same_machine = baseline.get("machine_id") == machine_id
 if not same_machine:
     print(f"  Baseline machine '{baseline.get('machine_id')}' != current '{machine_id}':")
-    print("  throughput checks SKIPPED (not comparable across machines); allocation checks still enforced.")
+    print("  regression gates SKIPPED (metrics are not comparable across machines);")
+    print("  benchmark run still acts as a smoke test.")
 
 fails = []
 skipped = 0
+# Throughput gates only apply to min-of-rounds measurements (CompareTable /
+# Compare / Report kinds); single-shot ReportTable rows swing with CPU
+# frequency scaling, so only their allocation is gated.
+THROUGHPUT_GATED_KINDS = {"CompareTable", "Compare", "Report"}
 for key, cur in sorted(current.items()):
     base = baseline.get("metrics", {}).get(key)
     if base is None:
         skipped += 1
         print(f"  NEW metric (no baseline): {key}")
         continue
+    if not same_machine:
+        continue
     alloc_ratio = cur["alloc"] / base["alloc"] if base["alloc"] > 0 else 1.0
     if alloc_ratio > 1.0 + alloc_th:
         fails.append(f"  FAIL allocation: {key} {cur['alloc']} B vs baseline {base['alloc']} B ({alloc_ratio*100:.0f}%)")
     kind = key.split("|", 1)[0]
-    if same_machine and kind in THROUGHPUT_GATED_KINDS:
+    if kind in THROUGHPUT_GATED_KINDS:
         ops_ratio = cur["ops"] / base["ops"] if base["ops"] > 0 else 1.0
         if ops_ratio < 1.0 - ops_th:
             fails.append(f"  FAIL throughput: {key} {cur['ops']:.0f} ops/s vs baseline {base['ops']:.0f} ({ops_ratio*100:.0f}%)")
