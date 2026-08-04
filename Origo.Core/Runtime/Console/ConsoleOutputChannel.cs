@@ -1,3 +1,4 @@
+using System.Threading;
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Console;
@@ -15,7 +16,7 @@ public sealed class ConsoleOutputChannel(ILogger? logger = null) : IConsoleOutpu
 {
     private readonly ILogger _logger = logger ?? NullLogger.Instance;
     private readonly Dictionary<long, Action<string>> _listeners = [];
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private long _nextId = 1;
 
     public long Subscribe(Action<string> listener)

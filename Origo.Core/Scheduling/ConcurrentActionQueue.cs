@@ -1,3 +1,4 @@
+using System.Threading;
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Logging;
@@ -25,7 +26,7 @@ internal class ConcurrentActionQueue
     private const int _maxReentrantDrainDepth = 100;
 
     private readonly List<Action> _actionQueue = [];
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly ILogger _logger;
 
     /// <summary>

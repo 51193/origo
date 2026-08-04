@@ -19,10 +19,7 @@ internal sealed class TestRepo : IDisposable
         Root = root;
     }
 
-    public static TestRepo Create()
-    {
-        return Create(["zh", "en"]);
-    }
+    public static TestRepo Create() => Create(["zh", "en"]);
 
     public static TestRepo Create(string[] languages)
     {
@@ -53,25 +50,13 @@ internal sealed class TestRepo : IDisposable
         File.WriteAllText(full, content);
     }
 
-    public string Read(string relativePath)
-    {
-        return File.ReadAllText(Full(relativePath));
-    }
+    public string Read(string relativePath) => File.ReadAllText(Full(relativePath));
 
-    public bool Exists(string relativePath)
-    {
-        return File.Exists(Full(relativePath));
-    }
+    public bool Exists(string relativePath) => File.Exists(Full(relativePath));
 
-    public string Full(string relativePath)
-    {
-        return Path.Combine(Root, relativePath.Replace('/', Path.DirectorySeparatorChar));
-    }
+    public string Full(string relativePath) => Path.Combine(Root, relativePath.Replace('/', Path.DirectorySeparatorChar));
 
-    public Config LoadConfig()
-    {
-        return Config.Load(Root);
-    }
+    public Config LoadConfig() => Config.Load(Root);
 
     public void Dispose()
     {

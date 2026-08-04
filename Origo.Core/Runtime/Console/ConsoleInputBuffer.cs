@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Origo.Core.Abstractions.Console;
@@ -10,7 +11,7 @@ namespace Origo.Core.Runtime.Console;
 /// </summary>
 public sealed class ConsoleInputBuffer : IConsoleInputSource
 {
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly Queue<string> _queue = new();
 
     public bool TryDequeueCommand([NotNullWhen(true)] out string? line)

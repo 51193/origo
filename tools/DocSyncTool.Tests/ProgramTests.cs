@@ -31,10 +31,7 @@ public class ProgramTests
         }
     }
 
-    private static int RunIn(TestRepo repo, params string[] args)
-    {
-        return RunIn(repo.Root, args);
-    }
+    private static int RunIn(TestRepo repo, params string[] args) => RunIn(repo.Root, args);
     [Fact]
     public void Main_NoArgs_ReturnsUsageExitCode()
     {

@@ -1,3 +1,4 @@
+using System.Threading;
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
@@ -20,7 +21,7 @@ public sealed class PersistentBlackboard : IBlackboard
     private readonly IFileMetaAccess _metaAccess;
     private readonly IPathResolver _pathResolver;
     private readonly IBlackboard _inner;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly DataSourceConverterRegistry _registry;
 
     /// <summary>

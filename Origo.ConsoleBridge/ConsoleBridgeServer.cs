@@ -30,7 +30,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private readonly IConsoleOutputChannel _output;
     private readonly Queue<string> _pendingOutput = new();
 
-    private readonly object _writerLock = new();
+    private readonly Lock _writerLock = new();
     private readonly CancellationTokenSource _cts = new();
 
     private TcpListener _listener = null!;

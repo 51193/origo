@@ -31,7 +31,12 @@ csharp_style_prefer_pattern_matching = true:suggestion
 csharp_style_prefer_not_pattern = true:suggestion
 
 # Null checking style
-dotnet_diagnostic.CA1062.severity = suggestion
+# CA1062 (validate public parameters) is enforced at error level in production
+# code; only test projects and test support are exempt (parameters are supplied
+# by the framework there — see the test-project section below).
+# The rule is no longer part of the default recommended set on the .NET 10 SDK,
+# so it must be enabled explicitly.
+dotnet_diagnostic.CA1062.severity = error
 
 # Test projects and test support: flat namespace for cross-directory type access.
 # Intentional design — see docs/Origo.Core.Tests/META-TEST.md §测试命名空间约定.
