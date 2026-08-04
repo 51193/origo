@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Performance Baseline
 
@@ -22,16 +22,37 @@ This script runs three benchmark suites sequentially (all marked `[Trait("Catego
 - **Core Subsystem Benchmarks** — `Origo.Core.Tests` (TypedData real-world simulation + entity lifecycle + Observer topology + DataSourceNode + Blackboard + Save + concurrent queue + random + Strategy performance)
 - **Godot Adapter Benchmarks** — `Origo.GodotAdapter.Tests` (Godot registered type TypedData read/write/conversion throughput)
 
+## Regression Gate (benchmark.sh comparison)
+
+`scripts/benchmark.sh` compares every run against `docs/benchmarks/baseline.json`
+(a machine-readable baseline generated from the `BENCH|kind|label|side|ops|alloc`
+lines emitted by `PerfReporter.EmitMetric`):
+
+- **Allocation growth over 20%**: fails on any machine (allocation is
+  CPU-independent and comparable across machines)
+- **Throughput drop over 50%**: fails only when the run machine matches the
+  baseline's `machine_id` (CI runners are random machines; throughput is not
+  comparable across machines, while local same-machine runs catch real
+  regressions)
+- Single-shot subsystem benchmarks fluctuate up to ±50% from CPU frequency
+  scaling, so the gate is tuned for "severe regression detection" (complexity
+  regressions, allocation leaks) rather than noise-level sensitivity
+- After a confirmed improvement or an environment change, run
+  `bash scripts/benchmark.sh --update-baseline` and commit the refreshed baseline
+
 ## Sampling Metadata
 
 | Item | Value |
 |----|----|
-| CPU | Intel Core i7-8550U (4C/8T, 1.80 GHz base / 4.00 GHz turbo) |
-| Memory / OS | 7.7 GiB / Ubuntu 26.04 LTS (Linux 7.0.0-27-generic) |
-| .NET | SDK 10.0.301, runtime **10.0.9** (test target `net10.0`) |
+| CPU | Intel Core i7-11800H (8C/16T, 2.30 GHz base) |
+| Memory / OS | 15.4 GiB / Ubuntu 26.04 LTS (Linux 7.0.0-28-generic) |
+| .NET | SDK 10.0.302, runtime 10.0.10 (test target `net10.0`) |
 | Build | `Release` |
 | Sampling | Single run (min-of-rounds internally takes `min of 5`) |
-| Ratio convention | `Ratio` = faster throughput / slower throughput; "Winner" indicates the faster side |
+
+> The tables below are a reference snapshot of the current baseline values;
+> **the regression gate's data source is `docs/benchmarks/baseline.json`**
+> (refreshed via `--update-baseline` as machine and runtime change).
 
 ## Methodology
 

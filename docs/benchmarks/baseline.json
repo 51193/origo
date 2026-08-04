@@ -1,0 +1,314 @@
+{
+  "machine_id": "463f02c7120949d890b60807bc1d686c",
+  "metrics": {
+    "CompareTable|Boolean|A": {
+      "alloc": 24670448,
+      "ops": 104874570.01
+    },
+    "CompareTable|Boolean|B": {
+      "alloc": 27699424,
+      "ops": 68117106.93
+    },
+    "CompareTable|Char|A": {
+      "alloc": 0,
+      "ops": 411167303.98
+    },
+    "CompareTable|Char|B": {
+      "alloc": 0,
+      "ops": 425731193.32
+    },
+    "CompareTable|Color|A": {
+      "alloc": 12800040,
+      "ops": 18817861.91
+    },
+    "CompareTable|Color|B": {
+      "alloc": 12800000,
+      "ops": 33173547.41
+    },
+    "CompareTable|Double|A": {
+      "alloc": 0,
+      "ops": 416538234.04
+    },
+    "CompareTable|Double|B": {
+      "alloc": 0,
+      "ops": 392296858.88
+    },
+    "CompareTable|Hetero|A": {
+      "alloc": 39312000,
+      "ops": 180567801.09
+    },
+    "CompareTable|Hetero|B": {
+      "alloc": 0,
+      "ops": 1243472981.18
+    },
+    "CompareTable|Int32|A": {
+      "alloc": 24670448,
+      "ops": 113237458.95
+    },
+    "CompareTable|Int32|B": {
+      "alloc": 27699432,
+      "ops": 51058441.49
+    },
+    "CompareTable|Int64|A": {
+      "alloc": 0,
+      "ops": 416021832.83
+    },
+    "CompareTable|Int64|B": {
+      "alloc": 0,
+      "ops": 396135303.97
+    },
+    "CompareTable|Mixed|A": {
+      "alloc": 0,
+      "ops": 505527948.11
+    },
+    "CompareTable|Mixed|B": {
+      "alloc": 0,
+      "ops": 328179816.28
+    },
+    "CompareTable|NumChain|A": {
+      "alloc": 0,
+      "ops": 151532371.1
+    },
+    "CompareTable|NumChain|B": {
+      "alloc": 0,
+      "ops": 168638329.81
+    },
+    "CompareTable|Observer|A": {
+      "alloc": 0,
+      "ops": 603445674.8
+    },
+    "CompareTable|Observer|B": {
+      "alloc": 0,
+      "ops": 894534394.85
+    },
+    "CompareTable|Read String|A": {
+      "alloc": 0,
+      "ops": 261371626.02
+    },
+    "CompareTable|Read String|B": {
+      "alloc": 0,
+      "ops": 449500829.33
+    },
+    "CompareTable|Single|A": {
+      "alloc": 24670448,
+      "ops": 115210027.88
+    },
+    "CompareTable|Single|B": {
+      "alloc": 27699440,
+      "ops": 36591702.47
+    },
+    "CompareTable|String|A": {
+      "alloc": 24670448,
+      "ops": 91981088.69
+    },
+    "CompareTable|String|B": {
+      "alloc": 15699424,
+      "ops": 96807295.4
+    },
+    "CompareTable|ToObject|A": {
+      "alloc": 6400040,
+      "ops": 27084123.29
+    },
+    "CompareTable|ToObject|B": {
+      "alloc": 6400000,
+      "ops": 63107408.81
+    },
+    "CompareTable|Vector3|A": {
+      "alloc": 6400040,
+      "ops": 57602027.59
+    },
+    "CompareTable|Vector3|B": {
+      "alloc": 6400000,
+      "ops": 193124758.59
+    },
+    "CompareTable|Write String|A": {
+      "alloc": 0,
+      "ops": 298641182.62
+    },
+    "CompareTable|Write String|B": {
+      "alloc": 64000000,
+      "ops": 59382775.43
+    },
+    "ReportTable|1 strategies": {
+      "alloc": 96,
+      "ops": 656146.45
+    },
+    "ReportTable|10 entities": {
+      "alloc": 41736,
+      "ops": 90661.83
+    },
+    "ReportTable|10 strategies": {
+      "alloc": 144,
+      "ops": 212404418.01
+    },
+    "ReportTable|100 actions": {
+      "alloc": 896,
+      "ops": 1647446.46
+    },
+    "ReportTable|100 entities": {
+      "alloc": 358704,
+      "ops": 181159.42
+    },
+    "ReportTable|100 keys \u00d7 2 ops": {
+      "alloc": 4952,
+      "ops": 3395585.74
+    },
+    "ReportTable|1000 actions": {
+      "alloc": 8096,
+      "ops": 27027027.03
+    },
+    "ReportTable|1000 enqueues": {
+      "alloc": 16672,
+      "ops": 17361111.11
+    },
+    "ReportTable|1000 keys \u00d7 2 ops": {
+      "alloc": 48776,
+      "ops": 14204545.45
+    },
+    "ReportTable|10000 actions": {
+      "alloc": 80096,
+      "ops": 3295110.06
+    },
+    "ReportTable|10000 enqueues": {
+      "alloc": 262464,
+      "ops": 1772861.04
+    },
+    "ReportTable|10e \u00d7 1s": {
+      "alloc": 600,
+      "ops": 12461059.19
+    },
+    "ReportTable|20 strategies": {
+      "alloc": 224,
+      "ops": 258933195.24
+    },
+    "ReportTable|2000 entities": {
+      "alloc": 8011992,
+      "ops": 318162.29
+    },
+    "ReportTable|200e \u00d7 10s": {
+      "alloc": 20840,
+      "ops": 34911020.54
+    },
+    "ReportTable|300 entities": {
+      "alloc": 6448,
+      "ops": 7594936.71
+    },
+    "ReportTable|5 strategies": {
+      "alloc": 104,
+      "ops": 132450331.13
+    },
+    "ReportTable|500 entities": {
+      "alloc": 1881736,
+      "ops": 203119.92
+    },
+    "ReportTable|500 keys \u00d7 2 ops": {
+      "alloc": 23168,
+      "ops": 16103059.58
+    },
+    "ReportTable|50000 enqueues": {
+      "alloc": 1048944,
+      "ops": 45837917.13
+    },
+    "ReportTable|50e \u00d7 5s": {
+      "alloc": 3240,
+      "ops": 26094671.47
+    },
+    "ReportTable|As<T> dispatch": {
+      "alloc": 40,
+      "ops": 36166226.63
+    },
+    "ReportTable|Create+Extract": {
+      "alloc": 41600040,
+      "ops": 8561717.14
+    },
+    "ReportTable|EntitySim": {
+      "alloc": 1920040,
+      "ops": 5498251.56
+    },
+    "ReportTable|Get Boolean": {
+      "alloc": 19992040,
+      "ops": 6738390.09
+    },
+    "ReportTable|Get Int32": {
+      "alloc": 19992040,
+      "ops": 5492670.58
+    },
+    "ReportTable|Get Single": {
+      "alloc": 19992040,
+      "ops": 6975222.61
+    },
+    "ReportTable|Get String": {
+      "alloc": 19992040,
+      "ops": 6199689.52
+    },
+    "ReportTable|Mount \u00d7 10": {
+      "alloc": 22848,
+      "ops": 58004.64
+    },
+    "ReportTable|Mount \u00d7 200": {
+      "alloc": 434360,
+      "ops": 636132.32
+    },
+    "ReportTable|Mount \u00d7 50": {
+      "alloc": 108432,
+      "ops": 559910.41
+    },
+    "ReportTable|NextInt32": {
+      "alloc": 0,
+      "ops": 591877078.97
+    },
+    "ReportTable|NextInt64": {
+      "alloc": 0,
+      "ops": 683209444.69
+    },
+    "ReportTable|NextUInt64": {
+      "alloc": 0,
+      "ops": 677763921.27
+    },
+    "ReportTable|Pool Roundtrip": {
+      "alloc": 229795024,
+      "ops": 365279.06
+    },
+    "ReportTable|Set Boolean": {
+      "alloc": 17273736,
+      "ops": 6696622.89
+    },
+    "ReportTable|Set Int32": {
+      "alloc": 17273736,
+      "ops": 6486556.61
+    },
+    "ReportTable|Set Single": {
+      "alloc": 17273736,
+      "ops": 7630034.87
+    },
+    "ReportTable|Set String": {
+      "alloc": 22065744,
+      "ops": 5315275.57
+    },
+    "ReportTable|Unmount \u00d7 10": {
+      "alloc": 18944,
+      "ops": 83333.33
+    },
+    "ReportTable|Unmount \u00d7 200": {
+      "alloc": 356464,
+      "ops": 403225.81
+    },
+    "ReportTable|Unmount \u00d7 50": {
+      "alloc": 89792,
+      "ops": 474383.3
+    },
+    "ReportTable|d=2 w=5 (~31 nodes)": {
+      "alloc": 41120,
+      "ops": 88774.34
+    },
+    "ReportTable|d=3 w=8 (~585 nodes)": {
+      "alloc": 1530608,
+      "ops": 76534.62
+    },
+    "ReportTable|d=4 w=8 (~4681 nodes)": {
+      "alloc": 16684848,
+      "ops": 403270.27
+    }
+  },
+  "schema_version": 1
+}

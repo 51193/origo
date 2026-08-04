@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo 性能基线
 
@@ -22,16 +22,26 @@ bash scripts/benchmark.sh
 - **Core 子系统基准** — `Origo.Core.Tests`（TypedData 真实模拟 + 实体生命周期 + Observer 拓扑 + DataSourceNode + Blackboard + Save + 并发队列 + 随机数 + Strategy 性能）
 - **Godot 适配器基准** — `Origo.GodotAdapter.Tests`（Godot 注册类型的 TypedData 读写/转换吞吐）
 
+## 回归门禁（benchmark.sh 比对）
+
+`scripts/benchmark.sh` 会把每次运行的测量值与 `docs/benchmarks/baseline.json` 比对（机器可读基线，由 `PerfReporter.EmitMetric` 输出的 `BENCH|kind|label|side|ops|alloc` 行生成）：
+
+- **分配增长超 20%**：任何机器上都判定失败（分配与 CPU 无关，跨机器可比）
+- **吞吐下降超 50%**：仅当运行机器与基线记录的 `machine_id` 相同时判定失败（CI runner 是随机机器，吞吐跨机器不可比；本地同机器运行可捕捉真实退化）
+- 单次测量的子系统基准受 CPU 调频影响波动可达 ±50%，故阈值按"严重退化检测"设定（复杂度退化、分配泄漏），不追求噪音级灵敏度
+- 确认改进或环境变更后，运行 `bash scripts/benchmark.sh --update-baseline` 刷新基线并提交
+
 ## 采样元信息
 
 | 项 | 值 |
 |----|----|
-| CPU | Intel Core i7-8550U（4C/8T，1.80 GHz base / 4.00 GHz turbo） |
-| 内存 / OS | 7.7 GiB / Ubuntu 26.04 LTS（Linux 7.0.0-27-generic） |
-| .NET | SDK 10.0.301，运行时 **10.0.9**（测试目标 `net10.0`） |
+| CPU | Intel Core i7-11800H（8C/16T，2.30 GHz base） |
+| 内存 / OS | 15.4 GiB / Ubuntu 26.04 LTS（Linux 7.0.0-28-generic） |
+| .NET | SDK 10.0.302，运行时 10.0.10（测试目标 `net10.0`） |
 | 构建 | `Release` |
 | 采样 | 单次运行（min-of-rounds 内部取 `min of 5`） |
-| 倍率口径 | `Ratio` = 快者吞吐 / 慢者吞吐；「胜方」标注更快的一侧 |
+
+> 下方数值表格为当前基线快照的参考展示；**回归门禁的数据源是 `docs/benchmarks/baseline.json`**（随机器与运行时变化由 `--update-baseline` 刷新）。
 
 ## 方法学
 

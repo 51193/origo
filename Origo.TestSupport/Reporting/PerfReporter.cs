@@ -26,6 +26,19 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         _testOutput?.WriteLine(line);
     }
 
+    /// <summary>
+    ///     Emits a machine-readable metric line (stable format consumed by
+    ///     scripts/benchmark.sh for baseline comparison):
+    ///     <c>BENCH|&lt;kind&gt;|&lt;label&gt;|&lt;side&gt;|&lt;ops/s&gt;|&lt;alloc bytes&gt;</c>.
+    ///     <paramref name="side" /> is "A"/"B" for two-sided comparisons or empty for single rows.
+    /// </summary>
+    public void EmitMetric(string kind, string label, string side, double opsPerSec, long allocatedBytes)
+    {
+        var line = $"BENCH|{kind}|{label}|{side}|{opsPerSec:F2}|{allocatedBytes}";
+        _output.WriteLine(line);
+        _testOutput?.WriteLine(line);
+    }
+
     public void Report(string title, int iterations, TimeSpan elapsed, long allocatedBytes,
         string? baselineName = null, double? baselineTimeMs = null, long? baselineAlloc = null)
     {
@@ -34,6 +47,8 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         var opsPerSec = iterations / elapsed.TotalSeconds;
         var nsPerOp = elapsed.TotalNanoseconds() / iterations;
         var allocStr = FormatBytes(allocatedBytes);
+
+        EmitMetric("Report", title, "", opsPerSec, allocatedBytes);
 
         WriteLine();
         WriteLine($"  === {title} ===");
@@ -76,6 +91,9 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         WriteLine($"  Method                 Iterations   Time         Ops/s         Alloc");
         WriteLine($"  {divider}");
 
+        EmitMetric("Compare", title, "A", iterationsA / timeA.TotalSeconds, allocA);
+        EmitMetric("Compare", title, "B", iterationsB / timeB.TotalSeconds, allocB);
+
         PrintRow(nameA, iterationsA, timeA, allocA);
         PrintRow(nameB, iterationsB, timeB, allocB);
 
@@ -96,6 +114,7 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         foreach (var (label, iterations, elapsed, alloc) in rows)
         {
             var opsPerSec = iterations / elapsed.TotalSeconds;
+            EmitMetric("ReportTable", label, "", opsPerSec, alloc);
             WriteLine($"  {label,-26} {iterations,-14:N0} {FormatTime(elapsed),-14} {FormatRate(opsPerSec),-16} {FormatBytes(alloc)}");
         }
 
@@ -119,6 +138,8 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         {
             var opsA = iterations / timeA.TotalSeconds;
             var opsB = iterations / timeB.TotalSeconds;
+            EmitMetric("CompareTable", label, "A", opsA, allocA);
+            EmitMetric("CompareTable", label, "B", opsB, allocB);
             var faster = timeA < timeB;
             var ratio = faster
                 ? timeB.TotalMilliseconds / timeA.TotalMilliseconds
