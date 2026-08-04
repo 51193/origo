@@ -62,7 +62,10 @@ public class TypedDataGeneratorTests
                 }
                 internal static void RegisterKind(byte kind, Type type)
                 {
-                    if (kind != 0) KindTypeMap[kind] = type ?? typeof(object);
+                    if (kind == 0) return;
+                    if (kind == UnregisteredKind) throw new ArgumentOutOfRangeException(nameof(kind));
+                    ArgumentNullException.ThrowIfNull(type);
+                    KindTypeMap[kind] = type;
                 }
             }
         }
@@ -172,7 +175,7 @@ public class TypedDataGeneratorTests
         Assert.Empty(output.CompileErrors);
 
         var text = output.AllGeneratedText;
-        Assert.Contains("public static class TypedDataLayeredExtensions", text);
+        Assert.Contains("internal static class TypedDataLayeredExtensions", text);
         // Non-system value type: read through _ref with a type check.
         Assert.Contains("public static StubVec3 AsStubVec3(this TypedData td)", text);
         Assert.Contains("return (StubVec3)td._ref!;", text);
@@ -348,6 +351,36 @@ public class TypedDataGeneratorTests
         // collision check the generator would emit duplicate 'List' identifiers.
         var attribute = """
             [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(System.Collections.Generic.List<int>), typeof(System.Collections.Generic.List<string>))]
+            """;
+        var output = RunHome(attribute);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.DoesNotContain("List", output.AllGeneratedText);
+    }
+
+    [Fact]
+    public void SameTypeRegisteredTwice_ReportORIGOSG005()
+    {
+        // The same type listed twice (e.g. copy-paste) shares the kind name;
+        // previously this slipped past both collision checks and emitted
+        // duplicate accessor members (CS0111 pointing at generated code).
+        var attribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(System.Collections.Generic.List<int>), typeof(System.Collections.Generic.List<int>))]
+            """;
+        var output = RunHome(attribute);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.DoesNotContain("List", output.AllGeneratedText);
+    }
+
+    [Fact]
+    public void SameTypeRegisteredToDifferentKinds_ReportORIGOSG005()
+    {
+        // The same type registered under two different kinds shares the kind
+        // name and would emit duplicate identifiers; must be rejected up front.
+        var attribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(1, typeof(System.Collections.Generic.List<int>))]
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(5, typeof(System.Collections.Generic.List<int>))]
             """;
         var output = RunHome(attribute);
 

@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `TypedDataLayeredExtensions` is now `internal`** — the adapter-generated `AsXxx`/`TryGetXxx` extension methods on `TypedData` are no longer public, matching the home assembly's internal `AsXxx` accessors. They are unguarded (no kind check) and were the only public read path that could misread a wrong kind. Business reads go through `ISndEntity.TryGetData<T>` or the generated typed `TryGetXxx` accessors; external consumers must migrate.
 - **Benchmark regression gates run only on the baseline machine** — `scripts/benchmark.sh`
   skips all numeric gates (throughput and allocation) when the current machine's id does not
   match the baseline's `machine_id` (CI runners are random VMs; allocation counts also vary
@@ -88,6 +89,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Attaching a second `PlanExecutionStrategyBase`-derived strategy to the same entity now throws** — previously it silently unsubscribed the first plan strategy's callbacks.
 - **BREAKING: TypedData kind 255 rejected by the source generator** — `ORIGOSG003` now limits the valid range to `[1, 254]`; 255 is the reserved `UnregisteredKind` sentinel, and registering it used to corrupt `DataType` resolution and extraction.
 - **Session checkpoint writes (`WriteProgressOnlyToCurrent` / `WriteLevelPayloadOnlyToCurrent`) leave a write-in-progress marker on failure** — readers now reject partially written checkpoints instead of accepting them.
+
+### Fixed
+
+- **`TypedDataConverter` rejects null data for registered value types** — a save entry like `{"type":"Int32","data":null}` now throws `InvalidOperationException` instead of silently coercing the value to `0` (data loss); reference types still load null values through the `_ref` slot.
+- **`TryGetData<string>` finds null-string entries** — `TypedDataFactory<T>.TryExtract` for a reference-kind `TypedData` now reports found=true with a null value when the stored `_ref` is null, consistent with the generated `TryGetString` accessor.
+- **`TypedData.RegisterKind` validates its inputs** — a null type now throws `ArgumentNullException`, and the reserved kind 255 (`UnregisteredKind` sentinel) is rejected with `ArgumentOutOfRangeException`.
+- **Source generator diagnostic `ORIGOSG005` also rejects duplicate registrations of the same type** — the same type listed twice (same or different kinds) previously produced uncompilable duplicate identifiers in generated code; it now fails the build with the diagnostic.
 
 ### Removed
 

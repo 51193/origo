@@ -27,21 +27,11 @@ internal sealed class TypedDataConverter : DataSourceConverter<TypedData>
         var type = _typeMapping.GetTypeByName(typeName);
 
         if (!node.TryGetValue("data", out var dataNode) || dataNode is null || dataNode.IsNull)
-        {
-            var nullKind = TypedDataTypeMap.GetKindForType(type);
-            return nullKind != 0
-                ? new TypedData(nullKind, 0, null)
-                : new TypedData(TypedData.UnregisteredKind, 0, null);
-        }
+            return CreateNullData(typeName, type);
 
         var data = _registry.Read(type, dataNode);
         if (data is null)
-        {
-            var nullKind = TypedDataTypeMap.GetKindForType(type);
-            return nullKind != 0
-                ? new TypedData(nullKind, 0, null)
-                : new TypedData(TypedData.UnregisteredKind, 0, null);
-        }
+            return CreateNullData(typeName, type);
 
         var kind = TypedDataTypeMap.GetKindForType(type);
         if (kind == 0)
@@ -49,6 +39,27 @@ internal sealed class TypedDataConverter : DataSourceConverter<TypedData>
 
         var (inlineBits, refValue) = TypedDataObjectConverter.FromObject(kind, data);
         return new TypedData(kind, inlineBits, refValue);
+    }
+
+    /// <summary>
+    ///     Builds the null-data TypedData for a registered or unregistered
+    ///     type. A null value is representable only for reference types
+    ///     (stored through the <c>_ref</c> slot); for registered value types
+    ///     null cannot be expressed and is rejected as corrupted data
+    ///     (fail-fast), because the framework never writes such entries and
+    ///     silently coercing null to <c>default</c> would lose data.
+    /// </summary>
+    private static TypedData CreateNullData(string typeName, Type type)
+    {
+        var nullKind = TypedDataTypeMap.GetKindForType(type);
+        if (nullKind != 0 && type.IsValueType)
+            throw new InvalidOperationException(
+                $"Cannot deserialize a null 'data' value for value type '{typeName}': " +
+                "value types cannot represent null in TypedData storage. " +
+                "The save data is corrupted or was written by an incompatible version.");
+        return nullKind != 0
+            ? new TypedData(nullKind, 0, null)
+            : new TypedData(TypedData.UnregisteredKind, 0, null);
     }
 
     public override DataSourceNode Write(TypedData value)

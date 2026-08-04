@@ -28,10 +28,10 @@ public sealed partial class TypedDataGenerator
             }
             else
             {
-                var localType = GetFactoryLocalType(t);
-                var extractExpr = GetFactoryExtractExpr(t);
+                var localType = t.ClrTypeName;
+                var extractExpr = InlineTypeExprs.FactoryExtractExpr(t);
                 sb.AppendLine($"            {localType} local = {extractExpr};");
-                sb.AppendLine($"            return new TypedData({t.KindValue}, {GetFactoryBitsExpr(t)}, null);");
+                sb.AppendLine($"            return new TypedData({t.KindValue}, {InlineTypeExprs.Pack(t, "local")}, null);");
             }
 
             sb.AppendLine("        }");
@@ -60,12 +60,13 @@ public sealed partial class TypedDataGenerator
 
             if (t.IsReferenceType)
             {
-                sb.AppendLine("            if (source._ref is T t) { value = t; return true; }");
+                sb.AppendLine("            value = (T)source._ref!;");
+                sb.AppendLine("            return true;");
             }
             else
             {
-                var localType = GetFactoryLocalType(t);
-                sb.AppendLine($"            {localType} local = {GetFactoryReadFromBitsExpr(t)};");
+                var localType = t.ClrTypeName;
+                sb.AppendLine($"            {localType} local = {InlineTypeExprs.Unpack(t, "source._inlineBits")};");
                 sb.AppendLine($"            value = Unsafe.As<{localType}, T>(ref local);");
                 sb.AppendLine("            return true;");
             }
@@ -84,68 +85,5 @@ public sealed partial class TypedDataGenerator
         sb.AppendLine("    }");
 
         sb.AppendLine("}");
-    }
-
-    private static string GetFactoryLocalType(InlineTypeInfo t)
-    {
-        return t.SpecialType switch
-        {
-            SpecialType.System_Byte => "byte",
-            SpecialType.System_SByte => "sbyte",
-            SpecialType.System_Int16 => "short",
-            SpecialType.System_UInt16 => "ushort",
-            SpecialType.System_Int32 => "int",
-            SpecialType.System_UInt32 => "uint",
-            SpecialType.System_Int64 => "long",
-            SpecialType.System_UInt64 => "ulong",
-            SpecialType.System_Single => "float",
-            SpecialType.System_Double => "double",
-            SpecialType.System_Boolean => "bool",
-            SpecialType.System_Char => "char",
-            _ => "long"
-        };
-    }
-
-    private static string GetFactoryExtractExpr(InlineTypeInfo t)
-    {
-        return t.SpecialType switch
-        {
-            SpecialType.System_Byte => "Unsafe.As<T, byte>(ref value)",
-            SpecialType.System_SByte => "Unsafe.As<T, sbyte>(ref value)",
-            SpecialType.System_Int16 => "Unsafe.As<T, short>(ref value)",
-            SpecialType.System_UInt16 => "Unsafe.As<T, ushort>(ref value)",
-            SpecialType.System_Int32 => "Unsafe.As<T, int>(ref value)",
-            SpecialType.System_UInt32 => "Unsafe.As<T, uint>(ref value)",
-            SpecialType.System_Int64 => "Unsafe.As<T, long>(ref value)",
-            SpecialType.System_UInt64 => "Unsafe.As<T, ulong>(ref value)",
-            SpecialType.System_Single => "Unsafe.As<T, float>(ref value)",
-            SpecialType.System_Double => "Unsafe.As<T, double>(ref value)",
-            SpecialType.System_Boolean => "Unsafe.As<T, bool>(ref value)",
-            SpecialType.System_Char => "Unsafe.As<T, char>(ref value)",
-            _ => "Unsafe.As<T, long>(ref value)"
-        };
-    }
-
-    private static string GetFactoryBitsExpr(InlineTypeInfo t)
-    {
-        return t.SpecialType switch
-        {
-            SpecialType.System_Single => "BitConverter.SingleToInt32Bits(local)",
-            SpecialType.System_Double => "BitConverter.DoubleToInt64Bits(local)",
-            SpecialType.System_Boolean => "local ? 1 : 0",
-            SpecialType.System_UInt32 or SpecialType.System_UInt64 => "(long)local",
-            _ => "local"
-        };
-    }
-
-    private static string GetFactoryReadFromBitsExpr(InlineTypeInfo t)
-    {
-        return t.SpecialType switch
-        {
-            SpecialType.System_Single => "BitConverter.Int32BitsToSingle((int)source._inlineBits)",
-            SpecialType.System_Double => "BitConverter.Int64BitsToDouble(source._inlineBits)",
-            SpecialType.System_Boolean => "source._inlineBits != 0",
-            _ => $"({GetFactoryLocalType(t)})source._inlineBits"
-        };
     }
 }

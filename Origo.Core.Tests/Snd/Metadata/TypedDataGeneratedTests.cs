@@ -235,6 +235,18 @@ public class TypedDataGeneratedTests
     }
 
     [Fact]
+    public void TryExtract_StringKindWithNullValue_ReturnsFoundTrueAndNull()
+    {
+        // A null-string entry is a legal state (reference kinds store through
+        // _ref). TryExtract must agree with TypedData.TryGetString: a matching
+        // kind means the key exists, even when its value is null.
+        var td = new TypedData(TypedData.KindMap.String, 0, null);
+
+        Assert.True(TypedDataFactory<string>.TryExtract(td, out var value));
+        Assert.Null(value);
+    }
+
+    [Fact]
     public void AllRegisteredTypes_AreCovered()
     {
         var typesToCheck = new[]

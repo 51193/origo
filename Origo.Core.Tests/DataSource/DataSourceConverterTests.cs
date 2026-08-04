@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Origo.Core.DataSource;
 using Origo.Core.DataSource.Converters;
+using Origo.Core.Serialization;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.StateMachine;
 using Xunit;
@@ -153,6 +154,40 @@ public class DataSourceConverterTests
         var result = registry.Read<TypedData>(node);
 
         Assert.Equal(typeof(string), result.DataType);
+        Assert.Null(TypedDataObjectConverter.ToObject(result));
+    }
+
+    [Fact]
+    public void TypedDataConverter_NullDataForRegisteredValueType_Throws()
+    {
+        // A null 'data' value cannot be represented for registered value
+        // kinds; silently coercing it to default would lose data, so the
+        // reader rejects it (fail-fast).
+        var tm = new TypeStringMapping();
+        var registry = TestFactory.CreateRegistry(tm);
+
+        var node = DataSourceNode.CreateObject();
+        node.Add("type", DataSourceNode.CreateString(BclTypeNames.Int32));
+        node.Add("data", DataSourceNode.CreateNull());
+
+        var ex = Assert.Throws<InvalidOperationException>(() => registry.Read<TypedData>(node));
+        Assert.Contains("value type", ex.Message);
+    }
+
+    [Fact]
+    public void TypedDataConverter_NullDataForNullReferenceType_StillReturnsNullString()
+    {
+        // Reference kinds (string) represent null through the _ref slot and
+        // must keep loading as found-but-null, not throw.
+        var tm = new TypeStringMapping();
+        var registry = TestFactory.CreateRegistry(tm);
+
+        var node = DataSourceNode.CreateObject();
+        node.Add("type", DataSourceNode.CreateString(BclTypeNames.String));
+        node.Add("data", DataSourceNode.CreateNull());
+
+        var result = registry.Read<TypedData>(node);
+        Assert.Equal(TypedData.KindMap.String, result._kind);
         Assert.Null(TypedDataObjectConverter.ToObject(result));
     }
 

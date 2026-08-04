@@ -174,4 +174,21 @@ public class TypedDataTests
         TypedData.RegisterKind(0, typeof(DateTime));
         Assert.Null(TypedData.KindTypeMap[0]);
     }
+
+    [Fact]
+    public void RegisterKind_UnregisteredKindSentinel_Throws()
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(
+            () => TypedData.RegisterKind(TypedData.UnregisteredKind, typeof(DateTime)));
+        Assert.Contains(nameof(TypedData.UnregisteredKind), ex.Message);
+        Assert.Null(TypedData.KindTypeMap[TypedData.UnregisteredKind]);
+    }
+
+    [Fact]
+    public void RegisterKind_NullType_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(
+            () => TypedData.RegisterKind(202, null!));
+        Assert.Null(TypedData.KindTypeMap[202]);
+    }
 }

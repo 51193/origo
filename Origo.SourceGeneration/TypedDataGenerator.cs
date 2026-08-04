@@ -6,13 +6,25 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Origo.SourceGeneration;
 
+/// <summary>
+///     Incremental source generator that emits TypedData inline storage
+///     members for every type declared via
+///     <c>Origo.Core.Snd.Metadata.SndInlineTypesAttribute</c>: the kind map,
+///     zero-boxing accessors, the generic factory, and — for adapter
+///     assemblies — layered kind/converter/type-map registration.
+/// </summary>
 [Generator(LanguageNames.CSharp)]
 public sealed partial class TypedDataGenerator : IIncrementalGenerator
 {
     private const string _attributeFullName = "Origo.Core.Snd.Metadata.SndInlineTypesAttribute";
     private const string _typedDataFullName = "Origo.Core.Snd.Metadata.TypedData";
-    private const string _registryFullName = "Origo.Core.Snd.Metadata.TypedDataLayeredRegistry";
 
+    /// <summary>
+    ///     Registers the incremental pipeline: the generation input is derived
+    ///     from the compilation's assembly attributes and compared by value,
+    ///     so identical declaration sets over new compilations skip
+    ///     regeneration entirely.
+    /// </summary>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var inputProvider = context.CompilationProvider
@@ -75,10 +87,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             {
                 foreach (var element in ctorArg.Values)
                 {
-                    if (element.Value is INamedTypeSymbol typeSymbol)
+                    if (element.Value is ITypeSymbol typeSymbol)
                         result.Add(CreateTypeInfo(typeSymbol, startKind + kindOffset++, attrLocation));
-                    else if (element.Value is ITypeSymbol ts)
-                        result.Add(CreateTypeInfo(ts, startKind + kindOffset++, attrLocation));
                 }
             }
         }
@@ -254,10 +264,14 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     }
 
     /// <summary>
-    ///     Rejects types whose generated kind names collide (same type name from
-    ///     different namespaces, or generic instantiations whose sanitized names
-    ///     collapse to the same identifier). Numeric kind collisions are handled
-    ///     by <see cref="RejectKindCollisions" />; this covers identifier-level
+    ///     Rejects types whose generated kind names collide. The kind name is
+    ///     the identifier derived from the type name, so any two registered
+    ///     types sharing that name — types of the same name from different
+    ///     namespaces, generic instantiations whose names collapse to one
+    ///     identifier, or the same type registered more than once (same or
+    ///     different kinds) — would emit duplicate generated identifiers.
+    ///     Numeric kind collisions are handled by
+    ///     <see cref="RejectKindCollisions" />; this covers identifier-level
     ///     collisions that would otherwise emit uncompilable code.
     /// </summary>
     private static List<InlineTypeInfo> RejectKindNameCollisions(
@@ -269,15 +283,10 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         foreach (var t in types)
         {
             if (t.KindIndex is null) continue;
-            if (firstTypeByKindName.TryGetValue(t.KindIndex, out var existing))
-            {
-                if (existing.ClrTypeName != t.ClrTypeName)
-                    collidingKindNames.Add(t.KindIndex);
-            }
+            if (firstTypeByKindName.ContainsKey(t.KindIndex))
+                collidingKindNames.Add(t.KindIndex);
             else
-            {
                 firstTypeByKindName[t.KindIndex] = t;
-            }
         }
 
         foreach (var kindName in collidingKindNames)
@@ -400,5 +409,59 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         ///     no value equality across compilations).
         /// </summary>
         public string LocationKey { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    ///     Single source of truth for the inline bit-packing expressions
+    ///     emitted for each supported system primitive. Shared by the home
+    ///     accessor/conversion generation and the factory generation so the
+    ///     type-to-expression mapping exists exactly once.
+    /// </summary>
+    private static class InlineTypeExprs
+    {
+        /// <summary>Expression packing a value operand into <c>_inlineBits</c> storage form.</summary>
+        public static string Pack(InlineTypeInfo t, string operand) =>
+            t.SpecialType switch
+            {
+                SpecialType.System_Single => $"BitConverter.SingleToInt32Bits({operand})",
+                SpecialType.System_Double => $"BitConverter.DoubleToInt64Bits({operand})",
+                SpecialType.System_Boolean => $"{operand} ? 1 : 0",
+                SpecialType.System_UInt32 or SpecialType.System_UInt64 => $"(long){operand}",
+                _ => operand
+            };
+
+        /// <summary>Expression unpacking an <c>_inlineBits</c> operand back into the target type.</summary>
+        public static string Unpack(InlineTypeInfo t, string bitsOperand) =>
+            t.SpecialType switch
+            {
+                SpecialType.System_Single => $"BitConverter.Int32BitsToSingle((int){bitsOperand})",
+                SpecialType.System_Double => $"BitConverter.Int64BitsToDouble({bitsOperand})",
+                SpecialType.System_Boolean => $"{bitsOperand} != 0",
+                SpecialType.System_Char => $"(char)(ushort){bitsOperand}",
+                _ => $"({t.ClrTypeName}){bitsOperand}"
+            };
+
+        /// <summary>Expression converting a boxed <c>value</c> operand to inline bits.</summary>
+        public static string FromObject(InlineTypeInfo t) =>
+            t.SpecialType switch
+            {
+                SpecialType.System_Single => "BitConverter.SingleToInt32Bits((float)value)",
+                SpecialType.System_Double => "BitConverter.DoubleToInt64Bits((double)value)",
+                SpecialType.System_Boolean => "(bool)value ? 1 : 0",
+                SpecialType.System_Byte => "(long)(byte)value",
+                SpecialType.System_SByte => "(long)(sbyte)value",
+                SpecialType.System_Int16 => "(long)(short)value",
+                SpecialType.System_UInt16 => "(long)(ushort)value",
+                SpecialType.System_Int32 => "(long)(int)value",
+                SpecialType.System_UInt32 => "(long)(uint)value",
+                SpecialType.System_Int64 => "(long)value",
+                SpecialType.System_UInt64 => "(long)(ulong)value",
+                SpecialType.System_Char => "(long)(char)value",
+                _ => "(long)value"
+            };
+
+        /// <summary>Expression reinterpreting a generic <c>value</c> as the target local type.</summary>
+        public static string FactoryExtractExpr(InlineTypeInfo t) =>
+            $"Unsafe.As<T, {t.ClrTypeName}>(ref value)";
     }
 }

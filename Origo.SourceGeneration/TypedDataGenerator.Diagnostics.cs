@@ -51,9 +51,10 @@ public sealed partial class TypedDataGenerator
         title: "TypedData kind name collision",
         messageFormat:
         "'{0}' and '{1}' produce the same kind name '{2}'. "
-        + "Generated accessor identifiers are derived from the type name, so types of the same name "
-        + "from different namespaces (or generic instantiations with the same name) cannot coexist in one "
-        + "SndInlineTypes registration; register only one of them.",
+        + "Generated accessor identifiers are derived from the type name, so every registered "
+        + "type must have a distinct name: types of the same name from different namespaces, "
+        + "generic instantiations with the same name, and the same type registered more than "
+        + "once (with the same or different kinds) are all rejected; register each type exactly once.",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

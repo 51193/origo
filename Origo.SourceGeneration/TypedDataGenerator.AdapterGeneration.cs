@@ -122,7 +122,12 @@ public sealed partial class TypedDataGenerator
 
         if (refTypes.Count == 0 && valueTypes.Count == 0) return;
 
-        sb.AppendLine("public static class TypedDataLayeredExtensions");
+        // Internal: the adapter accessors mirror the home assembly's internal
+        // AsXxx methods — they are unguarded (no kind check), so exposing them
+        // publicly would let business code read a wrong type's bits or throw
+        // opaque cast exceptions. Business reads go through TryGetXxx /
+        // ISndEntity.TryGetData<T>.
+        sb.AppendLine("internal static class TypedDataLayeredExtensions");
         sb.AppendLine("{");
 
         foreach (var t in refTypes)

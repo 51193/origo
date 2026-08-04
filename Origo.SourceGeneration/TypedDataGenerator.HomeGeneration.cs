@@ -71,7 +71,6 @@ public sealed partial class TypedDataGenerator
         sb.AppendLine("    [ModuleInitializer]");
         sb.AppendLine("    internal static void Initialize()");
         sb.AppendLine("    {");
-        sb.AppendLine("        TypedData.RegisterKind(0, typeof(object));");
 
         foreach (var t in types)
         {
@@ -131,7 +130,7 @@ public sealed partial class TypedDataGenerator
             sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    internal readonly {returnType} {methodName}()");
             sb.AppendLine("    {");
-            sb.AppendLine($"        {ReadInlineBitsExpr(t)}");
+            sb.AppendLine($"        return {InlineTypeExprs.Unpack(t, "_inlineBits")};");
             sb.AppendLine("    }");
             sb.AppendLine();
         }
@@ -157,7 +156,7 @@ public sealed partial class TypedDataGenerator
             sb.AppendLine("    {");
             sb.AppendLine($"        if (_kind == KindMap.{t.KindIndex})");
             sb.AppendLine("        {");
-            sb.AppendLine($"            value = {ReadInlineBitsValueExpr(t)};");
+            sb.AppendLine($"            value = {InlineTypeExprs.Unpack(t, "_inlineBits")};");
             sb.AppendLine("            return true;");
             sb.AppendLine("        }");
             sb.AppendLine($"        value = default;");
@@ -167,21 +166,6 @@ public sealed partial class TypedDataGenerator
         }
 
         sb.AppendLine("}");
-    }
-
-    private static string ReadInlineBitsExpr(InlineTypeInfo t) =>
-        $"return {ReadInlineBitsValueExpr(t)};";
-
-    private static string ReadInlineBitsValueExpr(InlineTypeInfo t)
-    {
-        return t.SpecialType switch
-        {
-            SpecialType.System_Single => "BitConverter.Int32BitsToSingle((int)_inlineBits)",
-            SpecialType.System_Double => "BitConverter.Int64BitsToDouble(_inlineBits)",
-            SpecialType.System_Boolean => "_inlineBits != 0",
-            SpecialType.System_Char => "(char)(ushort)_inlineBits",
-            _ => $"({t.ClrTypeName})_inlineBits"
-        };
     }
 
     private static void GenerateImplicitConversions(StringBuilder sb, List<InlineTypeInfo> types)
@@ -199,44 +183,12 @@ public sealed partial class TypedDataGenerator
             sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    public static explicit operator TypedData({typeName} value)");
             sb.AppendLine("    {");
-            sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, {PackInlineBitsExpr(t, "value")}, null);");
+            sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, {InlineTypeExprs.Pack(t, "value")}, null);");
             sb.AppendLine("    }");
             sb.AppendLine();
         }
 
         sb.AppendLine("}");
-    }
-
-    private static string PackInlineBitsExpr(InlineTypeInfo t, string operand)
-    {
-        return t.SpecialType switch
-        {
-            SpecialType.System_Single => $"BitConverter.SingleToInt32Bits({operand})",
-            SpecialType.System_Double => $"BitConverter.DoubleToInt64Bits({operand})",
-            SpecialType.System_Boolean => $"{operand} ? 1 : 0",
-            SpecialType.System_UInt32 or SpecialType.System_UInt64 => $"(long){operand}",
-            _ => operand
-        };
-    }
-
-    private static string FromObjectBitsExpr(InlineTypeInfo t)
-    {
-        return t.SpecialType switch
-        {
-            SpecialType.System_Single => "BitConverter.SingleToInt32Bits((float)value)",
-            SpecialType.System_Double => "BitConverter.DoubleToInt64Bits((double)value)",
-            SpecialType.System_Boolean => "(bool)value ? 1 : 0",
-            SpecialType.System_Byte => "(long)(byte)value",
-            SpecialType.System_SByte => "(long)(sbyte)value",
-            SpecialType.System_Int16 => "(long)(short)value",
-            SpecialType.System_UInt16 => "(long)(ushort)value",
-            SpecialType.System_Int32 => "(long)(int)value",
-            SpecialType.System_UInt32 => "(long)(uint)value",
-            SpecialType.System_Int64 => "(long)value",
-            SpecialType.System_UInt64 => "(long)(ulong)value",
-            SpecialType.System_Char => "(long)(char)value",
-            _ => "(long)value"
-        };
     }
 
     private static void GenerateTypedDataTypeMap(StringBuilder sb, List<InlineTypeInfo> types)
@@ -301,7 +253,7 @@ public sealed partial class TypedDataGenerator
             if (t.IsReferenceType)
                 sb.AppendLine($"            case {t.KindValue}: return (0, value);");
             else
-                sb.AppendLine($"            case {t.KindValue}: return ({FromObjectBitsExpr(t)}, null);");
+                sb.AppendLine($"            case {t.KindValue}: return ({InlineTypeExprs.FromObject(t)}, null);");
         }
 
         sb.AppendLine("        }");
