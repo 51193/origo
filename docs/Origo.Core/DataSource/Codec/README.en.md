@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Codec/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Codec
 
@@ -25,7 +25,7 @@ Concrete codec implementations for `IDataSourceCodec`. All codecs are `internal`
 ### MapDataSourceCodec
 - Parses `key: value` lines (`#` comments skipped)
 - All values are strings; no lazy loading needed
-- **Strict mode**: malformed lines throw `FormatException` → Gateway wraps as `InvalidOperationException`
+- **Strict mode**: malformed lines (no colon, empty key/value) throw `FormatException` → Gateway wraps as `InvalidOperationException` (fail-fast); duplicate keys do not throw — they log a Warning and the later value wins
 
 ### RawStringDataSourceCodec
 - Handles `.sha` and `.write_in_progress` as single string nodes

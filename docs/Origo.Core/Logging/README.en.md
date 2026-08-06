@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Logging/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Logging
 
@@ -31,7 +31,7 @@ builder.SetElapsedMs(12.3).AddContext("entity", "player").AddContext("hp", 100).
 - **Elapsed**: Optional, prepended in `[+X.XXms]` format
 - **Context**: Appended after the message in ` | key=val, key=val` format
 - **Empty value filtering**: Only added if the key is non-whitespace (null values are allowed and rendered as `key=`)
-- **Multiple AddContext calls**: Concatenated in addition order, comma-separated
+- **Multiple AddContext calls**: Concatenated in addition order, comma-separated; re-adding the same key replaces the existing value (keeping its original position, not appending)
 
 ### NullLogger
 

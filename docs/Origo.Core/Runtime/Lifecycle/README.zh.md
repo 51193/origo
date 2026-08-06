@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -15,7 +15,7 @@
 |------|------|
 | `SystemParameters.cs` | 系统层构造参数（含 `AdapterSceneHost`） |
 | `SystemRuntime.cs` | 系统级运行时容器：持有 SystemRun、SystemBlackboard、SndWorld |
-| `SystemRun.cs` | 系统层启动：创建 SndWorld → 构造 ProgressRuntime |
+| `SystemRun.cs` | 系统层启动：持有 OrigoRuntime（其构造时已创建 SndWorld）→ 构造 ProgressRuntime |
 | `ProgressParameters.cs` | 流程层构造参数 |
 | `ProgressRuntime.cs` | 流程级运行时容器：持有 ProgressRun、ProgressBlackboard、SaveContext |
 | `ProgressRun.cs` | 流程层主逻辑：关卡切换、读写存档、会话生命周期编排 |
@@ -62,7 +62,7 @@ SystemRun (由 SndContext 构造并持有)
 
 ### 运行
 
-- 每帧：`IScheduler.Tick()` → 执行延迟队列 → `SessionManager.ProcessAllSessions()` → `SessionManager.KillPendingAllSessions()` → 系统队列 → 控制台
+- 每帧（`OrigoRuntime.DriveFrame`）：`SessionManager.ProcessAllSessions()` → 业务延迟队列 → `SessionManager.KillPendingAllSessions()` → 系统延迟队列 → 控制台
 - 控制台命令路由到 `OrigoConsole.ProcessPending()`
 
 ### 持久化

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Benchmarks -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 性能基准 (Benchmarks)
 
@@ -70,7 +70,7 @@
 |---------|---------|
 | `SetValue_BulkWrite_ThroughputByType` | Int32/Single/String/Boolean 各 100k 次 SetValue 的吞吐与分配 |
 | `TryGet_BulkRead_ThroughputByType` | Int32/Single/String/Boolean 各 500k 次 TryGet 的吞吐与分配 |
-| `SerializedAllDeserializeAll_Roundtrip` | 100/500/1000 key 的 SerializeAll+DeserializeAll 往返吞吐 |
+| `SerializeAllDeserializeAll_Roundtrip` | 100/500/1000 key 的 SerializeAll+DeserializeAll 往返吞吐 |
 
 ### SavePayloadBenchmarkTests
 

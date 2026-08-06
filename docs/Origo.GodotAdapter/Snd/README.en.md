@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -29,6 +29,8 @@ The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in
 
 - **Implements ISndSceneHost**: CreateEntity / RecoverFromMetaList / RemoveAllEntities (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / ProcessAll are **explicit interface implementations** — business code cannot invoke these write operations on the concrete `GodotSndManager` type; they are driven only through the `ISndSceneHost` / `ISndSceneAccess` interfaces (held internally by Core). Public read operations are `GetEntities` / `FindByName`. `RemoveAllEntities()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
 - **Implements ISndContextAttachableSceneHost**: Supports runtime context switching
+- **Implements IObserverTopologyHost** (internal): Exposes the per-scene-host `ObserverTopology` for Core observer mount/unmount orchestration
+- **Implements IOwningSessionBindable** (internal): `SetOwningSession` binds a session to the host for the Core session-creation flow
 - **Collection logic delegated**: entity add/remove, batch recovery rollback, kill marking, and frame processing orchestration live in pure C# `SndEntityCollection<T>` (internal, no Godot dependency) and are covered by unit tests directly; GodotSndManager only bridges the collection to the Godot node tree (`AddChild` / `RemoveChild` / `Free` injected via the `DetachAndFree` callback)
 - **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, the collection rolls back and releases all already-created entities (via the staged list in `SndEntityCollection`)
 - **GetEntities()**: Lazily creates an `IReadOnlyCollection<ISndEntity>` view, caching the reference to avoid reallocation
@@ -38,6 +40,8 @@ The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in
 ### GodotSndEntity
 
 A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
+
+> **`[GlobalClass]` limitation**: `GodotSndEntity`'s only constructor is internal (five-parameter dependency injection) and there is no parameterless constructor — it cannot be created manually in the editor or instantiated from a `.tscn`. Entities must be created via `GodotSndManager` (`CreateEntity`). This is deliberate: `GodotSndEntity`'s dependencies (`SndWorld`, `ISndContext`, logger, observer topology) can only be injected by the framework; `[GlobalClass]` only makes the type recognizable to the Godot editor (exported properties / type registration).
 
 - **Lazy initialization**: `_entity` is created on first access via `SndWorld.CreateEntity`
 - **Lifecycle separation**: `DetachFromManager()` sets the released flag and nulls the entity reference; engine-level release (`RemoveChild`/`Free`) is performed by the GodotSndManager `DetachAndFree` callback (the `SndEntityCollection` "engine work delegated via callback" contract)
@@ -49,7 +53,7 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 ### GodotPackedSceneNodeFactory
 
 - **Create**: `ResourceLoader.Load<PackedScene>(resourceId)` → `Instantiate<Node>()` → `parent.AddChild(node)` → returns GodotNodeHandle
-- resourceId is resolved through `SndMappings.ResolveSceneAlias` (supports aliases), so it can be a raw `res://` path or an alias
+- resourceId is resolved on the Core side (`SndWorld` passes the `SndMappings.ResolveSceneAlias` delegate when creating entities), so the factory always receives the final path
 - Loaded `PackedScene` instances are cached to avoid repeated disk I/O when the same resource is instantiated multiple times
 
 ### GodotNodeHandle
@@ -88,7 +92,7 @@ If the node is directly released during iteration over `_entities`, Godot's node
 
 ### Adapter layer entity bridging: Why GodotSndEntity must hand-write forwarding
 
-The code in `GodotSndEntity` (236 lines) can be broken down into three categories:
+The code in `GodotSndEntity` (~238 lines) can be broken down into three categories:
 
 | Category | Lines | Share | Notes |
 |------|------|------|------|

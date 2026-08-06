@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console System Tests
 
@@ -9,8 +9,8 @@
 
 ## Behavior Overview
 
-Validates the full chain of the console command system: command parsing (positional/named/mixed arguments), command routing (register/dispatch/not found/case-insensitive/duplicate overwrite),
-input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interface contract, output channel (publish-subscribe, exception propagation),
+Validates the full chain of the console command system: command parsing (positional/named/mixed arguments), command routing (register/dispatch/not found/case-insensitive/duplicate rejected),
+input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interface contract, output channel (publish-subscribe, exception propagation, null rejected),
 14 built-in command handlers (11 Core + 3 GodotAdapter), type inference (bb_set/entity_set_data), console logging (level/order/Tag/content integrity).
 
 ## Test File List
@@ -18,9 +18,9 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | File | Verification Focus |
 |------|-------------------|
 | `ConsoleCommandParserTests.cs` | Command parsing: empty/whitespace lines, single commands, positional args, named args, invalid named args |
-| `ConsoleCommandRouterTests.cs` | Command routing: register/dispatch/unregistered commands/case-insensitive/duplicate overwrites previous/null handler |
+| `ConsoleCommandRouterTests.cs` | Command routing: register/dispatch/unregistered commands/case-insensitive/duplicate rejected/null handler |
 | `ConsoleInputBufferTests.cs` | Input queue: Enqueue/Dequeue/FIFO/trim/whitespace ignored/clear |
-| `ConsoleOutputChannelTests.cs` | Output channel: Subscribe/Publish/Unsubscribe/multiple subscribers/null broadcast/exception propagation |
+| `ConsoleOutputChannelTests.cs` | Output channel: Subscribe/Publish/Unsubscribe/multiple subscribers/null rejected/exception propagation |
 | `ConsoleCommandExtendedTests.cs` | Built-in command end-to-end: help/find_entity/kill_all/bb_*, late registration, parameter validation, spawn |
 | `ConsoleTypeInferenceTests.cs` | Type inference: bb_set Int32/Single/Boolean/String, entity_set_data new key inference + existing key type preservation |
 | `OrigoConsoleLoggingTests.cs` | Console logging: correct log level, message order, Tag consistency, content integrity (behavioral verification, no coupling to format strings) |
@@ -57,7 +57,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 |-------------|-----------------|-----------|
 | `ConsoleCommandRouter_Register_And_TryExecute_Success` | Register handler then dispatch executes successfully | console-commands |
 | `ConsoleCommandRouter_Register_CaseInsensitive` | Command names are case-insensitive ("TEST" matches "Test") | console-commands |
-| `ConsoleCommandRouter_Register_DuplicateName_OverridesPreviousHandler` | Re-registering the same command name overwrites the previous handler | console-commands |
+| `ConsoleCommandRouter_Register_DuplicateName_Throws` | Re-registering the same command name | InvalidOperationException (command names must be unique) |
 
 ### Error Path
 
@@ -107,7 +107,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
 | `ConsoleOutputChannel_Unsubscribe_InvalidId_ReturnsFalse` | Unsubscribe non-existent id | returns false |
-| `ConsoleOutputChannel_Publish_NullBroadcastsEmpty` | Publish(null) | subscriber receives empty string |
+| `ConsoleOutputChannel_Publish_Null_Throws` | Publish(null) | ArgumentNullException |
 
 ## ConsoleCommandExtendedTests Details
 

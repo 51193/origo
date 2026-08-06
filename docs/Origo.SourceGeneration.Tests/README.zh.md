@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration.Tests
 
@@ -10,7 +10,7 @@
 `Origo.SourceGeneration.Tests` 包含两类测试：
 
 - **生成器行为测试**：直接驱动 `TypedDataGenerator`，在内存编译上运行生成器并断言生成的源、生成器诊断以及"原始源 + 生成源"合并编译的结果。它把生成器作为普通库引用（非分析器附加），以便在测试中实例化并运行。
-- **生成产物性能基准**：通过引用 `Origo.Core` 取得生成的 `TypedData`（仅用 public API），跨多种值类型与引用类型 `string` 对比内联存储/Kind 分发与无优化装箱实现的吞吐。标记 `[Trait("Category","Benchmark")]`，在独立的 CI 步骤（`scripts/benchmark.sh`）中运行一次并打印比对表格，与受覆盖率门禁约束的测试运行分离。
+- **生成产物性能基准**：通过引用 `Origo.Core` 取得生成的 `TypedData`（public API 加经 `InternalsVisibleTo` 访问的内部成员），跨多种值类型与引用类型 `string` 对比内联存储/Kind 分发与无优化装箱实现的吞吐。标记 `[Trait("Category","Benchmark")]`，在独立的 CI 步骤（`scripts/benchmark.sh`）中运行一次并打印比对表格，与受覆盖率门禁约束的测试运行分离。
 
 ## 包含文件
 
@@ -96,9 +96,9 @@
 
 生成器通过 `TypedData` 所属程序集判定 Home/Adapter 模式。Adapter 用例将 `TypedData` 定义放入被引用的宿主程序集，使当前编译被识别为适配层；宿主程序集声明 `InternalsVisibleTo` 让生成的适配层代码可访问 `TypedData` 的内部字段，与 Origo.Core/Origo.GodotAdapter 的真实关系一致。
 
-### 为什么性能基准只用 public API、采用宽松阈值并独立运行
+### 为什么性能基准使用生成产物内部成员、采用宽松阈值并独立运行
 
-性能基准引用真实 `Origo.Core` 但仅使用 `TypedData` 的 public API（显式转换运算符、`TryGetXxx`、`TryGetString`、`Data`、`FromObject`），覆盖多种值类型与引用类型 `string`，因此无需向测试项目开放 Core 内部成员（`TypedDataFactory<T>` 等内部类型不在基准范围内）。
+性能基准引用真实 `Origo.Core` 的生成产物，覆盖显式转换运算符、`TryGetXxx`、`TryGetString`、`Data`、`FromObject` 等 public API，并通过 `InternalsVisibleTo` 访问生成器产出的内部成员（`TypedData.KindMap`、内部构造函数、`IsString` 判别属性），以精确对比生成路径与无优化装箱实现的吞吐；`TypedDataFactory<T>` 等非基准目标类型不在范围内。
 
 基准是宽松的：不要求生成路径快于无优化装箱基线，只断言其不超过基线的固定倍数（8×，并对低于 1ms 的不可靠基线跳过比率）且单基准有总时长上限，目的是守住"不出现严重性能退化/卡死"，而非锁定绝对性能数字。
 

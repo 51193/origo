@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 场景 测试
 
@@ -30,7 +30,7 @@ SndEntityFactory 的 spawn 编排和 ProcessAll 帧处理由 SndEntityLifecycleB
 |---------|-----------|---------|
 | `Spawn_AddsEntityAndMeta` | CreateEntity 将实体加入 GetEntities 列表和 BuildMetaList | ISndSceneHost |
 | `FindByName_ReturnsEntity` | FindByName 找到已创建实体，不存在返回 null | ISndSceneHost |
-| `RecoverFromMetaList_ReplacesExisting` | RecoverFromMetaList 替换全部实体，旧实体不可查找 | ISndSceneHost |
+| `LoadFromMetaList_DoesNotClearExisting` | RecoverFromMetaList 不清空已有实体（调用者负责清理） | ISndSceneHost |
 | `ClearAll_RemovesEntitiesAndMeta` | RemoveAllEntities 后 GetEntities 和 BuildMetaList 均为空 | ISndSceneHost |
 | `SerializeMetaList_ReturnsCorrectData` | BuildMetaList 返回当前全部实体元数据 | ISndSceneHost |
 
@@ -39,7 +39,7 @@ SndEntityFactory 的 spawn 编排和 ProcessAll 帧处理由 SndEntityLifecycleB
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `Spawn_ThrowsOnNull` | null metadata 参数 | ArgumentNullException |
-| `RecoverFromMetaList_ThrowsOnNull` | null metaList 参数 | ArgumentNullException |
+| `LoadFromMetaList_ThrowsOnNull` | null metaList 参数 | ArgumentNullException |
 
 ## FullMemorySndSceneHostTests 测试详情
 

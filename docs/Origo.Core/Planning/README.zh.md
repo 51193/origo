@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning
 
@@ -24,7 +24,7 @@
 | `IntentKey` | `abstract string` | 实体 data 键，存储当前意图字符串 |
 | `IntentStatusKey` | `abstract string` | 实体 data 键，存储意图执行状态 |
 | `PlanStepKey` | `abstract string` | 实体 data 键，存储当前计划步骤类型 |
-| `ActionKey` | `abstract string` | 实体 data 键，存储当前动作描述符 |
+| `ActionKey` | `abstract string` | 实体 data 键，存储当前动作描述符。内部采用 `"stepType,param"` 逗号格式：`AdvancePlan` 取逗号前前缀与 `PlanStepKey` 比较，判断动作是否已切换 |
 | `ActionStatusKey` | `abstract string` | 实体 data 键，存储动作执行状态 |
 | `ResolveNextStep(intent, currentStep, failed, entity)` | `abstract string?` | 根据意图和当前步骤返回下一步骤，`null`/空终止计划 |
 | `StepToActionIndex(stepType)` | `abstract string?` | 步骤类型 → Action 策略索引，`null`/空表示该步骤无需挂载策略 |

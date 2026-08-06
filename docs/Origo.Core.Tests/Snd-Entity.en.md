@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Entity Tests
 
@@ -37,8 +37,8 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Constructor_ThrowsOnNullName` | null name parameter | ArgumentNullException |
-| `GetData_ThrowsKeyNotFound_WhenMissing` | Non-existent key | KeyNotFoundException |
-| `GetData_ThrowsInvalidCast_OnTypeMismatch` | Type mismatch | InvalidCastException |
+| `GetData_ThrowsInvalidOperation_WhenMissing` | Non-existent key | InvalidOperationException |
+| `GetData_ThrowsInvalidOperation_OnTypeMismatch` | Type mismatch | InvalidOperationException |
 | `GetNode_ThrowsInvalidOperation` | Stub entity does not support node operations | InvalidOperationException |
 
 ### Boundary Paths
@@ -111,8 +111,8 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `BatchDead_CrossEntity_FindByNameSucceedsDuringBeforeDead` | During BeforeDead, FindByName can still find other entities | snd-entity-model: Batch lifecycle |
 | `BatchLoad_StrategyPriorityWithinEntity_Preserved` | Multiple strategies on the same entity are sorted by Priority (lower first) | snd-entity-model: Strategy priority |
 | `BatchLoad_SingleEntity_BehaviorCorrect` | Single-entity batch recovery correctly triggers AfterLoad | snd-entity-model: Batch lifecycle |
-| `SpawnSingle_ActiveStrategyAvailableDuringAfterSpawn` | After single-entity Spawn, ActiveStrategy is available during AfterSpawn | snd-entity-model: Batch lifecycle |
-| `LoadSingle_ActiveStrategyAvailableDuringAfterLoad` | After single-entity Load, ActiveStrategy is available during AfterLoad | snd-entity-model: Batch lifecycle |
+| `Spawn_ActiveStrategyAvailableDuringAfterSpawn` | After single-entity Spawn, ActiveStrategy is available during AfterSpawn | snd-entity-model: Batch lifecycle |
+| `Load_ActiveStrategyAvailableDuringAfterLoad` | After single-entity Load, ActiveStrategy is available during AfterLoad | snd-entity-model: Batch lifecycle |
 | `SndEntityFactory_SpawnMany_TriggersAfterSpawnAfterAllCreated` | SpawnMany triggers AfterSpawn uniformly after all entities are created | SndEntityFactory |
 | `SndEntityFactory_Spawn_CallsCreateEntityThenFiresAfterSpawn` | Spawn calls CreateEntity first, then fires AfterSpawn | SndEntityFactory |
 | `SndEntityFactory_SpawnMany_EntitiesVisibleInAfterSpawn` | During SpawnMany's AfterSpawn hooks, all entities are visible | SndEntityFactory |
@@ -130,7 +130,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
-| `BatchLoad_HookThrows_EntitiesCleanedUp` | AfterLoad hook throws InvalidOperationException | Exception propagates; entities are cleaned up |
+| `BatchLoad_HookThrows_PropagatesException` | AfterLoad hook throws InvalidOperationException | Exception propagates (entity cleanup is rolled back by the scene host) |
 
 ### Boundary Paths
 

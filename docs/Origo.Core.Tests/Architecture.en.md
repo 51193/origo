@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Guardrail Tests
 
@@ -27,8 +27,8 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
 | `CoreAssembly_ShouldNotReferenceGodot` | Core assembly does not reference any Godot assemblies | architecture-overview: platform independence |
-| `ISndContext_ShouldBeCompositionInterface_WithMinimalOwnDeclarations` | ISndContext itself declares no methods/properties | Snd Abstraction: ISP |
-| `ISndContext_ShouldInheritAllRoleInterfaces` | ISndContext inherits all 9 role interfaces (including ISndFileAccess and ISndArchiveFileAccess) | Snd Abstraction: ISndContext composition |
+| `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext itself declares no methods/properties | Snd Abstraction: ISP |
+| `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext inherits all 9 role interfaces (including ISndFileAccess and ISndArchiveFileAccess) | Snd Abstraction: ISndContext composition |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext inherits ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
 | `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | Completes save→load workflow using only public interfaces | architecture-overview: test strategy |
 | `Consumer_AccessesAllRoleInterfaces_ThroughISndContext` | All 9 role interface capabilities accessible through ISndContext (including ISndFileAccess file read/write, ISndArchiveFileAccess in-archive files) | Snd Abstraction |
@@ -44,7 +44,6 @@ as stateless via reflection at registration (rejects instance fields and writabl
 
 | Test Method | Triggered Error | Expected Behavior |
 |------------|-----------------|-------------------|
-| `DiscoverAndRegisterStrategies_WithoutAttribute_Throws` | Assembly has no StrategyIndex strategies | InvalidOperationException |
 | `SndWorld_RegisterStrategy_WithStatefulInstanceField_Throws` | Registering strategy with instance fields | InvalidOperationException (contains "invalid instance members") |
 | `SndWorld_RegisterStrategy_WithWritableInstanceProperty_Throws` | Registering strategy with writable instance properties | InvalidOperationException (contains "invalid instance members") |
 | `SndWorld_RegisterTypeMappings_NullCallback_Throws` | null callback | ArgumentNullException |

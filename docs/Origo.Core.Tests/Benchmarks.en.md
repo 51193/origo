@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Benchmarks -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Performance Benchmarks
 
@@ -80,7 +80,7 @@ and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) 
 |-----------------|-------------|
 | `SetValue_BulkWrite_ThroughputByType` | Int32/Single/String/Boolean 100k SetValue each, throughput and allocation |
 | `TryGet_BulkRead_ThroughputByType` | Int32/Single/String/Boolean 500k TryGet each, throughput and allocation |
-| `SerializedAllDeserializeAll_Roundtrip` | 100/500/1000 key SerializeAll+DeserializeAll round-trip throughput |
+| `SerializeAllDeserializeAll_Roundtrip` | 100/500/1000 key SerializeAll+DeserializeAll round-trip throughput |
 
 ### SavePayloadBenchmarkTests
 

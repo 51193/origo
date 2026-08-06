@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构守卫 测试
 
@@ -26,8 +26,8 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `CoreAssembly_ShouldNotReferenceGodot` | Core 程序集不引用任何 Godot 程序集 | architecture-overview: 平台无关 |
-| `ISndContext_ShouldBeCompositionInterface_WithMinimalOwnDeclarations` | ISndContext 自身不声明任何方法/属性 | Snd Abstraction: ISP |
-| `ISndContext_ShouldInheritAllRoleInterfaces` | ISndContext 继承全部 9 个角色接口（含 ISndFileAccess 和 ISndArchiveFileAccess） | Snd Abstraction: ISndContext 组合 |
+| `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext 自身不声明任何方法/属性 | Snd Abstraction: ISP |
+| `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext 继承全部 9 个角色接口（含 ISndFileAccess 和 ISndArchiveFileAccess） | Snd Abstraction: ISndContext 组合 |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext 继承 ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
 | `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | 仅通过公共接口完成 save→load 工作流 | architecture-overview: 测试策略 |
 | `Consumer_AccessesAllRoleInterfaces_ThroughISndContext` | 通过 ISndContext 可访问全部 9 个角色接口的能力（含 ISndFileAccess 读写文件，ISndArchiveFileAccess 存档内文件） | Snd Abstraction |
@@ -43,7 +43,6 @@
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `DiscoverAndRegisterStrategies_WithoutAttribute_Throws` | 程序集中无 StrategyIndex 策略 | InvalidOperationException |
 | `SndWorld_RegisterStrategy_WithStatefulInstanceField_Throws` | 有实例字段的策略注册 | InvalidOperationException（含 "invalid instance members"） |
 | `SndWorld_RegisterStrategy_WithWritableInstanceProperty_Throws` | 有可写实例属性的策略注册 | InvalidOperationException（含 "invalid instance members"） |
 | `SndWorld_RegisterTypeMappings_NullCallback_Throws` | null 回调 | ArgumentNullException |

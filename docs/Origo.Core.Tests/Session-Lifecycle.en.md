@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -321,8 +321,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
-| `Parse_LevelIdContainsExtraSeparator_UsesSecondFieldAsLevelId` | levelId contains `=` separator | Second field without equals used as levelId |
-| `Parse_SyncFieldParsing_FollowsBoolTryParseRules` | syncProcess field as TRUE/true/False/not_bool | Parsed following bool.TryParse rules |
+| `Parse_ExtraFields_ThrowsInvalidOperation` | levelId contains `=` separator (more than 3 fields) | InvalidOperationException (exactly key=levelId=syncProcess required) |
+| `Parse_SyncFieldParsing_FollowsBoolTryParseRules` | syncProcess field as TRUE/true/False/not_bool | Parsed following bool.TryParse rules; non-boolean throws InvalidOperationException |
 | `Join_EmptyEntries_ReturnsEmptyString` | Empty entry list | Returns empty string |
 | `Parse_IgnoreEmptyEntries` | Consecutive commas between entries (empty entries) | Empty entries ignored |
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 策略 测试
 
@@ -143,10 +143,11 @@
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
-| `Mount_Duplicate_DoesNotThrow` | 重复挂载同一观察者到同一目标 | 不抛异常，触发两次 OnMounted |
-| `Unmount_OnlyRemovesOneInstance` | 挂载两次后 Unmount 一次 | 仅触发一次 OnUnmounted（实例级引用计数） |
+| `Mount_Duplicate_Throws` | 重复挂载同一观察者到同一目标 | InvalidOperationException（重复挂载拒绝） |
+| `Unmount_NotMounted_Throws` | Unmount 未挂载的绑定 | InvalidOperationException |
 | `NoDataKeyObserver_CanMountAndUnmount` | 无 [ObserveData] 属性的观察者挂载/卸载 | 不抛异常 |
-| `RecoverBindings_TargetNotFound_Skips` | RecoverBindingsFor 时 resolveTarget 返回 null | 不抛异常，跳过该绑定 |
+| `RecoverBindings_TargetNotFound_Throws` | RecoverBindingsFor 时 resolveTarget 返回 null | InvalidOperationException（悬空绑定使加载失败） |
+| `RecoverBindings_EmptyTarget_Throws` | 存档绑定目标为 null/空白 | InvalidOperationException |
 | `KillPendingEntities_NoObserverBindings_NoError` | KillPending 无观察者绑定的实体 | 正常完成，实体数变为 0 |
 | `ClearAll_NoObserverBindings_NoError` | RemoveAllEntities 无观察者绑定的实体 | 正常完成，实体数变为 0 |
 
@@ -201,7 +202,6 @@
 |---------|-----------|---------|
 | `GetStrategy_WrongBranchGeneric_DoesNotLeakReferenceCount` | 泛型类型不匹配失败后引用计数不泄漏（再次获取不是同一实例） | Strategy README: SndStrategyPool |
 | `StackStateMachine_WhenSecondAcquireFails_ReleasesFirstAcquire` | StackStateMachine 构造时第一次获取成功但第二次失败，回滚第一次获取 | Strategy README: SndStrategyPool |
-| `GetStrategy_ThirdDomainBase_AssignsThroughExpectedAbstraction` | 在 LifecycleStrategyBase 之上扩展第三领域根基类（ExtensionDomainStrategyBase），仍复用同一策略池 | Strategy README: 策略继承体系 |
 | `RecoverStrategiesOnly_WithOnlyValidStrategies_Succeeds` | 仅含 LifecycleStrategy 的索引列表恢复成功 | Strategy README: SndStrategyManager |
 
 ### 错误路径

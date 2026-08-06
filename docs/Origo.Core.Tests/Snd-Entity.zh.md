@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体 测试
 
@@ -39,8 +39,8 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `Constructor_ThrowsOnNullName` | null 名称参数 | ArgumentNullException |
-| `GetData_ThrowsKeyNotFound_WhenMissing` | 不存在的键 | KeyNotFoundException |
-| `GetData_ThrowsInvalidCast_OnTypeMismatch` | 类型不匹配 | InvalidCastException |
+| `GetData_ThrowsInvalidOperation_WhenMissing` | 不存在的键 | InvalidOperationException |
+| `GetData_ThrowsInvalidOperation_OnTypeMismatch` | 类型不匹配 | InvalidOperationException |
 | `GetNode_ThrowsInvalidOperation` | Stub 实体不支持节点操作 | InvalidOperationException |
 
 ### 边界路径
@@ -113,8 +113,8 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | `BatchDead_CrossEntity_FindByNameSucceedsDuringBeforeDead` | BeforeDead 期间 FindByName 仍可找到其他实体 | snd-entity-model: 批量生命周期 |
 | `BatchLoad_StrategyPriorityWithinEntity_Preserved` | 同一实体多个策略按 Priority 排序（低优先在前） | snd-entity-model: 策略优先级 |
 | `BatchLoad_SingleEntity_BehaviorCorrect` | 单实体批量恢复正确触发 AfterLoad | snd-entity-model: 批量生命周期 |
-| `SpawnSingle_ActiveStrategyAvailableDuringAfterSpawn` | 单实体 Spawn 后 AfterSpawn 期间 ActiveStrategy 可用 | snd-entity-model: 批量生命周期 |
-| `LoadSingle_ActiveStrategyAvailableDuringAfterLoad` | 单实体 Load 后 AfterLoad 期间 ActiveStrategy 可用 | snd-entity-model: 批量生命周期 |
+| `Spawn_ActiveStrategyAvailableDuringAfterSpawn` | 单实体 Spawn 后 AfterSpawn 期间 ActiveStrategy 可用 | snd-entity-model: 批量生命周期 |
+| `Load_ActiveStrategyAvailableDuringAfterLoad` | 单实体 Load 后 AfterLoad 期间 ActiveStrategy 可用 | snd-entity-model: 批量生命周期 |
 | `SndEntityFactory_SpawnMany_TriggersAfterSpawnAfterAllCreated` | SpawnMany 在全部实体创建后统一触发 AfterSpawn | SndEntityFactory |
 | `SndEntityFactory_Spawn_CallsCreateEntityThenFiresAfterSpawn` | Spawn 先 CreateEntity 再触发 AfterSpawn | SndEntityFactory |
 | `SndEntityFactory_SpawnMany_EntitiesVisibleInAfterSpawn` | SpawnMany 的 AfterSpawn 钩子中所有实体可见 | SndEntityFactory |
@@ -132,7 +132,7 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `BatchLoad_HookThrows_EntitiesCleanedUp` | AfterLoad 钩子抛出 InvalidOperationException | 异常传播，实体已被清理 |
+| `BatchLoad_HookThrows_PropagatesException` | AfterLoad 钩子抛出 InvalidOperationException | 异常传播（实体清理由场景宿主回滚） |
 
 ### 边界路径
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -321,8 +321,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
-| `Parse_LevelIdContainsExtraSeparator_UsesSecondFieldAsLevelId` | levelId 中含 `=` 分隔符 | 不含等号的第二字段作为 levelId |
-| `Parse_SyncFieldParsing_FollowsBoolTryParseRules` | syncProcess 字段为 TRUE/true/False/not_bool | 按 bool.TryParse 规则解析 |
+| `Parse_ExtraFields_ThrowsInvalidOperation` | levelId 中含 `=` 分隔符（字段数多于 3） | InvalidOperationException（必须恰好 key=levelId=syncProcess 三字段） |
+| `Parse_SyncFieldParsing_FollowsBoolTryParseRules` | syncProcess 字段为 TRUE/true/False/not_bool | 按 bool.TryParse 规则解析；非布尔值抛 InvalidOperationException |
 
 ## TopologyInvariantTests 测试详情
 

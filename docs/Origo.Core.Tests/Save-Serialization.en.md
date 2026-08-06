@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Serialization Tests
 
@@ -85,11 +85,7 @@ PersistentBlackboard disk read/write.
 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
-| `Constructor_NullSessionManager_Throws` | null SessionManager | ArgumentNullException |
-| `Constructor_NullProgressBlackboard_Throws` | null Progress blackboard | ArgumentNullException |
-| `Constructor_NullStateMachines_Throws` | null StateMachineContainer | ArgumentNullException |
-| `Constructor_NullProgressRuntime_Throws` | null ProgressRuntime | ArgumentNullException |
-| `Constructor_NullSaveId_Throws` | null SaveId | ArgumentNullException |
+| `SaveContext_Constructor_ThrowsOnNullArgs` | null progress / null session / null sndWorld argument | ArgumentNullException |
 | `PersistProgress_WithoutForegroundSession_Throws` | PersistProgress called without foreground Session | InvalidOperationException (message contains "foreground") |
 
 ## PersistentBlackboardTests Details

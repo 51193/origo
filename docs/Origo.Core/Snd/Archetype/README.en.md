@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Archetype/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Archetype
 
@@ -24,7 +24,7 @@ Numeric recipe file loading and application utilities. Parses flat key-value Arc
 ## Implementation Details
 
 ### SndArchetypeLoader
-- **TryLoad(ISndFileAccess fileAccess, string path)**: Reads .map via framework file abstraction, returns `Dictionary<string, string>`. Returns false if file missing or format incorrect.
+- **TryLoad(ISndFileAccess fileAccess, string path)**: Reads .map via framework file abstraction, returns `Dictionary<string, string>`. Returns false if the file is missing, the format is incorrect, or the map is empty (no attribute keys).
 - **ApplyAttributes(ISndEntity entity, Dictionary<string, string> attributes)**: Parses each value in order: int → long → float → bool → string.
 
 Type inference rules:

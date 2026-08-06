@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Logging -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 日志 测试（适配层）
 
@@ -9,20 +9,20 @@
 ## 被测行为概览
 
 验证 GodotLogger 的委托注入模式和级别过滤：通过 `Action<LogLevel, string, string>` 委托代理日志输出、
-null handler 时不抛异常、最低日志级别过滤。
+null handler 构造时抛 ArgumentNullException、最低日志级别过滤。
 
 ## 测试文件清单
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `GodotLoggerTests.cs` | GodotLogger 委托注入、null handler 安全和级别过滤 |
+| `GodotLoggerTests.cs` | GodotLogger 委托注入、null handler 拒绝（ArgumentNullException）和级别过滤 |
 
 ### 正确路径
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `Log_WithHandler_InvokesHandlerWithCorrectLevelTagAndMessage` | Log(Warning, "Tag", "msg") → handler 收到正确参数 | GodotAdapter Logging |
-| `Log_WithNullHandler_DoesNotThrow` | 构造时不传 handler，Log 调用不抛异常 | GodotAdapter Logging |
+| `Constructor_WithNullHandler_Throws` | 构造时不传 handler | ArgumentNullException |
 | `Log_EachLogLevel_PassesCorrectLevel` | 所有四个级别均正确传递 | GodotAdapter Logging |
 | `Log_NullTagAndMessage_DoesNotThrow` | null tag 和 message 不抛异常 | GodotAdapter Logging |
 

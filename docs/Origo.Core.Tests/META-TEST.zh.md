@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试文档维护元指令
 
@@ -108,13 +108,15 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
    - `ProgressRun.LoadAndMountForeground(levelId)` 以**任意关卡**作为初始前台挂载的测试基础设施——生产中初始挂载只经入口/存档，无任意关卡初始挂载的公共 API。
    - `ProgressRun.BuildSavePayload`/`LoadFromPayload` 的**内存往返编解码契约**（`PayloadCodec_InMemoryRoundTrip_PreservesState`）——隔离验证序列化编解码本身、不经磁盘；公共 `RequestSaveGame`/`RequestLoadGame` 会把编解码与存储管线耦合，无法隔离验证 codec。
 
+8. **全局状态的测试复位**：`TypedData.ResetForTesting()`（internal）仅用于在测试间复位 TypedData 的 kind 注册表，使各测试以干净状态启动。它是**专为测试存在的复位钩子**，在生产路径中不可达；不得在测试用例之外的代码路径调用。
+
 **禁止使用 InternalsVisibleTo 的情况（应通过公共接口验证）**：
 
 1. **会话生命周期的编排方法**：`SessionRun.PersistLevelState()`、`SessionRun.SerializeToPayload()`、`ProgressRun.LoadFromPayload()`/`BuildSavePayload()`/`SwitchForeground()`、`SessionManager.PersistSession()` 等内部方法的行为应通过 `ctx.Save.RequestSaveGame()`/`RequestLoadGame()`/`RequestSwitchForegroundLevel()` + `ISaveStorageService` 公共流程验证（syncProcess 状态通过 `ProcessAllSessions` 是否处理该会话来间接验证）。仅上述白名单第 7 条所列、无公共等价的低层校验情形除外。
 
 2. **场景宿主内部方法作为行为触发器**：当测试意图是验证实体/策略行为（而非场景宿主自身契约）时，`FullMemorySndSceneHost.ProcessAll()`/`CreateEntity()`/`RemoveEntity()`/`RemoveAllEntities()` 不得作为触发捷径——应通过 `ISessionRun.Spawn`、`ISessionManager.ProcessAllSessions(includeForeground: true)`、`ISessionRun.RequestKillEntity` + `ISessionManager.KillPendingAllSessions()` 公共流程。（验证场景宿主自身契约的测试例外，见上白名单第 3 条。）
 
-3. **实体生成后手工补钩子**：`((IEntityLifecycle)e).FireAfterSpawnHooks()` 等不得用于模拟 spawn——应使用 `ISessionRun.Spawn`（内部已触发 AfterSpawn 钩子）。（验证分阶段编排中间态/排序的批量测试例外，见上白名单第 2 条。**单元级裸实体**（经 `SndWorld.CreateEntity` 直接构造、无宿主/会话包装，用于隔离测试策略挂载行为）因无 `ISessionRun` 公共路径可用，允许直接调用 `IEntityLifecycle` 的分阶段方法（`RecoverForLifecycle`/`FireAfterSpawnHooks`/`FireAfterLoadHooks`/`BuildMetaData`）完成"实体就绪"——`SndEntityFactory.Spawn` 需场景宿主，`ISessionRun.Spawn` 需会话。集成场景（有宿主/会话）仍必须走公共 API。）
+3. **实体生成后手工补钩子**：`((IEntityLifecycle)e).FireAfterSpawnHooks()` 等不得用于模拟 spawn——应使用 `ISessionRun.Spawn`（内部已触发 AfterSpawn 钩子）。（验证分阶段编排中间态/排序的批量测试例外，见上白名单第 2 条。**单元级裸实体**（经 `SndWorld.CreateEntity` 直接构造、无宿主/会话包装，用于隔离测试策略挂载行为）因无 `ISessionRun` 公共路径可用，允许直接调用 `IEntityLifecycle` 的分阶段方法（`RecoverForLifecycle`/`FireAfterSpawnHooks`/`FireAfterLoadHooks`/`BuildMetaData`）完成"实体就绪"——`SndEntityFactory.Spawn` 需场景宿主，`ISessionRun.Spawn` 需会话。集成场景（有宿主/会话）仍必须走公共 API。`SaveAndSwitchForegroundIntegrationTests` 属于白名单第 2 条的**宿主契约边界**：其测试意图是验证"钩子期间 FindByName 跨实体可见性"这一宿主中间态契约，故允许在完整会话环境中手工触发钩子，但同套件中验证会话编排的测试（`SaveAndSwitchForegroundTests` 等）必须走 `ISessionRun.Spawn` 公共 API。）
 
 4. **会话挂载键的内部属性**：`SessionRun.MountKey` 应通过 `ISessionManager.Contains()` / `ISessionManager.TryGet()` 验证
 

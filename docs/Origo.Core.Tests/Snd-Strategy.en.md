@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Strategy Tests
 
@@ -143,10 +143,11 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
-| `Mount_Duplicate_DoesNotThrow` | Duplicate mounting of same observer on same target | No exception; triggers OnMounted twice |
-| `Unmount_OnlyRemovesOneInstance` | Mount twice then Unmount once | Only triggers OnUnmounted once (instance-level reference counting) |
+| `Mount_Duplicate_Throws` | Duplicate mounting of same observer on same target | InvalidOperationException (duplicate mount rejected) |
+| `Unmount_NotMounted_Throws` | Unmount a binding that is not mounted | InvalidOperationException |
 | `NoDataKeyObserver_CanMountAndUnmount` | Mount/unmount observer with no [ObserveData] attributes | No exception |
-| `RecoverBindings_TargetNotFound_Skips` | RecoverBindingsFor when resolveTarget returns null | No exception; skip that binding |
+| `RecoverBindings_TargetNotFound_Throws` | RecoverBindingsFor when resolveTarget returns null | InvalidOperationException (dangling binding fails the load) |
+| `RecoverBindings_EmptyTarget_Throws` | Archived binding target is null/blank | InvalidOperationException |
 | `KillPendingEntities_NoObserverBindings_NoError` | KillPending on entities with no observer bindings | Completes normally; entity count becomes 0 |
 | `ClearAll_NoObserverBindings_NoError` | RemoveAllEntities with no observer bindings | Completes normally; entity count becomes 0 |
 
@@ -201,7 +202,6 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 |-------------|------------------|---------------------|
 | `GetStrategy_WrongBranchGeneric_DoesNotLeakReferenceCount` | Generic type mismatch failure does not leak reference count (acquiring again is not the same instance) | Strategy README: SndStrategyPool |
 | `StackStateMachine_WhenSecondAcquireFails_ReleasesFirstAcquire` | StackStateMachine construction: first acquire succeeds but second fails; rolls back first acquire | Strategy README: SndStrategyPool |
-| `GetStrategy_ThirdDomainBase_AssignsThroughExpectedAbstraction` | Third-domain base class (ExtensionDomainStrategyBase) extending LifecycleStrategyBase still reuses the same strategy pool | Strategy README: Strategy inheritance hierarchy |
 | `RecoverStrategiesOnly_WithOnlyValidStrategies_Succeeds` | Index list containing only LifecycleStrategies recovers successfully | Strategy README: SndStrategyManager |
 
 ### Error Paths

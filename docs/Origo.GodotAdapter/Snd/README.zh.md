@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -31,6 +31,8 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 
 - **实现 ISndSceneHost**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / ProcessAll 均为**显式接口实现**——业务代码无法在 `GodotSndManager` 具体类型上直接调用这些写操作，只能经 `ISndSceneHost`/`ISndSceneAccess` 接口（Core 内部持有）驱动；公开读操作为 `GetEntities` / `FindByName`。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
 - **实现 ISndContextAttachableSceneHost**：支持运行时切换上下文
+- **实现 IObserverTopologyHost**（internal）：暴露本场景宿主专用的 `ObserverTopology`，供 Core 的观察者挂载/卸载编排使用
+- **实现 IOwningSessionBindable**（internal）：`SetOwningSession` 将会话绑定到宿主，供 Core 会话创建流程使用
 - **集合逻辑委托**：实体增删、批量恢复回滚、击杀标记、帧处理等编排逻辑集中在纯 C# 的 `SndEntityCollection<T>`（internal，无 Godot 依赖），由测试直接覆盖；GodotSndManager 仅桥接集合与 Godot 节点树（`AddChild`/`RemoveChild`/`Free` 经 `DetachAndFree` 回调注入）
 - **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，集合回滚释放所有已创建的实体（经 `SndEntityCollection` 的 staged 列表）
 - **GetEntities()**：惰性创建 `IReadOnlyCollection<ISndEntity>` 视图，缓存引用避免重复分配
@@ -40,6 +42,8 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 ### GodotSndEntity
 
 Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
+
+> **`[GlobalClass]` 限制**：`GodotSndEntity` 的唯一构造函数是 internal（五参数依赖注入），无无参构造函数——因此它不能在编辑器中手动创建或从 `.tscn` 实例化。实体必须经 `GodotSndManager` 创建（`CreateEntity`），这是刻意设计：`GodotSndEntity` 的依赖（`SndWorld`、`ISndContext`、日志、观察者拓扑）只能由框架注入，`[GlobalClass]` 仅用于让 Godot 编辑器识别该类型（导出属性/类型注册）。
 
 - **延迟初始化**：`_entity` 在首次访问时通过 `SndWorld.CreateEntity` 创建
 - **Lifecycle 分离**：`DetachFromManager()` 设置 released 标志并置空 entity 引用；引擎级释放（`RemoveChild`/`Free`）由 GodotSndManager 的 `DetachAndFree` 回调执行（`SndEntityCollection` 的"引擎工作委托注入"契约）
@@ -51,7 +55,7 @@ Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 ### GodotPackedSceneNodeFactory
 
 - **Create**：`ResourceLoader.Load<PackedScene>(resourceId)` → `Instantiate<Node>()` → `parent.AddChild(node)` → 返回 GodotNodeHandle
-- resourceId 通过 `SndMappings.ResolveSceneAlias` 解析（支持别名），因此可以是原始 `res://` 路径或别名
+- resourceId 在 Core 侧（`SndWorld` 创建实体时传入 `SndMappings.ResolveSceneAlias` 委托）已解析为最终路径（支持别名），因此工厂收到的始终是原始 `res://` 路径或已解析路径
 - 已加载的 `PackedScene` 实例会缓存，避免同一资源多次实例化时的重复磁盘 I/O
 
 ### GodotNodeHandle
@@ -90,7 +94,7 @@ Godot 场景树中如果存在同名节点，Godot 会自动在 Name 后追加 `
 
 ### 适配层实体桥接：为什么 GodotSndEntity 必须手写转发
 
-`GodotSndEntity`（236 行）的代码可分解为三类：
+`GodotSndEntity`（约 238 行）的代码可分解为三类：
 
 | 类别 | 行数 | 占比 | 说明 |
 |------|------|------|------|

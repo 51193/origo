@@ -55,7 +55,7 @@ Current save files (JSON, map) are small (KB-level), and read-then-write is simp
 
 Godot's `DirAccess.Remove`/`RemoveAbsolute` is unreliable for `user://` paths within the editor process: the engine holds file descriptors to directories created at runtime, so container removal can return `Error.Failed` even after all contents have been cleared. Container removal is therefore best-effort: it first removes the container through the parent handle, and on failure falls back to leaving the empty container — an empty container is harmless and is naturally overwritten by subsequent save operations.
 
-In headless and exported-game processes (which hold no fd) the removal succeeds, keeping the adapter consistent with the `IFileSystem.DeleteDirectory` contract and preventing `SaveAtomicWriter.SwapSnapshotDirectory` from failing its rename when a stale empty `.bak` container already exists at the destination. The implementation reuses the parent-handle + relative-name mechanism already proven by the integration-test runner, without introducing non-adapter APIs such as `System.IO`.
+In headless and exported-game processes (which hold no fd) the removal succeeds, keeping the adapter consistent with the `IFileSystem.DeleteDirectory` contract and preventing `SaveAtomicWriter.SwapSnapshotDirectory` from failing its rename when a stale empty `.bak` container already exists at the destination. The implementation reuses the parent-handle + relative-name mechanism already proven by the integration-test runner, using only `System.IO` exception types (`IOException` / `DirectoryNotFoundException`) without introducing file-system API dependencies.
 
 ---
 [↑ Back to Origo.GodotAdapter](../README.en.md)

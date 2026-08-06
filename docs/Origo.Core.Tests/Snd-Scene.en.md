@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Scene Tests
 
@@ -29,7 +29,7 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 |-------------|------------------|---------------------|
 | `Spawn_AddsEntityAndMeta` | CreateEntity adds the entity to the GetEntities list and BuildMetaList | ISndSceneHost |
 | `FindByName_ReturnsEntity` | FindByName finds the created entity; returns null when not found | ISndSceneHost |
-| `RecoverFromMetaList_ReplacesExisting` | RecoverFromMetaList replaces all entities; old entities are no longer findable | ISndSceneHost |
+| `LoadFromMetaList_DoesNotClearExisting` | RecoverFromMetaList does not clear existing entities (caller handles cleanup) | ISndSceneHost |
 | `ClearAll_RemovesEntitiesAndMeta` | After RemoveAllEntities, both GetEntities and BuildMetaList are empty | ISndSceneHost |
 | `SerializeMetaList_ReturnsCorrectData` | BuildMetaList returns all current entity metadata | ISndSceneHost |
 
@@ -38,7 +38,7 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Spawn_ThrowsOnNull` | null metadata parameter | ArgumentNullException |
-| `RecoverFromMetaList_ThrowsOnNull` | null metaList parameter | ArgumentNullException |
+| `LoadFromMetaList_ThrowsOnNull` | null metaList parameter | ArgumentNullException |
 
 ## FullMemorySndSceneHostTests Details
 

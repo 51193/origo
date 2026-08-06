@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Codec/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Codec
 
@@ -31,7 +31,7 @@
 - 所有值均为字符串类型
 - 不支持延迟加载（`.map` 文件通常较小且扁平，无需延迟）
 - 编码时按键的字典序输出，null 值被跳过
-- **Strict 模式（`strict: true`）**：遇到格式错误的行时立即抛出 `FormatException`，Gateway 将其包装为包含文件路径信息的 `InvalidOperationException`（fail-fast）
+- **Strict 模式（`strict: true`）**：格式错误（无冒号、空 key/空 value）时立即抛出 `FormatException`，Gateway 将其包装为包含文件路径信息的 `InvalidOperationException`（fail-fast）；重复键不抛异常，仅记 Warning 日志且后者覆盖前者
 
 ### RawStringDataSourceCodec
 

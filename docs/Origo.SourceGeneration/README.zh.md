@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration
 
@@ -18,7 +18,7 @@
 | `TypedDataGenerator.cs` | Roslyn `IIncrementalGenerator`：双模式代码生成器（主入口 + 属性解析 + 编译输入提取） |
 | `TypedDataGenerator.AdapterGeneration.cs` | partial — Adapter 模式代码生成（Godot 引擎类型扩展方法） |
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home 模式代码生成（Core BCL 类型扩展方法） |
-| `TypedDataGenerator.FactoryGeneration.cs` | partial — 工厂注册代码生成（类型映射与 Kind 分配） |
+| `TypedDataGenerator.FactoryGeneration.cs` | partial — `TypedDataFactory<T>` 的 Create/TryExtract 分支生成（类型映射 `TypedDataTypeMap` 与 Kind 分配在 HomeGeneration.cs） |
 | `TypedDataGenerator.Diagnostics.cs` | partial — 诊断定义（ORIGOSG001-005） |
 | `AnalyzerReleases.Shipped.md` | 分析器发布跟踪（已发布规则，当前为空） |
 | `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`、`ORIGOSG002`、`ORIGOSG003`、`ORIGOSG004`、`ORIGOSG005`） |

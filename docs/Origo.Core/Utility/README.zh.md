@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Utility/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility
 
@@ -7,7 +7,7 @@
 
 ## 功能概述
 
-通用工具函数，提供集合差异比较（`DiffUtility`）与路径规范化（`PathUtility`，被 `GodotDirectoryOperations` 等适配层消费）等纯函数辅助能力。
+通用工具函数，提供集合差异比较（`DiffUtility`）、路径规范化（`PathUtility`，被 `GodotDirectoryOperations` 等适配层消费）与字符串到类型值推断（`ValueInference`，被 Archetype 与控制台类型推断共享）等纯函数辅助能力。
 
 ## 文件清单
 
@@ -15,6 +15,7 @@
 |------|------|
 | `DiffUtility.cs` | 通用集合差异比较：给定新旧两个集合，返回 (新增元素, 移除元素) |
 | `PathUtility.cs` | 路径操作工具：`Combine`（路径拼接 + 遍历攻击检测）、`GetParentDirectory`（父目录提取 + 根路径边界处理）、`NormalizeDirectoryPath`（去除尾部斜杠）、`ExtractGlobSuffix`（`"*.json"` → `".json"`） |
+| `ValueInference.cs` | `internal` — 字符串到类型值的统一推断（int → long → float → bool → string），供 `SndArchetypeLoader` 与控制台 `bb_set` / `entity_set_data` 共用 |
 
 ## 设计决策
 

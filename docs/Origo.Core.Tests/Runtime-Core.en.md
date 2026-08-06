@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Runtime Core Tests
 
@@ -42,8 +42,8 @@ Validates basic OrigoRuntime construction and console injection, flushing of end
 |-------------|-----------------|-----------|
 | `RequestKillEntity_TriggersBeforeDead_ViaFlush` | RequestKillEntity first marks IsPendingKill, then triggers BeforeDead and removes on reap | Runtime: Entity Lifecycle |
 | `ManualIterateAndRequestKillEntity_MarksAllAliveEntities` | Iterating session entities and calling RequestKillEntity marks all alive entities | Runtime: SessionManager |
-| `RequestKillAll_SkipsAlreadyPendingEntities` | Skips already IsPendingKill entities during iteration, no duplicate requests | Runtime: SessionManager |
-| `RequestKillAll_RemovesAllAfterFlush` | After marking all, KillPendingAllSessions removes all entities | Runtime: SessionManager |
+| `ManualKillAll_SkipsAlreadyPendingEntities` | Skips already IsPendingKill entities during iteration, no duplicate requests | Runtime: SessionManager |
+| `ManualKillAll_RemovesAllAfterFlush` | After marking all, KillPendingAllSessions removes all entities | Runtime: SessionManager |
 | `KillPendingEntities_FiresBeforeDead` | Reap triggers BeforeDead hook and removes entity | Runtime: Entity Lifecycle |
 | `KillPendingEntities_BusinessDeferredBeforeKillSweep` | Business deferred actions execute in enqueue order, and reap triggers BeforeDead after them | Scheduling |
 | `KillPendingAllSessions_RemovesPendingEntities` | KillPendingAllSessions removes marked entities | Runtime: SessionManager |
@@ -67,7 +67,7 @@ Validates basic OrigoRuntime construction and console injection, flushing of end
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
-| `RequestKillAll_EmptyScene_DoesNotThrow` | Iterate and RequestKillEntity on empty scene | Does not throw |
+| `ManualKillAll_EmptyScene_DoesNotThrow` | Iterate and RequestKillEntity on empty scene | Does not throw |
 | `KillPendingEntities_NoPendingEntities_DoesNotThrow` | KillPendingAllSessions with no pending entities | Does not throw, entities retained |
 | `StubSndSceneHost_DeadByName_MissingEntity_NoError` | RemoveEntity for non-existent entity | Does not throw |
 | `IsPendingKill_DefaultFalse` | Newly created entity | IsPendingKill defaults to false |

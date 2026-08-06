@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Companions/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Companions
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-`SndContext` 的 companion 对象层。每个 companion 是 `internal sealed class`，持有对 `SndContext` 的反向引用，实现 `ISndContext` 暴露的一个角色接口。策略通过 `ctx.Blackboard`、`ctx.Save` 等属性获取对应的 companion 实例，而非直接 cast `ISndContext` 到角色接口。
+`SndContext` 的 companion 对象层。每个 companion 是 `internal sealed class`，实现 `ISndContext` 暴露的一个角色接口。多数 companion 持有对 `SndContext` 的反向引用以访问框架内部状态；`SndContextFileAccess` / `SndContextArchiveFileAccess` 例外——它们直接注入 I/O 依赖（`IDataSourceIoGateway`、`IFileMetaAccess`、`IPathResolver` 等），不持有 `SndContext` 引用。策略通过 `ctx.Blackboard`、`ctx.Save` 等属性获取对应的 companion 实例，而非直接 cast `ISndContext` 到角色接口。
 
 ## 包含文件
 
@@ -32,7 +32,7 @@
 
 将每个角色提取为独立的 companion 对象：
 - `ISndContext` 只暴露 companion 属性，自身不继承任何角色接口
-- 每个 companion 持有 `SndContext` 的反向引用，访问框架内部状态
+- 多数 companion 持有 `SndContext` 的反向引用，访问框架内部状态；两个文件访问 companion 直接注入 I/O 依赖（无 `SndContext` 引用）
 - 使用者通过 `ctx.Blackboard.SystemBlackboard` 而非 `((ISndBlackboardAccess)ctx).SystemBlackboard` 访问能力，语义明确
 
 ### 为什么 companion 是 internal 而非 public

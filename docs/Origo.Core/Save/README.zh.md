@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Save
 
@@ -22,7 +22,7 @@ Origo 的持久化系统。负责存档的完整生命周期：Payload 构建、
 
 | 文件 | 职责 |
 |------|------|
-| `PersistentBlackboard.cs` | 持久化黑板：自动从磁盘加载/保存；每次修改通过原子写入（临时文件 + 重命名）防止崩溃导致文件损坏。中断写入的残留临时文件在加载时自动清理。 |
+| `PersistentBlackboard.cs` | 持久化黑板：每次修改自动保存到磁盘；通过原子写入（临时文件 + 重命名 + 备份交换）防止崩溃导致文件损坏。磁盘状态需显式调用 `LoadFromDisk()` 加载（构造时不自动加载）。中断写入的残留临时文件在加载时自动清理。 |
 | `SavePayloads.cs` | 存档载荷模型：`SaveGamePayload` / `LevelPayload` / 序列化容器 |
 | `WellKnownKeys.cs` | `internal` — 黑板键常量：`SessionTopology` / `ActiveSaveId` 等 |
 | `SaveCoordinator.cs` | 存档协调器：负责构建存档 payload、持久化 progress 状态、管理元数据的独立类 |
@@ -60,17 +60,18 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
     ├── 检查 save_{id}/.payload.sha 是否存在且 hash 相同 → 跳过（幂等去重）
     ├── 重建 .write_in_progress marker
     ├── 复制 current/ → save_{id}.tmp/
-    ├── 删除旧 save_{id}/（若存在）
-    ├── 重命名 save_{id}.tmp/ → save_{id}/
+    ├── 备份-替换：旧 save_{id}/ 改名为 save_{id}.bak/ → save_{id}.tmp/ 重命名为 save_{id}/ → 删除 save_{id}.bak/
     └── 删除 .write_in_progress marker
 ```
+
+> 注：`current/.payload.sha` 在 `WriteToCurrent` 完成后、快照 marker 重建前写入，携带 combined hash（payload + `extra/` 目录）；快照路径的 `.payload.sha` 用于幂等去重。
 
 ## 严格读取规则
 
 - **current/ 有 `.write_in_progress`** → 抛异常（上次写入中断，需处理）
 - **关卡三件套不全**（部分存在）→ 抛异常（数据损坏）
-- **progress.json 缺失** → 抛异常
-- **全部缺失** → 视为"尚无存档"（合法状态）
+- **progress.json 或 progress_state_machines.json 缺失** → 抛异常（含 current/ 完全不存在的情形）
+- **格式版本高于当前支持版本** → 抛异常（拒绝加载未来版本存档）
 
 ---
 [↑ 回到 Origo.Core](../README.zh.md)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台系统 测试
 
@@ -9,8 +9,8 @@
 
 ## 被测行为概览
 
-验证控制台命令系统的全链路：命令解析（位置参数/命名参数/混合模式）、命令路由（注册/分发/未找到/大小写不敏感/重复覆盖）、
-输入队列（轮询式出队、FIFO、裁剪、清空）、`IConsoleInputSource` 接口契约、输出通道（发布-订阅、异常传播）、
+验证控制台命令系统的全链路：命令解析（位置参数/命名参数/混合模式）、命令路由（注册/分发/未找到/大小写不敏感/重复注册拒绝）、
+输入队列（轮询式出队、FIFO、裁剪、清空）、`IConsoleInputSource` 接口契约、输出通道（发布-订阅、异常传播、null 拒绝）、
 14 个内置命令处理（11 Core + 3 GodotAdapter）、类型推断（bb_set/entity_set_data）、控制台日志记录（级别/顺序/Tag/内容完整性）。
 
 ## 测试文件清单
@@ -18,7 +18,7 @@
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `ConsoleCommandParserTests.cs` | 命令解析：空行/空白行/单命令/位置参数/命名参数/无效命名参数 |
-| `ConsoleCommandRouterTests.cs` | 命令路由：注册/分发/未注册命令/大小写不敏感/重复注册覆盖/null handler |
+| `ConsoleCommandRouterTests.cs` | 命令路由：注册/分发/未注册命令/大小写不敏感/重复注册拒绝/null handler |
 | `ConsoleInputBufferTests.cs` | 输入队列：Enqueue/Dequeue/FIFO/裁剪/空白忽略/清空 |
 | `ConsoleOutputChannelTests.cs` | 输出通道：Subscribe/Publish/Unsubscribe/多订阅者/null 广播/异常传播 |
 | `ConsoleCommandExtendedTests.cs` | 内置命令端到端：help/find_entity/kill_all/bb_*、晚注册、参数校验、spawn |
@@ -57,7 +57,7 @@
 |---------|-----------|---------|
 | `ConsoleCommandRouter_Register_And_TryExecute_Success` | 注册 handler 后分发执行成功 | console-commands |
 | `ConsoleCommandRouter_Register_CaseInsensitive` | 命令名大小写不敏感（"TEST" 匹配 "Test"） | console-commands |
-| `ConsoleCommandRouter_Register_DuplicateName_OverridesPreviousHandler` | 重复注册同名命令时新 handler 覆盖旧 handler | console-commands |
+| `ConsoleCommandRouter_Register_DuplicateName_Throws` | 重复注册同名命令 | InvalidOperationException（命令名必须唯一） |
 
 ### 错误路径
 
@@ -107,7 +107,7 @@
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
 | `ConsoleOutputChannel_Unsubscribe_InvalidId_ReturnsFalse` | Unsubscribe 不存在的 id | 返回 false |
-| `ConsoleOutputChannel_Publish_NullBroadcastsEmpty` | Publish(null) | 订阅者收到空字符串 |
+| `ConsoleOutputChannel_Publish_Null_Throws` | Publish(null) | ArgumentNullException |
 
 ## ConsoleCommandExtendedTests 测试详情
 

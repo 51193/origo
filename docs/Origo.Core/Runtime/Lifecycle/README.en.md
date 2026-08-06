@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -15,7 +15,7 @@ The implementation layer of the runtime's four-layer lifecycle. Defines the comp
 |------|------|
 | `SystemParameters.cs` | System-layer construction parameters (including `AdapterSceneHost`) |
 | `SystemRuntime.cs` | System-level runtime container: holds SystemRun, SystemBlackboard, SndWorld |
-| `SystemRun.cs` | System-layer startup: creates SndWorld → constructs ProgressRuntime |
+| `SystemRun.cs` | System-layer startup: holds OrigoRuntime (SndWorld created in its constructor) → constructs ProgressRuntime |
 | `ProgressParameters.cs` | Progress-layer construction parameters |
 | `ProgressRuntime.cs` | Progress-level runtime container: holds ProgressRun, ProgressBlackboard, SaveContext |
 | `ProgressRun.cs` | Progress-layer main logic: level switching, save read/write, session lifecycle orchestration |
@@ -62,7 +62,7 @@ Each layer container holds its layer's core object references and public access 
 
 ### Run
 
-- Every frame: `IScheduler.Tick()` → execute deferred queue → `SessionManager.ProcessAllSessions()` → `SessionManager.KillPendingAllSessions()` → system queue → console
+- Every frame (`OrigoRuntime.DriveFrame`): `SessionManager.ProcessAllSessions()` → business deferred queue → `SessionManager.KillPendingAllSessions()` → system deferred queue → console
 - Console commands route to `OrigoConsole.ProcessPending()`
 
 ### Persistence

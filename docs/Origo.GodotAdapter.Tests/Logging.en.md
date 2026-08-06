@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Logging -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Logging Tests (Adapter Layer)
 
@@ -9,20 +9,20 @@
 ## Behavior Under Test Overview
 
 Verifies GodotLogger's delegate injection pattern and level filtering: proxying log output via
-`Action<LogLevel, string, string>` delegate, not throwing when handler is null, and minimum log level filtering.
+`Action<LogLevel, string, string>` delegate, rejecting null handler at construction (ArgumentNullException), and minimum log level filtering.
 
 ## Test File List
 
 | File | Verification Focus |
 |------|-------------------|
-| `GodotLoggerTests.cs` | GodotLogger delegate injection, null handler safety, and level filtering |
+| `GodotLoggerTests.cs` | GodotLogger delegate injection, null handler rejection (ArgumentNullException), and level filtering |
 
 ### Happy Path
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
 | `Log_WithHandler_InvokesHandlerWithCorrectLevelTagAndMessage` | Log(Warning, "Tag", "msg") → handler receives correct arguments | GodotAdapter Logging |
-| `Log_WithNullHandler_DoesNotThrow` | No handler passed at construction, Log calls do not throw | GodotAdapter Logging |
+| `Constructor_WithNullHandler_Throws` | No handler passed at construction | ArgumentNullException |
 | `Log_EachLogLevel_PassesCorrectLevel` | All four levels are passed correctly | GodotAdapter Logging |
 | `Log_NullTagAndMessage_DoesNotThrow` | null tag and message do not throw | GodotAdapter Logging |
 

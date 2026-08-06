@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Logging/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Logging
 
@@ -31,7 +31,7 @@ builder.SetElapsedMs(12.3).AddContext("entity", "player").AddContext("hp", 100).
 - **耗时**：可选，以 `[+X.XXms]` 格式前置
 - **上下文**：消息后以 ` | key=val, key=val` 格式追加
 - **空值过滤**：key 非空白才添加（value 允许为 null，输出为 `key=`）
-- **多次调用 AddContext**：按添加顺序拼接，用逗号分隔
+- **多次调用 AddContext**：按添加顺序拼接，用逗号分隔；同名 key 重复添加时替换原值（保持原位置，不追加）
 
 ### NullLogger
 

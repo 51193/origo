@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Save
 
@@ -22,7 +22,7 @@ Origo's persistence system. Responsible for the complete save lifecycle: payload
 
 | File | Responsibility |
 |------|---------------|
-| `PersistentBlackboard.cs` | Persistent blackboard: auto loads/saves from disk; uses atomic write (temp file + rename) on every mutation to prevent file corruption on crash. Stale temp files from interrupted writes are cleaned up on load. |
+| `PersistentBlackboard.cs` | Persistent blackboard: auto-saves to disk on every mutation; uses atomic write (temp file + rename + backup swap) to prevent file corruption on crash. Disk state is loaded explicitly via `LoadFromDisk()` (not at construction). Stale temp files from interrupted writes are cleaned up on load. |
 | `SavePayloads.cs` | Save payload model: `SaveGamePayload` / `LevelPayload` / serialization containers |
 | `WellKnownKeys.cs` | `internal` — Blackboard key constants: `SessionTopology` / `ActiveSaveId`, etc. |
 | `SaveCoordinator.cs` | Save coordinator: an independent class responsible for building save payloads, persisting progress state, managing metadata |
@@ -60,17 +60,18 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
     ├── Check if save_{id}/.payload.sha exists with identical hash → skip (idempotent dedup)
     ├── Recreate .write_in_progress marker
     ├── Copy current/ → save_{id}.tmp/
-    ├── Delete old save_{id}/ (if exists)
-    ├── Rename save_{id}.tmp/ → save_{id}/
+    ├── Backup-replace: rename old save_{id}/ → save_{id}.bak/ → rename save_{id}.tmp/ → save_{id}/ → delete save_{id}.bak/
     └── Delete .write_in_progress marker
 ```
+
+> Note: `current/.payload.sha` is written after `WriteToCurrent` completes, before the snapshot marker is recreated, carrying the combined hash (payload + `extra/` directory); the snapshot's `.payload.sha` is used for idempotent dedup.
 
 ## Strict Read Rules
 
 - **current/ has `.write_in_progress`** → throw exception (previous write interrupted; needs handling)
 - **Level three files partially present** → throw exception (data corruption)
-- **progress.json missing** → throw exception
-- **All missing** → treated as "no save exists yet" (legal state)
+- **progress.json or progress_state_machines.json missing** → throw exception (including when current/ does not exist at all)
+- **Format version newer than the supported one** → throw exception (refuses to load future saves)
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Archetype/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Archetype
 
@@ -29,7 +29,7 @@ Archetype 是 Origo 提供的**数值外部化工具**——将实体属性数�
 
 ### SndArchetypeLoader
 
-- **TryLoad(ISndFileAccess fileAccess, string path)**：通过框架文件抽象读取 .map 文件，要求根节点为 Object，返回 `Dictionary<string, string>`。文件不存在或格式不正确时返回 false
+- **TryLoad(ISndFileAccess fileAccess, string path)**：通过框架文件抽象读取 .map 文件，要求根节点为 Object，返回 `Dictionary<string, string>`。文件不存在、格式不正确或为空 map（无属性键）时返回 false
 - **ApplyAttributes(ISndEntity entity, Dictionary<string, string> attributes)**：遍历属性字典，按 int → long → float → bool → string 的顺序尝试解析每个值
 
 类型推断规则：

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：序列化 测试
 
@@ -85,11 +85,7 @@ PersistentBlackboard 磁盘读写。
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `Constructor_NullSessionManager_Throws` | null SessionManager | ArgumentNullException |
-| `Constructor_NullProgressBlackboard_Throws` | null Progress 黑板 | ArgumentNullException |
-| `Constructor_NullStateMachines_Throws` | null StateMachineContainer | ArgumentNullException |
-| `Constructor_NullProgressRuntime_Throws` | null ProgressRuntime | ArgumentNullException |
-| `Constructor_NullSaveId_Throws` | null SaveId | ArgumentNullException |
+| `SaveContext_Constructor_ThrowsOnNullArgs` | null progress / null session / null sndWorld 参数 | ArgumentNullException |
 | `PersistProgress_WithoutForegroundSession_Throws` | PersistProgress 在无前台 Session 时调用 | InvalidOperationException（消息含 "foreground"） |
 
 ## PersistentBlackboardTests 测试详情

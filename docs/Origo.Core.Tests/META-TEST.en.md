@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -145,6 +145,10 @@ but must observe the following whitelist principle:
      codec itself, without going through disk; the public `RequestSaveGame` / `RequestLoadGame` couples
      codec with storage pipeline, unable to isolate codec verification.
 
+8. **Test-only reset of global state**: `TypedData.ResetForTesting()` (internal) resets TypedData's kind
+   registry between tests so each test starts clean. It is a **test-only reset hook**, unreachable from
+   production paths; it must not be invoked from non-test code.
+
 **Prohibited uses of InternalsVisibleTo (should verify through public interfaces)**:
 
 1. **Session lifecycle orchestration methods**: The behavior of internal methods like
@@ -170,7 +174,11 @@ but must observe the following whitelist principle:
    `IEntityLifecycle` phased methods directly (`RecoverForLifecycle` / `FireAfterSpawnHooks` /
    `FireAfterLoadHooks` / `BuildMetaData`) to make the entity ready; `SndEntityFactory.Spawn` requires a scene
    host and `ISessionRun.Spawn` requires a session. Integration scenarios with a host/session must still use the
-   public API.)
+   public API. `SaveAndSwitchForegroundIntegrationTests` falls under the **host-contract boundary** of whitelist
+   item 2: its intent is verifying the "cross-entity FindByName visibility during hooks" host intermediate-state
+   contract, so manually firing hooks in a full session environment is allowed; tests in the same suite that
+   verify session orchestration (`SaveAndSwitchForegroundTests` etc.) must use the `ISessionRun.Spawn` public
+   API.)
 
 4. **Internal properties of session mount keys**: `SessionRun.MountKey` should be verified through
    `ISessionManager.Contains()` / `ISessionManager.TryGet()`

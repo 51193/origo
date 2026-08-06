@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning 测试
 
@@ -44,7 +44,7 @@
 |---------|---------|---------|
 | `AfterSpawn_NoIntent_DoesNotStartPlan` | 无 intent 数据键 | 不写入任何步骤数据 |
 | `DefaultHooks_DoNotMutateEntityData` | 默认钩子实现依次调用 | 实体现有数据不变 |
-| `Wire_CalledTwice_DoesNotLeakSubscriptions` | AfterSpawn 后再次 AfterAdd | 订阅数保持 1，BeforeRemove 后归零 |
+| `Wire_MultipleCycles_ManagesSubscriptionsCorrectly` | AfterSpawn 后再次 AfterAdd | 订阅数保持 1，BeforeRemove 后归零 |
 
 ## 测试辅助策略
 

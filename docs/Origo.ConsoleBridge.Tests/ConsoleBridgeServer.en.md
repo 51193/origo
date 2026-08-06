@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console Bridge Server Tests
 
@@ -55,7 +55,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 |------------|-------------------|---------------|
 | `OutputChannel_Publish_ArrivesAtClient` | Publish("hello") → client reads "hello" | ConsoleBridge |
 | `OutputChannel_MultiplePublishes_AllDelivered` | Three Publish calls → client reads all three | ConsoleBridge |
-| `OutputChannel_PublishNullString_ArrivesAsEmpty` | Publish(null) → client reads "" | ConsoleBridge |
+| `OutputChannel_PublishNullString_Throws` | Publish(null) | ArgumentNullException |
 | `OutputChannel_LargeVolume_ManyLines_AllDelivered` | 100 lines all delivered | ConsoleBridge |
 | `OutputChannel_ConcurrentPublish_AllDelivered` | 10-thread concurrent publish, all delivered | ConsoleBridge |
 

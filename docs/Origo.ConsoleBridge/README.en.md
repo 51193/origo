@@ -50,8 +50,10 @@ nc localhost 9876
 > or output, and single-connection mode is first-come-first-served (a client
 > that holds the connection can execute any console command).
 
-- **Intended use**: local (`localhost`) or trusted-LAN development/debugging,
-  agent-driven development, and automated testing.
+- **Intended use**: local (`localhost`) development/debugging, agent-driven
+  development, and automated testing. The listener binds only to
+  `IPAddress.Loopback`, so direct LAN connections are not possible — remote
+  access requires an existing secure channel such as an SSH tunnel (below).
 - **Forbidden**: exposing the port directly to the public internet or an
   untrusted network.
 - **For remote access**: tunnel through existing secure channels such as SSH

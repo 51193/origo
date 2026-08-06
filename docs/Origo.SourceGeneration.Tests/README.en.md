@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration.Tests
 
@@ -10,7 +10,7 @@
 `Origo.SourceGeneration.Tests` contains two categories of tests:
 
 - **Generator behavior tests**: Directly drive `TypedDataGenerator`, run the generator on in-memory compilations and assert the generated sources, generator diagnostics, and the result of merged compilation of "original source + generated source". It references the generator as a regular library (not as an analyzer attachment), enabling instantiation and execution within tests.
-- **Generated artifact performance benchmarks**: Obtain the generated `TypedData` by referencing `Origo.Core` (using only the public API), comparing throughput of inline storage/Kind dispatch against an unoptimized boxing implementation across multiple value types and the reference type `string`. Marked `[Trait("Category","Benchmark")]`, run once in a separate CI step (`scripts/benchmark.sh`) and printing comparison tables, separated from test runs subject to coverage gates.
+- **Generated artifact performance benchmarks**: Obtain the generated `TypedData` by referencing `Origo.Core` (public API plus internal members accessed via `InternalsVisibleTo`), comparing throughput of inline storage/Kind dispatch against an unoptimized boxing implementation across multiple value types and the reference type `string`. Marked `[Trait("Category","Benchmark")]`, run once in a separate CI step (`scripts/benchmark.sh`) and printing comparison tables, separated from test runs subject to coverage gates.
 
 ## Files
 
@@ -96,9 +96,9 @@ The test compilation uses the current runtime's `TRUSTED_PLATFORM_ASSEMBLIES` as
 
 The generator determines Home/Adapter mode by the assembly that defines `TypedData`. Adapter cases place the `TypedData` definition in a referenced host assembly, making the current compilation recognized as an adapter layer; the host assembly declares `InternalsVisibleTo` so that generated adapter layer code can access `TypedData`'s internal fields, matching the real relationship between Origo.Core/Origo.GodotAdapter.
 
-### Why performance benchmarks use only the public API, relaxed thresholds, and run independently
+### Why performance benchmarks use generated internal members, relaxed thresholds, and run independently
 
-Performance benchmarks reference the real `Origo.Core` but use only `TypedData`'s public API (explicit conversion operators, `TryGetXxx`, `TryGetString`, `Data`, `FromObject`), covering multiple value types and the reference type `string`, thus without needing to expose Core internal members to the test project (`TypedDataFactory<T>` and other internal types are out of benchmark scope).
+Performance benchmarks reference the generated artifacts of the real `Origo.Core`, covering public API (explicit conversion operators, `TryGetXxx`, `TryGetString`, `Data`, `FromObject`) and — via `InternalsVisibleTo` — the generator-produced internal members (`TypedData.KindMap`, the internal constructor, the `IsString` discriminator property) to compare the generated path against an unoptimized boxing implementation precisely; `TypedDataFactory<T>` and other non-benchmark types are out of scope.
 
 Benchmarks are relaxed: they do not require the generated path to be faster than the unoptimized boxing baseline, only asserting it does not exceed a fixed multiple of the baseline (8×, skipping ratio for baselines below 1ms as unreliable) and that each single benchmark has a total elapsed upper limit. The goal is to guard against "severe performance regression / stalling" rather than pin down absolute performance numbers.
 

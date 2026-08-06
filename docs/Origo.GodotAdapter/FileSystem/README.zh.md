@@ -55,7 +55,7 @@ Godot 目录的 rename/move 操作需要打开目标所在父目录，然后对�
 
 `DirAccess.Remove`/`RemoveAbsolute` 在 Godot 编辑器进程内对 `user://` 路径不可靠：引擎在运行时持有已创建目录的文件描述符，即使目录内容已清空，容器移除仍可能返回 `Error.Failed`。因此容器移除是**尽力而为**：先经父句柄移除容器，失败时回退为保留空容器——空容器无害，后续存档写入操作会自然覆盖。
 
-在 headless 与导出游戏进程（不持有 fd）中容器移除会成功，这使适配层与 `IFileSystem.DeleteDirectory` 契约一致，并避免 `SaveAtomicWriter.SwapSnapshotDirectory` 在残留空 `.bak` 容器上执行 rename 时因目标已存在而失败。实现沿用集成测试运行器已验证的父句柄 + 相对名移除机制，无需引入 `System.IO` 等非适配层 API。
+在 headless 与导出游戏进程（不持有 fd）中容器移除会成功，这使适配层与 `IFileSystem.DeleteDirectory` 契约一致，并避免 `SaveAtomicWriter.SwapSnapshotDirectory` 在残留空 `.bak` 容器上执行 rename 时因目标已存在而失败。实现沿用集成测试运行器已验证的父句柄 + 相对名移除机制，仅使用 `System.IO` 的异常类型（`IOException` / `DirectoryNotFoundException`），不引入文件系统 API 依赖。
 
 ---
 [↑ 回到 Origo.GodotAdapter](../README.zh.md)

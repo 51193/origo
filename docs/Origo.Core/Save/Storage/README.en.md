@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Storage
 
@@ -50,7 +50,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 1. **Idempotency check** (only at `WriteSavePayloadToCurrentThenSnapshot` entry): if the target snapshot `save_{id}/.payload.sha` exists and the hash matches, return immediately (skip write)
 2. **Integrity validation**: validate the payload before writing any file — active level must exist in `Levels`, progress node must be non-null. Validation failure throws immediately; no half-written `current/` is produced
 3. **Write marker**: create `.write_in_progress` under `current/`
-4. **Write payload**: write progress.json, per-level three-piece sets, meta.map, `.payload.sha` (all completed under marker protection)
+4. **Write payload**: write progress.json, per-level three-piece sets, meta.map; `.payload.sha` is written after the payload completes, before the marker is recreated (combined hash = payload + `extra/`)
 5. **Clear phase-1 marker**: after `current/` is fully written (including `.payload.sha`), delete the marker
 6. **Recreate marker**: rebuild marker for the snapshot phase; if snapshot fails, marker remains so subsequent reads will reject this "updated but not snapshotted" `current/`
 7. **Snapshot (backup-replace)**: copy `current/` to `save_{id}.tmp/` → rename existing `save_{id}/` to `save_{id}.bak/` → rename `.tmp` to the final `save_{id}/` → delete `.bak`. Old data is not deleted until new data is in place

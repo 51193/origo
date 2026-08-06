@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 运行时核心 测试
 
@@ -42,8 +42,8 @@
 |---------|-----------|---------|
 | `RequestKillEntity_TriggersBeforeDead_ViaFlush` | RequestKillEntity 先标记 IsPendingKill，收割时触发 BeforeDead 并移除 | Runtime: 实体生命周期 |
 | `ManualIterateAndRequestKillEntity_MarksAllAliveEntities` | 遍历会话实体逐一 RequestKillEntity，所有存活实体被标记 | Runtime: SessionManager |
-| `RequestKillAll_SkipsAlreadyPendingEntities` | 遍历标记时跳过已 IsPendingKill 的实体，不重复请求 | Runtime: SessionManager |
-| `RequestKillAll_RemovesAllAfterFlush` | 标记全部后 KillPendingAllSessions 移除全部实体 | Runtime: SessionManager |
+| `ManualKillAll_SkipsAlreadyPendingEntities` | 遍历标记时跳过已 IsPendingKill 的实体，不重复请求 | Runtime: SessionManager |
+| `ManualKillAll_RemovesAllAfterFlush` | 标记全部后 KillPendingAllSessions 移除全部实体 | Runtime: SessionManager |
 | `KillPendingEntities_FiresBeforeDead` | 收割触发 BeforeDead 钩子并移除实体 | Runtime: 实体生命周期 |
 | `KillPendingEntities_BusinessDeferredBeforeKillSweep` | 业务延迟动作按入队顺序执行，且收割在其后触发 BeforeDead | Scheduling |
 | `KillPendingAllSessions_RemovesPendingEntities` | KillPendingAllSessions 移除被标记的实体 | Runtime: SessionManager |
@@ -67,7 +67,7 @@
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
-| `RequestKillAll_EmptyScene_DoesNotThrow` | 空场景遍历并 RequestKillEntity | 不抛异常 |
+| `ManualKillAll_EmptyScene_DoesNotThrow` | 空场景遍历并 RequestKillEntity | 不抛异常 |
 | `KillPendingEntities_NoPendingEntities_DoesNotThrow` | 无待销毁实体时 KillPendingAllSessions | 不抛异常，实体保留 |
 | `StubSndSceneHost_DeadByName_MissingEntity_NoError` | RemoveEntity 不存在的实体 | 不抛异常 |
 | `IsPendingKill_DefaultFalse` | 新建实体 | IsPendingKill 默认为 false |

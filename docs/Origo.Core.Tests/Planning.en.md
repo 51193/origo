@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Planning Tests
 
@@ -44,7 +44,7 @@ ensuring Action strategy mount/unmount goes through the real `SndStrategyManager
 |-------------|-------------------|-------------------|
 | `AfterSpawn_NoIntent_DoesNotStartPlan` | No intent data key | Does not write any step data |
 | `DefaultHooks_DoNotMutateEntityData` | Default hook implementations called sequentially | Existing entity data unchanged |
-| `Wire_CalledTwice_DoesNotLeakSubscriptions` | AfterAdd after AfterSpawn | Subscription count stays 1, returns to 0 after BeforeRemove |
+| `Wire_MultipleCycles_ManagesSubscriptionsCorrectly` | AfterAdd after AfterSpawn | Subscription count stays 1, returns to 0 after BeforeRemove |
 
 ## Test Helper Strategies
 

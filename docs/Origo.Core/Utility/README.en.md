@@ -1,12 +1,12 @@
 <!-- docsync-pair: Origo.Core/Utility/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Utility
 
 > [↑ Back to Origo.Core](../README.en.md)
 
 ## Overview
-General-purpose utility functions providing cross-module helper capabilities.
+General-purpose utility functions providing cross-module helper capabilities: collection diff (`DiffUtility`), path operations (`PathUtility`), and shared string-to-typed inference (`ValueInference`, used by the Archetype loader and console type inference).
 
 ## File List
 
@@ -14,6 +14,7 @@ General-purpose utility functions providing cross-module helper capabilities.
 |------|------|
 | `DiffUtility.cs` | Generic collection diff: (added, removed) from old vs new collections |
 | `PathUtility.cs` | Path operations: `Combine` (join + traversal attack detection), `GetParentDirectory` (parent + root boundary), `NormalizeDirectoryPath`, `ExtractGlobSuffix` |
+| `ValueInference.cs` | `internal` — unified string-to-typed inference (int → long → float → bool → string), shared by `SndArchetypeLoader` and console `bb_set` / `entity_set_data` |
 
 ## Design Decisions
 

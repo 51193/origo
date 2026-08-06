@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台桥接服务器 测试
 
@@ -55,7 +55,7 @@
 |---------|-----------|---------|
 | `OutputChannel_Publish_ArrivesAtClient` | Publish("hello") → 客户端读到 "hello" | ConsoleBridge |
 | `OutputChannel_MultiplePublishes_AllDelivered` | 三次 Publish → 客户端读到全部三条 | ConsoleBridge |
-| `OutputChannel_PublishNullString_ArrivesAsEmpty` | Publish(null) → 客户端读到 "" | ConsoleBridge |
+| `OutputChannel_PublishNullString_Throws` | Publish(null) | ArgumentNullException |
 | `OutputChannel_LargeVolume_ManyLines_AllDelivered` | 100 行全部递送 | ConsoleBridge |
 | `OutputChannel_ConcurrentPublish_AllDelivered` | 10 线程并发发布，全部递送 | ConsoleBridge |
 
