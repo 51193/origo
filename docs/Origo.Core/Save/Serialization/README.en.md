@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Serialization/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Serialization (Save)
 
@@ -36,6 +36,10 @@ Separates serialization from I/O. Neutral tree format supports any future codec.
 
 ### Why SaveContext holds both Progress and Session blackboard references
 Process saves contain both levels. References (not copies) ensure latest state after BeforeSave hooks.
+
+### Why SndSceneSerializer requires Array input
+
+A SND scene is an entity array (`[entity1, entity2, ...]`), not an object. Validating the shape at the entry point catches errors early (e.g. accidentally passing `session.json` instead of `snd_scene.json`) instead of producing ambiguous behavior later in parsing.
 
 ### Why serializer does not trigger strategy hooks
 BeforeSave and AfterLoad hooks uniformly orchestrated by `SessionRun` before/after serializer calls. Serializer focuses on data transformation.

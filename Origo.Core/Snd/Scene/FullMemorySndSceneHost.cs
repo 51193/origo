@@ -80,8 +80,26 @@ internal sealed class FullMemorySndSceneHost
         ArgumentNullException.ThrowIfNull(metaList);
         EnsureReady();
 
-        foreach (var meta in metaList)
-            CreateAndRecover(meta);
+        // All-or-nothing: roll back every entity created before a failure so a
+        // partial load never leaves half-initialized entities behind (matching
+        // the Godot adapter's SndEntityCollection staging).
+        var staged = new List<SndEntity>();
+        try
+        {
+            foreach (var meta in metaList)
+                staged.Add(CreateAndRecover(meta));
+        }
+        catch
+        {
+            foreach (var entity in staged)
+            {
+                _entries.RemoveAll(e => ReferenceEquals(e.Entity, entity));
+                ((IEntityLifecycle)entity).ReleaseStrategiesOnly();
+                ((IEntityLifecycle)entity).TeardownOnly();
+            }
+
+            throw;
+        }
     }
 
     public void RemoveAllEntities() => _entries.Clear();

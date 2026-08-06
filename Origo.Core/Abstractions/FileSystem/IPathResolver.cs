@@ -8,7 +8,9 @@ namespace Origo.Core.Abstractions.FileSystem;
 /// </summary>
 public interface IPathResolver
 {
+    /// <summary>Combines a base path and a relative path using platform-appropriate separators.</summary>
     string CombinePath(string basePath, string relativePath);
 
+    /// <summary>Gets the parent directory path of the given path.</summary>
     string GetParentDirectory(string path);
 }

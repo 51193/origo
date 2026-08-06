@@ -163,6 +163,48 @@ public partial class RandomAndStateMachineTests
     }
 
     [Fact]
+    public void StateMachineContainer_DeserializeFromNode_ArrayRoot_Throws()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+
+        using var arrayRoot = TestFactory.CreateJsonCodec().Decode("[]");
+
+        // A structurally wrong payload (array root) must fail the load instead
+        // of silently clearing every machine.
+        Assert.Throws<InvalidOperationException>(() =>
+            container.DeserializeFromNode(arrayRoot, TestFactory.CreateRegistry()));
+    }
+
+    [Fact]
+    public void StateMachineContainer_DeserializeFromNode_MissingMachinesKey_Throws()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+
+        using var missingKey = TestFactory.CreateJsonCodec().Decode("""{ "unrelated": 1 }""");
+
+        Assert.Throws<InvalidOperationException>(() =>
+            container.DeserializeFromNode(missingKey, TestFactory.CreateRegistry()));
+    }
+
+    [Fact]
     public void StateMachineContainer_SerializeDeserialize_RoundTrip()
     {
         var logger = new TestLogger();

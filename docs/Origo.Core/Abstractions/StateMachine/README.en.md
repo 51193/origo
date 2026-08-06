@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # StateMachine (Abstractions)
 
@@ -52,6 +52,9 @@ Different hook semantics: runtime pop triggers BeforeRemove, exit pop triggers B
 
 ### Why IStateMachineContainer in Abstractions
 Keeps `ISessionRun.GetSessionStateMachines()` dependent only on Abstractions, not Runtime concrete types.
+
+### Why SessionStateMachineContext is internal and not in the Abstractions layer
+`SessionStateMachineContext` is a concrete implementation class in the `Origo.Core.Runtime.Lifecycle` namespace, not part of the Abstractions-layer interface contract. External code only needs to depend on the `IStateMachineContext` interface. Session-level context binding is performed internally by `SessionManager` when constructing `SessionRun`.
 
 ---
 [↑ Back to Abstractions](../README.en.md)

@@ -71,6 +71,13 @@ internal sealed partial class ProgressRun
 
             _ = _owner._sessionManager.ForegroundSession
                      ?? throw new InvalidOperationException("No active foreground session after topology restore.");
+
+            // Re-solidify the topology from the live session set. The
+            // foreground mount is finalized before background sessions are
+            // mounted, so the intermediate value would otherwise be
+            // foreground-only; the blackboard must always hold the complete,
+            // recoverable snapshot of the current runtime state.
+            WriteForegroundTopology(_owner.RequireForegroundSession().LevelId);
             _owner.EnsureActiveLevelInvariant();
         }
 
@@ -82,10 +89,10 @@ internal sealed partial class ProgressRun
             if (levelPayload is not null)
             {
                 ValidateLevelPayload(levelId, levelPayload);
-                return MountForegroundFromPayload(levelId, levelPayload);
+                return MountForegroundFromPayload(levelId, levelPayload, writeTopology: true);
             }
 
-            return MountEmptyForeground(levelId);
+            return MountEmptyForeground(levelId, writeTopology: true);
         }
 
         internal void SwitchForeground(string newLevelId)
@@ -118,27 +125,28 @@ internal sealed partial class ProgressRun
                 }
         }
 
-        private ISessionRun MountForegroundFromPayload(string levelId, LevelPayload levelPayload)
+        private ISessionRun MountForegroundFromPayload(string levelId, LevelPayload levelPayload, bool writeTopology)
         {
             ResetForeground(false);
 
             var session = _owner._sessionManager.CreateForegroundFromPayload(levelId, levelPayload);
-            return FinalizeForegroundMount(levelId, session);
+            return FinalizeForegroundMount(levelId, session, writeTopology);
         }
 
-        private ISessionRun MountEmptyForeground(string levelId)
+        private ISessionRun MountEmptyForeground(string levelId, bool writeTopology)
         {
             ResetForeground(true);
 
             var session =
                 _owner._sessionManager.CreateForegroundSession(levelId);
-            return FinalizeForegroundMount(levelId, session);
+            return FinalizeForegroundMount(levelId, session, writeTopology);
         }
 
-        private ISessionRun FinalizeForegroundMount(string levelId, ISessionRun session)
+        private ISessionRun FinalizeForegroundMount(string levelId, ISessionRun session, bool writeTopology)
         {
             FlushStateMachinesAfterSceneReady();
-            WriteForegroundTopology(levelId);
+            if (writeTopology)
+                WriteForegroundTopology(levelId);
             return session;
         }
 
@@ -150,11 +158,13 @@ internal sealed partial class ProgressRun
                 SessionTopologyCodec.Join(_owner.BuildSessionTopology()));
         }
 
-        private void FlushStateMachinesAfterSceneReady()
-        {
+        private void FlushStateMachinesAfterSceneReady() =>
+            // Only the progress-level container is flushed here. The
+            // foreground session's container is flushed exactly once inside
+            // SessionRun.LoadFromPayload (payload-restored stacks); freshly
+            // mounted sessions have no restored stacks to flush. Flushing it
+            // again would re-fire OnPushAfterLoad on every payload load.
             _owner.ProgressScope.StateMachines.FlushAllAfterLoad();
-            ((StateMachineContainer?)_owner._sessionManager.ForegroundSession?.GetSessionStateMachines())?.FlushAllAfterLoad();
-        }
 
         private void ResetForeground(bool clearScene)
         {
@@ -213,10 +223,14 @@ internal sealed partial class ProgressRun
         {
             if (string.Equals(descriptor.Key, ISessionManager.ForegroundKey, StringComparison.Ordinal))
             {
+                // The topology was deserialized from the progress payload and is
+                // already complete; the foreground mount must not overwrite it
+                // before background sessions have mounted. The full topology is
+                // re-solidified once after the mount loop in LoadFromPayload.
                 if (payload.Levels.TryGetValue(descriptor.LevelId, out var fgPayload))
-                    MountForegroundFromPayload(descriptor.LevelId, fgPayload);
+                    MountForegroundFromPayload(descriptor.LevelId, fgPayload, writeTopology: false);
                 else
-                    MountEmptyForeground(descriptor.LevelId);
+                    MountEmptyForeground(descriptor.LevelId, writeTopology: false);
                 return;
             }
 

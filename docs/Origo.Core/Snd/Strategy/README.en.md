@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -49,8 +49,8 @@ BaseStrategy
 Each scene host that creates real `SndEntity` instances (`FullMemorySndSceneHost`, `GodotSndManager`, both implementing `IObserverTopologyHost`) holds one `ObserverTopology` instance, centrally managing all observer bindings for entities within that host. The topology maintains bidirectional indices by observerName primary key: outgoing edges (observer → its binding list, for serialization and outgoing teardown), incoming edges (target → set of observerNames observing it, for O(1) incoming teardown). Entities are injected with the topology reference at construction and delegate all observer operations to it (analogous to sharing the strategy pool). Data change signals always originate from the target entity's `ISndEntityRawSubscription`; the topology only manages binding records and wiring/teardown.
 
 - **BindContext(ctx)**: Injected by the host when binding the context, used for `OnMounted`/`OnDataChanged`/`OnUnmounted` callbacks
-- **Mount(observer, target, observerIndex)**: Acquire strategy instance → establish `SubscribeDataRaw` wiring on target for each key declared by `[ObserveData]` attribute → record binding → trigger `OnMounted`. Mounting is atomic: if wiring or `OnMounted` throws, all established subscriptions are canceled, partially-added bindings are removed, strategy reference is returned to pool, and the exception propagates
-- **Unmount(observer, target, observerIndex)**: Tear down `UnsubscribeDataRaw` → trigger `OnUnmounted` → release pool reference → remove binding record
+- **Mount(observer, target, observerIndex)**: Acquire strategy instance → establish `SubscribeDataRaw` wiring on target for each key declared by `[ObserveData]` attribute → record binding → trigger `OnMounted`. Mounting is atomic: if wiring or `OnMounted` throws, all established subscriptions are canceled, partially-added bindings are removed, strategy reference is returned to pool, and the exception propagates. Mounting the same (observer, target, observerIndex) twice throws `InvalidOperationException` (consistent with the passive/active strategy managers' duplicate-mount rejection)
+- **Unmount(observer, target, observerIndex)**: Tear down `UnsubscribeDataRaw` → trigger `OnUnmounted` → release pool reference → remove binding record. Throws `InvalidOperationException` when the binding does not exist (fail-fast, consistent with `RemoveStrategy` throwing on a non-mounted index)
 - **ReleaseStrategiesFor(observer)**: Release all strategy references held by an observer and clear its outgoing edges (does not trigger `OnUnmounted`, does not unsubscribe), corresponding to the `ReleaseStrategiesOnly` phase of entity teardown
 - **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`. A missing or blank target (inconsistent save topology) throws `InvalidOperationException` (fail-fast) instead of being silently skipped
 - **BuildBindingsFor(observerName)**: Serialize an observer's full outgoing edges as `List<ObserverBinding>` (grouped by target) into `StrategyMetaData`

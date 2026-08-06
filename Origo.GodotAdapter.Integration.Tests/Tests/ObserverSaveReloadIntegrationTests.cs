@@ -154,6 +154,68 @@ public class ObserverSaveReloadIntegrationTests
             TrackingObserverEvents.Events = null;
         }
     }
+
+    [IntegrationTest(Description = "Killing a wrapper (GodotSndEntity) observer tears down its bindings before release")]
+    public void ObserverOnUnmounted_FiresWhenWrapperObserverKilled()
+    {
+        TrackingObserverEvents.Events = [];
+        try
+        {
+            using var harness = new IntegrationTestHarness();
+            harness.BindRuntimeDependencies();
+
+            var fs = new GodotFileSystem();
+            if (fs.DirectoryExists("user://test_saves"))
+                fs.DeleteDirectory("user://test_saves");
+            fs.WriteAllText("user://entry.json",
+                """{ "levels": { "main_menu": { "snd_scene": "user://main_menu.json" } }, "main_menu_level": "main_menu" }""",
+                overwrite: true);
+            fs.WriteAllText("user://main_menu.json", "[]", overwrite: true);
+
+            var context = new SndContext(new SndContextParameters(
+                harness.Runtime,
+                DataSourceFactory.CreateDefaultIoGateway(fs),
+                DataSourceFactory.CreateFileMetaAccess(fs),
+                DataSourceFactory.CreatePathResolver(fs),
+                "user://test_saves", "res://initial", "user://entry.json"));
+            harness.SndManager.BindContext(context);
+
+            context.Bootstrap();
+            context.Deferred.FlushDeferredActionsForCurrentFrame();
+
+            var session = context.Runtime.SessionManager.ForegroundSession;
+            IntegrationTestRunner.AssertNotNull(session, "foreground session after bootstrap");
+
+            var target = session!.Spawn(new SndMetaData
+            {
+                Name = "godot_kill_target",
+                NodeMetaData = new NodeMetaData(),
+                StrategyMetaData = new StrategyMetaData(),
+                DataMetaData = new DataMetaData()
+            });
+            var observer = session.Spawn(new SndMetaData
+            {
+                Name = "godot_kill_observer",
+                NodeMetaData = new NodeMetaData(),
+                StrategyMetaData = new StrategyMetaData(),
+                DataMetaData = new DataMetaData()
+            });
+
+            observer.MountObserverStrategy(target, GodotTrackingObserver.Index);
+
+            TrackingObserverEvents.Events.Clear();
+            session.RequestKillEntity("godot_kill_observer");
+            context.Runtime.SessionManager.KillPendingAllSessions();
+
+            IntegrationTestRunner.Assert(
+                TrackingObserverEvents.Events.Exists(e => e == "unmounted:godot_kill_target"),
+                "killing a wrapper observer must fire OnUnmounted and tear down its binding");
+        }
+        finally
+        {
+            TrackingObserverEvents.Events = null;
+        }
+    }
 }
 
 internal static class TrackingObserverEvents

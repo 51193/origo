@@ -128,6 +128,47 @@ public class ProgressRunSessionLoadingEdgeTests
         Assert.False(ctx.Runtime.SessionManager.Contains("bg"));
     }
 
+    [Fact]
+    public void RequestLoadGame_Failure_DisposesProgressRunAndClearsContextReference()
+    {
+        var ctx = CreateContext();
+        var payload = new SaveGamePayload
+        {
+            SaveId = "002",
+            ActiveLevelId = "default",
+            ProgressNode = TestFactory.NodeFromJson(
+                """{"origo.session_topology":{"type":"String","data":"__foreground__=default=false,bg=bg=false"}}"""),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}"),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                ["default"] = new()
+                {
+                    LevelId = "default",
+                    SndSceneNode = TestFactory.NodeFromJson("[]"),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
+                },
+                ["bg"] = new()
+                {
+                    LevelId = "bg",
+                    SndSceneNode = TestFactory.NodeFromJson("{}"),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
+                }
+            }
+        };
+
+        ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "002", ctx.Runtime.Logger);
+        ctx.Save.RequestLoadGame("002");
+        Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+
+        // The failed progress run must not remain reachable: reads of the
+        // progress blackboard and the progress-run accessor fail fast instead
+        // of exposing half-deserialized state.
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
+        Assert.Throws<InvalidOperationException>(() => ctx.EnsureProgressRun());
+    }
+
     private static SndContext CreateContext()
     {
         var logger = new TestLogger();

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Scene/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Scene (Abstractions)
 
@@ -37,6 +37,12 @@ Defines the Core layer's abstract capabilities for orchestrating SND scenes. `IS
 | `RemoveEntity(name)` | Remove + release engine resources (no hooks) |
 | `RemoveAllEntities()` | Clear collection (no hooks) |
 
+### IOwningSessionBindable
+
+| Member | Description |
+|------|------|
+| `SetOwningSession(ISessionRun session)` | Called by `SessionRun` at construction; binds the session to the host, after which every entity the host creates is automatically bound to the session's `ISndEntity.OwningSession` |
+
 ## Design Decisions
 
 ### Why separate ISndSceneAccess and ISndSceneHost
@@ -44,6 +50,12 @@ The state machine context only needs build/recovery; session management needs en
 
 ### Why scene host does not trigger strategy hooks
 All hook orchestration is handled by the session lifecycle (`SndEntityFactory` / `SessionRun`), keeping adapter layer out of strategy lifecycle management and enabling batch operations between create/recover and hook trigger phases.
+
+### Why CreateEntity performs no duplicate-name check
+`CreateEntity` keeps minimal semantics and does not enforce name uniqueness at the interface level; the framework's spawn path does not force uniqueness either. The interface does not take on business-validation duties, leaving them to upper-layer business rules when needed.
+
+### Why kill is split into RequestKillEntity (mark) and RemoveEntity (disassemble)
+`RequestKillEntity` immediately marks the entity as pending kill (`IsPendingKill = true`) without physically removing it. This lets subsequent same-frame operations judge the entity's liveness via `IsPendingKill`, avoiding duplicate operations on a deferred kill. Physical destruction happens at end of frame via `SessionRun.KillPending()` (invoked per session by `SessionManager.KillPendingAllSessions()`, after the business queue and before the system queue): observer bindings are torn down bidirectionally first, then `BeforeDead` hooks fire in batch, strategies are released, and finally each entity is removed via `RemoveEntity`.
 
 ---
 [↑ Back to Abstractions](../README.en.md)

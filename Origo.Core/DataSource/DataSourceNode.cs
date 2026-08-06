@@ -360,7 +360,7 @@ public sealed class DataSourceNode : IDisposable
             {
                 DataSourceNodeKind.Map => "O{" + string.Join(",",
                     node._orderedKeys.OrderBy(k => k, StringComparer.Ordinal)
-                        .Select(k => k + "=" + resultMap[node._objectChildren[k]])) + "}",
+                        .Select(k => EscapeCanonicalKey(k) + "=" + resultMap[node._objectChildren[k]])) + "}",
                 DataSourceNodeKind.Array => "A[" + string.Join(",",
                     node._arrayChildren.Select(c => resultMap[c])) + "]",
                 DataSourceNodeKind.Text => "S\"" + EscapeCanonical(node._value) + "\"",
@@ -378,6 +378,33 @@ public sealed class DataSourceNode : IDisposable
     {
         if (value is null) return string.Empty;
         return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+    }
+
+    // Map keys are embedded raw into the canonical encoding between structural
+    // delimiters; escaping the delimiters and quote/backslash keeps the encoding
+    // unambiguous for keys containing any of those characters (an unescaped
+    // `=`, `,`, `{`, `}`, `[`, `]`, `"`, or `\` in a key could otherwise blend
+    // into the surrounding structure).
+    private static string EscapeCanonicalKey(string key)
+    {
+        var sb = new StringBuilder(key.Length + 8);
+        foreach (var ch in key)
+        {
+            switch (ch)
+            {
+                case '\\': sb.Append("\\\\"); break;
+                case '"': sb.Append("\\\""); break;
+                case '=': sb.Append("\\="); break;
+                case ',': sb.Append("\\,"); break;
+                case '{': sb.Append("\\{"); break;
+                case '}': sb.Append("\\}"); break;
+                case '[': sb.Append("\\["); break;
+                case ']': sb.Append("\\]"); break;
+                default: sb.Append(ch); break;
+            }
+        }
+
+        return sb.ToString();
     }
 
     private void EnsureExpanded()

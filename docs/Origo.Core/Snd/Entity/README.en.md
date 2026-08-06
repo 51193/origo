@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Entity
 
@@ -114,7 +114,7 @@ Notification callbacks may trigger Subscribe/Unsubscribe/SetData (and thus Notif
 
 Observer strategies, like passive/active strategies, are stateless and poolable. Delegating observer wiring to the scene-host-level `ObserverTopology` for unified governance allows the binding topology to be serialized with entities (`ObserverIndices`) and auto-restored on load, eliminating the need for business code to manually reconnect in `AfterLoad` or manually unsubscribe in `BeforeDead` — the topology auto-unmounts all bindings when an entity quits or dies. Cross-entity bindings form a directed graph rather than per-entity private state; centralizing them to the per-scene-host topology means `SessionRun`'s kill/clear bidirectional teardown locates observers via the incoming edge index without entities needing to expose their internal managers in reverse.
 
-> **⚠️ Adapter integration contract**: `SessionRun.KillPending`'s observer bidirectional teardown and load recovery apply only to entities that are bare `SndEntity` types inside the host. Non-bare wrapper entity types (e.g. Godot's `GodotSndEntity`) intentionally do not participate in that bidirectional teardown — new adapter implementations must handle observer unwiring for their wrapper entities themselves, or transcribe the bare-`SndEntity` semantics at the wrapper layer (see [Scene/README](../Scene/README.en.md)).
+> **⚠️ Adapter contract**: `SessionRun.KillPending`'s observer bidirectional teardown and load recovery apply uniformly to **all entity types** in the host — bare `SndEntity` and adapter wrapper entities (e.g. Godot's `GodotSndEntity`). Teardown resolves bindings by entity name and operates through the `ISndEntityRawSubscription` interface, so it does not depend on the concrete entity type, and `OnUnmounted` fires before the `BeforeDead` hooks. Adapters do not need to implement observer unwiring for their wrapper entities (see [Scene/README](../Scene/README.en.md)).
 
 ### Why SndDataManager stores (OriginalCallback, WrappedCallback) pairs
 

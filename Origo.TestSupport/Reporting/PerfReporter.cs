@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Xunit;
 
@@ -31,10 +32,14 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
     ///     scripts/benchmark.sh for baseline comparison):
     ///     <c>BENCH|&lt;kind&gt;|&lt;label&gt;|&lt;side&gt;|&lt;ops/s&gt;|&lt;alloc bytes&gt;</c>.
     ///     <paramref name="side" /> is "A"/"B" for two-sided comparisons or empty for single rows.
+    ///     The line is formatted with the invariant culture so the
+    ///     <c>BENCH|</c> regex in scripts/benchmark.sh parses identically on
+    ///     every locale (decimal separators / group separators must not vary).
     /// </summary>
     public void EmitMetric(string kind, string label, string side, double opsPerSec, long allocatedBytes)
     {
-        var line = $"BENCH|{kind}|{label}|{side}|{opsPerSec:F2}|{allocatedBytes}";
+        var line = string.Create(CultureInfo.InvariantCulture,
+            $"BENCH|{kind}|{label}|{side}|{opsPerSec:F2}|{allocatedBytes}");
         _output.WriteLine(line);
         _testOutput?.WriteLine(line);
     }

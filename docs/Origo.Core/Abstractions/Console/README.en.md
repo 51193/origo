@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Console/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console (Abstractions)
 
@@ -43,6 +43,9 @@ Origo adopts a single-threaded frame loop model. The polling-style `TryDequeueCo
 
 ### Why output uses publish-subscribe
 Console output may have multiple consumers (log file writing, screen rendering, remote forwarding). The publish-subscribe pattern lets Core operate without knowing the number or types of consumers.
+
+### Why the output channel does not keep history
+`IConsoleOutputChannel` has no local buffer; it only dispatches. History management is left to the individual consumers, avoiding interface bloat.
 
 ---
 [↑ Back to Abstractions](../README.en.md)

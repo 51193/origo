@@ -102,8 +102,9 @@ public sealed class ConsoleBridgeServer : IDisposable
             }
             catch (AggregateException ex)
             {
-                // Task.Wait only ever throws AggregateException; unexpected
-                // exceptions propagate to the caller (fail-fast).
+                // Task.Wait only ever throws AggregateException; a faulted accept
+                // loop is logged as an Error so the host can restart the server
+                // (matching the documented exception-propagation strategy).
                 acceptLoopCompleted = true;
                 foreach (var inner in ex.InnerExceptions)
                     _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
@@ -264,13 +265,15 @@ public sealed class ConsoleBridgeServer : IDisposable
             {
                 _writer = writer;
                 if (_droppedLineCount > 0)
-                {
                     writer.WriteLine(
                         $"[ConsoleBridge] Warning: {_droppedLineCount} output line(s) were dropped due to buffer overflow.");
-                    _droppedLineCount = 0;
-                }
                 foreach (var line in _pendingOutput)
                     writer.WriteLine(line);
+
+                // Only reset the drop counter and clear the backlog after the
+                // flush succeeded; on a mid-flush write failure the warning and
+                // the undelivered lines are retried by the next connection.
+                _droppedLineCount = 0;
                 _pendingOutput.Clear();
             }
 
@@ -285,9 +288,14 @@ public sealed class ConsoleBridgeServer : IDisposable
                 {
                     break;
                 }
-                catch (IOException)
+                catch (IOException ex)
                 {
                     // Client disconnect or stream reset: end this connection.
+                    // Surfaces the I/O failure instead of swallowing it silently
+                    // (documented exception-propagation strategy).
+                    _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                        new LogMessageBuilder().Build(
+                            $"Client read failed, ending connection: {ex}"));
                     break;
                 }
 

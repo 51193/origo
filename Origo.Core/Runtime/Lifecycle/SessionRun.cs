@@ -290,19 +290,19 @@ internal sealed class SessionRun : ISessionRun
             foreach (var other in entities)
                 entitiesByName[other.Name] = other;
 
+            // Outgoing teardown: every pending entity's own observer bindings
+            // are unmounted (unsubscribe + OnUnmounted + pool release),
+            // regardless of whether the entity is a bare SndEntity or an
+            // adapter wrapper implementing ISndEntityRawSubscription.
             foreach (var e in pending)
-                if (e is SndEntity se)
-                    TeardownOutgoingObserverBindings(se, entitiesByName, topology);
+                TeardownOutgoingObserverBindings(e, entitiesByName, topology);
 
             // Incoming teardown via the topology's O(1) incoming index: a
             // dying entity may be the target of other entities' bindings.
-            // Only bare SndEntity observers participate (documented contract).
             foreach (var e in pending)
-                if (e is SndEntity)
-                    foreach (var observerName in topology.GetObserverNamesTargeting(e.Name))
-                        if (entitiesByName.TryGetValue(observerName, out var observer)
-                            && observer is SndEntity)
-                            topology.RemoveBindingsTargetingFor(observer, e.Name);
+                foreach (var observerName in topology.GetObserverNamesTargeting(e.Name))
+                    if (entitiesByName.TryGetValue(observerName, out var observer))
+                        topology.RemoveBindingsTargetingFor(observer, e.Name);
         }
 
         foreach (var e in pending)
@@ -321,7 +321,7 @@ internal sealed class SessionRun : ISessionRun
         }
     }
 
-    private static void TeardownOutgoingObserverBindings(SndEntity entity,
+    private static void TeardownOutgoingObserverBindings(ISndEntity entity,
         Dictionary<string, ISndEntity> entitiesByName, ObserverTopology topology)
     {
         topology.TeardownOutgoingFor(entity, targetName =>

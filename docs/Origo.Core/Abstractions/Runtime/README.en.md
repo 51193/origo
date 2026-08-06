@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Runtime/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Runtime (Abstractions)
 
@@ -38,6 +38,9 @@ Orthogonal responsibilities: `IScheduler` manages queues (internal); `IOrigoFram
 
 ### Why IScheduler is internal
 No cross-assembly consumers outside Core. Marking internal avoids unnecessary API surface.
+
+### Why there is no ability to cancel a single action
+In the single-threaded frame-loop model, actions queued within a frame are generally one-shot lightweight transactions that do not need cancellation. Conditional execution should be decided by the strategy before enqueuing, or handled by an early exit inside the action. A cancellation mechanism would significantly increase queue implementation complexity without solving a real business problem.
 
 ---
 [↑ Back to Abstractions](../README.en.md)

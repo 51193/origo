@@ -780,6 +780,34 @@ public class BackgroundSessionTests
     }
 
     [Fact]
+    public void SaveAndLoad_ReSolidifiesFullTopology_IncludingBackgroundSessions()
+    {
+        var (ctx, _) = CreateForegroundContext();
+
+        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("sim1", "bg_sim", true);
+        bg.SessionBlackboard.SetValue("sim_round", 10);
+
+        ctx.Save.RequestSaveGame("save_topo");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        // Tear down everything, then reload from the snapshot.
+        ctx.Runtime.SessionManager.DestroySession("sim1");
+        ctx.EnsureProgressRun().Dispose();
+        ctx.SetProgressRun(null);
+
+        ctx.Save.RequestLoadGame("save_topo");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        // The progress blackboard topology must reflect the full live session
+        // set (foreground + restored background), not a foreground-only
+        // value written while background sessions were still unmounting.
+        var (found, topology) = ctx.Blackboard.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
+        Assert.True(found);
+        Assert.Contains($"{ISessionManager.ForegroundKey}=test_level=false", topology);
+        Assert.Contains("sim1=bg_sim=true", topology);
+    }
+
+    [Fact]
     public void SaveAndLoad_FromDisk_RestoresBackgroundSessions()
     {
         var (ctx, fs) = CreateForegroundContext();

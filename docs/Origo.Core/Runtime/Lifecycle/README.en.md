@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -113,9 +113,9 @@ Therefore:
 
 This ensures every persistence path has explicit semantics and a traceable call chain.
 
-### Why loading a save does not roll back ProgressRun's in-memory state on failure
+### Why a failed load discards the ProgressRun and clears the reference
 
-`ProgressRun.LoadFromPayload` operates on a brand-new `ProgressRun` just created by `SndContext` (create-then-load: `CreateProgressRun` then `LoadFromPayload`), and the on-disk `current/` has already received the complete payload before deserialization. So if deserialization or session mounting fails midway, the half-deserialized state belongs to a `ProgressRun` not yet in service: it does not pollute existing runtime state and the disk data stays intact. After failure that `ProgressRun` has no foreground session, so any later `PersistProgress`/`BuildSavePayload` immediately throws `InvalidOperationException` for the missing foreground session (fail-fast) instead of silently landing a half state; `LoadFromPayload` itself is idempotent and can be re-run to overwrite. On these three grounds the load-failure path does not roll back in-memory state.
+`ProgressRun.LoadFromPayload` operates on a brand-new `ProgressRun` just created by `SndContext` (create-then-load: `CreateProgressRun` then `LoadFromPayload`), and the on-disk `current/` has already received the complete payload before deserialization. If deserialization or session mounting fails midway, `SndContext` **disposes the ProgressRun and clears the context reference** (the failure path of `MountNewProgressRun`): pool references are returned immediately, `current/` is cleaned up, and read entry points such as `ctx.Blackboard.ProgressBlackboard` and `ctx.StateMachines` fail fast (null / "no active progress run") instead of exposing half-deserialized state. The original failure exception propagates unchanged (cleanup failures are only logged at Warning and never mask the original error). The next workflow (e.g. re-issuing `RequestLoadGame`) recreates the ProgressRun from a clean state.
 
 ### Why foreground session key fixed as `__foreground__`
 

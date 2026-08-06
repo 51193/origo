@@ -85,30 +85,33 @@ public class ObserverStrategyTests : IDisposable
     }
 
     [Fact]
-    public void Mount_Duplicate_DoesNotThrow()
+    public void Mount_Duplicate_Throws()
     {
         var (entity, _) = Setup();
         ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
-        MemoryObserver.MountedCalls.Clear();
 
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
-        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
 
-        Assert.Equal(2, MemoryObserver.MountedCalls.Count);
+        // Mounting the same (observer, target, index) twice would double the
+        // subscription and the pool reference; it is rejected like duplicate
+        // strategy mounts.
+        Assert.Throws<InvalidOperationException>(() =>
+            entity.MountObserverStrategy(entity.Name, _memoryObservedIdx));
     }
 
     [Fact]
-    public void Unmount_OnlyRemovesOneInstance()
+    public void Unmount_NotMounted_Throws()
     {
         var (entity, _) = Setup();
         ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
-        MemoryObserver.UnmountedCalls.Clear();
 
-        entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
         entity.UnmountObserverStrategy(entity.Name, _memoryObservedIdx);
 
-        Assert.Single(MemoryObserver.UnmountedCalls);
+        // Unmounting a pair that is no longer mounted fails fast (consistent
+        // with RemoveStrategy on a non-mounted strategy index).
+        Assert.Throws<InvalidOperationException>(() =>
+            entity.UnmountObserverStrategy(entity.Name, _memoryObservedIdx));
     }
 
     // ── Mount failure cleanup ──────────────────────────────────────────

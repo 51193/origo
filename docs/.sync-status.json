@@ -470,8 +470,8 @@
     "Origo.Core/Abstractions/Console/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.Core/Abstractions/Console/README.zh.md",
@@ -547,8 +547,8 @@
     "Origo.Core/Abstractions/Runtime/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.Core/Abstractions/Runtime/README.zh.md",
@@ -558,8 +558,8 @@
     "Origo.Core/Abstractions/Scene/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.Core/Abstractions/Scene/README.zh.md",
@@ -569,8 +569,8 @@
     "Origo.Core/Abstractions/Snd/README": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "Origo.Core/Abstractions/Snd/README.zh.md",
@@ -580,8 +580,8 @@
     "Origo.Core/Abstractions/StateMachine/README": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "files": {
         "zh": "Origo.Core/Abstractions/StateMachine/README.zh.md",
@@ -690,8 +690,8 @@
     "Origo.Core/Random/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.Core/Random/README.zh.md",
@@ -712,8 +712,8 @@
     "Origo.Core/Runtime/Console/CommandHandlers/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.Core/Runtime/Console/CommandHandlers/README.zh.md",
@@ -734,8 +734,8 @@
     "Origo.Core/Runtime/Lifecycle/README": {
       "status": "synced",
       "revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 9,
+        "en": 9
       },
       "files": {
         "zh": "Origo.Core/Runtime/Lifecycle/README.zh.md",
@@ -767,8 +767,8 @@
     "Origo.Core/Save/Meta/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.Core/Save/Meta/README.zh.md",
@@ -789,8 +789,8 @@
     "Origo.Core/Save/Serialization/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.Core/Save/Serialization/README.zh.md",
@@ -855,8 +855,8 @@
     "Origo.Core/Snd/Entity/README": {
       "status": "synced",
       "revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "files": {
         "zh": "Origo.Core/Snd/Entity/README.zh.md",
@@ -888,8 +888,8 @@
     "Origo.Core/Snd/Scene/README": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "Origo.Core/Snd/Scene/README.zh.md",
@@ -899,8 +899,8 @@
     "Origo.Core/Snd/Strategy/README": {
       "status": "synced",
       "revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "files": {
         "zh": "Origo.Core/Snd/Strategy/README.zh.md",
@@ -1053,8 +1053,8 @@
     "Origo.GodotAdapter/FileSystem/README": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "Origo.GodotAdapter/FileSystem/README.zh.md",

@@ -63,28 +63,46 @@ internal static class GodotDirectoryOperations
     /// <summary>
     ///     Recursively deletes all files and subdirectory contents under the
     ///     given directory, including hidden (dot-prefixed) files such as the
-    ///     save write-in-progress marker. The directory container itself is
-    ///     left intact — only its contents are removed.
+    ///     save write-in-progress marker. Afterwards it attempts to remove the
+    ///     directory container itself through its parent handle; when the
+    ///     engine (e.g. the editor) holds an open handle on the directory that
+    ///     makes the OS reject removal, the empty container is left behind,
+    ///     which is harmless.
     /// </summary>
     public static void DeleteRecursive(string directoryPath)
     {
         if (!DirAccess.DirExistsAbsolute(directoryPath))
             return;
 
-        using var dir = DirAccess.Open(directoryPath) ?? throw new InvalidOperationException(
-            $"Failed to open directory for deletion: {directoryPath}");
-        dir.IncludeHidden = true;
-
         var normalizedDir = PathUtility.NormalizeDirectoryPath(directoryPath);
 
-        foreach (var file in dir.GetFiles())
+        using (var dir = DirAccess.Open(directoryPath) ?? throw new InvalidOperationException(
+            $"Failed to open directory for deletion: {directoryPath}"))
         {
-            var fileErr = dir.Remove($"{normalizedDir}/{file}");
-            if (fileErr != Error.Ok)
-                throw new IOException($"Failed to delete file '{file}' in '{directoryPath}': {fileErr}");
+            dir.IncludeHidden = true;
+
+            foreach (var file in dir.GetFiles())
+            {
+                var fileErr = dir.Remove($"{normalizedDir}/{file}");
+                if (fileErr != Error.Ok)
+                    throw new IOException($"Failed to delete file '{file}' in '{directoryPath}': {fileErr}");
+            }
+
+            foreach (var subdir in dir.GetDirectories())
+                DeleteRecursive($"{normalizedDir}/{subdir}");
         }
 
-        foreach (var subdir in dir.GetDirectories())
-            DeleteRecursive($"{normalizedDir}/{subdir}");
+        // Best-effort container removal through the parent handle (the same
+        // mechanism the integration-test runner uses; DirAccess.RemoveAbsolute
+        // is unreliable for user:// paths). The engine can hold an open handle
+        // on the directory, so the OS may reject removal even when the
+        // container is empty — in that case the empty container is left behind.
+        var slash = normalizedDir.LastIndexOf('/');
+        if (slash < 0)
+            return;
+        var leaf = normalizedDir[(slash + 1)..];
+        using var parentDir = DirAccess.Open(normalizedDir[..^leaf.Length]);
+        if (parentDir is not null)
+            _ = parentDir.Remove(leaf);
     }
 }

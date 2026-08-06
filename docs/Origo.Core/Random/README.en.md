@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Random/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Random
 
@@ -43,6 +43,9 @@ Global state is hard to trace across multi-entity, multi-session, parallel-save 
 
 ### Why noise ratio 70/30
 Simplex provides macro terrain structure; Worley provides micro detail. Ratio chosen through experimentation.
+
+### Why no 3D noise
+2D noise covers current game needs (terrain, heightmaps). 3D noise has a different API (z parameter) and is 1-2 orders of magnitude more expensive. It is not introduced early without a concrete requirement.
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

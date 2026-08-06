@@ -7,5 +7,6 @@ namespace Origo.Core.Snd.Scene;
 /// </summary>
 public interface ISndContextAttachableSceneHost
 {
+    /// <summary>Binds the strategy context to the host so entity strategies execute within the correct session.</summary>
     void BindContext(ISndContext context);
 }

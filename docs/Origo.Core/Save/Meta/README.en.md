@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Meta/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Meta
 
@@ -33,6 +33,10 @@ IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 ```
 
 Contributors return independent dictionaries. `SaveMetaMerger` merges in registration order.
+
+### SaveMetaMerger
+
+Static utility class. Merge logic: non-empty contributors → contribute in order → overwrite keys (skipping empty-value keys) → return null when no contributor or no key is present.
 
 ## Design Decisions
 

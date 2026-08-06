@@ -127,4 +127,25 @@ public class DisposeSemanticsTestsProgressRun
         var ex = Record.Exception(() => progressRun.Dispose());
         Assert.Null(ex);
     }
+
+    [Fact]
+    public void ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased()
+    {
+        var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
+
+        var progressRun = ctx.EnsureProgressRun();
+        progressRun.ProgressBlackboard.SetValue("key", "value");
+
+        var fg = (SessionRun)progressRun.SessionManager.ForegroundSession!;
+        fg.Disposing += () => throw new InvalidOperationException("subscriber failure");
+
+        Assert.Throws<InvalidOperationException>(() => progressRun.Dispose());
+
+        // Session teardown failed mid-way, but the progress-level state must
+        // still be released and the dispose state committed (try/finally).
+        var (found, _) = progressRun.ProgressBlackboard.TryGet<string>("key");
+        Assert.False(found);
+        var second = Record.Exception(() => progressRun.Dispose());
+        Assert.Null(second);
+    }
 }

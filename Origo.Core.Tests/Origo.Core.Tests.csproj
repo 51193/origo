@@ -18,7 +18,10 @@
         <Include>[Origo.Core]*</Include>
         <!-- Reflection-heavy bootstrap: excluded from line % gate; covered indirectly via LoadAndSpawnFromFile / guard tests. -->
         <ExcludeByFile>**/Runtime/OrigoAutoInitializer.cs,**/Addons/FastNoiseLite/FastNoiseLite.cs,**/*.g.cs</ExcludeByFile>
-        <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+        <!-- CompilerGeneratedAttribute is intentionally NOT excluded: it would
+             silently remove async/iterator state-machine bodies from the
+             coverage denominator if Origo.Core ever gains such methods. -->
+        <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute</ExcludeByAttribute>
         <Threshold>90</Threshold>
         <ThresholdType>line</ThresholdType>
         <ThresholdStat>total</ThresholdStat>

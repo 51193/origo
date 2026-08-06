@@ -106,6 +106,21 @@ public class PersistentRandomTests
     }
 
     [Fact]
+    public void NextInt32_LargeSpan_StaysWithinBounds()
+    {
+        var bb = new Origo.Core.Blackboard.Blackboard();
+        var pr = new PersistentRandom(bb);
+        pr.InitSeed("large_span");
+
+        // Spans wider than int.MaxValue overflow the old (uint) range math,
+        // producing roughly half the results outside the requested range.
+        for (var i = 0; i < 2000; i++)
+            Assert.InRange(pr.NextInt32(-5, int.MaxValue), -5, int.MaxValue - 1);
+        for (var i = 0; i < 2000; i++)
+            Assert.InRange(pr.NextInt32(int.MinValue, int.MaxValue), int.MinValue, int.MaxValue - 1);
+    }
+
+    [Fact]
     public void NextFloat_InRange()
     {
         var bb = new Origo.Core.Blackboard.Blackboard();

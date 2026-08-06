@@ -195,4 +195,30 @@ public class ValidatorTests
 
         Assert.Equal(0, Validator.Run(repo.LoadConfig()));
     }
+
+    [Fact]
+    public void Validate_HeadingParityMismatch_WarnsButPasses()
+    {
+        using var repo = TestRepo.Create();
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# R\n\n## Design\n\n### A\n\n### B\n");
+        repo.Write("docs/README.en.md", TestRepo.Header("README") + "# R\n\n## Design\n\n### A\n");
+
+        var exitCode = Validator.RunCore(repo.LoadConfig(), out var warnings);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains(warnings, w => w.Contains("heading structure differs"));
+    }
+
+    [Fact]
+    public void Validate_HeadingParityMatch_NoWarning()
+    {
+        using var repo = TestRepo.Create();
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# R\n\n## Design\n\n### A\n");
+        repo.Write("docs/README.en.md", TestRepo.Header("README") + "# R\n\n## Design\n\n### A\n");
+
+        var exitCode = Validator.RunCore(repo.LoadConfig(), out var warnings);
+
+        Assert.Equal(0, exitCode);
+        Assert.Empty(warnings);
+    }
 }

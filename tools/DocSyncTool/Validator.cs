@@ -11,10 +11,18 @@ internal static partial class Validator
     [GeneratedRegex(@"\]\(([^)]+)\)", RegexOptions.Compiled)]
     private static partial Regex LinkRegex();
 
-    public static int Run(Config config)
+    public static int Run(Config config) => RunCore(config, out _);
+
+    /// <summary>
+    ///     Runs the full validation and also returns the collected parity
+    ///     warnings (testable without redirecting console output; parallel
+    ///     xUnit tests must not touch the global <see cref="Console" />).
+    /// </summary>
+    internal static int RunCore(Config config, out List<string> warnings)
     {
         var docsRoot = config.DocsFullPath;
         var errors = new List<string>();
+        warnings = [];
         var fileMetadatas = new List<DocFile>();
 
         var docFiles = FindAllDocFiles(docsRoot, config.Languages);
@@ -31,6 +39,7 @@ internal static partial class Validator
         }
 
         ValidatePairs(fileMetadatas, config.Languages, errors);
+        warnings = ComputeHeadingParityWarnings(fileMetadatas, config.Languages);
 
         if (errors.Count > 0)
         {
@@ -38,6 +47,13 @@ internal static partial class Validator
             foreach (var error in errors)
                 Console.Error.WriteLine(error);
             return 1;
+        }
+
+        if (warnings.Count > 0)
+        {
+            Console.WriteLine($"\nValidation passed with {warnings.Count} warning(s) (heading parity hints — verify translations are at content parity):\n");
+            foreach (var warning in warnings)
+                Console.WriteLine(warning);
         }
 
         Console.WriteLine($"Validation PASSED — {docFiles.Count} file(s) checked.");
@@ -271,4 +287,55 @@ internal static partial class Validator
             }
         }
     }
+
+    /// <summary>
+    ///     Computes heading-structure parity warnings for a bilingual pair
+    ///     (## / ### counts). Equal docsync revisions only prove the metadata
+    ///     was bumped, not that the translations stayed at content parity; a
+    ///     section count mismatch is a hint to verify the translation is
+    ///     complete. Warning-only: English may legitimately consolidate
+    ///     sections, and reworded titles never match literally.
+    /// </summary>
+    internal static List<string> ComputeHeadingParityWarnings(List<DocFile> fileMetadatas, List<string> languages)
+    {
+        var warnings = new List<string>();
+        var pairs = fileMetadatas
+            .GroupBy(f => f.PairId)
+            .Where(g => g.Count() == languages.Count);
+
+        foreach (var group in pairs)
+        {
+            var byLang = group.ToDictionary(f => f.Language, f => f.FullPath);
+            var counts = byLang.ToDictionary(
+                kvp => kvp.Key,
+                kvp =>
+                {
+                    var content = StripCodeSpans(File.ReadAllText(kvp.Value));
+                    var h2 = H2HeadingRegex().Count(content);
+                    var h3 = H3HeadingRegex().Count(content);
+                    return (H2: h2, H3: h3);
+                });
+
+            var (firstH2, firstH3) = counts.Values.First();
+            foreach (var (lang, c) in counts)
+            {
+                if (c.H2 != firstH2 || c.H3 != firstH3)
+                {
+                    var detail = string.Join(", ", counts.Select(kvp => $"{kvp.Key} {kvp.Value.H2}x## {kvp.Value.H3}x###"));
+                    warnings.Add(
+                        $"WARNING: pair '{group.Key}' — heading structure differs between languages ({detail}); " +
+                        "verify the translation is at content parity");
+                    break;
+                }
+            }
+        }
+
+        return warnings;
+    }
+
+    [GeneratedRegex(@"(?m)^##\s", RegexOptions.Compiled)]
+    private static partial Regex H2HeadingRegex();
+
+    [GeneratedRegex(@"(?m)^###\s", RegexOptions.Compiled)]
+    private static partial Regex H3HeadingRegex();
 }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Runtime/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Runtime (Abstractions)
 

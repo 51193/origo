@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # FileSystem
 
@@ -34,7 +34,7 @@ A thin facade that delegates all `IFileSystem` methods to the appropriate static
 
 - **Create**: `DirAccess.MakeDirRecursiveAbsolute`
 - **EnumerateFiles**: Supports `*pattern` suffix filtering and recursive mode, including hidden (dot-prefixed) files such as the `.write_in_progress` marker
-- **DeleteRecursive**: Clears directory contents (recursively deletes files and subdirectories, including hidden files), leaving the container directory itself intact
+- **DeleteRecursive**: Clears directory contents (recursively deletes files and subdirectories, including hidden files), then best-effort removes the directory container itself through its parent handle (falls back to leaving the empty container when the engine holds an fd)
 - **Rename**: Opens the parent directory then calls `DirAccess.Rename`
 
 ## Design Decisions
@@ -51,9 +51,11 @@ Godot directory rename/move operations require opening the target's parent direc
 
 Current save files (JSON, map) are small (KB-level), and read-then-write is simple and reliable. If large resource file copying is needed in the future, streaming can be introduced at a higher level (e.g., `SaveStorageFacade`) without modifying the low-level interface.
 
-### Why DeleteRecursive Does Not Remove the Directory Container
+### Why DeleteRecursive Best-Effort Removes the Directory Container
 
-Godot's `DirAccess.Remove`/`RemoveAbsolute` is unreliable for `user://` paths within the editor process: the engine holds file descriptors to directories created at runtime, so `RemoveAbsolute` returns `Error.Failed` even after all contents have been cleared. An empty directory container is harmless and is naturally overwritten by subsequent save operations. This approach also avoids introducing non-adapter APIs such as `System.IO`, keeping the adapter layer constrained to Godot APIs for filesystem operations. This issue does not affect exported games — the standalone process does not hold the editor's fd references.
+Godot's `DirAccess.Remove`/`RemoveAbsolute` is unreliable for `user://` paths within the editor process: the engine holds file descriptors to directories created at runtime, so container removal can return `Error.Failed` even after all contents have been cleared. Container removal is therefore best-effort: it first removes the container through the parent handle, and on failure falls back to leaving the empty container — an empty container is harmless and is naturally overwritten by subsequent save operations.
+
+In headless and exported-game processes (which hold no fd) the removal succeeds, keeping the adapter consistent with the `IFileSystem.DeleteDirectory` contract and preventing `SaveAtomicWriter.SwapSnapshotDirectory` from failing its rename when a stale empty `.bak` container already exists at the destination. The implementation reuses the parent-handle + relative-name mechanism already proven by the integration-test runner, without introducing non-adapter APIs such as `System.IO`.
 
 ---
 [↑ Back to Origo.GodotAdapter](../README.en.md)

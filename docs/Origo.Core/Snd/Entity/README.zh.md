@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity
 
@@ -117,7 +117,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 观察者策略与被动/主动策略一样无状态、可池化。将观察接线交由场景宿主级的 `ObserverTopology` 统一治理，使绑定拓扑可随实体序列化（`ObserverIndices`）并在读档时自动恢复，业务代码无需在 `AfterLoad` 中手动重连，也无需在 `BeforeDead` 中手动退订——实体退出/死亡时拓扑自动卸载全部绑定。跨实体绑定是有向图而非每实体私有状态，集中到 per-scene-host 拓扑后，`SessionRun` 的 kill/clear 双向 teardown 经入边索引定位观察者，无需实体反向暴露内部管理器。
 
-> **⚠️ 适配层接入契约**：`SessionRun.KillPending` 的 observer 双向 teardown 与读档恢复仅对宿主内**裸 `SndEntity` 类型**的实体生效。非裸的包装实体类型（如 Godot 前台的 `GodotSndEntity`）按约定不参与该双向 teardown——新适配层接入者必须自行处理包装实体的观察者拆线，或在包装层内转写为裸 `SndEntity` 语义（见 [Scene/README](../Scene/README.zh.md)）。
+> **⚠️ 适配层契约**：`SessionRun.KillPending` 的 observer 双向 teardown 与读档恢复对宿主内**所有实体类型**（裸 `SndEntity` 与适配层包装实体，如 Godot 前台的 `GodotSndEntity`）统一生效——拆线经宿主拓扑按实体名称与 `ISndEntityRawSubscription` 接口完成，不依赖具体实体类型，`OnUnmounted` 在 `BeforeDead` 钩子之前触发。适配层无需为包装实体另行实现观察者拆线（见 [Scene/README](../Scene/README.zh.md)）。
 
 ### 为什么 SndDataManager 存储 (OriginalCallback, WrappedCallback) 对
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/CommandHandlers/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # CommandHandlers
 
@@ -23,6 +23,37 @@ Concrete built-in console command handlers. All are `internal`, registered via `
 | `GetEntityDataCommandHandler.cs` | `entity_get_data` | Reads entity data (value + type) |
 | `SetEntityDataCommandHandler.cs` | `entity_set_data` | Sets entity data (preserves existing type) |
 | `InvokeStrategyCommandHandler.cs` | `invoke_strategy` | Invokes active strategy with optional JSON input |
+
+## Command Details
+
+### bb_get
+
+```
+bb_get <layer> <key>
+```
+Reads the key value from the given blackboard layer. Currently only `layer=system` is supported.
+
+### bb_set
+
+```
+bb_set <layer> <key> <value>
+```
+Writes a value to the blackboard. Value type is auto-inferred: integer → Int32, float → Single, "true"/"false" → Boolean, otherwise → String.
+
+### spawn
+
+```
+spawn <name> <template>
+spawn name=<name> template=<template>
+```
+Spawns an entity from a template. Mixing positional and named arguments is not supported. Templates resolve via `SndWorld.ResolveTemplate`.
+
+### invoke_strategy
+
+```
+invoke_strategy <entity> <strategy_index> [input]
+```
+Finds the entity by name, invokes the active strategy via `ISndActiveStrategyAccess.InvokeStrategy`, and prints the return value. `input` is optional, supports a JSON string, and is parsed by the strategy itself.
 
 ## Design Decisions
 

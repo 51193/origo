@@ -8,6 +8,9 @@ namespace Origo.Core.DataSource;
 /// </summary>
 public interface IDataSourceIoGateway
 {
+    /// <summary>Reads a file and decodes its content into a <see cref="DataSourceNode" /> using the codec matched by the file suffix.</summary>
     DataSourceNode ReadTree(string filePath);
+
+    /// <summary>Encodes a <see cref="DataSourceNode" /> and writes it to the file using the codec matched by the file suffix.</summary>
     void WriteTree(string filePath, DataSourceNode node, bool overwrite = true);
 }

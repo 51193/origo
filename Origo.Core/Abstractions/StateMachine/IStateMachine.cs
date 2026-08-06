@@ -30,6 +30,7 @@ public interface IStateMachine
     /// </summary>
     bool TryPopOnQuit(out string? popped);
 
+    /// <summary>Peeks at the top element without popping; <c>found</c> is <c>false</c> when the stack is empty.</summary>
     (bool found, string? top) Peek();
 
     /// <summary>

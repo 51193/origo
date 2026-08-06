@@ -52,16 +52,17 @@ public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key =
 
         // Rejection sampling removes modulo bias so every value in the range
         // is equally likely (the raw XorShift128+ output is a uniform
-        // 32-bit value).
-        var range = (uint)(maxExclusive - minInclusive);
-        var limit = (uint.MaxValue - range + 1u) % range;
+        // 32-bit value). Range arithmetic is done in long so spans up to the
+        // full 2^32-1 range (e.g. int.MinValue..int.MaxValue) do not overflow.
+        var range = (long)maxExclusive - (long)minInclusive;
+        var limit = ((1L << 32) - range) % range;
         while (true)
         {
             if (!TryNextInt32(out var raw))
                 throw new InvalidOperationException("Random state not initialized. Call InitSeed first.");
             var r = (uint)raw;
             if (r >= limit)
-                return (int)(r % range) + minInclusive;
+                return (int)((r % range) + (long)minInclusive);
         }
     }
 

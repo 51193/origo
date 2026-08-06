@@ -30,6 +30,7 @@ internal sealed partial class ProgressRun : IDisposable
     private readonly SessionLifecycle _sessionLifecycle;
     private readonly SessionManager _sessionManager;
     private bool _disposed;
+    private bool _disposing;
 
     internal ProgressRun(
         SystemRuntime systemRuntime,
@@ -79,22 +80,34 @@ internal sealed partial class ProgressRun : IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
+        if (_disposed || _disposing) return;
+        _disposing = true;
         var watch = Stopwatch.StartNew();
         _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
             $"Disposing ProgressRun (saveId: '{SaveId}').");
 
-        _sessionManager.Clear();
-        _progressRuntime.StorageService.DeleteCurrentDirectory();
-
-        ProgressScope.StateMachines.PopAllOnQuit();
-        ProgressScope.StateMachines.Clear();
-        ProgressBlackboard.Clear();
-        _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
-            new LogMessageBuilder()
-                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
+        try
+        {
+            // Session and directory teardown can throw (exceptions propagate
+            // to the caller per the fail-fast contract, matching SessionRun.
+            // Dispose); the progress-level state machines and blackboard are
+            // still guaranteed to be released and the disposed flag committed
+            // via the finally block.
+            _sessionManager.Clear();
+            _progressRuntime.StorageService.DeleteCurrentDirectory();
+        }
+        finally
+        {
+            ProgressScope.StateMachines.PopAllOnQuit();
+            ProgressScope.StateMachines.Clear();
+            ProgressBlackboard.Clear();
+            _disposed = true;
+            _disposing = false;
+            _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
+                new LogMessageBuilder()
+                    .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                    .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
+        }
     }
 
     public IStateMachineContainer GetProgressStateMachines() => ProgressScope.StateMachines;

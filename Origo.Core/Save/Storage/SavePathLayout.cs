@@ -114,8 +114,11 @@ internal static class SavePathLayout
     {
         if (string.IsNullOrWhiteSpace(baseDirectory))
             throw new ArgumentException("Base directory cannot be null or whitespace.", nameof(baseDirectory));
-        if (string.IsNullOrWhiteSpace(levelId))
-            throw new ArgumentException("Level id cannot be null or whitespace.", nameof(levelId));
+
+        // Level ids are embedded in directory names (level_<id>); validate the
+        // token like save ids so a crafted level id cannot inject path
+        // separators or traverse out of the save directory.
+        ValidateToken(levelId, nameof(levelId), "level id");
 
         return Combine(baseDirectory, $"{LevelDirectoryPrefix}{levelId}");
     }

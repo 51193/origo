@@ -4,10 +4,12 @@ using System.Globalization;
 using System.Threading;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.DataSource;
+using Origo.Core.Logging;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
@@ -285,7 +287,7 @@ public sealed class SndContext : ISndContext
 
             var progressRun = CreateProgressRun(saveId);
             SetProgressRun(progressRun);
-            progressRun.LoadFromPayload(payload);
+            MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
             _systemRun.SetActiveSaveSlot(saveId);
             return progressRun;
         });
@@ -311,7 +313,7 @@ public sealed class SndContext : ISndContext
 
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
             SetProgressRun(progressRun);
-            progressRun.LoadFromPayload(payload);
+            MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
             _systemRun.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
         });
     }
@@ -331,16 +333,58 @@ public sealed class SndContext : ISndContext
 
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
             SetProgressRun(progressRun);
-            progressRun.LoadAndMountForeground(SndDefaults.MainMenuLevelId);
+            MountNewProgressRun(progressRun, () =>
+            {
+                progressRun.LoadAndMountForeground(SndDefaults.MainMenuLevelId);
 
-            var sndScenePath = ResolveMainMenuSndScenePath();
-            OrigoAutoInitializer.LoadAndSpawnFromFile(
-                sndScenePath,
-                Runtime.SndWorld,
-                progressRun.SessionManager.ForegroundSession!,
-                DataSourceIo,
-                Runtime.Logger);
+                var sndScenePath = ResolveMainMenuSndScenePath();
+                OrigoAutoInitializer.LoadAndSpawnFromFile(
+                    sndScenePath,
+                    Runtime.SndWorld,
+                    progressRun.SessionManager.ForegroundSession!,
+                    DataSourceIo,
+                    Runtime.Logger);
+            });
         });
+    }
+
+    /// <summary>
+    ///     Mounts a freshly created progress run and, on failure, disposes it
+    ///     and clears the context reference so no half-initialized progress
+    ///     state remains reachable: reads of the progress blackboard and state
+    ///     machines fail fast with "no active progress run" instead of exposing
+    ///     partially deserialized data. Cleanup failures are logged and never
+    ///     mask the original load exception.
+    /// </summary>
+    private void MountNewProgressRun(ProgressRun progressRun, Action mount)
+    {
+        ArgumentNullException.ThrowIfNull(progressRun);
+        ArgumentNullException.ThrowIfNull(mount);
+
+        try
+        {
+            mount();
+        }
+        catch
+        {
+            try
+            {
+                progressRun.Dispose();
+            }
+            catch (Exception disposeEx)
+            {
+                Runtime.Logger.Log(LogLevel.Warning, nameof(SndContext),
+                    new LogMessageBuilder()
+                        .AddContext("saveId", progressRun.SaveId)
+                        .Build($"Progress run cleanup after failed mount failed: {disposeEx.Message}"));
+            }
+            finally
+            {
+                SetProgressRun(null);
+            }
+
+            throw;
+        }
     }
 
     /// <summary>

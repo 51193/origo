@@ -21,7 +21,11 @@ public class SavePathLayoutTests
     {
         { "", "level1" },
         { "base", "" },
-        { "", "" }
+        { "", "" },
+        { "base", "../evil" },
+        { "base", "level/one" },
+        { "base", "level one" },
+        { "base", "中文关卡" }
     };
 
     [Fact]

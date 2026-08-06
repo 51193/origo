@@ -55,6 +55,28 @@ public class DataSourceNodeSha256Tests
     }
 
     [Fact]
+    public void ObjectNode_HashEscapesSpecialCharactersInKeys()
+    {
+        var specialKeys = new[] { "a=b", "x,y", "p{q", "r}s", "m[n", "o]p", "q\"r", "s\\t" };
+        foreach (var key in specialKeys)
+        {
+            var a = DataSourceNode.CreateObject();
+            a.Add(key, DataSourceNode.CreateString("v"));
+            var b = DataSourceNode.CreateObject();
+            b.Add(key, DataSourceNode.CreateString("v"));
+            Assert.Equal(a.ComputeSha256Hash(), b.ComputeSha256Hash());
+        }
+
+        // Key escaping keeps a structural character in a key distinct from the
+        // same character appearing in a value position.
+        var keyMap = DataSourceNode.CreateObject();
+        keyMap.Add("a=b", DataSourceNode.CreateString("c"));
+        var valueMap = DataSourceNode.CreateObject();
+        valueMap.Add("a", DataSourceNode.CreateString("b=c"));
+        Assert.NotEqual(keyMap.ComputeSha256Hash(), valueMap.ComputeSha256Hash());
+    }
+
+    [Fact]
     public void ObjectNode_HashIndependentOfInsertionOrder()
     {
         var a = DataSourceNode.CreateObject();

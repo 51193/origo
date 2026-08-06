@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -114,9 +114,9 @@ SystemRun (由 SndContext 构造并持有)
 
 这确保了每条持久化路径都有明确的语义和可追溯的调用链。
 
-### 为什么读档失败后不回滚 ProgressRun 的内存状态
+### 为什么读档失败后弃置 ProgressRun 并清空引用
 
-`ProgressRun.LoadFromPayload` 作用于 `SndContext` 刚创建的全新 `ProgressRun`（先 `CreateProgressRun` 再 `LoadFromPayload`），且磁盘 `current/` 在反序列化之前已写入完整 payload。因此若反序列化或会话挂载中途失败，留下的半反序列化状态属于一个尚未投入使用的 `ProgressRun`，不污染既有运行状态，磁盘数据也保持完整。失败后该 `ProgressRun` 没有前台会话，任何后续 `PersistProgress`/`BuildSavePayload` 都会因缺少前台会话立即抛 `InvalidOperationException`（fail-fast），不会把半状态静默落盘；`LoadFromPayload` 本身幂等，可重新加载覆盖。基于这三点，读档失败路径不额外回滚内存状态。
+`ProgressRun.LoadFromPayload` 作用于 `SndContext` 刚创建的全新 `ProgressRun`（先 `CreateProgressRun` 再 `LoadFromPayload`），且磁盘 `current/` 在反序列化之前已写入完整 payload。若反序列化或会话挂载中途失败，`SndContext` 会 **Dispose 该 ProgressRun 并清空上下文引用**（`MountNewProgressRun` 的失败路径）：策略池引用立即归还、`current/` 被清理，且 `ctx.Blackboard.ProgressBlackboard` 与 `ctx.StateMachines` 等读取入口 fail-fast 返回 null/抛出"无活动流程"，不再暴露半反序列化状态。失败异常原样传播（清理失败仅记 Warning 日志，不遮蔽原始异常）。下次流程（如重新 `RequestLoadGame`）从干净状态重新创建 ProgressRun。
 
 ### 为什么前台会话键固定为 `__foreground__`
 

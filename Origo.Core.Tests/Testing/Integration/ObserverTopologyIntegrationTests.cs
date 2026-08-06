@@ -212,7 +212,7 @@ public class ObserverTopologyIntegrationTests
     }
 
     [Fact]
-    public void Observer_DuplicateMount_NotifiesMultipleTimes()
+    public void Observer_DuplicateMount_Throws()
     {
         var events = new List<TestObserverEvent>();
         var harness = GameplaySimulationHarness.Create()
@@ -229,9 +229,13 @@ public class ObserverTopologyIntegrationTests
 
             Assert.Single(events, e => e.EventType == "on_mounted");
 
-            observer.MountObserverStrategy(target, "test.int.obs.topology");
+            // Mounting the same (observer, target, index) twice would double
+            // the subscription and the pool reference; it is rejected.
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                observer.MountObserverStrategy(target, "test.int.obs.topology"));
+            Assert.Contains("already mounted", ex.Message);
 
-            Assert.Equal(2, events.Count(e => e.EventType == "on_mounted"));
+            Assert.Single(events, e => e.EventType == "on_mounted");
         }
         finally
         {

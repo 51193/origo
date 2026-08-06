@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.StateMachine;
@@ -167,6 +168,38 @@ public class StateMachineIntegrationTests
             var (found2, top2) = restoredSm.Peek();
             Assert.True(found2);
             Assert.Equal("menu", top2);
+        }
+        finally
+        {
+            HookRecordingStateMachineStrategy.Events = null;
+        }
+    }
+
+    [Fact]
+    public void StateMachine_SaveLoad_AfterLoadHookFiresOncePerLayer()
+    {
+        var events = new List<string>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new HookRecordingStateMachineStrategy())
+            .Build();
+
+        HookRecordingStateMachineStrategy.Events = events;
+        try
+        {
+            var sm = harness.GameSession.GetSessionStateMachines()
+                .CreateOrGet("test_sm", "test.int.sm.hook_recorder", "test.int.sm.hook_recorder");
+            sm.Push("menu");
+            sm.Push("gameplay");
+            harness.DriveFrame();
+            events.Clear();
+
+            harness.SaveAndReload("sm_save_once");
+
+            // Each restored stack layer must fire OnPushAfterLoad exactly once.
+            // A second flush of the restored foreground session container
+            // (previously triggered by FinalizeForegroundMount) would double-fire.
+            Assert.Equal(1, events.Count(e => e == "on_push_after_load:menu"));
+            Assert.Equal(1, events.Count(e => e == "on_push_after_load:gameplay"));
         }
         finally
         {

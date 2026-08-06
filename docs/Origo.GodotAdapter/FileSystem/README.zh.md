@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # FileSystem
 
@@ -34,7 +34,7 @@
 
 - **Create**：`DirAccess.MakeDirRecursiveAbsolute`
 - **EnumerateFiles**：支持 `*pattern` 后缀过滤和递归模式，包含隐藏文件（点前缀，如 `.write_in_progress` 写中标记）
-- **DeleteRecursive**：清除目录内容（递归删除文件和子目录，含隐藏文件），保留目录容器本身
+- **DeleteRecursive**：清除目录内容（递归删除文件和子目录，含隐藏文件），随后经父句柄尽力移除目录容器本身（引擎持 fd 时回退为保留空容器）
 - **Rename**：打开父目录后调用 `DirAccess.Rename`
 
 ## 设计决策
@@ -51,9 +51,11 @@ Godot 目录的 rename/move 操作需要打开目标所在父目录，然后对�
 
 当前存档文件（JSON、map）体积小（KB 级），read-then-write 简单可靠。若未来有大型资源文件复制需求，可在上层（如 `SaveStorageFacade`）引入流式传输，不修改底层接口。
 
-### 为什么 DeleteRecursive 不删除目录容器本身
+### 为什么 DeleteRecursive 尽力移除目录容器本身而非永远保留
 
-`DirAccess.Remove`/`RemoveAbsolute` 在 Godot 编辑器进程内对 `user://` 路径不可靠：引擎在运行时持有已创建目录的文件描述符，即使目录内容已清空，`RemoveAbsolute` 仍返回 `Error.Failed`。目录内容清空后容器为空无害，后续存档写入操作会自然覆盖。同时避开此问题也无需引入 `System.IO` 等非适配层 API，保持适配层仅通过 Godot API 操作文件系统的约束。此问题不影响导出游戏——因为独立进程中不存在编辑器持有的 fd 引用。
+`DirAccess.Remove`/`RemoveAbsolute` 在 Godot 编辑器进程内对 `user://` 路径不可靠：引擎在运行时持有已创建目录的文件描述符，即使目录内容已清空，容器移除仍可能返回 `Error.Failed`。因此容器移除是**尽力而为**：先经父句柄移除容器，失败时回退为保留空容器——空容器无害，后续存档写入操作会自然覆盖。
+
+在 headless 与导出游戏进程（不持有 fd）中容器移除会成功，这使适配层与 `IFileSystem.DeleteDirectory` 契约一致，并避免 `SaveAtomicWriter.SwapSnapshotDirectory` 在残留空 `.bak` 容器上执行 rename 时因目标已存在而失败。实现沿用集成测试运行器已验证的父句柄 + 相对名移除机制，无需引入 `System.IO` 等非适配层 API。
 
 ---
 [↑ 回到 Origo.GodotAdapter](../README.zh.md)

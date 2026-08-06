@@ -10,18 +10,25 @@ namespace Origo.Core.Abstractions.FileSystem;
 /// </summary>
 public interface IFileSystem
 {
+    /// <summary>Checks whether a file exists at the given path.</summary>
     bool Exists(string path);
 
+    /// <summary>Checks whether a directory exists at the given path.</summary>
     bool DirectoryExists(string path);
 
+    /// <summary>Reads all text from the file at the given path.</summary>
     string ReadAllText(string path);
 
+    /// <summary>Writes text to the file at the given path, honoring the overwrite flag.</summary>
     void WriteAllText(string path, string content, bool overwrite);
 
+    /// <summary>Copies a file to the destination path, honoring the overwrite flag.</summary>
     void Copy(string sourcePath, string destinationPath, bool overwrite);
 
+    /// <summary>Enumerates files under the given directory, optionally recursive, filtered by a search pattern.</summary>
     IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive);
 
+    /// <summary>Creates the directory (and parents) at the given path.</summary>
     void CreateDirectory(string directoryPath);
 
     /// <summary>

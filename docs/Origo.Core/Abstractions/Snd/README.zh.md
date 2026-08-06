@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd (Abstractions)
 
@@ -110,6 +110,10 @@ Abstractions 层接口的返回值不得引用 Runtime 层具体实现类型。`
 - `FileExists` → `IFileMetaAccess.FileExists`
 
 策略不应直接调用 `IFileSystem`（已完全内部化）或自行解析原始 JSON/Map 文本——后缀路由、编解码策略与 I/O 错误语义统一在 Gateway 一侧治理。路径拼接（`CombinePath`、`GetParentDirectory`）和目录检查（`DirectoryExists`）由框架内部的 `IPathResolver` 和 `IFileMetaAccess` 提供，不通过 `ISndFileAccess` 暴露给策略层。
+
+### 为什么 WriteFile 不限制路径
+
+`ISndFileAccess.WriteFile` 是**刻意开放**的文件写能力：策略是可信游戏代码，框架不替业务层裁决哪些路径可写。框架自身的存档写入不经过该路径（统一由 `SaveCoordinator` / `SaveStorageFacade` 编排，带写入标记与原子交换），因此开放写路径不会绕过框架的持久化保证——但策略若主动写 `current/*` 等框架属主路径，需自行对后果负责。需要限定写入范围的能力（如存档内 `extra/`）由 `ISndArchiveFileAccess` 提供。
 
 ---
 

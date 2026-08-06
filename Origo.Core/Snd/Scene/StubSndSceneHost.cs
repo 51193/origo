@@ -37,7 +37,9 @@ internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
         return entity;
     }
 
-    public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
+    // Returns a snapshot so callers iterating while the host is mutated do
+    // not hit "collection was modified" (consistent with FullMemorySndSceneHost).
+    public IReadOnlyCollection<ISndEntity> GetEntities() => [.. _entities];
 
     public ISndEntity? FindByName(string name) =>
         _entities.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));

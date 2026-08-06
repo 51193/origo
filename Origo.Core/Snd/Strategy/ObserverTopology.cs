@@ -78,6 +78,14 @@ internal sealed class ObserverTopology
                 $"Observer '{observer.Name}' and target '{target.Name}' belong to different sessions; " +
                 "observer bindings are scoped to a single scene host.");
 
+        // Mounting the same (observer, target, index) twice would double the
+        // data subscription, double-fire OnMounted/OnDataChanged, and double
+        // the pool reference — reject it up front (fail-fast), consistent with
+        // the passive/active strategy managers' duplicate-mount rejection.
+        if (FindBinding(observer.Name, target.Name, observerIndex) is not null)
+            throw new InvalidOperationException(
+                $"Observer strategy '{observerIndex}' is already mounted from '{observer.Name}' to '{target.Name}'.");
+
         ObserverStrategyBase? strategy = null;
         var acquired = false;
         ObserverBindingEntry? entry = null;
@@ -150,8 +158,9 @@ internal sealed class ObserverTopology
         ArgumentNullException.ThrowIfNull(target);
         var ctx = RequireContext();
 
-        var binding = FindBinding(observer.Name, target.Name, observerIndex);
-        if (binding is null) return;
+        var binding = FindBinding(observer.Name, target.Name, observerIndex)
+            ?? throw new InvalidOperationException(
+                $"Observer strategy '{observerIndex}' is not mounted from '{observer.Name}' to '{target.Name}'.");
 
         RemoveBinding(binding);
 
