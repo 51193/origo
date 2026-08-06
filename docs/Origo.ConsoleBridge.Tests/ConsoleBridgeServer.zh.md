@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台桥接服务器 测试
 
@@ -70,6 +70,7 @@
 | `ClientImmediateDisconnect_ServerRecovers` | 立即断开后服务器恢复正常 | ConsoleBridge |
 | `MidSession_ClientHardDisconnect_ServerRecovers` | 客户端强制关闭 socket（非正常 Dispose），服务器恢复 | ConsoleBridge |
 | `MidSession_ClientAbort_NextConnectionAccepted` | 会话中客户端中断后新连接可建立 | ConsoleBridge |
+| `ClientDisconnect_OutputLineBufferedForNextConnection` | 断开后发布的输出行被缓冲，并在下一连接投递（客户端以 FIN 优雅断开并读到服务器 EOF 确认断开已处理，确定性验证缓冲契约） | ConsoleBridge |
 
 ### 线程安全
 
@@ -116,6 +117,7 @@
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | 极高并发（100+ 并发客户端尝试连接）时的拒绝行为 | 连接风暴 | ConsoleBridge: 单连接模式 |
+| 输出写失败路径（RST 竞态窗口内 `WriteLine` 抛异常→行入缓冲）无法黑盒确定性触发 | 兜底行为与分离路径共享缓冲代码，缓冲契约由确定性测试覆盖；RST 窗口内"写入虚空"丢失行是 TCP 固有竞态 | ConsoleBridge: 异常传播策略 |
 
 ---
 

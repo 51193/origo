@@ -52,8 +52,8 @@
     "Origo.ConsoleBridge.Tests/ConsoleBridgeServer": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.ConsoleBridge.Tests/ConsoleBridgeServer.zh.md",

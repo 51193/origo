@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console Bridge Server Tests
 
@@ -70,6 +70,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `ClientImmediateDisconnect_ServerRecovers` | Server recovers after immediate disconnect | ConsoleBridge |
 | `MidSession_ClientHardDisconnect_ServerRecovers` | Client forcibly closes socket (not graceful Dispose), server recovers | ConsoleBridge |
 | `MidSession_ClientAbort_NextConnectionAccepted` | New connection established after client abort mid-session | ConsoleBridge |
+| `ClientDisconnect_OutputLineBufferedForNextConnection` | Output lines published after a disconnect are buffered and delivered on the next connection (client disconnects gracefully with FIN and reads the server's EOF to confirm the disconnect is fully processed, verifying the buffering contract deterministically) | ConsoleBridge |
 
 ### Thread Safety
 
@@ -116,6 +117,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | Gap Description | Impact | Doc Basis |
 |----------------|--------|-----------|
 | Rejection behavior under extremely high concurrency (100+ concurrent connection attempts) | Connection storm | ConsoleBridge: single-connection mode |
+| Output write-failure path (`WriteLine` throwing inside the RST race window → line buffered) cannot be triggered deterministically from a black box | The fallback shares the buffering code with the detach path, which the deterministic test covers; losing a line written "into the void" inside the RST window is an inherent TCP race | ConsoleBridge: exception propagation strategy |
 
 ---
 
