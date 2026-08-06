@@ -8,6 +8,7 @@ namespace Origo.Core.Utility;
 /// </summary>
 public static class PathUtility
 {
+    /// <summary>Normalizes a directory path by trimming trailing separators.</summary>
     public static string NormalizeDirectoryPath(string path)
     {
         if (path is null)
@@ -15,6 +16,7 @@ public static class PathUtility
         return path.TrimEnd('/', '\\');
     }
 
+    /// <summary>Extracts the suffix after a leading '*' glob; null when the pattern has no glob prefix.</summary>
     public static string? ExtractGlobSuffix(string searchPattern)
     {
         if (!string.IsNullOrEmpty(searchPattern) && searchPattern.StartsWith('*'))
@@ -22,6 +24,10 @@ public static class PathUtility
         return null;
     }
 
+    /// <summary>
+    ///     Combines a base path with a relative path, rejecting traversal sequences.
+    /// </summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="relativePath" /> contains a traversal sequence.</exception>
     public static string Combine(string basePath, string relativePath)
     {
         if (string.IsNullOrEmpty(basePath))
@@ -42,6 +48,7 @@ public static class PathUtility
         return $"{basePath.TrimEnd('/')}/{relativePath.TrimStart('/')}";
     }
 
+    /// <summary>Gets the parent directory of the given path.</summary>
     public static string GetParentDirectory(string path)
     {
         if (string.IsNullOrEmpty(path))

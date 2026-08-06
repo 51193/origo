@@ -1,10 +1,18 @@
 namespace Origo.Core.Abstractions.Logging;
 
+/// <summary>Log severity levels, ordered from most to least verbose.</summary>
 public enum LogLevel
 {
+    /// <summary>Detailed diagnostic messages.</summary>
     Debug,
+
+    /// <summary>Normal informational messages.</summary>
     Info,
+
+    /// <summary>Warnings that do not abort execution.</summary>
     Warning,
+
+    /// <summary>Errors that may abort execution.</summary>
     Error
 }
 

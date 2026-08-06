@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Logging;
@@ -375,13 +376,14 @@ public class StrategyPriorityTests
     }
 
     [Fact]
-    public void Remove_NonexistentStrategy_NoEffect()
+    public void Remove_NonexistentStrategy_Throws()
     {
         var (pool, mgr, e) = Setup();
         pool.Register(() => new SP50());
 
         mgr.Add(e, "s.p50", NoCtx);
-        mgr.Remove(e, "nonexistent", NoCtx);
+
+        Assert.Throws<InvalidOperationException>(() => mgr.Remove(e, "nonexistent", NoCtx));
 
         var indices = mgr.GetStrategyIndices();
         Assert.Equal(["s.p50"], indices);

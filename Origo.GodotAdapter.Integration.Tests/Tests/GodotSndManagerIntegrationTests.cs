@@ -1,4 +1,10 @@
 using System;
+using System.Threading;
+using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Scene;
+using Origo.Core.Snd;
+using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Strategy;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 using Origo.GodotAdapter.Integration.Tests.TestSupport;
 
@@ -59,20 +65,47 @@ public class GodotSndManagerIntegrationTests
         using var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         harness.BindContext();
-        harness.SndManager.ProcessAll(0.016);
+        ((ISndSceneHost)harness.SndManager).ProcessAll(0.016);
         IntegrationTestRunner.Assert(true, "ProcessAll on empty list should not throw.");
     }
 
-    [IntegrationTest(Description = "ProcessAll increments tick count")]
-    public void ProcessAll_IncrementsTickCount()
+    [IntegrationTest(Description = "ProcessAll drives entity Process for spawned entities")]
+    public void ProcessAll_DrivesEntityProcess()
     {
         using var harness = new IntegrationTestHarness();
+        harness.SndWorld.RegisterStrategy(() => new ProcessRecordingStrategy());
         harness.BindRuntimeDependencies();
         harness.BindContext();
-        var before = harness.SndManager.ProcessTickCount;
-        harness.SndManager.ProcessAll(0.016);
+
+        var meta = new SndMetaData
+        {
+            Name = "proc_entity",
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [ProcessRecordingStrategy.Index] }
+        };
+        ((ISndSceneHost)harness.SndManager).CreateEntity(meta);
+
+        ProcessRecordingStrategy.Bind(0);
+        ((ISndSceneHost)harness.SndManager).ProcessAll(0.016);
+
         IntegrationTestRunner.Assert(
-            harness.SndManager.ProcessTickCount > before,
-            "ProcessTickCount should increment after ProcessAll.");
+            ProcessRecordingStrategy.ProcessCalls == 1,
+            "ProcessAll should drive the entity's Process strategy once.");
+    }
+
+    private const string _processRecordingIndex = "test.process_recording";
+
+    [StrategyIndex(_processRecordingIndex)]
+    private sealed class ProcessRecordingStrategy : LifecycleStrategyBase
+    {
+        public const string Index = _processRecordingIndex;
+
+        private static readonly AsyncLocal<int> _processCalls = new();
+
+        public static int ProcessCalls => _processCalls.Value;
+
+        public static void Bind(int seed) => _processCalls.Value = seed;
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _processCalls.Value++;
     }
 }

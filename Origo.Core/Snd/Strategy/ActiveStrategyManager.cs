@@ -54,11 +54,16 @@ internal sealed class ActiveStrategyManager
             throw new InvalidOperationException($"Strategy '{index}' is not an ActiveStrategyBase.");
     }
 
-    /// <summary>Dynamically removes an active strategy. Non-existent indices are silently ignored.</summary>
+    /// <summary>
+    ///     Dynamically removes an active strategy, releasing its pool reference.
+    ///     Removing a strategy that is not attached throws.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when <paramref name="index" /> is not attached to the entity.</exception>
     public void Remove(string index)
     {
-        if (_active.Remove(index, out _))
-            _pool.ReleaseStrategy(index);
+        if (!_active.Remove(index, out _))
+            throw new InvalidOperationException($"Active strategy '{index}' is not attached.");
+        _pool.ReleaseStrategy(index);
     }
 
     /// <summary>Invokes the strategy actively and returns the result.</summary>

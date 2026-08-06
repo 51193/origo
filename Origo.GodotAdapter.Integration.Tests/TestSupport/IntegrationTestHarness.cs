@@ -5,6 +5,7 @@ using Origo.Core;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
+using Origo.Core.Abstractions.Scene;
 using Origo.Core.Blackboard;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime;
@@ -73,7 +74,7 @@ public sealed class IntegrationTestHarness : IDisposable
     public ISndEntity CreateEntity(string name)
     {
         var meta = new SndMetaData { Name = name };
-        return SndManager.CreateEntity(meta);
+        return ((ISndSceneHost)SndManager).CreateEntity(meta);
     }
 
     public void Dispose() => SndManager.QueueFree();

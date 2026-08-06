@@ -9,6 +9,8 @@ namespace Origo.Core.Snd.Strategy;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class StrategyIndexAttribute : Attribute
 {
+    /// <summary>Declares the strategy's unique index in the pool.</summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="index" /> is null or whitespace.</exception>
     public StrategyIndexAttribute(string index)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(index);
@@ -22,7 +24,9 @@ public sealed class StrategyIndexAttribute : Attribute
     /// </summary>
     public const int DefaultPriority = 6205;
 
+    /// <summary>The unique index of the strategy in the strategy pool.</summary>
     public string Index { get; }
 
+    /// <summary>Execution priority for lifecycle hooks; defaults to <see cref="DefaultPriority" />.</summary>
     public int Priority { get; set; } = DefaultPriority;
 }

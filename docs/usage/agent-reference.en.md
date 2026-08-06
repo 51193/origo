@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -232,7 +232,7 @@ public interface IStateMachine
     (bool found, string? top) Peek();
     IReadOnlyList<string> Snapshot();
     void FlushAfterLoad();
-    void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop);
+    // internal: void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop) — framework load pipeline only
 }
 ```
 

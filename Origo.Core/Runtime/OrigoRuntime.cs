@@ -33,6 +33,11 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     private readonly ISndSceneHost _adapterSceneHost;
     private Func<ISessionManager> _sessionManagerProvider = static () => EmptySessionManager.Instance;
 
+    /// <summary>
+    ///     Creates the runtime and wires the SND world over the given scene host
+    ///     and I/O infrastructure.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when a required argument is null.</exception>
     public OrigoRuntime(
         OrigoMeta meta,
         ILogger logger,
@@ -75,6 +80,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     /// </summary>
     public ILogger Logger { get; }
 
+    /// <summary>Framework metadata (name, version, banner).</summary>
     public OrigoMeta Meta { get; }
 
     /// <summary>

@@ -104,9 +104,7 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
-        var entity = bg.Spawn(CreateMetaWithStrategy("bg_entity"));
-        if (entity is IEntityLifecycle lc)
-            lc.FireAfterSpawnHooks();
+        bg.Spawn(CreateMetaWithStrategy("bg_entity"));
 
         Assert.Contains("AfterSpawn:bg_entity", events);
     }
@@ -157,7 +155,7 @@ public class BackgroundSessionTests
     }
 
     [Fact]
-    public void KillAll_TriggersBeforeDead()
+    public void KillAllEntities_FireBeforeDead()
     {
         var events = new List<string>();
         var (ctx, _) = CreateForegroundContext(world =>
@@ -167,14 +165,16 @@ public class BackgroundSessionTests
         });
 
         using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
-        bg.Spawn(CreateMetaWithStrategy("npc"));
+        bg.Spawn(CreateMetaWithStrategy("npc_1"));
+        bg.Spawn(CreateMetaWithStrategy("npc_2"));
 
-        var entity = bg.FindByName("npc");
-        Assert.NotNull(entity);
-        if (entity is IEntityLifecycle lc)
-            lc.FireBeforeDeadHooks();
+        bg.RequestKillEntity("npc_1");
+        bg.RequestKillEntity("npc_2");
+        ctx.Runtime.SessionManager.KillPendingAllSessions();
 
-        Assert.Contains("BeforeDead:npc", events);
+        Assert.Contains("BeforeDead:npc_1", events);
+        Assert.Contains("BeforeDead:npc_2", events);
+        Assert.Empty(bg.GetEntities());
     }
 
     // ── Spawn / FindByName / GetEntities ──────────────────────────────
@@ -236,7 +236,7 @@ public class BackgroundSessionTests
     }
 
     [Fact]
-    public void ClearAll_RemovesAll_FiresBeforeQuit()
+    public void Dispose_RemovesDirectHostEntities_FiresBeforeQuit()
     {
         var events = new List<string>();
         var (ctx, _) = CreateForegroundContext(world =>
@@ -250,15 +250,7 @@ public class BackgroundSessionTests
         host.CreateEntity(CreateMetaWithStrategy("a"));
         host.CreateEntity(CreateMetaWithStrategy("b"));
 
-        foreach (var e in host.GetEntities())
-            if (e is IEntityLifecycle lc)
-            {
-                lc.FireBeforeQuitHooks();
-                lc.ReleaseStrategiesOnly();
-                lc.TeardownOnly();
-            }
-
-        host.RemoveAllEntities();
+        bg.Dispose();
 
         Assert.Contains("BeforeQuit:a", events);
         Assert.Contains("BeforeQuit:b", events);

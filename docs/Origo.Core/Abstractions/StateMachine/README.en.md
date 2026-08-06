@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # StateMachine (Abstractions)
 
@@ -28,7 +28,7 @@ Defines the string-stack state machine system. The state machine only stores str
 | `Peek()` | View stack top |
 | `Snapshot()` | Bottom-to-top snapshot |
 | `FlushAfterLoad()` | Replay Push AfterLoad hooks in insertion order |
-| `RestoreStackWithoutHooks(list)` | Restore from save, no hooks triggered |
+| `RestoreStackWithoutHooks(list)` | Restore from save, no hooks triggered (`internal` — reserved for the framework's deserialization path; business code must use `Push`) |
 
 ## IStateMachineContext Members
 

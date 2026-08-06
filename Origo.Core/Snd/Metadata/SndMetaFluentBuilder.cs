@@ -11,6 +11,8 @@ public sealed class SndMetaFluentBuilder
 {
     private readonly SndMetaData _meta;
 
+    /// <summary>Creates a builder for a new entity metadata named <paramref name="name" />.</summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="name" /> is null or whitespace.</exception>
     public SndMetaFluentBuilder(string name) : this(new SndMetaData())
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -28,6 +30,7 @@ public sealed class SndMetaFluentBuilder
     /// </summary>
     public static SndMetaFluentBuilder From(SndMetaData meta) => new(meta);
 
+    /// <summary>Sets a node handle value under the given key.</summary>
     public SndMetaFluentBuilder SetNode(string key, string value)
     {
         _meta.NodeMetaData ??= new NodeMetaData();
@@ -35,6 +38,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Adds a passive lifecycle strategy index to the metadata.</summary>
     public SndMetaFluentBuilder AddLifecycleStrategy(string index)
     {
         _meta.StrategyMetaData ??= new StrategyMetaData();
@@ -42,6 +46,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Adds an active strategy index to the metadata.</summary>
     public SndMetaFluentBuilder AddActiveStrategy(string index)
     {
         _meta.StrategyMetaData ??= new StrategyMetaData();
@@ -49,6 +54,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Sets an <see cref="int" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetInt(string key, int value)
     {
         EnsureDataMetaData();
@@ -56,6 +62,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Sets a <see cref="float" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetFloat(string key, float value)
     {
         EnsureDataMetaData();
@@ -63,6 +70,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Sets a <see cref="double" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetDouble(string key, double value)
     {
         EnsureDataMetaData();
@@ -70,6 +78,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Sets a <see cref="long" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetLong(string key, long value)
     {
         EnsureDataMetaData();
@@ -77,6 +86,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Sets a <see cref="bool" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetBool(string key, bool value)
     {
         EnsureDataMetaData();
@@ -84,6 +94,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Sets a <see cref="string" /> data value under the given key.</summary>
     public SndMetaFluentBuilder SetString(string key, string value)
     {
         EnsureDataMetaData();
@@ -91,6 +102,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Sets a raw <see cref="byte" /> array data value under the given key.</summary>
     public SndMetaFluentBuilder SetBytes(string key, byte[] value)
     {
         EnsureDataMetaData();
@@ -98,6 +110,7 @@ public sealed class SndMetaFluentBuilder
         return this;
     }
 
+    /// <summary>Returns the fully-built <see cref="SndMetaData" />.</summary>
     public SndMetaData Build() => _meta;
 
     private void EnsureDataMetaData() => _meta.DataMetaData ??= new DataMetaData();

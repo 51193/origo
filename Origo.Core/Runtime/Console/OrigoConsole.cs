@@ -38,6 +38,9 @@ public sealed class OrigoConsole
         ];
     }
 
+    /// <summary>
+    ///     Creates the console with the built-in command handlers registered.
+    /// </summary>
     public OrigoConsole(IConsoleInputSource input, IConsoleOutputChannel output, OrigoRuntime runtime)
     {
         ArgumentNullException.ThrowIfNull(input);
@@ -52,6 +55,9 @@ public sealed class OrigoConsole
             _router.Register(h);
     }
 
+    /// <summary>
+    ///     Creates the console with built-in handlers plus extra handlers registered.
+    /// </summary>
     public OrigoConsole(IConsoleInputSource input, IConsoleOutputChannel output, OrigoRuntime runtime,
         IEnumerable<IConsoleCommandHandler> extraHandlers)
     {

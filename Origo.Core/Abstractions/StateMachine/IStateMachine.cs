@@ -8,12 +8,16 @@ namespace Origo.Core.Abstractions.StateMachine;
 /// </summary>
 public interface IStateMachine
 {
+    /// <summary>The logical key of this state machine in the container.</summary>
     string MachineKey { get; }
 
+    /// <summary>The index of the push strategy in the strategy pool.</summary>
     string PushStrategyIndex { get; }
 
+    /// <summary>The index of the pop strategy in the strategy pool.</summary>
     string PopStrategyIndex { get; }
 
+    /// <summary>Runtime push: pushes the value to the top of the stack, then invokes the push strategy's runtime hook.</summary>
     void Push(string value);
 
     /// <summary>
@@ -41,6 +45,9 @@ public interface IStateMachine
 
     /// <summary>
     ///     Restore stack contents from a save without triggering any strategy hooks.
+    ///     Internal: reserved for the framework's deserialization path
+    ///     (<see cref="Origo.Core.Runtime.StateMachine.StateMachineContainer" />);
+    ///     business code must use <see cref="Push" /> to modify the stack.
     /// </summary>
-    void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop);
+    internal void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop);
 }

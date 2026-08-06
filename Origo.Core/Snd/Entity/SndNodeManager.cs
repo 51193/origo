@@ -27,7 +27,11 @@ internal sealed class SndNodeManager : INodeHost
         _logger = logger;
     }
 
-    public void SetSceneAliasResolver(Func<string, string> resolveSceneAlias) => _resolveSceneAlias = resolveSceneAlias ?? (static s => s);
+    public void SetSceneAliasResolver(Func<string, string> resolveSceneAlias)
+    {
+        ArgumentNullException.ThrowIfNull(resolveSceneAlias);
+        _resolveSceneAlias = resolveSceneAlias;
+    }
 
     public INodeHandle GetNode(string name)
     {

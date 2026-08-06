@@ -128,12 +128,13 @@ public class LifecycleStrategyBaseTests
     private const string _processCalledIdx = "test.process_called";
 
     [Fact]
-    public void Remove_NonexistentStrategy_DoesNotThrow()
+    public void Remove_NonexistentStrategy_Throws()
     {
-        var entity = new StubSndEntity("e");
+        var (_, ctx) = CreateHost(_ => { });
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entity = session.Spawn(CreateMeta("E"));
 
-        var ex = Record.Exception(() => entity.RemoveStrategy("nonexistent.index"));
-        Assert.Null(ex);
+        Assert.Throws<InvalidOperationException>(() => entity.RemoveStrategy("nonexistent.index"));
     }
 
     [Fact]

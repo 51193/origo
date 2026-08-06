@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -103,6 +103,8 @@ Observer binding topology is serialized with entities through `StrategyMetaData.
 4. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`
 
 The adapter layer only passes configuration via `SndContextParameters` and does not need to know the execution order or internal implementation of the above steps.
+
+> **Bootstrap guard**: `Bootstrap()` may be executed only once (a second call throws `InvalidOperationException`), and it validates that the adapter scene host is ready before enqueuing the entry save load — if the host is an `IObserverTopologyHost` whose observer topology has no bound context (e.g. `Bootstrap` called before `SndManager.BindContext`), it throws immediately with a clear message instead of failing later at flush time. The entry save load is deferred (system deferred queue), so failing early prevents a misordered caller from getting a confusing late error.
 
 ### Why Startup Orchestration Is Centralized in SndContext.Bootstrap()
 

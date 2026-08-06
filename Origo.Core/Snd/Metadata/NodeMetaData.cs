@@ -8,5 +8,6 @@ namespace Origo.Core.Snd.Metadata;
 /// </summary>
 public sealed class NodeMetaData
 {
+    /// <summary>Key-value node resource pairs to restore into the entity's node manager.</summary>
     public Dictionary<string, string> Pairs { get; set; } = [];
 }

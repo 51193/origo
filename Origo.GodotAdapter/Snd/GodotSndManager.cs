@@ -37,9 +37,10 @@ public partial class GodotSndManager
     internal ILogger SharedLogger { get; private set; } = null!;
     internal ISndContext? Context { get; private set; }
 
-    /// <summary>Number of <see cref="ProcessAll" /> invocations. Framework-internal observability (test projects access via InternalsVisibleTo).</summary>
-    internal int ProcessTickCount { get; private set; }
-
+    /// <summary>
+    ///     Creates an empty manager. Call <see cref="BindRuntimeDependencies" />
+    ///     and <see cref="BindContext" /> before spawning entities.
+    /// </summary>
     public GodotSndManager()
     {
         _collection = new SndEntityCollection<GodotSndEntity>(CreateSndEntity, DetachAndFree);
@@ -68,10 +69,10 @@ public partial class GodotSndManager
     }
 
     /// <inheritdoc/>
-    public IReadOnlyList<SndMetaData> BuildMetaList() => _collection.BuildMetaList();
+    IReadOnlyList<SndMetaData> ISndSceneAccess.BuildMetaList() => _collection.BuildMetaList();
 
     /// <inheritdoc/>
-    public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
+    void ISndSceneAccess.RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
         _collection.RecoverFromMetaList(metaList, (meta, ex) =>
@@ -85,10 +86,10 @@ public partial class GodotSndManager
     }
 
     /// <inheritdoc/>
-    public void RemoveAllEntities() => _collection.RemoveAllEntities();
+    void ISndSceneHost.RemoveAllEntities() => _collection.RemoveAllEntities();
 
     /// <inheritdoc/>
-    public ISndEntity CreateEntity(SndMetaData metaData)
+    ISndEntity ISndSceneHost.CreateEntity(SndMetaData metaData)
     {
         ArgumentNullException.ThrowIfNull(metaData);
         try
@@ -103,24 +104,20 @@ public partial class GodotSndManager
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>Gets a view of all currently alive entities in the scene.</summary>
     public IReadOnlyCollection<ISndEntity> GetEntities() => _collection.GetEntities();
 
-    /// <inheritdoc/>
+    /// <summary>Looks up an entity by its stable name.</summary>
     public ISndEntity? FindByName(string name) => _collection.FindByName(name);
 
     /// <inheritdoc/>
-    public void ProcessAll(double delta)
-    {
-        ProcessTickCount++;
-        _collection.ProcessAll(delta);
-    }
+    void ISndSceneHost.ProcessAll(double delta) => _collection.ProcessAll(delta);
 
     /// <inheritdoc/>
-    public void RemoveEntity(string name) => _collection.RemoveEntity(name);
+    void ISndSceneHost.RemoveEntity(string name) => _collection.RemoveEntity(name);
 
     /// <inheritdoc/>
-    public void RequestKillEntity(string name) => _collection.RequestKillEntity(name);
+    void ISndSceneHost.RequestKillEntity(string name) => _collection.RequestKillEntity(name);
 
     /// <summary>
     ///     Binds the Core <see cref="SndWorld" /> and logger, and creates the

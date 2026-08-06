@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/StateMachine/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # StateMachine
 
@@ -56,7 +56,7 @@ Both strategies are fetched from the pool simultaneously at construction time; e
 
 ### Why RestoreStackWithoutHooks + FlushAfterLoad are two steps
 
-Save recovery requires two phases: (1) restore stack content without hooks (preventing side effects during recovery), (2) after stack structure adjustment is complete, replay AfterLoad hooks in order. If merged into one step, hooks would fire while the stack is incomplete, causing strategies to receive incorrect context.
+Save recovery requires two phases: (1) restore stack content without hooks (preventing side effects during recovery), (2) after stack structure adjustment is complete, replay AfterLoad hooks in order. If merged into one step, hooks would fire while the stack is incomplete, causing strategies to receive incorrect context. `RestoreStackWithoutHooks` is an `internal` member of `IStateMachine`, invoked only by the framework's deserialization path (`StateMachineContainer`) — business code must modify the stack via `Push`/`TryPop*` so strategy hooks stay in sync with stack contents.
 
 ### Why strategy hook parameters include BeforeTop and AfterTop
 

@@ -44,6 +44,13 @@ internal sealed class ObserverTopology
         _context = context;
     }
 
+    /// <summary>
+    ///     True when a context has been bound via <see cref="BindContext" />.
+    ///     Used by startup orchestration to fail early when the scene host
+    ///     is not fully wired before <c>SndContext.Bootstrap</c> runs.
+    /// </summary>
+    internal bool IsContextBound => _context is not null;
+
     internal void Mount(ISndEntity observer, ISndEntity target, string observerIndex)
     {
         ArgumentNullException.ThrowIfNull(observer);
@@ -198,7 +205,9 @@ internal sealed class ObserverTopology
         foreach (var b in bindings)
         {
             if (string.IsNullOrWhiteSpace(b.Target))
-                continue;
+                throw new InvalidOperationException(
+                    $"Observer binding for '{observer.Name}' has an empty target. " +
+                    "The save topology is inconsistent and cannot be recovered.");
 
             // A binding whose target cannot be resolved means the saved
             // topology references an entity that does not exist in the

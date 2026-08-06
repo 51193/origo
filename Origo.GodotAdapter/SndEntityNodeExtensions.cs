@@ -5,6 +5,10 @@ using Origo.GodotAdapter.Snd;
 
 namespace Origo.GodotAdapter;
 
+/// <summary>
+///     Adapter-layer convenience extensions for retrieving native Godot nodes
+///     from SND node handles and entities.
+/// </summary>
 public static class SndEntityNodeExtensions
 {
     /// <summary>

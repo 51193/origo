@@ -12,6 +12,10 @@ namespace Origo.Core.DataSource;
 /// </summary>
 public static class DataSourceFactory
 {
+    /// <summary>
+    ///     Creates a converter registry pre-loaded with the default primitive,
+    ///     array, and domain converters (TypedData, metadata, blackboard, etc.).
+    /// </summary>
     public static DataSourceConverterRegistry CreateDefaultRegistry(TypeStringMapping typeMapping)
     {
         var registry = new DataSourceConverterRegistry();
@@ -98,6 +102,10 @@ public static class DataSourceFactory
         };
     }
 
+    /// <summary>
+    ///     Creates an I/O gateway over the given file system with default codecs
+    ///     (.json / .map / raw-string suffixes).
+    /// </summary>
     public static IDataSourceIoGateway CreateIoGateway(IFileSystem fileSystem, bool writeIndented = true)
     {
         ArgumentNullException.ThrowIfNull(fileSystem);
@@ -115,15 +123,18 @@ public static class DataSourceFactory
         return new DataSourceIoGateway(fileSystem, options, codecs);
     }
 
+    /// <summary>Creates an I/O gateway with the default codecs and options.</summary>
     public static IDataSourceIoGateway CreateDefaultIoGateway(IFileSystem fileSystem, bool writeIndented = true)
         => CreateIoGateway(fileSystem, writeIndented);
 
+    /// <summary>Creates a file metadata access facade over the given file system.</summary>
     public static IFileMetaAccess CreateFileMetaAccess(IFileSystem fileSystem)
     {
         ArgumentNullException.ThrowIfNull(fileSystem);
         return new FileMetaAccess(fileSystem);
     }
 
+    /// <summary>Creates a path resolver that combines and normalizes paths on the given file system.</summary>
     public static IPathResolver CreatePathResolver(IFileSystem fileSystem)
     {
         ArgumentNullException.ThrowIfNull(fileSystem);

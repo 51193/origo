@@ -304,7 +304,9 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
             return;
 
         var strategyIndex = StepToActionIndex(step);
-        if (!string.IsNullOrEmpty(strategyIndex))
+        if (!string.IsNullOrEmpty(strategyIndex)
+            && entity is SndEntity sndEntity
+            && sndEntity.HasStrategyMounted(strategyIndex))
             entity.RemoveStrategy(strategyIndex);
     }
 

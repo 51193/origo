@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/state-machine -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 状态机
 
@@ -24,7 +24,7 @@ public interface IStateMachine
     (bool found, string? top) Peek();    // 查看栈顶
     IReadOnlyList<string> Snapshot();    // 栈快照
     void FlushAfterLoad();               // 读档后重放
-    void RestoreStackWithoutHooks(IReadOnlyList<string> stack);  // 无钩子恢复
+    // internal: RestoreStackWithoutHooks（仅框架反序列化路径使用，业务代码经 Push/TryPop* 修改栈）
 }
 ```
 
@@ -111,7 +111,7 @@ sm.TryPopRuntime(out var popped);  // popped == "settings"
 ## 读档恢复（两阶段）
 
 ```
-1. Deserialize → RestoreStackWithoutHooks(stack)
+1. Deserialize → RestoreStackWithoutHooks(stack)（internal，由框架读档管线调用）
    → 恢复栈内容，不触发任何策略钩子
 
 2. FlushAfterLoad()

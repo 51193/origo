@@ -31,6 +31,10 @@ public static class OrigoAutoInitializer
     private static readonly string[] _defaultSkipPrefixes =
         ["System", "Microsoft", "netstandard"];
 
+    /// <summary>
+    ///     Scans loaded assemblies for <c>[StrategyIndex]</c>-annotated strategy
+    ///     types and registers them with the world's strategy pool.
+    /// </summary>
     public static int DiscoverAndRegisterStrategies(
         SndWorld world,
         ILogger logger,

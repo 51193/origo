@@ -10,6 +10,7 @@ namespace Origo.GodotAdapter.Serialization;
 /// </summary>
 public static class GodotJsonConverterRegistry
 {
+    /// <summary>Registers all Godot built-in type-name mappings (Vector2, Vector3, Color, ...).</summary>
     public static void RegisterTypeMappings(TypeStringMapping typeMapping)
     {
         ArgumentNullException.ThrowIfNull(typeMapping);
@@ -29,6 +30,7 @@ public static class GodotJsonConverterRegistry
         typeMapping.RegisterType<Plane>(GodotEngineTypeNames.Plane);
     }
 
+    /// <summary>Registers data-source converters for all Godot built-in types.</summary>
     public static void RegisterDataSourceConverters(DataSourceConverterRegistry registry)
     {
         ArgumentNullException.ThrowIfNull(registry);

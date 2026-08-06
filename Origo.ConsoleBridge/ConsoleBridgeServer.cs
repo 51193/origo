@@ -40,6 +40,12 @@ public sealed class ConsoleBridgeServer : IDisposable
     private StreamWriter? _writer;
     private Task? _acceptTask;
 
+    /// <summary>
+    ///     Creates a bridge server forwarding client console input to
+    ///     <paramref name="input" /> and publishing server output on
+    ///     <paramref name="output" />.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="input" /> or <paramref name="output" /> is null.</exception>
     public ConsoleBridgeServer(
         IConsoleInputSource input,
         IConsoleOutputChannel output,

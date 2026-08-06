@@ -11,6 +11,9 @@ namespace Origo.Core.Save.Meta;
 /// </summary>
 public readonly struct SaveMetaBuildContext
 {
+    /// <summary>
+    ///     Creates the read-only context for a save operation.
+    /// </summary>
     public SaveMetaBuildContext(
         string saveId,
         string currentLevelId,

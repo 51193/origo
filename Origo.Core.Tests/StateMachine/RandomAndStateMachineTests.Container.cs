@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Snd;
@@ -216,7 +217,7 @@ public partial class RandomAndStateMachineTests
 
         // Populate with a machine, serialize, then deserialize into the same container.
         var sm = container.CreateOrGet("nav", "sm.swap.push", "sm.swap.pop");
-        sm.RestoreStackWithoutHooks(["a", "b"]);
+        ((IStateMachine)sm).RestoreStackWithoutHooks(["a", "b"]);
         using var node = container.SerializeToNode(TestFactory.CreateRegistry());
 
         // Deserialize replaces old state atomically.
@@ -309,7 +310,7 @@ public partial class RandomAndStateMachineTests
         {
             var c = new StateMachineContainer(pool, ctx.StateMachineContext);
             var sm = c.CreateOrGet("ui", "sm.push.test", "sm.pop.test");
-            sm.RestoreStackWithoutHooks(["x", "y"]);
+            ((IStateMachine)sm).RestoreStackWithoutHooks(["x", "y"]);
             c.FlushAllAfterLoad();
             Assert.Equal(
                 new[] { "push:afterload:null->x", "push:afterload:x->y" },

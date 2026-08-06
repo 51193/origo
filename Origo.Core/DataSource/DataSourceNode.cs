@@ -54,6 +54,7 @@ public sealed class DataSourceNode : IDisposable
         }
     }
 
+    /// <summary>True when the node is a null (Nil) node.</summary>
     public bool IsNull
     {
         get
@@ -65,6 +66,8 @@ public sealed class DataSourceNode : IDisposable
 
     // ── Object access ──
 
+    /// <summary>Gets a child node by key on a map node.</summary>
+    /// <exception cref="KeyNotFoundException">Thrown when the key is absent.</exception>
     public DataSourceNode this[string key]
     {
         get
@@ -76,6 +79,7 @@ public sealed class DataSourceNode : IDisposable
         }
     }
 
+    /// <summary>Enumerates the keys of a map node.</summary>
     public IEnumerable<string> Keys
     {
         get
@@ -87,6 +91,7 @@ public sealed class DataSourceNode : IDisposable
 
     // ── Array access ──
 
+    /// <summary>Gets a child node by index on an array node.</summary>
     public DataSourceNode this[int index]
     {
         get
@@ -96,6 +101,7 @@ public sealed class DataSourceNode : IDisposable
         }
     }
 
+    /// <summary>Gets the element count of an array node.</summary>
     public int Count
     {
         get
@@ -105,6 +111,7 @@ public sealed class DataSourceNode : IDisposable
         }
     }
 
+    /// <summary>Enumerates the child nodes of an array node.</summary>
     public IEnumerable<DataSourceNode> Elements
     {
         get
@@ -145,12 +152,14 @@ public sealed class DataSourceNode : IDisposable
         }
     }
 
+    /// <summary>Attempts to get a child node by key; returns false when the key is absent.</summary>
     public bool TryGetValue(string key, out DataSourceNode? node)
     {
         EnsureExpanded();
         return _objectChildren.TryGetValue(key, out node);
     }
 
+    /// <summary>Checks whether a map node contains the given key.</summary>
     public bool ContainsKey(string key)
     {
         EnsureExpanded();
@@ -159,6 +168,8 @@ public sealed class DataSourceNode : IDisposable
 
     // ── Value access ──
 
+    /// <summary>Gets the raw string value of a text/number/bool/null node.</summary>
+    /// <exception cref="InvalidOperationException">Thrown when the node is a map or array.</exception>
     public string AsString()
     {
         EnsureExpanded();
@@ -168,6 +179,8 @@ public sealed class DataSourceNode : IDisposable
         return _value ?? string.Empty;
     }
 
+    /// <summary>Gets the first character of the node's raw string value.</summary>
+    /// <exception cref="InvalidOperationException">Thrown when the node is a map/array, or its value is empty.</exception>
     public char AsChar()
     {
         EnsureExpanded();
@@ -248,6 +261,7 @@ public sealed class DataSourceNode : IDisposable
 
     // ── Builder methods ──
 
+    /// <summary>Adds a child under the given key on a map node and returns this node.</summary>
     public DataSourceNode Add(string key, DataSourceNode child)
     {
         EnsureExpanded();
@@ -257,6 +271,7 @@ public sealed class DataSourceNode : IDisposable
         return this;
     }
 
+    /// <summary>Appends a child to an array node and returns this node.</summary>
     public DataSourceNode Add(DataSourceNode child)
     {
         EnsureExpanded();
@@ -278,15 +293,19 @@ public sealed class DataSourceNode : IDisposable
     /// <summary>Creates a number node from its invariant-culture string representation.</summary>
     public static DataSourceNode CreateNumber(string value) => new(DataSourceNodeKind.Number, value);
 
+    /// <summary>Creates a number node from an <see cref="int" /> value.</summary>
     public static DataSourceNode CreateNumber(int value) =>
         new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
+    /// <summary>Creates a number node from a <see cref="long" /> value.</summary>
     public static DataSourceNode CreateNumber(long value) =>
         new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
+    /// <summary>Creates a number node from a <see cref="float" /> value.</summary>
     public static DataSourceNode CreateNumber(float value) =>
         new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
+    /// <summary>Creates a number node from a <see cref="double" /> value.</summary>
     public static DataSourceNode CreateNumber(double value) =>
         new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 

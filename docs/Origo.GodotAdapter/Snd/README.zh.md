@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -29,13 +29,13 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 
 适配层的核心入口节点（`[GlobalClass]`），直接挂载在 Godot 场景树中：
 
-- **实现 ISndSceneHost**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / GetEntities / FindByName / ProcessAll。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
+- **实现 ISndSceneHost**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / ProcessAll 均为**显式接口实现**——业务代码无法在 `GodotSndManager` 具体类型上直接调用这些写操作，只能经 `ISndSceneHost`/`ISndSceneAccess` 接口（Core 内部持有）驱动；公开读操作为 `GetEntities` / `FindByName`。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
 - **实现 ISndContextAttachableSceneHost**：支持运行时切换上下文
 - **集合逻辑委托**：实体增删、批量恢复回滚、击杀标记、帧处理等编排逻辑集中在纯 C# 的 `SndEntityCollection<T>`（internal，无 Godot 依赖），由测试直接覆盖；GodotSndManager 仅桥接集合与 Godot 节点树（`AddChild`/`RemoveChild`/`Free` 经 `DetachAndFree` 回调注入）
 - **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，集合回滚释放所有已创建的实体（经 `SndEntityCollection` 的 staged 列表）
 - **GetEntities()**：惰性创建 `IReadOnlyCollection<ISndEntity>` 视图，缓存引用避免重复分配
 - **BuildMetaList()**：经集合调用实体的 `BuildSndMetaData()` 收集元数据
-- **ProcessAll(delta)**：实现 `ISndSceneHost.ProcessAll` 的统一入口，由 Core 的 `SessionManager.ProcessAllSessions` 调用，维护 `ProcessTickCount`（框架内部可观测性，测试项目经 `InternalsVisibleTo` 访问）统计
+- **ProcessAll(delta)**：实现 `ISndSceneHost.ProcessAll` 的统一入口，由 Core 的 `SessionManager.ProcessAllSessions` 调用，驱动集合内每个实体的帧处理
 
 ### GodotSndEntity
 
@@ -58,7 +58,7 @@ Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 
 - **Name**：构造时缓存的节点名称，不受 Godot 释放原节点的影响
 - **Free()** → 检查 `IsInstanceValid(_node)` 后在有效时调用 `_node.Free()`
-- **SetVisible(bool)** → 先检查 `IsInstanceValid(_node)`，再根据节点类型（`CanvasItem` 或 `Node3D`）设置对应的 Visible 属性
+- **SetVisible(bool)** → 先检查 `IsInstanceValid(_node)`，再根据节点类型（`CanvasItem` 或 `Node3D`）设置对应的 Visible 属性；对其他无 `Visible` 属性的节点类型抛 `InvalidOperationException`（fail-fast，避免静默无操作）
 - **UnsafeGetNode()** → `internal` — 返回底层 `Godot.Node` 引用，仅供 `SndEntityNodeExtensions.GetNativeNode()` 使用
 
 ### SndEntityNodeExtensions
@@ -70,7 +70,7 @@ Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 
 ### 为什么 GodotSndManager 不拥有 _Process 循环
 
-实体帧处理是 Core 编排职责。若 `GodotSndManager` 自持 `_Process` 循环遍历实体调用 `ProcessSnd(delta)`，会重复 Core 的帧处理逻辑并绕过正式处理管线。因此帧处理统一由 Core 的 `SessionManager.ProcessAllSessions(delta)` 经 `SceneHost.ProcessAll(delta)`、通过 `IOrigoFrameDriver.DriveFrame(delta)` 执行，`ProcessTickCount` 也在 `ProcessAll` 中维护。`ProcessSnd` 为 `internal`——生命周期编排只能经 Core 的 `ISessionRun` 与批量钩子管线触发，外部代码不得经 `GodotSndEntity` 具体类型直接调用。
+实体帧处理是 Core 编排职责。若 `GodotSndManager` 自持 `_Process` 循环遍历实体调用 `ProcessSnd(delta)`，会重复 Core 的帧处理逻辑并绕过正式处理管线。因此帧处理统一由 Core 的 `SessionManager.ProcessAllSessions(delta)` 经 `SceneHost.ProcessAll(delta)`、通过 `IOrigoFrameDriver.DriveFrame(delta)` 执行。`ProcessSnd` 为 `internal`——生命周期编排只能经 Core 的 `ISessionRun` 与批量钩子管线触发，外部代码不得经 `GodotSndEntity` 具体类型直接调用。
 
 ### 为什么 GodotSndEntity 使用延迟创建 Core Entity
 

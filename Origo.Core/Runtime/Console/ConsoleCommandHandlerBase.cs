@@ -10,11 +10,22 @@ namespace Origo.Core.Runtime.Console;
 /// </summary>
 public abstract class ConsoleCommandHandlerBase : IConsoleCommandHandler
 {
+    /// <summary>The command name used to dispatch invocations.</summary>
     public abstract string Name { get; }
+
+    /// <summary>Help text describing the command's usage.</summary>
     public abstract string HelpText { get; }
+
+    /// <summary>Minimum number of positional arguments required.</summary>
     public abstract int MinPositionalArgs { get; }
+
+    /// <summary>Maximum number of positional arguments allowed; negative means unlimited.</summary>
     public abstract int MaxPositionalArgs { get; }
 
+    /// <summary>
+    ///     Validates the positional argument count against the declared bounds
+    ///     and delegates to <see cref="ExecuteCore" />.
+    /// </summary>
     public bool TryExecute(CommandInvocation invocation, IConsoleOutputChannel outputChannel, out string? errorMessage)
     {
         ArgumentNullException.ThrowIfNull(invocation);

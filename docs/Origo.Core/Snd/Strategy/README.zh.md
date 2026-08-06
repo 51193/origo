@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -52,7 +52,7 @@ BaseStrategy
 - **Mount(observer, target, observerIndex)**：获取策略实例 → 按 `[ObserveData]` 属性为每个 key 在 target 上建立 `SubscribeDataRaw` 接线 → 记录绑定 → 触发 `OnMounted`。挂载是原子的：若接线或 `OnMounted` 抛异常，已建立的订阅全部取消、半加入的绑定被移除、策略引用归还池后异常再传播
 - **Unmount(observer, target, observerIndex)**：拆线 `UnsubscribeDataRaw` → 触发 `OnUnmounted` → 释放池引用 → 移除绑定记录
 - **ReleaseStrategiesFor(observer)**：释放某 observer 持有的全部策略引用并清空其出边（不触发 `OnUnmounted`、不退订），对应实体整体销毁流程的 `ReleaseStrategiesOnly` 阶段
-- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`。目标实体缺失（存档拓扑不一致）时抛 `InvalidOperationException`（fail-fast），不静默跳过
+- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`。目标实体缺失或目标为空白（存档拓扑不一致）时抛 `InvalidOperationException`（fail-fast），不静默跳过
 - **BuildBindingsFor(observerName)**：序列化某 observer 的全部出边为 `List<ObserverBinding>`（按 target 分组）写入 `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**：清理某 observer 的全部出边；目标可解析则完整 `Unmount`，否则归还策略并移除记录
 - **TeardownAllBindingsFor(observer)**：对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略）的自包含清理路径，不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用。由 `SessionRun.ReleaseAllEntitiesAndClear` 在会话退出时经 `IEntityLifecycle.TeardownObserverBindings` 调用
@@ -103,7 +103,7 @@ BaseStrategy
 | `GetStrategyIndices()` | 返回当前持有的所有策略索引 |
 | `Process(entity, delta, ctx)` | 帧更新（快照迭代） |
 | `Add(entity, index, ctx)` | 动态添加策略并触发 `AfterAdd`；若 `AfterAdd` 抛异常，回滚插入并归还池引用后再传播（添加是原子的）。同一 index 重复挂载会抛 `InvalidOperationException`；计划引擎（`PlanExecutionStrategyBase`）在目标 action 已挂载时会复用而不是重复挂载，因此计划管理的 action 也可出现在 `LifecycleIndices` 中 |
-| `Remove(entity, index, ctx)` | 动态移除策略（触发 BeforeRemove） |
+| `Remove(entity, index, ctx)` | 动态移除策略（触发 BeforeRemove）；索引未挂载时抛 `InvalidOperationException`（fail-fast，与 `Add` 的严格性对称） |
 
 - **Recover**：从池获取时进行类型过滤，仅保留 `LifecycleStrategyBase` 子类；非 `LifecycleStrategyBase` 类型（如 `ActiveStrategyBase`、`ObserverStrategyBase`）立即抛 `InvalidOperationException`
 - **生命周期钩子触发**：全部基于 `ToArray()` 快照迭代——因为钩子内可增删策略。五个触发器方法（`TriggerAfterSpawn/Load/Save/Quit/Dead`）统一委托给 `TriggerAll`，消除复制粘贴重复
@@ -115,7 +115,7 @@ BaseStrategy
 - **容器**：`Dictionary<string, ActiveStrategyBase>` — O(1) 按索引查找，不参与每帧遍历
 - **Recover**：从 metadata 批量恢复（不触发钩子）；遇非 `ActiveStrategyBase` 类型立即抛 `InvalidOperationException`，并回滚本次恢复已获取的全部主动策略，不残留半初始化状态——与 `SndStrategyManager` 的实体策略恢复保持一致的 fail-fast 语义
 - **ReleaseAll**：逐个 `ReleaseStrategy` 并清空容器（不触发钩子）
-- **Add / Remove**：动态增删主动策略
+- **Add / Remove**：动态增删主动策略；`Remove` 对未挂载索引抛 `InvalidOperationException`（fail-fast）
 - **Invoke**：按索引查找策略实例，调用 `Invoke(entity, ctx, input)` 并返回结果
 - **序列化**：`SerializeIndices()` 返回当前持有的全部索引
 

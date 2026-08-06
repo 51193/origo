@@ -134,7 +134,7 @@ public sealed class StackStateMachine : IStateMachine, IDisposable
     }
 
     /// <summary>Restores stack contents from a snapshot without triggering any strategy hooks. Use together with <see cref="FlushAfterLoad" />.</summary>
-    public void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop)
+    void IStateMachine.RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(stackBottomToTop);

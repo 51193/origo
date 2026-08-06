@@ -14,11 +14,14 @@ namespace Origo.GodotAdapter.Console;
 /// </summary>
 public abstract class CommandHandlerBase : ConsoleCommandHandlerBase
 {
+    /// <summary>Creates a handler holding the given runtime reference.</summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="runtime" /> is null.</exception>
     protected CommandHandlerBase(OrigoRuntime runtime)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         Runtime = runtime;
     }
 
+    /// <summary>The runtime the handler operates against.</summary>
     protected OrigoRuntime Runtime { get; }
 }

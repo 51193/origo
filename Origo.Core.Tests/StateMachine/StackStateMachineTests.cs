@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
@@ -173,7 +174,7 @@ public class StackStateMachineTests
         var (pool, ctx) = CreatePoolAndContext();
         using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
-        Assert.Throws<ArgumentNullException>(() => sm.RestoreStackWithoutHooks(null!));
+        Assert.Throws<ArgumentNullException>(() => ((IStateMachine)sm).RestoreStackWithoutHooks(null!));
     }
 
     [Fact]
@@ -182,7 +183,7 @@ public class StackStateMachineTests
         var (pool, ctx) = CreatePoolAndContext();
         using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
-        sm.RestoreStackWithoutHooks([]);
+        ((IStateMachine)sm).RestoreStackWithoutHooks([]);
 
         var (found, top) = sm.Peek();
         Assert.False(found);
@@ -194,7 +195,7 @@ public class StackStateMachineTests
         var (pool, ctx) = CreatePoolAndContext();
         using var sm = new StackStateMachine("test", "sm.push.stub", "sm.pop.stub", pool, ctx.StateMachineContext);
 
-        sm.RestoreStackWithoutHooks(["x", "y"]);
+        ((IStateMachine)sm).RestoreStackWithoutHooks(["x", "y"]);
 
         var (found, top) = sm.Peek();
         Assert.True(found);

@@ -67,8 +67,8 @@ public class SndEntityAndAutoInitializerTests
         entity.RemoveStrategy(_lifecycleStrategyIndex);
         Assert.DoesNotContain(_lifecycleStrategyIndex, ((IEntityLifecycle)entity).BuildMetaData().StrategyMetaData!.LifecycleIndices);
 
-        // Removing a missing strategy should not throw.
-        entity.RemoveStrategy(_lifecycleStrategyIndex);
+        // Removing a strategy that is no longer mounted throws (fail-fast).
+        Assert.Throws<InvalidOperationException>(() => entity.RemoveStrategy(_lifecycleStrategyIndex));
     }
 
     [Fact]

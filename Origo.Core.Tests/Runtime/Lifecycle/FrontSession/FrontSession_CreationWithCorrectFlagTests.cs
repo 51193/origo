@@ -48,8 +48,8 @@ public class FrontSession_CreationWithCorrectFlagTests
         Assert.True(fg1.IsFrontSession);
 
         // Switch foreground (creates new one)
-        var progressRun = ctx.EnsureProgressRun();
-        progressRun.SwitchForeground("level_b");
+        ctx.Save.RequestSwitchForegroundLevel("level_b");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
         var fg2 = ctx.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg2.IsFrontSession);

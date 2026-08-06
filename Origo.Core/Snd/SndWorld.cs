@@ -19,6 +19,11 @@ public sealed class SndWorld
 {
     private readonly ILogger _logger;
 
+    /// <summary>
+    ///     Creates a world with the given type mapping, logger, converter
+    ///     registry, and data-source I/O gateway.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when a required argument is null.</exception>
     public SndWorld(
         TypeStringMapping typeMapping,
         ILogger logger,
@@ -55,6 +60,7 @@ public sealed class SndWorld
     /// </summary>
     public DataSourceConverterRegistry ConverterRegistry { get; }
 
+    /// <summary>Data-source I/O gateway used for all file content reads and writes.</summary>
     public IDataSourceIoGateway DataSourceIo { get; }
 
     /// <summary>
@@ -63,6 +69,10 @@ public sealed class SndWorld
     /// </summary>
     internal SndMappings Mappings { get; }
 
+    /// <summary>
+    ///     Registers a strategy type with the strategy pool, applying the
+    ///     statelessness validation performed at registration time.
+    /// </summary>
     public void RegisterStrategy<TStrategy>(Func<TStrategy> factory) where TStrategy : BaseStrategy =>
         StrategyPool.Register(factory);
 
@@ -82,6 +92,10 @@ public sealed class SndWorld
     public IReadOnlyCollection<string> GetRegisteredStrategyIndices() =>
         StrategyPool.EnumerateRegisteredIndices();
 
+    /// <summary>
+    ///     Registers type-name mappings used for TypedData serialization,
+    ///     via a callback that mutates the world's <see cref="TypeMapping" />.
+    /// </summary>
     public void RegisterTypeMappings(Action<TypeStringMapping> registerMappings)
     {
         ArgumentNullException.ThrowIfNull(registerMappings);
@@ -105,9 +119,11 @@ public sealed class SndWorld
         return meta.DeepClone();
     }
 
+    /// <summary>Loads scene alias mappings from the given map file.</summary>
     public void LoadSceneAliases(string mapFilePath, ILogger logger) =>
         Mappings.LoadSceneAliases(DataSourceIo, mapFilePath, logger);
 
+    /// <summary>Loads SND template mappings from the given map file.</summary>
     public void LoadTemplates(string mapFilePath, ILogger logger)
     {
         Mappings.LoadTemplates(
@@ -117,12 +133,17 @@ public sealed class SndWorld
             logger);
     }
 
+    /// <summary>
+    ///     Resolves a JSON array node into a list of entity metadata, applying
+    ///     template resolution and type conversion.
+    /// </summary>
     public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root)
     {
         ArgumentNullException.ThrowIfNull(root);
         return Mappings.ResolveMetaListFromJsonArray(root, ConverterRegistry);
     }
 
+    /// <summary>Reads a typed data map (key → <see cref="TypedData" />) from a data source node.</summary>
     public IReadOnlyDictionary<string, TypedData> ReadTypedDataMap(DataSourceNode node)
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -139,20 +160,24 @@ public sealed class SndWorld
         return new SndEntity(nodeFactory, StrategyPool, Mappings.ResolveSceneAlias, context, logger, observerTopology);
     }
 
+    /// <summary>Serializes a single entity metadata into a data source node.</summary>
     public DataSourceNode WriteMetaNode(SndMetaData metaData) => ConverterRegistry.Write(metaData);
 
+    /// <summary>Deserializes a data source node into a single entity metadata.</summary>
     public SndMetaData ReadMetaNode(DataSourceNode node)
     {
         ArgumentNullException.ThrowIfNull(node);
         return ConverterRegistry.Read<SndMetaData>(node);
     }
 
+    /// <summary>Serializes a list of entity metadata into a data source node.</summary>
     public DataSourceNode WriteMetaListNode(IEnumerable<SndMetaData> metaDataList)
     {
         var list = metaDataList as IReadOnlyList<SndMetaData> ?? [.. metaDataList];
         return ConverterRegistry.Write(list);
     }
 
+    /// <summary>Deserializes a data source node into a list of entity metadata.</summary>
     public IReadOnlyList<SndMetaData> ReadMetaListNode(DataSourceNode node)
     {
         ArgumentNullException.ThrowIfNull(node);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.StateMachine;
@@ -31,7 +32,7 @@ public partial class RandomAndStateMachineTests
         var snapshot1 = sm1.Snapshot();
 
         var sm2 = new StackStateMachine("m2", "sm.push.test", "sm.pop.test", pool, ctx.StateMachineContext);
-        sm2.RestoreStackWithoutHooks(snapshot1);
+        ((IStateMachine)sm2).RestoreStackWithoutHooks(snapshot1);
         var snapshot2 = sm2.Snapshot();
 
         sm1.Dispose();
@@ -177,7 +178,7 @@ public partial class RandomAndStateMachineTests
         try
         {
             var sm = new StackStateMachine("m1", "sm.push.test", "sm.pop.test", pool, ctx.StateMachineContext);
-            sm.RestoreStackWithoutHooks(["x", "y", "z"]);
+            ((IStateMachine)sm).RestoreStackWithoutHooks(["x", "y", "z"]);
             sm.FlushAfterLoad();
             sm.Dispose();
 

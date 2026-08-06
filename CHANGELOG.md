@@ -39,6 +39,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `IStateMachine.RestoreStackWithoutHooks` is now `internal`** — the only unguarded
+  public stack-write path (it bypasses `Push` strategy hooks) is sealed; business code must modify
+  the stack through `Push`/`TryPopRuntime`/`TryPopOnQuit`. The framework's deserialization path
+  (`StateMachineContainer`) still uses it via the internal interface member.
+- **BREAKING: `GodotSndManager` write operations are now explicit interface implementations** —
+  `CreateEntity`/`RemoveEntity`/`RemoveAllEntities`/`ProcessAll`/`RequestKillEntity`/`BuildMetaList`/
+  `RecoverFromMetaList` are no longer callable on the concrete manager type; they are driven only
+  through the `ISndSceneHost`/`ISndSceneAccess` interfaces held internally by Core. This closes the
+  bypass of spawn/kill hook orchestration (a direct `CreateEntity` previously skipped AfterSpawn).
+  Read operations `GetEntities`/`FindByName` remain public.
+- **`MemoryFileSystem` is now `internal`** — it had no production consumer (test projects reach it
+  via `InternalsVisibleTo`); the public reference-implementation status is no longer warranted.
+- **`SndContext.Bootstrap()` is single-use and validates scene-host readiness** — calling it twice,
+  or before the adapter scene host's observer topology context is bound (e.g. before
+  `SndManager.BindContext`), now throws `InvalidOperationException` immediately. Previously a
+  misordered startup failed late, at deferred-queue flush time, with an unclear error.
 - **BREAKING: `TypedData.AsString` is now `internal`** — the generated accessor was the only
   unguarded (no kind check) public read path on `TypedData`, inconsistent with the documented
   design where all `AsXxx` accessors are `internal`. No in-repo caller used it; business reads go
@@ -55,9 +71,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING:** `TypedDataInitializer` is now `internal` — adapter layers no longer get a
   public entry point; test projects access it via `InternalsVisibleTo` and call
   `TypedDataInitializer.EnsureLoaded()` instead of the always-true `IsLoaded` property.
-- **BREAKING:** `GodotSndManager.ProcessTickCount` is now `internal` and
-  `ProcessDeltaSum` is removed — these were observability members with no production
-  consumer.
+- **BREAKING:** `GodotSndManager.ProcessTickCount` and `ProcessDeltaSum` removed — these were
+  observability members with no production consumer (the integration test that read the tick
+  counter now verifies `ProcessAll` behaviorally, by driving an entity's Process strategy).
+- **Removing a strategy that is not mounted now throws** — `ISndStrategyAccess.RemoveStrategy`
+  and `ISndActiveStrategyAccess.RemoveActiveStrategy` throw `InvalidOperationException` when the
+  index is not mounted on the entity, instead of silently succeeding. The plan engine's internal
+  cleanup guards with an explicit mount check before removing its action strategy, preserving its
+  idempotent-teardown semantics.
 - **BREAKING:** `TypedData.RegisterKind` throws `InvalidOperationException` when a kind is
   registered to a different type than an existing mapping (idempotent re-registration of the
   same type is still allowed) — two adapter layers using overlapping kind ranges now fail
@@ -105,6 +126,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`GodotNodeHandle.SetVisible` throws on node types without a `Visible` property** — setting
+  visibility on a node that is neither `CanvasItem` nor `Node3D` now throws
+  `InvalidOperationException` instead of silently doing nothing.
+- **`ObserverTopology.RecoverBindingsFor` rejects blank observer targets** — an archived binding
+  with a null/whitespace target now fails the load (consistent with the dangling-binding
+  fail-fast), instead of being silently skipped.
 - **Dangling observer bindings now fail the load** — `ObserverTopology.RecoverBindingsFor` and
   `SessionRun.LoadFromPayload` throw `InvalidOperationException` when an archived observer binding
   references an entity that does not exist in the recovered scene, instead of silently skipping the

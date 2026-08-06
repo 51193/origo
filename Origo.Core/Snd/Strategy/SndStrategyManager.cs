@@ -127,10 +127,17 @@ internal sealed class SndStrategyManager
             .Build("Strategy added."));
     }
 
+    /// <summary>
+    ///     Dynamically removes a mounted strategy, firing its <c>BeforeRemove</c> hook.
+    ///     Removing a strategy that is not mounted throws.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when <paramref name="index" /> is not mounted on the entity.</exception>
     public void Remove(ISndEntity entity, string index, ISndContext ctx)
     {
         var i = _strategies.FindLastIndex(s => s.Index == index);
-        if (i < 0) return;
+        if (i < 0)
+            throw new InvalidOperationException(
+                $"Strategy '{index}' is not mounted on entity '{entity.Name}'.");
 
         var entry = _strategies[i];
         entry.Strategy.BeforeRemove(entity, ctx);

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -358,11 +358,11 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SessionContext_OwningSession_CorrectlyBoundToBackgroundSession` | 策略 Process 中 OwningSession.LevelId 为后台会话 levelId | session-model |
 | `OwnSessionBlackboard_IsolatedFromForeground` | 后台黑板数据对前台不可见 | session-model |
 | `OwnEntities_IsolatedFromForeground` | 后台实体对前台不可见 | session-model |
-| `KillAll_TriggersBeforeDead` | FireBeforeDeadHooks 触发 BeforeDead | ISessionRun |
+| `KillAllEntities_FireBeforeDead` | RequestKillEntity + KillPendingAllSessions 触发全部实体 BeforeDead | ISessionRun |
 | `Spawn_AddsEntity` | FullMemorySndSceneHost.CreateEntity 添加实体并可查找 | ISndSceneHost |
 | `SpawnMany_AddsAll` | 创建多个实体后全部存在 | ISndSceneHost |
 | `DeadByName_RemovesEntity_FiresBeforeDead` | RemoveEntity 移除实体并触发 BeforeDead | ISndSceneHost |
-| `ClearAll_RemovesAll_FiresBeforeQuit` | ReleaseAllEntities + RemoveAllEntities 触发 BeforeQuit 并清空 | ISessionRun |
+| `Dispose_RemovesDirectHostEntities_FiresBeforeQuit` | Dispose 触发 BeforeQuit 并清空宿主实体 | ISessionRun |
 | `ProcessAll_FiresProcessOnEntities` | ProcessAllSessions 触发 Process 策略 | ISessionManager |
 | `SerializeMetaList_ReturnsAllEntities` | BuildMetaList 返回所有实体元数据 | ISndSceneHost |
 | `PersistLevelState_WritesPayloadToFileSystem` | Save 后关卡文件存在 | session-model |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -232,7 +232,7 @@ public interface IStateMachine
     (bool found, string? top) Peek();
     IReadOnlyList<string> Snapshot();
     void FlushAfterLoad();
-    void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop);
+    // internal: void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop) — 仅框架读档管线使用
 }
 ```
 

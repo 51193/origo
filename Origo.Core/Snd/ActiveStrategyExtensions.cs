@@ -16,6 +16,10 @@ public static class ActiveStrategyExtensions
         PropertyNameCaseInsensitive = true
     };
 
+    /// <summary>
+    ///     Invokes an active strategy with a strongly-typed input and result.
+    ///     The input is JSON-serialized and the result JSON-deserialized.
+    /// </summary>
     public static TOutput? InvokeStrategy<TInput, TOutput>(this ISndEntity entity, string strategyIndex, TInput input)
     {
         ArgumentNullException.ThrowIfNull(entity);
@@ -24,6 +28,9 @@ public static class ActiveStrategyExtensions
         return DeserializeResult<TOutput>(result);
     }
 
+    /// <summary>
+    ///     Invokes an active strategy with no input and a strongly-typed result.
+    /// </summary>
     public static TOutput? InvokeStrategy<TOutput>(this ISndEntity entity, string strategyIndex)
     {
         ArgumentNullException.ThrowIfNull(entity);
@@ -54,6 +61,11 @@ public static class ActiveStrategyExtensions
         }
     }
 
+    /// <summary>
+    ///     Lazily mounts a strategy and records its index in entity data, unless
+    ///     the data key already holds a non-blank value. Returns true when the
+    ///     strategy was newly mounted. Idempotent-safe for repeated calls.
+    /// </summary>
     public static bool EnsureStrategy(this ISndEntity entity, string dataKey, string strategyIndex)
     {
         ArgumentNullException.ThrowIfNull(entity);

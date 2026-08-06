@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 策略 测试
 
@@ -67,7 +67,7 @@
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
-| `RemoveActiveStrategy_NotExists_Noop` | 移除不存在的 ActiveStrategy | 不抛异常 |
+| `RemoveActiveStrategy_NotExists_Throws` | 移除不存在的 ActiveStrategy | 抛 `InvalidOperationException`（fail-fast） |
 
 ## LifecycleStrategyBaseTests 测试详情
 
@@ -91,7 +91,7 @@
 | `Process_KillsItself_MarksEntity` | Process 中调用 RequestKillEntity(self) | 实体被标记 IsPendingKill |
 | `Process_KillsOtherEntity_MarksTargetEntity` | Process 中调用 RequestKillEntity("B") | 目标实体被标记 IsPendingKill，当前实体不受影响 |
 | `Process_RequestKillDuringProcess_RemainingStrategiesStillExecuted` | 第一个策略 Kill 自己后，同实体上后续策略仍执行 | KillSelfRecordingStrategy 先执行且记录，ProcessCalledStrategy 随后仍执行 |
-| `Remove_NonexistentStrategy_DoesNotThrow` | 移除不存在的策略 | 不抛异常 |
+| `Remove_NonexistentStrategy_Throws` | 移除不存在的策略 | 抛 `InvalidOperationException`（fail-fast） |
 
 ## ObserverStrategyTests 测试详情
 
@@ -190,7 +190,7 @@
 | `DescendingPriorityInsertion_SortedAscending` | 降序插入自动升序排列 | — |
 | `AscendingPriorityInsertion_SortedAscending` | 升序插入保持升序 | — |
 | `AlternatingPriorityInsertion_SortedCorrectly` | 交替优先级插入后排升序 | — |
-| `Remove_NonexistentStrategy_NoEffect` | 删除不存在的策略不影响 | — |
+| `Remove_NonexistentStrategy_Throws` | 删除不存在的策略抛异常，已挂载策略不受影响 | — |
 | `AllDefaultPriority6205_MaintainsInsertionOrder` | 全部默认优先级 6205 保持插入序 | snd-entity-model |
 
 ## StrategyPoolTypeSafetyAndExtensionTests 测试详情

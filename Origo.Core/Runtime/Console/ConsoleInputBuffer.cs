@@ -14,6 +14,7 @@ public sealed class ConsoleInputBuffer : IConsoleInputSource
     private readonly Lock _lock = new();
     private readonly Queue<string> _queue = new();
 
+    /// <summary>Dequeues the next command, if any.</summary>
     public bool TryDequeueCommand([NotNullWhen(true)] out string? line)
     {
         lock (_lock)
@@ -29,6 +30,7 @@ public sealed class ConsoleInputBuffer : IConsoleInputSource
         }
     }
 
+    /// <summary>Enqueues a command line, trimming surrounding whitespace; blank lines are ignored.</summary>
     public void Enqueue(string line)
     {
         if (string.IsNullOrWhiteSpace(line))
@@ -40,6 +42,7 @@ public sealed class ConsoleInputBuffer : IConsoleInputSource
         }
     }
 
+    /// <summary>Clears all pending commands.</summary>
     public void Clear()
     {
         lock (_lock)

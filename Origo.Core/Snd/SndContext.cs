@@ -36,6 +36,7 @@ public sealed class SndContext : ISndContext
 {
     internal readonly SystemRun _systemRun;
     internal readonly List<ISaveMetaContributor> _saveMetaContributors = [];
+    private bool _bootstrapped;
     private readonly SndContextParameters _parameters;
     internal int _pendingPersistenceRequests;
     internal ProgressRun? _progressRun;
@@ -100,8 +101,20 @@ public sealed class SndContext : ISndContext
     ///     strategies, load scene alias and template mappings, then invoke the
     ///     main menu entry workflow.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when Bootstrap is called more than once, or when the adapter
+    ///     scene host is not fully wired (its observer topology context is not
+    ///     bound) before the entry workflow is enqueued.
+    /// </exception>
     public void Bootstrap()
     {
+        if (_bootstrapped)
+            throw new InvalidOperationException(
+                "SndContext.Bootstrap has already been executed. Bootstrap must be called exactly once.");
+
+        EnsureSceneHostReady();
+        _bootstrapped = true;
+
         _parameters.ConfigureConverters?.Invoke(Runtime.SndWorld.ConverterRegistry);
 
         if (_parameters.AutoDiscoverStrategies)
@@ -117,14 +130,34 @@ public sealed class SndContext : ISndContext
         Lifecycle.RequestLoadMainMenuEntrySave();
     }
 
+    /// <summary>
+    ///     Fails early when the adapter scene host is not ready for entity
+    ///     creation. The main-menu entry workflow is enqueued as a deferred
+    ///     operation, so without this check a misordered startup would surface
+    ///     as a confusing failure at flush time instead of at Bootstrap time.
+    /// </summary>
+    private void EnsureSceneHostReady()
+    {
+        if (Runtime.GetAdapterSceneHost() is IObserverTopologyHost host
+            && !host.ObserverTopology.IsContextBound)
+            throw new InvalidOperationException(
+                "The adapter scene host's observer topology is not bound to a context. " +
+                "Bind the context to the scene host before calling SndContext.Bootstrap.");
+    }
+
     // ── Infrastructure (internal) ──
 
     internal OrigoRuntime Runtime { get; }
     internal IDataSourceIoGateway DataSourceIo { get; }
     internal IFileMetaAccess MetaAccess { get; }
     internal IPathResolver PathResolver { get; }
+    /// <summary>Root directory for runtime saves.</summary>
     public string SaveRootPath { get; }
+
+    /// <summary>Root directory for the initial (res://) saves.</summary>
     public string InitialSaveRootPath { get; }
+
+    /// <summary>Path to the entry config file (<c>entry.json</c>).</summary>
     public string EntryConfigPath { get; }
     internal ISaveStorageService StorageService { get; }
     internal ISaveStorageService InitialStorageService { get; }

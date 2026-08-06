@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -52,7 +52,7 @@ Each scene host that creates real `SndEntity` instances (`FullMemorySndSceneHost
 - **Mount(observer, target, observerIndex)**: Acquire strategy instance → establish `SubscribeDataRaw` wiring on target for each key declared by `[ObserveData]` attribute → record binding → trigger `OnMounted`. Mounting is atomic: if wiring or `OnMounted` throws, all established subscriptions are canceled, partially-added bindings are removed, strategy reference is returned to pool, and the exception propagates
 - **Unmount(observer, target, observerIndex)**: Tear down `UnsubscribeDataRaw` → trigger `OnUnmounted` → release pool reference → remove binding record
 - **ReleaseStrategiesFor(observer)**: Release all strategy references held by an observer and clear its outgoing edges (does not trigger `OnUnmounted`, does not unsubscribe), corresponding to the `ReleaseStrategiesOnly` phase of entity teardown
-- **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`. A missing target (inconsistent save topology) throws `InvalidOperationException` (fail-fast) instead of being silently skipped
+- **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`. A missing or blank target (inconsistent save topology) throws `InvalidOperationException` (fail-fast) instead of being silently skipped
 - **BuildBindingsFor(observerName)**: Serialize an observer's full outgoing edges as `List<ObserverBinding>` (grouped by target) into `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**: Clean an observer's full outgoing edges; if target is resolvable, full `Unmount`; otherwise return strategy and remove record
 - **TeardownAllBindingsFor(observer)**: Self-contained cleanup path that calls `FullCleanup` on all outgoing edges of the observer (unsubscribe + `OnUnmounted` + release strategy), not depending on the scene host — binding entries already hold `TargetEntity` references. Invoked by `SessionRun.ReleaseAllEntitiesAndClear` through `IEntityLifecycle.TeardownObserverBindings` when a session quits
@@ -103,7 +103,7 @@ Each `SndEntity` holds one manager instance, managing passive entity strategies.
 | `GetStrategyIndices()` | Return all currently held strategy indices |
 | `Process(entity, delta, ctx)` | Frame update (snapshot iteration) |
 | `Add(entity, index, ctx)` | Dynamically add strategy and trigger `AfterAdd`; if `AfterAdd` throws, roll back insertion and return pool reference before propagating (addition is atomic). Mounting the same index twice throws `InvalidOperationException`; the plan engine (`PlanExecutionStrategyBase`) reuses an already-mounted action instead of remounting it, so plan-managed actions may also appear in `LifecycleIndices` |
-| `Remove(entity, index, ctx)` | Dynamically remove strategy (triggers BeforeRemove) |
+| `Remove(entity, index, ctx)` | Dynamically remove strategy (triggers BeforeRemove); a non-mounted index throws `InvalidOperationException` (fail-fast, symmetric with `Add`'s strictness) |
 
 - **Recover**: Type filter on pool acquisition, keeping only `LifecycleStrategyBase` subclasses; non-`LifecycleStrategyBase` types (such as `ActiveStrategyBase`, `ObserverStrategyBase`) immediately throw `InvalidOperationException`
 - **Lifecycle hook triggering**: All based on `ToArray()` snapshot iteration — because hooks may add or remove strategies. The five trigger methods (`TriggerAfterSpawn/Load/Save/Quit/Dead`) uniformly delegate to `TriggerAll`, eliminating copy-paste duplication
@@ -115,7 +115,7 @@ Each `SndEntity` holds one manager instance, managing active strategies:
 - **Container**: `Dictionary<string, ActiveStrategyBase>` — O(1) lookup by index, does not participate in per-frame traversal
 - **Recover**: Batch recovery from metadata (does not trigger hooks); upon encountering non-`ActiveStrategyBase` types, immediately throws `InvalidOperationException` and rolls back all active strategies already acquired in this recovery, leaving no half-initialized state — consistent fail-fast semantics with `SndStrategyManager`'s entity strategy recovery
 - **ReleaseAll**: Call `ReleaseStrategy` on each and clear container (does not trigger hooks)
-- **Add / Remove**: Dynamic addition and removal of active strategies
+- **Add / Remove**: Dynamic addition and removal of active strategies; `Remove` throws `InvalidOperationException` for a non-attached index (fail-fast)
 - **Invoke**: Look up strategy instance by index, call `Invoke(entity, ctx, input)` and return the result
 - **Serialization**: `SerializeIndices()` returns all currently held indices
 

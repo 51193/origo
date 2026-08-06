@@ -154,7 +154,7 @@ public sealed class StateMachineContainer : IStateMachineContainer
                     throw new InvalidOperationException($"StateMachineEntry '{entry.Key}' stack is required.");
 
                 var sm = new StackStateMachine(entry.Key, entry.PushIndex, entry.PopIndex, _pool, _ctx);
-                sm.RestoreStackWithoutHooks(entry.Stack);
+                ((IStateMachine)sm).RestoreStackWithoutHooks(entry.Stack);
                 newMachines[entry.Key] = sm;
                 newOrder.Add(entry.Key);
             }

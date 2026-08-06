@@ -10,6 +10,10 @@ namespace Origo.Core.Snd;
 /// </summary>
 public static class TryGetNumericExtensions
 {
+    /// <summary>
+    ///     Reads a numeric value under the given key, trying float → int → long →
+    ///     double in order. Returns false when the value is missing or not numeric.
+    /// </summary>
     public static bool TryGetNumeric(this ISndDataAccess access, string key, out float value)
     {
         ArgumentNullException.ThrowIfNull(access);
@@ -45,5 +49,6 @@ public static class TryGetNumericExtensions
         return false;
     }
 
+    /// <summary>Reads a numeric value under the given key, returning <paramref name="fallback" /> when absent.</summary>
     public static float GetNumeric(this ISndDataAccess access, string key, float fallback) => TryGetNumeric(access, key, out var value) ? value : fallback;
 }

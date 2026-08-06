@@ -93,6 +93,27 @@ public class GodotNodeHandleIntegrationTests
         }
     }
 
+    [IntegrationTest(Description = "SetVisible on an unsupported node type throws InvalidOperationException")]
+    public void SetVisible_UnsupportedNodeType_Throws()
+    {
+        var node = new Node();
+        var handle = new GodotNodeHandle(node);
+
+        try
+        {
+            handle.SetVisible(false);
+            IntegrationTestRunner.Assert(false, "Expected InvalidOperationException was not thrown.");
+        }
+        catch (InvalidOperationException)
+        {
+            IntegrationTestRunner.Assert(true, "SetVisible on a non-CanvasItem/Node3D node threw InvalidOperationException.");
+        }
+        finally
+        {
+            node.Free();
+        }
+    }
+
     [IntegrationTest(Description = "UnsafeGetNode returns the original Node reference")]
     public void UnsafeGetNode_ReturnsOriginalReference()
     {

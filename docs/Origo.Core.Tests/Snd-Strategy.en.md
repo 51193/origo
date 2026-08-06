@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Strategy Tests
 
@@ -67,7 +67,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
-| `RemoveActiveStrategy_NotExists_Noop` | Removing non-existent ActiveStrategy | No exception |
+| `RemoveActiveStrategy_NotExists_Throws` | Removing non-existent ActiveStrategy | Throws `InvalidOperationException` (fail-fast) |
 
 ## LifecycleStrategyBaseTests Details
 
@@ -91,7 +91,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `Process_KillsItself_MarksEntity` | RequestKillEntity(self) called during Process | Entity marked IsPendingKill |
 | `Process_KillsOtherEntity_MarksTargetEntity` | RequestKillEntity("B") called during Process | Target entity marked IsPendingKill; current entity unaffected |
 | `Process_RequestKillDuringProcess_RemainingStrategiesStillExecuted` | First strategy kills itself; subsequent strategies on the same entity still execute | KillSelfRecordingStrategy executes first and records; ProcessCalledStrategy still executes afterward |
-| `Remove_NonexistentStrategy_DoesNotThrow` | Removing a non-existent strategy | No exception |
+| `Remove_NonexistentStrategy_Throws` | Removing a non-existent strategy | Throws `InvalidOperationException` (fail-fast) |
 
 ## ObserverStrategyTests Details
 
@@ -190,7 +190,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `DescendingPriorityInsertion_SortedAscending` | Descending priority insertion auto-sorted ascending | — |
 | `AscendingPriorityInsertion_SortedAscending` | Ascending priority insertion stays ascending | — |
 | `AlternatingPriorityInsertion_SortedCorrectly` | Alternating priority insertion sorted ascending afterwards | — |
-| `Remove_NonexistentStrategy_NoEffect` | Removing non-existent strategy has no effect | — |
+| `Remove_NonexistentStrategy_Throws` | Removing non-existent strategy throws; mounted strategies unaffected | — |
 | `AllDefaultPriority6205_MaintainsInsertionOrder` | All default priority 6205 maintains insertion order | snd-entity-model |
 
 ## StrategyPoolTypeSafetyAndExtensionTests Details

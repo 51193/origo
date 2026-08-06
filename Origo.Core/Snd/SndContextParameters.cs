@@ -7,8 +7,19 @@ using Origo.Core.Save.Storage;
 
 namespace Origo.Core.Snd;
 
+/// <summary>
+///     Constructor parameters for <see cref="SndContext" />: runtime, I/O
+///     gateway, and storage wiring, plus optional bootstrap configuration
+///     (strategy discovery, alias/template maps, custom converters).
+/// </summary>
 public sealed class SndContextParameters
 {
+    /// <summary>
+    ///     Creates the parameter set from the runtime and the I/O/storage
+    ///     infrastructure the context will use.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when a required reference parameter is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when a required path is null or whitespace.</exception>
     public SndContextParameters(
         OrigoRuntime runtime,
         IDataSourceIoGateway dataSourceIo,
@@ -34,19 +45,37 @@ public sealed class SndContextParameters
             "Entry config path cannot be null or whitespace.");
     }
 
+    /// <summary>The runtime the context drives.</summary>
     public OrigoRuntime Runtime { get; }
+
+    /// <summary>Data-source I/O gateway used for all file content reads and writes.</summary>
     public IDataSourceIoGateway DataSourceIo { get; }
+
+    /// <summary>File metadata access used by the save system.</summary>
     public IFileMetaAccess MetaAccess { get; }
+
+    /// <summary>Path resolver used to combine and normalize save paths.</summary>
     public IPathResolver PathResolver { get; }
+
+    /// <summary>Root directory for runtime saves.</summary>
     public string SaveRootPath { get; }
+
+    /// <summary>Root directory for the initial (res://) saves.</summary>
     public string InitialSaveRootPath { get; }
+
+    /// <summary>Path to the entry config file (<c>entry.json</c>).</summary>
     public string EntryConfigPath { get; }
 
     /// <summary>The level ID for the initial save. Default value is <c>"default"</c>, corresponding to the initial/save_000/level_default/ directory structure.</summary>
     public string InitialLevelId { get; init; } = "default";
 
+    /// <summary>Custom save storage service for runtime saves; defaults to <c>DefaultSaveStorageService</c>.</summary>
     public ISaveStorageService? StorageService { get; init; }
+
+    /// <summary>Custom save storage service for the initial (res://) saves; defaults to <c>DefaultSaveStorageService</c>.</summary>
     public ISaveStorageService? InitialStorageService { get; init; }
+
+    /// <summary>Custom save path policy; defaults to <c>DefaultSavePathPolicy</c>.</summary>
     public ISavePathPolicy? SavePathPolicy { get; init; }
 
     /// <summary>Whether to automatically discover and register strategy types from assemblies.</summary>

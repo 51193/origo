@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/state-machine -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # State Machine
 
@@ -24,7 +24,7 @@ public interface IStateMachine
     (bool found, string? top) Peek();    // Peek at stack top
     IReadOnlyList<string> Snapshot();    // Stack snapshot
     void FlushAfterLoad();               // Replay after loading
-    void RestoreStackWithoutHooks(IReadOnlyList<string> stack);  // Restore without hooks
+    // internal: RestoreStackWithoutHooks (used only by the framework's deserialization path; business code modifies the stack via Push/TryPop*)
 }
 ```
 
@@ -111,7 +111,7 @@ sm.TryPopRuntime(out var popped);  // popped == "settings"
 ## Load Recovery (Two-Phase)
 
 ```
-1. Deserialize → RestoreStackWithoutHooks(stack)
+1. Deserialize → RestoreStackWithoutHooks(stack) (internal, invoked by the framework's load pipeline)
    → Restore stack content; trigger no strategy hooks
 
 2. FlushAfterLoad()

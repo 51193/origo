@@ -73,14 +73,19 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     /// <summary>Unique stable name of this entity within its session.</summary>
     public string Name { get; internal set; } = string.Empty;
 
+    /// <inheritdoc cref="ISndDataAccess.SetData{T}"/>
     public void SetData<T>(string name, T value) => _dataManager.SetData(name, value);
 
+    /// <inheritdoc cref="ISndDataAccess.GetData{T}"/>
     public T GetData<T>(string name) where T : notnull => _dataManager.GetData<T>(name);
 
+    /// <inheritdoc cref="ISndDataAccess.TryGetData{T}(string)"/>
     public (bool found, T? value) TryGetData<T>(string name) => _dataManager.TryGetData<T>(name);
 
+    /// <inheritdoc cref="ISndDataAccess.TryGetData{T}(string, out T?)"/>
     public bool TryGetData<T>(string name, out T? value) => _dataManager.TryGetData<T>(name, out value);
 
+    /// <inheritdoc cref="ISndObserverStrategyAccess.MountObserverStrategy(string, string)"/>
     public void MountObserverStrategy(string targetName, string observerIndex)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(targetName);
@@ -90,6 +95,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _observerTopology.Mount(self, target, observerIndex);
     }
 
+    /// <inheritdoc cref="ISndObserverStrategyAccess.UnmountObserverStrategy(string, string)"/>
     public void UnmountObserverStrategy(string targetName, string observerIndex)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(targetName);
@@ -99,12 +105,14 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
         _observerTopology.Unmount(self, target, observerIndex);
     }
 
+    /// <inheritdoc cref="ISndObserverStrategyAccess.MountObserverStrategy(ISndEntity, string)"/>
     public void MountObserverStrategy(ISndEntity target, string observerIndex)
     {
         ArgumentNullException.ThrowIfNull(target);
         _observerTopology.Mount((ISndEntity)this, target, observerIndex);
     }
 
+    /// <inheritdoc cref="ISndObserverStrategyAccess.UnmountObserverStrategy(ISndEntity, string)"/>
     public void UnmountObserverStrategy(ISndEntity target, string observerIndex)
     {
         ArgumentNullException.ThrowIfNull(target);
@@ -120,38 +128,45 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
             $"Resolve the target via entity.OwningSession.FindByName(targetName), then use MountObserverStrategy(ISndEntity target, string observerIndex).");
     }
 
+    /// <inheritdoc cref="ISndNodeAccess.GetNode"/>
     public INodeHandle GetNode(string name)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(name);
         return _nodeHost.GetNode(name);
     }
 
+    /// <inheritdoc cref="ISndNodeAccess.GetNodeNames"/>
     public IReadOnlyCollection<string> GetNodeNames() => _nodeHost.GetNodeNames();
 
+    /// <inheritdoc cref="ISndStrategyAccess.AddStrategy"/>
     public void AddStrategy(string index)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(index);
         _strategyManager.Add(this, index, _context);
     }
 
+    /// <inheritdoc cref="ISndStrategyAccess.RemoveStrategy"/>
     public void RemoveStrategy(string index)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(index);
         _strategyManager.Remove(this, index, _context);
     }
 
+    /// <inheritdoc cref="ISndActiveStrategyAccess.AddActiveStrategy"/>
     public void AddActiveStrategy(string index)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(index);
         _activeStrategyManager.Add(index);
     }
 
+    /// <inheritdoc cref="ISndActiveStrategyAccess.RemoveActiveStrategy"/>
     public void RemoveActiveStrategy(string index)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(index);
         _activeStrategyManager.Remove(index);
     }
 
+    /// <inheritdoc cref="ISndActiveStrategyAccess.InvokeStrategy"/>
     public object? InvokeStrategy(string strategyIndex, object? input = null)
     {
         ArgumentNullException.ThrowIfNullOrWhiteSpace(strategyIndex);

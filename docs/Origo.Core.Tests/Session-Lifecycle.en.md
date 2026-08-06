@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -358,11 +358,11 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SessionContext_OwningSession_CorrectlyBoundToBackgroundSession` | Strategy Process OwningSession.LevelId is background session levelId | session-model |
 | `OwnSessionBlackboard_IsolatedFromForeground` | Background blackboard data not visible to foreground | session-model |
 | `OwnEntities_IsolatedFromForeground` | Background entities not visible to foreground | session-model |
-| `KillAll_TriggersBeforeDead` | FireBeforeDeadHooks triggers BeforeDead | ISessionRun |
+| `KillAllEntities_FireBeforeDead` | RequestKillEntity + KillPendingAllSessions triggers BeforeDead for all entities | ISessionRun |
 | `Spawn_AddsEntity` | FullMemorySndSceneHost.CreateEntity adds entity and can find it | ISndSceneHost |
 | `SpawnMany_AddsAll` | All multiple created entities exist | ISndSceneHost |
 | `DeadByName_RemovesEntity_FiresBeforeDead` | RemoveEntity removes entity and triggers BeforeDead | ISndSceneHost |
-| `ClearAll_RemovesAll_FiresBeforeQuit` | ReleaseAllEntities + RemoveAllEntities triggers BeforeQuit and clears | ISessionRun |
+| `Dispose_RemovesDirectHostEntities_FiresBeforeQuit` | Dispose triggers BeforeQuit and clears host entities | ISessionRun |
 | `ProcessAll_FiresProcessOnEntities` | ProcessAllSessions triggers Process strategy | ISessionManager |
 | `SerializeMetaList_ReturnsAllEntities` | BuildMetaList returns all entity metadata | ISndSceneHost |
 | `PersistLevelState_WritesPayloadToFileSystem` | Level files exist after Save | session-model |

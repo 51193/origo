@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 能力清单
 
@@ -50,7 +50,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 |------|------|----------|
 | 字符串栈状态机 | 栈内仅存字符串标识，行为由关联的 Push/Pop 策略定义 | [状态机](state-machine.zh.md) |
 | Push/Pop 策略钩子 | OnPushRuntime / OnPushAfterLoad / OnPopRuntime / OnPopBeforeQuit，含 BeforeTop/AfterTop 迁移上下文 | [状态机](state-machine.zh.md) |
-| 两阶段加载恢复 | RestoreStackWithoutHooks（静默恢复栈）→ FlushAfterLoad（按序回放钩子） | [状态机](state-machine.zh.md) |
+| 两阶段加载恢复 | 读档时框架经 internal 的 `RestoreStackWithoutHooks`（静默恢复栈）→ `FlushAfterLoad`（按序回放钩子） | [状态机](state-machine.zh.md) |
 
 ## 控制台系统
 

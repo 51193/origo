@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Capabilities
 
@@ -50,7 +50,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 |------------|-------------|-----------|
 | String-stack state machine | Stack holds only string identifiers; behavior is defined by associated Push/Pop strategies | [State Machine](state-machine.en.md) |
 | Push/Pop strategy hooks | OnPushRuntime / OnPushAfterLoad / OnPopRuntime / OnPopBeforeQuit, with BeforeTop/AfterTop migration context | [State Machine](state-machine.en.md) |
-| Two-phase load recovery | RestoreStackWithoutHooks (silent stack restore) → FlushAfterLoad (replay hooks in order) | [State Machine](state-machine.en.md) |
+| Two-phase load recovery | On load, the framework restores the stack via internal `RestoreStackWithoutHooks` (silent restore) → `FlushAfterLoad` (replay hooks in order) | [State Machine](state-machine.en.md) |
 
 ## Console System
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -27,13 +27,13 @@ The concrete implementation of the SND entity system in the Godot engine. Bridge
 
 The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in the Godot scene tree:
 
-- **Implements ISndSceneHost**: CreateEntity / RecoverFromMetaList / RemoveAllEntities (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / GetEntities / FindByName / ProcessAll. `RemoveAllEntities()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
+- **Implements ISndSceneHost**: CreateEntity / RecoverFromMetaList / RemoveAllEntities (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / ProcessAll are **explicit interface implementations** — business code cannot invoke these write operations on the concrete `GodotSndManager` type; they are driven only through the `ISndSceneHost` / `ISndSceneAccess` interfaces (held internally by Core). Public read operations are `GetEntities` / `FindByName`. `RemoveAllEntities()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
 - **Implements ISndContextAttachableSceneHost**: Supports runtime context switching
 - **Collection logic delegated**: entity add/remove, batch recovery rollback, kill marking, and frame processing orchestration live in pure C# `SndEntityCollection<T>` (internal, no Godot dependency) and are covered by unit tests directly; GodotSndManager only bridges the collection to the Godot node tree (`AddChild` / `RemoveChild` / `Free` injected via the `DetachAndFree` callback)
 - **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, the collection rolls back and releases all already-created entities (via the staged list in `SndEntityCollection`)
 - **GetEntities()**: Lazily creates an `IReadOnlyCollection<ISndEntity>` view, caching the reference to avoid reallocation
 - **BuildMetaList()**: Calls entities' `BuildSndMetaData()` to collect metadata
-- **ProcessAll(delta)**: Implements the unified entry for `ISndSceneHost.ProcessAll`, called by Core's `SessionManager.ProcessAllSessions`, maintaining `ProcessTickCount` (framework-internal observability, accessed by test projects via `InternalsVisibleTo`) statistics
+- **ProcessAll(delta)**: Implements the unified entry for `ISndSceneHost.ProcessAll`, called by Core's `SessionManager.ProcessAllSessions`, driving frame processing for every entity in the collection
 
 ### GodotSndEntity
 
@@ -56,7 +56,7 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 
 - **Name**: The node name cached at construction time, unaffected by Godot releasing the original node
 - **Free()** → checks `IsInstanceValid(_node)` then calls `_node.Free()` if valid
-- **SetVisible(bool)** → first checks `IsInstanceValid(_node)`, then sets the appropriate Visible property based on node type (`CanvasItem` or `Node3D`)
+- **SetVisible(bool)** → first checks `IsInstanceValid(_node)`, then sets the appropriate Visible property based on node type (`CanvasItem` or `Node3D`); for other node types without a `Visible` property it throws `InvalidOperationException` (fail-fast, no silent no-op)
 - **UnsafeGetNode()** → `internal` — returns the underlying `Godot.Node` reference, used only by `SndEntityNodeExtensions.GetNativeNode()`
 
 ### SndEntityNodeExtensions
@@ -68,7 +68,7 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 
 ### Why GodotSndManager does not own a _Process loop
 
-Entity frame processing is a Core orchestration responsibility. If `GodotSndManager` held its own `_Process` loop iterating entities and calling `ProcessSnd(delta)`, it would duplicate Core's frame processing logic and bypass the formal processing pipeline. Therefore frame processing is uniformly executed by Core's `SessionManager.ProcessAllSessions(delta)` via `SceneHost.ProcessAll(delta)`, through `IOrigoFrameDriver.DriveFrame(delta)`. `ProcessTickCount` is also maintained within `ProcessAll`. `ProcessSnd` is `internal` — lifecycle orchestration can only be triggered via Core's `ISessionRun` and the batch hook pipeline; external code must not call it through the concrete `GodotSndEntity` type.
+Entity frame processing is a Core orchestration responsibility. If `GodotSndManager` held its own `_Process` loop iterating entities and calling `ProcessSnd(delta)`, it would duplicate Core's frame processing logic and bypass the formal processing pipeline. Therefore frame processing is uniformly executed by Core's `SessionManager.ProcessAllSessions(delta)` via `SceneHost.ProcessAll(delta)`, through `IOrigoFrameDriver.DriveFrame(delta)`. `ProcessSnd` is `internal` — lifecycle orchestration can only be triggered via Core's `ISessionRun` and the batch hook pipeline; external code must not call it through the concrete `GodotSndEntity` type.
 
 ### Why GodotSndEntity uses lazy creation for the Core Entity
 

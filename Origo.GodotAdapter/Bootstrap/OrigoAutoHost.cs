@@ -31,7 +31,10 @@ public partial class OrigoAutoHost : Node
     private const string _logTag = nameof(OrigoAutoHost);
     private bool _readyFailed;
 
+    /// <summary>Root directory for the system blackboard save file.</summary>
     [Export] public string SystemBlackboardSaveRoot { get; set; } = "user://origo_saves";
+
+    /// <summary>The Godot scene host created and wired during <see cref="_Ready" />.</summary>
     public GodotSndManager SndManager { get; private set; } = null!;
 
     /// <summary>
@@ -60,8 +63,10 @@ public partial class OrigoAutoHost : Node
     /// </summary>
     protected IDataSourceIoGateway SharedDataSourceIo { get; private set; } = null!;
 
+    /// <summary>The Origo runtime created during <see cref="_Ready" />.</summary>
     public OrigoRuntime Runtime { get; private set; } = null!;
 
+    /// <summary>Godot lifecycle entry: builds the runtime and SndManager, or records and rethrows the failure.</summary>
     public override void _Ready()
     {
         var readyWatch = Stopwatch.StartNew();
@@ -87,6 +92,7 @@ public partial class OrigoAutoHost : Node
         }
     }
 
+    /// <summary>Godot frame callback: drives the Core frame pipeline, failing fast when bootstrap failed.</summary>
     public override void _Process(double delta)
     {
         // A failed _Ready leaves the node alive in the scene tree; drive

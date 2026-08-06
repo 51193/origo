@@ -8,10 +8,10 @@ namespace Origo.Core.DataSource;
 
 /// <summary>
 ///     A pure in-memory <see cref="IFileSystem" /> implementation, with no dependency on any physical
-///     file system or engine API. Exposed as a dependency-free reference implementation for tests
-///     and adapter layers (see CHANGELOG for the public-status rationale).
+///     file system or engine API. Internal: used by the test projects (via InternalsVisibleTo)
+///     as a dependency-free reference implementation. No production code consumes it.
 /// </summary>
-public sealed class MemoryFileSystem : IFileSystem
+internal sealed class MemoryFileSystem : IFileSystem
 {
     private readonly HashSet<string> _directories = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _files = new(StringComparer.Ordinal);

@@ -501,6 +501,22 @@ public class ObserverStrategyTests : IDisposable
         Assert.Contains("ghost", ex.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void RecoverBindings_EmptyTarget_Throws()
+    {
+        var (entity, _, topology) = SetupWithTopology();
+        ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
+
+        var bindings = new List<StrategyMetaData.ObserverBinding>
+        {
+            new() { Target = "   ", ObserverIndices = [_selfWatchIdx] }
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            topology.RecoverBindingsFor(entity, bindings, _ => null));
+        Assert.Contains("empty target", ex.Message, StringComparison.Ordinal);
+    }
+
     // ── Has / Remove observer bindings by target ──────────────────────
 
     [Fact]

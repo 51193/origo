@@ -17,11 +17,22 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
 
     private SndContext? _sndContext;
 
+    /// <summary>Path to the entry config file (levels-structured <c>entry.json</c>).</summary>
     [Export] public string ConfigPath { get; set; } = "res://origo/entry/entry.json";
+
+    /// <summary>Scene alias mapping file path; loaded during <see cref="SndContext.Bootstrap" />.</summary>
     [Export] public string SceneAliasMapPath { get; set; } = "res://origo/maps/scene_aliases.map";
+
+    /// <summary>SND template mapping file path; loaded during <see cref="SndContext.Bootstrap" />.</summary>
     [Export] public string SndTemplateMapPath { get; set; } = "res://origo/maps/snd_templates.map";
+
+    /// <summary>Root directory for runtime saves.</summary>
     [Export] public string SaveRootPath { get; set; } = "user://origo_saves";
+
+    /// <summary>Root directory for the initial (res://) saves.</summary>
     [Export] public string InitialSaveRootPath { get; set; } = "res://origo/initial";
+
+    /// <summary>Whether to auto-discover strategy types during <see cref="SndContext.Bootstrap" />.</summary>
     [Export] public bool AutoDiscoverStrategies { get; set; } = true;
 
     /// <summary>

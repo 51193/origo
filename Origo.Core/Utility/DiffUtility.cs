@@ -9,6 +9,10 @@ namespace Origo.Core.Utility;
 /// </summary>
 public static class DiffUtility
 {
+    /// <summary>
+    ///     Computes the items added in and removed from <paramref name="newItems" />
+    ///     relative to <paramref name="oldItems" />.
+    /// </summary>
     public static (List<T> Added, List<T> Removed) Diff<T>(
         IEnumerable<T> oldItems,
         IEnumerable<T> newItems)

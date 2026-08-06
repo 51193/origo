@@ -7,5 +7,6 @@ namespace Origo.Core.Snd.Metadata;
 /// </summary>
 public sealed class DataMetaData
 {
+    /// <summary>Key-value data pairs to restore into the entity's data manager.</summary>
     public Dictionary<string, TypedData> Pairs { get; set; } = [];
 }

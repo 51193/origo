@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # StateMachine (Abstractions)
 
@@ -29,7 +29,7 @@
 | `Peek()` | 查看栈顶 |
 | `Snapshot()` | 栈底到栈顶快照 |
 | `FlushAfterLoad()` | 读档后按入栈顺序重放 Push 策略的 AfterLoad |
-| `RestoreStackWithoutHooks(list)` | 从存档恢复栈内容，不触发策略钩子 |
+| `RestoreStackWithoutHooks(list)` | 从存档恢复栈内容，不触发策略钩子（`internal`——仅供框架反序列化路径使用，业务代码须经 `Push` 修改栈） |
 
 ## IStateMachineContext 成员
 

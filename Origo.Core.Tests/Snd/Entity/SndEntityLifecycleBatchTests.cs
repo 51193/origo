@@ -195,7 +195,7 @@ public class SndEntityLifecycleBatchTests
             throw new InvalidOperationException("simulated hook failure");
     }
 
-    private static int _subCount;
+    private static readonly AsyncLocal<int> _subCount = new();
 
     [StrategyIndex("batch.subscribe")]
     private sealed class SubscribeStrategy : LifecycleStrategyBase
@@ -214,7 +214,7 @@ public class SndEntityLifecycleBatchTests
                 ((Origo.Core.Snd.Entity.ISndEntityRawSubscription)target).SubscribeDataRaw("hp",
                     (_, oldVal, newVal) =>
                 {
-                    Interlocked.Increment(ref _subCount);
+                    _subCount.Value++;
                     Events.Add($"sub:{oldVal}->{newVal}");
                 }, null);
                 Events.Add("subscribed");
@@ -378,7 +378,7 @@ public class SndEntityLifecycleBatchTests
     [Fact]
     public void BatchLoad_CrossEntity_SubscribeDuringAfterLoad()
     {
-        _subCount = 0;
+        _subCount.Value = 0;
         SubscribeStrategy.Events.Clear();
         SubscribeStrategy.Host = null;
         var host = CreateHost(w =>
@@ -405,7 +405,7 @@ public class SndEntityLifecycleBatchTests
         target.SetData("hp", 50);
         target.SetData("hp", 30);
 
-        Assert.True(_subCount >= 2);
+        Assert.True(_subCount.Value >= 2);
     }
 
     // ── Batch AfterSpawn ────────────────────────────────────────────────

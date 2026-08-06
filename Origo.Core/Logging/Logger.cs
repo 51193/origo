@@ -12,12 +12,15 @@ public sealed class Logger<T> : ILogger<T>
 {
     private readonly ILogger _inner;
 
+    /// <summary>Wraps an underlying logger to add an auto-derived category tag.</summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inner" /> is null.</exception>
     public Logger(ILogger inner)
     {
         ArgumentNullException.ThrowIfNull(inner);
         _inner = inner;
     }
 
+    /// <summary>Logs a message with the category type name as the tag.</summary>
     public void Log(LogLevel level, string message)
         => _inner.Log(level, typeof(T).Name, message);
 

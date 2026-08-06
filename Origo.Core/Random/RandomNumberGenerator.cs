@@ -42,12 +42,14 @@ public static class RandomNumberGenerator
         return (nextS1 + nextS2, nextS1, nextS2);
     }
 
+    /// <summary>Advances the generator and produces a signed 64-bit value.</summary>
     public static (long value, ulong nextS0, ulong nextS1) NextInt64(ulong s0, ulong s1)
     {
         var (value, nextS0, nextS1) = NextUInt64(s0, s1);
         return ((long)value, nextS0, nextS1);
     }
 
+    /// <summary>Advances the generator and produces a signed 32-bit value.</summary>
     public static (int value, ulong nextS0, ulong nextS1) NextInt32(ulong s0, ulong s1)
     {
         var (value, nextS0, nextS1) = NextUInt64(s0, s1);

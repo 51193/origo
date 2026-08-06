@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -103,6 +103,8 @@ SND 的观察统一由观察者策略（`ObserverStrategyBase`）承载，自观
 5. **入口存档加载**：调用 `RequestLoadMainMenuEntrySave()`
 
 适配层仅通过 `SndContextParameters` 传入配置，不需要知道上述步骤的执行顺序和内部实现。
+
+> **Bootstrap 守卫**：`Bootstrap()` 只允许执行一次（重复调用抛 `InvalidOperationException`），并在入队入口存档加载前校验适配层场景宿主已就绪——若宿主是 `IObserverTopologyHost` 但观察者拓扑尚未绑定上下文（例如在 `SndManager.BindContext` 之前调用 `Bootstrap`），立即抛异常并给出明确错误信息，避免延迟到帧末冲刷时才失败。入口存档加载是延迟操作（系统延迟队列），早失败防止"顺序颠倒"的调用者得到混乱的延迟报错。
 
 ### 为什么启动编排集中在 SndContext.Bootstrap()
 

@@ -11,8 +11,10 @@ public sealed class NullLogger : ILogger
     {
     }
 
+    /// <summary>The shared no-op logger instance.</summary>
     public static NullLogger Instance { get; } = new();
 
+    /// <summary>No-op; discards all messages.</summary>
     public void Log(LogLevel level, string tag, string message)
     {
     }

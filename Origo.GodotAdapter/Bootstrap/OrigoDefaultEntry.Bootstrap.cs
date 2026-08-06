@@ -13,6 +13,10 @@ namespace Origo.GodotAdapter.Bootstrap;
 /// </summary>
 public partial class OrigoDefaultEntry
 {
+    /// <summary>
+    ///     Godot lifecycle entry: creates the <see cref="SndContext" />, binds it to the
+    ///     manager, then delegates the full startup flow to <see cref="SndContext.Bootstrap" />.
+    /// </summary>
     public override void _Ready()
     {
         base._Ready();

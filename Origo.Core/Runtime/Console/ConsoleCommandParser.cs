@@ -14,6 +14,10 @@ public static class ConsoleCommandParser
 {
     private static readonly char[] _tokenSeparators = [' ', '\t'];
 
+    /// <summary>
+    ///     Parses a console line into a <see cref="CommandInvocation" />.
+    ///     Returns false with an error message for empty/blank input.
+    /// </summary>
     public static bool TryParse(string line, out CommandInvocation? invocation, out string? error)
     {
         invocation = null;

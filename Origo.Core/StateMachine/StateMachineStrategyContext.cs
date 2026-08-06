@@ -8,6 +8,9 @@ namespace Origo.Core.StateMachine;
 /// </summary>
 public readonly struct StateMachineStrategyContext
 {
+    /// <summary>
+    ///     Creates a context capturing the stack top before and after an operation.
+    /// </summary>
     public StateMachineStrategyContext(string machineKey, string? beforeTop, string? afterTop)
     {
         ArgumentNullException.ThrowIfNull(machineKey);

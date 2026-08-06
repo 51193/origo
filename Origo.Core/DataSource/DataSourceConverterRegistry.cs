@@ -10,12 +10,15 @@ public sealed class DataSourceConverterRegistry
 {
     private readonly Dictionary<Type, DataSourceConverterBase> _converters = [];
 
+    /// <summary>Registers a converter for type <typeparamref name="T" />, replacing any previous registration.</summary>
     public void Register<T>(DataSourceConverter<T> converter)
     {
         ArgumentNullException.ThrowIfNull(converter);
         _converters[typeof(T)] = converter;
     }
 
+    /// <summary>Gets the converter registered for type <typeparamref name="T" />.</summary>
+    /// <exception cref="InvalidOperationException">Thrown when no converter is registered for the type.</exception>
     public DataSourceConverter<T> Get<T>()
     {
         if (_converters.TryGetValue(typeof(T), out var converter))
@@ -25,6 +28,7 @@ public sealed class DataSourceConverterRegistry
             $"No DataSourceConverter registered for type '{typeof(T).FullName}'.");
     }
 
+    /// <summary>Deserializes a node into <typeparamref name="T" /> via its registered converter.</summary>
     public T Read<T>(DataSourceNode node)
     {
         if (_converters.TryGetValue(typeof(T), out var converter))
@@ -35,6 +39,7 @@ public sealed class DataSourceConverterRegistry
         return (T)FindConverter(typeof(T)).ReadObject(node)!;
     }
 
+    /// <summary>Serializes a value into a node via its registered converter.</summary>
     public DataSourceNode Write<T>(T value)
     {
         if (value is null)
@@ -46,12 +51,14 @@ public sealed class DataSourceConverterRegistry
         return FindConverter(typeof(T)).WriteObject(value);
     }
 
+    /// <summary>Deserializes a node into the given <paramref name="type" /> via its registered converter.</summary>
     public object? Read(Type type, DataSourceNode node)
     {
         ArgumentNullException.ThrowIfNull(type);
         return FindConverter(type).ReadObject(node);
     }
 
+    /// <summary>Serializes a value into a node via the converter registered for <paramref name="type" />.</summary>
     public DataSourceNode Write(Type type, object? value)
     {
         ArgumentNullException.ThrowIfNull(type);

@@ -210,13 +210,12 @@ public class ActiveStrategyTests
     }
 
     [Fact]
-    public void RemoveActiveStrategy_NotExists_Noop()
+    public void RemoveActiveStrategy_NotExists_Throws()
     {
         var (entity, _, _) = Setup();
         ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta([])); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
-        var ex = Record.Exception(() => entity.RemoveActiveStrategy("not.exist"));
-        Assert.Null(ex);
+        Assert.Throws<InvalidOperationException>(() => entity.RemoveActiveStrategy("not.exist"));
     }
 
     // ── Serialization ──────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # DataSource
 
@@ -31,7 +31,7 @@ Origo's data source abstraction layer — the codec bridge between Core and exte
 | `DataSourceConverter.cs` | Generic converter base class: `Read(DataSourceNode)` / `Write(T)` |
 | `DataSourceConverterRegistry.cs` | Converter registry: look up Converter by Type + generic Read/Write. When an exact type is not registered, automatically backtracks along base class and interface chains. |
 | `KeyValueFileParser.cs` | key:value format parser (for .map files) |
-| `MemoryFileSystem.cs` | In-memory file system implementing `IFileSystem` (public, reused for tests and adapter layer) |
+| `MemoryFileSystem.cs` | In-memory file system implementing `IFileSystem` (internal; test projects use it via InternalsVisibleTo, no production consumer) |
 | `IFileMetaAccess.cs` | File metadata operation interface (public): FileExists / DirectoryExists / EnumerateFiles / EnumerateDirectories / CreateDirectory / Delete / DeleteDirectory / Copy / Rename; used alongside IDataSourceIoGateway — the Gateway handles content read/write (including codec routing), this interface handles file system structure operations |
 | `FileMetaAccess.cs` | Default IFileMetaAccess implementation (internal), delegates to IFileSystem |
 | `PathResolver.cs` | Default IPathResolver implementation (internal): CombinePath / GetParentDirectory, delegates to IFileSystem |

@@ -15,6 +15,9 @@ namespace Origo.Core.Snd.Scene;
 /// </summary>
 public static class SndEntityFactory
 {
+    /// <summary>
+    ///     Creates an entity on the host and fires its AfterSpawn hook immediately.
+    /// </summary>
     public static ISndEntity Spawn(ISndSceneHost host, SndMetaData meta)
     {
         ArgumentNullException.ThrowIfNull(host);
@@ -25,6 +28,10 @@ public static class SndEntityFactory
         return entity;
     }
 
+    /// <summary>
+    ///     Stages all entities on the host first, then fires AfterSpawn hooks in a
+    ///     second pass so hooks can assume a fully-constructed scene graph.
+    /// </summary>
     public static void SpawnMany(ISndSceneHost host, params SndMetaData[] metaList)
     {
         ArgumentNullException.ThrowIfNull(host);

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/StateMachine/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # StateMachine
 
@@ -56,7 +56,7 @@
 
 ### 为什么 RestoreStackWithoutHooks + FlushAfterLoad 分两步
 
-存档恢复需要两个阶段：(1) 无钩子恢复栈内容（避免恢复过程中触发副作用），(2) 栈结构调整完成后，按顺序重放 AfterLoad 钩子。如果合并为一步，钩子会在栈不完整时触发，导致策略拿到不正确的上下文。
+存档恢复需要两个阶段：(1) 无钩子恢复栈内容（避免恢复过程中触发副作用），(2) 栈结构调整完成后，按顺序重放 AfterLoad 钩子。如果合并为一步，钩子会在栈不完整时触发，导致策略拿到不正确的上下文。`RestoreStackWithoutHooks` 是 `IStateMachine` 的 `internal` 成员，仅由框架反序列化路径（`StateMachineContainer`）调用——业务代码修改栈必须经 `Push`/`TryPop*`，以保持策略钩子与栈内容始终同步。
 
 ### 为什么策略钩子参数包含 BeforeTop 和 AfterTop
 

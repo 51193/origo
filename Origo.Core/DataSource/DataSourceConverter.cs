@@ -15,7 +15,10 @@ public abstract class DataSourceConverterBase
 /// </summary>
 public abstract class DataSourceConverter<T> : DataSourceConverterBase
 {
+    /// <summary>Deserializes a data source node into a strongly-typed value.</summary>
     public abstract T Read(DataSourceNode node);
+
+    /// <summary>Serializes a strongly-typed value into a data source node.</summary>
     public abstract DataSourceNode Write(T value);
 
     internal override object? ReadObject(DataSourceNode node) => Read(node);

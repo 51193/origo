@@ -12,6 +12,11 @@ namespace Origo.Core.Snd.Archetype;
 /// </summary>
 public static class SndArchetypeLoader
 {
+    /// <summary>
+    ///     Attempts to load an archetype <c>.map</c> file into a string-keyed
+    ///     attribute dictionary. Returns false when the file does not exist or
+    ///     is not a key-value map.
+    /// </summary>
     public static bool TryLoad(ISndFileAccess fileAccess, string path,
         out Dictionary<string, string> attributes)
     {
@@ -37,6 +42,11 @@ public static class SndArchetypeLoader
         return attributes.Count > 0;
     }
 
+    /// <summary>
+    ///     Applies string attributes to an entity, inferring each value's
+    ///     runtime type via the shared string-to-typed inference (int → long →
+    ///     float → bool → string).
+    /// </summary>
     public static void ApplyAttributes(Origo.Core.Abstractions.Entity.ISndEntity entity,
         Dictionary<string, string> attributes)
     {

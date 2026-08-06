@@ -2,6 +2,7 @@ using System;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Scene;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -112,6 +113,38 @@ public class SndContextBootstrapTests
     {
         var ctx = CreateBootstrapContext(out _);
         Assert.Equal("entry.json", ctx.EntryConfigPath);
+    }
+
+    [Fact]
+    public void Bootstrap_Twice_Throws()
+    {
+        var ctx = CreateBootstrapContext(out var fs);
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
+
+        ctx.Bootstrap();
+
+        Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
+    }
+
+    [Fact]
+    public void Bootstrap_WhenSceneHostTopologyUnbound_Throws()
+    {
+        var logger = new TestLogger();
+        var fs = new TestMemoryFileSystem();
+        var tm = new TypeStringMapping();
+        var host = new FullMemorySndSceneHost(logger);
+        host.BindWorld(TestFactory.CreateSndWorld(tm, logger, fs));
+        var runtime = TestFactory.CreateRuntime(logger, host, tm, new Blackboard.Blackboard(), fs);
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
+
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
+        Assert.Contains("not bound to a context", ex.Message);
     }
 
     // ── IStateMachineContext after Bootstrap ──────────────────────────

@@ -38,6 +38,10 @@ internal sealed class GodotNodeHandle(Node node) : INodeHandle
             case Node3D node3D:
                 node3D.Visible = visible;
                 break;
+            default:
+                throw new InvalidOperationException(
+                    $"Cannot set visibility on a node of type '{_node.GetType().Name}': " +
+                    "only CanvasItem and Node3D nodes support a Visible property.");
         }
     }
 }
