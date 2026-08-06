@@ -40,17 +40,25 @@ public class StubSndSceneHostTests
     }
 
     [Fact]
-    public void LoadFromMetaList_ReplacesExisting()
+    public void LoadFromMetaList_DoesNotClearExisting()
     {
         var host = new StubSndSceneHost();
         host.CreateEntity(MakeMeta("old"));
         Assert.Single(host.GetEntities());
 
         host.RecoverFromMetaList([MakeMeta("new1"), MakeMeta("new2")]);
-        Assert.Equal(2, host.GetEntities().Count);
-        Assert.Null(host.FindByName("old"));
+        Assert.Equal(3, host.GetEntities().Count);
+        Assert.NotNull(host.FindByName("old"));
         Assert.NotNull(host.FindByName("new1"));
         Assert.NotNull(host.FindByName("new2"));
+    }
+
+    [Fact]
+    public void RemoveEntity_Missing_Throws()
+    {
+        var host = new StubSndSceneHost();
+        host.CreateEntity(MakeMeta("x"));
+        Assert.Throws<InvalidOperationException>(() => host.RemoveEntity("missing"));
     }
 
     [Fact]

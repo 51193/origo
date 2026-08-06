@@ -149,9 +149,7 @@ public sealed class PersistentBlackboard : IBlackboard
                 return;
 
             using var node = _dataSourceIo.ReadTree(_filePath);
-            var dict = _registry.Read<IReadOnlyDictionary<string, TypedData>>(node);
-            if (dict is not null)
-                _inner.DeserializeAll(dict);
+            _inner.DeserializeAll(_registry.Read<IReadOnlyDictionary<string, TypedData>>(node));
         }
     }
 

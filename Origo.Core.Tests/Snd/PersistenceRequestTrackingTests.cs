@@ -81,4 +81,19 @@ public class PersistenceRequestTrackingTests
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
+
+    [Fact]
+    public void RequestSwitchForegroundLevel_IsTrackedUntilFlushed()
+    {
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateContext(fs);
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        ctx.Save.RequestSwitchForegroundLevel("other_level");
+        Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
+
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+    }
 }

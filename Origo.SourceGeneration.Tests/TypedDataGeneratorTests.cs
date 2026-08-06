@@ -214,6 +214,29 @@ public class TypedDataGeneratorTests
         Assert.DoesNotContain("AsInt32", output.AllGeneratedText);
     }
 
+    // The adapter assembly (Origo.GodotAdapter/AssemblyAttributes.cs) uses the
+    // named-argument form `startKind: 128`, which Roslyn reports through
+    // AttributeData.ConstructorArguments just like positional arguments. This
+    // test pins that extraction path so a Roslyn behavior change cannot
+    // silently fall back to the default startKind 1.
+    [Fact]
+    public void Adapter_NamedStartKindArgument_IsExtracted()
+    {
+        var adapterSource = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(startKind: 128, typeof(StubVec3), typeof(StubRef))]
+            public struct StubVec3 { public float X; public float Y; public float Z; }
+            public sealed class StubRef { public int Value; }
+            """;
+        var output = RunAdapter(adapterSource);
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+
+        var text = output.AllGeneratedText;
+        Assert.Contains("TypedData.RegisterKind(128, typeof(StubVec3));", text);
+        Assert.Contains("TypedData.RegisterKind(129, typeof(StubRef));", text);
+    }
+
     // ─── Cross-cutting ─────────────────────────────────────────────
 
     [Fact]

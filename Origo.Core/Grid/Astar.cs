@@ -15,7 +15,7 @@ public static class Astar
     ///     on a <paramref name="gridSize" /> × <paramref name="gridSize" /> grid.
     ///     The returned path excludes the start cell and includes the end cell;
     ///     returns <c>null</c> when start or end is out of bounds, the end cell is
-    ///     blocked, or no path exists within the search limit.
+    ///     blocked, or no path exists.
     /// </summary>
     public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize,
         Func<GridPos, bool> isBlocked)
@@ -30,7 +30,6 @@ public static class Astar
         if (start == end)
             return [];
 
-        var maxSteps = gridSize * gridSize;
         var openSet = new PriorityQueue<GridPos, float>();
         var gScore = new Dictionary<GridPos, float> { [start] = 0f };
         var cameFrom = new Dictionary<GridPos, GridPos>();
@@ -38,7 +37,7 @@ public static class Astar
 
         openSet.Enqueue(start, Heuristic(start, end));
 
-        while (openSet.Count > 0 && closedSet.Count < maxSteps)
+        while (openSet.Count > 0)
         {
             var current = openSet.Dequeue();
             if (current == end)

@@ -149,6 +149,16 @@ public sealed class ConsoleBridgeServer : IDisposable
                 _outputSubId = _output.Subscribe(OnConsoleOutput);
 
             _acceptTask = Task.Run(() => AcceptLoopAsync(_cts.Token), _cts.Token);
+
+            if (_cts.IsCancellationRequested)
+            {
+                // Start raced with Dispose: the accept loop was launched with an
+                // already-cancelled token and exits immediately, but a successful
+                // Start must never be observable after Dispose. Roll back so the
+                // instance is left cleanly disposed and retry-safe.
+                throw new ObjectDisposedException(nameof(ConsoleBridgeServer),
+                    "Dispose was called while Start was in progress.");
+            }
         }
         catch
         {
@@ -184,12 +194,20 @@ public sealed class ConsoleBridgeServer : IDisposable
                     // A hard client disconnect (RST) breaks the socket write
                     // path while the handler thread is still inside its read
                     // loop. This is a connection-level failure: detach the
-                    // dead writer so subsequent lines buffer again, and never
-                    // let it propagate into the game frame loop.
+                    // dead writer and buffer the undelivered line so the next
+                    // connection replays it, and never let the failure
+                    // propagate into the game frame loop.
                     _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
                         new LogMessageBuilder()
                             .Build($"Output write failed; connection considered dead and detached: {ex.Message}"));
                     _writer = null;
+                    if (_pendingOutput.Count >= _maxPendingOutputLines)
+                    {
+                        _pendingOutput.Dequeue();
+                        _droppedLineCount++;
+                    }
+
+                    _pendingOutput.Enqueue(line);
                 }
             }
             else

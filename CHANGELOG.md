@@ -39,6 +39,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **`StubSndSceneHost` now matches the scene-host contract** — `RemoveEntity` on a missing entity
+  throws `InvalidOperationException` (consistent with `FullMemorySndSceneHost`), and
+  `RecoverFromMetaList` no longer clears existing entities (per the `ISndSceneAccess`
+  "does not automatically clear" contract; callers handle cleanup).
+- **`RequestSwitchForegroundLevel` is now tracked as a pending persistence request** —
+  `GetPendingPersistenceRequestCount()` counts level switches (they persist session/progress
+  state to disk) alongside save/load requests, so awaiters of persistence completion no longer
+  underestimate in-flight work.
+- **`SndContextArchiveFileAccess` traversal check is segment-based** — a `..` inside a file name
+  (e.g. `v1..2.map`) is no longer rejected; only actual `..` path segments escape the archive.
 - **BREAKING: `IStateMachine.RestoreStackWithoutHooks` is now `internal`** — the only unguarded
   public stack-write path (it bypasses `Push` strategy hooks) is sealed; business code must modify
   the stack through `Push`/`TryPopRuntime`/`TryPopOnQuit`. The framework's deserialization path
@@ -134,6 +144,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`GodotNodeHandle.SetVisible` throws on node types without a `Visible` property** — setting
   visibility on a node that is neither `CanvasItem` nor `Node3D` now throws
   `InvalidOperationException` instead of silently doing nothing.
+- **`PlanExecutionStrategyBase.Wire` rolls back the intent subscription when the action-status
+  subscription fails** — a partial wire no longer leaves an orphaned callback that `Unwire`
+  cannot reach.
+- **`ConsoleBridgeServer` buffers the line that failed to write** — a hard client disconnect no
+  longer silently drops the output line being written at that moment; it is replayed to the next
+  connection (bounded by the same overflow policy).
+- **`ConsoleBridgeServer.Start` is no longer observable as successful after `Dispose`** — a
+  Start/Dispose race rolls back the listener and subscription and throws
+  `ObjectDisposedException`, instead of leaving the instance stuck in a started-but-dead state.
+- **`PersistentBlackboard.LoadFromDisk` removed an unreachable null branch** — the blackboard
+  converter never returns null; the defensive branch could have masked corrupted data under a
+  future registration change.
+- **`Astar` removed a dead search-limit condition** — `closedSet.Count < gridSize*gridSize` was
+  always true on an in-bounds grid; the open-set exhaustion already terminates the search.
+
 - **`ObserverTopology.RecoverBindingsFor` rejects blank observer targets** — an archived binding
   with a null/whitespace target now fails the load (consistent with the dangling-binding
   fail-fast), instead of being silently skipped.

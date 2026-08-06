@@ -280,6 +280,19 @@ public class SndContextArchiveFileAccessTests
     }
 
     [Fact]
+    public void ReadFile_DotDotInsideFileName_IsAllowed()
+    {
+        // A ".." substring inside a file name is not a traversal segment and
+        // must not be rejected (regression for the substring-based check).
+        var ctx = CreateContext(out var fs, out _);
+        fs.SeedFile("root/current/extra/v1..2.map", "k: 1");
+
+        var node = AsFileAccess(ctx).ReadFile("v1..2.map");
+        Assert.False(node.IsNull);
+        Assert.Equal("1", node["k"].AsString());
+    }
+
+    [Fact]
     public void WriteFile_ThrowsForPathTraversal()
     {
         var ctx = CreateContext(out _, out _);

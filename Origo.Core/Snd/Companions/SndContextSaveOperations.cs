@@ -85,7 +85,10 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
         if (string.IsNullOrWhiteSpace(newLevelId))
             throw new ArgumentException(
                 "New level id cannot be null or whitespace.", nameof(newLevelId));
-        owner.EnqueueSystemDeferred(() =>
+
+        // A level switch persists the foreground state and progress to disk,
+        // so it is tracked as a pending persistence request like save/load.
+        owner.EnqueueTrackedSystemDeferred(() =>
         {
             owner.EnsureProgressRun().SwitchForeground(newLevelId);
         });

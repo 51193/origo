@@ -259,11 +259,10 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void StubSndSceneHost_DeadByName_MissingEntity_NoError()
+    public void StubSndSceneHost_DeadByName_MissingEntity_Throws()
     {
         var host = new StubSndSceneHost();
-        var ex = Record.Exception(() => host.RemoveEntity("not.exist"));
-        Assert.Null(ex);
+        Assert.Throws<InvalidOperationException>(() => host.RemoveEntity("not.exist"));
     }
 
     // ── StubSndSceneHost RequestKillEntity ───────────────────────────

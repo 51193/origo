@@ -12,7 +12,7 @@ public static class EntityStrategyExtensions
     ///     Ensures a replaceable resident strategy is present on the entity.
     ///     Reads <paramref name="implKey" /> from entity data to check for a configured
     ///     override (e.g. set by a template), falling back to <paramref name="defaultStrategyIndex" />.
-    ///     Uses <see cref="ISndEntity.EnsureStrategy" /> internally for deduplication.
+    ///     Uses <see cref="ActiveStrategyExtensions.EnsureStrategy" /> internally for deduplication.
     /// </summary>
     /// <param name="entity">The target entity.</param>
     /// <param name="implKey">

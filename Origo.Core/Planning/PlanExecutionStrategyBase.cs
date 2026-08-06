@@ -174,8 +174,18 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
         var intentCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnIntentChanged(t, n));
         var actionCb = new Action<ISndEntity, TypedData, TypedData>((t, o, n) => OnActionStatusChanged(t, n));
 
-        raw.SubscribeDataRaw(IntentKey, intentCb, null);
-        raw.SubscribeDataRaw(ActionStatusKey, actionCb, null);
+        try
+        {
+            raw.SubscribeDataRaw(IntentKey, intentCb, null);
+            raw.SubscribeDataRaw(ActionStatusKey, actionCb, null);
+        }
+        catch
+        {
+            // Roll back the first subscription if the second one fails so no
+            // orphaned callback (unreachable by Unwire) is left behind.
+            raw.UnsubscribeDataRaw(IntentKey, intentCb);
+            throw;
+        }
 
         _wiredCallbacks.AddOrUpdate(entity, new WireCallbacks { IntentCb = intentCb, ActionCb = actionCb });
 

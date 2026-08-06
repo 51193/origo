@@ -63,8 +63,13 @@ internal sealed class SndContextArchiveFileAccess(
 
     private static void RejectPathTraversal(string path)
     {
-        if (path.Contains(".."))
-            throw new ArgumentException("Path traversal '..' is not allowed.", nameof(path));
+        // Segment-level check (consistent with PathUtility.Combine): only a
+        // ".." segment (in either separator style) escapes the archive — a
+        // plain substring like "my..file" is a legal file name.
+        var normalized = path.Replace('\\', '/');
+        foreach (var segment in normalized.Split('/'))
+            if (segment == "..")
+                throw new ArgumentException("Path traversal '..' is not allowed.", nameof(path));
     }
 
     private string ResolveExtraPath(string relativePath)

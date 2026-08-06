@@ -49,8 +49,9 @@ internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         ArgumentNullException.ThrowIfNull(metaList);
-        _metaList.Clear();
-        _entities.Clear();
+        // Per the ISndSceneAccess contract, recovery must not clear existing
+        // entities; the caller handles old-entity cleanup before invoking this
+        // method (consistent with FullMemorySndSceneHost).
         foreach (var meta in metaList)
         {
             _metaList.Add(meta);
@@ -72,7 +73,7 @@ internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
     {
         var index = _entities.FindIndex(e => string.Equals(e.Name, name, StringComparison.Ordinal));
         if (index < 0)
-            return;
+            throw new InvalidOperationException($"No entity with name '{name}'.");
 
         _entities.RemoveAt(index);
         _metaList.RemoveAt(index);

@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Origo.Core.Runtime.Console;
+using Origo.TestSupport;
 using Xunit;
 
 namespace Origo.ConsoleBridge.Tests;
@@ -313,6 +316,66 @@ public class ConsoleBridgeServerCommunicationTests
 
         Assert.True(received.Count >= concurrentCount * 10,
             $"Expected >= {concurrentCount * 10}, got {received.Count}");
+
+        server.Dispose();
+    }
+
+    [Fact]
+    public void OutputWriteFailure_LineIsBufferedForNextConnection()
+    {
+        var logger = new TestLogger();
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var server = new ConsoleBridgeServer(input, output, logger: logger);
+        server.Start();
+        var port = server.ActualPort;
+
+        // Connect a client and confirm the server accepted it (the read loop
+        // is active, so the output writer is attached). Then hard-disconnect
+        // (RST) so the server-side socket becomes unwritable.
+        using (var client = new TcpClient())
+        {
+            client.Connect(IPAddress.Loopback, port);
+            using var writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
+            writer.WriteLine("warmup");
+            Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+                () => input.TryDequeueCommand(out var cmd) && cmd == "warmup",
+                ConsoleBridgeTestInfrastructure.CommandTimeoutMs));
+
+            client.LingerState = new LingerOption(true, 0);
+            client.Close();
+        }
+
+        // Publishing after the RST takes one of two server-side paths: the
+        // write fails against the dead socket (failure path buffers the line)
+        // or the handler has already detached the writer (the normal buffer
+        // path absorbs it). Either way the line must survive to the next
+        // connection — a write that succeeds into the void would lose it.
+        output.Publish("orphaned_line");
+
+        using var client2 = ConsoleBridgeTestInfrastructure.Connect(port,
+            ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+        using var reader2 = new StreamReader(client2.GetStream());
+
+        var received = new List<string>();
+        ConsoleBridgeTestInfrastructure.SpinUntil(() =>
+        {
+            var line = ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(reader2,
+                ConsoleBridgeTestInfrastructure.OutputTimeoutMs);
+            if (line is null)
+                return false;
+            received.Add(line);
+            return received.Contains("orphaned_line");
+        }, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+
+        Assert.Contains("orphaned_line", received);
+
+        // Diagnostic: when the write-failure path executed, a warning must be
+        // present; the assertion above is the real contract, but a missing
+        // warning here means the test exercised only the detach path.
+        if (!logger.Warnings.Any(w => w.Contains("Output write failed")))
+            Console.WriteLine(
+                "[ConsoleBridge] Note: write-failure path not exercised; the detach path buffered the line.");
 
         server.Dispose();
     }
