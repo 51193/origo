@@ -327,6 +327,64 @@ public class DataSourceConverterTests
         Assert.Equal(new[] { "only" }, result.Machines[1].Stack);
     }
 
+    [Fact]
+    public void StateMachineContainerPayloadConverter_EntryMissingKey_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"machines":[{"pushIndex":"start","popIndex":"end","stack":[]}]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StateMachineContainerPayload>(node));
+        Assert.Contains("key", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void StateMachineContainerPayloadConverter_EntryMissingPushIndex_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"machines":[{"key":"main","popIndex":"end","stack":[]}]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StateMachineContainerPayload>(node));
+        Assert.Contains("pushIndex", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void StateMachineContainerPayloadConverter_EntryMissingPopIndex_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"machines":[{"key":"main","pushIndex":"start","stack":[]}]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StateMachineContainerPayload>(node));
+        Assert.Contains("popIndex", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"machines":[{"key":null,"pushIndex":"start","popIndex":"end","stack":[]}]}""");
+
+        Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StateMachineContainerPayload>(node));
+    }
+
+    [Fact]
+    public void StateMachineContainerPayloadConverter_EntryStackMissing_DefaultsToEmpty()
+    {
+        // 'stack' is written by the framework but a missing stack is a valid
+        // empty stack; only the identity fields are mandatory.
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"machines":[{"key":"main","pushIndex":"start","popIndex":"end"}]}""");
+
+        var result = registry.Read<StateMachineContainerPayload>(node);
+
+        var entry = Assert.Single(result.Machines);
+        Assert.Equal("main", entry.Key);
+        Assert.Empty(entry.Stack);
+    }
+
     // ── 17. StringDictionary converter ──
 
     [Fact]

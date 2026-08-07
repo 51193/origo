@@ -26,14 +26,23 @@ internal sealed class StateMachineContainerPayloadConverter
         {
             var entry = new StateMachineEntryPayload();
 
-            if (element.TryGetValue("key", out var keyNode) && keyNode is not null)
-                entry.Key = keyNode.AsString();
+            // The identity fields are always written by the framework; a
+            // payload missing them is corrupt and must fail the strict read
+            // instead of silently producing empty-key state machine entries.
+            if (!element.TryGetValue("key", out var keyNode) || keyNode is null || keyNode.IsNull)
+                throw new InvalidOperationException(
+                    "State machine payload entry is missing the required 'key' string.");
+            entry.Key = keyNode.AsString();
 
-            if (element.TryGetValue("pushIndex", out var pushNode) && pushNode is not null)
-                entry.PushIndex = pushNode.AsString();
+            if (!element.TryGetValue("pushIndex", out var pushNode) || pushNode is null || pushNode.IsNull)
+                throw new InvalidOperationException(
+                    "State machine payload entry is missing the required 'pushIndex' string.");
+            entry.PushIndex = pushNode.AsString();
 
-            if (element.TryGetValue("popIndex", out var popNode) && popNode is not null)
-                entry.PopIndex = popNode.AsString();
+            if (!element.TryGetValue("popIndex", out var popNode) || popNode is null || popNode.IsNull)
+                throw new InvalidOperationException(
+                    "State machine payload entry is missing the required 'popIndex' string.");
+            entry.PopIndex = popNode.AsString();
 
             if (element.TryGetValue("stack", out var stackNode) && stackNode is not null && !stackNode.IsNull)
                 foreach (var stackElement in stackNode.Elements)
