@@ -29,7 +29,6 @@ public partial class GodotSndManager
 {
     private readonly SndEntityCollection<GodotSndEntity> _collection;
     private ObserverTopology? _observerTopology;
-    private ISessionRun? _owningSession;
 
     private bool _runtimeDepsBound;
 
@@ -53,12 +52,11 @@ public partial class GodotSndManager
     void IOwningSessionBindable.SetOwningSession(ISessionRun session)
     {
         ArgumentNullException.ThrowIfNull(session);
-        _owningSession = session;
         _collection.OwningSession = session;
     }
 
     /// <inheritdoc/>
-    public void BindContext(ISndContext context)
+    void ISndContextAttachableSceneHost.BindContext(ISndContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 

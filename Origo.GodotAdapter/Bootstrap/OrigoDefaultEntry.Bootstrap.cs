@@ -1,6 +1,7 @@
 using System;
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Scene;
 using Origo.GodotAdapter.Console;
 
 namespace Origo.GodotAdapter.Bootstrap;
@@ -39,7 +40,7 @@ public partial class OrigoDefaultEntry
             ConfigureConverters = RegisterCustomConverters,
         });
 
-        SndManager.BindContext(_sndContext);
+        ((ISndContextAttachableSceneHost)SndManager).BindContext(_sndContext);
         ConfigureSaveMetadataContributors(_sndContext);
 
         // Delegate to Core to execute the complete startup flow: strategy discovery → alias/template loading → entry save

@@ -8,6 +8,7 @@ using Origo.Core.Snd.Strategy;
 using Origo.GodotAdapter.FileSystem;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 using Origo.GodotAdapter.Integration.Tests.TestSupport;
+using Origo.Core.Snd.Scene;
 
 namespace Origo.GodotAdapter.Integration.Tests;
 
@@ -36,7 +37,7 @@ public class ObserverSaveReloadIntegrationTests
                 DataSourceFactory.CreateFileMetaAccess(fs),
                 DataSourceFactory.CreatePathResolver(fs),
                 "user://test_saves", "res://initial", "user://entry.json"));
-            harness.SndManager.BindContext(context);
+            ((ISndContextAttachableSceneHost)harness.SndManager).BindContext(context);
 
 
             context.Bootstrap();
@@ -116,7 +117,7 @@ public class ObserverSaveReloadIntegrationTests
                 DataSourceFactory.CreateFileMetaAccess(fs),
                 DataSourceFactory.CreatePathResolver(fs),
                 "user://test_saves", "res://initial", "user://entry.json"));
-            harness.SndManager.BindContext(context);
+            ((ISndContextAttachableSceneHost)harness.SndManager).BindContext(context);
 
 
             context.Bootstrap();
@@ -178,7 +179,7 @@ public class ObserverSaveReloadIntegrationTests
                 DataSourceFactory.CreateFileMetaAccess(fs),
                 DataSourceFactory.CreatePathResolver(fs),
                 "user://test_saves", "res://initial", "user://entry.json"));
-            harness.SndManager.BindContext(context);
+            ((ISndContextAttachableSceneHost)harness.SndManager).BindContext(context);
 
             context.Bootstrap();
             context.Deferred.FlushDeferredActionsForCurrentFrame();

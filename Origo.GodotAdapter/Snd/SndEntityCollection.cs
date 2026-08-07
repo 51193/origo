@@ -42,7 +42,6 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
     private readonly List<T> _entities = [];
     private readonly Func<T> _entityFactory;
     private readonly Action<T>? _detachCallback;
-    private IReadOnlyCollection<ISndEntity>? _entityView;
 
     public SndEntityCollection(Func<T> entityFactory, Action<T>? detachCallback = null)
     {
@@ -99,7 +98,6 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
             _detachCallback?.Invoke(entity);
         }
         _entities.Clear();
-        _entityView = null;
     }
 
     public ISndEntity CreateEntity(SndMetaData metaData)
@@ -117,7 +115,14 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         }
     }
 
-    public IReadOnlyCollection<ISndEntity> GetEntities() => _entityView ??= _entities;
+    /// <summary>
+    ///     Returns a snapshot of the currently alive entities. A snapshot (not
+    ///     a live view) matches the Core scene hosts' contract: callers that
+    ///     iterate while the host is mutated do not hit "collection was
+    ///     modified", and the result cannot be downcast to the mutable backing
+    ///     list to bypass collection management.
+    /// </summary>
+    public IReadOnlyCollection<ISndEntity> GetEntities() => [.. _entities];
 
     public ISndEntity? FindByName(string name)
     {

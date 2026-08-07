@@ -9,6 +9,7 @@ namespace Origo.GodotAdapter.Snd;
 ///     Creates Godot nodes by loading <c>PackedScene</c> resources.
 ///     Scenes are cached by resource ID to avoid redundant disk I/O.
 /// </summary>
+/// <param name="parent">The scene-tree node newly created nodes are attached to.</param>
 public sealed class GodotPackedSceneNodeFactory(Node parent) : INodeFactory
 {
     private readonly Node _parent = parent;

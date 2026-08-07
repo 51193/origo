@@ -12,6 +12,7 @@ using Origo.Core.Runtime;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Scene;
 using Origo.GodotAdapter.FileSystem;
 using Origo.GodotAdapter.Snd;
 
@@ -68,7 +69,7 @@ public sealed class IntegrationTestHarness : IDisposable
             Runtime, dataSourceIo, metaAccess, pathResolver,
             "user://test_saves", "res://initial", "entry.json"));
 
-        SndManager.BindContext(context);
+        ((ISndContextAttachableSceneHost)SndManager).BindContext(context);
     }
 
     public ISndEntity CreateEntity(string name)

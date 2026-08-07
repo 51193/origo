@@ -3,6 +3,7 @@ using Origo.Core.Abstractions.Logging;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 using Origo.GodotAdapter.Integration.Tests.TestSupport;
 using Origo.GodotAdapter.Snd;
+using Origo.Core.Snd.Scene;
 
 namespace Origo.GodotAdapter.Integration.Tests;
 
@@ -41,7 +42,7 @@ public class GodotSndManagerInitializationTests
         var manager = new GodotSndManager();
         manager.BindRuntimeDependencies(harness.SndWorld, harness.Logger);
         IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => manager.BindContext(null!),
+            () => ((ISndContextAttachableSceneHost)manager).BindContext(null!),
             "null context should throw");
     }
 
@@ -52,7 +53,7 @@ public class GodotSndManagerInitializationTests
 
         var freshManager = new GodotSndManager();
         freshManager.BindRuntimeDependencies(harness.SndWorld, harness.Logger);
-        freshManager.BindContext(harness.SndManager.Context!);
+        ((ISndContextAttachableSceneHost)freshManager).BindContext(harness.SndManager.Context!);
 
         IntegrationTestRunner.Assert(true, "chained BindRuntimeDependencies + BindContext should not throw with valid args.");
     }

@@ -7,6 +7,7 @@ using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 using Origo.GodotAdapter.Integration.Tests.TestSupport;
+using Origo.Core.Snd.Scene;
 
 namespace Origo.GodotAdapter.Integration.Tests;
 
@@ -55,7 +56,7 @@ public class GodotSndManagerIntegrationTests
         using var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => harness.SndManager.BindContext(null!),
+            () => ((ISndContextAttachableSceneHost)harness.SndManager).BindContext(null!),
             "null context should throw");
     }
 

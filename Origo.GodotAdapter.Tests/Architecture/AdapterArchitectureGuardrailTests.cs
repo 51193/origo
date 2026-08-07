@@ -204,3 +204,22 @@ public class GodotSndEntityLifecycleVisibilityTests
             "(used by SndEntityNodeExtensions) and must stay public.");
     }
 }
+
+public class GodotSndManagerWritePathVisibilityTests
+{
+    [Fact]
+    public void GodotSndManager_BindContext_ShouldNotBePublic()
+    {
+        // BindContext is framework-orchestrated startup wiring (driven through
+        // ISndContextAttachableSceneHost by SessionRun / the bootstrap flow);
+        // a public concrete-type path would let business code rebind the
+        // context behind the framework's back.
+        Assert.Null(typeof(GodotSndManager).GetMethod("BindContext",
+            BindingFlags.Instance | BindingFlags.Public));
+
+        var explicitImpl = typeof(GodotSndManager).GetMethod(
+            "Origo.Core.Snd.Scene.ISndContextAttachableSceneHost.BindContext",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(explicitImpl);
+    }
+}

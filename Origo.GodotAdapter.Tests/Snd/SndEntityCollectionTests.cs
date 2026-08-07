@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
@@ -286,6 +287,26 @@ public class SndEntityCollectionTests
         foreach (var entity in collection)
             names.Add(entity.Name);
         Assert.Equal(["a", "b"], names);
+    }
+
+    [Fact]
+    public void GetEntities_ReturnsSnapshot_NotTheMutableBackingList()
+    {
+        var collection = CreateCollection(out _);
+        collection.CreateEntity(Meta("a"));
+
+        var snapshot = collection.GetEntities();
+
+        // The snapshot is a copy: mutating the collection afterwards does not
+        // change an already-obtained view, and the view cannot be downcast to
+        // the mutable backing list (which would bypass collection management).
+        Assert.NotSame(collection, snapshot);
+        Assert.False(snapshot is List<FakeSndEntity>);
+
+        var before = snapshot.ToList();
+        collection.CreateEntity(Meta("b"));
+        Assert.Single(before);
+        Assert.Equal(2, collection.Count);
     }
 }
 
