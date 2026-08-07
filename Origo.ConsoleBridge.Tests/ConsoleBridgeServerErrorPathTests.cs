@@ -421,20 +421,28 @@ public class ConsoleBridgeServerErrorPathTests
         server.Start();
         var port = server.ActualPort;
 
-        // Connect and immediately hard-disconnect (RST) so the handler's
-        // writer targets a dead stream.
+        // Connect but keep the client open: the handler accepts and blocks in
+        // its read loop holding the writer. Wait until it is inside the
+        // connection (writer non-null) — a fixed sleep could race the accept
+        // and leave the publish buffering without ever touching the client.
         using (var client = new TcpClient())
         {
             client.Connect(IPAddress.Loopback, port);
+
+            var writerField = typeof(ConsoleBridgeServer)
+                .GetField("_writer", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+                () => writerField.GetValue(server) is not null,
+                ConsoleBridgeTestInfrastructure.CommandTimeoutMs),
+                "Server should have accepted the connection before publish.");
+
+            // Now hard-disconnect (RST) so the handler's writer targets a dead
+            // stream, then publish from the game side. The publish call itself
+            // must not throw: a dead client writer is a connection-level
+            // failure and must be isolated from the game frame loop.
             client.Client.Shutdown(SocketShutdown.Both);
             client.Client.Close();
         }
-
-        // Give the handler time to enter the connection and hold the broken
-        // stream, then publish from the game side. The publish call itself
-        // must not throw: a dead client writer is a connection-level failure
-        // and must be isolated from the game frame loop.
-        Thread.Sleep(150);
 
         var published = false;
         for (var i = 0; i < 5; i++)
