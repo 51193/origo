@@ -210,7 +210,11 @@ internal sealed class SessionRun : ISessionRun
             if (!payload.SndSceneNode.IsNull)
                 recoveredSceneMeta = _saveContext.RecoverSndScene(_sceneHost, payload.SndSceneNode);
 
-            foreach (var entity in _sceneHost.GetEntities())
+            // Snapshot the collection before firing hooks: AfterLoad hooks may
+            // spawn new entities, and hosts expose a live entity view (the
+            // Godot adapter returns the backing list).
+            List<ISndEntity> loadedEntities = [.. _sceneHost.GetEntities()];
+            foreach (var entity in loadedEntities)
                 if (entity is IEntityLifecycle lifecycle)
                     lifecycle.FireAfterLoadHooks();
 
@@ -336,7 +340,12 @@ internal sealed class SessionRun : ISessionRun
     internal void FireBeforeSaveHooks()
     {
         ThrowIfDisposed();
-        foreach (var entity in _sceneHost.GetEntities())
+        // Snapshot the collection: BeforeSave hooks may spawn new entities,
+        // and hosts expose a live entity view (the Godot adapter returns the
+        // backing list). Entities spawned inside a hook are serialized but do
+        // not fire BeforeSave (they entered the scene mid-save).
+        List<ISndEntity> saveEntities = [.. _sceneHost.GetEntities()];
+        foreach (var entity in saveEntities)
             if (entity is IEntityLifecycle lifecycle)
                 lifecycle.FireBeforeSaveHooks();
     }
@@ -367,26 +376,45 @@ internal sealed class SessionRun : ISessionRun
     ///     Releases every entity in the session: fires quit hooks (when requested),
     ///     tears down observer bindings bidirectionally (so observers receive
     ///     <c>OnUnmounted</c> and stop listening to target data), then releases
-    ///     strategies and engine resources.
+    ///     strategies and engine resources. Each harvested pass works on a
+    ///     snapshot (hooks may spawn new entities, and hosts expose a live
+    ///     entity view); entities spawned inside a hook are harvested by the
+    ///     next pass, and processed entities are removed from the host so the
+    ///     loop converges. A pass cap guards against a quit hook that spawns
+    ///     entities forever (business-code pathology): it fails loudly instead
+    ///     of hanging disposal.
     /// </summary>
     private void ReleaseAllEntitiesAndClear(bool fireQuitHooks)
     {
-        var entities = _sceneHost.GetEntities();
+        const int maxPasses = 4;
+        for (var pass = 0; pass < maxPasses; pass++)
+        {
+            List<ISndEntity> entities = [.. _sceneHost.GetEntities()];
+            if (entities.Count == 0)
+                return;
 
-        foreach (var entity in entities)
-            if (fireQuitHooks && entity is IEntityLifecycle lifecycle)
-                lifecycle.FireBeforeQuitHooks();
+            foreach (var entity in entities)
+                if (fireQuitHooks && entity is IEntityLifecycle lifecycle)
+                    lifecycle.FireBeforeQuitHooks();
 
-        foreach (var entity in entities)
-            if (entity is IEntityLifecycle lifecycle)
-                lifecycle.TeardownObserverBindings();
+            foreach (var entity in entities)
+                if (entity is IEntityLifecycle lifecycle)
+                    lifecycle.TeardownObserverBindings();
 
-        foreach (var entity in entities)
-            if (entity is IEntityLifecycle lifecycle)
-            {
-                lifecycle.ReleaseStrategiesOnly();
-                lifecycle.TeardownOnly();
-            }
+            foreach (var entity in entities)
+                if (entity is IEntityLifecycle lifecycle)
+                {
+                    lifecycle.ReleaseStrategiesOnly();
+                    lifecycle.TeardownOnly();
+                }
+
+            foreach (var entity in entities)
+                _sceneHost.RemoveEntity(entity.Name);
+        }
+
+        throw new InvalidOperationException(
+            $"Entity teardown for session '{LevelId}' did not converge after {maxPasses} passes: " +
+            "a quit hook keeps spawning entities during disposal.");
     }
 
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);

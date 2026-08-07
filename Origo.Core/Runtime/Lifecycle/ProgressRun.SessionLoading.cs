@@ -102,7 +102,33 @@ internal sealed partial class ProgressRun
             PersistForegroundLevelState();
             PersistAndDestroyBackgroundIfExists(newLevelId);
             ResetForeground(true);
-            LoadAndMountForeground(newLevelId);
+            try
+            {
+                LoadAndMountForeground(newLevelId);
+            }
+            catch
+            {
+                // The old foreground is already destroyed and persisted; a
+                // failure while mounting the new one must not leave a
+                // half-loaded foreground session mounted (it would be exposed
+                // through ISessionManager.ForegroundSession with partial
+                // state). Dispose it; cleanup failures are logged and never
+                // mask the original mount exception.
+                try
+                {
+                    _owner._sessionManager.DestroyForeground();
+                }
+                catch (Exception cleanupEx)
+                {
+                    _owner._progressRuntime.Logger.Log(LogLevel.Warning, nameof(ProgressRun),
+                        new LogMessageBuilder()
+                            .AddContext("saveId", _owner.SaveId)
+                            .Build($"Foreground cleanup after failed switch failed: {cleanupEx.Message}"));
+                }
+
+                throw;
+            }
+
             _owner.PersistProgress();
         }
 
@@ -168,15 +194,18 @@ internal sealed partial class ProgressRun
 
         private void ResetForeground(bool clearScene)
         {
-            if (clearScene)
-            {
-                if (_owner._sessionManager.ForegroundSession is SessionRun fg)
-                    fg.SceneHost.RemoveAllEntities();
-                else
-                    _owner._sessionManager.ClearAdapterScene();
-            }
-
+            // Destroy first: SessionRun.Dispose is the single orchestrated
+            // teardown path for the old foreground (BeforeQuit hooks, observer
+            // binding teardown, strategy pool release, node teardown), and it
+            // relies on the host's entity collection still being populated.
+            // Clearing the host first would make ReleaseAllEntitiesAndClear a
+            // no-op, silently skipping hooks and leaking strategy references
+            // and stale observer bindings. Dispose's finally clears the scene
+            // host regardless; ClearAdapterScene below covers the case where
+            // no foreground session existed at all.
             _owner._sessionManager.DestroyForeground();
+            if (clearScene)
+                _owner._sessionManager.ClearAdapterScene();
         }
 
         private static void ValidateLevelId(string levelId, string paramName, string message)
