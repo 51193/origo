@@ -77,4 +77,47 @@ public class PathUtilityTests
 
     [Fact]
     public void GetParentDirectory_SingleSegment_ReturnsEmpty() => Assert.Equal(string.Empty, PathUtility.GetParentDirectory("file.txt"));
+
+    // ── Scheme roots ("user://" / "res://") ──────────────────────────
+
+    [Fact]
+    public void NormalizeDirectoryPath_SchemeRoot_IsPreserved()
+    {
+        Assert.Equal("user://", PathUtility.NormalizeDirectoryPath("user://"));
+        Assert.Equal("res://", PathUtility.NormalizeDirectoryPath("res://"));
+    }
+
+    [Fact]
+    public void NormalizeDirectoryPath_SchemePath_TrimsTrailingSlash()
+    {
+        Assert.Equal("user://dir", PathUtility.NormalizeDirectoryPath("user://dir/"));
+    }
+
+    [Fact]
+    public void Combine_SchemeRootBase_KeepsDoubleSlash()
+    {
+        Assert.Equal("user://x", PathUtility.Combine("user://", "x"));
+        Assert.Equal("user://x", PathUtility.Combine("user://", "/x"));
+        Assert.Equal("user://dir/x", PathUtility.Combine("user://dir", "x"));
+    }
+
+    [Fact]
+    public void GetParentDirectory_SchemeFile_ReturnsSchemeRoot()
+    {
+        Assert.Equal("user://", PathUtility.GetParentDirectory("user://foo.map"));
+        Assert.Equal("res://levels", PathUtility.GetParentDirectory("res://levels/main.json"));
+    }
+
+    [Fact]
+    public void GetParentDirectory_SchemeRoot_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() => PathUtility.GetParentDirectory("user://"));
+        Assert.Throws<InvalidOperationException>(() => PathUtility.GetParentDirectory("res://"));
+    }
+
+    [Fact]
+    public void GetParentDirectory_BackslashPath_ReturnsParent()
+    {
+        Assert.Equal(@"C:\base", PathUtility.GetParentDirectory(@"C:\base\sub"));
+    }
 }

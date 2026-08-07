@@ -21,12 +21,14 @@ public interface IStateMachine
     void Push(string value);
 
     /// <summary>
-    ///     Runtime pop: triggers the pop strategy's <c>BeforeRemove</c> semantics.
+    ///     Runtime pop: pops the top element, then triggers the pop strategy's
+    ///     <c>OnPopRuntime</c> hook.
     /// </summary>
     bool TryPopRuntime(out string? popped);
 
     /// <summary>
-    ///     Quit-time pop: triggers the pop strategy's <c>BeforeQuit</c> semantics.
+    ///     Quit-time pop: pops the top element, then triggers the pop strategy's
+    ///     <c>OnPopBeforeQuit</c> hook.
     /// </summary>
     bool TryPopOnQuit(out string? popped);
 

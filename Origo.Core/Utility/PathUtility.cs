@@ -13,6 +13,10 @@ public static class PathUtility
     {
         if (path is null)
             return string.Empty;
+        // A scheme root ("user://") must keep its double slash; trimming
+        // would destroy it into the invalid "user:" prefix.
+        if (path.EndsWith("://", StringComparison.Ordinal))
+            return path;
         return path.TrimEnd('/', '\\');
     }
 
@@ -45,7 +49,11 @@ public static class PathUtility
                     nameof(relativePath));
         }
 
-        return $"{basePath.TrimEnd('/')}/{relativePath.TrimStart('/')}";
+        // A scheme root ("user://") must keep its double slash; trimming it
+        // would produce the invalid "user:/" prefix.
+        if (basePath.EndsWith("://", StringComparison.Ordinal))
+            return $"{basePath}{relativePath.TrimStart('/')}";
+        return $"{basePath.TrimEnd('/', '\\')}/{relativePath.TrimStart('/')}";
     }
 
     /// <summary>Gets the parent directory of the given path.</summary>
@@ -54,9 +62,27 @@ public static class PathUtility
         if (string.IsNullOrEmpty(path))
             return string.Empty;
 
-        var trimmed = path.TrimEnd('/');
-        var lastSlash = trimmed.LastIndexOf('/');
-        if (lastSlash < 0)
+        // Scheme paths ("user://dir/file"): the scheme root "user://" is the
+        // top of the hierarchy; splitting must not truncate its double slash.
+        var schemeIndex = path.IndexOf("://", StringComparison.Ordinal);
+        if (schemeIndex >= 0)
+        {
+            var schemeRoot = path[..(schemeIndex + 3)];
+            var rest = path[(schemeIndex + 3)..].TrimEnd('/', '\\');
+            if (rest.Length == 0)
+                throw new InvalidOperationException(
+                    $"Path '{path}' is at root and has no parent directory.");
+
+            var lastSlash = Math.Max(rest.LastIndexOf('/'), rest.LastIndexOf('\\'));
+            if (lastSlash < 0)
+                return schemeRoot;
+            var parent = rest[..lastSlash];
+            return parent.Length == 0 ? schemeRoot : $"{schemeRoot}{parent}";
+        }
+
+        var trimmed = path.TrimEnd('/', '\\');
+        var lastSeparator = Math.Max(trimmed.LastIndexOf('/'), trimmed.LastIndexOf('\\'));
+        if (lastSeparator < 0)
         {
             if (trimmed.Length == 0 || trimmed.IndexOf(':') == trimmed.Length - 1)
                 throw new InvalidOperationException(
@@ -65,11 +91,11 @@ public static class PathUtility
             return string.Empty;
         }
 
-        var parent = trimmed[..lastSlash];
-        if (parent.Length == 0)
+        var parentDir = trimmed[..lastSeparator];
+        if (parentDir.Length == 0)
             throw new InvalidOperationException(
                 $"Path '{path}' is at root and has no parent directory.");
 
-        return parent;
+        return parentDir;
     }
 }
