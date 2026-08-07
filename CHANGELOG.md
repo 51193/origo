@@ -39,6 +39,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `GodotSndManager.BindRuntimeDependencies` is now `internal`** — runtime
+  dependency binding (World + Logger) is framework-orchestrated startup wiring, driven only by
+  `OrigoAutoHost` (and the `InternalsVisibleTo` test projects); business code can no longer rebind
+  the runtime dependencies on the concrete manager type. External consumers must let the bootstrap
+  flow perform the binding.
 - **BREAKING: `GodotSndManager.BindContext` is now an explicit interface implementation** —
   context binding is framework-orchestrated startup wiring; it is driven only through the
   `ISndContextAttachableSceneHost` interface (by `SessionRun` and the bootstrap flow). Business
@@ -152,7 +157,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
-- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. Callers should chain `GodotSndManager.BindRuntimeDependencies(sndWorld, logger)` followed by `GodotSndManager.BindContext(context)` directly.
+- **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. The two-step binding (`BindRuntimeDependencies` then `BindContext`) is now framework-orchestrated startup wiring driven entirely by `OrigoAutoHost`.
 - **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
 - **`SndEntity.SpawnSingle` / `LoadSingle` / `SaveSingle` and their `GodotSndEntity` counterparts removed** — these internal single-entity shortcuts had no production callers (spawn/load/save uniformly go through `SndEntityFactory` / `SessionRun` / the serialization pipeline) and were only used by tests, which now drive the `IEntityLifecycle` phased methods directly.
 - **BREAKING: `SaveGamePayload.FormatVersion` property removed** — the framework neither read nor wrote it (the on-disk version always comes from `CurrentFormatVersion` via `meta.map`); only `CurrentFormatVersion` and the `FormatVersionMetaKey` constant remain.

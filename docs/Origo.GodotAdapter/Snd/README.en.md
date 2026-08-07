@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -29,6 +29,7 @@ The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in
 
 - **Implements ISndSceneHost**: CreateEntity / RecoverFromMetaList / RemoveAllEntities (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / ProcessAll are **explicit interface implementations** — business code cannot invoke these write operations on the concrete `GodotSndManager` type; they are driven only through the `ISndSceneHost` / `ISndSceneAccess` interfaces (held internally by Core). Public read operations are `GetEntities` / `FindByName`. `RemoveAllEntities()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
 - **Implements ISndContextAttachableSceneHost**: `BindContext` is an **explicit interface implementation** — context binding is a framework-orchestrated startup write path (driven by `SessionRun` construction / the bootstrap flow); business code cannot rebind the context on the concrete type
+- **Startup wiring sealed**: `BindRuntimeDependencies` is `internal` — runtime dependency binding (World + Logger) is also framework-orchestrated startup wiring (driven by `OrigoAutoHost` in the bootstrap flow); business code cannot rebind runtime dependencies on the concrete type
 - **Implements IObserverTopologyHost** (internal): Exposes the per-scene-host `ObserverTopology` for Core observer mount/unmount orchestration
 - **Implements IOwningSessionBindable** (internal): `SetOwningSession` binds a session to the host for the Core session-creation flow
 - **Collection logic delegated**: entity add/remove, batch recovery rollback, kill marking, and frame processing orchestration live in pure C# `SndEntityCollection<T>` (internal, no Godot dependency) and are covered by unit tests directly; GodotSndManager only bridges the collection to the Godot node tree (`AddChild` / `RemoveChild` / `Free` injected via the `DetachAndFree` callback)

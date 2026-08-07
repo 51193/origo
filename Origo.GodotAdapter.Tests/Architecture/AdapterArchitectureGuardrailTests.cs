@@ -222,4 +222,20 @@ public class GodotSndManagerWritePathVisibilityTests
             BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.NotNull(explicitImpl);
     }
+
+    [Fact]
+    public void GodotSndManager_BindRuntimeDependencies_ShouldNotBePublic()
+    {
+        // BindRuntimeDependencies is framework-orchestrated startup wiring,
+        // driven only by the bootstrap flow (OrigoAutoHost) and the
+        // InternalsVisibleTo test projects; a public concrete-type path
+        // would let business code rebind the world/logger behind the
+        // framework's back (same category as BindContext).
+        Assert.Null(typeof(GodotSndManager).GetMethod("BindRuntimeDependencies",
+            BindingFlags.Instance | BindingFlags.Public));
+
+        var internalImpl = typeof(GodotSndManager).GetMethod("BindRuntimeDependencies",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(internalImpl);
+    }
 }

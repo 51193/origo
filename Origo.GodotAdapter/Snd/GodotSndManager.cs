@@ -11,6 +11,7 @@ using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
 using Origo.Core.Logging;
 using Origo.Core.Snd.Strategy;
+using Origo.GodotAdapter.Bootstrap;
 
 namespace Origo.GodotAdapter.Snd;
 
@@ -121,12 +122,18 @@ public partial class GodotSndManager
     ///     Binds the Core <see cref="SndWorld" /> and logger, and creates the
     ///     per-scene-host observer topology. Must be called before
     ///     <see cref="BindContext" />; calling it twice throws.
+    ///     <para>
+    ///         Framework-orchestrated startup wiring: driven only by the
+    ///         bootstrap flow (<see cref="OrigoAutoHost" />) through this
+    ///         internal member; business code cannot rebind the runtime
+    ///         dependencies on the concrete manager type.
+    ///     </para>
     /// </summary>
     /// <exception cref="InvalidOperationException">
     ///     Thrown when runtime dependencies are already bound.
     /// </exception>
     [MemberNotNull(nameof(SharedWorld), nameof(SharedLogger))]
-    public void BindRuntimeDependencies(SndWorld world, ILogger logger)
+    internal void BindRuntimeDependencies(SndWorld world, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(logger);
