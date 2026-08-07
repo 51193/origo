@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Logging -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Logging Tests
 
@@ -39,7 +39,7 @@ explicit interface implementation compatibility with manual tags, null inner gua
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
 | `AddContext_NullKey_Skipped` | null key | Skipped |
-| `AddContext_NullValue_Skipped` | null value | Skipped |
+| `AddContext_NullValue_Preserved` | null value | Preserved as `key=` (empty value, not skipped) |
 | `AddContext_WhitespaceKey_Skipped` | Whitespace key | Skipped |
 
 ## Known Coverage Gaps

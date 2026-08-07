@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试文档维护元指令
 
@@ -109,6 +109,15 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
    - `ProgressRun.BuildSavePayload`/`LoadFromPayload` 的**内存往返编解码契约**（`PayloadCodec_InMemoryRoundTrip_PreservesState`）——隔离验证序列化编解码本身、不经磁盘；公共 `RequestSaveGame`/`RequestLoadGame` 会把编解码与存储管线耦合，无法隔离验证 codec。
 
 8. **全局状态的测试复位**：`TypedData.ResetForTesting()`（internal）仅用于在测试间复位 TypedData 的 kind 注册表，使各测试以干净状态启动。它是**专为测试存在的复位钩子**，在生产路径中不可达；不得在测试用例之外的代码路径调用。
+
+9. **无公共触发路径的内部故障态注入**：当被测行为的故障态（faulted task、永不完成的 task、端口被占用前已启动的 listener、已损坏的客户端 writer 等）**没有任何公共 API 可以触发**时，允许经反射注入/读取私有字段构造故障态。此类注入比 `InternalsVisibleTo` 更脆弱（字段重命名即运行时失败），必须遵守：
+   - 仅用于**该故障态本身无公共触发路径**的场景；可经公共路径触发的场景必须走公共路径（如 `Start_AfterDispose`、`Start_PortInUse` 均走公共调用）
+   - 反射字段访问集中在该测试文件内，不扩散到生产代码或其他测试
+   - 先例：`Origo.ConsoleBridge.Tests/ConsoleBridgeServerErrorPathTests.cs`（`_acceptTask`/`_listener`/`_writer`/`_started` 字段注入，`ConsoleBridge` 程序集未配置 `InternalsVisibleTo`）；等待性断言必须使用轮询等待（如 `SpinUntil` 等待 `_writer` 非空），禁止固定 `Thread.Sleep` 时序
+
+10. **内部属性作为宿主契约验证入口**：当测试意图是验证**场景宿主自身契约**（白名单第 3 条）但宿主实例来自会话内部时，允许经 `((SessionRun)bg).SceneHost` 等内部属性取得宿主后直接操作宿主方法。这与直接构造宿主（如 `MemorySndSceneHostTests`）属同一白名单类别，区别仅是宿主实例的取得路径。先例：`BackgroundSessionTests.FullMemorySndSceneHost_LoadFromMetaList_ClearsAndLoads`。
+
+**测试项目命名空间偏离记录**：`Origo.GodotAdapter.Integration.Tests` 的 `Runner/`（轻量测试运行器，`[GlobalClass]` Godot 节点）与 `TestSupport/`（集成测试夹具）基础设施类使用 `Origo.GodotAdapter.Integration.Tests.Runner` / `.TestSupport` 子命名空间——这是刻意偏离扁平命名空间约定的设计：这些类型是引擎运行时组件（AutoLoad 节点、Godot 场景对象），而非测试用例；测试用例类本身仍使用扁平命名空间。不适用于其他测试项目。
 
 **禁止使用 InternalsVisibleTo 的情况（应通过公共接口验证）**：
 

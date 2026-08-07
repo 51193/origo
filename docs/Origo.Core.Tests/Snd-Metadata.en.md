@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Metadata Tests
 
@@ -48,11 +48,21 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | `WithArrayType_PreservesExactType` | int[] type preserved | snd-entity-model: TypedData |
 | `WithReferenceType_PreservesIdentity` | Reference type preserves same object reference | snd-entity-model: TypedData |
 | `WithNullValueForReferenceType_PreservesTypeInfo` | null value preserves type information | snd-entity-model: TypedData |
+| `RegisterKind_SameTypeTwice_IsIdempotent` | Registering the same kind with the same type twice is idempotent | snd-entity-model: TypedData |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `RegisterKind_DifferentTypeSameKind_Throws` | Registering a different type under the same kind | InvalidOperationException (message contains kind and original type name); original mapping preserved |
+| `RegisterKind_NullType_Throws` | RegisterKind with null type | ArgumentNullException; no mapping left behind |
+| `RegisterKind_UnregisteredKindSentinel_Throws` | Registering with the UnregisteredKind sentinel | ArgumentOutOfRangeException; no mapping left behind |
 
 ### Boundary Paths
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
+| `RegisterKind_KindZero_IsIgnored` | Registering with kind=0 | Ignored; KindTypeMap[0] stays null |
 | `TwoInstances_SameTypeAndSameValue_AreEqual` | Two TypedData with same value (struct value semantics) | Values are equal |
 | `TwoInstances_DifferentType_HaveDifferentReferences` | Two TypedData of different types | Values are not equal |
 
@@ -112,6 +122,7 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | `CrossTypeAccess_StringAsInt32_ReturnsFalse` | string accessed via TryGetInt32 | Returns false |
 | `NullSentinel_HasKindZero` | default(TypedData) IsNull=true, all TryGet return false | Kind=0, all TryGet return false |
 | `NullSentinel_StillHasKindZero_AfterRegistrations` | After registering new Kinds, default is still Kind=0 | Unaffected by registrations |
+| `TryExtract_StringKindWithNullValue_ReturnsFoundTrueAndNull` | string kind with a null value (legal state for reference kinds) | TryExtract returns true with a null value, consistent with TryGetString semantics |
 
 ## SndMetaDataTests Details
 

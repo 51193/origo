@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体 测试（适配层）
 
@@ -30,6 +30,17 @@
 | `RecoverFromMetaList` 系列 | 批量恢复成功全部入列；`BuildMetaList` 与恢复元数据一一对应 | Origo.GodotAdapter/Snd |
 | `RemoveEntity` / `RemoveAllEntities` 系列 | 移除实体经 detach 回调释放引擎节点、列表清空、`GetEntities` 视图同步 | Origo.GodotAdapter/Snd |
 | `RequestKillEntity` 系列 | 击杀标记立即生效、重复击杀抛异常、`ProcessAll` 帧处理计数 | Origo.GodotAdapter/Snd |
+| `CreateEntity_AddsAndRecovers` | 创建实体加入集合且 `RecoverForLifecycle` 被调用（StableName 设置、计数正确） | Origo.GodotAdapter/Snd |
+| `CreateEntity_OwningSession_BindsEntity` | `OwningSession` 已绑定时创建的实体自动绑定同一会话 | Origo.GodotAdapter/Snd |
+| `FindByName_ReturnsEntity` | 按名查找返回实体；不存在返回 null | Origo.GodotAdapter/Snd |
+| `GetEntities_ReturnsAllAndIsEnumerable` | `GetEntities` 返回全部实体，集合可直接枚举 | Origo.GodotAdapter/Snd |
+| `GetEntities_ReturnsSnapshot_NotTheMutableBackingList` | `GetEntities` 返回快照副本（非可变后备列表、不可下转型绕过集合管理，后续变更不影响已取得的视图） | Origo.GodotAdapter/Snd |
+| `ProcessAll_ProcessesEveryEntity` | 帧处理对每个实体各调用一次 `ProcessSnd` | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_RecoversAll` | 批量恢复全部入列、可按名查找 | Origo.GodotAdapter/Snd |
+| `RemoveEntity_DetachesAndRemoves` | 移除实体触发 detach 回调并从集合删除 | Origo.GodotAdapter/Snd |
+| `RemoveAllEntities_ClearsCollection` | 清空集合且 detach 回调逐一触发（b、a 逆序） | Origo.GodotAdapter/Snd |
+| `RequestKillEntity_MarksPending` | 击杀标记立即生效（`IsPendingKill`=true） | Origo.GodotAdapter/Snd |
+| `BuildMetaList_ReturnsAllMetadata` | 按序构建全部实体元数据（a、b） | Origo.GodotAdapter/Snd |
 
 ### 错误路径
 
@@ -37,6 +48,31 @@
 |---------|-----------|---------|
 | `RecoverFromMetaList` 部分失败 | 第 N 个实体恢复失败时回滚全部已 staged 实体（集合为空、detach 回调逐一触发） | Origo.GodotAdapter/Snd |
 | `FindByName` 不存在 | 返回 null；`RemoveEntity` 不存在时抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
+| `CreateEntity_NullMeta_Throws` | meta 为 null 时抛 `ArgumentNullException` | Origo.GodotAdapter/Snd |
+| `CreateEntity_RecoverFailure_RollsBackAndPropagates` | 创建时恢复失败：异常上抛、集合回滚为空、detach 回调触发 | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_RollsBackStaged` | 第 N 个实体恢复失败时回滚全部已 staged 实体（集合为空、detach 回调触发） | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_ReportsFailingMeta` | 恢复失败经失败回调报告失败的 meta 与异常 | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Null_Throws` | metaList 为 null 时抛 `ArgumentNullException` | Origo.GodotAdapter/Snd |
+| `RemoveEntity_Unknown_Throws` | 移除不存在的实体抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
+| `RequestKillEntity_AlreadyPending_Throws` | 对已标记击杀的实体重复击杀抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
+| `RequestKillEntity_Unknown_Throws` | 击杀不存在的实体抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
+
+## TypedDataInitializerTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `EnsureLoaded_TriggersAdapterKindRegistration` | `TypedDataInitializer.EnsureLoaded()` 触发适配层 Kind 注册（Vector2 解析为 Kind 128） | Origo.GodotAdapter/Snd |
+
+## SndEntityNodeExtensionsTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `GetNativeNode_NonGodotHandle_ReturnsNull` | `GetNativeNode()` 在节点句柄非 Godot 节点句柄时返回 null（契约违约静默降级，不崩溃） | Origo.GodotAdapter/Snd |
+| `GetNodeFromSnd_NonGodotEntity_ReturnsNull` | `GetNodeFromSnd<T>()` 在实体非 Godot 实体时返回 null | Origo.GodotAdapter/Snd |
 
 ## 测试辅助策略
 

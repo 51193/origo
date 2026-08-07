@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Runtime Core Tests
 
@@ -62,6 +62,7 @@ Validates basic OrigoRuntime construction and console injection, flushing of end
 |-------------|----------------|-------------------|
 | `StubSndSceneHost_RequestKillEntity_Missing_Throws` | RequestKillEntity for non-existent entity | InvalidOperationException |
 | `StubSndSceneHost_RequestKillEntity_AlreadyPending_Throws` | Duplicate RequestKillEntity on already IsPendingKill entity | InvalidOperationException |
+| `StubSndSceneHost_DeadByName_MissingEntity_Throws` | RemoveEntity for non-existent entity | InvalidOperationException |
 
 ### Boundary Path
 
@@ -69,7 +70,6 @@ Validates basic OrigoRuntime construction and console injection, flushing of end
 |-------------|-------------------|-------------------|
 | `ManualKillAll_EmptyScene_DoesNotThrow` | Iterate and RequestKillEntity on empty scene | Does not throw |
 | `KillPendingEntities_NoPendingEntities_DoesNotThrow` | KillPendingAllSessions with no pending entities | Does not throw, entities retained |
-| `StubSndSceneHost_DeadByName_MissingEntity_NoError` | RemoveEntity for non-existent entity | Does not throw |
 | `IsPendingKill_DefaultFalse` | Newly created entity | IsPendingKill defaults to false |
 
 ## SchedulingAndTypeMappingTests Details

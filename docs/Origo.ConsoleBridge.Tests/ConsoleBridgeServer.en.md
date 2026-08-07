@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console Bridge Server Tests
 
@@ -18,6 +18,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `ConsoleBridgeServerLifecycleTests.cs` | Server lifecycle (Start / Stop / Dispose / double Dispose / ActualPort) and connection management (dual connection rejection, disconnect reconnect, hard disconnect recovery) |
 | `ConsoleBridgeServerCommunicationTests.cs` | Client input command delivery (FIFO order, Unicode, long lines, blank line filtering) and output channel distribution (multi-line, null, large volume, concurrent publish, buffer overflow) |
 | `ConsoleBridgeServerTests.cs` | Thread safety (no deadlock under concurrent read/write), regression tests (connect-time flush vs concurrent publish), short round-trip, Agent workflow integration (output arrival, multi-line output, full reconnect flow) |
+| `ConsoleBridgeServerErrorPathTests.cs` | Accept-loop fault observability, Dispose semantics, Start rollback and retry, output-side isolation — write/read failure recovery |
 | `ConsoleBridgeOptionsTests.cs` | Option configuration (custom port, etc.) |
 
 ## ConsoleBridgeServerTests Test Details
@@ -58,6 +59,8 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `OutputChannel_PublishNullString_Throws` | Publish(null) | ArgumentNullException |
 | `OutputChannel_LargeVolume_ManyLines_AllDelivered` | 100 lines all delivered | ConsoleBridge |
 | `OutputChannel_ConcurrentPublish_AllDelivered` | 10-thread concurrent publish, all delivered | ConsoleBridge |
+| `PendingOutput_WithinLimit_AllDeliveredOnConnect` | 500 pending output lines published with no client connected are all delivered in order after connection | ConsoleBridge |
+| `PendingOutput_BufferOverflow_DropsOldestLines` | Pending buffer exceeds the limit (1000+1 lines): overflow notice line plus the retained newest lines are received, the oldest line is dropped | ConsoleBridge |
 
 ### Connection Management
 
@@ -101,6 +104,32 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `Constructor_NullOutput_Throws` | null output | ArgumentNullException |
 | `Constructor_DefaultOptions_HasExpectedPort` | Default options | ActualPort > 0 |
 | `Constructor_CustomPort_StoredInOptions` | Port=9876 | ActualPort=9876 |
+
+## ConsoleBridgeServerErrorPathTests Test Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Doc Reference |
+|------------|-------------------|---------------|
+| `HardClientRst_TriggersIOException_AndRecovers` | Client RST triggers an IOException on the server's read, server recovers and accepts new connections | ConsoleBridge |
+| `HardSocketClose_TriggersIOException_AndRecovers` | Client hard socket close triggers an IOException, server recovers and accepts new connections | ConsoleBridge |
+| `StreamShutdown_TriggersSocketException_AndRecovers` | Client Shutdown triggers a SocketException, server recovers and accepts new connections | ConsoleBridge |
+| `PendingFlush_BrokenClient_ServerRecovers` | Client connects and immediately disconnects; pending-output flush hits a closed stream, server recovers after exception handling | ConsoleBridge |
+| `WriteFailure_LogsWarning_AndRecovers` | Input Enqueue throws: logs a "Connection handler failed" warning, server recovers and accepts new connections | ConsoleBridge |
+| `Dispose_FaultedAcceptTask_LogsErrorInsteadOfSwallowing` | A faulted accept task is logged as "Accept loop faulted" on Dispose instead of being swallowed (regression guard) | ConsoleBridge |
+| `Dispose_AcceptTaskStillRunning_LogsTimeoutWarning` | Accept task not stopped within the join timeout logs a timeout warning; Dispose does not wait for its full lifetime | ConsoleBridge |
+| `AcceptLoop_NonCancellationListenerError_LogsErrorAndStops` | Non-cancellation listener error logs "Accept loop stopped" without misreporting "Accept loop faulted" | ConsoleBridge |
+| `AcceptLoop_NonCancellationError_StopsListenerAndAllowsRestart` | Non-cancellation accept error stops the listener and rolls back `_started`; the same instance can Start again on a fresh port and accept connections | ConsoleBridge |
+| `OnConsoleOutput_BrokenWriter_DoesNotThrowToCaller` | With a dead client stream, the output callback does not throw to the caller, logs a warning and clears the writer | ConsoleBridge |
+| `Publish_BrokenClientWriter_DoesNotThrowToCaller` | After client RST, `Publish` does not throw to the game side (output-side isolation); the server still accepts new connections afterwards | ConsoleBridge |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|------------|-----------------|-------------------|
+| `Start_AfterDispose_ThrowsObjectDisposed` | Start called after Dispose | ObjectDisposedException |
+| `Start_Failure_RollsBackAndAllowsRetry` | Invalid port (-1) makes Start fail | Throws and rolls back the started flag; retry succeeds after fixing the port |
+| `Start_PortInUse_RollsBackListenerAndAllowsRetryAfterRelease` | Port in use makes Start fail | SocketException, listener and output subscription fully rolled back; retry succeeds after the port is released |
 
 ## ConsoleBridgeOptionsTests Test Details
 

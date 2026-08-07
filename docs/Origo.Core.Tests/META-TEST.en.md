@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -148,6 +148,34 @@ but must observe the following whitelist principle:
 8. **Test-only reset of global state**: `TypedData.ResetForTesting()` (internal) resets TypedData's kind
    registry between tests so each test starts clean. It is a **test-only reset hook**, unreachable from
    production paths; it must not be invoked from non-test code.
+
+9. **Internal fault-state injection without a public trigger path**: when the fault state under test
+   (faulted task, never-completing task, a listener already started before a port conflict, a broken
+   client writer, etc.) **cannot be triggered through any public API**, reflection may be used to inject
+   or read private fields to construct the fault state. Such injection is more fragile than
+   `InternalsVisibleTo` (a field rename breaks the test at runtime) and must follow these rules:
+   - Use it **only** where the fault state itself has no public trigger path; scenarios reachable via
+     public paths must use them (e.g. `Start_AfterDispose`, `Start_PortInUse` both drive public calls)
+   - Reflection field access stays confined to that test file — never spread into production code or
+     other tests
+   - Precedent: `Origo.ConsoleBridge.Tests/ConsoleBridgeServerErrorPathTests.cs` (`_acceptTask` /
+     `_listener` / `_writer` / `_started` field injection; the ConsoleBridge assembly has no
+     `InternalsVisibleTo`); timing-sensitive assertions must poll (e.g. `SpinUntil` waiting for
+     `_writer` to become non-null), never use a fixed `Thread.Sleep`
+
+10. **Internal properties as host-contract verification entry points**: when the test intent is to
+    verify a **scene-host's own contract** (white-list item 3) but the host instance comes from inside a
+    session, tests may obtain the host via an internal property such as `((SessionRun)bg).SceneHost` and
+    drive host methods directly. This is the same white-list category as constructing the host directly
+    (e.g. `MemorySndSceneHostTests`); only the host-acquisition path differs. Precedent:
+    `BackgroundSessionTests.FullMemorySndSceneHost_LoadFromMetaList_ClearsAndLoads`.
+
+**Recorded namespace deviation**: `Origo.GodotAdapter.Integration.Tests` uses
+`Origo.GodotAdapter.Integration.Tests.Runner` / `.TestSupport` sub-namespaces for its `Runner/`
+(lightweight test runner, `[GlobalClass]` Godot node) and `TestSupport/` (integration test fixtures)
+infrastructure classes — a deliberate deviation from the flat-namespace convention: these types are
+engine runtime components (AutoLoad nodes, Godot scene objects), not test cases; test case classes
+themselves keep flat namespaces. Not applicable to other test projects.
 
 **Prohibited uses of InternalsVisibleTo (should verify through public interfaces)**:
 

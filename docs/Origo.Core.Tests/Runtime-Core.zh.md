@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 运行时核心 测试
 
@@ -62,6 +62,7 @@
 |---------|-----------|---------|
 | `StubSndSceneHost_RequestKillEntity_Missing_Throws` | RequestKillEntity 不存在的实体 | InvalidOperationException |
 | `StubSndSceneHost_RequestKillEntity_AlreadyPending_Throws` | 对已 IsPendingKill 的实体重复 RequestKillEntity | InvalidOperationException |
+| `StubSndSceneHost_DeadByName_MissingEntity_Throws` | RemoveEntity 不存在的实体 | InvalidOperationException |
 
 ### 边界路径
 
@@ -69,7 +70,6 @@
 |---------|---------|---------|
 | `ManualKillAll_EmptyScene_DoesNotThrow` | 空场景遍历并 RequestKillEntity | 不抛异常 |
 | `KillPendingEntities_NoPendingEntities_DoesNotThrow` | 无待销毁实体时 KillPendingAllSessions | 不抛异常，实体保留 |
-| `StubSndSceneHost_DeadByName_MissingEntity_NoError` | RemoveEntity 不存在的实体 | 不抛异常 |
 | `IsPendingKill_DefaultFalse` | 新建实体 | IsPendingKill 默认为 false |
 
 ## SchedulingAndTypeMappingTests 测试详情

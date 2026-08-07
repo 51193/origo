@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Grid -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 网格 测试
 
@@ -109,6 +109,9 @@
 |---------|-----------|---------|
 | `ParseCoords_InvalidFormat_ReturnsNull` | `"abc"`, `"3"`, 空串 | `null` |
 | `ParseCoords_NullInput_ReturnsNull` | null 输入 | `null` |
+| `ParseCoords_JsonElement_NumberKind_ReturnsNull` | JsonElement 为数字类型（42） | `null` |
+| `ParseCoords_JsonElement_TrueKind_ReturnsNull` | JsonElement 为布尔类型（true） | `null` |
+| `ParseCoords_JsonElement_NullKind_ReturnsNull` | JsonElement 为 null 类型 | `null` |
 
 ## 已知覆盖缺口
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console System Tests
 
@@ -168,6 +168,8 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | `EntitySetData_NewKey_BoolLiteral_StoredAsBoolean` | entity_set_data player alive true → Boolean | console-commands |
 | `EntitySetData_NewKey_StringLiteral_StoredAsString` | entity_set_data player tag hero → String | console-commands |
 | `EntitySetData_ExistingKey_PreservesType` | Existing float-typed "hunger" key, write 15 → preserved as Single(15.0f) | console-commands: entity_set_data |
+| `BlackboardSet_BeyondIntRange_StoredAsInt64` | bb_set system big 3000000000 (beyond int range) → Int64(3000000000) | console-commands: bb_set |
+| `EntitySetData_NewKey_BeyondIntRange_StoredAsInt64` | entity_set_data player coins 3000000000 → Int64 | console-commands: entity_set_data |
 
 ### Error Path
 
@@ -175,6 +177,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 |-------------|----------------|-------------------|
 | `BlackboardSet_UnknownLayer_ReturnsError` | bb_set unknown key 42 | returns false + error containing "layer" |
 | `EntitySetData_EntityNotFound_ReturnsError` | entity_set_data nonexistent hp 50 | returns false + error containing "not found" |
+| `EntitySetData_ExistingKeyUnparseableValue_ReturnsErrorAndKeepsValue` | Writing unparseable value to existing int key | returns false + error containing "Cannot parse", original value retained |
 
 ## OrigoConsoleLoggingTests Details
 

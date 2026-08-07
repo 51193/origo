@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Scene Tests
 
@@ -40,6 +40,7 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 |-------------|----------------|-------------------|
 | `Spawn_ThrowsOnNull` | null metadata parameter | ArgumentNullException |
 | `LoadFromMetaList_ThrowsOnNull` | null metaList parameter | ArgumentNullException |
+| `RemoveEntity_Missing_Throws` | Removing a non-existent entity name | InvalidOperationException |
 
 ## FullMemorySndSceneHostTests Details
 
@@ -69,11 +70,23 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 |-------------|------------------|---------------------|
 | `NullNodeFactory_CreatesNullNodeHandle` | Create returns a non-null handle; Free/SetVisible are no-ops | INodeFactory |
 
+## SndEntityFactoryRollbackTests Details
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `Spawn_AfterSpawnHookThrows_RollsBackEntityAndStrategyReferences` | AfterSpawn hook of Spawn throws InvalidOperationException | Half-initialized entity removed from the host (FindByName returns null); acquired strategy references returned (LogPoolLeaks emits no refCount warning); original exception propagates |
+| `SpawnMany_AfterSpawnHookThrows_RollsBackUnfiredEntitiesOnly` | AfterSpawn hook of the second entity in SpawnMany throws InvalidOperationException | E1 whose hook already fired stays; E2 and E3 whose hooks never fired are fully rolled back; rolled-back strategy references returned |
+| `Spawn_AfterSpawnHookThrows_OnDetachInvalidatingHost_PropagatesOriginalException` | AfterSpawn throws on a detach-invalidating host (Godot wrapper semantics) | Teardown happens before removal; the original exception is not masked by ObjectDisposedException |
+
 ## Test Helper Strategies
 
 | Strategy Class | Defined In | Purpose |
 |----------------|-----------|---------|
-| None | — | This test file defines no strategy classes; pure interface behavior tests |
+| `ThrowingAfterSpawnStrategy` | SndEntityFactoryRollbackTests.cs | AfterSpawn hook throws InvalidOperationException ("Intentional AfterSpawn failure"); verifies Spawn/SpawnMany rollback |
+| `NormalStrategy` | SndEntityFactoryRollbackTests.cs | Normal lifecycle strategy; the entity whose hook fired (E1) survives in SpawnMany |
+| `NormalTwoStrategy` | SndEntityFactoryRollbackTests.cs | Normal lifecycle strategy; rollback candidate whose hook never fired (E3); verifies unfired entities are rolled back |
 
 ## Known Coverage Gaps
 

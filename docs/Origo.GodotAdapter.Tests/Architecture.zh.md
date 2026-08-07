@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构守卫 测试（适配层）
 
@@ -31,6 +31,8 @@
 | `CommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | `Origo.GodotAdapter.Console.CommandHandlerBase` 为 public（或嵌套 public），外部项目可派生 | Origo.GodotAdapter/Console |
 | `GodotSndEntity_LifecycleMethods_ShouldBeInternal` | `GodotSndEntity` 的 `IEntityLifecycle` 实现为显式接口实现，经反射不可见，生命周期只能经 Core 编排 | Origo.GodotAdapter/Snd |
 | `GodotSndEntity_GetNodeFromSnd_ShouldRemainPublic` | `SndEntityNodeExtensions.GetNodeFromSnd<T>()` 保持 public，外部项目可访问 Godot 节点 | Origo.GodotAdapter/Snd |
+| `GodotSndManager_BindContext_ShouldNotBePublic` | 反射断言 `GodotSndManager.BindContext` 无 public 具体类型路径（仅为 `ISndContextAttachableSceneHost` 显式接口实现），防止业务代码绕过框架重新绑定 context | Origo.GodotAdapter/Snd |
+| `GodotSndManager_BindRuntimeDependencies_ShouldNotBePublic` | 反射断言 `BindRuntimeDependencies` 仅 internal（由引导流程 `OrigoAutoHost` 与 InternalsVisibleTo 测试项目驱动），防止业务代码绕过框架重绑 world/logger | Origo.GodotAdapter/Snd |
 
 ## 测试辅助策略
 

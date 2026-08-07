@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 类型序列化 测试
 
@@ -69,6 +69,7 @@
 | `SndMappings_ResolveMetaListFromJsonArray_SupportsTemplateAndInlineMix` | JSON 数组混合 templateKey 引用与内联定义解析为 meta 列表 | Serialization |
 | `Blackboard_SerializeAll_ReturnsDetachedCopy` | SerializeAll 返回脱离副本，修改副本不影响黑板原值 | Serialization |
 | `JsonCodec_DecodeJsonArrayRoot_ReadsElements` | 顶层 JSON 数组解码为 Array 节点并按索引读取元素 | Serialization |
+| `SndWorld_ResolveTemplate_MutationDoesNotPolluteTemplateCache` | 修改 ResolveTemplate 返回的副本不污染模板缓存，再次解析仍为原始内容 | Serialization |
 
 ### 错误路径
 

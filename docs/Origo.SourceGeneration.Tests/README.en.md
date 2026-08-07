@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration.Tests
 
@@ -17,7 +17,7 @@
 | File | Responsibility |
 |------|------|
 | `GeneratorTestHarness.cs` | Constructs in-memory `CSharpCompilation`, runs `TypedDataGenerator`, exposes generated sources, generator diagnostics, merged compilation errors |
-| `TypedDataGeneratorTests.cs` | Generator behavior tests: Home/Adapter mode output, two storage models, `ORIGOSG001`–`ORIGOSG004` diagnostics, generation determinism and incremental pipeline |
+| `TypedDataGeneratorTests.cs` | Generator behavior tests: Home/Adapter mode output, two storage models, `ORIGOSG001`–`ORIGOSG005` diagnostics, generation determinism and incremental pipeline |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | Generated artifact performance benchmarks: write/read/mixed dispatch for multiple value types + `string`, generated inline `TypedData` vs unoptimized boxing; fixed pool + large iterations + multi-round min noise reduction, relaxed thresholds + comparison tables, and per-side measured allocation (`GC.GetAllocatedBytesForCurrentThread`, placed in separate `NoInlining` methods to avoid polluting timing) |
 | `TestSupport/PerfReporter.cs` | Performance comparison table output (writes to both console and xUnit test output) |
 
@@ -39,6 +39,14 @@
 | `Incremental_NoAttribute_ThenAddAttribute_ProducesNewOutput` | From no attribute to adding attribute, output changes from empty to non-empty | Origo.SourceGeneration |
 | `Incremental_HasAttribute_ThenRemoveAttribute_OutputDisappears` | From having attribute to removing attribute, output changes from non-empty to empty | Origo.SourceGeneration |
 | `Incremental_AddTypeToExistingAttribute_OutputChanges` | Adding a type to an existing attribute, output gains corresponding type member (`Single`) | Origo.SourceGeneration |
+| `Adapter_NamedStartKindArgument_IsExtracted` | Named-argument form `startKind: 128` extracts equivalently to positional (StubVec3=128, StubRef=129 registered), no diagnostics, zero compile errors | Origo.SourceGeneration |
+| `Adapter_ReferenceOnlyTypes_HaveNoInlineHelpers` | Adapter mode with only reference types (StubRefA/B) does not emit `ReadBitsAs`/`BitsFrom`/`_inlineBits` inline machinery, only `AsStubRefA/B` and `RegisterKind(128/129)` | Origo.SourceGeneration |
+| `Attribute_DefaultStartKind_StartsAtOne` | Without `StartKind`, numbering starts at 1 (Int32=1, String=2, matching `RegisterKind`) | Origo.SourceGeneration |
+| `Attribute_NoTypes_ProducesNoOutput` | Only `StartKind` (128) specified with no type arguments | Produces no sources, no diagnostics, no compile errors |
+| `Attribute_NullArrayElement_SkippedWithoutCrash` | Type arguments contain a null element | Null element skipped without crash, int/string generated normally (Int32=1, String=2) |
+| `Home_WithoutString_GeneratesCompilableCode` | Home mode without `string` registered (int/float only) | Zero compile errors, does not generate `KindMap.String`/`IsString`/`AsString`/`TryGetString` |
+| `Incremental_SameInputTwice_GenerationStepIsCached` | Two new Compilation instances with identical sources (modeling every editor keystroke) | Second run's SourceOutput steps all skip regeneration with Cached reason |
+| `Incremental_SameInputTwice_TrackedStepsPresent` | Same input run twice | Incremental pipeline retains TrackedSteps (non-empty), observable step execution/caching reasons |
 
 ### Error Paths
 
@@ -49,6 +57,12 @@
 | `KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero` | `StartKind` offset causes Kind to exceed byte range (256/257, 257 wraps to 1 causing collision) | Reports `ORIGOSG003` (Error), excludes out-of-range types, in-range type (`Byte=255`) still generated |
 | `OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes` | Two groups assign same Kind 1 to different types (`int`/`long`) | Reports `ORIGOSG004` (Error), excludes the two colliding types |
 | `HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected` | Same compilation has both Home attribute (system primitive types) and Adapter attribute (non-system value types) | Home mode takes effect, system types generated normally, non-system value types report `ORIGOSG002` (Error) |
+| `GenericInstantiations_WithSameName_ReportORIGOSG005` | `List<int>` and `List<string>` share the name 'List' | Reports `ORIGOSG005` (Error), drops the colliding types, does not produce List identifiers |
+| `SameTypeNameDifferentNamespaces_ReportORIGOSG005_AndDropCollidingTypes` | `A.Dup`/`B.Dup` from different namespaces share the name (kind-name collision after sanitizing) | Reports `ORIGOSG005` (Error), drops colliding types, does not produce uncompilable duplicate identifiers |
+| `SameTypeRegisteredTwice_ReportORIGOSG005` | The same type registered twice (`List<int>` twice) | Reports `ORIGOSG005` (Error), drops the duplicate (prevents CS0111 duplicate members in generated code) |
+| `SameTypeRegisteredToDifferentKinds_ReportORIGOSG005` | The same type registered under two different Kinds (1 and 5) | Reports `ORIGOSG005` (Error), drops the type |
+| `TypeNamedNull_ReservedKindMapSentinel_ReportORIGOSG005_AndDropType` | Registered type named 'Null' collides with the KindMap reserved sentinel | Reports `ORIGOSG005` (Error), drops the type (prevents CS0102 duplicate members), zero compile errors |
+| `ValueTypeNamedNull_InHomeMode_ReportORIGOSG002_AndDropType` | Home mode registers non-system value type `A.Null` (struct) | Reports `ORIGOSG002` (Error), drops the type (does not generate members colliding with the handwritten `IsNull`), zero compile errors |
 
 ### Edge Paths
 

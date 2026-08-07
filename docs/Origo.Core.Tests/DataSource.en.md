@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Data Source Tests
 
@@ -66,6 +66,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `TypedDataConverter_RoundTrip_IntValue` | TypedData(int) round-trip preserves DataType=int | DataSource |
 | `TypedDataConverter_RoundTrip_StringValue` | TypedData(string) round-trip preserves DataType=string | DataSource |
 | `TypedDataConverter_RoundTrip_NullData` | TypedData(string, null) round-trip preserves type with null data | DataSource |
+| `TypedDataConverter_NullDataForNullReferenceType_StillReturnsNullString` | Reference-kind (string) null data reads back as found-but-null, does not throw | DataSource |
 | `SndMetaDataConverter_RoundTrip_FullStructure` | SndMetaData full fields (Node/Strategy/Data substructures) round-trip | DataSource |
 | `SndMetaDataConverter_RoundTrip_NullSubStructures` | Null substructures round-trip, DataMetaData falls back to empty dict | DataSource |
 | `BlackboardDataConverter_RoundTrip_MixedEntries` | Blackboard dict (int/string/bool mixed) round-trip | DataSource |
@@ -124,6 +125,11 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `ObjectNode_IndexerByKey_ThrowsOnMissingKey` | obj["missing"] | KeyNotFoundException |
 | `Registry_Get_ThrowsForUnregisteredType` | Get<DateTime>() unregistered | InvalidOperationException |
 | `Registry_RuntimeRead_ThrowsForUnregisteredType` | Read(typeof(DateTime), …) unregistered | InvalidOperationException |
+| `TypedDataConverter_NullDataForRegisteredValueType_Throws` | data field null for registered value kind (int) | InvalidOperationException (contains "value type") |
+| `StateMachineContainerPayloadConverter_EntryMissingKey_Throws` | Machine entry missing key field | InvalidOperationException (contains "key") |
+| `StateMachineContainerPayloadConverter_EntryMissingPushIndex_Throws` | Machine entry missing pushIndex field | InvalidOperationException (contains "pushIndex") |
+| `StateMachineContainerPayloadConverter_EntryMissingPopIndex_Throws` | Machine entry missing popIndex field | InvalidOperationException (contains "popIndex") |
+| `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | Machine entry key is null | InvalidOperationException |
 | `MapCodec_Encode_ThrowsForNonObjectNode` | Map encode on Array node | InvalidOperationException |
 | `LazyNode_WhenExpanderThrows_NodeStaysLazy_AndCanRetrySuccessfully` | First expansion throws InvalidOperationException | After first access throws, node stays Lazy, second access succeeds (callCount=2) |
 | `LazyNode_WhenExpanderThrows_NodeCanStillBeDisposed` | Expander always throws InvalidOperationException | Can still Dispose after failed expansion, subsequent access throws ObjectDisposedException |
@@ -137,6 +143,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `AsString_OnNullNode_ReturnsEmpty` | Null node AsString | Returns string.Empty |
 | `ObjectNode_TryGetValue_ReturnsFalseForMissingKey` | TryGetValue for missing key | Returns false |
 | `Registry_RuntimeWrite_NullReturnsNullNode` | Write(typeof(int), null) | Returns Null node |
+| `Registry_GenericWrite_NullReturnsNullNodeLikeRuntimeOverload` | Write<string>(null) consistent with runtime-typed overload | Both return Null node with identical hash |
+| `StateMachineContainerPayloadConverter_EntryStackMissing_DefaultsToEmpty` | Machine entry missing stack field | Treated as empty stack, reads normally (only identity fields mandatory) |
 | `JsonCodec_RoundTrip_EmptyObject` | Empty object JSON round-trip | Map node, no keys |
 | `JsonCodec_RoundTrip_EmptyArray` | Empty array JSON round-trip | Array node, Count=0 |
 | `MapCodec_Decode_EmptyValueAfterColon_ReturnsEmptyString` | `emptyval:` empty value line | Key exists, value is empty string |
@@ -162,6 +170,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `ScalarBoolean_HashIsDeterministic` | Same boolean node produces consistent hash | DataSource |
 | `NullNode_HashIsDeterministic` | Null node produces consistent hash | DataSource |
 | `ObjectNode_HashDependsOnKeys` | Different key names produce different hashes | DataSource |
+| `ObjectNode_HashEscapesSpecialCharactersInKeys` | Keys with special chars (`=`/`,`/`{}`/`[]`/quotes/backslash) hash deterministically, distinct from same char in value position | DataSource |
 | `ObjectNode_HashIndependentOfInsertionOrder` | Object hash is independent of key insertion order | DataSource |
 | `ArrayNode_HashOrderDependent` | Array hash depends on element order | DataSource |
 | `DeepNested_HashWorks` | Deep nesting (object containing array containing string) computes without throwing and is non-empty | DataSource |
@@ -173,6 +182,11 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `NumberIntegerVsFloatWithSameValue_HaveDifferentHashes` | Integer 1 and float 1.0 canonicalized to same hash (value-equivalent) | DataSource |
 | `HashIsHexString` | Hash is 64-character lowercase hex string | DataSource |
 | `SameComplexTree_DifferentInstances_SameHash` | Different instances of same structure produce same hash | DataSource |
+| `DecodedDeeplyNestedTree_AllLevelsExpanded_DepthThreeHashDiffers` | Decoded tree expanded to depth 3 with changed leaf value produces different hash (regression: lazy subtrees included in hash) | DataSource |
+| `DecodedNestedTree_ArrayDeepChange_ProducesDifferentHash` | Deep object value change inside decoded tree array produces different hash | DataSource |
+| `DecodedNestedTree_DeepKeyChange_ProducesDifferentHash` | Deep key change in decoded tree produces different hash | DataSource |
+| `DecodedNestedTree_DeepValueChange_ProducesDifferentHash` | Deep leaf value change in decoded tree produces different hash | DataSource |
+| `DecodedNestedTree_SameContent_ProducesSameHash` | Decoded trees with same content produce same hash | DataSource |
 
 ### Error Path
 

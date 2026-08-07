@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Tests (Adapter)
 
@@ -28,6 +28,17 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | `RecoverFromMetaList` group | Batch recovery adds all entities; `BuildMetaList` maps one-to-one to the recovered metadata | Origo.GodotAdapter/Snd |
 | `RemoveEntity` / `RemoveAllEntities` group | Removal releases the engine node via the detach callback, list clears, `GetEntities` view stays in sync | Origo.GodotAdapter/Snd |
 | `RequestKillEntity` group | Kill marking takes effect immediately, duplicate kill throws, `ProcessAll` frame processing ticks | Origo.GodotAdapter/Snd |
+| `CreateEntity_AddsAndRecovers` | Creating an entity adds it to the collection and invokes `RecoverForLifecycle` (StableName set, counts correct) | Origo.GodotAdapter/Snd |
+| `CreateEntity_OwningSession_BindsEntity` | When `OwningSession` is already set, created entities are auto-bound to the same session | Origo.GodotAdapter/Snd |
+| `FindByName_ReturnsEntity` | Find by name returns the entity; missing name returns null | Origo.GodotAdapter/Snd |
+| `GetEntities_ReturnsAllAndIsEnumerable` | `GetEntities` returns all entities; collection is directly enumerable | Origo.GodotAdapter/Snd |
+| `GetEntities_ReturnsSnapshot_NotTheMutableBackingList` | `GetEntities` returns a snapshot copy (not the mutable backing list, not downcastable to bypass collection management; later mutations do not affect an already-obtained view) | Origo.GodotAdapter/Snd |
+| `ProcessAll_ProcessesEveryEntity` | Frame processing invokes `ProcessSnd` once per entity | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_RecoversAll` | Batch recovery adds all entities, findable by name | Origo.GodotAdapter/Snd |
+| `RemoveEntity_DetachesAndRemoves` | Removing an entity invokes the detach callback and deletes it from the collection | Origo.GodotAdapter/Snd |
+| `RemoveAllEntities_ClearsCollection` | Clears the collection with the detach callback invoked per entity (b, a in reverse order) | Origo.GodotAdapter/Snd |
+| `RequestKillEntity_MarksPending` | Kill marking takes effect immediately (`IsPendingKill`=true) | Origo.GodotAdapter/Snd |
+| `BuildMetaList_ReturnsAllMetadata` | Builds all entity metadata in order (a, b) | Origo.GodotAdapter/Snd |
 
 ### Error Paths
 
@@ -35,6 +46,31 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 |---------|-----------|---------|
 | `RecoverFromMetaList` partial failure | When the N-th entity fails, all staged entities are rolled back (collection empty, detach callback invoked per entity) | Origo.GodotAdapter/Snd |
 | `FindByName` missing | Returns null; `RemoveEntity` on a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
+| `CreateEntity_NullMeta_Throws` | meta is null — throws `ArgumentNullException` | Origo.GodotAdapter/Snd |
+| `CreateEntity_RecoverFailure_RollsBackAndPropagates` | Recovery fails during creation: exception propagates, collection rolls back to empty, detach callback invoked | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_RollsBackStaged` | When the N-th entity fails, all staged entities are rolled back (collection empty, detach callback invoked per entity) | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_ReportsFailingMeta` | Recovery failure reports the failing meta and exception via the failure callback | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Null_Throws` | metaList is null — throws `ArgumentNullException` | Origo.GodotAdapter/Snd |
+| `RemoveEntity_Unknown_Throws` | Removing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
+| `RequestKillEntity_AlreadyPending_Throws` | Duplicate kill on an already-marked entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
+| `RequestKillEntity_Unknown_Throws` | Killing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
+
+## TypedDataInitializerTests Details
+
+### Happy Path
+
+| Test method | Verified behavior | Doc source |
+|---------|-----------|---------|
+| `EnsureLoaded_TriggersAdapterKindRegistration` | `TypedDataInitializer.EnsureLoaded()` triggers adapter-layer kind registration (Vector2 resolves to Kind 128) | Origo.GodotAdapter/Snd |
+
+## SndEntityNodeExtensionsTests Details
+
+### Error Paths
+
+| Test method | Verified behavior | Doc source |
+|---------|-----------|---------|
+| `GetNativeNode_NonGodotHandle_ReturnsNull` | `GetNativeNode()` returns null when the node handle is not a Godot node handle (graceful contract deviation, no crash) | Origo.GodotAdapter/Snd |
+| `GetNodeFromSnd_NonGodotEntity_ReturnsNull` | `GetNodeFromSnd<T>()` returns null when the entity is not a Godot entity | Origo.GodotAdapter/Snd |
 
 ## Test Support Strategy
 

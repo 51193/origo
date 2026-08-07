@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration.Tests
 
@@ -17,7 +17,7 @@
 | 文件 | 职责 |
 |------|------|
 | `GeneratorTestHarness.cs` | 构造内存 `CSharpCompilation`，运行 `TypedDataGenerator`，暴露生成源、生成器诊断、合并编译错误 |
-| `TypedDataGeneratorTests.cs` | 生成器行为测试：Home/Adapter 模式输出、两存储模型、`ORIGOSG001`–`ORIGOSG004` 诊断、生成确定性与增量管线 |
+| `TypedDataGeneratorTests.cs` | 生成器行为测试：Home/Adapter 模式输出、两存储模型、`ORIGOSG001`–`ORIGOSG005` 诊断、生成确定性与增量管线 |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | 生成产物性能基准：多值类型 + `string` 的写/读/混合分发，生成的内联 `TypedData` vs 无优化装箱；固定池 + 大迭代 + 多轮取最小降噪，宽松阈值 + 比对表格，并对每侧实测分配（`GC.GetAllocatedBytesForCurrentThread`，置于独立 `NoInlining` 方法以免污染计时） |
 | `TestSupport/PerfReporter.cs` | 性能比对表格输出器（同时写控制台与 xUnit 测试输出） |
 
@@ -39,6 +39,14 @@
 | `Incremental_NoAttribute_ThenAddAttribute_ProducesNewOutput` | 从无特性到加上特性，输出从空变为非空 | Origo.SourceGeneration |
 | `Incremental_HasAttribute_ThenRemoveAttribute_OutputDisappears` | 从有特性到移除特性，输出从非空变为空 | Origo.SourceGeneration |
 | `Incremental_AddTypeToExistingAttribute_OutputChanges` | 向既有特性追加类型，输出增加对应类型成员（`Single`） | Origo.SourceGeneration |
+| `Adapter_NamedStartKindArgument_IsExtracted` | 命名参数形式 `startKind: 128` 与位置参数等价提取（StubVec3=128、StubRef=129 注册），无诊断、零编译错误 | Origo.SourceGeneration |
+| `Adapter_ReferenceOnlyTypes_HaveNoInlineHelpers` | 适配层仅注册引用类型（StubRefA/B）时不产出 `ReadBitsAs`/`BitsFrom`/`_inlineBits` 内联机制，仅生成 `AsStubRefA/B` 与 `RegisterKind(128/129)` | Origo.SourceGeneration |
+| `Attribute_DefaultStartKind_StartsAtOne` | 未指定 `StartKind` 时从 1 开始（Int32=1、String=2，`RegisterKind` 对应） | Origo.SourceGeneration |
+| `Attribute_NoTypes_ProducesNoOutput` | 仅指定 `StartKind`（128）而无类型参数 | 不产出任何源，无诊断、无编译错误 |
+| `Attribute_NullArrayElement_SkippedWithoutCrash` | 类型参数含 null 元素 | null 元素被跳过不崩溃，int/string 正常生成（Int32=1、String=2） |
+| `Home_WithoutString_GeneratesCompilableCode` | 宿主模式未注册 `string`（仅 int/float） | 零编译错误，不生成 `KindMap.String`/`IsString`/`AsString`/`TryGetString` |
+| `Incremental_SameInputTwice_GenerationStepIsCached` | 两个相同输入的新 Compilation 实例（模拟编辑器每次按键） | 第二次运行 SourceOutput 步骤全部以 Cached 原因跳过重新生成 |
+| `Incremental_SameInputTwice_TrackedStepsPresent` | 相同输入两次运行 | 增量管线保留 TrackedSteps（非空），可观测步骤执行/缓存原因 |
 
 ### 错误路径
 
@@ -48,7 +56,13 @@
 | `Adapter_SystemPrimitive_ReportsORIGOSG001` | 适配层组注册系统基础类型（`int`） | 报告 `ORIGOSG001`（Error），剔除该基元，不产出其内联访问器 |
 | `KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero` | `StartKind` 偏移使 Kind 超出 byte 范围（256/257，257 会回绕为 1 造成碰撞） | 报告 `ORIGOSG003`（Error），剔除越界类型，范围内类型（`Byte=255`）仍生成 |
 | `OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes` | 两组将同一 Kind 1 分配给不同类型（`int`/`long`） | 报告 `ORIGOSG004`（Error），剔除碰撞的两个类型 |
-| `HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected` | 同一编译中同时存在 Home 属性（系统基础类型）和 Adapter 属性（非系统值类型） | Home 模式生效，系统类型正常生成，非系统值类型报告 `ORIGOSG002`（Error）
+| `HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected` | 同一编译中同时存在 Home 属性（系统基础类型）和 Adapter 属性（非系统值类型） | Home 模式生效，系统类型正常生成，非系统值类型报告 `ORIGOSG002`（Error） |
+| `GenericInstantiations_WithSameName_ReportORIGOSG005` | `List<int>` 与 `List<string>` 同名 'List' | 报告 `ORIGOSG005`（Error），剔除冲突类型、不产出 List 标识符 |
+| `SameTypeNameDifferentNamespaces_ReportORIGOSG005_AndDropCollidingTypes` | `A.Dup`/`B.Dup` 不同命名空间同名（sanitize 后 Kind 名冲突） | 报告 `ORIGOSG005`（Error），剔除碰撞类型，不产出无法编译的重复标识符 |
+| `SameTypeRegisteredTwice_ReportORIGOSG005` | 同一类型重复注册（`List<int>` 两次） | 报告 `ORIGOSG005`（Error），剔除重复类型（防止生成代码 CS0111 重复成员） |
+| `SameTypeRegisteredToDifferentKinds_ReportORIGOSG005` | 同一类型注册到两个不同 Kind（1 与 5） | 报告 `ORIGOSG005`（Error），剔除该类型 |
+| `TypeNamedNull_ReservedKindMapSentinel_ReportORIGOSG005_AndDropType` | 注册类型名为 'Null' 与 KindMap 保留哨兵冲突 | 报告 `ORIGOSG005`（Error），剔除类型（防止 CS0102 重复成员），零编译错误 |
+| `ValueTypeNamedNull_InHomeMode_ReportORIGOSG002_AndDropType` | 宿主模式注册非系统值类型 `A.Null`（struct） | 报告 `ORIGOSG002`（Error），剔除类型（不生成与手写 `IsNull` 冲突的成员），零编译错误 |
 
 ### 边界路径
 

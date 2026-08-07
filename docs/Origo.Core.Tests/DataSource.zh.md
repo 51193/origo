@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 数据源 测试
 
@@ -66,6 +66,7 @@
 | `TypedDataConverter_RoundTrip_IntValue` | TypedData(int) 往返保持 DataType=int | DataSource |
 | `TypedDataConverter_RoundTrip_StringValue` | TypedData(string) 往返保持 DataType=string | DataSource |
 | `TypedDataConverter_RoundTrip_NullData` | TypedData(string, null) 往返保持类型且数据为 null | DataSource |
+| `TypedDataConverter_NullDataForNullReferenceType_StillReturnsNullString` | 引用类型（string）data 为 null 时按"存在但为 null"读回，不抛异常 | DataSource |
 | `SndMetaDataConverter_RoundTrip_FullStructure` | SndMetaData 全字段（Node/Strategy/Data 子结构）往返 | DataSource |
 | `SndMetaDataConverter_RoundTrip_NullSubStructures` | null 子结构往返，DataMetaData 回落为空字典 | DataSource |
 | `BlackboardDataConverter_RoundTrip_MixedEntries` | 黑板字典（int/string/bool 混合）往返 | DataSource |
@@ -124,6 +125,11 @@
 | `ObjectNode_IndexerByKey_ThrowsOnMissingKey` | obj["missing"] | KeyNotFoundException |
 | `Registry_Get_ThrowsForUnregisteredType` | Get<DateTime>() 未注册 | InvalidOperationException |
 | `Registry_RuntimeRead_ThrowsForUnregisteredType` | Read(typeof(DateTime), …) 未注册 | InvalidOperationException |
+| `TypedDataConverter_NullDataForRegisteredValueType_Throws` | 值类型（int）的 data 字段为 null | InvalidOperationException（消息含 "value type"） |
+| `StateMachineContainerPayloadConverter_EntryMissingKey_Throws` | 机器条目缺 key 字段 | InvalidOperationException（消息含 "key"） |
+| `StateMachineContainerPayloadConverter_EntryMissingPushIndex_Throws` | 机器条目缺 pushIndex 字段 | InvalidOperationException（消息含 "pushIndex"） |
+| `StateMachineContainerPayloadConverter_EntryMissingPopIndex_Throws` | 机器条目缺 popIndex 字段 | InvalidOperationException（消息含 "popIndex"） |
+| `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | 机器条目 key 为 null | InvalidOperationException |
 | `MapCodec_Encode_ThrowsForNonObjectNode` | Map 编码 Array 节点 | InvalidOperationException |
 | `LazyNode_WhenExpanderThrows_NodeStaysLazy_AndCanRetrySuccessfully` | 首次展开抛 InvalidOperationException | 首次访问抛异常后节点保持 Lazy，二次访问展开成功（callCount=2） |
 | `LazyNode_WhenExpanderThrows_NodeCanStillBeDisposed` | 展开始终抛 InvalidOperationException | 展开失败后仍可 Dispose，后续访问抛 ObjectDisposedException |
@@ -137,6 +143,8 @@
 | `AsString_OnNullNode_ReturnsEmpty` | Null 节点 AsString | 返回 string.Empty |
 | `ObjectNode_TryGetValue_ReturnsFalseForMissingKey` | TryGetValue 缺失键 | 返回 false |
 | `Registry_RuntimeWrite_NullReturnsNullNode` | Write(typeof(int), null) | 返回 Null 节点 |
+| `Registry_GenericWrite_NullReturnsNullNodeLikeRuntimeOverload` | Write<string>(null) 与运行时类型重载一致 | 均返回 Null 节点且哈希一致 |
+| `StateMachineContainerPayloadConverter_EntryStackMissing_DefaultsToEmpty` | 机器条目缺 stack 字段 | 视为空栈，正常读取（仅身份字段必需） |
 | `JsonCodec_RoundTrip_EmptyObject` | 空对象 JSON 往返 | Map 节点，无键 |
 | `JsonCodec_RoundTrip_EmptyArray` | 空数组 JSON 往返 | Array 节点，Count=0 |
 | `MapCodec_Decode_EmptyValueAfterColon_ReturnsEmptyString` | `emptyval:` 空值行 | 键存在，值为空字符串 |
@@ -162,6 +170,7 @@
 | `ScalarBoolean_HashIsDeterministic` | 相同布尔节点哈希一致 | DataSource |
 | `NullNode_HashIsDeterministic` | Null 节点哈希一致 | DataSource |
 | `ObjectNode_HashDependsOnKeys` | 键名不同则哈希不同 | DataSource |
+| `ObjectNode_HashEscapesSpecialCharactersInKeys` | 键含特殊字符（`=`/`,`/`{}`/`[]`/引号/反斜杠）时哈希确定，与值中同字符不碰撞 | DataSource |
 | `ObjectNode_HashIndependentOfInsertionOrder` | 对象哈希与键插入顺序无关 | DataSource |
 | `ArrayNode_HashOrderDependent` | 数组哈希依赖元素顺序 | DataSource |
 | `DeepNested_HashWorks` | 深层嵌套（对象含数组含字符串）计算哈希不抛异常且非空 | DataSource |
@@ -173,6 +182,11 @@
 | `NumberIntegerVsFloatWithSameValue_HaveDifferentHashes` | 整数 1 与 float 1.0 规范化后哈希相同（值等价） | DataSource |
 | `HashIsHexString` | 哈希为 64 位小写十六进制字符串 | DataSource |
 | `SameComplexTree_DifferentInstances_SameHash` | 相同结构的不同实例哈希相同 | DataSource |
+| `DecodedDeeplyNestedTree_AllLevelsExpanded_DepthThreeHashDiffers` | 解码树展开到第 3 层后叶值变化，哈希不同（回归：懒子树被纳入哈希） | DataSource |
+| `DecodedNestedTree_ArrayDeepChange_ProducesDifferentHash` | 解码树中数组内深层对象值变化，哈希不同 | DataSource |
+| `DecodedNestedTree_DeepKeyChange_ProducesDifferentHash` | 解码树深层键名变化，哈希不同 | DataSource |
+| `DecodedNestedTree_DeepValueChange_ProducesDifferentHash` | 解码树深层叶值变化，哈希不同 | DataSource |
+| `DecodedNestedTree_SameContent_ProducesSameHash` | 相同内容的解码树哈希一致 | DataSource |
 
 ### 错误路径
 

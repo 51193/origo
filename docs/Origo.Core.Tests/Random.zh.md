@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Random -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 随机数 测试
 
@@ -79,6 +79,7 @@ PersistentRandom（黑板承载的持久随机数生成器，含初始化/范围
 | `DifferentSeed_ProducesDifferentSequence` | 不同种子产生不同序列 | Random/PersistentRandom |
 | `NextInt32_Ranged_WithinBounds` | NextInt32(min, max) 返回 [min, max) 内 100 次 | Random/PersistentRandom |
 | `NextFloat_InRange` | NextFloat 返回 [0, 1) 内 100 次 | Random/PersistentRandom |
+| `NextFloat_IsStrictlyLessThanOne` | 10000 次 NextFloat 均满足 0 ≤ 值 < 1.0 | Random/PersistentRandom |
 
 ### 错误路径
 
@@ -96,6 +97,8 @@ PersistentRandom（黑板承载的持久随机数生成器，含初始化/范围
 |---------|---------|---------|
 | `TryNextInt32_BeforeInit_ReturnsFalse` | 未初始化时调用 TryNextInt32 | 返回 false |
 | `CustomStateKeys_UseProvidedKeys` | 自定义黑板键名 | 使用提供的键名，初始化正常工作 |
+| `NextInt32_LargeSpan_StaysWithinBounds` | 跨度超过 int.MaxValue 的区间（如 [-5, int.MaxValue)） | 2000 次取值均落在 [min, max) 内（uint 范围数学不溢出） |
+| `NextFloat_EdgeRawValuesThatRoundToOne_AreClamped` | 原始值落在 [2^32-2^7, 2^32) 会舍入为 1.0f 的边界状态 | NextFloat 钳制结果 < 1.0f |
 
 ## RandomAndStateMachineTests.Random 测试详情
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # State Machine Tests
 
@@ -118,6 +118,8 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `StateMachineContainer_CreateOrGet_ConflictingIndices_Throws` | Same key, different indices for CreateOrGet | InvalidOperationException |
 | `StateMachineContainer_DeserializeFromNode_DuplicateMachineKey_Throws` | Deserialization containing duplicate keys | InvalidOperationException |
 | `StateMachineContainer_DeserializeFromNode_ThrowsOnNullNode` | null node deserialization | ArgumentNullException |
+| `StateMachineContainer_DeserializeFromNode_ArrayRoot_Throws` | Structurally wrong payload (array root) deserialization | InvalidOperationException (fail-fast instead of silently clearing machines) |
+| `StateMachineContainer_DeserializeFromNode_MissingMachinesKey_Throws` | Payload missing the machines key | InvalidOperationException |
 
 ## SessionAndAdapter Details
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Archive File Access Tests
 
@@ -63,6 +63,7 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 | `WriteFile_EmptyObject_RoundTrip` | Empty DataSourceNode object (zero keys) | Written and read back, contains no keys |
 | `WriteFile_NullValueNode_RoundTrip` | Object containing a Null value node | After read back, IsNull is true |
 | `WriteFile_BooleanValues_RoundTrip` | Object containing true/false nodes | After read back, AsBool() returns correct values |
+| `ReadFile_DotDotInsideFileName_IsAllowed` | File name contains a `..` substring (e.g. `v1..2.map`, not a traversal segment) | Reads normally, not rejected |
 
 ### Save/Load Round-Trips
 

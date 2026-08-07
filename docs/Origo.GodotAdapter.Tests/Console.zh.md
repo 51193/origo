@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Console -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台 测试（适配层）
 
@@ -20,6 +20,7 @@
 | `CommandHandlerBaseTests.cs` | 适配层 CommandHandlerBase 基类：构造守卫、null 守卫、参数数量上下界校验、执行成功 |
 | `PressButtonCommandHandlerTests.cs` | press_button 命令：属性契约、参数不足、实体未找到、实体非 Godot 实体 |
 | `CameraViewCommandHandlerTests.cs` | camera_view 命令：属性契约（Name/HelpText/参数界） |
+| `TreeDebugCommandHandlerTests.cs` | tree_debug 命令：属性契约、无前台会话错误路径、参数过多错误路径 |
 | `ProjectionHelperTests.cs` | ProjectionHelper.ProjectWorldToScreen：中心/四边界/相机后方/视锥外/深度递增/对称性/相机非原点 |
 
 ## CommandHandlerBaseTests 测试详情
@@ -64,6 +65,15 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `Properties_HaveExpectedValues` | Name="camera_view"，HelpText 含 "screen coordinates"/"depth"，Min/Max 均为 0 | console-commands |
+
+## TreeDebugCommandHandlerTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `TryExecute_TooManyArgs_ReturnsError` | 提供 2 个参数（需 1 个） | 返回 false，error 含 "Invalid argument count." |
+| `TryExecute_NoForegroundSession_ReturnsError` | 无前台会话时执行 | 返回 false，error 含 "not found" |
 
 ## ProjectionHelperTests 测试详情
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Console -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console Tests (Adapter Layer)
 
@@ -21,6 +21,7 @@ and execution orchestration; plus the `ProjectionHelper` world→screen coordina
 | `CommandHandlerBaseTests.cs` | Adapter-layer CommandHandlerBase: constructor guards, null guards, argument count lower/upper bound checks, execution success |
 | `PressButtonCommandHandlerTests.cs` | press_button command: property contract, insufficient arguments, entity not found, entity is not Godot entity |
 | `CameraViewCommandHandlerTests.cs` | camera_view command: property contract (Name / HelpText / argument bounds) |
+| `TreeDebugCommandHandlerTests.cs` | tree_debug command: property contract, no-foreground-session error path, too-many-arguments error path |
 | `ProjectionHelperTests.cs` | ProjectionHelper.ProjectWorldToScreen: center / four boundaries / behind camera / outside frustum / depth increase / symmetry / camera not at origin |
 
 ## CommandHandlerBaseTests Test Details
@@ -65,6 +66,15 @@ and execution orchestration; plus the `ProjectionHelper` world→screen coordina
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
 | `Properties_HaveExpectedValues` | Name="camera_view", HelpText contains "screen coordinates" / "depth", Min / Max both 0 | console-commands |
+
+## TreeDebugCommandHandlerTests Test Details
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|------------|-----------------|-------------------|
+| `TryExecute_TooManyArgs_ReturnsError` | 2 arguments provided (1 required) | Returns false, error contains "Invalid argument count." |
+| `TryExecute_NoForegroundSession_ReturnsError` | Executed with no foreground session | Returns false, error contains "not found" |
 
 ## ProjectionHelperTests Test Details
 

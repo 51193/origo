@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Grid -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Grid Tests
 
@@ -109,6 +109,9 @@ Validates single-axis/dual-axis coordinate conversion (GridToWorld / WorldToGrid
 |-------------|----------------|-------------------|
 | `ParseCoords_InvalidFormat_ReturnsNull` | `"abc"`, `"3"`, empty string | `null` |
 | `ParseCoords_NullInput_ReturnsNull` | null input | `null` |
+| `ParseCoords_JsonElement_NumberKind_ReturnsNull` | JsonElement of number kind (42) | `null` |
+| `ParseCoords_JsonElement_TrueKind_ReturnsNull` | JsonElement of boolean kind (true) | `null` |
+| `ParseCoords_JsonElement_NullKind_ReturnsNull` | JsonElement of null kind | `null` |
 
 ## Known Coverage Gaps
 

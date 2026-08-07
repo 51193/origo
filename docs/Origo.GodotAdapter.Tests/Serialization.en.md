@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Serialization -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Serialization Tests (Adapter Layer)
 
@@ -28,6 +28,7 @@ run only by `scripts/benchmark.sh`; `test.sh` full test run excludes them via
 | `GodotDataSourceConvertersTests.cs` | 14 Godot type converter round-trips: write→read values match |
 | `GodotJsonConverterRegistryTests.cs` | Type name mapping registration (all 14 types) + round-trip after converter registration |
 | `GodotTypedDataLayeredTests.cs` | Multi-layer TypedData: Kind resolution, FromObject round-trip, TryGet / AsXxx extensions, DataType / Data, ObjectConverter fallback, cross-layer Kind isolation |
+| `GodotTypedDataGeneratedCoverageTests.cs` | Generated accessor per-type coverage: AsXxx / TryGetXxx / KindMap / Converter round-trips, unregistered-Kind fallback and failure paths |
 | `GodotTypedDataPerformanceTests.cs` | (Benchmark) Multi-layer dispatch performance: registered vs unregistered write / read throughput, ObjectConverter switch vs fallback, Factory path, entity frame simulation |
 
 ## GodotDataSourceConvertersTests Test Details
@@ -99,6 +100,27 @@ run only by `scripts/benchmark.sh`; `test.sh` full test run excludes them via
 | `Core_Int_DoesNotConflict_With_GodotKind` | int TypedData read with TryGetVector2 | TryGetVector2 false, TryGetInt32 true returns 42 |
 | `GodotType_Null_PreservesDataType` | TypedData(130, 0, null) (null value) | DataType still Vector3, ToObject returns null |
 | `GodotKind_NotRecognized_ByCoreOnlyUnregistered` | Godot type Kind ≥ 128 vs Core int Kind < 128 | Godot Kind non-zero and ≥ 128, int Kind=5 and < 128 |
+
+## GodotTypedDataGeneratedCoverageTests Test Details
+
+Parametrically exercises every generated accessor (`As*`/`TryGet*`), the kind map, and the object converter bridge for all 14 registered Godot types, executing every generated branch.
+
+### Happy Path
+
+| Test Method | Verified Behavior | Doc Reference |
+|------------|-------------------|---------------|
+| `KindMap_ResolvesEveryRegisteredType` | All 14 Godot types resolve to their respective Kinds via `TypedDataTypeMap.GetKindForType` (128–141 one-to-one) | GodotAdapter Snd |
+| `Converter_FromObject_RoundTrips` | `FromObject`→`TypedData`→`ToObject` full round-trip for all 14 types, DataType and value match | GodotAdapter Snd |
+| `Converter_UnregisteredKind_FromObjectFallsBackToRef` | Unregistered Kind(250) via `FromObject` falls back to the ref slot: inlineBits=0, same instance referenced | GodotAdapter Snd |
+| `Converter_ToObject_UnregisteredKind_FallsBackToRef` | Unregistered Kind(250) via `ToObject` falls back returning the original value; null value returns null | GodotAdapter Snd |
+| `Accessors_AsAndTryGet_ReturnValue` | `As*` and `TryGet*` accessors for all 14 types return matching values | GodotAdapter Snd |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|------------|-----------------|-------------------|
+| `Accessors_TryGet_RefTypeMismatch_Fails` | Ref slot holds a non-Godot value (string) when calling `TryGet*` | Returns false |
+| `Accessors_As_UnregisteredKind_Throws` | `As*` called on TypedData with unregistered Kind(250) | InvalidCastException |
 
 ## GodotTypedDataPerformanceTests Test Details (Benchmark)
 

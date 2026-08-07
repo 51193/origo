@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 元数据 测试
 
@@ -48,11 +48,21 @@
 | `WithArrayType_PreservesExactType` | int[] 类型保留 | snd-entity-model: TypedData |
 | `WithReferenceType_PreservesIdentity` | 引用类型保持同一对象引用 | snd-entity-model: TypedData |
 | `WithNullValueForReferenceType_PreservesTypeInfo` | null 值保留类型信息 | snd-entity-model: TypedData |
+| `RegisterKind_SameTypeTwice_IsIdempotent` | 同一 kind 重复注册相同类型为幂等操作 | snd-entity-model: TypedData |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `RegisterKind_DifferentTypeSameKind_Throws` | 同一 kind 注册不同类型 | InvalidOperationException（消息含 kind 与原类型名），原映射保留 |
+| `RegisterKind_NullType_Throws` | RegisterKind 的 type 为 null | ArgumentNullException，不残留映射 |
+| `RegisterKind_UnregisteredKindSentinel_Throws` | 使用 UnregisteredKind 哨兵注册 | ArgumentOutOfRangeException，不残留映射 |
 
 ### 边界路径
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
+| `RegisterKind_KindZero_IsIgnored` | kind=0 注册 | 被忽略，KindTypeMap[0] 保持 null |
 | `TwoInstances_SameTypeAndSameValue_AreEqual` | 相同值的两个 TypedData（struct 值语义） | 值相等 |
 | `TwoInstances_DifferentType_HaveDifferentReferences` | 不同类型的两个 TypedData | 值不相等 |
 
@@ -112,6 +122,7 @@
 | `CrossTypeAccess_StringAsInt32_ReturnsFalse` | string 用 TryGetInt32 访问 | 返回 false |
 | `NullSentinel_HasKindZero` | default(TypedData) IsNull=true，所有 TryGet 返回 false | Kind=0，所有 TryGet 返回 false |
 | `NullSentinel_StillHasKindZero_AfterRegistrations` | 注册新 Kind 后 default 仍为 Kind=0 | 不受注册影响 |
+| `TryExtract_StringKindWithNullValue_ReturnsFoundTrueAndNull` | string kind 的值为 null（引用 kind 合法状态） | TryExtract 返回 true 且值为 null，与 TryGetString 语义一致 |
 
 ## SndMetaDataTests 测试详情
 

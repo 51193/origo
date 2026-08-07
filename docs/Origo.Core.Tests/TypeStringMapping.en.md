@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Type Serialization Tests
 
@@ -66,6 +66,7 @@ Validates TypeStringMapping's CLR type ↔ stable string identifier bidirectiona
 | `SndMappings_ResolveMetaListFromJsonArray_SupportsTemplateAndInlineMix` | JSON array mixing templateKey references and inline definitions resolved to meta list | Serialization |
 | `Blackboard_SerializeAll_ReturnsDetachedCopy` | SerializeAll returns a detached copy; modifying the copy does not affect the blackboard original | Serialization |
 | `JsonCodec_DecodeJsonArrayRoot_ReadsElements` | Top-level JSON array decoded to Array node; elements readable by index | Serialization |
+| `SndWorld_ResolveTemplate_MutationDoesNotPolluteTemplateCache` | Mutating the copy returned by ResolveTemplate does not pollute the template cache; resolving again returns original content | Serialization |
 
 ### Error Paths
 

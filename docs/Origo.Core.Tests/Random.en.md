@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Random -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Random Number Tests
 
@@ -79,6 +79,7 @@ and noise map generator (OpenSimplex2 + Worley blend).
 | `DifferentSeed_ProducesDifferentSequence` | Different seed produces different sequence | Random/PersistentRandom |
 | `NextInt32_Ranged_WithinBounds` | NextInt32(min, max) returns within [min, max) for 100 calls | Random/PersistentRandom |
 | `NextFloat_InRange` | NextFloat returns within [0, 1) for 100 calls | Random/PersistentRandom |
+| `NextFloat_IsStrictlyLessThanOne` | 10000 NextFloat calls all satisfy 0 ≤ value < 1.0 | Random/PersistentRandom |
 
 ### Error Path
 
@@ -96,6 +97,8 @@ and noise map generator (OpenSimplex2 + Worley blend).
 |-------------|-------------------|-------------------|
 | `TryNextInt32_BeforeInit_ReturnsFalse` | Call TryNextInt32 when uninitialized | Returns false |
 | `CustomStateKeys_UseProvidedKeys` | Custom blackboard key names | Uses provided keys, init works normally |
+| `NextInt32_LargeSpan_StaysWithinBounds` | Span wider than int.MaxValue (e.g. [-5, int.MaxValue)) | 2000 draws all within [min, max) (uint range math does not overflow) |
+| `NextFloat_EdgeRawValuesThatRoundToOne_AreClamped` | Raw state values in [2^32-2^7, 2^32) that would round to 1.0f | NextFloat clamps result below 1.0f |
 
 ## RandomAndStateMachineTests.Random Details
 

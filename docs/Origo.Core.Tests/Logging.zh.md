@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Logging -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 日志 测试
 
@@ -39,7 +39,7 @@
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
 | `AddContext_NullKey_Skipped` | null key | 跳过 |
-| `AddContext_NullValue_Skipped` | null value | 跳过 |
+| `AddContext_NullValue_Preserved` | null value | 保留为 `key=`（空值不被跳过） |
 | `AddContext_WhitespaceKey_Skipped` | 空白 key | 跳过 |
 
 ## 已知覆盖缺口

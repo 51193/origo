@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 场景 测试
 
@@ -41,6 +41,7 @@ SndEntityFactory 的 spawn 编排和 ProcessAll 帧处理由 SndEntityLifecycleB
 |---------|-----------|---------|
 | `Spawn_ThrowsOnNull` | null metadata 参数 | ArgumentNullException |
 | `LoadFromMetaList_ThrowsOnNull` | null metaList 参数 | ArgumentNullException |
+| `RemoveEntity_Missing_Throws` | 移除不存在的实体名 | InvalidOperationException |
 
 ## FullMemorySndSceneHostTests 测试详情
 
@@ -70,11 +71,23 @@ SndEntityFactory 的 spawn 编排和 ProcessAll 帧处理由 SndEntityLifecycleB
 |---------|-----------|---------|
 | `NullNodeFactory_CreatesNullNodeHandle` | Create 返回非 null 句柄，Free/SetVisible 为无操作 | INodeFactory |
 
+## SndEntityFactoryRollbackTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Spawn_AfterSpawnHookThrows_RollsBackEntityAndStrategyReferences` | Spawn 的 AfterSpawn 钩子抛出 InvalidOperationException | 半初始化实体从宿主移除（FindByName 返回 null），已获取的策略引用归还（LogPoolLeaks 无 refCount 告警），原始异常传播 |
+| `SpawnMany_AfterSpawnHookThrows_RollsBackUnfiredEntitiesOnly` | SpawnMany 中第二个实体的 AfterSpawn 钩子抛出 InvalidOperationException | 钩子已触发的 E1 保留；钩子未触发的 E2、E3 全部回滚，回滚策略引用归还 |
+| `Spawn_AfterSpawnHookThrows_OnDetachInvalidatingHost_PropagatesOriginalException` | detach 使实体包装失效的宿主（Godot wrapper 语义）上 AfterSpawn 抛异常 | 先拆卸再移除，原始异常不被 ObjectDisposedException 遮蔽 |
+
 ## 测试辅助策略
 
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
-| 无 | — | 本测试文件不定义策略类，纯接口行为测试 |
+| `ThrowingAfterSpawnStrategy` | SndEntityFactoryRollbackTests.cs | AfterSpawn 钩子抛出 InvalidOperationException（"Intentional AfterSpawn failure"），验证 Spawn/SpawnMany 回滚 |
+| `NormalStrategy` | SndEntityFactoryRollbackTests.cs | 正常生命周期策略，SpawnMany 中钩子正常触发的实体（E1）保留 |
+| `NormalTwoStrategy` | SndEntityFactoryRollbackTests.cs | 正常生命周期策略，钩子尚未触发的回滚候选（E3），验证未触发钩子的实体被回滚 |
 
 ## 已知覆盖缺口
 

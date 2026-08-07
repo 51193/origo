@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Meta -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：元数据 测试
 
@@ -72,7 +72,13 @@
 | `RegisterSaveMetaContributor_ThrowsOnNullContributor` | null ISaveMetaContributor | ArgumentNullException |
 | `RegisterSaveMetaContributor_ThrowsOnNullDelegate` | null 委托 | ArgumentNullException |
 
-## SaveMetaNullAndSessionContextTests 正确路径
+## SaveMetaNullAndSessionContextTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `NullSndContext_RegisterSaveMetaContributor_Throws` | 在 NullSndContext 上注册贡献者（接口或委托） | InvalidOperationException |
 
 ## SaveMetaMergerTests 测试详情
 

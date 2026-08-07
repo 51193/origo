@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Storage Tests
 
@@ -27,6 +27,8 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SaveGamePayloadTests.cs` | Data model: SaveGamePayload/LevelPayload defaults, multi-level access, CustomMeta |
 | `WellKnownKeysTests.cs` | Constants: ActiveSaveId, SessionTopology key name correctness |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
+| `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden |
+| `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |
 
 ## SaveStorageContractTests Details
 
@@ -48,6 +50,8 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `EnumerateSaveIds_ReturnsCorrectList` | Enumerated saves do not include current directory | ISaveStorageService |
 | `DeleteCurrentDirectory_RemovesAllCurrentFiles` | DeleteCurrentDirectory removes all current/ contents | ISaveStorageService |
 | `TryReadLevelPayload_AllThreePresent_Succeeds` | All three level files present returns full LevelPayload | persistence-flow: Strict Reads |
+| `WriteProgressOnlyToCurrent_RemovesMarkerOnSuccess` | Checkpoint write succeeds with no marker residue, files exist | persistence-flow: Two-Phase Write |
+| `WriteLevelPayloadOnlyToCurrent_RemovesMarkerOnSuccess` | Level-only write succeeds with no marker, readable back | persistence-flow: Two-Phase Write |
 
 ### Error Path
 
@@ -60,6 +64,8 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `TryReadLevelPayload_AnyTwoOfThree_Throws` | Any two of the three level files present | InvalidOperationException (data corruption) |
 | `ReadSavePayloadFromCurrent_WhenProgressJsonMissing_Throws` | progress.json missing | Throws exception |
 | `ReadSavePayloadFromSnapshot_WhenSaveNotExist_Throws` | Non-existent save snapshot | InvalidOperationException |
+| `WriteProgressOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | I/O failure mid checkpoint write (simulated second write throws) | IOException propagates, marker left so readers reject |
+| `WriteLevelPayloadOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | Level-only write validation fails (Null nodes) | InvalidOperationException, marker left so readers reject |
 
 ### Boundary Path
 
@@ -69,6 +75,35 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `StaleWriteMarker_AfterDeleteCurrentDirectory_WriteThenSucceeds` | stale marker → DeleteCurrentDirectory → rewrite | New data writable and readable |
 | `RecoverFromStaleWriteMarker_CleanStateAfterRecovery` | Clean current/ state after recovery | No marker residue, data normal |
 | `DeleteCurrentDirectory_WhenNoDirectory_DoesNotThrow` | Delete when current/ does not exist | Does not throw (idempotent) |
+
+## SaveFormatVersionTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `Save_WritesFormatVersionToMetaMap` | Save writes `origo.format_version: 1` to meta.map | persistence-flow: meta.map |
+| `ListSaves_HidesFrameworkReservedMetaKeys` | ListSaves/EnumerateSavesWithMetaData hide `origo.*` framework-reserved keys | persistence-flow: meta.map |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `Load_RejectsSaveWithNewerFormatVersion` | Save format version newer than current (99) | InvalidOperationException (load rejected) |
+
+### Boundary Path
+
+| Test Method | Boundary Condition | Expected Behavior |
+|-------------|-------------------|-------------------|
+| `Load_AcceptsMissingFormatVersionKey` | Old save meta.map without version key | Treated as version 1, loads normally |
+
+## SaveSnapshotMarkerTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `Snapshot_DoesNotContainWriteInProgressMarker` | Snapshot directory has no `.write_in_progress` file after a full save | persistence-flow: Two-Phase Write |
 
 ## SaveStorageAndPayloadTests Details
 
@@ -263,6 +298,22 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 |-------------|-----------------|-----------|
 | `CopyDirectoryFromSnapshot_SeededFiles_AllCopiedToCurrent` | All seeded files under snapshot save_001/extra are copied to current/extra | SaveStorageFacade.CopyDirectoryFromSnapshot |
 | `CopyDirectoryFromSnapshot_SubdirectoryStructurePreserved` | Subdirectory hierarchy preserved after copy | SaveStorageFacade.CopyDirectoryFromSnapshot |
+| `CopyDirectoryFromSnapshot_ExistingFilesInCurrent_Overwrites` | Existing same-name files in current are overwritten by snapshot content | SaveStorageFacade.CopyDirectoryFromSnapshot |
+| `ExtraFiles_FullSaveLoadRoundTrip_PreservesMultipleFiles` | Multiple extra files survive save→load round-trip with content and structure | persistence-flow: extra |
+| `ExtraFiles_SaveLoadRoundTrip_SubdirectoryPreserved` | Extra files in subdirectories survive round-trip | persistence-flow: extra |
+| `ExtraFiles_SaveTwice_SameSlot_HasLatestContent` | Saving twice to the same slot, load yields latest content | persistence-flow: extra |
+| `ExtraFiles_SaveLoadRoundTrip_TypeDataRoundTrip_PreservesNumbers` | TypedData write/read (int/bool/string) round-trip preserves values | persistence-flow: extra |
+| `ExtraFiles_DeleteFileThenSave_FileNotInSnapshot` | Deleted file is not in snapshot after save | persistence-flow: extra |
+| `ExtraFiles_DifferentContent_DifferentCombinedHash` | Extra content change changes .payload.sha hash | persistence-flow: Idempotent |
+| `ExtraFiles_LoadWithoutExtra_DoesNotThrowAndPreviousStateCleared` | Loading a save without extra directory does not throw | persistence-flow: extra |
+| `IdempotentSkip_UnchangedPayloadAndExtra_SkipHappens` | Second save skipped idempotently with log when payload and extra hashes unchanged | persistence-flow: Idempotent |
+| `CombineHashes_EmptySide_ProducesConsistentFormat` | Combining with an empty side still yields 64-char hex | SaveAtomicWriter |
+| `CombineHashes_SamePayload_EmptyAndNonEmptySide_DifferentResult` | Same payload hash, empty side vs non-empty side produce different results | SaveAtomicWriter |
+| `CombineHashes_WithExtra_DifferentFromPayloadHash` | Combined hash with extra differs from pure payload hash | SaveAtomicWriter |
+| `ComputeSideDirectoryHash_WithFiles_ReturnsNonEmpty` | Directory with files returns non-empty 64-char hex hash | SaveAtomicWriter |
+| `ComputeSideDirectoryHash_SameContent_SameHash` | Same content computed twice yields same hash | SaveAtomicWriter |
+| `ComputeSideDirectoryHash_DifferentContent_DifferentHash` | Content change yields different hash | SaveAtomicWriter |
+| `ComputeSideDirectoryHash_CustomDirectoryName_Works` | Custom directory name also produces a 64-char hex hash | SaveAtomicWriter |
 
 ### Boundary Path
 
@@ -270,6 +321,9 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 |-------------|-------------------|-------------------|
 | `CopyDirectoryFromSnapshot_SourceDirectoryDoesNotExist_ReturnsSilently` | No extra/ directory in snapshot | Returns silently, no exception |
 | `CopyDirectoryFromSnapshot_EmptySourceDirectory_DoesNothing` | extra/ is an empty directory | current/extra created but stays empty |
+| `ComputeSideDirectoryHash_NoExtraDir_ReturnsEmpty` | No extra/ directory | Returns empty string |
+| `ComputeSideDirectoryHash_EmptyExtraDir_ReturnsEmpty` | extra/ directory exists but is empty | Returns empty string |
+| `ComputeSideDirectoryHash_CustomDirectory_Empty_ReturnsEmpty` | Custom directory is empty | Returns empty string |
 
 ### Error Path
 

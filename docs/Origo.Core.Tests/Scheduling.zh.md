@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Scheduling -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 调度 测试
 
@@ -64,6 +64,7 @@
 |---------|---------|---------|
 | `ExecuteAll_EmptyQueue_IsIdempotent` | 连续 3 次 ExecuteAll | 每次返回 0 |
 | `ExecuteAll_AfterClear_DoesNotExecuteClearedActions` | Clear 后 ExecuteAll | 返回 0，action 不被执行 |
+| `ExecuteAll_ExactlyMaxDepthBatches_ThenQueueEmpty_DoesNotThrow` | 恰好 100 层链式再入队后队列为空（回归） | 不抛异常，100 个 action 全部执行 |
 
 ## 测试辅助策略
 

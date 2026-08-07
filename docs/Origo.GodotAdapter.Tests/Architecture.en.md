@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Guardrail Tests (Adapter Layer)
 
@@ -33,6 +33,8 @@ and guards the public visibility of the adapter-layer `CommandHandlerBase`, allo
 | `CommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | `Origo.GodotAdapter.Console.CommandHandlerBase` is public (or nested public), external projects can derive from it | Origo.GodotAdapter/Console |
 | `GodotSndEntity_LifecycleMethods_ShouldBeInternal` | `GodotSndEntity` implements `IEntityLifecycle` via explicit interface implementation, invisible to reflection; lifecycle is driven only by Core orchestration | Origo.GodotAdapter/Snd |
 | `GodotSndEntity_GetNodeFromSnd_ShouldRemainPublic` | `SndEntityNodeExtensions.GetNodeFromSnd<T>()` stays public so external projects can reach Godot nodes | Origo.GodotAdapter/Snd |
+| `GodotSndManager_BindContext_ShouldNotBePublic` | Reflection asserts `GodotSndManager.BindContext` has no public concrete-type path (only the explicit `ISndContextAttachableSceneHost` implementation), preventing business code from rebinding the context behind the framework's back | Origo.GodotAdapter/Snd |
+| `GodotSndManager_BindRuntimeDependencies_ShouldNotBePublic` | Reflection asserts `BindRuntimeDependencies` is internal only (driven by the bootstrap flow `OrigoAutoHost` and InternalsVisibleTo test projects), preventing business code from rebinding world/logger behind the framework's back | Origo.GodotAdapter/Snd |
 
 ## Test Support Strategy
 

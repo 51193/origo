@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Frame-Driven Game Simulation Integration Tests
 
@@ -59,12 +59,155 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `ConcurrentSpawnKill_SameFrame_AllCleanedUp` | Concurrently spawn 2 entities → kill both in same frame → verify BeforeDead fires twice + all entities removed | Runtime: SessionManager |
 | `KillEntity_ThenRespawn_NewEntityIndependent` | Entity kill → respawn with same name → verify new entity data is independent (does not inherit old entity state) | ISndEntity lifecycle |
 | `MultipleBackgroundSessions_EntitiesProcessedInParallel` | Create 3 sessions (1 foreground + 2 background) → each session spawns one FrameCounter → DriveFrame → verify each count=1 | SessionManager: Multi-session |
+| `CrossSession_EntityReadsPeerInAnotherSession` | After an entity in a background session runs frames, its data can be read via TryGetSession + FindByName (count accumulates across frames) | SessionManager: Multi-session |
+| `BackgroundSession_SaveLoad_IndependentEntityState` | Foreground and background session entities/blackboards are saved and loaded independently: foreground count and background count/blackboard values all restored | persistence-flow |
+| `BackgroundSession_KillEntities_DuringForegroundPlay` | Harvesting a background session entity during foreground play (BeforeDead fires, entity removed); foreground entity unaffected | Runtime: SessionManager |
+| `MultipleBackgroundSessions_SaveLoadCycle` | Multiple background sessions + foreground session all restored after save/reload (entity counts and each session's blackboard preserved independently) | persistence-flow |
 
 ### Error Paths
 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `ErrorPath_KillAlreadyKilledEntity_Throws` | Kill already-harvested entity | `InvalidOperationException` |
+
+## AdvancedGameplayIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `BatchSpawn_100Entities_AllProcessed` | Batch-spawning 100 entities then running 5 frames: every entity has count=5 | architecture-overview: Frame loop |
+| `BatchSpawn_ThenBatchKill_AllCleanedUp` | Batch-spawn 100 entities then batch-kill them in the same frame; all harvested and removed after DriveFrame | Runtime: SessionManager |
+| `ConsoleCommand_SndCount_PublishesOutput` | Submitting the snd_count command produces console output containing "Snd count:" | console-commands |
+| `ConsoleCommand_BbSetSystemLayer_RoundTrip` | bb_set/bb_get system-layer commands: int/string written and read back via SystemBlackboard; bb_get prints the value | console-commands |
+| `EntityDataSetGet_DirectAPI_RoundTrip` | Entity SetData/GetData/TryGetData direct API round-trips (int/string/bool) | snd-entity-model: TypedData |
+| `MultiStrategyEntity_LifecyclePlusObserver` | Lifecycle+Observer hybrid entity: frame processing increments count and triggers the observer's data change | snd-entity-model: Observer |
+| `MultiStrategyEntity_LifecyclePlusActive` | Lifecycle+Active hybrid entity: frame processing accumulating count and InvokeStrategy work together | snd-entity-model |
+| `MultiStrategyEntity_AllThreeTypes` | Entity with all three strategy types (Lifecycle+Observer+Active) processes frames, notifies, and invokes normally | snd-entity-model |
+| `SaveLoad_MultipleEntities_StatePreserved` | Save/reload of 10 entities + session blackboard restores entity count, count, tag, and blackboard values | persistence-flow |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `ErrorPath_RequestKillUnknownEntity_Throws` | RequestKillEntity on a non-existent entity | InvalidOperationException |
+| `ErrorPath_SpawnWithUnregisteredStrategyIndex_Throws` | Spawning with an unregistered strategy index | Throws |
+
+## ActiveStrategyIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `InvokeStrategy_DirectCall_ReturnsResult` | After dynamically AddActiveStrategy, direct InvokeStrategy returns the strategy result (21→42) | snd-entity-model: ActiveStrategy |
+| `InvokeStrategy_ProcessTriggersActive_WithinFrame` | A Lifecycle strategy calls its own InvokeStrategy during Process and writes the result to entity data | snd-entity-model: ActiveStrategy |
+| `InvokeStrategy_PeerEntityActiveStrategy_CrossEntity` | During Process, calls another entity's ActiveStrategy via OwningSession.FindByName | snd-entity-model: ActiveStrategy |
+| `ActiveStrategyIndices_SaveLoad_Persisted` | Dynamically mounted ActiveStrategy indices persist across save/reload; Invoke still works (result correct) | persistence-flow |
+| `ActiveStrategy_AfterLoad_InvokeWorks` | After reload the entity's ActiveStrategy works and entity data is preserved | persistence-flow |
+| `HybridEntity_LifecycleProcessAndActiveInvoke` | Lifecycle+Active hybrid entity: frame-loop Process accumulates count while Invoke remains usable | snd-entity-model |
+| `ActiveStrategy_DynamicAddRemove_InFrameLoop` | Dynamic Add/RemoveActiveStrategy in the frame loop: Invoke throws before add, works after add, throws again after remove | snd-entity-model |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `ErrorPath_InvokeActiveStrategyOnKilledEntity_Throws` | InvokeStrategy after the entity is killed | Throws |
+| `ErrorPath_AddDuplicateActiveStrategy_Throws` | Duplicate AddActiveStrategy | Throws |
+
+## StateMachineIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `StateMachine_PushPop_InFrameLoop` | Push/Pop of the state machine stack in the frame loop; Peek reflects the correct top | state-machine |
+| `StateMachine_OnPushHook_FiresCorrectly` | Push triggers the OnPushRuntime hook (records the after-top value) | state-machine: Push |
+| `StateMachine_OnPopHook_FiresCorrectly` | TryPopRuntime triggers the OnPopRuntime hook; Peek returns false once the stack is empty | state-machine: TryPopRuntime |
+| `StateMachine_OnPopBeforeQuit_FiresOnSessionDestroy` | OnPopBeforeQuit fires for stacked states when the session is destroyed | state-machine: TryPopOnQuit |
+| `StateMachine_SaveLoad_PreservesStack` | The stack survives save/reload (AfterLoad hooks fire per layer; Pop continues to work) | state-machine: Load Restoration |
+| `StateMachine_SaveLoad_AfterLoadHookFiresOncePerLayer` | Each restored stack layer fires OnPushAfterLoad exactly once (no double flush) | state-machine: Load Restoration |
+| `StateMachine_MultipleEntities_IndependentStacks` | Multiple state machine stacks in the same session are independent | state-machine |
+| `StateMachine_EntityLifecycleStrategy_PushesAndPopsState` | A Lifecycle strategy pushes/pops an entity state machine across frames | state-machine |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `ErrorPath_PushStateMachineAfterSessionDestroy_Throws` | Operating the state machine (Peek/Push) after session destroy | ObjectDisposedException |
+
+## ObserverTopologyIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `Observer_Mount_TriggersOnMountedAndDataChange` | Mount triggers OnMounted; target data changes trigger OnDataChanged (new value correct) | snd-entity-model: Observer |
+| `Observer_Unmount_StopsNotifying` | Target data changes no longer notify after Unmount | snd-entity-model: Observer |
+| `Observer_TargetKilled_TriggersOnUnmounted` | Killing the target entity triggers OnUnmounted | snd-entity-model: Observer |
+| `Observer_OldAndNewValues_CorrectOnChange` | Consecutive changes deliver the correct oldValue/newValue sequence to OnDataChanged | snd-entity-model: Observer |
+| `Observer_MultipleTargets_NotifiedIndependently` | An observer watching multiple targets is notified independently per target | snd-entity-model: Observer |
+| `Observer_FrameDriven_StrategyMountsObserverInProcess` | A Lifecycle strategy auto-mounts an observer in AfterSpawn; notifications work in the frame loop | snd-entity-model: Observer |
+| `Observer_Bindings_RestoredAcrossSaveAndReload` | Observer bindings are restored after save/reload; data changes still notify | persistence-flow |
+| `Observer_OnMounted_FiresAgainAfterReload` | OnMounted fires again after reload restores the binding | persistence-flow |
+| `Observer_OnUnmounted_FiresWhenSessionIsDestroyed` | Observers receive OnUnmounted when the session is destroyed | snd-entity-model: Observer |
+| `Observer_TargetDataNoLongerNotifiesAfterSessionDestroyed` | Target data changes no longer notify after the session is destroyed | snd-entity-model: Observer |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `Observer_MountWithInvalidIndex_Throws` | Mounting with an unregistered observer index | InvalidOperationException ("not found") |
+| `Observer_DuplicateMount_Throws` | Duplicate mount of the same (observer, target, index) | InvalidOperationException ("already mounted"); OnMounted does not fire twice |
+| `Observer_MountToKilledEntity_Throws` | Mounting onto a killed target entity | InvalidOperationException ("pending kill") |
+| `Observer_KilledObserverCannotMount_Throws` | A killed observer entity initiates a mount | InvalidOperationException ("pending kill") |
+| `Observer_MountAcrossSessions_Throws` | Cross-session mount (entity from another session mounting a foreground entity) | InvalidOperationException ("different sessions") |
+
+## PlanningIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `PlanExecution_SetIntent_StartsPlanInFrameLoop` | Setting the intent data starts the plan frame-driven (plan_step=step_a, action_status=executing) | Planning: PlanExecutionStrategyBase |
+| `PlanExecution_CompletePlan_InFrameLoop` | After actions complete, the frame-driven plan advances steps until the intent completes (task_status=completed) | Planning: PlanExecutionStrategyBase |
+| `PlanExecution_WithoutIntent_DoesNotStart` | Without intent the plan does not start (no plan_step/task_status data) | Planning: PlanExecutionStrategyBase |
+| `PlanExecution_DataAttributeKeys_AreSetCorrectly` | plan_step and action_index data keys are set correctly once the plan starts | Planning: PlanExecutionStrategyBase |
+| `PlanExecution_MultipleEntities_IndependentPlans` | Plans on multiple entities are independent; one entity advancing does not affect another | Planning: PlanExecutionStrategyBase |
+
+## StrategyStateSaveLoadIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `LifecycleStrategy_StateSurvivesSaveLoad` | Lifecycle strategy count state and entity data survive save/reload; frame processing continues after reload | persistence-flow |
+| `EntityDataAndBlackboard_BothSurviveSaveLoad` | Entity data and SessionBlackboard (int/string) both restored after save/reload | persistence-flow |
+| `SaveLoad_ThenContinue_EntityStillProcesses` | After reload, running frames continues to accumulate the entity count from the restored value | persistence-flow |
+| `SaveLoad_NoLossOfEntities` | Batch save/reload of 20 entities loses nothing (entity count, count, and id all correct) | persistence-flow |
+| `SaveTwice_SecondOverwrites_StateCorrect` | Second save to the same slot overwrites: reload yields the second state (count and blackboard version) | persistence-flow |
+| `SaveLoad_MultipleSessions_AllStatePreserved` | Foreground + background session entities and blackboards all preserved after save/reload | persistence-flow |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `ErrorPath_LoadCorruptSave_Throws` | Loading with corrupted progress.json | Flush throws (fail-fast) |
+
+## ErrorPathIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `DeferredAction_ExecutesAndFlushesThroughDriveFrame` | Deferred actions enqueued during Process execute via the DriveFrame flush (count accumulates + deferred_ran=true) | Scheduling |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `ErrorPath_LoadNonexistentSave_Throws` | Loading a non-existent save | Flush throws (message contains "nonexistent") |
+| `ErrorPath_LoadSaveWithCorruptedSessionFile_Throws` | Loading with corrupted session.json | Flush throws |
+| `ErrorPath_LoadSaveWithCorruptedSndScene_Throws` | Loading with corrupted snd_scene.json | Flush throws |
 
 ## Test Helper Facilities
 
@@ -80,6 +223,27 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `ConsoleCommandStrategy` | `GameplayIntegrationTests.cs` | TrySubmitConsoleCommand("snd_count") during Process; verifies command is handled through DriveFrame processing |
 | `HpObserverIntegrationStrategy` | `GameplayIntegrationTests.cs` | ObserverStrategyBase: OnDataChanged records "changed:{dataKey}"; verifies observer Mount/Notify mechanism |
 | `DataObserverIntegrationStrategy` | `AdvancedGameplayIntegrationTests.cs` | ObserverStrategyBase: ObserveData("count"), OnDataChanged records "changed:{dataKey}"; used for multi-strategy combination tests |
+| `BatchFrameCounterStrategy` | `AdvancedGameplayIntegrationTests.cs` | SharedFrameCounterStrategy subclass; batch spawn/kill frame counting |
+| `EchoActiveStrategy` | `AdvancedGameplayIntegrationTests.cs` | SharedEchoActiveStrategy subclass (input×2); all-three-strategy-type combination tests |
+| `EchoActiveStrategy` | `ActiveStrategyIntegrationTests.cs` | SharedEchoActiveStrategy subclass (input×2); verifies ActiveStrategy Invoke/save persistence |
+| `SelfInvokeStrategy` | `ActiveStrategyIntegrationTests.cs` | Calls its own InvokeStrategy during Process and writes the result |
+| `PeerInvokeStrategy` | `ActiveStrategyIntegrationTests.cs` | Calls a peer entity's ActiveStrategy via FindByName during Process and writes the result |
+| `AdvFrameCounterStrategy` | `ActiveStrategyIntegrationTests.cs` | SharedFrameCounterStrategy subclass; hybrid entity frame counting |
+| `ErrorPathFrameCounterStrategy` | `ErrorPathIntegrationTests.cs` | SharedFrameCounterStrategy subclass; frame counting for corrupted-save load scenarios |
+| `DeferredCounterStrategy` | `ErrorPathIntegrationTests.cs` | Increments count each frame in Process; enqueues a deferred action setting deferred_ran=true when count>0 |
+| `BlackboardMarkerStrategy` | `GameplaySessionSwitchAndConcurrencyTests.cs` | SharedNoopLifecycleStrategy subclass; placeholder for session switch blackboard isolation scenarios |
+| `KillableTestStrategy` | `GameplaySessionSwitchAndConcurrencyTests.cs` | SharedKillProbeStrategy subclass; records BeforeDead events |
+| `FrameCounterStrategy` | `GameplaySessionSwitchAndConcurrencyTests.cs` | SharedFrameCounterStrategy subclass (TestStrategyIndices.FrameCounter); frame counting for multi-session parallel/save scenarios |
+| `TopologyObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase watching hp; records OnMounted/OnDataChanged/OnUnmounted events |
+| `ValueCapturingObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase watching hp; records oldValue/newValue |
+| `TargetAwareObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase watching hp; records TargetName |
+| `AutoMountObserverLifecycleStrategy` | `ObserverTopologyIntegrationTests.cs` | Auto-mounts an observer onto "target" in AfterSpawn; verifies frame-driven mounting |
+| `TwoStepPlanStrategy` | `PlanningIntegrationTests.cs` | PlanExecutionStrategyBase subclass: two-step plans (step_a→step_b) for intents "build"/"repair" |
+| `NoopActionStrategy` | `PlanningIntegrationTests.cs` | SharedNoopLifecycleStrategy subclass; plan Action placeholder |
+| `PushTrackingStateMachineStrategy` | `StateMachineIntegrationTests.cs` | SharedNoopStateMachineStrategy subclass; drives Push/Pop stack in the frame loop |
+| `HookRecordingStateMachineStrategy` | `StateMachineIntegrationTests.cs` | Records on_push_runtime/on_push_after_load/on_pop_runtime/on_pop_before_quit events |
+| `SmPushingLifecycleStrategy` | `StateMachineIntegrationTests.cs` | Lifecycle strategy: pushes "active" in AfterSpawn, pops and pushes "idle" once frame count reaches 3 |
+| `StateFrameCounterStrategy` | `StrategyStateSaveLoadIntegrationTests.cs` | SharedFrameCounterStrategy subclass; frame counting for strategy state save/load |
 
 ## Usage Pattern
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：存储 测试
 
@@ -26,6 +26,8 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SavePathResolverTests.cs` | 路径解析：SaveFileHandle 相对路径提取、父目录创建、遍历攻击拒绝、叶目录名 |
 | `SaveGamePayloadTests.cs` | 数据模型：SaveGamePayload/LevelPayload 默认值、多关卡访问、CustomMeta |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ 侧信道文件：快照→current 复制往返、目录结构保留、缺失/空目录容错、参数校验 |
+| `SaveFormatVersionTests.cs` | 存档格式版本：meta.map 写入 origo.format_version、新版本拒绝加载、缺版本键兼容、保留键隐藏 |
+| `SaveSnapshotMarkerTests.cs` | 快照完整性：快照目录无 .write_in_progress 残留 |
 | `WellKnownKeysTests.cs` | 常量：ActiveSaveId、SessionTopology 键名正确性 |
 
 ## SaveStorageContractTests 测试详情
@@ -48,6 +50,8 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `EnumerateSaveIds_ReturnsCorrectList` | 枚举存档不包含 current 目录 | ISaveStorageService |
 | `DeleteCurrentDirectory_RemovesAllCurrentFiles` | DeleteCurrentDirectory 删除所有 current/ 内容 | ISaveStorageService |
 | `TryReadLevelPayload_AllThreePresent_Succeeds` | 关卡三件套全存时返回完整 LevelPayload | persistence-flow: 严格读取 |
+| `WriteProgressOnlyToCurrent_RemovesMarkerOnSuccess` | progress 单写成功后无 marker 残留、文件存在 | persistence-flow: 两阶段写入 |
+| `WriteLevelPayloadOnlyToCurrent_RemovesMarkerOnSuccess` | 关卡单写成功后无 marker、可读回 | persistence-flow: 两阶段写入 |
 
 ### 错误路径
 
@@ -60,6 +64,8 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `TryReadLevelPayload_AnyTwoOfThree_Throws` | 关卡三件套只存在任意两件 | InvalidOperationException（数据损坏） |
 | `ReadSavePayloadFromCurrent_WhenProgressJsonMissing_Throws` | progress.json 缺失 | 抛出异常 |
 | `ReadSavePayloadFromSnapshot_WhenSaveNotExist_Throws` | 不存在的存档快照 | InvalidOperationException |
+| `WriteProgressOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | progress 单写中途 I/O 失败（模拟第二次写入抛异常） | IOException 传播，marker 残留使读端拒绝 |
+| `WriteLevelPayloadOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | 关卡单写 Payload 校验失败（节点为 Null） | InvalidOperationException，marker 残留使读端拒绝 |
 
 ### 边界路径
 
@@ -69,6 +75,35 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `StaleWriteMarker_AfterDeleteCurrentDirectory_WriteThenSucceeds` | stale marker → DeleteCurrentDirectory → 重写 | 新数据可正常写入和读取 |
 | `RecoverFromStaleWriteMarker_CleanStateAfterRecovery` | 恢复后 current/ 状态干净 | 无 marker 残留，数据正常 |
 | `DeleteCurrentDirectory_WhenNoDirectory_DoesNotThrow` | current/ 不存在时调用 Delete | 不抛异常（幂等） |
+
+## SaveFormatVersionTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `Save_WritesFormatVersionToMetaMap` | 保存时 meta.map 写入 `origo.format_version: 1` | persistence-flow: meta.map |
+| `ListSaves_HidesFrameworkReservedMetaKeys` | ListSaves/EnumerateSavesWithMetaData 隐藏 `origo.*` 框架保留键 | persistence-flow: meta.map |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Load_RejectsSaveWithNewerFormatVersion` | 存档格式版本高于当前（99） | InvalidOperationException（加载被拒绝） |
+
+### 边界路径
+
+| 测试方法 | 边界条件 | 预期行为 |
+|---------|---------|---------|
+| `Load_AcceptsMissingFormatVersionKey` | 旧存档 meta.map 无版本键 | 视为版本 1 正常加载 |
+
+## SaveSnapshotMarkerTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `Snapshot_DoesNotContainWriteInProgressMarker` | 完整保存后快照目录内无 `.write_in_progress` 文件 | persistence-flow: 两阶段写入 |
 
 ## SaveStorageAndPayloadTests 测试详情
 
@@ -263,6 +298,22 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 |---------|-----------|---------|
 | `CopyDirectoryFromSnapshot_SeededFiles_AllCopiedToCurrent` | 快照 save_001/extra 下种子文件全部复制到 current/extra | SaveStorageFacade.CopyDirectoryFromSnapshot |
 | `CopyDirectoryFromSnapshot_SubdirectoryStructurePreserved` | 子目录层级结构在复制后原样保留 | SaveStorageFacade.CopyDirectoryFromSnapshot |
+| `CopyDirectoryFromSnapshot_ExistingFilesInCurrent_Overwrites` | current 中已有同名文件被快照内容覆盖 | SaveStorageFacade.CopyDirectoryFromSnapshot |
+| `ExtraFiles_FullSaveLoadRoundTrip_PreservesMultipleFiles` | 多个 extra 文件保存→加载往返后内容与结构保留 | persistence-flow: extra |
+| `ExtraFiles_SaveLoadRoundTrip_SubdirectoryPreserved` | 子目录下的 extra 文件往返保留 | persistence-flow: extra |
+| `ExtraFiles_SaveTwice_SameSlot_HasLatestContent` | 同槽位保存两次后加载为最新内容 | persistence-flow: extra |
+| `ExtraFiles_SaveLoadRoundTrip_TypeDataRoundTrip_PreservesNumbers` | TypedData 对象写读（int/bool/string）往返保留值 | persistence-flow: extra |
+| `ExtraFiles_DeleteFileThenSave_FileNotInSnapshot` | 删除文件后保存，快照不含该文件 | persistence-flow: extra |
+| `ExtraFiles_DifferentContent_DifferentCombinedHash` | extra 内容变化导致 .payload.sha 哈希变化 | persistence-flow: 幂等 |
+| `ExtraFiles_LoadWithoutExtra_DoesNotThrowAndPreviousStateCleared` | 加载不含 extra 的存档不抛异常 | persistence-flow: extra |
+| `IdempotentSkip_UnchangedPayloadAndExtra_SkipHappens` | Payload 与 extra 哈希均未变时二次保存幂等跳过并记录日志 | persistence-flow: 幂等 |
+| `CombineHashes_EmptySide_ProducesConsistentFormat` | 空侧哈希参与合并仍产生 64 位十六进制结果 | SaveAtomicWriter |
+| `CombineHashes_SamePayload_EmptyAndNonEmptySide_DifferentResult` | 同一 payload 哈希，空侧与非空侧合并结果不同 | SaveAtomicWriter |
+| `CombineHashes_WithExtra_DifferentFromPayloadHash` | 合并 extra 哈希后不同于纯 payload 哈希 | SaveAtomicWriter |
+| `ComputeSideDirectoryHash_WithFiles_ReturnsNonEmpty` | 目录含文件时返回非空 64 位十六进制哈希 | SaveAtomicWriter |
+| `ComputeSideDirectoryHash_SameContent_SameHash` | 相同内容两次计算哈希一致 | SaveAtomicWriter |
+| `ComputeSideDirectoryHash_DifferentContent_DifferentHash` | 内容变化后哈希不同 | SaveAtomicWriter |
+| `ComputeSideDirectoryHash_CustomDirectoryName_Works` | 自定义目录名同样计算 64 位哈希 | SaveAtomicWriter |
 
 ### 边界路径
 
@@ -270,6 +321,9 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 |---------|---------|---------|
 | `CopyDirectoryFromSnapshot_SourceDirectoryDoesNotExist_ReturnsSilently` | 快照中无 extra/ 目录 | 静默返回，不抛异常 |
 | `CopyDirectoryFromSnapshot_EmptySourceDirectory_DoesNothing` | extra/ 为空目录 | current/extra 创建但内容为空 |
+| `ComputeSideDirectoryHash_NoExtraDir_ReturnsEmpty` | 无 extra/ 目录 | 返回空字符串 |
+| `ComputeSideDirectoryHash_EmptyExtraDir_ReturnsEmpty` | extra/ 目录存在但为空 | 返回空字符串 |
+| `ComputeSideDirectoryHash_CustomDirectory_Empty_ReturnsEmpty` | 自定义目录为空 | 返回空字符串 |
 
 ### 错误路径
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Entity Tests
 
@@ -20,6 +20,9 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `SndEntityAndAutoInitializerTests.cs` | AutoInitializer recovering strategy and data from metadata; SndEntity AddStrategy/RemoveStrategy index updates |
 | `SndEntityLifecycleBatchTests.cs` | Batch lifecycle orchestration: all hook stages, cross-entity lookup, priority, SndEntityFactory/Spawn, ProcessAll frame processing |
 | `SndEntityOwningSessionTests.cs` | Entity OwningSession binding and unbinding |
+| `SndDataManagerFailureTests.cs` | SndDataManager.SetData leaves no dictionary entry when the converter throws (prevents leaking into saves) |
+| `SndEntityRecoveryRollbackTests.cs` | Regression: cross-stage rollback of RecoverForLifecycle (active phase failure releases previously acquired passive strategies; node phase failure releases created nodes and does not release unacquired indices) |
+| `SndNodeManagerTests.cs` | SndNodeManager guard contract: null SetSceneAliasResolver parameter fails fast |
 
 ## MemorySndEntityTests Details
 
@@ -30,6 +33,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `Name_ReturnsConstructedName` | Name specified at construction is accessible via the Name property | ISndEntity |
 | `SetData_GetData_RoundTrip` | SetData/GetData round-trip preserves value consistency | snd-entity-model: TypedData |
 | `TryGetData_ReturnsTrueWhenFound` | TryGetData returns true and the value when the key exists | snd-entity-model: TypedData |
+| `TryGetDataOut_ReturnsTrueAndValueWhenFound` | The out overload of TryGetData returns true and the value when the key exists | snd-entity-model: TypedData |
 | `InitialNameData_IsSetInDictionary` | Name is auto-stored into the "name" data entry at construction | ISndEntity |
 
 ### Error Paths
@@ -47,6 +51,8 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 |-------------|-------------------|-------------------|
 | `TryGetData_ReturnsFalseWhenMissing` | Key does not exist | Returns false |
 | `TryGetData_ReturnsFalseForTypeMismatch` | Type mismatch | Returns false, no exception |
+| `TryGetDataOut_ReturnsFalseAndDefaultWhenMissing` | Out overload, key does not exist | Returns false, out value is default (0) |
+| `TryGetDataOut_ReturnsFalseForTypeMismatch` | Out overload, type mismatch | Returns false, out value is default, no exception |
 | `GetNodeNames_ReturnsEmpty` | Entity without nodes | Returns empty collection |
 | `AddRemoveStrategy_DoesNotThrow` | AddStrategy/RemoveStrategy on Stub entity | No-op, no exception, existing data unaffected |
 
@@ -85,6 +91,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SndEntity_GetData_MissingKey_ThrowsInvalidOperation` | GetData on a non-existent key | InvalidOperationException |
+| `SetData_NullOrWhitespaceName_ThrowsArgumentException` | Data key is null/empty/whitespace | null → ArgumentNullException; empty/whitespace → ArgumentException |
 | `OrigoAutoInitializer_LoadAndSpawnFromFile_EmptyPath_Throws` | Blank path string | ArgumentException, error logged |
 | `OrigoAutoInitializer_LoadAndSpawnFromFile_MissingFile_Throws` | File does not exist | InvalidOperationException |
 | `OrigoAutoInitializer_LoadAndSpawnFromFile_EmptyFile_Throws` | File content is empty/whitespace | Throws exception |
@@ -131,6 +138,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `BatchLoad_HookThrows_PropagatesException` | AfterLoad hook throws InvalidOperationException | Exception propagates (entity cleanup is rolled back by the scene host) |
+| `SetData_WithNullValue_ThrowsArgumentNullException` | SetData value is null | ArgumentNullException |
 
 ### Boundary Paths
 
@@ -158,6 +166,31 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `CreateEntity_WithoutOwningSession_OwningSessionThrows` | Accessing OwningSession without binding | InvalidOperationException |
+
+## SndDataManagerFailureTests Details
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `SetData_ConverterThrows_LeavesNoDictionaryEntry` | Object converter for a custom kind throws | InvalidOperationException; the failed SetData leaves no entry (SerializeMeta is empty, TryGetData returns false) |
+
+## SndEntityRecoveryRollbackTests Details
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `RecoverForLifecycle_ActivePhaseFails_ReleasesPreviouslyAcquiredPassiveStrategies` | Active phase rejects a Lifecycle index | InvalidOperationException; cross-stage rollback releases the passive strategy acquired by the earlier phase (LogPoolLeaks emits no leak warning) |
+| `RecoverForLifecycle_NodePhaseFails_ReleasesCreatedNodesAndNothingFromPool` | Creating the second node fails during the node phase | InvalidOperationException; nodes created before the failure are freed, and unacquired strategy indices are not released (no leak warning) |
+
+## SndNodeManagerTests Details
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `SetSceneAliasResolver_Null_ThrowsArgumentNullException` | SetSceneAliasResolver with null | ArgumentNullException (fail-fast) |
 
 ## Test Helper Strategies
 

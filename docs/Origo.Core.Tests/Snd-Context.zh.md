@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -21,6 +21,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch 全链路工作流 |
 | `SndContextEntryFlowTests.cs` | SndContext 从入口配置开始的工作流 |
 | `SndContextBootstrapTests.cs` | Bootstrap 启动流程：策略发现、别名/模板加载、入口存档加载的顺序与配置开关 |
+| `PersistenceRequestTrackingTests.cs` | 持久化请求（save/continue/initial/main menu entry/switch level）入队后 pending 计数跟踪直至冲刷 |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder 构建和写入关卡数据 |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad 解析与 ApplyAttributes 类型推断 |
 | `SndTemplateResolverTests.cs` | 模板别名解析、缓存、克隆不影响缓存 |
@@ -53,6 +54,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `GetPendingPersistenceRequestCount_InitiallyZero` | 初始 pending 计数为 0 | ISndDeferredActions |
 | `GetProgressStateMachines_NullWhenNoProgress` | 无 ProgressRun 时状态机容器为 null | ISndStateMachineAccess |
 | `GetProgressStateMachines_NotNullAfterProgressRunCreated` | 有 ProgressRun 后状态机容器可用 | ISndStateMachineAccess |
+| `RequestLoadInitialSave_WithCustomInitialLevelId_UsesConfiguredLevel` | InitialLevelId 配置生效：加载初始存档后 ForegroundSession.LevelId 为配置值 | ISndLifecycleOperations |
 
 ### 错误路径
 
@@ -80,6 +82,20 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `HasContinueData_FalseWhenNoTargetSet` | 未设置 Continue 目标 | 返回 false |
 | `InitialState_NoProgressBlackboard_NoForegroundSession` | 刚创建时无 Progress 和前台会话（ForegroundSession 为 null） | null |
 | `RequestSaveGame_ConcurrentWorkflow_AllowsSequentialSavesInSingleFlush` | 同一 Flush 中多次 Save | 不抛异常 |
+| `UnsubscribeConsoleOutput_NegativeId_DoesNotThrow` | 取消订阅负数 ID | 不抛异常 |
+| `UnsubscribeConsoleOutput_ZeroId_DoesNotThrow` | 取消订阅 0 ID | 不抛异常 |
+
+## PersistenceRequestTrackingTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `RequestSaveGame_IsTrackedUntilFlushed` | RequestSaveGame 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
+| `RequestContinueGame_IsTrackedUntilFlushed` | RequestContinueGame 成功入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
+| `RequestLoadInitialSave_IsTrackedUntilFlushed` | RequestLoadInitialSave 入队后 pending 计数为 1（仅验证跟踪语义） | ISndDeferredActions |
+| `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
+| `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
 
 ## SndTemplateResolverTests 测试详情
 
@@ -162,6 +178,11 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | 缺少 entry.json | 冲刷延迟队列时抛出异常（fail-fast） |
+| `Bootstrap_Twice_Throws` | 重复调用 Bootstrap | InvalidOperationException |
+| `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | 场景宿主未绑定 context（topology 未绑定）时 Bootstrap | InvalidOperationException（消息含 "not bound to a context"） |
+| `CloneTemplate_NullKey_ThrowsArgumentException` | CloneTemplate 传入 null key | ArgumentException |
+| `CloneTemplate_WhitespaceKey_ThrowsArgumentException` | CloneTemplate 传入空白 key | ArgumentException |
+| `CloneTemplate_NonExistingKey_Throws` | CloneTemplate 传入不存在的模板别名 | InvalidOperationException |
 
 ### 边界路径
 

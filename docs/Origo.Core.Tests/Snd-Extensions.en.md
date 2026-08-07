@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Extensions Tests
 
@@ -18,6 +18,7 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `EntityStrategyExtensionsTests.cs` | EnsureReplaceableStrategy default/custom/empty override/idempotent/parameter validation |
 | `TryGetNumericExtensionsTests.cs` | TryGetNumeric cross-type reads (int/float/long/double), non-numeric returns false, GetNumeric fallback |
 | `ActiveStrategyExtensionsTests.cs` | InvokeStrategy generic overloads: with/without input serialization round-trip, null returns default |
+| `EntityExtensionsTests.cs` | IsSameEntityAs entity identity comparison: same reference/wrapper, name+session dual check, unbound degenerate comparison, null argument validation |
 
 ## EnsureStrategyTests Details
 
@@ -79,6 +80,27 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `InvokeStrategy_GenericNoInput_CallsWithoutInput` | InvokeStrategy<TOutput> no-input overload still correctly invokes the strategy | Snd README: ActiveStrategyExtensions |
 | `InvokeStrategy_NullResult_ReturnsDefault` | When strategy Invoke returns null, the generic method returns default(TOutput) | Snd README: ActiveStrategyExtensions |
 
+## EntityExtensionsTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `IsSameEntityAs_SameReference_ReturnsTrue` | Same object reference comparison returns true | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_DifferentWrappersSameEntity_ReturnsTrue` | Two distinct wrapper instances of the same entity (same name, same session) compare as equal | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_SameNameDifferentSession_ReturnsFalse` | Same name but different owning session returns false | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_DifferentNamesSameSession_ReturnsFalse` | Same session but different names returns false | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_SameNameBothUnbound_ReturnsTrue` | When neither side is bound to a session, comparison degenerates to name equality; same name passes | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_OneBoundOneUnbound_ReturnsFalse` | One side bound to a session and the other unbound returns false | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_RealUnboundEntities_SameName_ReturnsTrue` | Real unbound entities (OwningSession access throws) degenerate to name equality without crashing | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_RealUnboundEntities_DifferentName_ReturnsFalse` | Real unbound entities with different names return false | snd-entity-model: IsSameEntityAs |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `IsSameEntityAs_NullArgument_Throws` | other parameter is null | ArgumentNullException |
+
 ## Test Helper Strategies
 
 | Strategy Class | Defined In | Purpose |
@@ -86,6 +108,8 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `StubActiveStrategyEntity` | ActiveStrategyExtensionsTests.cs | ISndEntity stub implementation, injecting InvokeStrategy behavior via Func<object?, object?>, other members throw NotImplementedException |
 | `TestNumericEntity` | TryGetNumericExtensionsTests.cs | ISndDataAccess test implementation with internal Dictionary<string, TypedData> storage; TryGetData converts via TypedDataObjectConverter |
 | `TestResult` | ActiveStrategyExtensionsTests.cs | Simple POCO with a Result property, used as the return type for generic InvokeStrategy deserialization |
+| `StubEntity` | EntityExtensionsTests.cs | ISndEntity stub with configurable OwningSession (init), used for IsSameEntityAs name+session dual check |
+| `StubSession` | EntityExtensionsTests.cs | ISessionRun stub with LevelId fixed to "test"; other members throw NotImplementedException |
 
 ## Known Coverage Gaps
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构守卫 测试
 
@@ -27,10 +27,14 @@
 |---------|-----------|---------|
 | `CoreAssembly_ShouldNotReferenceGodot` | Core 程序集不引用任何 Godot 程序集 | architecture-overview: 平台无关 |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext 自身不声明任何方法/属性 | Snd Abstraction: ISP |
-| `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext 继承全部 9 个角色接口（含 ISndFileAccess 和 ISndArchiveFileAccess） | Snd Abstraction: ISndContext 组合 |
+| `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext 以 10 个 companion 属性暴露全部角色接口能力，不通过接口继承 | Snd Abstraction: ISndContext 组合 |
+| `SndContext_ShouldNotImplementRoleInterfaces` | SndContext 具体类型不实现任何角色接口（纯组合对象） | Snd Abstraction: ISndContext 组合 |
+| `SndContext_CompanionProperties_ShareConsistentState` | 各 companion 属性共享同一黑板实例（SystemBlackboard/ProgressBlackboard） | Snd Abstraction: ISndContext 组合 |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext 继承 ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
+| `IEntityLifecycle_ShouldBeInternal` | IEntityLifecycle 接口为 internal——业务代码不得直接触发生命周期钩子 | Runtime: 生命周期编排 |
+| `SndEntity_LifecycleMethods_ShouldBeInternal` | SndEntity.Process 等具体生命周期方法为 internal，仅经框架编排调用 | Runtime: 生命周期编排 |
 | `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | 仅通过公共接口完成 save→load 工作流 | architecture-overview: 测试策略 |
-| `Consumer_AccessesAllRoleInterfaces_ThroughISndContext` | 通过 ISndContext 可访问全部 9 个角色接口的能力（含 ISndFileAccess 读写文件，ISndArchiveFileAccess 存档内文件） | Snd Abstraction |
+| `Consumer_AccessesAllRoleInterfaces_ThroughISndContext` | 通过 ISndContext 可访问全部角色接口的能力（含 ISndFileAccess 读写文件，ISndArchiveFileAccess 存档内文件） | Snd Abstraction |
 | `SaveLoad_TriggeredThroughISndSaveOperations` | Save/Load 通过 ISndSaveOperations 接口触发 | persistence-flow |
 | `SessionLifecycle_ManagedThroughISessionManager` | 会话生命周期通过 ISessionManager 管理 | session-model |
 | `ISessionRun_ProvidesRuntimeAccess` | ISessionRun 提供黑板/SceneHost/StateMachines 访问 | session-model |

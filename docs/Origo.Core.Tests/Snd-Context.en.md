@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -17,6 +17,8 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 |------|-------------------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch full-chain workflows |
 | `SndContextEntryFlowTests.cs` | SndContext workflow starting from entry configuration |
+| `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, alias/template loading, entry save loading, and configuration switches |
+| `PersistenceRequestTrackingTests.cs` | Persistence requests (save/continue/initial/main menu entry/switch level) tracked as pending count until flushed |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder building and writing level data |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad parsing and ApplyAttributes type inference |
 | `SndTemplateResolverTests.cs` | Template alias resolution, caching, clone does not affect cache |
@@ -49,6 +51,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `GetPendingPersistenceRequestCount_InitiallyZero` | Initial pending count is 0 | ISndDeferredActions |
 | `GetProgressStateMachines_NullWhenNoProgress` | State machine container is null when no ProgressRun exists | ISndStateMachineAccess |
 | `GetProgressStateMachines_NotNullAfterProgressRunCreated` | State machine container is available after ProgressRun is created | ISndStateMachineAccess |
+| `RequestLoadInitialSave_WithCustomInitialLevelId_UsesConfiguredLevel` | InitialLevelId configuration takes effect: ForegroundSession.LevelId is the configured value after loading the initial save | ISndLifecycleOperations |
 
 ### Error Paths
 
@@ -76,6 +79,20 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `HasContinueData_FalseWhenNoTargetSet` | No Continue target set | Returns false |
 | `InitialState_NoProgressBlackboard_NoForegroundSession` | Freshly created, no Progress and ForegroundSession is null | null |
 | `RequestSaveGame_ConcurrentWorkflow_AllowsSequentialSavesInSingleFlush` | Multiple Saves in the same Flush | No exception thrown |
+| `UnsubscribeConsoleOutput_NegativeId_DoesNotThrow` | Unsubscribing with a negative ID | No exception thrown |
+| `UnsubscribeConsoleOutput_ZeroId_DoesNotThrow` | Unsubscribing with ID 0 | No exception thrown |
+
+## PersistenceRequestTrackingTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `RequestSaveGame_IsTrackedUntilFlushed` | RequestSaveGame queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
+| `RequestContinueGame_IsTrackedUntilFlushed` | A successful RequestContinueGame queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
+| `RequestLoadInitialSave_IsTrackedUntilFlushed` | RequestLoadInitialSave queues and the pending count is 1 (tracking semantics only) | ISndDeferredActions |
+| `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
+| `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
 
 ## SndTemplateResolverTests Details
 
@@ -158,6 +175,11 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | entry.json missing | Deferred flush throws (fail-fast) |
+| `Bootstrap_Twice_Throws` | Calling Bootstrap twice | InvalidOperationException |
+| `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | Bootstrap when the scene host topology is not bound to a context | InvalidOperationException (message contains "not bound to a context") |
+| `CloneTemplate_NullKey_ThrowsArgumentException` | CloneTemplate with null key | ArgumentException |
+| `CloneTemplate_WhitespaceKey_ThrowsArgumentException` | CloneTemplate with whitespace key | ArgumentException |
+| `CloneTemplate_NonExistingKey_Throws` | CloneTemplate with a non-existent template alias | InvalidOperationException |
 
 ### Boundary Path
 

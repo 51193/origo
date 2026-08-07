@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体 测试
 
@@ -22,6 +22,9 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | `SndEntityAndAutoInitializerTests.cs` | AutoInitializer 从 metadata 恢复策略和数据；SndEntity AddStrategy/RemoveStrategy 索引更新 |
 | `SndEntityLifecycleBatchTests.cs` | 批量生命周期编排：全部钩子阶段、跨实体查找、优先级、SndEntityFactory/Spawn、ProcessAll 帧处理 |
 | `SndEntityOwningSessionTests.cs` | 实体 OwningSession 绑定与解除 |
+| `SndDataManagerFailureTests.cs` | SndDataManager.SetData 转换器抛异常时不残留字典条目（防泄漏进存档） |
+| `SndEntityRecoveryRollbackTests.cs` | 回归：RecoverForLifecycle 跨阶段回滚（active 阶段失败释放已获取的被动策略；node 阶段失败释放已创建节点且不释放未获取索引） |
+| `SndNodeManagerTests.cs` | SndNodeManager 守卫契约：SetSceneAliasResolver null 参数快速失败 |
 
 ## MemorySndEntityTests 测试详情
 
@@ -32,6 +35,7 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | `Name_ReturnsConstructedName` | 构造函数指定的名称可通过 Name 属性获取 | ISndEntity |
 | `SetData_GetData_RoundTrip` | SetData/GetData 往返保持值一致 | snd-entity-model: TypedData |
 | `TryGetData_ReturnsTrueWhenFound` | TryGetData 在键存在时返回 true 和值 | snd-entity-model: TypedData |
+| `TryGetDataOut_ReturnsTrueAndValueWhenFound` | TryGetData 的 out 重载在键存在时返回 true 和值 | snd-entity-model: TypedData |
 | `InitialNameData_IsSetInDictionary` | 构造时名称自动存入 "name" 数据条目 | ISndEntity |
 
 ### 错误路径
@@ -49,6 +53,8 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 |---------|---------|---------|
 | `TryGetData_ReturnsFalseWhenMissing` | 键不存在 | 返回 false |
 | `TryGetData_ReturnsFalseForTypeMismatch` | 类型不匹配 | 返回 false，不抛异常 |
+| `TryGetDataOut_ReturnsFalseAndDefaultWhenMissing` | out 重载键不存在 | 返回 false，out 值为默认值（0） |
+| `TryGetDataOut_ReturnsFalseForTypeMismatch` | out 重载类型不匹配 | 返回 false，out 值为默认值，不抛异常 |
 | `GetNodeNames_ReturnsEmpty` | 无节点实体 | 返回空集合 |
 | `AddRemoveStrategy_DoesNotThrow` | Stub 实体的 AddStrategy/RemoveStrategy | 无操作，不抛异常，已有数据不受影响 |
 
@@ -87,6 +93,7 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `SndEntity_GetData_MissingKey_ThrowsInvalidOperation` | GetData 访问不存在的键 | InvalidOperationException |
+| `SetData_NullOrWhitespaceName_ThrowsArgumentException` | 数据键为 null/空串/空白 | null → ArgumentNullException；空串/空白 → ArgumentException |
 | `OrigoAutoInitializer_LoadAndSpawnFromFile_EmptyPath_Throws` | 空白路径字符串 | ArgumentException，日志记录错误 |
 | `OrigoAutoInitializer_LoadAndSpawnFromFile_MissingFile_Throws` | 文件不存在 | InvalidOperationException |
 | `OrigoAutoInitializer_LoadAndSpawnFromFile_EmptyFile_Throws` | 文件内容为空/空白 | 抛异常 |
@@ -133,6 +140,7 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `BatchLoad_HookThrows_PropagatesException` | AfterLoad 钩子抛出 InvalidOperationException | 异常传播（实体清理由场景宿主回滚） |
+| `SetData_WithNullValue_ThrowsArgumentNullException` | SetData 的 value 为 null | ArgumentNullException |
 
 ### 边界路径
 
@@ -160,6 +168,31 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `CreateEntity_WithoutOwningSession_OwningSessionThrows` | 未绑定 OwningSession 时访问 OwningSession | InvalidOperationException |
+
+## SndDataManagerFailureTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `SetData_ConverterThrows_LeavesNoDictionaryEntry` | 自定义 kind 的对象转换器抛异常 | InvalidOperationException；失败的 SetData 不残留条目（SerializeMeta 为空、TryGetData 返回 false） |
+
+## SndEntityRecoveryRollbackTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `RecoverForLifecycle_ActivePhaseFails_ReleasesPreviouslyAcquiredPassiveStrategies` | Active 阶段拒绝 Lifecycle 索引 | InvalidOperationException；跨阶段回滚释放被动阶段已获取的策略（LogPoolLeaks 无泄漏告警） |
+| `RecoverForLifecycle_NodePhaseFails_ReleasesCreatedNodesAndNothingFromPool` | Node 阶段创建第二个节点失败 | InvalidOperationException；失败前创建的节点被释放，且不释放未获取的策略索引（无泄漏告警） |
+
+## SndNodeManagerTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `SetSceneAliasResolver_Null_ThrowsArgumentNullException` | SetSceneAliasResolver 传入 null | ArgumentNullException（fail-fast） |
 
 ## 测试辅助策略
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Guardrail Tests
 
@@ -28,10 +28,14 @@ as stateless via reflection at registration (rejects instance fields and writabl
 |------------|-------------------|---------------|
 | `CoreAssembly_ShouldNotReferenceGodot` | Core assembly does not reference any Godot assemblies | architecture-overview: platform independence |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext itself declares no methods/properties | Snd Abstraction: ISP |
-| `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext inherits all 9 role interfaces (including ISndFileAccess and ISndArchiveFileAccess) | Snd Abstraction: ISndContext composition |
+| `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext exposes all role-interface capabilities through 10 companion properties, not interface inheritance | Snd Abstraction: ISndContext composition |
+| `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |
+| `SndContext_CompanionProperties_ShareConsistentState` | Companion properties share the same blackboard instances (SystemBlackboard/ProgressBlackboard) | Snd Abstraction: ISndContext composition |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext inherits ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
+| `IEntityLifecycle_ShouldBeInternal` | IEntityLifecycle is internal — business code must not trigger lifecycle hooks directly | Runtime: lifecycle orchestration |
+| `SndEntity_LifecycleMethods_ShouldBeInternal` | Concrete lifecycle methods like SndEntity.Process are internal, invoked only by framework orchestration | Runtime: lifecycle orchestration |
 | `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | Completes save→load workflow using only public interfaces | architecture-overview: test strategy |
-| `Consumer_AccessesAllRoleInterfaces_ThroughISndContext` | All 9 role interface capabilities accessible through ISndContext (including ISndFileAccess file read/write, ISndArchiveFileAccess in-archive files) | Snd Abstraction |
+| `Consumer_AccessesAllRoleInterfaces_ThroughISndContext` | All role-interface capabilities accessible through ISndContext (including ISndFileAccess file read/write, ISndArchiveFileAccess in-archive files) | Snd Abstraction |
 | `SaveLoad_TriggeredThroughISndSaveOperations` | Save/Load triggered through ISndSaveOperations interface | persistence-flow |
 | `SessionLifecycle_ManagedThroughISessionManager` | Session lifecycle managed through ISessionManager | session-model |
 | `ISessionRun_ProvidesRuntimeAccess` | ISessionRun provides Blackboard/SceneHost/StateMachines access | session-model |

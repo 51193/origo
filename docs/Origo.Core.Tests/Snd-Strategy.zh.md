@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 策略 测试
 
@@ -18,6 +18,7 @@
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `ActiveStrategyTests.cs` | 主动策略 Invoke 调用、Spawn/Load 恢复、Quit/Dead 释放、动态增删、序列化、注册校验、Entity/Active 混合场景 |
+| `ActiveStrategyJsonBaseTests.cs` | ActiveStrategyJsonBase JSON 契约：输入反序列化/结果序列化、错误输入返回 err 结果、裸字符串结果直通、null 输入执行、泛型扩展调用往返 |
 | `LifecycleStrategyBaseTests.cs` | 默认钩子不变更数据；Process 中 Add/Kill/SelfKill/OtherKill 的并发语义；AfterAdd 失败回滚；不存在策略操作的安全处理 |
 | `ObserverStrategyTests.cs` | 观察者注册/无状态校验；Mount/Unmount 生命周期与参数正确性；数据变更通知（正确键/非观察键/卸载后）及新旧值；多键观察；序列化（ObserverIndices 填充/空绑定/分组）；Dead/Quit 释放与 OnUnmounted；属性反射提取；跨实体挂载拒绝；null/空/未知参数防御；RecoverBindings 容错；Has/Remove 拓扑查询；Teardown/KillPending/ClearAll 清理路径 |
 | `StrategyPriorityTests.cs` | 策略按 Priority 升序排列、同优先级按插入顺序 FIFO、所有生命周期钩子遵循优先级、序列化/恢复保持顺序 |
@@ -69,6 +70,25 @@
 |---------|---------|---------|
 | `RemoveActiveStrategy_NotExists_Throws` | 移除不存在的 ActiveStrategy | 抛 `InvalidOperationException`（fail-fast） |
 
+## ActiveStrategyJsonBaseTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `Invoke_ValidJsonInput_DeserializesAndSerializesResult` | 合法 JSON 输入反序列化为强类型后传给 Execute，返回值序列化为 JSON 字符串 | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_StringResult_IsSerializedAsJsonString` | Ok 字符串结果序列化为 JSON 字符串（`"ok"`） | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_ErrorResult_IsSerializedAsJsonString` | Err 结果序列化为 JSON 字符串（`"err:invalid"`） | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_InvalidJsonInput_ReturnsErrorResult` | 非法 JSON 输入返回 `"err:Invalid request"` 错误结果而非抛异常 | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_NonStringInput_ReturnsErrorResult` | 非字符串输入返回 `"err:Invalid request"` 错误结果 | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_NullResult_SerializesNull` | Execute 返回 null 时序列化为 JSON 字面量 `null` | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_NullInput_ExecutesWithDefault` | null 输入以默认值执行（int 默认 0，结果为 `"0"`） | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_StringReferenceTypeInput_RoundTrips` | 字符串引用类型输入往返保持（`"hello"` → `"hello"`） | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_NullJsonInput_ExecutesWithNullReference` | JSON 字面量 `null` 输入以 null 引用执行并序列化为 `null` | Strategy README: ActiveStrategyJsonBase |
+| `GenericInvoke_JsonBaseStrategy_RoundTripsThroughExtensions` | 泛型 InvokeStrategy<TestPayload,TestPayload> 经 JSON 基类完整往返 | Snd README: ActiveStrategyExtensions |
+| `GenericInvoke_BareStringResult_ReturnsStringAsIs` | 返回裸字符串的旧策略经泛型调用原样返回，不抛 JSON 异常 | Snd README: ActiveStrategyExtensions |
+| `GenericInvoke_ErrorBareString_ReturnsStringAsIs` | 裸字符串 err 结果（`"err:no gold"`）原样返回 | Snd README: ActiveStrategyExtensions |
+
 ## LifecycleStrategyBaseTests 测试详情
 
 ### 正确路径
@@ -82,6 +102,7 @@
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `AddStrategy_WhenAfterAddThrows_RollsBackInsertionAndPoolReference` | 策略 AfterAdd 钩子抛出 InvalidOperationException | 策略插入回滚，池引用归还，后续 Process 不执行该策略 |
+| `AddStrategy_SameIndexTwice_Throws` | 对已挂载的策略索引重复 AddStrategy | InvalidOperationException（"already mounted"） |
 
 ### 边界路径
 
@@ -126,6 +147,10 @@
 | `DataChange_OnlyTargetEntityNotified` | 数据变更仅通知观察目标实体的观察者（EntityName 和 TargetName 均为目标实体） | snd-entity-model: 观察者 |
 | `BuildObserverBindings_TwoTargets_GroupsCorrectly` | BuildBindingsFor 按 target 正确分组 | Strategy README: ObserverTopology |
 | `OnDataChanged_OldAndNewValues_Correct` | OnDataChanged 参数中 oldValue=100、newValue=50 | snd-entity-model: 观察者 |
+| `GetObserverNamesTargeting_MountedObserver_ReturnsObserverName` | 已挂载观察者时 GetObserverNamesTargeting 返回观察者名 | Strategy README: ObserverTopology |
+| `GetObserverNamesTargeting_NoBindings_ReturnsEmpty` | 无任何绑定时 GetObserverNamesTargeting 返回空（含未知目标名） | Strategy README: ObserverTopology |
+| `GetObserverNamesTargeting_AfterUnmount_IndexCleared` | Unmount 后 GetObserverNamesTargeting 不再返回该观察者名 | Strategy README: ObserverTopology |
+| `MountObserverStrategy_ByEntityOverload_Works` | 以实体重载挂载观察者到其他实体，目标数据变更触发回调且 Entity/Target 参数正确 | snd-entity-model: 观察者 |
 
 ### 错误路径
 
@@ -138,6 +163,10 @@
 | `Mount_NullTargetName_Throws` | null 目标名 | InvalidOperationException |
 | `Mount_EmptyObserverIndex_Throws` | 空字符串观察者索引 | ArgumentException |
 | `Mount_UnknownObserverIndex_Throws` | 未注册的观察者索引 | InvalidOperationException |
+| `MountObserverStrategy_ByEntityOverload_NullTarget_Throws` | 实体重载的 target 为 null | ArgumentNullException |
+| `Mount_WhenGetStrategyThrows_PropagatesOriginalError` | 获取观察者策略失败 | 原始 InvalidOperationException 传播（含索引名） |
+| `Unmount_WhenOnUnmountedThrows_PoolReferenceStillReleased` | OnUnmounted 钩子抛出 InvalidOperationException | 异常传播且策略仍归还池（LogPoolLeaks 无泄漏告警） |
+| `FullCleanup_NullTargetEntity_ThrowsInvalidOperation` | FullCleanup 传入 null TargetEntity | InvalidOperationException（消息含 "TargetEntity"） |
 
 ### 边界路径
 
@@ -210,6 +239,8 @@
 |---------|-----------|---------|
 | `GetStrategy_WrongBranchGeneric_ThrowsInvalidOperation` | 用 LifecycleStrategyBase 泛型获取 Active/StateMachine 策略 | InvalidOperationException |
 | `RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws` | Recover 列表含 ActiveStrategyBase 类型 | InvalidOperationException（"LifecycleStrategyBase"） |
+| `Register_AbstractStrategyType_Throws` | 注册抽象策略类型 | InvalidOperationException |
+| `Register_DuplicateIndex_Throws` | 重复注册同一策略索引 | InvalidOperationException（"already registered"） |
 
 ## SndStrategyPerformanceTests 测试详情
 
@@ -258,6 +289,7 @@
 | `KillSelfRecordingStrategy` | LifecycleStrategyBaseTests.cs | Process 中 Kill 自身并记录执行日志，AsyncLocal 隔离 |
 | `ProcessCalledStrategy` | LifecycleStrategyBaseTests.cs | 标记 Process 是否被调用（AsyncLocal bool），验证 Kill 后后续策略执行 |
 | `ThrowOnAddStrategy` | LifecycleStrategyBaseTests.cs | AfterAdd 钩子抛出 InvalidOperationException，验证回滚并确认 Process 不执行 |
+| `DuplicateAddTestStrategy` | LifecycleStrategyBaseTests.cs | 空白 LifecycleStrategy 策略，验证同一索引重复 AddStrategy 被拒绝 |
 | `QueryHpStrategy` | ActiveStrategyTests.cs | ActiveStrategy：返回 100（int）或实体名（input="get_name"） |
 | `CmdDamageStrategy` | ActiveStrategyTests.cs | ActiveStrategy：input 为 int 时返回 "dealt {n} damage" |
 | `EntityOnlyStrategy` | ActiveStrategyTests.cs | LifecycleStrategy 占位符，用于区分 Entity/Active 类型 |
@@ -269,6 +301,7 @@
 | `NoDataKeyObserver` | ObserverStrategyTests.cs | 无 [ObserveData] 属性的观察者，验证可挂载/卸载 |
 | `MemoryObserver` | ObserverStrategyTests.cs | 记录 OnMounted/OnUnmounted 调用（MountCall 含 Entity + Target），AsyncLocal 列表隔离 |
 | `ThrowOnMountObserver` | ObserverStrategyTests.cs | OnMounted 抛出 InvalidOperationException，验证回滚并确认后续 SetData 不触发 |
+| `ThrowOnUnmountObserver` | ObserverStrategyTests.cs | OnUnmounted 抛出 InvalidOperationException，验证失败卸载仍归还池引用 |
 | `StatefulObserver` | ObserverStrategyTests.cs | 有实例字段 _counter 的观察者，验证注册时被拒绝 |
 | `UnannotatedObserver` | ObserverStrategyTests.cs | 无 [StrategyIndex] 属性的观察者，验证注册拒绝 |
 | `ExtensionDomainStrategyBase`（abstract） | StrategyPoolTypeSafetyAndExtensionTests.cs | 在 LifecycleStrategyBase 之上扩展的第三领域抽象根基类，定义 ProbeValue() 抽象方法 |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility 测试
 
@@ -57,6 +57,11 @@
 | `GetParentDirectory_ReturnsParent` | 父目录提取 |
 | `GetParentDirectory_NullOrEmpty_ReturnsEmpty` | null/空输入返回 string.Empty |
 | `GetParentDirectory_SingleSegment_ReturnsEmpty` | 单段路径无父级返回 string.Empty |
+| `NormalizeDirectoryPath_SchemePath_TrimsTrailingSlash` | `user://dir/` 尾部斜杠去除 |
+| `NormalizeDirectoryPath_SchemeRoot_IsPreserved` | `user://`/`res://` scheme 根保留双斜杠 |
+| `Combine_SchemeRootBase_KeepsDoubleSlash` | `user://` 根拼接子路径保留双斜杠 |
+| `GetParentDirectory_SchemeFile_ReturnsSchemeRoot` | scheme 下文件返回其 scheme 根（`user://foo.map` → `user://`） |
+| `GetParentDirectory_BackslashPath_ReturnsParent` | Windows 反斜杠路径父目录提取（`C:\base\sub` → `C:\base`） |
 
 ### PathUtility 错误路径
 
@@ -64,6 +69,7 @@
 |---------|-----------|---------|
 | `Combine_RejectsPathTraversal` | `..` 路径遍历序列 | `ArgumentException` |
 | `GetParentDirectory_AtRoot_Throws` | 根路径无父目录 | `InvalidOperationException` |
+| `GetParentDirectory_SchemeRoot_Throws` | `user://`/`res://` scheme 根无父目录 | `InvalidOperationException` |
 
 ## 已知覆盖缺口
 

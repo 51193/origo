@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Serialization Tests
 
@@ -96,6 +96,16 @@ PersistentBlackboard disk read/write.
 |-------------|-----------------|-----------|
 | `PersistentBlackboard_SetAndLoadFromDisk_Works` | SetValue → reload → LoadFromDisk restores key-value | PersistentBlackboard |
 | `PersistentBlackboard_Clear_PersistsEmptyData` | After Clear, data on disk is empty Map | PersistentBlackboard |
+| `PersistentBlackboard_WriteUsesTempAndRename` | SetValue writes via `.tmp.json` temp file + rename atomic write, no temp residue after success | PersistentBlackboard |
+| `PersistentBlackboard_UpdatedValue_OverwritesViaAtomicRename` | Updating the same key then reloading reads the latest value (atomic overwrite) | PersistentBlackboard |
+
+### Boundary Path
+
+| Test Method | Boundary Condition | Expected Behavior |
+|-------------|-------------------|-------------------|
+| `PersistentBlackboard_StaleTempFile_CleanedUpOnLoad` | Stale `.tmp.json` residue exists | Temp file deleted on load |
+| `PersistentBlackboard_SuccessfulWrite_LeavesNoBackupFile` | After successful overwrite | No `.bak.json` residue |
+| `PersistentBlackboard_LoadFromDisk_RecoversPreviousVersionFromBackup` | Primary file missing, backup holds previous version (crash simulation) | Primary restored from backup, backup consumed |
 
 ## Test Helper Strategies
 

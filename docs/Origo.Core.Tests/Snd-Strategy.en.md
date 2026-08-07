@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Strategy Tests
 
@@ -18,6 +18,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | File | Verification Focus |
 |------|-------------------|
 | `ActiveStrategyTests.cs` | ActiveStrategy Invoke calls, Spawn/Load recovery, Quit/Dead release, dynamic add/remove, serialization, registration validation, Entity/Active mixed scenarios |
+| `ActiveStrategyJsonBaseTests.cs` | ActiveStrategyJsonBase JSON contract: input deserialization/result serialization, invalid input returns err result, bare string results pass through, null input execution, generic extension round-trip |
 | `LifecycleStrategyBaseTests.cs` | Default hooks do not mutate data; concurrent semantics of Add/Kill/SelfKill/OtherKill during Process; AfterAdd failure rollback; safe handling of non-existent strategy operations |
 | `ObserverStrategyTests.cs` | Observer registration & statelessness enforcement; Mount/Unmount lifecycle and parameter correctness; data change notifications (correct key/non-observed key/after unmount) and old/new values; multi-key observation; serialization (ObserverIndices population/empty bindings/grouping); Dead/Quit release and OnUnmounted; attribute reflection extraction; cross-entity mount rejection; null/empty/unknown parameter defenses; RecoverBindings fault tolerance; Has/Remove topology queries; Teardown/KillPending/ClearAll cleanup paths |
 | `StrategyPriorityTests.cs` | Strategies sorted ascending by Priority, same priority preserves insertion order FIFO, all lifecycle hooks respect priority, serialization/recovery preserves order |
@@ -69,6 +70,25 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 |-------------|-------------------|-------------------|
 | `RemoveActiveStrategy_NotExists_Throws` | Removing non-existent ActiveStrategy | Throws `InvalidOperationException` (fail-fast) |
 
+## ActiveStrategyJsonBaseTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `Invoke_ValidJsonInput_DeserializesAndSerializesResult` | Valid JSON input is deserialized to a strong type and passed to Execute; return value is serialized as a JSON string | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_StringResult_IsSerializedAsJsonString` | Ok string result is serialized as a JSON string (`"ok"`) | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_ErrorResult_IsSerializedAsJsonString` | Err result is serialized as a JSON string (`"err:invalid"`) | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_InvalidJsonInput_ReturnsErrorResult` | Invalid JSON input returns `"err:Invalid request"` error result instead of throwing | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_NonStringInput_ReturnsErrorResult` | Non-string input returns `"err:Invalid request"` error result | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_NullResult_SerializesNull` | When Execute returns null, it is serialized as the JSON literal `null` | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_NullInput_ExecutesWithDefault` | null input executes with the default value (int default 0, result `"0"`) | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_StringReferenceTypeInput_RoundTrips` | String reference type input round-trips (`"hello"` → `"hello"`) | Strategy README: ActiveStrategyJsonBase |
+| `Invoke_NullJsonInput_ExecutesWithNullReference` | JSON literal `null` input executes with a null reference and serializes as `null` | Strategy README: ActiveStrategyJsonBase |
+| `GenericInvoke_JsonBaseStrategy_RoundTripsThroughExtensions` | Generic InvokeStrategy<TestPayload,TestPayload> round-trips fully through the JSON base class | Snd README: ActiveStrategyExtensions |
+| `GenericInvoke_BareStringResult_ReturnsStringAsIs` | Legacy strategies returning bare strings return them as-is through the generic call without throwing JSON exceptions | Snd README: ActiveStrategyExtensions |
+| `GenericInvoke_ErrorBareString_ReturnsStringAsIs` | Bare string err result (`"err:no gold"`) returned as-is | Snd README: ActiveStrategyExtensions |
+
 ## LifecycleStrategyBaseTests Details
 
 ### Correct Paths
@@ -82,6 +102,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `AddStrategy_WhenAfterAddThrows_RollsBackInsertionAndPoolReference` | Strategy AfterAdd hook throws InvalidOperationException | Strategy insertion rolled back, pool reference returned, subsequent Process does not execute this strategy |
+| `AddStrategy_SameIndexTwice_Throws` | Calling AddStrategy again on an already-mounted strategy index | InvalidOperationException ("already mounted") |
 
 ### Boundary Paths
 
@@ -126,6 +147,10 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `DataChange_OnlyTargetEntityNotified` | Data changes only notify observers of the target entity (EntityName and TargetName are both the target entity) | snd-entity-model: Observer |
 | `BuildObserverBindings_TwoTargets_GroupsCorrectly` | BuildBindingsFor groups correctly by target | Strategy README: ObserverTopology |
 | `OnDataChanged_OldAndNewValues_Correct` | OnDataChanged parameters oldValue=100, newValue=50 | snd-entity-model: Observer |
+| `GetObserverNamesTargeting_MountedObserver_ReturnsObserverName` | GetObserverNamesTargeting returns the observer name when mounted | Strategy README: ObserverTopology |
+| `GetObserverNamesTargeting_NoBindings_ReturnsEmpty` | GetObserverNamesTargeting returns empty with no bindings (including unknown target names) | Strategy README: ObserverTopology |
+| `GetObserverNamesTargeting_AfterUnmount_IndexCleared` | GetObserverNamesTargeting no longer returns the observer name after Unmount | Strategy README: ObserverTopology |
+| `MountObserverStrategy_ByEntityOverload_Works` | Mounting an observer onto another entity via the entity overload; target data changes trigger the callback with correct Entity/Target parameters | snd-entity-model: Observer |
 
 ### Error Paths
 
@@ -138,6 +163,10 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `Mount_NullTargetName_Throws` | null target name | InvalidOperationException |
 | `Mount_EmptyObserverIndex_Throws` | Empty string observer index | ArgumentException |
 | `Mount_UnknownObserverIndex_Throws` | Unregistered observer index | InvalidOperationException |
+| `MountObserverStrategy_ByEntityOverload_NullTarget_Throws` | null target for the entity overload | ArgumentNullException |
+| `Mount_WhenGetStrategyThrows_PropagatesOriginalError` | Observer strategy acquisition fails | Original InvalidOperationException propagates (contains index name) |
+| `Unmount_WhenOnUnmountedThrows_PoolReferenceStillReleased` | OnUnmounted hook throws InvalidOperationException | Exception propagates and the strategy is still returned to the pool (LogPoolLeaks emits no leak warning) |
+| `FullCleanup_NullTargetEntity_ThrowsInvalidOperation` | FullCleanup with null TargetEntity | InvalidOperationException (message contains "TargetEntity") |
 
 ### Boundary Paths
 
@@ -210,6 +239,8 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 |-------------|----------------|-------------------|
 | `GetStrategy_WrongBranchGeneric_ThrowsInvalidOperation` | Using LifecycleStrategyBase generic to acquire Active/StateMachine strategy | InvalidOperationException |
 | `RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws` | Recover list contains ActiveStrategyBase type | InvalidOperationException ("LifecycleStrategyBase") |
+| `Register_AbstractStrategyType_Throws` | Registering an abstract strategy type | InvalidOperationException |
+| `Register_DuplicateIndex_Throws` | Registering the same strategy index twice | InvalidOperationException ("already registered") |
 
 ## SndStrategyPerformanceTests Details
 
@@ -242,6 +273,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `KillSelfRecordingStrategy` | LifecycleStrategyBaseTests.cs | Kills itself during Process and records execution log; AsyncLocal isolated |
 | `ProcessCalledStrategy` | LifecycleStrategyBaseTests.cs | Marks whether Process was called (AsyncLocal bool); verifies subsequent strategies execute after Kill |
 | `ThrowOnAddStrategy` | LifecycleStrategyBaseTests.cs | AfterAdd hook throws InvalidOperationException; verifies rollback and confirms Process is not executed |
+| `DuplicateAddTestStrategy` | LifecycleStrategyBaseTests.cs | Blank LifecycleStrategy; verifies duplicate AddStrategy of the same index is rejected |
 | `QueryHpStrategy` | ActiveStrategyTests.cs | ActiveStrategy: returns 100 (int) or entity name (input="get_name") |
 | `CmdDamageStrategy` | ActiveStrategyTests.cs | ActiveStrategy: when input is int, returns "dealt {n} damage" |
 | `EntityOnlyStrategy` | ActiveStrategyTests.cs | LifecycleStrategy placeholder for distinguishing Entity/Active types |
@@ -253,6 +285,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `NoDataKeyObserver` | ObserverStrategyTests.cs | Observer with no [ObserveData] attributes; verifies mount/unmount is possible |
 | `MemoryObserver` | ObserverStrategyTests.cs | Records OnMounted/OnUnmounted calls (MountCall contains Entity + Target); AsyncLocal list isolated |
 | `ThrowOnMountObserver` | ObserverStrategyTests.cs | OnMounted throws InvalidOperationException; verifies rollback and confirms subsequent SetData does not trigger |
+| `ThrowOnUnmountObserver` | ObserverStrategyTests.cs | OnUnmounted throws InvalidOperationException; verifies the failed unmount still returns the pool reference |
 | `StatefulObserver` | ObserverStrategyTests.cs | Observer with instance field _counter; verifies registration rejection |
 | `UnannotatedObserver` | ObserverStrategyTests.cs | Observer without [StrategyIndex] attribute; verifies registration rejection |
 | `ExtensionDomainStrategyBase` (abstract) | StrategyPoolTypeSafetyAndExtensionTests.cs | Third-domain abstract base class extending LifecycleStrategyBase; defines ProbeValue() abstract method |

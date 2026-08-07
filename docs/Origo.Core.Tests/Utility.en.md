@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Utility Tests
 
@@ -57,6 +57,11 @@ Behavior of `DiffUtility.Diff<T>()` and `PathUtility` static path operations.
 | `GetParentDirectory_ReturnsParent` | Parent directory extracted |
 | `GetParentDirectory_NullOrEmpty_ReturnsEmpty` | null/empty input returns string.Empty |
 | `GetParentDirectory_SingleSegment_ReturnsEmpty` | Single-segment path with no parent returns string.Empty |
+| `NormalizeDirectoryPath_SchemePath_TrimsTrailingSlash` | `user://dir/` trailing slash trimmed |
+| `NormalizeDirectoryPath_SchemeRoot_IsPreserved` | `user://`/`res://` scheme roots keep double slash |
+| `Combine_SchemeRootBase_KeepsDoubleSlash` | Combining with `user://` root keeps double slash |
+| `GetParentDirectory_SchemeFile_ReturnsSchemeRoot` | File under scheme returns its scheme root (`user://foo.map` → `user://`) |
+| `GetParentDirectory_BackslashPath_ReturnsParent` | Windows backslash path parent extraction (`C:\base\sub` → `C:\base`) |
 
 ### PathUtility Error Paths
 
@@ -64,6 +69,7 @@ Behavior of `DiffUtility.Diff<T>()` and `PathUtility` static path operations.
 |-------------|----------------|-------------------|
 | `Combine_RejectsPathTraversal` | `..` path traversal sequences | `ArgumentException` |
 | `GetParentDirectory_AtRoot_Throws` | Root path with no parent directory | `InvalidOperationException` |
+| `GetParentDirectory_SchemeRoot_Throws` | `user://`/`res://` scheme root has no parent | `InvalidOperationException` |
 
 ## Known Coverage Gaps
 

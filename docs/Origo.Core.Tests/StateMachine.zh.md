@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 状态机 测试
 
@@ -118,6 +118,8 @@ StateMachineStrategyBase 默认钩子语义、StateMachineStrategyContext 快照
 | `StateMachineContainer_CreateOrGet_ConflictingIndices_Throws` | 同 key 不同索引的 CreateOrGet | InvalidOperationException |
 | `StateMachineContainer_DeserializeFromNode_DuplicateMachineKey_Throws` | 反序列化含重复 key | InvalidOperationException |
 | `StateMachineContainer_DeserializeFromNode_ThrowsOnNullNode` | null 节点反序列化 | ArgumentNullException |
+| `StateMachineContainer_DeserializeFromNode_ArrayRoot_Throws` | 结构错误的载荷（数组根节点）反序列化 | InvalidOperationException（fail-fast，而非静默清空机器） |
+| `StateMachineContainer_DeserializeFromNode_MissingMachinesKey_Throws` | 载荷缺少 machines 键 | InvalidOperationException |
 
 ## SessionAndAdapter 测试详情
 

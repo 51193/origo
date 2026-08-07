@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Meta -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Metadata Tests
 
@@ -72,7 +72,13 @@ contributor registration, and the full SaveGame chain.
 | `RegisterSaveMetaContributor_ThrowsOnNullContributor` | null ISaveMetaContributor | ArgumentNullException |
 | `RegisterSaveMetaContributor_ThrowsOnNullDelegate` | null delegate | ArgumentNullException |
 
-## SaveMetaNullAndSessionContextTests Happy Path
+## SaveMetaNullAndSessionContextTests Details
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `NullSndContext_RegisterSaveMetaContributor_Throws` | Registering a contributor (interface or delegate) on NullSndContext | InvalidOperationException |
 
 ## SaveMetaMergerTests Details
 

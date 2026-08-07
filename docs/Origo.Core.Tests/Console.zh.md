@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台系统 测试
 
@@ -168,6 +168,8 @@
 | `EntitySetData_NewKey_BoolLiteral_StoredAsBoolean` | entity_set_data player alive true → Boolean | console-commands |
 | `EntitySetData_NewKey_StringLiteral_StoredAsString` | entity_set_data player tag hero → String | console-commands |
 | `EntitySetData_ExistingKey_PreservesType` | 已有 float 类型的 hunger 键，写 15 → 保持 Single(15.0f) | console-commands: entity_set_data |
+| `BlackboardSet_BeyondIntRange_StoredAsInt64` | bb_set system big 3000000000（超出 int 范围）→ Int64(3000000000) | console-commands: bb_set |
+| `EntitySetData_NewKey_BeyondIntRange_StoredAsInt64` | entity_set_data player coins 3000000000 → Int64 | console-commands: entity_set_data |
 
 ### 错误路径
 
@@ -175,6 +177,7 @@
 |---------|-----------|---------|
 | `BlackboardSet_UnknownLayer_ReturnsError` | bb_set unknown key 42 | 返回 false + error 含 "layer" |
 | `EntitySetData_EntityNotFound_ReturnsError` | entity_set_data nonexistent hp 50 | 返回 false + error 含 "not found" |
+| `EntitySetData_ExistingKeyUnparseableValue_ReturnsErrorAndKeepsValue` | 已有 int 键写不可解析值 not_a_number | 返回 false + error 含 "Cannot parse"，原值保留 |
 
 ## OrigoConsoleLoggingTests 测试详情
 

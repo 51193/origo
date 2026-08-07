@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning 测试
 
@@ -37,6 +37,16 @@
 | `ActionFailed_AdvancesPlan_AndTerminates` | Action 失败（ActionStatus="failed"）后调用 OnPlanFailed，计划终止 | Planning |
 | `OnPlanCompleted_SuccessPath_FiresHook` | 单步计划完成后 OnPlanCompleted 触发，OnPlanFailed 不触发 | Planning |
 | `ResolveNextStep_ReturnsNull_NoPathTerminatesPlan` | action 完成但 ResolveNextStep 返回 null（无可行路径），计划干净终止，触发 OnPlanCompleted | Planning |
+| `PushAction_ActionAlreadyMountedInLifecycleIndices_ReusesItInsteadOfThrowing` | 步骤 Action 已在 LifecycleIndices 静态挂载时复用而非重复挂载，不抛异常 | Planning |
+| `PushAction_ConsecutiveSameStep_ResetsActionKeyParamSuffix` | 连续相同步骤时 ActionKey 重置为规范形式，不留旧 ",param" 后缀 | Planning |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `AdvancePlan_ActionCompletesWithoutIntent_ThrowsAndCleansUpAction` | intent 被清空后 Action 标记完成 | InvalidOperationException（消息含 "no intent is active"），且卸载 Action、清空计划步骤 |
+| `Wire_SecondPlanStrategyOnSameEntity_Throws` | 同一实体上挂载第二个计划策略 | InvalidOperationException（消息含 "plan strategy"） |
+| `Wire_StartIntentThrows_RollsBackWiringAndAllowsRetry` | StartIntent 期间 ResolveNextStep 抛异常 | InvalidOperationException 传播，订阅回滚归零，可重试成功 |
 
 ### 边界路径
 
@@ -55,6 +65,9 @@
 | `FakeAction2Strategy` | PlanExecutionStrategyBaseTests.cs | 模拟第二个 Action 策略，收集 AfterAdd 事件 |
 | `FailingPlanStrategy` | PlanExecutionStrategyBaseTests.cs | 模拟失败计划：step_a 完成后 ResolveNextStep 返回 null 触发 OnPlanFailed |
 | `CompletingPlanStrategy` | PlanExecutionStrategyBaseTests.cs | 模拟完成计划：单步计划 complete_test→step_a→完成，覆写 OnPlanCompleted/OnPlanFailed 记录调用 |
+| `LoopPlanStrategy` | PlanExecutionStrategyBaseTests.cs | 模拟循环计划：同一步骤 step_a 反复推进，验证重复入栈时 ActionKey 参数后缀复位与已挂载 action 复用 |
+| `FlakyStartPlanStrategy` | PlanExecutionStrategyBaseTests.cs | 可配置 ResolveNextStep 抛异常的启动失败计划，验证 StartIntent 失败时接线回滚、实体可重新接线 |
+| `SubscriptionTrackingEntity` | PlanExecutionStrategyBaseTests.cs | 包装 StubSndEntity 的 ISndEntity + ISndEntityRawSubscription 实现，记录各键订阅/退订次数，验证 Wire 失败不残留孤儿回调 |
 
 ## 已知覆盖缺口
 

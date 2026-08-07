@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台桥接服务器 测试
 
@@ -18,6 +18,7 @@
 | `ConsoleBridgeServerLifecycleTests.cs` | 服务器生命周期（Start/Stop/Dispose/双 Dispose/ActualPort）和连接管理（双连接拒绝、断开重连、硬断开恢复） |
 | `ConsoleBridgeServerCommunicationTests.cs` | 客户端输入命令传递（FIFO 顺序、Unicode、长行、空白行过滤）和输出通道分发（多行、null、大容量、并发发布、缓冲溢出） |
 | `ConsoleBridgeServerTests.cs` | 线程安全（并发读写无死锁）、回归测试（connect-time flush vs 并发发布）、短往返、Agent 工作流集成（输出到达、多行输出、重连全流程） |
+| `ConsoleBridgeServerErrorPathTests.cs` | 接受循环故障可观察性、Dispose 语义、Start 回滚与重试、输出侧隔离——写/读失败恢复 |
 | `ConsoleBridgeOptionsTests.cs` | 选项配置（自定义端口等） |
 
 ## ConsoleBridgeServerTests 测试详情
@@ -58,6 +59,8 @@
 | `OutputChannel_PublishNullString_Throws` | Publish(null) | ArgumentNullException |
 | `OutputChannel_LargeVolume_ManyLines_AllDelivered` | 100 行全部递送 | ConsoleBridge |
 | `OutputChannel_ConcurrentPublish_AllDelivered` | 10 线程并发发布，全部递送 | ConsoleBridge |
+| `PendingOutput_WithinLimit_AllDeliveredOnConnect` | 无客户端连接时发布 500 行待发输出，连接后全部按序递送 | ConsoleBridge |
+| `PendingOutput_BufferOverflow_DropsOldestLines` | 待发缓冲超过上限（1000+1 行）：收到溢出通知行与保留的最新行，最旧行被丢弃 | ConsoleBridge |
 
 ### 连接管理
 
@@ -101,6 +104,32 @@
 | `Constructor_NullOutput_Throws` | null output | ArgumentNullException |
 | `Constructor_DefaultOptions_HasExpectedPort` | 默认选项 | ActualPort > 0 |
 | `Constructor_CustomPort_StoredInOptions` | Port=9876 | ActualPort=9876 |
+
+## ConsoleBridgeServerErrorPathTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `HardClientRst_TriggersIOException_AndRecovers` | 客户端 RST 触发服务器读取 IOException，服务器恢复并接受新连接 | ConsoleBridge |
+| `HardSocketClose_TriggersIOException_AndRecovers` | 客户端硬关闭 socket 触发 IOException，服务器恢复并接受新连接 | ConsoleBridge |
+| `StreamShutdown_TriggersSocketException_AndRecovers` | 客户端 Shutdown 触发 SocketException，服务器恢复并接受新连接 | ConsoleBridge |
+| `PendingFlush_BrokenClient_ServerRecovers` | 客户端连接后立即断开，待发输出 flush 命中已关闭流，异常处理后服务器恢复 | ConsoleBridge |
+| `WriteFailure_LogsWarning_AndRecovers` | 输入 Enqueue 抛异常：记录 "Connection handler failed" 警告，服务器恢复并接受新连接 | ConsoleBridge |
+| `Dispose_FaultedAcceptTask_LogsErrorInsteadOfSwallowing` | 已故障的 accept task 在 Dispose 时记录 "Accept loop faulted" 错误而非吞掉（回归守卫） | ConsoleBridge |
+| `Dispose_AcceptTaskStillRunning_LogsTimeoutWarning` | accept task 未在 join 超时内停止时记录超时警告，Dispose 不等待其完整生命周期 | ConsoleBridge |
+| `AcceptLoop_NonCancellationListenerError_LogsErrorAndStops` | 非取消监听错误记录 "Accept loop stopped" 且不误报 "Accept loop faulted" | ConsoleBridge |
+| `AcceptLoop_NonCancellationError_StopsListenerAndAllowsRestart` | 非取消 accept 错误停止监听、`_started` 回滚，同一实例可重新 Start 绑定新端口并接受连接 | ConsoleBridge |
+| `OnConsoleOutput_BrokenWriter_DoesNotThrowToCaller` | 客户端流已死时输出回调不向调用方抛异常，记录警告并清除 writer | ConsoleBridge |
+| `Publish_BrokenClientWriter_DoesNotThrowToCaller` | 客户端 RST 后 `Publish` 不向游戏侧抛异常（输出侧隔离），服务器随后仍可接受新连接 | ConsoleBridge |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Start_AfterDispose_ThrowsObjectDisposed` | Dispose 后调用 Start | ObjectDisposedException |
+| `Start_Failure_RollsBackAndAllowsRetry` | 非法端口（-1）导致 Start 失败 | 抛异常且 started 标志回滚，修正端口后重试成功 |
+| `Start_PortInUse_RollsBackListenerAndAllowsRetryAfterRelease` | 端口被占用导致 Start 失败 | SocketException，listener 与输出订阅完全回滚，端口释放后重试成功 |
 
 ## ConsoleBridgeOptionsTests 测试详情
 

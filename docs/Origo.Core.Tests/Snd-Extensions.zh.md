@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 扩展 测试
 
@@ -18,6 +18,7 @@
 | `EntityStrategyExtensionsTests.cs` | EnsureReplaceableStrategy 默认/自定义/空值覆盖/幂等方式/参数校验 |
 | `TryGetNumericExtensionsTests.cs` | TryGetNumeric 跨类型读取（int/float/long/double）、非数值返回 false、GetNumeric fallback |
 | `ActiveStrategyExtensionsTests.cs` | InvokeStrategy 泛型重载：带输入/无输入序列化往返、null 返回 default |
+| `EntityExtensionsTests.cs` | IsSameEntityAs 实体身份比较：同引用/同包装、名称+会话双重校验、未绑定退化比较、null 参数校验 |
 
 ## EnsureStrategyTests 测试详情
 
@@ -79,6 +80,27 @@
 | `InvokeStrategy_GenericNoInput_CallsWithoutInput` | InvokeStrategy<TOutput> 无 input 重载仍正确调用策略 | Snd README: ActiveStrategyExtensions |
 | `InvokeStrategy_NullResult_ReturnsDefault` | 策略 Invoke 返回 null 时，泛型方法返回 default(TOutput) | Snd README: ActiveStrategyExtensions |
 
+## EntityExtensionsTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `IsSameEntityAs_SameReference_ReturnsTrue` | 同一对象引用比较返回 true | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_DifferentWrappersSameEntity_ReturnsTrue` | 同一实体（同名同会话）的两个不同包装实例比较返回 true | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_SameNameDifferentSession_ReturnsFalse` | 同名但所属会话不同返回 false | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_DifferentNamesSameSession_ReturnsFalse` | 同会话但名称不同返回 false | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_SameNameBothUnbound_ReturnsTrue` | 双方均未绑定会话时退化为名称相等比较，同名校验通过 | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_OneBoundOneUnbound_ReturnsFalse` | 一方绑定会话另一方未绑定时返回 false | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_RealUnboundEntities_SameName_ReturnsTrue` | 真实未绑定实体（OwningSession 访问抛异常）同名比较退化为名称相等，不崩溃 | snd-entity-model: IsSameEntityAs |
+| `IsSameEntityAs_RealUnboundEntities_DifferentName_ReturnsFalse` | 真实未绑定实体不同名返回 false | snd-entity-model: IsSameEntityAs |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `IsSameEntityAs_NullArgument_Throws` | other 参数为 null | ArgumentNullException |
+
 ## 测试辅助策略
 
 | 策略类 | 定义位置 | 用途 |
@@ -86,6 +108,8 @@
 | `StubActiveStrategyEntity` | ActiveStrategyExtensionsTests.cs | ISndEntity 的 stub 实现，通过 Func<object?, object?> 注入 InvokeStrategy 行为，其他成员抛 NotImplementedException |
 | `TestNumericEntity` | TryGetNumericExtensionsTests.cs | ISndDataAccess 的测试实现，内部 Dictionary<string, TypedData> 存储，TryGetData 通过 TypedDataObjectConverter 转换 |
 | `TestResult` | ActiveStrategyExtensionsTests.cs | 含 Result 属性的简单 POCO，用于泛型 InvokeStrategy 的返回类型反序列化 |
+| `StubEntity` | EntityExtensionsTests.cs | ISndEntity 桩实现，OwningSession 可配置（init），用于 IsSameEntityAs 名称+会话双重校验 |
+| `StubSession` | EntityExtensionsTests.cs | ISessionRun 桩实现，LevelId 固定为 "test"，其余成员抛 NotImplementedException |
 
 ## 已知覆盖缺口
 

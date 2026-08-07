@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Serialization -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 序列化 测试（适配层）
 
@@ -26,6 +26,7 @@ Basis、Transform2D/3D、Rect2/2I、Aabb、Plane。所有类型通过 `DataSourc
 | `GodotDataSourceConvertersTests.cs` | 14 种 Godot 类型转换器往返：写入→读取值一致 |
 | `GodotJsonConverterRegistryTests.cs` | 类型名映射注册（全部 14 种）+ 转换器注册后的往返 |
 | `GodotTypedDataLayeredTests.cs` | 多层 TypedData：Kind 解析、FromObject 往返、TryGet/AsXxx 扩展、DataType/Data、ObjectConverter fallback、跨层 Kind 隔离 |
+| `GodotTypedDataGeneratedCoverageTests.cs` | 生成访问器逐类型覆盖：AsXxx/TryGetXxx/KindMap/Converter 往返、未注册 Kind 的 fallback 与失败路径 |
 | `GodotTypedDataPerformanceTests.cs` | （Benchmark）多层分发性能：注册 vs 未注册写/读吞吐、ObjectConverter switch vs fallback、Factory 路径、实体帧模拟 |
 
 ## GodotDataSourceConvertersTests 测试详情
@@ -97,6 +98,27 @@ Basis、Transform2D/3D、Rect2/2I、Aabb、Plane。所有类型通过 `DataSourc
 | `Core_Int_DoesNotConflict_With_GodotKind` | int 的 TypedData 用 TryGetVector2 读取 | TryGetVector2 false、TryGetInt32 true 返回 42 |
 | `GodotType_Null_PreservesDataType` | TypedData(130, 0, null)（null 值） | DataType 仍为 Vector3，ToObject 返回 null |
 | `GodotKind_NotRecognized_ByCoreOnlyUnregistered` | Godot 类型 Kind ≥ 128 vs Core int Kind < 128 | Godot Kind 非 0 且 ≥ 128，int Kind=5 且 < 128 |
+
+## GodotTypedDataGeneratedCoverageTests 测试详情
+
+参数化覆盖全部 14 种已注册 Godot 类型的生成访问器（`As*`/`TryGet*`）、KindMap 与对象转换器桥接，使每条生成分支都被执行。
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `KindMap_ResolvesEveryRegisteredType` | 全部 14 种 Godot 类型经 `TypedDataTypeMap.GetKindForType` 解析出各自 Kind（128–141 一一对应） | GodotAdapter Snd |
+| `Converter_FromObject_RoundTrips` | `FromObject`→`TypedData`→`ToObject` 对全部 14 种类型完整往返，DataType 与值一致 | GodotAdapter Snd |
+| `Converter_UnregisteredKind_FromObjectFallsBackToRef` | 未注册 Kind(250) 经 `FromObject` 回退到 ref 槽：inlineBits=0、引用同一实例 | GodotAdapter Snd |
+| `Converter_ToObject_UnregisteredKind_FallsBackToRef` | 未注册 Kind(250) 经 `ToObject` 回退返回原值；null 值返回 null | GodotAdapter Snd |
+| `Accessors_AsAndTryGet_ReturnValue` | 全部 14 种类型的 `As*` 与 `TryGet*` 访问器返回一致值 | GodotAdapter Snd |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Accessors_TryGet_RefTypeMismatch_Fails` | ref 槽存放非 Godot 值（string）时调用 `TryGet*` | 返回 false |
+| `Accessors_As_UnregisteredKind_Throws` | 未注册 Kind(250) 的 TypedData 调用 `As*` | InvalidCastException |
 
 ## GodotTypedDataPerformanceTests 测试详情（Benchmark）
 

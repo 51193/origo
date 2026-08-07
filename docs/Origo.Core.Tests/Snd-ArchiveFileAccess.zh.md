@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 存档文件访问 测试
 
@@ -63,6 +63,7 @@
 | `WriteFile_EmptyObject_RoundTrip` | 空 DataSourceNode 对象（零 key） | 写入并读回，不含任何键 |
 | `WriteFile_NullValueNode_RoundTrip` | 对象包含 Null 值节点 | 读回后 IsNull 为 true |
 | `WriteFile_BooleanValues_RoundTrip` | 对象包含 true/false 节点 | 读回后 AsBool() 正确 |
+| `ReadFile_DotDotInsideFileName_IsAllowed` | 文件名内部含 `..` 子串（如 `v1..2.map`，非路径穿越段） | 正常读取，不被拒绝 |
 
 ### Save/Load 往返
 
