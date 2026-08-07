@@ -192,9 +192,22 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
         if (!initialize)
             return;
 
-        var (found, intent) = entity.TryGetData<string>(IntentKey);
-        if (found && !string.IsNullOrEmpty(intent))
-            StartIntent(entity, intent);
+        try
+        {
+            var (found, intent) = entity.TryGetData<string>(IntentKey);
+            if (found && !string.IsNullOrEmpty(intent))
+                StartIntent(entity, intent);
+        }
+        catch
+        {
+            // Roll back the wiring (subscriptions + callback registry) so the
+            // entity can be re-wired on a retry instead of being stuck behind
+            // the "already wired" guard with orphaned callbacks.
+            raw.UnsubscribeDataRaw(IntentKey, intentCb);
+            raw.UnsubscribeDataRaw(ActionStatusKey, actionCb);
+            _wiredCallbacks.Remove(entity);
+            throw;
+        }
     }
 
     private void Unwire(ISndEntity entity)
@@ -249,7 +262,17 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
     {
         var (foundIntent, intent) = entity.TryGetData<string>(IntentKey);
         if (!foundIntent || string.IsNullOrEmpty(intent))
-            return;
+        {
+            // An action reported completion while no intent is active: the
+            // plan state is inconsistent (the action strategy may still be
+            // mounted). Clean up and fail loudly instead of silently
+            // stalling the plan.
+            RemoveCurrentAction(entity);
+            entity.SetData(PlanStepKey, "");
+            throw new InvalidOperationException(
+                $"Plan action completed on '{entity.Name}' while no intent is active; " +
+                "the plan state is inconsistent.");
+        }
 
         var (foundStep, step) = entity.TryGetData<string>(PlanStepKey);
         var currentStep = foundStep && step is not null ? step : "";
@@ -284,11 +307,11 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
 
         entity.SetData(PlanStepKey, stepType);
 
-        var (foundAction, currentAction) = entity.TryGetData<string>(ActionKey);
-        var currentPrefix = foundAction && currentAction is not null ? currentAction.Split(',')[0] : "";
-
-        if (currentPrefix != stepType)
-            entity.SetData(ActionKey, stepType);
+        // Always write the canonical descriptor: a previous run of the same
+        // step may have left a ",param" suffix in ActionKey, and re-entering
+        // the step must reset it (the SetData notification fires because the
+        // value differs).
+        entity.SetData(ActionKey, stepType);
 
         entity.SetData(ActionStatusKey, ActionStatusExecuting);
 

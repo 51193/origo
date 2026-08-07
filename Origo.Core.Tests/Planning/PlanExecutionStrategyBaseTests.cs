@@ -738,6 +738,143 @@ public class PlanExecutionStrategyBaseTests
         CompletingPlanStrategy.FailedCalls = null;
     }
 
+    // ── Regression: consecutive same step, StartIntent rollback, missing intent ──
+
+    [Fact]
+    public void PushAction_ConsecutiveSameStep_ResetsActionKeyParamSuffix()
+    {
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        world.StrategyPool.Register(() => new LoopPlanStrategy());
+        world.StrategyPool.Register(() => new FakeActionStrategy());
+        host.BindWorld(world);
+        host.BindContext(NullSndContext.Instance);
+
+        var entity = host.CreateEntity(CreatePlainMeta("loop_entity"));
+        // A previous run left a ",param" suffix in ActionKey; re-entering the
+        // same step type must reset it to the canonical "stepType" form.
+        entity.SetData(_actionKey, "step_a,param");
+
+        entity.SetData(_intentKey, "loop");
+        entity.AddStrategy("test.loop_plan_strategy");
+
+        Assert.Equal("step_a", entity.GetData<string>(_actionKey));
+
+        // Complete step_a → ResolveNextStep yields step_a again (consecutive
+        // same step); the ActionKey must stay canonical, not accumulate
+        // stale state.
+        entity.SetData(_actionStatusKey, "completed");
+        Assert.Equal("step_a", entity.GetData<string>(_actionKey));
+        Assert.Equal("step_a", entity.GetData<string>(_planStepKey));
+    }
+
+    [Fact]
+    public void Wire_StartIntentThrows_RollsBackWiringAndAllowsRetry()
+    {
+        var strategy = new FlakyStartPlanStrategy { ThrowOnResolve = true };
+        var tracking = new SubscriptionTrackingEntity(new StubSndEntity("e"));
+        tracking.SetData(_intentKey, "flaky");
+        ISndContext ctx = NullSndContext.Instance;
+
+        var ex = Assert.Throws<InvalidOperationException>(() => strategy.AfterAdd(tracking, ctx));
+        Assert.Contains("StartIntent", ex.Message, StringComparison.Ordinal);
+
+        // The subscriptions must be rolled back: a retry must not hit the
+        // "already wired" guard with orphaned callbacks.
+        Assert.Equal(0, tracking.GetSubCount(_intentKey));
+        Assert.Equal(0, tracking.GetSubCount(_actionStatusKey));
+
+        strategy.ThrowOnResolve = false;
+        strategy.AfterAdd(tracking, ctx);
+
+        Assert.Equal(1, tracking.GetSubCount(_intentKey));
+        Assert.Equal(1, tracking.GetSubCount(_actionStatusKey));
+        Assert.Equal("step_a", tracking.GetData<string>(_planStepKey));
+    }
+
+    [Fact]
+    public void AdvancePlan_ActionCompletesWithoutIntent_ThrowsAndCleansUpAction()
+    {
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        world.StrategyPool.Register(() => new SimplePlanStrategy());
+        world.StrategyPool.Register(() => new FakeActionStrategy());
+        host.BindWorld(world);
+        host.BindContext(NullSndContext.Instance);
+
+        var entity = host.CreateEntity(CreatePlainMeta("orphan_entity"));
+        entity.SetData(_intentKey, "test");
+        entity.AddStrategy("test.plan_strategy");
+        Assert.Equal("step_a", entity.GetData<string>(_planStepKey));
+
+        // External interference clears the intent while an action is still
+        // mounted; its completion is a plan-state inconsistency that must
+        // fail loudly instead of silently stalling the plan.
+        entity.SetData(_intentKey, "");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => entity.SetData(_actionStatusKey, "completed"));
+        Assert.Contains("no intent is active", ex.Message, StringComparison.Ordinal);
+
+        // The current action must have been unmounted and the plan step
+        // cleared, so the entity is not left in a half-driven state.
+        Assert.Equal("", entity.GetData<string>(_planStepKey));
+    }
+
+    private static SndMetaData CreatePlainMeta(string name) =>
+        new()
+        {
+            Name = name,
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [] },
+            DataMetaData = new DataMetaData(),
+            NodeMetaData = new NodeMetaData()
+        };
+
+    [StrategyIndex("test.loop_plan_strategy")]
+    private sealed class LoopPlanStrategy : PlanExecutionStrategyBase
+    {
+        protected override string IntentKey => PlanExecutionStrategyBaseTests._intentKey;
+        protected override string IntentStatusKey => PlanExecutionStrategyBaseTests._intentStatusKey;
+        protected override string PlanStepKey => PlanExecutionStrategyBaseTests._planStepKey;
+        protected override string ActionKey => PlanExecutionStrategyBaseTests._actionKey;
+        protected override string ActionStatusKey => PlanExecutionStrategyBaseTests._actionStatusKey;
+
+        protected override string? ResolveNextStep(string intent, string currentStep, bool failed, ISndEntity entity)
+        {
+            return (intent, currentStep) switch
+            {
+                ("loop", "" or null) => "step_a",
+                ("loop", "step_a") => "step_a",
+                _ => null,
+            };
+        }
+
+        protected override string? StepToActionIndex(string stepType) => "test.action.fake";
+    }
+
+    [StrategyIndex("test.flaky_plan_strategy")]
+    private sealed class FlakyStartPlanStrategy : PlanExecutionStrategyBase
+    {
+        public bool ThrowOnResolve { get; set; }
+
+        protected override string IntentKey => PlanExecutionStrategyBaseTests._intentKey;
+        protected override string IntentStatusKey => PlanExecutionStrategyBaseTests._intentStatusKey;
+        protected override string PlanStepKey => PlanExecutionStrategyBaseTests._planStepKey;
+        protected override string ActionKey => PlanExecutionStrategyBaseTests._actionKey;
+        protected override string ActionStatusKey => PlanExecutionStrategyBaseTests._actionStatusKey;
+
+        protected override string? ResolveNextStep(string intent, string currentStep, bool failed, ISndEntity entity)
+        {
+            if (ThrowOnResolve)
+                throw new InvalidOperationException("Intentional StartIntent failure.");
+            return "step_a";
+        }
+
+        protected override string? StepToActionIndex(string stepType) => "test.action.fake";
+    }
+
     private sealed class SubscriptionTrackingEntity(StubSndEntity inner) : ISndEntity, ISndEntityRawSubscription
     {
         private readonly Dictionary<string, int> _subCounts = new(StringComparer.Ordinal);
