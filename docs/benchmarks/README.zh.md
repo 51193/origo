@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 性能基线
 
@@ -13,8 +13,8 @@ Origo 框架的性能基线数据与设计权衡分析，覆盖 TypedData 内联
 
 | 文件 | 说明 |
 |------|------|
-| `baseline.md` | Origo 框架各子系统的性能基线数据与设计权衡分析 |
-| `README.md` | 性能基准文档概览（本文件） |
+| `baseline.zh.md` / `baseline.en.md` | Origo 框架各子系统的性能基线数据与设计权衡分析 |
+| `README.md` | 自动生成的导航中枢（列出本目录全部文档，禁止手动编辑） |
 
 ## 基准测试文件
 
@@ -22,7 +22,7 @@ Origo 框架的性能基线数据与设计权衡分析，覆盖 TypedData 内联
 |------|---------|------|
 | `Origo.SourceGeneration.Tests/Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | 源生成 | TypedData 内联 vs 装箱的纯净微基准：值类型 / 引用类型读写、混合分派 |
 | `Origo.Core.Tests/Benchmarks/TypedDataRealWorldBenchmarkTests.cs` | TypedData | 真实 SND 路径模拟：字典查找/插入、数值强转链、观察者通知、异构迭代 |
-| `Origo.Core.Tests/Benchmarks/EntityLifecycleBenchmarkTests.cs` | 实体生命周期 | 实体创建+AfterSpawn、帧处理缩放、SaveSingle 吞吐 |
+| `Origo.Core.Tests/Benchmarks/EntityLifecycleBenchmarkTests.cs` | 实体生命周期 | 实体创建+AfterSpawn、帧处理缩放、BuildMetaData 序列化吞吐 |
 | `Origo.Core.Tests/Benchmarks/ObserverTopologyBenchmarkTests.cs` | Observer 拓扑 | Mount/Unmount 绑定数量缩放 |
 | `Origo.Core.Tests/Benchmarks/DataSourceNodeBenchmarkTests.cs` | DataSourceNode | 树构建、SHA-256 哈希、As<T> 类型分派 |
 | `Origo.Core.Tests/Benchmarks/BlackboardBenchmarkTests.cs` | Blackboard | 批量 SetValue/TryGet、序列化往返 |

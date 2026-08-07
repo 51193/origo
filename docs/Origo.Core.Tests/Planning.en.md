@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Planning Tests
 
@@ -18,7 +18,7 @@ ensuring Action strategy mount/unmount goes through the real `SndStrategyManager
 
 | File | Verification Focus |
 |------|-------------------|
-| `Planning/PlanExecutionStrategyBaseTests.cs` | Complete plan lifecycle: start/advance/complete/fail, Action strategy mount/unmount, subscription leak prevention |
+| `Planning/PlanExecutionStrategyBaseTests.cs` | Complete plan lifecycle: start/advance/complete/fail, Action strategy mount/unmount, subscription leak prevention (regression: consecutive same steps reset the ActionKey suffix; StartIntent failure rolls back wiring for retry; action completion without an active intent throws and cleans up) |
 
 ## PlanExecutionStrategyBaseTests Details
 

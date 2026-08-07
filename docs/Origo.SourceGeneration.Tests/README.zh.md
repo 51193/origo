@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration.Tests
 
@@ -98,7 +98,7 @@
 
 ### 为什么性能基准使用生成产物内部成员、采用宽松阈值并独立运行
 
-性能基准引用真实 `Origo.Core` 的生成产物，覆盖显式转换运算符、`TryGetXxx`、`TryGetString`、`Data`、`FromObject` 等 public API，并通过 `InternalsVisibleTo` 访问生成器产出的内部成员（`TypedData.KindMap`、内部构造函数、`IsString` 判别属性），以精确对比生成路径与无优化装箱实现的吞吐；`TypedDataFactory<T>` 等非基准目标类型不在范围内。
+性能基准引用真实 `Origo.Core` 的生成产物，覆盖显式转换运算符、`TryGetXxx`、`TryGetString` 等访问器，并通过 `InternalsVisibleTo` 访问生成器产出的内部成员（`TypedData.KindMap`、内部构造函数、`IsString` 判别属性）与 internal `TypedDataObjectConverter.ToObject`，以精确对比生成路径与无优化装箱实现的吞吐；`TypedDataFactory<T>` 等非基准目标类型不在范围内。
 
 基准是宽松的：不要求生成路径快于无优化装箱基线，只断言其不超过基线的固定倍数（8×，并对低于 1ms 的不可靠基线跳过比率）且单基准有总时长上限，目的是守住"不出现严重性能退化/卡死"，而非锁定绝对性能数字。
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # DataSource
 
@@ -63,6 +63,7 @@ CLR objects (TypedData / SndMetaData / etc.)
 - **Lazy expansion**: Large JSON nodes expand children only on access, avoiding full parsing
 - **Zero reflection**: All converters are explicitly registered; no reflection-based auto-discovery is used
 - **Runtime type container**: `DataSourceNode` is a universal serialization container — the entire Save system and DataSource flow passes data through it, deferring type safety to `DataSourceConverterRegistry` lookups. This is a deliberate design trade-off ("simplicity over strict typing"), allowing all subsystems to share a single data tree at the cost of exposing conversion errors at runtime rather than compile time.
+- **Strict reads**: archive payload converters (e.g. `StateMachineContainerPayloadConverter`) validate framework-mandatory fields (`key`/`pushIndex`/`popIndex` on each `machines` entry) — a corrupt archive immediately throws `InvalidOperationException`, never silently defaulting (fail-fast, consistent with the Save strict-read contract)
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

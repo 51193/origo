@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
@@ -538,7 +538,7 @@ Thus the minimum safe layout is: `byte (1B) + padding (7B) + long (8B) + referen
 
 ## 6. Performance Panorama
 
-> Data from [benchmarks/baseline.md](../benchmarks/baseline.en.md), sampling environment: AMD Ryzen 7 9700X / .NET 10.0.9
+> Data from [benchmarks/baseline.en.md](../benchmarks/baseline.en.md), sampling environment: AMD Ryzen 7 9700X / .NET 10.0.9
 
 ### Writes (Generated 12-13x, 0 Byte Allocation)
 

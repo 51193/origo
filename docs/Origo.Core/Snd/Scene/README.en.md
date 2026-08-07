@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Scene
 
@@ -13,7 +13,7 @@ SND scene host implementation layer. Provides two implementations of `ISndSceneH
 
 | File | Responsibility |
 |------|---------------|
-| `SndEntityFactory.cs` | Public static utility: `Spawn(host, meta)` = `host.CreateEntity` + trigger AfterSpawn; `SpawnMany(host, metas)` = two-phase (create all first, then uniformly trigger AfterSpawn) |
+| `SndEntityFactory.cs` | Public static utility: `Spawn(host, meta)` = `host.CreateEntity` + trigger AfterSpawn (rolls the entity back — remove from host + teardown observer bindings + release strategies/nodes — when the hook throws); `SpawnMany(host, metas)` = two-phase (create all first, then uniformly trigger AfterSpawn; on failure rolls back every entity whose hooks never fired) |
 | `FullMemorySndSceneHost.cs` | Full in-memory scene host, creates real SndEntity, holds per-scene-host observer topology, supports owning session binding |
 | `StubSndSceneHost.cs` | Lightweight stub scene host, uses simple StubSndEntity (no strategies/nodes), for unit tests and LevelBuilder offline construction |
 | `ISndContextAttachableSceneHost.cs` | Interface: allows binding `ISndContext` to the host during session construction (`BindContext`) |
@@ -80,7 +80,7 @@ All strategy lifecycle hook triggering is uniformly orchestrated by session life
 
 ### Why spawn logic is centralized in SndEntityFactory
 
-`SndEntityFactory.Spawn/SpawnMany` is the single authoritative implementation of "create entity + trigger AfterSpawn". `ISessionRun.Spawn/SpawnMany` delegates to it; adapter layers and auto-initializers also reuse it. A single source ensures that adjusting spawn behavior only requires one change, avoiding divergence from multiple spawn logic paths. `SndEntityFactory.SpawnMany` uses a two-phase approach (all created first, then uniformly trigger hooks), making all sibling entities visible during AfterSpawn hooks.
+`SndEntityFactory.Spawn/SpawnMany` is the single authoritative implementation of "create entity + trigger AfterSpawn". `ISessionRun.Spawn/SpawnMany` delegates to it; adapter layers and auto-initializers also reuse it. A single source ensures that adjusting spawn behavior only requires one change, avoiding divergence from multiple spawn logic paths. `SndEntityFactory.SpawnMany` uses a two-phase approach (all created first, then uniformly trigger hooks), making all sibling entities visible during AfterSpawn hooks. **Hook-failure rollback**: when AfterSpawn throws the entity already exists (strategies/nodes acquired); `Spawn` rolls it back immediately (`host.RemoveEntity` + `TeardownObserverBindings` + `ReleaseStrategiesOnly` + `TeardownOnly`) and rethrows, so no half-initialized entity or leaked strategy reference survives; `SpawnMany` keeps entities whose hooks already fired and rolls back the rest (the throwing one and all not-yet-fired ones).
 
 ### Why FullMemorySndSceneHost uses deferred binding for World/Context
 

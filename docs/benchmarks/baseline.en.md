@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Performance Baseline
 
@@ -165,7 +165,7 @@ Documents why the current state is as it is, what trade-offs were made, and dire
 
 1. **CPU dynamic frequency scaling (scaling ≈ 75%)** introduces run-to-run jitter; for marginal items ≤ 1.3x and the fastest loops (boxed side heterogeneous iteration 6.3–8.4x, writes), retesting at fixed frequency/performance mode is recommended.
 2. **Absolute throughput is affected by code alignment**: writes and other ultra-trivial loops are sensitive to method layout/alignment, with ~±8% jitter; **allocation counts and relative trends are unaffected by this** and should be the primary criteria.
-3. **Runtime is .NET 10.0.9**, matching the `net10.0` test target; conclusions must be retested under the same runtime.
+3. **Runtime is .NET 10.0.10**, matching the `net10.0` test target; conclusions must be retested under the same runtime.
 4. **Micro-benchmarks use min-of-rounds**, favoring ideal JIT steady state; real-world simulation suites are more representative.
 5. High-variance items: String `TryGetString` read, mixed dispatch, boxed side heterogeneous iteration, boxed side value type insertion; for these items, increase sampling rounds (≥ 8 rounds) to converge before drawing conclusions.
 

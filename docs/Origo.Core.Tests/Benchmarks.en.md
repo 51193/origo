@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Benchmarks -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Performance Benchmarks
 
@@ -29,7 +29,7 @@ and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) 
 | File | Responsibility |
 |------|---------------|
 | `Benchmarks/TypedDataRealWorldBenchmarkTests.cs` | Five TypedData real-world simulation benchmarks: dictionary lookup/insert, numeric coercing chain, observer notification, heterogeneous dictionary iteration |
-| `Benchmarks/EntityLifecycleBenchmarkTests.cs` | Entity creation + AfterSpawn scaling, frame processing (ProcessAll) scaling, SaveSingle throughput |
+| `Benchmarks/EntityLifecycleBenchmarkTests.cs` | Entity creation + AfterSpawn scaling, frame processing (ProcessAll) scaling, BuildMetaData serialization throughput |
 | `Benchmarks/ObserverTopologyBenchmarkTests.cs` | ObserverTopology Mount/Unmount binding count scaling |
 | `Benchmarks/DataSourceNodeBenchmarkTests.cs` | DataSourceNode tree construction, SHA-256 hash computation, As\<T\> type dispatch throughput |
 | `Benchmarks/BlackboardBenchmarkTests.cs` | In-memory Blackboard SetValue/TryGet bulk throughput, SerializeAll+DeserializeAll round-trip |
@@ -49,7 +49,7 @@ and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) 
 | `DictInsert_FactoryCreate_vs_BoxedDict` | `SndDataManager.SetData<T>`: construct value and write to dictionary | Generated factory `Create` / implicit conversion + insert vs boxed insert |
 | `MultiTypeExtractionChain_Generated_vs_Boxed` | `TryGetNumeric` cross-numeric type sequential try-read | Generated `TryGetSingle→TryGetInt32→TryGetInt64→TryGetDouble` chain vs `is float→is int→is long→is double` chain |
 | `ObserverNotify_Generated_vs_Boxed` | Observer callback passing old/new values with type check | Passing `(TypedData, TypedData)` + `TryGetString` vs passing `(object?, object?)` + `is string` |
-| `HeterogeneousDictIteration_GeneratedData_vs_BoxedDict` | Iterating heterogeneous data dictionary, reading `.Data` per entry | Generated `.Data` (via `ToObject`) vs pure `object` pass-through |
+| `HeterogeneousDictIteration_GeneratedData_vs_BoxedDict` | Iterating heterogeneous data dictionary, converting each entry to `object` via `TypedDataObjectConverter.ToObject` | Generated `ToObject` (object-ification) vs pure `object` pass-through |
 
 ### EntityLifecycleBenchmarkTests
 
@@ -57,7 +57,7 @@ and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) 
 |-----------------|-------------|
 | `EntityCreation_ScalingByEntityCount` | 100/500/2000 entity creation + `FireAfterSpawnHooks` throughput and allocation |
 | `FrameProcessing_ScalingByEntityAndStrategyCount` | 200-frame ProcessAll throughput under 10e×1s / 50e×5s / 200e×10s configurations |
-| `EntitySaveSingle_ScalingByEntityCount` | 10/100/500 entity `SaveSingle` throughput |
+| `EntitySaveSingle_ScalingByEntityCount` | 10/100/500 entity `BuildMetaData` (serialization metadata construction) throughput |
 
 ### ObserverTopologyBenchmarkTests
 
@@ -127,7 +127,7 @@ table format "Method / Iterations / Time / Throughput / Allocation" with dual-ch
 |----------------|--------|-----------|
 | Does not cover real-world throughput of GodotAdapter registered types (`Vector2`/`Vector3`, etc.) | Adapter-layer multi-layer dispatch performance not verified in this suite | Covered separately by `GodotTypedDataPerformanceTests` in [Origo.GodotAdapter.Tests/Serialization](../Origo.GodotAdapter.Tests/Serialization.en.md) |
 | Does not cover concurrent/multi-threaded read/write | Contention and visibility under multi-threading not tested | Framework uses single-threaded frame model (see [manual root README — Design Principles](../README.en.md)) |
-| Does not cover Kind-dispatch alternative iteration paths | Only tests the `.Data` (`ToObject`) iteration path | [Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md) Kind dispatch |
+| Does not cover Kind-dispatch alternative iteration paths | Only tests the `ToObject` (object-ification) iteration path | [Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md) Kind dispatch |
 | Absolute throughput/ratio/allocation not asserted (only prints + single-benchmark time cap) | Performance degradations cannot be auto-captured, require manual baseline comparison | [benchmarks/baseline.md](../benchmarks/baseline.en.md) |
 
 ## Design Decisions
@@ -171,10 +171,14 @@ captures locals), it would change the codegen of the timing loop (closure field 
 alignment), contaminating throughput numbers. Keeping it in a separate method preserves the
 uninstrumented codegen of the timing loop, with allocation and time not interfering.
 
-### Why only use public API
+### Why the benchmarks go through TypedDataObjectConverter
 
-Benchmarks use only `TypedData`'s public API (explicit conversion operators, `TryGetXxx`,
-`TryGetString`, `FromObject`, `.Data`) and `System.Collections.Generic.Dictionary`, without
+All of `TypedData`'s `AsXxx` accessors and the object converter are `internal` (the test
+projects reach them via `InternalsVisibleTo`). The heterogeneous-iteration benchmark measures
+the "compile-time-unknown-type object-ification" cold path through internal
+`TypedDataObjectConverter.ToObject` — the real call shape of serialization, console, and
+`ToString` cold paths; hot/warm paths (data-change signal handling, load validation) use the
+zero-allocation `TryGetXxx` accessors (see [Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md)).
 needing to expose Core internal members to the test project, keeping the benchmark's calling shape
 consistent with real downstream consumers.
 

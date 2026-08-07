@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Performance Baselines
 
@@ -13,7 +13,7 @@ Performance baseline data and design trade-off analysis for the Origo framework,
 
 | File | Description |
 |------|------|
-| `baseline.md` | Performance baseline data and design trade-off analysis for Origo framework subsystems |
+| `baseline.en.md` / `baseline.zh.md` | Performance baseline data and design trade-off analysis for Origo framework subsystems |
 | `README.md` | Performance benchmark document overview (this file) |
 
 ## Benchmark Test Files
@@ -22,7 +22,7 @@ Performance baseline data and design trade-off analysis for the Origo framework,
 |------|---------|------|
 | `Origo.SourceGeneration.Tests/Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | Source Generation | Pure micro-benchmark: TypedData inline vs boxing for value type / reference type read/write, mixed dispatch |
 | `Origo.Core.Tests/Benchmarks/TypedDataRealWorldBenchmarkTests.cs` | TypedData | Real SND path simulation: dictionary lookup/insertion, numeric cast chains, observer notification, heterogeneous iteration |
-| `Origo.Core.Tests/Benchmarks/EntityLifecycleBenchmarkTests.cs` | Entity Lifecycle | Entity creation+AfterSpawn, frame processing scaling, SaveSingle throughput |
+| `Origo.Core.Tests/Benchmarks/EntityLifecycleBenchmarkTests.cs` | Entity Lifecycle | Entity creation+AfterSpawn, frame processing scaling, BuildMetaData serialization throughput |
 | `Origo.Core.Tests/Benchmarks/ObserverTopologyBenchmarkTests.cs` | Observer Topology | Mount/Unmount binding count scaling |
 | `Origo.Core.Tests/Benchmarks/DataSourceNodeBenchmarkTests.cs` | DataSourceNode | Tree construction, SHA-256 hashing, As\<T\> type dispatch |
 | `Origo.Core.Tests/Benchmarks/BlackboardBenchmarkTests.cs` | Blackboard | Batch SetValue/TryGet, serialization round-trip |

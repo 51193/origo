@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Logging/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Logging (Abstractions)
 
@@ -32,7 +32,8 @@ Defines the engine-agnostic basic logging interface `ILogger` and the log level 
 | `Log(level, tag, message)` | Record a log entry with level, tag, and body |
 
 ### ILogger\<TCategory\>
-Type-aware logging interface; tag is automatically derived from `typeof(TCategory).Name`.
+Type-aware logging interface; tag is automatically derived from `typeof(TCategory).Name`,
+and it inherits `ILogger` (manual-tag scenarios go through the base interface method).
 
 | Member | Description |
 |------|------|

@@ -39,6 +39,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `GodotSndManager.BindContext` is now an explicit interface implementation** —
+  context binding is framework-orchestrated startup wiring; it is driven only through the
+  `ISndContextAttachableSceneHost` interface (by `SessionRun` and the bootstrap flow). Business
+  code can no longer rebind the context on the concrete manager type.
+- **`GodotSndManager.GetEntities` returns a snapshot instead of a live view** — consistent with
+  the Core scene hosts: iterating while the host is mutated no longer throws, and the result
+  cannot be downcast to the mutable backing list (no manual mutations bypassing collection
+  management). The read operation remains public.
+- **Format gate now enforces the style rules** — `.editorconfig` style rules
+  (`csharp_style_*`) and the private-field naming rule were `suggestion`-level, which
+  `dotnet format --verify-no-changes --severity info` (the CI gate) never reports; they are now
+  `info`-level so the declared style rules are actually enforced. (Naming rules remain fix-only
+  in dotnet format and are enforced by review.)
+- **Release workflow gates on the Godot integration tests** — the release job now runs after the
+  headless Godot integration tests instead of publishing first and testing afterwards, and runs
+  the DocSync validation; the release test step now uses `scripts/test.sh` (same command as CI,
+  including the 90% coverage gates) instead of a duplicated inline command.
+
 - **`StubSndSceneHost` now matches the scene-host contract** — `RemoveEntity` on a missing entity
   throws `InvalidOperationException` (consistent with `FullMemorySndSceneHost`), and
   `RecoverFromMetaList` no longer clears existing entities (per the `ISndSceneAccess`
@@ -140,6 +158,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING: `SaveGamePayload.FormatVersion` property removed** — the framework neither read nor wrote it (the on-disk version always comes from `CurrentFormatVersion` via `meta.map`); only `CurrentFormatVersion` and the `FormatVersionMetaKey` constant remain.
 
 ### Fixed
+
+- **Level switches now run full disposal semantics on the old foreground** — `SwitchForeground` /
+  `MountEmptyForeground` previously cleared the scene host *before* disposing the session, making
+  `SessionRun.Dispose`'s BeforeQuit hooks, observer-binding teardown, strategy pool release, and
+  node teardown all no-ops. Consequences: quit hooks never fired, strategy pool references leaked
+  permanently, and switching back to a previously visited level failed the load with
+  "Observer strategy ... is already mounted" (stale bindings survived in the per-scene-host
+  topology). Destruction now happens first; the scene is cleared afterwards.
+- **A failed level switch no longer leaves a half-mounted foreground behind** — if the new level
+  fails to load after the old foreground was destroyed, the partially mounted new session is
+  disposed (cleanup failures are logged, never masking the original exception) and the session
+  manager returns to a no-foreground state, so a retry is safe.
+- **`SndEntityFactory.Spawn` / `SpawnMany` roll back on AfterSpawn hook failure** — a hook
+  exception previously left the created entity on the host with acquired strategies and nodes
+  unreleased; the entity is now removed, observer bindings torn down, and strategies/nodes
+  released before the exception propagates. `SpawnMany` keeps entities whose hooks already fired
+  and rolls back the rest.
+- **Batch hook iteration is safe when hooks spawn entities** — `SessionRun`'s AfterLoad /
+  BeforeSave / BeforeQuit iterations previously threw "Collection was modified" on hosts exposing
+  a live entity view (the Godot adapter); they now iterate snapshots, and disposal harvests
+  entities spawned inside quit hooks in additional passes (failing loudly if teardown does not
+  converge).
+- **Source generator `ORIGOSG005` now rejects types named `Null`** — a registered type whose
+  sanitized kind name is `Null` collides with the always-emitted `KindMap.Null = 0` sentinel (and,
+  for value types, the handwritten `IsNull` property) and previously produced uncompilable
+  duplicate members; it is now reported as a build error and dropped.
+- **State-machine payload entries validate their identity fields** — a corrupt archive whose
+  `machines` entry is missing `key` / `pushIndex` / `popIndex` now fails the strict read with
+  `InvalidOperationException` instead of silently producing empty-key state machine entries.
+- **`scripts/benchmark.sh` no longer masks benchmark run failures** — the comparison result
+  previously overwrote the `dotnet test` exit code, so on CI (where numeric gates are skipped) a
+  completely failed benchmark run still returned success; run failures and comparison failures are
+  now tracked independently and either one fails the step. A failed run also no longer captures a
+  corrupted baseline (with or without `--update-baseline`).
+- **`PathUtility` handles `scheme://` roots correctly** — `Combine`/`NormalizeDirectoryPath`/
+  `GetParentDirectory` previously mangled `user://` into `user:` / `user:/`; scheme roots are now
+  preserved, the parent of `user://x` is `user://`, and backslash-separated paths are handled
+  consistently with forward slashes.
+- **DocSyncTool validation catches links escaping into sibling directories** — the
+  `docs/`-prefix check was bypassable by `docs-backup/`-style names; escape detection now uses
+  relative-path comparison. Generation also removes stale auto-generated `README.md` hubs of
+  directories whose docs were deleted (and no longer lists them as ghost subdirectories).
+- **Plan engine failure paths are explicit** — re-entering the same plan step now always rewrites
+  the canonical `ActionKey` descriptor (clearing stale `,param` suffixes); a `StartIntent` failure
+  during wiring rolls the subscriptions back so the entity can be re-wired; an action completing
+  while no intent is active throws instead of silently stalling the plan.
 
 - **`GodotNodeHandle.SetVisible` throws on node types without a `Visible` property** — setting
   visibility on a node that is neither `CanvasItem` nor `Node3D` now throws

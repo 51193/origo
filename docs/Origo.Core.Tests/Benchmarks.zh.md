@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Benchmarks -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 性能基准 (Benchmarks)
 
@@ -39,7 +39,7 @@
 | `DictInsert_FactoryCreate_vs_BoxedDict` | `SndDataManager.SetData<T>`：构造值并写入字典 | 生成工厂 `Create`/隐式转换 + 插入 vs 装箱插入 |
 | `MultiTypeExtractionChain_Generated_vs_Boxed` | `TryGetNumeric` 跨数值类型逐一尝试读取 | 生成 `TryGetSingle→TryGetInt32→TryGetInt64→TryGetDouble` 链 vs `is float→is int→is long→is double` 链 |
 | `ObserverNotify_Generated_vs_Boxed` | 观察者回调传递新旧值并判型 | 传递 `(TypedData, TypedData)` + `TryGetString` vs 传递 `(object?, object?)` + `is string` |
-| `HeterogeneousDictIteration_GeneratedData_vs_BoxedDict` | 遍历异构数据字典，逐项读取 `.Data` | 生成 `.Data`（经 `ToObject`）vs 纯 `object` 直通 |
+| `HeterogeneousDictIteration_GeneratedData_vs_BoxedDict` | 遍历异构数据字典，逐项经 `TypedDataObjectConverter.ToObject` 转为 `object` | 生成 `ToObject`（`object` 化）vs 纯 `object` 直通 |
 
 ### EntityLifecycleBenchmarkTests
 
@@ -47,7 +47,7 @@
 |---------|---------|
 | `EntityCreation_ScalingByEntityCount` | 100/500/2000 实体创建 + `FireAfterSpawnHooks` 的吞吐与分配 |
 | `FrameProcessing_ScalingByEntityAndStrategyCount` | 10e×1s / 50e×5s / 200e×10s 配置下 200 帧 ProcessAll 吞吐 |
-| `EntitySaveSingle_ScalingByEntityCount` | 10/100/500 实体 `SaveSingle` 吞吐 |
+| `EntitySaveSingle_ScalingByEntityCount` | 10/100/500 实体 `BuildMetaData`（序列化元数据构建）吞吐 |
 
 ### ObserverTopologyBenchmarkTests
 
@@ -114,7 +114,7 @@
 |---------|------|---------|
 | 不覆盖 GodotAdapter 注册类型（`Vector2`/`Vector3` 等）的真实场景吞吐 | 适配层多层分派性能不在本套件验证 | 由 [Origo.GodotAdapter.Tests/Serialization](../Origo.GodotAdapter.Tests/Serialization.zh.md) 的 `GodotTypedDataPerformanceTests` 单独覆盖 |
 | 不覆盖并发/多线程读写 | 多线程下的争用与可见性未测 | 框架采用单线程帧模型（见 [手册根 README — 设计原则](../README.zh.md)） |
-| 不覆盖按 Kind 直接分派的异构迭代替代路径 | 仅测 `.Data`（`ToObject`）这一条迭代路径 | [Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md) 的 Kind 分派 |
+| 不覆盖按 Kind 直接分派的异构迭代替代路径 | 仅测 `ToObject`（`object` 化）这一条迭代路径 | [Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md) 的 Kind 分派 |
 | 绝对吞吐/倍率/分配均不作断言（仅打印 + 单基准时间上限） | 性能退化无法自动捕获，需人工对照基线 | [benchmarks/baseline.md](../benchmarks/baseline.zh.md) |
 
 ## 设计决策
@@ -137,9 +137,9 @@
 
 每个基准在计时轮之外，对生成/装箱两侧各跑一次专用测量轮，取 `GC.GetAllocatedBytesForCurrentThread()` 前后差值作为该轮分配。测量循环被抽到独立的 `[MethodImpl(NoInlining)]` 方法中：若内联进计时方法体（或用捕获局部变量的 lambda），会改变计时循环的代码生成（闭包字段间接、循环对齐），从而污染吞吐数字。放在独立方法里使计时循环保留未插桩版的代码生成，分配与时间互不干扰。
 
-### 为什么只用 public API
+### 为什么基准与真实消费者一致：经 `TypedDataObjectConverter` 的 object 化路径
 
-基准仅使用 `TypedData` 的 public API（显式转换运算符、`TryGetXxx`、`TryGetString`、`FromObject`、`.Data`）与 `System.Collections.Generic.Dictionary`，无需向测试项目开放 Core 内部成员，使基准与真实下游消费者的调用形态一致。
+`TypedData` 的全部 `AsXxx` 访问器与对象转换器均为 `internal`（测试项目经 `InternalsVisibleTo` 访问）。异构迭代基准经 internal `TypedDataObjectConverter.ToObject` 度量"编译期未知类型的 object 化"冷路径——这是序列化、控制台、`ToString` 等冷路径的真实调用形态；热/温路径（数据变更信号处理、加载校验）使用零装箱的 `TryGetXxx`，见 [Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md)。
 
 ---
 

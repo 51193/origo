@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -203,7 +203,7 @@ public class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 策略实例在多个实体间共享，若持有实例字段（如 `int _hp`），多实体间会互相污染。注册期通过反射检查 `BaseStrategy` 到具体类型之间的所有层级，拒绝声明可变实例字段或可写属性的策略，从源头阻止此错误；`readonly` 实例字段（`IsInitOnly`）作为例外被豁免。
 
-此约束的一个副作用：**测试策略无法使用实例字段作为事件接收器**，必须使用静态字段（`static List<string>?`）在各策略实例间共享事件收集。使用静态字段的测试类必须通过 `[Collection]` 属性串行化执行，或通过 `[assembly: CollectionBehavior(DisableTestParallelization = true)]` 全局禁用并行，以防止并行测试间的竞态。详见 `Origo.Core.Tests/Architecture.md`。
+此约束的一个副作用：**测试策略无法使用实例字段作为事件接收器**，必须使用静态字段（`static List<string>?`）在各策略实例间共享事件收集。使用静态字段的测试类必须通过 `[Collection]` 属性串行化执行，或通过 `[assembly: CollectionBehavior(DisableTestParallelization = true)]` 全局禁用并行，以防止并行测试间的竞态。详见 `Origo.Core.Tests/Architecture.zh.md`。
 
 ### 为什么使用引用计数而非单一实例
 

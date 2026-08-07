@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -28,12 +28,12 @@ The concrete implementation of the SND entity system in the Godot engine. Bridge
 The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in the Godot scene tree:
 
 - **Implements ISndSceneHost**: CreateEntity / RecoverFromMetaList / RemoveAllEntities (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / ProcessAll are **explicit interface implementations** — business code cannot invoke these write operations on the concrete `GodotSndManager` type; they are driven only through the `ISndSceneHost` / `ISndSceneAccess` interfaces (held internally by Core). Public read operations are `GetEntities` / `FindByName`. `RemoveAllEntities()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
-- **Implements ISndContextAttachableSceneHost**: Supports runtime context switching
+- **Implements ISndContextAttachableSceneHost**: `BindContext` is an **explicit interface implementation** — context binding is a framework-orchestrated startup write path (driven by `SessionRun` construction / the bootstrap flow); business code cannot rebind the context on the concrete type
 - **Implements IObserverTopologyHost** (internal): Exposes the per-scene-host `ObserverTopology` for Core observer mount/unmount orchestration
 - **Implements IOwningSessionBindable** (internal): `SetOwningSession` binds a session to the host for the Core session-creation flow
 - **Collection logic delegated**: entity add/remove, batch recovery rollback, kill marking, and frame processing orchestration live in pure C# `SndEntityCollection<T>` (internal, no Godot dependency) and are covered by unit tests directly; GodotSndManager only bridges the collection to the Godot node tree (`AddChild` / `RemoveChild` / `Free` injected via the `DetachAndFree` callback)
 - **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, the collection rolls back and releases all already-created entities (via the staged list in `SndEntityCollection`)
-- **GetEntities()**: Lazily creates an `IReadOnlyCollection<ISndEntity>` view, caching the reference to avoid reallocation
+- **GetEntities()**: Returns a **snapshot** (not a live view) — consistent with the Core hosts' contract: iterating while the host is mutated does not throw "collection was modified", and the snapshot cannot be downcast to the mutable backing list (no manual mutations bypassing collection management)
 - **BuildMetaList()**: Calls entities' `BuildSndMetaData()` to collect metadata
 - **ProcessAll(delta)**: Implements the unified entry for `ISndSceneHost.ProcessAll`, called by Core's `SessionManager.ProcessAllSessions`, driving frame processing for every entity in the collection
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration
 
@@ -90,7 +90,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 | `ORIGOSG002` | Error | 宿主程序集中注册了无法内联且不受支持的值类型（如 `decimal` 或自定义结构体）。宿主程序集仅允许注册受支持的系统基础类型与引用类型。 |
 | `ORIGOSG003` | Error | 注册类型的 Kind 值（`startKind` + 组内位置）落在 `byte` 有效范围 `[1, 254]` 之外。包含 Kind 越界后会回绕到某个已占用值、从而与其它类型静默冲突的情形。 |
 | `ORIGOSG004` | Error | 多个 `SndInlineTypes` 组的 `startKind` 区间重叠，导致同一个 Kind 字节被分配给多个不同类型。每个内联类型必须映射到唯一的 Kind。 |
-| `ORIGOSG005` | Error | 多个注册类型产生相同的生成标识符（KindName）：不同命名空间的同名类型、泛型实例化后名称折叠为同一标识符的类型、以及同一类型以不同 Kind 值重复注册。同一类型以相同 Kind 重复注册属幂等操作，被静默去重（与运行时 `RegisterKind` 的幂等语义一致）。生成访问器标识符派生自类型名，任何标识符冲突都会产出不可编译的重复成员。 |
+| `ORIGOSG005` | Error | 多个注册类型产生相同的生成标识符（KindName）：不同命名空间的同名类型、泛型实例化后名称折叠为同一标识符的类型、以及同一类型以不同 Kind 值重复注册。同一类型以相同 Kind 重复注册属幂等操作，被静默去重（与运行时 `RegisterKind` 的幂等语义一致）。**保留标识符 `Null` 也被拒绝**——`KindMap` 恒输出哨兵常量 `Null = 0`（值类型还会与手写 `IsNull` 属性冲突），注册名为 `Null` 的类型同样报 ORIGOSG005 并剔除。生成访问器标识符派生自类型名，任何标识符冲突都会产出不可编译的重复成员。 |
 
 ## 注册机制
 
@@ -151,7 +151,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 ### 为什么在编译期校验 Kind 空间的范围与唯一性
 
-Kind 是 `byte`，运行时 `TypedData.RegisterKind` 对同一 Kind 注册不同类型时抛 `InvalidOperationException`（相同类型重复注册幂等），避免多个类型映射到同一 Kind 时互相覆盖造成 TypedData 存取错乱。Kind 由 `startKind` 加组内位置算出，若 `startKind` 偏大或类型过多，Kind 会越过 255 并回绕到某个已占用的小值，与其他类型冲突。生成器因此在编译期强制不变量：Kind 必须落在 `[1, 254]`（`ORIGOSG003`，按真实值判定，不依赖 `byte` 截断结果），每个 Kind 必须唯一映射（`ORIGOSG004`，检测重叠的 `startKind` 区间），且每个生成标识符必须唯一（`ORIGOSG005`，检测跨命名空间/泛型实例化的同名类型）。违规类型被剔除并报构建错误，使 Kind 冲突在构建期暴露而非运行期损坏存档。
+Kind 是 `byte`，运行时 `TypedData.RegisterKind` 对同一 Kind 注册不同类型时抛 `InvalidOperationException`（相同类型重复注册幂等），避免多个类型映射到同一 Kind 时互相覆盖造成 TypedData 存取错乱。Kind 由 `startKind` 加组内位置算出，若 `startKind` 偏大或类型过多，Kind 会越过 255 并回绕到某个已占用的小值，与其他类型冲突。生成器因此在编译期强制不变量：Kind 必须落在 `[1, 254]`（`ORIGOSG003`，按真实值判定，不依赖 `byte` 截断结果），每个 Kind 必须唯一映射（`ORIGOSG004`，检测重叠的 `startKind` 区间），且每个生成标识符必须唯一（`ORIGOSG005`，检测跨命名空间/泛型实例化的同名类型，以及会与 `KindMap` 哨兵常量 `Null` 冲突的保留标识符）。违规类型被剔除并报构建错误，使 Kind 冲突在构建期暴露而非运行期损坏存档。
 
 ---
 

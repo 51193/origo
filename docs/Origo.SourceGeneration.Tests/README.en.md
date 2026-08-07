@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration.Tests
 
@@ -98,7 +98,7 @@ The generator determines Home/Adapter mode by the assembly that defines `TypedDa
 
 ### Why performance benchmarks use generated internal members, relaxed thresholds, and run independently
 
-Performance benchmarks reference the generated artifacts of the real `Origo.Core`, covering public API (explicit conversion operators, `TryGetXxx`, `TryGetString`, `Data`, `FromObject`) and — via `InternalsVisibleTo` — the generator-produced internal members (`TypedData.KindMap`, the internal constructor, the `IsString` discriminator property) to compare the generated path against an unoptimized boxing implementation precisely; `TypedDataFactory<T>` and other non-benchmark types are out of scope.
+Performance benchmarks reference the generated artifacts of the real `Origo.Core`, covering accessors such as explicit conversion operators, `TryGetXxx`, and `TryGetString`, and — via `InternalsVisibleTo` — the generator-produced internal members (`TypedData.KindMap`, the internal constructor, the `IsString` discriminator property) and the internal `TypedDataObjectConverter.ToObject`, to compare the generated path against an unoptimized boxing implementation precisely; `TypedDataFactory<T>` and other non-benchmark types are out of scope.
 
 Benchmarks are relaxed: they do not require the generated path to be faster than the unoptimized boxing baseline, only asserting it does not exceed a fixed multiple of the baseline (8×, skipping ratio for baselines below 1ms as unreliable) and that each single benchmark has a total elapsed upper limit. The goal is to guard against "severe performance regression / stalling" rather than pin down absolute performance numbers.
 

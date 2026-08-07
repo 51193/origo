@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -203,7 +203,7 @@ public class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 Strategy instances are shared across multiple entities; instance fields (such as `int _hp`) would cause cross-entity contamination. Registration-time reflection checks all levels between `BaseStrategy` and the concrete type, rejecting strategies that declare instance fields or writable properties, blocking this error at the source.
 
-A side effect of this constraint: **test strategies cannot use instance fields as event receivers** and must use static fields (`static List<string>?`) to share event collection across strategy instances. Test classes using static fields must be serialized via `[Collection]` attributes or globally disable parallel execution via `[assembly: CollectionBehavior(DisableTestParallelization = true)]` to prevent race conditions between parallel tests. See `Origo.Core.Tests/Architecture.md`.
+A side effect of this constraint: **test strategies cannot use instance fields as event receivers** and must use static fields (`static List<string>?`) to share event collection across strategy instances. Test classes using static fields must be serialized via `[Collection]` attributes or globally disable parallel execution via `[assembly: CollectionBehavior(DisableTestParallelization = true)]` to prevent race conditions between parallel tests. See `Origo.Core.Tests/Architecture.en.md`.
 
 ### Why use reference counting instead of a single instance
 

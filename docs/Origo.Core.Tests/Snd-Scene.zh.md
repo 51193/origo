@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 场景 测试
 
@@ -21,6 +21,7 @@ SndEntityFactory 的 spawn 编排和 ProcessAll 帧处理由 SndEntityLifecycleB
 | `MemorySndSceneHostTests.cs` | StubSndSceneHost 的实体增删查改和列表序列化基本行为 |
 | `FullMemorySndSceneHostTests.cs` | FullMemorySndSceneHost 的绑定前置条件、CreateEntity/RemoveEntity/RequestKillEntity 错误路径 |
 | `NullNodeFactoryTests.cs` | NullNodeFactory 返回 NullNodeHandle，Free/SetVisible 为无操作 |
+| `SndEntityFactoryRollbackTests.cs` | 回归：Spawn/SpawnMany 的 AfterSpawn 钩子抛异常时回滚（实体移除、观察者拆线、策略/节点释放、原始异常传播）；detach 失效宿主（Godot wrapper 语义）上回滚顺序正确不遮蔽原始异常 |
 
 ## MemorySndSceneHostTests 测试详情
 

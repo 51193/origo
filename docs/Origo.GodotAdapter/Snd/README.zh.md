@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -30,12 +30,12 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 适配层的核心入口节点（`[GlobalClass]`），直接挂载在 Godot 场景树中：
 
 - **实现 ISndSceneHost**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / ProcessAll 均为**显式接口实现**——业务代码无法在 `GodotSndManager` 具体类型上直接调用这些写操作，只能经 `ISndSceneHost`/`ISndSceneAccess` 接口（Core 内部持有）驱动；公开读操作为 `GetEntities` / `FindByName`。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
-- **实现 ISndContextAttachableSceneHost**：支持运行时切换上下文
+- **实现 ISndContextAttachableSceneHost**：`BindContext` 为**显式接口实现**——上下文绑定是框架启动编排（`SessionRun` 构造 / Bootstrap 流程）驱动的写路径，业务代码无法在具体类型上重绑上下文
 - **实现 IObserverTopologyHost**（internal）：暴露本场景宿主专用的 `ObserverTopology`，供 Core 的观察者挂载/卸载编排使用
 - **实现 IOwningSessionBindable**（internal）：`SetOwningSession` 将会话绑定到宿主，供 Core 会话创建流程使用
 - **集合逻辑委托**：实体增删、批量恢复回滚、击杀标记、帧处理等编排逻辑集中在纯 C# 的 `SndEntityCollection<T>`（internal，无 Godot 依赖），由测试直接覆盖；GodotSndManager 仅桥接集合与 Godot 节点树（`AddChild`/`RemoveChild`/`Free` 经 `DetachAndFree` 回调注入）
 - **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，集合回滚释放所有已创建的实体（经 `SndEntityCollection` 的 staged 列表）
-- **GetEntities()**：惰性创建 `IReadOnlyCollection<ISndEntity>` 视图，缓存引用避免重复分配
+- **GetEntities()**：返回**快照**（非实时视图）——与 Core 宿主契约一致：迭代期间宿主被修改不会抛 "collection was modified"，且快照不可下转型为可变后备列表（杜绝绕过集合管理的手工修改）
 - **BuildMetaList()**：经集合调用实体的 `BuildSndMetaData()` 收集元数据
 - **ProcessAll(delta)**：实现 `ISndSceneHost.ProcessAll` 的统一入口，由 Core 的 `SessionManager.ProcessAllSessions` 调用，驱动集合内每个实体的帧处理
 

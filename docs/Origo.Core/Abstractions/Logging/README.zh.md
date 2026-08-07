@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Logging/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Logging (Abstractions)
 
@@ -34,7 +34,7 @@
 
 ### ILogger\<TCategory\>
 
-类型感知的日志接口，标签自动取自 `typeof(TCategory).Name`，继承自 `ILogger` 保持向后兼容。
+类型感知的日志接口，标签自动取自 `typeof(TCategory).Name`，并继承 `ILogger`（手动指定 tag 的场景经基接口方法）。
 
 | 成员 | 说明 |
 |------|------|

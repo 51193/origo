@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo 性能基线
 
@@ -86,13 +86,13 @@ bash scripts/benchmark.sh
 
 ## Core 真实模拟基准
 
-### 异构字典迭代（2,048,000 次 `.Data` 读取）
+### 异构字典迭代（2,048,000 次 `ToObject` 读取）
 
-| 场景 | 生成 .Data (Mops/s) | 装箱迭代 (Mops/s) | 倍率 | 胜方 | Alloc 生成/装箱 |
+| 场景 | 生成 ToObject (Mops/s) | 装箱迭代 (Mops/s) | 倍率 | 胜方 | Alloc 生成/装箱 |
 |------|--------------------:|------------------:|:----:|:----:|----------------|
-| 异构字典 `.Data` 迭代 | 74 | 520 | ~7.0x | 装箱 | 37.49 MB / 0 B |
+| 异构字典 `ToObject` 迭代 | 74 | 520 | ~7.0x | 装箱 | 37.49 MB / 0 B |
 
-> 这是**合成最坏情况**：`.Data` 返回 `object`，值类型每次读取经 `ToObject` 重新装箱（数据集 ~80% 为值类型 → 每轮 37.49 MB）。生产无此调用形态（见「设计权衡」）。
+> 这是**合成最坏情况**：internal `TypedDataObjectConverter.ToObject` 返回 `object`，值类型每次读取经 `ToObject` 重新装箱（数据集 ~80% 为值类型 → 每轮 37.49 MB）。生产无此调用形态（见「设计权衡」）。
 
 ### 工厂构造 + 字典插入（500,000 迭代）
 
@@ -146,13 +146,13 @@ bash scripts/benchmark.sh
 
 - **【已评估不划算，勿尝试】把 `TypedData` 结构体压到 16 字节**：当前 24 字节（`byte _kind` + `long _inlineBits` + `object? _ref`）是 GC 安全设计的下限——`long` 与托管引用槽不能重叠（GC 需独立扫描引用），`_kind` 字节无空闲位可塞。压到 16 字节须牺牲 `long`/`double` 的满 64 位内联，或引入额外分支/类型查找（多半负收益），且改动 `internal` 布局（被生成代码与测试经 `InternalsVisibleTo` 依赖）。值类型单读 ≤1.10x、DictLookup 值类型 1.31–1.38x 的结构性差距即源于此，已接受。
 
-- **`.Data`（object?）的装箱只落在冷路径**：`.Data` 经 `ToObject` 对值类型装箱，服务于编译期无法得知类型的冷路径（按 `DataType` 的序列化、控制台、`ToString`），这些路径固有需要 `object`。框架内热/温路径（数据变更信号处理、加载校验等）一律用零装箱的 `TryGetXxx`。**「异构 `.Data` 迭代」基准（~6.9x、37.49 MB）是合成最坏情况，不对应任何真实生产热路径**；移除 `.Data` 只会把同样的装箱挪进内部并增加复杂度（下游零依赖、~60 处测试依赖其便利访问）。取舍与推荐用法见 [Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md)。
+- **`ToObject`（object?）的装箱只落在冷路径**：internal `TypedDataObjectConverter.ToObject` 对值类型装箱，服务于编译期无法得知类型的冷路径（按 `DataType` 的序列化、控制台、`ToString`），这些路径固有需要 `object`。框架内热/温路径（数据变更信号处理、加载校验等）一律用零装箱的 `TryGetXxx`。**「异构 `ToObject` 迭代」基准（~6.9x、37.49 MB）是合成最坏情况，不对应任何真实生产热路径**；测试项目经 `InternalsVisibleTo` 访问该 internal 转换器以度量此冷路径。取舍与推荐用法见 [Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md)。
 
 ## 效度局限
 
 1. **CPU 动态调频（scaling ≈ 75%）** 引入运行间抖动；针对 ≤ 1.3x 的边际项与最快循环（异构迭代装箱侧 6.3–8.4x、写入），建议固定频率/性能模式后复测。
 2. **绝对吞吐受代码对齐影响**：写入等超平凡循环对方法布局/对齐敏感，存在 ~±8% 抖动；**分配量与相对趋势不受此影响**，应作为主要判据。
-3. **运行时为 .NET 10.0.9**，与测试目标 `net10.0` 一致；结论须在同一运行时下复测。
+3. **运行时为 .NET 10.0.10**，与测试目标 `net10.0` 一致；结论须在同一运行时下复测。
 4. **微基准取 min-of-rounds**，偏向理想 JIT 稳态；真实模拟套件更具代表性。
 5. 高方差项：String `TryGetString` 读取、混合分派、异构迭代装箱侧、值类型插入装箱侧；对该些项下结论前应增加采样轮数（≥ 8 轮）收敛。
 

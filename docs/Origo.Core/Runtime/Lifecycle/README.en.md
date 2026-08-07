@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -73,15 +73,15 @@ Each layer container holds its layer's core object references and public access 
 - `SaveFileHandle`: unified I/O context (`Origo.Core.Save.Storage.SaveFileHandle`) wrapping `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver` + `saveRootPath` + `ISavePathPolicy`. All Writer/Reader methods receive dependencies through `SaveFileHandle`, eliminating multi-parameter overload chains.
 - `PersistProgress`: serializes the progress blackboard and the full session topology (foreground + all backgrounds) to `current/progress.json`. Without a mounted foreground session it throws `InvalidOperationException` rather than silently writing partial data.
 - `SessionRun.BuildLevelPayload`: batch-triggers BeforeSave hooks (`FireBeforeSaveHooks`) on all entities first, then builds scene metadata via `SaveContext.BuildSndScene`. This gives every strategy a final chance to flush in-memory state into entity Data before saving. The full-save path (`SaveCoordinator.BuildSavePayload`) also batch-triggers `FireBeforeSaveHooks` before serializing the foreground scene, matching the background session semantics. Hooks that overwrite framework-managed blackboard keys (such as `SessionTopology`) are overridden by the framework-computed value before serialization, so such writes take no effect.
-- `SessionRun.LoadFromPayload`: first restores all entity data/strategies/nodes via `SaveContext.RecoverSndScene`, then batch-triggers AfterLoad hooks (`FireAfterLoadHooks`), finally flushes state machine AfterLoad. This ensures every entity and ActiveStrategy is fully recovered before any strategy's AfterLoad fires, enabling loading-order-independent cross-entity interoperability. Observer bindings are then restored via the host topology's `RecoverBindingsFor`; an archived observer_indices reference to an entity missing from the recovered scene throws `InvalidOperationException` (fail-fast, strict-read contract).
+- `SessionRun.LoadFromPayload`: first restores all entity data/strategies/nodes via `SaveContext.RecoverSndScene`, then batch-triggers AfterLoad hooks (`FireAfterLoadHooks`), finally flushes state machine AfterLoad. This ensures every entity and ActiveStrategy is fully recovered before any strategy's AfterLoad fires, enabling loading-order-independent cross-entity interoperability. AfterLoad hooks iterate a snapshot of the host entity collection (entities spawned inside a hook follow spawn semantics and do not fire AfterLoad again). Observer bindings are then restored via the host topology's `RecoverBindingsFor`; an archived observer_indices reference to an entity missing from the recovered scene throws `InvalidOperationException` (fail-fast, strict-read contract).
 
 ### Level Switching
 
 `SwitchForeground(newLevelId)` is a composite save-destroy-load operation:
 1. `PersistForegroundLevelState()` **explicitly** persists the old foreground level data to `current/` (via `SessionManager.PersistSession`)
 2. `PersistAndDestroyBackgroundIfExists(newLevelId)` persists and destroys a background session holding the target `levelId`, if any
-3. `ResetForeground(true)` destroys the current foreground (Dispose does not implicitly persist)
-4. `LoadAndMountForeground(newLevelId)` creates and mounts the new foreground (`CreateForegroundSession` → resolves level data from `current/`)
+3. `ResetForeground(true)` destroys the current foreground (Dispose does not implicitly persist; destruction happens **before** the scene is cleared — `SessionRun.Dispose` relies on the host entity collection still being populated to run BeforeQuit hooks, observer teardown, and strategy pool release; clearing the host first would make those steps no-ops)
+4. `LoadAndMountForeground(newLevelId)` creates and mounts the new foreground (`CreateForegroundSession` → resolves level data from `current/`); if the load fails, the half-mounted new foreground is disposed immediately (cleanup failures are logged, never masking the original exception), leaving no foreground session so a retry is safe
 5. `PersistProgress()` writes the new full topology to `current/progress.json`
 
 After the switch, `WriteForegroundTopology` writes the new foreground and all surviving background sessions into the progress blackboard topology; a subsequent `PersistProgress()` lands this topology together with the progress state machines to disk.
@@ -89,7 +89,7 @@ After the switch, `WriteForegroundTopology` writes the new foreground and all su
 ### Shutdown
 
 - Dispose cascade: SessionRun → SessionManager → ProgressRun → SystemRun
-- `SessionRun.Dispose` uses a two-phase flag: `_disposing` is set first (re-entrancy guard), BeforeQuit hooks run while session resources are still accessible, strategies are released, then `try/finally` guarantees the scene collection is cleared and the blackboard cleared, and only then is `_disposed` set (external access formally forbidden)
+- `SessionRun.Dispose` uses a two-phase flag: `_disposing` is set first (re-entrancy guard), BeforeQuit hooks run while session resources are still accessible, strategies are released, then `try/finally` guarantees the scene collection is cleared and the blackboard cleared, and only then is `_disposed` set (external access formally forbidden). Entity release runs in snapshot-based harvesting passes (`ReleaseAllEntitiesAndClear`): entities spawned inside a hook are released by the next pass, processed entities are removed from the host immediately, and a non-converging teardown (a hook that keeps spawning) fails loudly after four passes
 - Cleanup operations in Dispose do not catch exceptions: if `StateMachines.Clear()`, `ReleaseAllEntities`, `RemoveAllEntities`, or `Blackboard.Clear()` throws, the exception propagates directly to the caller — no `firstError` accumulation and no `AggregateException` wrapping
 - Exceptions from `SessionManager.Clear()` and `DeleteCurrentDirectory()` in `ProgressRun.Dispose` likewise propagate directly and are not silently swallowed
 - Pre-shutdown data saving is the application layer's explicit responsibility via `RequestSaveGame`; the `current/` directory is a temporary work area safely cleaned up on exit

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -35,6 +35,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `FrontSession_CreationWithCorrectFlagTests.cs` | Foreground IsFrontSession=true |
 | `FrontSession_StrategyContextReceivesFrontFlagTests.cs` | Strategy context receives foreground flag |
 | `FrontSession_UniqueConstraintValidationTests.cs` | Foreground uniqueness constraint |
+| `SwitchForegroundCleanupTests.cs` | Regression: SwitchForeground runs full disposal semantics (BeforeQuit / observer teardown / strategy pool release), re-mounts observer bindings when switching back to a previous level, and leaves no half-mounted foreground on load failure |
+| `SessionRunHookIterationTests.cs` | Regression: spawning entities inside AfterLoad/BeforeSave/BeforeQuit hooks does not break batch iteration (live-view host); disposal harvests in passes until convergence, and a non-converging quit hook (infinite spawn) fails loudly instead of hanging |
 
 ## LifecycleRunsTests Details
 

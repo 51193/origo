@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 编译期优化全链路解析
 
@@ -538,7 +538,7 @@ offset 16: _ref (8B)
 
 ## 6. 性能全景
 
-> 数据来自 [benchmarks/baseline.md](../benchmarks/baseline.zh.md)，采样环境：AMD Ryzen 7 9700X / .NET 10.0.9
+> 数据来自 [benchmarks/baseline.zh.md](../benchmarks/baseline.zh.md)，采样环境：AMD Ryzen 7 9700X / .NET 10.0.9
 
 ### 写入（生成 12-13x，0 字节分配）
 

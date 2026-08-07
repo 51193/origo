@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -35,6 +35,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `FrontSession_CreationWithCorrectFlagTests.cs` | 前台 IsFrontSession=true |
 | `FrontSession_StrategyContextReceivesFrontFlagTests.cs` | 策略上下文接收前台标志 |
 | `FrontSession_UniqueConstraintValidationTests.cs` | 前台唯一性约束 |
+| `SwitchForegroundCleanupTests.cs` | 回归：SwitchForeground 完整销毁语义（BeforeQuit/观察者拆线/策略池归还）、切回原关卡重新挂载观察者、加载失败不残留半挂载前台 |
+| `SessionRunHookIterationTests.cs` | 回归：AfterLoad/BeforeSave/BeforeQuit 钩子内 spawn 新实体不破坏批量迭代（实时视图宿主）；销毁路径分轮收割收敛释放全部实体，钩子无限 spawn（非收敛）时显式抛异常而非挂死 |
 
 ## LifecycleRunsTests 测试详情
 
