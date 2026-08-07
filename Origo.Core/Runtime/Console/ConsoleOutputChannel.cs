@@ -19,6 +19,9 @@ public sealed class ConsoleOutputChannel(ILogger? logger = null) : IConsoleOutpu
     private readonly Lock _lock = new();
     private long _nextId = 1;
 
+    /// <summary>Subscribes a listener to published output lines.</summary>
+    /// <param name="listener">The callback invoked for each published line.</param>
+    /// <returns>A subscription id used with <see cref="Unsubscribe" />.</returns>
     public long Subscribe(Action<string> listener)
     {
         ArgumentNullException.ThrowIfNull(listener);
@@ -30,6 +33,9 @@ public sealed class ConsoleOutputChannel(ILogger? logger = null) : IConsoleOutpu
         }
     }
 
+    /// <summary>Removes a subscription by id.</summary>
+    /// <param name="subscriptionId">The id returned by <see cref="Subscribe" />.</param>
+    /// <returns>True when the subscription existed and was removed.</returns>
     public bool Unsubscribe(long subscriptionId)
     {
         lock (_lock)
@@ -38,6 +44,12 @@ public sealed class ConsoleOutputChannel(ILogger? logger = null) : IConsoleOutpu
         }
     }
 
+    /// <summary>
+    ///     Publishes a line to all current subscribers. Subscriber exceptions
+    ///     are collected and rethrown (aggregated when multiple failed) after
+    ///     every subscriber had its chance to run.
+    /// </summary>
+    /// <param name="line">The line to publish.</param>
     public void Publish(string line)
     {
         Action<string>[] targets;

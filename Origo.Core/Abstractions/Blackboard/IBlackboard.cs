@@ -11,12 +11,21 @@ namespace Origo.Core.Abstractions.Blackboard;
 /// </summary>
 public interface IBlackboard
 {
+    /// <summary>Sets a typed value under a key.</summary>
+    /// <typeparam name="T">The value type; preserved across serialization.</typeparam>
+    /// <param name="key">The key to store under.</param>
+    /// <param name="value">The value to store.</param>
     void SetValue<T>(string key, T value);
 
+    /// <summary>Gets a typed value; reports whether the key exists with a matching type.</summary>
+    /// <typeparam name="T">The expected value type.</typeparam>
+    /// <param name="key">The key to read.</param>
     (bool found, T value) TryGet<T>(string key);
 
+    /// <summary>Removes all entries from the blackboard.</summary>
     void Clear();
 
+    /// <summary>Enumerates all currently stored keys.</summary>
     IReadOnlyCollection<string> GetKeys();
 
     /// <summary>

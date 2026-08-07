@@ -6,6 +6,7 @@ namespace Origo.Core;
 /// </summary>
 public sealed record OrigoMeta(string Name, string Version, string Banner)
 {
+    /// <summary>The default banner text used when no custom banner is provided.</summary>
     public const string DefaultBanner = """
                                         :3
                                         """;

@@ -9,5 +9,7 @@ namespace Origo.Core.Abstractions.Runtime;
 /// </summary>
 public interface IOrigoFrameDriver
 {
+    /// <summary>Signals that a frame boundary has arrived with its delta time.</summary>
+    /// <param name="delta">The elapsed time in seconds since the previous frame.</param>
     void DriveFrame(double delta);
 }

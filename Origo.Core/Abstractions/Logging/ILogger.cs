@@ -23,6 +23,10 @@ public enum LogLevel
 /// </summary>
 public interface ILogger
 {
+    /// <summary>Logs a message with an explicit log tag.</summary>
+    /// <param name="level">The severity of the message.</param>
+    /// <param name="tag">The source category tag of the message.</param>
+    /// <param name="message">The message text.</param>
     void Log(LogLevel level, string tag, string message);
 }
 
@@ -34,5 +38,8 @@ public interface ILogger
 /// </summary>
 public interface ILogger<out TCategory> : ILogger
 {
+    /// <summary>Logs a message; the tag is the category type name.</summary>
+    /// <param name="level">The severity of the message.</param>
+    /// <param name="message">The message text.</param>
     void Log(LogLevel level, string message);
 }

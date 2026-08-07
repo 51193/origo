@@ -9,5 +9,7 @@ namespace Origo.Core.Abstractions.Scene;
 /// </summary>
 public interface IOwningSessionBindable
 {
+    /// <summary>Binds the session that owns this host.</summary>
+    /// <param name="session">The owning session.</param>
     void SetOwningSession(ISessionRun session);
 }

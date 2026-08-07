@@ -39,6 +39,7 @@ internal class ConcurrentActionQueue
         _logger = logger;
     }
 
+    /// <summary>Returns the number of actions currently queued for execution.</summary>
     public int Count
     {
         get
