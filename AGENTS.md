@@ -152,9 +152,9 @@ facilities**, to understand the collaboration contracts between modules.
 - **All C# code must pass `dotnet format --verify-no-changes --severity info`.**
   This is the first CI gate (see `scripts/format.sh` and
   `.github/workflows/ci.yml`).
-- `.editorconfig` defines the project's full set of formatting rules:
-  naming, whitespace, collection initializers, `var` preferences, primary
-  constructors, etc. CI enforces them; local runs of `scripts/ci.sh`
+- `.editorconfig` defines the project's set of formatting rules:
+  naming, whitespace, `var` preferences, and analyzer severities.
+  CI enforces them; local runs of `scripts/ci.sh`
   provide equivalent validation.
 - **Test projects use flat namespaces** (`Origo.Core.Tests`, not
   `Origo.Core.Tests.Snd.Strategy`). This is deliberate xUnit convention

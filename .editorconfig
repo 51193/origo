@@ -44,7 +44,8 @@ csharp_style_prefer_not_pattern = true:info
 dotnet_diagnostic.CA1062.severity = error
 
 # Test projects and test support: flat namespace for cross-directory type access.
-# Intentional design — see docs/Origo.Core.Tests/META-TEST.md §测试命名空间约定.
+# Intentional design — see docs/Origo.Core.Tests/META-TEST.zh.md §测试命名空间约定
+# (and the recorded Integration.Tests Runner/TestSupport deviation there).
 # CA1062 (validate public parameters): suppressed — parameters are supplied by the framework.
 [{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.GodotAdapter.Integration.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests,Origo.TestSupport}/**/*.cs]
 dotnet_diagnostic.IDE0130.severity = none

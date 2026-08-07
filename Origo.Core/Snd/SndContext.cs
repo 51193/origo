@@ -30,7 +30,7 @@ namespace Origo.Core.Snd;
 ///     <para>
 ///         Owns the <see cref="SystemRun" /> for system-level state and
 ///         manages <see cref="ProgressRun" /> lifecycle transitions (create,
-///         load, save, dispose). Exposes nine capability facets as companion
+///         load, save, dispose). Exposes ten capability facets as companion
 ///         objects, each implementing a dedicated <c>ISnd*</c> interface.
 ///     </para>
 /// </summary>
