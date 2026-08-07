@@ -9,7 +9,12 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 
 # C# naming conventions
-dotnet_naming_rule.private_fields_should_be_camel_case.severity = suggestion
+# Info severity: dotnet format --severity info (the CI gate) only reports
+# rules at info level or above, so naming/style rules below info would never
+# be enforced. AGENTS.md §1.5 declares these rules CI-enforced. Note: naming
+# rules are fix-only in dotnet format and are not reported by
+# --verify-no-changes; the style rules below are enforced by the gate.
+dotnet_naming_rule.private_fields_should_be_camel_case.severity = info
 dotnet_naming_rule.private_fields_should_be_camel_case.symbols = private_fields
 dotnet_naming_rule.private_fields_should_be_camel_case.style = camel_case_underscore
 
@@ -21,14 +26,14 @@ dotnet_naming_style.camel_case_underscore.required_prefix = _
 dotnet_naming_style.camel_case_underscore.capitalization = camel_case
 
 # C# code style
-csharp_style_var_for_built_in_types = true:suggestion
-csharp_style_var_when_type_is_apparent = true:suggestion
-csharp_style_expression_bodied_methods = when_on_single_line:suggestion
-csharp_style_expression_bodied_properties = true:suggestion
-csharp_style_namespace_declarations = file_scoped:suggestion
-csharp_style_prefer_switch_expression = true:suggestion
-csharp_style_prefer_pattern_matching = true:suggestion
-csharp_style_prefer_not_pattern = true:suggestion
+csharp_style_var_for_built_in_types = true:info
+csharp_style_var_when_type_is_apparent = true:info
+csharp_style_expression_bodied_methods = when_on_single_line:info
+csharp_style_expression_bodied_properties = true:info
+csharp_style_namespace_declarations = file_scoped:info
+csharp_style_prefer_switch_expression = true:info
+csharp_style_prefer_pattern_matching = true:info
+csharp_style_prefer_not_pattern = true:info
 
 # Null checking style
 # CA1062 (validate public parameters) is enforced at error level in production

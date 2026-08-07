@@ -6,7 +6,39 @@ on:
       - 'v*'
 
 jobs:
+  godot-integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Cache Godot binary
+        uses: actions/cache@v4
+        with:
+          path: .godot_binary
+          key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
+
+      - name: Install Godot headless dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
+
+      - name: Godot headless integration tests
+        run: bash scripts/godot-test.sh
+
   release:
+    needs: godot-integration-tests
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -30,6 +62,9 @@ jobs:
           fi
           echo "Tag version v$TAG_VERSION matches Directory.Build.props version $PROPS_VERSION."
 
+      - name: DocSync validate
+        run: bash scripts/doc-sync.sh
+
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
@@ -45,12 +80,8 @@ jobs:
       - name: Build
         run: dotnet build Origo.sln --no-restore --configuration Release
 
-      - name: Test with coverage gates
-        run: |
-          dotnet test Origo.sln \
-            --no-build --configuration Release \
-            --verbosity normal \
-            --filter "Category!=Benchmark"
+      - name: CI — build, tests, line coverage gates (>= 90%)
+        run: bash scripts/test.sh
 
       - name: Benchmarks — TypedData + subsystem baselines
         run: bash scripts/benchmark.sh
@@ -85,35 +116,3 @@ jobs:
         with:
           files: ./artifacts/*
           generate_release_notes: true
-
-  godot-integration-tests:
-    needs: release
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
-          restore-keys: nuget-${{ runner.os }}-
-
-      - name: Cache Godot binary
-        uses: actions/cache@v4
-        with:
-          path: .godot_binary
-          key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
-
-      - name: Install Godot headless dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
-
-      - name: Godot headless integration tests
-        run: bash scripts/godot-test.sh
