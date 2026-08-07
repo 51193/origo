@@ -197,6 +197,20 @@ public class ValidatorTests
     }
 
     [Fact]
+    public void Validate_LanguageLinkToDocsSiblingDirectory_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        // "docs-backup" merely starts with "docs"; a raw prefix comparison
+        // would wrongly accept it as inside the mirror.
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") +
+            "# A\n\n[stale](../docs-backup/stale.zh.md)\n");
+
+        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+    }
+
+    [Fact]
     public void Validate_HeadingParityMismatch_WarnsButPasses()
     {
         using var repo = TestRepo.Create();

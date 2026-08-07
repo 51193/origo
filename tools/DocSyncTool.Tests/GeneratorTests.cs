@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 using Xunit;
 
@@ -5,10 +6,11 @@ namespace DocSyncTool.Tests;
 
 public class GeneratorTests
 {
-    private static void WritePair(TestRepo repo, string pairId, int zhRevision, int enRevision)
+    private static void WritePair(TestRepo repo, string pairId, int zhRevision, int enRevision, string? path = null)
     {
-        repo.Write("docs/" + pairId + ".zh.md", TestRepo.Header(pairId, zhRevision) + $"# {pairId} zh\n");
-        repo.Write("docs/" + pairId + ".en.md", TestRepo.Header(pairId, enRevision) + $"# {pairId} en\n");
+        path ??= "docs/" + pairId;
+        repo.Write(path + ".zh.md", TestRepo.Header(pairId, zhRevision) + $"# {pairId} zh\n");
+        repo.Write(path + ".en.md", TestRepo.Header(pairId, enRevision) + $"# {pairId} en\n");
     }
 
     [Fact]
@@ -116,6 +118,28 @@ public class GeneratorTests
         Generator.Run(repo.LoadConfig());
 
         Assert.False(repo.Exists("docs/empty/README.md"));
+    }
+
+    [Fact]
+    public void Generate_RemovesStaleHubOfDocLessDirectory()
+    {
+        using var repo = TestRepo.Create();
+        WritePair(repo, "README", 1, 1);
+        WritePair(repo, "ghost", 1, 1, path: "docs/ghost/README");
+
+        Generator.Run(repo.LoadConfig());
+        Assert.True(repo.Exists("docs/ghost/README.md"));
+
+        // Delete the content files; the leftover auto-generated hub must be
+        // removed on the next generate, and the ghost directory must not
+        // appear in the parent hub.
+        File.Delete(repo.Full("docs/ghost/README.zh.md"));
+        File.Delete(repo.Full("docs/ghost/README.en.md"));
+
+        Generator.Run(repo.LoadConfig());
+
+        Assert.False(repo.Exists("docs/ghost/README.md"));
+        Assert.DoesNotContain("ghost/", repo.Read("docs/README.md"));
     }
 
     [Fact]

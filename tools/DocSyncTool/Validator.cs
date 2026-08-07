@@ -175,7 +175,12 @@ internal static partial class Validator
                 continue;
             }
 
-            if (!resolved.StartsWith(docsRoot, StringComparison.OrdinalIgnoreCase))
+            // Compare via relative path, not a raw prefix: a prefix check
+            // against docsRoot would also accept sibling directories that
+            // merely start with the same name (e.g. "docs-backup"), and
+            // OrdinalIgnoreCase disagrees with the filesystem on Linux.
+            var relativeToRoot = Path.GetRelativePath(docsRoot, resolved);
+            if (relativeToRoot.StartsWith("..", StringComparison.Ordinal))
             {
                 // A language-suffixed doc link that escapes the docs mirror
                 // is always broken: the mirror is self-contained, so any

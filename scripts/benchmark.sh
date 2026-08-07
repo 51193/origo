@@ -40,7 +40,12 @@ done
 
 MACHINE_ID="$(cat /etc/machine-id 2>/dev/null || hostname || echo unknown)"
 
-EXIT_CODE=0
+# Run failure and comparison failure are tracked independently: the python
+# comparison may legitimately pass (e.g. on a non-baseline machine where all
+# gates are skipped) while a benchmark project failed to build or run. A
+# failed benchmark run must never be masked by a passing comparison.
+RUN_EXIT_CODE=0
+COMPARE_EXIT_CODE=0
 RUN_LOG="$(mktemp)"
 
 run_benchmark() {
@@ -53,7 +58,7 @@ run_benchmark() {
     --configuration Release \
     --filter "Category=Benchmark" \
     --logger "console;verbosity=detailed" \
-    -p:CollectCoverage=false 2>&1 | tee -a "$RUN_LOG" || EXIT_CODE=$?
+    -p:CollectCoverage=false 2>&1 | tee -a "$RUN_LOG" || RUN_EXIT_CODE=$?
 }
 
 run_benchmark \
@@ -88,6 +93,12 @@ json.dump(metrics, open(out, 'w'), indent=2, sort_keys=True)
 EOF
 
 if [[ ! -f "$BASELINE" ]]; then
+  if [[ $RUN_EXIT_CODE -ne 0 ]]; then
+    echo ""
+    echo "Benchmark run failed; no baseline captured." >&2
+    rm -f "$RUN_LOG" "$CURRENT_JSON"
+    exit $RUN_EXIT_CODE
+  fi
   echo ""
   echo "No baseline found ($BASELINE). Capturing current run as the baseline."
   python3 - "$CURRENT_JSON" "$BASELINE" "$MACHINE_ID" <<'EOF'
@@ -100,10 +111,16 @@ EOF
   echo "NOTE: verify docs/benchmarks/baseline.json reflects a representative machine,"
   echo "      and commit it together with benchmark-related changes."
   rm -f "$RUN_LOG" "$CURRENT_JSON"
-  exit $EXIT_CODE
+  exit $RUN_EXIT_CODE
 fi
 
 if [[ "$UPDATE_BASELINE" == "1" ]]; then
+  if [[ $RUN_EXIT_CODE -ne 0 ]]; then
+    echo ""
+    echo "Benchmark run failed; baseline not updated." >&2
+    rm -f "$RUN_LOG" "$CURRENT_JSON"
+    exit $RUN_EXIT_CODE
+  fi
   python3 - "$CURRENT_JSON" "$BASELINE" "$MACHINE_ID" <<'EOF'
 import json, sys
 metrics = json.load(open(sys.argv[1]))
@@ -112,7 +129,7 @@ json.dump(doc, open(sys.argv[2], 'w'), indent=2, sort_keys=True)
 EOF
   echo "Baseline updated with $(python3 -c "import json,sys; print(len(json.load(open('$CURRENT_JSON'))))") metric(s) on machine '$MACHINE_ID'."
   rm -f "$RUN_LOG" "$CURRENT_JSON"
-  exit $EXIT_CODE
+  exit $RUN_EXIT_CODE
 fi
 
 python3 - "$CURRENT_JSON" "$BASELINE" "$OPS_THRESHOLD" "$ALLOC_THRESHOLD" "$MACHINE_ID" <<'EOF'
@@ -182,7 +199,10 @@ if fails:
 
 print("All benchmark metrics within thresholds.")
 EOF
-EXIT_CODE=$?
+COMPARE_EXIT_CODE=$?
 
 rm -f "$RUN_LOG" "$CURRENT_JSON"
-exit $EXIT_CODE
+if [[ $RUN_EXIT_CODE -ne 0 || $COMPARE_EXIT_CODE -ne 0 ]]; then
+  exit 1
+fi
+exit 0
