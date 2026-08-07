@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Origo.Core.Save;
+using Origo.TestSupport;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -204,5 +206,91 @@ public class DisposeSemanticsTestsSessionRun
         bg.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => bg.GetSessionStateMachines());
+    }
+
+    [Fact]
+    public void SessionRun_Dispose_PopHookThrows_SessionMachinesAndEntitiesStillReleased()
+    {
+        var (ctx, logger) = CreateContext(world =>
+        {
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.BeforeQuitSpyStrategy());
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPushStrategy());
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPopStrategy());
+        });
+
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+            DisposeSemanticsTestInfrastructure.BeforeQuitStrategyIndex));
+        bg.GetSessionStateMachines().CreateOrGet("machine",
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPushIndex,
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPopIndex).Push("state");
+
+        // A quit-pop hook throws inside Dispose: the exception must propagate
+        // (fail-fast), but the session state machines and entity strategies
+        // must still be released and the disposed flag committed.
+        Assert.Throws<InvalidOperationException>(() => bg.Dispose());
+
+        Assert.Null(Record.Exception(() => bg.Dispose()));
+        Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
+
+        ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount"));
+    }
+
+    [Fact]
+    public void SessionRun_Dispose_DisposingSubscriberThrows_SessionMachinesAndEntitiesStillReleased()
+    {
+        var (ctx, logger) = CreateContext(world =>
+        {
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.BeforeQuitSpyStrategy());
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPushStrategy());
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPopStrategy());
+        });
+
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+            DisposeSemanticsTestInfrastructure.BeforeQuitStrategyIndex));
+        bg.GetSessionStateMachines().CreateOrGet("machine",
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPushIndex,
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPopIndex).Push("state");
+        bg.Disposing += () => throw new InvalidOperationException("subscriber failure");
+
+        // The disposing-subscriber exception must propagate (fail-fast), but
+        // the session state machines and entity strategies must still be
+        // released and the disposed flag committed.
+        Assert.Throws<InvalidOperationException>(() => bg.Dispose());
+
+        Assert.Null(Record.Exception(() => bg.Dispose()));
+        Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
+
+        ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount"));
+    }
+
+    private static (SndContext ctx, TestLogger logger) CreateContext(
+        Action<SndWorld>? configureWorld = null)
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("res://entry/entry.json",
+            "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]");
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var tm = new TypeStringMapping();
+        var systemBb = new Blackboard.Blackboard();
+        var runtime = TestFactory.CreateRuntime(logger, host, tm, systemBb, dataSourceIo);
+        configureWorld?.Invoke(runtime.SndWorld);
+
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver,
+            "root", "res://initial", "res://entry/entry.json"));
+
+        var progressRun = TestFactory.CreateProgressRun(
+            "test_save", logger, metaAccess, pathResolver, "root", runtime, ctx, sharedDataSourceIo: dataSourceIo);
+        ctx.SetProgressRun(progressRun);
+
+        return (ctx, logger);
     }
 }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -90,7 +90,7 @@ SystemRun (由 SndContext 构造并持有)
 ### 退出
 
 - `Dispose` 级联：SessionRun → SessionManager → ProgressRun → SystemRun
-- `SessionRun.Dispose` 使用两阶段标志：先设 `_disposing`（防重入），执行 BeforeQuit 钩子（此时会话资源仍可访问）和释放策略，再通过 `try/finally` 保证场景集合清空和黑板清除必定执行，最后设 `_disposed`（外部访问正式禁止）。实体释放按宿主集合快照分轮收割（`ReleaseAllEntitiesAndClear`）：钩子内 spawn 的新实体在下一轮被同等释放，已处理实体即时从宿主移除；若四轮内未收敛（钩子不断 spawn）则抛异常显式失败
+- `SessionRun.Dispose` 使用两阶段标志：先设 `_disposing`（防重入），执行 BeforeQuit 钩子（此时会话资源仍可访问）和释放策略，再通过嵌套 `try/finally` 保证状态机容器清空、实体策略释放、场景集合清空和黑板清除必定执行，最后设 `_disposed`（外部访问正式禁止）。实体释放按宿主集合快照分轮收割（`ReleaseAllEntitiesAndClear`）：钩子内 spawn 的新实体在下一轮被同等释放，已处理实体即时从宿主移除；若四轮内未收敛（钩子不断 spawn）则抛异常显式失败。异常安全：`Disposing` 订阅者或状态机退出 Pop 钩子抛异常时，异常直接传播（fail-fast），但会话状态机（池引用）与实体策略仍保证全部释放、dispose 标志必定提交——与 `ProgressRun.Dispose` 的嵌套 finally 结构对称
 - Dispose 中的清理操作不捕获异常：若 `StateMachines.Clear()`、`ReleaseAllEntities`、`RemoveAllEntities` 或 `Blackboard.Clear()` 抛出异常，异常直接传播到调用方，不累积 `firstError` 或包装为 `AggregateException`。
 - `ProgressRun.Dispose` 中 `SessionManager.Clear()` 和 `DeleteCurrentDirectory()` 的异常同样直接传播，不被静默吞掉。
 - 退出前的数据保存应由应用层显式调用 `RequestSaveGame` 完成；`current/` 目录作为临时工作区，在退出时被安全清理

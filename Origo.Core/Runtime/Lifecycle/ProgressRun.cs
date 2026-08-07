@@ -98,15 +98,25 @@ internal sealed partial class ProgressRun : IDisposable
         }
         finally
         {
-            ProgressScope.StateMachines.PopAllOnQuit();
-            ProgressScope.StateMachines.Clear();
-            ProgressBlackboard.Clear();
-            _disposed = true;
-            _disposing = false;
-            _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
-                new LogMessageBuilder()
-                    .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                    .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
+            // Quit-pop hooks can throw (fail-fast: the exception propagates),
+            // but the machine disposal, blackboard clear, and the disposed
+            // flag commit must still run so no pool reference or half-closed
+            // state survives a hook failure.
+            try
+            {
+                ProgressScope.StateMachines.PopAllOnQuit();
+            }
+            finally
+            {
+                ProgressScope.StateMachines.Clear();
+                ProgressBlackboard.Clear();
+                _disposed = true;
+                _disposing = false;
+                _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
+                    new LogMessageBuilder()
+                        .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                        .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
+            }
         }
     }
 

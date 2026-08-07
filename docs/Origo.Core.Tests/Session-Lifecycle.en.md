@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -105,6 +105,11 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SessionRun_AfterDispose_SessionBlackboard_ThrowsObjectDisposed` | Access SessionBlackboard after Dispose | ObjectDisposedException |
 | `SessionRun_AfterDispose_SceneHost_ThrowsObjectDisposed` | FindByName after Dispose | ObjectDisposedException |
 | `SessionRun_AfterDispose_GetSessionStateMachines_ThrowsObjectDisposed` | Get state machines after Dispose | ObjectDisposedException |
+| `SessionRun_Dispose_DisposingSubscriberThrows_PropagatesAndSessionStillReleases` | Disposing subscriber throws | Exception propagates, but dispose state committed (second dispose is a no-op, access throws ObjectDisposedException) |
+| `SessionRun_Dispose_DisposingSubscriberThrows_SessionMachinesAndEntitiesStillReleased` | Disposing subscriber throws | Exception propagates, but session state machines and entity strategies are all released (LogPoolLeaks finds no leak), disposed flag committed |
+| `SessionRun_Dispose_PopHookThrows_SessionMachinesAndEntitiesStillReleased` | Session state-machine quit pop hook throws | Exception propagates, but session state machines and entity strategies are all released (LogPoolLeaks finds no leak), disposed flag committed |
+| `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | Quit pop hook throws | Exception propagates, but progress blackboard cleared, state machines released, disposed flag committed (second dispose idempotent) |
+| `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | Subscriber throws during session teardown | Exception propagates, but progress state still released and dispose state committed (second dispose no-op) |
 
 ### Boundary Path
 
@@ -192,6 +197,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `LoadAndMountForeground_WhenSndSceneIsEmpty_ThrowsInvalidOperation` | snd_scene.json empty or whitespace | InvalidOperationException (contains "invalid snd_scene.json") |
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json syntax error | Exception |
 | `LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions` | Background session snd_scene invalid format causes load failure | Foreground set to null, no background keys |
+| `RequestLoadGame_Failure_DisposesProgressRunAndClearsContextReference` | Save load fails (corrupted background level) | ProgressRun disposed, context reference cleared (ProgressBlackboard null, EnsureProgressRun throws InvalidOperationException) |
 
 ## SaveAndSwitchForegroundIntegrationTests Details
 
@@ -304,6 +310,10 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `DestroySession_NonExistentKey_DoesNotChangeMountedSessions` | Destroy non-existent key | Does not affect mounted sessions |
 | `ForegroundSession_ReflectsProgressRunForegroundSession` | ProgressRun exists but no foreground session | ForegroundSession is null |
 | `CreateBackgroundSession_SameLevelIdAsDestroyedSession_Succeeds` | Use levelId of already-destroyed session | Succeeds (levelId released) |
+| `Contains_EmptyKey_ReturnsFalse` | Contains("") | Returns false |
+| `DestroySession_EmptyKey_DoesNotThrow` | DestroySession("") | Does not throw |
+| `TryGet_EmptyKey_ReturnsNull` | TryGet("") | Returns null |
+| `TryGet_WhitespaceKey_ReturnsNull` | TryGet("   ") | Returns null |
 
 ## SessionTopologyCodecTests Details
 
@@ -318,6 +328,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Parse_MalformedOrEmptyKeyOrLevel_ThrowsInvalidOperation` | Malformed/empty key or levelId | InvalidOperationException |
+| `Parse_NonBooleanSyncField_ThrowsInvalidOperation` | syncProcess field is non-boolean (not_bool) | InvalidOperationException |
 
 ### Boundary Path
 
@@ -334,7 +345,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
-| `EnsureActiveLevel_ValidTopology_DoesNotThrow` | Blackboard topology contains expected levelId | Does not throw; validation passes | TopologyInvariant |
+| `EnsureActiveLevel_ValidTopology_DoesNotThrow` | Blackboard topology contains the expected levelId — does not throw; validation passes | TopologyInvariant |
 
 ### Error Path
 
@@ -346,6 +357,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `EnsureActiveLevel_MismatchedLevelId_Throws` | Foreground levelId in topology differs from expected | InvalidOperationException |
 | `EnsureActiveLevel_NullBlackboard_Throws` | Blackboard is null | ArgumentNullException |
 | `EnsureActiveLevel_EmptyExpectedLevelId_Throws` | Expected levelId is empty string | ArgumentException |
+| `EnsureActiveLevel_CorruptedTopology_Throws` | Topology is an invalid format string | InvalidOperationException |
 
 ## BackgroundSessionTests Details
 
@@ -384,6 +396,10 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SaveAndLoad_RoundTrips_SyncProcessFlag` | syncProcess flag correctly restored after round-trip | session-model |
 | `SaveAndLoad_FromDisk_RestoresBackgroundSessions` | Write to disk→read snapshot→load→background restored | session-model |
 | `ReadFromCurrent_IncludesAllLevelDirectories` | ReadFromCurrent includes all level directories (including backgrounds) | ISaveStorageService |
+| `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | Full save triggers BeforeSave hooks on foreground entities (regression: hooks used to be skipped) | session-model |
+| `FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins` | When a BeforeSave hook overwrites SessionTopology, the framework-computed value wins and is persisted | session-model: Session Topology |
+| `FullSave_BeforeSaveHookWrites_ArePersistedIntoForegroundSceneData` | Data written by BeforeSave hooks lands in foreground snd_scene.json | session-model |
+| `SaveAndLoad_ReSolidifiesFullTopology_IncludingBackgroundSessions` | Save→full teardown→reload re-solidifies topology to the complete session set (foreground + background with syncProcess) | session-model: Session Topology |
 
 ### Error Path
 
@@ -400,6 +416,37 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 |-------------|-------------------|-------------------|
 | `FindByName_ReturnsNullWhenNotFound` | Find non-existent entity | Returns null |
 | `Dispose_IsIdempotent` | Two Dispose calls | Does not throw |
+
+## SessionRunHookIterationTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `LoadFromPayload_AfterLoadHookSpawnsEntity_DoesNotThrow` | Spawning inside the AfterLoad hook does not break batch iteration; after load both new and old entities exist | session-model: Hook Iteration |
+| `BuildLevelPayload_BeforeSaveHookSpawnsEntity_DoesNotThrow` | Spawning inside the BeforeSave hook does not break serialization | session-model: Hook Iteration |
+| `Dispose_BeforeQuitHookSpawnsEntity_DoesNotThrowAndReleasesEverything` | Spawning inside the BeforeQuit hook does not break disposal; all entities released with no strategy pool reference leaks | session-model: Dispose Semantics |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `Dispose_QuitHookSpawnsForever_FailsLoudlyInsteadOfHanging` | Quit hook spawns forever (does not converge) | InvalidOperationException (contains "did not converge"), no hang and no silent leak |
+
+## SwitchForegroundCleanupTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `SwitchForeground_RunsFullDisposalSemantics_ForOldForegroundEntities` | Switching runs full disposal semantics for old foreground entities: BeforeQuit fires, observer bindings torn down bidirectionally, no strategy pool leaks | session-model: Level Switch |
+| `SwitchForeground_BackToPreviousLevel_RemountsObserverBindings` | Switching back to a previous level re-mounts persisted observer bindings (OnMounted fires) | session-model: Level Switch |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `SwitchForeground_LoadFailure_LeavesNoHalfMountedForeground` | Target level snd_scene references an unregistered strategy, load fails | InvalidOperationException (contains "not found"), no half-mounted foreground left (ForegroundSession null), subsequent switch to a healthy level succeeds |
 
 ## BackgroundSession_CreationWithCorrectFlagTests Details
 
@@ -457,16 +504,20 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 
 | Strategy Class | Defined In | Purpose |
 |---------------|-----------|---------|
-| `BeforeSaveSpyStrategy` | DisposeSemanticsTests.cs | Overrides BeforeSave hook, records calls via AsyncLocal<List<string>> |
-| `BeforeQuitSpyStrategy` | DisposeSemanticsTests.cs | Overrides BeforeQuit hook, records calls via AsyncLocal<List<string>> |
-| `SessionAccessQuitStrategy` | DisposeSemanticsTests.cs | Verifies SceneHost and SessionBlackboard are still accessible during BeforeQuit |
-| `ThrowingQuitStrategy` | DisposeSemanticsTests.cs | Deliberately throws in BeforeQuit to verify exception safety |
+| `BeforeSaveSpyStrategy` | DisposeSemanticsTestInfrastructure.cs | Overrides BeforeSave hook, records calls via AsyncLocal<List<string>> |
+| `BeforeQuitSpyStrategy` | DisposeSemanticsTestInfrastructure.cs | Overrides BeforeQuit hook, records calls via AsyncLocal<List<string>> |
+| `SessionAccessQuitStrategy` | DisposeSemanticsTestInfrastructure.cs | Verifies SceneHost and SessionBlackboard are still accessible during BeforeQuit |
+| `ThrowingQuitStrategy` | DisposeSemanticsTestInfrastructure.cs | Deliberately throws in BeforeQuit to verify exception safety |
+| `PopHookThrowsPushStrategy` | DisposeSemanticsTestInfrastructure.cs | StateMachineStrategyBase: empty push strategy paired with the throwing pop strategy to construct a state machine |
+| `PopHookThrowsPopStrategy` | DisposeSemanticsTestInfrastructure.cs | StateMachineStrategyBase: deliberately throws in OnPopBeforeQuit to verify Dispose exception safety (shared by progress- and session-level tests) |
 | `ContractPushStrategy` | ForegroundBackgroundContractTests.cs | StateMachineStrategyBase: OnPushRuntime records BeforeTop→AfterTop events |
 | `ContractPopStrategy` | ForegroundBackgroundContractTests.cs | Empty Pop strategy (placeholder only) |
 | `TrackingStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: records all hooks AfterSpawn/AfterLoad/AfterAdd/BeforeRemove/BeforeSave/BeforeQuit/BeforeDead |
 | `ProcessCounterStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Process hook calls AsyncLocal<Action> |
 | `SessionContextSpyStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Process hook records OwningSession.LevelId |
 | `FindByNameStrategy` | SaveAndSwitchForegroundIntegrationTests.cs | LifecycleStrategyBase: Looks up self and sibling entities via OwningSession.FindByName during AfterSpawn/AfterLoad hooks |
+| `BeforeSaveDataWriterStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Writes entity data in the BeforeSave hook, verifying hook writes reach the save file |
+| `TopologyOverwriteStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase: Deliberately overwrites the framework-owned session-topology key in BeforeSave, verifying the framework re-solidifies topology |
 | `BlackboardProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase: OnPushRuntime reads marker key from SessionBlackboard |
 | `SceneAccessProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase: OnPushRuntime reads all entity names from SceneAccess |
 | `NoOpPopStrategy` | SessionDecouplingTests.cs | Empty Pop strategy (placeholder, paired with BlackboardProbeStrategy/SceneAccessProbeStrategy) |

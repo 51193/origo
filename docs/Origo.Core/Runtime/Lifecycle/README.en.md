@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -89,7 +89,7 @@ After the switch, `WriteForegroundTopology` writes the new foreground and all su
 ### Shutdown
 
 - Dispose cascade: SessionRun → SessionManager → ProgressRun → SystemRun
-- `SessionRun.Dispose` uses a two-phase flag: `_disposing` is set first (re-entrancy guard), BeforeQuit hooks run while session resources are still accessible, strategies are released, then `try/finally` guarantees the scene collection is cleared and the blackboard cleared, and only then is `_disposed` set (external access formally forbidden). Entity release runs in snapshot-based harvesting passes (`ReleaseAllEntitiesAndClear`): entities spawned inside a hook are released by the next pass, processed entities are removed from the host immediately, and a non-converging teardown (a hook that keeps spawning) fails loudly after four passes
+- `SessionRun.Dispose` uses a two-phase flag: `_disposing` is set first (re-entrancy guard), BeforeQuit hooks run while session resources are still accessible, strategies are released, then nested `try/finally` blocks guarantee the state-machine container is cleared, entity strategies are released, the scene collection is cleared, and the blackboard is cleared, and only then is `_disposed` set (external access formally forbidden). Entity release runs in snapshot-based harvesting passes (`ReleaseAllEntitiesAndClear`): entities spawned inside a hook are released by the next pass, processed entities are removed from the host immediately, and a non-converging teardown (a hook that keeps spawning) fails loudly after four passes. Exception safety: when a `Disposing` subscriber or a state-machine quit pop hook throws, the exception propagates (fail-fast), but the session state machines (pool references) and entity strategies are still guaranteed to be fully released and the disposed flag committed — symmetric to the nested-finally structure of `ProgressRun.Dispose`
 - Cleanup operations in Dispose do not catch exceptions: if `StateMachines.Clear()`, `ReleaseAllEntities`, `RemoveAllEntities`, or `Blackboard.Clear()` throws, the exception propagates directly to the caller — no `firstError` accumulation and no `AggregateException` wrapping
 - Exceptions from `SessionManager.Clear()` and `DeleteCurrentDirectory()` in `ProgressRun.Dispose` likewise propagate directly and are not silently swallowed
 - Pre-shutdown data saving is the application layer's explicit responsibility via `RequestSaveGame`; the `current/` directory is a temporary work area safely cleaned up on exit

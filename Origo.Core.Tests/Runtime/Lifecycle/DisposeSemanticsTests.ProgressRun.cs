@@ -148,4 +148,31 @@ public class DisposeSemanticsTestsProgressRun
         var second = Record.Exception(() => progressRun.Dispose());
         Assert.Null(second);
     }
+
+    [Fact]
+    public void ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted()
+    {
+        var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext(world =>
+        {
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPushStrategy());
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPopStrategy());
+        });
+
+        var progressRun = ctx.EnsureProgressRun();
+        progressRun.ProgressBlackboard.SetValue("key", "value");
+        var machines = progressRun.GetProgressStateMachines();
+        machines.CreateOrGet("machine",
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPushIndex,
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPopIndex).Push("state");
+
+        Assert.Throws<InvalidOperationException>(() => progressRun.Dispose());
+
+        // The pop hook threw while the quit pop was running, but the
+        // progress-level state machines and blackboard must still be
+        // released and the disposed flag committed.
+        var (found, _) = progressRun.ProgressBlackboard.TryGet<string>("key");
+        Assert.False(found);
+        Assert.False(machines.TryGet("machine", out _));
+        Assert.Null(Record.Exception(() => progressRun.Dispose()));
+    }
 }

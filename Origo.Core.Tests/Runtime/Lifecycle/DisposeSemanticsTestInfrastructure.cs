@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
+using Origo.Core.StateMachine;
 
 namespace Origo.Core.Tests;
 
@@ -17,6 +19,8 @@ internal static class DisposeSemanticsTestInfrastructure
     public const string BeforeQuitStrategyIndex = "dispose_sem.before_quit";
     public const string SessionAccessStrategyIndex = "dispose_sem.session_access";
     public const string ThrowingQuitStrategyIndex = "dispose_sem.throwing_quit";
+    public const string PopHookThrowsPushIndex = "dispose_sem.pop_hook_push";
+    public const string PopHookThrowsPopIndex = "dispose_sem.pop_hook_throwing";
 
     public static (SndContext ctx, TestMemoryFileSystem fs) CreateForegroundContext(
         Action<SndWorld>? configureWorld = null)
@@ -124,5 +128,18 @@ internal static class DisposeSemanticsTestInfrastructure
     {
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
             throw new InvalidOperationException("Intentional BeforeQuit failure for testing.");
+    }
+
+    [StrategyIndex(PopHookThrowsPushIndex)]
+    public sealed class PopHookThrowsPushStrategy : StateMachineStrategyBase
+    {
+        public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) { }
+    }
+
+    [StrategyIndex(PopHookThrowsPopIndex)]
+    public sealed class PopHookThrowsPopStrategy : StateMachineStrategyBase
+    {
+        public override void OnPopBeforeQuit(StateMachineStrategyContext context, IStateMachineContext ctx) =>
+            throw new InvalidOperationException("Intentional OnPopBeforeQuit failure for testing.");
     }
 }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -105,6 +105,11 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SessionRun_AfterDispose_SessionBlackboard_ThrowsObjectDisposed` | Dispose 后访问 SessionBlackboard | ObjectDisposedException |
 | `SessionRun_AfterDispose_SceneHost_ThrowsObjectDisposed` | Dispose 后 FindByName | ObjectDisposedException |
 | `SessionRun_AfterDispose_GetSessionStateMachines_ThrowsObjectDisposed` | Dispose 后获取状态机 | ObjectDisposedException |
+| `SessionRun_Dispose_DisposingSubscriberThrows_PropagatesAndSessionStillReleases` | Disposing 订阅者抛异常 | 异常传播，但 dispose 状态已提交（二次 Dispose 无操作、访问抛 ObjectDisposedException） |
+| `SessionRun_Dispose_DisposingSubscriberThrows_SessionMachinesAndEntitiesStillReleased` | Disposing 订阅者抛异常 | 异常传播，但会话状态机与实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交 |
+| `SessionRun_Dispose_PopHookThrows_SessionMachinesAndEntitiesStillReleased` | 会话状态机退出 Pop 钩子抛异常 | 异常传播，但会话状态机与实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交 |
+| `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | 退出 Pop 钩子抛异常 | 异常传播，但 progress 黑板清空、状态机释放、dispose 标志提交（二次 Dispose 幂等） |
+| `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | 会话 teardown 期间订阅者抛异常 | 异常传播，但 progress 状态仍释放、dispose 状态提交（二次 Dispose 无操作） |
 
 ### 边界路径
 
@@ -192,6 +197,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `LoadAndMountForeground_WhenSndSceneIsEmpty_ThrowsInvalidOperation` | snd_scene.json 为空或空白 | InvalidOperationException（包含 "invalid snd_scene.json"） |
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json 语法错误 | Exception |
 | `LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions` | 后台会话 snd_scene 格式无效致加载失败 | 前台置 null、不含后台 key |
+| `RequestLoadGame_Failure_DisposesProgressRunAndClearsContextReference` | 存档加载失败（后台关卡损坏） | ProgressRun 被 Dispose，ctx 引用清除（ProgressBlackboard 为 null、EnsureProgressRun 抛 InvalidOperationException） |
 
 ## SaveAndSwitchForegroundIntegrationTests 测试详情
 
@@ -304,6 +310,10 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `DestroySession_NonExistentKey_DoesNotChangeMountedSessions` | 销毁不存在的 key | 不影响已挂载的会话 |
 | `ForegroundSession_ReflectsProgressRunForegroundSession` | ProgressRun 存在但无前台会话时 | ForegroundSession 为 null |
 | `CreateBackgroundSession_SameLevelIdAsDestroyedSession_Succeeds` | 使用已被销毁会话的 levelId | 成功创建（levelId 已释放） |
+| `Contains_EmptyKey_ReturnsFalse` | Contains("") | 返回 false |
+| `DestroySession_EmptyKey_DoesNotThrow` | DestroySession("") | 不抛异常 |
+| `TryGet_EmptyKey_ReturnsNull` | TryGet("") | 返回 null |
+| `TryGet_WhitespaceKey_ReturnsNull` | TryGet("   ") | 返回 null |
 
 ## SessionTopologyCodecTests 测试详情
 
@@ -318,6 +328,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `Parse_MalformedOrEmptyKeyOrLevel_ThrowsInvalidOperation` | 格式错误/空 key 或 levelId | InvalidOperationException |
+| `Parse_NonBooleanSyncField_ThrowsInvalidOperation` | syncProcess 字段为非布尔值（not_bool） | InvalidOperationException |
 
 ### 边界路径
 
@@ -332,7 +343,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `EnsureActiveLevel_ValidTopology_DoesNotThrow` | 黑板中拓扑含目标 levelId | 不抛异常，校验通过 | TopologyInvariant |
+| `EnsureActiveLevel_ValidTopology_DoesNotThrow` | 黑板中拓扑含目标 levelId 时不抛异常，校验通过 | TopologyInvariant |
 
 ### 错误路径
 
@@ -344,6 +355,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `EnsureActiveLevel_MismatchedLevelId_Throws` | 拓扑前台 levelId 与期望不一致 | InvalidOperationException |
 | `EnsureActiveLevel_NullBlackboard_Throws` | 黑板为 null | ArgumentNullException |
 | `EnsureActiveLevel_EmptyExpectedLevelId_Throws` | 期望 levelId 为空字符串 | ArgumentException |
+| `EnsureActiveLevel_CorruptedTopology_Throws` | 拓扑为非法格式字符串 | InvalidOperationException |
 | `Join_EmptyEntries_ReturnsEmptyString` | 空条目列表 | 返回空字符串 |
 | `Parse_IgnoreEmptyEntries` | 条目间有连续逗号（空条目） | 空条目被忽略 |
 
@@ -384,6 +396,10 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SaveAndLoad_RoundTrips_SyncProcessFlag` | 往返后 syncProcess 标志正确恢复 | session-model |
 | `SaveAndLoad_FromDisk_RestoresBackgroundSessions` | 写磁盘→读快照→加载→后台恢复 | session-model |
 | `ReadFromCurrent_IncludesAllLevelDirectories` | ReadFromCurrent 包含所有关卡目录（含后台） | ISaveStorageService |
+| `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | 完整保存触发前台实体 BeforeSave 钩子（回归：钩子曾被跳过） | session-model |
+| `FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins` | BeforeSave 钩子覆写 SessionTopology 时框架计算值获胜并持久化 | session-model: 会话拓扑 |
+| `FullSave_BeforeSaveHookWrites_ArePersistedIntoForegroundSceneData` | BeforeSave 钩子写入的实体数据进入前台 snd_scene.json | session-model |
+| `SaveAndLoad_ReSolidifiesFullTopology_IncludingBackgroundSessions` | 保存→全部销毁→重载后拓扑重固化为完整会话集（前台+后台及 syncProcess） | session-model: 会话拓扑 |
 
 ### 错误路径
 
@@ -400,6 +416,37 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 |---------|---------|---------|
 | `FindByName_ReturnsNullWhenNotFound` | 查找不存在的实体 | 返回 null |
 | `Dispose_IsIdempotent` | 两次 Dispose | 不抛异常 |
+
+## SessionRunHookIterationTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `LoadFromPayload_AfterLoadHookSpawnsEntity_DoesNotThrow` | AfterLoad 钩子内 spawn 新实体不破坏批量迭代，加载完成后新旧实体并存 | session-model: 钩子迭代 |
+| `BuildLevelPayload_BeforeSaveHookSpawnsEntity_DoesNotThrow` | BeforeSave 钩子内 spawn 实体不破坏序列化 | session-model: 钩子迭代 |
+| `Dispose_BeforeQuitHookSpawnsEntity_DoesNotThrowAndReleasesEverything` | BeforeQuit 钩子内 spawn 实体不破坏销毁，全部实体释放且无策略池引用泄漏 | session-model: Dispose 语义 |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Dispose_QuitHookSpawnsForever_FailsLoudlyInsteadOfHanging` | BeforeQuit 钩子无限 spawn（不收敛） | InvalidOperationException（消息含 "did not converge"），不挂死、不静默泄漏 |
+
+## SwitchForegroundCleanupTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `SwitchForeground_RunsFullDisposalSemantics_ForOldForegroundEntities` | 切换时旧前台实体完整销毁语义：BeforeQuit 触发、观察者双向拆线、策略池无泄漏 | session-model: 关卡切换 |
+| `SwitchForeground_BackToPreviousLevel_RemountsObserverBindings` | 切回原关卡后持久化的观察者绑定重新挂载（OnMounted 触发） | session-model: 关卡切换 |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `SwitchForeground_LoadFailure_LeavesNoHalfMountedForeground` | 目标关卡 snd_scene 引用未注册策略导致加载失败 | InvalidOperationException（含 "not found"），无半挂载前台残留（ForegroundSession 为 null），可再次切换到健康关卡 |
 
 ## BackgroundSession_CreationWithCorrectFlagTests 测试详情
 
@@ -457,16 +504,20 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
-| `BeforeSaveSpyStrategy` | DisposeSemanticsTests.cs | 重写 BeforeSave 钩子，通过 AsyncLocal<List<string>> 记录调用 |
-| `BeforeQuitSpyStrategy` | DisposeSemanticsTests.cs | 重写 BeforeQuit 钩子，通过 AsyncLocal<List<string>> 记录调用 |
-| `SessionAccessQuitStrategy` | DisposeSemanticsTests.cs | 在 BeforeQuit 中验证 SceneHost 和 SessionBlackboard 仍可访问 |
-| `ThrowingQuitStrategy` | DisposeSemanticsTests.cs | 在 BeforeQuit 中故意抛异常，验证异常安全 |
+| `BeforeSaveSpyStrategy` | DisposeSemanticsTestInfrastructure.cs | 重写 BeforeSave 钩子，通过 AsyncLocal<List<string>> 记录调用 |
+| `BeforeQuitSpyStrategy` | DisposeSemanticsTestInfrastructure.cs | 重写 BeforeQuit 钩子，通过 AsyncLocal<List<string>> 记录调用 |
+| `SessionAccessQuitStrategy` | DisposeSemanticsTestInfrastructure.cs | 在 BeforeQuit 中验证 SceneHost 和 SessionBlackboard 仍可访问 |
+| `ThrowingQuitStrategy` | DisposeSemanticsTestInfrastructure.cs | 在 BeforeQuit 中故意抛异常，验证异常安全 |
+| `PopHookThrowsPushStrategy` | DisposeSemanticsTestInfrastructure.cs | StateMachineStrategyBase：空实现 Push 策略，配合抛异常的 Pop 策略构造状态机 |
+| `PopHookThrowsPopStrategy` | DisposeSemanticsTestInfrastructure.cs | StateMachineStrategyBase：OnPopBeforeQuit 故意抛异常，验证 Dispose 异常安全（progress 与 session 级共用） |
 | `ContractPushStrategy` | ForegroundBackgroundContractTests.cs | StateMachineStrategyBase：OnPushRuntime 记录 BeforeTop→AfterTop 事件 |
 | `ContractPopStrategy` | ForegroundBackgroundContractTests.cs | 空白 Pop 策略（仅占位） |
 | `TrackingStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase：记录 AfterSpawn/AfterLoad/AfterAdd/BeforeRemove/BeforeSave/BeforeQuit/BeforeDead 全部钩子调用 |
 | `ProcessCounterStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase：Process 钩子调用 AsyncLocal<Action> |
 | `SessionContextSpyStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase：Process 钩子记录 OwningSession.LevelId |
 | `FindByNameStrategy` | SaveAndSwitchForegroundIntegrationTests.cs | LifecycleStrategyBase：在 AfterSpawn/AfterLoad 钩子中通过 OwningSession.FindByName 查找自身和兄弟实体 |
+| `BeforeSaveDataWriterStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase：BeforeSave 钩子向实体写入数据，验证钩子写入进入存档文件 |
+| `TopologyOverwriteStrategy` | BackgroundSessionTests.cs | LifecycleStrategyBase：BeforeSave 钩子故意覆写框架所有的会话拓扑键，验证框架重新固化拓扑 |
 | `BlackboardProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase：OnPushRuntime 读取 SessionBlackboard 中的 marker 键 |
 | `SceneAccessProbeStrategy` | SessionDecouplingTests.cs | StateMachineStrategyBase：OnPushRuntime 读取 SceneAccess 中的全部实体名称 |
 | `NoOpPopStrategy` | SessionDecouplingTests.cs | 空白 Pop 策略（仅占位，配合 BlackboardProbeStrategy/SceneAccessProbeStrategy） |

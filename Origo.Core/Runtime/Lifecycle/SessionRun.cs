@@ -162,24 +162,40 @@ internal sealed class SessionRun : ISessionRun
 
         try
         {
+            // The disposing notification and the session-scoped state
+            // machines' quit-pop hooks can throw (exceptions propagate to the
+            // caller per the fail-fast contract); the session state machines,
+            // entity strategies, scene container, and blackboard are still
+            // guaranteed to be released and the disposed flag committed via
+            // the nested finally blocks (matching ProgressRun.Dispose).
             Disposing?.Invoke();
             MountKey = null;
-
-            _sessionScope.StateMachines.PopAllOnQuit();
-            _sessionScope.StateMachines.Clear();
-
-            ReleaseAllEntitiesAndClear(true);
         }
         finally
         {
-            _sceneHost.RemoveAllEntities();
-            _sessionScope.Blackboard.Clear();
-            _disposed = true;
-            _disposing = false;
-            _logger.Log(LogLevel.Info, _logTag,
-                new LogMessageBuilder()
-                    .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                    .Build($"Disposed SessionRun for level '{LevelId}'."));
+            try
+            {
+                _sessionScope.StateMachines.PopAllOnQuit();
+            }
+            finally
+            {
+                _sessionScope.StateMachines.Clear();
+                try
+                {
+                    ReleaseAllEntitiesAndClear(true);
+                }
+                finally
+                {
+                    _sceneHost.RemoveAllEntities();
+                    _sessionScope.Blackboard.Clear();
+                    _disposed = true;
+                    _disposing = false;
+                    _logger.Log(LogLevel.Info, _logTag,
+                        new LogMessageBuilder()
+                            .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                            .Build($"Disposed SessionRun for level '{LevelId}'."));
+                }
+            }
         }
     }
 

@@ -164,6 +164,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`ProgressRun.Dispose` stays fully released when a quit-pop hook throws** — an `OnPopBeforeQuit`
+  hook failure inside the dispose path previously aborted the finally block before the state-machine
+  container and progress blackboard were cleared and the disposed flag committed, leaving the run
+  permanently stuck in a half-closed state with leaked strategy-pool references. The release steps
+  and the flag commit now run regardless of hook exceptions (the hook exception still propagates).
+- **`SessionRun.Dispose` keeps releasing when a disposing subscriber or quit-pop hook throws** — a
+  throwing `Disposing` subscriber or `OnPopBeforeQuit` hook previously skipped the session
+  state-machine clear and the entity release, leaking strategy-pool references (only the scene
+  container and blackboard were guaranteed). The session state machines and entity strategies are
+  now released and the disposed flag committed via nested finally blocks (matching
+  `ProgressRun.Dispose`), while the hook exception still propagates.
 - **Level switches now run full disposal semantics on the old foreground** — `SwitchForeground` /
   `MountEmptyForeground` previously cleared the scene host *before* disposing the session, making
   `SessionRun.Dispose`'s BeforeQuit hooks, observer-binding teardown, strategy pool release, and
