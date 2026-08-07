@@ -118,6 +118,9 @@ facilities**, to understand the collaboration contracts between modules.
   the corresponding `docs/.../README.md` "Design Decisions / Why / Why Not"
   section. If the docs don't cover it or you cannot confirm, **ask the
   maintainer**. Do not make changes based on partial speculation.
+- The file's **git history is part of this understanding** (§1.8): the
+  current shape is the outcome of prior decisions and fixes — read it
+  before concluding that something is a defect.
 - Likewise, §4's Changelog must **not** mis-record such "cross-module
   co-designed constructs" as `Fixed`.
 
@@ -280,6 +283,34 @@ missing language files) always fail the build.
   API reference is needed.
 - This rule is enforced by developer discipline and code review.
 
+### 1.8 Git History Awareness — File History Informs Changes
+
+> **Before fixing or extending a file, read its git history first. The
+> history explains why the code is the way it is — and repeated edits to
+> the same area are a signal, not noise.**
+
+- **Read the history**: `git log --follow -p <file>` (and the history of its
+  upstream/downstream collaborators) reveals the intent behind the current
+  shape: design decisions, prior bug fixes, deliberate trade-offs, and
+  cross-module contracts. Treat the history as part of the §1.3 full-chain
+  understanding — the current state is the *outcome* of the history, not an
+  independent snapshot.
+- **Churn is a warning sign**: if a region was edited back and forth across
+  commits (an order swapped twice, a check added then removed, a constant
+  renamed several times), do not "fix" it again on the same reasoning — the
+  previous attempts either fixed a symptom or were undone for a reason.
+  Confirm the root cause and the current design intent with the maintainer
+  before touching it again. A fix that lands on top of churn must come with
+  a regression test that pins the correct behavior, so the churn ends here.
+- **No history in the code**: this awareness is for the developer's
+  understanding only. §1.2 still forbids evolution markers, dead code, and
+  historical traces in the code and docs.
+- **Review the final diff before committing**: `git diff` must show exactly
+  the intended change — no accidental reversals accumulated during
+  iteration. If a file was touched, reverted, and touched again in the
+  working tree, only the final state matters; make it minimal and
+  intentional.
+
 ---
 
 ## 2. Development Loop (Mandatory Order)
@@ -289,8 +320,8 @@ missing language files) always fail the build.
 
 | Step | Name | Description |
 |------|------|-------------|
-| 1 | **Develop source** | Implement the feature / fix / refactor, satisfying §0 gate and §1 principles. |
-| 2 | **Extend / adapt tests** | Add or adjust tests for this change: behavior tests for new public API, regression tests for bug fixes (red first), sync existing tests for behavior changes. |
+| 1 | **Develop source** | Implement the feature / fix / refactor, satisfying §0 gate and §1 principles. Before writing, read the target file's git history and its upstream/downstream collaborators (per §1.8) so the change builds on the design's actual evolution instead of re-litigating it. |
+| 2 | **Extend / adapt tests** | Add or adjust tests for this change: behavior tests for new public API, regression tests for bug fixes (**red first, per §3 red-first rule — the test must reproduce the bug through a real reachable path**), sync existing tests for behavior changes. |
 | 3 | **Execute tests** | During development iteration, run `bash scripts/test.sh` (restore → build → test + coverage gates). **Before committing, you must run** `bash scripts/ci.sh`, which mirrors CI exactly: format + doc-sync + test + benchmarks + Godot integration. |
 | 4 | **Fix source + re-test loop** | If tests are not all green, go back to fix the source and re-run step 3. **Loop until all pass.** Fixes must still comply with §1 (especially avoid false-positive fixes). |
 | 5 | **Changelog alignment** | Write user-facing significant changes into `CHANGELOG.md` under the `[Unreleased]` section (conventions in §4). |
@@ -310,6 +341,36 @@ missing language files) always fail the build.
 | Bug fix | Must have a regression test (red → green). |
 | Behavior change | Update existing tests to reflect new behavior. |
 | Refactoring | All existing tests must pass; no new tests required. |
+
+### Red-first, real-path regression for bug fixes
+
+A bug fix is only considered a valid fix after the **red → green** loop has
+been demonstrated:
+
+1. **Write the regression test first** — it must reproduce the bug through a
+   **real, reachable scenario** (the actual user/business path that triggers
+   the failure: real hosts, real strategies, real save payloads, the real
+   deferred-queue flow), not a synthetic setup that exists only inside the
+   test. If the bug only manifests with a specific collaborator (e.g. the
+   Godot adapter's live entity view), the test must exercise that
+   collaborator or a faithful stand-in with the same contract. A test that
+   passes because it silently uses a different code path is a **test blind
+   spot**, not a regression test.
+2. **Verify red** — run the test against the unmodified code and confirm it
+   fails for the expected reason (the bug's own symptom — the wrong value,
+   the missing hook, the leaking reference, the "already mounted"
+   exception — not an unrelated error). If it does not fail, the test does
+   not reproduce the bug; fix the test, not the source.
+3. **Fix the source, verify green** — the fix is complete only when the same
+   test passes unchanged. Optionally re-verify by temporarily reverting the
+   fix and confirming the test goes red again (this pins the test to the
+   defect, not to the fix's implementation details).
+4. **Check sibling paths** — the same defect pattern in parallel code paths
+   (e.g. teardown orders across scene hosts, sibling converters, similar
+   batch loops) must be checked for the identical issue, and the regression
+   test must cover the collaborator whose contract makes the fix
+   order-dependent. Re-run the full test suite (§2 step 3) before
+   committing.
 
 - **Run command**: `bash scripts/ci.sh` (repo root, full local CI reproduction:
   format + build + test + coverage gates + benchmarks + Godot integration).
