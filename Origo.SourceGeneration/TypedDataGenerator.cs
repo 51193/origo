@@ -272,18 +272,28 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     ///     different kinds) — would emit duplicate generated identifiers.
     ///     Numeric kind collisions are handled by
     ///     <see cref="RejectKindCollisions" />; this covers identifier-level
-    ///     collisions that would otherwise emit uncompilable code.
+    ///     collisions that would otherwise emit uncompilable code. The KindMap
+    ///     sentinel constant <c>Null = 0</c> (and the handwritten
+    ///     <c>IsNull</c> property on value types) reserves the kind name
+    ///     <c>Null</c>, so a registered type sanitizing to it is rejected too.
     /// </summary>
     private static List<InlineTypeInfo> RejectKindNameCollisions(
         SourceProductionContext context, List<InlineTypeInfo> types)
     {
+        // KindMap always emits `public const byte Null = 0`, and TypedData
+        // declares a handwritten `IsNull` property; a registered type named
+        // Null would collide with the sentinel constant (and, for value
+        // types, with the property), producing CS0102. Treat the reserved
+        // identifier as an already-taken kind name.
+        const string reservedKindName = "Null";
         var firstTypeByKindName = new Dictionary<string, InlineTypeInfo>(StringComparer.Ordinal);
         var collidingKindNames = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var t in types)
         {
             if (t.KindIndex is null) continue;
-            if (firstTypeByKindName.ContainsKey(t.KindIndex))
+            if (string.Equals(t.KindIndex, reservedKindName, StringComparison.Ordinal)
+                || firstTypeByKindName.ContainsKey(t.KindIndex))
                 collidingKindNames.Add(t.KindIndex);
             else
                 firstTypeByKindName[t.KindIndex] = t;
@@ -294,12 +304,22 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             var colliding = types
                 .Where(t => string.Equals(t.KindIndex, kindName, StringComparison.Ordinal))
                 .ToArray();
-            context.ReportDiagnostic(Diagnostic.Create(
-                _kindNameCollision,
-                colliding[0].Location ?? Location.None,
-                colliding[0].ClrTypeName,
-                colliding[1].ClrTypeName,
-                kindName));
+            if (string.Equals(kindName, reservedKindName, StringComparison.Ordinal))
+            {
+                foreach (var t in colliding)
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        _kindNameCollision, t.Location ?? Location.None,
+                        t.ClrTypeName, "the reserved KindMap sentinel", kindName));
+            }
+            else
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    _kindNameCollision,
+                    colliding[0].Location ?? Location.None,
+                    colliding[0].ClrTypeName,
+                    colliding[1].ClrTypeName,
+                    kindName));
+            }
         }
 
         var result = new List<InlineTypeInfo>();

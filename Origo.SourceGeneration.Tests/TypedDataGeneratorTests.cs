@@ -411,6 +411,43 @@ public class TypedDataGeneratorTests
         Assert.DoesNotContain("List", output.AllGeneratedText);
     }
 
+    [Fact]
+    public void TypeNamedNull_ReservedKindMapSentinel_ReportORIGOSG005_AndDropType()
+    {
+        // The KindMap always emits the sentinel `public const byte Null = 0`,
+        // and TypedData has a handwritten `IsNull` property; a registered type
+        // whose sanitized kind name is 'Null' would collide with both. The
+        // generator must reject it as a kind-name collision instead of
+        // emitting uncompilable duplicate members (CS0102).
+        var attribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(A.Null))]
+            namespace A { public class Null { } }
+            """;
+        var output = RunHome(attribute);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.DoesNotContain("AsNull", output.AllGeneratedText);
+        Assert.Empty(output.CompileErrors);
+    }
+
+    [Fact]
+    public void ValueTypeNamedNull_InHomeMode_ReportORIGOSG002_AndDropType()
+    {
+        // A non-system value type cannot be stored inline in the home
+        // assembly at all, so the ORIGOSG002 gate rejects it before any
+        // kind-name consideration; no generated IsNull may collide with the
+        // handwritten one on TypedData.
+        var attribute = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(typeof(A.Null))]
+            namespace A { public struct Null { } }
+            """;
+        var output = RunHome(attribute);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG002"));
+        Assert.DoesNotContain("IsNull", output.AllGeneratedText);
+        Assert.Empty(output.CompileErrors);
+    }
+
     // ─── Incremental generator behaviour ────────────────────────────
 
     [Fact]
