@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -18,7 +18,7 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 | `SndEntityCollection.cs` | internal — 纯 C# 实体集合：实体增删、批量恢复回滚、击杀标记、帧处理编排，无 Godot 依赖，由测试直接覆盖 |
 | `GodotPackedSceneNodeFactory.cs` | INodeFactory 实现：通过 PackedScene.Instantiate 创建 Godot Node |
 | `GodotNodeHandle.cs` | INodeHandle 实现：包装 Godot.Node，提供 Free / SetVisible / UnsafeGetNode |
-| `SndEntityNodeExtensions.cs` | 适配层便利扩展：`GetNativeNode()`（从 INodeHandle 提取 Godot Node）、`GetNodeFromSnd<T>()`（从 ISndEntity 遍历 Godot 场景树）。物理位置在项目根 `Origo.GodotAdapter/SndEntityNodeExtensions.cs`（非 Snd/ 子目录），命名空间归属 `Origo.GodotAdapter` |
+| `SndEntityNodeExtensions.cs` | 适配层便利扩展：`GetNativeNode()`（从 INodeHandle 提取 Godot Node）、`GetNodeFromSnd<T>()`（经 SND 节点注册表按逻辑名解析并强转）。物理位置在项目根 `Origo.GodotAdapter/SndEntityNodeExtensions.cs`（非 Snd/ 子目录），命名空间归属 `Origo.GodotAdapter` |
 | `TypedDataInitializer.cs` | internal — 程序集加载强制入口：调用 `EnsureLoaded()` 触发所有 `[ModuleInitializer]` 执行（测试项目经 InternalsVisibleTo 访问） |
 
 > 项目根目录的 `AssemblyAttributes.cs` 声明 `[assembly: SndInlineTypes(startKind: 128, ...)]`，注册 14 种 Godot 引擎类型（Vector2/Vector2I/Vector3/Vector3I/Vector4/Quaternion/Basis/Transform2D/Transform3D/Color/Rect2/Rect2I/Aabb/Plane）到 TypedData 的适配层 Kind 区间（128–141）。
@@ -51,7 +51,7 @@ Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 - **BuildSndMetaData()**：公开包装 `BuildMetaData()`，供 GodotSndManager 收集元数据
 - **IEntityLifecycle 实现**：各方法包含 `EnsureEntity()` 守卫（先用再创建）
 - **StableName**：独立存储实体稳定名（Godot Node 的 Name 可能因重名自动修改后缀）
-- **GetNodeFromSnd<TNode>**：Godot 特有扩展——从 SND 节点系统按名查找并强转为 Godot 具体类型
+- **GetNodeFromSnd<TNode>**：Godot 特有扩展——从实体的 SND 节点注册表按逻辑名查找并强转为 Godot 具体类型
 
 ### GodotPackedSceneNodeFactory
 
@@ -69,7 +69,7 @@ Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 ### SndEntityNodeExtensions
 
 - **GetNativeNode(this INodeHandle)** → 安全地将 `INodeHandle` 转换为原生 `Godot.Node`。仅在 handle 是 `GodotNodeHandle` 时生效，否则返回 null
-- **GetNodeFromSnd<TNode>(this ISndEntity, string)** → 遍历 Godot 场景树按名查找节点并强转为指定类型。仅在 entity 是 `GodotSndEntity` 时生效
+- **GetNodeFromSnd<TNode>(this ISndEntity, string)** → 经实体的 SND 节点注册表按逻辑名解析节点并强转为指定类型；未注册名抛 `InvalidOperationException`，句柄非 Godot 或类型不符返回 null。仅在 entity 是 `GodotSndEntity` 时生效
 
 ## 设计决策
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # FileSystem (Abstractions)
 
@@ -47,7 +47,7 @@ Different platforms (Godot virtual file system vs OS local file system) handle r
 ### Why strategies do not directly use IFileSystem
 `IFileSystem` is completely internalized — neither strategies nor infrastructure modules reference it directly. Strategies access files through `ISndFileAccess` (static resource file access, the `FileAccess` companion property of `ISndContext`) and `ISndArchiveFileAccess` (save-internal file access, the `ArchiveFileAccess` companion property). `ISndFileAccess` internally delegates to three base interfaces:
 
-- `IDataSourceIoGateway`: content read/write (only `ReadTree`/`WriteTree`; all files are forced through the codec routing — including extension-less structured files like `.sha` and `.write_in_progress`, routed via `RawStringDataSourceCodec`), returning parsed `DataSourceNode` trees
+- `IDataSourceIoGateway`: content read/write (only `ReadTree`/`WriteTree`; all files are forced through the codec routing — including files without structured suffixes like `.sha` and `.write_in_progress`, routed via `RawStringDataSourceCodec`), returning parsed `DataSourceNode` trees
 - `IFileMetaAccess`: file metadata (FileExists, DirectoryExists, Enumerate, CreateDirectory, Delete, Copy, Rename)
 - `IPathResolver`: platform path computation (CombinePath, GetParentDirectory)
 
@@ -57,7 +57,7 @@ Different platforms (Godot virtual file system vs OS local file system) handle r
 - File metadata operations go through `IFileMetaAccess`, path computation through `IPathResolver`
 - Strategies never parse raw JSON/Map text themselves or deal with platform path differences
 - Encoding/decoding policies are centrally managed; swapping engines requires no strategy changes
-- The `IFileSystem` interface itself is implemented by the adapter layer; Core's built-in `MemoryFileSystem` serves as a zero-dependency reference implementation, public for tests and adapter reuse (see the DataSource module docs)
+- The `IFileSystem` interface itself is implemented by the adapter layer; Core's built-in `MemoryFileSystem` is an `internal` zero-dependency reference implementation, used by test projects via InternalsVisibleTo (see the DataSource module docs)
 
 ---
 [↑ Back to Abstractions](../README.en.md)

@@ -6,8 +6,10 @@ namespace Origo.Core.Random;
 
 /// <summary>
 ///     Persistent random number generator that stores its state in a progress blackboard.
-///     Initialized from a string seed; each invocation atomically reads, advances,
-///     and writes back the state. Deterministic across sessions for the same seed.
+///     Initialized from a string seed; each invocation reads, advances, and writes back the
+///     state. Deterministic across sessions for the same seed. Not thread-safe: the
+///     read-advance-write sequence is not atomic, so a single generator must not be shared
+///     across threads (consistent with the single-threaded frame model).
 /// </summary>
 public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key = null, string? state2Key = null)
 {

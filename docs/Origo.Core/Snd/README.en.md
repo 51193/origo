@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -31,7 +31,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | `SndDefaults.cs` | `internal` — SND system default value constants. Defines `InitialSaveId` ("000"), `InitialLevelId` ("default"), `MainMenuLevelId` ("main_menu"), used by Core's internal persistence flow and startup orchestration. |
 | `SndMappings.cs` | Scene alias resolution + template registration and parsing |
 | `SndTemplateResolver.cs` | Template resolver: supports both JSON array and .map shorthand template formats |
-| `TryGetNumericExtensions.cs` | Entity data numeric type compatible read extension: bridges int/float type access mismatches |
+| `TryGetNumericExtensions.cs` | Entity data numeric type compatible read extension: bridges int/float type access mismatches. Note precision boundaries: int→float may lose precision above 2²⁴, and double→float narrowing may overflow to ±Infinity — neither is checked. Suitable for close-range in-game numbers, not for metering scenarios requiring exact representation |
 | `ActiveStrategyExtensions.cs` | Generic ActiveStrategy invocation extension: eliminates JSON serialization boilerplate on the `InvokeStrategy` side |
 | `LevelBuilder.cs` | `internal` — Offline level building tool. Only used internally by framework tests and StubSndSceneHost; business code should build levels via templates and entry.json. |
 | `EntityExtensions.cs` | Entity identity comparison extension methods such as `IsSameEntityAs` |
@@ -98,9 +98,9 @@ Observer binding topology is serialized with entities through `StrategyMetaData.
 
 1. **Converter registration**: if `SndContextParameters.ConfigureConverters` is set, it is invoked to register custom `DataSourceConverter`s
 2. **Strategy discovery**: If `SndContextParameters.AutoDiscoverStrategies` is true, scans assemblies for `[StrategyIndex]` annotated types via `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, using `DiscoverySkipPrefixes` to filter adapter-layer assemblies
-2. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls `SndWorld.LoadSceneAliases()`
-3. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls `SndWorld.LoadTemplates()`
-4. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`
+3. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls `SndWorld.LoadSceneAliases()`
+4. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls `SndWorld.LoadTemplates()`
+5. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`
 
 The adapter layer only passes configuration via `SndContextParameters` and does not need to know the execution order or internal implementation of the above steps.
 

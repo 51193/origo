@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体 测试（适配层）
 
@@ -18,7 +18,7 @@
 |------|-----------|
 | `Snd/SndEntityCollectionTests.cs` | 实体集合全能力：创建/查找/移除/击杀标记、`RecoverFromMetaList` 批量恢复与部分失败回滚、`RemoveAllEntities`、帧处理 `ProcessAll`、元数据列表构建、`OwningSession` 绑定 |
 | `Snd/TypedDataInitializerTests.cs` | `TypedDataInitializer.EnsureLoaded()` 触发适配层 Kind 注册的幂等性与可用性 |
-| `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` 的契约：类型不符抛异常、节点句柄提取 |
+| `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` 的契约：非 Godot 实体/句柄返回 null、节点句柄提取 |
 
 ## SndEntityCollectionTests 测试详情
 

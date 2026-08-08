@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -17,7 +17,7 @@ The concrete implementation of the SND entity system in the Godot engine. Bridge
 | `GodotSndEntity.cs` | Godot entity: binds Core SndEntity to Godot Node lifecycle, delegates all ISndEntity calls |
 | `GodotPackedSceneNodeFactory.cs` | INodeFactory implementation: creates Godot Nodes via PackedScene.Instantiate |
 | `GodotNodeHandle.cs` | INodeHandle implementation: wraps Godot.Node, provides Free / SetVisible / UnsafeGetNode |
-| `SndEntityNodeExtensions.cs` | Adapter-layer convenience extensions: `GetNativeNode()` (extracts Godot Node from INodeHandle), `GetNodeFromSnd<T>()` (traverses Godot scene tree from ISndEntity). Physically located at project root `Origo.GodotAdapter/SndEntityNodeExtensions.cs` (not in Snd/ subdirectory), namespace belongs to `Origo.GodotAdapter` |
+| `SndEntityNodeExtensions.cs` | Adapter-layer convenience extensions: `GetNativeNode()` (extracts Godot Node from INodeHandle), `GetNodeFromSnd<T>()` (resolves via the SND node registry by logical name and casts). Physically located at project root `Origo.GodotAdapter/SndEntityNodeExtensions.cs` (not in Snd/ subdirectory), namespace belongs to `Origo.GodotAdapter` |
 | `SndEntityCollection.cs` | internal — pure C# entity collection: entity add/remove, batch recovery rollback, kill marking, frame processing orchestration; no Godot dependency, covered directly by unit tests |
 | `TypedDataInitializer.cs` | internal — assembly loading forced entry point: calling `EnsureLoaded()` triggers all `[ModuleInitializer]` executions (test projects access via InternalsVisibleTo) |
 
@@ -49,7 +49,7 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 - **BuildSndMetaData()**: Public wrapper for `BuildMetaData()`, used by GodotSndManager to collect metadata
 - **IEntityLifecycle implementation**: Each method includes an `EnsureEntity()` guard (creates before use)
 - **StableName**: Independently stores the entity's stable name (Godot Node's Name may be auto-modified with suffixes due to name conflicts)
-- **GetNodeFromSnd<TNode>**: Godot-specific extension — finds nodes by name from the SND node system and casts to a concrete Godot type
+- **GetNodeFromSnd<TNode>**: Godot-specific extension — looks up by logical name in the entity's SND node registry and casts to a concrete Godot type
 
 ### GodotPackedSceneNodeFactory
 
@@ -67,7 +67,7 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 ### SndEntityNodeExtensions
 
 - **GetNativeNode(this INodeHandle)** → safely converts `INodeHandle` to a native `Godot.Node`. Only works when the handle is a `GodotNodeHandle`; returns null otherwise
-- **GetNodeFromSnd<TNode>(this ISndEntity, string)** → traverses the Godot scene tree to find a node by name and casts to the specified type. Only works when the entity is a `GodotSndEntity`
+- **GetNodeFromSnd<TNode>(this ISndEntity, string)** → resolves a node by logical name in the entity's SND node registry and casts to the specified type; an unregistered name throws `InvalidOperationException`, a non-Godot handle or type mismatch returns null. Only works when the entity is a `GodotSndEntity`
 
 ## Design Decisions
 

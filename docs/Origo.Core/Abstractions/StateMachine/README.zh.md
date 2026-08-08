@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # StateMachine (Abstractions)
 
@@ -24,8 +24,8 @@
 | `MachineKey` | 状态机唯一标识 |
 | `PushStrategyIndex` / `PopStrategyIndex` | 关联的 Push/Pop 策略索引 |
 | `Push(value)` | 压栈 |
-| `TryPopRuntime(out popped)` | 运行时出栈，触发 pop 策略的 BeforeRemove |
-| `TryPopOnQuit(out popped)` | 退出逐级出栈，触发 pop 策略的 BeforeQuit |
+| `TryPopRuntime(out popped)` | 运行时出栈：先触发 pop 策略的 `OnPopRuntime` 钩子，再出栈 |
+| `TryPopOnQuit(out popped)` | 退出逐级出栈：先触发 pop 策略的 `OnPopBeforeQuit` 钩子，再出栈 |
 | `Peek()` | 查看栈顶 |
 | `Snapshot()` | 栈底到栈顶快照 |
 | `FlushAfterLoad()` | 读档后按入栈顺序重放 Push 策略的 AfterLoad |
@@ -53,7 +53,7 @@
 
 ### 为什么分离 TryPopRuntime 和 TryPopOnQuit
 
-两种出栈触发不同的策略钩子语义。运行时出栈触发 `BeforeRemove`（正常状态流转），退出逐级出栈触发 `BeforeQuit`（状态机销毁时的清理）。如果合并为一个方法，调用方需传递额外参数区分语义，增加误用风险。
+两种出栈触发不同的策略钩子语义。运行时出栈触发 `OnPopRuntime`（正常状态流转），退出逐级出栈触发 `OnPopBeforeQuit`（状态机销毁时的清理）。如果合并为一个方法，调用方需传递额外参数区分语义，增加误用风险。
 
 ### 为什么 SessionStateMachineContext 是 internal 且不在 Abstractions 层
 

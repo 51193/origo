@@ -16,9 +16,9 @@ public static class EntityExtensions
     ///         inner <c>SndEntity</c> while <c>ISessionRun.GetEntities()</c>
     ///         may return adapter wrappers (e.g. <c>GodotSndEntity</c>) around
     ///         the same entity. The comparison therefore falls back to the
-    ///         entity name within the same owning session. Names are unique
-    ///         within a session by framework contract (lookup, observer
-    ///         topology, and save recovery all key on names).
+    ///         entity name within the same owning session. Lookup, observer
+    ///         topology, and save recovery all key on names, so name equality
+    ///         within a session is the intended identity criterion.
     ///     </para>
     ///     <para>
     ///         When both entities have no owning session (unbound stubs, e.g.

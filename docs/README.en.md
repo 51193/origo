@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Manual
 
@@ -113,7 +113,7 @@ Each directory's `README.md` contains:
 
 ## Version
 
-Current Origo framework version: **0.0.9-nightly** (in development). Documentation is co-located with source code in the same repository; versions are naturally synchronized. When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
+Current Origo framework version: **0.0.9-nightly** (in development; nightly carries a date suffix, see `Directory.Build.props`). Documentation is co-located with source code in the same repository; versions are naturally synchronized (the docs do not track the nightly date suffix). When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
 
 - Framework source and docs: this repository [origo](https://github.com/51193/origo) (docs under `docs/`)
 - Example project: [origo.demo](https://github.com/51193/origo.demo)

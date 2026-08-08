@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Tests (Adapter)
 
@@ -16,7 +16,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 |------|-----------|
 | `Snd/SndEntityCollectionTests.cs` | Full entity collection capability: create/find/remove/kill marking, `RecoverFromMetaList` batch recovery with partial-failure rollback, `RemoveAllEntities`, frame processing `ProcessAll`, meta list building, `OwningSession` binding |
 | `Snd/TypedDataInitializerTests.cs` | `TypedDataInitializer.EnsureLoaded()` triggering adapter-layer kind registration: idempotency and availability |
-| `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` contracts: wrong-type throws, node handle extraction |
+| `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` contracts: non-Godot entity/handle returns null, node handle extraction |
 
 ## SndEntityCollectionTests Details
 

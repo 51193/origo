@@ -23,9 +23,11 @@ public static class SndEntityNodeExtensions
     }
 
     /// <summary>
-    ///     Godot adapter layer convenience method: traverses the Godot scene tree
-    ///     to find a node by name and casts it to the specified type.
-    ///     Only works when entity is a GodotSndEntity.
+    ///     Godot adapter layer convenience method: resolves the node registered
+    ///     under the given logical name in the entity's SND node registry and
+    ///     casts it to the specified type. Throws when no node is registered
+    ///     under that name (the SND node registry lookup is strict); only
+    ///     works when the entity is a <see cref="GodotSndEntity" />.
     /// </summary>
     public static TNode? GetNodeFromSnd<TNode>(this ISndEntity entity, string name) where TNode : Node
     {

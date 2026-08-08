@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Node/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Node (Abstractions)
 
@@ -51,7 +51,7 @@
 
 ### 为什么 INodeHandle 不暴露原生节点对象
 
-Core 层通过 `INodeHandle` 的方法（`Free` / `SetVisible`）操作节点，不持有、不暴露任何引擎特定类型。需要原生节点时，适配层 `SndEntityNodeExtensions`（命名空间 `Origo.GodotAdapter.Snd`，文件 `Origo.GodotAdapter/SndEntityNodeExtensions.cs`）提供扩展方法：`GetNativeNode()` 将 `INodeHandle` 提取为 `Godot.Node?`（句柄非 `GodotNodeHandle` 时返回 null），`GetNodeFromSnd<T>()` 遍历 Godot 场景树取强类型节点。引擎节点访问统一经此适配层扩展显式声明引擎依赖，`INodeHandle` 本身不通过 `object` 暴露引擎类型，使 Core 与引擎类型保持隔离。
+Core 层通过 `INodeHandle` 的方法（`Free` / `SetVisible`）操作节点，不持有、不暴露任何引擎特定类型。需要原生节点时，适配层 `SndEntityNodeExtensions`（命名空间 `Origo.GodotAdapter.Snd`，文件 `Origo.GodotAdapter/SndEntityNodeExtensions.cs`）提供扩展方法：`GetNativeNode()` 将 `INodeHandle` 提取为 `Godot.Node?`（句柄非 `GodotNodeHandle` 时返回 null），`GetNodeFromSnd<T>()` 经实体的 SND 节点注册表按逻辑名解析节点并强转（未注册名抛 `InvalidOperationException`，类型不符返回 null）。引擎节点访问统一经此适配层扩展显式声明引擎依赖，`INodeHandle` 本身不通过 `object` 暴露引擎类型，使 Core 与引擎类型保持隔离。
 
 ---
 [↑ 回到 Abstractions](../README.zh.md)
