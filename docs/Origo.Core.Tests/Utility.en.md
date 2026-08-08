@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Utility Tests
 
@@ -8,41 +8,16 @@
 
 ## Verified Capabilities
 
-Behavior of `DiffUtility.Diff<T>()` and `PathUtility` static path operations.
+Behavior of `PathUtility` static path operations and `ValueInference` string-to-typed value inference.
 
 ## Test File List
 
 | File | Verification Focus |
 |------|-------------------|
-| `Utility/DiffUtilityTests.cs` | Diff collection difference comparison correct/error/boundary paths |
 | `Utility/PathUtilityTests.cs` | Path joining, traversal attack detection, parent directory extraction, glob suffix parsing |
+| `Utility/ValueInferenceTests.cs` | int → long → float → bool → string inference order and type precision |
 
 ## Test Details
-
-### Correct Paths
-
-| Test Method | Behavior Verified | Documentation Source |
-|-------------|------------------|---------------------|
-| `Diff_AddedItems_Detected` | Added items correctly detected | `DiffUtility` public API |
-| `Diff_RemovedItems_Detected` | Removed items correctly detected | `DiffUtility` public API |
-| `Diff_AddedAndRemoved` | Mixed additions and removals | `DiffUtility` public API |
-| `Diff_Duplicates_TreatedAsSingle` | Duplicates are deduplicated before comparison | `DiffUtility` public API |
-
-### Boundary Paths
-
-| Test Method | Boundary Condition | Expected Behavior |
-|-------------|-------------------|-------------------|
-| `Diff_EmptyBoth_ReturnsEmpty` | Both collections are empty | added, removed are both empty lists |
-| `Diff_EmptyOld_NewHasItems_ReturnsAdded` | Old collection is empty | All new items counted as added |
-| `Diff_EmptyNew_OldHasItems_ReturnsRemoved` | New collection is empty | All old items counted as removed |
-| `Diff_NoChange_ReturnsEmpty` | Both collections have the same content | added, removed are both empty lists |
-
-### Error Paths
-
-| Test Method | Error Triggered | Expected Behavior |
-|-------------|----------------|-------------------|
-| `Diff_NullOld_Throws` | oldItems is null | `ArgumentNullException` |
-| `Diff_NullNew_Throws` | newItems is null | `ArgumentNullException` |
 
 ### PathUtility Correct Paths
 
@@ -72,11 +47,11 @@ Behavior of `DiffUtility.Diff<T>()` and `PathUtility` static path operations.
 | `GetParentDirectory_AtRoot_Throws` | Root path with no parent directory | `InvalidOperationException` |
 | `GetParentDirectory_SchemeRoot_Throws` | `user://`/`res://` scheme root has no parent | `InvalidOperationException` |
 
-## Known Coverage Gaps
+### ValueInference Inference Order
 
-| Gap Description | Impact | Documentation Basis |
-|-----------------|--------|---------------------|
-| Diff dedup/comparison for custom reference types that are not IEquatable<T> | Reference equality vs value equality semantics | DiffUtility |
+| Test Method | Behavior Verified |
+|-------------|------------------|
+| `Infer_ReturnsFirstMatchingTypedValue` | Returns the first parseable type in int → long → float → bool → string order; `"42"`→int, `"3000000000"`→long, `"3.14"`→float, `"true"`→bool, everything else→string (including empty string and `"12abc"` returned verbatim) |
 
 ---
 

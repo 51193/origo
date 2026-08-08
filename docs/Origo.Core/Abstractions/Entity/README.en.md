@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Entity (Abstractions)
 
@@ -92,7 +92,7 @@ Composite interface with own members:
 | `FireBeforeDeadHooks()` | Phase 2 | Trigger BeforeDead |
 | `ReleaseStrategiesOnly()` | Phase 3 | Release EntityStrategy + ActiveStrategy references |
 | `TeardownOnly()` | Phase 3 | Release Node + Data resources |
-| `TeardownObserverBindings()` | Phase 3 | Unload all observer bindings of this entity via the host `ObserverTopology` (unsubscribe target data channels; whether `OnUnmounted` fires depends on the calling path) |
+| `TeardownObserverBindings()` | Phase 3 | Unload all observer bindings of this entity via the host `ObserverTopology`: unsubscribe target data channels, fire `OnUnmounted`, and release strategy-pool references |
 | `BuildMetaData()` | Serialization | Build metadata (no BeforeSave) |
 
 Implementers: `SndEntity` (Core in-memory entity) and adapter-layer entities (such as `GodotSndEntity`, which bridges by delegating to an inner `SndEntity`).

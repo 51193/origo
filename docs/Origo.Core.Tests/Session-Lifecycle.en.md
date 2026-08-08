@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -548,7 +548,6 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | Gap Description | Impact | Reference |
 |----------------|--------|-----------|
 | Automatic collision resolution when background session shares same levelId with foreground | SwitchForeground auto-saves and destroys background | session-model: levelId uniqueness constraint |
-| ISessionManager.ProcessAllSessions behavior with includeForeground=true | Whether foreground participates in ProcessAll | ISessionManager |
 | Performance boundaries with large number of background sessions (100+) | Extreme concurrent session count | — |
 | ProgressRun.LoadFromPayload handling of Payload.Levels being null | Defense against null Levels | session-model |
 | Race condition between session double Dispose, ForegroundSession and external references | External ISessionRun reference used after Dispose | — |

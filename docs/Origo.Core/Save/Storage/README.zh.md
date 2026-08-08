@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Storage
 
@@ -61,7 +61,12 @@
 
 - **current/ 下有 `.write_in_progress`** → 拒绝读取，抛异常（上次写入中断）
 - **关卡三件套不全** → 拒绝读取（部分存在 = 损坏）
+## 严格读取规则
+
+- **current/ 下有 `.write_in_progress`** → 拒绝读取，抛异常（上次写入中断）
+- **关卡三件套不全** → 拒绝读取（部分存在 = 损坏）
 - **progress.json 缺失** → 拒绝读取
+- **拓扑引用的后台关卡无 payload** → 拒绝加载（与前台一致：存档拓扑引用了不存在的关卡数据，加载必须显式失败，静默空挂载会掩盖数据丢失）
 
 ## 设计决策
 

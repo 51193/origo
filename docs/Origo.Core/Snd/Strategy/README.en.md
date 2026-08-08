@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -56,7 +56,7 @@ Each scene host that creates real `SndEntity` instances (`FullMemorySndSceneHost
 - **BuildBindingsFor(observerName)**: Serialize an observer's full outgoing edges as `List<ObserverBinding>` (grouped by target) into `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**: Clean an observer's full outgoing edges; if target is resolvable, full `Unmount`; otherwise return strategy and remove record
 - **TeardownAllBindingsFor(observer)**: Self-contained cleanup path that calls `FullCleanup` on all outgoing edges of the observer (unsubscribe + `OnUnmounted` + release strategy), not depending on the scene host — binding entries already hold `TargetEntity` references. Invoked by `SessionRun.ReleaseAllEntitiesAndClear` through `IEntityLifecycle.TeardownObserverBindings` when a session quits
-- **HasBindingTargetingFrom(observerName, targetName)** / **RemoveBindingsTargetingFor(observer, targetName)**: Incoming teardown support — query/clean bindings where a specific observer points to a specific target
+- **GetObserverNamesTargeting(targetName)** / **RemoveBindingsTargetingFor(observer, targetName)**: Incoming teardown support — query the observers targeting a name, clean bindings where a specific observer points to a specific target
 - **Bidirectional teardown**: `SessionRun.KillPending` handles both outgoing (killed entity as observer) and incoming (killed entity as target, located via incoming index), preventing re-entrant modification in `OnUnmounted` callbacks through snapshots
 
 ### Observer Strategy Persistence
@@ -220,6 +220,10 @@ Hook callbacks frequently need to add or remove strategies (e.g., removing one's
 ### Why ActiveStrategy is recovered before entity strategy hooks
 
 ActiveStrategy is recovered during `RecoverForLifecycle` (Phase 1), before `FireAfterSpawnHooks` / `FireAfterLoadHooks` (Phase 2). This ensures entity strategy hooks can call their own ActiveStrategy via `InvokeStrategy` and can also call ActiveStrategies of other recovered entities — enabling loading-order-independent cross-entity interoperability.
+
+### Why the strategy pool's reference counting is not thread-safe
+
+`SndStrategyPool`'s reference counts, registration table, and instance cache are only accessed on the frame thread (single-threaded frame model). Cross-thread scenarios (deferred-queue enqueue/dequeue, console input, etc.) only carry actions and data and never touch the pool; engine callbacks and business strategy hooks all run on the frame thread. Reference counting therefore needs no locking — concurrent pool access is a contract violation with undefined behavior.
 
 ---
 

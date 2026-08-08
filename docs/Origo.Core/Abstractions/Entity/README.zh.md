@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity (Abstractions)
 
@@ -93,7 +93,7 @@
 | `FireBeforeDeadHooks()` | Phase 2 | 触发策略 BeforeDead |
 | `ReleaseStrategiesOnly()` | Phase 3 | 释放 EntityStrategy + ActiveStrategy 引用 |
 | `TeardownOnly()` | Phase 3 | 释放 Node + Data 资源 |
-| `TeardownObserverBindings()` | Phase 3 | 经宿主 `ObserverTopology` 卸载本实体的全部观察者绑定（退订目标数据通道，不触发 OnUnmounted 由谁处理视调用路径而定） |
+| `TeardownObserverBindings()` | Phase 3 | 经宿主 `ObserverTopology` 卸载本实体的全部观察者绑定：退订目标数据通道、触发 `OnUnmounted` 并归还策略池引用 |
 | `BuildMetaData()` | 序列化 | 构建元数据（不触发 BeforeSave） |
 
 实现者：`SndEntity`（Core 内存实体）、适配层实体（如 `GodotSndEntity`，桥接委托给内部 `SndEntity`）。

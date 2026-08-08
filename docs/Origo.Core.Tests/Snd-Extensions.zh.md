@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 扩展 测试
 
@@ -59,6 +59,8 @@
 | `TryGetNumeric_FloatStored_ReturnsFloat` | 存储 float 通过 TryGetNumeric<float> 读回 | Snd README: TryGetNumericExtensions |
 | `TryGetNumeric_IntStored_ReturnsFloat` | 存储 int 通过 TryGetNumeric<float> 跨类型读回（42→42f） | Snd README: TryGetNumericExtensions |
 | `TryGetNumeric_LongStored_ReturnsFloat` | 存储 long 通过 TryGetNumeric<float> 跨类型读回（123L→123f） | Snd README: TryGetNumericExtensions |
+| `TryGetNumeric_IntegerTypesStored_ReturnsFloat` | byte/sbyte/short/ushort/char/uint/ulong 七种整数类型均可跨类型读回 | Snd README: TryGetNumericExtensions |
+| `TryGetNumeric_BoolStored_ReturnsFalse` | 存储 bool 时返回 false | Snd README: TryGetNumericExtensions |
 | `TryGetNumeric_DoubleStored_ReturnsFloat` | 存储 double 通过 TryGetNumeric<float> 跨类型读回（2.5d→2.5f） | Snd README: TryGetNumericExtensions |
 | `GetNumeric_FloatStored_ReturnsValue` | GetNumeric 直接读取存储的 float 值 | Snd README: TryGetNumericExtensions |
 | `GetNumeric_Missing_ReturnsFallback` | 缺失键时 GetNumeric 返回指定的 fallback 值 | Snd README: TryGetNumericExtensions |
@@ -116,7 +118,6 @@
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | EnsureReplaceableStrategy 的实际策略挂载与 AddStrategy 集成 | 当前测试用 StubSndEntity（不存储实际策略），未验证 EnsureReplaceableStrategy 结果与实际策略 Add 的联动 | Snd README: EnsureReplaceableStrategy |
-| TryGetNumeric 对 decimal/byte/short 等数值类型的兼容性 | 仅测试 int/long/float/double 四种类型，其他 CLR 数值类型未覆盖 | Snd README: TryGetNumericExtensions |
 | InvokeStrategy 泛型对复杂嵌套类型的序列化往返 | 仅测试简单匿名类型 {Sx, Sz} → TestResult，未测试嵌套对象/数组/枚举 | Snd README: ActiveStrategyExtensions |
 | EnsureStrategy/EnsureReplaceableStrategy 在真实运行时环境（含策略池注册）的集成测试 | 当前测试仅操作 DummySndEntity/StubSndEntity 的数据层，未验证策略实际被 Add 和执行 | Snd README: ActiveStrategyExtensions |
 

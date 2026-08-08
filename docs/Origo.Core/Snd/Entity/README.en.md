@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Entity
 
@@ -71,6 +71,7 @@ These methods are used by the framework layer for batch orchestration; business 
 
 - **Storage**: `Dictionary<string, TypedData>`
 - **SetData**: Uses `CollectionsMarshal.GetValueRefOrAddDefault` for in-place writes; skips notification when old value is the same (avoiding meaningless events). Throws `ArgumentNullException` when `value` is null for reference types.
+- **Notification contract**: the value is **committed before** observers are notified — a throwing callback never rolls the value back; observers are notified in subscription order and a throwing callback aborts the remaining notifications for the same key while the exception propagates (fail-fast).
 - **GetData / GetRequiredData vs TryGetData**: Both `GetData` and `GetRequiredData` require `T : notnull`. They throw `InvalidOperationException` on KeyNotFound or type mismatch; the latter safely returns `(found, value?)`
 - **Subscribe/Unsubscribe**: Receives `Action<ISndEntity, TypedData, TypedData>` (`(target, old, new)`), internally wrapped as `Action<TypedData, TypedData>` adapting `DataObserverManager`; `_subscriptionMap` stores `(OriginalCallback, WrappedCallback)` pairs for unsubscribe matching. This data subscription channel is driven by `ObserverTopology` via `ISndEntityRawSubscription` and is not directly exposed to business strategies
 - **Recover / Release / SerializeMeta**: Save recovery / cleanup / serialization

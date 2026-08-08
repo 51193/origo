@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -201,7 +201,7 @@ public interface ISessionManager
 ```
 
 ```csharp
-public interface ISessionRun : IDisposable
+public interface ISessionRun
 {
     IBlackboard SessionBlackboard { get; }
     string LevelId { get; }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.Core.Tests
 
@@ -74,7 +74,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 状态机 | [StateMachine.md](StateMachine.zh.md) | StackStateMachine 压栈/出栈/恢复/FlushAfterLoad、空栈/空串/Dispose 边界测试、容器 CreateOrGet/序列化 |
 | 策略测试框架 | [StrategyTestScenario.md](StrategyTestScenario.zh.md) | 三阶段模式（configure/run/assert）、EntityStrategy harness、ActiveStrategy harness |
 | 帧驱动集成测试 | [Testing/Integration/Integration.md](Testing/Integration/Integration.zh.md) | GameplaySimulationHarness 完整运行时模拟：SndContext → Bootstrap → DriveFrame 帧循环 → 实体处理/黑板交互/延迟动作 |
-| 集合差异比较 | [Utility.md](Utility.zh.md) | DiffUtility 泛型集合差异比较（added/removed）+ 去重语义 |
+| 路径与类型推断 | [Utility.md](Utility.zh.md) | PathUtility 路径操作 + ValueInference int→long→float→bool→string 推断 |
 | 框架元信息 | [Meta.md](Meta.zh.md) | OrigoMeta 记录：默认横幅非空、ToString 含名称与版本、值相等语义 |
 
 ---

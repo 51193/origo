@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 策略 测试
 
@@ -140,8 +140,8 @@
 | `Quit_TriggersOnUnmounted` | Quit 触发 OnUnmounted | snd-entity-model: 观察者 |
 | `DeepClone_PreservesObserverBindings` | SndMetaData.DeepClone() 保持 ObserverIndices | snd-entity-model: 观察者 |
 | `SaveSingle_ThenRecover_PreservesObserverBindings` | Save → 新实体 Spawn + RecoverBindingsFor 后数据变更通知正常 | snd-entity-model: 观察者 |
-| `HasObserverBindingTargeting_ExistingTarget_ReturnsTrue` | 已挂载观察者时 HasBindingTargetingFrom 返回 true | Strategy README: ObserverTopology |
-| `HasObserverBindingTargeting_NonexistentTarget_ReturnsFalse` | 不存在目标绑定时返回 false | Strategy README: ObserverTopology |
+| `GetObserverNamesTargeting_ExistingTarget_ReturnsTrue` | 已挂载观察者时 GetObserverNamesTargeting 返回观察者名 | Strategy README: ObserverTopology |
+| `GetObserverNamesTargeting_NonexistentTarget_ReturnsFalse` | 不存在目标绑定时返回空集合 | Strategy README: ObserverTopology |
 | `RemoveAllObserverBindingsTargeting_ClearsBindings` | RemoveBindingsTargetingFor 清空指定 target 的全部绑定 | Strategy README: ObserverTopology |
 | `TeardownOutgoingObserverBindings_TriggersOnUnmounted` | TeardownOutgoingFor 触发 OnUnmounted | Strategy README: ObserverTopology |
 | `DataChange_OnlyTargetEntityNotified` | 数据变更仅通知观察目标实体的观察者（EntityName 和 TargetName 均为目标实体） | snd-entity-model: 观察者 |

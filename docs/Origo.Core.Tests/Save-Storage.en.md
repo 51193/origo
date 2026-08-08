@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Storage Tests
 
@@ -26,6 +26,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SavePathResolverTests.cs` | Path resolution: SaveFileHandle relative path extraction, parent directory creation, traversal attack rejection, leaf directory name |
 | `SaveGamePayloadTests.cs` | Data model: SaveGamePayload/LevelPayload defaults, multi-level access, CustomMeta |
 | `WellKnownKeysTests.cs` | Constants: ActiveSaveId, SessionTopology key name correctness |
+| `SaveIdValidationTests.cs` | Save id validation: `RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` reject invalid ids (path separators / out-of-range chars), accept valid ids |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
 | `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden |
 | `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Model
 
@@ -25,7 +25,7 @@ Origo supports a model with both **foreground sessions** and **background sessio
 ### ISessionRun
 
 ```csharp
-public interface ISessionRun : IDisposable
+public interface ISessionRun
 {
     IBlackboard SessionBlackboard { get; }
     string LevelId { get; }

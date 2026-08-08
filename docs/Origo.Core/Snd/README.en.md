@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -31,7 +31,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | `SndDefaults.cs` | `internal` — SND system default value constants. Defines `InitialSaveId` ("000"), `InitialLevelId` ("default"), `MainMenuLevelId` ("main_menu"), used by Core's internal persistence flow and startup orchestration. |
 | `SndMappings.cs` | Scene alias resolution + template registration and parsing |
 | `SndTemplateResolver.cs` | Template resolver: supports both JSON array and .map shorthand template formats |
-| `TryGetNumericExtensions.cs` | Entity data numeric type compatible read extension: bridges int/float type access mismatches. Note precision boundaries: int→float may lose precision above 2²⁴, and double→float narrowing may overflow to ±Infinity — neither is checked. Suitable for close-range in-game numbers, not for metering scenarios requiring exact representation |
+| `TryGetNumericExtensions.cs` | Entity data numeric-type compatible read extensions: tries float → int → the remaining integer types (byte/sbyte/short/ushort/char/uint/ulong) → long → double in order. Note the precision boundary: int→float may lose precision above 2²⁴, uint/ulong→float loses precision, double→float narrowing may overflow to ±Infinity — none of these is checked — suitable for close-range gameplay values, not for metrology that needs exact representation |
 | `ActiveStrategyExtensions.cs` | Generic ActiveStrategy invocation extension: eliminates JSON serialization boilerplate on the `InvokeStrategy` side |
 | `LevelBuilder.cs` | `internal` — Offline level building tool. Only used internally by framework tests and StubSndSceneHost; business code should build levels via templates and entry.json. |
 | `EntityExtensions.cs` | Entity identity comparison extension methods such as `IsSameEntityAs` |

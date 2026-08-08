@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning
 
@@ -106,6 +106,9 @@ entity.EnsureReplaceableStrategy("character.path_impl", "character.pathfind.asta
 
 5. **为什么 `AfterLoad` 不重启计划？**
    Action 策略（如 `character.action.nav_to`）作为动态添加策略，通过 `SndEntity.BuildMetaData()` → `SndStrategyManager.GetStrategyIndices()` 参与实体序列化。读档时 `SndEntity.RecoverForLifecycle()` → `SndStrategyManager.RecoverStrategiesOnly()` 完整恢复全部策略。恢复后的 Action 策略在下一帧的 `Process` 中继续执行，计划从断点自然推进，无需 `AfterLoad` 中由 `PlanExecutionStrategyBase` 显式重启。`AfterLoad` 仅需重新建立 `IntentKey` 和 `ActionStatusKey` 的数据订阅连接——这是运行时非持久化资源的 RAII 恢复。
+
+6. **为什么幂等守卫基于 `SndEntity` 具体类型检查（而不是接口查询）？**
+   `PushAction` / `RemoveCurrentAction` 用 `entity is SndEntity sndEntity && sndEntity.HasStrategyMounted(...)` 判断 action 策略是否已挂载，避免重复挂载 / 对未挂载策略执行移除（`RemoveStrategy` 对未挂载抛异常）。这可能被误判为"对桥接实体（如 `GodotSndEntity`）失效的缺陷"，但它是**故意设计且恒成立**：桥接实体把全部策略操作（`AddStrategy`/`RemoveStrategy`）、原始数据订阅（`ISndEntityRawSubscription`）与生命周期钩子（`IEntityLifecycle`）委托给内部包装的 `SndEntity`，计划引擎从 `Wire` 到 `StartIntent`/`AdvancePlan`/`PushAction`/`RemoveCurrentAction` 收到的实体参数恒为内部 `SndEntity`（数据通知回调的 target 同样如此）。因此守卫在所有真实调用路径上都为真，桥接实体上的计划行为与原生 `SndEntity` 完全一致。此结论经红测试验证（`PlanExecutionStrategyBridgeTests` 用包装内部 `SndEntity` 的委托实体忠实模拟桥接契约，全部通过）；不要将其"修复"为接口查询——当前形态无行为差异，任何改动都是无价值的 churn。若未来出现不包装 `SndEntity` 的第三方实体，`Wire` 的 `(ISndEntityRawSubscription)entity` 强转已先一步拒绝（`InvalidCastException`），守卫形态仍安全。
 
 ## 文件清单
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Storage
 
@@ -61,7 +61,12 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 - **`.write_in_progress` exists under `current/`** → refuse to read, throw exception (previous write was interrupted)
 - **Per-level three-piece set incomplete** → refuse to read (partial existence = corruption)
+## Strict Read Rules
+
+- **`.write_in_progress` exists under `current/`** → refuse to read, throw exception (previous write was interrupted)
+- **Per-level three-piece set incomplete** → refuse to read (partial existence = corruption)
 - **progress.json missing** → refuse to read
+- **Background level referenced by the topology has no payload** → refuse to load (consistent with the foreground: a topology referencing level data that does not exist must fail explicitly; silently mounting an empty session would hide data loss)
 
 ## Design Decisions
 

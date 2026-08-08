@@ -41,7 +41,7 @@ public class HealthStrategy : LifecycleStrategyBase
 ### Manage state and persistence
 
 - **Built-in save system**: current workspace + snapshot slots. Two-phase write (`current/` → `save_xxx/`) with hash-based idempotent dedup. Strict read validation on load.
-- **Background sessions**: run AI simulation, procedural generation, or off-screen world updates in a background session — same strategy logic, same data contracts as the foreground. Create one with `ctx.SessionManager.CreateBackgroundSession(key, levelId)`.
+- **Background sessions**: run AI simulation, procedural generation, or off-screen world updates in a background session — same strategy logic, same data contracts as the foreground. Create one with `entity.OwningSession.SessionManager.CreateBackgroundSession(key, levelId)` (or `runtime.SessionManager` from non-entity code).
 - **Snapshot management**: enumerate, inspect metadata, and select saves at runtime.
 
 ### Navigation, AI, and planning
@@ -67,7 +67,7 @@ public class HealthStrategy : LifecycleStrategyBase
 nc localhost 9876
 ```
 
-- **Source generator**: Roslyn incremental generator emits compile-time typed data accessors, eliminating boxing and string-key lookups in hot paths. 4 diagnostics (`ORIGOSG001`–`004`) catch misconfigurations at build time.
+- **Source generator**: Roslyn incremental generator emits compile-time typed data accessors, eliminating boxing and string-key lookups in hot paths. 5 diagnostics (`ORIGOSG001`–`005`) catch misconfigurations at build time.
 - **Test infrastructure**: `StrategyTestScenario` for declarative strategy unit tests (Configure → Simulate → Inspect). Architecture guardrail tests enforce dependency direction and strategy constraints.
 
 ### Godot 4 adapter

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Planning
 
@@ -106,6 +106,9 @@ entity.EnsureReplaceableStrategy("character.path_impl", "character.pathfind.asta
 
 5. **Why doesn't `AfterLoad` restart the plan?**
    Action strategies (e.g., `character.action.nav_to`), as dynamically added strategies, participate in entity serialization through `SndEntity.BuildMetaData()` → `SndStrategyManager.GetStrategyIndices()`. On load, `SndEntity.RecoverForLifecycle()` → `SndStrategyManager.RecoverStrategiesOnly()` fully restores all strategies. The restored Action strategy continues executing in the next frame's `Process`; the plan naturally advances from the breakpoint without `PlanExecutionStrategyBase` explicitly restarting in `AfterLoad`. `AfterLoad` only needs to re-establish data subscription connections for `IntentKey` and `ActionStatusKey` — this is the RAII recovery of runtime non-persistent resources.
+
+6. **Why do the idempotent guards check the concrete `SndEntity` type (instead of an interface query)?**
+   `PushAction` / `RemoveCurrentAction` use `entity is SndEntity sndEntity && sndEntity.HasStrategyMounted(...)` to detect whether the action strategy is already mounted, avoiding duplicate mounts and removals of non-mounted strategies (`RemoveStrategy` throws on non-mounted). This may look like a defect that "fails for bridge entities (e.g. `GodotSndEntity`)", but it is **deliberate and always true**: bridge entities delegate every strategy operation (`AddStrategy`/`RemoveStrategy`), raw data subscription (`ISndEntityRawSubscription`), and lifecycle hook (`IEntityLifecycle`) to an inner `SndEntity`, so the entity the plan engine receives — from `Wire` through `StartIntent`/`AdvancePlan`/`PushAction`/`RemoveCurrentAction`, including data-notification callback targets — is always that inner `SndEntity`. The guard therefore holds on every reachable path, and plan behavior on bridge entities is identical to native `SndEntity`. This was verified red-test style (`PlanExecutionStrategyBridgeTests` exercise a delegating entity wrapping an inner `SndEntity` that faithfully mimics the bridge contract; all pass). Do not "fix" it into an interface query — there is no behavioral difference today, and any such change is pure churn. If a third-party entity that does not wrap `SndEntity` ever appears, the `(ISndEntityRawSubscription)entity` cast in `Wire` already rejects it first (`InvalidCastException`), so the guard shape remains safe.
 
 ## File List
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Extensions Tests
 
@@ -59,6 +59,8 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `TryGetNumeric_FloatStored_ReturnsFloat` | Stored float is read back via TryGetNumeric<float> | Snd README: TryGetNumericExtensions |
 | `TryGetNumeric_IntStored_ReturnsFloat` | Stored int is read back via TryGetNumeric<float> as cross-type (42→42f) | Snd README: TryGetNumericExtensions |
 | `TryGetNumeric_LongStored_ReturnsFloat` | Stored long is read back via TryGetNumeric<float> as cross-type (123L→123f) | Snd README: TryGetNumericExtensions |
+| `TryGetNumeric_IntegerTypesStored_ReturnsFloat` | All seven integer types (byte/sbyte/short/ushort/char/uint/ulong) read back cross-type | Snd README: TryGetNumericExtensions |
+| `TryGetNumeric_BoolStored_ReturnsFalse` | Stored bool returns false | Snd README: TryGetNumericExtensions |
 | `TryGetNumeric_DoubleStored_ReturnsFloat` | Stored double is read back via TryGetNumeric<float> as cross-type (2.5d→2.5f) | Snd README: TryGetNumericExtensions |
 | `GetNumeric_FloatStored_ReturnsValue` | GetNumeric directly reads a stored float value | Snd README: TryGetNumericExtensions |
 | `GetNumeric_Missing_ReturnsFallback` | GetNumeric returns the specified fallback value for a missing key | Snd README: TryGetNumericExtensions |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -56,7 +56,7 @@ BaseStrategy
 - **BuildBindingsFor(observerName)**：序列化某 observer 的全部出边为 `List<ObserverBinding>`（按 target 分组）写入 `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**：清理某 observer 的全部出边；目标可解析则完整 `Unmount`，否则归还策略并移除记录
 - **TeardownAllBindingsFor(observer)**：对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略）的自包含清理路径，不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用。由 `SessionRun.ReleaseAllEntitiesAndClear` 在会话退出时经 `IEntityLifecycle.TeardownObserverBindings` 调用
-- **HasBindingTargetingFrom(observerName, targetName)** / **RemoveBindingsTargetingFor(observer, targetName)**：incoming 拆线支撑——查询/清理某 observer 指向特定 target 的绑定
+- **GetObserverNamesTargeting(targetName)** / **RemoveBindingsTargetingFor(observer, targetName)**：incoming 拆线支撑——查询指向特定 target 的观察者名集合、清理某 observer 指向特定 target 的绑定
 - **双向 teardown**：`SessionRun.KillPending` 同时处理 outgoing（被杀实体作为 observer）与 incoming（被杀实体作为 target，经入边索引定位观察者），通过快照防止 `OnUnmounted` 回调中的重入修改
 
 ### 观察者策略持久化
@@ -221,6 +221,9 @@ public class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 ActiveStrategy 在 `RecoverForLifecycle` (Phase 1) 中恢复，早于 `FireAfterSpawnHooks` / `FireAfterLoadHooks` (Phase 2)。这确保实体策略钩子中可以通过 `InvokeStrategy` 调用自身的 ActiveStrategy，也可以调用其他已恢复实体的 ActiveStrategy——实现加载顺序无关的跨实体互操作。
 
----
+### 为什么策略池引用计数不保证线程安全
 
+`SndStrategyPool` 的引用计数、注册表和实例缓存仅在帧线程（单线程帧模型）上访问。跨线程场景（延迟队列的入队/出队、控制台输入等）只传递动作与数据，不触碰策略池；引擎回调与业务策略钩子全部在帧线程执行。因此引用计数无需加锁——并发访问策略池属于契约违规，行为未定义。
+
+---
 [↑ 回到 Snd](../README.zh.md)

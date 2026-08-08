@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.Core.Tests
 
@@ -82,7 +82,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | State Machine | [StateMachine.md](StateMachine.en.md) | StackStateMachine push/pop/recovery/FlushAfterLoad, empty stack/empty string/Dispose boundary tests, Container CreateOrGet/serialization |
 | Strategy Test Framework | [StrategyTestScenario.md](StrategyTestScenario.en.md) | Three-phase pattern (configure/run/assert), EntityStrategy harness, ActiveStrategy harness |
 | Frame-Driven Integration Tests | [Testing/Integration/Integration.md](Testing/Integration/Integration.en.md) | GameplaySimulationHarness full runtime simulation: SndContext → Bootstrap → DriveFrame frame loop → Entity processing/Blackboard interaction/Deferred actions |
-| Collection Diff Comparison | [Utility.md](Utility.en.md) | DiffUtility generic collection diff comparison (added/removed) + dedup semantics |
+| Paths & Value Inference | [Utility.md](Utility.en.md) | PathUtility path operations + ValueInference int→long→float→bool→string inference |
 | Framework Meta-Info | [Meta.md](Meta.en.md) | OrigoMeta records: default banner non-empty, ToString includes name and version, value equality semantics |
 
 ---

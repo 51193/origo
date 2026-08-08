@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -40,9 +40,9 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 7 | `GodotFileOperations` (ReadAllText/WriteAllText/Copy/Delete guards and correctness) |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 10 | `GodotDirectoryOperations` (Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive, hidden-file enumeration/deletion) |
 | GodotNodeHandleIntegrationTests | `Tests/GodotNodeHandleIntegrationTests.cs` | 8 | `GodotNodeHandle` (Name cache, Free, SetVisible for CanvasItem/Node3D, UnsafeGetNode) |
-| GodotSndManagerInitializationTests | `Tests/GodotSndManagerInitializationTests.cs` | 4 | `GodotSndManager.BindRuntimeDependencies` / `BindContext` (null guards, normal chained binding flow) |
+| GodotSndManagerInitializationTests | `Tests/GodotSndManagerInitializationTests.cs` | 6 | `GodotSndManager.BindRuntimeDependencies` / `BindContext` (null guards, chained bind flow); unbound entity operations throw the NotReady contract error instead of NRE |
 | GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 9 | `GodotSndEntity` (construction null guards, SetData/GetData/TryGetData, type safety, fail-fast after release) |
-| GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager` (BindRuntimeDeps double bind guard, BindContext order guard, null guards, ProcessAll empty list and TickCount) |
+| GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager` (BindRuntimeDeps double bind guard, BindContext order guard, null guards, ProcessAll empty list) |
 | GodotSndManagerCreationIntegrationTests | `Tests/GodotSndManagerCreationIntegrationTests.cs` | 5 | `GodotSndManager` (CreateEntity/RemoveEntity/BuildMetaList/RequestKillEntity/GetEntities) |
 | GodotPackedSceneNodeFactoryIntegrationTests | `Tests/GodotPackedSceneNodeFactoryIntegrationTests.cs` | 4 | `GodotPackedSceneNodeFactory` (valid/invalid scene loading, child node adding, cache reuse) |
 | OrigoAutoHostBootstrapIntegrationTests | `Tests/OrigoAutoHostBootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` full `_Ready()` startup (Runtime/SndManager/ConsoleChannels) |
@@ -53,6 +53,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | TypedDataInitializerIntegrationTests | `Tests/TypedDataInitializerIntegrationTests.cs` | 1 | `TypedDataInitializer` (EnsureLoaded triggers adapter kind registration) |
 | ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 3 | Observer bindings restored across save/load; session destroy fires OnUnmounted |
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | Pre-test user:// cleanup: leftover write markers / prefixed artifacts removed, non-test and Godot system content preserved, idempotent |
+| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side |
 
 ## Running
 

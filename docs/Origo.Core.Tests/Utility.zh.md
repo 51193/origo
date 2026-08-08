@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility 测试
 
@@ -8,41 +8,16 @@
 
 ## 验证能力
 
-`DiffUtility.Diff<T>()` 和 `PathUtility` 静态路径操作的行为。
+`PathUtility` 静态路径操作与 `ValueInference` 字符串到类型值推断的行为。
 
 ## 测试文件清单
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `Utility/DiffUtilityTests.cs` | Diff 集合差异比较的正确/错误/边界路径 |
 | `Utility/PathUtilityTests.cs` | 路径拼接、遍历攻击检测、父目录提取、glob 后缀解析 |
+| `Utility/ValueInferenceTests.cs` | int → long → float → bool → string 推断顺序与类型精确性 |
 
 ## 测试详情
-
-### 正确路径
-
-| 测试方法 | 验证的行为 | 文档出处 |
-|---------|-----------|---------|
-| `Diff_AddedItems_Detected` | 添加项正确检出 | `DiffUtility` public API |
-| `Diff_RemovedItems_Detected` | 删除项正确检出 | `DiffUtility` public API |
-| `Diff_AddedAndRemoved` | 同时有添加和删除的混合情况 | `DiffUtility` public API |
-| `Diff_Duplicates_TreatedAsSingle` | 重复元素去重后参与比较 | `DiffUtility` public API |
-
-### 边界路径
-
-| 测试方法 | 边界条件 | 预期行为 |
-|---------|---------|---------|
-| `Diff_EmptyBoth_ReturnsEmpty` | 两个集合均为空 | added、removed 均为空列表 |
-| `Diff_EmptyOld_NewHasItems_ReturnsAdded` | 旧集合为空 | 全部新项计为 added |
-| `Diff_EmptyNew_OldHasItems_ReturnsRemoved` | 新集合为空 | 全部旧项计为 removed |
-| `Diff_NoChange_ReturnsEmpty` | 两集合内容相同 | added、removed 均为空列表 |
-
-### 错误路径
-
-| 测试方法 | 触发的错误 | 预期行为 |
-|---------|-----------|---------|
-| `Diff_NullOld_Throws` | oldItems 为 null | `ArgumentNullException` |
-| `Diff_NullNew_Throws` | newItems 为 null | `ArgumentNullException` |
 
 ### PathUtility 正确路径
 
@@ -72,11 +47,11 @@
 | `GetParentDirectory_AtRoot_Throws` | 根路径无父目录 | `InvalidOperationException` |
 | `GetParentDirectory_SchemeRoot_Throws` | `user://`/`res://` scheme 根无父目录 | `InvalidOperationException` |
 
-## 已知覆盖缺口
+### ValueInference 推断顺序
 
-| 缺口描述 | 影响 | 文档依据 |
-|---------|------|---------|
-| Diff 对非 IEquatable<T> 的自定义引用类型的去重/比较 | 引用相等 vs 值相等语义 | DiffUtility |
+| 测试方法 | 验证的行为 |
+|---------|-----------|
+| `Infer_ReturnsFirstMatchingTypedValue` | 按 int → long → float → bool → string 顺序返回第一个可解析类型；`"42"`→int、`"3000000000"`→long、`"3.14"`→float、`"true"`→bool、其余→string（含空串与 `"12abc"` 原样返回） |
 
 ---
 

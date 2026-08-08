@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Strategy Tests
 
@@ -140,8 +140,8 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `Quit_TriggersOnUnmounted` | Quit triggers OnUnmounted | snd-entity-model: Observer |
 | `DeepClone_PreservesObserverBindings` | SndMetaData.DeepClone() preserves ObserverIndices | snd-entity-model: Observer |
 | `SaveSingle_ThenRecover_PreservesObserverBindings` | Save → new entity Spawn + RecoverBindingsFor; data change notification works | snd-entity-model: Observer |
-| `HasObserverBindingTargeting_ExistingTarget_ReturnsTrue` | HasBindingTargetingFrom returns true when observer is mounted | Strategy README: ObserverTopology |
-| `HasObserverBindingTargeting_NonexistentTarget_ReturnsFalse` | Returns false when target binding does not exist | Strategy README: ObserverTopology |
+| `GetObserverNamesTargeting_ExistingTarget_ReturnsTrue` | GetObserverNamesTargeting returns the observer name when mounted | Strategy README: ObserverTopology |
+| `GetObserverNamesTargeting_NonexistentTarget_ReturnsFalse` | Returns an empty collection when no binding targets the name | Strategy README: ObserverTopology |
 | `RemoveAllObserverBindingsTargeting_ClearsBindings` | RemoveBindingsTargetingFor clears all bindings for a specified target | Strategy README: ObserverTopology |
 | `TeardownOutgoingObserverBindings_TriggersOnUnmounted` | TeardownOutgoingFor triggers OnUnmounted | Strategy README: ObserverTopology |
 | `DataChange_OnlyTargetEntityNotified` | Data changes only notify observers of the target entity (EntityName and TargetName are both the target entity) | snd-entity-model: Observer |

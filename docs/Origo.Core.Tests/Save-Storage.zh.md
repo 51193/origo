@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：存储 测试
 
@@ -30,6 +30,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SaveSnapshotMarkerTests.cs` | 快照完整性：快照目录无 .write_in_progress 残留 |
 | `StaleLevelDirectoryCleanupTests.cs` | 回归：完整保存后 `current/` 与 payload 关卡集合一致——销毁后台会话后其关卡目录被清理，不泄漏进后续快照 |
 | `WellKnownKeysTests.cs` | 常量：ActiveSaveId、SessionTopology 键名正确性 |
+| `SaveIdValidationTests.cs` | save id 校验：`RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` 拒绝非法 id（含路径分隔符/越界字符），合法 id 接受 |
 
 ## SaveStorageContractTests 测试详情
 

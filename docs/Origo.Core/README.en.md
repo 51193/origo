@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.Core
 
@@ -27,7 +27,7 @@
 | [Serialization](Serialization/README.en.md) | Type mapping | TypeStringMapping (CLR types ↔ stable string identifiers) |
 | [Snd](Snd/README.en.md) | SND entity system | Strategy→Entity→Data→Scene Host→Numeric Recipe Loading — full stack |
 | [StateMachine](StateMachine/README.en.md) | String-stack state machine | StackStateMachine + strategy hooks + persistence model |
-| [Utility](Utility/README.en.md) | General utilities | DiffUtility: collection diff comparison |
+| [Utility](Utility/README.en.md) | General utilities | Path normalization (PathUtility) and string-to-value inference (ValueInference) |
 
 > The TypedData source generator is a standalone project [Origo.SourceGeneration](../Origo.SourceGeneration/README.en.md), not part of Core.
 

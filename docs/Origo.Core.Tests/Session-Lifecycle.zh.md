@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -548,7 +548,6 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | 后台会话与前台共享同一 levelId 时的冲突自动解决 | SwitchForeground 自动保存销毁后台 | session-model: levelId 唯一性约束 |
-| ISessionManager.ProcessAllSessions includeForeground=true 的行为 | 前台是否参与 ProcessAll | ISessionManager |
 | 大量后台会话（100+）时的性能边界 | 极端并发会话数 | — |
 | ProgressRun.LoadFromPayload 对 Payload.Levels 为 null 的处理 | null Levels 的防御 | session-model |
 | 会话双层 Dispose 时 ForegroundSession 与外部引用的竞态 | 外部持有 ISessionRun 引用在 Dispose 后使用 | — |

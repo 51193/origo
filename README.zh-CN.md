@@ -41,7 +41,7 @@ public class HealthStrategy : LifecycleStrategyBase
 ### 状态管理与持久化
 
 - **内置存档系统**：当前工作区 + 快照槽位。两阶段写入（`current/` → `save_xxx/`），基于哈希的幂等去重，加载时严格校验完整性。
-- **后台 Session**：在后台运行 AI 仿真、程序化生成或离屏世界更新——与前台 Session 走同一套策略逻辑和数据契约。通过 `ctx.SessionManager.CreateBackgroundSession(key, levelId)` 创建。
+- **后台 Session**：在后台运行 AI 仿真、程序化生成或离屏世界更新——与前台 Session 走同一套策略逻辑和数据契约。通过 `entity.OwningSession.SessionManager.CreateBackgroundSession(key, levelId)` 创建（非实体代码可用 `runtime.SessionManager`）。
 - **快照管理**：运行时枚举存档、查看元数据、自由选择加载。
 
 ### 导航、AI 与规划
@@ -67,7 +67,7 @@ public class HealthStrategy : LifecycleStrategyBase
 nc localhost 9876
 ```
 
-- **源码生成器**：Roslyn 增量生成器在编译期生成类型化数据访问器，消除装箱和字符串 key 查找。4 个诊断规则（`ORIGOSG001`–`004`）在编译时捕获配置错误。
+- **源码生成器**：Roslyn 增量生成器在编译期生成类型化数据访问器，消除装箱和字符串 key 查找。5 个诊断规则（`ORIGOSG001`–`005`）在编译时捕获配置错误。
 - **测试基础设施**：`StrategyTestScenario` 声明式策略单元测试框架（Configure → Simulate → Inspect）。架构护栏测试强制执行依赖方向和策略约束。
 
 ### Godot 4 适配器

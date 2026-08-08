@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
@@ -217,7 +217,7 @@ The generated content falls into two sets based on **whether the current compila
 
 #### Source Generator Code Location
 
-The generator source lives under `Origo.SourceGeneration/` as 5 partial files (~1000 lines total): `TypedDataGenerator.cs` (pipeline and input extraction), `TypedDataGenerator.HomeGeneration.cs` (home-assembly generation), `TypedDataGenerator.AdapterGeneration.cs` (adapter generation), `TypedDataGenerator.FactoryGeneration.cs` (`TypedDataFactory<T>` branch generation), and `TypedDataGenerator.Diagnostics.cs` (diagnostic definitions). The core `GenerateTypedDataFactory` (`FactoryGeneration.cs`) iterates all registered types and generates `typeof(T) == typeof(...)`-style branches one by one.
+The generator source lives under `Origo.SourceGeneration/` as 5 partial files (~1085 lines total): `TypedDataGenerator.cs` (pipeline and input extraction), `TypedDataGenerator.HomeGeneration.cs` (home-assembly generation), `TypedDataGenerator.AdapterGeneration.cs` (adapter generation), `TypedDataGenerator.FactoryGeneration.cs` (`TypedDataFactory<T>` branch generation), and `TypedDataGenerator.Diagnostics.cs` (diagnostic definitions). The core `GenerateTypedDataFactory` (`FactoryGeneration.cs`) iterates all registered types and generates `typeof(T) == typeof(...)`-style branches one by one.
 
 ---
 
@@ -331,7 +331,8 @@ public static bool TryExtract(TypedData source, out T value)
     // ... float, double, bool, char, string ...
     if (typeof(T) == typeof(string) && source._kind == 13)
     {
-        if (source._ref is T t) { value = t; return true; }
+        object? rawRef = source._ref;
+        value = Unsafe.As<object?, T>(ref rawRef)!;   // bit reinterpretation (no castclass); null yields found=true + null
     }
     // fallback: registered but non-inline types → ToObject + cast
     if (source._kind != 0 && source._kind != TypedData.UnregisteredKind)

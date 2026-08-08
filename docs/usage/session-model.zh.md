@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话模型
 
@@ -25,7 +25,7 @@ Origo 支持**前台会话**和**后台会话**并存的模型，两种会话通
 ### ISessionRun
 
 ```csharp
-public interface ISessionRun : IDisposable
+public interface ISessionRun
 {
     IBlackboard SessionBlackboard { get; }
     string LevelId { get; }

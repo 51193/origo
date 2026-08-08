@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -31,7 +31,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | `SndDefaults.cs` | `internal` — SND 系统默认值常量。定义 `InitialSaveId`（"000"）、`InitialLevelId`（"default"）、`MainMenuLevelId`（"main_menu"），供 Core 内部持久化流程和启动编排使用。 |
 | `SndMappings.cs` | 场景别名解析 + 模板注册与解析 |
 | `SndTemplateResolver.cs` | 模板解析器：支持 JSON 数组和 .map 简写两种模板格式 |
-| `TryGetNumericExtensions.cs` | 实体数据数值类型兼容读取扩展：桥接 int/float 等类型存取不匹配。注意精度边界：int→float 在 >2²⁴ 时可能丢失精度，double→float 收缩可能溢出为 ±Infinity，均不检查——适合游戏内近距离数值，不适合需要精确表示的计量场景 |
+| `TryGetNumericExtensions.cs` | 实体数据数值类型兼容读取扩展：按 float → int → 其余整数类型（byte/sbyte/short/ushort/char/uint/ulong）→ long → double 顺序尝试。注意精度边界：int→float 在 >2²⁴ 时可能丢失精度，uint/ulong→float 有精度损失，double→float 收缩可能溢出为 ±Infinity，均不检查——适合游戏内近距离数值，不适合需要精确表示的计量场景 |
 | `ActiveStrategyExtensions.cs` | 泛型 ActiveStrategy 调用扩展：消除 `InvokeStrategy` 侧的 JSON 序列化样板 |
 | `LevelBuilder.cs` | `internal` — 离线关卡构建工具。仅框架测试和 StubSndSceneHost 内部使用；业务代码应通过模板和 entry.json 构建关卡。 |
 | `EntityExtensions.cs` | `IsSameEntityAs` 等实体身份比较扩展方法 |

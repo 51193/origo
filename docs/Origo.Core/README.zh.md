@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.Core
 
@@ -27,7 +27,7 @@
 | [Serialization](Serialization/README.zh.md) | 类型映射 | TypeStringMapping（CLR 类型 ↔ 稳定字符串标识）|
 | [Snd](Snd/README.zh.md) | SND 实体系统 | 策略→实体→数据→场景宿主→数值配方加载 完整堆栈 |
 | [StateMachine](StateMachine/README.zh.md) | 字符串栈状态机 | StackStateMachine + 策略钩子 + 持久化模型 |
-| [Utility](Utility/README.zh.md) | 通用工具 | DiffUtility：集合差异比较 |
+| [Utility](Utility/README.zh.md) | 通用工具 | 路径规范化（PathUtility）与字符串到类型值推断（ValueInference） |
 
 > TypedData 源码生成器是独立项目 [Origo.SourceGeneration](../Origo.SourceGeneration/README.zh.md)，不在 Core 内。
 

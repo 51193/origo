@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 编译期优化全链路解析
 
@@ -217,7 +217,7 @@ Source Generator 通过 Roslyn `IIncrementalGenerator` 管线在编译期被调�
 
 #### 源码生成器代码位置
 
-生成器源码位于 `Origo.SourceGeneration/` 下，拆分为 5 个 partial 文件（共 ~1000 行）：`TypedDataGenerator.cs`（管线与输入提取）、`TypedDataGenerator.HomeGeneration.cs`（Home 程序集生成）、`TypedDataGenerator.AdapterGeneration.cs`（适配层生成）、`TypedDataGenerator.FactoryGeneration.cs`（`TypedDataFactory<T>` 分支生成）、`TypedDataGenerator.Diagnostics.cs`（诊断定义）。核心的 `GenerateTypedDataFactory`（`FactoryGeneration.cs`）遍历所有注册类型并逐条生成 `typeof(T) == typeof(...)` 风格的分支。
+生成器源码位于 `Origo.SourceGeneration/` 下，拆分为 5 个 partial 文件（共 ~1085 行）：`TypedDataGenerator.cs`（管线与输入提取）、`TypedDataGenerator.HomeGeneration.cs`（Home 程序集生成）、`TypedDataGenerator.AdapterGeneration.cs`（适配层生成）、`TypedDataGenerator.FactoryGeneration.cs`（`TypedDataFactory<T>` 分支生成）、`TypedDataGenerator.Diagnostics.cs`（诊断定义）。核心的 `GenerateTypedDataFactory`（`FactoryGeneration.cs`）遍历所有注册类型并逐条生成 `typeof(T) == typeof(...)` 风格的分支。
 
 ---
 
@@ -331,7 +331,8 @@ public static bool TryExtract(TypedData source, out T value)
     // ... float, double, bool, char, string ...
     if (typeof(T) == typeof(string) && source._kind == 13)
     {
-        if (source._ref is T t) { value = t; return true; }
+        object? rawRef = source._ref;
+        value = Unsafe.As<object?, T>(ref rawRef)!;   // 位重解释（非 castclass），null 时返回 found=true + null
     }
     // fallback: 注册但非内联类型 → ToObject + cast
     if (source._kind != 0 && source._kind != TypedData.UnregisteredKind)
