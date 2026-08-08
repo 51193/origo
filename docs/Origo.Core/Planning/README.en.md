@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Planning
 
@@ -24,7 +24,7 @@ Intent-driven plan execution base class. Encapsulates the complete lifecycle fro
 | `IntentKey` | `abstract string` | Entity data key storing the current intent string |
 | `IntentStatusKey` | `abstract string` | Entity data key storing intent execution status |
 | `PlanStepKey` | `abstract string` | Entity data key storing the current plan step type |
-| `ActionKey` | `abstract string` | Entity data key storing the current action descriptor. Internally uses the `"stepType,param"` comma format: `AdvancePlan` compares the comma-prefix against `PlanStepKey` to detect action switches. Every step entry always writes the canonical `"stepType"` form — re-entering the same step clears any stale `,param` suffix and re-notifies subscribers |
+| `ActionKey` | `abstract string` | Entity data key storing the current action descriptor. Every step entry always writes the canonical `"stepType"` form — re-entering the same step clears any stale `,param` suffix and re-notifies subscribers |
 | `ActionStatusKey` | `abstract string` | Entity data key storing action execution status |
 | `ResolveNextStep(intent, currentStep, failed, entity)` | `abstract string?` | Returns next step based on intent and current step; `null`/empty terminates the plan |
 | `StepToActionIndex(stepType)` | `abstract string?` | Step type → Action strategy index; `null`/empty means no strategy needs to be mounted for this step |
@@ -33,7 +33,7 @@ Intent-driven plan execution base class. Encapsulates the complete lifecycle fro
 
 | Member | Default | Description |
 |--------|---------|-------------|
-| `IntentStatusActive` | `"active"` | Intent active status value |
+| `IntentStatusActive` | `"active"` | Intent active status value (written to `IntentStatusKey` by the framework when the intent starts executing; the `OnIntentStarted` hook can override it) |
 | `IntentStatusCompleted` | `"completed"` | Intent completed status value |
 | `IntentStatusFailed` | `"failed"` | Intent failed-termination status value (written when a plan step fails and no further step exists) |
 | `ActionStatusExecuting` | `"executing"` | Action executing status value |

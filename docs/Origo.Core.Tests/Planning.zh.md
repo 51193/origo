@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning 测试
 
@@ -28,6 +28,7 @@
 |---------|-----------|---------|
 | `AfterSpawn_IntentPresent_StartsPlan` | AfterSpawn 时 intent 数据键存在，自动启动计划（写入 PlanStepKey=第一步） | Planning |
 | `AfterAdd_IntentPresent_StartsPlan` | AfterAdd 时 intent 存在，同样启动计划 | Planning |
+| `StartIntent_WritesActiveIntentStatus` | 意图开始执行时 `IntentStatusKey` 写入 `"active"`（与终态 completed/failed 对应的激活态） | Planning |
 | `AfterLoad_IntentPresent_DoesNotRestartPlan` | AfterLoad 不重置已存在的计划步骤（存档恢复） | Planning |
 | `StartIntent_ClearsPreviousPlanState` | 启动新 intent 时清除旧步骤/Action 数据 | Planning |
 | `ActionCompletion_InSndEntity_AdvancesToNextStep` | ActionStatus="completed" 后通过数据订阅推进到下一步，卸载旧 Action 并挂载新 Action | Planning |

@@ -146,6 +146,25 @@ public class PlanExecutionStrategyBaseTests
     }
 
     [Fact]
+    public void StartIntent_WritesActiveIntentStatus()
+    {
+        var strategy = new SimplePlanStrategy();
+        var entity = new StubSndEntity("e");
+        entity.SetData(_intentKey, "test");
+        ISndContext ctx = NullSndContext.Instance;
+
+        strategy.AfterSpawn(entity, ctx);
+
+        // The intent-status protocol marks the intent as active the moment it
+        // starts executing — the counterpart of the terminal states
+        // (completed/failed) written when the plan ends. Observers reading the
+        // status key must not see a stale value from a previous plan.
+        var (foundStatus, status) = entity.TryGetData<string>(_intentStatusKey);
+        Assert.True(foundStatus);
+        Assert.Equal("active", status);
+    }
+
+    [Fact]
     public void AfterLoad_IntentPresent_DoesNotRestartPlan()
     {
         var strategy = new SimplePlanStrategy();

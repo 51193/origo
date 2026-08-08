@@ -251,6 +251,11 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
         RemoveCurrentAction(entity);
         entity.SetData(PlanStepKey, "");
 
+        // Mark the intent active before the user-visible extension hook so
+        // observers reading the status key never see a stale value from a
+        // previous plan; OnIntentStarted may still override the status.
+        entity.SetData(IntentStatusKey, IntentStatusActive);
+
         OnIntentStarted(entity, intent);
 
         var step = ResolveNextStep(intent, "", false, entity);

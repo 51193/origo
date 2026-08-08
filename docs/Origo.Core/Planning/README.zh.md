@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Planning/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning
 
@@ -24,7 +24,7 @@
 | `IntentKey` | `abstract string` | 实体 data 键，存储当前意图字符串 |
 | `IntentStatusKey` | `abstract string` | 实体 data 键，存储意图执行状态 |
 | `PlanStepKey` | `abstract string` | 实体 data 键，存储当前计划步骤类型 |
-| `ActionKey` | `abstract string` | 实体 data 键，存储当前动作描述符。内部采用 `"stepType,param"` 逗号格式：`AdvancePlan` 取逗号前前缀与 `PlanStepKey` 比较，判断动作是否已切换。每次进入新步骤时总是写入规范形式 `"stepType"`——连续执行同一步骤会清掉上次残留的 `,param` 后缀并重新通知订阅者 |
+| `ActionKey` | `abstract string` | 实体 data 键，存储当前动作描述符。每次进入新步骤时总是写入规范形式 `"stepType"`——连续执行同一步骤会清掉上次残留的 `,param` 后缀并重新通知订阅者 |
 | `ActionStatusKey` | `abstract string` | 实体 data 键，存储动作执行状态 |
 | `ResolveNextStep(intent, currentStep, failed, entity)` | `abstract string?` | 根据意图和当前步骤返回下一步骤，`null`/空终止计划 |
 | `StepToActionIndex(stepType)` | `abstract string?` | 步骤类型 → Action 策略索引，`null`/空表示该步骤无需挂载策略 |
@@ -33,7 +33,7 @@
 
 | 成员 | 默认值 | 说明 |
 |------|--------|------|
-| `IntentStatusActive` | `"active"` | 意图激活状态值 |
+| `IntentStatusActive` | `"active"` | 意图激活状态值（意图开始执行时由框架写入 `IntentStatusKey`；`OnIntentStarted` 钩子可覆写该值） |
 | `IntentStatusCompleted` | `"completed"` | 意图完成状态值 |
 | `IntentStatusFailed` | `"failed"` | 意图失败终止状态值（计划步骤失败且无后续步骤时写入） |
 | `ActionStatusExecuting` | `"executing"` | 动作执行中状态值 |

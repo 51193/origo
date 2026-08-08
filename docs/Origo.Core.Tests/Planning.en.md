@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Planning Tests
 
@@ -28,6 +28,7 @@ ensuring Action strategy mount/unmount goes through the real `SndStrategyManager
 |-------------|-----------------|-----------|
 | `AfterSpawn_IntentPresent_StartsPlan` | When intent data key exists at AfterSpawn, automatically starts plan (writes PlanStepKey=first step) | Planning |
 | `AfterAdd_IntentPresent_StartsPlan` | When intent exists at AfterAdd, also starts plan | Planning |
+| `StartIntent_WritesActiveIntentStatus` | When an intent starts executing, `IntentStatusKey` is written as `"active"` (the active state corresponding to the terminal completed/failed states) | Planning |
 | `AfterLoad_IntentPresent_DoesNotRestartPlan` | AfterLoad does not reset existing plan steps (save restoration) | Planning |
 | `StartIntent_ClearsPreviousPlanState` | Starting new intent clears old step/Action data | Planning |
 | `ActionCompletion_InSndEntity_AdvancesToNextStep` | After ActionStatus="completed", advances to next step via data subscription, unmounts old Action and mounts new Action | Planning |
