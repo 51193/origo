@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Lifecycle/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle (Abstractions)
 
@@ -13,7 +13,7 @@ Defines abstract interfaces for session management. `ISessionManager` and `ISess
 | File | Responsibility |
 |------|------|
 | `ISessionManager.cs` | Session manager: create/destroy/find sessions, manage full lifecycle of foreground and background sessions |
-| `ISessionRun.cs` | Session runtime (`: IDisposable`): SessionBlackboard + entity operation facade (FindByName/GetEntities/Spawn/SpawnMany/RequestKillEntity) + SessionManager + LevelId + IsFrontSession + state machine container |
+| `ISessionRun.cs` | Session runtime (does not inherit `IDisposable`; destruction goes through `ISessionManager.DestroySession` only): SessionBlackboard + entity operation facade (FindByName/GetEntities/Spawn/SpawnMany/RequestKillEntity) + SessionManager + LevelId + IsFrontSession + state machine container |
 
 ## ISessionManager Members
 

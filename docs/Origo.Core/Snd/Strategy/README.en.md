@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -50,7 +50,7 @@ Each scene host that creates real `SndEntity` instances (`FullMemorySndSceneHost
 
 - **BindContext(ctx)**: Injected by the host when binding the context, used for `OnMounted`/`OnDataChanged`/`OnUnmounted` callbacks
 - **Mount(observer, target, observerIndex)**: Acquire strategy instance → establish `SubscribeDataRaw` wiring on target for each key declared by `[ObserveData]` attribute → record binding → trigger `OnMounted`. Mounting is atomic: if wiring or `OnMounted` throws, all established subscriptions are canceled, partially-added bindings are removed, strategy reference is returned to pool, and the exception propagates. Mounting the same (observer, target, observerIndex) twice throws `InvalidOperationException` (consistent with the passive/active strategy managers' duplicate-mount rejection)
-- **Unmount(observer, target, observerIndex)**: Tear down `UnsubscribeDataRaw` → trigger `OnUnmounted` → release pool reference → remove binding record. Throws `InvalidOperationException` when the binding does not exist (fail-fast, consistent with `RemoveStrategy` throwing on a non-mounted index)
+- **Unmount(observer, target, observerIndex)**: Remove binding record → tear down `UnsubscribeDataRaw` → trigger `OnUnmounted` → release pool reference. The binding is removed before the callbacks so re-entrant unmounting from inside `OnUnmounted` is safe; a `finally` block guarantees the pool reference is returned even when a hook throws. Throws `InvalidOperationException` when the binding does not exist (fail-fast, consistent with `RemoveStrategy` throwing on a non-mounted index)
 - **ReleaseStrategiesFor(observer)**: Release all strategy references held by an observer and clear its outgoing edges (does not trigger `OnUnmounted`, does not unsubscribe), corresponding to the `ReleaseStrategiesOnly` phase of entity teardown
 - **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`. A missing or blank target (inconsistent save topology) throws `InvalidOperationException` (fail-fast) instead of being silently skipped
 - **BuildBindingsFor(observerName)**: Serialize an observer's full outgoing edges as `List<ObserverBinding>` (grouped by target) into `StrategyMetaData`

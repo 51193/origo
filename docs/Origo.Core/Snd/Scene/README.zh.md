@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene
 
@@ -13,7 +13,7 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 
 | 文件 | 职责 |
 |------|------|
-| `SndEntityFactory.cs` | 公共静态工具：`Spawn(host, meta)` = `host.CreateEntity` + 触发 AfterSpawn（钩子抛异常时回滚实体：移出宿主 + 拆观察者 + 释放策略/节点）；`SpawnMany(host, metas)` = 两阶段（全部创建后再统一触发 AfterSpawn，失败时回滚未完成钩子的实体） |
+| `SndEntityFactory.cs` | 公共静态工具：`Spawn(host, meta)` = `host.CreateEntity` + 触发 AfterSpawn（钩子抛异常时回滚实体：移出宿主 + 拆观察者 + 释放策略/节点）；`SpawnMany(host, metas)` = 两阶段（全部创建后再统一触发 AfterSpawn，创建阶段失败与钩子阶段失败都会回滚所有未完成 AfterSpawn 的实体） |
 | `FullMemorySndSceneHost.cs` | 完整内存场景宿主，创建真实 SndEntity，持有 per-scene-host 观察者拓扑，支持归属会话绑定 |
 | `StubSndSceneHost.cs` | 轻量存根场景宿主，使用简单 StubSndEntity（无策略/节点），用于单元测试和 LevelBuilder 离线构建 |
 | `ISndContextAttachableSceneHost.cs` | 接口：允许会话构造时把 `ISndContext` 绑定到宿主（`BindContext`） |
@@ -80,7 +80,7 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 
 ### 为什么 spawn 逻辑集中在 SndEntityFactory
 
-`SndEntityFactory.Spawn/SpawnMany` 是"创建实体 + 触发 AfterSpawn"的唯一权威实现。`ISessionRun.Spawn/SpawnMany` 委托给它，适配层与自动初始化器也复用它。单一来源保证调整 spawn 行为只需改一处，避免多套 spawn 逻辑产生分歧。`SndEntityFactory.SpawnMany` 采用两阶段（全部创建后再统一触发钩子），使 AfterSpawn 钩子可见全部兄弟实体。**钩子失败的回滚**：AfterSpawn 抛异常时实体已创建（策略/节点已获取），`Spawn` 立即回滚（`host.RemoveEntity` + `TeardownObserverBindings` + `ReleaseStrategiesOnly` + `TeardownOnly`）后原样传播异常，杜绝半生成实体与策略引用泄漏；`SpawnMany` 对"钩子已成功触发的实体"保留、对"未触发钩子的实体"（含抛异常的当前实体）一并回滚。
+`SndEntityFactory.Spawn/SpawnMany` 是"创建实体 + 触发 AfterSpawn"的唯一权威实现。`ISessionRun.Spawn/SpawnMany` 委托给它，适配层与自动初始化器也复用它。单一来源保证调整 spawn 行为只需改一处，避免多套 spawn 逻辑产生分歧。`SndEntityFactory.SpawnMany` 采用两阶段（全部创建后再统一触发钩子），使 AfterSpawn 钩子可见全部兄弟实体。**失败的回滚**：AfterSpawn 抛异常时实体已创建（策略/节点已获取），`Spawn` 立即回滚（`host.RemoveEntity` + `TeardownObserverBindings` + `ReleaseStrategiesOnly` + `TeardownOnly`）后原样传播异常，杜绝半生成实体与策略引用泄漏；`SpawnMany` 对"钩子已成功触发的实体"保留、对"未触发钩子的实体"（含抛异常的当前实体）一并回滚；若**创建阶段**本身失败（宿主拒绝某个 meta），已创建的实体同样全部回滚——创建阶段完成的实体从未触发 AfterSpawn，不允许以"已注册但从未 spawn"的幽灵实体残留在宿主中。
 
 ### 为什么 FullMemorySndSceneHost 延迟绑定 World/Context
 

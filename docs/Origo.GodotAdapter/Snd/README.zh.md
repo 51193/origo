@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -35,6 +35,7 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 - **实现 IObserverTopologyHost**（internal）：暴露本场景宿主专用的 `ObserverTopology`，供 Core 的观察者挂载/卸载编排使用
 - **实现 IOwningSessionBindable**（internal）：`SetOwningSession` 将会话绑定到宿主，供 Core 会话创建流程使用
 - **集合逻辑委托**：实体增删、批量恢复回滚、击杀标记、帧处理等编排逻辑集中在纯 C# 的 `SndEntityCollection<T>`（internal，无 Godot 依赖），由测试直接覆盖；GodotSndManager 仅桥接集合与 Godot 节点树（`AddChild`/`RemoveChild`/`Free` 经 `DetachAndFree` 回调注入）
+- **`_ExitTree` 越界兜底**：当本管理器节点未经框架的会话 teardown 直接离开场景树（场景切换、业务代码直接 `RemoveChild`/`Free`）时，`_ExitTree` 释放 Core 侧状态：对每个实体执行观察者绑定拆线（退订 + `OnUnmounted` + 归还池引用）与策略释放，随后清空实体集合（引擎已负责节点树的物理释放）。钩子异常仅记 Warning 不中断清理（兜底路径为越界使用而存在）；框架正常路径先清空集合再释放节点，`_ExitTree` 幂等空转
 - **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，集合回滚释放所有已创建的实体（经 `SndEntityCollection` 的 staged 列表）
 - **GetEntities()**：返回**快照**（非实时视图）——与 Core 宿主契约一致：迭代期间宿主被修改不会抛 "collection was modified"，且快照不可下转型为可变后备列表（杜绝绕过集合管理的手工修改）
 - **BuildMetaList()**：经集合调用实体的 `BuildSndMetaData()` 收集元数据

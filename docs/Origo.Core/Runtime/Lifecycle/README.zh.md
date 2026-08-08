@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -122,7 +122,11 @@ SystemRun (由 SndContext 构造并持有)
 
 ### 为什么前台会话键固定为 `__foreground__`
 
-前/后台会话共享同一接口 `ISessionRun`，差异仅在于内部实现（`ISndSceneHost` 的注入方式）和键名。固定键名消除了"查找前台"的逻辑分支——直接从 SessionManager 中按常量键取值。
+前/后台会话共享同一接口 `ISessionRun`，差异仅在于内部实现（`ISndSceneHost` 的注入方式）和键名。固定键名消除了"查找前台"的逻辑分支——直接从 SessionManager 中按常量键取值。`__foreground__` 是**保留键**：`CreateBackgroundSession` 拒绝使用它（抛 `InvalidOperationException`），前台槽位只能由框架的前台挂载路径（`CreateForegroundSession` / 加载恢复）占据。
+
+### 为什么 ISessionRun 不继承 IDisposable
+
+会话销毁是管理器的能力：业务代码必须通过 `ISessionManager.DestroySession`（或框架的前台切换/清理路径）销毁会话。`ISessionRun` 因此**不暴露** `Dispose()`（`IDisposable` 只由内部具体 `SessionRun` 实现，供框架与测试使用）——若策略可直接 `OwningSession.Dispose()`，销毁就会绕过管理器的挂载校验，形成 §1.4 禁止的第二条访问路径。
 
 ### 为什么运行时容器按层分离
 

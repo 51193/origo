@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/CommandHandlers/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # CommandHandlers
 
@@ -46,7 +46,7 @@ Writes a value to the blackboard. Value type is auto-inferred: integer → Int32
 spawn <name> <template>
 spawn name=<name> template=<template>
 ```
-Spawns an entity from a template. Mixing positional and named arguments is not supported. Templates resolve via `SndWorld.ResolveTemplate`.
+Spawns an entity from a template. Mixing positional and named arguments is not supported. Templates resolve via `SndWorld.ResolveTemplate`; an **unknown template alias** (or templates not yet loaded) is treated as a user input error and returns an error message (consistent with `bb_get`'s unknown-layer handling), never breaking out of the command loop.
 
 ### invoke_strategy
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Serialization/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Serialization (Save)
 
@@ -37,7 +37,7 @@
 
 ### SaveContext
 
-Save 模块的核心编排对象，由 `ProgressRun` 持有：
+Save 模块的核心编排对象，**瞬态对象**——每次保存/加载操作按需新建，不被任何运行时组件持有：
 
 ```
 SaveContext = IBlackboard(Progress) + IBlackboard(Session) + SndWorld

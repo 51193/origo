@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Converters/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Converters
 
@@ -56,7 +56,7 @@
 
 序列化边界：写入时 `TypedData.Data` 将内联值装箱为 `object`；读取时对已注册类型通过 `FromObject` 解除装箱还原内联值。未注册类型的值仍需经过 `object?` 装箱穿越序列化边界。
 
-当指定的具体类型在注册表中无精确匹配时（例如存储了 `ReadOnlyDictionary<string,string>` 但只注册了 `IReadOnlyDictionary<string,string>` 的转换器），`DataSourceConverterRegistry` 会自动沿基类链和接口链回退查找。这允许以接口类型注册转换器，同时支持存储其具体实现类型。
+当指定的具体类型在注册表中无精确匹配时（例如存储了 `ReadOnlyDictionary<string,string>` 但只注册了 `IReadOnlyDictionary<string,string>` 的转换器），`DataSourceConverterRegistry` 会自动沿基类链和接口链回退查找。这允许以接口类型注册转换器，同时支持存储和读取其具体实现类型：`StringDictionaryConverter` 返回 `ReadOnlyDictionary<string,string>` 实例（与请求类型兼容）。若转换器返回的实例与请求类型不兼容（如请求 `SortedDictionary`），读取立即抛 `InvalidOperationException`（fail-fast，报错指明转换器与请求类型，而非晦涩的 `InvalidCastException`），避免静默返回类型漂移的值导致后续序列化失败。
 
 ## 设计决策
 

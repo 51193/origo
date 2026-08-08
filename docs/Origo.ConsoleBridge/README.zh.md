@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.ConsoleBridge
 
@@ -27,7 +27,7 @@ telnet client ──TCP:9876──> ConsoleBridgeServer
 
 **线程模型**：
 - **异步 I/O**：`AcceptTcpClientAsync` 和 `ReadLineAsync` 在 ThreadPool 上运行，不占用专用线程。CancellationToken 替代 `Monitor.Wait` 轮询和 `ReceiveTimeout`，取消操作立即响应。
-- **输出路径同步**：`OnConsoleOutput` 回调中的 `StreamWriter.WriteLine` 保持同步——控制台输出是短 kernel 调用，TCP 发送缓冲区在实际使用中不会满，异步化得不偿失。
+- **输出路径同步 + 发送超时**：`OnConsoleOutput` 回调中的 `StreamWriter.WriteLine` 保持同步——控制台输出是短 kernel 调用，正常消费下不会阻塞。为防慢客户端/停止读取的客户端填满 TCP 发送缓冲导致游戏帧线程僵死，连接建立时设置**有界发送超时**（`ConsoleBridgeOptions.OutputSendTimeoutMs`，默认 100ms）：单次发送阻塞超过超时即断开该连接（detach），未送达的行保留在缓冲中等待下次连接回放；积压回放（连接建立时的历史行重放）同样受超时保护，写失败即结束连接、剩余行保留在缓冲。
 
 ## 使用方式
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -33,6 +33,7 @@ The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in
 - **Implements IObserverTopologyHost** (internal): Exposes the per-scene-host `ObserverTopology` for Core observer mount/unmount orchestration
 - **Implements IOwningSessionBindable** (internal): `SetOwningSession` binds a session to the host for the Core session-creation flow
 - **Collection logic delegated**: entity add/remove, batch recovery rollback, kill marking, and frame processing orchestration live in pure C# `SndEntityCollection<T>` (internal, no Godot dependency) and are covered by unit tests directly; GodotSndManager only bridges the collection to the Godot node tree (`AddChild` / `RemoveChild` / `Free` injected via the `DetachAndFree` callback)
+- **`_ExitTree` out-of-contract fallback**: When this manager node leaves the scene tree without the framework's session teardown (a scene switch, or business code calling `RemoveChild`/`Free` directly), `_ExitTree` releases the Core-side state: for every entity it tears down observer bindings (unsubscribe + `OnUnmounted` + pool reference return) and releases strategies, then clears the entity collection (the engine already handles the physical node-tree teardown). Hook failures only log a warning and never interrupt the cleanup (this path exists for out-of-contract use); the framework path empties the collection before freeing nodes, so `_ExitTree` is idempotent and no-ops there.
 - **Rollback mechanism**: In `RecoverFromMetaList`, if an entity fails to load, the collection rolls back and releases all already-created entities (via the staged list in `SndEntityCollection`)
 - **GetEntities()**: Returns a **snapshot** (not a live view) — consistent with the Core hosts' contract: iterating while the host is mutated does not throw "collection was modified", and the snapshot cannot be downcast to the mutable backing list (no manual mutations bypassing collection management)
 - **BuildMetaList()**: Calls entities' `BuildSndMetaData()` to collect metadata

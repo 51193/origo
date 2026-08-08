@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -121,7 +121,11 @@ Rollback cleanup follows the same "never mask the original exception" discipline
 
 ### Why foreground session key fixed as `__foreground__`
 
-Foreground and background sessions share the same `ISessionRun` interface; the only differences are the internal implementation (how `ISndSceneHost` is injected) and the key name. A fixed key eliminates the "find the foreground" branch — look it up by constant key directly from the SessionManager.
+Foreground and background sessions share the same `ISessionRun` interface; the only differences are the internal implementation (how `ISndSceneHost` is injected) and the key name. A fixed key eliminates the "find the foreground" branch — look it up by constant key directly from the SessionManager. `__foreground__` is a **reserved key**: `CreateBackgroundSession` rejects it (`InvalidOperationException`); the foreground slot can only be occupied by the framework's foreground mount paths (`CreateForegroundSession` / load restore).
+
+### Why ISessionRun does not inherit IDisposable
+
+Session destruction is a manager capability: business code must destroy sessions through `ISessionManager.DestroySession` (or the framework's foreground switch / cleanup paths). `ISessionRun` therefore does **not** expose `Dispose()` (`IDisposable` is implemented only by the internal concrete `SessionRun`, for framework and test use) — if a strategy could call `OwningSession.Dispose()` directly, destruction would bypass the manager's mount validation, forming a second access path forbidden by §1.4.
 
 ### Why runtime containers are separated by layer
 

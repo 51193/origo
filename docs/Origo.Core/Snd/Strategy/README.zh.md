@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -50,7 +50,7 @@ BaseStrategy
 
 - **BindContext(ctx)**：由宿主在绑定上下文时注入，供 `OnMounted`/`OnDataChanged`/`OnUnmounted` 回调使用
 - **Mount(observer, target, observerIndex)**：获取策略实例 → 按 `[ObserveData]` 属性为每个 key 在 target 上建立 `SubscribeDataRaw` 接线 → 记录绑定 → 触发 `OnMounted`。挂载是原子的：若接线或 `OnMounted` 抛异常，已建立的订阅全部取消、半加入的绑定被移除、策略引用归还池后异常再传播。同一 (observer, target, observerIndex) 重复挂载会抛 `InvalidOperationException`（与被动/主动策略管理器的重复挂载拒绝一致）
-- **Unmount(observer, target, observerIndex)**：拆线 `UnsubscribeDataRaw` → 触发 `OnUnmounted` → 释放池引用 → 移除绑定记录。目标绑定不存在时抛 `InvalidOperationException`（fail-fast，与 `RemoveStrategy` 对未挂载索引抛异常一致）
+- **Unmount(observer, target, observerIndex)**：移除绑定记录 → 拆线 `UnsubscribeDataRaw` → 触发 `OnUnmounted` → 释放池引用。绑定记录先于回调摘除，保证 `OnUnmounted` 内的重入安全；`finally` 兜底确保钩子抛异常时池引用仍归还。目标绑定不存在时抛 `InvalidOperationException`（fail-fast，与 `RemoveStrategy` 对未挂载索引抛异常一致）
 - **ReleaseStrategiesFor(observer)**：释放某 observer 持有的全部策略引用并清空其出边（不触发 `OnUnmounted`、不退订），对应实体整体销毁流程的 `ReleaseStrategiesOnly` 阶段
 - **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`。目标实体缺失或目标为空白（存档拓扑不一致）时抛 `InvalidOperationException`（fail-fast），不静默跳过
 - **BuildBindingsFor(observerName)**：序列化某 observer 的全部出边为 `List<ObserverBinding>`（按 target 分组）写入 `StrategyMetaData`

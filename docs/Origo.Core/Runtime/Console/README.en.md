@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console
 
@@ -20,9 +20,9 @@ Origo's runtime console command system. Provides command parsing (positional + n
 |------|------|
 | `OrigoConsole.cs` | Console facade: Router + Input + OutputChannel + Parser |
 | `ConsoleCommandRouter.cs` | Command routing: name → IConsoleCommandHandler registration and lookup |
-| `ConsoleCommandParser.cs` | Command parsing: string → CommandInvocation (positional + named args) |
+| `ConsoleCommandParser.cs` | Command parsing: string → CommandInvocation (positional + named args), `internal` |
 | `ConsoleCommandHandlerBase.cs` | Handler base: Name/HelpText/arg validation/execution |
-| `ConsoleMessages.cs` | User-facing console message constants (English), referenced by both production handlers and test assertions to avoid hardcoded literals. Currently contains `InvalidArgumentCount` |
+| `ConsoleMessages.cs` | User-facing console message constants (English, `internal`), referenced by both production handlers and test assertions to avoid hardcoded literals. Currently contains `InvalidArgumentCount` |
 | `CommandInvocation.cs` | Invocation model: Command + PositionalArgs + NamedArgs |
 | `IConsoleCommandHandler.cs` | Handler interface: Name + HelpText + TryExecute |
 | `ConsoleInputBuffer.cs` | Thread-safe input queue (Enqueue/TryDequeue/Clear) |

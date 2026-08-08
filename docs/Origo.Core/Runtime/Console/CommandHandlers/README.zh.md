@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/CommandHandlers/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # CommandHandlers
 
@@ -47,7 +47,7 @@ bb_set <layer> <key> <value>
 spawn <name> <template>
 spawn name=<name> template=<template>
 ```
-从模板生成实体。不支持混合使用位置参数和命名参数。模板通过 `SndWorld.ResolveTemplate` 解析。
+从模板生成实体。不支持混合使用位置参数和命名参数。模板通过 `SndWorld.ResolveTemplate` 解析；**未知模板别名**（或模板未加载）按用户输入错误处理，返回错误消息（与 `bb_get` 的未知层处理一致），不会击穿命令循环。
 
 ### invoke_strategy
 

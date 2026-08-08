@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Converters/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Converters
 
@@ -44,7 +44,7 @@ One per primitive type array. Read iterates `node.Elements`; Write builds `Creat
 | `BlackboardDataConverter` | Full blackboard data |
 
 ### TypedDataConverter
-Reads/writes `"type"` and `"data"` fields. On read, resolves CLR type from `"type"` via `TypeStringMapping`, then uses corresponding converter. The registry backtracks along base class and interface chains when no exact type match exists.
+Reads/writes `"type"` and `"data"` fields. On read, resolves CLR type from `"type"` via `TypeStringMapping`, then uses corresponding converter. The registry backtracks along base class and interface chains when no exact type match exists — e.g. storing a `ReadOnlyDictionary<string,string>` with only an `IReadOnlyDictionary<string,string>` converter registered. This allows registering converters for interface types while still storing and reading their concrete implementations: `StringDictionaryConverter` returns a `ReadOnlyDictionary<string,string>` instance (compatible with the requested type). If the converter's returned instance is incompatible with the requested type (e.g. requesting `SortedDictionary`), the read throws `InvalidOperationException` immediately (fail-fast, naming both the converter and the requested type rather than an opaque `InvalidCastException`), preventing a silently type-drifted value from breaking a later serialization.
 
 ## Design Decisions
 

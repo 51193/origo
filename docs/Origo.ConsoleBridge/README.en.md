@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.ConsoleBridge
 
@@ -27,7 +27,7 @@ telnet client ──TCP:9876──> ConsoleBridgeServer
 
 **Threading model**:
 - **Async I/O**: `AcceptTcpClientAsync` and `ReadLineAsync` run on the ThreadPool without occupying dedicated threads. CancellationToken replaces `Monitor.Wait` polling and `ReceiveTimeout`, enabling immediate cancellation response.
-- **Output path is synchronous**: `StreamWriter.WriteLine` in the `OnConsoleOutput` callback remains synchronous — console output involves short kernel calls, and the TCP send buffer will not fill up in practice; async would be a net loss.
+- **Output path is synchronous with a bounded send timeout**: `StreamWriter.WriteLine` in the `OnConsoleOutput` callback remains synchronous — console output involves short kernel calls and does not block under normal consumption. To keep a slow (or stopped-reading) client from filling the TCP send buffer and stalling the game frame thread, every connection gets a **bounded send timeout** (`ConsoleBridgeOptions.OutputSendTimeoutMs`, default 100ms): a single send that stays blocked past the timeout detaches the connection, and the undelivered lines stay buffered for replay by the next connection. The backlog replay (historic lines written when a connection is established) is protected by the same timeout — a failed flush ends the connection and keeps the remaining backlog queued.
 
 ## Usage
 
