@@ -64,6 +64,35 @@ public class TryGetNumericExtensionsTests
         Assert.Equal(0f, value);
     }
 
+    [Theory]
+    [InlineData((byte)7, 7f)]
+    [InlineData((sbyte)-3, -3f)]
+    [InlineData((short)-1234, -1234f)]
+    [InlineData((ushort)4321, 4321f)]
+    [InlineData('x', 120f)]
+    [InlineData(3000000000u, 3000000000f)]
+    [InlineData(5000000000ul, 5000000000f)]
+    public void TryGetNumeric_IntegerTypesStored_ReturnsFloat(object stored, float expected)
+    {
+        var entity = new TestNumericEntity();
+        entity.SetData("val", stored);
+
+        var result = entity.TryGetNumeric("val", out var value);
+        Assert.True(result);
+        Assert.Equal(expected, value);
+    }
+
+    [Fact]
+    public void TryGetNumeric_BoolStored_ReturnsFalse()
+    {
+        var entity = new TestNumericEntity();
+        entity.SetData("val", true);
+
+        var result = entity.TryGetNumeric("val", out var value);
+        Assert.False(result);
+        Assert.Equal(0f, value);
+    }
+
     [Fact]
     public void TryGetNumeric_MissingKey_ReturnsFalse()
     {

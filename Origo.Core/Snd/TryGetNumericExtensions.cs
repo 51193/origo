@@ -11,8 +11,12 @@ namespace Origo.Core.Snd;
 public static class TryGetNumericExtensions
 {
     /// <summary>
-    ///     Reads a numeric value under the given key, trying float → int → long →
-    ///     double in order. Returns false when the value is missing or not numeric.
+    ///     Reads a numeric value under the given key, trying float → int →
+    ///     byte → sbyte → short → ushort → char → uint → ulong → long →
+    ///     double in order. Returns false when the value is missing or not
+    ///     numeric. As with all numeric coercion in this framework, precision
+    ///     is not validated: wide integers convert to <c>float</c> with
+    ///     possible precision loss (see <c>docs/Origo.Core/Snd/README</c>).
     /// </summary>
     public static bool TryGetNumeric(this ISndDataAccess access, string key, out float value)
     {
@@ -28,6 +32,48 @@ public static class TryGetNumericExtensions
         if (foundInt)
         {
             value = i;
+            return true;
+        }
+
+        if (access.TryGetData<byte>(key, out byte b))
+        {
+            value = b;
+            return true;
+        }
+
+        if (access.TryGetData<sbyte>(key, out sbyte sb))
+        {
+            value = sb;
+            return true;
+        }
+
+        if (access.TryGetData<short>(key, out short s))
+        {
+            value = s;
+            return true;
+        }
+
+        if (access.TryGetData<ushort>(key, out ushort us))
+        {
+            value = us;
+            return true;
+        }
+
+        if (access.TryGetData<char>(key, out char c))
+        {
+            value = c;
+            return true;
+        }
+
+        if (access.TryGetData<uint>(key, out uint ui))
+        {
+            value = ui;
+            return true;
+        }
+
+        if (access.TryGetData<ulong>(key, out ulong ul))
+        {
+            value = ul;
             return true;
         }
 
