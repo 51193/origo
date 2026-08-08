@@ -116,8 +116,13 @@ internal sealed class SndStrategyManager
         }
         catch
         {
-            _strategies.Remove(entry);
-            _pool.ReleaseStrategy(index);
+            // The strategy may have removed itself through the public API
+            // inside AfterAdd, which already released the pool reference.
+            // Only release when the entry is still present; a second release
+            // would throw and mask the original AfterAdd failure.
+            if (_strategies.Remove(entry))
+                _pool.ReleaseStrategy(index);
+
             throw;
         }
 

@@ -24,11 +24,11 @@ internal sealed class ObserverBindingEntry
             throw new InvalidOperationException(
                 "Observer binding FullCleanup requires a non-null TargetEntity reference.");
 
-        if (TargetEntity is ISndEntityRawSubscription raw)
-        {
-            foreach (var (key, wrapper) in DataWrappers)
-                raw.UnsubscribeDataRaw(key, wrapper);
-        }
+        // Mount hard-casts the target to ISndEntityRawSubscription, so every
+        // binding that reaches cleanup has a target implementing it.
+        var raw = (ISndEntityRawSubscription)TargetEntity;
+        foreach (var (key, wrapper) in DataWrappers)
+            raw.UnsubscribeDataRaw(key, wrapper);
 
         Strategy.OnUnmounted(entity, ctx, TargetEntity);
 

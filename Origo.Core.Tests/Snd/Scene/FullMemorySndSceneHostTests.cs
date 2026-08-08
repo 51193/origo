@@ -129,4 +129,21 @@ public class FullMemorySndSceneHostTests
         var ex = Assert.Throws<InvalidOperationException>(() => host.RequestKillEntity("E"));
         Assert.Contains("already pending kill", ex.Message);
     }
+
+    [Fact]
+    public void CreateEntity_EmptyName_Throws()
+    {
+        var host = CreateBoundHost();
+
+        var ex = Assert.Throws<ArgumentException>(() => host.CreateEntity(CreateMeta("")));
+        Assert.Equal("metaData", ex.ParamName);
+    }
+
+    [Fact]
+    public void CreateEntity_WhitespaceName_Throws()
+    {
+        var host = CreateBoundHost();
+
+        Assert.Throws<ArgumentException>(() => host.CreateEntity(CreateMeta("   ")));
+    }
 }

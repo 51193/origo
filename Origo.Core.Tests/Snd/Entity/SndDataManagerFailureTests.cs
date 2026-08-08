@@ -40,6 +40,27 @@ public class SndDataManagerFailureTests
     }
 
     [Fact]
+    public void SetData_WhenObserverThrows_ValueStillCommittedAndRemainingObserversSkipped()
+    {
+        // Contract: data is committed before observers are notified; a
+        // throwing observer aborts the remaining notifications and the
+        // exception propagates (fail-fast). The committed value must be
+        // readable afterwards — a failed notification does not roll back data.
+        var manager = new SndDataManager(new DummyEntity("E"), new TestLogger());
+        var remainingCalled = false;
+        manager.Subscribe("hp", (_, _, _) => throw new InvalidOperationException("observer failure"), null);
+        manager.Subscribe("hp", (_, _, _) => remainingCalled = true, null);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => manager.SetData("hp", 50));
+        Assert.Equal("observer failure", ex.Message);
+        Assert.False(remainingCalled, "A throwing observer must abort the remaining notifications.");
+
+        var (found, value) = manager.TryGetData<int>("hp");
+        Assert.True(found, "The value must remain committed after a failed notification.");
+        Assert.Equal(50, value);
+    }
+
+    [Fact]
     public void TryGetData_BlankName_Throws()
     {
         var manager = new SndDataManager(new DummyEntity("E"), new TestLogger());

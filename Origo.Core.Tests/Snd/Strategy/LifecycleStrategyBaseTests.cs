@@ -153,6 +153,31 @@ public class LifecycleStrategyBaseTests
         Assert.Equal(0, ThrowOnAddStrategy.ProcessCalls);
     }
 
+    private const string _selfRemoveThenThrowIdx = "test.self_remove_then_throw";
+    [StrategyIndex(_selfRemoveThenThrowIdx)]
+    private sealed class SelfRemoveThenThrowStrategy : LifecycleStrategyBase
+    {
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx)
+        {
+            // Removes itself through the public API (which already releases
+            // the pool reference), then fails: the Add rollback must not
+            // release the pool reference a second time and mask this failure.
+            entity.RemoveStrategy(_selfRemoveThenThrowIdx);
+            throw new InvalidOperationException("original after-add failure");
+        }
+    }
+
+    [Fact]
+    public void AddStrategy_WhenAfterAddRemovesItselfThenThrows_PropagatesOriginalFailure()
+    {
+        var (_, ctx) = CreateHost(w => w.RegisterStrategy(() => new SelfRemoveThenThrowStrategy()));
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var entity = session.Spawn(CreateMeta("E"));
+
+        var ex = Assert.Throws<InvalidOperationException>(() => entity.AddStrategy(_selfRemoveThenThrowIdx));
+        Assert.Contains("original after-add failure", ex.Message, StringComparison.Ordinal);
+    }
+
     private const string _duplicateIdx = "test.duplicate_add";
 
     [StrategyIndex(_duplicateIdx)]
@@ -258,6 +283,34 @@ public class LifecycleStrategyBaseTests
         },
         DataMetaData = new DataMetaData()
     };
+
+    private const string _spawnInProcessIdx = "test.spawn_in_process";
+
+    [StrategyIndex(_spawnInProcessIdx)]
+    private sealed class SpawnInProcessStrategy : LifecycleStrategyBase
+    {
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx)
+            => entity.OwningSession.Spawn(new SndMetaData
+            {
+                Name = "spawned_in_process",
+                NodeMetaData = new NodeMetaData(),
+                StrategyMetaData = new StrategyMetaData(),
+                DataMetaData = new DataMetaData()
+            });
+    }
+
+    [Fact]
+    public void ProcessAll_ContainerModifiedDuringProcess_ThrowsInvalidOperation()
+    {
+        // Mutating the host while entities process would silently skip
+        // entities; the host must fail loudly instead (documented contract).
+        var (host, ctx) = CreateHost(w => w.RegisterStrategy(() => new SpawnInProcessStrategy()));
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        session.Spawn(CreateMeta("E", [_spawnInProcessIdx]));
+
+        var ex = Assert.Throws<InvalidOperationException>(() => host.ProcessAll(0.016));
+        Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

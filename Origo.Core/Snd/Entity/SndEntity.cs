@@ -201,6 +201,9 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(metaData);
+            if (string.IsNullOrWhiteSpace(metaData.Name))
+                throw new ArgumentException("SndMetaData 'name' cannot be empty.", nameof(metaData));
             Name = metaData.Name;
             _dataManager.Recover(metaData.DataMetaData ??
                                  throw new InvalidOperationException("DataMetaData is required."));

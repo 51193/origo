@@ -37,6 +37,14 @@ internal sealed class DataObserverManager
         if (list.Count == 0) _subscriptions.Remove(name);
     }
 
+    /// <summary>
+    ///     Fires all callbacks subscribed to the given key with the old and
+    ///     new values, in subscription order. A throwing callback aborts the
+    ///     remaining callbacks for the same key while the exception propagates
+    ///     (fail-fast); the caller has already committed the new value by the
+    ///     time this runs. Snapshot iteration keeps re-entrant subscription
+    ///     changes from corrupting the current notification pass.
+    /// </summary>
     public void NotifyObservers(string name, TypedData oldValue, TypedData newValue)
     {
         if (!_subscriptions.TryGetValue(name, out var list)) return;

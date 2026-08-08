@@ -55,9 +55,18 @@ internal sealed class StackStateMachine : IStateMachine, IDisposable
     {
         if (_disposed) return;
 
-        _pool.ReleaseStrategy(PushStrategyIndex);
-        _pool.ReleaseStrategy(PopStrategyIndex);
-        _disposed = true;
+        // Release both references even if the first release throws
+        // (reference-count mismatch), mirroring the constructor's partial
+        // failure rollback.
+        try
+        {
+            _pool.ReleaseStrategy(PushStrategyIndex);
+        }
+        finally
+        {
+            _pool.ReleaseStrategy(PopStrategyIndex);
+            _disposed = true;
+        }
     }
 
     /// <summary>The logical key of this state machine in the container.</summary>

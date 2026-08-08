@@ -245,6 +245,17 @@ internal sealed class ObserverTopology
             var target = resolveTarget(binding.TargetName);
             if (target is null)
             {
+                // The target no longer exists in the scene (it was removed
+                // without going through teardown, or the scene is partially
+                // deserialized). The binding cannot be unmounted normally;
+                // release the pool reference and drop the record. Logged so
+                // the silent drop stays observable.
+                _logger.Log(LogLevel.Debug, nameof(ObserverTopology),
+                    new LogMessageBuilder()
+                        .AddContext("observerName", observer.Name)
+                        .AddContext("targetName", binding.TargetName)
+                        .AddContext("observerIndex", binding.ObserverIndex)
+                        .Build("Observer binding removed because its target is no longer resolvable."));
                 _pool.ReleaseStrategy(binding.ObserverIndex);
                 RemoveBinding(binding);
                 continue;

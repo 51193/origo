@@ -288,6 +288,7 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
         {
             RemoveCurrentAction(entity);
             entity.SetData(PlanStepKey, "");
+            entity.SetData(ActionKey, "");
             entity.SetData(IntentKey, "");
             if (failed)
             {
@@ -329,6 +330,12 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
         // Idempotent mount: the action strategy may already be mounted on the
         // entity (e.g. it is listed in the entity's LifecycleIndices). Reuse it
         // instead of failing with a duplicate-mount exception.
+        // Note: the concrete-type check is deliberate and safe. Adapter bridge
+        // entities (e.g. GodotSndEntity) delegate every strategy operation,
+        // raw subscription, and lifecycle hook to an inner SndEntity, so the
+        // entity reaching the plan engine is always that inner SndEntity —
+        // the guard never sees the outer wrapper. Do not "fix" this into an
+        // interface query; there is no reachable path where it differs.
         if (entity is SndEntity sndEntity && sndEntity.HasStrategyMounted(strategyIndex))
             return;
 
@@ -342,6 +349,9 @@ public abstract class PlanExecutionStrategyBase : LifecycleStrategyBase
             return;
 
         var strategyIndex = StepToActionIndex(step);
+        // Same concrete-type guard rationale as PushAction: adapter bridge
+        // entities delegate to an inner SndEntity, so the entity handled
+        // here is always that inner SndEntity.
         if (!string.IsNullOrEmpty(strategyIndex)
             && entity is SndEntity sndEntity
             && sndEntity.HasStrategyMounted(strategyIndex))

@@ -78,6 +78,17 @@ internal sealed class SndDataManager
         if (list.Count == 0) _subscriptionMap.Remove(name);
     }
 
+    /// <summary>
+    ///     Commits a value and notifies subscribed observers.
+    ///     <para>
+    ///         The value is committed to the data dictionary <b>before</b>
+    ///         observers are notified; a notification failure therefore never
+    ///         rolls the value back. Observers are notified in subscription
+    ///         order and a throwing observer aborts the remaining
+    ///         notifications for the same key while the exception propagates
+    ///         (fail-fast).
+    ///     </para>
+    /// </summary>
     public void SetData<T>(string name, T value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);

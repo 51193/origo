@@ -106,6 +106,24 @@ public class DataObserverManagerTests
     }
 
     [Fact]
+    public void Notify_WhenCallbackThrows_AbortsRemainingCallbacksAndPropagates()
+    {
+        // Contract: notifications are delivered in subscription order and a
+        // throwing callback aborts the remaining notifications for the same
+        // key while the exception propagates (fail-fast). The setter has
+        // already committed the value at this point.
+        var mgr = new DataObserverManager();
+        var remainingCalled = false;
+        mgr.Subscribe("hp", (_, _) => throw new InvalidOperationException("observer failure"));
+        mgr.Subscribe("hp", (_, _) => remainingCalled = true);
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => mgr.NotifyObservers("hp", (TypedData)100, (TypedData)50));
+        Assert.Equal("observer failure", ex.Message);
+        Assert.False(remainingCalled, "A throwing callback must abort the remaining callbacks.");
+    }
+
+    [Fact]
     public void Notify_InsideCallback_UnsubscribesItself_DoesNotThrow()
     {
         var mgr = new DataObserverManager();

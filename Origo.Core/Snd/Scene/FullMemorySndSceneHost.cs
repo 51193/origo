@@ -130,8 +130,18 @@ internal sealed class FullMemorySndSceneHost
 
     public void ProcessAll(double delta)
     {
+        // The container must not be modified while entities process (a
+        // documented caller contract); a strategy that mutates the host
+        // would otherwise silently skip entities. Detect the violation
+        // instead of failing silently.
+        var initialCount = _entries.Count;
         for (var i = 0; i < _entries.Count; i++)
             _entries[i].Entity.Process(delta);
+
+        if (_entries.Count != initialCount)
+            throw new InvalidOperationException(
+                $"Scene container modified during ProcessAll: entity count changed from {initialCount} to {_entries.Count}. " +
+                "The host must not be mutated while entities process.");
     }
 
     internal void BindWorld(SndWorld world)
