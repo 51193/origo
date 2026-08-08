@@ -92,6 +92,39 @@ public class ProgressRunSessionLoadingEdgeTests
     }
 
     [Fact]
+    public void LoadFromPayload_WhenBackgroundLevelPayloadMissing_ThrowsInvalidOperation()
+    {
+        // A topology that references a background level with no payload in
+        // the save must fail fast like the foreground path does, instead of
+        // silently mounting an empty background session.
+        var ctx = CreateContext();
+        var progressRun = TestFactory.CreateProgressRun("001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
+
+        var payload = new SaveGamePayload
+        {
+            SaveId = "001",
+            ActiveLevelId = "default",
+            ProgressNode = TestFactory.NodeFromJson(
+                """{"origo.session_topology":{"type":"String","data":"__foreground__=default=false,bg=bg=false"}}"""),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}"),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                ["default"] = new()
+                {
+                    LevelId = "default",
+                    SndSceneNode = TestFactory.NodeFromJson("[]"),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
+                }
+            }
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() => progressRun.LoadFromPayload(payload));
+        Assert.Contains("bg", ex.Message, StringComparison.Ordinal);
+        Assert.False(ctx.Runtime.SessionManager.Contains("bg"));
+    }
+
+    [Fact]
     public void LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions()
     {
         var ctx = CreateContext();

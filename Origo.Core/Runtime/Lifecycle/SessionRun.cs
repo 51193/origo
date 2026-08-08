@@ -328,43 +328,70 @@ internal sealed class SessionRun : ISessionRun, IDisposable
         if (pending.Count == 0)
             return;
 
+        Exception? firstFailure = null;
+
         if (topology is not null)
         {
             // Resolve entity names to instances once; the same dictionary
             // serves outgoing target resolution and incoming observer lookup.
+            // Entity names are not mandated unique by the host contract; a
+            // duplicate name collapses the lookup (last one wins), which is
+            // observable via this warning instead of being fully silent.
             var entitiesByName = new Dictionary<string, ISndEntity>(entities.Count, StringComparer.Ordinal);
             foreach (var other in entities)
+            {
+                if (entitiesByName.ContainsKey(other.Name))
+                    _logger.Log(LogLevel.Warning, _logTag,
+                        new LogMessageBuilder()
+                            .AddContext("entityName", other.Name)
+                            .Build("Duplicate entity name detected while resolving kill-pending observers; the last entity wins."));
                 entitiesByName[other.Name] = other;
+            }
 
             // Outgoing teardown: every pending entity's own observer bindings
             // are unmounted (unsubscribe + OnUnmounted + pool release),
             // regardless of whether the entity is a bare SndEntity or an
             // adapter wrapper implementing ISndEntityRawSubscription.
             foreach (var e in pending)
-                TeardownOutgoingObserverBindings(e, entitiesByName, topology);
+                firstFailure = TryEntityStep(e, firstFailure, "observer teardown (outgoing)",
+                    () => TeardownOutgoingObserverBindings(e, entitiesByName, topology));
 
             // Incoming teardown via the topology's O(1) incoming index: a
             // dying entity may be the target of other entities' bindings.
             foreach (var e in pending)
-                foreach (var observerName in topology.GetObserverNamesTargeting(e.Name))
-                    if (entitiesByName.TryGetValue(observerName, out var observer))
-                        topology.RemoveBindingsTargetingFor(observer, e.Name);
+                firstFailure = TryEntityStep(e, firstFailure, "observer teardown (incoming)", () =>
+                {
+                    foreach (var observerName in topology.GetObserverNamesTargeting(e.Name))
+                        if (entitiesByName.TryGetValue(observerName, out var observer))
+                            topology.RemoveBindingsTargetingFor(observer, e.Name);
+                });
         }
 
+        // Each phase runs independently per entity (matching the dispose
+        // path): a throwing BeforeDead hook must not skip the strategy
+        // release or the physical removal of any pending entity, otherwise
+        // the entity stays pending forever and the sweep re-fails every
+        // frame. The first failure is rethrown after the sweep completes.
         foreach (var e in pending)
-            if (e is IEntityLifecycle lifecycle)
-                lifecycle.FireBeforeDeadHooks();
+            firstFailure = TryEntityStep(e, firstFailure, "before-dead hook",
+                () => ((IEntityLifecycle)e).FireBeforeDeadHooks());
 
         foreach (var e in pending)
-        {
-            if (e is IEntityLifecycle lifecycle)
+            firstFailure = TryEntityStep(e, firstFailure, "strategy release", () =>
             {
+                var lifecycle = (IEntityLifecycle)e;
                 lifecycle.ReleaseStrategiesOnly();
                 lifecycle.TeardownOnly();
-            }
+            });
 
+        // Physical removal is a host operation independent of lifecycle
+        // delegation: every pending entity must leave the host for the sweep
+        // to converge. A removal failure propagates immediately.
+        foreach (var e in pending)
             _sceneHost.RemoveEntity(e.Name);
-        }
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     private static void TeardownOutgoingObserverBindings(ISndEntity entity,

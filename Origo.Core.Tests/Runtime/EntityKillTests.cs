@@ -170,6 +170,55 @@ public class EntityKillTests
     }
 
     [Fact]
+    public void KillPendingEntities_BeforeDeadHookFailure_RemovesAllPendingEntitiesAndPropagates()
+    {
+        // A throwing BeforeDead hook must not skip the cleanup of the other
+        // pending entities, nor leave the failing entity stuck in the scene:
+        // the kill sweep mirrors the dispose path (per-entity independent
+        // phases, first failure rethrown after the sweep completes).
+        var (ctx, host, _) = SetupKillTest(
+            registerKillProbe: true,
+            registerThrowingBeforeDead: true);
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntityWithThrowingBeforeDead(session, "A");
+        SpawnEntity(session, "B");
+
+        KillProbeStrategy.Events = [];
+        try
+        {
+            session.RequestKillEntity("A");
+            session.RequestKillEntity("B");
+
+            var ex = Assert.Throws<InvalidOperationException>(
+                () => ctx.Runtime.SessionManager.KillPendingAllSessions());
+            Assert.Contains("intentional before_dead failure", ex.Message);
+
+            Assert.Null(host.FindByName("A"));
+            Assert.Null(host.FindByName("B"));
+            Assert.Contains("before_dead", KillProbeStrategy.Events);
+        }
+        finally
+        {
+            KillProbeStrategy.Events = null;
+        }
+    }
+
+    [Fact]
+    public void KillPending_DuplicateEntityNames_LogsWarning()
+    {
+        var (ctx, host, logger) = SetupKillTest();
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        SpawnEntityWithoutStrategy(session, "Dup");
+        SpawnEntityWithoutStrategy(session, "Dup");
+
+        session.RequestKillEntity("Dup");
+        ctx.Runtime.SessionManager.KillPendingAllSessions();
+
+        Assert.Contains(logger.Warnings, w =>
+            w.Contains("Duplicate entity name", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void KillPendingEntities_BusinessDeferredBeforeKillSweep()
     {
         var (ctx, host, _) = SetupKillTest(registerKillProbe: true);
@@ -449,13 +498,16 @@ public class EntityKillTests
     ///     建立前台会话。所有实体生命周期（请求 / 收割）经 ctx 走 SessionManager 管线。
     /// </summary>
     private static (SndContext ctx, FullMemorySndSceneHost host, TestLogger logger) SetupKillTest(
-        bool registerKillProbe = false)
+        bool registerKillProbe = false,
+        bool registerThrowingBeforeDead = false)
     {
         var logger = new TestLogger();
         var host = new FullMemorySndSceneHost(logger);
         var world = TestFactory.CreateSndWorld(logger: logger);
         if (registerKillProbe)
             world.RegisterStrategy(() => new KillProbeStrategy());
+        if (registerThrowingBeforeDead)
+            world.RegisterStrategy(() => new ThrowingBeforeDeadStrategy());
         host.BindWorld(world);
         var fs = new TestMemoryFileSystem();
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
@@ -492,6 +544,22 @@ public class EntityKillTests
             StrategyMetaData = new StrategyMetaData
             {
                 LifecycleIndices = ["kill.test.lifecycle"],
+                ActiveIndices = []
+            },
+            DataMetaData = new DataMetaData()
+        };
+        return session.Spawn(meta);
+    }
+
+    private static ISndEntity SpawnEntityWithThrowingBeforeDead(ISessionRun session, string name)
+    {
+        var meta = new SndMetaData
+        {
+            Name = name,
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData
+            {
+                LifecycleIndices = ["kill.test.throw_before_dead"],
                 ActiveIndices = []
             },
             DataMetaData = new DataMetaData()
@@ -584,6 +652,13 @@ public class EntityKillTests
         public static List<string>? Events { get => _events.Value; set => _events.Value = value; }
 
         public override void BeforeDead(ISndEntity entity, ISndContext ctx) => Events?.Add("before_dead");
+    }
+
+    [StrategyIndex("kill.test.throw_before_dead")]
+    private sealed class ThrowingBeforeDeadStrategy : LifecycleStrategyBase
+    {
+        public override void BeforeDead(ISndEntity entity, ISndContext ctx)
+            => throw new InvalidOperationException("intentional before_dead failure");
     }
 
     [StrategyIndex("quit.test.probe")]

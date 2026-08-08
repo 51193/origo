@@ -279,7 +279,19 @@ internal sealed partial class ProgressRun
             _owner._sessionManager.CreateBackgroundSession(
                 descriptor.Key, descriptor.LevelId, descriptor.SyncProcess);
             if (payload.Levels.TryGetValue(descriptor.LevelId, out var bgPayload))
+            {
                 _owner._sessionManager.LoadSessionFromPayload(descriptor.Key, bgPayload);
+            }
+            else
+            {
+                // A topology that references a background level with no
+                // payload is inconsistent save data (the foreground path fails
+                // the same way at the disk layer). Mounting an empty session
+                // would silently lose the level's state on the next save.
+                throw new InvalidOperationException(
+                    $"Missing level '{descriptor.LevelId}' for background session '{descriptor.Key}'. " +
+                    "The save topology is inconsistent and cannot be recovered.");
+            }
         }
 
         private List<SessionTopologyCodec.SessionDescriptor> ParseSessionTopologyFromProgress()
