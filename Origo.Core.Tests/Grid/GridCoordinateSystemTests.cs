@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Grid;
 using Xunit;
 
@@ -73,5 +74,33 @@ public class GridCoordinateSystemTests
         var gridSize = 4;
         var result = GridCoordinateSystem.GridToWorld(0, cellSize, gridSize);
         Assert.Equal(-0.75f, result, 0.001f);
+    }
+
+    [Fact]
+    public void GridToWorld_NonPositiveCellSize_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.GridToWorld(0, 0f, 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.GridToWorld(0, -1f, 10));
+    }
+
+    [Fact]
+    public void GridToWorld_NonPositiveGridSize_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.GridToWorld(0, 1f, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.GridToWorld(0, 1f, -5));
+    }
+
+    [Fact]
+    public void WorldToGrid_NonPositiveCellSize_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, 0f, 10, out _));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, -1f, 10, out _));
+    }
+
+    [Fact]
+    public void WorldToGrid_NonPositiveGridSize_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, 1f, 0, out _));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, 1f, -5, out _));
     }
 }

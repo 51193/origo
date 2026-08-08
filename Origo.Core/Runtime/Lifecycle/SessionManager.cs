@@ -73,7 +73,6 @@ internal sealed class SessionManager : ISessionManager
         ValidateKey(key);
         ValidateLevelIdUnique(levelId, key);
         var session = CreateBackgroundSessionCore(levelId);
-        session.GetSessionStateMachines().FlushAllAfterLoad();
         MountInternal(key, session, syncProcess);
         return session;
     }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Utility Tests
 
@@ -51,7 +51,8 @@ Behavior of `DiffUtility.Diff<T>()` and `PathUtility` static path operations.
 | `NormalizeDirectoryPath_StripsTrailingSlashes` | Trailing slashes stripped |
 | `ExtractGlobSuffix_ReturnsSuffix` | `"*.json"` → `".json"` |
 | `ExtractGlobSuffix_ReturnsNull_WhenNoGlob` | No wildcard pattern returns null |
-| `Combine_NullOrEmptyBase_ReturnsRelative` | Base path empty returns relative path |
+| `Combine_EmptyBase_ReturnsRelative` | Empty-string base path returns relative path directly (passthrough) |
+| `Combine_NullBase_Throws` | Base path is null | `ArgumentNullException` (fail-fast) |
 | `Combine_NullOrEmptyRelative_ReturnsBase` | Relative path empty returns base path |
 | `Combine_JoinsPaths` | Normal path joining (redundant slashes removed) |
 | `GetParentDirectory_ReturnsParent` | Parent directory extracted |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Grid -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Grid Tests
 
@@ -38,6 +38,10 @@ Validates single-axis/dual-axis coordinate conversion (GridToWorld / WorldToGrid
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `WorldToGrid_OutOfBounds_ReportsTrue` | World coordinate far beyond grid bounds | `outOfBounds = true` |
+| `GridToWorld_NonPositiveCellSize_Throws` | `cellSize <= 0` | `ArgumentOutOfRangeException` (fail-fast) |
+| `GridToWorld_NonPositiveGridSize_Throws` | `gridSize <= 0` | `ArgumentOutOfRangeException` (fail-fast) |
+| `WorldToGrid_NonPositiveCellSize_Throws` | `cellSize <= 0` | `ArgumentOutOfRangeException` (fail-fast) |
+| `WorldToGrid_NonPositiveGridSize_Throws` | `gridSize <= 0` | `ArgumentOutOfRangeException` (fail-fast) |
 
 ## GridPosTests Details
 

@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Runtime.Console;
 using Xunit;
 
@@ -70,6 +71,14 @@ public class ConsoleCommandParserTests
         var ok = ConsoleCommandParser.TryParse("cmd key=", out _, out var err);
         Assert.False(ok);
         Assert.NotNull(err);
+    }
+
+    [Fact]
+    public void ConsoleCommandParser_TryParse_DuplicateNamedArg_Fails()
+    {
+        var ok = ConsoleCommandParser.TryParse("spawn name=a name=b", out _, out var err);
+        Assert.False(ok);
+        Assert.Contains("name", err, StringComparison.Ordinal);
     }
 }
 

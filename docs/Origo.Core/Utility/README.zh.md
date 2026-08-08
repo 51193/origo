@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Utility/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility
 
@@ -14,7 +14,7 @@
 | 文件 | 职责 |
 |------|------|
 | `DiffUtility.cs` | 通用集合差异比较：给定新旧两个集合，返回 (新增元素, 移除元素) |
-| `PathUtility.cs` | 路径操作工具：`Combine`（路径拼接 + 遍历攻击检测）、`GetParentDirectory`（父目录提取 + 根路径边界处理）、`NormalizeDirectoryPath`（去除尾部斜杠）、`ExtractGlobSuffix`（`"*.json"` → `".json"`）。三个路径函数均识别 `scheme://` 方案根（如 `user://`）：根不会被去尾斜杠破坏，`user://x` 的父目录正确返回 `user://`，方案根自身无父目录 |
+| `PathUtility.cs` | 路径操作工具：`Combine`（路径拼接 + 遍历攻击检测；`basePath` 为 null 抛 `ArgumentNullException`，空字符串 base 直接透传 relative）、`GetParentDirectory`（父目录提取 + 根路径边界处理）、`NormalizeDirectoryPath`（去除尾部斜杠）、`ExtractGlobSuffix`（`"*.json"` → `".json"`）。三个路径函数均识别 `scheme://` 方案根（如 `user://`）：根不会被去尾斜杠破坏，`user://x` 的父目录正确返回 `user://`，方案根自身无父目录 |
 | `ValueInference.cs` | `internal` — 字符串到类型值的统一推断（int → long → float → bool → string），供 `SndArchetypeLoader` 与控制台 `bb_set` / `entity_set_data` 共用 |
 
 ## 设计决策

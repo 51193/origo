@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console
 
@@ -20,14 +20,14 @@ Origo's runtime console command system. Provides command parsing (positional + n
 |------|------|
 | `OrigoConsole.cs` | Console facade: Router + Input + OutputChannel + Parser |
 | `ConsoleCommandRouter.cs` | Command routing: name → IConsoleCommandHandler registration and lookup |
-| `ConsoleCommandParser.cs` | Command parsing: string → CommandInvocation |
+| `ConsoleCommandParser.cs` | Command parsing: string → CommandInvocation (positional + named args) |
 | `ConsoleCommandHandlerBase.cs` | Handler base: Name/HelpText/arg validation/execution |
-| `ConsoleMessages.cs` | User-facing message constants (English) |
+| `ConsoleMessages.cs` | User-facing console message constants (English), referenced by both production handlers and test assertions to avoid hardcoded literals. Currently contains `InvalidArgumentCount` |
 | `CommandInvocation.cs` | Invocation model: Command + PositionalArgs + NamedArgs |
 | `IConsoleCommandHandler.cs` | Handler interface: Name + HelpText + TryExecute |
 | `ConsoleInputBuffer.cs` | Thread-safe input queue (Enqueue/TryDequeue/Clear) |
 | `ConsoleOutputChannel.cs` | Subscribe/publish output channel |
-| `ConsoleCommandHelper.cs` | internal: entity lookup, blackboard layer resolution, type inference |
+| `ConsoleCommandHelper.cs` | internal utility class: entity lookup `TryFindEntity`, blackboard layer resolution, type inference |
 
 ## Command Lifecycle
 
@@ -48,12 +48,12 @@ OrigoConsole.ProcessPending()
 ```
 
 ## Design Principles
-- **Named arg support**: `key=value` named args (not mixable with positional)
-- **Pre-validation**: Arg count validated before execution
-- **Thread-safe input**: `lock` protected for TCP bridge concurrent enqueue
-- **Immediate exception propagation**: Handler exceptions propagate directly, no degradation
-- **Unique command names**: Duplicate handler registration throws `InvalidOperationException`
-- **Output listener isolation**: Try-catch per subscriber; first exception rethrown after all invoked
+- **Named arg support**: besides positional args, `key=value` named args are supported (e.g. `spawn name=x template=y`). The two modes cannot be mixed. Duplicate named args (e.g. `name=a name=b`) are rejected with an error (fail-fast, no silent override)
+- **Pre-validation**: `ConsoleCommandHandlerBase.TryExecute` validates the argument count before execution, returning a clear error on failure
+- **Thread-safe input**: `ConsoleInputBuffer` is `lock`-protected, supporting concurrent enqueue from the TCP bridge thread
+- **Immediate exception propagation**: `ProcessPending()` does not catch exceptions thrown by command handlers. If a handler throws while executing (e.g. `InvalidOperationException`), the exception propagates directly to the caller — not degraded to a log or error message. This ensures bugs surface early in development
+- **Unique command names**: `ConsoleCommandRouter.Register` requires globally unique command names. Registering a handler with a name already taken by an existing handler throws `InvalidOperationException`
+- **Output listener isolation**: `ConsoleOutputChannel.Publish()` wraps each subscriber's invocation in try-catch. If a single listener throws, subsequent subscribers still receive the output line. After all subscribers have been invoked, the first exception is rethrown to preserve fail-fast. This ensures output is never silently lost because of a single faulty listener
 
 ---
 [↑ Back to Runtime](../README.en.md)

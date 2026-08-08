@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console System Tests
 
@@ -48,6 +48,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | `ConsoleCommandParser_TryParse_WhitespaceLine_Fails` | Whitespace-only line | returns false + error |
 | `ConsoleCommandParser_TryParse_InvalidNamedArg_Fails` | "cmd =value" (no key) | returns false + error |
 | `ConsoleCommandParser_TryParse_NamedArgMissingValue_Fails` | "cmd key=" (no value) | returns false + error |
+| `ConsoleCommandParser_TryParse_DuplicateNamedArg_Fails` | "spawn name=a name=b" (duplicate named argument) | returns false + error (containing the argument name), no silent overwrite |
 
 ## ConsoleCommandRouterTests Details
 

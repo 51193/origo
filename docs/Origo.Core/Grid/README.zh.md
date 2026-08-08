@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Grid
 
@@ -37,6 +37,8 @@ public readonly record struct GridPos(int X, int Z);
 - **GridToWorld(GridPos pos, float cellSize, int gridSize)**：2D 便捷重载，返回 `(float X, float Z)` 元组
 - **WorldToGrid(float worldX, float worldZ, float cellSize, int gridSize, out bool outOfBounds)**：2D 逆转换，返回 `GridPos`
 
+`cellSize` 与 `gridSize` 必须为正数，否则抛 `ArgumentOutOfRangeException`（fail-fast，杜绝除零产生 NaN 坐标）。
+
 公式（单轴）：`worldCoord = gridCoord * cellSize - (gridSize * cellSize) / 2 + cellSize * 0.5f`。
 
 ### Astar
@@ -45,7 +47,7 @@ public readonly record struct GridPos(int X, int Z);
 public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize, Func<GridPos, bool> isBlocked)
 ```
 
-标准 A* 搜索，使用欧几里得距离启发式。返回不含起点的路径列表，无可行路径时返回 `null`。
+标准 A* 搜索（**4 方向邻居**：上下左右，对角线不可通行），使用欧几里得距离启发式。返回不含起点的路径列表，无可行路径时返回 `null`。
 
 - `isBlocked` 是 `Func<GridPos, bool>` 委托，由调用方组装阻塞检测逻辑（如合并地形阻挡 + 动态阻挡）
 - 自动校验终点是否越界或被阻挡

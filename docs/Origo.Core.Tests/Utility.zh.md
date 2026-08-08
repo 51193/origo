@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility 测试
 
@@ -51,7 +51,8 @@
 | `NormalizeDirectoryPath_StripsTrailingSlashes` | 尾部斜杠去除 |
 | `ExtractGlobSuffix_ReturnsSuffix` | `"*.json"` → `".json"` |
 | `ExtractGlobSuffix_ReturnsNull_WhenNoGlob` | 无通配符模式返回 null |
-| `Combine_NullOrEmptyBase_ReturnsRelative` | 基础路径为空时返回相对路径 |
+| `Combine_EmptyBase_ReturnsRelative` | 基础路径为空字符串时直接返回相对路径（透传） |
+| `Combine_NullBase_Throws` | 基础路径为 null | ArgumentNullException（fail-fast） |
 | `Combine_NullOrEmptyRelative_ReturnsBase` | 相对路径为空时返回基础路径 |
 | `Combine_JoinsPaths` | 正常路径拼接（去冗余斜杠） |
 | `GetParentDirectory_ReturnsParent` | 父目录提取 |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Grid -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 网格 测试
 
@@ -38,6 +38,10 @@
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `WorldToGrid_OutOfBounds_ReportsTrue` | 世界坐标远超网格边界 | `outOfBounds = true` |
+| `GridToWorld_NonPositiveCellSize_Throws` | `cellSize <= 0` | `ArgumentOutOfRangeException`（fail-fast） |
+| `GridToWorld_NonPositiveGridSize_Throws` | `gridSize <= 0` | `ArgumentOutOfRangeException`（fail-fast） |
+| `WorldToGrid_NonPositiveCellSize_Throws` | `cellSize <= 0` | `ArgumentOutOfRangeException`（fail-fast） |
+| `WorldToGrid_NonPositiveGridSize_Throws` | `gridSize <= 0` | `ArgumentOutOfRangeException`（fail-fast） |
 
 ## GridPosTests 测试详情
 

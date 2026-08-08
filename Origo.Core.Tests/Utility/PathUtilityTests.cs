@@ -27,10 +27,15 @@ public class PathUtilityTests
     public void ExtractGlobSuffix_ReturnsNull_WhenNoGlob(string? pattern) => Assert.Null(PathUtility.ExtractGlobSuffix(pattern!));
 
     [Fact]
-    public void Combine_NullOrEmptyBase_ReturnsRelative()
+    public void Combine_EmptyBase_ReturnsRelative()
     {
         Assert.Equal("relative", PathUtility.Combine("", "relative"));
-        Assert.Equal("relative", PathUtility.Combine(null!, "relative"));
+    }
+
+    [Fact]
+    public void Combine_NullBase_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => PathUtility.Combine(null!, "relative"));
     }
 
     [Fact]

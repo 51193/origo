@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台系统 测试
 
@@ -48,6 +48,7 @@
 | `ConsoleCommandParser_TryParse_WhitespaceLine_Fails` | 空白行 | 返回 false + error |
 | `ConsoleCommandParser_TryParse_InvalidNamedArg_Fails` | "cmd =value"（无 key） | 返回 false + error |
 | `ConsoleCommandParser_TryParse_NamedArgMissingValue_Fails` | "cmd key="（无 value） | 返回 false + error |
+| `ConsoleCommandParser_TryParse_DuplicateNamedArg_Fails` | "spawn name=a name=b"（重复命名参数） | 返回 false + error（含参数名），不静默覆盖 |
 
 ## ConsoleCommandRouterTests 测试详情
 

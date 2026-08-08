@@ -76,8 +76,8 @@ public partial class GodotSndManager
         ArgumentNullException.ThrowIfNull(metaList);
         _collection.RecoverFromMetaList(metaList, (meta, ex) =>
         {
-            if (SharedLogger is null)
-                return;
+            // Runtime dependencies are bound before any entity operation can
+            // reach this host, so the logger is always available.
             SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
                 new LogMessageBuilder().AddContext("entityName", meta.Name)
                     .Build($"Entity recovery failed, rolling back partial load: {ex.Message}"));

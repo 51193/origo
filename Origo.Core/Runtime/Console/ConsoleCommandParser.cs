@@ -82,6 +82,13 @@ public static class ConsoleCommandParser
                 return false;
             }
 
+            if (named.ContainsKey(key))
+            {
+                invocation = null;
+                error = $"Duplicate named argument '{key}'. Each argument may be specified only once.";
+                return false;
+            }
+
             named[key] = value;
         }
 

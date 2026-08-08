@@ -31,10 +31,12 @@ public static class PathUtility
     /// <summary>
     ///     Combines a base path with a relative path, rejecting traversal sequences.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="basePath" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="relativePath" /> contains a traversal sequence.</exception>
     public static string Combine(string basePath, string relativePath)
     {
-        if (string.IsNullOrEmpty(basePath))
+        ArgumentNullException.ThrowIfNull(basePath);
+        if (basePath.Length == 0)
             return relativePath;
         if (string.IsNullOrEmpty(relativePath))
             return basePath;

@@ -88,6 +88,7 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
 
         _listener?.Stop();
+        _listener?.Dispose();
         _output.Unsubscribe(_outputSubId);
 
         if (_acceptTask is not null)
