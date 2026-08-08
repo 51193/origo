@@ -76,9 +76,10 @@ public partial class GodotSndManager
         ArgumentNullException.ThrowIfNull(metaList);
         _collection.RecoverFromMetaList(metaList, (meta, ex) =>
         {
-            // Runtime dependencies are bound before any entity operation can
-            // reach this host, so the logger is always available.
-            SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
+            // The logger may be unbound when entity operations reach this
+            // host before BindRuntimeDependencies (a failed bootstrap);
+            // guard it like the _ExitTree fallback path does.
+            SharedLogger?.Log(LogLevel.Warning, nameof(GodotSndManager),
                 new LogMessageBuilder().AddContext("entityName", meta.Name)
                     .Build($"Entity recovery failed, rolling back partial load: {ex.Message}"));
         });
@@ -97,9 +98,10 @@ public partial class GodotSndManager
         }
         catch (Exception ex)
         {
-            // CreateEntity requires bound runtime dependencies
-            // (EnsureReadyForSpawn), so the logger is always available.
-            SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
+            // The logger may be unbound when entity operations reach this
+            // host before BindRuntimeDependencies (a failed bootstrap);
+            // guard it like the _ExitTree fallback path does.
+            SharedLogger?.Log(LogLevel.Warning, nameof(GodotSndManager),
                 new LogMessageBuilder().AddContext("entityName", metaData.Name).Build($"Entity creation failed, rolling back: {ex.Message}"));
             throw;
         }
@@ -172,7 +174,10 @@ public partial class GodotSndManager
     /// </summary>
     public override void _ExitTree()
     {
-        foreach (var entity in _collection)
+        // Snapshot the collection: teardown triggers OnUnmounted hooks whose
+        // handlers may mutate the collection, which would abort a live
+        // enumeration and skip the remaining entities' cleanup.
+        foreach (var entity in _collection.GetEntities())
         {
             try
             {

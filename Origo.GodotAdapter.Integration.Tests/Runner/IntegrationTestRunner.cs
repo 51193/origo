@@ -15,14 +15,11 @@ public partial class IntegrationTestRunner : Node
     private List<TestResult> _results = [];
     private readonly Queue<DeferredTestEntry> _deferredQueue = new();
     private DeferredTestEntry? _currentDeferred;
-    private int _deferredFrameCount;
-    private bool _allInstantDone;
 
     public override void _Ready()
     {
         CleanupTestUserData();
         _results = RunInstantTests();
-        _allInstantDone = true;
 
         var types = Assembly.GetExecutingAssembly().GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract
@@ -84,7 +81,6 @@ public partial class IntegrationTestRunner : Node
                 return;
             }
             _currentDeferred = _deferredQueue.Dequeue();
-            _deferredFrameCount = 0;
 
             if (_currentDeferred.Instance is IDeferredTestFixture fixture)
             {
@@ -106,11 +102,8 @@ public partial class IntegrationTestRunner : Node
                 }
             }
 
-            _deferredFrameCount = 1;
             return;
         }
-
-        _deferredFrameCount++;
 
         if (_currentDeferred.Instance is IDeferredTestFixture deferredFixture)
         {
