@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Storage
 
@@ -17,7 +17,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 | `ISavePathPolicy.cs` | Save path policy interface (replaceable layout) |
 | `DefaultSaveStorageService.cs` | Default ISaveStorageService implementation, internally delegates to SaveFileHandle + SavePayloadWriter/Reader |
 | `DefaultSavePathPolicy.cs` | Default ISavePathPolicy implementation, delegates to SavePathLayout |
-| `SaveFileHandle.cs` | Unified I/O context: encapsulates IFileMetaAccess + IDataSourceIoGateway + IPathResolver + saveRootPath + ISavePathPolicy, combining the path utility methods of the former SavePathResolver and the gateway creation of SaveStorageGatewayFactory |
+| `SaveFileHandle.cs` | Unified I/O context: encapsulates IFileMetaAccess + IDataSourceIoGateway + IPathResolver + saveRootPath + ISavePathPolicy, combining path utility methods and gateway creation |
 | `SavePathLayout.cs` | Standard path layout constants and methods (current/, save_*, level_*) |
 | `SavePayloadWriter.cs` | Save write orchestration (two-phase write + marker management) |
 | `SavePayloadReader.cs` | Save read orchestration (strict reading + integrity validation) |
@@ -51,10 +51,11 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 2. **Integrity validation**: validate the payload before writing any file — active level must exist in `Levels`, progress node must be non-null. Validation failure throws immediately; no half-written `current/` is produced
 3. **Write marker**: create `.write_in_progress` under `current/`
 4. **Write payload**: write progress.json, per-level three-piece sets, meta.map; `.payload.sha` is written after the payload completes, before the marker is recreated (combined hash = payload + `extra/`)
-5. **Clear phase-1 marker**: after `current/` is fully written (including `.payload.sha`), delete the marker
-6. **Recreate marker**: rebuild marker for the snapshot phase; if snapshot fails, marker remains so subsequent reads will reject this "updated but not snapshotted" `current/`
-7. **Snapshot (backup-replace)**: copy `current/` to `save_{id}.tmp/` → rename existing `save_{id}/` to `save_{id}.bak/` → rename `.tmp` to the final `save_{id}/` → delete `.bak`. Old data is not deleted until new data is in place
-8. **Clear marker**: delete the marker
+5. **Clean up stale level directories**: delete `level_*` directories under `current/` that are not in the payload (e.g. levels of destroyed sessions). The payload is the authoritative set of active levels; cleanup keeps `current/` consistent with the payload and prevents stale data from being copied into every snapshot (this step runs within marker protection; failure rejects reads)
+6. **Clear phase-1 marker**: after `current/` is fully written (including `.payload.sha`), delete the marker
+7. **Recreate marker**: rebuild marker for the snapshot phase; if snapshot fails, marker remains so subsequent reads will reject this "updated but not snapshotted" `current/`
+8. **Snapshot (backup-replace)**: copy `current/` to `save_{id}.tmp/` → rename existing `save_{id}/` to `save_{id}.bak/` → rename `.tmp` to the final `save_{id}/` → delete `.bak`. Old data is not deleted until new data is in place
+9. **Clear marker**: delete the marker (the one recreated for the snapshot phase)
 
 ## Strict Read Rules
 
@@ -93,7 +94,7 @@ When the same game state is written to the same save slot multiple times, SHA-25
 - CustomMeta key-value change → hash differs → rewrite
 - Only SaveId differs (writing to a different slot) → always write (new slot has no .sha to compare)
 
-The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + `extra/`), which the next idempotency comparison consumes; the test path (`SaveStorageFacade.WriteSavePayloadToCurrent`) writes the **payload-only hash** (tests have no `extra/` side channel, so a combined hash would be stale); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
+The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + `extra/`), which the next idempotency comparison consumes; the test path (`SaveStorageFacade.WriteSavePayloadToCurrent`) writes the **payload-only hash** (tests have no `extra/` side channel, so a combined hash would be inaccurate); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
 
 ### Why DataSourceNode computes a Canonical Hash rather than a post-serialization hash
 

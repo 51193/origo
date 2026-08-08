@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Storage
 
@@ -51,10 +51,11 @@
 2. **完整性校验**：写入任何文件前校验 payload——active level 必须存在于 `Levels` 中、progress 节点非空。校验失败立即抛异常，不产生半写的 `current/`
 3. **写入标记**：在 `current/` 下创建 `.write_in_progress`
 4. **写入 payload**：写入 progress.json、各关卡三件套、meta.map；`.payload.sha` 在 payload 写完、marker 重建前写入（combined hash = payload + `extra/`）
-5. **清除第一阶段标记**：`current/` 完整写入（含 `.payload.sha`）后删除 marker
-6. **重新创建标记**：为快照阶段重建 marker；若快照失败则保留，使后续读取拒绝这个"已更新但未快照"的 `current/`
-7. **快照（备份-替换）**：复制 `current/` 到 `save_{id}.tmp/` → 将已存在的 `save_{id}/` 改名为 `save_{id}.bak/` → 重命名 `.tmp` 为正式 `save_{id}/` → 删除 `.bak`。旧数据在新数据就位前不被删除
-8. **清除标记**：删除 marker
+5. **清理 stale 关卡目录**：删除 `current/` 下不在 payload 中的 `level_*` 目录（如已销毁会话的关卡）。payload 是活动关卡的权威集合；清理保证 `current/` 与 payload 一致，杜绝陈旧数据被复制进每次快照（此步骤在 marker 保护内，失败即拒绝读取）
+6. **清除第一阶段标记**：`current/` 完整写入（含 `.payload.sha`）后删除 marker
+7. **重新创建标记**：为快照阶段重建 marker；若快照失败则保留，使后续读取拒绝这个"已更新但未快照"的 `current/`
+8. **快照（备份-替换）**：复制 `current/` 到 `save_{id}.tmp/` → 将已存在的 `save_{id}/` 改名为 `save_{id}.bak/` → 重命名 `.tmp` 为正式 `save_{id}/` → 删除 `.bak`。旧数据在新数据就位前不被删除
+9. **清除标记**：删除 marker（快照阶段的重建标记）
 
 ## 严格读取规则
 

@@ -105,7 +105,38 @@ internal static class SavePayloadWriter
             WriteLevelPayload(handle, currentRel, level.Value, true);
         }
 
+        // Prune level directories whose sessions no longer exist (e.g. a
+        // background session was destroyed): stale data must not accumulate in
+        // current/ and leak into every subsequent snapshot. The payload is
+        // authoritative for which levels are live. The write-in-progress
+        // marker still protects readers, so a failure here leaves current/ in
+        // the rejected state.
+        PruneStaleLevelDirectories(handle, currentRel, payload.Levels);
+
         handle.MetaAccess.Delete(markerAbs);
+    }
+
+    private static void PruneStaleLevelDirectories(
+        SaveFileHandle handle,
+        string currentRel,
+        Dictionary<string, LevelPayload> liveLevels)
+    {
+        var currentAbs = handle.GetAbsolutePath(currentRel);
+        if (!handle.MetaAccess.DirectoryExists(currentAbs))
+            return;
+
+        foreach (var dirAbs in handle.MetaAccess.EnumerateDirectories(currentAbs))
+        {
+            var leaf = SaveFileHandle.GetLeafDirectoryName(dirAbs);
+            if (!leaf.StartsWith(SavePathLayout.LevelDirectoryPrefix, StringComparison.Ordinal))
+                continue;
+
+            var levelId = leaf[SavePathLayout.LevelDirectoryPrefix.Length..];
+            if (string.IsNullOrWhiteSpace(levelId) || liveLevels.ContainsKey(levelId))
+                continue;
+
+            handle.MetaAccess.DeleteDirectory(dirAbs);
+        }
     }
 
     public static void WriteLevelPayloadOnly(

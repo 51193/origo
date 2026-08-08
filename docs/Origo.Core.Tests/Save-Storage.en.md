@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Storage Tests
 
@@ -29,6 +29,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
 | `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden |
 | `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |
+| `StaleLevelDirectoryCleanupTests.cs` | Regression: after a full save `current/` is consistent with the payload's level set — level directories of destroyed background sessions are cleaned up, not leaked into subsequent snapshots |
 
 ## SaveStorageContractTests Details
 
@@ -104,6 +105,14 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
 | `Snapshot_DoesNotContainWriteInProgressMarker` | Snapshot directory has no `.write_in_progress` file after a full save | persistence-flow: Two-Phase Write |
+
+## StaleLevelDirectoryCleanupTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `SaveAfterDestroyingBackgroundSession_PrunesStaleLevelDirectory` | After saving foreground + background sessions each with one level, destroy the background and save again: neither `current/` nor the new snapshot contains the destroyed session's level directory; surviving levels are retained | Save/Storage: stale level directory cleanup |
 
 ## SaveStorageAndPayloadTests Details
 
