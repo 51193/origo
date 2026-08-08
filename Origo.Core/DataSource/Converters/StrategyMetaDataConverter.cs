@@ -20,8 +20,13 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
         if (node.TryGetValue("observer_indices", out var observerIndicesNode) && observerIndicesNode is not null && !observerIndicesNode.IsNull)
             foreach (var element in observerIndicesNode.Elements)
             {
+                // The writer only ever emits object elements; anything else
+                // is corrupt save data and must fail the strict read instead
+                // of silently dropping the damaged binding.
                 if (element.Kind != DataSourceNodeKind.Map)
-                    continue;
+                    throw new InvalidOperationException(
+                        $"observer_indices entries must be objects ({{ \"target\": [...] }}), but found {element.Kind}. " +
+                        "The save data is corrupt and cannot be recovered.");
 
                 var binding = new StrategyMetaData.ObserverBinding();
                 foreach (var key in element.Keys)

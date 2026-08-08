@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Data Source Tests
 
@@ -21,6 +21,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `DataSourceTests.cs` | Remaining items: IDisposable recursive disposal with deep-tree stack overflow prevention, new accessor methods, TypeStringMapping new type registration, DataSourceConverterRegistry type hierarchy fallback, ReadOnlyDictionary round-trip |
 | `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` canonical hash computation |
 | `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` key-value file parsing (strict/lenient mode, comments, duplicate keys, null/empty content) |
+| `CorruptObserverIndicesStrictReadTests.cs` (in Save/) | Regression: when `observer_indices` contains a non-object element (corrupted save), `LoadFromPayload` throws `InvalidOperationException` (containing "observer_indices") instead of silently dropping bindings |
 
 ## DataSourceTests Details
 
@@ -209,6 +210,14 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `KeyValueFileParser_Parse_BasicKeyValue` | Basic `key: value` multi-line parsed to dict | DataSource |
 | `KeyValueFileParser_Parse_SkipsCommentsAndBlanks` | Skips `#` comments and empty lines, retains valid keys | DataSource |
 | `KeyValueFileParser_Parse_ValueContainsColon_PreservesFullValue` | Colons in values (e.g. URLs) fully preserved | DataSource |
+
+## CorruptObserverIndicesStrictReadTests Details
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `LoadFromPayload_WhenObserverIndicesEntryIsNotAnObject_Throws` | `observer_indices` array contains a non-object element (corrupted save; the write side only ever produces object elements) | `LoadFromPayload` throws `InvalidOperationException` (message contains "observer_indices"), does not silently drop corrupted bindings |
 
 ### Error Path
 

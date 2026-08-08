@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 数据源 测试
 
@@ -21,6 +21,7 @@
 | `DataSourceTests.cs` | 余项：IDisposable 递归释放与深树防栈溢出、新访问器方法、TypeStringMapping 新类型注册、DataSourceConverterRegistry 类型层级回退、ReadOnlyDictionary 往返 |
 | `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` 规范化摘要计算 |
 | `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` 键值文件解析（严格/宽松模式、注释、重复键、null/空内容） |
+| `CorruptObserverIndicesStrictReadTests.cs`（位于 Save/） | 回归：`observer_indices` 含非对象元素（损坏存档）时 `LoadFromPayload` 抛 `InvalidOperationException`（含 "observer_indices"），而非静默丢弃绑定 |
 
 ## DataSourceTests 测试详情
 
@@ -209,6 +210,14 @@
 | `KeyValueFileParser_Parse_BasicKeyValue` | 基础 `key: value` 多行解析为字典 | DataSource |
 | `KeyValueFileParser_Parse_SkipsCommentsAndBlanks` | 跳过 `#` 注释和空行，保留有效键值 | DataSource |
 | `KeyValueFileParser_Parse_ValueContainsColon_PreservesFullValue` | 值中冒号（如 URL）完整保留 | DataSource |
+
+## CorruptObserverIndicesStrictReadTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `LoadFromPayload_WhenObserverIndicesEntryIsNotAnObject_Throws` | `observer_indices` 数组含非对象元素（损坏存档；写入侧只会产生对象元素） | `LoadFromPayload` 抛 `InvalidOperationException`（消息含 "observer_indices"），不静默丢弃损坏绑定 |
 
 ### 错误路径
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # DataSource
 
@@ -59,7 +59,7 @@ CLR objects (TypedData / SndMetaData / etc.)
 ## Design Decisions
 
 - **IDataSourceIoGateway hard boundary**: All file content I/O in Core must go through the Gateway's `ReadTree`/`WriteTree`; direct `File.*` API is forbidden; zero bypass
-- **Fail-fast**: On codec decode failure, the Gateway wraps the exception as an `InvalidOperationException` containing the file path and immediately throws
+- **Fail-fast**: On codec decode failure, the Gateway wraps the exception as an `InvalidOperationException` containing the file path and immediately throws. Note: `.json` decoding uses lazy expansion (see below), so a `JsonException` is thrown only when the node is first accessed — outside the Gateway's try/catch, without file-path context. Load paths supplement level/file context at first access (e.g. `ProgressRun`'s `ValidateLevelPayload`); `.map`/`.sha` are eagerly decoded, and parse errors are always wrapped by the Gateway
 - **Lazy expansion**: Large JSON nodes expand children only on access, avoiding full parsing
 - **Zero reflection**: All converters are explicitly registered; no reflection-based auto-discovery is used
 - **Runtime type container**: `DataSourceNode` is a universal serialization container — the entire Save system and DataSource flow passes data through it, deferring type safety to `DataSourceConverterRegistry` lookups. This is a deliberate design trade-off ("simplicity over strict typing"), allowing all subsystems to share a single data tree at the cost of exposing conversion errors at runtime rather than compile time.

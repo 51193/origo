@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # DataSource
 
@@ -59,7 +59,7 @@ CLR 对象 (TypedData / SndMetaData / etc.)
 ## 设计决策
 
 - **IDataSourceIoGateway 硬边界**：Core 中所有文件内容 I/O 必须经过 Gateway 的 `ReadTree`/`WriteTree`，禁止直接 `File.*` API，零旁路
-- **Fail-fast**：codec 解码失败时，Gateway 将异常包装为包含文件路径的 `InvalidOperationException` 立即抛出
+- **Fail-fast**：codec 解码失败时，Gateway 将异常包装为包含文件路径的 `InvalidOperationException` 立即抛出。注意：`.json` 解码采用延迟展开（见下），`JsonException` 在首次访问节点时才抛出——位于 Gateway 的 try/catch 之外，不带文件路径上下文。加载路径在首次访问时（如 `ProgressRun` 的 `ValidateLevelPayload`）会补充关卡/文件上下文；`.map`/`.sha` 为急切解码，解析错误始终经 Gateway 包装
 - **延迟展开**：JSON 大型节点在访问时才展开子节点，避免全量解析
 - **零反射**：所有转换器显式注册，不使用反射自动发现
 - **运行时类型容器**：`DataSourceNode` 是通用序列化容器——整个 Save 系统和 DataSource 流转均通过它传递数据，类型安全推迟到 `DataSourceConverterRegistry` 查找时。这是刻意的设计权衡（"简单优于严格类型"），允许所有子系统共享同一棵数据树，代价是转换错误在运行时而非编译时暴露。
