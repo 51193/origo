@@ -43,6 +43,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - **`DataSourceConverterRegistry.Read<T>` / `Read(Type, ...)` validate the returned instance** — a converter resolved through the base/interface chain must return a value assignable to the requested type: incompatible requests now throw a clear `InvalidOperationException` (naming the converter and the requested type) instead of an opaque `InvalidCastException` or a silently drifted value type. `StringDictionaryConverter` now returns `ReadOnlyDictionary<string,string>`, so a `ReadOnlyDictionary` stored in a blackboard survives save/load round-trips (including re-saves) without drifting to `Dictionary`.
+- **`TryGetNumeric` covers all integer types** — reading entity data as `float` now also tries
+  `byte`/`sbyte`/`short`/`ushort`/`char`/`uint`/`ulong` (previously only `float`/`int`/`long`/
+  `double`), so any stored integer is readable through the numeric accessor instead of returning
+  "not found". Wide values convert with the documented precision loss.
+- **A kill-pending entity is always removed from its session even when a `BeforeDead` hook throws** —
+  the kill sweep now mirrors the dispose path: each pending entity's phases (observer teardown,
+  `BeforeDead` hooks, strategy/node/data release, physical removal) run independently, so a
+  throwing hook no longer leaves the entity stuck pending forever (it used to re-fail every
+  frame); the first hook failure still propagates fail-fast after the sweep completes.
+- **Loading a save whose topology references a background level with no payload now fails** —
+  previously the background session was silently mounted empty (only the foreground path was
+  strict); an inconsistent topology now fails the load with `InvalidOperationException`, matching
+  the foreground behavior.
+- **`SessionTopologyCodec.Parse` rejects empty entries** — an empty segment in the topology
+  string (e.g. a double comma) was silently dropped; it is now a malformed-entry error, matching
+  the documented strict contract.
+- **`SndEntity.RecoverForLifecycle` rejects empty entity names** — spawning an entity with a
+  blank name now throws `ArgumentException` at recovery instead of registering an unnamed entity
+  that would silently break name-based lookups and observer resolution.
+- **`FullMemorySndSceneHost.ProcessAll` detects container mutation during processing** — a
+  strategy that spawns/removes entities mid-`ProcessAll` previously skipped entities silently;
+  the host now throws when the entity count changes during processing (mutating the host during
+  frame processing was already a documented caller contract).
+
 - **`PathUtility.NormalizeDirectoryPath(null)` throws `ArgumentNullException`** — matching `Combine`; previously it silently returned an empty string. `LogMessageBuilder.SetElapsedMs` rejects NaN/negative/infinite values; `SndMetaFluentBuilder.SetString`/`SetBytes` reject null values (consistent with the data layer's non-null invariant); `TypeStringMapping.GetTypeByName` rejects blank names; `ValueInference` no longer infers NaN/Infinity floats; `SndDataManager.TryGetData`/`GetRequiredData` validate key names like `SetData`.
 - **BREAKING: `GodotSndManager.BindRuntimeDependencies` is now `internal`** — runtime
   dependency binding (World + Logger) is framework-orchestrated startup wiring, driven only by
@@ -174,6 +198,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING: `StateMachineContainer`, `StackStateMachine`, `ConsoleCommandParser`, and `ConsoleMessages` are now `internal`** — none had cross-assembly consumers (state-machine instances are only reachable through their interfaces), so the unreachable public surfaces are sealed.
 - **BREAKING: `DataSourceFactory.CreateIoGateway` removed** — `CreateDefaultIoGateway` provides identical behavior and is the single entry point.
 - **BREAKING: `DiffUtility` removed** — it had no production consumers; its documented use cases (topology-change computation) were not backed by code.
+
+### Fixed
+
+- **`GodotSndManager` surfaces the NotReady contract error instead of a `NullReferenceException`** —
+  `CreateEntity` / `RecoverFromMetaList` before `BindRuntimeDependencies` used to mask the
+  "manager is not ready" contract error with a `NullReferenceException` inside the rollback
+  logging path; the error message now identifies the missing binding.
+- **`SndStrategyManager.Add` no longer double-releases the pool reference when a strategy removes
+  itself inside `AfterAdd` and then throws** — the rollback used to release the already-released
+  strategy and mask the original `AfterAdd` failure with a pool error; the original failure now
+  propagates.
+- **`SndMappings` reload failures no longer destroy the previous mappings** — a failed
+  `LoadSceneAliases` / `LoadTemplates` (missing file, parse error) previously cleared the
+  existing aliases/templates before failing; the previous state now survives the failed reload.
+- **A leftover write-in-progress marker no longer keeps `current/` refusing reads forever** — a
+  retry with identical save content used to take the idempotent skip, leaving the marker from a
+  failed snapshot phase in place; the retry now rewrites `current/` and clears the marker.
+- **Save ids ending in `.tmp`/`.bak` are enumerable again** — a slot named e.g. `save_foo.tmp`
+  was always filtered as an interrupted-snapshot leftover; it is now only filtered when the real
+  `save_foo` slot exists (the actual leftover case).
+- **`WriteLevelPayloadOnly` validates all three level files before writing any** — a missing
+  `session_state_machines.json` used to be detected after `snd_scene.json`/`session.json` were
+  already written, potentially leaving a partial level on the bare write path.
+- **A completed plan clears the action key** — the action descriptor (`ActionKey`) was left
+  stale (with any `,param` suffix) after plan termination; it is now cleared together with the
+  plan-step and intent keys.
+- **`ConsoleBridgeServer` no longer logs a false error when shutting down** — disposing the
+  server cancels the accept loop and stops the listener; a plain socket error during that
+  window was misreported as a genuine failure (and reset the started flag) instead of being
+  treated as a normal shutdown.
+- **`GodotSndManager._ExitTree` cleanup survives hook-driven collection changes** — the exit
+  fallback iterated the live entity collection; an `OnUnmounted` hook that mutated it aborted
+  the enumeration and skipped the remaining entities' cleanup. The collection is now snapshotted
+  before teardown.
+- **`GridParser` parses coordinates culture-invariantly** — integer parsing previously used the
+  ambient culture, so a locale with a dot thousands separator changed which inputs were accepted.
+- **`NoiseMapGenerator` validates its extended parameters** — `octaves`/`lacunarity`/`gain`/
+  `frequency`/`worleyFrequencyMultiplier` outside their valid ranges now throw
+  `ArgumentOutOfRangeException` instead of producing undefined noise.
+- **`SndContextArchiveFileAccess` rejects null/blank relative paths** — the six archive methods
+  previously threw a `NullReferenceException` on null paths instead of a parameter error.
+- **Generated `TypedData` bit-pattern conversions are `unchecked`** — consumers compiling with
+  `/checked` previously hit overflow exceptions on `uint`/`ulong` bit-pattern storage; the
+  reinterpretations are now explicitly unchecked.
+- **`TryExtract` reference types are extracted without a castclass** — the factory's reference
+  branch now reinterprets like the home `TryGetString` accessor (same semantics, no
+  castclass-check block, consistent with the documented de-castclass design).
 
 ### Fixed
 
