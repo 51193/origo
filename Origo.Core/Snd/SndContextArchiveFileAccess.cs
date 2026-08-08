@@ -63,6 +63,7 @@ internal sealed class SndContextArchiveFileAccess(
 
     private static void RejectPathTraversal(string path)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
         // Segment-level check (consistent with PathUtility.Combine): only a
         // ".." segment (in either separator style) escapes the archive — a
         // plain substring like "my..file" is a legal file name.

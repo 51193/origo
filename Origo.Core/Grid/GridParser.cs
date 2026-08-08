@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace Origo.Core.Grid;
@@ -29,9 +30,9 @@ public static class GridParser
         if (parts.Length < 2)
             return null;
 
-        if (!int.TryParse(parts[0].Trim(), out var x))
+        if (!int.TryParse(parts[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var x))
             return null;
-        if (!int.TryParse(parts[1].Trim(), out var z))
+        if (!int.TryParse(parts[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var z))
             return null;
 
         return (x, z);

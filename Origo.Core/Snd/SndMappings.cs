@@ -32,19 +32,24 @@ internal sealed class SndMappings
     ///     Loads scene resource alias mappings from the specified text file.
     ///     The file format is line-based <c>key: value</c> pairs;
     ///     blank lines and lines starting with # are ignored.
+    ///     The previous mappings are replaced only after the load succeeds;
+    ///     a failed reload does not destroy the existing state.
     /// </summary>
     public void LoadSceneAliases(IDataSourceIoGateway dataSourceIo, string mapFilePath, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(dataSourceIo);
         ArgumentNullException.ThrowIfNull(logger);
-        _sceneAliases.Clear();
-
         if (string.IsNullOrWhiteSpace(mapFilePath))
             throw new ArgumentException("Scene alias map file path cannot be null or whitespace.", nameof(mapFilePath));
 
         var node = dataSourceIo.ReadTree(mapFilePath);
+        var loaded = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
-            _sceneAliases[key] = node[key].AsString();
+            loaded[key] = node[key].AsString();
+
+        _sceneAliases.Clear();
+        foreach (var (key, value) in loaded)
+            _sceneAliases[key] = value;
         logger.Log(LogLevel.Info, nameof(SndMappings),
             new LogMessageBuilder().AddContext("filePath", mapFilePath)
                 .Build($"Loaded {_sceneAliases.Count} scene resource aliases."));
@@ -72,6 +77,8 @@ internal sealed class SndMappings
     /// <summary>
     ///     Loads the mapping from template aliases to JSON file paths from the map file,
     ///     and configures the internal codec.
+    ///     The previous mapping and resolver are replaced only after the load
+    ///     succeeds; a failed reload does not destroy the existing state.
     /// </summary>
     public void LoadTemplates(
         IDataSourceIoGateway dataSourceIo,
@@ -82,20 +89,22 @@ internal sealed class SndMappings
         ArgumentNullException.ThrowIfNull(dataSourceIo);
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(logger);
-
-        _templatePaths.Clear();
-        _templateResolver = null;
-
         if (string.IsNullOrWhiteSpace(mapFilePath))
             throw new ArgumentException("Snd template alias map file path cannot be null or whitespace.",
                 nameof(mapFilePath));
 
         var node = dataSourceIo.ReadTree(mapFilePath);
+        var loaded = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
-            _templatePaths[key] = node[key].AsString();
+            loaded[key] = node[key].AsString();
 
         var sndMetaConverter = registry.Get<SndMetaData>();
-        _templateResolver = new SndTemplateResolver(dataSourceIo, sndMetaConverter, _templatePaths);
+        var resolver = new SndTemplateResolver(dataSourceIo, sndMetaConverter, loaded);
+
+        _templatePaths.Clear();
+        foreach (var (key, value) in loaded)
+            _templatePaths[key] = value;
+        _templateResolver = resolver;
         logger.Log(LogLevel.Info, nameof(SndMappings),
             new LogMessageBuilder().AddContext("filePath", mapFilePath)
                 .Build($"Loaded {_templatePaths.Count} Snd templates."));

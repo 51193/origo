@@ -53,6 +53,12 @@ public sealed class PersistentBlackboard : IBlackboard
 
     /// <summary>
     ///     Sets a key-value pair and automatically persists to disk.
+    ///     <para>
+    ///         The in-memory value is committed before the disk write; if
+    ///         <c>Persist</c> throws (disk full, I/O error), the exception
+    ///         propagates while the in-memory value stays set. The next
+    ///         successful persist reconciles the disk state.
+    ///     </para>
     /// </summary>
     public void SetValue<T>(string key, T value)
     {

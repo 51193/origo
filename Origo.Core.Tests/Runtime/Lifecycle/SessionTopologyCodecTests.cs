@@ -71,14 +71,11 @@ public class SessionTopologyCodecTests
     }
 
     [Fact]
-    public void Parse_IgnoreEmptyEntries()
+    public void Parse_EmptyEntries_ThrowInvalidOperation()
     {
-        var descriptors = SessionTopologyCodec.Parse(
-            $"{SessionTopologyCodec.Serialize("bg", "l1", true)},,");
-
-        var descriptor = Assert.Single(descriptors);
-        Assert.Equal("bg", descriptor.Key);
-        Assert.Equal("l1", descriptor.LevelId);
-        Assert.True(descriptor.SyncProcess);
+        // Empty segments are malformed topology data, not noise: they must
+        // fail explicitly instead of being silently dropped.
+        Assert.Throws<InvalidOperationException>(() => SessionTopologyCodec.Parse(
+            $"{SessionTopologyCodec.Serialize("bg", "l1", true)},,"));
     }
 }

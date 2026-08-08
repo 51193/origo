@@ -76,4 +76,18 @@ public class NoiseMapGeneratorTests
 
         Assert.True(map1.SequenceEqual(map2));
     }
+
+    [Theory]
+    [InlineData(0, 2.0f, 0.5f, 1.0f, 1.0f, "octaves")]
+    [InlineData(3, 1.0f, 0.5f, 1.0f, 1.0f, "lacunarity")]
+    [InlineData(3, 2.0f, 0.0f, 1.0f, 1.0f, "gain")]
+    [InlineData(3, 2.0f, 0.5f, 0.0f, 1.0f, "frequency")]
+    [InlineData(3, 2.0f, 0.5f, 1.0f, 0.0f, "worleyFrequencyMultiplier")]
+    public void ExtendedOverload_InvalidParameters_Throw(int octaves, float lacunarity, float gain, float frequency, float worleyMultiplier, string paramName)
+    {
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            NoiseMapGenerator.GenerateSimplexWorleyBlendMap(16, 42, frequency, octaves, lacunarity, gain, worleyMultiplier));
+
+        Assert.Equal(paramName, exception.ParamName);
+    }
 }

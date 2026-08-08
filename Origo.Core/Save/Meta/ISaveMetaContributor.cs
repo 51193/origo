@@ -14,5 +14,10 @@ namespace Origo.Core.Save.Meta;
 /// </summary>
 public interface ISaveMetaContributor
 {
+    /// <summary>
+    ///     Produces this contributor's key-value pairs for the save's display
+    ///     metadata. Implementations must return a fresh dictionary and must
+    ///     not mutate the <paramref name="context" /> beyond reading it.
+    /// </summary>
     IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 }

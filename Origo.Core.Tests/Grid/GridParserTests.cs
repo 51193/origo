@@ -75,4 +75,30 @@ public class GridParserTests
         using var doc = JsonDocument.Parse("null");
         Assert.Null(GridParser.ParseCoords(doc.RootElement));
     }
+
+    [Fact]
+    public void ParseCoords_IsCultureInvariant()
+    {
+        // Parsing must not depend on the ambient culture: a dot thousands
+        // separator (valid in e.g. de-DE) must not change the result, and
+        // the invariant interpretation ("1.000" is not an integer) applies
+        // regardless of the current culture.
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentCulture =
+                System.Globalization.CultureInfo.GetCultureInfo("de-DE");
+
+            var parsed = GridParser.ParseCoords("10,20");
+            Assert.NotNull(parsed);
+            Assert.Equal(10, parsed.Value.X);
+            Assert.Equal(20, parsed.Value.Z);
+
+            Assert.Null(GridParser.ParseCoords("1.000,5"));
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+        }
+    }
 }

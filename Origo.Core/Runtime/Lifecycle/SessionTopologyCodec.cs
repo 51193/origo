@@ -34,7 +34,7 @@ internal static class SessionTopologyCodec
     public static List<SessionDescriptor> Parse(string raw)
     {
         var list = new List<SessionDescriptor>();
-        var entries = raw.Split(_entrySeparator, StringSplitOptions.RemoveEmptyEntries);
+        var entries = raw.Split(_entrySeparator);
         foreach (var entry in entries)
         {
             var parts = entry.Split(_fieldSeparator);

@@ -63,6 +63,38 @@ public class JsonAndMappingsTests
     }
 
     [Fact]
+    public void SndMappings_ReloadFailure_KeepsPreviousSceneAliases()
+    {
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("maps/scenes.map", "hero: res://hero.tscn");
+        var io = TestFactory.CreateIoGateway(fs);
+        var mappings = new SndMappings();
+        var logger = new TestLogger();
+        mappings.LoadSceneAliases(io, "maps/scenes.map", logger);
+
+        Assert.ThrowsAny<Exception>(() => mappings.LoadSceneAliases(io, "maps/missing.map", logger));
+
+        Assert.Equal("res://hero.tscn", mappings.ResolveSceneAlias("hero"));
+    }
+
+    [Fact]
+    public void SndMappings_ReloadFailure_KeepsPreviousTemplates()
+    {
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("maps/templates.map", "hero_template: templates/hero.json");
+        fs.SeedFile("templates/hero.json", """{"name":"TemplateHero"}""");
+        var io = TestFactory.CreateIoGateway(fs);
+        var registry = TestFactory.CreateRegistry(new TypeStringMapping());
+        var mappings = new SndMappings();
+        var logger = new TestLogger();
+        mappings.LoadTemplates(io, "maps/templates.map", registry, logger);
+
+        Assert.ThrowsAny<Exception>(() => mappings.LoadTemplates(io, "maps/missing.map", registry, logger));
+
+        Assert.Equal("TemplateHero", mappings.ResolveTemplate("hero_template").Name);
+    }
+
+    [Fact]
     public void SndMappings_LoadSceneAliasesAndTemplates_ResolveExpectedValues()
     {
         var fs = new TestMemoryFileSystem();

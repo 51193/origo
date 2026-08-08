@@ -35,6 +35,12 @@ public static class NoiseMapGenerator
         int octaves, float lacunarity, float gain, float worleyFrequencyMultiplier)
     {
         if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size), size, "Size must be greater than 0.");
+        if (octaves <= 0) throw new ArgumentOutOfRangeException(nameof(octaves), octaves, "Octaves must be greater than 0.");
+        if (lacunarity <= 1f) throw new ArgumentOutOfRangeException(nameof(lacunarity), lacunarity, "Lacunarity must be greater than 1.");
+        if (gain <= 0f) throw new ArgumentOutOfRangeException(nameof(gain), gain, "Gain must be greater than 0.");
+        if (frequency <= 0f) throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Frequency must be greater than 0.");
+        if (worleyFrequencyMultiplier <= 0f)
+            throw new ArgumentOutOfRangeException(nameof(worleyFrequencyMultiplier), worleyFrequencyMultiplier, "Worley frequency multiplier must be greater than 0.");
 
         var simplex = CreateSimplexNoise(seed, frequency);
         simplex.SetFractalType(FastNoiseLite.FractalType.FBm);

@@ -408,4 +408,42 @@ public class SndContextArchiveFileAccessTests
         var readBack = AsFileAccess(ctx).ReadFile("game_state.json");
         Assert.Equal("persisted", readBack["game_data"].AsString());
     }
+
+    // ── Error path: null / whitespace relative paths ──
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ReadFile_NullOrWhitespacePath_Throws(string? path)
+    {
+        var ctx = CreateContext(out _, out _);
+
+        var ex = Assert.ThrowsAny<ArgumentException>(() => AsFileAccess(ctx).ReadFile(path!));
+        Assert.Equal("path", ex.ParamName);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void WriteFile_NullOrWhitespacePath_Throws(string? path)
+    {
+        var ctx = CreateContext(out _, out _);
+
+        var ex = Assert.ThrowsAny<ArgumentException>(() => AsFileAccess(ctx).WriteFile(path!, DataSourceNode.CreateObject(), overwrite: true));
+        Assert.Equal("path", ex.ParamName);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void DeleteFile_NullOrWhitespacePath_Throws(string? path)
+    {
+        var ctx = CreateContext(out _, out _);
+
+        var ex = Assert.ThrowsAny<ArgumentException>(() => AsFileAccess(ctx).DeleteFile(path!));
+        Assert.Equal("path", ex.ParamName);
+    }
 }
