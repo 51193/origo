@@ -246,6 +246,15 @@ public sealed class ConsoleBridgeServer : IDisposable
             }
             catch (Exception ex)
             {
+                if (ct.IsCancellationRequested)
+                {
+                    // Dispose cancelled the token before stopping the
+                    // listener; the stop can surface as a plain socket error
+                    // instead of OperationCanceledException. Treat it as a
+                    // normal shutdown rather than a genuine failure.
+                    break;
+                }
+
                 // A cancellation makes AcceptTcpClientAsync throw
                 // OperationCanceledException (handled above); anything else is a
                 // genuine system-level socket error — stop the listener so the
