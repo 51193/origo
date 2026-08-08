@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -117,6 +117,8 @@ SystemRun (由 SndContext 构造并持有)
 ### 为什么读档失败后弃置 ProgressRun 并清空引用
 
 `ProgressRun.LoadFromPayload` 作用于 `SndContext` 刚创建的全新 `ProgressRun`（先 `CreateProgressRun` 再 `LoadFromPayload`），且磁盘 `current/` 在反序列化之前已写入完整 payload。若反序列化或会话挂载中途失败，`SndContext` 会 **Dispose 该 ProgressRun 并清空上下文引用**（`MountNewProgressRun` 的失败路径）：策略池引用立即归还、`current/` 被清理，且 `ctx.Blackboard.ProgressBlackboard` 与 `ctx.StateMachines` 等读取入口 fail-fast 返回 null/抛出"无活动流程"，不再暴露半反序列化状态。失败异常原样传播（清理失败仅记 Warning 日志，不遮蔽原始异常）。下次流程（如重新 `RequestLoadGame`）从干净状态重新创建 ProgressRun。
+
+回滚的清理步骤同样遵守"不遮蔽原始异常"纪律：`SessionRun.LoadFromPayload` 失败时 `ResetAfterLoadFailure` 逐步执行清理（状态机、实体、场景宿主、黑板），每步独立 try/catch——某一步的用户钩子（如 `OnUnmounted`）抛异常时，后续步骤仍执行，失败汇总为 `AggregateException` 记录 Warning 后，原始加载异常仍原样传播；`ProgressRun` 挂载循环失败时的 `Clear()` 同理（清理失败仅记 Warning）。
 
 ### 为什么前台会话键固定为 `__foreground__`
 

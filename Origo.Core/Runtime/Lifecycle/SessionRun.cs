@@ -261,12 +261,24 @@ internal sealed class SessionRun : ISessionRun
         {
             // Record the original load failure before cleanup: cleanup steps
             // (ResetAfterLoadFailure) can throw on their own and would
-            // otherwise mask the exception that triggered them.
+            // otherwise mask the exception that triggered them. Cleanup
+            // failures are logged and never mask the original failure.
             _logger.Log(LogLevel.Error, _logTag,
                 new LogMessageBuilder()
                     .AddContext("levelId", LevelId)
                     .Build($"Payload load failed: {ex.Message}"));
-            ResetAfterLoadFailure();
+            try
+            {
+                ResetAfterLoadFailure();
+            }
+            catch (Exception cleanupEx)
+            {
+                _logger.Log(LogLevel.Warning, _logTag,
+                    new LogMessageBuilder()
+                        .AddContext("levelId", LevelId)
+                        .Build($"Session cleanup after failed load failed: {cleanupEx.Message}"));
+            }
+
             throw;
         }
     }
@@ -380,12 +392,43 @@ internal sealed class SessionRun : ISessionRun
         };
     }
 
+    /// <summary>
+    ///     Rolls the session back to a clean state after a failed load: every
+    ///     cleanup step (state machines, entities, scene host, blackboard)
+    ///     runs independently even when an earlier step throws, so a user hook
+    ///     failure (e.g. <c>OnUnmounted</c>) cannot skip the remaining steps.
+    ///     Step failures are logged and rethrown as an
+    ///     <see cref="AggregateException" /> so the caller can surface them
+    ///     without masking the original load failure.
+    /// </summary>
     private void ResetAfterLoadFailure()
     {
-        _sessionScope.StateMachines.Clear();
-        ReleaseAllEntitiesAndClear(false);
-        _sceneHost.RemoveAllEntities();
-        _sessionScope.Blackboard.Clear();
+        var failures = new List<Exception>();
+        TryCleanupStep("state machines", () => _sessionScope.StateMachines.Clear(), failures);
+        TryCleanupStep("entities", () => ReleaseAllEntitiesAndClear(false), failures);
+        TryCleanupStep("scene host", () => _sceneHost.RemoveAllEntities(), failures);
+        TryCleanupStep("blackboard", () => _sessionScope.Blackboard.Clear(), failures);
+
+        if (failures.Count > 0)
+            throw new AggregateException(
+                "Session cleanup after failed load did not fully complete; see inner exceptions.", failures);
+    }
+
+    private void TryCleanupStep(string step, Action action, List<Exception> failures)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            _logger.Log(LogLevel.Warning, _logTag,
+                new LogMessageBuilder()
+                    .AddContext("levelId", LevelId)
+                    .AddContext("cleanupStep", step)
+                    .Build($"Load-failure cleanup step failed: {ex.Message}"));
+            failures.Add(ex);
+        }
     }
 
     /// <summary>

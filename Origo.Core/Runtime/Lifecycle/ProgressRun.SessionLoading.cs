@@ -53,7 +53,6 @@ internal sealed partial class ProgressRun
                 throw new InvalidOperationException(
                     $"Progress blackboard missing required '{WellKnownKeys.SessionTopology}' before load.");
 
-            _owner._sessionManager.Clear();
             try
             {
                 foreach (var descriptor in topology)
@@ -65,7 +64,21 @@ internal sealed partial class ProgressRun
                     new LogMessageBuilder()
                         .AddContext("saveId", _owner.SaveId)
                         .Build($"Session mount failed during load, all sessions cleared: {ex.Message}"));
-                _owner._sessionManager.Clear();
+                try
+                {
+                    // Dispose runs user hooks (BeforeQuit) which can throw on
+                    // their own; a cleanup failure must never mask the
+                    // original mount failure, so it is logged and dropped.
+                    _owner._sessionManager.Clear();
+                }
+                catch (Exception cleanupEx)
+                {
+                    _owner._progressRuntime.Logger.Log(LogLevel.Warning, nameof(ProgressRun),
+                        new LogMessageBuilder()
+                            .AddContext("saveId", _owner.SaveId)
+                            .Build($"Session cleanup after failed load failed: {cleanupEx.Message}"));
+                }
+
                 throw;
             }
 

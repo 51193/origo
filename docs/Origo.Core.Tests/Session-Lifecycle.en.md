@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -24,6 +24,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `EmptySessionManagerTests.cs` | No-op behavior of EmptySessionManager |
 | `PlayStopPlayRoundTripTests.cs` | Round-trip consistency of multiple Play→Stop→Play cycles (identity/blackboard/Tick/Progress) |
 | `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun load error paths (topology format errors/file missing/background load failure) |
+| `ProgressRunLoadRollbackMaskingTests.cs` | Regression: session cleanup after a background mount failure must not mask the original load exception if cleanup itself throws (BeforeQuit hook) — cleanup failure is only logged as Warning, the original exception propagates unchanged |
+| `SessionRunLoadRollbackMaskingTests.cs` | Regression: SessionRun load-failure rollback (`ResetAfterLoadFailure`) executes cleanup step by step; when the `OnUnmounted` hook throws, the remaining steps still execute (entities/blackboard cleared), the original exception is not masked, and cleanup failures are logged as Warning |
 | `SaveAndSwitchForegroundIntegrationTests.cs` | Combined save + switch level operations, collision handling, deferred queue orchestration |
 | `SessionDecouplingTests.cs` | Sessions run independently without interference (SessionStateMachineContext, SceneHost, path policy) |
 | `SessionManagerTests.cs` | ISessionManager: create/find/destroy/enumerate/ProcessAll/KillPending |
@@ -198,6 +200,22 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json syntax error | Exception |
 | `LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions` | Background session snd_scene invalid format causes load failure | Foreground set to null, no background keys |
 | `RequestLoadGame_Failure_DisposesProgressRunAndClearsContextReference` | Save load fails (corrupted background level) | ProgressRun disposed, context reference cleared (ProgressBlackboard null, EnsureProgressRun throws InvalidOperationException) |
+
+## ProgressRunLoadRollbackMaskingTests Details
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `LoadFromPayload_WhenBackgroundMountFails_OriginalExceptionSurvivesCleanupFailure` | Corrupted background level + foreground entity BeforeQuit hook throws | Original load exception propagates (without the BeforeQuit error message); cleanup still completes (foreground set to null); cleanup failure logged as Warning |
+
+## SessionRunLoadRollbackMaskingTests Details
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `LoadFromPayload_WhenFlushFails_OriginalExceptionSurvivesCleanupFailure` | `FlushAllAfterLoad` throws (push strategy failure) + `OnUnmounted` hook throws during rollback | Original FLUSH exception propagates (without the OnUnmounted message); scene host cleared, session blackboard cleared; cleanup failure logged as Warning |
 
 ## SaveAndSwitchForegroundIntegrationTests Details
 
@@ -424,7 +442,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
 | `LoadFromPayload_AfterLoadHookSpawnsEntity_DoesNotThrow` | Spawning inside the AfterLoad hook does not break batch iteration; after load both new and old entities exist | session-model: Hook Iteration |
-| `BuildLevelPayload_BeforeSaveHookSpawnsEntity_DoesNotThrow` | Spawning inside the BeforeSave hook does not break serialization | session-model: Hook Iteration |
+| `BuildLevelPayload_BeforeSaveHookSpawnsEntity_DoesNotThrow` | Spawns an entity inside the BeforeSave hook via the public `RequestSaveGame` flow without breaking serialization; after the save round-trip both new and old entities exist | session-model: Hook Iteration |
 | `Dispose_BeforeQuitHookSpawnsEntity_DoesNotThrowAndReleasesEverything` | Spawning inside the BeforeQuit hook does not break disposal; all entities released with no strategy pool reference leaks | session-model: Dispose Semantics |
 
 ### Error Path

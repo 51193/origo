@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -24,6 +24,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `EmptySessionManagerTests.cs` | EmptySessionManager 的无操作行为 |
 | `PlayStopPlayRoundTripTests.cs` | 多次 Play→Stop→Play 的往返一致性（身份/黑板/Tick/Progress） |
 | `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun 加载错误路径（拓扑格式错误/文件缺失/后台加载失败） |
+| `ProgressRunLoadRollbackMaskingTests.cs` | 回归：后台挂载失败后的会话清理若自身抛异常（BeforeQuit 钩子），不得遮蔽原始加载异常——清理失败仅记 Warning，原异常原样传播 |
+| `SessionRunLoadRollbackMaskingTests.cs` | 回归：SessionRun 加载失败回滚（`ResetAfterLoadFailure`）逐步执行清理；`OnUnmounted` 钩子抛异常时其余步骤仍执行（实体/黑板清空），原始异常不被遮蔽，清理失败记 Warning |
 | `SaveAndSwitchForegroundIntegrationTests.cs` | 保存+切换关卡的组合操作、碰撞处理、延迟队列编排 |
 | `SessionDecouplingTests.cs` | 会话独立运行互不干扰（SessionStateMachineContext、SceneHost、路径策略） |
 | `SessionManagerTests.cs` | ISessionManager：创建/查找/销毁/枚举/ProcessAll/KillPending |
@@ -198,6 +200,22 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json 语法错误 | Exception |
 | `LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions` | 后台会话 snd_scene 格式无效致加载失败 | 前台置 null、不含后台 key |
 | `RequestLoadGame_Failure_DisposesProgressRunAndClearsContextReference` | 存档加载失败（后台关卡损坏） | ProgressRun 被 Dispose，ctx 引用清除（ProgressBlackboard 为 null、EnsureProgressRun 抛 InvalidOperationException） |
+
+## ProgressRunLoadRollbackMaskingTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `LoadFromPayload_WhenBackgroundMountFails_OriginalExceptionSurvivesCleanupFailure` | 后台关卡损坏 + 前台实体 BeforeQuit 钩子抛异常 | 传播原始加载异常（不含 BeforeQuit 错误消息）；清理仍完成（前台置 null）；清理失败记 Warning |
+
+## SessionRunLoadRollbackMaskingTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `LoadFromPayload_WhenFlushFails_OriginalExceptionSurvivesCleanupFailure` | `FlushAllAfterLoad` 抛（push 策略失败）+ 回滚时 `OnUnmounted` 钩子抛 | 传播原始 FLUSH 异常（不含 OnUnmounted 消息）；场景宿主清空、会话黑板清空；清理失败记 Warning |
 
 ## SaveAndSwitchForegroundIntegrationTests 测试详情
 
@@ -424,7 +442,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `LoadFromPayload_AfterLoadHookSpawnsEntity_DoesNotThrow` | AfterLoad 钩子内 spawn 新实体不破坏批量迭代，加载完成后新旧实体并存 | session-model: 钩子迭代 |
-| `BuildLevelPayload_BeforeSaveHookSpawnsEntity_DoesNotThrow` | BeforeSave 钩子内 spawn 实体不破坏序列化 | session-model: 钩子迭代 |
+| `BuildLevelPayload_BeforeSaveHookSpawnsEntity_DoesNotThrow` | 经 `RequestSaveGame` 公共流程触发 BeforeSave 钩子内 spawn 实体，不破坏序列化，存档往返后新旧实体并存 | session-model: 钩子迭代 |
 | `Dispose_BeforeQuitHookSpawnsEntity_DoesNotThrowAndReleasesEverything` | BeforeQuit 钩子内 spawn 实体不破坏销毁，全部实体释放且无策略池引用泄漏 | session-model: Dispose 语义 |
 
 ### 错误路径

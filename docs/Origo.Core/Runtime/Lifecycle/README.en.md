@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -116,6 +116,8 @@ This ensures every persistence path has explicit semantics and a traceable call 
 ### Why a failed load discards the ProgressRun and clears the reference
 
 `ProgressRun.LoadFromPayload` operates on a brand-new `ProgressRun` just created by `SndContext` (create-then-load: `CreateProgressRun` then `LoadFromPayload`), and the on-disk `current/` has already received the complete payload before deserialization. If deserialization or session mounting fails midway, `SndContext` **disposes the ProgressRun and clears the context reference** (the failure path of `MountNewProgressRun`): pool references are returned immediately, `current/` is cleaned up, and read entry points such as `ctx.Blackboard.ProgressBlackboard` and `ctx.StateMachines` fail fast (null / "no active progress run") instead of exposing half-deserialized state. The original failure exception propagates unchanged (cleanup failures are only logged at Warning and never mask the original error). The next workflow (e.g. re-issuing `RequestLoadGame`) recreates the ProgressRun from a clean state.
+
+Rollback cleanup follows the same "never mask the original exception" discipline: when `SessionRun.LoadFromPayload` fails, `ResetAfterLoadFailure` performs cleanup step by step (state machines, entities, scene host, blackboard), each step with its own try/catch — if a user hook in one step (e.g. `OnUnmounted`) throws, the remaining steps still run, and failures are aggregated into an `AggregateException` logged as Warning while the original load exception still propagates unchanged; `ProgressRun`'s `Clear()` on mount-loop failure follows the same principle (cleanup failures are only logged as Warning).
 
 ### Why foreground session key fixed as `__foreground__`
 

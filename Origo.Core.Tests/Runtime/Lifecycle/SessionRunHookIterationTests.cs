@@ -66,9 +66,19 @@ public class SessionRunHookIterationTests
         var session = ctx.EnsureProgressRun().LoadAndMountForeground("test_level");
         session.Spawn(CreateMeta("A", BeforeSaveSpawnIdx));
 
-        // FireBeforeSaveHooks runs inside SerializeToPayload; a hook that
-        // spawns must not break serialization.
-        ((SessionRun)session).SerializeToPayload();
+        // The save pipeline fires the BeforeSave hooks during payload
+        // construction; a hook that spawns an entity must not break
+        // serialization, and the spawned entity must survive the round trip.
+        ctx.Save.RequestSaveGame("hook_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        ctx.Save.RequestLoadGame("hook_save");
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        var names = ctx.Runtime.SessionManager.ForegroundSession!.GetEntities()
+            .Select(e => e.Name).ToList();
+        Assert.Contains("A", names);
+        Assert.Contains("B", names);
     }
 
     [Fact]
