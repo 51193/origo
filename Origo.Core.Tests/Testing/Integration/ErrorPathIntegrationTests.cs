@@ -48,8 +48,9 @@ public class ErrorPathIntegrationTests
         harness.Context.SetProgressRun(null);
 
         harness.Context.Save.RequestLoadGame(saveId);
-        Assert.ThrowsAny<Exception>(
+        var ex = Assert.ThrowsAny<Exception>(
             () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Contains("property name", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -85,8 +86,9 @@ public class ErrorPathIntegrationTests
         harness.Context.SetProgressRun(null);
 
         harness.Context.Save.RequestLoadGame(saveId);
-        Assert.ThrowsAny<Exception>(
+        var ex = Assert.ThrowsAny<Exception>(
             () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Contains("property name", ex.Message, StringComparison.Ordinal);
     }
 
     // ── test strategies ──────────────────────────────────────────────

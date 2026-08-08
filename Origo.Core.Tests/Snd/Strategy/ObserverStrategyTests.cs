@@ -523,7 +523,7 @@ public class ObserverStrategyTests : IDisposable
     // ── Has / Remove observer bindings by target ──────────────────────
 
     [Fact]
-    public void HasObserverBindingTargeting_ExistingTarget_ReturnsTrue()
+    public void GetObserverNamesTargeting_ExistingTarget_ReturnsTrue()
     {
         var (entity, _, topology) = SetupWithTopology();
         ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
@@ -533,7 +533,7 @@ public class ObserverStrategyTests : IDisposable
     }
 
     [Fact]
-    public void HasObserverBindingTargeting_NonexistentTarget_ReturnsFalse()
+    public void GetObserverNamesTargeting_NonexistentTarget_ReturnsFalse()
     {
         var (entity, _, topology) = SetupWithTopology();
         ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
