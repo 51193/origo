@@ -24,7 +24,7 @@ public partial class OrigoDefaultEntry
 
         RegisterConsoleCommandHandlers();
 
-        _sndContext = new SndContext(new SndContextParameters(
+        var sndContext = new SndContext(new SndContextParameters(
             Runtime,
             SharedDataSourceIo,
             SharedMetaAccess,
@@ -40,11 +40,11 @@ public partial class OrigoDefaultEntry
             ConfigureConverters = RegisterCustomConverters,
         });
 
-        ((ISndContextAttachableSceneHost)SndManager).BindContext(_sndContext);
-        ConfigureSaveMetadataContributors(_sndContext);
+        ((ISndContextAttachableSceneHost)SndManager).BindContext(sndContext);
+        ConfigureSaveMetadataContributors(sndContext);
 
         // Delegate to Core to execute the complete startup flow: strategy discovery → alias/template loading → entry save
-        _sndContext.Bootstrap();
+        sndContext.Bootstrap();
     }
 
     private void RegisterConsoleCommandHandlers()

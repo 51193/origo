@@ -249,6 +249,10 @@ internal sealed class SessionManager : ISessionManager
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Session key cannot be null or whitespace.", nameof(key));
+        if (string.Equals(key, ISessionManager.ForegroundKey, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                $"Session key '{key}' is reserved for the framework's foreground session; " +
+                "background sessions must use a different key.");
         ValidateTopologyToken(key, nameof(key));
         if (TryGetMountedSession(key) is not null)
             throw new InvalidOperationException($"A session with key '{key}' is already mounted.");

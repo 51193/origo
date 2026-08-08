@@ -149,7 +149,7 @@ public class SndEntityOwningSessionTests
         public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => _events?.Add($"AfterSpawn:{entity.Name}");
     }
 
-    private sealed class StubSessionRun : ISessionRun
+    private sealed class StubSessionRun : ISessionRun, IDisposable
     {
         public IBlackboard SessionBlackboard => throw new NotSupportedException();
         public string LevelId => "test";

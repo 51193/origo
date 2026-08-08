@@ -25,7 +25,7 @@ public class LifecycleRunsTests
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
         var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
-        var run = progressRun.LoadAndMountForeground("default");
+        var run = (SessionRun)progressRun.LoadAndMountForeground("default");
         run.SessionBlackboard.SetValue("foo", 1);
 
         run.Dispose();
@@ -37,6 +37,28 @@ public class LifecycleRunsTests
         Assert.Throws<ObjectDisposedException>(() => run.SessionBlackboard);
         Assert.Throws<ObjectDisposedException>(() => run.GetSessionStateMachines());
         Assert.Throws<ObjectDisposedException>(() => run.FindByName("x"));
+    }
+
+    [Fact]
+    public void SessionRun_LoadFromPayload_NullNodes_FailFast()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
+        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
+        var run = (SessionRun)progressRun.LoadAndMountForeground("default");
+
+        // A level payload whose JSON content is null is corrupted data, not
+        // an empty level: the strict read must reject it (matching
+        // ValidateLevelPayload) instead of silently loading an empty scene.
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => run.LoadFromPayload(new LevelPayload { LevelId = "default" }));
+        Assert.Contains("null", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -247,7 +269,7 @@ public class LifecycleRunsTests
         sndContext.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("level1");
 
-        var fg = progressRun.SessionManager.ForegroundSession!;
+        var fg = (SessionRun)progressRun.SessionManager.ForegroundSession!;
         fg.SessionBlackboard.SetValue("score", 42);
 
         sndContext.Save.RequestSaveGame("roundtrip_001");
@@ -366,7 +388,7 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        var bg = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        var bg = (SessionRun)sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
         Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
 
         bg.Dispose();
@@ -392,7 +414,7 @@ public class LifecycleRunsTests
         sndContext.SetProgressRun(progressRun);
 
         // No data seeded — should mount empty session.
-        var session = progressRun.LoadAndMountForeground("missing_level");
+        var session = (SessionRun)progressRun.LoadAndMountForeground("missing_level");
 
         Assert.NotNull(session);
         Assert.Equal("missing_level", session.LevelId);
@@ -430,7 +452,7 @@ public class LifecycleRunsTests
         var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
 
-        var run = progressRun.LoadAndMountForeground("test_level");
+        var run = (SessionRun)progressRun.LoadAndMountForeground("test_level");
 
         Assert.Contains(logger.Infos, msg => msg.Contains("SessionRun") && msg.Contains("test_level"));
 
@@ -470,7 +492,7 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        using var bg = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
+        using var bg = (SessionRun)sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
 
         Assert.Contains(logger.Infos, msg => msg.Contains("SessionManager") && msg.Contains("bg1"));
     }

@@ -27,7 +27,7 @@ public class SaveAndSwitchForegroundIntegrationTests
             world.RegisterStrategy(() => new FindByNameStrategy());
         });
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         var entityA = host.CreateEntity(CreateMetaWithStrategy("EntityA",
@@ -49,7 +49,7 @@ public class SaveAndSwitchForegroundIntegrationTests
             world.RegisterStrategy(() => new FindByNameStrategy());
         });
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         host.CreateEntity(CreateMetaWithStrategy("EntityA"));
@@ -71,7 +71,7 @@ public class SaveAndSwitchForegroundIntegrationTests
             world.RegisterStrategy(() => new FindByNameStrategy());
         });
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         host.RecoverFromMetaList(
@@ -96,7 +96,7 @@ public class SaveAndSwitchForegroundIntegrationTests
             world.RegisterStrategy(() => new FindByNameStrategy());
         });
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         var host = (FullMemorySndSceneHost)((SessionRun)bg).SceneHost;
 
         host.RecoverFromMetaList(
@@ -118,7 +118,7 @@ public class SaveAndSwitchForegroundIntegrationTests
     {
         var (ctx, fs) = CreateForegroundContext();
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity1"));
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity2"));
         bg.SessionBlackboard.SetValue("bg_value", 42);
@@ -130,7 +130,7 @@ public class SaveAndSwitchForegroundIntegrationTests
         ctx.Save.RequestSwitchForegroundLevel("game");
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.Runtime.SessionManager.ForegroundSession;
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
 
@@ -145,7 +145,7 @@ public class SaveAndSwitchForegroundIntegrationTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("key_int", 100);
         bg.SessionBlackboard.SetValue("key_str", "hello");
@@ -157,7 +157,7 @@ public class SaveAndSwitchForegroundIntegrationTests
         ctx.Save.RequestSwitchForegroundLevel("game");
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.Runtime.SessionManager.ForegroundSession;
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
 
         var (foundInt, intValue) = fg.SessionBlackboard.TryGet<int>("key_int");
@@ -174,7 +174,7 @@ public class SaveAndSwitchForegroundIntegrationTests
     {
         var (ctx, _) = CreateForegroundContext();
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "game", true);
         ((SessionRun)bg).SceneHost.CreateEntity(CreateMeta("BgEntity"));
         bg.SessionBlackboard.SetValue("bg_only", 99);
 
@@ -188,7 +188,7 @@ public class SaveAndSwitchForegroundIntegrationTests
         var stillAlive = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.Null(stillAlive);
 
-        var fg = ctx.Runtime.SessionManager.ForegroundSession;
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.Equal("game", fg.LevelId);
     }

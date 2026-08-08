@@ -37,7 +37,11 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     private readonly SndStrategyManager _strategyManager;
 
     /// <summary>Bind the owning session after entity creation.</summary>
-    internal void BindSession(ISessionRun session) => _owningSession = session;
+    internal void BindSession(ISessionRun session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        _owningSession = session;
+    }
 
     /// <summary>
     ///     Constructs the entity and creates all four internal managers.

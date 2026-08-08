@@ -42,8 +42,8 @@ public class SessionDecouplingTests
             });
 
             SetupForegroundSession(ctx);
-            var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-            using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+            var fg = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
+            using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
             // Seed each session's blackboard with a unique marker.
             fg.SessionBlackboard.SetValue("marker", "foreground");
@@ -84,8 +84,8 @@ public class SessionDecouplingTests
             });
 
             SetupForegroundSession(ctx);
-            var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-            using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+            var fg = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
+            using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
             // Spawn a unique entity in each session's scene so we can distinguish them.
             // Foreground uses TestSndSceneHost (simple meta OK).
@@ -122,8 +122,8 @@ public class SessionDecouplingTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        var fg = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         // Both should expose ISndSceneHost (which includes FindByName/Spawn/GetEntities).
         Assert.IsType<ISndSceneHost>(((SessionRun)fg).SceneHost, exactMatch: false);
@@ -151,7 +151,7 @@ public class SessionDecouplingTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         // Directly use SceneHost (typed as ISndSceneHost) – no cast needed.
         var spawned = ((SessionRun)bg).SceneHost.CreateEntity(CreateFullMeta("soldier"));

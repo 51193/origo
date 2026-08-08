@@ -6,7 +6,7 @@ namespace Origo.Core.DataSource.Converters;
 
 /// <summary>
 ///     Converter between TypedData and DataSourceNode.
-///     JSON format: { "type": "System.Int32", "data": 42 }
+///     JSON format: { "type": "Int32", "data": 42 }
 /// </summary>
 internal sealed class TypedDataConverter : DataSourceConverter<TypedData>
 {

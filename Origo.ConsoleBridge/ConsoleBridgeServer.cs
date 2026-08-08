@@ -141,6 +141,14 @@ public sealed class ConsoleBridgeServer : IDisposable
 
         try
         {
+            // Socket.SendTimeout treats 0 as "infinite": a non-positive
+            // configured timeout would silently reintroduce the frame-thread
+            // stall the bounded send timeout exists to prevent.
+            if (_options.OutputSendTimeoutMs <= 0)
+                throw new ArgumentOutOfRangeException(nameof(_options), _options.OutputSendTimeoutMs,
+                    "OutputSendTimeoutMs must be positive; zero or negative values disable the " +
+                    "bounded send timeout (Socket.SendTimeout semantics).");
+
             _listener = new TcpListener(IPAddress.Loopback, _options.Port);
             _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             _listener.Start();
@@ -276,6 +284,11 @@ public sealed class ConsoleBridgeServer : IDisposable
     {
         try
         {
+            // A bounded send timeout keeps output writes (which run on the
+            // game frame thread) from stalling forever on a client that stops
+            // reading: once the TCP send buffer stays full past the timeout,
+            // the write fails and the connection is detached.
+            client.Client.SendTimeout = _options.OutputSendTimeoutMs;
             using var stream = client.GetStream();
             using var reader = new StreamReader(stream);
             using var writer = new StreamWriter(stream) { AutoFlush = true };
@@ -283,17 +296,31 @@ public sealed class ConsoleBridgeServer : IDisposable
             lock (_writerLock)
             {
                 _writer = writer;
-                if (_droppedLineCount > 0)
-                    writer.WriteLine(
-                        $"[ConsoleBridge] Warning: {_droppedLineCount} output line(s) were dropped due to buffer overflow.");
-                foreach (var line in _pendingOutput)
-                    writer.WriteLine(line);
+                try
+                {
+                    if (_droppedLineCount > 0)
+                        writer.WriteLine(
+                            $"[ConsoleBridge] Warning: {_droppedLineCount} output line(s) were dropped due to buffer overflow.");
+                    foreach (var line in _pendingOutput)
+                        writer.WriteLine(line);
 
-                // Only reset the drop counter and clear the backlog after the
-                // flush succeeded; on a mid-flush write failure the warning and
-                // the undelivered lines are retried by the next connection.
-                _droppedLineCount = 0;
-                _pendingOutput.Clear();
+                    // Only reset the drop counter and clear the backlog after the
+                    // flush succeeded; on a mid-flush write failure the warning and
+                    // the undelivered lines are retried by the next connection.
+                    _droppedLineCount = 0;
+                    _pendingOutput.Clear();
+                }
+                catch (Exception ex) when (ex is IOException or ObjectDisposedException or SocketException)
+                {
+                    // A slow or dead client filled the send buffer past the
+                    // send timeout: end this connection instead of blocking
+                    // the caller. The backlog is still queued (it is cleared
+                    // only after a successful flush) for the next connection.
+                    _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                        new LogMessageBuilder().Build(
+                            $"Initial output flush failed; connection detached: {ex.Message}"));
+                    return;
+                }
             }
 
             while (!ct.IsCancellationRequested)

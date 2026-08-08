@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
@@ -32,7 +34,25 @@ internal sealed class SpawnTemplateCommandHandler : ConsoleCommandHandlerBase
             return false;
         }
 
-        var template = _runtime.SndWorld.ResolveTemplate(templateKey);
+        SndMetaData template;
+        try
+        {
+            template = _runtime.SndWorld.ResolveTemplate(templateKey);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            // A mistyped template alias is a user input error: report it as a
+            // command error (matching bb_get's unknown-layer handling)
+            // instead of throwing through the frame loop.
+            errorMessage = ex.Message;
+            return false;
+        }
+        catch (InvalidOperationException ex)
+        {
+            errorMessage = ex.Message;
+            return false;
+        }
+
         template.Name = entityName;
 
         var session = _runtime.SessionManager.ForegroundSession;

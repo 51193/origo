@@ -361,7 +361,7 @@ internal sealed class TestSessionManager : ISessionManager
     }
 }
 
-internal sealed class TestSessionRun : ISessionRun
+internal sealed class TestSessionRun : ISessionRun, IDisposable
 {
     internal ISessionManager? _sessionManager;
 

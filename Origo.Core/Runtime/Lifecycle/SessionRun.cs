@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
@@ -30,7 +31,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 ///         SessionRun reclaims all its own resources in Dispose.
 ///     </para>
 /// </summary>
-internal sealed class SessionRun : ISessionRun
+internal sealed class SessionRun : ISessionRun, IDisposable
 {
     private const string _logTag = nameof(SessionRun);
     private readonly ISessionManager _sessionManager;
@@ -214,17 +215,30 @@ internal sealed class SessionRun : ISessionRun
 
         try
         {
-            if (!payload.SessionNode.IsNull)
-                _saveContext.DeserializeSession(payload.SessionNode);
+            // A null node is corrupted data (the writer always emits the full
+            // three-file set; missing files fail earlier in the reader). The
+            // strict read must reject it instead of silently loading an empty
+            // scene — matching ValidateLevelPayload on the direct-load path.
+            if (payload.SessionNode.IsNull)
+                throw new InvalidOperationException(
+                    $"Level payload for '{LevelId}' has a null session node: " +
+                    "the save data is corrupted or was written by an incompatible version.");
+            if (payload.SessionStateMachinesNode.IsNull)
+                throw new InvalidOperationException(
+                    $"Level payload for '{LevelId}' has a null session state machines node: " +
+                    "the save data is corrupted or was written by an incompatible version.");
+            if (payload.SndSceneNode.IsNull)
+                throw new InvalidOperationException(
+                    $"Level payload for '{LevelId}' has a null scene node: " +
+                    "the save data is corrupted or was written by an incompatible version.");
 
-            if (!payload.SessionStateMachinesNode.IsNull)
-                _sessionScope.StateMachines.DeserializeFromNode(
-                    payload.SessionStateMachinesNode,
-                    _saveContext.SndWorld.ConverterRegistry);
+            _saveContext.DeserializeSession(payload.SessionNode);
+            _sessionScope.StateMachines.DeserializeFromNode(
+                payload.SessionStateMachinesNode,
+                _saveContext.SndWorld.ConverterRegistry);
 
             IReadOnlyList<SndMetaData>? recoveredSceneMeta = null;
-            if (!payload.SndSceneNode.IsNull)
-                recoveredSceneMeta = _saveContext.RecoverSndScene(_sceneHost, payload.SndSceneNode);
+            recoveredSceneMeta = _saveContext.RecoverSndScene(_sceneHost, payload.SndSceneNode);
 
             // Snapshot the collection before firing hooks: AfterLoad hooks may
             // spawn new entities, and hosts expose a live entity view (the
@@ -442,38 +456,84 @@ internal sealed class SessionRun : ISessionRun
     ///     loop converges. A pass cap guards against a quit hook that spawns
     ///     entities forever (business-code pathology): it fails loudly instead
     ///     of hanging disposal.
+    ///     <para>
+    ///     Hook failures (BeforeQuit, OnUnmounted) propagate fail-fast, but each
+    ///     phase runs independently per entity: a throwing hook on one entity
+    ///     must not skip the release of every other entity (strategy-pool
+    ///     references and node handles would leak). The first hook failure is
+    ///     rethrown after the release passes complete; further failures are
+    ///     logged as warnings so they stay visible.
+    ///     </para>
     /// </summary>
     private void ReleaseAllEntitiesAndClear(bool fireQuitHooks)
     {
         const int maxPasses = 4;
-        for (var pass = 0; pass < maxPasses; pass++)
+        Exception? firstHookFailure = null;
+        var pass = 0;
+        while (true)
         {
             List<ISndEntity> entities = [.. _sceneHost.GetEntities()];
             if (entities.Count == 0)
-                return;
+                break;
+
+            if (pass >= maxPasses)
+                throw new InvalidOperationException(
+                    $"Entity teardown for session '{LevelId}' did not converge after {maxPasses} passes: " +
+                    "a quit hook keeps spawning entities during disposal.");
+
+            if (fireQuitHooks)
+                foreach (var entity in entities)
+                    firstHookFailure = TryEntityStep(entity, firstHookFailure, "quit hook",
+                        () => ((IEntityLifecycle)entity).FireBeforeQuitHooks());
 
             foreach (var entity in entities)
-                if (fireQuitHooks && entity is IEntityLifecycle lifecycle)
-                    lifecycle.FireBeforeQuitHooks();
+                firstHookFailure = TryEntityStep(entity, firstHookFailure, "observer teardown",
+                    () => ((IEntityLifecycle)entity).TeardownObserverBindings());
 
             foreach (var entity in entities)
-                if (entity is IEntityLifecycle lifecycle)
-                    lifecycle.TeardownObserverBindings();
+                firstHookFailure = TryEntityStep(entity, firstHookFailure, "strategy release",
+                    () =>
+                    {
+                        var lifecycle = (IEntityLifecycle)entity;
+                        lifecycle.ReleaseStrategiesOnly();
+                        lifecycle.TeardownOnly();
+                    });
 
-            foreach (var entity in entities)
-                if (entity is IEntityLifecycle lifecycle)
-                {
-                    lifecycle.ReleaseStrategiesOnly();
-                    lifecycle.TeardownOnly();
-                }
-
+            // Physical removal is a host operation independent of lifecycle
+            // delegation: every harvested entity must leave the host for the
+            // pass loop to converge. A removal failure propagates immediately
+            // (a host that cannot remove entities cannot be cleaned).
             foreach (var entity in entities)
                 _sceneHost.RemoveEntity(entity.Name);
+
+            pass++;
         }
 
-        throw new InvalidOperationException(
-            $"Entity teardown for session '{LevelId}' did not converge after {maxPasses} passes: " +
-            "a quit hook keeps spawning entities during disposal.");
+        if (firstHookFailure is not null)
+            ExceptionDispatchInfo.Capture(firstHookFailure).Throw();
+    }
+
+    private Exception? TryEntityStep(ISndEntity entity, Exception? firstFailure, string step, Action action)
+    {
+        if (entity is not IEntityLifecycle)
+            return firstFailure;
+
+        try
+        {
+            action();
+            return firstFailure;
+        }
+        catch (Exception ex)
+        {
+            if (firstFailure is null)
+                return ex;
+            _logger.Log(LogLevel.Warning, _logTag,
+                new LogMessageBuilder()
+                    .AddContext("entityName", entity.Name)
+                    .AddContext("step", step)
+                    .Build($"Entity teardown step failed during disposal: {ex.Message}"));
+            return firstFailure;
+        }
     }
 
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);

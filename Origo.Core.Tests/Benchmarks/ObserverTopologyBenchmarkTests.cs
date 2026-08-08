@@ -180,7 +180,7 @@ public class ObserverTopologyBenchmarkTests(ITestOutputHelper output)
     ///     entities are always session-bound, so the benchmark must model
     ///     that (the Mount validation reads the owning session).
     /// </summary>
-    private sealed class BenchmarkSession : Origo.Core.Abstractions.Lifecycle.ISessionRun
+    private sealed class BenchmarkSession : Origo.Core.Abstractions.Lifecycle.ISessionRun, IDisposable
     {
         public static readonly BenchmarkSession Instance = new();
 

@@ -364,4 +364,69 @@ public class DataSourceTests
         var hash = leaf.ComputeSha256Hash();
         Assert.NotEmpty(hash);
     }
+
+    // ── 28. Generic Read<T> through the interface chain returns a T-compatible instance ──
+
+    [Fact]
+    public void ConverterRegistry_GenericRead_ConcreteTypeThroughInterfaceChain()
+    {
+        var tm = new TypeStringMapping();
+        var registry = TestFactory.CreateRegistry(tm);
+
+        var node = registry.Write<ReadOnlyDictionary<string, string>>(
+            new ReadOnlyDictionary<string, string>(
+                new Dictionary<string, string> { ["a"] = "1", ["b"] = "2" }));
+
+        var result = registry.Read<ReadOnlyDictionary<string, string>>(node);
+
+        Assert.Equal("1", result["a"]);
+        Assert.Equal("2", result["b"]);
+    }
+
+    [Fact]
+    public void ConverterRegistry_GenericRead_IncompatibleRequest_FailsFastWithClearError()
+    {
+        var tm = new TypeStringMapping();
+        var registry = TestFactory.CreateRegistry(tm);
+
+        var node = registry.Write<ReadOnlyDictionary<string, string>>(
+            new ReadOnlyDictionary<string, string>(
+                new Dictionary<string, string> { ["a"] = "1" }));
+
+        // SortedDictionary has no converter of its own and the interface-chain
+        // converter cannot produce it; the request must fail fast with a clear
+        // error instead of an opaque InvalidCastException.
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<SortedDictionary<string, string>>(node));
+        Assert.Contains("SortedDictionary", ex.Message);
+    }
+
+    // ── 29. ReadOnlyDictionary blackboard round-trip preserves the concrete type ──
+
+    [Fact]
+    public void ReadOnlyDictionary_BlackboardRoundTrip_PreservesConcreteTypeAndResaves()
+    {
+        var tm = new TypeStringMapping();
+        var registry = TestFactory.CreateRegistry(tm);
+
+        var original = new Blackboard.Blackboard();
+        original.SetValue<IReadOnlyDictionary<string, string>>("map",
+            new ReadOnlyDictionary<string, string>(
+                new Dictionary<string, string> { ["x"] = "10", ["y"] = "20" }));
+
+        var serialized = original.SerializeAll();
+        var node = registry.Write(serialized);
+        var restoredDict = registry.Read<IReadOnlyDictionary<string, TypedData>>(node);
+        var restored = new Blackboard.Blackboard();
+        restored.DeserializeAll(restoredDict);
+
+        var (found, value) = restored.TryGet<ReadOnlyDictionary<string, string>>("map");
+        Assert.True(found);
+        Assert.NotNull(value);
+        Assert.Equal("10", value!["x"]);
+
+        // A resave must succeed: the round-trip must not drift the stored type
+        // to Dictionary (whose stable name is not registered).
+        _ = restored.SerializeAll();
+    }
 }

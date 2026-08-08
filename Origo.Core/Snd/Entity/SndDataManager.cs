@@ -99,6 +99,7 @@ internal sealed class SndDataManager
 
     public (bool, T?) TryGetData<T>(string name)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (_data.TryGetValue(name, out var td) && TypedDataFactory<T>.TryExtract(td, out var value))
             return (true, value);
         return (false, default);
@@ -106,6 +107,7 @@ internal sealed class SndDataManager
 
     public bool TryGetData<T>(string name, out T? value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (_data.TryGetValue(name, out var td) && TypedDataFactory<T>.TryExtract(td, out var extracted))
         {
             value = extracted;
@@ -120,6 +122,7 @@ internal sealed class SndDataManager
 
     public T GetRequiredData<T>(string name) where T : notnull
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (_data.TryGetValue(name, out var td) && TypedDataFactory<T>.TryExtract(td, out var value))
             return value;
         var message = $"Data with name '{name}' not found or is not of type '{typeof(T).Name}'.";

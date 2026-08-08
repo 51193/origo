@@ -81,6 +81,24 @@ public class SaveFormatVersionTests
     }
 
     [Fact]
+    public void Load_RejectsCorruptFormatVersionValue()
+    {
+        var (fs, ctx) = CreateSavedGame("ver_slot");
+
+        // A present-but-unparseable version value is corrupted data, not a
+        // missing key: silently treating it as version 1 would hide a save
+        // written by a newer framework whose version cannot be compared.
+        var metaPath = "root/save_ver_slot/meta.map";
+        var metaText = fs.ReadAllText(metaPath);
+        fs.WriteAllText(metaPath, metaText.Replace(
+            "origo.format_version: 1", "origo.format_version: corrupt"), overwrite: true);
+
+        ctx.Save.RequestLoadGame("ver_slot");
+        Assert.Throws<InvalidOperationException>(
+            () => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+    }
+
+    [Fact]
     public void ListSaves_HidesFrameworkReservedMetaKeys()
     {
         var (_, ctx) = CreateSavedGame("ver_slot");

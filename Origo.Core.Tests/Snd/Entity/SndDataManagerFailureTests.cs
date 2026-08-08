@@ -39,6 +39,16 @@ public class SndDataManagerFailureTests
         Assert.False(found, "Failed SetData must not leave a key behind.");
     }
 
+    [Fact]
+    public void TryGetData_BlankName_Throws()
+    {
+        var manager = new SndDataManager(new DummyEntity("E"), new TestLogger());
+
+        Assert.Throws<ArgumentException>(() => manager.TryGetData<int>(""));
+        Assert.Throws<ArgumentException>(() => manager.TryGetData<int>("", out _));
+        Assert.Throws<ArgumentException>(() => manager.GetRequiredData<int>(""));
+    }
+
     private sealed class DummyEntity(string name) : ISndEntity
     {
         public string Name { get; } = name;

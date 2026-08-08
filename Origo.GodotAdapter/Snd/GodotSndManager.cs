@@ -97,7 +97,9 @@ public partial class GodotSndManager
         }
         catch (Exception ex)
         {
-            SharedLogger?.Log(LogLevel.Warning, nameof(GodotSndManager),
+            // CreateEntity requires bound runtime dependencies
+            // (EnsureReadyForSpawn), so the logger is always available.
+            SharedLogger.Log(LogLevel.Warning, nameof(GodotSndManager),
                 new LogMessageBuilder().AddContext("entityName", metaData.Name).Build($"Entity creation failed, rolling back: {ex.Message}"));
             throw;
         }
@@ -153,6 +155,44 @@ public partial class GodotSndManager
             factoryParent => new GodotPackedSceneNodeFactory(factoryParent));
         AddChild(entity);
         return entity;
+    }
+
+    /// <summary>
+    ///     Last-resort cleanup when this manager leaves the scene tree without
+    ///     going through the framework's session teardown (a scene switch, or
+    ///     business code removing/freeing the node directly). The engine is
+    ///     already tearing down the child node tree, so only the Core-side
+    ///     state must be released here: observer bindings (full teardown:
+    ///     unsubscribe + OnUnmounted + pool release) and entity strategies,
+    ///     then the collection is detached. Hook failures are logged and
+    ///     dropped — this path exists for out-of-contract use, and the node
+    ///     tree is already going away. Idempotent: the framework teardown
+    ///     path (session dispose → RemoveAllEntities) empties the collection
+    ///     before the node is freed, so nothing runs here in that case.
+    /// </summary>
+    public override void _ExitTree()
+    {
+        foreach (var entity in _collection)
+        {
+            try
+            {
+                if (entity is IEntityLifecycle lifecycle)
+                {
+                    lifecycle.TeardownObserverBindings();
+                    lifecycle.ReleaseStrategiesOnly();
+                }
+            }
+            catch (Exception ex)
+            {
+                // The logger may be unbound when the node is torn down before
+                // BindRuntimeDependencies (a failed bootstrap); guard it here.
+                SharedLogger?.Log(LogLevel.Warning, nameof(GodotSndManager),
+                    new LogMessageBuilder().AddContext("entityName", entity.Name)
+                        .Build($"Entity cleanup on manager exit failed: {ex.Message}"));
+            }
+        }
+
+        _collection.RemoveAllEntities();
     }
 
     private void DetachAndFree(GodotSndEntity entity)

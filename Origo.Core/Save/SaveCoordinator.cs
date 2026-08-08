@@ -36,7 +36,7 @@ internal sealed class SaveCoordinator
         ArgumentNullException.ThrowIfNull(progressBlackboard);
         ArgumentNullException.ThrowIfNull(progressStateMachines);
         ArgumentNullException.ThrowIfNull(progressRuntime);
-        ArgumentNullException.ThrowIfNull(saveId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(saveId);
         _sessionManager = sessionManager;
         _progressBlackboard = progressBlackboard;
         _progressStateMachines = progressStateMachines;

@@ -8,11 +8,16 @@ namespace Origo.Core.Utility;
 /// </summary>
 public static class PathUtility
 {
-    /// <summary>Normalizes a directory path by trimming trailing separators.</summary>
+    /// <summary>
+    ///     Normalizes a directory path by trimming trailing separators.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="path" /> is null, matching
+    ///     <see cref="Combine" />.
+    /// </exception>
     public static string NormalizeDirectoryPath(string path)
     {
-        if (path is null)
-            return string.Empty;
+        ArgumentNullException.ThrowIfNull(path);
         // A scheme root ("user://") must keep its double slash; trimming
         // would destroy it into the invalid "user:" prefix.
         if (path.EndsWith("://", StringComparison.Ordinal))

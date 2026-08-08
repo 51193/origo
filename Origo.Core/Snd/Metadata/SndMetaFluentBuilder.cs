@@ -95,16 +95,20 @@ public sealed class SndMetaFluentBuilder
     }
 
     /// <summary>Sets a <see cref="string" /> data value under the given key.</summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value" /> is null.</exception>
     public SndMetaFluentBuilder SetString(string key, string value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = new TypedData(TypedData.KindMap.String, 0, value);
         return this;
     }
 
     /// <summary>Sets a raw <see cref="byte" /> array data value under the given key.</summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value" /> is null.</exception>
     public SndMetaFluentBuilder SetBytes(string key, byte[] value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         EnsureDataMetaData();
         _meta.DataMetaData!.Pairs[key] = new TypedData(TypedData.UnregisteredKind, 0, value);
         return this;

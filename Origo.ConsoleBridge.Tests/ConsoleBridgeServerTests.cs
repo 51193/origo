@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Origo.Core.Runtime.Console;
+using Origo.TestSupport;
 using Xunit;
 
 namespace Origo.ConsoleBridge.Tests;
@@ -441,5 +443,94 @@ public class ConsoleBridgeServerTests
         var ex = Record.Exception(() => server.Dispose());
 
         Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task OutputToNonReadingClient_DoesNotBlockPublish()
+    {
+        var (server, (_, output)) = ConsoleBridgeTestInfrastructure.CreateStartedServer();
+        try
+        {
+            using var client = new TcpClient { ReceiveBufferSize = 1024 };
+            client.Connect(IPAddress.Loopback, server.ActualPort);
+            // Never read from the stream: a client that stops consuming data
+            // fills the server's send buffer. Publishing must not block the
+            // caller (the game frame thread) indefinitely — the dead
+            // connection is detached after a send timeout and the remaining
+            // lines are buffered for the next connection.
+            var longLine = new string('x', 60);
+            var publish = Task.Run(() =>
+            {
+                for (var i = 0; i < 200_000; i++)
+                    output.Publish($"line {i}: {longLine}");
+            }, TestContext.Current.CancellationToken);
+
+            var completed = await Task.WhenAny(publish,
+                Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+            Assert.Same(publish, completed);
+        }
+        finally
+        {
+            server.Dispose();
+        }
+    }
+
+    [Fact]
+    public void Options_OutputSendTimeoutMs_DefaultsAndCustom()
+    {
+        Assert.Equal(ConsoleBridgeOptions.DefaultOutputSendTimeoutMs,
+            new ConsoleBridgeOptions().OutputSendTimeoutMs);
+        Assert.Equal(250, new ConsoleBridgeOptions { OutputSendTimeoutMs = 250 }.OutputSendTimeoutMs);
+    }
+
+    [Fact]
+    public void Start_NonPositiveOutputSendTimeout_Throws()
+    {
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var server = new ConsoleBridgeServer(input, output,
+            new ConsoleBridgeOptions { OutputSendTimeoutMs = 0 });
+
+        // Socket.SendTimeout treats 0 as "infinite": accepting it would
+        // silently reintroduce the frame-thread stall the timeout exists to
+        // prevent.
+        Assert.Throws<ArgumentOutOfRangeException>(() => server.Start());
+    }
+
+    [Fact]
+    public async Task BacklogReplayToNonReadingClient_DetachesConnectionAndKeepsBacklog()
+    {
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var logger = new TestLogger();
+        var server = new ConsoleBridgeServer(input, output, new ConsoleBridgeOptions { Port = 0 }, logger);
+        server.Start();
+        try
+        {
+            // Fill the pending-output backlog while no client is connected
+            // (8MB total — well beyond the kernel socket buffers).
+            var longLine = new string('x', 8000);
+            for (var i = 0; i < 1000; i++)
+                output.Publish($"line {i}: {longLine}");
+
+            // Connect without reading: the backlog replay stalls until the
+            // send timeout detaches the connection; the remaining backlog
+            // stays queued for a later connection instead of blocking the
+            // caller (and the connection is closed).
+            using var client = new TcpClient { ReceiveBufferSize = 1024 };
+            client.Connect(IPAddress.Loopback, server.ActualPort);
+
+            await Task.Delay(500, TestContext.Current.CancellationToken);
+            output.Publish("after-detach");
+
+            Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+                () => logger.Warnings.Any(w => w.Contains("flush failed")),
+                ConsoleBridgeTestInfrastructure.OutputTimeoutMs),
+                "the stalled replay must detach the connection");
+        }
+        finally
+        {
+            server.Dispose();
+        }
     }
 }

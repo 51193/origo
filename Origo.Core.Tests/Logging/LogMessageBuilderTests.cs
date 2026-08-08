@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Logging;
 using Xunit;
 
@@ -75,5 +76,19 @@ public class LogMessageBuilderTests
     {
         var msg = new LogMessageBuilder().SetElapsedMs(0.0).Build("test");
         Assert.StartsWith("[+0.00ms]", msg);
+    }
+
+    [Fact]
+    public void SetElapsedMs_NaN_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new LogMessageBuilder().SetElapsedMs(double.NaN));
+    }
+
+    [Fact]
+    public void SetElapsedMs_Negative_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new LogMessageBuilder().SetElapsedMs(-1.0));
     }
 }

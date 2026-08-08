@@ -25,7 +25,8 @@ internal static class ValueInference
             return intValue;
         if (long.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var longValue))
             return longValue;
-        if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
+        if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue)
+            && !float.IsNaN(floatValue) && !float.IsInfinity(floatValue))
             return floatValue;
         if (bool.TryParse(raw, out var boolValue))
             return boolValue;

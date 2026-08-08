@@ -11,7 +11,7 @@ namespace Origo.Core.StateMachine;
 ///     runtime pop invokes the Pop strategy's <see cref="StateMachineStrategyBase.OnPopRuntime" />;
 ///     quit-time staged pop invokes <see cref="StateMachineStrategyBase.OnPopBeforeQuit" />.
 /// </summary>
-public sealed class StackStateMachine : IStateMachine, IDisposable
+internal sealed class StackStateMachine : IStateMachine, IDisposable
 {
     private readonly IStateMachineContext _ctx;
     private readonly SndStrategyPool _pool;

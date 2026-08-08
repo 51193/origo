@@ -161,4 +161,18 @@ public class SndMetaFluentBuilderTests
         Assert.Equal("Hero", TypedDataObjectConverter.ToObject(meta.DataMetaData.Pairs["name"]));
         Assert.Equal(true, TypedDataObjectConverter.ToObject(meta.DataMetaData.Pairs["alive"]));
     }
+
+    [Fact]
+    public void SetString_NullValue_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(
+            () => new SndMetaFluentBuilder("E").SetString("name", null!));
+    }
+
+    [Fact]
+    public void SetBytes_NullValue_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(
+            () => new SndMetaFluentBuilder("E").SetBytes("raw", null!));
+    }
 }

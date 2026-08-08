@@ -433,17 +433,12 @@ public sealed class SndContext : ISndContext
 
     private void RunWorkflow(Action body)
     {
-        BeginWorkflow();
-        try
+        ArgumentNullException.ThrowIfNull(body);
+        RunWorkflow(() =>
         {
-            Runtime.ResetConsoleState();
-            ShutdownCurrentProgressAndScene();
             body();
-        }
-        finally
-        {
-            EndWorkflow();
-        }
+            return 0;
+        });
     }
 
     private T RunWorkflow<T>(Func<T> body)

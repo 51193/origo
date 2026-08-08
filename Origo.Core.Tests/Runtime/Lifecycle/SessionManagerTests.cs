@@ -51,6 +51,19 @@ public class SessionManagerTests
     }
 
     [Fact]
+    public void CreateBackgroundSession_ReservedForegroundKey_Throws()
+    {
+        var (ctx, _) = CreateContext();
+
+        // The foreground key is a reserved slot managed exclusively by the
+        // framework's foreground mount paths; a background session must not
+        // be able to occupy (or destroy) it.
+        Assert.Throws<InvalidOperationException>(() =>
+            ctx.Runtime.SessionManager.CreateBackgroundSession(ISessionManager.ForegroundKey, "bg1"));
+        Assert.False(ctx.Runtime.SessionManager.Contains(ISessionManager.ForegroundKey));
+    }
+
+    [Fact]
     public void DestroySession_NonExistentKey_DoesNotChangeMountedSessions()
     {
         var (ctx, _) = CreateContext();

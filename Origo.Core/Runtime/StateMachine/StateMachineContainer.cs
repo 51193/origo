@@ -13,7 +13,7 @@ namespace Origo.Core.Runtime.StateMachine;
 ///     to strategy pool reference counts. Depends on <see cref="IStateMachineContext" /> rather than a
 ///     concrete context type, ensuring frontend and backend can share the same state machine semantics.
 /// </summary>
-public sealed class StateMachineContainer : IStateMachineContainer
+internal sealed class StateMachineContainer : IStateMachineContainer
 {
     private readonly IStateMachineContext _ctx;
     private readonly List<string> _machineOrder = [];

@@ -17,6 +17,14 @@ public class TypeStringMappingExtendedTests
     }
 
     [Fact]
+    public void TypeStringMapping_GetTypeByName_BlankName_Throws()
+    {
+        var mapping = new TypeStringMapping();
+        Assert.Throws<ArgumentException>(() => mapping.GetTypeByName(""));
+        Assert.Throws<ArgumentException>(() => mapping.GetTypeByName("   "));
+    }
+
+    [Fact]
     public void TypeStringMapping_GetNameByType_UnregisteredType_Throws()
     {
         var mapping = new TypeStringMapping();

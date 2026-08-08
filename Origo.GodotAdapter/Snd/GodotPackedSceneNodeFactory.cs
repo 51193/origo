@@ -38,7 +38,10 @@ public sealed class GodotPackedSceneNodeFactory(Node parent) : INodeFactory
             _cache[resourceId] = scene;
         }
 
-        var node = scene.Instantiate<Node>();
+        var node = scene.Instantiate<Node>()
+            ?? throw new InvalidOperationException(
+                $"Instantiation of PackedScene '{resourceId}' for logicalName='{logicalName}' " +
+                "returned null (a script error inside the scene root).");
         node.Name = logicalName;
         _parent.AddChild(node);
         return new GodotNodeHandle(node);

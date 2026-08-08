@@ -15,9 +15,19 @@ public sealed class LogMessageBuilder
     private readonly List<KeyValuePair<string, object?>> _context = [];
     private double? _elapsedMs;
 
-    /// <summary>Attaches an elapsed-time prefix (<c>[+N.NNms]</c>) to the built message.</summary>
+    /// <summary>
+    ///     Attaches an elapsed-time prefix (<c>[+N.NNms]</c>) to the built
+    ///     message. The value must be a finite non-negative number.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="elapsedMs" /> is NaN, negative infinity,
+    ///     positive infinity, or negative.
+    /// </exception>
     public LogMessageBuilder SetElapsedMs(double elapsedMs)
     {
+        if (double.IsNaN(elapsedMs) || double.IsInfinity(elapsedMs) || elapsedMs < 0)
+            throw new ArgumentOutOfRangeException(nameof(elapsedMs), elapsedMs,
+                "Elapsed milliseconds must be a finite non-negative number.");
         _elapsedMs = elapsedMs;
         return this;
     }

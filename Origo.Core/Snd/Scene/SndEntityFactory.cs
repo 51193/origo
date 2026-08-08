@@ -44,8 +44,11 @@ public static class SndEntityFactory
 
     /// <summary>
     ///     Stages all entities on the host first, then fires AfterSpawn hooks in a
-    ///     second pass so hooks can assume a fully-constructed scene graph. If a
-    ///     hook throws, every entity that was created but did not complete its
+    ///     second pass so hooks can assume a fully-constructed scene graph. If the
+    ///     staging itself fails (a host rejects a meta), every entity staged so far
+    ///     is rolled back — none of them fired AfterSpawn, so none may remain as
+    ///     half-staged entities that are registered on the host but never spawned.
+    ///     If a hook throws, every entity that was created but did not complete its
     ///     AfterSpawn hook (the failing one and all not-yet-fired ones) is rolled
     ///     back; entities whose hooks already fired are left fully spawned.
     /// </summary>
@@ -54,8 +57,22 @@ public static class SndEntityFactory
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(metaList);
         var staged = new List<ISndEntity>();
-        foreach (var meta in metaList)
-            staged.Add(host.CreateEntity(meta));
+        try
+        {
+            foreach (var meta in metaList)
+                staged.Add(host.CreateEntity(meta));
+        }
+        catch
+        {
+            // The failing entity is rolled back by the host itself; the
+            // already-staged ones never fired AfterSpawn and must not stay
+            // registered on the host.
+            foreach (var entity in staged)
+                if (entity is IEntityLifecycle rollback)
+                    Rollback(host, entity, rollback);
+            throw;
+        }
+
         for (var i = 0; i < staged.Count; i++)
         {
             if (staged[i] is not IEntityLifecycle lifecycle)

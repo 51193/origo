@@ -102,16 +102,6 @@ public static class DataSourceFactory
         };
     }
 
-    /// <summary>
-    ///     Creates an I/O gateway over the given file system with default codecs
-    ///     (.json / .map / raw-string suffixes).
-    /// </summary>
-    public static IDataSourceIoGateway CreateIoGateway(IFileSystem fileSystem, bool writeIndented = true)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        return new DataSourceIoGateway(fileSystem, BuildDefaultIoOptions(), BuildDefaultCodecs(writeIndented));
-    }
-
     internal static IDataSourceIoGateway CreateIoGateway(
         IFileSystem fileSystem,
         DataSourceIoOptions options,
@@ -125,7 +115,7 @@ public static class DataSourceFactory
 
     /// <summary>Creates an I/O gateway with the default codecs and options.</summary>
     public static IDataSourceIoGateway CreateDefaultIoGateway(IFileSystem fileSystem, bool writeIndented = true)
-        => CreateIoGateway(fileSystem, writeIndented);
+        => new DataSourceIoGateway(fileSystem, BuildDefaultIoOptions(), BuildDefaultCodecs(writeIndented));
 
     /// <summary>Creates a file metadata access facade over the given file system.</summary>
     public static IFileMetaAccess CreateFileMetaAccess(IFileSystem fileSystem)

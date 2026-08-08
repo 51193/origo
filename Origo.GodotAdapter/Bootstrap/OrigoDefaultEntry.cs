@@ -15,8 +15,6 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
 {
     private static readonly string[] _godotSkipPrefixes = ["Godot", "GodotSharp"];
 
-    private SndContext? _sndContext;
-
     /// <summary>Path to the entry config file (levels-structured <c>entry.json</c>).</summary>
     [Export] public string ConfigPath { get; set; } = "res://origo/entry/entry.json";
 

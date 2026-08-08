@@ -275,12 +275,6 @@ internal sealed class ObserverTopology
         }
     }
 
-    internal bool HasBindingTargetingFrom(string observerName, string targetName)
-    {
-        return _outgoing.TryGetValue(observerName, out var list)
-               && list.Any(b => string.Equals(b.TargetName, targetName, StringComparison.Ordinal));
-    }
-
     /// <summary>
     ///     Returns the names of all observers that currently hold a binding
     ///     targeting the given entity name. O(1) lookup through the incoming

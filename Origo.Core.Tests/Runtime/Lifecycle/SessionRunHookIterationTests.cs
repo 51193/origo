@@ -50,7 +50,7 @@ public class SessionRunHookIterationTests
         fs.SeedFile("root/current/level_level_a/session.json", "{}");
         fs.SeedFile("root/current/level_level_a/session_state_machines.json", "{\"machines\":[]}");
 
-        var fg = ctx.EnsureProgressRun().LoadAndMountForeground("level_a");
+        var fg = (SessionRun)ctx.EnsureProgressRun().LoadAndMountForeground("level_a");
 
         // The AfterLoad hook spawned entity B; both must be present and the
         // load must have completed.
@@ -63,7 +63,7 @@ public class SessionRunHookIterationTests
     public void BuildLevelPayload_BeforeSaveHookSpawnsEntity_DoesNotThrow()
     {
         var (ctx, _, _) = CreateContext();
-        var session = ctx.EnsureProgressRun().LoadAndMountForeground("test_level");
+        var session = (SessionRun)ctx.EnsureProgressRun().LoadAndMountForeground("test_level");
         session.Spawn(CreateMeta("A", BeforeSaveSpawnIdx));
 
         // The save pipeline fires the BeforeSave hooks during payload
@@ -85,7 +85,7 @@ public class SessionRunHookIterationTests
     public void Dispose_BeforeQuitHookSpawnsEntity_DoesNotThrowAndReleasesEverything()
     {
         var (ctx, _, logger) = CreateContext();
-        var session = ctx.EnsureProgressRun().LoadAndMountForeground("test_level");
+        var session = (SessionRun)ctx.EnsureProgressRun().LoadAndMountForeground("test_level");
         session.Spawn(CreateMeta("A", BeforeQuitSpawnIdx));
 
         session.Dispose();
@@ -100,7 +100,7 @@ public class SessionRunHookIterationTests
     public void Dispose_QuitHookSpawnsForever_FailsLoudlyInsteadOfHanging()
     {
         var (ctx, _, _) = CreateContext();
-        var session = ctx.EnsureProgressRun().LoadAndMountForeground("test_level");
+        var session = (SessionRun)ctx.EnsureProgressRun().LoadAndMountForeground("test_level");
         session.Spawn(CreateMeta("A", InfiniteSpawnIdx));
 
         // A quit hook that keeps spawning entities is business-code pathology;

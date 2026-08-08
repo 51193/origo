@@ -241,7 +241,7 @@ public abstract class StatefulAutoInitStrategy : LifecycleStrategyBase
     public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _counter++;
 }
 
-internal sealed class StubSessionRun : ISessionRun
+internal sealed class StubSessionRun : ISessionRun, IDisposable
 {
     private readonly ISndSceneHost _host;
     public StubSessionRun(ISndSceneHost host) { ArgumentNullException.ThrowIfNull(host); _host = host; }

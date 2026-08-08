@@ -1,3 +1,4 @@
+using Origo.Core.Runtime.Lifecycle;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -114,7 +115,7 @@ public class CoreArchitectureGuardrailTests
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var fg = ctx.Runtime.SessionManager.ForegroundSession;
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         fg.SessionBlackboard.SetValue("test_key", "test_value");
 
@@ -199,7 +200,7 @@ public class CoreArchitectureGuardrailTests
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
         bg.SessionBlackboard.SetValue("bg_key", "bg_value");
 
         Assert.True(ctx.Runtime.SessionManager.Contains("bg1"));
@@ -258,7 +259,7 @@ public class CoreArchitectureGuardrailTests
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
 
         bg.SessionBlackboard.SetValue("item", "sword");
         var (found, value) = bg.SessionBlackboard.TryGet<string>("item");
@@ -292,7 +293,7 @@ public class CoreArchitectureGuardrailTests
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
         Assert.NotEmpty(ctx.Runtime.SessionManager.Keys);
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("side", "side_level", true);
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("side", "side_level", true);
         Assert.True(ctx.Runtime.SessionManager.Contains("side"));
 
         ctx.Runtime.SessionManager.DestroySession("side");

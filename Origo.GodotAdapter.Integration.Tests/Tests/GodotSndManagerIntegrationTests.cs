@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Threading;
+using Godot;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Snd;

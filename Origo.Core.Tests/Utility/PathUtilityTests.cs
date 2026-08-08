@@ -93,6 +93,12 @@ public class PathUtilityTests
     }
 
     [Fact]
+    public void NormalizeDirectoryPath_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => PathUtility.NormalizeDirectoryPath(null!));
+    }
+
+    [Fact]
     public void NormalizeDirectoryPath_SchemePath_TrimsTrailingSlash()
     {
         Assert.Equal("user://dir", PathUtility.NormalizeDirectoryPath("user://dir/"));

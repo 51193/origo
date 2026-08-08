@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Origo.Core.DataSource.Converters;
 
@@ -10,7 +11,7 @@ internal sealed class StringDictionaryConverter : DataSourceConverter<IReadOnlyD
         var dict = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
             dict[key] = node[key].AsString();
-        return dict;
+        return new ReadOnlyDictionary<string, string>(dict);
     }
 
     public override DataSourceNode Write(IReadOnlyDictionary<string, string> value)

@@ -27,7 +27,7 @@ public class ForegroundBackgroundContractTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         // 公共 API 只暴露 ISessionRun，业务层无法获得具体类型。
         Assert.IsType<ISessionRun>(bg, exactMatch: false);
@@ -39,7 +39,7 @@ public class ForegroundBackgroundContractTests
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         // Verify session can be populated via save/load round-trip
         ctx.Blackboard.ProgressBlackboard!.SetValue(
             WellKnownKeys.SessionTopology,
@@ -56,7 +56,7 @@ public class ForegroundBackgroundContractTests
         SetupForegroundSession(ctx);
 
         // ForegroundSession 属性类型为 ISessionRun?
-        var fg = ctx.Runtime.SessionManager.ForegroundSession;
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         Assert.IsType<ISessionRun>(fg, exactMatch: false);
     }
@@ -68,9 +68,9 @@ public class ForegroundBackgroundContractTests
     {
         var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession!;
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         fg.SessionBlackboard.SetValue("fg_key", 1);
         bg.SessionBlackboard.SetValue("bg_key", 2);
@@ -90,7 +90,7 @@ public class ForegroundBackgroundContractTests
         ctx.Save.RequestLoadGame("format_test");
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var loadedBg = ctx.Runtime.SessionManager.TryGet("bg");
+        var loadedBg = (SessionRun?)ctx.Runtime.SessionManager.TryGet("bg");
         Assert.NotNull(loadedBg);
         var (foundFg, _) = ctx.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.TryGet<int>("fg_key");
         var (foundBg, _) = loadedBg!.SessionBlackboard.TryGet<int>("bg_key");
@@ -107,10 +107,10 @@ public class ForegroundBackgroundContractTests
         var (ctx, fs) = CreateContext();
 
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession!;
         fg.SessionBlackboard.SetValue("shared_key", 42);
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
         bg.SessionBlackboard.SetValue("shared_key", 42);
 
         ctx.Save.RequestSaveGame("load_test");
@@ -133,8 +133,8 @@ public class ForegroundBackgroundContractTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession!;
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         fg.SessionBlackboard.SetValue("x", "hello");
         bg.SessionBlackboard.SetValue("x", "world");
@@ -153,8 +153,8 @@ public class ForegroundBackgroundContractTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession!;
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         fg.SessionBlackboard.SetValue("only_fg", 1);
         bg.SessionBlackboard.SetValue("only_bg", 2);
@@ -170,8 +170,8 @@ public class ForegroundBackgroundContractTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession!;
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         fg.Dispose();
         bg.Dispose();
@@ -200,8 +200,8 @@ public class ForegroundBackgroundContractTests
         });
 
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession!;
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         var fgMachine = fg.GetSessionStateMachines().CreateOrGet(
             "test_sm", "contract.push", "contract.pop");
@@ -222,8 +222,8 @@ public class ForegroundBackgroundContractTests
     {
         var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession!;
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         fg.SessionBlackboard.SetValue("fg_data", "fg_val");
         bg.SessionBlackboard.SetValue("bg_data", "bg_val");
@@ -242,8 +242,8 @@ public class ForegroundBackgroundContractTests
     {
         var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+        var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession!;
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
         var sessions = new List<ISessionRun> { fg, bg };
         foreach (var session in sessions)
@@ -268,7 +268,7 @@ public class ForegroundBackgroundContractTests
         var (ctx, fs) = CreateContext();
         SetupForegroundSession(ctx);
 
-        using var bg1 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "level_a");
+        using var bg1 = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "level_a");
         bg1.SessionBlackboard.SetValue("data", 99);
 
         ctx.Save.RequestSaveGame("rttest");
@@ -277,7 +277,7 @@ public class ForegroundBackgroundContractTests
         Assert.True(fs.Exists("root/save_rttest/progress.json"));
         Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg1"));
 
-        var loadedFg = ctx.Runtime.SessionManager.ForegroundSession;
+        var loadedFg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(loadedFg);
 
         var savedBg = ctx.Runtime.SessionManager.TryGet("bg1");

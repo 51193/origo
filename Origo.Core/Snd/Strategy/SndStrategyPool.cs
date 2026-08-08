@@ -94,10 +94,6 @@ internal sealed class SndStrategyPool
                 $"Cannot release strategy '{index}': not acquired or already fully released.");
 
         count--;
-        if (count < 0)
-            throw new InvalidOperationException(
-                $"Reference count for strategy '{index}' went below zero (double release).");
-
         if (count == 0)
         {
             _pool.Remove(index);

@@ -74,8 +74,10 @@ public sealed class TypeStringMapping
     }
 
     /// <summary>Resolves a registered name to its type, throwing when the name is unknown.</summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="typeName" /> is null or whitespace.</exception>
     public Type GetTypeByName(string typeName)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(typeName);
         return _typeMap.TryGetValue(typeName, out var type)
             ? type
             : throw new InvalidOperationException($"Type name '{typeName}' is not registered.");

@@ -1,3 +1,4 @@
+using Origo.Core.Runtime.Lifecycle;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -86,7 +87,7 @@ public class AdapterArchitectureGuardrailTests
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_sess", "bg_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg_sess", "bg_level");
         bg.SessionBlackboard.SetValue("bg_data", "bg_value");
 
         var (found, val) = bg.SessionBlackboard.TryGet<string>("bg_data");

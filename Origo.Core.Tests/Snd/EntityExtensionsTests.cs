@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Lifecycle;
@@ -126,7 +127,7 @@ public class EntityExtensionsTests
         public void RemoveActiveStrategy(string index) => throw new System.NotImplementedException();
     }
 
-    private sealed class StubSession : ISessionRun
+    private sealed class StubSession : ISessionRun, IDisposable
     {
         public IBlackboard SessionBlackboard => throw new System.NotImplementedException();
         public string LevelId => "test";

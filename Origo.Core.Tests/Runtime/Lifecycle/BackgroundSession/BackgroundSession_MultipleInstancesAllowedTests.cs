@@ -1,3 +1,4 @@
+using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
 using Origo.Core.Abstractions.FileSystem;
@@ -16,9 +17,9 @@ public class BackgroundSession_MultipleInstancesAllowedTests
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
 
-        using var bg1 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_1", "level_a");
-        using var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_2", "level_b");
-        using var bg3 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_3", "level_c");
+        using var bg1 = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg_1", "level_a");
+        using var bg2 = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg_2", "level_b");
+        using var bg3 = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg_3", "level_c");
 
         Assert.False(bg1.IsFrontSession);
         Assert.False(bg2.IsFrontSession);
@@ -33,10 +34,10 @@ public class BackgroundSession_MultipleInstancesAllowedTests
     {
         var (ctx, _) = CreateContext();
         SetupForegroundSession(ctx);
-        using var bg1 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_1", "level_a");
-        using var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg_2", "level_b");
+        using var bg1 = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg_1", "level_a");
+        using var bg2 = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg_2", "level_b");
 
-        var fg = ctx.Runtime.SessionManager.ForegroundSession!;
+        var fg = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg.IsFrontSession);
     }
 

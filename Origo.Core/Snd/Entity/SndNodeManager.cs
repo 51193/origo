@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Logging;
@@ -75,10 +76,30 @@ internal sealed class SndNodeManager : INodeHost
 
     public void Release()
     {
-        foreach (var node in _nodes.Values) node.Free();
+        // A throwing node release must not skip the remaining nodes or leave
+        // the dictionaries in a half-cleared state: release every node, then
+        // clear regardless of individual failures (the first failure still
+        // propagates, fail-fast).
+        Exception? firstFailure = null;
+        foreach (var node in _nodes.Values)
+        {
+            try
+            {
+                node.Free();
+            }
+            catch (Exception ex)
+            {
+                firstFailure ??= ex;
+                _logger.Log(LogLevel.Warning, nameof(SndNodeManager),
+                    new LogMessageBuilder().Build($"Node release failed: {ex.Message}"));
+            }
+        }
 
         _nodes.Clear();
         _resources.Clear();
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     public NodeMetaData SerializeMetaData()

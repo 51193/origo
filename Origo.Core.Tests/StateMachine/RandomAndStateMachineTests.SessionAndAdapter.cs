@@ -1,3 +1,4 @@
+using Origo.Core.Runtime.Lifecycle;
 using System.Collections.Generic;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
@@ -37,7 +38,7 @@ public partial class RandomAndStateMachineTests
             ctx.SetProgressRun(progressRun);
             progressRun.LoadAndMountForeground("default");
 
-            using var run = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+            using var run = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
             var sm = run.GetSessionStateMachines().CreateOrGet("ui", "sm.push.test", "sm.pop.test");
             sm.Push("a");

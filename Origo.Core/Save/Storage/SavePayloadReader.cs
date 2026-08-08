@@ -90,16 +90,21 @@ internal static class SavePayloadReader
     /// <summary>
     ///     Rejects saves whose stored format version exceeds the current
     ///     framework version (a future format cannot be safely parsed).
-    ///     A missing version key is treated as version 1 (the initial format).
+    ///     A missing version key is treated as version 1 (the initial format);
+    ///     a present-but-unparseable value is corrupted data and fails the
+    ///     strict read.
     /// </summary>
     private static void ValidateFormatVersion(string baseRel, IReadOnlyDictionary<string, string>? customMeta)
     {
         var storedVersion = SaveGamePayload.CurrentFormatVersion;
         if (customMeta is not null
-            && customMeta.TryGetValue(SaveGamePayload.FormatVersionMetaKey, out var raw)
-            && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+            && customMeta.TryGetValue(SaveGamePayload.FormatVersionMetaKey, out var raw))
         {
-            storedVersion = parsed;
+            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out storedVersion))
+                throw new InvalidOperationException(
+                    $"Save at '{baseRel}' carries an invalid format version '{raw}': " +
+                    "the value is not a valid integer, so the save format cannot be trusted. " +
+                    "The save data is corrupted or was written by an incompatible version.");
         }
 
         if (storedVersion > SaveGamePayload.CurrentFormatVersion)

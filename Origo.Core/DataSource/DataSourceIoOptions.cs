@@ -31,10 +31,16 @@ internal sealed class DataSourceIoOptions
 
     internal static string NormalizeSuffix(string suffix)
     {
-        if (string.IsNullOrWhiteSpace(suffix))
-            throw new ArgumentException("Codec suffix cannot be null or whitespace.", nameof(suffix));
+        // A missing suffix (no extension) is a valid lookup key, not an
+        // invalid argument; only an explicitly blank value is rejected.
+        ArgumentNullException.ThrowIfNull(suffix);
+        if (suffix.Length == 0)
+            return string.Empty;
 
         var trimmed = suffix.Trim();
+        if (trimmed.Length == 0)
+            throw new ArgumentException("Codec suffix cannot be whitespace.", nameof(suffix));
+
         return trimmed[0] == '.'
             ? trimmed.ToLowerInvariant()
             : $".{trimmed.ToLowerInvariant()}";

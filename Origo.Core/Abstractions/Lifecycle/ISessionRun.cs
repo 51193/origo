@@ -12,11 +12,13 @@ namespace Origo.Core.Abstractions.Lifecycle;
 ///     Strategies use this to access session capabilities: entity operations
 ///     (find / spawn / kill), the session blackboard, state machines, and the
 ///     owning <see cref="ISessionManager" /> (for cross-session access).
-///     Lifecycle (create / destroy) and serialization are managed by <see cref="ISessionManager" />.
-///     Foreground and background sessions expose the same interface; they differ
-///     only by the <see cref="IsFrontSession" /> flag.
+///     Lifecycle (create / destroy) and serialization are managed by
+///     <see cref="ISessionManager" /> — sessions are destroyed through
+///     <see cref="ISessionManager.DestroySession" />, never by disposing the
+///     facade directly. Foreground and background sessions expose the same
+///     interface; they differ only by the <see cref="IsFrontSession" /> flag.
 /// </summary>
-public interface ISessionRun : IDisposable
+public interface ISessionRun
 {
     /// <summary>Session-scoped blackboard, isolated from other sessions.</summary>
     IBlackboard SessionBlackboard { get; }

@@ -10,7 +10,7 @@ namespace Origo.Core.Runtime.Console;
 ///     Supports positional arguments: <c>spawn myName myTemplate</c>;
 ///     or named arguments: <c>spawn name=myName template=myTemplate</c> (cannot be mixed with positional arguments).
 /// </summary>
-public static class ConsoleCommandParser
+internal static class ConsoleCommandParser
 {
     private static readonly char[] _tokenSeparators = [' ', '\t'];
 

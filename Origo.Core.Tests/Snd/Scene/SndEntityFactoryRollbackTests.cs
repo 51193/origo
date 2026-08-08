@@ -86,6 +86,31 @@ public class SndEntityFactoryRollbackTests
         Assert.Empty(host.GetEntities());
     }
 
+    [Fact]
+    public void SpawnMany_CreateEntityThrows_RollsBackAlreadyStagedEntities()
+    {
+        var (ctx, host, logger) = CreateContext();
+
+        // E2 references a strategy index that has no registered factory, so
+        // its creation fails inside the staging loop. The already-created
+        // entities (E1) must be rolled back too: a spawn batch that fails
+        // mid-creation must not leave half-staged entities behind that never
+        // receive their AfterSpawn hooks.
+        Assert.Throws<InvalidOperationException>(() => SndEntityFactory.SpawnMany(host,
+            CreateMeta("E1", NormalIdx),
+            CreateMeta("E2", "spawn_rollback.missing"),
+            CreateMeta("E3", NormalTwoIdx)));
+
+        Assert.Empty(host.GetEntities());
+        Assert.Null(host.FindByName("E1"));
+        Assert.Null(host.FindByName("E2"));
+        Assert.Null(host.FindByName("E3"));
+
+        // E1's strategy reference acquired during staging must be returned.
+        ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount"));
+    }
+
     private static (SndContext ctx, FullMemorySndSceneHost host, TestLogger logger) CreateContext()
     {
         var logger = new TestLogger();

@@ -173,6 +173,7 @@ public sealed class SndWorld
     /// <summary>Serializes a list of entity metadata into a data source node.</summary>
     public DataSourceNode WriteMetaListNode(IEnumerable<SndMetaData> metaDataList)
     {
+        ArgumentNullException.ThrowIfNull(metaDataList);
         var list = metaDataList as IReadOnlyList<SndMetaData> ?? [.. metaDataList];
         return ConverterRegistry.Write(list);
     }

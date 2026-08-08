@@ -21,7 +21,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("Entity"));
 
         var progressRun = ctx.EnsureProgressRun();
@@ -43,7 +43,7 @@ public class DisposeSemanticsTestsSessionRun
             world.RegisterStrategy(() => new DisposeSemanticsTestInfrastructure.BeforeSaveSpyStrategy());
         });
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.BeforeSaveStrategyIndex));
 
@@ -63,7 +63,7 @@ public class DisposeSemanticsTestsSessionRun
             world.RegisterStrategy(() => new DisposeSemanticsTestInfrastructure.BeforeQuitSpyStrategy());
         });
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.BeforeQuitStrategyIndex));
 
@@ -78,7 +78,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("Entity"));
         bg.SessionBlackboard.SetValue("data", 42);
 
@@ -102,7 +102,7 @@ public class DisposeSemanticsTestsSessionRun
             world.RegisterStrategy(() => new DisposeSemanticsTestInfrastructure.BeforeSaveSpyStrategy());
         });
 
-        using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.BeforeSaveStrategyIndex));
 
@@ -118,7 +118,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Dispose();
 
         var ex = Record.Exception(() => bg.Dispose());
@@ -130,7 +130,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)(SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("Entity"));
         bg.Disposing += () => throw new InvalidOperationException("subscriber failure");
 
@@ -148,7 +148,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("DisposedEntity"));
         bg.SessionBlackboard.SetValue("disposed_key", "disposed_val");
         bg.Dispose();
@@ -164,7 +164,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.SessionBlackboard.SetValue("data", 42);
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("DisposedEntity"));
         bg.Dispose();
@@ -180,7 +180,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
@@ -191,7 +191,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => bg.FindByName("any"));
@@ -202,7 +202,7 @@ public class DisposeSemanticsTestsSessionRun
     {
         var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
-        var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => bg.GetSessionStateMachines());
@@ -218,7 +218,7 @@ public class DisposeSemanticsTestsSessionRun
             world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPopStrategy());
         });
 
-        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)(SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.BeforeQuitStrategyIndex));
         bg.GetSessionStateMachines().CreateOrGet("machine",
@@ -247,7 +247,7 @@ public class DisposeSemanticsTestsSessionRun
             world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPopStrategy());
         });
 
-        var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        var bg = (SessionRun)(SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
             DisposeSemanticsTestInfrastructure.BeforeQuitStrategyIndex));
         bg.GetSessionStateMachines().CreateOrGet("machine",
@@ -262,6 +262,31 @@ public class DisposeSemanticsTestsSessionRun
 
         Assert.Null(Record.Exception(() => bg.Dispose()));
         Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
+
+        ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount"));
+    }
+
+    [Fact]
+    public void SessionRun_Dispose_EntityQuitHookThrows_LaterEntitiesStillReleased()
+    {
+        var (ctx, logger) = CreateContext(world =>
+        {
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.BeforeQuitSpyStrategy());
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.ThrowingQuitStrategy());
+        });
+
+        var bg = (SessionRun)(SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Throwing",
+            DisposeSemanticsTestInfrastructure.ThrowingQuitStrategyIndex));
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Normal",
+            DisposeSemanticsTestInfrastructure.BeforeQuitStrategyIndex));
+
+        // The first entity's BeforeQuit hook throws mid-release (fail-fast
+        // contract: the exception propagates), but the remaining entities'
+        // strategies must still be released instead of leaking pool
+        // references.
+        Assert.Throws<InvalidOperationException>(() => bg.Dispose());
 
         ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
         Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount"));

@@ -529,7 +529,7 @@ public class ObserverStrategyTests : IDisposable
         ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
         entity.MountObserverStrategy(entity.Name, _memoryObservedIdx);
 
-        Assert.True(topology.HasBindingTargetingFrom(entity.Name, entity.Name));
+        Assert.Contains(entity.Name, topology.GetObserverNamesTargeting(entity.Name));
     }
 
     [Fact]
@@ -538,7 +538,7 @@ public class ObserverStrategyTests : IDisposable
         var (entity, _, topology) = SetupWithTopology();
         ((IEntityLifecycle)entity).RecoverForLifecycle(CreateMeta()); ((IEntityLifecycle)entity).FireAfterSpawnHooks();
 
-        Assert.False(topology.HasBindingTargetingFrom(entity.Name, "ghost"));
+        Assert.Empty(topology.GetObserverNamesTargeting("ghost"));
     }
 
     [Fact]
@@ -551,7 +551,7 @@ public class ObserverStrategyTests : IDisposable
 
         topology.RemoveBindingsTargetingFor(entity, entity.Name);
 
-        Assert.False(topology.HasBindingTargetingFrom(entity.Name, entity.Name));
+        Assert.DoesNotContain(entity.Name, topology.GetObserverNamesTargeting(entity.Name));
     }
 
     // ── Incoming index (O(1) observer lookup by target) ───────────────

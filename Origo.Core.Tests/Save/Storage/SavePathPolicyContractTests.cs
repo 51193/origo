@@ -270,8 +270,8 @@ public class SavePathPolicyContractTests
             });
 
             SetupForegroundSession(ctx);
-            var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-            using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+            var fg = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
+            using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
             // Seed each scene with a distinguishing entity.
             ((SessionRun)fg).SceneHost.CreateEntity(new SndMetaData { Name = "fg_marker" });
@@ -318,8 +318,8 @@ public class SavePathPolicyContractTests
             });
 
             SetupForegroundSession(ctx);
-            var fg = ctx.Runtime.SessionManager.ForegroundSession!;
-            using var bg = ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
+            var fg = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
+            using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
             fg.SessionBlackboard.SetValue("who", "foreground");
             bg.SessionBlackboard.SetValue("who", "background");
