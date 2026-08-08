@@ -151,6 +151,19 @@ internal static class SavePayloadWriter
         LevelPayload level,
         bool overwrite)
     {
+        // All required nodes are validated before anything is written: a
+        // partial three-file write without the marker protection would leave
+        // a half level behind (ISaveStorageService exposes a bare write path).
+        if (level.SndSceneNode.IsNull)
+            throw new InvalidOperationException(
+                $"Level payload '{level.LevelId}' missing required SndSceneNode (strict mode).");
+        if (level.SessionNode.IsNull)
+            throw new InvalidOperationException(
+                $"Level payload '{level.LevelId}' missing required SessionNode (strict mode).");
+        if (level.SessionStateMachinesNode.IsNull)
+            throw new InvalidOperationException(
+                $"Level payload '{level.LevelId}' missing required SessionStateMachinesNode (strict mode).");
+
         var levelDirRel = handle.PathPolicy.GetLevelDirectory(baseDirectoryRel, level.LevelId);
         var levelDirAbs = handle.GetAbsolutePath(levelDirRel);
         handle.MetaAccess.CreateDirectory(levelDirAbs);
@@ -161,21 +174,12 @@ internal static class SavePayloadWriter
         var sndSceneAbs = handle.GetAbsolutePath(sndSceneRel);
         var sessionAbs = handle.GetAbsolutePath(sessionRel);
 
-        if (level.SndSceneNode.IsNull)
-            throw new InvalidOperationException(
-                $"Level payload '{level.LevelId}' missing required SndSceneNode (strict mode).");
-        if (level.SessionNode.IsNull)
-            throw new InvalidOperationException(
-                $"Level payload '{level.LevelId}' missing required SessionNode (strict mode).");
         handle.IoGateway.WriteTree(sndSceneAbs, level.SndSceneNode, overwrite);
         handle.IoGateway.WriteTree(sessionAbs, level.SessionNode, overwrite);
 
         var sessionSmRel = handle.PathPolicy.GetLevelSessionStateMachinesFile(levelDirRel);
         var sessionSmAbs = handle.GetAbsolutePath(sessionSmRel);
         handle.EnsureParentDirectory(sessionSmRel);
-        if (level.SessionStateMachinesNode.IsNull)
-            throw new InvalidOperationException(
-                $"Level payload '{level.LevelId}' missing required SessionStateMachinesNode (strict mode).");
         handle.IoGateway.WriteTree(sessionSmAbs, level.SessionStateMachinesNode, overwrite);
     }
 

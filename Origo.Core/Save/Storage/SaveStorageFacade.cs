@@ -45,10 +45,30 @@ internal static class SaveStorageFacade
 
             // Directories left over from an interrupted snapshot (save_X.tmp
             // staging / save_X.bak backup) are not valid slots; the swap logic
-            // only cleans them on the next write to the same id.
-            if (id.EndsWith(SaveTempDirectorySuffix, StringComparison.Ordinal)
-                || id.EndsWith(SaveBackupDirectorySuffix, StringComparison.Ordinal))
+            // only cleans them on the next write to the same id. An id that
+            // genuinely ends with the suffix (user-chosen name) with no
+            // matching real slot stays enumerable.
+            string trimmedId;
+            if (id.EndsWith(SaveTempDirectorySuffix, StringComparison.Ordinal))
+            {
+                trimmedId = id[..^SaveTempDirectorySuffix.Length];
+            }
+            else if (id.EndsWith(SaveBackupDirectorySuffix, StringComparison.Ordinal))
+            {
+                trimmedId = id[..^SaveBackupDirectorySuffix.Length];
+            }
+            else
+            {
+                result.Add(id);
                 continue;
+            }
+
+            if (trimmedId.Length > 0)
+            {
+                var realSlotRel = handle.PathPolicy.GetSaveDirectory(trimmedId);
+                if (handle.MetaAccess.DirectoryExists(handle.GetAbsolutePath(realSlotRel)))
+                    continue;
+            }
 
             result.Add(id);
         }

@@ -30,6 +30,15 @@ internal static class SaveAtomicWriter
     public static bool TryIdempotentSkip(
         SaveFileHandle handle, string newSaveId, string combinedHash, ILogger logger, Stopwatch watch)
     {
+        // A leftover write-in-progress marker in current/ means the previous
+        // save's snapshot phase failed. Skipping this write would leave
+        // current/ refusing reads until the next content change; only skip
+        // when current/ is clean.
+        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
+        if (handle.MetaAccess.FileExists(handle.GetAbsolutePath(markerRel)))
+            return false;
+
         var snapshotDirRel = handle.PathPolicy.GetSaveDirectory(newSaveId);
         var snapshotShaRel = handle.PathPolicy.GetPayloadShaFile(snapshotDirRel);
         var snapshotShaAbs = handle.GetAbsolutePath(snapshotShaRel);

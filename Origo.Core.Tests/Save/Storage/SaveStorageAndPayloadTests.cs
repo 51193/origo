@@ -57,6 +57,108 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void SaveStorageFacade_WriteSavePayloadToCurrentThenSnapshot_WhenMarkerLeft_DoesNotIdempotentSkip()
+    {
+        // A failed snapshot leaves the write-in-progress marker on disk and
+        // the combined hash in the snapshot slot. A retry with identical
+        // content must not take the idempotent skip (which would leave
+        // current/ refusing reads); it must rewrite and clear the marker.
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        var logger = new TestLogger();
+        var progressSm = """{"machines":[]}""";
+        var payload = new SaveGamePayload
+        {
+            SaveId = "001",
+            ActiveLevelId = "default",
+            ProgressNode = TestFactory.NodeFromJson("""{"marker":"content"}"""),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson(progressSm),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                ["default"] = new()
+                {
+                    LevelId = "default",
+                    SndSceneNode = TestFactory.NodeFromJson("[]"),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson(progressSm)
+                }
+            }
+        };
+
+        // State after an interrupted snapshot: current/ carries the marker and
+        // the snapshot slot already holds the matching combined hash.
+        var combinedHash = SaveAtomicWriter.ComputeCombinedHash(handle, payload);
+        var saveShaRel = handle.PathPolicy.GetPayloadShaFile(handle.PathPolicy.GetSaveDirectory("001"));
+        fs.SeedFile(fs.CombinePath("root", saveShaRel), combinedHash);
+        var markerRel = SavePathLayout.GetWriteInProgressMarker(SavePathLayout.GetCurrentDirectory());
+        fs.SeedFile(fs.CombinePath("root", markerRel), string.Empty);
+
+        SaveStorageFacade.WriteSavePayloadToCurrentThenSnapshot(handle, payload, "001", logger);
+
+        Assert.False(fs.Exists(fs.CombinePath("root", markerRel)),
+            "The retry must clear the leftover write-in-progress marker.");
+        Assert.True(fs.DirectoryExists("root/save_001"), "The retry must complete the snapshot.");
+    }
+
+    [Fact]
+    public void SaveStorageFacade_WriteLevelPayloadOnly_NullStateMachines_NoFilesWritten()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+
+        var level = new LevelPayload
+        {
+            LevelId = "lvl",
+            SndSceneNode = TestFactory.NodeFromJson("[]"),
+            SessionNode = TestFactory.NodeFromJson("{}"),
+            SessionStateMachinesNode = TestFactory.NodeFromJson("null")
+        };
+
+        Assert.Throws<InvalidOperationException>(() =>
+            SaveStorageFacade.WriteLevelPayloadOnly(handle, SavePathLayout.GetCurrentDirectory(), level));
+
+        Assert.False(fs.Exists("root/current/level_lvl/snd_scene.json"));
+        Assert.False(fs.Exists("root/current/level_lvl/session.json"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_EnumerateSaveIds_SuffixNamedSlotWithoutRealSlot_IsEnumerated()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.CreateDirectory("root/save_foo.tmp");
+        fs.CreateDirectory("root/save_bar");
+        fs.CreateDirectory("root/save_bar.tmp");
+
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        // "bar.tmp" is a leftover of an interrupted snapshot (real slot
+        // exists); "foo.tmp" is a user-chosen id that ends with the suffix
+        // and must stay enumerable.
+        Assert.Equal(["bar", "foo.tmp"], ids);
+    }
+
+    [Fact]
+    public void SaveStorageFacade_EnumerateSaveIds_SuffixOnlyId_DoesNotThrow()
+    {
+        // A user-chosen id that is itself only the suffix (".tmp") produces
+        // the directory save_.tmp; stripping the suffix would yield an empty
+        // id, which must not crash the enumeration (there is no valid real
+        // slot for an empty id).
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.CreateDirectory("root/save_.tmp");
+
+        var ids = SaveStorageFacade.EnumerateSaveIds(handle);
+
+        Assert.Equal([".tmp"], ids);
+    }
+
+    [Fact]
     public void SaveStorageFacade_EnumerateSaveIds_NullFileSystem_Throws() =>
         Assert.Throws<ArgumentNullException>(() => SaveStorageFacade.EnumerateSaveIds(null!));
 
