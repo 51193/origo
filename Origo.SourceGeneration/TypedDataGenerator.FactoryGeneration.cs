@@ -60,7 +60,11 @@ public sealed partial class TypedDataGenerator
 
             if (t.IsReferenceType)
             {
-                sb.AppendLine("            value = (T)source._ref!;");
+                // Reinterpret instead of casting: the kind guard already
+                // guarantees the reference type, and a castclass would block
+                // JIT elimination of the null check (see baseline docs).
+                sb.AppendLine("            object? rawRef = source._ref;");
+                sb.AppendLine("            value = Unsafe.As<object?, T>(ref rawRef)!;");
                 sb.AppendLine("            return true;");
             }
             else

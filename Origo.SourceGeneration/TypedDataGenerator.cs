@@ -446,7 +446,9 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 SpecialType.System_Single => $"BitConverter.SingleToInt32Bits({operand})",
                 SpecialType.System_Double => $"BitConverter.DoubleToInt64Bits({operand})",
                 SpecialType.System_Boolean => $"{operand} ? 1 : 0",
-                SpecialType.System_UInt32 or SpecialType.System_UInt64 => $"(long){operand}",
+                // Bit-pattern conversions: a consumer compiling with /checked
+                // must not hit overflow checks on the reinterpretation.
+                SpecialType.System_UInt32 or SpecialType.System_UInt64 => $"unchecked((long){operand})",
                 _ => operand
             };
 
@@ -458,6 +460,10 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 SpecialType.System_Double => $"BitConverter.Int64BitsToDouble({bitsOperand})",
                 SpecialType.System_Boolean => $"{bitsOperand} != 0",
                 SpecialType.System_Char => $"(char)(ushort){bitsOperand}",
+                // Bit-pattern conversions: a consumer compiling with /checked
+                // must not hit overflow checks on the reinterpretation.
+                SpecialType.System_UInt32 => $"unchecked((uint){bitsOperand})",
+                SpecialType.System_UInt64 => $"unchecked((ulong){bitsOperand})",
                 _ => $"({t.ClrTypeName}){bitsOperand}"
             };
 
@@ -473,9 +479,9 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 SpecialType.System_Int16 => "(long)(short)value",
                 SpecialType.System_UInt16 => "(long)(ushort)value",
                 SpecialType.System_Int32 => "(long)(int)value",
-                SpecialType.System_UInt32 => "(long)(uint)value",
+                SpecialType.System_UInt32 => "unchecked((long)(uint)value)",
                 SpecialType.System_Int64 => "(long)value",
-                SpecialType.System_UInt64 => "(long)(ulong)value",
+                SpecialType.System_UInt64 => "unchecked((long)(ulong)value)",
                 SpecialType.System_Char => "(long)(char)value",
                 _ => "(long)value"
             };
