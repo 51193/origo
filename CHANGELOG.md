@@ -150,6 +150,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Attaching a second `PlanExecutionStrategyBase`-derived strategy to the same entity now throws** — previously it silently unsubscribed the first plan strategy's callbacks.
 - **BREAKING: TypedData kind 255 rejected by the source generator** — `ORIGOSG003` now limits the valid range to `[1, 254]`; 255 is the reserved `UnregisteredKind` sentinel, and registering it used to corrupt `DataType` resolution and extraction.
 - **Godot `DeleteRecursive` now best-effort removes the directory container** — after clearing all contents (including hidden files) it attempts to remove the container through its parent handle, matching `IFileSystem.DeleteDirectory`. When the engine holds an open handle (e.g. inside the Godot editor) the removal fails and the empty container is left behind, which is harmless; in headless/exported processes the container is removed, preventing `SwapSnapshotDirectory` from failing its rename over a stale empty `.bak` container.
+- **`PlanExecutionStrategyBase` marks the intent status `active` when a plan starts** — `StartIntent` now writes `IntentStatusActive` ("active") to the intent-status key, completing the three-state protocol (`active` → `completed`/`failed`); observers reading the status key no longer see a stale value from a previous plan while an intent is executing.
+- **`PathUtility.Combine` rejects a null base path** — a null `basePath` now throws `ArgumentNullException` instead of silently returning the relative path (an empty-string base still passes the relative path through).
+- **Grid coordinate conversions reject non-positive dimensions** — `cellSize <= 0` or `gridSize <= 0` now throws `ArgumentOutOfRangeException` instead of silently producing NaN/out-of-range coordinates through division by zero.
+- **Duplicate named console arguments are rejected** — `spawn name=a name=b` now fails parsing with an explicit error instead of silently letting the last value win.
 - **A failed save load disposes the progress run and clears the context reference** — after a load failure, the half-initialized `ProgressRun` is disposed, its strategy pool references are returned, and `ctx.Blackboard.ProgressBlackboard` / `ctx.StateMachines` fail fast (null / "no active progress run") instead of exposing partially deserialized state. The original load exception still propagates.
 - **Observer mounting is now fail-fast like strategy mounting** — mounting the same (observer, target, strategy index) twice throws `InvalidOperationException` (previously it double-subscribed and double-fired `OnDataChanged`), and unmounting a pair that is not mounted throws instead of silently succeeding.
 - **DocSync validation warns on bilingual heading-structure drift** — `DocSyncTool validate` now compares `##`/`###` section counts between a pair's languages and warns when they differ (revision equality alone cannot prove content parity); warnings do not fail the build.
@@ -164,6 +168,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`ProgressRun` load rollback no longer masks the original failure** — when a session mount fails mid-load, the rollback `Clear()` is exception-protected: a `BeforeQuit` hook that throws during cleanup is logged as a warning and the original load failure still propagates (previously the cleanup exception replaced it).
+- **`SessionRun` load-failure rollback runs every cleanup step independently** — `ResetAfterLoadFailure` executes each step (state machines, entities, scene host, blackboard) with per-step protection, so a throwing `OnUnmounted` hook cannot skip the remaining cleanup; step failures are logged and rethrown as an `AggregateException`, and the original load failure still propagates.
+- **Corrupt `observer_indices` entries fail the load** — a save whose `observer_indices` array contains a non-object element now throws `InvalidOperationException` instead of silently dropping the damaged binding (the writer only ever emits object elements).
+- **Stale level directories are pruned on save** — a full save now removes `current/` level directories that are not in the payload (e.g. a destroyed background session's level); previously the stale data accumulated in `current/` and was copied into every subsequent snapshot.
 - **`ProgressRun.Dispose` stays fully released when a quit-pop hook throws** — an `OnPopBeforeQuit`
   hook failure inside the dispose path previously aborted the finally block before the state-machine
   container and progress blackboard were cleared and the disposed flag committed, leaving the run
@@ -227,17 +235,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`PlanExecutionStrategyBase.Wire` rolls back the intent subscription when the action-status
   subscription fails** — a partial wire no longer leaves an orphaned callback that `Unwire`
   cannot reach.
-- **`ConsoleBridgeServer` buffers the line that failed to write** — a hard client disconnect no
-  longer silently drops the output line being written at that moment; it is replayed to the next
-  connection (bounded by the same overflow policy).
-- **`ConsoleBridgeServer.Start` is no longer observable as successful after `Dispose`** — a
-  Start/Dispose race rolls back the listener and subscription and throws
-  `ObjectDisposedException`, instead of leaving the instance stuck in a started-but-dead state.
-- **`PersistentBlackboard.LoadFromDisk` removed an unreachable null branch** — the blackboard
-  converter never returns null; the defensive branch could have masked corrupted data under a
-  future registration change.
-- **`Astar` removed a dead search-limit condition** — `closedSet.Count < gridSize*gridSize` was
-  always true on an in-bounds grid; the open-set exhaustion already terminates the search.
 
 - **`ObserverTopology.RecoverBindingsFor` rejects blank observer targets** — an archived binding
   with a null/whitespace target now fails the load (consistent with the dangling-binding
@@ -254,24 +251,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`TypedData.RegisterKind` validates its inputs** — a null type now throws `ArgumentNullException`, and the reserved kind 255 (`UnregisteredKind` sentinel) is rejected with `ArgumentOutOfRangeException`.
 - **Source generator diagnostic `ORIGOSG005` also rejects duplicate registrations of the same type** — the same type listed twice (same or different kinds) previously produced uncompilable duplicate identifiers in generated code; it now fails the build with the diagnostic.
 - **`GodotSndEntity.DetachFromManager` no longer frees the Godot node itself** — engine teardown (`RemoveChild`/`Free`) is now consistently performed by the manager's detach callback; previously the entity freed itself first, making the callback dead code and leaving the "engine work injected via callback" contract unfulfilled.
-- **`ConsoleBridgeServer.Start` failure now rolls back fully** — a failed start stops and disposes the listener and unsubscribes the output channel, so a retry starts from a clean state instead of leaking the socket or subscription.
 - **`GodotPackedSceneNodeFactory` no longer caches failed scene loads** — a missing `PackedScene` resource can be retried after it becomes available instead of being pinned as a permanent failure.
 - **`DataSourceNode.ComputeSha256Hash` expands lazy subtrees recursively** — the save idempotency hash previously treated unexpanded nested JSON children as empty maps, so deep changes inside `extra/` files produced identical hashes and the whole save could be silently skipped.
 - **Save topology is re-solidified after `BeforeSave` hooks** — the framework-computed `SessionTopology` value is written after hooks fire, so hook writes to framework-owned blackboard keys cannot corrupt the persisted save topology.
 - **Plan actions already mounted via `LifecycleIndices` are reused** — `PlanExecutionStrategyBase` no longer fails when the action strategy for a plan step is already mounted on the entity; it reuses the existing mount instead of throwing a duplicate-mount exception.
 - **Foreground sessions now fire `BeforeSave` hooks on full save** — `RequestSaveGame` previously serialized foreground entities without triggering `BeforeSave`, so hook-written data never reached the save file; background sessions already fired them.
-- **`ConsoleBridgeServer` accept-loop faults are observable** — a non-cancellation socket error now logs `Error` and stops the listener (instead of dying silently), `Dispose` logs accept-task faults and join timeouts instead of swallowing them, and connection-handler logs include full stack traces.
-- **`ConsoleBridgeServer.Start` is retryable** — a failed start (e.g. port in use) rolls back its internal state instead of permanently disabling the instance.
 - **`entity_set_data` reports parse failures** — a value that cannot be converted to an existing key's type now returns an error message and keeps the original value, instead of reporting success.
 - **Level-switch checkpoints are marker-protected** — `WriteProgressOnlyToCurrent` / `WriteLevelPayloadOnlyToCurrent` now use the write-in-progress marker, so a crash between the two files leaves a state that readers reject instead of silently accepting a mixed generation.
 - **`PersistentBlackboard` writes are backup-swapped** — crash between the old delete+rename steps no longer loses `system.json`; the previous version is kept in a `.bak.json` file and restored by `LoadFromDisk` when the primary is missing.
 - **`PersistentRandom.NextFloat` stays in `[0, 1)`** — the raw-value upper bound could previously round up to exactly `1.0f` (~1-in-16-million chance per call).
 - **`ObserverTopology.Mount` rollback guard** — prevents strategy reference-count corruption when `GetStrategy` throws before pool acquisition.
-- **`GodotDirectoryOperations.Create` / `DeleteRecursive`** — error codes from Godot API calls are checked (fail-fast) instead of discarded. `DeleteRecursive` now clears directory contents but leaves the container intact, avoiding failures when the Godot editor holds file descriptors to `user://` paths.
+- **`GodotDirectoryOperations.Create` / `DeleteRecursive`** — error codes from Godot API calls are checked (fail-fast) instead of discarded.
 - **`GodotFileOperations.Delete`** — error code from `DirAccess.RemoveAbsolute` is checked instead of discarded.
-- **`PersistentBlackboard` atomic write** — uses temp-file + rename to prevent `system.json` corruption on crash. Stale temp files from interrupted writes are cleaned up automatically.
-- **`ConsoleBridgeServer` connection robustness** — no longer intermittently resets an in-flight read via concurrent stream disposal on `Dispose()`. Output buffer overflow now emits a warning instead of dropping lines silently.
-- **`ConsoleBridgeServer` accept-loop faults stop the listener and allow restart** — a non-cancellation socket error in the accept loop now stops the listener and rolls back the started flag, so the same server instance can be restarted by the host; previously the port stayed bound behind a dead accept loop and new connections hung forever.
 - **`SndDataManager.SetData` leaves no residual entry on conversion failure** — the value is converted before the dictionary slot is created, so a throwing adapter converter no longer leaves a default (null) data entry behind that would leak into serialized saves.
 - **`GodotDirectoryOperations` enumerates and deletes hidden files** — `EnumerateFiles`/`EnumerateDirectories`/`DeleteRecursive` now include dot-prefixed files (`DirAccess.IncludeHidden`), so a leftover `.write_in_progress` marker (from an interrupted save write) is actually removed by directory cleanup instead of silently surviving and causing strict readers to reject the save. Save-file snapshot copies now also include hidden files under `extra/`.
 
@@ -298,26 +289,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Level payload key/`LevelId` mismatch is rejected at write time** — writing a payload whose dictionary key differs from `LevelId` now throws instead of writing to the wrong directory.
 - **`PathUtility.NormalizeDirectoryPath` handles backslashes** — consistent with `SaveFileHandle` path handling on Windows-style paths.
 - **`SndMetaFluentBuilder` validates before constructing** — an invalid name no longer allocates a throwaway metadata object.
-- **`ConsoleBridgeServer` isolates output-write failures** — a hard client disconnect during `Publish` no longer propagates into the game frame loop; the dead writer is detached and output buffers again.
 - **`GodotFileOperations.WriteAllText` checks the write result** — a failed `StoreString` now throws `IOException` instead of silently losing data.
 - **`GodotSndManager` error logs no longer mask the original error** — entity creation/recovery failure paths guard against an unbound logger (previously a `NullReferenceException` replaced the intended error message).
 - **`OrigoAutoHost` fails loudly after bootstrap failure** — frame driving after a failed `_Ready` throws instead of silently running without a runtime.
-- **`TestSndSceneHost.RemoveEntity` keeps the metadata view in sync** — removed entities no longer linger in `BuildMetaList`.
-- **The TypedData source generator is truly incremental** — the generation input now has value equality, so an unchanged declaration set over a new `Compilation` (every editor keystroke) skips regeneration instead of re-extracting and regenerating everything.
-- **`GodotAdapter.CommandHandlerBase` inherits Core's handler base** — argument validation and error messaging are no longer duplicated; the adapter base only adds the runtime reference.
-- **Orphaned Godot `.uid` files removed** — 30 stale editor metadata files whose source files had been deleted.
 - **Foreground session state machines fire `OnPushAfterLoad` exactly once per restored layer after save/load** — a redundant second flush in the foreground-mount finalization previously re-fired the hook on every payload load.
 - **The progress blackboard topology keeps restored background sessions after a full load** — the load path no longer overwrites the complete deserialized topology with a foreground-only value before background sessions are mounted; it re-solidifies the full live topology once all sessions are mounted.
 - **`ProgressRun.Dispose` releases progress state machines and blackboard even when session teardown throws** — the disposed flag is committed and progress-level state is released in a `finally` block, mirroring `SessionRun.Dispose`.
 - **Structurally invalid state-machine save files now fail the load** — a `session_state_machines.json` / `progress_state_machines.json` that is not an object with a `machines` array is rejected with an explicit error instead of silently clearing every machine.
 - **Killing any entity now tears down its observer bindings before release** — `SessionRun.KillPending` no longer restricts observer teardown to bare `SndEntity` types; adapter wrapper entities (e.g. `GodotSndEntity`) are unmounted uniformly (`OnUnmounted` fires, the target data channel is unsubscribed, and the pool reference is released), closing a leak where a released observer strategy kept receiving `OnDataChanged` from a live target.
-- **`ConsoleBridgeServer` logs a `Warning` when a client read fails** — `IOException` from the read loop is no longer swallowed silently, matching the documented exception-propagation strategy.
-- **`ConsoleBridgeServer` preserves the buffer-overflow warning across a mid-flush write failure** — the drop counter and backlog are cleared only after the backlog flush succeeds, so the warning is not permanently lost when a client disconnects mid-flush.
 - **`PersistentRandom.NextInt32` stays within bounds for spans wider than `int.MaxValue`** — range arithmetic is done in `long`, so ranges like `NextInt32(-5, int.MaxValue)` no longer produce roughly half the results outside the requested range.
 - **Benchmark metric lines are locale-independent** — `PerfReporter.EmitMetric` formats with the invariant culture, so `scripts/benchmark.sh` parses `BENCH|` lines identically on every machine locale instead of silently skipping the regression gates.
 - **`DataSourceNode` canonical hashes escape structural characters in map keys** — keys containing `=`, `,`, `{`, `}`, `[`, `]`, quotes or backslashes no longer produce ambiguous encodings in the save idempotency hash.
 - **`FullMemorySndSceneHost.RecoverFromMetaList` is all-or-nothing** — a failed batch load rolls back every entity created before the failure, matching the Godot adapter's staged loading.
-- **`StubSndSceneHost.GetEntities` returns a snapshot** — callers iterating while the host is mutated no longer hit "collection was modified", consistent with `FullMemorySndSceneHost`.
 
 ## [0.0.8] - 2026-06-30
 
