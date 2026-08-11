@@ -10,7 +10,7 @@ internal sealed class NodeMetaDataConverter : DataSourceConverter<NodeMetaData>
 
         if (node.TryGetValue("pairs", out var pairsNode) && pairsNode is not null && !pairsNode.IsNull)
             foreach (var key in pairsNode.Keys)
-                meta.Pairs[key] = pairsNode[key].AsString();
+                meta.Pairs[key] = StringDataSourceConverter.ReadElement(pairsNode[key]);
 
         return meta;
     }

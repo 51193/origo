@@ -12,11 +12,11 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
 
         if (node.TryGetValue("lifecycle_indices", out var lifecycleNode) && lifecycleNode is not null && !lifecycleNode.IsNull)
             foreach (var element in lifecycleNode.Elements)
-                meta.LifecycleIndices.Add(element.AsString());
+                meta.LifecycleIndices.Add(StringDataSourceConverter.ReadElement(element));
 
         if (node.TryGetValue("active_indices", out var activeNode) && activeNode is not null && !activeNode.IsNull)
             foreach (var element in activeNode.Elements)
-                meta.ActiveIndices.Add(element.AsString());
+                meta.ActiveIndices.Add(StringDataSourceConverter.ReadElement(element));
 
         if (node.TryGetValue("observer_indices", out var observerIndicesNode) && observerIndicesNode is not null && !observerIndicesNode.IsNull)
             foreach (var element in observerIndicesNode.Elements)
@@ -40,7 +40,7 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
                 var indicesNode = element[binding.Target];
                 if (indicesNode is not null && !indicesNode.IsNull)
                     foreach (var indexElement in indicesNode.Elements)
-                        binding.ObserverIndices.Add(indexElement.AsString());
+                        binding.ObserverIndices.Add(StringDataSourceConverter.ReadElement(indexElement));
 
                 if (!string.IsNullOrWhiteSpace(binding.Target))
                     meta.ObserverIndices.Add(binding);

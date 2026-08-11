@@ -46,7 +46,7 @@ internal sealed class StateMachineContainerPayloadConverter
 
             if (element.TryGetValue("stack", out var stackNode) && stackNode is not null && !stackNode.IsNull)
                 foreach (var stackElement in stackNode.Elements)
-                    entry.Stack.Add(stackElement.AsString());
+                    entry.Stack.Add(StringDataSourceConverter.ReadElement(stackElement));
 
             payload.Machines.Add(entry);
         }

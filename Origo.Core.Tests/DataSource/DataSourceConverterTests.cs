@@ -377,7 +377,6 @@ public class DataSourceConverterTests
         // empty stack; only the identity fields are mandatory.
         var registry = TestFactory.CreateRegistry();
         var node = TestFactory.NodeFromJson("""{"machines":[{"key":"main","pushIndex":"start","popIndex":"end"}]}""");
-
         var result = registry.Read<StateMachineContainerPayload>(node);
 
         var entry = Assert.Single(result.Machines);
@@ -386,6 +385,72 @@ public class DataSourceConverterTests
     }
 
     // ── 17. StringDictionary converter ──
+
+    [Fact]
+    public void StateMachineContainerPayloadConverter_StackNullElement_Throws()
+    {
+        // A null stack element must not silently drift into an empty string:
+        // corrupt save data surfaces here instead of later as an opaque
+        // strategy lookup failure.
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"machines":[{"key":"main","pushIndex":"start","popIndex":"end","stack":[null]}]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StateMachineContainerPayload>(node));
+        Assert.Contains("null", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void StringDictionaryConverter_Read_NullValue_Throws()
+    {
+        // A null map value must not silently drift into an empty string
+        // (consistent with Read<string> rejecting a null node).
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"lang":"en","region":null}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<IReadOnlyDictionary<string, string>>(node));
+        Assert.Contains("null", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void StringArrayConverter_Read_NullElement_Throws()
+    {
+        // A null array element must not silently drift into an empty string
+        // (consistent with Read<string> rejecting a null node).
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""["hello",null,"world"]""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<string[]>(node));
+        Assert.Contains("null", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void NodeMetaDataConverter_Read_NullPairValue_Throws()
+    {
+        // A null node-pair value must not silently drift into an empty
+        // resource path (consistent with Read<string> rejecting null nodes).
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"pairs":{"root":"player.tscn","bad":null}}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<NodeMetaData>(node));
+        Assert.Contains("null", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void StrategyMetaDataConverter_Read_NullIndexElement_Throws()
+    {
+        // A null strategy-index element must not silently drift into an
+        // empty index that only fails later as an opaque pool lookup error.
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"lifecycle_indices":["game.ai",null]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StrategyMetaData>(node));
+        Assert.Contains("null", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 
     [Fact]
     public void StringDictionaryConverter_RoundTrip()

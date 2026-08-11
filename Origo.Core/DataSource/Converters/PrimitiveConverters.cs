@@ -14,7 +14,14 @@ internal sealed class StringDataSourceConverter : DataSourceConverter<string>
     ///     <see cref="DataSourceNode.IsNull" /> / <c>TryGetValue</c> first
     ///     (the pattern <c>TypedDataConverter</c> uses).
     /// </summary>
-    public override string Read(DataSourceNode node) =>
+    public override string Read(DataSourceNode node) => ReadElement(node);
+
+    /// <summary>
+    ///     Shared strict read for string values in scalar positions (map
+    ///     values, array elements): a null node is rejected instead of
+    ///     drifting into an empty string, matching <see cref="Read" />.
+    /// </summary>
+    internal static string ReadElement(DataSourceNode node) =>
         node.IsNull
             ? throw new InvalidOperationException(
                 "Cannot read a null DataSourceNode as a string: a null value " +

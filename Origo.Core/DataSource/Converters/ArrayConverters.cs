@@ -270,7 +270,7 @@ internal sealed class StringArrayDataSourceConverter : DataSourceConverter<strin
         var result = new string[node.Count];
         var i = 0;
         foreach (var element in node.Elements)
-            result[i++] = element.AsString();
+            result[i++] = StringDataSourceConverter.ReadElement(element);
         return result;
     }
 

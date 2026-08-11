@@ -10,7 +10,7 @@ internal sealed class StringDictionaryConverter : DataSourceConverter<IReadOnlyD
     {
         var dict = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
-            dict[key] = node[key].AsString();
+            dict[key] = StringDataSourceConverter.ReadElement(node[key]);
         return new ReadOnlyDictionary<string, string>(dict);
     }
 

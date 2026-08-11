@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Converters/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Converters
 
@@ -35,19 +35,19 @@
 
 ### ArrayConverters
 
-每个基础类型的数组对应一个转换器。Read 遍历 `node.Elements` 逐个转换，Write 构建 `DataSourceNode.CreateArray()` 并填充元素。
+每个基础类型的数组对应一个转换器。Read 遍历 `node.Elements` 逐个转换，Write 构建 `DataSourceNode.CreateArray()` 并填充元素。`string[]` 的元素读取与 `Read<string>` 同严格语义：null 元素抛 `InvalidOperationException`（不静默漂移为空串，损坏存档在转换层立即失败）。
 
 ### 领域转换器（DomainConverters）
 
 | 转换器 | 处理类型 |
 |------|------|
-| `NodeMetaDataConverter` | 节点元数据（pairs 字典） |
+| `NodeMetaDataConverter` | 节点元数据（pairs 字典）。pair 值为 null 时抛 `InvalidOperationException`（与 `Read<string>` 严格语义一致，不静默漂移为空串资源路径） |
 | `StrategyMetaDataConverter` | 策略索引列表 |
 | `DataMetaDataConverter` | 实体数据（依赖 TypedDataConverter） |
 | `SndMetaDataConverter` | SND 实体元数据（组合上述三个） |
 | `SndMetaDataListConverter` | 实体元数据列表 |
 | `BlackboardDataConverter` | 黑板全部数据字典 |
-| `StringDictionaryConverter` | 字符串字典 |
+| `StringDictionaryConverter` | 字符串字典。读取时键值必须为标量字符串；null 值抛 `InvalidOperationException`（与 `Read<string>` 拒绝 null 节点的严格语义一致，杜绝 null 静默漂移为空串） |
 | `StateMachineContainerPayloadConverter` | 状态机组序列化 |
 
 ### TypedDataConverter

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Converters/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Converters
 
@@ -30,7 +30,7 @@ Collection of registered `DataSourceConverter<T>` implementations. All converter
 `string`, `byte`, `sbyte`, `short`, `ushort`, `int`, `uint`, `long`, `ulong`, `float`, `double`, `decimal`, `char`, `bool`
 
 ### ArrayConverters
-One per primitive type array. Read iterates `node.Elements`; Write builds `CreateArray()`.
+One per primitive type array. Read iterates `node.Elements`; Write builds `CreateArray()`. `string[]` element reads share the strict semantics of `Read<string>`: a null element throws `InvalidOperationException` (no silent drift to an empty string, so corrupt saves fail at the converter layer).
 
 ### Domain converters
 
@@ -44,7 +44,7 @@ One per primitive type array. Read iterates `node.Elements`; Write builds `Creat
 | `BlackboardDataConverter` | Full blackboard data |
 
 ### TypedDataConverter
-Reads/writes `"type"` and `"data"` fields. On read, resolves CLR type from `"type"` via `TypeStringMapping`, then uses corresponding converter. The registry backtracks along base class and interface chains when no exact type match exists — e.g. storing a `ReadOnlyDictionary<string,string>` with only an `IReadOnlyDictionary<string,string>` converter registered. This allows registering converters for interface types while still storing and reading their concrete implementations: `StringDictionaryConverter` returns a `ReadOnlyDictionary<string,string>` instance (compatible with the requested type). If the converter's returned instance is incompatible with the requested type (e.g. requesting `SortedDictionary`), the read throws `InvalidOperationException` immediately (fail-fast, naming both the converter and the requested type rather than an opaque `InvalidCastException`), preventing a silently type-drifted value from breaking a later serialization.
+Reads/writes `"type"` and `"data"` fields. On read, resolves CLR type from `"type"` via `TypeStringMapping`, then uses corresponding converter. The registry backtracks along base class and interface chains when no exact type match exists — e.g. storing a `ReadOnlyDictionary<string,string>` with only an `IReadOnlyDictionary<string,string>` converter registered. This allows registering converters for interface types while still storing and reading their concrete implementations: `StringDictionaryConverter` returns a `ReadOnlyDictionary<string,string>` instance (compatible with the requested type). If the converter's returned instance is incompatible with the requested type (e.g. requesting `SortedDictionary`), the read throws `InvalidOperationException` immediately (fail-fast, naming both the converter and the requested type rather than an opaque `InvalidCastException`), preventing a silently type-drifted value from breaking a later serialization. String map values must be scalar strings: a null value throws `InvalidOperationException` (consistent with `Read<string>` rejecting null nodes — no silent drift to an empty string). The node-pair map (`NodeMetaDataConverter`) follows the same strict semantics: a null pair value fails the read instead of drifting into an empty resource path.
 
 ## Design Decisions
 
