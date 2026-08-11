@@ -187,6 +187,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Observer mounting is now fail-fast like strategy mounting** — mounting the same (observer, target, strategy index) twice throws `InvalidOperationException` (previously it double-subscribed and double-fired `OnDataChanged`), and unmounting a pair that is not mounted throws instead of silently succeeding.
 - **DocSync validation warns on bilingual heading-structure drift** — `DocSyncTool validate` now compares `##`/`###` section counts between a pair's languages and warns when they differ (revision equality alone cannot prove content parity); warnings do not fail the build.
 - **`scripts/ci.sh` doc-sync step no longer fails on uncommitted doc changes** — the committed-files check is restricted to CI runs; local runs only execute generate + validate, resolving the conflict between the pre-commit CI loop and uncommitted documentation edits.
+- **`DataSourceFactory.CreateDefaultIoGateway` accepts an optional logger** — `.map` codec decode warnings (e.g. duplicate keys) now reach a real logger instead of being silently discarded; the optional parameter keeps existing call sites source-compatible.
 
 ### Removed
 
@@ -201,6 +202,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **A console client that stops reading is actually disconnected** — the send-timeout detach previously only dropped the output writer while the dead client kept occupying the single connection slot forever (no "next connection" ever arrived, so the buffered lines were never replayed). The dead client is now closed, freeing the slot; the undelivered lines replay on the next connection as documented.
+- **Backlog replay to a slow-but-reading console client runs on a bounded time budget** — the initial output flush previously held the writer lock for the whole backlog when every line drained just below the send timeout, stalling the game frame thread for seconds; the replay now aborts at a capped time budget (remaining lines stay buffered for the next connection).
+- **`SndEntityFactory` rollback runs every teardown step independently** — a throwing step (e.g. an `OnUnmounted` hook inside observer-binding teardown) no longer masks the original `AfterSpawn` failure nor skips the remaining rollback steps: the remaining teardown still runs (teardown steps are best-effort, as the static factory has no logger to report their failures through).
+- **Corrupt `observer_indices` bindings with multiple target keys fail the load** — a damaged binding object with several keys previously had all but the first binding silently dropped; it now throws `InvalidOperationException` like other malformed binding entries.
+- **`DataSourceNode.Add` rejects children on scalar nodes** — children added to a text/number/bool/null node were silently dropped by every codec (encode only visits Map/Array children); the invalid builder call now throws immediately.
+- **Loading a save whose topology references a foreground level with no payload now fails** — the foreground mount previously fell back to an empty session (only the background path was strict); an inconsistent topology now fails the load with `InvalidOperationException`.
+- **`PathUtility.Combine` rejects traversal sequences with an empty base or scheme-root base** — the traversal guard was skipped when the base path was empty, so `Combine("", "../x")` passed the escape through; the guard now runs before the base-path branches.
+- **`Read<string>` rejects a null data node** — reading a null node as `string` silently drifted a null value into an empty string; it now throws `InvalidOperationException`, and callers must check `IsNull` / `TryGetValue` first (the pattern `TypedDataConverter` already uses).
+- **`.map` codec rejects values containing line breaks** — encoding a value with a `\n`/`\r` produced a file the strict decoder cannot parse back; such values now fail the encode. Duplicate-key warnings on decode are also observable now (they previously went to a null logger).
+- **`Astar.FindPath` validates the grid size** — a non-positive `gridSize` previously returned `null` as a side effect of the bounds check; it now throws `ArgumentOutOfRangeException` like the grid coordinate system's dimension validation.
+- **`FileMetaAccess.DirectoryExists` validates its path** — a null or blank path previously passed through to the file system; it now throws `ArgumentException`, matching `FileExists`.
+- **`TestSndSceneHost` (test infrastructure) matches the production scene-host contract** — `GetEntities()` returns a snapshot and `RemoveEntity` throws for unknown entities (previously a silent no-op); tests relying on the old permissive behavior were aligned, removing a test blind spot.
+- **Source generator reports invalid and reserved kind names** — a registered pointer type (whose name sanitizes to an identifier containing `*`) previously emitted uncompilable accessor code (CS1001) instead of a diagnostic; the new ORIGOSG006 rejects kind names that are not valid C# identifiers. An adapter type named like a Home inline kind (e.g. the user's own `Int32`) previously generated an `AsInt32` extension that silently shadowed the Home accessor semantics for consumers; it is now rejected with ORIGOSG005.
 - **`GodotSndManager` surfaces the NotReady contract error instead of a `NullReferenceException`** —
   `CreateEntity` / `RecoverFromMetaList` before `BindRuntimeDependencies` used to mask the
   "manager is not ready" contract error with a `NullReferenceException` inside the rollback
@@ -245,8 +259,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`TryExtract` reference types are extracted without a castclass** — the factory's reference
   branch now reinterprets like the home `TryGetString` accessor (same semantics, no
   castclass-check block, consistent with the documented de-castclass design).
-
-### Fixed
 
 - **`CreateBackgroundSession` can no longer occupy the reserved `__foreground__` slot** — a background session created under the foreground key previously destroyed the real foreground and mounted an in-memory-host session into the foreground slot, bypassing the adapter scene-host binding; the reserved key now throws `InvalidOperationException` at creation.
 - **`SndEntityFactory.SpawnMany` rolls back already-staged entities when staging fails** — if a batch's creation fails mid-way (e.g. a strategy index with no registered factory), entities staged before the failure previously stayed registered on the host as ghosts that never fired `AfterSpawn`; they are now rolled back like unfired-hook entities.
