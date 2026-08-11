@@ -573,7 +573,7 @@ public class SaveStorageAndPayloadTests
         fs.SeedFile("root/current/progress.json", "{}");
         fs.SeedFile("root/current/level_default/snd_scene.json", "[]");
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
             SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
 
         // The incomplete .tmp directory must be cleaned up.

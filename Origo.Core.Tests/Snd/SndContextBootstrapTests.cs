@@ -4,6 +4,7 @@ using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
 using Xunit;
+using System.IO;
 
 namespace Origo.Core.Tests;
 
@@ -91,7 +92,7 @@ public class SndContextBootstrapTests
 
         ctx.Bootstrap();
 
-        Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<FileNotFoundException>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
     }
 
     [Fact]

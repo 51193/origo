@@ -4,6 +4,7 @@ using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Xunit;
+using System.Text.Json;
 
 namespace Origo.Core.Tests;
 
@@ -129,7 +130,7 @@ public class SndTemplateResolverTests
             ["broken"] = "templates/broken.json"
         });
 
-        Assert.ThrowsAny<Exception>(() => resolver.Resolve("broken"));
+        Assert.ThrowsAny<JsonException>(() => resolver.Resolve("broken"));
     }
 
     [Fact]

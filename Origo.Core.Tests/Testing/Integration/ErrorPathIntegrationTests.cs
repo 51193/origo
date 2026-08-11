@@ -4,6 +4,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 using Xunit;
+using System.Text.Json;
 
 namespace Origo.Core.Tests;
 
@@ -48,7 +49,7 @@ public class ErrorPathIntegrationTests
         harness.Context.SetProgressRun(null);
 
         harness.Context.Save.RequestLoadGame(saveId);
-        var ex = Assert.ThrowsAny<Exception>(
+        var ex = Assert.ThrowsAny<JsonException>(
             () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
         Assert.Contains("property name", ex.Message, StringComparison.Ordinal);
     }
@@ -60,7 +61,7 @@ public class ErrorPathIntegrationTests
             .Build();
 
         harness.Context.Save.RequestLoadGame("nonexistent_save_id");
-        var ex = Assert.ThrowsAny<Exception>(
+        var ex = Assert.Throws<InvalidOperationException>(
             () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
         Assert.Contains("nonexistent", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -86,7 +87,7 @@ public class ErrorPathIntegrationTests
         harness.Context.SetProgressRun(null);
 
         harness.Context.Save.RequestLoadGame(saveId);
-        var ex = Assert.ThrowsAny<Exception>(
+        var ex = Assert.ThrowsAny<JsonException>(
             () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
         Assert.Contains("property name", ex.Message, StringComparison.Ordinal);
     }

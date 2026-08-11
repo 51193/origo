@@ -77,7 +77,7 @@ public class SndSceneSerializerTests
         var host = new TestSndSceneHost();
 
         using var node = TestFactory.NodeFromJson("{}");
-        Assert.ThrowsAny<Exception>(() => serializer.RecoverInto(host, node));
+        Assert.Throws<InvalidOperationException>(() => serializer.RecoverInto(host, node));
     }
 
     [Fact]

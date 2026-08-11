@@ -6,6 +6,7 @@ using Origo.Core.Snd;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.DataSource;
 using Xunit;
+using System.Text.Json;
 
 namespace Origo.Core.Tests;
 
@@ -88,7 +89,7 @@ public class ProgressRunSessionLoadingEdgeTests
         fs.SeedFile("root/current/level_target/session.json", "{}");
         fs.SeedFile("root/current/level_target/session_state_machines.json", "{");
 
-        Assert.ThrowsAny<Exception>(() => progressRun.LoadAndMountForeground("target"));
+        Assert.Throws<InvalidOperationException>(() => progressRun.LoadAndMountForeground("target"));
     }
 
     [Fact]
@@ -180,7 +181,7 @@ public class ProgressRunSessionLoadingEdgeTests
 
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "001", ctx.Runtime.Logger);
         ctx.Save.RequestLoadGame("001");
-        Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<InvalidOperationException>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
         Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
         Assert.False(ctx.Runtime.SessionManager.Contains("bg"));
     }
@@ -217,7 +218,7 @@ public class ProgressRunSessionLoadingEdgeTests
 
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "002", ctx.Runtime.Logger);
         ctx.Save.RequestLoadGame("002");
-        Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<InvalidOperationException>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
 
         // The failed progress run must not remain reachable: reads of the
         // progress blackboard and the progress-run accessor fail fast instead

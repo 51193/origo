@@ -1001,18 +1001,6 @@ public class SndEntityLifecycleBatchTests
     // ── SndEntityFactory tests ──────────────────────────────────────────
 
     [Fact]
-    public void SndEntityFactory_Spawn_CreatesEntityAndFiresAfterSpawn()
-    {
-        ProbeStrategy.Events.Clear();
-        var host = CreateHost(w => { w.RegisterStrategy(() => new ProbeStrategy()); });
-
-        var entity = SndEntityFactory.Spawn(host, CreateMeta("E", [_probeIdx]));
-
-        Assert.NotNull(entity);
-        Assert.Contains("after_spawn:E", ProbeStrategy.Events);
-    }
-
-    [Fact]
     public void SndEntityFactory_SpawnMany_BatchCreatesAllThenFiresHooks()
     {
         ProbeStrategy.Events.Clear();

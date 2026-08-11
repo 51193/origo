@@ -77,6 +77,9 @@ public class ProgressRunLoadRollbackMaskingTests
         var ex = Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
         Assert.DoesNotContain("QUIT_BOOM", ex.Message, StringComparison.Ordinal);
 
+        // ThrowsAny is deliberate here: the original load failure or a cleanup
+        // failure may propagate, and the message assertions pin which one won.
+
         // Cleanup still completes: the failed mount must not leave a partial
         // foreground session behind.
         Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);

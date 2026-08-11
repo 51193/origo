@@ -175,7 +175,7 @@ public class ActiveStrategyIntegrationTests
         harness.RequestKillEntity("actor");
         harness.DriveFrame();
 
-        Assert.ThrowsAny<Exception>(
+        Assert.Throws<InvalidOperationException>(
             () => entity.InvokeStrategy("test.int.active.echo", 7));
     }
 
@@ -189,7 +189,7 @@ public class ActiveStrategyIntegrationTests
         var entity = harness.SpawnEntity("actor", []);
         entity.AddActiveStrategy("test.int.active.echo");
 
-        Assert.ThrowsAny<Exception>(
+        Assert.Throws<InvalidOperationException>(
             () => entity.AddActiveStrategy("test.int.active.echo"));
     }
 

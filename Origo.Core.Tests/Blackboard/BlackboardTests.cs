@@ -115,7 +115,7 @@ public class BlackboardTests
     public void Blackboard_DeserializeAll_Null_Throws()
     {
         var bb = new Blackboard.Blackboard();
-        Assert.ThrowsAny<Exception>(() => bb.DeserializeAll(null!));
+        Assert.Throws<ArgumentNullException>(() => bb.DeserializeAll(null!));
     }
 }
 

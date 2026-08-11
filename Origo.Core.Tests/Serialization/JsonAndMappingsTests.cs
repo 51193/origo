@@ -5,6 +5,8 @@ using Origo.Core.Logging;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Xunit;
+using System.IO;
+using System.Text.Json;
 
 namespace Origo.Core.Tests;
 
@@ -72,7 +74,7 @@ public class JsonAndMappingsTests
         var logger = new TestLogger();
         mappings.LoadSceneAliases(io, "maps/scenes.map", logger);
 
-        Assert.ThrowsAny<Exception>(() => mappings.LoadSceneAliases(io, "maps/missing.map", logger));
+        Assert.Throws<FileNotFoundException>(() => mappings.LoadSceneAliases(io, "maps/missing.map", logger));
 
         Assert.Equal("res://hero.tscn", mappings.ResolveSceneAlias("hero"));
     }
@@ -89,7 +91,7 @@ public class JsonAndMappingsTests
         var logger = new TestLogger();
         mappings.LoadTemplates(io, "maps/templates.map", registry, logger);
 
-        Assert.ThrowsAny<Exception>(() => mappings.LoadTemplates(io, "maps/missing.map", registry, logger));
+        Assert.Throws<FileNotFoundException>(() => mappings.LoadTemplates(io, "maps/missing.map", registry, logger));
 
         Assert.Equal("TemplateHero", mappings.ResolveTemplate("hero_template").Name);
     }
@@ -256,7 +258,7 @@ public class JsonAndMappingsTests
         var logger = new TestLogger();
         mappings.LoadTemplates(io, "maps/templates.map", registry, logger);
 
-        Assert.ThrowsAny<Exception>(() => mappings.ResolveTemplate("bad_template"));
+        Assert.ThrowsAny<JsonException>(() => mappings.ResolveTemplate("bad_template"));
     }
 
     [Fact]

@@ -278,7 +278,7 @@ public class ConsoleBridgeServerErrorPathTests
         var options = new ConsoleBridgeOptions { Port = -1 };
         var server = new ConsoleBridgeServer(new ConsoleInputBuffer(), new ConsoleOutputChannel(), options);
 
-        Assert.ThrowsAny<Exception>(() => server.Start());
+        Assert.Throws<ArgumentOutOfRangeException>(() => server.Start());
 
         options.Port = 0;
         server.Start();

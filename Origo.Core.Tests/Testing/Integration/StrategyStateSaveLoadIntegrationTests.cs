@@ -5,6 +5,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Xunit;
+using System.Text.Json;
 
 namespace Origo.Core.Tests;
 
@@ -220,7 +221,7 @@ public class StrategyStateSaveLoadIntegrationTests
         harness.Context.SetProgressRun(null);
 
         harness.Context.Save.RequestLoadGame(saveId);
-        Assert.ThrowsAny<Exception>(
+        Assert.ThrowsAny<JsonException>(
             () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
     }
 

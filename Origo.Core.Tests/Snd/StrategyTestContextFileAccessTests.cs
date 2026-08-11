@@ -3,6 +3,7 @@ using Origo.Core.Abstractions.Snd;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Xunit;
+using System.IO;
 
 namespace Origo.Core.Tests;
 
@@ -107,7 +108,7 @@ public class StrategyTestContextFileAccessTests
         var ctx = new StrategyTestContext();
         var fa = AsFileAccess(ctx);
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<FileNotFoundException>(() =>
             fa.ReadFile("nonexistent/file.json"));
     }
 
@@ -180,7 +181,7 @@ public class StrategyTestContextFileAccessTests
         var ctx = new StrategyTestContext();
         var fa = AsFileAccess(ctx);
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<FileNotFoundException>(() =>
             fa.ReadObject<int>("no/such/file.json"));
     }
 }

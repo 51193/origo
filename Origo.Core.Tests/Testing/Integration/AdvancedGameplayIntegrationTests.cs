@@ -238,7 +238,7 @@ public class AdvancedGameplayIntegrationTests
     {
         var harness = GameplaySimulationHarness.Create().Build();
 
-        Assert.ThrowsAny<Exception>(
+        Assert.Throws<InvalidOperationException>(
             () => harness.SpawnEntity("bad_entity", ["nonexistent.strategy.index"]));
     }
 

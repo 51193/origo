@@ -4,6 +4,8 @@ using Origo.Core.Blackboard;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Xunit;
+using System.IO;
+using System.Text.Json;
 
 namespace Origo.Core.Tests;
 
@@ -237,7 +239,7 @@ public class SndContextFileAccessTests
     {
         var ctx = CreateContext(out _, out _);
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<FileNotFoundException>(() =>
             AsFileAccess(ctx).ReadFile("nonexistent/file.json"));
     }
 
@@ -258,7 +260,7 @@ public class SndContextFileAccessTests
 
         var node = AsFileAccess(ctx).ReadFile("data/bad.json");
         // JSON parsing is lazy — exception occurs on access, not on Read
-        Assert.ThrowsAny<Exception>(() => { var _ = node.AsString(); });
+        Assert.ThrowsAny<JsonException>(() => { var _ = node.AsString(); });
     }
 
     [Fact]
@@ -275,7 +277,7 @@ public class SndContextFileAccessTests
     {
         var ctx = CreateContext(out _, out _);
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<FileNotFoundException>(() =>
             AsFileAccess(ctx).ReadObject<int>("nonexistent/file.json"));
     }
 
@@ -285,7 +287,7 @@ public class SndContextFileAccessTests
         var ctx = CreateContext(out var fs, out _);
         fs.SeedFile("data/str.json", "\"not a number\"");
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<FormatException>(() =>
             AsFileAccess(ctx).ReadObject<int>("data/str.json"));
     }
 

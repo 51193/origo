@@ -246,7 +246,7 @@ public class SndContextArchiveFileAccessTests
         fs.SeedFile("root/current/extra/data.json", """{"key":1}""");
         AsFileAccess(ctx).DeleteFile("data.json");
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<FileNotFoundException>(() =>
             AsFileAccess(ctx).ReadFile("data.json"));
     }
 
@@ -266,7 +266,7 @@ public class SndContextArchiveFileAccessTests
     {
         var ctx = CreateContext(out _, out _);
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<FileNotFoundException>(() =>
             AsFileAccess(ctx).ReadFile("nonexistent.json"));
     }
 
@@ -326,7 +326,7 @@ public class SndContextArchiveFileAccessTests
         var ctx = CreateContext(out var fs, out _);
         fs.SeedFile("root/current/extra/str.json", "\"not a number\"");
 
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<FormatException>(() =>
             AsFileAccess(ctx).ReadObject<int>("str.json"));
     }
 
@@ -419,7 +419,9 @@ public class SndContextArchiveFileAccessTests
     {
         var ctx = CreateContext(out _, out _);
 
-        var ex = Assert.ThrowsAny<ArgumentException>(() => AsFileAccess(ctx).ReadFile(path!));
+        var ex = path is null
+            ? Assert.Throws<ArgumentNullException>(() => AsFileAccess(ctx).ReadFile(path!))
+            : Assert.Throws<ArgumentException>(() => AsFileAccess(ctx).ReadFile(path!));
         Assert.Equal("path", ex.ParamName);
     }
 
@@ -431,7 +433,9 @@ public class SndContextArchiveFileAccessTests
     {
         var ctx = CreateContext(out _, out _);
 
-        var ex = Assert.ThrowsAny<ArgumentException>(() => AsFileAccess(ctx).WriteFile(path!, DataSourceNode.CreateObject(), overwrite: true));
+        var ex = path is null
+            ? Assert.Throws<ArgumentNullException>(() => AsFileAccess(ctx).WriteFile(path!, DataSourceNode.CreateObject(), overwrite: true))
+            : Assert.Throws<ArgumentException>(() => AsFileAccess(ctx).WriteFile(path!, DataSourceNode.CreateObject(), overwrite: true));
         Assert.Equal("path", ex.ParamName);
     }
 
@@ -443,7 +447,9 @@ public class SndContextArchiveFileAccessTests
     {
         var ctx = CreateContext(out _, out _);
 
-        var ex = Assert.ThrowsAny<ArgumentException>(() => AsFileAccess(ctx).DeleteFile(path!));
+        var ex = path is null
+            ? Assert.Throws<ArgumentNullException>(() => AsFileAccess(ctx).DeleteFile(path!))
+            : Assert.Throws<ArgumentException>(() => AsFileAccess(ctx).DeleteFile(path!));
         Assert.Equal("path", ex.ParamName);
     }
 }

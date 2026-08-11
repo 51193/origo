@@ -13,6 +13,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 using Xunit;
+using System.Text.Json;
 
 namespace Origo.Core.Tests;
 
@@ -170,7 +171,7 @@ public class SndEntityAndAutoInitializerTests
         var fs = new TestMemoryFileSystem();
         var io = TestFactory.CreateIoGateway(fs);
         fs.SeedFile("empty.json", "   ");
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.ThrowsAny<JsonException>(() =>
             OrigoAutoInitializer.LoadAndSpawnFromFile("empty.json", runtime.SndWorld, session, io, logger));
     }
 

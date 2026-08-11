@@ -80,6 +80,9 @@ public class SessionRunLoadRollbackMaskingTests
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "004", ctx.Runtime.Logger);
         ctx.Save.RequestLoadGame("004");
 
+        // ThrowsAny is deliberate here: the original flush failure or a cleanup
+        // failure may propagate, and the message assertions pin which one won.
+
         // FlushAllAfterLoad throws (the state machine's push strategy fails),
         // then the rollback tears down the recovered observer binding whose
         // OnUnmounted hook throws. The original flush failure must propagate,

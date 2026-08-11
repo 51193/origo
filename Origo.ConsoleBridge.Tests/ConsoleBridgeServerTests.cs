@@ -520,13 +520,15 @@ public class ConsoleBridgeServerTests
             using var client = new TcpClient { ReceiveBufferSize = 1024 };
             client.Connect(IPAddress.Loopback, server.ActualPort);
 
-            await Task.Delay(500, TestContext.Current.CancellationToken);
-            output.Publish("after-detach");
-
+            // Poll for the detach instead of a fixed delay: on a slow machine
+            // the send timeout may not have fired yet, and publishing too
+            // early would route the marker line through the still-connected
+            // handler instead of the buffered backlog this test exercises.
             Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
                 () => logger.Warnings.Any(w => w.Contains("flush failed")),
                 ConsoleBridgeTestInfrastructure.OutputTimeoutMs),
                 "the stalled replay must detach the connection");
+            output.Publish("after-detach");
         }
         finally
         {

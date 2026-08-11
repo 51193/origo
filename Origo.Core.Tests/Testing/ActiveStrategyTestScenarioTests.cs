@@ -403,7 +403,7 @@ public class ActiveStrategyTestScenarioTests
     [Fact]
     public void ForActive_WithNullOrEmptyIndex_Throws()
     {
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             StrategyTestScenario.ForActive<SimpleAnswerStrategy>(null!));
         Assert.Throws<ArgumentException>(() =>
             StrategyTestScenario.ForActive<SimpleAnswerStrategy>(""));

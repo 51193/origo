@@ -8,6 +8,7 @@ using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Xunit;
 using Origo.Core.Abstractions.Lifecycle;
+using System.Text.Json;
 
 namespace Origo.Core.Tests;
 
@@ -301,7 +302,7 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
-        Assert.ThrowsAny<Exception>(() => progressRun.LoadAndMountForeground("bad"));
+        Assert.Throws<InvalidOperationException>(() => progressRun.LoadAndMountForeground("bad"));
     }
 
     [Fact]
