@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -38,6 +39,8 @@ public sealed class ConsoleBridgeServer : IDisposable
     private int _started;
     private int _droppedLineCount;
     private StreamWriter? _writer;
+    private TcpClient? _client;
+    private bool _detachRequested;
     private Task? _acceptTask;
 
     /// <summary>
@@ -203,13 +206,20 @@ public sealed class ConsoleBridgeServer : IDisposable
                     // A hard client disconnect (RST) breaks the socket write
                     // path while the handler thread is still inside its read
                     // loop. This is a connection-level failure: detach the
-                    // dead writer and buffer the undelivered line so the next
-                    // connection replays it, and never let the failure
-                    // propagate into the game frame loop.
+                    // dead writer, close the dead client, and buffer the
+                    // undelivered line so the next connection replays it —
+                    // never let the failure propagate into the game frame
+                    // loop. Closing the client also ends the handler's read
+                    // loop, freeing the single connection slot: a dead
+                    // connection must not occupy it forever (otherwise no
+                    // "next connection" ever arrives and the buffered lines
+                    // are lost).
                     _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
                         new LogMessageBuilder()
                             .Build($"Output write failed; connection considered dead and detached: {ex.Message}"));
                     _writer = null;
+                    _detachRequested = true;
+                    _client?.Close();
                     if (_pendingOutput.Count >= _maxPendingOutputLines)
                     {
                         _pendingOutput.Dequeue();
@@ -266,6 +276,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                 try
                 {
                     _listener.Stop();
+                    _listener.Dispose();
                 }
                 catch (Exception stopEx)
                 {
@@ -305,19 +316,47 @@ public sealed class ConsoleBridgeServer : IDisposable
             lock (_writerLock)
             {
                 _writer = writer;
+                _client = client;
                 try
                 {
                     if (_droppedLineCount > 0)
                         writer.WriteLine(
                             $"[ConsoleBridge] Warning: {_droppedLineCount} output line(s) were dropped due to buffer overflow.");
-                    foreach (var line in _pendingOutput)
-                        writer.WriteLine(line);
 
-                    // Only reset the drop counter and clear the backlog after the
-                    // flush succeeded; on a mid-flush write failure the warning and
-                    // the undelivered lines are retried by the next connection.
-                    _droppedLineCount = 0;
-                    _pendingOutput.Clear();
+                    // The backlog replay runs on a bounded time budget: a
+                    // slow-but-reading client drains each line below the send
+                    // timeout, so an unbounded replay would hold the writer
+                    // lock for the whole backlog and stall the game frame
+                    // thread (the caller of OnConsoleOutput) for seconds.
+                    // Aborting at the budget keeps the remaining lines
+                    // buffered for the next connection. The budget scales
+                    // with the send timeout but is capped so a large timeout
+                    // cannot reintroduce a long frame-thread stall (the
+                    // multiplication is widened to long so an extreme
+                    // configured timeout cannot overflow).
+                    var budget = TimeSpan.FromMilliseconds(
+                        Math.Clamp(_options.OutputSendTimeoutMs * 4L, 200, 1000));
+                    var flushTimer = Stopwatch.StartNew();
+                    while (_pendingOutput.Count > 0)
+                    {
+                        if (flushTimer.Elapsed >= budget)
+                        {
+                            _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
+                                new LogMessageBuilder().Build(
+                                    "Backlog replay aborted at its time budget; the remaining lines stay buffered for the next connection."));
+                            break;
+                        }
+
+                        writer.WriteLine(_pendingOutput.Peek());
+                        _pendingOutput.Dequeue();
+                    }
+
+                    // Only reset the drop counter after the flush completed;
+                    // on a mid-flush write failure or a budget abort the
+                    // warning and the undelivered lines are retried by the
+                    // next connection.
+                    if (_pendingOutput.Count == 0)
+                        _droppedLineCount = 0;
                 }
                 catch (Exception ex) when (ex is IOException or ObjectDisposedException or SocketException)
                 {
@@ -328,6 +367,7 @@ public sealed class ConsoleBridgeServer : IDisposable
                     _logger.Log(LogLevel.Warning, nameof(ConsoleBridgeServer),
                         new LogMessageBuilder().Build(
                             $"Initial output flush failed; connection detached: {ex.Message}"));
+                    _detachRequested = true;
                     return;
                 }
             }
@@ -343,8 +383,14 @@ public sealed class ConsoleBridgeServer : IDisposable
                 {
                     break;
                 }
-                catch (IOException ex)
+                catch (Exception ex) when (ex is IOException or ObjectDisposedException)
                 {
+                    // The connection was deliberately closed after an output
+                    // write failure (the dead-client detach); end the handler
+                    // silently instead of reporting a false read failure.
+                    if (IsDetachRequested())
+                        break;
+
                     // Client disconnect or stream reset: end this connection.
                     // Surfaces the I/O failure instead of swallowing it silently
                     // (documented exception-propagation strategy).
@@ -366,9 +412,19 @@ public sealed class ConsoleBridgeServer : IDisposable
             lock (_writerLock)
             {
                 _writer = null;
+                _client = null;
+                _detachRequested = false;
             }
 
             client.Close();
+        }
+    }
+
+    private bool IsDetachRequested()
+    {
+        lock (_writerLock)
+        {
+            return _detachRequested;
         }
     }
 }

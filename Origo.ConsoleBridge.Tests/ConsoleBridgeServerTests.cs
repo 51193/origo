@@ -533,4 +533,186 @@ public class ConsoleBridgeServerTests
             server.Dispose();
         }
     }
+
+    [Fact]
+    public async Task DeadNonReadingClient_IsClosed_NextClientConnectsAndReplaysBacklog()
+    {
+        // A client that stops reading must be actually closed once the send
+        // timeout detaches it — otherwise it occupies the single connection
+        // slot forever and the buffered lines can never reach a "next
+        // connection" (the documented replay mechanism).
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var logger = new TestLogger();
+        var server = new ConsoleBridgeServer(input, output,
+            new ConsoleBridgeOptions { Port = 0, OutputSendTimeoutMs = 50 }, logger);
+        server.Start();
+        try
+        {
+            var longLine = new string('x', 8000);
+            for (var i = 0; i < 1000; i++)
+                output.Publish($"line {i}: {longLine}");
+
+            using var deadClient = new TcpClient { ReceiveBufferSize = 1024 };
+            deadClient.Connect(IPAddress.Loopback, server.ActualPort);
+
+            Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+                () => IsRemoteEndClosed(deadClient),
+                ConsoleBridgeTestInfrastructure.OutputTimeoutMs),
+                "the detached dead client must be closed by the server");
+
+            // With the slot freed, a new client connects and receives the
+            // buffered backlog: the documented replay-on-next-connection.
+            using var nextClient = ConsoleBridgeTestInfrastructure.Connect(
+                server.ActualPort, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+            using var reader = new StreamReader(nextClient.GetStream());
+            Assert.NotNull(ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(
+                reader, ConsoleBridgeTestInfrastructure.OutputTimeoutMs));
+        }
+        finally
+        {
+            server.Dispose();
+        }
+    }
+
+    [Fact]
+    public async Task BacklogReplayToSlowClient_AbortsAtBudget_RemainingLinesReplayOnNextConnection()
+    {
+        // A slow-but-reading client drains the backlog below the per-line
+        // send timeout, so the replay would otherwise hold the writer lock
+        // for the full backlog duration and stall the game frame thread for
+        // seconds. The flush runs on a bounded time budget: the remaining
+        // lines stay buffered and replay on the next connection.
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var logger = new TestLogger();
+        // A very large send timeout keeps per-line writes from ever timing
+        // out (a timed-out line may already be half-delivered and would
+        // replay duplicated on the next connection); with the flush budget
+        // capped at one second, the budget abort is then the only mechanism
+        // that ends the flush.
+        var server = new ConsoleBridgeServer(input, output,
+            new ConsoleBridgeOptions { Port = 0, OutputSendTimeoutMs = 10_000 }, logger);
+        server.Start();
+        try
+        {
+            // 8MB of backlog: the socket send buffer absorbs the first chunk
+            // instantly; the rest blocks on every line (the client drains
+            // slowly but continuously), so the time budget must end the
+            // replay far below the per-line send timeout.
+            const int lineCount = 1000;
+            var longLine = new string('x', 8000);
+            for (var i = 0; i < lineCount; i++)
+                output.Publish($"line {i}: {longLine}");
+
+            using var slowClient = ConsoleBridgeTestInfrastructure.Connect(
+                server.ActualPort, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+            var firstClientLineCount = 0;
+            var budgetAbortSeen = false;
+            using (var reader = new StreamReader(slowClient.GetStream()))
+            {
+                // Drain slowly and continuously (5ms per line, polling the
+                // socket with a short timeout when the receive buffer is
+                // empty): every replay write then blocks a few milliseconds
+                // instead of timing out, so the time budget is the only
+                // mechanism that ends the flush. Reading stops once the
+                // budget abort has been observed and the buffer is drained
+                // (EOF means the server detached the connection, which fails
+                // the budget-abort assertion below).
+                while (true)
+                {
+                    string? line;
+                    try
+                    {
+                        reader.BaseStream.ReadTimeout = 100;
+                        line = reader.ReadLine();
+                    }
+                    catch (IOException)
+                    {
+                        // Receive buffer empty: if the server's budget abort
+                        // has been observed (either on a previous line or
+                        // just now — the abort log races the client's last
+                        // read), the flush is over; otherwise keep polling.
+                        if (budgetAbortSeen
+                            || logger.SnapshotWarnings().Any(w => w.Contains("time budget", StringComparison.Ordinal)))
+                            break;
+                        continue;
+                    }
+
+                    if (line is null)
+                        break;
+
+                    firstClientLineCount++;
+                    if (logger.SnapshotWarnings().Any(w => w.Contains("time budget", StringComparison.Ordinal)))
+                        budgetAbortSeen = true;
+                    await Task.Delay(5, TestContext.Current.CancellationToken);
+                    if (firstClientLineCount >= lineCount)
+                        break;
+                }
+            }
+
+            // The replay aborted at its time budget: not everything was sent.
+            Assert.True(firstClientLineCount < lineCount,
+                "the backlog replay must abort at its time budget for a slow reader");
+            Assert.True(logger.SnapshotWarnings().Any(w => w.Contains("time budget", StringComparison.Ordinal)),
+                "the replay must end via the budget abort, not a write failure");
+
+            // Reconnect: the remaining lines replay on the next connection.
+            using var nextClient = ConsoleBridgeTestInfrastructure.Connect(
+                server.ActualPort, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+            var replayedLineCount = 0;
+            using (var reader = new StreamReader(nextClient.GetStream()))
+            {
+                while (ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(
+                           reader, ConsoleBridgeTestInfrastructure.OutputTimeoutMs) is not null)
+                {
+                    replayedLineCount++;
+                }
+            }
+
+            Assert.True(replayedLineCount > 100,
+                "at least the tail of the backlog must survive for the next connection");
+            Assert.Equal(lineCount, firstClientLineCount + replayedLineCount);
+        }
+        finally
+        {
+            server.Dispose();
+        }
+    }
+
+    private static bool IsRemoteEndClosed(TcpClient client)
+    {
+        // Buffered payload bytes arrive before the close notification, so a
+        // single ReadByte only proves "not EOF yet". Drain until EOF: the
+        // server has closed the connection exactly when the stream ends.
+        var stream = client.GetStream();
+        var oldTimeout = stream.ReadTimeout;
+        try
+        {
+            stream.ReadTimeout = 800;
+            while (stream.ReadByte() != -1)
+            {
+            }
+
+            return true;
+        }
+        catch (SocketException)
+        {
+            return true;
+        }
+        catch (ObjectDisposedException)
+        {
+            return true;
+        }
+        catch (IOException ex)
+        {
+            // A read timeout means the connection is still open; any other
+            // I/O failure means the peer closed it.
+            return ex.InnerException is not SocketException { SocketErrorCode: SocketError.TimedOut };
+        }
+        finally
+        {
+            stream.ReadTimeout = oldTimeout;
+        }
+    }
 }
