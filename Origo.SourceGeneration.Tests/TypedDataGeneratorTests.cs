@@ -431,6 +431,61 @@ public class TypedDataGeneratorTests
     }
 
     [Fact]
+    public void PointerType_ReportsDiagnostic_InsteadOfEmittingInvalidIdentifier()
+    {
+        // A pointer type's Name contains '*', which sanitizes to an invalid
+        // C# identifier: the generator must reject it with a diagnostic
+        // instead of emitting uncompilable accessor names (CS1001).
+        // (In Home mode the ORIGOSG002 gate rejects non-system value types
+        // first; the adapter mode is where such a registration survives
+        // validation and reaches the identifier check.)
+        var adapterSource = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(int*))]
+            """;
+        var output = RunAdapter(adapterSource);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG006"));
+        Assert.All(
+            output.GeneratorDiagnostics.Where(d => d.Id == "ORIGOSG006"),
+            d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+        Assert.Empty(output.CompileErrors);
+    }
+
+    [Fact]
+    public void AdapterType_KindNameCollidesWithHomeReservedKind_ReportORIGOSG005()
+    {
+        // An adapter type named like a Home inline kind (e.g. the user's own
+        // 'Int32') would generate a public AsInt32 extension method that
+        // consumers bind to instead of the Home instance accessor, silently
+        // changing the semantics of td.AsInt32(): reject the registration.
+        var adapterSource = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(A.Int32))]
+            namespace A { public class Int32 { } }
+            """;
+        var output = RunAdapter(adapterSource);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG005"));
+        Assert.DoesNotContain("AsInt32", output.AllGeneratedText);
+        Assert.Empty(output.CompileErrors);
+    }
+
+    [Fact]
+    public void Adapter_BCLTypeItself_WithReservedKindName_IsAllowed()
+    {
+        // Registering the BCL type itself under a custom kind (e.g. string
+        // at kind 128) has identical accessor semantics to the Home member,
+        // so the reserved-name gate must not reject it.
+        var adapterSource = """
+            [assembly: Origo.Core.Snd.Metadata.SndInlineTypes(128, typeof(string))]
+            """;
+        var output = RunAdapter(adapterSource);
+
+        Assert.Empty(output.GeneratorDiagnostics);
+        Assert.Empty(output.CompileErrors);
+        Assert.Contains("AsString", output.AllGeneratedText);
+    }
+
+    [Fact]
     public void ValueTypeNamedNull_InHomeMode_ReportORIGOSG002_AndDropType()
     {
         // A non-system value type cannot be stored inline in the home

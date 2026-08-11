@@ -171,6 +171,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         var validTypes = ValidateAndFilter(context, input.IsHome, allTypes);
         validTypes = RejectKindCollisions(context, validTypes);
         validTypes = RejectKindNameCollisions(context, validTypes);
+        validTypes = RejectInvalidKindNames(context, validTypes, input.IsHome);
         if (validTypes.Count == 0) return;
 
         if (input.IsHome)
@@ -326,6 +327,84 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         foreach (var t in types)
         {
             if (t.KindIndex is not null && collidingKindNames.Contains(t.KindIndex)) continue;
+            result.Add(t);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    ///     Home inline kind names whose generated accessor identifiers are
+    ///     reserved, mapped to the BCL type each name belongs to. In adapter
+    ///     mode a type that sanitizes to one of these names would generate a
+    ///     public extension method that shadows the Home accessor semantics
+    ///     for consumers (extension methods are only considered when no
+    ///     applicable instance member exists, so a public <c>AsInt32</c>
+    ///     extension would silently win for consumer code while Origo.Core's
+    ///     internal calls still bind to the instance member): such
+    ///     registrations are rejected — unless the registered type *is* the
+    ///     BCL type the name belongs to (e.g. registering <c>string</c> under
+    ///     a custom kind), whose accessor semantics are identical to the Home
+    ///     member. In Home mode the BCL kinds are registered by the Home
+    ///     attribute itself and same-assembly duplicates are already caught by
+    ///     <see cref="RejectKindNameCollisions" />, so no extra gate applies.
+    /// </summary>
+    private static readonly Dictionary<string, SpecialType> _homeReservedKindNames = new()
+    {
+        ["Byte"] = SpecialType.System_Byte,
+        ["SByte"] = SpecialType.System_SByte,
+        ["Int16"] = SpecialType.System_Int16,
+        ["UInt16"] = SpecialType.System_UInt16,
+        ["Int32"] = SpecialType.System_Int32,
+        ["UInt32"] = SpecialType.System_UInt32,
+        ["Int64"] = SpecialType.System_Int64,
+        ["UInt64"] = SpecialType.System_UInt64,
+        ["Single"] = SpecialType.System_Single,
+        ["Double"] = SpecialType.System_Double,
+        ["Boolean"] = SpecialType.System_Boolean,
+        ["Char"] = SpecialType.System_Char,
+        ["String"] = SpecialType.System_String
+    };
+
+    /// <summary>
+    ///     Rejects types whose sanitized kind names are not valid C#
+    ///     identifiers (e.g. pointer types, whose <c>Name</c> contains
+    ///     <c>*</c>, would emit accessor identifiers like <c>AsInt32*</c>),
+    ///     and — in adapter mode — types whose kind names collide with the
+    ///     Home assembly's reserved kind names (a *custom* type named like a
+    ///     Home inline kind, e.g. the user's own <c>Int32</c>, diverges from
+    ///     the Home accessor semantics; the BCL type itself does not).
+    /// </summary>
+    private static List<InlineTypeInfo> RejectInvalidKindNames(
+        SourceProductionContext context, List<InlineTypeInfo> types, bool isHome)
+    {
+        var result = new List<InlineTypeInfo>();
+
+        foreach (var t in types)
+        {
+            if (t.KindIndex is null)
+            {
+                result.Add(t);
+                continue;
+            }
+
+            if (!SyntaxFacts.IsValidIdentifier(t.KindIndex))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    _invalidKindName, t.Location ?? Location.None, t.ClrTypeName, t.KindIndex));
+                continue;
+            }
+
+            if (!isHome
+                && _homeReservedKindNames.TryGetValue(t.KindIndex, out var bclSpecialType)
+                && t.SpecialType != bclSpecialType)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    _kindNameCollision, t.Location ?? Location.None,
+                    t.ClrTypeName, "the Home assembly's reserved kind name", t.KindIndex));
+                continue;
+            }
+
             result.Add(t);
         }
 

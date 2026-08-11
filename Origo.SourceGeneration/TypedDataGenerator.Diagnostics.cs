@@ -58,4 +58,16 @@ public sealed partial class TypedDataGenerator
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor _invalidKindName = new(
+        id: "ORIGOSG006",
+        title: "TypedData kind name is not a valid identifier",
+        messageFormat:
+        "Type '{0}' sanitizes to the kind name '{1}', which is not a valid C# identifier. "
+        + "Generated accessor members derive their identifiers from the type name, so a "
+        + "sanitized name must be a valid identifier; register a type whose name sanitizes "
+        + "to one (pointer and ref-like types never do).",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
