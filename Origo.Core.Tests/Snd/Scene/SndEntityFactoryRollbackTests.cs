@@ -111,6 +111,25 @@ public class SndEntityFactoryRollbackTests
         Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount"));
     }
 
+    [Fact]
+    public void Spawn_AfterSpawnHookThrows_WhenRollbackStepAlsoThrows_PropagatesOriginalAndCompletesRollback()
+    {
+        // A throwing rollback step (e.g. an OnUnmounted hook inside
+        // TeardownObserverBindings) must neither mask the original AfterSpawn
+        // failure nor skip the remaining rollback steps: the entity must
+        // still end up fully released and removed from the host.
+        var host = new ThrowingRollbackHost();
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SndEntityFactory.Spawn(host, new SndMetaData { Name = "E" }));
+        Assert.Contains("Intentional AfterSpawn failure", ex.Message, StringComparison.Ordinal);
+
+        Assert.Equal(
+            ["ReleaseStrategiesOnly", "TeardownOnly", "RemoveEntity"],
+            host.Steps);
+        Assert.Empty(host.GetEntities());
+    }
+
     private static (SndContext ctx, FullMemorySndSceneHost host, TestLogger logger) CreateContext()
     {
         var logger = new TestLogger();
@@ -248,6 +267,94 @@ public class SndEntityFactoryRollbackTests
         public void ReleaseStrategiesOnly() => ThrowIfDetached();
         public void TeardownOnly() => ThrowIfDetached();
         public void TeardownObserverBindings() => ThrowIfDetached();
+        public SndMetaData BuildMetaData() => new() { Name = Name };
+    }
+
+    // ── Host whose rollback teardown step throws (OnUnmounted hook semantics) ──
+
+    /// <summary>
+    ///     Mimics an entity whose observer-binding teardown throws during
+    ///     rollback (e.g. a throwing OnUnmounted hook inside
+    ///     TeardownObserverBindings) while the remaining steps succeed.
+    /// </summary>
+    private sealed class ThrowingRollbackHost : ISndSceneHost
+    {
+        private readonly List<ISndEntity> _entities = [];
+
+        public List<string> Steps { get; } = [];
+
+        public ISndEntity CreateEntity(SndMetaData metaData)
+        {
+            var entity = new RollbackStepEntity(Steps);
+            _entities.Add(entity);
+            return entity;
+        }
+
+        public IReadOnlyCollection<ISndEntity> GetEntities() => [.. _entities];
+
+        public ISndEntity? FindByName(string name) =>
+            _entities.FirstOrDefault(e => e.Name == name);
+
+        public IReadOnlyList<SndMetaData> BuildMetaList() => [];
+
+        public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
+        {
+        }
+
+        public void RemoveAllEntities() => _entities.Clear();
+
+        public void RemoveEntity(string name)
+        {
+            Steps.Add("RemoveEntity");
+            var entity = _entities.FirstOrDefault(e => e.Name == name)
+                         ?? throw new InvalidOperationException($"No entity with name '{name}'.");
+            _entities.Remove(entity);
+        }
+
+        public void RequestKillEntity(string name)
+        {
+        }
+
+        public void ProcessAll(double delta)
+        {
+        }
+    }
+
+    private sealed class RollbackStepEntity : ISndEntity, IEntityLifecycle
+    {
+        private readonly List<string> _steps;
+
+        internal RollbackStepEntity(List<string> steps) => _steps = steps;
+
+        public string Name => "E";
+        public ISessionRun OwningSession { get; set; } = null!;
+        public bool IsPendingKill { get; set; }
+
+        public void SetData<T>(string name, T value) => throw new NotSupportedException();
+        public T GetData<T>(string name) where T : notnull => throw new NotSupportedException();
+        public (bool found, T? value) TryGetData<T>(string name) => throw new NotSupportedException();
+        public bool TryGetData<T>(string name, out T? value) => throw new NotSupportedException();
+        public void MountObserverStrategy(string targetName, string observerIndex) => throw new NotSupportedException();
+        public void UnmountObserverStrategy(string targetName, string observerIndex) => throw new NotSupportedException();
+        public void MountObserverStrategy(ISndEntity target, string observerIndex) => throw new NotSupportedException();
+        public void UnmountObserverStrategy(ISndEntity target, string observerIndex) => throw new NotSupportedException();
+        public INodeHandle GetNode(string name) => throw new NotSupportedException();
+        public IReadOnlyCollection<string> GetNodeNames() => [];
+        public void AddStrategy(string index) => throw new NotSupportedException();
+        public void RemoveStrategy(string index) => throw new NotSupportedException();
+        public void AddActiveStrategy(string index) => throw new NotSupportedException();
+        public void RemoveActiveStrategy(string index) => throw new NotSupportedException();
+        public object? InvokeStrategy(string strategyIndex, object? input = null) => throw new NotSupportedException();
+
+        public void RecoverForLifecycle(SndMetaData metaData) => throw new NotSupportedException();
+        public void FireAfterSpawnHooks() => throw new InvalidOperationException("Intentional AfterSpawn failure.");
+        public void FireAfterLoadHooks() => throw new NotSupportedException();
+        public void FireBeforeSaveHooks() => throw new NotSupportedException();
+        public void FireBeforeQuitHooks() => throw new NotSupportedException();
+        public void FireBeforeDeadHooks() => throw new NotSupportedException();
+        public void ReleaseStrategiesOnly() => _steps.Add("ReleaseStrategiesOnly");
+        public void TeardownOnly() => _steps.Add("TeardownOnly");
+        public void TeardownObserverBindings() => throw new InvalidOperationException("Intentional teardown failure.");
         public SndMetaData BuildMetaData() => new() { Name = Name };
     }
 }

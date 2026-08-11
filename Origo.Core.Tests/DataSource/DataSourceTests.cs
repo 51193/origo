@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Origo.Core.DataSource;
+using Origo.Core.DataSource.Codec;
 using Origo.Core.DataSource.Converters;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.StateMachine;
+using Origo.TestSupport;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -260,6 +262,33 @@ public class DataSourceTests
 
         Assert.Equal(DataSourceNodeKind.Map, node.Kind);
         Assert.Empty(node.Keys);
+    }
+
+    [Fact]
+    public void MapCodec_Encode_RejectsMultilineValue()
+    {
+        // A value containing a line break would be written as several lines
+        // that the strict decoder cannot parse back: the codec must reject
+        // such values instead of producing files it cannot read.
+        var codec = TestFactory.CreateMapCodec();
+        var node = DataSourceNode.CreateObject()
+            .Add("key", DataSourceNode.CreateString("line1\nline2"));
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(node));
+    }
+
+    [Fact]
+    public void MapCodec_DuplicateKey_WarningIsObservable()
+    {
+        // The duplicate-key warning must reach a real logger instead of
+        // being silently discarded.
+        var logger = new TestLogger();
+        var codec = new MapDataSourceCodec(logger);
+
+        var node = codec.Decode("a: 1\na: 2");
+
+        Assert.Single(node.Keys);
+        Assert.Contains(logger.Warnings, w => w.Contains("Duplicate key", StringComparison.Ordinal));
     }
 
     // ── 26. DataSourceConverterRegistry type hierarchy fallback ──

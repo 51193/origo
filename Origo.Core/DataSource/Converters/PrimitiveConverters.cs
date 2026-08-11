@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 
 namespace Origo.Core.DataSource.Converters;
@@ -6,7 +7,20 @@ namespace Origo.Core.DataSource.Converters;
 
 internal sealed class StringDataSourceConverter : DataSourceConverter<string>
 {
-    public override string Read(DataSourceNode node) => node.AsString();
+    /// <summary>
+    ///     Reads a string value from a text/number/bool node. A null node is
+    ///     rejected: reading it as a string would silently drift a null value
+    ///     into an empty string. Callers must check
+    ///     <see cref="DataSourceNode.IsNull" /> / <c>TryGetValue</c> first
+    ///     (the pattern <c>TypedDataConverter</c> uses).
+    /// </summary>
+    public override string Read(DataSourceNode node) =>
+        node.IsNull
+            ? throw new InvalidOperationException(
+                "Cannot read a null DataSourceNode as a string: a null value " +
+                "cannot be represented as a string without silently drifting " +
+                "to an empty string. Check node.IsNull / TryGetValue before reading.")
+            : node.AsString();
 
     public override DataSourceNode Write(string value) => DataSourceNode.CreateString(value);
 }

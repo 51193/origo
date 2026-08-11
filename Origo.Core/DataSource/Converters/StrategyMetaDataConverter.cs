@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Origo.Core.Snd.Metadata;
 
 namespace Origo.Core.DataSource.Converters;
@@ -29,15 +30,17 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
                         "The save data is corrupt and cannot be recovered.");
 
                 var binding = new StrategyMetaData.ObserverBinding();
-                foreach (var key in element.Keys)
-                {
-                    binding.Target = key;
-                    var indicesNode = element[key];
-                    if (indicesNode is not null && !indicesNode.IsNull)
-                        foreach (var indexElement in indicesNode.Elements)
-                            binding.ObserverIndices.Add(indexElement.AsString());
-                    break;
-                }
+                if (element.Keys.Count() != 1)
+                    throw new InvalidOperationException(
+                        $"observer_indices entries must contain exactly one target key " +
+                        $"(\"{{ \\\"target\\\": [...] }}\"), but found {element.Keys.Count()} keys. " +
+                        "The save data is corrupt and cannot be recovered.");
+
+                binding.Target = element.Keys.First();
+                var indicesNode = element[binding.Target];
+                if (indicesNode is not null && !indicesNode.IsNull)
+                    foreach (var indexElement in indicesNode.Elements)
+                        binding.ObserverIndices.Add(indexElement.AsString());
 
                 if (!string.IsNullOrWhiteSpace(binding.Target))
                     meta.ObserverIndices.Add(binding);

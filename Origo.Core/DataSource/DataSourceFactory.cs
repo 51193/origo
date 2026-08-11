@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.FileSystem;
+using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource.Converters;
 using Origo.Core.DataSource.Codec;
 using Origo.Core.Serialization;
@@ -92,12 +93,14 @@ public static class DataSourceFactory
             .RegisterSuffix(".write_in_progress", DataSourceCodecKind.RawString);
     }
 
-    internal static IReadOnlyDictionary<DataSourceCodecKind, IDataSourceCodec> BuildDefaultCodecs(bool writeIndented = true)
+    internal static IReadOnlyDictionary<DataSourceCodecKind, IDataSourceCodec> BuildDefaultCodecs(
+        bool writeIndented = true,
+        ILogger? logger = null)
     {
         return new Dictionary<DataSourceCodecKind, IDataSourceCodec>
         {
             [DataSourceCodecKind.Json] = new JsonDataSourceCodec(writeIndented),
-            [DataSourceCodecKind.Map] = new MapDataSourceCodec(),
+            [DataSourceCodecKind.Map] = new MapDataSourceCodec(logger),
             [DataSourceCodecKind.RawString] = new RawStringDataSourceCodec()
         };
     }
@@ -114,8 +117,11 @@ public static class DataSourceFactory
     }
 
     /// <summary>Creates an I/O gateway with the default codecs and options.</summary>
-    public static IDataSourceIoGateway CreateDefaultIoGateway(IFileSystem fileSystem, bool writeIndented = true)
-        => new DataSourceIoGateway(fileSystem, BuildDefaultIoOptions(), BuildDefaultCodecs(writeIndented));
+    public static IDataSourceIoGateway CreateDefaultIoGateway(
+        IFileSystem fileSystem,
+        bool writeIndented = true,
+        ILogger? logger = null)
+        => new DataSourceIoGateway(fileSystem, BuildDefaultIoOptions(), BuildDefaultCodecs(writeIndented, logger));
 
     /// <summary>Creates a file metadata access facade over the given file system.</summary>
     public static IFileMetaAccess CreateFileMetaAccess(IFileSystem fileSystem)

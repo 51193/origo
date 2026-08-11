@@ -114,7 +114,7 @@ public partial class OrigoAutoHost : Node
             new LogMessageBuilder().Build("CreateRuntime begin."));
 
         var fileSystem = new GodotFileSystem();
-        SharedDataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem);
+        SharedDataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem, logger: logger);
         SharedMetaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
         SharedPathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
 

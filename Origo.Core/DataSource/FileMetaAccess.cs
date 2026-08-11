@@ -20,7 +20,12 @@ internal sealed class FileMetaAccess(IFileSystem fileSystem) : IFileMetaAccess
         return _fileSystem.Exists(path);
     }
 
-    public bool DirectoryExists(string path) => _fileSystem.DirectoryExists(path);
+    public bool DirectoryExists(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("DataSource file path cannot be null or whitespace.", nameof(path));
+        return _fileSystem.DirectoryExists(path);
+    }
 
     public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive) =>
         _fileSystem.EnumerateFiles(directoryPath, searchPattern, recursive);

@@ -406,6 +406,30 @@ public class DataSourceConverterTests
         Assert.Equal("US", result["region"]);
     }
 
+    [Fact]
+    public void Read_String_FromNullNode_Throws()
+    {
+        // A Null node cannot be read as a string: doing so would silently
+        // drift a null value into an empty string. Callers must check
+        // IsNull / TryGetValue first (the pattern TypedDataConverter uses).
+        var registry = TestFactory.CreateRegistry();
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<string>(DataSourceNode.CreateNull()));
+        Assert.Contains("null", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void RuntimeRead_String_FromNullNode_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+
+#pragma warning disable CA2263 // Intentionally testing runtime-typed overload
+        Assert.Throws<InvalidOperationException>(
+            () => registry.Read(typeof(string), DataSourceNode.CreateNull()));
+#pragma warning restore CA2263
+    }
+
     // ── Additional edge-case tests ──
 
     [Fact]

@@ -97,9 +97,49 @@ public static class SndEntityFactory
         // detach their backing entity when removed from the host, after which
         // lifecycle delegation would throw. Matches the KillPending / disposal
         // teardown order (hooks/bindings/strategies first, physical removal last).
-        lifecycle.TeardownObserverBindings();
-        lifecycle.ReleaseStrategiesOnly();
-        lifecycle.TeardownOnly();
-        host.RemoveEntity(entity.Name);
+        //
+        // Each step is independently protected so a throwing step (e.g. an
+        // OnUnmounted hook inside TeardownObserverBindings) cannot mask the
+        // original AfterSpawn failure nor skip the remaining teardown: the
+        // remaining steps still run. The rollback steps run without a logger
+        // to report to, so their failures are intentionally not surfaced —
+        // the original exception propagated by the caller carries the failure
+        // context, and a failing teardown step (including a failing physical
+        // removal) is best-effort rather than guaranteed.
+        try
+        {
+            lifecycle.TeardownObserverBindings();
+        }
+        catch (Exception)
+        {
+            // Best-effort teardown; continue with the remaining steps.
+        }
+
+        try
+        {
+            lifecycle.ReleaseStrategiesOnly();
+        }
+        catch (Exception)
+        {
+            // Best-effort teardown; continue with the remaining steps.
+        }
+
+        try
+        {
+            lifecycle.TeardownOnly();
+        }
+        catch (Exception)
+        {
+            // Best-effort teardown; continue with the remaining steps.
+        }
+
+        try
+        {
+            host.RemoveEntity(entity.Name);
+        }
+        catch (Exception)
+        {
+            // Best-effort teardown; the caller's original exception wins.
+        }
     }
 }

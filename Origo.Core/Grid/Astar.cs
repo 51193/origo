@@ -17,10 +17,16 @@ public static class Astar
     ///     returns <c>null</c> when start or end is out of bounds, the end cell is
     ///     blocked, or no path exists.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="gridSize" /> is not positive.
+    /// </exception>
     public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize,
         Func<GridPos, bool> isBlocked)
     {
         ArgumentNullException.ThrowIfNull(isBlocked);
+        if (gridSize <= 0)
+            throw new ArgumentOutOfRangeException(nameof(gridSize), gridSize,
+                "Grid size must be positive; a non-positive grid has no in-bounds cells.");
         if (!IsInBounds(start, gridSize))
             return null;
         if (!IsInBounds(end, gridSize))

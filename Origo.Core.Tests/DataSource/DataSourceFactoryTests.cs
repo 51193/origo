@@ -6,6 +6,7 @@ using Origo.Core.DataSource;
 using Origo.Core.DataSource.Converters;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.StateMachine;
+using Origo.TestSupport;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -168,6 +169,26 @@ public class DataSourceFactoryTests
         Assert.Equal(new[] { "z", "a", "m" }, obj.Keys.ToArray());
     }
 
+    [Fact]
+    public void ObjectNode_Add_OnScalarNode_Throws()
+    {
+        // Children added to a scalar node are silently dropped by every
+        // codec (encode only visits Map/Array children): fail fast instead.
+        var scalar = DataSourceNode.CreateString("x");
+
+        Assert.Throws<InvalidOperationException>(
+            () => scalar.Add("k", DataSourceNode.CreateNumber(1)));
+    }
+
+    [Fact]
+    public void ArrayNode_Add_OnScalarNode_Throws()
+    {
+        var scalar = DataSourceNode.CreateNumber(1);
+
+        Assert.Throws<InvalidOperationException>(
+            () => scalar.Add(DataSourceNode.CreateString("x")));
+    }
+
     // ── 4. Array access ──
 
     [Fact]
@@ -309,5 +330,16 @@ public class DataSourceFactoryTests
         Assert.NotNull(registry.Get<IReadOnlyDictionary<string, TypedData>>());
         Assert.NotNull(registry.Get<IReadOnlyDictionary<string, string>>());
         Assert.NotNull(registry.Get<StateMachineContainerPayload>());
+    }
+
+    // ── FileMetaAccess ──
+
+    [Fact]
+    public void FileMetaAccess_DirectoryExists_RejectsNullOrWhitespacePath()
+    {
+        var metaAccess = new FileMetaAccess(new TestMemoryFileSystem());
+
+        Assert.Throws<ArgumentException>(() => metaAccess.DirectoryExists(null!));
+        Assert.Throws<ArgumentException>(() => metaAccess.DirectoryExists("   "));
     }
 }

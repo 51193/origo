@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Origo.Core.Grid;
 using Xunit;
@@ -65,6 +66,15 @@ public class AstarTests
         var path = Astar.FindPath(new GridPos(0, 0), new GridPos(100, 0), 10,
             _ => false);
         Assert.Null(path);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void FindPath_NonPositiveGridSize_Throws(int gridSize)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Astar.FindPath(new GridPos(0, 0), new GridPos(1, 1), gridSize, _ => false));
     }
 
     [Fact]

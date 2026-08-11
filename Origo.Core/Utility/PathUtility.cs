@@ -41,11 +41,12 @@ public static class PathUtility
     public static string Combine(string basePath, string relativePath)
     {
         ArgumentNullException.ThrowIfNull(basePath);
-        if (basePath.Length == 0)
-            return relativePath;
         if (string.IsNullOrEmpty(relativePath))
             return basePath;
 
+        // The traversal guard applies to every branch, including an empty
+        // base (where Combine would otherwise pass the relative path
+        // through untouched) and scheme roots.
         if (relativePath.Contains("..", StringComparison.Ordinal))
         {
             var normalized = relativePath.Replace('\\', '/');
@@ -55,6 +56,9 @@ public static class PathUtility
                     $"Relative path must not contain path traversal sequences: '{relativePath}'",
                     nameof(relativePath));
         }
+
+        if (basePath.Length == 0)
+            return relativePath;
 
         // A scheme root ("user://") must keep its double slash; trimming it
         // would produce the invalid "user:/" prefix.

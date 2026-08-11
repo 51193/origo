@@ -60,6 +60,97 @@ public class CorruptObserverIndicesStrictReadTests
         Assert.Contains("observer_indices", ex.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void LoadFromPayload_WhenObserverBindingHasMultipleTargets_Throws()
+    {
+        // The writer only ever emits one target key per binding
+        // ({ "target": [...] }); an object with several keys is corrupt
+        // save data and must fail instead of silently dropping the extra
+        // bindings.
+        var (_, progressRun) = CreateContext();
+
+        var payload = new SaveGamePayload
+        {
+            SaveId = "005",
+            ActiveLevelId = "target",
+            ProgressNode = TestFactory.NodeFromJson(
+                """{"origo.session_topology":{"type":"String","data":"__foreground__=target=false"}}"""),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}"),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                ["target"] = new()
+                {
+                    LevelId = "target",
+                    SndSceneNode = TestFactory.NodeFromJson(
+                        """
+                        [
+                          {
+                            "name": "OBS",
+                            "node": { "pairs": {} },
+                            "strategy": {
+                              "lifecycle_indices": [],
+                              "active_indices": [],
+                              "observer_indices": [ { "A": [], "B": [] } ]
+                            },
+                            "data": { "pairs": {} }
+                          }
+                        ]
+                        """),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
+                }
+            }
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() => progressRun.LoadFromPayload(payload));
+        Assert.Contains("observer_indices", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void LoadFromPayload_WhenObserverBindingIsEmptyObject_Throws()
+    {
+        // The writer only ever emits bindings with exactly one target key; an
+        // empty object is corrupt save data and must fail like a multi-key
+        // binding instead of being silently skipped.
+        var (_, progressRun) = CreateContext();
+
+        var payload = new SaveGamePayload
+        {
+            SaveId = "005",
+            ActiveLevelId = "target",
+            ProgressNode = TestFactory.NodeFromJson(
+                """{"origo.session_topology":{"type":"String","data":"__foreground__=target=false"}}"""),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}"),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                ["target"] = new()
+                {
+                    LevelId = "target",
+                    SndSceneNode = TestFactory.NodeFromJson(
+                        """
+                        [
+                          {
+                            "name": "OBS",
+                            "node": { "pairs": {} },
+                            "strategy": {
+                              "lifecycle_indices": [],
+                              "active_indices": [],
+                              "observer_indices": [ {} ]
+                            },
+                            "data": { "pairs": {} }
+                          }
+                        ]
+                        """),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
+                }
+            }
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() => progressRun.LoadFromPayload(payload));
+        Assert.Contains("observer_indices", ex.Message, StringComparison.Ordinal);
+    }
+
     private static (SndContext ctx, ProgressRun progressRun) CreateContext()
     {
         var logger = new TestLogger();

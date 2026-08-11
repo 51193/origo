@@ -59,6 +59,18 @@ public class PathUtilityTests
     [InlineData("foo/../bar")]
     public void Combine_RejectsPathTraversal(string relative) => Assert.Throws<ArgumentException>(() => PathUtility.Combine("/base", relative));
 
+    [Theory]
+    [InlineData("../etc/passwd")]
+    [InlineData("..\\some")]
+    public void Combine_EmptyBase_RejectsTraversal(string relative) =>
+        Assert.Throws<ArgumentException>(() => PathUtility.Combine("", relative));
+
+    [Theory]
+    [InlineData("../etc/passwd")]
+    [InlineData("..\\some")]
+    public void Combine_SchemeRootBase_RejectsTraversal(string relative) =>
+        Assert.Throws<ArgumentException>(() => PathUtility.Combine("user://", relative));
+
     [Fact]
     public void GetParentDirectory_ReturnsParent()
     {

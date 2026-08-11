@@ -270,9 +270,20 @@ internal sealed partial class ProgressRun
                 // before background sessions have mounted. The full topology is
                 // re-solidified once after the mount loop in LoadFromPayload.
                 if (payload.Levels.TryGetValue(descriptor.LevelId, out var fgPayload))
+                {
                     MountForegroundFromPayload(descriptor.LevelId, fgPayload, writeTopology: false);
+                }
                 else
-                    MountEmptyForeground(descriptor.LevelId, writeTopology: false);
+                {
+                    // A topology that references a foreground level with no
+                    // payload is inconsistent save data, matching the background
+                    // path: silently mounting an empty foreground would lose the
+                    // level's state on the next save.
+                    throw new InvalidOperationException(
+                        $"Missing level '{descriptor.LevelId}' for the foreground session. " +
+                        "The save topology is inconsistent and cannot be recovered.");
+                }
+
                 return;
             }
 

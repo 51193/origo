@@ -262,9 +262,19 @@ public sealed class DataSourceNode : IDisposable
     // ── Builder methods ──
 
     /// <summary>Adds a child under the given key on a map node and returns this node.</summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when this node is not a map: children added to a scalar node
+    ///     would be silently dropped by every codec (encode only visits
+    ///     Map/Array children).
+    /// </exception>
     public DataSourceNode Add(string key, DataSourceNode child)
     {
         EnsureExpanded();
+        if (_kind != DataSourceNodeKind.Map)
+            throw new InvalidOperationException(
+                $"Cannot add a child to a {_kind} DataSourceNode: children are " +
+                "only representable on Map nodes. Use CreateObject() for object " +
+                "trees or the single-argument Add overload on array nodes.");
         _objectChildren[key] = child;
         if (!_orderedKeys.Contains(key))
             _orderedKeys.Add(key);
@@ -272,9 +282,19 @@ public sealed class DataSourceNode : IDisposable
     }
 
     /// <summary>Appends a child to an array node and returns this node.</summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when this node is not an array: children added to a scalar
+    ///     node would be silently dropped by every codec (encode only visits
+    ///     Map/Array children).
+    /// </exception>
     public DataSourceNode Add(DataSourceNode child)
     {
         EnsureExpanded();
+        if (_kind != DataSourceNodeKind.Array)
+            throw new InvalidOperationException(
+                $"Cannot append a child to a {_kind} DataSourceNode: children are " +
+                "only representable on Array nodes. Use CreateArray() for array " +
+                "trees or the keyed Add overload on map nodes.");
         _arrayChildren.Add(child);
         return this;
     }
