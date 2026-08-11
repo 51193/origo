@@ -333,6 +333,62 @@ public partial class RandomAndStateMachineTests
     }
 
     [Fact]
+    public void StateMachineContainer_Remove_UnknownKey_Throws()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "r", "i", "e.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmPopStrategy());
+        try
+        {
+            var c = new StateMachineContainer(pool, ctx.StateMachineContext);
+
+            var ex = Assert.Throws<InvalidOperationException>(() => c.Remove("missing"));
+            Assert.Contains("missing", ex.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            ResetStrategyHooks();
+        }
+    }
+
+    [Fact]
+    public void StateMachineContainer_Remove_MountedKey_DisposesAndRemoves()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "r", "i", "e.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmPopStrategy());
+        try
+        {
+            var c = new StateMachineContainer(pool, ctx.StateMachineContext);
+            c.CreateOrGet("k", "sm.push.test", "sm.pop.test");
+
+            c.Remove("k");
+
+            Assert.False(c.TryGet("k", out _));
+        }
+        finally
+        {
+            ResetStrategyHooks();
+        }
+    }
+
+    [Fact]
     public void StateMachineContainer_FlushAllAfterLoad_NotifiesPushStrategy()
     {
         var logger = new TestLogger();

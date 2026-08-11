@@ -17,7 +17,11 @@ public interface IStateMachineContainer
     /// <summary>Look up an existing state machine by key.</summary>
     bool TryGet(string machineKey, out IStateMachine? machine);
 
-    /// <summary>Remove and release a state machine by key.</summary>
+    /// <summary>
+    ///     Remove and release a state machine by key. Throws
+    ///     <see cref="System.InvalidOperationException" /> when the key does
+    ///     not exist in the container.
+    /// </summary>
     void Remove(string machineKey);
 
     /// <summary>Release all state machines and clear the container.</summary>

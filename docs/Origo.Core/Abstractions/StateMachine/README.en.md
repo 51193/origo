@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # StateMachine (Abstractions)
 
@@ -61,6 +61,7 @@ The two pop paths trigger different strategy hook semantics. Runtime pop trigger
 - Strategy code obtaining the container via `ISessionRun` depends only on the Abstractions layer
 - The concrete implementation `StateMachineContainer` keeps its internal methods (`FlushAllAfterLoad`, `SerializeToNode`) for Runtime-layer internal code
 - External strategies can create and look up state machines via `CreateOrGet`/`TryGet` without being aware of the container's concrete implementation
+- `Remove` throws `InvalidOperationException` for a key that does not exist (fail-fast, consistent with the strategy managers' remove contracts)
 
 ---
 [↑ Back to Abstractions](../README.en.md)

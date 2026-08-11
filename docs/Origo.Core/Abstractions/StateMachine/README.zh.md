@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # StateMachine (Abstractions)
 
@@ -66,6 +66,7 @@
 - 策略层通过 `ISessionRun` 获取容器时仅依赖 Abstractions 层
 - 具体实现 `StateMachineContainer` 保留内部方法（`FlushAllAfterLoad`、`SerializeToNode`），供 Runtime 层内部代码使用
 - 外部策略可通过 `CreateOrGet`/`TryGet` 创建和查找状态机，无需感知容器具体实现
+- `Remove` 对不存在的 key 抛 `InvalidOperationException`（fail-fast，与同层策略管理器的移除契约一致）
 
 ---
 [↑ 回到 Abstractions](../README.zh.md)

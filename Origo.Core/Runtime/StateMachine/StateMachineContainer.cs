@@ -58,10 +58,17 @@ internal sealed class StateMachineContainer : IStateMachineContainer
     public bool TryGet(string machineKey, out StackStateMachine? machine) =>
         _machines.TryGetValue(machineKey, out machine);
 
-    /// <summary>Removes and disposes a state machine by key.</summary>
+    /// <summary>
+    ///     Removes and disposes a state machine by key. Removing a machine
+    ///     that is not present throws (fail-fast, consistent with the
+    ///     strategy managers' remove contracts).
+    /// </summary>
     public void Remove(string machineKey)
     {
-        if (!_machines.TryGetValue(machineKey, out var sm)) return;
+        ArgumentException.ThrowIfNullOrWhiteSpace(machineKey);
+        if (!_machines.TryGetValue(machineKey, out var sm))
+            throw new InvalidOperationException(
+                $"State machine '{machineKey}' does not exist in the container.");
         sm.Dispose();
         _machines.Remove(machineKey);
         _machineOrder.Remove(machineKey);

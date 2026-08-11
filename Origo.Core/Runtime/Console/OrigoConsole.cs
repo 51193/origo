@@ -56,28 +56,6 @@ public sealed class OrigoConsole
     }
 
     /// <summary>
-    ///     Creates the console with built-in handlers plus extra handlers registered.
-    /// </summary>
-    public OrigoConsole(IConsoleInputSource input, IConsoleOutputChannel output, OrigoRuntime runtime,
-        IEnumerable<IConsoleCommandHandler> extraHandlers)
-    {
-        ArgumentNullException.ThrowIfNull(input);
-        ArgumentNullException.ThrowIfNull(output);
-        ArgumentNullException.ThrowIfNull(runtime);
-        ArgumentNullException.ThrowIfNull(extraHandlers);
-        _input = input;
-        _output = output;
-        _logger = runtime.Logger;
-
-        var handlers = CreateHandlers(runtime, _router);
-        foreach (var h in handlers)
-            _router.Register(h);
-
-        foreach (var h in extraHandlers)
-            _router.Register(h);
-    }
-
-    /// <summary>
     ///     Registers additional console command handlers (for use by lazily-created components such as
     ///     <see cref="Snd.SndContext" />).
     /// </summary>
