@@ -58,7 +58,7 @@ public class BackgroundSessionTests
     public void CreateBackgroundSession_Throws_WhenLevelIdInvalid(string? levelId)
     {
         var (ctx, _) = CreateForegroundContext();
-        Assert.ThrowsAny<ArgumentException>(() => ctx.Runtime.SessionManager.CreateBackgroundSession("test_key", levelId!));
+        Assert.Throws<ArgumentException>(() => ctx.Runtime.SessionManager.CreateBackgroundSession("test_key", levelId!));
     }
 
     // ── Shared ProgressBlackboard ─────────────────────────────────────
@@ -848,7 +848,7 @@ public class BackgroundSessionTests
     }
 
     [Fact]
-    public void ReadFromCurrent_IncludesAllLevelDirectories()
+    public void ReadFromSnapshot_IncludesAllLevelDirectories()
     {
         var (ctx, fs) = CreateForegroundContext();
 
@@ -860,12 +860,12 @@ public class BackgroundSessionTests
         ctx.Save.RequestSaveGame("save_cur_test");
         ctx.Deferred.FlushDeferredActionsForCurrentFrame();
 
-        // Read back from current/ — should include both levels.
-        var readPayload = ctx.StorageService.ReadSavePayloadFromCurrent(
+        // Read back from the snapshot — should include both levels.
+        var readPayload = ctx.StorageService.ReadSavePayloadFromSnapshot(
             "save_cur_test", "test_level");
         Assert.True(readPayload.Levels.ContainsKey("test_level"));
         Assert.True(readPayload.Levels.ContainsKey("bg_level"),
-            "ReadFromCurrent should enumerate and include background level directories.");
+            "ReadFromSnapshot should enumerate and include background level directories.");
 
         bg.Dispose();
     }

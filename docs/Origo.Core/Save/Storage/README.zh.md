@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Storage
 
@@ -57,10 +57,6 @@
 8. **快照（备份-替换）**：复制 `current/` 到 `save_{id}.tmp/` → 将已存在的 `save_{id}/` 改名为 `save_{id}.bak/` → 重命名 `.tmp` 为正式 `save_{id}/` → 删除 `.bak`。旧数据在新数据就位前不被删除
 9. **清除标记**：删除 marker（快照阶段的重建标记）
 
-## 严格读取规则
-
-- **current/ 下有 `.write_in_progress`** → 拒绝读取，抛异常（上次写入中断）
-- **关卡三件套不全** → 拒绝读取（部分存在 = 损坏）
 ## 严格读取规则
 
 - **current/ 下有 `.write_in_progress`** → 拒绝读取，抛异常（上次写入中断）

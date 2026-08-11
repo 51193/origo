@@ -186,14 +186,13 @@ public class SessionDecouplingTests
             SessionStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}""")
         };
 
-        // WriteLevelPayloadOnly should use the custom policy's GetCurrentDirectory / GetLevelDirectory.
-        var currentDir = customPolicy.GetCurrentDirectory();
-        storage.WriteLevelPayloadOnly(currentDir, payload);
+        // WriteLevelPayloadOnlyToCurrent should use the custom policy's GetCurrentDirectory / GetLevelDirectory.
+        storage.WriteLevelPayloadOnlyToCurrent(payload);
 
         // The custom policy prefixes "custom_" to directory names,
         // so level directory becomes "custom_current/custom_level_dungeon/".
         var expectedSndScene =
-            $"root/{customPolicy.GetLevelSndSceneFile(customPolicy.GetLevelDirectory(currentDir, "dungeon"))}";
+            $"root/{customPolicy.GetLevelSndSceneFile(customPolicy.GetLevelDirectory(customPolicy.GetCurrentDirectory(), "dungeon"))}";
         Assert.True(fs.Exists(expectedSndScene),
             $"Expected file at '{expectedSndScene}' to exist (custom path policy should change layout).");
 
@@ -370,27 +369,15 @@ public class SessionDecouplingTests
             ILogger logger) =>
             _inner.WriteSavePayloadToCurrentThenSnapshot(payload, newSaveId, logger);
 
-        public void WriteLevelPayloadOnly(string baseDirectoryRel, LevelPayload levelPayload, bool overwrite = true)
+        public void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload)
         {
             WriteLevelPayloadOnlyCalls++;
             LastWrittenPayload = levelPayload;
-            _inner.WriteLevelPayloadOnly(baseDirectoryRel, levelPayload, overwrite);
+            _inner.WriteLevelPayloadOnlyToCurrent(levelPayload);
         }
 
-        public void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload, bool overwrite = true)
-        {
-            WriteLevelPayloadOnlyCalls++;
-            LastWrittenPayload = levelPayload;
-            _inner.WriteLevelPayloadOnlyToCurrent(levelPayload, overwrite);
-        }
-
-        public void WriteProgressOnlyToCurrent(DataSourceNode progressNode, DataSourceNode progressStateMachinesNode,
-            bool overwrite = true) =>
-            _inner.WriteProgressOnlyToCurrent(progressNode, progressStateMachinesNode, overwrite);
-
-        public SaveGamePayload ReadSavePayloadFromCurrent(string saveId, string activeLevelId,
-            ILogger? logger = null) =>
-            _inner.ReadSavePayloadFromCurrent(saveId, activeLevelId, logger);
+        public void WriteProgressOnlyToCurrent(DataSourceNode progressNode, DataSourceNode progressStateMachinesNode) =>
+            _inner.WriteProgressOnlyToCurrent(progressNode, progressStateMachinesNode);
 
         public SaveGamePayload ReadSavePayloadFromSnapshot(string saveId, string activeLevelId) =>
             _inner.ReadSavePayloadFromSnapshot(saveId, activeLevelId);

@@ -4,9 +4,8 @@ using System.Collections.Generic;
 namespace Origo.Core.Save.Meta;
 
 /// <summary>
-///     Merges registered contributors with the save request overrides:
-///     contributors first (in registration order, same-name keys from later
-///     contributors override earlier ones), then <paramref name="overrides" />.
+///     Merges the registered contributors in registration order (same-name
+///     keys from later contributors override earlier ones).
 /// </summary>
 internal static class SaveMetaMerger
 {
@@ -17,8 +16,7 @@ internal static class SaveMetaMerger
     /// </summary>
     public static IReadOnlyDictionary<string, string>? Merge(
         IReadOnlyList<ISaveMetaContributor> contributors,
-        in SaveMetaBuildContext context,
-        IReadOnlyDictionary<string, string>? overrides)
+        in SaveMetaBuildContext context)
     {
         ArgumentNullException.ThrowIfNull(contributors);
 
@@ -36,24 +34,6 @@ internal static class SaveMetaMerger
             }
         }
 
-        ApplyOverrides(merged, overrides);
         return merged.Count == 0 ? null : merged;
-    }
-
-    private static void ApplyOverrides(
-        Dictionary<string, string> merged,
-        IReadOnlyDictionary<string, string>? overrides)
-    {
-        if (overrides is null)
-            return;
-
-        foreach (var kv in overrides)
-        {
-            if (string.IsNullOrEmpty(kv.Key))
-                continue;
-            if (kv.Value is null)
-                continue;
-            merged[kv.Key] = kv.Value;
-        }
     }
 }

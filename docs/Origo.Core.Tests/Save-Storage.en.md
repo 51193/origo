@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Storage Tests
 
@@ -64,7 +64,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `TryReadLevelPayload_OnlySessionExists_Throws` | Level only has session.json | InvalidOperationException (data corruption) |
 | `TryReadLevelPayload_OnlyStateMachinesExists_Throws` | Level only has session_state_machines.json | InvalidOperationException (data corruption) |
 | `TryReadLevelPayload_AnyTwoOfThree_Throws` | Any two of the three level files present | InvalidOperationException (data corruption) |
-| `ReadSavePayloadFromCurrent_WhenProgressJsonMissing_Throws` | progress.json missing | Throws exception |
+| `ReadSavePayloadFromCurrent_WhenProgressJsonMissing_Throws` | progress.json missing | InvalidOperationException |
 | `ReadSavePayloadFromSnapshot_WhenSaveNotExist_Throws` | Non-existent save snapshot | InvalidOperationException |
 | `WriteProgressOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | I/O failure mid checkpoint write (simulated second write throws) | IOException propagates, marker left so readers reject |
 | `WriteLevelPayloadOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | Level-only write validation fails (Null nodes) | InvalidOperationException, marker left so readers reject |

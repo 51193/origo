@@ -50,7 +50,7 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
                 var progressRun = owner.EnsureProgressRun();
                 var metaContext = progressRun.BuildSaveMetaContext(newSaveId);
                 var mergedMeta = SaveMetaMerger.Merge(
-                    owner._saveMetaContributors, in metaContext, null);
+                    owner._saveMetaContributors, in metaContext);
                 var payload = progressRun.BuildSavePayload(newSaveId, mergedMeta);
                 owner.StorageService.WriteSavePayloadToCurrentThenSnapshot(
                     payload, newSaveId, owner.Runtime.Logger);

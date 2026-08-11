@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -134,7 +134,8 @@ but must observe the following whitelist principle:
    - **Isolated contract verification of `DefaultSaveStorageService`** (`SavePathPolicyContractTests`,
      `SaveStorageContractTests`): per-method path assertions under a custom `ISavePathPolicy` injection, plus
      low-level methods with no public equivalent such as `EnumerateSavesWithMetaData`/`SnapshotCurrentToSave`/
-     `WriteSavePayloadToCurrent`/`ReadSavePayloadFromCurrent` — the public `RequestSaveGame`/`RequestLoadGame`
+     `WriteSavePayloadToCurrent` (the full `current/` read, `SavePayloadReader.ReadFromCurrent`, is a
+     framework-internal reader with no public equivalent either) — the public `RequestSaveGame`/`RequestLoadGame`
      also carries progress files and idempotency logic, unable to isolate the storage service itself; observable
      behavior with a public equivalent (e.g. `EnumerateSaveIds` → `ctx.Save.ListSaves()`) must go through the
      public path.

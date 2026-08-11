@@ -22,40 +22,8 @@ internal static class SavePayloadReader
     {
         ArgumentNullException.ThrowIfNull(handle);
         var baseRel = handle.PathPolicy.GetCurrentDirectory();
-
-        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(baseRel);
-        var markerAbs = handle.GetAbsolutePath(markerRel);
-        if (handle.MetaAccess.FileExists(markerAbs))
-        {
-            var ex = new InvalidOperationException(
-                $"Detected write-in-progress marker at '{markerRel}' in current/; interrupted save write must be handled before loading.");
-            (logger ?? NullLogger.Instance).Log(
-                LogLevel.Error,
-                nameof(SavePayloadReader),
-                ex.Message);
-            throw ex;
-        }
-
-        var progressRel = handle.PathPolicy.GetProgressFile(baseRel);
-        var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseRel);
-        var (progressNode, progressStateMachinesNode, customMeta) = ReadProgressAndCustomMeta(
-            handle,
-            baseRel,
-            $"Missing required progress.json in current (path='{progressRel}').",
-            $"Missing required progress_state_machines.json in current (path='{progressSmRel}').");
-
-        ValidateFormatVersion(baseRel, customMeta);
-
-        var levels = CreateLevelPayloadMap(handle, baseRel, activeLevelId);
-        ReadRemainingLevelPayloads(handle, baseRel, levels);
-
-        return CreateSavePayload(
-            saveId,
-            activeLevelId,
-            progressNode,
-            progressStateMachinesNode,
-            StripFrameworkMetaKeys(customMeta),
-            levels);
+        ThrowIfWriteInProgressMarkerExists(handle, baseRel, logger);
+        return ReadFromBase(handle, saveId, activeLevelId, baseRel, "current");
     }
 
     public static SaveGamePayload ReadFromSnapshot(
@@ -65,13 +33,23 @@ internal static class SavePayloadReader
     {
         ArgumentNullException.ThrowIfNull(handle);
         var baseRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        return ReadFromBase(handle, saveId, activeLevelId, baseRel, $"save '{saveId}'");
+    }
+
+    private static SaveGamePayload ReadFromBase(
+        SaveFileHandle handle,
+        string saveId,
+        string activeLevelId,
+        string baseRel,
+        string location)
+    {
         var progressRel = handle.PathPolicy.GetProgressFile(baseRel);
         var progressSmRel = handle.PathPolicy.GetProgressStateMachinesFile(baseRel);
         var (progressNode, progressStateMachinesNode, customMeta) = ReadProgressAndCustomMeta(
             handle,
             baseRel,
-            $"Missing required progress.json in save '{saveId}' (path='{progressRel}').",
-            $"Missing required progress_state_machines.json in save '{saveId}' (path='{progressSmRel}').");
+            $"Missing required progress.json in {location} (path='{progressRel}').",
+            $"Missing required progress_state_machines.json in {location} (path='{progressSmRel}').");
 
         ValidateFormatVersion(baseRel, customMeta);
 
@@ -134,7 +112,7 @@ internal static class SavePayloadReader
         ArgumentNullException.ThrowIfNull(handle);
 
         var currentRel = handle.PathPolicy.GetCurrentDirectory();
-        ThrowIfWriteInProgressMarkerExists(handle, currentRel);
+        ThrowIfWriteInProgressMarkerExists(handle, currentRel, null);
         return TryReadLevelPayload(handle, currentRel, levelId);
     }
 
@@ -168,6 +146,11 @@ internal static class SavePayloadReader
             if (valueNode.Kind is DataSourceNodeKind.Map or DataSourceNodeKind.Array)
                 throw new InvalidOperationException(
                     $"Map file '{mapFileAbs}' key '{key}' must be scalar.");
+            if (valueNode.IsNull)
+                throw new InvalidOperationException(
+                    $"Map file '{mapFileAbs}' key '{key}' must not be null: " +
+                    "a null value cannot be represented as a string without " +
+                    "silently drifting to an empty string.");
             result[key] = valueNode.AsString();
         }
 
@@ -290,13 +273,18 @@ internal static class SavePayloadReader
 
     private static void ThrowIfWriteInProgressMarkerExists(
         SaveFileHandle handle,
-        string baseRel)
+        string baseRel,
+        ILogger? logger)
     {
         var markerRel = handle.PathPolicy.GetWriteInProgressMarker(baseRel);
         var markerAbs = handle.GetAbsolutePath(markerRel);
-        if (handle.MetaAccess.FileExists(markerAbs))
-            throw new InvalidOperationException(
-                $"Detected write-in-progress marker at '{markerRel}' in current/; interrupted save write must be handled before loading.");
+        if (!handle.MetaAccess.FileExists(markerAbs))
+            return;
+
+        var ex = new InvalidOperationException(
+            $"Detected write-in-progress marker at '{markerRel}' in current/; interrupted save write must be handled before loading.");
+        (logger ?? NullLogger.Instance).Log(LogLevel.Error, nameof(SavePayloadReader), ex.Message);
+        throw ex;
     }
 
     private static void ReadRemainingLevelPayloads(

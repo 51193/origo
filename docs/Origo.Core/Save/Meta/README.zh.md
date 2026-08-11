@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Meta/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Meta
 
@@ -26,8 +26,7 @@
 1. **注册贡献者**：实现 `ISaveMetaContributor`，通过 `ISndSaveOperations.RegisterSaveMetaContributor()` 注册（支持接口实例和委托两种重载）
 2. **构建上下文**：存档时创建 `SaveMetaBuildContext`（含 saveId、levelId、黑板、场景访问）
 3. **收集**：`SaveMetaMerger.Merge()` 按注册顺序调用每个贡献者的 `Contribute()`，同名键后者覆盖前者
-4. **覆写**：调用方提供的 `customMeta` 参数再次键级覆盖
-5. **持久化**：最终字典通过 `BuildStringMapNode()` 转为 JSON DataSourceNode 树，由 `SavePayloadWriter` 写入 `meta.map`
+4. **持久化**：最终字典通过 `BuildStringMapNode()` 转为 JSON DataSourceNode 树，由 `SavePayloadWriter` 写入 `meta.map`
 
 ### ISaveMetaContributor
 

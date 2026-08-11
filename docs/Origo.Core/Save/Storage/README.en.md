@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Storage
 
@@ -57,10 +57,6 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 8. **Snapshot (backup-replace)**: copy `current/` to `save_{id}.tmp/` → rename existing `save_{id}/` to `save_{id}.bak/` → rename `.tmp` to the final `save_{id}/` → delete `.bak`. Old data is not deleted until new data is in place
 9. **Clear marker**: delete the marker (the one recreated for the snapshot phase)
 
-## Strict Read Rules
-
-- **`.write_in_progress` exists under `current/`** → refuse to read, throw exception (previous write was interrupted)
-- **Per-level three-piece set incomplete** → refuse to read (partial existence = corruption)
 ## Strict Read Rules
 
 - **`.write_in_progress` exists under `current/`** → refuse to read, throw exception (previous write was interrupted)

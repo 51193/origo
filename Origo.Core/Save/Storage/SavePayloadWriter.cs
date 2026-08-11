@@ -55,7 +55,7 @@ internal static class SavePayloadWriter
         handle.IoGateway.WriteTree(progressSmAbs, progressStateMachinesNode, overwrite);
     }
 
-    private static string WriteCheckpointMarker(SaveFileHandle handle, string currentRel)
+    internal static string WriteCheckpointMarker(SaveFileHandle handle, string currentRel)
     {
         var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
         var markerAbs = handle.GetAbsolutePath(markerRel);
@@ -82,9 +82,7 @@ internal static class SavePayloadWriter
         var currentAbs = handle.GetAbsolutePath(currentRel);
         handle.MetaAccess.CreateDirectory(currentAbs);
 
-        var markerRel = handle.PathPolicy.GetWriteInProgressMarker(currentRel);
-        var markerAbs = handle.GetAbsolutePath(markerRel);
-        handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
+        var markerAbs = WriteCheckpointMarker(handle, currentRel);
 
         WriteProgressFilesToCurrent(
             handle,

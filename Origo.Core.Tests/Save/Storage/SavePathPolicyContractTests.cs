@@ -55,7 +55,7 @@ public class SavePathPolicyContractTests
             SessionStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}""")
         };
         var currentDir = customPolicy.GetCurrentDirectory();
-        ctx.StorageService.WriteLevelPayloadOnly(currentDir, payload);
+        ctx.StorageService.WriteLevelPayloadOnlyToCurrent(payload);
 
         // Assert: file must be at the custom policy path, NOT the default SavePathLayout path.
         var expectedDir = customPolicy.GetLevelDirectory(currentDir, "testlvl");
@@ -94,7 +94,7 @@ public class SavePathPolicyContractTests
             SessionStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}""")
         };
         var currentDir = customPolicy.GetCurrentDirectory();
-        ctx.InitialStorageService.WriteLevelPayloadOnly(currentDir, payload);
+        ctx.InitialStorageService.WriteLevelPayloadOnlyToCurrent(payload);
 
         // Assert
         var expectedDir = customPolicy.GetLevelDirectory(currentDir, "initlvl");
@@ -126,7 +126,7 @@ public class SavePathPolicyContractTests
             SessionStateMachinesNode = TestFactory.NodeFromJson("""{"machines":[]}""")
         };
         var currentDir = customPolicy.GetCurrentDirectory();
-        systemRuntime.StorageService.WriteLevelPayloadOnly(currentDir, payload);
+        systemRuntime.StorageService.WriteLevelPayloadOnlyToCurrent(payload);
 
         // Assert
         var expectedDir = customPolicy.GetLevelDirectory(currentDir, "faclvl");
@@ -259,7 +259,11 @@ public class SavePathPolicyContractTests
         var payload = CreateFullSaveGamePayload("dungeon");
         storage.WriteSavePayloadToCurrent(payload);
 
-        var read = storage.ReadSavePayloadFromCurrent("001", "dungeon");
+        // The current/ read is framework-internal; drive it through the
+        // internal reader with the same path policy to verify the policy
+        // governs the read layout too.
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
+        var read = SavePayloadReader.ReadFromCurrent(handle, "001", "dungeon");
         Assert.Equal("dungeon", read.ActiveLevelId);
         Assert.True(read.Levels.ContainsKey("dungeon"));
     }

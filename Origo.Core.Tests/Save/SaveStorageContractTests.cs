@@ -46,19 +46,19 @@ public class SaveStorageContractTests
         fs.SeedFile("root/current/.write_in_progress", "");
 
         Assert.Throws<InvalidOperationException>(() =>
-            ctx.StorageService.ReadSavePayloadFromCurrent("slot", "test_level"));
+            ReadFromCurrent(fs, "slot", "test_level"));
     }
 
     [Fact]
     public void ReadSavePayloadFromCurrent_WhenNoMarker_Succeeds()
     {
-        var (ctx, _) = CreateForegroundContext();
+        var (ctx, fs) = CreateForegroundContext();
         ctx.Blackboard.ProgressBlackboard!.SetValue(WellKnownKeys.SessionTopology,
             @"__foreground__=test_level=false");
         ctx.StorageService.WriteSavePayloadToCurrent(
             BuildPayload("test_level", "slot"));
 
-        var payload = ctx.StorageService.ReadSavePayloadFromCurrent("slot", "test_level");
+        var payload = ReadFromCurrent(fs, "slot", "test_level");
 
         Assert.NotNull(payload);
         Assert.Equal("test_level", payload.ActiveLevelId);
@@ -210,10 +210,10 @@ public class SaveStorageContractTests
     [Fact]
     public void ReadSavePayloadFromCurrent_WhenProgressJsonMissing_Throws()
     {
-        var (ctx, _) = CreateForegroundContext();
+        var (_, fs) = CreateForegroundContext();
 
-        Assert.ThrowsAny<Exception>(() =>
-            ctx.StorageService.ReadSavePayloadFromCurrent("nonexistent_save", "nonexistent_level"));
+        Assert.Throws<InvalidOperationException>(() =>
+            ReadFromCurrent(fs, "nonexistent_save", "nonexistent_level"));
     }
 
     // ── 两阶段写入原子性 ─────────────────────────────────────────────
@@ -494,7 +494,7 @@ public class SaveStorageContractTests
         Assert.False(fs.Exists("root/current/.write_in_progress"));
         Assert.True(fs.Exists("root/current/progress.json"));
 
-        var payload = ctx.StorageService.ReadSavePayloadFromCurrent("slot", "test_level");
+        var payload = ReadFromCurrent(fs, "slot", "test_level");
         Assert.NotNull(payload);
     }
 
@@ -598,6 +598,19 @@ public class SaveStorageContractTests
         (DataSourceFactory.CreateFileMetaAccess(fs),
          DataSourceFactory.CreateDefaultIoGateway(fs),
          DataSourceFactory.CreatePathResolver(fs));
+
+    /// <summary>
+    ///     Reads a full payload from current/ through the internal reader
+    ///     (the public <c>ISaveStorageService</c> surface exposes the snapshot
+    ///     read only; the current/ read is framework-internal).
+    /// </summary>
+    private static SaveGamePayload ReadFromCurrent(
+        TestMemoryFileSystem fs, string saveId, string activeLevelId)
+    {
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        return SavePayloadReader.ReadFromCurrent(handle, saveId, activeLevelId);
+    }
 
     /// <summary>
     ///     Wraps an <see cref="IFileSystem" /> and fails the second

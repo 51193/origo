@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试文档维护元指令
 
@@ -103,7 +103,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 6. **静态方法的直接调用**：`OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 等引导期工具方法
 
 7. **载荷反序列化校验与无公共等价的低层操作**：以下情形没有能忠实复现同一契约的公共路径，故保留内部 API：
-   - `DefaultSaveStorageService` 的**隔离契约验证**（`SavePathPolicyContractTests`、`SaveStorageContractTests`）：自定义 `ISavePathPolicy` 注入下逐方法路径断言、以及 `EnumerateSavesWithMetaData`/`SnapshotCurrentToSave`/`WriteSavePayloadToCurrent`/`ReadSavePayloadFromCurrent` 等无公共等价的低层方法——公共 `RequestSaveGame`/`RequestLoadGame` 会连带进度文件与幂等逻辑，无法隔离验证存储服务自身；有公共等价的可观察行为（如 `EnumerateSaveIds` → `ctx.Save.ListSaves()`）必须走公共路径。
+   - `DefaultSaveStorageService` 的**隔离契约验证**（`SavePathPolicyContractTests`、`SaveStorageContractTests`）：自定义 `ISavePathPolicy` 注入下逐方法路径断言、以及 `EnumerateSavesWithMetaData`/`SnapshotCurrentToSave`/`WriteSavePayloadToCurrent` 等无公共等价的低层方法（`current/` 的完整读取 `SavePayloadReader.ReadFromCurrent` 属框架内部读取器，同样无公共等价）——公共 `RequestSaveGame`/`RequestLoadGame` 会连带进度文件与幂等逻辑，无法隔离验证存储服务自身；有公共等价的可观察行为（如 `EnumerateSaveIds` → `ctx.Save.ListSaves()`）必须走公共路径。
    - `LevelBuilder` 的提交委托契约（`LevelBuilder_Commit_UsesStorageService`）：内部类型，无公共等价。
    - `ProgressRun.LoadFromPayload` 对**手工构造的畸形/缺失字段载荷**的校验（畸形/缺失拓扑、null 的 `ProgressStateMachinesNode`）——公共 `RequestLoadGame` 走磁盘，存档写入器会在读档校验前就拒绝这类畸形载荷，无法忠实复现（`ProgressRunSessionLoadingEdgeTests`、`LifecycleRunsTests`）。
    - `ProgressRun.PersistProgress`（仅持久化 progress、不含会话数据）——公共 `RequestSaveGame` 会连带持久化会话，无"仅 progress"的公共等价（`DisposeSemanticsTests`）。

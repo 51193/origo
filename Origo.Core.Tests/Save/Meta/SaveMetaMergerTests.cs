@@ -19,22 +19,6 @@ public class SaveMetaMergerTests
     }
 
     [Fact]
-    public void Merge_ContributorsThenOverrides_OverridesWin()
-    {
-        var contributors = new ISaveMetaContributor[]
-        {
-            new FuncContributor(_ => new Dictionary<string, string> { ["a"] = "1" }),
-            new FuncContributor(_ => new Dictionary<string, string> { ["b"] = "2" })
-        };
-        var overrides = new Dictionary<string, string> { ["a"] = "override", ["c"] = "3" };
-        var merged = SaveMetaMerger.Merge(contributors, DummyContext(), overrides);
-        Assert.NotNull(merged);
-        Assert.Equal("override", merged!["a"]);
-        Assert.Equal("2", merged["b"]);
-        Assert.Equal("3", merged["c"]);
-    }
-
-    [Fact]
     public void Merge_LaterContributorOverwritesEarlierSameKey()
     {
         var contributors = new ISaveMetaContributor[]
@@ -42,26 +26,16 @@ public class SaveMetaMergerTests
             new FuncContributor(_ => new Dictionary<string, string> { ["k"] = "first" }),
             new FuncContributor(_ => new Dictionary<string, string> { ["k"] = "second" })
         };
-        var merged = SaveMetaMerger.Merge(contributors, DummyContext(), null);
+        var merged = SaveMetaMerger.Merge(contributors, DummyContext());
         Assert.NotNull(merged);
         Assert.Equal("second", merged!["k"]);
     }
 
     [Fact]
-    public void Merge_NoContributorsNoOverrides_ReturnsNull()
+    public void Merge_NoContributors_ReturnsNull()
     {
-        var merged = SaveMetaMerger.Merge([], DummyContext(), null);
+        var merged = SaveMetaMerger.Merge([], DummyContext());
         Assert.Null(merged);
-    }
-
-    [Fact]
-    public void Merge_SkipsNullOverrideValues()
-    {
-        var contributors = new ISaveMetaContributor[] { new FuncContributor(_ => new Dictionary<string, string> { ["x"] = "keep" }) };
-        var overrides = new Dictionary<string, string> { ["x"] = null! };
-        var merged = SaveMetaMerger.Merge(contributors, DummyContext(), overrides);
-        Assert.NotNull(merged);
-        Assert.Equal("keep", merged!["x"]);
     }
 
     private sealed class FuncContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> func) : ISaveMetaContributor

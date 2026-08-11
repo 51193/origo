@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：存储 测试
 
@@ -64,7 +64,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `TryReadLevelPayload_OnlySessionExists_Throws` | 关卡只有 session.json | InvalidOperationException（数据损坏） |
 | `TryReadLevelPayload_OnlyStateMachinesExists_Throws` | 关卡只有 session_state_machines.json | InvalidOperationException（数据损坏） |
 | `TryReadLevelPayload_AnyTwoOfThree_Throws` | 关卡三件套只存在任意两件 | InvalidOperationException（数据损坏） |
-| `ReadSavePayloadFromCurrent_WhenProgressJsonMissing_Throws` | progress.json 缺失 | 抛出异常 |
+| `ReadSavePayloadFromCurrent_WhenProgressJsonMissing_Throws` | progress.json 缺失 | InvalidOperationException |
 | `ReadSavePayloadFromSnapshot_WhenSaveNotExist_Throws` | 不存在的存档快照 | InvalidOperationException |
 | `WriteProgressOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | progress 单写中途 I/O 失败（模拟第二次写入抛异常） | IOException 传播，marker 残留使读端拒绝 |
 | `WriteLevelPayloadOnlyToCurrent_Failure_LeavesMarkerSoReadersReject` | 关卡单写 Payload 校验失败（节点为 Null） | InvalidOperationException，marker 残留使读端拒绝 |

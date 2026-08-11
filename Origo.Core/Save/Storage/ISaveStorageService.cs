@@ -31,26 +31,13 @@ public interface ISaveStorageService
         string newSaveId,
         ILogger logger);
 
-    /// <summary>Writes only a single level payload to the specified base directory.</summary>
-    void WriteLevelPayloadOnly(
-        string baseDirectoryRel,
-        LevelPayload levelPayload,
-        bool overwrite = true);
-
     /// <summary>Writes only a single level payload to the current/ directory.</summary>
-    void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload, bool overwrite = true);
+    void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload);
 
     /// <summary>Writes only Progress-related files to the current/ directory.</summary>
     void WriteProgressOnlyToCurrent(
         DataSourceNode progressNode,
-        DataSourceNode progressStateMachinesNode,
-        bool overwrite = true);
-
-    /// <summary>Reads a complete save payload from current/.</summary>
-    SaveGamePayload ReadSavePayloadFromCurrent(
-        string saveId,
-        string activeLevelId,
-        ILogger? logger = null);
+        DataSourceNode progressStateMachinesNode);
 
     /// <summary>Reads a complete save payload from a save_* snapshot directory.</summary>
     SaveGamePayload ReadSavePayloadFromSnapshot(

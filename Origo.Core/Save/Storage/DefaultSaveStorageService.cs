@@ -55,35 +55,21 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
             _handle, payload, newSaveId, logger);
     }
 
-    public void WriteLevelPayloadOnly(
-        string baseDirectoryRel,
-        LevelPayload levelPayload,
-        bool overwrite = true) => SavePayloadWriter.WriteLevelPayloadOnly(_handle, baseDirectoryRel, levelPayload, overwrite);
-
-    public void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload, bool overwrite = true)
+    public void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload)
     {
         var currentRel = _handle.PathPolicy.GetCurrentDirectory();
-        var markerRel = _handle.PathPolicy.GetWriteInProgressMarker(currentRel);
-        var markerAbs = _handle.GetAbsolutePath(markerRel);
-        _handle.MetaAccess.CreateDirectory(_handle.GetAbsolutePath(currentRel));
-        _handle.IoGateway.WriteTree(markerAbs, DataSourceNode.CreateString(""));
+        var markerAbs = SavePayloadWriter.WriteCheckpointMarker(_handle, currentRel);
 
         // If the write throws, the marker is intentionally left on disk so
         // that readers reject the partially written level checkpoint.
-        WriteLevelPayloadOnly(currentRel, levelPayload, overwrite);
+        SavePayloadWriter.WriteLevelPayloadOnly(_handle, currentRel, levelPayload, overwrite: true);
 
         _handle.MetaAccess.Delete(markerAbs);
     }
 
     public void WriteProgressOnlyToCurrent(
         DataSourceNode progressNode,
-        DataSourceNode progressStateMachinesNode,
-        bool overwrite = true) => SavePayloadWriter.WriteProgressOnlyToCurrent(_handle, progressNode, progressStateMachinesNode, overwrite);
-
-    public SaveGamePayload ReadSavePayloadFromCurrent(
-        string saveId,
-        string activeLevelId,
-        ILogger? logger = null) => SavePayloadReader.ReadFromCurrent(_handle, saveId, activeLevelId, logger);
+        DataSourceNode progressStateMachinesNode) => SavePayloadWriter.WriteProgressOnlyToCurrent(_handle, progressNode, progressStateMachinesNode, overwrite: true);
 
     public SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
