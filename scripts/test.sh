@@ -34,4 +34,13 @@ echo ""
 
 # Benchmarks are tagged [Trait("Category","Benchmark")] and run separately via
 # scripts/benchmark.sh (a dedicated CI step) so they are not executed twice.
-dotnet test Origo.sln --no-build --configuration Release --verbosity normal --filter "Category!=Benchmark" --logger "console;verbosity=detailed"
+#
+# -m:1 runs the test projects sequentially instead of in parallel. Parallel
+# test processes on multi-core Windows runners stall xUnit v3's assembly-info
+# child process long enough (>1s) to hit upstream bug xunit/xunit#3576, where
+# the "Waiting 10 seconds for foreground threads to exit..." message pollutes
+# the assembly-info JSON and VSTest fails discovery with "Test process did not
+# return valid JSON". Sequential runs keep each child process's exit fast
+# enough to avoid the race (fixed upstream only in xunit.v3 4.0.0-pre.128+,
+# which requires the Microsoft Testing Platform migration).
+dotnet test Origo.sln --no-build --configuration Release --verbosity normal --filter "Category!=Benchmark" --logger "console;verbosity=detailed" -m:1
