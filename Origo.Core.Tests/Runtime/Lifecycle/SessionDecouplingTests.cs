@@ -89,9 +89,9 @@ public class SessionDecouplingTests
 
             // Spawn a unique entity in each session's scene so we can distinguish them.
             // Foreground uses TestSndSceneHost (simple meta OK).
-            ((SessionRun)fg).SceneHost.CreateEntity(new SndMetaData { Name = "fg_entity" });
+            fg.Spawn(new SndMetaData { Name = "fg_entity" });
             // Background uses FullMemorySndSceneHost (needs full meta).
-            ((SessionRun)bg).SceneHost.CreateEntity(CreateFullMeta("bg_entity"));
+            bg.Spawn(CreateFullMeta("bg_entity"));
 
             // Push triggers the hook which reads ctx.SceneAccess.
             var fgMachine = fg.GetSessionStateMachines().CreateOrGet(

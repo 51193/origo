@@ -23,7 +23,7 @@ public sealed class TestSndSceneHost : ISndSceneHost
         return entity;
     }
 
-    public IReadOnlyCollection<ISndEntity> GetEntities() => _entities;
+    public IReadOnlyCollection<ISndEntity> GetEntities() => [.. _entities];
 
     public ISndEntity? FindByName(string name) => _entities.FirstOrDefault(e => e.Name == name);
 
@@ -53,9 +53,11 @@ public sealed class TestSndSceneHost : ISndSceneHost
 
     public void RemoveEntity(string name)
     {
-        var entity = _entities.FirstOrDefault(e => e.Name == name);
-        if (entity is not null)
-            _entities.Remove(entity);
+        // Matches the production scene-host contract (SndEntityCollection):
+        // removing an unknown entity fails instead of silently no-opping.
+        var entity = _entities.FirstOrDefault(e => e.Name == name)
+                     ?? throw new InvalidOperationException($"No entity with name '{name}'.");
+        _entities.Remove(entity);
 
         // Keep the metadata view in sync with the entity view so
         // BuildMetaList never returns removed entities.

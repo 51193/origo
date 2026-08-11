@@ -205,7 +205,7 @@ public class SaveAndSwitchForegroundTests
     // ── Direct switch (no prior save) ───────────────────────────────────
 
     [Fact]
-    public void SwitchForeground_WithoutSave_WhenTargetLevelInBackgroundSession_LoadsEntities()
+    public void SwitchForeground_ToBackgroundSessionLevel_ReloadsFromCurrent()
     {
         var (ctx, fs) = CreateForegroundContext();
 
@@ -456,7 +456,7 @@ public class SaveAndSwitchForegroundTests
     // ── SwitchForeground explicit persist contract ─────────────────────
 
     [Fact]
-    public void SwitchForeground_ExplicitPersist_WritesOldForegroundToCurrent()
+    public void SwitchForeground_AutoPersistsOldForeground_IncludingProgress()
     {
         var (ctx, fs) = CreateForegroundContext();
 

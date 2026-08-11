@@ -545,7 +545,7 @@ public class BackgroundSessionTests
     }
 
     [Fact]
-    public void LoadFromPayload_Throws_WhenDisposed()
+    public void Save_AfterDispose_DoesNotWriteDisposedSessionFiles()
     {
         var (ctx, fs) = CreateForegroundContext();
 
@@ -559,7 +559,7 @@ public class BackgroundSessionTests
     }
 
     [Fact]
-    public void SerializeToPayload_Throws_WhenDisposed()
+    public void Save_AfterDispose_ExcludesDisposedSessionLevelFiles()
     {
         var (ctx, fs) = CreateForegroundContext();
 
@@ -600,7 +600,7 @@ public class BackgroundSessionTests
     }
 
     [Fact]
-    public void LoadSessionFromPayload_Throws_WhenPayloadNull()
+    public void CreateBackgroundSession_EmptyLevelId_Throws()
     {
         var (ctx, _) = CreateForegroundContext();
         Assert.Throws<ArgumentException>(() => ctx.Runtime.SessionManager.CreateBackgroundSession("bg", ""));
@@ -609,7 +609,7 @@ public class BackgroundSessionTests
     // ── FullMemorySndSceneHost ────────────────────────────────────────
 
     [Fact]
-    public void FullMemorySndSceneHost_ProcessAll_FiresProcess()
+    public void ProcessAllSessions_FiresProcess_OnBackgroundEntity()
     {
         var processCount = 0;
         var (ctx, _) = CreateForegroundContext(world =>

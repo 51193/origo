@@ -140,17 +140,26 @@ public class SavePathPolicyContractTests
     [Fact]
     public void DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy()
     {
+        // The custom save path policy is a public SndContext configuration
+        // point: the save-listing behavior is verified through the public
+        // ISndSaveOperations.ListSaves() pipeline instead of constructing
+        // the internal storage service directly.
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("p_");
-        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
+        var runtime = TestFactory.CreateRuntime(new TestLogger(), new TestSndSceneHost());
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json")
+        {
+            SavePathPolicy = policy
+        });
 
         // Seed a save directory that looks like a valid save
         fs.CreateDirectory("root/save_001");
         fs.SeedFile("root/save_001/dummy.txt", "");
 
         // EnumerateSaveIds should find the save via save_ prefix
-        var ids = storage.EnumerateSaveIds();
+        var ids = ctx.Save.ListSaves();
         Assert.Contains("001", ids);
     }
 
@@ -274,9 +283,9 @@ public class SavePathPolicyContractTests
             using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg");
 
             // Seed each scene with a distinguishing entity.
-            ((SessionRun)fg).SceneHost.CreateEntity(new SndMetaData { Name = "fg_marker" });
+            fg.Spawn(new SndMetaData { Name = "fg_marker" });
 
-            ((SessionRun)bg).SceneHost.CreateEntity(CreateFullMeta("bg_marker"));
+            bg.Spawn(CreateFullMeta("bg_marker"));
             // Push triggers the strategy hook in each session's state machine.
             var fgMachine = fg.GetSessionStateMachines().CreateOrGet(
                 "contract_sm", "contract.scene_access", "contract.noop_pop");
