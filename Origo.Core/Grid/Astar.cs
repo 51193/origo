@@ -15,7 +15,8 @@ public static class Astar
     ///     on a <paramref name="gridSize" /> × <paramref name="gridSize" /> grid.
     ///     The returned path excludes the start cell and includes the end cell;
     ///     returns <c>null</c> when start or end is out of bounds, the end cell is
-    ///     blocked, or no path exists.
+    ///     blocked, or no path exists. The start cell is the entity's current
+    ///     position and is not checked for blocking (standard A* semantics).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">
     ///     Thrown when <paramref name="gridSize" /> is not positive.
