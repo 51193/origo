@@ -31,8 +31,9 @@ public sealed class TestSndSceneHost : ISndSceneHost
 
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
-        _metaList.Clear();
-        _entities.Clear();
+        // Matches the production scene-host contract (SndEntityCollection /
+        // FullMemorySndSceneHost): recovery appends to the existing scene and
+        // does not automatically clear it. Callers handle cleanup.
         foreach (var meta in metaList)
         {
             _metaList.Add(meta);
