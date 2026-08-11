@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Data Source Tests
 
@@ -21,7 +21,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `DataSourceTests.cs` | Remaining items: IDisposable recursive disposal with deep-tree stack overflow prevention, new accessor methods, TypeStringMapping new type registration, DataSourceConverterRegistry type hierarchy fallback, ReadOnlyDictionary round-trip |
 | `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` canonical hash computation |
 | `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` key-value file parsing (strict/lenient mode, comments, duplicate keys, null/empty content) |
-| `CorruptObserverIndicesStrictReadTests.cs` (in Save/) | Regression: when `observer_indices` contains a non-object element (corrupted save), `LoadFromPayload` throws `InvalidOperationException` (containing "observer_indices") instead of silently dropping bindings |
+| `CorruptObserverIndicesStrictReadTests.cs` (in Save/) | Regression: when `observer_indices` contains a non-object element, **multiple target keys**, or an **empty object** (corrupted save), `LoadFromPayload` throws `InvalidOperationException` (containing "observer_indices") instead of silently dropping bindings |
 
 ## DataSourceTests Details
 
@@ -60,6 +60,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `MapCodec_Decode_IgnoresCommentsAndEmptyLines` | Map decode skips `#` comments and empty lines | DataSource |
 | `MapCodec_Decode_HandlesColonsInValues` | Map decode preserves colons in values (e.g. URLs) | DataSource |
 | `MapCodec_Encode_SkipsNullValues` | Map encode skips null-valued keys | DataSource |
+| `MapCodec_Encode_RejectsMultilineValue` | Value contains newline characters | InvalidOperationException (encode would produce a file that its own strict decode cannot read back, so it must be rejected) |
+| `MapCodec_DuplicateKey_WarningIsObservable` | Duplicate keys on decode | Warning logged (no longer silently dropped via NullLogger) |
 | `Registry_RegisterAndGet_RoundTrips` | Register→Get→Write→Read round-trip | DataSource |
 | `Registry_ReadWrite_ByGenericType` | Write/Read round-trip by generic type | DataSource |
 | `Registry_ReadWrite_ByRuntimeType` | Write/Read round-trip by runtime Type | DataSource |
@@ -73,6 +75,11 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `BlackboardDataConverter_RoundTrip_MixedEntries` | Blackboard dict (int/string/bool mixed) round-trip | DataSource |
 | `StateMachineContainerPayloadConverter_RoundTrip` | State machine container Payload (multiple machines/stacks) round-trip | DataSource |
 | `StringDictionaryConverter_RoundTrip` | IReadOnlyDictionary<string,string> round-trip | DataSource |
+| `Read_String_FromNullNode_Throws` | Reading a Null node as string | InvalidOperationException (silent null drift to empty string must be rejected; callers check IsNull/TryGetValue first) |
+| `RuntimeRead_String_FromNullNode_Throws` | Runtime-typed overload reads Null node as string | InvalidOperationException |
+| `ObjectNode_Add_OnScalarNode_Throws` | Adding a child by key onto a scalar node | InvalidOperationException (children would be silently dropped by all codecs) |
+| `ArrayNode_Add_OnScalarNode_Throws` | Appending a child onto a scalar node | InvalidOperationException |
+| `FileMetaAccess_DirectoryExists_RejectsNullOrWhitespacePath` | DirectoryExists with empty/whitespace path | ArgumentException (aligned with FileExists) |
 | `CreateDefaultRegistry_RegistersAllExpectedTypes` | Default registry registers all primitive/array/domain type converters | DataSource |
 | `SndMetaDataConverter_JsonIntegration_FullRoundTrip` | SndMetaData → node → JSON → node → SndMetaData | DataSource |
 | `ByteConverter_RoundTrip` | byte 0/255/128 round-trip | DataSource |

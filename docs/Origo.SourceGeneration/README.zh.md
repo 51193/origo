@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration
 
@@ -19,9 +19,9 @@
 | `TypedDataGenerator.AdapterGeneration.cs` | partial — Adapter 模式代码生成（Godot 引擎类型扩展方法） |
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home 模式代码生成（Core BCL 类型扩展方法） |
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — `TypedDataFactory<T>` 的 Create/TryExtract 分支生成（类型映射 `TypedDataTypeMap` 与 Kind 分配在 HomeGeneration.cs） |
-| `TypedDataGenerator.Diagnostics.cs` | partial — 诊断定义（ORIGOSG001-005） |
+| `TypedDataGenerator.Diagnostics.cs` | partial — 诊断定义（ORIGOSG001-006） |
 | `AnalyzerReleases.Shipped.md` | 分析器发布跟踪（已发布规则，当前为空） |
-| `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`、`ORIGOSG002`、`ORIGOSG003`、`ORIGOSG004`、`ORIGOSG005`） |
+| `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`~`ORIGOSG006`） |
 | `pipeline.zh.md` | 全链路性能解析：从装箱问题到编译期优化的完整推理与基准说明 |
 
 ## 双模式架构
@@ -90,7 +90,8 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 | `ORIGOSG002` | Error | 宿主程序集中注册了无法内联且不受支持的值类型（如 `decimal` 或自定义结构体）。宿主程序集仅允许注册受支持的系统基础类型与引用类型。 |
 | `ORIGOSG003` | Error | 注册类型的 Kind 值（`startKind` + 组内位置）落在 `byte` 有效范围 `[1, 254]` 之外。包含 Kind 越界后会回绕到某个已占用值、从而与其它类型静默冲突的情形。 |
 | `ORIGOSG004` | Error | 多个 `SndInlineTypes` 组的 `startKind` 区间重叠，导致同一个 Kind 字节被分配给多个不同类型。每个内联类型必须映射到唯一的 Kind。 |
-| `ORIGOSG005` | Error | 多个注册类型产生相同的生成标识符（KindName）：不同命名空间的同名类型、泛型实例化后名称折叠为同一标识符的类型、以及同一类型以不同 Kind 值重复注册。同一类型以相同 Kind 重复注册属幂等操作，被静默去重（与运行时 `RegisterKind` 的幂等语义一致）。**保留标识符 `Null` 也被拒绝**——`KindMap` 恒输出哨兵常量 `Null = 0`（值类型还会与手写 `IsNull` 属性冲突），注册名为 `Null` 的类型同样报 ORIGOSG005 并剔除。生成访问器标识符派生自类型名，任何标识符冲突都会产出不可编译的重复成员。 |
+| `ORIGOSG005` | Error | 多个注册类型产生相同的生成标识符（KindName）：不同命名空间的同名类型、泛型实例化后名称折叠为同一标识符的类型、以及同一类型以不同 Kind 值重复注册。同一类型以相同 Kind 重复注册属幂等操作，被静默去重（与运行时 `RegisterKind` 的幂等语义一致）。**保留标识符 `Null` 与宿主内联 Kind 名也被拒绝**——`KindMap` 恒输出哨兵常量 `Null = 0`（值类型还会与手写 `IsNull` 属性冲突），注册名为 `Null` 的类型同样报 ORIGOSG005 并剔除；适配层注册的**自定义类型其名称清洗后与宿主内联 Kind 名相同**（如用户自己的 `Int32`）会生成与宿主访问器同名的公共扩展方法，消费者侧将静默绑定到扩展方法而 Core 内部绑定到实例方法（语义分歧），同样报 ORIGOSG005。生成访问器标识符派生自类型名，任何标识符冲突都会产出不可编译的重复成员或语义分歧。 |
+| `ORIGOSG006` | Error | 注册类型的清洗后 KindName **不是合法的 C# 标识符**（如指针类型，其 `Name` 含 `*`，清洗后为 `Int32*`），生成访问器标识符无法编译；此类注册报 ORIGOSG006 并剔除。 |
 
 ## 注册机制
 

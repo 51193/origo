@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.SourceGeneration.Tests
 
@@ -17,7 +17,7 @@
 | 文件 | 职责 |
 |------|------|
 | `GeneratorTestHarness.cs` | 构造内存 `CSharpCompilation`，运行 `TypedDataGenerator`，暴露生成源、生成器诊断、合并编译错误 |
-| `TypedDataGeneratorTests.cs` | 生成器行为测试：Home/Adapter 模式输出、两存储模型、`ORIGOSG001`–`ORIGOSG005` 诊断、生成确定性与增量管线 |
+| `TypedDataGeneratorTests.cs` | 生成器行为测试：Home/Adapter 模式输出、两存储模型、`ORIGOSG001`–`ORIGOSG006` 诊断、生成确定性与增量管线 |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | 生成产物性能基准：多值类型 + `string` 的写/读/混合分发，生成的内联 `TypedData` vs 无优化装箱；固定池 + 大迭代 + 多轮取最小降噪，宽松阈值 + 比对表格，并对每侧实测分配（`GC.GetAllocatedBytesForCurrentThread`，置于独立 `NoInlining` 方法以免污染计时） |
 | `TestSupport/PerfReporter.cs` | 性能比对表格输出器（同时写控制台与 xUnit 测试输出） |
 

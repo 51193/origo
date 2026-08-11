@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台桥接服务器 测试
 
@@ -74,6 +74,8 @@
 | `MidSession_ClientHardDisconnect_ServerRecovers` | 客户端强制关闭 socket（非正常 Dispose），服务器恢复 | ConsoleBridge |
 | `MidSession_ClientAbort_NextConnectionAccepted` | 会话中客户端中断后新连接可建立 | ConsoleBridge |
 | `ClientDisconnect_OutputLineBufferedForNextConnection` | 断开后发布的输出行被缓冲，并在下一连接投递（客户端以 FIN 优雅断开并读到服务器 EOF 确认断开已处理，确定性验证缓冲契约） | ConsoleBridge |
+| `DeadNonReadingClient_IsClosed_NextClientConnectsAndReplaysBacklog` | 停止读取的客户端在发送超时后被真正关闭（单连接槽位释放），下一个客户端可接入并收到缓冲回放 | ConsoleBridge: 发送超时 detach |
+| `BacklogReplayToSlowClient_AbortsAtBudget_RemainingLinesReplayOnNextConnection` | 慢速但持续读取的客户端使回放每行阻塞但低于发送超时：回放在时间预算处中止（日志含 "time budget"），剩余行在下一次连接完整回放（无重复） | ConsoleBridge: 回放时间预算 |
 
 ### 线程安全
 

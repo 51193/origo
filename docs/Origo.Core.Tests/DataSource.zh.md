@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 数据源 测试
 
@@ -21,7 +21,7 @@
 | `DataSourceTests.cs` | 余项：IDisposable 递归释放与深树防栈溢出、新访问器方法、TypeStringMapping 新类型注册、DataSourceConverterRegistry 类型层级回退、ReadOnlyDictionary 往返 |
 | `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` 规范化摘要计算 |
 | `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` 键值文件解析（严格/宽松模式、注释、重复键、null/空内容） |
-| `CorruptObserverIndicesStrictReadTests.cs`（位于 Save/） | 回归：`observer_indices` 含非对象元素（损坏存档）时 `LoadFromPayload` 抛 `InvalidOperationException`（含 "observer_indices"），而非静默丢弃绑定 |
+| `CorruptObserverIndicesStrictReadTests.cs`（位于 Save/） | 回归：`observer_indices` 含非对象元素、**含多个目标键**或**空对象**（损坏存档）时 `LoadFromPayload` 抛 `InvalidOperationException`（含 "observer_indices"），而非静默丢弃绑定 |
 
 ## DataSourceTests 测试详情
 
@@ -60,6 +60,8 @@
 | `MapCodec_Decode_IgnoresCommentsAndEmptyLines` | Map 解码跳过 `#` 注释和空行 | DataSource |
 | `MapCodec_Decode_HandlesColonsInValues` | Map 解码保留值中冒号（如 URL） | DataSource |
 | `MapCodec_Encode_SkipsNullValues` | Map 编码跳过 null 值键 | DataSource |
+| `MapCodec_Encode_RejectsMultilineValue` | 值含换行符 | InvalidOperationException（编码产出自身严格解码无法读回的文件，须拒绝） |
+| `MapCodec_DuplicateKey_WarningIsObservable` | 解码重复键 | 记 Warning 日志（不再经 NullLogger 静默丢弃） |
 | `Registry_RegisterAndGet_RoundTrips` | Register→Get→Write→Read 往返 | DataSource |
 | `Registry_ReadWrite_ByGenericType` | 按泛型类型 Write/Read 往返 | DataSource |
 | `Registry_ReadWrite_ByRuntimeType` | 按运行时 Type Write/Read 往返 | DataSource |
@@ -73,6 +75,11 @@
 | `BlackboardDataConverter_RoundTrip_MixedEntries` | 黑板字典（int/string/bool 混合）往返 | DataSource |
 | `StateMachineContainerPayloadConverter_RoundTrip` | 状态机容器 Payload（多机器/栈）往返 | DataSource |
 | `StringDictionaryConverter_RoundTrip` | IReadOnlyDictionary<string,string> 往返 | DataSource |
+| `Read_String_FromNullNode_Throws` | 读取 Null 节点为 string | InvalidOperationException（null 静默漂移为空串须拒绝；调用方先 IsNull/TryGetValue 检查） |
+| `RuntimeRead_String_FromNullNode_Throws` | 运行时类型重载读 Null 节点为 string | InvalidOperationException |
+| `ObjectNode_Add_OnScalarNode_Throws` | 在 scalar 节点上按键 Add 子节点 | InvalidOperationException（子节点会被所有 codec 静默丢弃） |
+| `ArrayNode_Add_OnScalarNode_Throws` | 在 scalar 节点上追加子节点 | InvalidOperationException |
+| `FileMetaAccess_DirectoryExists_RejectsNullOrWhitespacePath` | DirectoryExists 空/空白路径 | ArgumentException（与 FileExists 对齐） |
 | `CreateDefaultRegistry_RegistersAllExpectedTypes` | 默认注册全部基本/数组/领域类型转换器 | DataSource |
 | `SndMetaDataConverter_JsonIntegration_FullRoundTrip` | SndMetaData → 节点 → JSON → 节点 → SndMetaData | DataSource |
 | `ByteConverter_RoundTrip` | byte 0/255/128 往返 | DataSource |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Scene/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Scene
@@ -14,7 +14,7 @@ Test double for `ISndSceneHost`. Manages entities in an in-memory list with a bu
 
 | File | Responsibility |
 |------|---------------|
-| `TestSndSceneHost.cs` | Implements `ISndSceneHost`, managing entities in `List<ISndEntity>`. Exports the entity metadata list via `BuildMetaList()` and exposes the `ClearAllCount` counter. The built-in `DummySndEntity` provides minimal Name and metadata support. |
+| `TestSndSceneHost.cs` | Implements `ISndSceneHost`, managing entities in `List<ISndEntity>`. Exports the entity metadata list via `BuildMetaList()` and exposes the `ClearAllCount` counter. The built-in `DummySndEntity` provides minimal Name and metadata support. **Aligned with the production host contract**: `GetEntities()` returns a snapshot (not downcastable to the mutable backing list) and `RemoveEntity` throws `InvalidOperationException` for unknown entities (consistent with `SndEntityCollection`), preventing test blind spots. |
 
 ## Usage Pattern
 

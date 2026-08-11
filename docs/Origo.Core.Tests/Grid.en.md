@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Grid -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Grid Tests
 
@@ -91,6 +91,7 @@ Validates single-axis/dual-axis coordinate conversion (GridToWorld / WorldToGrid
 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
+| `FindPath_NonPositiveGridSize_Throws` | gridSize is 0 or negative | ArgumentOutOfRangeException |
 | `FindPath_BlockedEndpoint_ReturnsNull` | Endpoint blocked | `null` |
 | `FindPath_CompletelyBlocked_ReturnsNull` | Entire grid blocked | `null` |
 | `FindPath_OutOfBounds_ReturnsNull` | Endpoint out of bounds | `null` |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Grid -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 网格 测试
 
@@ -91,6 +91,7 @@
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
+| `FindPath_NonPositiveGridSize_Throws` | gridSize 为 0 或负数 | ArgumentOutOfRangeException |
 | `FindPath_BlockedEndpoint_ReturnsNull` | 终点被阻挡 | `null` |
 | `FindPath_CompletelyBlocked_ReturnsNull` | 全图阻挡 | `null` |
 | `FindPath_OutOfBounds_ReturnsNull` | 终点越界 | `null` |

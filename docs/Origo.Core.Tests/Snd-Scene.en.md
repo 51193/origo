@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Scene Tests
 
@@ -20,7 +20,7 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `MemorySndSceneHostTests.cs` | Basic entity add/remove/lookup/modify and list serialization behavior of StubSndSceneHost |
 | `FullMemorySndSceneHostTests.cs` | Binding prerequisites for FullMemorySndSceneHost, error paths for CreateEntity/RemoveEntity/RequestKillEntity |
 | `NullNodeFactoryTests.cs` | NullNodeFactory returns NullNodeHandle; Free/SetVisible are no-ops |
-| `SndEntityFactoryRollbackTests.cs` | Regression: Spawn/SpawnMany roll back when an AfterSpawn hook throws (entity removal, observer teardown, strategy/node release, original exception propagation); rollback order is correct on detach-invalidating hosts (Godot wrapper semantics) so the original exception is not masked |
+| `SndEntityFactoryRollbackTests.cs` | Regression: Spawn/SpawnMany roll back when an AfterSpawn hook throws (entity removal, observer teardown, strategy/node release, original exception propagation); rollback order is correct on detach-invalidating hosts (Godot wrapper semantics) so the original exception is not masked; when a rollback step itself throws, the original exception still propagates and the remaining rollback steps all execute |
 
 ## MemorySndSceneHostTests Details
 
@@ -79,6 +79,7 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `Spawn_AfterSpawnHookThrows_RollsBackEntityAndStrategyReferences` | AfterSpawn hook of Spawn throws InvalidOperationException | Half-initialized entity removed from the host (FindByName returns null); acquired strategy references returned (LogPoolLeaks emits no refCount warning); original exception propagates |
 | `SpawnMany_AfterSpawnHookThrows_RollsBackUnfiredEntitiesOnly` | AfterSpawn hook of the second entity in SpawnMany throws InvalidOperationException | E1 whose hook already fired stays; E2 and E3 whose hooks never fired are fully rolled back; rolled-back strategy references returned |
 | `Spawn_AfterSpawnHookThrows_OnDetachInvalidatingHost_PropagatesOriginalException` | AfterSpawn throws on a detach-invalidating host (Godot wrapper semantics) | Teardown happens before removal; the original exception is not masked by ObjectDisposedException |
+| `Spawn_AfterSpawnHookThrows_WhenRollbackStepAlsoThrows_PropagatesOriginalAndCompletesRollback` | AfterSpawn throws and `TeardownObserverBindings` (OnUnmounted hook) also throws during rollback | Original AfterSpawn exception propagates; `ReleaseStrategiesOnly`/`TeardownOnly`/`RemoveEntity` all still execute; host removal is best-effort |
 
 ## Test Helper Strategies
 

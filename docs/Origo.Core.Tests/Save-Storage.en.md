@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Storage Tests
 
@@ -232,7 +232,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SndContext_DefaultStorage_Uses_Injected_SavePathPolicy` | SndContext default storage uses injected ISavePathPolicy | ISavePathPolicy |
 | `SndContext_DefaultInitialStorage_Uses_Injected_SavePathPolicy` | SndContext initial storage uses injected ISavePathPolicy | ISavePathPolicy |
 | `SystemRuntime_DefaultStorage_Uses_Injected_SavePathPolicy` | SystemRuntime default storage uses injected ISavePathPolicy | ISavePathPolicy |
-| `DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` | EnumerateSaveIds assembles paths through policy | ISavePathPolicy |
+| `DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` | Save enumeration under a custom policy, verified through the public `ctx.Save.ListSaves()` pipeline | ISavePathPolicy |
 | `DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy` | EnumerateSavesWithMetaData reads meta.map through policy | ISavePathPolicy |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_Uses_PathPolicy` | Two-phase write fully passes through policy-assembled paths | ISavePathPolicy |
 | `DefaultSaveStorageService_SnapshotCurrentToSave_Uses_PathPolicy` | SnapshotCurrentToSave assembles snapshot path through policy | ISavePathPolicy |
@@ -241,7 +241,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SessionStateMachineContext_SceneAccess_PointsToForegroundSession_ForegroundAndBackground` | In foreground/background Session state machines, SceneAccess each points to own SceneHost | StateMachineStrategyBase |
 | `SessionStateMachineContext_SessionBlackboard_PointsToForegroundSession_ForegroundAndBackground` | In foreground/background Session state machines, SessionBlackboard each isolated | StateMachineStrategyBase |
 
-## SaveFileHandleTests Details
+## SavePathResolverTests Details
 
 ### Happy Path
 
@@ -370,9 +370,20 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 Per the documentation: all file operations in the Core layer go through `IFileSystem`; direct `File.*` API is forbidden.
 Therefore tests should not depend on the real file system — this would break the Core layer's platform independence.
 
-### Why not test DefaultSaveStorageService internal implementation details
+### Why some tests construct DefaultSaveStorageService directly (whitelist exemption)
 
-`DefaultSaveStorageService` is an internal type. Tests verify behavior through the `ISaveStorageService` interface injected into SndContext, rather than directly testing internal implementation.
+`DefaultSaveStorageService` is an internal type; its injection into SndContext is verified through the public
+`ISaveStorageService` chain (e.g. `SndContext_DefaultStorage_Uses_Injected_SavePathPolicy`,
+`DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` via `ctx.Save.ListSaves()`).
+
+However, the storage layer's **isolated contract verification** (per-method path assertions under a custom
+`ISavePathPolicy` injection, and read/write round-trips of low-level methods with no public equivalent such as
+`EnumerateSavesWithMetaData` / `SnapshotCurrentToSave` / `WriteSavePayloadToCurrent` /
+`ReadSavePayloadFromCurrent`) cannot be faithfully reproduced through the public pipeline —
+`RequestSaveGame`/`RequestLoadGame` also carries progress files and idempotency logic, making it impossible to
+isolate the storage service itself. These cases construct `DefaultSaveStorageService` directly via
+`InternalsVisibleTo` and are recorded as exemptions under META-TEST whitelist item 7 ("low-level operations
+with no public equivalent").
 
 ### Why separate SaveStorageContractTests is needed
 

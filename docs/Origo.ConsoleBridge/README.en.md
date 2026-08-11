@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.ConsoleBridge
 
@@ -27,7 +27,7 @@ telnet client ──TCP:9876──> ConsoleBridgeServer
 
 **Threading model**:
 - **Async I/O**: `AcceptTcpClientAsync` and `ReadLineAsync` run on the ThreadPool without occupying dedicated threads. CancellationToken replaces `Monitor.Wait` polling and `ReceiveTimeout`, enabling immediate cancellation response.
-- **Output path is synchronous with a bounded send timeout**: `StreamWriter.WriteLine` in the `OnConsoleOutput` callback remains synchronous — console output involves short kernel calls and does not block under normal consumption. To keep a slow (or stopped-reading) client from filling the TCP send buffer and stalling the game frame thread, every connection gets a **bounded send timeout** (`ConsoleBridgeOptions.OutputSendTimeoutMs`, default 100ms): a single send that stays blocked past the timeout detaches the connection, and the undelivered lines stay buffered for replay by the next connection. The backlog replay (historic lines written when a connection is established) is protected by the same timeout — a failed flush ends the connection and keeps the remaining backlog queued.
+- **Output path is synchronous with a bounded send timeout**: `StreamWriter.WriteLine` in the `OnConsoleOutput` callback remains synchronous — console output involves short kernel calls and does not block under normal consumption. To keep a slow (or stopped-reading) client from filling the TCP send buffer and stalling the game frame thread, every connection gets a **bounded send timeout** (`ConsoleBridgeOptions.OutputSendTimeoutMs`, default 100ms): a single send that stays blocked past the timeout detaches the connection — **the detach actually closes the client connection** (releasing the single connection slot; a dead connection must not occupy it forever, otherwise the buffered lines can never reach a "next connection"), and the undelivered lines stay buffered for replay by the next connection. **The backlog replay (historic lines written when a connection is established) runs on a bounded time budget**: a slow-but-reading client drains each line below the send timeout while the cumulative wait can reach seconds (the game frame thread blocks on the writer lock meanwhile); the replay aborts at the budget (4x the send timeout, clamped to [200ms, 1000ms]) and the remaining lines stay buffered. A single-line write failure (send timeout) ends the connection.
 
 ## Usage
 

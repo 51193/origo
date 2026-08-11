@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Save
 
@@ -72,6 +72,7 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 - **Level three files partially present** → throw exception (data corruption)
 - **progress.json or progress_state_machines.json missing** → throw exception (including when current/ does not exist at all)
 - **Format version newer than the supported one** → throw exception (refuses to load future saves)
+- **A level referenced by the topology has no payload** (foreground or background) → throw exception (an inconsistent topology; the foreground no longer falls back to an empty session silently — matching the background path)
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

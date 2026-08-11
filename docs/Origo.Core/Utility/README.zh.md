@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Utility/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility
 
@@ -13,7 +13,7 @@
 
 | 文件 | 职责 |
 |------|------|
-| `PathUtility.cs` | 路径操作工具：`Combine`（路径拼接 + 遍历攻击检测；`basePath` 为 null 抛 `ArgumentNullException`，空字符串 base 直接透传 relative）、`GetParentDirectory`（父目录提取 + 根路径边界处理）、`NormalizeDirectoryPath`（去除尾部斜杠；null 抛 `ArgumentNullException`）、`ExtractGlobSuffix`（`"*.json"` → `".json"`）。三个路径函数均识别 `scheme://` 方案根（如 `user://`）：根不会被去尾斜杠破坏，`user://x` 的父目录正确返回 `user://`，方案根自身无父目录 |
+| `PathUtility.cs` | 路径操作工具：`Combine`（路径拼接 + 遍历攻击检测——守卫在**所有分支之前**执行，包括空字符串 base 与 `scheme://` 根；`basePath` 为 null 抛 `ArgumentNullException`，空字符串 base 直接透传无遍历的相对路径）、`GetParentDirectory`（父目录提取 + 根路径边界处理）、`NormalizeDirectoryPath`（去除尾部斜杠；null 抛 `ArgumentNullException`）、`ExtractGlobSuffix`（`"*.json"` → `".json"`）。三个路径函数均识别 `scheme://` 方案根（如 `user://`）：根不会被去尾斜杠破坏，`user://x` 的父目录正确返回 `user://`，方案根自身无父目录 |
 | `ValueInference.cs` | `internal` — 字符串到类型值的统一推断（int → long → float → bool → string；float 解析拒绝 NaN/Infinity），供 `SndArchetypeLoader` 与控制台 `bb_set` / `entity_set_data` 共用 |
 
 ## 设计决策

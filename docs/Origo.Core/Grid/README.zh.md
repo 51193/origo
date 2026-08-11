@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Grid
 
@@ -50,7 +50,8 @@ public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize, 
 标准 A* 搜索（**4 方向邻居**：上下左右，对角线不可通行），使用欧几里得距离启发式。返回不含起点的路径列表，无可行路径时返回 `null`。
 
 - `isBlocked` 是 `Func<GridPos, bool>` 委托，由调用方组装阻塞检测逻辑（如合并地形阻挡 + 动态阻挡）
-- 自动校验终点是否越界或被阻挡
+- `gridSize` 必须为正数，否则抛 `ArgumentOutOfRangeException`（与 `GridCoordinateSystem.ValidateDimensions` 的维度校验一致，杜绝把"无界网格"当作合法输入）
+- 自动校验起点/终点是否越界或被阻挡
 
 ### GridParser
 

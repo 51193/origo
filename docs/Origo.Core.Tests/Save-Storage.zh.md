@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：存储 测试
 
@@ -232,7 +232,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SndContext_DefaultStorage_Uses_Injected_SavePathPolicy` | SndContext 默认存储使用注入的 ISavePathPolicy | ISavePathPolicy |
 | `SndContext_DefaultInitialStorage_Uses_Injected_SavePathPolicy` | SndContext 初始存储使用注入的 ISavePathPolicy | ISavePathPolicy |
 | `SystemRuntime_DefaultStorage_Uses_Injected_SavePathPolicy` | SystemRuntime 默认存储使用注入的 ISavePathPolicy | ISavePathPolicy |
-| `DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` | EnumerateSaveIds 通过策略拼装路径 | ISavePathPolicy |
+| `DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` | 自定义策略下存档枚举经公共 `ctx.Save.ListSaves()` 链路验证 | ISavePathPolicy |
 | `DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy` | EnumerateSavesWithMetaData 通过策略读 meta.map | ISavePathPolicy |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_Uses_PathPolicy` | 两阶段写入全部经过策略拼装路径 | ISavePathPolicy |
 | `DefaultSaveStorageService_SnapshotCurrentToSave_Uses_PathPolicy` | SnapshotCurrentToSave 经策略拼装快照路径 | ISavePathPolicy |
@@ -241,7 +241,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SessionStateMachineContext_SceneAccess_PointsToForegroundSession_ForegroundAndBackground` | 前后台 Session 状态机中 SceneAccess 各自指向自身 SceneHost | StateMachineStrategyBase |
 | `SessionStateMachineContext_SessionBlackboard_PointsToForegroundSession_ForegroundAndBackground` | 前后台 Session 状态机中 SessionBlackboard 各自隔离 | StateMachineStrategyBase |
 
-## SaveFileHandleTests 测试详情
+## SavePathResolverTests 测试详情
 
 ### 正确路径
 
@@ -370,10 +370,19 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 文档明确：Core 层所有文件操作通过 `IFileSystem` 进行，禁止直接 `File.*` API。
 因此测试不应依赖真实文件系统——这会破坏 Core 层的平台无关性。
 
-### 为什么不测试 DefaultSaveStorageService 的内部实现细节
+### 为什么部分测试直接构造 DefaultSaveStorageService（白名单豁免）
 
-`DefaultSaveStorageService` 是 internal 类型。测试通过注入到 SndContext 的
-`ISaveStorageService` 接口验证行为，而非直接测试内部实现。
+`DefaultSaveStorageService` 是 internal 类型，其注入到 SndContext 的行为经公共
+`ISaveStorageService` 链路验证（如 `SndContext_DefaultStorage_Uses_Injected_SavePathPolicy`、
+`DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` 经 `ctx.Save.ListSaves()`）。
+
+但存储层的**隔离契约验证**（自定义 `ISavePathPolicy` 注入下各方法逐一路径断言、
+无公共等价的低层方法如 `EnumerateSavesWithMetaData` / `SnapshotCurrentToSave` /
+`WriteSavePayloadToCurrent` / `ReadSavePayloadFromCurrent` 的读写往返）无法经公共
+管线忠实复现——`RequestSaveGame`/`RequestLoadGame` 会连带进度文件与幂等逻辑，无法
+隔离验证存储服务自身。这类用例经 `InternalsVisibleTo` 直接构造
+`DefaultSaveStorageService` 验证，属 META-TEST 白名单第 7 条（"无公共等价的低层
+操作"）的豁免记录。
 
 ### 为什么需要单独的 SaveStorageContractTests
 

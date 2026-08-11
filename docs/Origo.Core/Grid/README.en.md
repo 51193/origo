@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Grid
 
@@ -50,7 +50,8 @@ public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize, 
 Standard A* search (**4-direction neighbors**: up/down/left/right; diagonals are not traversable), using the Euclidean distance heuristic. Returns a path list excluding the starting point; returns `null` when no feasible path exists.
 
 - `isBlocked` is a `Func<GridPos, bool>` delegate; callers assemble blocking detection logic (e.g., combining terrain blocking + dynamic blocking)
-- Automatically validates whether the endpoint is out-of-bounds or blocked
+- `gridSize` must be positive, otherwise `ArgumentOutOfRangeException` (consistent with `GridCoordinateSystem.ValidateDimensions` — a non-positive grid must not be treated as a valid input)
+- Automatically validates whether the start/endpoint is out-of-bounds or blocked
 
 ### GridParser
 

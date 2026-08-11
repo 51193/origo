@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Utility Tests
 
@@ -36,6 +36,8 @@ Behavior of `PathUtility` static path operations and `ValueInference` string-to-
 | `NormalizeDirectoryPath_SchemePath_TrimsTrailingSlash` | `user://dir/` trailing slash trimmed |
 | `NormalizeDirectoryPath_SchemeRoot_IsPreserved` | `user://`/`res://` scheme roots keep double slash |
 | `Combine_SchemeRootBase_KeepsDoubleSlash` | Combining with `user://` root keeps double slash |
+| `Combine_EmptyBase_RejectsTraversal` | Empty base path + traversal sequence (`../`, `..\\`) | ArgumentException (regression: the traversal guard was previously skipped in the empty-base branch) |
+| `Combine_SchemeRootBase_RejectsTraversal` | Scheme root + traversal sequence | ArgumentException |
 | `GetParentDirectory_SchemeFile_ReturnsSchemeRoot` | File under scheme returns its scheme root (`user://foo.map` → `user://`) |
 | `GetParentDirectory_BackslashPath_ReturnsParent` | Windows backslash path parent extraction (`C:\base\sub` → `C:\base`) |
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration
 
@@ -19,9 +19,9 @@
 | `TypedDataGenerator.AdapterGeneration.cs` | partial — Adapter mode code generation (Godot engine type extension methods) |
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home mode code generation (Core BCL type extension methods) |
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — `TypedDataFactory<T>` Create/TryExtract branch generation (type mapping `TypedDataTypeMap` and Kind allocation live in HomeGeneration.cs) |
-| `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-005) |
+| `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-006) |
 | `AnalyzerReleases.Shipped.md` | Analyzer release tracking (shipped rules, currently empty) |
-| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (unshipped rules: `ORIGOSG001`, `ORIGOSG002`, `ORIGOSG003`, `ORIGOSG004`, `ORIGOSG005`) |
+| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (unshipped rules: `ORIGOSG001`-`ORIGOSG006`) |
 | `pipeline.en.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |
 
 ## Dual-Mode Architecture
@@ -90,7 +90,8 @@ Diagnostic messages carry the corresponding `SndInlineTypesAttribute` syntax loc
 | `ORIGOSG002` | Error | An uninlinable and unsupported value type (such as `decimal` or a custom struct) is registered in the home assembly. The home assembly only permits registering supported system primitive types and reference types. |
 | `ORIGOSG003` | Error | A registered type's Kind value (`startKind` + position within group) falls outside the `byte` valid range `[1, 254]`. This includes cases where a Kind overflow wraps around to an already-occupied value, silently conflicting with another type. |
 | `ORIGOSG004` | Error | Multiple `SndInlineTypes` groups have overlapping `startKind` ranges, causing the same Kind byte to be assigned to multiple different types. Each inlined type must map to a unique Kind. |
-| `ORIGOSG005` | Error | Multiple registered types produce the same generated identifier (KindName): same-named types from different namespaces, generic instantiations whose names collapse to one identifier, and the same type registered more than once with different kind values (re-registering the same type with the same kind is idempotent and silently deduplicated, matching the runtime `RegisterKind` semantics). The reserved identifier `Null` is rejected too — `KindMap` always emits the sentinel `Null = 0` (and value types would also collide with the handwritten `IsNull` property), so a type named `Null` reports ORIGOSG005 and is dropped. Generated accessor identifiers derive from the type name; any identifier collision would emit uncompilable duplicate members. |
+| `ORIGOSG005` | Error | Multiple registered types produce the same generated identifier (KindName): same-named types from different namespaces, generic instantiations whose names collapse to one identifier, and the same type registered more than once with different kind values (re-registering the same type with the same kind is idempotent and silently deduplicated, matching the runtime `RegisterKind` semantics). The reserved identifiers `Null` and the Home inline kind names are rejected too — `KindMap` always emits the sentinel `Null = 0` (and value types would also collide with the handwritten `IsNull` property), so a type named `Null` reports ORIGOSG005 and is dropped; an adapter-layer **custom type whose sanitized name equals a Home inline kind name** (e.g. the user's own `Int32`) would generate a public extension method that consumers bind to instead of the Home instance accessor (silent semantic divergence), also ORIGOSG005. Generated accessor identifiers derive from the type name; any identifier collision would emit uncompilable duplicate members or divergent semantics. |
+| `ORIGOSG006` | Error | A registered type's sanitized KindName **is not a valid C# identifier** (e.g. pointer types, whose `Name` contains `*` and sanitizes to `Int32*`), so the generated accessor identifiers could not compile; such registrations report ORIGOSG006 and are dropped. |
 
 ## Registration Mechanism
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console Bridge Server Tests
 
@@ -74,6 +74,8 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `MidSession_ClientHardDisconnect_ServerRecovers` | Client forcibly closes socket (not graceful Dispose), server recovers | ConsoleBridge |
 | `MidSession_ClientAbort_NextConnectionAccepted` | New connection established after client abort mid-session | ConsoleBridge |
 | `ClientDisconnect_OutputLineBufferedForNextConnection` | Output lines published after a disconnect are buffered and delivered on the next connection (client disconnects gracefully with FIN and reads the server's EOF to confirm the disconnect is fully processed, verifying the buffering contract deterministically) | ConsoleBridge |
+| `DeadNonReadingClient_IsClosed_NextClientConnectsAndReplaysBacklog` | A client that stops reading is actually closed after the send timeout (single-connection slot released); the next client can connect and receives the buffered replay | ConsoleBridge: send-timeout detach |
+| `BacklogReplayToSlowClient_AbortsAtBudget_RemainingLinesReplayOnNextConnection` | A slow but continuously reading client makes replay block per line but stay below the send timeout: replay aborts at the time budget (log contains "time budget"), remaining lines replay in full on the next connection (no duplicates) | ConsoleBridge: replay time budget |
 
 ### Thread Safety
 

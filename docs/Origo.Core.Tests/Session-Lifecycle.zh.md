@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -26,7 +26,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun 加载错误路径（拓扑格式错误/文件缺失/后台加载失败） |
 | `ProgressRunLoadRollbackMaskingTests.cs` | 回归：后台挂载失败后的会话清理若自身抛异常（BeforeQuit 钩子），不得遮蔽原始加载异常——清理失败仅记 Warning，原异常原样传播 |
 | `SessionRunLoadRollbackMaskingTests.cs` | 回归：SessionRun 加载失败回滚（`ResetAfterLoadFailure`）逐步执行清理；`OnUnmounted` 钩子抛异常时其余步骤仍执行（实体/黑板清空），原始异常不被遮蔽，清理失败记 Warning |
-| `SaveAndSwitchForegroundIntegrationTests.cs` | 保存+切换关卡的组合操作、碰撞处理、延迟队列编排 |
+| `SaveAndSwitchForegroundTests.cs` | 保存+切换关卡的组合操作、碰撞处理、延迟队列编排、旧前台自动持久化（含 progress） |
+| `SaveAndSwitchForegroundIntegrationTests.cs` | 场景宿主契约边界：FindByName 钩子中间态 + 保存后台→切换的实体/黑板/关卡冲突 |
 | `SessionDecouplingTests.cs` | 会话独立运行互不干扰（SessionStateMachineContext、SceneHost、路径策略） |
 | `SessionManagerTests.cs` | ISessionManager：创建/查找/销毁/枚举/ProcessAll/KillPending |
 | `SessionTopologyCodecTests.cs` | SessionTopology 编解码往返 |
@@ -198,6 +199,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `LoadFromPayload_WhenTopologyMissing_ThrowsInvalidOperation` | progress.json 无拓扑字段 | InvalidOperationException |
 | `LoadAndMountForeground_WhenSndSceneIsEmpty_ThrowsInvalidOperation` | snd_scene.json 为空或空白 | InvalidOperationException（包含 "invalid snd_scene.json"） |
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json 语法错误 | Exception |
+| `LoadFromPayload_WhenBackgroundLevelPayloadMissing_ThrowsInvalidOperation` | 拓扑引用后台关卡但 payload 缺失 | InvalidOperationException（包含关卡名）；不含后台 key |
+| `LoadFromPayload_WhenForegroundLevelPayloadMissing_ThrowsInvalidOperation` | 拓扑引用前台关卡但 payload 缺失 | InvalidOperationException（包含关卡名）；前台为 null |
 | `LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions` | 后台会话 snd_scene 格式无效致加载失败 | 前台置 null、不含后台 key |
 | `RequestLoadGame_Failure_DisposesProgressRunAndClearsContextReference` | 存档加载失败（后台关卡损坏） | ProgressRun 被 Dispose，ctx 引用清除（ProgressBlackboard 为 null、EnsureProgressRun 抛 InvalidOperationException） |
 
@@ -230,6 +233,13 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SaveBackgroundWithEntities_ThenSwitchForeground_LoadsEntitiesIntoForeground` | 保存后台→销毁→切换前台，实体加载到新前台 | session-model: 关卡切换 |
 | `SaveBackgroundWithEntities_ThenSwitchForeground_PreservesBlackboard` | 保存后台→切换后黑板数据保留 | session-model |
 | `SaveBackgroundWithEntities_ThenSwitchForeground_LevelIdMustNotConflict` | 切换后原后台 key 不存在，前台占有关卡 | session-model |
+
+## SaveAndSwitchForegroundTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
 | `PersistProgress_WritesFullTopologyIncludingBackgroundSessions` | PersistProgress 写入完整拓扑（前台+后台） | session-model: 会话拓扑 |
 | `SwitchForeground_PreservesBackgroundSessionsInTopology` | 切换后拓扑中后台信息保留 | session-model |
 | `SwitchForeground_WithoutBackgroundSessions_TopologyIsForegroundOnly` | 无后台时拓扑仅含前台 | session-model |
@@ -237,14 +247,14 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SaveBackgroundSession_ThenSwitch_WritesAllLevelDataToCurrent` | 保存后台→切换后将关卡数据写入 current/ | session-model |
 | `SaveBackgroundSession_ThenSwitch_ProgressJsonHasCorrectActiveLevel` | 切换后 ActiveLevelId 正确 | session-model |
 | `SaveBackgroundSession_ThenSwitch_ThenReloadFromSnapshot_EntitiesPreserved` | 完整往返：保存→切换→snapshot→重新加载，实体保留 | session-model |
-| `SwitchForeground_WithoutSave_WhenTargetLevelInBackgroundSession_LoadsEntities` | 直接切换（不显式保存）到后台持有关卡 | session-model |
+| `SwitchForeground_ToBackgroundSessionLevel_ReloadsFromCurrent` | 切换到已保存的后台持有关卡，从磁盘重载 | session-model |
 | `RequestSaveGameAuto_ThenRequestSwitchForeground_EntitiesLoadRegardlessOfFlushOrder` | Deferred 队列中 Save 和 Switch 编排正确 | session-model: 关卡切换 |
 | `SwitchForeground_AutoPersistsOldForegroundSessionToCurrent` | 切换时旧前台自动持久化 | session-model |
 | `SwitchForeground_BackgroundSessionEntitiesUntouched` | 切换后后台实体不受影响 | session-model |
 | `SwitchForeground_BackgroundSessionTickStatePreserved` | 切换后后台 syncProcess 标志保留 | session-model |
 | `RequestSwitchForegroundLevel_ExecutesInSystemDeferredQueue` | Switch 在系统延迟队列中执行 | session-model |
 | `RequestSwitchForegroundLevel_RunsAfterBusinessDeferred` | Switch 在业务延迟队列之后执行 | session-model |
-| `SwitchForeground_ExplicitPersist_WritesOldForegroundToCurrent` | 显式 PersistForegroundLevelState 写入旧前台数据 | session-model |
+| `SwitchForeground_AutoPersistsOldForeground_IncludingProgress` | 切换时旧前台自动持久化（含 progress 文件） | session-model |
 | `SwitchForeground_BackgroundSessionStateIsNotAutoPersisted` | 切换时后台数据不自动持久化 | session-model |
 | `SwitchForeground_BackgroundSessionStateCanBeExplicitlyPersisted` | 显式 PersistSession 可持久化后台 | session-model |
 | `SwitchForeground_BackgroundCollision_AutoDestroysBackground` | 前台切换到后台持有 levelId 时自动销毁后台 | session-model |
@@ -402,10 +412,10 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SerializeToPayload_ReturnsLevelPayload_WithCorrectLevelIdAndData` | Save 后序列化输出含正确 levelId 和实体/黑板数据 | session-model |
 | `LoadFromPayload_RestoresSessionState` | 保存后文件存在可验证 | session-model |
 | `SerializeToPayload_ThenLoadFromPayload_RoundTrips` | 序列化→反序列化后黑板数据和实体不变 | session-model |
-| `LoadFromPayload_Throws_WhenDisposed` | Dispose 后保存不产生关卡文件 | session-model |
-| `SerializeToPayload_Throws_WhenDisposed` | Dispose 后保存不产生关卡文件 | session-model |
+| `Save_AfterDispose_DoesNotWriteDisposedSessionFiles` | Dispose 后保存不产生关卡文件 | session-model |
+| `Save_AfterDispose_ExcludesDisposedSessionLevelFiles` | Dispose 后保存不产生已销毁会话的关卡文件 | session-model |
 | `CreateBackgroundSession_ThenLoadSessionFromPayload_RestoresState` | 保存→会话中存在实体和黑板数据 | session-model |
-| `FullMemorySndSceneHost_ProcessAll_FiresProcess` | FullMemorySndSceneHost 的 ProcessAll 触发 Process | ISndSceneHost |
+| `ProcessAllSessions_FiresProcess_OnBackgroundEntity` | ProcessAllSessions 处理后台会话时触发 Process 策略 | ISessionManager |
 | `FullMemorySndSceneHost_LoadFromMetaList_ClearsAndLoads` | RemoveAllEntities + RecoverFromMetaList + FireAfterLoadHooks | ISndSceneHost |
 | `BuildSavePayload_IncludesBackgroundSessionsInPayload` | BuildSavePayload 含后台关卡数据 | session-model |
 | `SaveAndLoad_RoundTrips_BackgroundSessions` | 前后台保存→Dispose→重新加载完整往返 | session-model |
@@ -424,7 +434,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `CreateBackgroundSession_Throws_WhenLevelIdInvalid` | null/空/空白 levelId | ArgumentException |
-| `LoadSessionFromPayload_Throws_WhenPayloadNull` | 空 levelId | ArgumentException |
+| `CreateBackgroundSession_EmptyLevelId_Throws` | 空 levelId | ArgumentException |
 | `Dispose_ClearsEntities` | Dispose 后 FindByName | ObjectDisposedException |
 | `DisposedSession_ThrowsOnAllPublicMethods` | Dispose 后 SessionBlackboard/StateMachines/FindByName/GetEntities | ObjectDisposedException |
 
@@ -547,7 +557,6 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| 后台会话与前台共享同一 levelId 时的冲突自动解决 | SwitchForeground 自动保存销毁后台 | session-model: levelId 唯一性约束 |
 | 大量后台会话（100+）时的性能边界 | 极端并发会话数 | — |
 | ProgressRun.LoadFromPayload 对 Payload.Levels 为 null 的处理 | null Levels 的防御 | session-model |
 | 会话双层 Dispose 时 ForegroundSession 与外部引用的竞态 | 外部持有 ISessionRun 引用在 Dispose 后使用 | — |

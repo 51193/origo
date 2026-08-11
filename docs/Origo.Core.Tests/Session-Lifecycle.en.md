@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -26,7 +26,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun load error paths (topology format errors/file missing/background load failure) |
 | `ProgressRunLoadRollbackMaskingTests.cs` | Regression: session cleanup after a background mount failure must not mask the original load exception if cleanup itself throws (BeforeQuit hook) — cleanup failure is only logged as Warning, the original exception propagates unchanged |
 | `SessionRunLoadRollbackMaskingTests.cs` | Regression: SessionRun load-failure rollback (`ResetAfterLoadFailure`) executes cleanup step by step; when the `OnUnmounted` hook throws, the remaining steps still execute (entities/blackboard cleared), the original exception is not masked, and cleanup failures are logged as Warning |
-| `SaveAndSwitchForegroundIntegrationTests.cs` | Combined save + switch level operations, collision handling, deferred queue orchestration |
+| `SaveAndSwitchForegroundTests.cs` | Combined save + switch level operations, collision handling, deferred queue orchestration, old foreground auto-persist (incl. progress) |
+| `SaveAndSwitchForegroundIntegrationTests.cs` | Scene host contract boundary: FindByName hook intermediate state + save background→switch entity/blackboard/level conflicts |
 | `SessionDecouplingTests.cs` | Sessions run independently without interference (SessionStateMachineContext, SceneHost, path policy) |
 | `SessionManagerTests.cs` | ISessionManager: create/find/destroy/enumerate/ProcessAll/KillPending |
 | `SessionTopologyCodecTests.cs` | SessionTopology codec round-trip |
@@ -198,6 +199,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `LoadFromPayload_WhenTopologyMissing_ThrowsInvalidOperation` | progress.json without topology field | InvalidOperationException |
 | `LoadAndMountForeground_WhenSndSceneIsEmpty_ThrowsInvalidOperation` | snd_scene.json empty or whitespace | InvalidOperationException (contains "invalid snd_scene.json") |
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json syntax error | Exception |
+| `LoadFromPayload_WhenBackgroundLevelPayloadMissing_ThrowsInvalidOperation` | Topology references a background level but the payload is missing | InvalidOperationException (contains level name); no background keys |
+| `LoadFromPayload_WhenForegroundLevelPayloadMissing_ThrowsInvalidOperation` | Topology references the foreground level but the payload is missing | InvalidOperationException (contains level name); foreground is null |
 | `LoadFromPayload_WhenBackgroundSessionLoadFails_ClearsMountedSessions` | Background session snd_scene invalid format causes load failure | Foreground set to null, no background keys |
 | `RequestLoadGame_Failure_DisposesProgressRunAndClearsContextReference` | Save load fails (corrupted background level) | ProgressRun disposed, context reference cleared (ProgressBlackboard null, EnsureProgressRun throws InvalidOperationException) |
 
@@ -230,6 +233,14 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SaveBackgroundWithEntities_ThenSwitchForeground_LoadsEntitiesIntoForeground` | Save background→Destroy→Switch foreground, entities load into new foreground | session-model: Level Switch |
 | `SaveBackgroundWithEntities_ThenSwitchForeground_PreservesBlackboard` | Save background→Switch, blackboard data preserved | session-model |
 | `SaveBackgroundWithEntities_ThenSwitchForeground_LevelIdMustNotConflict` | After switch, original background key absent, foreground owns the level | session-model |
+
+
+## SaveAndSwitchForegroundTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
 | `PersistProgress_WritesFullTopologyIncludingBackgroundSessions` | PersistProgress writes full topology (foreground + background) | session-model: Session Topology |
 | `SwitchForeground_PreservesBackgroundSessionsInTopology` | Background info preserved in topology after switch | session-model |
 | `SwitchForeground_WithoutBackgroundSessions_TopologyIsForegroundOnly` | Topology is foreground-only when no backgrounds | session-model |
@@ -237,14 +248,14 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SaveBackgroundSession_ThenSwitch_WritesAllLevelDataToCurrent` | Save background→Switch writes level data to current/ | session-model |
 | `SaveBackgroundSession_ThenSwitch_ProgressJsonHasCorrectActiveLevel` | ActiveLevelId correct after switch | session-model |
 | `SaveBackgroundSession_ThenSwitch_ThenReloadFromSnapshot_EntitiesPreserved` | Full round-trip: save→switch→snapshot→reload, entities preserved | session-model |
-| `SwitchForeground_WithoutSave_WhenTargetLevelInBackgroundSession_LoadsEntities` | Direct switch (no explicit save) to level held by background | session-model |
+| `SwitchForeground_ToBackgroundSessionLevel_ReloadsFromCurrent` | Switch to a saved background-held level, reloads from disk | session-model |
 | `RequestSaveGameAuto_ThenRequestSwitchForeground_EntitiesLoadRegardlessOfFlushOrder` | Save and Switch correctly orchestrated in deferred queue | session-model: Level Switch |
 | `SwitchForeground_AutoPersistsOldForegroundSessionToCurrent` | Old foreground auto-persisted on switch | session-model |
 | `SwitchForeground_BackgroundSessionEntitiesUntouched` | Background entities unaffected after switch | session-model |
 | `SwitchForeground_BackgroundSessionTickStatePreserved` | Background syncProcess flag preserved after switch | session-model |
 | `RequestSwitchForegroundLevel_ExecutesInSystemDeferredQueue` | Switch executes in system deferred queue | session-model |
 | `RequestSwitchForegroundLevel_RunsAfterBusinessDeferred` | Switch runs after business deferred queue | session-model |
-| `SwitchForeground_ExplicitPersist_WritesOldForegroundToCurrent` | Explicit PersistForegroundLevelState writes old foreground data | session-model |
+| `SwitchForeground_AutoPersistsOldForeground_IncludingProgress` | Old foreground auto-persisted on switch (incl. progress file) | session-model |
 | `SwitchForeground_BackgroundSessionStateIsNotAutoPersisted` | Background data not auto-persisted on switch | session-model |
 | `SwitchForeground_BackgroundSessionStateCanBeExplicitlyPersisted` | Explicit PersistSession can persist background | session-model |
 | `SwitchForeground_BackgroundCollision_AutoDestroysBackground` | Foreground switching to background-held levelId auto-destroys background | session-model |
@@ -402,10 +413,10 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SerializeToPayload_ReturnsLevelPayload_WithCorrectLevelIdAndData` | Save output contains correct levelId and entity/blackboard data | session-model |
 | `LoadFromPayload_RestoresSessionState` | After save, files exist and can be verified | session-model |
 | `SerializeToPayload_ThenLoadFromPayload_RoundTrips` | Serialize→Deserialize: blackboard data and entities unchanged | session-model |
-| `LoadFromPayload_Throws_WhenDisposed` | After Dispose, save does not produce level files | session-model |
-| `SerializeToPayload_Throws_WhenDisposed` | After Dispose, save does not produce level files | session-model |
+| `Save_AfterDispose_DoesNotWriteDisposedSessionFiles` | Save after Dispose does not produce level files | session-model |
+| `Save_AfterDispose_ExcludesDisposedSessionLevelFiles` | Save after Dispose does not produce level files of the disposed session | session-model |
 | `CreateBackgroundSession_ThenLoadSessionFromPayload_RestoresState` | After save, session contains entities and blackboard data | session-model |
-| `FullMemorySndSceneHost_ProcessAll_FiresProcess` | FullMemorySndSceneHost ProcessAll triggers Process | ISndSceneHost |
+| `ProcessAllSessions_FiresProcess_OnBackgroundEntity` | ProcessAllSessions triggers the Process strategy when processing a background session | ISessionManager |
 | `FullMemorySndSceneHost_LoadFromMetaList_ClearsAndLoads` | RemoveAllEntities + RecoverFromMetaList + FireAfterLoadHooks | ISndSceneHost |
 | `BuildSavePayload_IncludesBackgroundSessionsInPayload` | BuildSavePayload includes background level data | session-model |
 | `SaveAndLoad_RoundTrips_BackgroundSessions` | Foreground/background save→Dispose→reload full round-trip | session-model |
@@ -424,7 +435,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `CreateBackgroundSession_Throws_WhenLevelIdInvalid` | null/empty/whitespace levelId | ArgumentException |
-| `LoadSessionFromPayload_Throws_WhenPayloadNull` | Empty levelId | ArgumentException |
+| `CreateBackgroundSession_EmptyLevelId_Throws` | Empty levelId | ArgumentException |
 | `Dispose_ClearsEntities` | FindByName after Dispose | ObjectDisposedException |
 | `DisposedSession_ThrowsOnAllPublicMethods` | SessionBlackboard/StateMachines/FindByName/GetEntities after Dispose | ObjectDisposedException |
 
@@ -547,7 +558,6 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 
 | Gap Description | Impact | Reference |
 |----------------|--------|-----------|
-| Automatic collision resolution when background session shares same levelId with foreground | SwitchForeground auto-saves and destroys background | session-model: levelId uniqueness constraint |
 | Performance boundaries with large number of background sessions (100+) | Extreme concurrent session count | — |
 | ProgressRun.LoadFromPayload handling of Payload.Levels being null | Defense against null Levels | session-model |
 | Race condition between session double Dispose, ForegroundSession and external references | External ISessionRun reference used after Dispose | — |

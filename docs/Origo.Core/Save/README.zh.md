@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Save
 
@@ -72,6 +72,7 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 - **关卡三件套不全**（部分存在）→ 抛异常（数据损坏）
 - **progress.json 或 progress_state_machines.json 缺失** → 抛异常（含 current/ 完全不存在的情形）
 - **格式版本高于当前支持版本** → 抛异常（拒绝加载未来版本存档）
+- **拓扑引用的关卡无对应载荷**（前台或后台）→ 抛异常（拓扑不一致的存档，前台不再静默降级为空会话——与后台路径行为一致）
 
 ---
 [↑ 回到 Origo.Core](../README.zh.md)

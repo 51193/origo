@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.SourceGeneration.Tests
 
@@ -17,7 +17,7 @@
 | File | Responsibility |
 |------|------|
 | `GeneratorTestHarness.cs` | Constructs in-memory `CSharpCompilation`, runs `TypedDataGenerator`, exposes generated sources, generator diagnostics, merged compilation errors |
-| `TypedDataGeneratorTests.cs` | Generator behavior tests: Home/Adapter mode output, two storage models, `ORIGOSG001`–`ORIGOSG005` diagnostics, generation determinism and incremental pipeline |
+| `TypedDataGeneratorTests.cs` | Generator behavior tests: Home/Adapter mode output, two storage models, `ORIGOSG001`–`ORIGOSG006` diagnostics, generation determinism and incremental pipeline |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | Generated artifact performance benchmarks: write/read/mixed dispatch for multiple value types + `string`, generated inline `TypedData` vs unoptimized boxing; fixed pool + large iterations + multi-round min noise reduction, relaxed thresholds + comparison tables, and per-side measured allocation (`GC.GetAllocatedBytesForCurrentThread`, placed in separate `NoInlining` methods to avoid polluting timing) |
 | `TestSupport/PerfReporter.cs` | Performance comparison table output (writes to both console and xUnit test output) |
 
