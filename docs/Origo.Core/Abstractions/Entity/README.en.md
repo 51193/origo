@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Entity (Abstractions)
 
@@ -90,7 +90,7 @@ Composite interface with own members:
 | `FireBeforeSaveHooks()` | Phase 2 | Trigger BeforeSave |
 | `FireBeforeQuitHooks()` | Phase 2 | Trigger BeforeQuit |
 | `FireBeforeDeadHooks()` | Phase 2 | Trigger BeforeDead |
-| `ReleaseStrategiesOnly()` | Phase 3 | Release EntityStrategy + ActiveStrategy references |
+| `ReleaseStrategiesOnly()` | Phase 3 | Release passive + active + observer strategy references (no hooks fired) |
 | `TeardownOnly()` | Phase 3 | Release Node + Data resources |
 | `TeardownObserverBindings()` | Phase 3 | Unload all observer bindings of this entity via the host `ObserverTopology`: unsubscribe target data channels, fire `OnUnmounted`, and release strategy-pool references |
 | `BuildMetaData()` | Serialization | Build metadata (no BeforeSave) |

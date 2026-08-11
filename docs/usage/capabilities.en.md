@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Capabilities
 
@@ -83,7 +83,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | PackedScene node instantiation | GodotPackedSceneNodeFactory loads scenes from resource paths and instantiates them as GodotNodeHandle | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
 | GodotEntity + StableName | GodotSndEntity bridges ISndEntity with the Godot Node lifecycle; independent StableName avoids Godot auto-rename interference | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
 | Scene alias resolution | Resolves logical aliases to res:// resource paths via SndMappings | [↔ GodotAdapter/Bootstrap](../Origo.GodotAdapter/Bootstrap/README.en.md) |
-| Adapter-layer console commands | press_button (simulate button click), tree_debug (print entity node tree) | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.en.md) |
+| Adapter-layer console commands | press_button (simulate button click), tree_debug (print entity node tree), camera_view (show screen coordinates and depth of entity nodes visible through the active Camera3D) | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.en.md) |
 
 ## Testing Infrastructure
 
@@ -103,7 +103,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | Grid coordinate system | GridPos type, GridCoordinateSystem single/dual-axis conversion, A* pathfinding, GridParser coordinate parsing | [↔ Grid](../Origo.Core/Grid/README.en.md) |
 | In-memory blackboard | IBlackboard default implementation, SetValue/TryGet/SerializeAll/DeserializeAll, key case-sensitive | [↔ Blackboard](../Origo.Core/Blackboard/README.en.md) |
 | Deferred action scheduling | ConcurrentActionQueue thread-safe queue, snapshot-drain pattern, supports re-enqueue during execution | [↔ Scheduling](../Origo.Core/Scheduling/README.en.md) |
-| Structured log builder | LogMessageBuilder fluent API (SetElapsedMs / AddPrefix / AddSuffix / Build) | [↔ Logging](../Origo.Core/Logging/README.en.md) |
+| Structured log builder | LogMessageBuilder fluent API (SetElapsedMs / AddContext / Build) | [↔ Logging](../Origo.Core/Logging/README.en.md) |
 
 ## Framework Design Properties
 

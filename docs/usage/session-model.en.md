@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Model
 
@@ -83,7 +83,7 @@ If you need explicit flow control (e.g., you don't want to save the background's
 // Method 1: Automatic (recommended) — SwitchForeground handles save + destroy internally
 var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
-bg.SessionBlackboard.SetValue("data", value);
+bg.SessionBlackboard.SetValue("data", 1);
 
 // Direct switch; SwitchForeground automatically saves and destroys bg
 ctx.Save.RequestSwitchForegroundLevel("game");

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Grid
 
@@ -51,7 +51,7 @@ public static List<GridPos>? FindPath(GridPos start, GridPos end, int gridSize, 
 
 - `isBlocked` 是 `Func<GridPos, bool>` 委托，由调用方组装阻塞检测逻辑（如合并地形阻挡 + 动态阻挡）
 - `gridSize` 必须为正数，否则抛 `ArgumentOutOfRangeException`（与 `GridCoordinateSystem.ValidateDimensions` 的维度校验一致，杜绝把"无界网格"当作合法输入）
-- 自动校验起点/终点是否越界或被阻挡
+- 自动校验起点/终点是否越界；终点被阻挡时返回 `null`（起点格是实体当前位置，不检查其阻挡状态——标准 A* 语义）
 
 ### GridParser
 
@@ -78,6 +78,8 @@ public static (int X, int Z)? ParseCoords(object? input)
 ### 为什么不放在Snd命名空间
 
 坐标转换和寻路是通用几何工具，不依赖SND实体模型。独立命名空间使其可用于任何游戏逻辑（包括非Snd系统）。
+
+> **消费说明**：Grid 模块在 Core 仓库内没有生产消费者（仅供测试使用）——它作为框架能力提供给游戏侧消费（如 origo.demo）。
 
 ---
 

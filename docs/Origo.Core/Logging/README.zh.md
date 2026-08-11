@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Logging/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Logging
 
@@ -50,6 +50,8 @@ builder.SetElapsedMs(12.3).AddContext("entity", "player").AddContext("hp", 100).
 ### 为什么 NullLogger 使用单例
 
 `NullLogger` 无任何可变状态，创建多个实例是资源浪费。私有构造函数 + 静态 Instance 属性确保全局唯一。
+
+> **消费说明**：`Logger<T>` 泛型包装器在 Core 仓库内没有生产消费者（仅供测试使用）——它作为公共扩展点提供给下游（策略库、适配层或游戏代码）用于类型化日志。
 
 ---
 

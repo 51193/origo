@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -32,7 +32,7 @@ public interface ISndDataAccess
 // TryGetNumeric extension methods (Origo.Core.Snd.TryGetNumericExtensions):
 // bool entity.TryGetNumeric(string key, out float value)
 // float entity.GetNumeric(string key, float fallback)
-// Attempts reading in order: float → int → long → double, bridging type mismatches.
+// Attempts reading in order: float → int → remaining integer types (byte/sbyte/short/ushort/char/uint/ulong) → long → double, bridging type mismatches.
 
 public interface ISndObserverStrategyAccess
 {

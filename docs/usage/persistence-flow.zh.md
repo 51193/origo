@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化流程
 
@@ -55,9 +55,10 @@ Origo 的存档系统遵循 **严格读取、显式失败、两阶段写入** �
 1. 重建 current/.write_in_progress marker
 2. 创建 save_{id}.tmp/
 3. 递归复制 current/ 全部文件到 save_{id}.tmp/
-4. 若 save_{id}/ 已存在，删除之
+4. 若 save_{id}/ 已存在，先重命名为 save_{id}.bak/（旧数据在新数据就位前不被删除）
 5. 原子重命名 save_{id}.tmp/ → save_{id}/
-6. 删除 .write_in_progress marker
+6. 删除 save_{id}.bak/ 备份
+7. 删除 .write_in_progress marker
 ```
 
 如果阶段 2 失败，`current/` 数据完整但 marker 残留。下次读取 `current/` 时会因为 marker 而拒绝读取，日志记录需要人工或重试处理。

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Logging/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Logging
 
@@ -50,6 +50,8 @@ The prefix/suffix distinction does not provide semantic clarity in practice. A u
 ### Why NullLogger uses a singleton
 
 `NullLogger` has no mutable state; creating multiple instances is a resource waste. Private constructor + static Instance property ensures global uniqueness.
+
+> **Consumption note**: the `Logger<T>` generic wrapper has no production consumer inside the Core repository (test-only usage) — it is provided as a public extension point for downstream code (strategy libraries, adapters, or game code) for typed logging.
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

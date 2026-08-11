@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -19,7 +19,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `LifecycleRunsTests.cs` | SessionRun/ProgressRun 生命周期、MountKey、LoadFromPayload、SwitchForeground、日志 |
-| `DisposeSemanticsTests.cs` (3 partial files: `SessionRun.cs`, `ProgressRun.cs`, `RoundTrip.cs`) | Dispose 不触发 BeforeSave、触发 BeforeQuit、幂等、Save-then-Dispose-then-Continue 往返、异常安全 |
+| `DisposeSemanticsTests.SessionRun.cs` / `DisposeSemanticsTests.ProgressRun.cs` / `DisposeSemanticsTests.RoundTrip.cs` (3 partial files + `DisposeSemanticsTestInfrastructure.cs`) | Dispose 不触发 BeforeSave、触发 BeforeQuit、幂等、Save-then-Dispose-then-Continue 往返、异常安全 |
 | `ForegroundBackgroundContractTests.cs` | 前后台 ISessionRun 行为完全一致（黑板/状态机/序列化/Dispose） |
 | `EmptySessionManagerTests.cs` | EmptySessionManager 的无操作行为 |
 | `PlayStopPlayRoundTripTests.cs` | 多次 Play→Stop→Play 的往返一致性（身份/黑板/Tick/Progress） |

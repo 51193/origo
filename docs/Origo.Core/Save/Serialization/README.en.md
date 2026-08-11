@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Serialization/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Serialization (Save)
 
@@ -19,15 +19,31 @@ Save serialization layer implementation. `BlackboardSerializer` and `SndSceneSer
 ## Module Details
 
 ### BlackboardSerializer
-- **Serialize**: `blackboard.SerializeAll()` → registry.Write → DataSourceNode
-- **DeserializeInto**: DataSourceNode → registry.Read → `blackboard.DeserializeAll()`
+- **Serialize**: `blackboard.SerializeAll()` → `registry.Write<Dict<string,TypedData>>()` → DataSourceNode
+- **DeserializeInto**: DataSourceNode → `registry.Read<Dict<string,TypedData>>()` → `blackboard.DeserializeAll(dict)`
+
+`TypedData` is a struct (value type); its inline values are stored directly in the dictionary, avoiding extra heap allocations.
+
+Depends on `BlackboardDataConverter` (registered in DataSource.Converters).
 
 ### SndSceneSerializer
-- **Build**: `BuildMetaList()` → DataSourceNode (no BeforeSave hooks)
-- **RecoverInto**: DataSourceNode (Array format) → `RecoverFromMetaList` (no AfterLoad hooks, no ClearAll)
+- **Build**: `sceneAccess.BuildMetaList()` → `_world.WriteMetaListNode(metaList)` → DataSourceNode.  
+  Does not fire BeforeSave — `SessionRun.BuildLevelPayload` fires it in batch before calling.
+- **RecoverInto**: input must be Array format → `SndMappings.ResolveMetaListFromJsonArray` → `sceneAccess.RecoverFromMetaList`.  
+  Fires no AfterLoad hooks and performs no ClearAll — `SessionRun.LoadFromPayload` fires hooks in batch afterwards; callers handle clearing before recovery.
 
 ### SaveContext
-Core orchestration object, **transient** — created fresh per save/load operation, held by no runtime component. Provides `BuildSndScene(ISndSceneAccess)`, `RecoverSndScene(ISndSceneAccess, DataSourceNode)`, `SaveGame`.
+Core orchestration object, **transient** — created fresh per save/load operation, held by no runtime component:
+
+```
+SaveContext = IBlackboard(Progress) + IBlackboard(Session) + SndWorld
+```
+
+| Method | Description |
+|--------|-------------|
+| `BuildSndScene(ISndSceneAccess)` | Builds scene metadata (no BeforeSave hooks) |
+| `RecoverSndScene(ISndSceneAccess, DataSourceNode)` | Recovers the scene (no AfterLoad hooks, no ClearAll) |
+| `SaveGame(...)` | Collects all data into a `SaveGamePayload` |
 
 ## Design Decisions
 

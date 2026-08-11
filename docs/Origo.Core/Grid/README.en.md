@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Grid
 
@@ -51,7 +51,7 @@ Standard A* search (**4-direction neighbors**: up/down/left/right; diagonals are
 
 - `isBlocked` is a `Func<GridPos, bool>` delegate; callers assemble blocking detection logic (e.g., combining terrain blocking + dynamic blocking)
 - `gridSize` must be positive, otherwise `ArgumentOutOfRangeException` (consistent with `GridCoordinateSystem.ValidateDimensions` — a non-positive grid must not be treated as a valid input)
-- Automatically validates whether the start/endpoint is out-of-bounds or blocked
+- Automatically validates whether the start/endpoint is out-of-bounds; a blocked endpoint returns `null` (the start cell is the entity's current position and is not checked for blocking — standard A* semantics)
 
 ### GridParser
 
@@ -78,6 +78,8 @@ In practice, the vast majority of call sites use the same cellSize and gridSize 
 ### Why not in the Snd namespace
 
 Coordinate conversion and pathfinding are general geometric utilities that do not depend on the SND entity model. An independent namespace allows use in any game logic (including non-Snd systems).
+
+> **Consumption note**: the Grid module has no production consumer inside the Core repository (test-only usage) — it is provided as a framework capability for game-side consumption (e.g. origo.demo).
 
 ---
 

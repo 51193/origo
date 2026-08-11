@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence Flow
 
@@ -46,7 +46,8 @@ Origo's save system follows **strict read, explicit failure, two-phase write** c
    a. Write level_{id}/snd_scene.json
    b. Write level_{id}/session.json
    c. Write level_{id}/session_state_machines.json
-6. Delete .write_in_progress marker
+6. Delete the save_{id}.bak/ backup
+7. Delete .write_in_progress marker
 ```
 
 ### Phase 2: Snapshot to save_{id}/
@@ -55,7 +56,7 @@ Origo's save system follows **strict read, explicit failure, two-phase write** c
 1. Recreate current/.write_in_progress marker
 2. Create save_{id}.tmp/
 3. Recursively copy all files from current/ to save_{id}.tmp/
-4. If save_{id}/ already exists, delete it
+4. If save_{id}/ already exists, rename it aside to save_{id}.bak/ (the old data is never deleted before the new data is in place)
 5. Atomically rename save_{id}.tmp/ → save_{id}/
 6. Delete .write_in_progress marker
 ```

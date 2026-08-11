@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -19,7 +19,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | File | Verification Focus |
 |------|-------------------|
 | `LifecycleRunsTests.cs` | SessionRun/ProgressRun lifecycle, MountKey, LoadFromPayload, SwitchForeground, logging |
-| `DisposeSemanticsTests.cs` (3 partial files: `SessionRun.cs`, `ProgressRun.cs`, `RoundTrip.cs`) | Dispose does not trigger BeforeSave, triggers BeforeQuit, idempotent, Save-then-Dispose-then-Continue round-trip, exception safety |
+| `DisposeSemanticsTests.SessionRun.cs` / `DisposeSemanticsTests.ProgressRun.cs` / `DisposeSemanticsTests.RoundTrip.cs` (3 partial files + `DisposeSemanticsTestInfrastructure.cs`) | Dispose does not trigger BeforeSave, triggers BeforeQuit, idempotent, Save-then-Dispose-then-Continue round-trip, exception safety |
 | `ForegroundBackgroundContractTests.cs` | Complete behavioral consistency of foreground/background ISessionRun (blackboard/state machines/serialization/Dispose) |
 | `EmptySessionManagerTests.cs` | No-op behavior of EmptySessionManager |
 | `PlayStopPlayRoundTripTests.cs` | Round-trip consistency of multiple Play→Stop→Play cycles (identity/blackboard/Tick/Progress) |

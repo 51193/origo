@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 能力清单
 
@@ -83,7 +83,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | PackedScene 节点实例化 | GodotPackedSceneNodeFactory 从资源路径加载场景并实例化为 GodotNodeHandle | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.zh.md) |
 | GodotEntity + StableName | GodotSndEntity 桥接 ISndEntity 与 Godot Node 生命周期，独立 StableName 避免 Godot 自动重命名干扰 | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.zh.md) |
 | 场景别名解析 | 通过 SndMappings 将逻辑别名解析为 res:// 资源路径 | [↔ GodotAdapter/Bootstrap](../Origo.GodotAdapter/Bootstrap/README.zh.md) |
-| 适配层控制台命令 | press_button（模拟按钮点击）、tree_debug（打印实体节点树） | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.zh.md) |
+| 适配层控制台命令 | press_button（模拟按钮点击）、tree_debug（打印实体节点树）、camera_view（显示活跃摄像头视角下可见实体节点的屏幕坐标和深度） | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.zh.md) |
 
 ## 测试基础设施
 
@@ -103,7 +103,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 网格坐标系 | GridPos 类型、GridCoordinateSystem 单/双轴转换、A* 寻路、GridParser 坐标解析 | [↔ Grid](../Origo.Core/Grid/README.zh.md) |
 | 内存黑板 | IBlackboard 默认实现，SetValue/TryGet/SerializeAll/DeserializeAll，key 大小写敏感 | [↔ Blackboard](../Origo.Core/Blackboard/README.zh.md) |
 | 延迟动作调度 | ConcurrentActionQueue 线程安全队列，快照-排干模式，支持执行中再次入队 | [↔ Scheduling](../Origo.Core/Scheduling/README.zh.md) |
-| 结构化日志构建器 | LogMessageBuilder 流式 API（SetElapsedMs / AddPrefix / AddSuffix / Build） | [↔ Logging](../Origo.Core/Logging/README.zh.md) |
+| 结构化日志构建器 | LogMessageBuilder 流式 API（SetElapsedMs / AddContext / Build） | [↔ Logging](../Origo.Core/Logging/README.zh.md) |
 
 ## 框架设计属性
 

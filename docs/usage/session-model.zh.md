@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话模型
 
@@ -83,7 +83,7 @@ bgSession.SessionBlackboard.SetValue("explored", true);
 // 方式一：自动处理（推荐）—— SwitchForeground 内部完成保存 + 销毁
 var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
-bg.SessionBlackboard.SetValue("data", value);
+bg.SessionBlackboard.SetValue("data", 1);
 
 // 直接切换，SwitchForeground 会自动保存并销毁 bg
 ctx.Save.RequestSwitchForegroundLevel("game");
