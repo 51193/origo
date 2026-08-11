@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台桥接服务器 测试
 
@@ -74,7 +74,8 @@
 | `MidSession_ClientHardDisconnect_ServerRecovers` | 客户端强制关闭 socket（非正常 Dispose），服务器恢复 | ConsoleBridge |
 | `MidSession_ClientAbort_NextConnectionAccepted` | 会话中客户端中断后新连接可建立 | ConsoleBridge |
 | `ClientDisconnect_OutputLineBufferedForNextConnection` | 断开后发布的输出行被缓冲，并在下一连接投递（客户端以 FIN 优雅断开并读到服务器 EOF 确认断开已处理，确定性验证缓冲契约） | ConsoleBridge |
-| `DeadNonReadingClient_IsClosed_NextClientConnectsAndReplaysBacklog` | 停止读取的客户端在发送超时后被真正关闭（单连接槽位释放），下一个客户端可接入并收到缓冲回放 | ConsoleBridge: 发送超时 detach |
+| `DeadNonReadingClient_IsClosed_NextClientConnectsAndReplaysBacklog` | 连接建立时积压 flush 失败（发送超时）后死连接被关闭（单连接槽位释放），下一个客户端可接入并收到缓冲回放（以服务端 detach 日志 + 新连接接入为平台无关信号） | ConsoleBridge: 发送超时 detach |
+| `DeadClientAfterEstablishedConnection_IsClosed_NextClientConnectsAndReplaysBacklog` | 连接已建立（flush 成功）后客户端停止读取，后续输出写失败（OnConsoleOutput 发送超时）→ 死连接被关闭、槽位释放，下一个客户端可接入并收到缓冲回放（回归：原始缺陷只摘除 writer 不关闭连接，槽位永久占用） | ConsoleBridge: 发送超时 detach |
 | `BacklogReplayToSlowClient_AbortsAtBudget_RemainingLinesReplayOnNextConnection` | 慢速但持续读取的客户端使回放每行阻塞但低于发送超时：回放在时间预算处中止（日志含 "time budget"），剩余行在下一次连接完整回放（无重复） | ConsoleBridge: 回放时间预算 |
 
 ### 线程安全

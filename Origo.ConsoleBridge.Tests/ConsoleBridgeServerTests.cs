@@ -541,6 +541,14 @@ public class ConsoleBridgeServerTests
         // timeout detaches it — otherwise it occupies the single connection
         // slot forever and the buffered lines can never reach a "next
         // connection" (the documented replay mechanism).
+        //
+        // The detach is observed through two platform-independent signals:
+        // the server's detach warning in the log, and — decisively — a new
+        // connection being accepted and receiving the buffered backlog. In
+        // single-connection mode the accept loop only reaches the next
+        // client after the dead connection's handler has ended, which only
+        // happens when the server closed it; a detached-but-open connection
+        // would make the new connection time out instead.
         var input = new ConsoleInputBuffer();
         var output = new ConsoleOutputChannel();
         var logger = new TestLogger();
@@ -549,7 +557,10 @@ public class ConsoleBridgeServerTests
         server.Start();
         try
         {
-            var longLine = new string('x', 8000);
+            // 64MB of backlog — far beyond any platform's socket send buffer
+            // and receive-window tuning, so the send timeout is guaranteed to
+            // fire on every OS (Windows auto-tuning can absorb several MB).
+            var longLine = new string('x', 64 * 1024);
             for (var i = 0; i < 1000; i++)
                 output.Publish($"line {i}: {longLine}");
 
@@ -557,12 +568,78 @@ public class ConsoleBridgeServerTests
             deadClient.Connect(IPAddress.Loopback, server.ActualPort);
 
             Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
-                () => IsRemoteEndClosed(deadClient),
+                () => logger.SnapshotWarnings().Any(w =>
+                    w.Contains("flush failed", StringComparison.Ordinal)
+                    || w.Contains("Output write failed", StringComparison.Ordinal)),
                 ConsoleBridgeTestInfrastructure.OutputTimeoutMs),
-                "the detached dead client must be closed by the server");
+                "the server must detach the dead connection after the send timeout");
 
             // With the slot freed, a new client connects and receives the
             // buffered backlog: the documented replay-on-next-connection.
+            using var nextClient = ConsoleBridgeTestInfrastructure.Connect(
+                server.ActualPort, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
+            using var reader = new StreamReader(nextClient.GetStream());
+            Assert.NotNull(ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(
+                reader, ConsoleBridgeTestInfrastructure.OutputTimeoutMs));
+        }
+        finally
+        {
+            server.Dispose();
+        }
+    }
+
+    [Fact]
+    public async Task DeadClientAfterEstablishedConnection_IsClosed_NextClientConnectsAndReplaysBacklog()
+    {
+        // The original defect: after a connection was established (flush
+        // succeeded) and the client stopped reading, a subsequent output
+        // write failed inside OnConsoleOutput — the writer was detached but
+        // the connection stayed open, occupying the single connection slot
+        // forever. This test drives exactly that path: a small seed backlog
+        // (flush succeeds), the client stops reading, then a large publish
+        // makes the frame-thread write fail; the server must close the dead
+        // client so the next connection can arrive and replay the backlog.
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var logger = new TestLogger();
+        var server = new ConsoleBridgeServer(input, output,
+            new ConsoleBridgeOptions { Port = 0, OutputSendTimeoutMs = 50 }, logger);
+        server.Start();
+        try
+        {
+            // Seed one line: the connection's initial flush succeeds and the
+            // read loop starts.
+            output.Publish("seed");
+
+            using var deadClient = new TcpClient { ReceiveBufferSize = 1024 };
+            deadClient.Connect(IPAddress.Loopback, server.ActualPort);
+            using (var seedReader = new StreamReader(
+                       deadClient.GetStream(),
+                       System.Text.Encoding.UTF8,
+                       false,
+                       1024,
+                       leaveOpen: true))
+            {
+                Assert.Equal("seed", ConsoleBridgeTestInfrastructure.ReadLineWithTimeout(
+                    seedReader, ConsoleBridgeTestInfrastructure.OutputTimeoutMs));
+            }
+
+            // The client stops reading; a large publish now fills the send
+            // buffer and the frame-thread write fails on the send timeout.
+            var longLine = new string('x', 64 * 1024);
+            for (var i = 0; i < 1000; i++)
+                output.Publish($"line {i}: {longLine}");
+
+            Assert.True(ConsoleBridgeTestInfrastructure.SpinUntil(
+                () => logger.SnapshotWarnings().Any(w =>
+                    w.Contains("Output write failed", StringComparison.Ordinal)),
+                ConsoleBridgeTestInfrastructure.OutputTimeoutMs),
+                "the server must detach the dead connection after an output write failure");
+
+            // With the slot freed, a new client connects and receives the
+            // buffered backlog (the documented replay-on-next-connection);
+            // under the original defect this connection would never be
+            // serviced.
             using var nextClient = ConsoleBridgeTestInfrastructure.Connect(
                 server.ActualPort, ConsoleBridgeTestInfrastructure.CommandTimeoutMs);
             using var reader = new StreamReader(nextClient.GetStream());
@@ -677,42 +754,6 @@ public class ConsoleBridgeServerTests
         finally
         {
             server.Dispose();
-        }
-    }
-
-    private static bool IsRemoteEndClosed(TcpClient client)
-    {
-        // Buffered payload bytes arrive before the close notification, so a
-        // single ReadByte only proves "not EOF yet". Drain until EOF: the
-        // server has closed the connection exactly when the stream ends.
-        var stream = client.GetStream();
-        var oldTimeout = stream.ReadTimeout;
-        try
-        {
-            stream.ReadTimeout = 800;
-            while (stream.ReadByte() != -1)
-            {
-            }
-
-            return true;
-        }
-        catch (SocketException)
-        {
-            return true;
-        }
-        catch (ObjectDisposedException)
-        {
-            return true;
-        }
-        catch (IOException ex)
-        {
-            // A read timeout means the connection is still open; any other
-            // I/O failure means the peer closed it.
-            return ex.InnerException is not SocketException { SocketErrorCode: SocketError.TimedOut };
-        }
-        finally
-        {
-            stream.ReadTimeout = oldTimeout;
         }
     }
 }
