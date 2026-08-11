@@ -70,3 +70,49 @@ internal sealed class TestRepo : IDisposable
         }
     }
 }
+
+/// <summary>
+///     Runs an action with both console streams redirected to silent writers,
+///     so the DocSyncTool tools' output during tests (the expected
+///     "Validation FAILED" diagnostics of the negative tests, the generate
+///     progress lines, the migration banners) does not pollute the
+///     test-runner log — where "Validation FAILED" in particular looks like a
+///     CI failure. The captured text is returned alongside the result so
+///     tests can assert on it or surface it when a test fails. Redirecting
+///     the process-global console streams requires callers to run in
+///     serialized xUnit collections.
+/// </summary>
+internal static class ConsoleOutputCapture
+{
+    public static (T Result, string CapturedOut, string CapturedError) Run<T>(Func<T> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        var previousOut = Console.Out;
+        var previousError = Console.Error;
+        using var capturedOut = new StringWriter();
+        using var capturedError = new StringWriter();
+        try
+        {
+            Console.SetOut(capturedOut);
+            Console.SetError(capturedError);
+            return (action(), capturedOut.ToString(), capturedError.ToString());
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+            Console.SetError(previousError);
+        }
+    }
+
+    /// <summary>Void-action overload of <see cref="Run{T}(Func{T})" />.</summary>
+    public static (string CapturedOut, string CapturedError) Run(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        var (_, capturedOut, capturedError) = Run(() =>
+        {
+            action();
+            return 0;
+        });
+        return (capturedOut, capturedError);
+    }
+}

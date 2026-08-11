@@ -2,8 +2,17 @@ using Xunit;
 
 namespace DocSyncTool.Tests;
 
+/// <summary>
+///     Runs in a serialized collection because <see cref="ConsoleErrorCapture" />
+///     redirects the process-global <c>Console.Error</c> stream.
+/// </summary>
+[Collection("DocSyncToolConsoleCapture")]
 public class ValidatorTests
 {
+
+    private static int RunValidator(Config config) =>
+        ConsoleOutputCapture.Run(() => Validator.Run(config)).Result;
+
     private static void WriteSyncedPair(TestRepo repo, string pairId, string relativePath, int revision = 1)
     {
         var lang = relativePath.EndsWith(".zh.md", System.StringComparison.Ordinal) ? "zh" : "en";
@@ -17,7 +26,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "README", "docs/README.zh.md");
         WriteSyncedPair(repo, "README", "docs/README.en.md");
 
-        Assert.Equal(0, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -27,7 +36,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "README", "docs/README.zh.md", 1);
         WriteSyncedPair(repo, "README", "docs/README.en.md", 2);
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -36,7 +45,7 @@ public class ValidatorTests
         using var repo = TestRepo.Create();
         WriteSyncedPair(repo, "README", "docs/README.zh.md");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -49,7 +58,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "a/README", "docs/a/README.en.md");
         repo.Write("docs/a/README.zh.md", TestRepo.Header("a/README") + "# A\n\n[target](README.en.md)\n");
 
-        var exitCode = Validator.Run(repo.LoadConfig());
+        var exitCode = RunValidator(repo.LoadConfig());
         Assert.Equal(1, exitCode);
     }
 
@@ -64,7 +73,7 @@ public class ValidatorTests
         repo.Write("docs/META.en.md", TestRepo.Header("META") + "# META\n");
         repo.Write("docs/README.en.md", TestRepo.Header("README") + "# B\n\n[target](META.md)\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -75,7 +84,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "README", "docs/README.en.md");
         repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[missing](nonexistent.zh.md)\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -85,7 +94,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "README", "docs/README.en.md");
         repo.Write("docs/README.zh.md", "# No metadata here\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -95,7 +104,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "README", "docs/README.en.md");
         repo.Write("docs/README.zh.md", "<!-- docsync-pair: README -->\n# No revision\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -106,7 +115,7 @@ public class ValidatorTests
         repo.Write("docs/README.zh.md",
             "<!-- docsync-pair: README -->\n<!-- docsync-revision: 1 -->\n# No reminder\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -116,7 +125,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "README", "docs/README.zh.md");
         repo.Write("docs/README.en.md", TestRepo.Header("WRONG/PAIR") + "# B\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -128,7 +137,7 @@ public class ValidatorTests
             "<!-- docsync-pair: README -->\n<!-- docsync-revision: abc -->\n" +
             "<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->\n# A\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -140,7 +149,7 @@ public class ValidatorTests
         repo.Write("docs/README.zh.md", TestRepo.Header("README") +
             "# A\n\n```md\n[link](README.en.md)\n```\n\n`inline [x](META.md)`\n");
 
-        Assert.Equal(0, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -152,7 +161,7 @@ public class ValidatorTests
         repo.Write("docs/README.zh.md", TestRepo.Header("README") +
             "# A\n\n[https://example.com/x.md](https://example.com/x.md)\n");
 
-        Assert.Equal(0, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -165,7 +174,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "META", "docs/META.en.md");
         repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[meta](META.zh.md#section)\n");
 
-        Assert.Equal(0, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -180,7 +189,7 @@ public class ValidatorTests
         repo.Write("docs/README.zh.md", TestRepo.Header("README") +
             "# A\n\n[baseline](../../benchmarks/baseline.zh.md)\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -193,7 +202,7 @@ public class ValidatorTests
         // (e.g. AGENTS.md referenced from META docs).
         repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[AGENTS](../AGENTS.md)\n");
 
-        Assert.Equal(0, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -207,7 +216,7 @@ public class ValidatorTests
         repo.Write("docs/README.zh.md", TestRepo.Header("README") +
             "# A\n\n[stale](../docs-backup/stale.zh.md)\n");
 
-        Assert.Equal(1, Validator.Run(repo.LoadConfig()));
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]
@@ -217,7 +226,11 @@ public class ValidatorTests
         repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# R\n\n## Design\n\n### A\n\n### B\n");
         repo.Write("docs/README.en.md", TestRepo.Header("README") + "# R\n\n## Design\n\n### A\n");
 
-        var exitCode = Validator.RunCore(repo.LoadConfig(), out var warnings);
+        var (exitCode, warnings) = ConsoleOutputCapture.Run(() =>
+        {
+            var code = Validator.RunCore(repo.LoadConfig(), out var w);
+            return (code, w);
+        }).Result;
 
         Assert.Equal(0, exitCode);
         Assert.Contains(warnings, w => w.Contains("heading structure differs"));
@@ -230,7 +243,11 @@ public class ValidatorTests
         repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# R\n\n## Design\n\n### A\n");
         repo.Write("docs/README.en.md", TestRepo.Header("README") + "# R\n\n## Design\n\n### A\n");
 
-        var exitCode = Validator.RunCore(repo.LoadConfig(), out var warnings);
+        var (exitCode, warnings) = ConsoleOutputCapture.Run(() =>
+        {
+            var code = Validator.RunCore(repo.LoadConfig(), out var w);
+            return (code, w);
+        }).Result;
 
         Assert.Equal(0, exitCode);
         Assert.Empty(warnings);

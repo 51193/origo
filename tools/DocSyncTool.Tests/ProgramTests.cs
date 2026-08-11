@@ -9,13 +9,9 @@ namespace DocSyncTool.Tests;
 /// every test here switches the process CWD to an isolated TestRepo. The class
 /// runs in a serialized collection because CWD is process-global state.
 /// </summary>
-[Collection("DocSyncToolProgramTests")]
+[Collection("DocSyncToolConsoleCapture")]
 public class ProgramTests
 {
-    [CollectionDefinition("DocSyncToolProgramTests", DisableParallelization = true)]
-    public class DocSyncToolProgramTestsDefinition
-    {
-    }
 
     private static int RunIn(string root, params string[] args)
     {
@@ -23,7 +19,12 @@ public class ProgramTests
         try
         {
             Environment.CurrentDirectory = root;
-            return Program.Main(args);
+            // Program.Main reports failures through Console.Error; the
+            // negative tests intentionally produce "Validation FAILED"
+            // output that must not pollute the test-runner log (where it
+            // looks like a CI failure). Capture both streams and discard
+            // them.
+            return ConsoleOutputCapture.Run(() => Program.Main(args)).Result;
         }
         finally
         {

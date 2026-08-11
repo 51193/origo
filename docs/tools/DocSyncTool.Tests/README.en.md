@@ -1,5 +1,5 @@
 <!-- docsync-pair: tools/DocSyncTool.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # DocSyncTool Tests
 
@@ -26,6 +26,14 @@ temporary repo scaffolds.
 - Flat namespace `DocSyncTool.Tests`, matching the repository's other test
   projects (`.editorconfig` exempts this path from IDE0130/CA1062).
 - Reaches the tool's `internal` types via `InternalsVisibleTo`.
+- **Test helper `ConsoleOutputCapture`**: redirects `Console.Out`/`Console.Error`
+  to silent writers so the tool's expected output (the negative tests'
+  "Validation FAILED" diagnostics, generate progress lines, migration banners)
+  does not pollute the test-runner log — "Validation FAILED" looks like a
+  build failure in CI logs. Because redirecting the process-global console
+  streams affects all tests, the four capturing test classes
+  (`ProgramTests`/`ValidatorTests`/`GeneratorTests`/`MigratorTests`) run in
+  the serialized `DocSyncToolConsoleCapture` collection.
 - Every test builds a repo scaffold in its own temp directory (with
   `AGENTS.md`, `docs/` and `tools/DocSyncTool/docsync-config.json`); the
   real repository is never touched.

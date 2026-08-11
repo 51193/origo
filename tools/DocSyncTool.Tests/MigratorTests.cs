@@ -2,15 +2,23 @@ using Xunit;
 
 namespace DocSyncTool.Tests;
 
+/// <summary>
+///     Runs in a serialized collection because <see cref="ConsoleOutputCapture" />
+///     redirects the process-global console streams.
+/// </summary>
+[Collection("DocSyncToolConsoleCapture")]
 public class MigratorTests
 {
+    private static void RunMigrator(Config config) =>
+        ConsoleOutputCapture.Run(() => Migrator.Run(config));
+
     [Fact]
     public void Migrate_RenamesAndInjectsMetadata()
     {
         using var repo = TestRepo.Create();
         repo.Write("docs/README.md", "# Readme\n\nBody.\n");
 
-        Migrator.Run(repo.LoadConfig());
+        RunMigrator(repo.LoadConfig());
 
         Assert.False(repo.Exists("docs/README.md"));
         var migrated = repo.Read("docs/README.zh.md");
@@ -26,7 +34,7 @@ public class MigratorTests
         repo.Write("docs/README.md", "# Readme\n\n[meta](META.md#section)\n\n[site](https://example.com/x.md)\n");
         repo.Write("docs/META.md", "# Meta\n");
 
-        Migrator.Run(repo.LoadConfig());
+        RunMigrator(repo.LoadConfig());
 
         var migrated = repo.Read("docs/README.zh.md");
         Assert.Contains("[meta](META.zh.md#section)", migrated);
@@ -40,7 +48,7 @@ public class MigratorTests
         repo.Write("docs/README.zh.md", "<!-- docsync-pair: README -->\n# zh\n");
         repo.Write("docs/README.en.md", "<!-- docsync-pair: README -->\n# en\n");
 
-        Migrator.Run(repo.LoadConfig());
+        RunMigrator(repo.LoadConfig());
 
         Assert.True(repo.Exists("docs/README.zh.md"));
         Assert.True(repo.Exists("docs/README.en.md"));
@@ -52,7 +60,7 @@ public class MigratorTests
         using var repo = TestRepo.Create();
         repo.Write("docs/README.md", "<!-- docsync-pair: README -->\n# already migrated\n");
 
-        Migrator.Run(repo.LoadConfig());
+        RunMigrator(repo.LoadConfig());
 
         Assert.True(repo.Exists("docs/README.md"));
         Assert.False(repo.Exists("docs/README.zh.md"));
@@ -65,7 +73,7 @@ public class MigratorTests
         repo.Write("docs/README.md", "# will not move\n");
         repo.Write("docs/README.zh.md", "<!-- docsync-pair: README -->\n# exists\n");
 
-        Migrator.Run(repo.LoadConfig());
+        RunMigrator(repo.LoadConfig());
 
         Assert.True(repo.Exists("docs/README.md"));
     }
@@ -75,7 +83,7 @@ public class MigratorTests
     {
         using var repo = TestRepo.Create();
 
-        Migrator.Run(repo.LoadConfig());
+        RunMigrator(repo.LoadConfig());
 
         Assert.False(repo.Exists("docs/README.zh.md"));
     }
@@ -86,7 +94,7 @@ public class MigratorTests
         using var repo = TestRepo.Create();
         repo.Write("docs/sub/mod.md", "# Mod\n");
 
-        Migrator.Run(repo.LoadConfig());
+        RunMigrator(repo.LoadConfig());
 
         var migrated = repo.Read("docs/sub/mod.zh.md");
         Assert.StartsWith("<!-- docsync-pair: sub/mod -->", migrated);
@@ -98,7 +106,7 @@ public class MigratorTests
         using var repo = TestRepo.Create();
         repo.Write("docs/README.md", "# Readme\n\n[dir](assets/)\n[anch](README.md#top)\n");
 
-        Migrator.Run(repo.LoadConfig());
+        RunMigrator(repo.LoadConfig());
 
         Assert.Contains("[dir](assets/)", repo.Read("docs/README.zh.md"));
         Assert.Contains("[anch](README.zh.md#top)", repo.Read("docs/README.zh.md"));

@@ -1,5 +1,5 @@
 <!-- docsync-pair: tools/DocSyncTool.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # DocSyncTool 测试
 
@@ -24,5 +24,6 @@
 - 通过 `InternalsVisibleTo` 访问工具的 `internal` 类型。
 - 每个测试在独立的临时目录中构建仓库脚手架（含 `AGENTS.md`、`docs/` 与 `tools/DocSyncTool/docsync-config.json`），不触碰真实仓库文件。
 - 覆盖率门槛：行覆盖率 ≥ 90%（`ThresholdStat=total`），与其他测试项目一致。
+- **测试辅助 `ConsoleOutputCapture`**：把 `Console.Out`/`Console.Error` 重定向到静默写入器，使工具的预期输出（负面测试的 "Validation FAILED" 诊断、generate 进度行、迁移横幅）不污染测试运行器日志——"Validation FAILED" 在 CI 日志中看起来像构建失败。因重定向进程全局控制台流，涉及捕获的四个测试类（`ProgramTests`/`ValidatorTests`/`GeneratorTests`/`MigratorTests`）在串行集合 `DocSyncToolConsoleCapture` 中运行。
 
 [↑ 回到 Origo 手册](../../README.zh.md)

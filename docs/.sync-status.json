@@ -1251,8 +1251,8 @@
     "tools/DocSyncTool.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "tools/DocSyncTool.Tests/README.zh.md",
