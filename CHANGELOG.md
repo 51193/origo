@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name.
 - **`SndContextParameters.InitialLevelId`** — configurable initial save level ID (defaults to `"default"`).
 
+
 - **`ActiveStrategyJsonBase<TInput>`** — active strategy base class that owns the JSON
   serialization contract: input strings are deserialized to `TInput` and `Execute` results
   are serialized back, so subclasses implement strongly-typed logic with plain object
@@ -42,6 +43,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **String collection reads are strictly null-aware** — `string[]` arrays, string dictionaries, state-machine stacks, strategy-index lists, and node-pair maps now throw `InvalidOperationException` when an element/value is a null node, matching the existing `Read<string>` contract. Previously a null element silently drifted into an empty string, so corrupt save data surfaced later as an opaque strategy/node lookup failure instead of at the converter layer.
+- **BREAKING: `ISaveStorageService` surface tightened** — the raw-path `WriteLevelPayloadOnly(baseDirectoryRel, ...)`, the `ReadSavePayloadFromCurrent` member, and the always-true `overwrite` parameters of `WriteLevelPayloadOnlyToCurrent` / `WriteProgressOnlyToCurrent` are removed. The `current/` full read remains available to framework internals (`SavePayloadReader`); external callers use the snapshot read or the level-payload reads.
+- **BREAKING: `OrigoConsole` extra-handlers constructor removed** — the four-argument constructor (`extraHandlers` variant) had no callers anywhere; additional handlers are registered via the public `RegisterHandler` method.
+- **BREAKING: `PersistentRandom.InitSeed` now returns `void`** — the previous return value was always `true` and carried no information.
+- **BREAKING: `IStateMachineContainer.Remove` throws for unknown keys** — removing a state machine that is not in the container now throws `InvalidOperationException` instead of silently succeeding (consistent with the strategy managers' remove contracts).
+- **`TestSndSceneHost.RecoverFromMetaList` now matches the production scene-host contract** — it appends to the existing scene instead of clearing it first (per `ISndSceneAccess`'s "does not automatically clear" contract; callers handle cleanup), removing a test-blind-spot divergence.
+- **Grid/Random/`Logger<T>` consumption notes** — the READMEs now state that these framework capabilities have no in-repo production consumer and are provided for game-side use.
+- **Documentation drift corrections** — usage and module READMEs were aligned with the real API: the nonexistent `AddPrefix`/`AddSuffix` log-builder methods, the outdated `TryGetNumeric` fallback order (three places), the snapshot-phase description that claimed `save_{id}/` is deleted (actual behavior is backup-replace), the A* claim that the start cell is blocking-checked (standard A* semantics documented instead), and the misleading "atomic" wording of `PersistentRandom.TryNextInt32`.
 - **`DataSourceConverterRegistry.Read<T>` / `Read(Type, ...)` validate the returned instance** — a converter resolved through the base/interface chain must return a value assignable to the requested type: incompatible requests now throw a clear `InvalidOperationException` (naming the converter and the requested type) instead of an opaque `InvalidCastException` or a silently drifted value type. `StringDictionaryConverter` now returns `ReadOnlyDictionary<string,string>`, so a `ReadOnlyDictionary` stored in a blackboard survives save/load round-trips (including re-saves) without drifting to `Dictionary`.
 - **`TryGetNumeric` covers all integer types** — reading entity data as `float` now also tries
   `byte`/`sbyte`/`short`/`ushort`/`char`/`uint`/`ulong` (previously only `float`/`int`/`long`/
