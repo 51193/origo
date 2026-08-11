@@ -170,10 +170,14 @@ internal sealed class SessionRun : ISessionRun, IDisposable
             // guaranteed to be released and the disposed flag committed via
             // the nested finally blocks (matching ProgressRun.Dispose).
             Disposing?.Invoke();
-            MountKey = null;
         }
         finally
         {
+            // Cleared even when a Disposing subscriber throws: the session
+            // manager's subscriber removes its own _sessions entry, so a
+            // stale MountKey must not survive the dispose.
+            MountKey = null;
+
             try
             {
                 _sessionScope.StateMachines.PopAllOnQuit();
@@ -237,8 +241,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
                 payload.SessionStateMachinesNode,
                 _saveContext.SndWorld.ConverterRegistry);
 
-            IReadOnlyList<SndMetaData>? recoveredSceneMeta = null;
-            recoveredSceneMeta = _saveContext.RecoverSndScene(_sceneHost, payload.SndSceneNode);
+            var recoveredSceneMeta = _saveContext.RecoverSndScene(_sceneHost, payload.SndSceneNode);
 
             // Snapshot the collection before firing hooks: AfterLoad hooks may
             // spawn new entities, and hosts expose a live entity view (the
