@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Random/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Random
 
@@ -31,12 +31,15 @@ Unified entry point for game random numbers. Two independent capabilities: XorSh
 ### PersistentRandom
 - Wraps `IBlackboard` storing state as two `ulong` key-value pairs
 - **InitSeed(seed)**: String seed → FNV-1a hash → XorShift128+ state → write to blackboard
-- **TryNextInt32**: Atomic read → advance → write. Returns false when uninitialized
+- **TryNextInt32**: Sequential read → advance → write (not atomic; single-threaded frame model only, a generator must not be shared across threads). Returns false when uninitialized
+- The constructor accepts optional custom state key names (default `"rand.state1"`, `"rand.state2"`). **The default keys are shared constants**: two generators on the same blackboard with default keys silently share (and overwrite) each other's state — pass distinct custom keys unless sharing is intended
 
 ## Design Decisions
 
 ### Why random state is explicitly maintained
 Global state is hard to trace across multi-entity, multi-session, parallel-save scenarios. Explicit state per entity/session enables save serialization and consistent sequences.
+
+> **Consumption note**: the Random module has no production consumer inside the Core repository (test-only usage) — it is provided as a framework capability for game-side consumption (e.g. origo.demo).
 
 ### Why XorShift128+ instead of System.Random
 `System.Random` lacks cross-version consistency and serializable state. XorShift128+ has 16-byte state and cross-platform consistency.

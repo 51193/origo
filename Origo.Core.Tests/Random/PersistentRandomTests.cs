@@ -12,7 +12,11 @@ public class PersistentRandomTests
     {
         var bb = new Origo.Core.Blackboard.Blackboard();
         var pr = new PersistentRandom(bb);
-        Assert.True(pr.InitSeed("test_seed"));
+        pr.InitSeed("test_seed");
+
+        Assert.True(bb.TryGet<ulong>("rand.state1").found);
+        Assert.True(bb.TryGet<ulong>("rand.state2").found);
+        Assert.True(pr.TryNextInt32(out _));
     }
 
     [Fact]

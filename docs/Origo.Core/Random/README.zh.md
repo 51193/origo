@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Random/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Random
 
@@ -39,16 +39,18 @@
 
 - 包装 `IBlackboard`，将随机状态（两个 `ulong`）存储为黑板键值对
 - **InitSeed(seed)**：字符串种子 → FNV-1a散列 → XorShift128+ 状态对 → 写入黑板
-- **TryNextInt32**：原子读取状态 → 推进 → 写回黑板。未初始化时返回 false
+- **TryNextInt32**：顺序执行读取状态 → 推进 → 写回黑板（非原子；单线程帧模型下使用，不得跨线程共享同一实例）。未初始化时返回 false
 - **NextInt32(min, max)**：返回 `[min, max)` 区间整数。`max <= min` 抛 `ArgumentOutOfRangeException`；未初始化时抛 `InvalidOperationException`
 - **NextFloat**：返回 `[0, 1)` 区间浮点。未初始化时抛出异常
-- 构造函数接受可选的自定义状态键名（默认 `"rand.state1"`、`"rand.state2"`）
+- 构造函数接受可选的自定义状态键名（默认 `"rand.state1"`、`"rand.state2"`）。**默认键是共享常量**：同一黑板上多个默认键实例会静默共享（互相覆盖）状态——除非有意共享，否则每个实例必须传入不同的自定义键
 
 ## 设计决策
 
 ### 为什么随机状态由调用方显式维护
 
 全局随机状态在多实体、多会话、并行存档场景中难以追溯和复现。显式状态让每个实体/会话持有独立状态，存档时序列化状态，恢复后继续产出一致序列。
+
+> **消费说明**：Random 模块在 Core 仓库内没有生产消费者（仅供测试使用）——它作为框架能力提供给游戏侧消费（如 origo.demo）。
 
 ### 为什么 XorShift128+ 而非 System.Random
 

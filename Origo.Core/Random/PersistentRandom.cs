@@ -10,6 +10,12 @@ namespace Origo.Core.Random;
 ///     state. Deterministic across sessions for the same seed. Not thread-safe: the
 ///     read-advance-write sequence is not atomic, so a single generator must not be shared
 ///     across threads (consistent with the single-threaded frame model).
+///     <para>
+///         The default state keys (<c>rand.state1</c> / <c>rand.state2</c>) are shared
+///         constants: two generators on the same blackboard without explicit custom keys
+///         silently share (and overwrite) each other's state. Give each generator distinct
+///         keys unless sharing is intended.
+///     </para>
 /// </summary>
 public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key = null, string? state2Key = null)
 {
@@ -21,12 +27,11 @@ public sealed class PersistentRandom(IBlackboard blackboard, string? state1Key =
     private readonly string _state2Key = string.IsNullOrWhiteSpace(state2Key) ? _defaultState2Key : state2Key;
 
     /// <summary>Initializes the random state from a string seed, overwriting any existing state.</summary>
-    public bool InitSeed(string seed)
+    public void InitSeed(string seed)
     {
         var (s0, s1) = RandomNumberGenerator.CreateStateFromSeed(seed);
         _blackboard.SetValue(_state1Key, s0);
         _blackboard.SetValue(_state2Key, s1);
-        return true;
     }
 
     /// <summary>Advances the generator once and returns the raw 32-bit value; <c>false</c> when state is not initialized.</summary>
