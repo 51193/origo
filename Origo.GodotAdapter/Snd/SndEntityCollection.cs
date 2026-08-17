@@ -137,8 +137,18 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
 
     public void ProcessAll(double delta)
     {
+        // Matches FullMemorySndSceneHost: the host container must not be
+        // mutated while entities process. A strategy that spawns/removes
+        // entities mid-frame would otherwise make the index loop skip or
+        // double-process entities silently.
+        var initialCount = _entities.Count;
         for (var i = 0; i < _entities.Count; i++)
             _entities[i].ProcessSnd(delta);
+
+        if (_entities.Count != initialCount)
+            throw new InvalidOperationException(
+                $"Scene container modified during ProcessAll: entity count changed from {initialCount} to {_entities.Count}. " +
+                "The host must not be mutated while entities process.");
     }
 
     public void RemoveEntity(string name)

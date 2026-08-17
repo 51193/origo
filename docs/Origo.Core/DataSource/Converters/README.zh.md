@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Converters/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Converters
 
@@ -49,6 +49,8 @@
 | `BlackboardDataConverter` | 黑板全部数据字典 |
 | `StringDictionaryConverter` | 字符串字典。读取时键值必须为标量字符串；null 值抛 `InvalidOperationException`（与 `Read<string>` 拒绝 null 节点的严格语义一致，杜绝 null 静默漂移为空串） |
 | `StateMachineContainerPayloadConverter` | 状态机组序列化 |
+
+**节点形状校验**：领域转换器读取时校验根节点与集合字段的形状——对象字段（`pairs`、字符串字典、黑板字典、SndMetaData）必须是 Map，数组字段（状态机 `stack`、策略索引列表、`observer_indices`、SndMetaData 列表）必须是 Array；形状错误抛 `InvalidOperationException`，避免损坏数据静默变为空集合。空 observer target 同样拒绝，不静默丢弃观察者绑定。
 
 ### TypedDataConverter
 

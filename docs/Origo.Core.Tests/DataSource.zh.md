@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 数据源 测试
 
@@ -138,6 +138,17 @@
 | `StateMachineContainerPayloadConverter_EntryMissingPushIndex_Throws` | 机器条目缺 pushIndex 字段 | InvalidOperationException（消息含 "pushIndex"） |
 | `StateMachineContainerPayloadConverter_EntryMissingPopIndex_Throws` | 机器条目缺 popIndex 字段 | InvalidOperationException（消息含 "popIndex"） |
 | `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | 机器条目 key 为 null | InvalidOperationException |
+| `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | 机器条目 key 为 null | InvalidOperationException |
+| `StateMachineContainerPayloadConverter_StackNotArray_Throws` | 机器条目 stack 为对象而非数组 | InvalidOperationException（消息含 "array"；不得静默变为空栈） |
+| `StrategyMetaDataConverter_LifecycleIndicesNotArray_Throws` | lifecycle_indices 为对象而非数组 | InvalidOperationException（消息含 "array"） |
+| `StrategyMetaDataConverter_ObserverIndicesNotArray_Throws` | observer_indices 为对象而非数组 | InvalidOperationException（消息含 "array"） |
+| `StrategyMetaDataConverter_BlankObserverTarget_Throws` | observer_indices 条目的 target 为空 | InvalidOperationException（消息含 "target"；不得静默丢弃绑定） |
+| `NodeMetaDataConverter_PairsNotMap_Throws` | node.pairs 为数组而非对象 | InvalidOperationException（消息含 "object"） |
+| `DataMetaDataConverter_PairsNotMap_Throws` | data.pairs 为数组而非对象 | InvalidOperationException（消息含 "object"） |
+| `StringDictionaryConverter_Read_NonMap_Throws` | 字符串字典根节点为数组 | InvalidOperationException（消息含 "object"） |
+| `BlackboardDataConverter_Read_NonMap_Throws` | 黑板字典根节点为数组 | InvalidOperationException（消息含 "object"） |
+| `SndMetaDataConverter_Read_NonMap_Throws` | SndMetaData 根节点为数组 | InvalidOperationException（消息含 "object"） |
+| `SndMetaDataListConverter_Read_NonArray_Throws` | SndMetaData 列表根节点为对象 | InvalidOperationException（消息含 "array"） |
 | `MapCodec_Encode_ThrowsForNonObjectNode` | Map 编码 Array 节点 | InvalidOperationException |
 | `LazyNode_WhenExpanderThrows_NodeStaysLazy_AndCanRetrySuccessfully` | 首次展开抛 InvalidOperationException | 首次访问抛异常后节点保持 Lazy，二次访问展开成功（callCount=2） |
 | `LazyNode_WhenExpanderThrows_NodeCanStillBeDisposed` | 展开始终抛 InvalidOperationException | 展开失败后仍可 Dispose，后续访问抛 ObjectDisposedException |

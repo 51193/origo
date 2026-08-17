@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Data Source Tests
 
@@ -138,6 +138,17 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `StateMachineContainerPayloadConverter_EntryMissingPushIndex_Throws` | Machine entry missing pushIndex field | InvalidOperationException (contains "pushIndex") |
 | `StateMachineContainerPayloadConverter_EntryMissingPopIndex_Throws` | Machine entry missing popIndex field | InvalidOperationException (contains "popIndex") |
 | `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | Machine entry key is null | InvalidOperationException |
+| `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | Machine entry key is null | InvalidOperationException |
+| `StateMachineContainerPayloadConverter_StackNotArray_Throws` | Machine entry stack is an object instead of an array | InvalidOperationException (contains "array"; must not silently become an empty stack) |
+| `StrategyMetaDataConverter_LifecycleIndicesNotArray_Throws` | lifecycle_indices is an object instead of an array | InvalidOperationException (contains "array") |
+| `StrategyMetaDataConverter_ObserverIndicesNotArray_Throws` | observer_indices is an object instead of an array | InvalidOperationException (contains "array") |
+| `StrategyMetaDataConverter_BlankObserverTarget_Throws` | observer_indices entry target is empty | InvalidOperationException (contains "target"; binding must not be silently dropped) |
+| `NodeMetaDataConverter_PairsNotMap_Throws` | node.pairs is an array instead of an object | InvalidOperationException (contains "object") |
+| `DataMetaDataConverter_PairsNotMap_Throws` | data.pairs is an array instead of an object | InvalidOperationException (contains "object") |
+| `StringDictionaryConverter_Read_NonMap_Throws` | String dictionary root node is an array | InvalidOperationException (contains "object") |
+| `BlackboardDataConverter_Read_NonMap_Throws` | Blackboard dictionary root node is an array | InvalidOperationException (contains "object") |
+| `SndMetaDataConverter_Read_NonMap_Throws` | SndMetaData root node is an array | InvalidOperationException (contains "object") |
+| `SndMetaDataListConverter_Read_NonArray_Throws` | SndMetaData list root node is an object | InvalidOperationException (contains "array") |
 | `MapCodec_Encode_ThrowsForNonObjectNode` | Map encode on Array node | InvalidOperationException |
 | `LazyNode_WhenExpanderThrows_NodeStaysLazy_AndCanRetrySuccessfully` | First expansion throws InvalidOperationException | After first access throws, node stays Lazy, second access succeeds (callCount=2) |
 | `LazyNode_WhenExpanderThrows_NodeCanStillBeDisposed` | Expander always throws InvalidOperationException | Can still Dispose after failed expansion, subsequent access throws ObjectDisposedException |

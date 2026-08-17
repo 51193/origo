@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # DataSource
 
@@ -63,7 +63,7 @@ CLR 对象 (TypedData / SndMetaData / etc.)
 - **延迟展开**：JSON 大型节点在访问时才展开子节点，避免全量解析
 - **零反射**：所有转换器显式注册，不使用反射自动发现
 - **运行时类型容器**：`DataSourceNode` 是通用序列化容器——整个 Save 系统和 DataSource 流转均通过它传递数据，类型安全推迟到 `DataSourceConverterRegistry` 查找时。这是刻意的设计权衡（"简单优于严格类型"），允许所有子系统共享同一棵数据树，代价是转换错误在运行时而非编译时暴露。
-- **严格读取**：存档载荷转换器（如 `StateMachineContainerPayloadConverter`）对框架必写字段（`machines` 条目的 `key`/`pushIndex`/`popIndex`）执行必填校验——损坏存档立即抛 `InvalidOperationException`，绝不静默接受为默认值（fail-fast，与 Save 严格读取契约一致）
+- **严格读取**：存档载荷转换器（如 `StateMachineContainerPayloadConverter`）对框架必写字段（`machines` 条目的 `key`/`pushIndex`/`popIndex`）执行必填校验，并校验数组/对象字段的节点形状（stack、pairs、indices 等）；损坏存档立即抛 `InvalidOperationException`，绝不静默接受为默认值或空集合（fail-fast，与 Save 严格读取契约一致）
 - **null 值不被静默漂移**：`Read<string>`（含运行时类型重载）遇 Null 节点抛 `InvalidOperationException`——读成空串会把 null 静默漂移为 `""`；调用方须先 `IsNull`/`TryGetValue` 检查（`TypedDataConverter` 即此模式）。`AsString()` 对 Null 节点返回空串的文档化行为保持不变（`DataSourceFactoryTests.AsString_OnNullNode_ReturnsEmpty` 钉定）
 
 ---

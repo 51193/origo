@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Storage
 
@@ -54,7 +54,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 5. **Clean up stale level directories**: delete `level_*` directories under `current/` that are not in the payload (e.g. levels of destroyed sessions). The payload is the authoritative set of active levels; cleanup keeps `current/` consistent with the payload and prevents stale data from being copied into every snapshot (this step runs within marker protection; failure rejects reads)
 6. **Clear phase-1 marker**: after `current/` is fully written (including `.payload.sha`), delete the marker
 7. **Recreate marker**: rebuild marker for the snapshot phase; if snapshot fails, marker remains so subsequent reads will reject this "updated but not snapshotted" `current/`
-8. **Snapshot (backup-replace)**: copy `current/` to `save_{id}.tmp/` → rename existing `save_{id}/` to `save_{id}.bak/` → rename `.tmp` to the final `save_{id}/` → delete `.bak`. Old data is not deleted until new data is in place
+8. **Snapshot (backup-replace)**: copy `current/` to `save_{id}.tmp/` → rename existing `save_{id}/` to `save_{id}.bak/` → rename `.tmp` to the final `save_{id}/` → delete `.bak`. Old data is not deleted until new data is in place; if the temp-to-final rename fails, the code attempts to roll `.bak` back to `save_{id}/`, and keeps the `.bak` copy when rollback fails
 9. **Clear marker**: delete the marker (the one recreated for the snapshot phase)
 
 ## Strict Read Rules

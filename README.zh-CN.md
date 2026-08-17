@@ -67,7 +67,7 @@ public class HealthStrategy : LifecycleStrategyBase
 nc localhost 9876
 ```
 
-- **源码生成器**：Roslyn 增量生成器在编译期生成类型化数据访问器，消除装箱和字符串 key 查找。5 个诊断规则（`ORIGOSG001`–`005`）在编译时捕获配置错误。
+- **源码生成器**：Roslyn 增量生成器在编译期生成类型化数据访问器，消除装箱和字符串 key 查找。6 个诊断规则（`ORIGOSG001`–`006`）在编译时捕获配置错误。
 - **测试基础设施**：`StrategyTestScenario` 声明式策略单元测试框架（Configure → Simulate → Inspect）。架构护栏测试强制执行依赖方向和策略约束。
 
 ### Godot 4 适配器

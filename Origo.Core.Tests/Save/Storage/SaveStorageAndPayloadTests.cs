@@ -565,6 +565,37 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void SnapshotCurrentToSave_TempToFinalRenameFailsTwice_PreservesPreviousBackup()
+    {
+        // A failed backup-replace swap leaves the previous snapshot only in
+        // save_001.bak. A retry must not delete that backup before the new
+        // snapshot is safely installed, or a second failure loses the last
+        // known-good snapshot.
+        var fs = new FailOnRenameFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+
+        fs.SeedFile("root/current/progress.json", """{"v":"old"}""");
+        fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
+
+        fs.SeedFile("root/current/progress.json", """{"v":"new"}""");
+        fs.FailTempToFinalRename = true;
+        Assert.Throws<InvalidOperationException>(() =>
+            SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
+
+        // Retry while the temp-to-final rename still fails.
+        Assert.Throws<InvalidOperationException>(() =>
+            SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
+
+        Assert.True(fs.DirectoryExists("root/save_001"),
+            "the previous known-good snapshot must survive a second failed swap");
+        Assert.Equal("""{"v":"old"}""", fs.ReadAllText("root/save_001/progress.json"));
+        Assert.False(fs.DirectoryExists("root/save_001.bak"),
+            "a successful rollback leaves no backup directory behind");
+    }
+
+    [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure()
     {
         var fs = new FailOnCopyFileSystem("save_001.tmp");
@@ -585,6 +616,61 @@ public class SaveStorageAndPayloadTests
         (DataSourceFactory.CreateFileMetaAccess(fs),
          DataSourceFactory.CreateDefaultIoGateway(fs),
          DataSourceFactory.CreatePathResolver(fs));
+
+    /// <summary>
+    ///     A file system that delegates to <see cref="TestMemoryFileSystem" /> but can be
+    ///     configured to fail the temp-to-final rename in
+    ///     <see cref="SaveAtomicWriter.SwapSnapshotDirectory" />. Used to simulate
+    ///     an interrupted backup-replace swap.
+    /// </summary>
+    private sealed class FailOnRenameFileSystem : IFileSystem
+    {
+        private readonly TestMemoryFileSystem _inner = new();
+
+        public bool FailTempToFinalRename { get; set; }
+
+        public bool Exists(string path) => _inner.Exists(path);
+
+        public bool DirectoryExists(string path) => _inner.DirectoryExists(path);
+
+        public string ReadAllText(string path) => _inner.ReadAllText(path);
+
+        public void WriteAllText(string path, string content, bool overwrite) =>
+            _inner.WriteAllText(path, content, overwrite);
+
+        public void Copy(string sourcePath, string destinationPath, bool overwrite) =>
+            _inner.Copy(sourcePath, destinationPath, overwrite);
+
+        public IEnumerable<string> EnumerateFiles(string directoryPath, string searchPattern, bool recursive) =>
+            _inner.EnumerateFiles(directoryPath, searchPattern, recursive);
+
+        public void CreateDirectory(string directoryPath) => _inner.CreateDirectory(directoryPath);
+
+        public void Delete(string path) => _inner.Delete(path);
+
+        public string CombinePath(string basePath, string relativePath) => _inner.CombinePath(basePath, relativePath);
+
+        public string GetParentDirectory(string path) => _inner.GetParentDirectory(path);
+
+        public IEnumerable<string> EnumerateDirectories(string directoryPath) =>
+            _inner.EnumerateDirectories(directoryPath);
+
+        public void Rename(string sourcePath, string destinationPath)
+        {
+            var source = sourcePath.Replace('\\', '/').TrimEnd('/');
+            var destination = destinationPath.Replace('\\', '/').TrimEnd('/');
+            if (FailTempToFinalRename
+                && source.EndsWith("save_001.tmp", StringComparison.Ordinal)
+                && destination.EndsWith("save_001", StringComparison.Ordinal))
+                throw new InvalidOperationException($"Simulated rename failure for '{sourcePath}' -> '{destinationPath}'.");
+
+            _inner.Rename(sourcePath, destinationPath);
+        }
+
+        public void DeleteDirectory(string directoryPath) => _inner.DeleteDirectory(directoryPath);
+
+        public void SeedFile(string path, string content) => _inner.SeedFile(path, content);
+    }
 
     /// <summary>
     ///     A file system that delegates to <see cref="TestMemoryFileSystem" /> but throws on

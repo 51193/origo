@@ -20,31 +20,39 @@ public partial class OrigoDefaultEntry
     /// </summary>
     public override void _Ready()
     {
-        base._Ready();
-
-        RegisterConsoleCommandHandlers();
-
-        var sndContext = new SndContext(new SndContextParameters(
-            Runtime,
-            SharedDataSourceIo,
-            SharedMetaAccess,
-            SharedPathResolver,
-            SaveRootPath,
-            InitialSaveRootPath,
-            ConfigPath)
+        try
         {
-            AutoDiscoverStrategies = AutoDiscoverStrategies,
-            DiscoverySkipPrefixes = AutoDiscoverStrategies ? _godotSkipPrefixes : null,
-            SceneAliasMapPath = SceneAliasMapPath,
-            SndTemplateMapPath = SndTemplateMapPath,
-            ConfigureConverters = RegisterCustomConverters,
-        });
+            base._Ready();
 
-        ((ISndContextAttachableSceneHost)SndManager).BindContext(sndContext);
-        ConfigureSaveMetadataContributors(sndContext);
+            RegisterConsoleCommandHandlers();
 
-        // Delegate to Core to execute the complete startup flow: strategy discovery → alias/template loading → entry save
-        sndContext.Bootstrap();
+            var sndContext = new SndContext(new SndContextParameters(
+                Runtime,
+                SharedDataSourceIo,
+                SharedMetaAccess,
+                SharedPathResolver,
+                SaveRootPath,
+                InitialSaveRootPath,
+                ConfigPath)
+            {
+                AutoDiscoverStrategies = AutoDiscoverStrategies,
+                DiscoverySkipPrefixes = AutoDiscoverStrategies ? _godotSkipPrefixes : null,
+                SceneAliasMapPath = SceneAliasMapPath,
+                SndTemplateMapPath = SndTemplateMapPath,
+                ConfigureConverters = RegisterCustomConverters,
+            });
+
+            ((ISndContextAttachableSceneHost)SndManager).BindContext(sndContext);
+            ConfigureSaveMetadataContributors(sndContext);
+
+            // Delegate to Core to execute the complete startup flow: strategy discovery → alias/template loading → entry save
+            sndContext.Bootstrap();
+        }
+        catch
+        {
+            MarkBootstrapFailed();
+            throw;
+        }
     }
 
     private void RegisterConsoleCommandHandlers()

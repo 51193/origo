@@ -24,6 +24,11 @@ internal sealed class SndMetaDataConverter : DataSourceConverter<SndMetaData>
 
     public override SndMetaData Read(DataSourceNode node)
     {
+        if (node.Kind != DataSourceNodeKind.Map)
+            throw new InvalidOperationException(
+                $"SND metadata must be a JSON object, but found {node.Kind}. " +
+                "The save data is corrupt and cannot be recovered.");
+
         var meta = new SndMetaData();
 
         if (node.TryGetValue("name", out var nameNode) && nameNode is not null && !nameNode.IsNull)

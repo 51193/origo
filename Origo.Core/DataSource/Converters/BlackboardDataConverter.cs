@@ -16,6 +16,11 @@ internal sealed class BlackboardDataConverter : DataSourceConverter<IReadOnlyDic
 
     public override IReadOnlyDictionary<string, TypedData> Read(DataSourceNode node)
     {
+        if (node.Kind != DataSourceNodeKind.Map)
+            throw new InvalidOperationException(
+                $"Blackboard data must be a JSON object, but found {node.Kind}. " +
+                "The save data is corrupt and cannot be recovered.");
+
         var dict = new Dictionary<string, TypedData>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
             dict[key] = _typedDataConverter.Read(node[key]);

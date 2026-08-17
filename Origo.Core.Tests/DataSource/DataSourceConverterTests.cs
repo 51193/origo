@@ -452,6 +452,122 @@ public class DataSourceConverterTests
         Assert.Contains("null", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    // ── Wrong node shapes must fail strict reads, not become empty ──────
+
+    [Fact]
+    public void StateMachineContainerPayloadConverter_StackNotArray_Throws()
+    {
+        // A corrupted stack object must not silently become an empty stack:
+        // the machine state would be lost without any error.
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"machines":[{"key":"main","pushIndex":"start","popIndex":"end","stack":{}}]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StateMachineContainerPayload>(node));
+        Assert.Contains("array", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void StrategyMetaDataConverter_LifecycleIndicesNotArray_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"lifecycle_indices":{}}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StrategyMetaData>(node));
+        Assert.Contains("array", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void StrategyMetaDataConverter_ObserverIndicesNotArray_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"observer_indices":{}}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StrategyMetaData>(node));
+        Assert.Contains("array", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void StrategyMetaDataConverter_BlankObserverTarget_Throws()
+    {
+        // A blank target would otherwise be silently dropped and the saved
+        // observer binding would disappear during load.
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"observer_indices":[{"":["watch.health"]}]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<StrategyMetaData>(node));
+        Assert.Contains("target", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void NodeMetaDataConverter_PairsNotMap_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"pairs":[]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<NodeMetaData>(node));
+        Assert.Contains("object", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void DataMetaDataConverter_PairsNotMap_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"pairs":[]}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<DataMetaData>(node));
+        Assert.Contains("object", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void StringDictionaryConverter_Read_NonMap_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""[]""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<IReadOnlyDictionary<string, string>>(node));
+        Assert.Contains("object", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void BlackboardDataConverter_Read_NonMap_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""[]""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<IReadOnlyDictionary<string, TypedData>>(node));
+        Assert.Contains("object", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void SndMetaDataConverter_Read_NonMap_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""[]""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<SndMetaData>(node));
+        Assert.Contains("object", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void SndMetaDataListConverter_Read_NonArray_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{}""");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => registry.Read<IReadOnlyList<SndMetaData>>(node));
+        Assert.Contains("array", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void StringDictionaryConverter_RoundTrip()
     {

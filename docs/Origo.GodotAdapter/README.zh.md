@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter
 
@@ -31,11 +31,13 @@ OrigoDefaultEntry._Ready()
   │       ├── GodotSndManager
   │       ├── GodotJsonConverterRegistry 注册
   │       └── OrigoRuntime
-  ├── 自动发现策略 (reflection scan, skip Godot assemblies)
-  ├── SndContext 创建 (注入 Runtime + FileSystem + saveRoot + config)
+  ├── RegisterConsoleCommandHandlers()       // 适配层命令
+  ├── new SndContext(...)                    // 传入启动配置
   ├── SndManager.BindContext(sndContext)
-  ├── LoadSceneAliases / LoadTemplates
-  └── RequestLoadMainMenuEntrySave
+  └── sndContext.Bootstrap()                 // Core 内部按序执行：
+        ├── 策略发现 (reflection scan, skip Godot assemblies)
+        ├── LoadSceneAliases / LoadTemplates
+        └── RequestLoadMainMenuEntrySave
 ```
 
 ## 架构约束

@@ -8,6 +8,11 @@ internal sealed class StringDictionaryConverter : DataSourceConverter<IReadOnlyD
 {
     public override IReadOnlyDictionary<string, string> Read(DataSourceNode node)
     {
+        if (node.Kind != DataSourceNodeKind.Map)
+            throw new InvalidOperationException(
+                $"String dictionary must be a JSON object, but found {node.Kind}. " +
+                "The save data is corrupt and cannot be recovered.");
+
         var dict = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
             dict[key] = StringDataSourceConverter.ReadElement(node[key]);

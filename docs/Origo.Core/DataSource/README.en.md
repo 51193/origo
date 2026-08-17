@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # DataSource
 
@@ -63,7 +63,7 @@ CLR objects (TypedData / SndMetaData / etc.)
 - **Lazy expansion**: Large JSON nodes expand children only on access, avoiding full parsing
 - **Zero reflection**: All converters are explicitly registered; no reflection-based auto-discovery is used
 - **Runtime type container**: `DataSourceNode` is a universal serialization container — the entire Save system and DataSource flow passes data through it, deferring type safety to `DataSourceConverterRegistry` lookups. This is a deliberate design trade-off ("simplicity over strict typing"), allowing all subsystems to share a single data tree at the cost of exposing conversion errors at runtime rather than compile time.
-- **Strict reads**: archive payload converters (e.g. `StateMachineContainerPayloadConverter`) validate framework-mandatory fields (`key`/`pushIndex`/`popIndex` on each `machines` entry) — a corrupt archive immediately throws `InvalidOperationException`, never silently defaulting (fail-fast, consistent with the Save strict-read contract)
+- **Strict reads**: archive payload converters (e.g. `StateMachineContainerPayloadConverter`) validate framework-mandatory fields (`key`/`pushIndex`/`popIndex` on each `machines` entry) and the node shape of array/object fields (stack, pairs, indices, etc.) — a corrupt archive immediately throws `InvalidOperationException`, never silently defaulting or becoming an empty collection (fail-fast, consistent with the Save strict-read contract)
 - **Null values are never silently drifted**: `Read<string>` (including the runtime-typed overload) throws `InvalidOperationException` on a Null node — reading it as an empty string would silently drift null into `""`; callers must check `IsNull`/`TryGetValue` first (the pattern `TypedDataConverter` uses). `AsString()` returning `""` for a Null node stays as documented behavior (`DataSourceFactoryTests.AsString_OnNullNode_ReturnsEmpty` pins it)
 
 ---

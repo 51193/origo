@@ -24,6 +24,8 @@ internal sealed class FakeSndEntity : ISndEntityFacade
     public int DetachCount { get; private set; }
     public bool FailRecover { get; set; }
 
+    public Action? OnProcess { get; set; }
+
     public IReadOnlyList<SndMetaData> Recovered => _recovered;
 
     public void RecoverForLifecycle(SndMetaData meta)
@@ -37,7 +39,11 @@ internal sealed class FakeSndEntity : ISndEntityFacade
 
     public void BindSession(ISessionRun session) => OwningSession = session;
 
-    public void ProcessSnd(double delta) => ProcessCount++;
+    public void ProcessSnd(double delta)
+    {
+        ProcessCount++;
+        OnProcess?.Invoke();
+    }
 
     public void DetachFromManager() => DetachCount++;
 
@@ -244,6 +250,19 @@ public class SndEntityCollectionTests
 
         Assert.Equal(1, a.ProcessCount);
         Assert.Equal(1, b.ProcessCount);
+    }
+
+    [Fact]
+    public void ProcessAll_ContainerModifiedDuringProcess_Throws()
+    {
+        // Matches FullMemorySndSceneHost: mutating the host while entities
+        // process must fail loudly instead of silently skipping/adding frames.
+        var collection = CreateCollection(out _);
+        var a = (FakeSndEntity)collection.CreateEntity(Meta("a"));
+        a.OnProcess = () => collection.CreateEntity(Meta("spawned_during_process"));
+
+        var ex = Assert.Throws<InvalidOperationException>(() => collection.ProcessAll(0.5));
+        Assert.Contains("modified during ProcessAll", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]

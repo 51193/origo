@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体 测试（适配层）
 
@@ -55,6 +55,7 @@
 | `RecoverFromMetaList_Null_Throws` | metaList 为 null 时抛 `ArgumentNullException` | Origo.GodotAdapter/Snd |
 | `RemoveEntity_Unknown_Throws` | 移除不存在的实体抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
 | `RequestKillEntity_AlreadyPending_Throws` | 对已标记击杀的实体重复击杀抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
+| `ProcessAll_ContainerModifiedDuringProcess_Throws` | 帧处理期间集合被修改（实体在 ProcessSnd 中新增） | 抛 `InvalidOperationException`（消息含 "modified during ProcessAll"；与 FullMemorySndSceneHost 一致） |
 | `RequestKillEntity_Unknown_Throws` | 击杀不存在的实体抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
 
 ## TypedDataInitializerTests 测试详情

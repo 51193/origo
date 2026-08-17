@@ -16,6 +16,11 @@ internal sealed class SndMetaDataListConverter : DataSourceConverter<IReadOnlyLi
 
     public override IReadOnlyList<SndMetaData> Read(DataSourceNode node)
     {
+        if (node.Kind != DataSourceNodeKind.Array)
+            throw new InvalidOperationException(
+                $"SND metadata list must be a JSON array, but found {node.Kind}. " +
+                "The save data is corrupt and cannot be recovered.");
+
         var list = new List<SndMetaData>();
         foreach (var element in node.Elements)
             list.Add(_sndMetaDataConverter.Read(element));

@@ -107,16 +107,49 @@ internal static class SaveAtomicWriter
     {
         var bakRel = $"{saveRel}.bak";
         var bakAbs = handle.GetAbsolutePath(bakRel);
-        if (handle.MetaAccess.DirectoryExists(bakAbs))
+        var hadExisting = handle.MetaAccess.DirectoryExists(saveAbs);
+
+        // A stale backup is only safe to remove when the real snapshot still
+        // exists (the real slot is authoritative). When a previous swap failed
+        // after renaming the old snapshot to .bak, the backup is the only
+        // known-good copy and must survive until the new snapshot is in place.
+        if (hadExisting && handle.MetaAccess.DirectoryExists(bakAbs))
             handle.MetaAccess.DeleteDirectory(bakAbs);
 
-        var hadExisting = handle.MetaAccess.DirectoryExists(saveAbs);
         if (hadExisting)
             handle.MetaAccess.Rename(saveAbs, bakAbs);
 
-        handle.MetaAccess.Rename(tempAbs, saveAbs);
+        try
+        {
+            handle.MetaAccess.Rename(tempAbs, saveAbs);
+        }
+        catch (Exception ex)
+        {
+            // Restore the previous snapshot to its original path when the new
+            // one could not be installed. If even the rollback rename fails,
+            // surface both failures; the previous generation is still present
+            // in .bak and a later retry can recover it.
+            try
+            {
+                if (hadExisting
+                    && !handle.MetaAccess.DirectoryExists(saveAbs)
+                    && handle.MetaAccess.DirectoryExists(bakAbs))
+                    handle.MetaAccess.Rename(bakAbs, saveAbs);
+            }
+            catch (Exception rollbackEx)
+            {
+                throw new InvalidOperationException(
+                    "Snapshot swap failed and the previous snapshot could not be restored from its backup. " +
+                    "The backup copy is preserved on disk.",
+                    new AggregateException(ex, rollbackEx));
+            }
 
-        if (hadExisting)
+            throw;
+        }
+
+        // The new snapshot is installed; the previous generation (if any) is
+        // now safe to remove.
+        if (handle.MetaAccess.DirectoryExists(bakAbs))
             handle.MetaAccess.DeleteDirectory(bakAbs);
     }
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Tests (Adapter)
 
@@ -53,6 +53,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | `RecoverFromMetaList_Null_Throws` | metaList is null — throws `ArgumentNullException` | Origo.GodotAdapter/Snd |
 | `RemoveEntity_Unknown_Throws` | Removing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 | `RequestKillEntity_AlreadyPending_Throws` | Duplicate kill on an already-marked entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
+| `ProcessAll_ContainerModifiedDuringProcess_Throws` | Collection mutated during frame processing (entity spawned inside ProcessSnd) | Throws `InvalidOperationException` (contains "modified during ProcessAll"; consistent with FullMemorySndSceneHost) |
 | `RequestKillEntity_Unknown_Throws` | Killing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 
 ## TypedDataInitializerTests Details

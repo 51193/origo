@@ -38,8 +38,10 @@ public partial class GodotSndManager
     internal ISndContext? Context { get; private set; }
 
     /// <summary>
-    ///     Creates an empty manager. Call <see cref="BindRuntimeDependencies" />
-    ///     and <see cref="BindContext" /> before spawning entities.
+    ///     Creates an empty manager. Runtime dependencies and context binding are
+    ///     framework-orchestrated startup wiring (driven by the bootstrap flow
+    ///     through <see cref="ISndContextAttachableSceneHost" />); entities must
+    ///     not be spawned until that wiring has completed.
     /// </summary>
     public GodotSndManager()
     {

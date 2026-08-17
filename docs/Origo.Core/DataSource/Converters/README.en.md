@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Converters/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Converters
 
@@ -42,6 +42,8 @@ One per primitive type array. Read iterates `node.Elements`; Write builds `Creat
 | `SndMetaDataConverter` | SND entity metadata |
 | `SndMetaDataListConverter` | Entity metadata list |
 | `BlackboardDataConverter` | Full blackboard data |
+
+**Node-shape validation**: domain converters validate root and collection field shapes on read — object fields (`pairs`, string dictionaries, blackboard dictionaries, SndMetaData) must be Maps, and array fields (state-machine `stack`, strategy-index lists, `observer_indices`, SndMetaData lists) must be Arrays. A wrong shape throws `InvalidOperationException` instead of silently becoming an empty collection; an empty observer target is rejected rather than silently dropping the binding.
 
 ### TypedDataConverter
 Reads/writes `"type"` and `"data"` fields. On read, resolves CLR type from `"type"` via `TypeStringMapping`, then uses corresponding converter. The registry backtracks along base class and interface chains when no exact type match exists — e.g. storing a `ReadOnlyDictionary<string,string>` with only an `IReadOnlyDictionary<string,string>` converter registered. This allows registering converters for interface types while still storing and reading their concrete implementations: `StringDictionaryConverter` returns a `ReadOnlyDictionary<string,string>` instance (compatible with the requested type). If the converter's returned instance is incompatible with the requested type (e.g. requesting `SortedDictionary`), the read throws `InvalidOperationException` immediately (fail-fast, naming both the converter and the requested type rather than an opaque `InvalidCastException`), preventing a silently type-drifted value from breaking a later serialization. String map values must be scalar strings: a null value throws `InvalidOperationException` (consistent with `Read<string>` rejecting null nodes — no silent drift to an empty string). The node-pair map (`NodeMetaDataConverter`) follows the same strict semantics: a null pair value fails the read instead of drifting into an empty resource path.

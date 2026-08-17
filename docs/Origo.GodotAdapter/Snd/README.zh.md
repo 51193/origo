@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -39,7 +39,7 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 - **回滚机制**：`RecoverFromMetaList` 中若某实体加载失败，集合回滚释放所有已创建的实体（经 `SndEntityCollection` 的 staged 列表）
 - **GetEntities()**：返回**快照**（非实时视图）——与 Core 宿主契约一致：迭代期间宿主被修改不会抛 "collection was modified"，且快照不可下转型为可变后备列表（杜绝绕过集合管理的手工修改）
 - **BuildMetaList()**：经集合调用实体的 `BuildSndMetaData()` 收集元数据
-- **ProcessAll(delta)**：实现 `ISndSceneHost.ProcessAll` 的统一入口，由 Core 的 `SessionManager.ProcessAllSessions` 调用，驱动集合内每个实体的帧处理
+- **ProcessAll(delta)**：实现 `ISndSceneHost.ProcessAll` 的统一入口，由 Core 的 `SessionManager.ProcessAllSessions` 调用，驱动集合内每个实体的帧处理；与 `FullMemorySndSceneHost` 一致，处理期间宿主容器被修改（例如策略在 `Process` 中 `Spawn`）会抛 `InvalidOperationException`，而不是静默跳过或重复处理实体
 
 ### GodotSndEntity
 

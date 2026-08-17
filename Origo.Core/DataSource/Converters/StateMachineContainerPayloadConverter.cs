@@ -45,8 +45,18 @@ internal sealed class StateMachineContainerPayloadConverter
             entry.PopIndex = popNode.AsString();
 
             if (element.TryGetValue("stack", out var stackNode) && stackNode is not null && !stackNode.IsNull)
+            {
+                // A non-array stack node is corrupt data: iterating a wrong
+                // shape would silently produce an empty stack and lose the
+                // machine state.
+                if (stackNode.Kind != DataSourceNodeKind.Array)
+                    throw new InvalidOperationException(
+                        $"State machine payload entry '{entry.Key}' has a stack field that is {stackNode.Kind}, not a JSON array. " +
+                        "The save data is corrupt and cannot be recovered.");
+
                 foreach (var stackElement in stackNode.Elements)
                     entry.Stack.Add(StringDataSourceConverter.ReadElement(stackElement));
+            }
 
             payload.Machines.Add(entry);
         }

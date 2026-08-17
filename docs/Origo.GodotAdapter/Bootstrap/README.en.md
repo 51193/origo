@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Bootstrap
 
@@ -15,7 +15,7 @@ Startup and orchestration for the Godot adapter layer. Responsible for creating 
 |------|------|
 | `OrigoAutoHost.cs` | Godot Node, creates the runtime: GodotFileSystem + TypeStringMapping + ConverterRegistry + PersistentBlackboard + ConsoleInput/Output. `_Process` delegates to `IOrigoFrameDriver.DriveFrame(delta)` |
 | `OrigoDefaultEntry.cs` | Inherits OrigoAutoHost, holds startup configuration properties (`AutoDiscoverStrategies`, `_godotSkipPrefixes` (`private static readonly` field), `SceneAliasMapPath`, etc.) |
-| `OrigoDefaultEntry.Bootstrap.cs` | Partial class, `_Ready` implementation: register command handlers → create SndContext → call `Bootstrap()` |
+| `OrigoDefaultEntry.Bootstrap.cs` | Partial class, `_Ready` implementation: register command handlers → create SndContext → call `Bootstrap()`. Any step failure marks the bootstrap failed (`MarkBootstrapFailed`) so the next frame fails fast |
 
 ## Startup Flow
 

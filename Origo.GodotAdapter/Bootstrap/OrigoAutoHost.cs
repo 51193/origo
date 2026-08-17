@@ -66,6 +66,14 @@ public partial class OrigoAutoHost : Node
     /// <summary>The Origo runtime created during <see cref="_Ready" />.</summary>
     public OrigoRuntime Runtime { get; private set; } = null!;
 
+    /// <summary>
+    ///     Marks the bootstrap as failed so <see cref="_Process" /> fails fast
+    ///     instead of driving a partially initialized runtime. Derived entry
+    ///     classes call this when any step after the base runtime creation
+    ///     throws.
+    /// </summary>
+    protected void MarkBootstrapFailed() => _readyFailed = true;
+
     /// <summary>Godot lifecycle entry: builds the runtime and SndManager, or records and rethrows the failure.</summary>
     public override void _Ready()
     {
@@ -87,7 +95,7 @@ public partial class OrigoAutoHost : Node
             bootstrapLogger.Log(LogLevel.Error, _logTag,
                 new LogMessageBuilder().SetElapsedMs(readyWatch.Elapsed.TotalMilliseconds)
                     .Build($"_Ready failed: {ex.Message}"));
-            _readyFailed = true;
+            MarkBootstrapFailed();
             throw;
         }
     }

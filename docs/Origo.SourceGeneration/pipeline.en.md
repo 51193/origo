@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
@@ -179,6 +179,7 @@ Compile-time validation (fail-fast):
 | `ORIGOSG003` | Kind out of range (not in `[1, 254]`) |
 | `ORIGOSG004` | Kind range overlap, multiple types mapped to the same Kind |
 | `ORIGOSG005` | Generated identifier (KindName) collisions: same-named types from different namespaces, collapsing generic instantiations, or the same type registered more than once with different kind values (same-kind re-registration is idempotent and silently deduplicated) |
+| `ORIGOSG006` | Sanitized KindName is not a valid C# identifier (e.g. pointer type names containing `*`) |
 
 These diagnostics are reported as Errors at compile time, causing build failure. Issues like Kind conflicts or out-of-range values **never reach runtime**.
 

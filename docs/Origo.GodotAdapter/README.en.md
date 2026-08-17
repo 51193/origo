@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter
 
@@ -34,11 +34,13 @@ OrigoDefaultEntry._Ready()
   │       │    └── OrigoRuntime
   │       ├── ConsoleInput/Output
   │       └── OrigoRuntime
-  ├── Auto-discover strategies (reflection scan, skip Godot assemblies)
-  ├── SndContext created (inject Runtime + FileSystem + saveRoot + config)
+  ├── RegisterConsoleCommandHandlers()       // Adapter commands
+  ├── new SndContext(...)                    // Pass startup config
   ├── SndManager.BindContext(sndContext)
-  ├── LoadSceneAliases / LoadTemplates
-  └── RequestLoadMainMenuEntrySave
+  └── sndContext.Bootstrap()                 // Core-internal sequence:
+        ├── Strategy discovery (reflection scan, skip Godot assemblies)
+        ├── LoadSceneAliases / LoadTemplates
+        └── RequestLoadMainMenuEntrySave
 ```
 
 ## Architectural Constraints
