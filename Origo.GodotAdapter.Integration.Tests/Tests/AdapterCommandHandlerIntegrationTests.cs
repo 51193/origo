@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using Origo.Core;
@@ -19,8 +20,9 @@ using Origo.GodotAdapter.Snd;
 
 namespace Origo.GodotAdapter.Integration.Tests;
 
-public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture
+public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture, IDisposable
 {
+    private readonly List<Node> _rootNodes = [];
     private Node _root = null!;
     private int _frame;
 
@@ -28,9 +30,19 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture
     public void Setup() => _frame = 0;
     public void AdvanceFrame() => _frame++;
 
+    public void Dispose()
+    {
+        foreach (var node in _rootNodes)
+            IntegrationTestRunner.FreeNode(node);
+        _rootNodes.Clear();
+        GC.SuppressFinalize(this);
+    }
+
+    private void TrackNode(Node node) => _rootNodes.Add(node);
+
     private static OrigoRuntime CreateRuntimeWithMockSession(ISndEntity? entityToFind)
     {
-        var harness = new IntegrationTestHarness();
+        using var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         var sessionManager = new StubSessionManager(entityToFind);
         harness.Runtime.SetSessionManagerProvider(() => sessionManager);
@@ -53,14 +65,15 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture
     {
         _root = ((SceneTree)Engine.GetMainLoop()).Root;
 
-        var harness = new IntegrationTestHarness();
+        using var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         harness.BindContext();
-        var entity = new GodotSndEntity(
+        var entity = GodotSndEntity.Create(
             harness.SndWorld, harness.SndManager.Context!, harness.Logger,
             harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory());
         SetupEntity(entity, "test_entity");
         _root.AddChild(entity);
+        TrackNode(entity);
 
         var child1 = new Node { Name = "ChildA" };
         entity.AddChild(child1);
@@ -104,14 +117,15 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture
     {
         _root = ((SceneTree)Engine.GetMainLoop()).Root;
 
-        var harness = new IntegrationTestHarness();
+        using var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         harness.BindContext();
-        var entity = new GodotSndEntity(
+        var entity = GodotSndEntity.Create(
             harness.SndWorld, harness.SndManager.Context!, harness.Logger,
             harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory());
         SetupEntity(entity, "button_entity");
         _root.AddChild(entity);
+        TrackNode(entity);
 
         var button = new Button { Name = "TestBtn" };
         entity.AddChild(button);
@@ -140,14 +154,15 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture
     {
         _root = ((SceneTree)Engine.GetMainLoop()).Root;
 
-        var harness = new IntegrationTestHarness();
+        using var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         harness.BindContext();
-        var entity = new GodotSndEntity(
+        var entity = GodotSndEntity.Create(
             harness.SndWorld, harness.SndManager.Context!, harness.Logger,
             harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory());
         SetupEntity(entity, "no_btn_entity");
         _root.AddChild(entity);
+        TrackNode(entity);
 
         var runtime = CreateRuntimeWithMockSession(entity);
         var handler = new PressButtonCommandHandler(runtime);
@@ -169,20 +184,22 @@ public class AdapterCommandHandlerIntegrationTests : IDeferredTestFixture
     {
         _root = ((SceneTree)Engine.GetMainLoop()).Root;
 
-        var harness = new IntegrationTestHarness();
+        using var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         harness.BindContext();
-        var entity = new GodotSndEntity(
+        var entity = GodotSndEntity.Create(
             harness.SndWorld, harness.SndManager.Context!, harness.Logger,
             harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory());
         SetupEntity(entity, "cam_entity");
         _root.AddChild(entity);
+        TrackNode(entity);
 
         var node3d = new Node3D { Name = "VisibleThing", Position = new Vector3(0, 1, -10) };
         entity.AddChild(node3d);
 
         var camera = new Camera3D { Name = "TestCamera", Current = true, Position = new Vector3(0, 0, 0) };
         _root.AddChild(camera);
+        TrackNode(camera);
 
         var runtime = CreateRuntimeWithMockSession(entity);
         var handler = new CameraViewCommandHandler(runtime);

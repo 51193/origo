@@ -84,6 +84,42 @@ public class GeneratorTests
     }
 
     [Fact]
+    public void Generate_RevisionBump_RecordsPreviousRevisionAndStaysIdempotent()
+    {
+        using var repo = TestRepo.Create();
+        WritePair(repo, "README", 1, 1);
+
+        RunGenerator(repo.LoadConfig());
+        var first = repo.Read("docs/.sync-status.json");
+
+        repo.Write("docs/README.zh.md", TestRepo.Header("README", 2) + "# zh\n");
+        repo.Write("docs/README.en.md", TestRepo.Header("README", 2) + "# en\n");
+        RunGenerator(repo.LoadConfig());
+
+        var status = JsonSerializer.Deserialize<JsonElement>(repo.Read("docs/.sync-status.json"));
+        var pair = status.GetProperty("pairs").GetProperty("README");
+        Assert.Equal(1, pair.GetProperty("previous_revisions").GetProperty("zh").GetInt32());
+        Assert.Equal(1, pair.GetProperty("previous_revisions").GetProperty("en").GetInt32());
+
+        RunGenerator(repo.LoadConfig());
+        Assert.Equal(repo.Read("docs/.sync-status.json"), repo.Read("docs/.sync-status.json"));
+        Assert.NotEqual(first, repo.Read("docs/.sync-status.json"));
+    }
+
+    [Fact]
+    public void Generate_MalformedPreviousStatus_RebuildsSnapshot()
+    {
+        using var repo = TestRepo.Create();
+        WritePair(repo, "README", 1, 1);
+        repo.Write("docs/.sync-status.json", "{not-json");
+
+        RunGenerator(repo.LoadConfig());
+
+        var status = JsonSerializer.Deserialize<JsonElement>(repo.Read("docs/.sync-status.json"));
+        Assert.Equal("synced", status.GetProperty("pairs").GetProperty("README").GetProperty("status").GetString());
+    }
+
+    [Fact]
     public void Generate_IsIdempotent()
     {
         using var repo = TestRepo.Create();

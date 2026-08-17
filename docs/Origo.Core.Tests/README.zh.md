@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.Core.Tests
 
@@ -35,6 +35,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | `PerfReporter` | 静态工具类 | 性能测试输出格式化：Compare/Report 方法，打印时间/吞吐/分配对比。支持双通道输出（`Console.Out` + `ITestOutputHelper`），确保 CI 和本地均可看到结果 |
 | `ConsoleInputBuffer` | `IConsoleInputSource` 实现 | 控制台输入队列（Core 生产代码，测试中直接使用） |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` 实现 | 控制台输出通道（Core 生产代码，测试中直接使用） |
+| `PrivateFieldNamingConvention` | 架构守卫辅助 | 反射校验生产程序集私有字段遵循 `_camelCase` 命名（`dotnet format` 无法验证 fix-only 命名规则） |
 
 框架内部的测试辅助设施（如 `SndEntity` 的生命周期方法）为 `internal`，通过 `InternalsVisibleTo` 暴露给测试项目；独立的 `Origo.TestSupport` 程序集则提供可公开复用的测试支撑类型（TestMemoryFileSystem、TestSndSceneHost、TestLogger 等）。
 

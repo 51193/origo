@@ -15,6 +15,10 @@
         <CollectCoverage>true</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <Include>[DocSyncTool]*</Include>
+        <!-- GeneratedRegex outputs are compiler-generated implementation details,
+             not hand-authored source; they are excluded from the line gate.
+             The handwritten Validator/Generator code above is fully covered. -->
+        <ExcludeByFile>**/System.Text.RegularExpressions.Generator/**/*.g.cs</ExcludeByFile>
         <Threshold>90</Threshold>
         <ThresholdType>line</ThresholdType>
         <ThresholdStat>total</ThresholdStat>

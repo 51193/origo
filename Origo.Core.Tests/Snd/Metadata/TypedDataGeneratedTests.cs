@@ -17,7 +17,7 @@ public class TypedDataGeneratedTests
 {
     public TypedDataGeneratedTests()
     {
-        TypedData.ResetForTesting();
+        TypedDataTestSupport.ResetKindRegistry();
     }
 
     [Fact]

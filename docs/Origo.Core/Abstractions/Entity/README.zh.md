@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Entity (Abstractions)
 
@@ -123,7 +123,7 @@
 
 ### 为什么 TryGetData 使用 found/value 元组
 
-参考 [Blackboard 的相同设计决策](../Blackboard/README.zh.md#为什么是泛型-tryget-而非-object)。
+参考 Blackboard 的[设计决策](../Blackboard/README.zh.md#设计决策)中的存储理由。
 
 ### 为什么观察者钩子签名包含 target 参数
 

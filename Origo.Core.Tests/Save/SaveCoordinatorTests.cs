@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
+using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.StateMachine;
@@ -104,18 +105,20 @@ public class SaveCoordinatorTests
         public IBlackboard SystemBlackboard => new Blackboard.Blackboard();
         public IBlackboard ProgressBlackboard => new Blackboard.Blackboard();
         public IBlackboard? SessionBlackboard => null;
-        public Abstractions.Scene.ISndSceneAccess SceneAccess =>
+        public Abstractions.Scene.ISndSceneReadAccess SceneAccess =>
             new TestSceneAccess();
         public void EnqueueBusinessDeferred(Action action) { }
         public void FlushDeferredActionsForCurrentFrame() { }
         public int GetPendingPersistenceRequestCount() => 0;
     }
 
-    private sealed class TestSceneAccess : Abstractions.Scene.ISndSceneAccess
+    private sealed class TestSceneAccess : Abstractions.Scene.ISndSceneAccess, Abstractions.Scene.ISndSceneReadAccess
     {
         public IReadOnlyList<SndMetaData> BuildMetaList() =>
             [];
         public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList) { }
+        public IReadOnlyCollection<ISndEntity> GetEntities() => [];
+        public ISndEntity? FindByName(string name) => null;
     }
 
     private static (IFileMetaAccess MetaAccess, IDataSourceIoGateway DataSourceIo, IPathResolver PathResolver)

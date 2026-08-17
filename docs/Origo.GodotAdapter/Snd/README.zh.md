@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -29,8 +29,8 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 
 适配层的核心入口节点（`[GlobalClass]`），直接挂载在 Godot 场景树中：
 
-- **实现 ISndSceneHost**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / ProcessAll 均为**显式接口实现**——业务代码无法在 `GodotSndManager` 具体类型上直接调用这些写操作，只能经 `ISndSceneHost`/`ISndSceneAccess` 接口（Core 内部持有）驱动；公开读操作为 `GetEntities` / `FindByName`。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
-- **实现 ISndContextAttachableSceneHost**：`BindContext` 为**显式接口实现**——上下文绑定是框架启动编排（`SessionRun` 构造 / Bootstrap 流程）驱动的写路径，业务代码无法在具体类型上重绑上下文
+- **实现 ISndSceneHost（internal）**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / ProcessAll 均为**显式接口实现**，且 `ISndSceneHost` / `ISndSceneAccess` 本身为 `internal`——业务代码既不能在具体类型上调用，也无法通过接口强转绕过；公开读操作经 public `ISndSceneReadAccess`（`GetEntities` / `FindByName`）。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
+- **实现 ISndContextAttachableSceneHost（internal）**：`BindContext` 为**显式接口实现**且接口为 `internal`——上下文绑定是框架启动编排（`SessionRun` 构造 / Bootstrap 流程）驱动的写路径，业务代码无法在具体类型上重绑上下文
 - **启动编排封闭**：`BindRuntimeDependencies` 为 `internal`——运行时依赖绑定（World + Logger）同属框架启动编排（由 `OrigoAutoHost` 在 Bootstrap 流程中驱动），业务代码无法在具体类型上重绑运行时依赖
 - **实现 IObserverTopologyHost**（internal）：暴露本场景宿主专用的 `ObserverTopology`，供 Core 的观察者挂载/卸载编排使用
 - **实现 IOwningSessionBindable**（internal）：`SetOwningSession` 将会话绑定到宿主，供 Core 会话创建流程使用

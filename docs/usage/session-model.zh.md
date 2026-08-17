@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话模型
 
@@ -125,7 +125,7 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     IBlackboard SystemBlackboard { get; }     // 系统级（继承 ISndBlackboardAccess）
     IBlackboard? ProgressBlackboard { get; }  // 流程级（继承 ISndBlackboardAccess）
     IBlackboard? SessionBlackboard { get; }   // 当前会话级
-    ISndSceneAccess SceneAccess { get; }      // 当前会话场景
+    ISndSceneReadAccess SceneAccess { get; }      // 当前会话场景
     void EnqueueBusinessDeferred(Action action);           // 继承 ISndDeferredActions
     void FlushDeferredActionsForCurrentFrame();            // 继承 ISndDeferredActions
     int GetPendingPersistenceRequestCount();               // 继承 ISndDeferredActions

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace DocSyncTool;
@@ -38,7 +40,7 @@ internal static partial class Validator
                 fileMetadatas.Add(docFile);
         }
 
-        ValidatePairs(fileMetadatas, config.Languages, errors);
+        ValidatePairs(fileMetadatas, config.Languages, docsRoot, errors);
         warnings = ComputeHeadingParityWarnings(fileMetadatas, config.Languages);
 
         if (errors.Count > 0)
@@ -144,88 +146,200 @@ internal static partial class Validator
     [GeneratedRegex(@"\x60{3}[\s\S]*?\x60{3}|\x60{2}[^\n]*?\x60{2}|\x60[^\x60\r\n]+\x60", RegexOptions.Compiled)]
     private static partial Regex CodeSpanRegex();
 
+    [GeneratedRegex(@"^\[[^\]]+\]:\s*(.+?)\s*$", RegexOptions.Multiline | RegexOptions.Compiled)]
+    private static partial Regex ReferenceDefinitionRegex();
+
+    [GeneratedRegex(@"\[[^\]]+\]\[([^\]]+)\]", RegexOptions.Compiled)]
+    private static partial Regex FullReferenceLinkRegex();
+
+    [GeneratedRegex(@"\[([^\]]+)\]\[\]", RegexOptions.Compiled)]
+    private static partial Regex CollapsedReferenceLinkRegex();
+
+    [GeneratedRegex(@"^(#{1,6})\s+(.+?)\s*$", RegexOptions.Multiline | RegexOptions.Compiled)]
+    private static partial Regex HeadingRegex();
+
     private static void ValidateLinks(DocFile docFile, string content,
         string docsRoot, List<string> errors)
     {
         var cleanContent = StripCodeSpans(content);
-        var matches = LinkRegex().Matches(cleanContent);
-        var thisLang = docFile.Language;
 
-        for (var i = 0; i < matches.Count; i++)
+        foreach (Match match in LinkRegex().Matches(cleanContent))
         {
-            var match = matches[i];
             var rawTarget = match.Groups[1].Value;
-            var displayText = match.Value;
+            ValidateLinkTarget(docFile, content, rawTarget, match.Value, match.Index,
+                docsRoot, errors);
+        }
 
-            if (rawTarget.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-                || rawTarget.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                continue;
+        ValidateReferenceLinks(docFile, content, cleanContent, docsRoot, errors);
+    }
 
-            var anchorIdx = rawTarget.IndexOf('#');
-            var linkPath = anchorIdx >= 0 ? rawTarget[..anchorIdx] : rawTarget;
+    private static void ValidateReferenceLinks(DocFile docFile, string content,
+        string cleanContent, string docsRoot, List<string> errors)
+    {
+        var definitions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            var dir = Path.GetDirectoryName(docFile.FullPath) ?? ".";
-            string resolved;
-            try
+        foreach (Match match in ReferenceDefinitionRegex().Matches(cleanContent))
+        {
+            var label = match.Groups[1].Value.Trim();
+            var target = match.Groups[2].Value.Trim();
+            if (!definitions.TryAdd(label, target))
             {
-                resolved = Path.GetFullPath(Path.Combine(dir, linkPath));
-            }
-            catch
-            {
-                continue;
-            }
-
-            // Compare via relative path, not a raw prefix: a prefix check
-            // against docsRoot would also accept sibling directories that
-            // merely start with the same name (e.g. "docs-backup"), and
-            // OrdinalIgnoreCase disagrees with the filesystem on Linux.
-            var relativeToRoot = Path.GetRelativePath(docsRoot, resolved);
-            if (relativeToRoot.StartsWith("..", StringComparison.Ordinal))
-            {
-                // A language-suffixed doc link that escapes the docs mirror
-                // is always broken: the mirror is self-contained, so any
-                // .zh.md/.en.md target must live under docs/. Bare .md links
-                // may legitimately point at repo-root documents (AGENTS.md).
-                var escapedName = Path.GetFileName(resolved);
-                if (escapedName.EndsWith(".zh.md", StringComparison.OrdinalIgnoreCase)
-                    || escapedName.EndsWith(".en.md", StringComparison.OrdinalIgnoreCase))
-                {
-                    var lineHint = FindLineNumber(content, match.Index);
-                    errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — language-suffixed link escapes the docs mirror: '{displayText}' resolves outside {docsRoot}");
-                }
-
+                var lineHint = FindLineNumber(content, match.Index);
+                errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — duplicate reference link definition '{label}'");
                 continue;
             }
 
-            var relResolved = Path.GetRelativePath(docsRoot, resolved).Replace('\\', '/');
+            ValidateLinkTarget(docFile, content, target,
+                $"[{label}]: {target}", match.Index, docsRoot, errors);
+        }
 
-            if (relResolved.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
-                && !relResolved.EndsWith($".{thisLang}.md", StringComparison.OrdinalIgnoreCase))
+        foreach (Match match in FullReferenceLinkRegex().Matches(cleanContent))
+        {
+            var label = match.Groups[1].Value.Trim();
+            if (label.Length == 0 || !definitions.ContainsKey(label))
             {
-                var linkLang = DocFile.ExtractLanguage(Path.GetFileName(relResolved));
-
-                if (linkLang.Length > 0 && linkLang != thisLang)
-                {
-                    var lineHint = FindLineNumber(content, match.Index);
-                    errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — cross-language link: '{displayText}' targets .{linkLang}.md from a .{thisLang}.md file");
-                }
-                else if (linkLang.Length == 0)
-                {
-                    var lineHint = FindLineNumber(content, match.Index);
-                    errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — bare .md link without language suffix: '{displayText}' (should be .{thisLang}.md)");
-                }
-            }
-
-            if (relResolved.EndsWith($".{thisLang}.md", StringComparison.OrdinalIgnoreCase))
-            {
-                var targetFull = Path.Combine(docsRoot, relResolved.Replace('/', Path.DirectorySeparatorChar));
-                if (!File.Exists(targetFull))
-                {
-                    var lineHint = FindLineNumber(content, match.Index);
-                    errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — broken link: '{displayText}' (target file not found: {relResolved})");
-                }
+                var lineHint = FindLineNumber(content, match.Index);
+                errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — reference link '{match.Value}' has no matching definition");
             }
         }
+
+        foreach (Match match in CollapsedReferenceLinkRegex().Matches(cleanContent))
+        {
+            var label = match.Groups[1].Value.Trim();
+            if (label.Length == 0 || !definitions.ContainsKey(label))
+            {
+                var lineHint = FindLineNumber(content, match.Index);
+                errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — collapsed reference link '{match.Value}' has no matching definition");
+            }
+        }
+    }
+
+    private static void ValidateLinkTarget(
+        DocFile docFile,
+        string content,
+        string rawTarget,
+        string displayText,
+        int charIndex,
+        string docsRoot,
+        List<string> errors)
+    {
+        if (rawTarget.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || rawTarget.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var anchorIdx = rawTarget.IndexOf('#');
+        var linkPath = anchorIdx >= 0 ? rawTarget[..anchorIdx] : rawTarget;
+        var anchor = anchorIdx >= 0 ? rawTarget[(anchorIdx + 1)..] : null;
+
+        if (linkPath.Length == 0)
+        {
+            if (!string.IsNullOrEmpty(anchor))
+                ValidateAnchor(docFile, content, docFile.FullPath, anchor, charIndex, errors);
+            return;
+        }
+
+        var dir = Path.GetDirectoryName(docFile.FullPath) ?? ".";
+        string resolved;
+        try
+        {
+            resolved = Path.GetFullPath(Path.Combine(dir, linkPath));
+        }
+        catch
+        {
+            return;
+        }
+
+        var relativeToRoot = Path.GetRelativePath(docsRoot, resolved);
+        if (relativeToRoot.StartsWith("..", StringComparison.Ordinal))
+        {
+            var escapedName = Path.GetFileName(resolved);
+            if (escapedName.EndsWith(".zh.md", StringComparison.OrdinalIgnoreCase)
+                || escapedName.EndsWith(".en.md", StringComparison.OrdinalIgnoreCase))
+            {
+                var lineHint = FindLineNumber(content, charIndex);
+                errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — language-suffixed link escapes the docs mirror: '{displayText}' resolves outside {docsRoot}");
+            }
+
+            return;
+        }
+
+        var relResolved = Path.GetRelativePath(docsRoot, resolved).Replace('\\', '/');
+
+        if (relResolved.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
+            && !relResolved.EndsWith($".{docFile.Language}.md", StringComparison.OrdinalIgnoreCase))
+        {
+            var linkLang = DocFile.ExtractLanguage(Path.GetFileName(relResolved));
+            if (linkLang.Length > 0 && linkLang != docFile.Language)
+            {
+                var lineHint = FindLineNumber(content, charIndex);
+                errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — cross-language link: '{displayText}' targets .{linkLang}.md from a .{docFile.Language}.md file");
+            }
+            else if (linkLang.Length == 0)
+            {
+                var lineHint = FindLineNumber(content, charIndex);
+                errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — bare .md link without language suffix: '{displayText}' (should be .{docFile.Language}.md)");
+            }
+        }
+
+        if (relResolved.EndsWith($".{docFile.Language}.md", StringComparison.OrdinalIgnoreCase))
+        {
+            var targetFull = Path.Combine(docsRoot, relResolved.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(targetFull))
+            {
+                var lineHint = FindLineNumber(content, charIndex);
+                errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — broken link: '{displayText}' (target file not found: {relResolved})");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(anchor))
+                ValidateAnchor(docFile, content, targetFull, anchor, charIndex, errors);
+
+            return;
+        }
+
+        // Directory targets (e.g. generated hub entries) must exist too.
+        var targetDir = Path.Combine(docsRoot, relResolved.Replace('/', Path.DirectorySeparatorChar));
+        if (!Directory.Exists(targetDir))
+        {
+            var lineHint = FindLineNumber(content, charIndex);
+            errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — broken directory link: '{displayText}' (target not found: {relResolved})");
+        }
+    }
+
+    private static void ValidateAnchor(
+        DocFile docFile,
+        string content,
+        string targetFull,
+        string anchor,
+        int charIndex,
+        List<string> errors)
+    {
+        var targetContent = string.Equals(targetFull, docFile.FullPath, StringComparison.Ordinal)
+            ? content
+            : File.ReadAllText(targetFull);
+        var cleanTarget = StripCodeSpans(targetContent);
+        var headings = HeadingRegex().Matches(cleanTarget)
+            .Select(m => SlugifyHeading(m.Groups[2].Value))
+            .ToHashSet(StringComparer.Ordinal);
+
+        if (headings.Contains(anchor))
+            return;
+
+        var lineHint = FindLineNumber(content, charIndex);
+        errors.Add($"ERROR: {docFile.RelativePath}:{lineHint} — broken anchor link: '#{anchor}' was not found in {Path.GetRelativePath(docFile.FullPath, targetFull)}");
+    }
+
+    [GeneratedRegex(@"[^\p{L}\p{N}\s_-]", RegexOptions.Compiled)]
+    private static partial Regex SlugRemoveRegex();
+
+    [GeneratedRegex(@"\s+", RegexOptions.Compiled)]
+    private static partial Regex SlugWhitespaceRegex();
+
+    private static string SlugifyHeading(string heading)
+    {
+        var text = SlugRemoveRegex().Replace(heading, "");
+        text = SlugWhitespaceRegex().Replace(text.Trim(), "-").ToLowerInvariant();
+        return text;
     }
 
     private static int FindLineNumber(string content, int charIndex)
@@ -258,11 +372,12 @@ internal static partial class Validator
     }
 
     private static void ValidatePairs(List<DocFile> fileMetadatas, List<string> languages,
-        List<string> errors)
+        string docsRoot, List<string> errors)
     {
         var pairs = fileMetadatas
             .GroupBy(f => f.PairId)
             .ToDictionary(g => g.Key, g => g.ToList());
+        var previousRevisions = LoadPreviousRevisions(docsRoot);
 
         foreach (var (pairId, files) in pairs)
         {
@@ -290,7 +405,54 @@ internal static partial class Validator
                 var detail = string.Join(", ", files.Select(f => $"{f.Language}={f.Revision}"));
                 errors.Add($"ERROR: pair '{pairId}' — revision mismatch ({detail})");
             }
+
+            if (previousRevisions.TryGetValue(pairId, out var previous))
+            {
+                foreach (var file in files)
+                {
+                    if (previous.TryGetValue(file.Language, out var previousRevision)
+                        && file.Revision < previousRevision)
+                        errors.Add(
+                            $"ERROR: pair '{pairId}' — revision for {file.Language} moved backwards " +
+                            $"({previousRevision} -> {file.Revision}); docsync-revision must be monotonic");
+                }
+            }
         }
+    }
+
+    private static Dictionary<string, Dictionary<string, int>> LoadPreviousRevisions(string docsRoot)
+    {
+        var statusPath = Path.Combine(docsRoot, ".sync-status.json");
+        if (!File.Exists(statusPath))
+            return [];
+
+        try
+        {
+            var status = JsonSerializer.Deserialize<StatusSnapshot>(File.ReadAllText(statusPath));
+            if (status?.Pairs is null)
+                return [];
+
+            return status.Pairs.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.PreviousRevisions ?? [],
+                StringComparer.Ordinal);
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private sealed class StatusSnapshot
+    {
+        [JsonPropertyName("pairs")]
+        public Dictionary<string, StatusPairSnapshot>? Pairs { get; set; }
+    }
+
+    private sealed class StatusPairSnapshot
+    {
+        [JsonPropertyName("previous_revisions")]
+        public Dictionary<string, int>? PreviousRevisions { get; set; }
     }
 
     /// <summary>

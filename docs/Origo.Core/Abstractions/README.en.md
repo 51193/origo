@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Abstractions
 
@@ -21,7 +21,7 @@ The stable public abstraction layer of Origo.Core. All interfaces are defined in
 | [Logging](Logging/README.en.md) | Engine-agnostic logging interface | `ILogger` + `LogLevel` enum (Debug/Info/Warning/Error) |
 | [Node](Node/README.en.md) | Abstract engine node operations | `INodeFactory` + `INodeHandle` + `INodeHost` (internal) |
 | [Runtime](Runtime/README.en.md) | Abstract frame driver interface | `IOrigoFrameDriver`: DriveFrame (unified frame entry; EnqueueBusinessDeferred/EnqueueSystemDeferred live on OrigoRuntime) |
-| [Scene](Scene/README.en.md) | SND scene access and host | `ISndSceneAccess` + `ISndSceneHost` (CreateEntity/FindByName/ProcessAll) |
+| [Scene](Scene/README.en.md) | SND scene access and host | public `ISndSceneReadAccess` (GetEntities/FindByName) + internal `ISndSceneAccess` / `ISndSceneHost` (orchestration) |
 | [Snd](Snd/README.en.md) | ISndContext 10 companion properties | IStateMachineContext also inherits some of them |
 | [StateMachine](StateMachine/README.en.md) | String-stack state machine system | `IStateMachine` + `IStateMachineContext` + `IStateMachineContainer` |
 
@@ -43,7 +43,7 @@ ISndContext ··· companion properties › ISndBlackboardAccess + ISndDeferredA
                 + ISndFileAccess + ISndArchiveFileAccess
                 + IStateMachineContext
 
-ISndSceneHost ─── ISndSceneAccess
+ISndSceneHost (internal) ─── ISndSceneAccess (internal)
 
 IStateMachine ⟷ IStateMachineContext ⟷ IStateMachineContainer
                     │ (inherits ISndBlackboardAccess + ISndDeferredActions)

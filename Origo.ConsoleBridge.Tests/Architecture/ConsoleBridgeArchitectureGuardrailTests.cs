@@ -2,12 +2,20 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Origo.ConsoleBridge;
+using Origo.TestSupport;
 using Xunit;
 
 namespace Origo.ConsoleBridge.Tests;
 
 public class ConsoleBridgeArchitectureGuardrailTests
 {
+    [Fact]
+    public void PrivateFields_FollowUnderscoreCamelCase()
+    {
+        var violations = PrivateFieldNamingConvention.FindViolations(typeof(ConsoleBridgeServer).Assembly);
+        Assert.Empty(violations);
+    }
+
     [Fact]
     public void ConsoleBridge_ShouldNotReferenceGodot()
     {

@@ -19,7 +19,7 @@ public readonly struct SaveMetaBuildContext
         string currentLevelId,
         IBlackboard progress,
         IBlackboard session,
-        ISndSceneAccess sceneAccess)
+        ISndSceneReadAccess sceneAccess)
     {
         ArgumentNullException.ThrowIfNull(saveId);
         ArgumentNullException.ThrowIfNull(currentLevelId);
@@ -47,5 +47,5 @@ public readonly struct SaveMetaBuildContext
 
     /// <summary>Read-only access interface for the current scene; can be used
     /// to serialize entity metadata lists.</summary>
-    public ISndSceneAccess SceneAccess { get; }
+    public ISndSceneReadAccess SceneAccess { get; }
 }

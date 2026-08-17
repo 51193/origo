@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构守卫 测试（适配层）
 
@@ -26,6 +26,7 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
+| `PrivateFields_FollowUnderscoreCamelCase` | GodotAdapter 生产程序集私有字段遵循 `_camelCase` 命名 | .editorconfig 命名规则 |
 | `SndContext_AllRoleInterfaces_AreAccessibleThroughISndContext` | ISndContext 可 cast 为各角色接口（Blackboard/Deferred/Save/Lifecycle/Console/FileAccess/ArchiveFileAccess）并使用 | Abstractions: ISndContext |
 | `SndContext_ViaSessionManager_CanCreateAndDestroyBackgroundSessions` | 通过 ISessionManager 创建后台会话、读写会话黑板、Contains 校验、DestroySession 销毁 | session-model |
 | `CommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | `Origo.GodotAdapter.Console.CommandHandlerBase` 为 public（或嵌套 public），外部项目可派生 | Origo.GodotAdapter/Console |

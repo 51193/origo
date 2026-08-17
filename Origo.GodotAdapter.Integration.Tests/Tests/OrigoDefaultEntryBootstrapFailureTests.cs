@@ -54,8 +54,7 @@ public partial class OrigoDefaultEntryBootstrapFailureTests : IDeferredTestFixtu
             "a partially initialized entry must fail fast on _Process instead of driving frames");
         IntegrationTestRunner.AssertContains("bootstrap failed", processError!.Message, "_Process error");
 
-        root.RemoveChild(entry);
-        entry.QueueFree();
+        IntegrationTestRunner.FreeNode(entry);
     }
 
     private sealed partial class FailingAfterRuntimeEntry : OrigoDefaultEntry

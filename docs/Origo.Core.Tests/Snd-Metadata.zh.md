@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 元数据 测试
 
@@ -193,7 +193,7 @@
 
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
-| `TypedDataTestContext` | TypedDataTestContext.cs | xUnit 集合夹具，在 [Collection("TypedData")] 内每次测试前调用 TypedData.ResetForTesting() 重置静态状态 |
+| `TypedDataTestContext` | TypedDataTestContext.cs | xUnit 集合夹具，在 [Collection("TypedData")] 内每次测试前调用 `TypedDataTestSupport.ResetKindRegistry()` 重置静态状态 |
 
 ## 已知覆盖缺口
 

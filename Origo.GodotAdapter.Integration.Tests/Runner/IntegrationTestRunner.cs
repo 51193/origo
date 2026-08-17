@@ -302,6 +302,21 @@ public partial class IntegrationTestRunner : Node
         GD.Print($"INTEGRATION_TEST_SUMMARY: {passed}/{total} passed");
     }
 
+    /// <summary>
+    ///     Removes a node from its parent and frees it immediately. Used by
+    ///     integration fixtures so test-owned scene-tree nodes do not leak
+    ///     at process exit.
+    /// </summary>
+    internal static void FreeNode(Node? node)
+    {
+        if (node is null || !GodotObject.IsInstanceValid(node))
+            return;
+
+        var parent = node.GetParent();
+        parent?.RemoveChild(node);
+        node.Free();
+    }
+
     public static void Assert(bool condition, string message)
     {
         if (!condition)

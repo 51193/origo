@@ -1,10 +1,11 @@
+using System;
 using Godot;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 using Origo.GodotAdapter.Snd;
 
 namespace Origo.GodotAdapter.Integration.Tests;
 
-public class GodotPackedSceneNodeFactoryIntegrationTests : IDeferredTestFixture
+public class GodotPackedSceneNodeFactoryIntegrationTests : IDeferredTestFixture, System.IDisposable
 {
     private GodotPackedSceneNodeFactory? _factory;
     private Node _parent = null!;
@@ -13,6 +14,14 @@ public class GodotPackedSceneNodeFactoryIntegrationTests : IDeferredTestFixture
     public bool IsComplete => _frame >= 1;
     public void Setup() => _frame = 0;
     public void AdvanceFrame() => _frame++;
+
+    public void Dispose()
+    {
+        IntegrationTestRunner.FreeNode(_parent);
+        _parent = null!;
+        _factory = null;
+        GC.SuppressFinalize(this);
+    }
 
     [DeferredTest(Description = "Create loads a scene and returns a valid node handle")]
     public void Create_ValidScene_ReturnsNodeHandle()

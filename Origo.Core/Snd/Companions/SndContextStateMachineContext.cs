@@ -19,7 +19,7 @@ internal sealed class SndContextStateMachineContext(SndContext owner) : IStateMa
     public IBlackboard? SessionBlackboard =>
         owner._progressRun?.SessionManager.ForegroundSession?.SessionBlackboard;
 
-    public ISndSceneAccess SceneAccess =>
+    public ISndSceneReadAccess SceneAccess =>
         owner._progressRun?.SessionManager.ForegroundSession is SessionRun fgSession
             ? fgSession.SceneHost
             : throw new InvalidOperationException(

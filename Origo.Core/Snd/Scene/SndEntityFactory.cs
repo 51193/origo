@@ -13,7 +13,7 @@ namespace Origo.Core.Snd.Scene;
 ///     hooks in a second pass so that hooks can assume a fully-constructed
 ///     scene graph.
 /// </summary>
-public static class SndEntityFactory
+internal static class SndEntityFactory
 {
     /// <summary>
     ///     Creates an entity on the host and fires its AfterSpawn hook immediately.

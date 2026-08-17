@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -135,7 +135,7 @@ entity.EnsureStrategy("character.path_impl", "character.pathfind.astar");
 ```
 
 - `InvokeStrategy<TInput, TOutput>` / `InvokeStrategy<TOutput>`: transparently handles JSON serialization/deserialization, eliminating call-side boilerplate
-- `EnsureStrategy(string dataKey, string strategyIndex)`: checks whether the entity's dataKey already has a value; if not, writes it and mounts the strategy. Used for lazy strategy layer initialization; idempotently safe for repeated calls
+- `EnsureStrategy(string dataKey, string strategyIndex)`: checks whether the entity's dataKey already has a value; if not, mounts the strategy first and writes dataKey as the idempotency marker only after the mount succeeds. Used for lazy strategy layer initialization; idempotently safe for repeated calls
 
 The raw `entity.InvokeStrategy(string, object?)` interface remains unchanged; the generic extension methods serve as an optional convenience layer.
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -248,7 +248,7 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     //   int GetPendingPersistenceRequestCount();
 
     IBlackboard? SessionBlackboard { get; }
-    ISndSceneAccess SceneAccess { get; }
+    ISndSceneReadAccess SceneAccess { get; }
 }
 ```
 

@@ -108,14 +108,20 @@ internal sealed partial class ProgressRun : IDisposable
             }
             finally
             {
-                ProgressScope.StateMachines.Clear();
-                ProgressBlackboard.Clear();
-                _disposed = true;
-                _disposing = false;
-                _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
-                    new LogMessageBuilder()
-                        .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                        .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
+                try
+                {
+                    ProgressScope.StateMachines.Clear();
+                }
+                finally
+                {
+                    ProgressBlackboard.Clear();
+                    _disposed = true;
+                    _disposing = false;
+                    _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
+                        new LogMessageBuilder()
+                            .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                            .Build($"Disposed ProgressRun (saveId: '{SaveId}')."));
+                }
             }
         }
     }

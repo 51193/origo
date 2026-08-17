@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Guardrail Tests (Adapter Layer)
 
@@ -28,6 +28,7 @@ and guards the public visibility of the adapter-layer `CommandHandlerBase`, allo
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
+| `PrivateFields_FollowUnderscoreCamelCase` | GodotAdapter production private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `SndContext_AllRoleInterfaces_AreAccessibleThroughISndContext` | ISndContext can be cast to each role interface (Blackboard / Deferred / Save / Lifecycle / Console / FileAccess / ArchiveFileAccess) and used | Abstractions: ISndContext |
 | `SndContext_ViaSessionManager_CanCreateAndDestroyBackgroundSessions` | Create background session via ISessionManager, read/write session blackboard, Contains check, DestroySession | session-model |
 | `CommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | `Origo.GodotAdapter.Console.CommandHandlerBase` is public (or nested public), external projects can derive from it | Origo.GodotAdapter/Console |

@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Snd.Metadata;
@@ -6,7 +7,7 @@ using Origo.GodotAdapter.Integration.Tests.TestSupport;
 
 namespace Origo.GodotAdapter.Integration.Tests;
 
-public class GodotSndManagerCreationIntegrationTests : IDeferredTestFixture
+public class GodotSndManagerCreationIntegrationTests : IDeferredTestFixture, System.IDisposable
 {
     private IntegrationTestHarness? _harness;
     private int _frame;
@@ -14,6 +15,13 @@ public class GodotSndManagerCreationIntegrationTests : IDeferredTestFixture
     public bool IsComplete => _frame >= 1;
     public void Setup() => _frame = 0;
     public void AdvanceFrame() => _frame++;
+
+    public void Dispose()
+    {
+        _harness?.Dispose();
+        _harness = null;
+        GC.SuppressFinalize(this);
+    }
 
     private static SndMetaData CreateMeta(string name) => new()
     {

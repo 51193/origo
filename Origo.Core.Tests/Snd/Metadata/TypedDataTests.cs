@@ -10,7 +10,7 @@ public class TypedDataTests
 {
     public TypedDataTests()
     {
-        TypedData.ResetForTesting();
+        TypedDataTestSupport.ResetKindRegistry();
     }
 
     [Fact]

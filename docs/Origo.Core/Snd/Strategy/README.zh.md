@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -135,7 +135,7 @@ entity.EnsureStrategy("character.path_impl", "character.pathfind.astar");
 ```
 
 - `InvokeStrategy<TInput, TOutput>` / `InvokeStrategy<TOutput>`：透明处理 JSON 序列化/反序列化，消除调用侧样板
-- `EnsureStrategy(string dataKey, string strategyIndex)`：检查实体 dataKey 是否已有值，若无则写入并挂载策略。用于惰性策略层初始化，幂等安全可重复调用
+- `EnsureStrategy(string dataKey, string strategyIndex)`：检查实体 dataKey 是否已有值，若无则先挂载策略、成功后再写入 dataKey 作为幂等标记（挂载失败不写标记）。用于惰性策略层初始化，幂等安全可重复调用
 
 原始 `entity.InvokeStrategy(string, object?)` 接口保持不变，泛型扩展方法作为可选便利层。
 

@@ -202,7 +202,7 @@ public class StateMachineStrategyBaseTests
         public IBlackboard SystemBlackboard { get; } = new Blackboard.Blackboard();
         public IBlackboard? ProgressBlackboard => null;
         public IBlackboard? SessionBlackboard => null;
-        public ISndSceneAccess SceneAccess => throw new NotImplementedException();
+        public ISndSceneReadAccess SceneAccess => throw new NotImplementedException();
 
         public void EnqueueBusinessDeferred(Action action)
         {

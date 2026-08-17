@@ -1,4 +1,5 @@
 using Origo.Core.Runtime.Lifecycle;
+using Origo.TestSupport;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -22,6 +23,13 @@ namespace Origo.GodotAdapter.Tests;
 
 public class AdapterArchitectureGuardrailTests
 {
+    [Fact]
+    public void PrivateFields_FollowUnderscoreCamelCase()
+    {
+        var violations = PrivateFieldNamingConvention.FindViolations(typeof(GodotSndManager).Assembly);
+        Assert.Empty(violations);
+    }
+
     [Fact]
     public void SndContext_AllRoleInterfaces_AreAccessibleThroughISndContext()
     {

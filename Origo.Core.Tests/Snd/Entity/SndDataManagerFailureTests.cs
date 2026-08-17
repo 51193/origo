@@ -15,7 +15,7 @@ public class SndDataManagerFailureTests
 {
     public SndDataManagerFailureTests()
     {
-        TypedData.ResetForTesting();
+        TypedDataTestSupport.ResetKindRegistry();
     }
 
     [Fact]

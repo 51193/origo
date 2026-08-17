@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -68,7 +68,7 @@ This script automatically:
 1. Parses `Godot.NET.Sdk` version from `Origo.GodotAdapter.csproj`
 2. Downloads the matching Godot mono binary (cached in `.godot_binary/`)
 3. Runs `godot --headless --path Origo.GodotAdapter.Integration.Tests`
-4. Parses exit code and displays results
+4. Parses exit code and displays results; leaked ObjectDB nodes fail the script even when tests pass
 
 ### Local
 

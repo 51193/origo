@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene
 
@@ -13,10 +13,10 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 
 | 文件 | 职责 |
 |------|------|
-| `SndEntityFactory.cs` | 公共静态工具：`Spawn(host, meta)` = `host.CreateEntity` + 触发 AfterSpawn（钩子抛异常时回滚实体：移出宿主 + 拆观察者 + 释放策略/节点）；`SpawnMany(host, metas)` = 两阶段（全部创建后再统一触发 AfterSpawn，创建阶段失败与钩子阶段失败都会回滚所有未完成 AfterSpawn 的实体） |
+| `SndEntityFactory.cs` | internal 静态工具：`Spawn(host, meta)` = `host.CreateEntity` + 触发 AfterSpawn（钩子抛异常时回滚实体：移出宿主 + 拆观察者 + 释放策略/节点）；`SpawnMany(host, metas)` = 两阶段（全部创建后再统一触发 AfterSpawn，创建阶段失败与钩子阶段失败都会回滚所有未完成 AfterSpawn 的实体） |
 | `FullMemorySndSceneHost.cs` | 完整内存场景宿主，创建真实 SndEntity，持有 per-scene-host 观察者拓扑，支持归属会话绑定 |
 | `StubSndSceneHost.cs` | 轻量存根场景宿主，使用简单 StubSndEntity（无策略/节点），用于单元测试和 LevelBuilder 离线构建 |
-| `ISndContextAttachableSceneHost.cs` | 接口：允许会话构造时把 `ISndContext` 绑定到宿主（`BindContext`） |
+| `ISndContextAttachableSceneHost.cs` | internal 接口：允许会话构造时把 `ISndContext` 绑定到宿主（`BindContext`） |
 | `IObserverTopologyHost.cs` | `internal` 接口：暴露宿主持有的 per-scene-host 观察者拓扑（`ObserverTopology`），供 `SessionRun`/`SessionManager` 编排跨实体观察者绑定的拆线与读档恢复 |
 | `NullNodeFactory.cs` | 内存级节点工厂，创建无操作句柄 |
 

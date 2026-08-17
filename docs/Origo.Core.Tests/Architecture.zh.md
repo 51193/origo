@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构守卫 测试
 
@@ -26,6 +26,8 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `CoreAssembly_ShouldNotReferenceGodot` | Core 程序集不引用任何 Godot 程序集 | architecture-overview: 平台无关 |
+| `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` 与 `SndEntityFactory` 为 internal | architecture-overview: 单一访问路径 |
+| `PrivateFields_FollowUnderscoreCamelCase` | Core 生产程序集私有字段遵循 `_camelCase` 命名 | .editorconfig 命名规则 |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext 自身不声明任何方法/属性 | Snd Abstraction: ISP |
 | `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext 以 10 个 companion 属性暴露全部角色接口能力，不通过接口继承 | Snd Abstraction: ISndContext 组合 |
 | `SndContext_ShouldNotImplementRoleInterfaces` | SndContext 具体类型不实现任何角色接口（纯组合对象） | Snd Abstraction: ISndContext 组合 |

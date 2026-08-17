@@ -7,7 +7,7 @@ namespace Origo.Core.Abstractions.Scene;
 ///     session construction time, so that subsequent entity creation
 ///     automatically binds <see cref="ISndEntity.OwningSession" />.
 /// </summary>
-public interface IOwningSessionBindable
+internal interface IOwningSessionBindable
 {
     /// <summary>Binds the session that owns this host.</summary>
     /// <param name="session">The owning session.</param>

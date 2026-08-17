@@ -155,7 +155,7 @@ public partial class GodotSndManager
     private GodotSndEntity CreateSndEntity()
     {
         EnsureReadyForSpawn();
-        var entity = new GodotSndEntity(SharedWorld, Context!, SharedLogger, _observerTopology!,
+        var entity = GodotSndEntity.Create(SharedWorld, Context!, SharedLogger, _observerTopology!,
             factoryParent => new GodotPackedSceneNodeFactory(factoryParent));
         AddChild(entity);
         return entity;

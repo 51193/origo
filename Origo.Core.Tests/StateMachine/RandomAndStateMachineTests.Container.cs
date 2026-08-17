@@ -144,6 +144,35 @@ public partial class RandomAndStateMachineTests
     }
 
     [Fact]
+    public void StateMachineContainer_Clear_ReleasesAllMachines_WhenOneDisposeThrows()
+    {
+        var logger = new TestLogger();
+        var host = new TestSndSceneHost();
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var fs = new TestMemoryFileSystem();
+        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
+        var pool = runtime.SndWorld.StrategyPool;
+        pool.Register(() => new SmPushStrategy());
+        pool.Register(() => new SmPopStrategy());
+
+        var container = new StateMachineContainer(pool, ctx.StateMachineContext);
+        container.CreateOrGet("first", "sm.push.test", "sm.pop.test");
+        container.CreateOrGet("second", "sm.push.test", "sm.pop.test");
+
+        // Sabotage one machine's push reference so its Dispose throws; the
+        // container must still dispose the remaining machines and clear its
+        // dictionaries before rethrowing.
+        pool.ReleaseStrategy("sm.push.test");
+
+        Assert.Throws<InvalidOperationException>(() => container.Clear());
+        Assert.False(container.TryGet("first", out _));
+        Assert.False(container.TryGet("second", out _));
+    }
+
+    [Fact]
     public void StateMachineContainer_DeserializeFromNode_ThrowsOnNullNode()
     {
         var logger = new TestLogger();

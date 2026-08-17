@@ -69,8 +69,8 @@ public class ValidatorTests
         WriteSyncedPair(repo, "README", "docs/README.zh.md");
         WriteSyncedPair(repo, "README", "docs/README.en.md");
         repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[target](META.zh.md)\n");
-        repo.Write("docs/META.zh.md", TestRepo.Header("META") + "# META\n");
-        repo.Write("docs/META.en.md", TestRepo.Header("META") + "# META\n");
+        repo.Write("docs/META.zh.md", TestRepo.Header("META") + "# META\n\n## Section\n");
+        repo.Write("docs/META.en.md", TestRepo.Header("META") + "# META\n\n## Section\n");
         repo.Write("docs/README.en.md", TestRepo.Header("README") + "# B\n\n[target](META.md)\n");
 
         Assert.Equal(1, RunValidator(repo.LoadConfig()));
@@ -172,6 +172,7 @@ public class ValidatorTests
         WriteSyncedPair(repo, "README", "docs/README.en.md");
         WriteSyncedPair(repo, "META", "docs/META.zh.md");
         WriteSyncedPair(repo, "META", "docs/META.en.md");
+        repo.Write("docs/META.zh.md", TestRepo.Header("META") + "# META\n\n## Section\n");
         repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[meta](META.zh.md#section)\n");
 
         Assert.Equal(0, RunValidator(repo.LoadConfig()));
@@ -217,6 +218,134 @@ public class ValidatorTests
             "# A\n\n[stale](../docs-backup/stale.zh.md)\n");
 
         Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_DirectoryLinkOk()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        System.IO.Directory.CreateDirectory(repo.Full("docs/child"));
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[child](child/)\n");
+
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_DirectoryLinkBroken_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[missing](missing/)\n");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_BrokenAnchor_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        WriteSyncedPair(repo, "META", "docs/META.zh.md");
+        WriteSyncedPair(repo, "META", "docs/META.en.md");
+        repo.Write("docs/META.zh.md", TestRepo.Header("META") + "# META\n");
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[meta](META.zh.md#missing)\n");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_ReferenceDefinitionBrokenTarget_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") +
+            "# A\n\n[target][meta]\n\n[meta]: missing.zh.md\n");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_RevisionMovedBackwards_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md", 2);
+        WriteSyncedPair(repo, "README", "docs/README.en.md", 2);
+        repo.Write("docs/.sync-status.json",
+            """{"schema_version":1,"languages":["zh","en"],"pairs":{"README":{"status":"synced","revisions":{"zh":2,"en":2},"previous_revisions":{"zh":3,"en":3},"files":{"zh":"README.zh.md","en":"README.en.md"}}}}""");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_ReferenceLinkWithoutDefinition_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[target][missing]\n");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_DuplicateReferenceDefinition_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") +
+            "# A\n\n[target][meta]\n\n[meta]: META.zh.md\n[meta]: META.zh.md\n");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_CollapsedReferenceWithoutDefinition_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[target][]\n");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_SameFileAnchorOk()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n## Section\n\n[go](#section)\n");
+
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_SameFileAnchorBroken_Fails()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# A\n\n[go](#missing)\n");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_MalformedStatusSnapshot_IsIgnored()
+    {
+        using var repo = TestRepo.Create();
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+        repo.Write("docs/.sync-status.json", "{not-json");
+
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
     }
 
     [Fact]

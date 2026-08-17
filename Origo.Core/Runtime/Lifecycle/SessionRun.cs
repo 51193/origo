@@ -184,21 +184,27 @@ internal sealed class SessionRun : ISessionRun, IDisposable
             }
             finally
             {
-                _sessionScope.StateMachines.Clear();
                 try
                 {
-                    ReleaseAllEntitiesAndClear(true);
+                    _sessionScope.StateMachines.Clear();
                 }
                 finally
                 {
-                    _sceneHost.RemoveAllEntities();
-                    _sessionScope.Blackboard.Clear();
-                    _disposed = true;
-                    _disposing = false;
-                    _logger.Log(LogLevel.Info, _logTag,
-                        new LogMessageBuilder()
-                            .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                            .Build($"Disposed SessionRun for level '{LevelId}'."));
+                    try
+                    {
+                        ReleaseAllEntitiesAndClear(true);
+                    }
+                    finally
+                    {
+                        _sceneHost.RemoveAllEntities();
+                        _sessionScope.Blackboard.Clear();
+                        _disposed = true;
+                        _disposing = false;
+                        _logger.Log(LogLevel.Info, _logTag,
+                            new LogMessageBuilder()
+                                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                                .Build($"Disposed SessionRun for level '{LevelId}'."));
+                    }
                 }
             }
         }

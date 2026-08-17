@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Scene
 
@@ -13,10 +13,10 @@ SND scene host implementation layer. Provides two implementations of `ISndSceneH
 
 | File | Responsibility |
 |------|---------------|
-| `SndEntityFactory.cs` | Public static utility: `Spawn(host, meta)` = `host.CreateEntity` + trigger AfterSpawn (rolls the entity back — remove from host + teardown observer bindings + release strategies/nodes — when the hook throws); `SpawnMany(host, metas)` = two-phase (create all first, then uniformly trigger AfterSpawn; staging-phase and hook-phase failures both roll back every entity whose AfterSpawn never fired) |
+| `SndEntityFactory.cs` | Internal static utility: `Spawn(host, meta)` = `host.CreateEntity` + trigger AfterSpawn (rolls the entity back — remove from host + teardown observer bindings + release strategies/nodes — when the hook throws); `SpawnMany(host, metas)` = two-phase (create all first, then uniformly trigger AfterSpawn; staging-phase and hook-phase failures both roll back every entity whose AfterSpawn never fired) |
 | `FullMemorySndSceneHost.cs` | Full in-memory scene host, creates real SndEntity, holds per-scene-host observer topology, supports owning session binding |
 | `StubSndSceneHost.cs` | Lightweight stub scene host, uses simple StubSndEntity (no strategies/nodes), for unit tests and LevelBuilder offline construction |
-| `ISndContextAttachableSceneHost.cs` | Interface: allows binding `ISndContext` to the host during session construction (`BindContext`) |
+| `ISndContextAttachableSceneHost.cs` | Internal interface: allows binding `ISndContext` to the host during session construction (`BindContext`) |
 | `IObserverTopologyHost.cs` | `internal` interface: exposes the host's per-scene-host observer topology (`ObserverTopology`), used by `SessionRun`/`SessionManager` to orchestrate cross-entity observer binding teardown and load-time recovery |
 | `NullNodeFactory.cs` | In-memory node factory, creates no-op handles |
 

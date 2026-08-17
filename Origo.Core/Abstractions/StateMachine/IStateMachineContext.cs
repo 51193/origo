@@ -44,6 +44,6 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     /// <summary>Current session blackboard; null when no session is active.</summary>
     IBlackboard? SessionBlackboard { get; }
 
-    /// <summary>SND scene access for the current session; foreground and background sessions each return their own scene host.</summary>
-    ISndSceneAccess SceneAccess { get; }
+    /// <summary>Read-only SND scene access for the current session; foreground and background sessions each return their own scene host.</summary>
+    ISndSceneReadAccess SceneAccess { get; }
 }

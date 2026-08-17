@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Linq;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
@@ -74,14 +75,31 @@ internal sealed class StateMachineContainer : IStateMachineContainer
         _machineOrder.Remove(machineKey);
     }
 
-    /// <summary>Disposes all state machines and clears the container.</summary>
+    /// <summary>
+    ///     Disposes all state machines and clears the container. Every machine
+    ///     is disposed independently; the first failure propagates after all
+    ///     machines are released and the dictionaries are cleared.
+    /// </summary>
     public void Clear()
     {
+        Exception? firstFailure = null;
         foreach (var sm in _machines.Values)
-            sm.Dispose();
+        {
+            try
+            {
+                sm.Dispose();
+            }
+            catch (Exception ex)
+            {
+                firstFailure ??= ex;
+            }
+        }
 
         _machines.Clear();
         _machineOrder.Clear();
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     /// <summary>Executes <see cref="StackStateMachine.FlushAfterLoad" /> for all state machines in insertion order after loading.</summary>

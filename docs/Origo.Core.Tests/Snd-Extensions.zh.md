@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 扩展 测试
 
@@ -26,9 +26,15 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `EnsureStrategy_DataKeyMissing_SetsDataAndReturnsTrue` | 数据键不存在时设置 dataKey 并返回 true | Snd README: ActiveStrategyExtensions |
+| `EnsureStrategy_DataKeyMissing_SetsDataAndReturnsTrue` | 数据键不存在时先挂载策略、再设置 dataKey 并返回 true | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_DataKeyExistsWithValue_ReturnsFalse` | 数据键已有非空值时跳过，返回 false 且值不变 | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_DataKeyExistsButEmpty_StillSetsAndReturnsTrue` | 数据键存在但值为空字符串时仍覆盖并返回 true | Snd README: ActiveStrategyExtensions |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `EnsureStrategy_AddStrategyThrows_DoesNotWriteDataKey` | AddStrategy 抛异常（未注册/重复挂载/AfterAdd 抛出） | 异常上抛，dataKey 保持不变（不写入半提交标记） |
 
 ## EntityStrategyExtensionsTests 测试详情
 

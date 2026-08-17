@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 手册维护元指令
 
@@ -93,7 +93,7 @@ dotnet run --project tools/DocSyncTool -- generate
 | 命令 | 作用 |
 |------|------|
 | `dotnet run --project tools/DocSyncTool -- generate` | 重新生成所有 `README.md` 导航中枢 + `.sync-status.json`。永远成功。 |
-| `dotnet run --project tools/DocSyncTool -- validate` | 只读检查：所有 pair 的 revision 一致、所有链接指向同语言文件、无断裂链接。失败时 exit code 1。 |
+| `dotnet run --project tools/DocSyncTool -- validate` | 只读检查：所有 pair 的 revision 一致且单调递增（以 `generate` 记录的上次 revision 为下限）、所有链接指向同语言文件、文件/目录/锚点目标存在、reference-style 链接定义完整。失败时 exit code 1。 |
 | `dotnet run --project tools/DocSyncTool -- init` | **一次性迁移** —— 重命名 `.md` → `.zh.md`，注入元数据，更新链接。已执行完毕，切勿重复运行。 |
 
 **链接规则**（由 `validate` 以 ERROR 级别强制检查）：

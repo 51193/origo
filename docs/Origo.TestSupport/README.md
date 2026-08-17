@@ -4,6 +4,7 @@
 
 ## 中文
 - [README](README.zh.md)
+- [Architecture/](Architecture/)
 - [FileSystem/](FileSystem/)
 - [Logging/](Logging/)
 - [Node/](Node/)
@@ -14,6 +15,7 @@
 
 ## English
 - [README](README.en.md)
+- [Architecture/](Architecture/)
 - [FileSystem/](FileSystem/)
 - [Logging/](Logging/)
 - [Node/](Node/)

@@ -1,10 +1,11 @@
+using System;
 using Godot;
 using Origo.GodotAdapter.Bootstrap;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 
 namespace Origo.GodotAdapter.Integration.Tests;
 
-public class OrigoAutoHostBootstrapIntegrationTests : IDeferredTestFixture
+public class OrigoAutoHostBootstrapIntegrationTests : IDeferredTestFixture, System.IDisposable
 {
     private OrigoAutoHost? _autoHost;
     private int _frame;
@@ -12,6 +13,13 @@ public class OrigoAutoHostBootstrapIntegrationTests : IDeferredTestFixture
     public bool IsComplete => _frame >= 1;
     public void Setup() => _frame = 0;
     public void AdvanceFrame() => _frame++;
+
+    public void Dispose()
+    {
+        IntegrationTestRunner.FreeNode(_autoHost);
+        _autoHost = null;
+        GC.SuppressFinalize(this);
+    }
 
     [DeferredTest(Description = "OrigoAutoHost._Ready creates Runtime and SndManager")]
     public void Ready_CreatesRuntimeAndSndManager()

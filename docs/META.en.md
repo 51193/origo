@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -93,7 +93,7 @@ This produces two kinds of derived files (commit them together):
 | Command | What it does |
 |---------|-------------|
 | `dotnet run --project tools/DocSyncTool -- generate` | Regenerate all `README.md` nav hubs + `.sync-status.json`. Always succeeds. |
-| `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: all pairs have matching revisions, all links point to same-language files, no broken links. Exit code 1 on failure. |
+| `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: matching and monotonic pair revisions (floored by the previous revisions recorded by `generate`), same-language links, existing file/directory/anchor targets, and complete reference-style link definitions. Exit code 1 on failure. |
 | `dotnet run --project tools/DocSyncTool -- init` | **One-time migration** — rename `.md` → `.zh.md`, inject metadata, update links. Already executed; do not re-run. |
 
 **Link discipline** (enforced as ERROR by `validate`):

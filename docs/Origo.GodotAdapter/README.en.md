@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter
 
@@ -58,7 +58,7 @@ The adapter layer does not participate in any aspect of strategy lifecycle manag
 - **Does not flush the deferred pipeline**: The frame loop does not bypass Core to call `FlushDeferredActionsForCurrentFrame` directly
 - **`OrigoAutoHost._Process` is the sole frame entry point**: Within it, Core's `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending` are delegated in order; the adapter layer only schedules, never makes decisions
 
-All this orchestration is the unified responsibility of the Core layer's session lifecycle (`SessionManager` / `SessionRun`). For detailed separation principles, see [Architecture Overview](../usage/architecture-overview.en.md#adapter-layer-and-core-layer-separation-principle).
+All this orchestration is the unified responsibility of the Core layer's session lifecycle (`SessionManager` / `SessionRun`). For detailed separation principles, see [Architecture Overview](../usage/architecture-overview.en.md#adapter-layer-and-core-layer-separation-principles).
 
 ### Bridge Pattern
 
@@ -98,7 +98,7 @@ Verified integration notes for embedding Origo into a Godot project:
 |-----------|------------|------|
 | `IFileSystem` | `GodotFileSystem` | [FileSystem/](FileSystem/README.en.md) |
 | `ILogger` | `GodotLogger` | [Logging/](Logging/README.en.md) |
-| `ISndSceneHost` | `GodotSndManager` | [Snd/](Snd/README.en.md) |
+| `ISndSceneHost` (internal) / `ISndSceneReadAccess` (public) | `GodotSndManager` | [Snd/](Snd/README.en.md) |
 | `INodeFactory` | `GodotPackedSceneNodeFactory` | [Snd/](Snd/README.en.md) |
 | `INodeHandle` | `GodotNodeHandle` | [Snd/](Snd/README.en.md) |
 | `IConsoleCommandHandler` | `CommandHandlerBase` + subclasses | [Console/](Console/README.en.md) |

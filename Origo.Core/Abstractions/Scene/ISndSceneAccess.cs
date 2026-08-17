@@ -13,7 +13,7 @@ namespace Origo.Core.Abstractions.Scene;
 ///     <see cref="Origo.Core.Runtime.Lifecycle.SessionRun" />)
 ///     before and after calls.
 /// </summary>
-public interface ISndSceneAccess
+internal interface ISndSceneAccess
 {
     /// <summary>
     ///     Collect a metadata list of all entities in the current scene.

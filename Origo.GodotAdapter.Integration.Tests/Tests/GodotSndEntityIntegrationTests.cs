@@ -14,7 +14,7 @@ public class GodotSndEntityIntegrationTests
         var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         harness.BindContext();
-        var entity = new GodotSndEntity(
+        var entity = GodotSndEntity.Create(
             harness.SndWorld,
             harness.SndManager.Context!,
             harness.Logger,
@@ -30,7 +30,7 @@ public class GodotSndEntityIntegrationTests
         harness.BindRuntimeDependencies();
         harness.BindContext();
         IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => new GodotSndEntity(
+            () => GodotSndEntity.Create(
                 null!, harness.SndManager.Context!, harness.Logger,
                 harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory()),
             "null world should throw");
@@ -42,7 +42,7 @@ public class GodotSndEntityIntegrationTests
         using var harness = new IntegrationTestHarness();
         harness.BindRuntimeDependencies();
         IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => new GodotSndEntity(
+            () => GodotSndEntity.Create(
                 harness.SndWorld, null!, harness.Logger,
                 harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory()),
             "null context should throw");
@@ -55,7 +55,7 @@ public class GodotSndEntityIntegrationTests
         harness.BindRuntimeDependencies();
         harness.BindContext();
         IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => new GodotSndEntity(
+            () => GodotSndEntity.Create(
                 harness.SndWorld, harness.SndManager.Context!, null!,
                 harness.SndManager.GetObserverTopology(), _ => new StubNodeFactory()),
             "null logger should throw");
@@ -68,7 +68,7 @@ public class GodotSndEntityIntegrationTests
         harness.BindRuntimeDependencies();
         harness.BindContext();
         IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => new GodotSndEntity(
+            () => GodotSndEntity.Create(
                 harness.SndWorld, harness.SndManager.Context!, harness.Logger,
                 null!, _ => new StubNodeFactory()),
             "null observer topology should throw");
@@ -135,6 +135,7 @@ public class GodotSndEntityIntegrationTests
             IntegrationTestRunner.AssertThrows<InvalidOperationException>(
                 () => _ = entity.IsPendingKill,
                 "IsPendingKill after release should throw (fail-fast), not silently return false.");
+            entity.Free();
         }
     }
 }

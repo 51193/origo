@@ -268,6 +268,39 @@ public class DisposeSemanticsTestsSessionRun
     }
 
     [Fact]
+    public void SessionRun_Dispose_StateMachineClearThrows_EntitiesStillReleased()
+    {
+        var (ctx, logger) = CreateContext(world =>
+        {
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.BeforeQuitSpyStrategy());
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPushStrategy());
+            world.StrategyPool.Register(() => new DisposeSemanticsTestInfrastructure.PopHookThrowsPopStrategy());
+        });
+
+        var bg = (SessionRun)(SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg_level");
+        bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMetaWithIndex("Entity",
+            DisposeSemanticsTestInfrastructure.BeforeQuitStrategyIndex));
+        bg.GetSessionStateMachines().CreateOrGet("machine",
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPushIndex,
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPopIndex);
+
+        // Sabotage one state machine's push reference so
+        // StateMachineContainer.Clear throws after releasing all machines.
+        // SessionRun.Dispose must still release entities and commit the
+        // disposed flag after that cleanup failure.
+        ctx.Runtime.SndWorld.StrategyPool.ReleaseStrategy(
+            DisposeSemanticsTestInfrastructure.PopHookThrowsPushIndex);
+
+        Assert.Throws<InvalidOperationException>(() => bg.Dispose());
+
+        Assert.Null(Record.Exception(() => bg.Dispose()));
+        Assert.Throws<ObjectDisposedException>(() => bg.SessionBlackboard);
+
+        ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount"));
+    }
+
+    [Fact]
     public void SessionRun_Dispose_EntityQuitHookThrows_LaterEntitiesStillReleased()
     {
         var (ctx, logger) = CreateContext(world =>

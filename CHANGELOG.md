@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`ISndSceneReadAccess`** — public read-only scene view (`GetEntities` / `FindByName`) for state-machine hooks and save-meta contributors, decoupled from internal scene orchestration.
 - **Complete English documentation** — 127 English `.en.md` files alongside existing Chinese `.zh.md` files.
 - **`camera_view` console command** — displays screen coordinates and depth of Godot entity nodes visible through the active `Camera3D`.
 - **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name.
@@ -43,6 +44,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: scene orchestration interfaces are now `internal`** — `ISndSceneHost`, `ISndSceneAccess`, `ISndContextAttachableSceneHost`, `IOwningSessionBindable`, `SndEntityFactory`, and the `OrigoRuntime` constructor are no longer public. Business code can no longer cast `GodotSndManager` to a scene-host interface and bypass spawn/load/kill orchestration; scene queries go through the public `ISndSceneReadAccess`. Adapter/test assemblies retain access via `InternalsVisibleTo`.
+- **`EnsureStrategy` mounts before writing its marker** — a failed `AddStrategy` (unregistered index, duplicate mount, or a throwing `AfterAdd`) no longer leaves a half-committed data marker; the idempotency marker is written only after the mount succeeds.
+- **`TypedData` no longer contains a test-only reset hook** — global kind-registry reset moved to `Origo.TestSupport.TypedDataTestSupport` (internal test helper), keeping production code free of test conveniences.
 - **String collection reads are strictly null-aware** — `string[]` arrays, string dictionaries, state-machine stacks, strategy-index lists, and node-pair maps now throw `InvalidOperationException` when an element/value is a null node, matching the existing `Read<string>` contract. Previously a null element silently drifted into an empty string, so corrupt save data surfaced later as an opaque strategy/node lookup failure instead of at the converter layer.
 - **BREAKING: `ISaveStorageService` surface tightened** — the raw-path `WriteLevelPayloadOnly(baseDirectoryRel, ...)`, the `ReadSavePayloadFromCurrent` member, and the always-true `overwrite` parameters of `WriteLevelPayloadOnlyToCurrent` / `WriteProgressOnlyToCurrent` are removed. The `current/` full read remains available to framework internals (`SavePayloadReader`); external callers use the snapshot read or the level-payload reads.
 - **BREAKING: `OrigoConsole` extra-handlers constructor removed** — the four-argument constructor (`extraHandlers` variant) had no callers anywhere; additional handlers are registered via the public `RegisterHandler` method.
@@ -202,6 +206,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- **`TypedData.ResetForTesting()`** — the production test-only reset hook is removed; tests reset the registry through `Origo.TestSupport` instead.
 - **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. The two-step binding (`BindRuntimeDependencies` then `BindContext`) is now framework-orchestrated startup wiring driven entirely by `OrigoAutoHost`.
 - **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
 - **`SndEntity.SpawnSingle` / `LoadSingle` / `SaveSingle` and their `GodotSndEntity` counterparts removed** — these internal single-entity shortcuts had no production callers (spawn/load/save uniformly go through `SndEntityFactory` / `SessionRun` / the serialization pipeline) and were only used by tests, which now drive the `IEntityLifecycle` phased methods directly.
@@ -213,6 +218,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **State-machine container clear releases every machine even when one dispose throws** — previously the first release failure aborted the clear loop, leaving later machines mounted and dictionaries uncleared; `StateMachineContainer.Clear` now disposes all machines independently, clears the container, then rethrows the first failure. `SessionRun.Dispose` / `ProgressRun.Dispose` nest the clear inside independent `finally` blocks so entity release, blackboard clear, and the disposed flag still commit when `Clear` throws.
+- **Godot integration tests leave no ObjectDB nodes behind, and `scripts/godot-test.sh` fails on leaks** — deferred/integration fixtures now free every node they create; null-argument `GodotSndEntity` construction validates before allocating a native node; the Godot test script treats `ObjectDB instances were leaked` as a hard failure.
+- **Local `scripts/ci.sh` now enforces committed generated docs** — after `doc-sync.sh`, any uncommitted changes under `docs/` fail the run, matching the CI PR gate.
+- **Private `_camelCase` field naming is now test-enforced** — because `dotnet format` cannot report fix-only naming rules, architecture tests in every test project reflectively scan production assemblies.
+- **DocSyncTool validates directory links, anchors, reference-style definitions, and monotonic revisions** — broken directory targets and anchors now fail validation; reference links without definitions fail; `generate` records previous revisions in `.sync-status.json` and `validate` rejects backwards revision movement.
 - **Save converters reject wrong-shaped array/object fields** — a corrupt state-machine `stack` object, strategy-index object, node/data `pairs` array, blackboard/string dictionary array, or non-object `SndMetaData` used to silently deserialize as an empty collection and lose state; these wrong node shapes now throw `InvalidOperationException` at the converter layer. Blank observer binding targets are rejected instead of silently dropped.
 - **Godot foreground `ProcessAll` detects container mutation like the memory host** — a strategy that spawns/removes entities while the Godot scene host processes a frame previously let the index loop silently skip or double-process entities; the adapter entity collection now throws `InvalidOperationException` when the count changes during processing.
 - **A second failed snapshot swap no longer deletes the previous snapshot backup** — after an interrupted backup-replace swap, a retry used to remove `save_*.bak` before the new snapshot was installed, so a second failure could lose the last known-good snapshot; the previous snapshot is now preserved/rolled back until the new one is safely in place.

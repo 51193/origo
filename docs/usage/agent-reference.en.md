@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -248,7 +248,7 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     //   int GetPendingPersistenceRequestCount();
 
     IBlackboard? SessionBlackboard { get; }
-    ISndSceneAccess SceneAccess { get; }
+    ISndSceneReadAccess SceneAccess { get; }
 }
 ```
 

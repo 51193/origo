@@ -15,7 +15,7 @@ public class TypedDataIntegrationTests
 {
     public TypedDataIntegrationTests()
     {
-        TypedData.ResetForTesting();
+        TypedDataTestSupport.ResetKindRegistry();
     }
 
     [Fact]

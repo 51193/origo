@@ -11,12 +11,12 @@ public class TypedDataTestContext : ICollectionFixture<TypedDataTestContext.Fixt
     {
         public Fixture()
         {
-            TypedData.ResetForTesting();
+            TypedDataTestSupport.ResetKindRegistry();
         }
 
         public void Dispose()
         {
-            TypedData.ResetForTesting();
+            TypedDataTestSupport.ResetKindRegistry();
             GC.SuppressFinalize(this);
         }
     }

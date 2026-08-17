@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -111,6 +111,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SessionRun_Dispose_DisposingSubscriberThrows_PropagatesAndSessionStillReleases` | Disposing subscriber throws | Exception propagates, but dispose state committed (second dispose is a no-op, access throws ObjectDisposedException) |
 | `SessionRun_Dispose_DisposingSubscriberThrows_SessionMachinesAndEntitiesStillReleased` | Disposing subscriber throws | Exception propagates, but session state machines and entity strategies are all released (LogPoolLeaks finds no leak), disposed flag committed |
 | `SessionRun_Dispose_PopHookThrows_SessionMachinesAndEntitiesStillReleased` | Session state-machine quit pop hook throws | Exception propagates, but session state machines and entity strategies are all released (LogPoolLeaks finds no leak), disposed flag committed |
+| `SessionRun_Dispose_StateMachineClearThrows_EntitiesStillReleased` | State-machine container release throws | Exception propagates, but entity strategies are still released (LogPoolLeaks finds no leak), disposed flag committed (second dispose idempotent, access throws ObjectDisposedException) |
 | `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | Quit pop hook throws | Exception propagates, but progress blackboard cleared, state machines released, disposed flag committed (second dispose idempotent) |
 | `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | Subscriber throws during session teardown | Exception propagates, but progress state still released and dispose state committed (second dispose no-op) |
 

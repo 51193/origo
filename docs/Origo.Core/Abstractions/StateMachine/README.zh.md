@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # StateMachine (Abstractions)
 
@@ -43,7 +43,7 @@
 | `FlushDeferredActionsForCurrentFrame()` | 冲刷延迟队列，继承自 [ISndDeferredActions](../Snd/README.zh.md) |
 | `GetPendingPersistenceRequestCount()` | 待持久化请求数，继承自 [ISndDeferredActions](../Snd/README.zh.md) |
 | `SessionBlackboard` | 会话级黑板；无活动会话时为 null（自有） |
-| `SceneAccess` | 当前会话 SND 场景访问（自有） |
+| `SceneAccess` | 当前会话 SND 只读场景访问（`ISndSceneReadAccess`：GetEntities / FindByName） |
 
 ## 设计决策
 

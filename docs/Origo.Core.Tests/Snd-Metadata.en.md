@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Metadata Tests
 
@@ -193,7 +193,7 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 
 | Strategy Class | Defined In | Purpose |
 |----------------|-----------|---------|
-| `TypedDataTestContext` | TypedDataTestContext.cs | xUnit collection fixture; calls TypedData.ResetForTesting() to reset static state before each test within [Collection("TypedData")] |
+| `TypedDataTestContext` | TypedDataTestContext.cs | xUnit collection fixture; calls `TypedDataTestSupport.ResetKindRegistry()` to reset static state before each test within [Collection("TypedData")] |
 
 ## Known Coverage Gaps
 

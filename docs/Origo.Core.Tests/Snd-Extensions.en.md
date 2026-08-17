@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Extensions Tests
 
@@ -26,9 +26,15 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
-| `EnsureStrategy_DataKeyMissing_SetsDataAndReturnsTrue` | When the data key does not exist, sets the dataKey and returns true | Snd README: ActiveStrategyExtensions |
+| `EnsureStrategy_DataKeyMissing_SetsDataAndReturnsTrue` | When the data key does not exist, mounts the strategy first, then sets the dataKey and returns true | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_DataKeyExistsWithValue_ReturnsFalse` | When the data key already has a non-empty value, skips, returns false, and the value is unchanged | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_DataKeyExistsButEmpty_StillSetsAndReturnsTrue` | When the data key exists but the value is an empty string, still overwrites and returns true | Snd README: ActiveStrategyExtensions |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `EnsureStrategy_AddStrategyThrows_DoesNotWriteDataKey` | AddStrategy throws (unregistered/duplicate/throwing AfterAdd) | Exception propagates; dataKey stays unchanged (no half-committed marker) |
 
 ## EntityStrategyExtensionsTests Details
 

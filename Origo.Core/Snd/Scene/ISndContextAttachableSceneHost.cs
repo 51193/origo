@@ -5,7 +5,7 @@ namespace Origo.Core.Snd.Scene;
 ///     After SessionRun is created, it binds the session context to the host,
 ///     ensuring entity strategies execute within the correct session.
 /// </summary>
-public interface ISndContextAttachableSceneHost
+internal interface ISndContextAttachableSceneHost
 {
     /// <summary>Binds the strategy context to the host so entity strategies execute within the correct session.</summary>
     void BindContext(ISndContext context);

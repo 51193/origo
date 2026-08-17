@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 状态机 测试
 
@@ -120,6 +120,7 @@ StateMachineStrategyBase 默认钩子语义、StateMachineStrategyContext 快照
 | `StateMachineContainer_DeserializeFromNode_ThrowsOnNullNode` | null 节点反序列化 | ArgumentNullException |
 | `StateMachineContainer_DeserializeFromNode_ArrayRoot_Throws` | 结构错误的载荷（数组根节点）反序列化 | InvalidOperationException（fail-fast，而非静默清空机器） |
 | `StateMachineContainer_DeserializeFromNode_MissingMachinesKey_Throws` | 载荷缺少 machines 键 | InvalidOperationException |
+| `StateMachineContainer_Clear_ReleasesAllMachines_WhenOneDisposeThrows` | 其中一台机器释放抛异常 | 异常传播，但其余机器仍释放且容器清空 |
 
 ## SessionAndAdapter 测试详情
 

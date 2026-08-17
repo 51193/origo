@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.Core.Tests
 
@@ -43,6 +43,7 @@ The test project provides the following core support facilities via `TestSupport
 | `PerfReporter` | Static utility class | Performance test output formatting: Compare/Report methods, prints time/throughput/allocation comparison. Supports dual-channel output (`Console.Out` + `ITestOutputHelper`), ensuring results visible in both CI and local |
 | `ConsoleInputBuffer` | `IConsoleInputSource` implementation | Console input queue (Core production code, used directly in tests) |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` implementation | Console output channel (Core production code, used directly in tests) |
+| `PrivateFieldNamingConvention` | Architecture guardrail helper | Reflectively verifies production private fields follow `_camelCase` (dotnet format cannot verify fix-only naming rules) |
 
 All test support facilities are `internal`, exposed to the test project via `InternalsVisibleTo`.
 

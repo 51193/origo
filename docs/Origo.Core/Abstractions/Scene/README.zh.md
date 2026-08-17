@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Scene/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene (Abstractions)
 
@@ -7,19 +7,28 @@
 
 ## 概述
 
-定义 Core 层编排 SND 场景的抽象能力。`ISndSceneAccess` 提供最小化的构建/恢复操作（纯数据转换，不触发策略钩子），`ISndSceneHost` 在其基础上补充实体容器管理能力，`IOwningSessionBindable` 允许会话在构造时把自身绑定到宿主以自动确定新实体的归属会话。策略生命周期钩子由上层会话生命周期（`SndEntityFactory` / `SessionRun`）统一编排。
+定义 Core 层编排 SND 场景的抽象能力。四个编排接口（`ISndSceneAccess`、`ISndSceneHost`、`ISndContextAttachableSceneHost`、`IOwningSessionBindable`）均为 `internal`，仅供 Core 会话生命周期与持有 `InternalsVisibleTo` 的适配层实现；业务代码唯一可见的场景接口是只读的 `ISndSceneReadAccess`。策略生命周期钩子由上层会话生命周期（`SndEntityFactory` / `SessionRun`）统一编排。
 
 ## 包含文件
 
 | 文件 | 职责 |
 |------|------|
-| `ISndSceneAccess.cs` | 最小场景访问：构建元数据列表 / 从元数据恢复（无钩子触发） |
-| `ISndSceneHost.cs` | 场景宿主（继承 ISndSceneAccess）：实体容器（创建/查找/移除/帧更新） |
-| `IOwningSessionBindable.cs` | 归属会话绑定：`SetOwningSession(session)`，宿主据此在创建实体时自动绑定 `ISndEntity.OwningSession` |
+| `ISndSceneReadAccess.cs` | public 只读场景访问：`GetEntities` / `FindByName`；状态机钩子与存档元数据贡献者经此查询场景 |
+| `ISndSceneAccess.cs` | internal 场景序列化访问：构建元数据列表 / 从元数据恢复（无钩子触发） |
+| `ISndSceneHost.cs` | internal 场景宿主（继承 ISndSceneAccess + ISndSceneReadAccess）：实体容器（创建/移除/帧更新） |
+| `IOwningSessionBindable.cs` | internal 归属会话绑定：`SetOwningSession(session)`，宿主据此在创建实体时自动绑定 `ISndEntity.OwningSession` |
+| `ISndContextAttachableSceneHost.cs` | internal 上下文绑定：`BindContext(context)`，由 `SndContext` / `SessionRun` 启动编排调用 |
 
 ## 接口详细
 
-### ISndSceneAccess
+### ISndSceneReadAccess（public）
+
+| 成员 | 说明 |
+|------|------|
+| `GetEntities()` | 获取当前场景全部存活实体快照 |
+| `FindByName(name)` | 按稳定名称查找实体；不存在返回 null |
+
+### ISndSceneAccess（internal）
 
 | 成员 | 说明 |
 |------|------|
@@ -46,9 +55,9 @@
 
 ## 设计决策
 
-### 为什么分离 ISndSceneAccess 和 ISndSceneHost
+### 为什么分离只读访问与编排接口
 
-状态机上下文只需要 `ISndSceneAccess` 的构建/恢复能力，不需要实体容器管理。ISP 分离让依赖更精确：存档系统通过 `ISndSceneAccess` 操作场景，会话管理通过 `ISndSceneHost` 管理实体集合。两者对外暴露不同消费场景。
+状态机上下文与存档元数据贡献者只需要查询实体（`GetEntities` / `FindByName`），不需要也不应接触创建、恢复、移除等编排能力。public `ISndSceneReadAccess` 与 internal `ISndSceneAccess` / `ISndSceneHost` 分离后，业务代码无法通过 `GodotSndManager` 强转绕过钩子编排；存档系统与会话管理继续通过 internal 接口访问完整能力。
 
 ### 为什么场景宿主不触发策略钩子
 

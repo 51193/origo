@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Model
 
@@ -125,7 +125,7 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     IBlackboard SystemBlackboard { get; }     // System level (inherits ISndBlackboardAccess)
     IBlackboard? ProgressBlackboard { get; }  // Progress level (inherits ISndBlackboardAccess)
     IBlackboard? SessionBlackboard { get; }   // Current session level
-    ISndSceneAccess SceneAccess { get; }      // Current session scene
+    ISndSceneReadAccess SceneAccess { get; }      // Current session scene
     void EnqueueBusinessDeferred(Action action);           // Inherits ISndDeferredActions
     void FlushDeferredActionsForCurrentFrame();            // Inherits ISndDeferredActions
     int GetPendingPersistenceRequestCount();               // Inherits ISndDeferredActions

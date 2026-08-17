@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # State Machine Tests
 
@@ -120,6 +120,7 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `StateMachineContainer_DeserializeFromNode_ThrowsOnNullNode` | null node deserialization | ArgumentNullException |
 | `StateMachineContainer_DeserializeFromNode_ArrayRoot_Throws` | Structurally wrong payload (array root) deserialization | InvalidOperationException (fail-fast instead of silently clearing machines) |
 | `StateMachineContainer_DeserializeFromNode_MissingMachinesKey_Throws` | Payload missing the machines key | InvalidOperationException |
+| `StateMachineContainer_Clear_ReleasesAllMachines_WhenOneDisposeThrows` | One machine release throws | Exception propagates, but remaining machines are released and the container clears |
 
 ## SessionAndAdapter Details
 

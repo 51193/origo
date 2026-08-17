@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -67,7 +67,7 @@ bash scripts/godot-test.sh
 1. 从 `Origo.GodotAdapter.csproj` 解析 `Godot.NET.Sdk` 版本
 2. 下载匹配版本的 Godot mono 二进制（缓存于 `.godot_binary/`）
 3. 运行 `godot --headless --path Origo.GodotAdapter.Integration.Tests`
-4. 解析退出码并展示结果
+4. 解析退出码并展示结果；若 Godot 报告 ObjectDB 节点泄漏（即使测试本身通过），脚本仍以失败退出
 
 ### 本地
 

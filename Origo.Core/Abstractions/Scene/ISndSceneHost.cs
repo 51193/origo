@@ -17,7 +17,7 @@ namespace Origo.Core.Abstractions.Scene;
 ///         the Core layer.
 ///     </para>
 /// </summary>
-public interface ISndSceneHost : ISndSceneAccess
+internal interface ISndSceneHost : ISndSceneAccess, ISndSceneReadAccess
 {
     /// <summary>
     ///     Create an entity in the scene from metadata, restoring data,
@@ -34,16 +34,6 @@ public interface ISndSceneHost : ISndSceneAccess
     ///     </para>
     /// </summary>
     ISndEntity CreateEntity(SndMetaData metaData);
-
-    /// <summary>
-    ///     Get a view of all currently alive entities in the scene.
-    /// </summary>
-    IReadOnlyCollection<ISndEntity> GetEntities();
-
-    /// <summary>
-    ///     Look up an entity by its name.
-    /// </summary>
-    ISndEntity? FindByName(string name);
 
     /// <summary>
     ///     Execute per-frame update for all alive entities.

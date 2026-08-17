@@ -89,22 +89,6 @@ public readonly partial struct TypedData : IEquatable<TypedData>
     }
 
     /// <summary>
-    ///     Resets the global kind registry and layered registration chains,
-    ///     then replays the home-assembly registration. For test isolation
-    ///     only. Constraint: this must be called only in processes where no
-    ///     adapter assembly has registered kinds yet (home-only test
-    ///     processes); adapter registrations run once via ModuleInitializer
-    ///     and are not replayed here, so resetting after an adapter loaded
-    ///     permanently drops the adapter's kinds.
-    /// </summary>
-    internal static void ResetForTesting()
-    {
-        Array.Clear(KindTypeMap, 0, KindTypeMap.Length);
-        TypedDataLayeredRegistry.Reset();
-        TypedDataHomeKindRegistration.Initialize();
-    }
-
-    /// <summary>
     ///     Value equality: same kind, and equal reference values or equal
     ///     inline bits.
     /// </summary>

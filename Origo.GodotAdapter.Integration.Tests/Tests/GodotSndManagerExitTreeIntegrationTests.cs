@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Godot;
 using Origo.Core.Abstractions.Entity;
@@ -20,7 +21,7 @@ namespace Origo.GodotAdapter.Integration.Tests;
 ///     (instant tests run inside the runner's <c>_Ready</c>, where
 ///     <c>add_child</c> is rejected by the engine).
 /// </summary>
-public class GodotSndManagerExitTreeIntegrationTests : IDeferredTestFixture
+public class GodotSndManagerExitTreeIntegrationTests : IDeferredTestFixture, System.IDisposable
 {
     private const string _exitTreeTestIndex = "test.exit_tree";
 
@@ -36,6 +37,13 @@ public class GodotSndManagerExitTreeIntegrationTests : IDeferredTestFixture
     }
 
     public void AdvanceFrame() => _frame++;
+
+    public void Dispose()
+    {
+        _harness?.Dispose();
+        _harness = null;
+        GC.SuppressFinalize(this);
+    }
 
     [DeferredTest(Description = "Manager removed from tree directly (bypassing session teardown) releases entity strategies")]
     public void ManagerRemovedFromTreeDirectly_ReleasesEntityStrategies()

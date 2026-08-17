@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter
 
@@ -92,7 +92,7 @@ OrigoDefaultEntry._Ready()
 |-----------|------------|------|
 | `IFileSystem` | `GodotFileSystem` | [FileSystem/](FileSystem/README.zh.md) |
 | `ILogger` | `GodotLogger` | [Logging/](Logging/README.zh.md) |
-| `ISndSceneHost` | `GodotSndManager` | [Snd/](Snd/README.zh.md) |
+| `ISndSceneHost`（internal） / `ISndSceneReadAccess`（public） | `GodotSndManager` | [Snd/](Snd/README.zh.md) |
 | `INodeFactory` | `GodotPackedSceneNodeFactory` | [Snd/](Snd/README.zh.md) |
 | `INodeHandle` | `GodotNodeHandle` | [Snd/](Snd/README.zh.md) |
 | `IConsoleCommandHandler` | `CommandHandlerBase` + 子类 | [Console/](Console/README.zh.md) |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Origo.TestSupport
@@ -13,6 +13,7 @@
 
 | 子模块 | 说明 |
 |--------|------|
+| [Architecture](Architecture/README.zh.md) | `PrivateFieldNamingConvention` 私有字段命名守卫与 TypedData 测试复位助手 |
 | [FileSystem](FileSystem/README.zh.md) | `IFileSystem` 纯内存测试替身 |
 | [Logging](Logging/README.zh.md) | `ILogger` 内存日志采集器 |
 | [Node](Node/README.zh.md) | `INodeHandle` / `INodeFactory` 测试替身 |

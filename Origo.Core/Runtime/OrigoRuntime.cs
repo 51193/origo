@@ -38,7 +38,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     ///     and I/O infrastructure.
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown when a required argument is null.</exception>
-    public OrigoRuntime(
+    internal OrigoRuntime(
         OrigoMeta meta,
         ILogger logger,
         ISndSceneHost sndSceneHost,

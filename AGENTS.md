@@ -152,10 +152,11 @@ facilities**, to understand the collaboration contracts between modules.
 - **All C# code must pass `dotnet format --verify-no-changes --severity info`.**
   This is the first CI gate (see `scripts/format.sh` and
   `.github/workflows/ci.yml`).
-- `.editorconfig` defines the project's set of formatting rules:
-  naming, whitespace, `var` preferences, and analyzer severities.
-  CI enforces them; local runs of `scripts/ci.sh`
-  provide equivalent validation.
+- `.editorconfig` defines whitespace, `var` preferences, and analyzer
+  severities, enforced by `dotnet format`. Private-field `_camelCase`
+  naming is fix-only in dotnet format, so architecture tests in every test
+  project reflectively enforce it as part of the normal test gate.
+  Local runs of `scripts/ci.sh` provide equivalent validation.
 - **Test projects use flat namespaces** (`Origo.Core.Tests`, not
   `Origo.Core.Tests.Snd.Strategy`). This is deliberate xUnit convention
   design — it enables cross-directory type access. IDE0130 is suppressed
@@ -228,7 +229,7 @@ This produces two kinds of derived files (commit them together with your change)
 | Command | What it does |
 |---------|-------------|
 | `dotnet run --project tools/DocSyncTool -- generate` | Regenerates all `README.md` hubs + `.sync-status.json`. Always succeeds. |
-| `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: all pairs have matching revisions across configured languages, all links point to same-language files, no broken links. **Exit code 1 on failure.** |
+| `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: pair/revision consistency (including monotonic revision floors recorded by `generate`), same-language links, file/directory/anchor existence, and reference-style link definitions. **Exit code 1 on failure.** |
 | `dotnet run --project tools/DocSyncTool -- init` | **One-time migration only** — renames `.md` → `.zh.md`, injects metadata, updates links. Already executed; do not re-run. |
 
 **Link discipline** (validated as ERROR by `validate`):

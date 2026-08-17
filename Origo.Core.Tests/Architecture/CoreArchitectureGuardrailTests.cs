@@ -3,12 +3,14 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Entity;
+using Origo.Core.Snd.Scene;
 using Xunit;
 using Origo.Core.Abstractions.Lifecycle;
 
@@ -17,11 +19,32 @@ namespace Origo.Core.Tests;
 public class CoreArchitectureGuardrailTests
 {
     [Fact]
+    public void PrivateFields_FollowUnderscoreCamelCase()
+    {
+        var violations = PrivateFieldNamingConvention.FindViolations(typeof(OrigoRuntime).Assembly);
+        Assert.Empty(violations);
+    }
+
+    [Fact]
     public void CoreAssembly_ShouldNotReferenceGodot()
     {
         var refs = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();
         Assert.DoesNotContain(refs,
             r => r.Name != null && r.Name.StartsWith("Godot", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void SceneWriteInterfacesAndSpawnFactory_AreInternal()
+    {
+        // Low-level scene mutation is framework orchestration only; business
+        // code must use ISessionRun.Spawn / RequestKillEntity / state-machine
+        // read access. Public interfaces would let any holder of GodotSndManager
+        // cast and bypass hook orchestration.
+        Assert.False(typeof(ISndSceneHost).IsVisible, "ISndSceneHost must be internal.");
+        Assert.False(typeof(ISndSceneAccess).IsVisible, "ISndSceneAccess must be internal.");
+        Assert.False(typeof(ISndContextAttachableSceneHost).IsVisible, "ISndContextAttachableSceneHost must be internal.");
+        Assert.False(typeof(IOwningSessionBindable).IsVisible, "IOwningSessionBindable must be internal.");
+        Assert.False(typeof(SndEntityFactory).IsVisible, "SndEntityFactory must be internal.");
     }
 
     [Fact]

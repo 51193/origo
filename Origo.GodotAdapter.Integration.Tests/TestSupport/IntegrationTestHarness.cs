@@ -78,7 +78,17 @@ public sealed class IntegrationTestHarness : IDisposable
         return ((ISndSceneHost)SndManager).CreateEntity(meta);
     }
 
-    public void Dispose() => SndManager.QueueFree();
+    public void Dispose()
+    {
+        // Free immediately (not QueueFree) so instant/deferred tests leave no
+        // ObjectDB node behind when the runner quits in the same frame.
+        if (GodotObject.IsInstanceValid(SndManager))
+        {
+            var parent = SndManager.GetParent();
+            parent?.RemoveChild(SndManager);
+            SndManager.Free();
+        }
+    }
 }
 
 public sealed class StubLogger : ILogger

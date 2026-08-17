@@ -15,6 +15,18 @@ cd "$ROOT"
 
 bash scripts/format.sh
 bash scripts/doc-sync.sh
+
+# Committed-hubs check (the CI PR gate): generated README.md hubs and
+# .sync-status.json must be committed together with documentation changes.
+# This is what makes local scripts/ci.sh equivalent to CI.
+if [[ -n $(git status --porcelain -- docs/) ]]; then
+  echo "" >&2
+  echo "ERROR: generated doc files (README.md hubs, .sync-status.json) are not committed." >&2
+  echo "Run 'git add docs/ && git commit --amend --no-edit' (or make a docs commit) and re-run." >&2
+  git status --short -- docs/ >&2
+  exit 1
+fi
+
 bash scripts/test.sh
 bash scripts/benchmark.sh
 bash scripts/godot-test.sh

@@ -60,7 +60,11 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
     public ISessionRun OwningSession => _entity?.OwningSession ?? throw new InvalidOperationException("GodotSndEntity has no backing SndEntity.");
     private bool _releasedFromManager;
 
-    internal GodotSndEntity(
+    /// <summary>
+    ///     Creates the entity after validating every dependency, so a null
+    ///     argument fails before a native Godot node is allocated.
+    /// </summary>
+    internal static GodotSndEntity Create(
         SndWorld world,
         ISndContext context,
         ILogger logger,
@@ -72,6 +76,16 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(observerTopology);
         ArgumentNullException.ThrowIfNull(nodeFactoryCreator);
+        return new GodotSndEntity(world, context, logger, observerTopology, nodeFactoryCreator);
+    }
+
+    private GodotSndEntity(
+        SndWorld world,
+        ISndContext context,
+        ILogger logger,
+        ObserverTopology observerTopology,
+        Func<GodotSndEntity, INodeFactory> nodeFactoryCreator)
+    {
         _world = world;
         _context = context;
         _logger = logger;

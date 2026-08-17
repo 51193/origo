@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Guardrail Tests
 
@@ -27,6 +27,8 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
 | `CoreAssembly_ShouldNotReferenceGodot` | Core assembly does not reference any Godot assemblies | architecture-overview: platform independence |
+| `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` and `SndEntityFactory` are internal | architecture-overview: single access path |
+| `PrivateFields_FollowUnderscoreCamelCase` | Core production private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext itself declares no methods/properties | Snd Abstraction: ISP |
 | `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext exposes all role-interface capabilities through 10 companion properties, not interface inheritance | Snd Abstraction: ISndContext composition |
 | `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |

@@ -251,6 +251,8 @@ internal static class Generator
             Pairs = []
         };
 
+        var previousStatus = ReadPreviousStatus(config);
+
         foreach (var (pairId, langDict) in pairs.OrderBy(p => p.Key))
         {
             var revisions = new Dictionary<string, int>();
@@ -270,10 +272,19 @@ internal static class Generator
 
             var status = DetermineStatus(revisions, config.Languages);
 
+            StatusPairEntry? oldEntry = null;
+            var oldEntryExists = previousStatus?.Pairs.TryGetValue(pairId, out oldEntry) == true;
+            var previousRevisions = oldEntryExists && oldEntry is not null
+                ? (RevisionsEqual(oldEntry.Revisions, revisions)
+                    ? new Dictionary<string, int>(oldEntry.PreviousRevisions)
+                    : new Dictionary<string, int>(oldEntry.Revisions))
+                : [];
+
             statusData.Pairs[pairId] = new StatusPairEntry
             {
                 Status = status,
                 Revisions = revisions,
+                PreviousRevisions = previousRevisions,
                 Files = files
             };
         }
@@ -289,6 +300,38 @@ internal static class Generator
         else
         {
             Console.WriteLine($"  SKIPPED (unchanged): .sync-status.json");
+        }
+    }
+
+    private static bool RevisionsEqual(
+        Dictionary<string, int> left,
+        Dictionary<string, int> right)
+    {
+        if (left.Count != right.Count)
+            return false;
+
+        foreach (var (lang, revision) in left)
+            if (!right.TryGetValue(lang, out var other) || other != revision)
+                return false;
+
+        return true;
+    }
+
+    private static StatusFile? ReadPreviousStatus(Config config)
+    {
+        var statusPath = Path.Combine(config.DocsFullPath, ".sync-status.json");
+        if (!File.Exists(statusPath))
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<StatusFile>(File.ReadAllText(statusPath), _jsonOptions);
+        }
+        catch (JsonException)
+        {
+            // A malformed generated snapshot is not source documentation; the
+            // next generate rebuilds it and validate reports the fresh state.
+            return null;
         }
     }
 
@@ -328,6 +371,9 @@ internal static class Generator
 
         [JsonPropertyName("revisions")]
         public Dictionary<string, int> Revisions { get; set; } = [];
+
+        [JsonPropertyName("previous_revisions")]
+        public Dictionary<string, int> PreviousRevisions { get; set; } = [];
 
         [JsonPropertyName("files")]
         public Dictionary<string, string> Files { get; set; } = [];

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # StateMachine (Abstractions)
 
@@ -42,7 +42,7 @@ Defines the string-stack state machine system. The state machine only stores str
 | `FlushDeferredActionsForCurrentFrame()` | Flush the deferred queue (inherited from [ISndDeferredActions](../Snd/README.en.md)) |
 | `GetPendingPersistenceRequestCount()` | Pending persistence request count (inherited from [ISndDeferredActions](../Snd/README.en.md)) |
 | `SessionBlackboard` | Session-level blackboard; null when no active session (own) |
-| `SceneAccess` | Current session SND scene access (own) |
+| `SceneAccess` | Current session SND read-only scene access (`ISndSceneReadAccess`: GetEntities / FindByName) |
 
 ## Design Decisions
 

@@ -22,5 +22,7 @@ public class OrigoDefaultEntryBootstrapIntegrationTests
         IntegrationTestRunner.AssertEqual("user://origo_saves", entry.SaveRootPath, "SaveRootPath");
         IntegrationTestRunner.AssertEqual("res://origo/initial", entry.InitialSaveRootPath, "InitialSaveRootPath");
         IntegrationTestRunner.Assert(entry.AutoDiscoverStrategies, "AutoDiscoverStrategies default should be true.");
+
+        entry.Free();
     }
 }

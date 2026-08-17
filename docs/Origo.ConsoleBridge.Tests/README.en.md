@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.ConsoleBridge.Tests
 
@@ -21,7 +21,7 @@ server works in a real network environment.
 | Capability | Document | Verification Focus |
 |------------|----------|-------------------|
 | Bridge Server | [ConsoleBridgeServer.md](ConsoleBridgeServer.en.md) | Lifecycle / Input / Output / Connection management / Thread safety / Agent workflow |
-| Architecture | [Architecture.md](Architecture.en.md) | Assembly dependency direction (no Godot / GodotAdapter dependency) |
+| Architecture | [Architecture.md](Architecture.en.md) | Assembly dependency direction (no Godot / GodotAdapter dependency), private `_camelCase` field naming |
 
 ---
 

@@ -115,7 +115,7 @@ public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDefe
     public void RegisterSaveMetaContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute) =>
         throw new InvalidOperationException("NullSndContext does not support save meta registration.");
 
-    ISndSceneAccess IStateMachineContext.SceneAccess =>
+    ISndSceneReadAccess IStateMachineContext.SceneAccess =>
         throw new InvalidOperationException("NullSndContext does not support scene access.");
 
     IBlackboard? IStateMachineContext.SessionBlackboard => null;

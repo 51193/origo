@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Entity (Abstractions)
 
@@ -122,7 +122,7 @@ Lifecycle hook triggering is controlled by the framework layer. Putting `Recover
 
 ### Why TryGetData uses found/value tuple
 
-See the [same design decision for Blackboard](../Blackboard/README.en.md#why-generic-tryget-instead-of-object).
+See Blackboard's [design decisions](../Blackboard/README.en.md#design-decisions) for the storage rationale.
 
 ### Why observer hook signatures include target parameter
 

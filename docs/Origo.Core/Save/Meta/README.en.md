@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Meta/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Meta
 
@@ -22,7 +22,7 @@ Save display metadata (meta.map) building and merging system. Display metadata i
 
 ### Metadata Contribution Flow
 1. Register contributors via `ISndSaveOperations.RegisterSaveMetaContributor()`
-2. Create `SaveMetaBuildContext` at save time
+2. Create `SaveMetaBuildContext` at save time (saveId, levelId, blackboards, read-only `ISndSceneReadAccess`)
 3. `SaveMetaMerger.Merge()` calls each contributor in order; later overwrites earlier for same keys
 4. Persist: the merged dictionary is converted to a JSON DataSourceNode tree via `BuildStringMapNode()` and written to `meta.map` by `SavePayloadWriter`
 

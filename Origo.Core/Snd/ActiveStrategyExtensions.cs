@@ -69,12 +69,18 @@ public static class ActiveStrategyExtensions
     public static bool EnsureStrategy(this ISndEntity entity, string dataKey, string strategyIndex)
     {
         ArgumentNullException.ThrowIfNull(entity);
+        ArgumentException.ThrowIfNullOrWhiteSpace(dataKey);
+        ArgumentException.ThrowIfNullOrWhiteSpace(strategyIndex);
+
         var (found, current) = entity.TryGetData<string>(dataKey);
         if (found && !string.IsNullOrWhiteSpace(current))
             return false;
 
-        entity.SetData(dataKey, strategyIndex);
+        // Mount first, then write the idempotency marker. If AddStrategy
+        // throws (unregistered index, duplicate mount, throwing AfterAdd),
+        // the marker stays untouched and the next attempt is not poisoned.
         entity.AddStrategy(strategyIndex);
+        entity.SetData(dataKey, strategyIndex);
         return true;
     }
 }

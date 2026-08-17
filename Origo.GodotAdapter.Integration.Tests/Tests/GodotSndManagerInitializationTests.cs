@@ -23,18 +23,34 @@ public class GodotSndManagerInitializationTests
     public void BindRuntimeDependencies_NullWorld_Throws()
     {
         using var harness = CreateHarness();
-        IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => new GodotSndManager().BindRuntimeDependencies(null!, harness.Logger),
-            "null world should throw");
+        var manager = new GodotSndManager();
+        try
+        {
+            IntegrationTestRunner.AssertThrows<ArgumentNullException>(
+                () => manager.BindRuntimeDependencies(null!, harness.Logger),
+                "null world should throw");
+        }
+        finally
+        {
+            IntegrationTestRunner.FreeNode(manager);
+        }
     }
 
     [IntegrationTest(Description = "BindRuntimeDependencies with null logger throws ArgumentNullException")]
     public void BindRuntimeDependencies_NullLogger_Throws()
     {
         using var harness = CreateHarness();
-        IntegrationTestRunner.AssertThrows<ArgumentNullException>(
-            () => new GodotSndManager().BindRuntimeDependencies(harness.SndWorld, null!),
-            "null logger should throw");
+        var manager = new GodotSndManager();
+        try
+        {
+            IntegrationTestRunner.AssertThrows<ArgumentNullException>(
+                () => manager.BindRuntimeDependencies(harness.SndWorld, null!),
+                "null logger should throw");
+        }
+        finally
+        {
+            IntegrationTestRunner.FreeNode(manager);
+        }
     }
 
     [IntegrationTest(Description = "BindContext with null context throws ArgumentNullException")]
@@ -46,6 +62,7 @@ public class GodotSndManagerInitializationTests
         IntegrationTestRunner.AssertThrows<ArgumentNullException>(
             () => ((ISndContextAttachableSceneHost)manager).BindContext(null!),
             "null context should throw");
+        IntegrationTestRunner.FreeNode(manager);
     }
 
     [IntegrationTest(Description = "Chained BindRuntimeDependencies + BindContext with valid args does not throw")]
@@ -58,6 +75,7 @@ public class GodotSndManagerInitializationTests
         ((ISndContextAttachableSceneHost)freshManager).BindContext(harness.SndManager.Context!);
 
         IntegrationTestRunner.Assert(true, "chained BindRuntimeDependencies + BindContext should not throw with valid args.");
+        IntegrationTestRunner.FreeNode(freshManager);
     }
 
     [IntegrationTest(Description = "CreateEntity before bind throws NotReady, not NullReferenceException")]
@@ -77,6 +95,7 @@ public class GodotSndManagerInitializationTests
         IntegrationTestRunner.AssertThrows<InvalidOperationException>(
             () => ((ISndSceneHost)manager).CreateEntity(meta),
             "CreateEntity before bind must surface the NotReady contract error, not a NullReferenceException");
+        IntegrationTestRunner.FreeNode(manager);
     }
 
     [IntegrationTest(Description = "RecoverFromMetaList before bind throws NotReady, not NullReferenceException")]
@@ -96,5 +115,6 @@ public class GodotSndManagerInitializationTests
         IntegrationTestRunner.AssertThrows<InvalidOperationException>(
             () => ((ISndSceneAccess)manager).RecoverFromMetaList([meta]),
             "RecoverFromMetaList before bind must surface the NotReady contract error, not a NullReferenceException");
+        IntegrationTestRunner.FreeNode(manager);
     }
 }
