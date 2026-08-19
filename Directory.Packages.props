@@ -6,7 +6,7 @@
     <ItemGroup>
         <PackageVersion Include="coverlet.msbuild" Version="10.0.1"/>
         <PackageVersion Include="Microsoft.Bcl.HashCode" Version="6.0.0"/>
-        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1"/>
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0"/>
         <!-- xunit.v3 and xunit.v3.extensibility.core form a version-coupled
              set: the xunit.v3 3.x metapackage pins transitive dependencies
              with exact (=) ranges, so both entries must be bumped together.
