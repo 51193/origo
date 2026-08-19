@@ -8,8 +8,36 @@ updates:
       roslyn:
         patterns:
           - "Microsoft.CodeAnalysis.*"
+      # xunit.v3 3.x pins transitive dependencies with exact (=) versions,
+      # so xunit.v3 and xunit.v3.extensibility.core must be proposed in a
+      # single PR. Bumping only one of them causes NU1608 restore errors in
+      # every test project.
+      xunit-v3:
+        patterns:
+          - "xunit.v3"
+          - "xunit.v3.extensibility.core"
+      # xunit.runner.visualstudio has an independent version line and remains
+      # compatible with xunit.v3, so Dependabot may update it separately.
     ignore:
+      # Microsoft.CodeAnalysis.* is coupled to the compiler in the SDK pinned
+      # by global.json: Origo.SourceGeneration.dll is loaded as an analyzer,
+      # and packages newer than the running compiler fail with CS9057.
+      # Dependabot cannot coordinate nuget and dotnet-sdk updates in one PR,
+      # so all Roslyn package updates are ignored and must be bumped manually
+      # together with the matching SDK update.
       - dependency-name: "Microsoft.CodeAnalysis.*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+      # xunit.v3 4.0 moves test execution to Microsoft Testing Platform and
+      # changes assembly parallelization attributes. Accepting the major
+      # update requires one coordinated PR that also migrates test projects
+      # and scripts/test.sh, so semver-major xunit.v3 bumps are ignored
+      # until that migration is performed as a single change.
+      - dependency-name: "xunit.v3"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "xunit.v3.extensibility.core"
         update-types: ["version-update:semver-major"]
 
   - package-ecosystem: dotnet-sdk

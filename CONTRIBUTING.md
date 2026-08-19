@@ -22,6 +22,28 @@ Every change must follow this cycle (see `AGENTS.md` §2 for details):
 5. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing.
 6. Sync `docs/` if public API, design decisions, or module structure changed.
 
+## Dependency updates
+
+Dependabot owns package version bumps. Version-coupled package families are
+grouped in [`.github/dependabot.yml`](.github/dependabot.yml) and must be
+updated in a single PR.
+
+- `xunit.v3` and `xunit.v3.extensibility.core` are grouped because the
+  xunit.v3 3.x metapackage pins its transitive dependencies with exact `=`
+  version ranges. Bumping only one member causes NU1608 restore errors in
+  every test project. `xunit.runner.visualstudio` has an independent version
+  line and may move separately.
+- Semver-major `xunit.v3` / `xunit.v3.extensibility.core` updates are
+  ignored until the coordinated xunit.v3 4.0 / Microsoft Testing Platform
+  migration. Do not remove those ignore rules without updating the xUnit
+  packages, test projects, and `scripts/test.sh` in the same PR.
+- `Microsoft.CodeAnalysis.*` updates are ignored because the source
+  generator is loaded as an analyzer and must not reference a Roslyn
+  compiler newer than the SDK in `global.json` (otherwise the build fails
+  with CS9057). Bump Roslyn packages manually together with the matching
+  SDK update in one PR.
+- See `AGENTS.md` §1.9 for the full dependency update policy.
+
 ## Reporting issues
 
 - For **bugs**, use the Bug Report template.

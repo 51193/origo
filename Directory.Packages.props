@@ -7,9 +7,21 @@
         <PackageVersion Include="coverlet.msbuild" Version="10.0.1"/>
         <PackageVersion Include="Microsoft.Bcl.HashCode" Version="6.0.0"/>
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1"/>
+        <!-- xunit.v3 and xunit.v3.extensibility.core form a version-coupled
+             set: the xunit.v3 3.x metapackage pins transitive dependencies
+             with exact (=) ranges, so both entries must be bumped together.
+             .github/dependabot.yml groups them in a single PR and ignores
+             semver-major bumps until the coordinated Microsoft Testing
+             Platform migration. xunit.runner.visualstudio has an independent
+             version line and may move separately. -->
         <PackageVersion Include="xunit.v3" Version="3.2.2"/>
         <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2"/>
         <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5"/>
+        <!-- Microsoft.CodeAnalysis.* must not outrun the Roslyn compiler
+             shipped in the SDK pinned by global.json. Origo.SourceGeneration
+             is loaded as an analyzer assembly, so a newer package fails with
+             CS9057. .github/dependabot.yml ignores Roslyn package updates;
+             bump these entries manually together with the matching SDK. -->
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0"/>
         <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0"/>
     </ItemGroup>

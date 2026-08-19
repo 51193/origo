@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -120,7 +120,7 @@ This produces two kinds of derived files (commit them together):
 3. **Design decision change** → update the design decisions section
 4. **New config key/command** → update relevant README and usage docs
 5. **Inter-module dependency change** → update module README links
-6. **AGENTS.md meta-instruction changes** → synchronize references to new rules in this document (e.g., AGENTS.md §1.7 comment language requirements, §1.8 git history awareness, §3 red-first rule — bug fixes require a red regression test that reproduces the bug through a real reachable path, and the file's git history must be consulted before fixing or extending it)
+6. **AGENTS.md meta-instruction changes** → synchronize references to new rules in this document (e.g., AGENTS.md §1.7 comment language requirements, §1.8 git history awareness, §1.9 dependency update grouping — version-coupled package families must be bumped together, never independently, §3 red-first rule — bug fixes require a red regression test that reproduces the bug through a real reachable path, and the file's git history must be consulted before fixing or extending it)
 
 ### Situations NOT Requiring Sync
 

@@ -312,6 +312,39 @@ missing language files) always fail the build.
   working tree, only the final state matters; make it minimal and
   intentional.
 
+### 1.9 Dependency Updates — Version-Coupled Packages Move as One
+
+> **Dependabot PRs must pass CI as proposed. Package families with exact
+> cross-package constraints are grouped; never bump one member
+> independently.**
+
+- Dependency versions are centralized in `Directory.Packages.props` and
+  updated through `.github/dependabot.yml`. When a package family must stay
+  version-compatible, configure a Dependabot group so every member is
+  proposed in the same PR.
+- The `xunit-v3` group covers `xunit.v3` and `xunit.v3.extensibility.core`.
+  The xunit.v3 3.x metapackage pins transitive packages such as
+  `xunit.v3.common` and `xunit.v3.extensibility.core` with exact `=` version
+  ranges; bumping only one direct package causes NU1608 restore errors in
+  all test projects. `xunit.runner.visualstudio` has an independent version
+  line and stays outside this group.
+- Semver-major updates for `xunit.v3` and `xunit.v3.extensibility.core` are
+  ignored by Dependabot until the coordinated xunit.v3 4.0 migration is
+  performed. xunit.v3 4.0 switches test execution to Microsoft Testing
+  Platform and changes assembly parallelization attributes; accepting it
+  requires one PR that updates the xUnit packages, test projects, and
+  `scripts/test.sh` together. Remove the ignore rules only as part of that
+  migration.
+- `Microsoft.CodeAnalysis.CSharp` and `Microsoft.CodeAnalysis.Analyzers`
+  are coupled to the Roslyn compiler version in the SDK pinned by
+  `global.json`. `Origo.SourceGeneration.dll` is loaded as an analyzer; if
+  the package version is newer than the running compiler, the build fails
+  with CS9057. Dependabot cannot coordinate `nuget` and `dotnet-sdk`
+  updates in one PR, so Roslyn package updates are ignored. Bump them
+  manually in the same PR as the matching `global.json` SDK update.
+- Apply the same grouping rule to any future package family with exact
+  cross-package constraints.
+
 ---
 
 ## 2. Development Loop (Mandatory Order)
