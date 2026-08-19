@@ -16,7 +16,7 @@
              version line and may move separately. -->
         <PackageVersion Include="xunit.v3" Version="3.2.2"/>
         <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2"/>
-        <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5"/>
+        <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0"/>
         <!-- Microsoft.CodeAnalysis.* must not outrun the Roslyn compiler
              shipped in the SDK pinned by global.json. Origo.SourceGeneration
              is loaded as an analyzer assembly, so a newer package fails with
