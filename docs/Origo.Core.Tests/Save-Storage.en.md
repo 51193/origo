@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Storage Tests
 
@@ -309,6 +309,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `CopyDirectoryFromSnapshot_SeededFiles_AllCopiedToCurrent` | All seeded files under snapshot save_001/extra are copied to current/extra | SaveStorageFacade.CopyDirectoryFromSnapshot |
 | `CopyDirectoryFromSnapshot_SubdirectoryStructurePreserved` | Subdirectory hierarchy preserved after copy | SaveStorageFacade.CopyDirectoryFromSnapshot |
 | `CopyDirectoryFromSnapshot_ExistingFilesInCurrent_Overwrites` | Existing same-name files in current are overwritten by snapshot content | SaveStorageFacade.CopyDirectoryFromSnapshot |
+| `RestoreExtraFilesFromSourceSnapshot_CopiesAcrossStorageRoots` | Copies save_000/extra from the source storage service into the destination service's current/extra (across storage roots) | ISaveStorageService.RestoreExtraFilesFromSnapshot |
 | `ExtraFiles_FullSaveLoadRoundTrip_PreservesMultipleFiles` | Multiple extra files survive save→load round-trip with content and structure | persistence-flow: extra |
 | `ExtraFiles_SaveLoadRoundTrip_SubdirectoryPreserved` | Extra files in subdirectories survive round-trip | persistence-flow: extra |
 | `ExtraFiles_SaveTwice_SameSlot_HasLatestContent` | Saving twice to the same slot, load yields latest content | persistence-flow: extra |
@@ -331,6 +332,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 |-------------|-------------------|-------------------|
 | `CopyDirectoryFromSnapshot_SourceDirectoryDoesNotExist_ReturnsSilently` | No extra/ directory in snapshot | Returns silently, no exception |
 | `CopyDirectoryFromSnapshot_EmptySourceDirectory_DoesNothing` | extra/ is an empty directory | current/extra created but stays empty |
+| `RestoreExtraFilesFromSourceSnapshot_SourceWithoutExtra_ReturnsSilently` | Source snapshot has no extra/ directory | Returns silently; destination extra/ is not created |
 | `ComputeSideDirectoryHash_NoExtraDir_ReturnsEmpty` | No extra/ directory | Returns empty string |
 | `ComputeSideDirectoryHash_EmptyExtraDir_ReturnsEmpty` | extra/ directory exists but is empty | Returns empty string |
 | `ComputeSideDirectoryHash_CustomDirectory_Empty_ReturnsEmpty` | Custom directory is empty | Returns empty string |
@@ -342,6 +344,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `CopyDirectoryFromSnapshot_NullHandle_Throws` | handle is null | ArgumentNullException |
 | `CopyDirectoryFromSnapshot_EmptySaveId_Throws` | saveId is empty string | ArgumentException |
 | `CopyDirectoryFromSnapshot_EmptyDirName_Throws` | relativeDirName is empty string | ArgumentException |
+| `RestoreExtraFilesFromSourceSnapshot_NullSource_Throws` | sourceStorage is null | ArgumentNullException |
 
 ## Test Helper Strategies
 

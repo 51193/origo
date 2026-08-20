@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Storage
 
@@ -96,6 +96,10 @@ When the same game state is written to the same save slot multiple times, SHA-25
 - Only SaveId differs (writing to a different slot) → always write (new slot has no .sha to compare)
 
 The `current/.payload.sha` writes follow three deliberate, non-conflicting semantics: the snapshot path (`WriteSavePayloadToCurrentThenSnapshot`) writes the **combined hash** (payload + `extra/`), which the next idempotency comparison consumes; the test path (`SaveStorageFacade.WriteSavePayloadToCurrent`) writes the **payload-only hash** (tests have no `extra/` side channel, so a combined hash would be inaccurate); the load-recovery path (`DefaultSaveStorageService.WriteSavePayloadToCurrent`) writes **no hash** — a recovery write has no idempotency contract, and only the snapshot phase performs deduplication. The only consumer of `.payload.sha` is `TryIdempotentSkip` comparing against the snapshot directory; the `current/` hash itself is consumed only indirectly when it is copied into a snapshot.
+
+### Why cross-storage-root extra/ restore takes an explicit source service
+
+`RestoreExtraFilesFromSnapshot(string saveId)` means "restore from this service's own snapshot into this service's current/". Initial-save payloads and extra/ live under the read-only `res://` initial storage root, while the runtime restore target is the writable `user://` runtime storage root. Reusing the same-service overload would resolve the source path under the destination service's current/ — ignoring the initial save's extra/ files and potentially copying stale runtime snapshot files into the current save. The interface therefore adds `RestoreExtraFilesFromSnapshot(ISaveStorageService sourceStorage, string saveId)`, where the destination service explicitly names the source service. The default implementation supports only a default source; custom service pairs must be supported by a custom destination implementation, and unknown pairs throw explicitly instead of silently falling back.
 
 ### Why DataSourceNode computes a Canonical Hash rather than a post-serialization hash
 

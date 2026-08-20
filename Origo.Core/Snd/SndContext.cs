@@ -309,7 +309,8 @@ public sealed class SndContext : ISndContext
 
             StorageService.DeleteCurrentDirectory();
             StorageService.WriteSavePayloadToCurrent(payload);
-            StorageService.RestoreExtraFilesFromSnapshot(SndDefaults.InitialSaveId);
+            StorageService.RestoreExtraFilesFromSnapshot(
+                InitialStorageService, SndDefaults.InitialSaveId);
 
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
             SetProgressRun(progressRun);

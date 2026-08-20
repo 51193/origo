@@ -18,6 +18,8 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
 {
     private readonly SaveFileHandle _handle;
 
+    internal SaveFileHandle Handle => _handle;
+
     public DefaultSaveStorageService(
         IFileMetaAccess metaAccess,
         IDataSourceIoGateway ioGateway,
@@ -104,5 +106,23 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     {
         SaveStorageFacade.CopyDirectoryFromSnapshot(
             _handle, saveId, SavePathLayout.ExtraDirectoryName);
+    }
+
+    public void RestoreExtraFilesFromSnapshot(
+        ISaveStorageService sourceStorage,
+        string saveId)
+    {
+        ArgumentNullException.ThrowIfNull(sourceStorage);
+        if (sourceStorage is not DefaultSaveStorageService source)
+            throw new InvalidOperationException(
+                "DefaultSaveStorageService can only restore extra files from another " +
+                "DefaultSaveStorageService. Custom storage services must be paired with a " +
+                "custom destination implementation that understands their snapshot layout.");
+
+        SaveStorageFacade.CopyDirectoryFromSnapshot(
+            source.Handle,
+            saveId,
+            SavePathLayout.ExtraDirectoryName,
+            _handle);
     }
 }

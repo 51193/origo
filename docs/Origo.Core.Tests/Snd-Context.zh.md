@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -43,6 +43,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `SetContinueTarget_MakesHasContinueDataTrue` | 设置 Continue 目标后 HasContinueData 返回 true | ISndLifecycleOperations |
 | `RequestContinueGame_ReturnsTrueAndLoadsWhenContinueSet` | Continue 正确加载存档 | ISndLifecycleOperations |
 | `RequestLoadInitialSave_LoadsFromInitialRoot` | 从初始路径加载初始存档 | ISndLifecycleOperations |
+| `RequestLoadInitialSave_RestoresExtraFilesFromInitialRoot` | 初始存档的 extra/ 文件从初始存储根恢复到运行时 current/extra | ISndArchiveFileAccess |
 | `RequestSwitchForegroundLevel_SwitchesLevel` | 关卡切换后 ForegroundSession.LevelId 正确 | ISndLifecycleOperations |
 | `CloneTemplate_ClonesAndOverridesName` | 克隆模板并覆盖名字 | ISndTemplateAccess |
 | `CloneTemplate_WithoutOverrideName_KeepsOriginal` | 不覆盖名字时保留原名 | ISndTemplateAccess |

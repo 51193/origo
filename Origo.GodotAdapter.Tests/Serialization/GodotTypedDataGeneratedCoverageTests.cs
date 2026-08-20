@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using Godot;
 using Origo.Core.Snd.Metadata;
@@ -17,7 +18,9 @@ public class GodotTypedDataGeneratedCoverageTests
 {
     static GodotTypedDataGeneratedCoverageTests()
     {
-        TypedDataInitializer.EnsureLoaded();
+        // Force the GodotAdapter assembly to load so its generated
+        // [ModuleInitializer] registrations run before TypedData kind use.
+        RuntimeHelpers.RunModuleConstructor(typeof(GodotSndManager).Module.ModuleHandle);
     }
 
     public static IEnumerable<(byte Kind, object Value)> AllTypes()

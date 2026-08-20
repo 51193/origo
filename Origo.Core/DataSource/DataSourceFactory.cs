@@ -105,17 +105,6 @@ public static class DataSourceFactory
         };
     }
 
-    internal static IDataSourceIoGateway CreateIoGateway(
-        IFileSystem fileSystem,
-        DataSourceIoOptions options,
-        IReadOnlyDictionary<DataSourceCodecKind, IDataSourceCodec> codecs)
-    {
-        ArgumentNullException.ThrowIfNull(fileSystem);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(codecs);
-        return new DataSourceIoGateway(fileSystem, options, codecs);
-    }
-
     /// <summary>Creates an I/O gateway with the default codecs and options.</summary>
     public static IDataSourceIoGateway CreateDefaultIoGateway(
         IFileSystem fileSystem,

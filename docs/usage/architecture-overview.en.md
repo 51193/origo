@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Overview
 
@@ -226,7 +226,7 @@ Origo.GodotAdapter/   # Godot 4 adapter layer (~23 .cs files)
 ├── FileSystem/       # Godot file system
 ├── Logging/          # Godot logging
 ├── Serialization/    # Godot type serialization
-└── Snd/              # Godot entities + manager + TypedDataInitializer
+└── Snd/              # Godot entities + manager + node factory
 
 Origo.ConsoleBridge/  # TCP remote console (~2 .cs files)
 ```

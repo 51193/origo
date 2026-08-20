@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Tests (Adapter)
 
@@ -15,7 +15,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | File | Verification focus |
 |------|-----------|
 | `Snd/SndEntityCollectionTests.cs` | Full entity collection capability: create/find/remove/kill marking, `RecoverFromMetaList` batch recovery with partial-failure rollback, `RemoveAllEntities`, frame processing `ProcessAll`, meta list building, `OwningSession` binding |
-| `Snd/TypedDataInitializerTests.cs` | `TypedDataInitializer.EnsureLoaded()` triggering adapter-layer kind registration: idempotency and availability |
+| `Snd/TypedDataAssemblyLoadTests.cs` | Forces assembly loading by referencing a public GodotAdapter type; verifies the generated `[ModuleInitializer]` completes adapter kind registration |
 | `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` contracts: non-Godot entity/handle returns null, node handle extraction |
 
 ## SndEntityCollectionTests Details
@@ -56,13 +56,13 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | `ProcessAll_ContainerModifiedDuringProcess_Throws` | Collection mutated during frame processing (entity spawned inside ProcessSnd) | Throws `InvalidOperationException` (contains "modified during ProcessAll"; consistent with FullMemorySndSceneHost) |
 | `RequestKillEntity_Unknown_Throws` | Killing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 
-## TypedDataInitializerTests Details
+## TypedDataAssemblyLoadTests Details
 
 ### Happy Path
 
 | Test method | Verified behavior | Doc source |
 |---------|-----------|---------|
-| `EnsureLoaded_TriggersAdapterKindRegistration` | `TypedDataInitializer.EnsureLoaded()` triggers adapter-layer kind registration (Vector2 resolves to Kind 128) | Origo.GodotAdapter/Snd |
+| `GodotAdapterAssemblyLoad_RegistersTypedDataKinds` | Referencing a public GodotAdapter type forces assembly loading and the generated `[ModuleInitializer]`; Vector2 resolves to Kind 128 | Origo.GodotAdapter/Snd |
 
 ## SndEntityNodeExtensionsTests Details
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -19,7 +19,6 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 | `GodotPackedSceneNodeFactory.cs` | INodeFactory 实现：通过 PackedScene.Instantiate 创建 Godot Node |
 | `GodotNodeHandle.cs` | INodeHandle 实现：包装 Godot.Node，提供 Free / SetVisible / UnsafeGetNode |
 | `SndEntityNodeExtensions.cs` | 适配层便利扩展：`GetNativeNode()`（从 INodeHandle 提取 Godot Node）、`GetNodeFromSnd<T>()`（经 SND 节点注册表按逻辑名解析并强转）。物理位置在项目根 `Origo.GodotAdapter/SndEntityNodeExtensions.cs`（非 Snd/ 子目录），命名空间归属 `Origo.GodotAdapter` |
-| `TypedDataInitializer.cs` | internal — 程序集加载强制入口：调用 `EnsureLoaded()` 触发所有 `[ModuleInitializer]` 执行（测试项目经 InternalsVisibleTo 访问） |
 
 > 项目根目录的 `AssemblyAttributes.cs` 声明 `[assembly: SndInlineTypes(startKind: 128, ...)]`，注册 14 种 Godot 引擎类型（Vector2/Vector2I/Vector3/Vector3I/Vector4/Quaternion/Basis/Transform2D/Transform3D/Color/Rect2/Rect2I/Aabb/Plane）到 TypedData 的适配层 Kind 区间（128–141）。
 

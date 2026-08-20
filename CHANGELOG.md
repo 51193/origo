@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **`ISndSceneReadAccess`** — public read-only scene view (`GetEntities` / `FindByName`) for state-machine hooks and save-meta contributors, decoupled from internal scene orchestration.
-- **Complete English documentation** — 127 English `.en.md` files alongside existing Chinese `.zh.md` files.
+- **Complete English documentation** — 128 English `.en.md` files alongside existing Chinese `.zh.md` files.
 - **`camera_view` console command** — displays screen coordinates and depth of Godot entity nodes visible through the active `Camera3D`.
 - **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name.
 - **`SndContextParameters.InitialLevelId`** — configurable initial save level ID (defaults to `"default"`).
@@ -41,6 +41,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`ConsoleBridgeOptions.OutputSendTimeoutMs`** — bounded send timeout (default 100ms)
   for console output writes: a client that stops reading is detached (and the undelivered
   lines stay buffered for the next connection) instead of stalling the game frame thread.
+- **`ISaveStorageService.RestoreExtraFilesFromSnapshot(ISaveStorageService, string)`** —
+  cross-storage-root extra/ restore: the destination storage service can restore archive
+  files from a snapshot owned by an explicitly named source storage service (used when an
+  initial save under `res://` is loaded into the writable runtime save root).
 
 ### Changed
 
@@ -143,9 +147,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   across machines/runtime builds because JIT inlining decisions change per-instruction
   allocation, so cross-machine comparison was producing false failures). On the baseline
   machine the full gates still apply; CI benchmark steps act as smoke tests.
-- **BREAKING:** `TypedDataInitializer` is now `internal` — adapter layers no longer get a
-  public entry point; test projects access it via `InternalsVisibleTo` and call
-  `TypedDataInitializer.EnsureLoaded()` instead of the always-true `IsLoaded` property.
 - **BREAKING:** `GodotSndManager.ProcessTickCount` and `ProcessDeltaSum` removed — these were
   observability members with no production consumer (the integration test that read the tick
   counter now verifies `ProcessAll` behaviorally, by driving an entity's Process strategy).
@@ -206,6 +207,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- **BREAKING: `TypedDataInitializer` removed** — adapter layers no longer get a public
+  entry point just to force assembly loading. Referencing any public GodotAdapter type
+  loads the assembly and runs its generated `[ModuleInitializer]` registrations; tests
+  force loading through a public type reference instead of a production helper.
 - **`TypedData.ResetForTesting()`** — the production test-only reset hook is removed; tests reset the registry through `Origo.TestSupport` instead.
 - **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. The two-step binding (`BindRuntimeDependencies` then `BindContext`) is now framework-orchestrated startup wiring driven entirely by `OrigoAutoHost`.
 - **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
@@ -218,6 +223,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Initial saves now restore their `extra/` files from the initial storage root** — the
+  initial-load workflow previously restored `extra/` through the runtime storage service,
+  so archive files shipped in the initial save were ignored and stale runtime files could
+  be copied instead. It now names the initial storage service as the source, so
+  `res://.../save_000/extra/` reaches `current/extra/` through the real workflow.
 - **State-machine container clear releases every machine even when one dispose throws** — previously the first release failure aborted the clear loop, leaving later machines mounted and dictionaries uncleared; `StateMachineContainer.Clear` now disposes all machines independently, clears the container, then rethrows the first failure. `SessionRun.Dispose` / `ProgressRun.Dispose` nest the clear inside independent `finally` blocks so entity release, blackboard clear, and the disposed flag still commit when `Clear` throws.
 - **Godot integration tests leave no ObjectDB nodes behind, and `scripts/godot-test.sh` fails on leaks** — deferred/integration fixtures now free every node they create; null-argument `GodotSndEntity` construction validates before allocating a native node; the Godot test script treats `ObjectDB instances were leaked` as a hard failure.
 - **Local `scripts/ci.sh` now enforces committed generated docs** — after `doc-sync.sh`, any uncommitted changes under `docs/` fail the run, matching the CI PR gate.

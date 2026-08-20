@@ -257,6 +257,20 @@ public class SndContextWorkflowTests
         Assert.Equal("my_level", fg.LevelId);
     }
 
+    [Fact]
+    public void RequestLoadInitialSave_RestoresExtraFilesFromInitialRoot()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SeedInitialSave(fs, "res://initial");
+        fs.SeedFile("res://initial/save_000/extra/seed.json", """{"value":1}""");
+
+        ctx.Lifecycle.RequestLoadInitialSave();
+        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+
+        Assert.True(fs.Exists("root/current/extra/seed.json"),
+            "Initial-save extra/ files must be restored into current/extra/ by the initial-load workflow.");
+    }
+
     // ── RequestSwitchForegroundLevel ──
 
     [Fact]

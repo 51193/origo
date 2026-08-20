@@ -120,6 +120,58 @@ public class SaveExtraFilesRoundTripTests
             SaveStorageFacade.CopyDirectoryFromSnapshot(handle, "001", "  "));
     }
 
+    // ── Cross-root restore through ISaveStorageService ──────────────────
+
+    [Fact]
+    public void RestoreExtraFilesFromSourceSnapshot_CopiesAcrossStorageRoots()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var source = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "res://initial");
+        var destination = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root");
+
+        fs.SeedFile("res://initial/save_000/extra/config.json", """{"key":"value"}""");
+        fs.SeedFile("res://initial/save_000/extra/nested/data.txt", "hello");
+
+        destination.RestoreExtraFilesFromSnapshot(source, "000");
+
+        Assert.True(fs.Exists("root/current/extra/config.json"));
+        Assert.True(fs.Exists("root/current/extra/nested/data.txt"));
+        Assert.Equal("""{"key":"value"}""", fs.ReadAllText("root/current/extra/config.json"));
+        Assert.Equal("hello", fs.ReadAllText("root/current/extra/nested/data.txt"));
+    }
+
+    [Fact]
+    public void RestoreExtraFilesFromSourceSnapshot_SourceWithoutExtra_ReturnsSilently()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var source = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "res://initial");
+        var destination = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root");
+
+        var ex = Record.Exception(() =>
+            destination.RestoreExtraFilesFromSnapshot(source, "000"));
+
+        Assert.Null(ex);
+        Assert.False(fs.DirectoryExists("root/current/extra"));
+    }
+
+    [Fact]
+    public void RestoreExtraFilesFromSourceSnapshot_NullSource_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var destination = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root");
+
+        Assert.Throws<ArgumentNullException>(() =>
+            destination.RestoreExtraFilesFromSnapshot(null!, "000"));
+    }
+
     [Fact]
     public void CopyDirectoryFromSnapshot_ExistingFilesInCurrent_Overwrites()
     {

@@ -263,12 +263,12 @@
     "Origo.Core.Tests/META-TEST": {
       "status": "synced",
       "revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
-        "zh": 13,
-        "en": 13
+        "zh": 14,
+        "en": 14
       },
       "files": {
         "zh": "Origo.Core.Tests/META-TEST.zh.md",
@@ -368,8 +368,8 @@
     "Origo.Core.Tests/Save-Storage": {
       "status": "synced",
       "revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 13,
+        "en": 13
       },
       "previous_revisions": {
         "zh": 12,
@@ -428,8 +428,8 @@
     "Origo.Core.Tests/Snd-Context": {
       "status": "synced",
       "revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 8,
+        "en": 8
       },
       "previous_revisions": {
         "zh": 7,
@@ -1088,8 +1088,8 @@
     "Origo.Core/Save/Storage/README": {
       "status": "synced",
       "revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "previous_revisions": {
         "zh": 9,
@@ -1268,12 +1268,12 @@
     "Origo.GodotAdapter.Integration.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "previous_revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 9,
+        "en": 9
       },
       "files": {
         "zh": "Origo.GodotAdapter.Integration.Tests/README.zh.md",
@@ -1343,12 +1343,12 @@
     "Origo.GodotAdapter.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
-        "zh": 13,
-        "en": 13
+        "zh": 14,
+        "en": 14
       },
       "files": {
         "zh": "Origo.GodotAdapter.Tests/README.zh.md",
@@ -1373,8 +1373,8 @@
     "Origo.GodotAdapter.Tests/Snd": {
       "status": "synced",
       "revisions": {
-        "zh": 6,
-        "en": 6
+        "zh": 7,
+        "en": 7
       },
       "previous_revisions": {
         "zh": 6,
@@ -1463,12 +1463,12 @@
     "Origo.GodotAdapter/README": {
       "status": "synced",
       "revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 9,
+        "en": 9
       },
       "previous_revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 8,
+        "en": 8
       },
       "files": {
         "zh": "Origo.GodotAdapter/README.zh.md",
@@ -1493,12 +1493,12 @@
     "Origo.GodotAdapter/Snd/README": {
       "status": "synced",
       "revisions": {
-        "zh": 21,
-        "en": 21
+        "zh": 22,
+        "en": 22
       },
       "previous_revisions": {
-        "zh": 20,
-        "en": 20
+        "zh": 21,
+        "en": 21
       },
       "files": {
         "zh": "Origo.GodotAdapter/Snd/README.zh.md",
@@ -1748,8 +1748,8 @@
     "usage/architecture-overview": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
         "zh": 3,

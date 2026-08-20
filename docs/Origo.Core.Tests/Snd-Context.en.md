@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -40,6 +40,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `SetContinueTarget_MakesHasContinueDataTrue` | After setting Continue target, HasContinueData returns true | ISndLifecycleOperations |
 | `RequestContinueGame_ReturnsTrueAndLoadsWhenContinueSet` | Continue correctly loads the save | ISndLifecycleOperations |
 | `RequestLoadInitialSave_LoadsFromInitialRoot` | Loads initial save from the initial path | ISndLifecycleOperations |
+| `RequestLoadInitialSave_RestoresExtraFilesFromInitialRoot` | Initial-save extra/ files are restored from the initial storage root into runtime current/extra | ISndArchiveFileAccess |
 | `RequestSwitchForegroundLevel_SwitchesLevel` | After level switch, ForegroundSession.LevelId is correct | ISndLifecycleOperations |
 | `CloneTemplate_ClonesAndOverridesName` | Clones a template and overrides the name | ISndTemplateAccess |
 | `CloneTemplate_WithoutOverrideName_KeepsOriginal` | Keeps the original name when not overriding | ISndTemplateAccess |

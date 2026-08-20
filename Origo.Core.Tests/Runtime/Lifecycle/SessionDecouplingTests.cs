@@ -398,6 +398,11 @@ public class SessionDecouplingTests
 
         public void DeleteCurrentDirectory() => _inner.DeleteCurrentDirectory();
 
-        public void RestoreExtraFilesFromSnapshot(string saveId) { }
+        public void RestoreExtraFilesFromSnapshot(string saveId) =>
+            _inner.RestoreExtraFilesFromSnapshot(saveId);
+
+        public void RestoreExtraFilesFromSnapshot(
+            ISaveStorageService sourceStorage, string saveId) =>
+            _inner.RestoreExtraFilesFromSnapshot(sourceStorage, saveId);
     }
 }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：存储 测试
 
@@ -309,6 +309,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `CopyDirectoryFromSnapshot_SeededFiles_AllCopiedToCurrent` | 快照 save_001/extra 下种子文件全部复制到 current/extra | SaveStorageFacade.CopyDirectoryFromSnapshot |
 | `CopyDirectoryFromSnapshot_SubdirectoryStructurePreserved` | 子目录层级结构在复制后原样保留 | SaveStorageFacade.CopyDirectoryFromSnapshot |
 | `CopyDirectoryFromSnapshot_ExistingFilesInCurrent_Overwrites` | current 中已有同名文件被快照内容覆盖 | SaveStorageFacade.CopyDirectoryFromSnapshot |
+| `RestoreExtraFilesFromSourceSnapshot_CopiesAcrossStorageRoots` | 从源存储服务的 save_000/extra 复制到目标存储服务的 current/extra（跨存储根） | ISaveStorageService.RestoreExtraFilesFromSnapshot |
 | `ExtraFiles_FullSaveLoadRoundTrip_PreservesMultipleFiles` | 多个 extra 文件保存→加载往返后内容与结构保留 | persistence-flow: extra |
 | `ExtraFiles_SaveLoadRoundTrip_SubdirectoryPreserved` | 子目录下的 extra 文件往返保留 | persistence-flow: extra |
 | `ExtraFiles_SaveTwice_SameSlot_HasLatestContent` | 同槽位保存两次后加载为最新内容 | persistence-flow: extra |
@@ -331,6 +332,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 |---------|---------|---------|
 | `CopyDirectoryFromSnapshot_SourceDirectoryDoesNotExist_ReturnsSilently` | 快照中无 extra/ 目录 | 静默返回，不抛异常 |
 | `CopyDirectoryFromSnapshot_EmptySourceDirectory_DoesNothing` | extra/ 为空目录 | current/extra 创建但内容为空 |
+| `RestoreExtraFilesFromSourceSnapshot_SourceWithoutExtra_ReturnsSilently` | 源快照无 extra/ 目录 | 静默返回，不创建目标 extra/ |
 | `ComputeSideDirectoryHash_NoExtraDir_ReturnsEmpty` | 无 extra/ 目录 | 返回空字符串 |
 | `ComputeSideDirectoryHash_EmptyExtraDir_ReturnsEmpty` | extra/ 目录存在但为空 | 返回空字符串 |
 | `ComputeSideDirectoryHash_CustomDirectory_Empty_ReturnsEmpty` | 自定义目录为空 | 返回空字符串 |
@@ -342,6 +344,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `CopyDirectoryFromSnapshot_NullHandle_Throws` | handle 为 null | ArgumentNullException |
 | `CopyDirectoryFromSnapshot_EmptySaveId_Throws` | saveId 为空字符串 | ArgumentException |
 | `CopyDirectoryFromSnapshot_EmptyDirName_Throws` | relativeDirName 为空字符串 | ArgumentException |
+| `RestoreExtraFilesFromSourceSnapshot_NullSource_Throws` | sourceStorage 为 null | ArgumentNullException |
 
 ## 测试辅助策略
 

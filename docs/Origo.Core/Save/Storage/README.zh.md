@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Storage
 
@@ -97,6 +97,10 @@
 - 仅 SaveId 不同（写入不同槽）→ 总是写入（新槽位无 .sha 可比较）
 
 `current/.payload.sha` 的写入有三种刻意语义，互不冲突：快照写入路径（`WriteSavePayloadToCurrentThenSnapshot`）写 **combined hash**（payload + `extra/`），供下一次幂等去重比对；测试路径（`SaveStorageFacade.WriteSavePayloadToCurrent`）写 **payload-only hash**（测试无 `extra/` 侧通道，combined 会失真）；加载恢复路径（`DefaultSaveStorageService.WriteSavePayloadToCurrent`）**不写 sha**——恢复写入无幂等契约，快照阶段才承担去重。`.payload.sha` 的唯一消费方是快照目录中 `TryIdempotentSkip` 的比对，`current/` 自身的 sha 仅随快照复制被间接消费。
+
+### 为什么 extra/ 跨存储根恢复要显式传入 source 服务
+
+`RestoreExtraFilesFromSnapshot(string saveId)` 的语义是“从本服务自己的快照恢复到本服务的 current/”。初始存档的 payload 与 extra/ 位于只读的 `res://` 初始存储根，而运行时要恢复到可写的 `user://` 运行时存储根。若复用同服务重载，源路径会被解析到目标服务的 current/ 中，导致初始存档的 extra/ 被忽略，甚至可能把运行时旧快照的文件误拷入当前存档。因此接口增加 `RestoreExtraFilesFromSnapshot(ISaveStorageService sourceStorage, string saveId)`，由目标服务明确声明源存储服务；默认实现仅支持源也是 `DefaultSaveStorageService` 的组合，自定义服务组合需由自定义目标实现支持，未知组合显式抛异常而非静默回退。
 
 ### 为什么 DataSourceNode 计算 Canonical Hash 而非序列化后 Hash
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -49,7 +49,7 @@
 | OrigoDefaultEntryBootstrapIntegrationTests | `Tests/OrigoDefaultEntryBootstrapIntegrationTests.cs` | 1 | `OrigoDefaultEntry` 属性完整默认值 |
 | BootstrapIntegrationTests | `Tests/BootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` / `OrigoDefaultEntry` 属性默认值与实例化 |
 | SndEntityNodeExtensionsIntegrationTests | `Tests/SndEntityNodeExtensionsIntegrationTests.cs` | 3 | `SndEntityNodeExtensions`（GetNativeNode/GetNodeFromSnd 类型守卫） |
-| TypedDataInitializerIntegrationTests | `Tests/TypedDataInitializerIntegrationTests.cs` | 1 | `TypedDataInitializer`（EnsureLoaded 触发 adapter kind 注册） |
+| GodotAdapterTypedDataRegistrationIntegrationTests | `Tests/GodotAdapterTypedDataRegistrationIntegrationTests.cs` | 1 | GodotAdapter 程序集加载触发生成的 `[ModuleInitializer]` Kind 注册 |
 | ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 3 | 观察者绑定跨存档/读档恢复 + 会话销毁触发 OnUnmounted |
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | 测试进程启动前 user:// 清理：残留写中标记/前缀产物清除、非测试内容与 Godot 系统内容保留、幂等 |
 | GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 1 | `GodotSndManager._ExitTree` 越界清理：直接移除管理器节点后 Core 侧策略池引用无泄漏 |
@@ -105,7 +105,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── OrigoAutoHostBootstrapIntegrationTests.cs # 完整启动测试
 │   ├── AdapterCommandHandlerIntegrationTests.cs # 命令处理器测试
 │   ├── SndEntityNodeExtensionsIntegrationTests.cs # 扩展方法测试
-│   ├── TypedDataInitializerIntegrationTests.cs # 类型数据初始化测试
+│   ├── GodotAdapterTypedDataRegistrationIntegrationTests.cs # 程序集加载触发 TypedData Kind 注册测试
 │   ├── BootstrapIntegrationTests.cs       # 引导默认值/实例化测试
 │   ├── OrigoDefaultEntryBootstrapIntegrationTests.cs # 默认入口属性测试
 │   ├── ObserverSaveReloadIntegrationTests.cs # 观察者绑定跨存档恢复测试

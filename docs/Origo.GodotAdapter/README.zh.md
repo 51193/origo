@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter
 
@@ -18,7 +18,7 @@
 | [FileSystem](FileSystem/README.zh.md) | Godot 文件系统 | IFileSystem 实现：FileAccess/DirAccess + res:// 和 user:// 支持 |
 | [Logging](Logging/README.zh.md) | Godot 日志 | ILogger 实现：委托注入 GD.Print/PushWarning/PushError |
 | [Serialization](Serialization/README.zh.md) | Godot 类型序列化 | 14 种 Godot 类型 → DataSourceNode 转换器 |
-| [Snd](Snd/README.zh.md) | Godot SND 实体 | ISndSceneHost 实现：GodotSndManager + GodotSndEntity + PackedSceneNodeFactory + TypedDataInitializer |
+| [Snd](Snd/README.zh.md) | Godot SND 实体 | ISndSceneHost 实现：GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
 | — | TypedData 内联 | Source Generator 为 14 种 Godot 类型生成扩展方法与 Kind 注册 |
 
 ## 启动流程
@@ -101,7 +101,7 @@ OrigoDefaultEntry._Ready()
 
 Origo.GodotAdapter 引用 `Origo.SourceGeneration` 源码生成器，通过 `[assembly: SndInlineTypes(startKind: 128, ...)]` 在程序集中注册 14 种 Godot 引擎类型。编译时 SG 自动生成扩展方法（`TryGetVector2` / `AsVector3` 等，`TypedDataLayeredExtensions` 类为 `internal`）、`[ModuleInitializer]` 注册逻辑和 KindResolver/Converter 桥接。
 
-- **TypedDataInitializer**（`Origo.GodotAdapter.Snd`）：`internal` 静态类，`EnsureLoaded()` 触发 GodotAdapter 程序集加载，确保所有 `[ModuleInitializer]` 执行完毕。测试项目经 `InternalsVisibleTo` 调用它强制加载适配层。
+- **程序集加载即注册**：GodotAdapter 程序集被引用或加载时，其生成的 `[ModuleInitializer]` 自动执行 Kind / Converter / TypeMap 注册，无需额外初始化入口。测试通过引用公开类型强制程序集加载。
 - **Kind 范围 128–141**：不与 Core 层 1–13 冲突，确保 Core 创建的 `(TypedData)42` 不会在 GodotAdapter 中被误解析为 `Vector2`。
 
 详见 [Origo.SourceGeneration 文档](../Origo.SourceGeneration/README.zh.md)。

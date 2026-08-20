@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构总览
 
@@ -226,7 +226,7 @@ Origo.GodotAdapter/   # Godot 4 适配层（~23 个 .cs 文件）
 ├── FileSystem/       # Godot 文件系统
 ├── Logging/          # Godot 日志
 ├── Serialization/    # Godot 类型序列化
-└── Snd/              # Godot 实体 + 管理器 + TypedDataInitializer
+└── Snd/              # Godot 实体 + 管理器 + 节点工厂
 
 Origo.ConsoleBridge/  # TCP 远程控制台（~2 个 .cs 文件）
 ```

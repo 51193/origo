@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体 测试（适配层）
 
@@ -17,7 +17,7 @@
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `Snd/SndEntityCollectionTests.cs` | 实体集合全能力：创建/查找/移除/击杀标记、`RecoverFromMetaList` 批量恢复与部分失败回滚、`RemoveAllEntities`、帧处理 `ProcessAll`、元数据列表构建、`OwningSession` 绑定 |
-| `Snd/TypedDataInitializerTests.cs` | `TypedDataInitializer.EnsureLoaded()` 触发适配层 Kind 注册的幂等性与可用性 |
+| `Snd/TypedDataAssemblyLoadTests.cs` | 通过引用公开 GodotAdapter 类型强制程序集加载，验证生成的 `[ModuleInitializer]` 完成适配层 Kind 注册 |
 | `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` 的契约：非 Godot 实体/句柄返回 null、节点句柄提取 |
 
 ## SndEntityCollectionTests 测试详情
@@ -58,13 +58,13 @@
 | `ProcessAll_ContainerModifiedDuringProcess_Throws` | 帧处理期间集合被修改（实体在 ProcessSnd 中新增） | 抛 `InvalidOperationException`（消息含 "modified during ProcessAll"；与 FullMemorySndSceneHost 一致） |
 | `RequestKillEntity_Unknown_Throws` | 击杀不存在的实体抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
 
-## TypedDataInitializerTests 测试详情
+## TypedDataAssemblyLoadTests 测试详情
 
 ### 正确路径
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `EnsureLoaded_TriggersAdapterKindRegistration` | `TypedDataInitializer.EnsureLoaded()` 触发适配层 Kind 注册（Vector2 解析为 Kind 128） | Origo.GodotAdapter/Snd |
+| `GodotAdapterAssemblyLoad_RegistersTypedDataKinds` | 引用公开 GodotAdapter 类型触发程序集加载和生成的 `[ModuleInitializer]`，Vector2 解析为 Kind 128 | Origo.GodotAdapter/Snd |
 
 ## SndEntityNodeExtensionsTests 测试详情
 
