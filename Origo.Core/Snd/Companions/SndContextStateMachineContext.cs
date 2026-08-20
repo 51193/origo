@@ -28,9 +28,6 @@ internal sealed class SndContextStateMachineContext(SndContext owner) : IStateMa
     public void EnqueueBusinessDeferred(Action action) =>
         owner.Runtime.EnqueueBusinessDeferred(action);
 
-    public void FlushDeferredActionsForCurrentFrame() =>
-        owner.Runtime.FlushEndOfFrameDeferred();
-
     public int GetPendingPersistenceRequestCount() =>
         System.Threading.Interlocked.CompareExchange(
             ref owner._pendingPersistenceRequests, 0, 0);

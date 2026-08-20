@@ -77,7 +77,7 @@ public sealed class StrategyTestHarness : BaseStrategyTestHarness
     public void RunFrame(double delta = 0.016)
     {
         Strategy.Process(Entity, delta, Context);
-        Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        Context.FlushDeferredActionsForCurrentFrame();
     }
 
     public void RunFrames(int count, double delta = 0.016)
@@ -120,7 +120,7 @@ public sealed class ActiveStrategyTestHarness : BaseStrategyTestHarness
 
     public object? Invoke(object? input = null) => Strategy.Invoke(Entity, Context, input);
 
-    public void FlushDeferredActions() => Context.Deferred.FlushDeferredActionsForCurrentFrame();
+    public void FlushDeferredActions() => Context.FlushDeferredActionsForCurrentFrame();
 
     public object? InvokeViaEntity(object? input = null) => Entity.InvokeStrategy(_strategyIndex, input);
 }

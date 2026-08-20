@@ -33,7 +33,7 @@ public class SaveMetaContributorRegistrationTests
         ctx.Save.RegisterSaveMetaContributor(new KeyValueContributor("key_a", "val_a"));
 
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_01", MainMenuLevelId);
         Assert.NotNull(payload.CustomMeta);
@@ -52,7 +52,7 @@ public class SaveMetaContributorRegistrationTests
         ctx.Save.RegisterSaveMetaContributor(_ => new Dictionary<string, string> { ["dkey"] = "dval" });
 
         ctx.Save.RequestSaveGame("slot_02");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_02", MainMenuLevelId);
         Assert.NotNull(payload.CustomMeta);
@@ -89,7 +89,7 @@ public class SaveMetaContributorRegistrationTests
         ctx.Save.RegisterSaveMetaContributor(new KeyValueContributor("same", "second"));
 
         ctx.Save.RequestSaveGame("slot_03");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_03", MainMenuLevelId);
         Assert.NotNull(payload.CustomMeta);
@@ -110,7 +110,7 @@ public class SaveMetaContributorRegistrationTests
         ctx.Save.RegisterSaveMetaContributor(new KeyValueContributor("c", "3"));
 
         ctx.Save.RequestSaveGame("slot_04");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_04", MainMenuLevelId);
         Assert.NotNull(payload.CustomMeta);
@@ -131,7 +131,7 @@ public class SaveMetaContributorRegistrationTests
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
 
         ctx.Save.RequestSaveGame("slot_05");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_05", MainMenuLevelId);
         Assert.Null(payload.CustomMeta);
@@ -157,7 +157,7 @@ public class SaveMetaContributorRegistrationTests
         });
 
         ctx.Save.RequestSaveGame("slot_ctx");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Equal("slot_ctx", receivedSaveId);
         Assert.Equal(MainMenuLevelId, receivedLevelId);
@@ -177,14 +177,14 @@ public class SaveMetaContributorRegistrationTests
         ctx.Save.RegisterSaveMetaContributor(new KeyValueContributor("ts", "1"));
 
         ctx.Save.RequestSaveGame("slot_a");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload1 = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_a", MainMenuLevelId);
         Assert.Equal("1", payload1.CustomMeta!["ts"]);
 
         ctx.Save.RegisterSaveMetaContributor(new KeyValueContributor("ts", "2"));
         ctx.Save.RequestSaveGame("slot_b");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload2 = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "slot_b", MainMenuLevelId);
         Assert.Equal("2", payload2.CustomMeta!["ts"]);
@@ -234,6 +234,6 @@ internal static class SndContextTestHelper
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
     }
 }

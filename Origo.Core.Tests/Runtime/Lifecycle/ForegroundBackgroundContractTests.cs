@@ -45,7 +45,7 @@ public class ForegroundBackgroundContractTests
             WellKnownKeys.SessionTopology,
             $"{ISessionManager.ForegroundKey}=default=false,bg=bg=false");
         ctx.Save.RequestSaveGame("test_load_rt");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.IsType<ISessionRun>(bg, exactMatch: false);
     }
 
@@ -76,7 +76,7 @@ public class ForegroundBackgroundContractTests
         bg.SessionBlackboard.SetValue("bg_key", 2);
 
         ctx.Save.RequestSaveGame("format_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_format_test/level_default/session.json"));
         Assert.True(fs.Exists("root/save_format_test/level_bg/session.json"));
@@ -88,7 +88,7 @@ public class ForegroundBackgroundContractTests
             "format_test", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
         ctx.SetProgressRun(newPr);
         ctx.Save.RequestLoadGame("format_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var loadedBg = (SessionRun?)ctx.Runtime.SessionManager.TryGet("bg");
         Assert.NotNull(loadedBg);
@@ -114,7 +114,7 @@ public class ForegroundBackgroundContractTests
         bg.SessionBlackboard.SetValue("shared_key", 42);
 
         ctx.Save.RequestSaveGame("load_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.True(fs.Exists("root/save_load_test/progress.json"));
 
         var (fgFound, fgVal) = fg.SessionBlackboard.TryGet<int>("shared_key");
@@ -229,7 +229,7 @@ public class ForegroundBackgroundContractTests
         bg.SessionBlackboard.SetValue("bg_data", "bg_val");
 
         ctx.Save.RequestSaveGame("persist_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists($"root/save_persist_test/level_{fg.LevelId}/session.json"));
         Assert.True(fs.Exists("root/save_persist_test/level_bg/session.json"));
@@ -256,7 +256,7 @@ public class ForegroundBackgroundContractTests
         }
 
         ctx.Save.RequestSaveGame("unified_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists($"root/save_unified_test/level_{fg.LevelId}/session.json"));
         Assert.True(fs.Exists("root/save_unified_test/level_bg/session.json"));
@@ -272,7 +272,7 @@ public class ForegroundBackgroundContractTests
         bg1.SessionBlackboard.SetValue("data", 99);
 
         ctx.Save.RequestSaveGame("rttest");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_rttest/progress.json"));
         Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg1"));

@@ -305,7 +305,7 @@ public class BackgroundSessionTests
         bg.SessionBlackboard.SetValue("difficulty", "hard");
 
         ctx.Save.RequestSaveGame("persist_dungeon");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_persist_dungeon/level_dungeon/snd_scene.json"));
         Assert.True(fs.Exists("root/save_persist_dungeon/level_dungeon/session.json"));
@@ -394,7 +394,7 @@ public class BackgroundSessionTests
         // Save via ISndContext.
         events.Clear();
         ctx.Save.RequestSaveGame("full_workflow_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Contains("BeforeSave:guard_01", events);
         Assert.Contains("BeforeSave:guard_02", events);
 
@@ -425,7 +425,7 @@ public class BackgroundSessionTests
 
         events.Clear();
         ctx.Save.RequestSaveGame("fg_before_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_fg_before_save/level_test_level/snd_scene.json"));
         Assert.Contains("BeforeSave:hero_01", events);
@@ -443,7 +443,7 @@ public class BackgroundSessionTests
         fg.Spawn(CreateMetaWithIndices("hero_01", _topologyOverwriteStrategyIndex));
 
         ctx.Save.RequestSaveGame("fg_topology_guard");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // The persisted topology must be the framework-computed one, not the
         // value written by the hook.
@@ -468,7 +468,7 @@ public class BackgroundSessionTests
         fg.Spawn(CreateMetaWithIndices("guard_01", _beforeSaveWriterStrategyIndex));
 
         ctx.Save.RequestSaveGame("fg_before_save_write");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Contains("BeforeSaveWrite:guard_01", events);
         var sndJson = fs.ReadAllText("root/save_fg_before_save_write/level_test_level/snd_scene.json");
@@ -487,7 +487,7 @@ public class BackgroundSessionTests
         bg.SessionBlackboard.SetValue("hp", 100);
 
         ctx.Save.RequestSaveGame("ser_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_ser_test/level_bg_level/snd_scene.json"));
         Assert.True(fs.Exists("root/save_ser_test/level_bg_level/session.json"));
@@ -516,7 +516,7 @@ public class BackgroundSessionTests
         source.SessionBlackboard.SetValue("alert", 5);
 
         ctx.Save.RequestSaveGame("src_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_src_save/level_src_level/session.json"));
         Assert.True(fs.Exists("root/save_src_save/level_src_level/snd_scene.json"));
@@ -533,7 +533,7 @@ public class BackgroundSessionTests
         bg.SessionBlackboard.SetValue("score", 42);
 
         ctx.Save.RequestSaveGame("roundtrip");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_roundtrip/level_bg/snd_scene.json"));
         Assert.True(fs.Exists("root/save_roundtrip/level_bg/session.json"));
@@ -553,7 +553,7 @@ public class BackgroundSessionTests
         bg.Dispose();
 
         ctx.Save.RequestSaveGame("after_dispose");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.False(fs.Exists("root/save_after_dispose/level_bg/snd_scene.json"));
     }
@@ -568,7 +568,7 @@ public class BackgroundSessionTests
         bg.Dispose();
 
         ctx.Save.RequestSaveGame("after_dispose2");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.False(fs.Exists("root/save_after_dispose2/level_bg/snd_scene.json"));
     }
@@ -590,7 +590,7 @@ public class BackgroundSessionTests
         source.SessionBlackboard.SetValue("difficulty", "hard");
 
         ctx.Save.RequestSaveGame("load_sess");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_load_sess/level_src/session.json"));
         Assert.NotNull(source.FindByName("npc_a"));
@@ -662,7 +662,7 @@ public class BackgroundSessionTests
         bg.SessionBlackboard.SetValue("bg_key", 42);
 
         ctx.Save.RequestSaveGame("save001");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         var payload = ctx.StorageService.ReadSavePayloadFromSnapshot("save001", "test_level");
 
         // Should contain both foreground and background levels.
@@ -687,7 +687,7 @@ public class BackgroundSessionTests
 
         // Save and reload through the public save/load flow.
         ctx.Save.RequestSaveGame("save_bg_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Clean up current runs.
         ctx.Runtime.SessionManager.DestroySession("sim1");
@@ -696,7 +696,7 @@ public class BackgroundSessionTests
 
         // Reload from saved snapshot.
         ctx.Save.RequestLoadGame("save_bg_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Verify the background session was restored.
         Assert.NotNull(ctx.Runtime.SessionManager.TryGet("sim1"));
@@ -719,7 +719,7 @@ public class BackgroundSessionTests
             $"{ISessionManager.ForegroundKey}=test_level=false,stale=old=false");
 
         ctx.Save.RequestSaveGame("save_empty");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // SessionTopology should always include foreground session.
         var (found, bgIds) = ctx.Blackboard.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
@@ -739,7 +739,7 @@ public class BackgroundSessionTests
         ctx.Runtime.SessionManager.CreateBackgroundSession("bg_nosync", "bg_nosync_level");
 
         ctx.Save.RequestSaveGame("save_sync_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var (found, bgIds) = ctx.Blackboard.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found);
@@ -755,7 +755,7 @@ public class BackgroundSessionTests
         ctx.Runtime.SessionManager.CreateBackgroundSession("bg_nosync", "bg_nosync_level");
 
         ctx.Save.RequestSaveGame("save_sync_rt");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Clean up and reload.
         ctx.Runtime.SessionManager.DestroySession("bg_sync");
@@ -764,7 +764,7 @@ public class BackgroundSessionTests
         ctx.SetProgressRun(null);
 
         ctx.Save.RequestLoadGame("save_sync_rt");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Verify syncProcess was restored for the true session.
         Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg_sync"));
@@ -772,7 +772,7 @@ public class BackgroundSessionTests
 
         // Verify via another save: the persisted format records the correct flags.
         ctx.Save.RequestSaveGame("save_sync_rt2");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         var (found2, bgIds2) = ctx.Blackboard.ProgressBlackboard!.TryGet<string>(WellKnownKeys.SessionTopology);
         Assert.True(found2);
         Assert.Contains("bg_sync=bg_sync_level=true", bgIds2);
@@ -788,7 +788,7 @@ public class BackgroundSessionTests
         bg.SessionBlackboard.SetValue("sim_round", 10);
 
         ctx.Save.RequestSaveGame("save_topo");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Tear down everything, then reload from the snapshot.
         ctx.Runtime.SessionManager.DestroySession("sim1");
@@ -796,7 +796,7 @@ public class BackgroundSessionTests
         ctx.SetProgressRun(null);
 
         ctx.Save.RequestLoadGame("save_topo");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // The progress blackboard topology must reflect the full live session
         // set (foreground + restored background), not a foreground-only
@@ -819,7 +819,7 @@ public class BackgroundSessionTests
 
         // Save to disk (both current/ and snapshot).
         ctx.Save.RequestSaveGame("save_disk_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Read back from snapshot (simulating a full reload from disk).
         var readPayload = ctx.StorageService.ReadSavePayloadFromSnapshot(
@@ -835,7 +835,7 @@ public class BackgroundSessionTests
         ctx.SetProgressRun(null);
 
         ctx.Save.RequestLoadGame("save_disk_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Verify the background session was restored.
         var restoredBg = ctx.Runtime.SessionManager.TryGet("sim1");
@@ -858,7 +858,7 @@ public class BackgroundSessionTests
 
         // Save (writes to current/ and snapshot).
         ctx.Save.RequestSaveGame("save_cur_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Read back from the snapshot — should include both levels.
         var readPayload = ctx.StorageService.ReadSavePayloadFromSnapshot(

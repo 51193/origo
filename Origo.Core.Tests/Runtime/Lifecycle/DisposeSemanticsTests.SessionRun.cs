@@ -83,7 +83,7 @@ public class DisposeSemanticsTestsSessionRun
         bg.SessionBlackboard.SetValue("data", 42);
 
         ctx.Save.RequestSaveGame("explicit1");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_explicit1/level_bg_level/snd_scene.json"));
         Assert.True(fs.Exists("root/save_explicit1/level_bg_level/session.json"));
@@ -108,7 +108,7 @@ public class DisposeSemanticsTestsSessionRun
 
         events.Clear();
         ctx.Save.RequestSaveGame("before_save_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Contains("BeforeSave:Entity", events);
     }
@@ -154,7 +154,7 @@ public class DisposeSemanticsTestsSessionRun
         bg.Dispose();
 
         ctx.Save.RequestSaveGame("after_dispose_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.False(fs.Exists("root/save_after_dispose_save/level_bg_level/snd_scene.json"));
     }
@@ -170,7 +170,7 @@ public class DisposeSemanticsTestsSessionRun
         bg.Dispose();
 
         ctx.Save.RequestSaveGame("exclude_disposed");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.False(fs.Exists("root/save_exclude_disposed/level_bg_level/snd_scene.json"));
     }

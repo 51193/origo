@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -118,7 +118,6 @@ public interface ISndBlackboardAccess {
 // 延迟动作
 public interface ISndDeferredActions {
     void EnqueueBusinessDeferred(Action action);
-    void FlushDeferredActionsForCurrentFrame();
     int GetPendingPersistenceRequestCount();
 }
 
@@ -244,7 +243,6 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     //   IBlackboard? ProgressBlackboard { get; }
     // 继承自 ISndDeferredActions:
     //   void EnqueueBusinessDeferred(Action action);
-    //   void FlushDeferredActionsForCurrentFrame();
     //   int GetPendingPersistenceRequestCount();
 
     IBlackboard? SessionBlackboard { get; }

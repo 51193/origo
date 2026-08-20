@@ -624,7 +624,7 @@ public class ObserverStrategyTests : IDisposable
             "res://entry/entry.json"));
         host.BindContext(ctx);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         var entity = session.Spawn(CreateMeta("bob"));

@@ -29,10 +29,10 @@ public class SaveSnapshotMarkerTests
         fs.SeedFile("res://levels/main_menu.json", "[]");
 
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestSaveGame("slot_001");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var snapshotDir = "root/save_slot_001";
         Assert.True(fs.DirectoryExists(snapshotDir), "snapshot directory should exist");

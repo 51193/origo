@@ -9,8 +9,6 @@ internal sealed class SndContextDeferredActions(SndContext owner) : ISndDeferred
 {
     public void EnqueueBusinessDeferred(Action action) => owner.Runtime.EnqueueBusinessDeferred(action);
 
-    public void FlushDeferredActionsForCurrentFrame() => owner.Runtime.FlushEndOfFrameDeferred();
-
     public int GetPendingPersistenceRequestCount() =>
         Interlocked.CompareExchange(ref owner._pendingPersistenceRequests, 0, 0);
 }

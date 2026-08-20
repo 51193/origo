@@ -53,7 +53,7 @@ public class EntityKillTests
     {
         var (ctx, _) = Setup();
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         session.Spawn(new SndMetaData
@@ -85,7 +85,7 @@ public class EntityKillTests
     {
         var (ctx, _) = Setup();
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         session.Spawn(new SndMetaData
@@ -128,7 +128,7 @@ public class EntityKillTests
     {
         var (ctx, _) = Setup();
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         foreach (var e in session.GetEntities())
@@ -242,7 +242,7 @@ public class EntityKillTests
             });
             ctx.Deferred.EnqueueBusinessDeferred(() => events.Add("business:after_marks"));
 
-            ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+            ctx.FlushFrame();
 
             Assert.Equal("business:mark_a", events[0]);
             Assert.Equal("business:mark_b", events[1]);
@@ -519,7 +519,7 @@ public class EntityKillTests
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         return (ctx, host, logger);
     }
 

@@ -32,7 +32,7 @@ public class DisposeSemanticsTestsProgressRun
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSaveGame("temp");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/progress.json"));
 

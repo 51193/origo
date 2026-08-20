@@ -29,7 +29,7 @@ public class SndContextBootstrapTests
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
 
         ctx.Bootstrap();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
     }
@@ -79,7 +79,7 @@ public class SndContextBootstrapTests
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
 
         ctx.Bootstrap();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var clone = ctx.Template.CloneTemplate("hero", "MyHero");
         Assert.Equal("MyHero", clone.Name);
@@ -92,7 +92,7 @@ public class SndContextBootstrapTests
 
         ctx.Bootstrap();
 
-        Assert.Throws<FileNotFoundException>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<FileNotFoundException>(() => ctx.FlushFrame());
     }
 
     [Fact]
@@ -157,7 +157,7 @@ public class SndContextBootstrapTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Bootstrap();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var smCtx = ctx.StateMachineContext;
         Assert.NotNull(smCtx.SceneAccess);
@@ -170,7 +170,7 @@ public class SndContextBootstrapTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Bootstrap();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var smCtx = ctx.StateMachineContext;
         Assert.NotNull(smCtx.SystemBlackboard);
@@ -183,7 +183,7 @@ public class SndContextBootstrapTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Bootstrap();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var smCtx = ctx.StateMachineContext;
         Assert.NotNull(smCtx.ProgressBlackboard);

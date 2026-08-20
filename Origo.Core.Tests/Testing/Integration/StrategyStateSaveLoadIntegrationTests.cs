@@ -133,20 +133,20 @@ public class StrategyStateSaveLoadIntegrationTests
         harness.RunFrames(2);
 
         var saveId1 = harness.Context.Save.RequestSaveGameAuto("state_overwrite");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.Context.FlushFrame();
 
         harness.RunFrames(3);
         harness.SessionBlackboard.SetValue("version", 2);
 
         var saveId2 = harness.Context.Save.RequestSaveGameAuto("state_overwrite");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.Context.FlushFrame();
 
         foreach (var key in harness.Context.Runtime.SessionManager.Keys)
             harness.Context.Runtime.SessionManager.DestroySession(key);
         harness.Context.SetProgressRun(null);
 
         harness.Context.Save.RequestLoadGame(saveId2);
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.Context.FlushFrame();
 
         var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
         Assert.NotNull(gameSession);
@@ -211,7 +211,7 @@ public class StrategyStateSaveLoadIntegrationTests
         harness.RunFrames(3);
 
         var saveId = harness.Context.Save.RequestSaveGameAuto("corrupt_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.Context.FlushFrame();
 
         harness.FileSystem.SeedFile(
             $"root/save_{saveId}/progress.json", "{broken json");
@@ -222,7 +222,7 @@ public class StrategyStateSaveLoadIntegrationTests
 
         harness.Context.Save.RequestLoadGame(saveId);
         Assert.ThrowsAny<JsonException>(
-            () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
+            () => harness.Context.FlushFrame());
     }
 
     // ── test strategies ──────────────────────────────────────────────

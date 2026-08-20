@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter
 
@@ -52,7 +52,7 @@ OrigoDefaultEntry._Ready()
 
 - **不触发策略钩子**：`GodotSndManager.CreateEntity` 仅创建实体和 Godot 节点，不调用 `AfterSpawn` / `AfterLoad` / `BeforeDead` 等钩子
 - **不管理策略释放**：`RemoveEntity` 仅移除 Godot 节点和集合引用，不调用 `ReleaseStrategiesOnly`
-- **不冲刷延迟管线**：帧循环中不绕过 Core 直接调用 `FlushDeferredActionsForCurrentFrame`
+- **不冲刷延迟管线**：帧循环中不绕过 Core 直接调用 internal 的 `FlushEndOfFrameDeferred`
 - **`OrigoAutoHost._Process` 为唯一帧入口**：在其中依次委托 Core 的 `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending`，适配层仅做调度，不做决策
 
 所有这些编排由 Core 层的会话生命周期（`SessionManager` / `SessionRun`）统一负责。详细分离原则见 [架构总览](../usage/architecture-overview.zh.md#适配层与-core-层分离原则)。

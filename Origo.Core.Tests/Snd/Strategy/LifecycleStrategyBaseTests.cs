@@ -63,7 +63,7 @@ public class LifecycleStrategyBaseTests
         var pathResolver = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial", "res://entry/entry.json"));
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         var entity = session.Spawn(new SndMetaData { Name = "e" });
@@ -88,7 +88,7 @@ public class LifecycleStrategyBaseTests
         var pathResolver2 = TestFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, io2, metaAccess2, pathResolver2, "root", "res://initial", "res://entry/entry.json"));
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         var entityA = session.Spawn(new SndMetaData { Name = "A" });
@@ -269,7 +269,7 @@ public class LifecycleStrategyBaseTests
             "res://entry/entry.json"));
         host.BindContext(ctx);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         return (host, ctx);
     }
 

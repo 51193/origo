@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Model
 
@@ -87,18 +87,18 @@ bg.SessionBlackboard.SetValue("data", 1);
 
 // Direct switch; SwitchForeground automatically saves and destroys bg
 ctx.Save.RequestSwitchForegroundLevel("game");
-ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+((IOrigoFrameDriver)runtime).DriveFrame(0); // host frame boundary executes deferred requests
 
 // Method 2: Manual control — caller explicitly saves and destroys step by step for finer control
 var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
 
 ctx.Save.RequestSaveGameAuto();
-ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+((IOrigoFrameDriver)runtime).DriveFrame(0); // host frame boundary executes deferred requests
 
 sessionManager.DestroySession("gen");
 ctx.Save.RequestSwitchForegroundLevel("game");
-ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+((IOrigoFrameDriver)runtime).DriveFrame(0); // host frame boundary executes deferred requests
 ```
 
 ## Session Topology
@@ -127,7 +127,6 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     IBlackboard? SessionBlackboard { get; }   // Current session level
     ISndSceneReadAccess SceneAccess { get; }      // Current session scene
     void EnqueueBusinessDeferred(Action action);           // Inherits ISndDeferredActions
-    void FlushDeferredActionsForCurrentFrame();            // Inherits ISndDeferredActions
     int GetPendingPersistenceRequestCount();               // Inherits ISndDeferredActions
 }
 ```

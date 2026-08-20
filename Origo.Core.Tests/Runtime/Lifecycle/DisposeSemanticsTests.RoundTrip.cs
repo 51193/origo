@@ -27,7 +27,7 @@ public class DisposeSemanticsTestsRoundTrip
         fg.SessionBlackboard.SetValue("save_key", "save_value");
 
         ctx.Save.RequestSaveGame("test_001");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_test_001/progress.json"));
         Assert.True(fs.Exists("root/save_test_001/level_test_level/snd_scene.json"));
@@ -36,7 +36,7 @@ public class DisposeSemanticsTestsRoundTrip
         ctx.SetProgressRun(null);
 
         ctx.Save.RequestLoadGame("test_001");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var restoredFg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
@@ -57,13 +57,13 @@ public class DisposeSemanticsTestsRoundTrip
         ctx.Blackboard.ProgressBlackboard!.SetValue("global_score", 9001);
 
         ctx.Save.RequestSaveGame("score_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
         ctx.Save.RequestLoadGame("score_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var (found, score) = ctx.Blackboard.ProgressBlackboard!.TryGet<int>("global_score");
         Assert.True(found);
@@ -79,11 +79,11 @@ public class DisposeSemanticsTestsRoundTrip
         bg.Spawn(DisposeSemanticsTestInfrastructure.CreateMeta("GameEntity"));
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("gen");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -91,7 +91,7 @@ public class DisposeSemanticsTestsRoundTrip
 
         var saveId = "after_switch";
         ctx.Save.RequestSaveGame(saveId);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload = ctx.StorageService.ReadSavePayloadFromSnapshot(saveId, "game");
         Assert.Equal("game", payload.ActiveLevelId);
@@ -109,11 +109,11 @@ public class DisposeSemanticsTestsRoundTrip
         bg.SessionBlackboard.SetValue("map_seed", 42);
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("gen");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fgBefore = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fgBefore);
@@ -121,13 +121,13 @@ public class DisposeSemanticsTestsRoundTrip
 
         var saveId = "reload_test";
         ctx.Save.RequestSaveGame(saveId);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
         ctx.Save.RequestLoadGame(saveId);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var restoredFg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
@@ -155,7 +155,7 @@ public class DisposeSemanticsTestsRoundTrip
             "{\"machines\":[]}");
 
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/level_test_level/snd_scene.json"));
         Assert.True(fs.Exists("root/current/level_test_level/session.json"));

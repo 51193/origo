@@ -154,7 +154,7 @@ internal static class TestFactory
         var ctx = new SndContext(new SndContextParameters(
             runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         return runtime.SessionManager.ForegroundSession
                ?? throw new InvalidOperationException("Foreground session was not created.");

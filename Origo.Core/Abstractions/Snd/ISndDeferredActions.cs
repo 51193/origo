@@ -13,10 +13,6 @@ public interface ISndDeferredActions
     /// This is the recommended way to schedule side-effects from strategy hooks.</summary>
     void EnqueueBusinessDeferred(Action action);
 
-    /// <summary>Execute all deferred actions for the current frame (business queue before system queue).
-    /// Called once per frame by the engine adapter layer; strategies should not call this directly.</summary>
-    void FlushDeferredActionsForCurrentFrame();
-
     /// <summary>Get the current count of pending persistence requests, useful for awaiting async save completion.</summary>
     int GetPendingPersistenceRequestCount();
 }

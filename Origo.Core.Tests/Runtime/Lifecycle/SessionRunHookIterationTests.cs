@@ -70,10 +70,10 @@ public class SessionRunHookIterationTests
         // construction; a hook that spawns an entity must not break
         // serialization, and the spawned entity must survive the round trip.
         ctx.Save.RequestSaveGame("hook_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestLoadGame("hook_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var names = ctx.Runtime.SessionManager.ForegroundSession!.GetEntities()
             .Select(e => e.Name).ToList();

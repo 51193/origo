@@ -94,7 +94,7 @@ public class LifecycleRunsTests
 
         sndContext.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "001", sndContext.Runtime.Logger);
         sndContext.Save.RequestLoadGame("001");
-        sndContext.Deferred.FlushDeferredActionsForCurrentFrame();
+        sndContext.FlushFrame();
         var (found, value) = sndContext.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.TryGet<int>("x");
 
         Assert.True(found);
@@ -134,7 +134,7 @@ public class LifecycleRunsTests
 
         sndContext.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "001", sndContext.Runtime.Logger);
         sndContext.Save.RequestLoadGame("001");
-        var ex = Assert.Throws<InvalidOperationException>(() => sndContext.Deferred.FlushDeferredActionsForCurrentFrame());
+        var ex = Assert.Throws<InvalidOperationException>(() => sndContext.FlushFrame());
         Assert.Contains(WellKnownKeys.SessionTopology, ex.Message, StringComparison.Ordinal);
     }
 
@@ -159,7 +159,7 @@ public class LifecycleRunsTests
         fs.SeedFile("root/current/level_b/session_state_machines.json", "{\"machines\":[]}");
 
         sndContext.Save.RequestSwitchForegroundLevel("b");
-        sndContext.Deferred.FlushDeferredActionsForCurrentFrame();
+        sndContext.FlushFrame();
 
         Assert.Equal("b", progressRun.SessionManager.ForegroundSession!.LevelId);
         Assert.True(progressRun.SessionManager.Contains(ISessionManager.ForegroundKey));
@@ -195,7 +195,7 @@ public class LifecycleRunsTests
         Assert.NotEmpty(host.BuildMetaList());
 
         sndContext.Save.RequestSwitchForegroundLevel("b");
-        sndContext.Deferred.FlushDeferredActionsForCurrentFrame();
+        sndContext.FlushFrame();
 
         Assert.Empty(host.BuildMetaList());
         Assert.Equal("b", progressRun.SessionManager.ForegroundSession?.LevelId);
@@ -250,7 +250,7 @@ public class LifecycleRunsTests
         progressRun.ProgressBlackboard.SetValue(WellKnownKeys.SessionTopology, "__foreground__=wrong=false");
 
         sndContext.Save.RequestSaveGame("new-save-01");
-        Assert.Throws<InvalidOperationException>(() => sndContext.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<InvalidOperationException>(() => sndContext.FlushFrame());
     }
 
     // ── SessionRun serialization round-trip ──
@@ -274,7 +274,7 @@ public class LifecycleRunsTests
         fg.SessionBlackboard.SetValue("score", 42);
 
         sndContext.Save.RequestSaveGame("roundtrip_001");
-        sndContext.Deferred.FlushDeferredActionsForCurrentFrame();
+        sndContext.FlushFrame();
 
         Assert.True(fs.Exists("root/save_roundtrip_001/level_level1/session.json"));
 
@@ -586,6 +586,6 @@ public class LifecycleRunsTests
         progressRun.ProgressBlackboard.SetValue(WellKnownKeys.SessionTopology, string.Empty);
 
         sndContext.Save.RequestSaveGame("no_topology");
-        Assert.Throws<InvalidOperationException>(() => sndContext.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<InvalidOperationException>(() => sndContext.FlushFrame());
     }
 }

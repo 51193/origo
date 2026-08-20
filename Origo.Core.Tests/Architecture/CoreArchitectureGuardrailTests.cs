@@ -119,6 +119,22 @@ public class CoreArchitectureGuardrailTests
         Assert.DoesNotContain(ownMethods, m => m.Name == "EnqueueBusinessDeferred");
     }
 
+    [Fact]
+    public void DeferredFlush_ShouldNotBePublicBusinessSurface()
+    {
+        // Frame flushing is owned by IOrigoFrameDriver.DriveFrame. A public
+        // flush on ISndDeferredActions or OrigoRuntime would let business code
+        // run the business queue -> kill sweep -> system queue outside the
+        // entity-processing/console frame order.
+        var deferredMethods = typeof(ISndDeferredActions)
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+            .Select(m => m.Name);
+        Assert.DoesNotContain("FlushDeferredActionsForCurrentFrame", deferredMethods);
+        Assert.Null(typeof(OrigoRuntime).GetMethod(
+            nameof(OrigoRuntime.FlushEndOfFrameDeferred),
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly));
+    }
+
     // ── Behavioral replacements for reflection-based implementation-detail tests ──
 
     [Fact]
@@ -136,14 +152,14 @@ public class CoreArchitectureGuardrailTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
         fg.SessionBlackboard.SetValue("test_key", "test_value");
 
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/progress.json"));
     }
@@ -170,7 +186,7 @@ public class CoreArchitectureGuardrailTests
         var def = ctx.Deferred;
         var executed = false;
         def.EnqueueBusinessDeferred(() => executed = true);
-        def.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.True(executed);
 
         var save = ctx.Save;
@@ -184,8 +200,8 @@ public class CoreArchitectureGuardrailTests
         var console = ctx.ConsoleAccess;
         Assert.False(console.TrySubmitConsoleCommand(""));
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
+        ctx.FlushFrame();
 
         ISndFileAccess fileAccess = ctx.FileAccess;
         Assert.False(fileAccess.FileExists("nonexistent.json"));
@@ -221,7 +237,7 @@ public class CoreArchitectureGuardrailTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
         bg.SessionBlackboard.SetValue("bg_key", "bg_value");
@@ -249,13 +265,13 @@ public class CoreArchitectureGuardrailTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Blackboard.ProgressBlackboard!.SetValue("score", 99);
         ctx.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("level_data", "xyz");
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var saveOps = ctx.Save;
         var saves = saveOps.ListSaves();
@@ -280,7 +296,7 @@ public class CoreArchitectureGuardrailTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1_level");
 
@@ -311,7 +327,7 @@ public class CoreArchitectureGuardrailTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
         Assert.NotEmpty(ctx.Runtime.SessionManager.Keys);
@@ -369,7 +385,7 @@ public class CoreArchitectureGuardrailTests
 
         var executed = false;
         ctx.Deferred.EnqueueBusinessDeferred(() => executed = true);
-        ctx.StateMachineContext.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.True(executed);
     }
 

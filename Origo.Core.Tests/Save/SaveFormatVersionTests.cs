@@ -30,10 +30,10 @@ public class SaveFormatVersionTests
         fs.SeedFile("res://levels/main_menu.json", "[]");
 
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestSaveGame(saveId);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         return (fs, ctx);
     }
 
@@ -61,7 +61,7 @@ public class SaveFormatVersionTests
 
         ctx.Save.RequestLoadGame("ver_slot");
         Assert.Throws<InvalidOperationException>(
-            () => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+            () => ctx.FlushFrame());
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class SaveFormatVersionTests
         fs.WriteAllText(metaPath, metaText.Replace("origo.format_version: 1", ""), overwrite: true);
 
         ctx.Save.RequestLoadGame("ver_slot");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
     }
 
@@ -95,7 +95,7 @@ public class SaveFormatVersionTests
 
         ctx.Save.RequestLoadGame("ver_slot");
         Assert.Throws<InvalidOperationException>(
-            () => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+            () => ctx.FlushFrame());
     }
 
     [Fact]

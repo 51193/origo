@@ -49,6 +49,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - **BREAKING: scene orchestration interfaces are now `internal`** — `ISndSceneHost`, `ISndSceneAccess`, `ISndContextAttachableSceneHost`, `IOwningSessionBindable`, `SndEntityFactory`, and the `OrigoRuntime` constructor are no longer public. Business code can no longer cast `GodotSndManager` to a scene-host interface and bypass spawn/load/kill orchestration; scene queries go through the public `ISndSceneReadAccess`. Adapter/test assemblies retain access via `InternalsVisibleTo`.
+- **BREAKING: deferred-frame flushing is no longer a business-visible API** —
+  `ISndDeferredActions.FlushDeferredActionsForCurrentFrame` is removed, and
+  `OrigoRuntime.EnqueueBusinessDeferred` / `EnqueueSystemDeferred` /
+  `FlushEndOfFrameDeferred` / `ResetConsoleState` are now `internal`. The only
+  frame-boundary path is `IOrigoFrameDriver.DriveFrame(delta)`; tests reach the
+  internal pipeline via `InternalsVisibleTo`.
 - **`EnsureStrategy` mounts before writing its marker** — a failed `AddStrategy` (unregistered index, duplicate mount, or a throwing `AfterAdd`) no longer leaves a half-committed data marker; the idempotency marker is written only after the mount succeeds.
 - **`TypedData` no longer contains a test-only reset hook** — global kind-registry reset moved to `Origo.TestSupport.TypedDataTestSupport` (internal test helper), keeping production code free of test conveniences.
 - **String collection reads are strictly null-aware** — `string[]` arrays, string dictionaries, state-machine stacks, strategy-index lists, and node-pair maps now throw `InvalidOperationException` when an element/value is a null node, matching the existing `Read<string>` contract. Previously a null element silently drifted into an empty string, so corrupt save data surfaced later as an opaque strategy/node lookup failure instead of at the converter layer.

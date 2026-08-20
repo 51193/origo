@@ -210,7 +210,7 @@ public class StateMachineStrategyBaseTests
             action();
         }
 
-        public void FlushDeferredActionsForCurrentFrame()
+        public static void FlushDeferredActionsForCurrentFrame()
         {
         }
 

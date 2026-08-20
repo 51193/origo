@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
@@ -41,7 +42,7 @@ public class ObserverSaveReloadIntegrationTests
 
 
             context.Bootstrap();
-            context.Deferred.FlushDeferredActionsForCurrentFrame();
+            ((IOrigoFrameDriver)context.Runtime).DriveFrame(0);
 
             var session = context.Runtime.SessionManager.ForegroundSession;
             IntegrationTestRunner.AssertNotNull(session, "foreground session after bootstrap");
@@ -68,7 +69,7 @@ public class ObserverSaveReloadIntegrationTests
                 "observer should fire on data change before save");
 
             context.Save.RequestSaveGame("obs_godot_slot");
-            context.Deferred.FlushDeferredActionsForCurrentFrame();
+            ((IOrigoFrameDriver)context.Runtime).DriveFrame(0);
 
             foreach (var key in context.Runtime.SessionManager.Keys)
                 context.Runtime.SessionManager.DestroySession(key);
@@ -77,7 +78,7 @@ public class ObserverSaveReloadIntegrationTests
             TrackingObserverEvents.Events.Clear();
 
             context.Save.RequestLoadGame("obs_godot_slot");
-            context.Deferred.FlushDeferredActionsForCurrentFrame();
+            ((IOrigoFrameDriver)context.Runtime).DriveFrame(0);
 
             var reloaded = context.Runtime.SessionManager.ForegroundSession;
             IntegrationTestRunner.AssertNotNull(reloaded, "foreground session after load");
@@ -121,7 +122,7 @@ public class ObserverSaveReloadIntegrationTests
 
 
             context.Bootstrap();
-            context.Deferred.FlushDeferredActionsForCurrentFrame();
+            ((IOrigoFrameDriver)context.Runtime).DriveFrame(0);
 
             var session = context.Runtime.SessionManager.ForegroundSession;
             IntegrationTestRunner.AssertNotNull(session, "foreground session after bootstrap");
@@ -182,7 +183,7 @@ public class ObserverSaveReloadIntegrationTests
             ((ISndContextAttachableSceneHost)harness.SndManager).BindContext(context);
 
             context.Bootstrap();
-            context.Deferred.FlushDeferredActionsForCurrentFrame();
+            ((IOrigoFrameDriver)context.Runtime).DriveFrame(0);
 
             var session = context.Runtime.SessionManager.ForegroundSession;
             IntegrationTestRunner.AssertNotNull(session, "foreground session after bootstrap");

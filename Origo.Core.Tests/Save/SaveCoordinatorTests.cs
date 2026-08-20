@@ -108,7 +108,7 @@ public class SaveCoordinatorTests
         public Abstractions.Scene.ISndSceneReadAccess SceneAccess =>
             new TestSceneAccess();
         public void EnqueueBusinessDeferred(Action action) { }
-        public void FlushDeferredActionsForCurrentFrame() { }
+        public static void FlushDeferredActionsForCurrentFrame() { }
         public int GetPendingPersistenceRequestCount() => 0;
     }
 

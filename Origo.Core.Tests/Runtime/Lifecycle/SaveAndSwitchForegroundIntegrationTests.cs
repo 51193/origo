@@ -124,11 +124,11 @@ public class SaveAndSwitchForegroundIntegrationTests
         bg.SessionBlackboard.SetValue("bg_value", 42);
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -151,11 +151,11 @@ public class SaveAndSwitchForegroundIntegrationTests
         bg.SessionBlackboard.SetValue("key_str", "hello");
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -179,11 +179,11 @@ public class SaveAndSwitchForegroundIntegrationTests
         bg.SessionBlackboard.SetValue("bg_only", 99);
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var stillAlive = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.Null(stillAlive);

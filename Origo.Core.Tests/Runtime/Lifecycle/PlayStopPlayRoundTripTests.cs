@@ -41,7 +41,7 @@ public class PlayStopPlayRoundTripTests
         Assert.Equal("level_a", fg1.LevelId);
 
         ctx1.Save.RequestSaveGame("save-001");
-        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx1.FlushFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
@@ -49,7 +49,7 @@ public class PlayStopPlayRoundTripTests
         // ── PLAY 2 (shared file system simulates a restart) ─────────────
         var (ctx2, _) = CreateContext(fs);
         ctx2.Save.RequestLoadGame("save-001");
-        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx2.FlushFrame();
 
         var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg2.IsFrontSession, "Foreground identity must be restored after round-trip.");
@@ -77,7 +77,7 @@ public class PlayStopPlayRoundTripTests
         Assert.DoesNotContain("bg_level_store", TickProbeStrategy.Ticked);
 
         ctx1.Save.RequestSaveGame("save-002");
-        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx1.FlushFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
@@ -85,7 +85,7 @@ public class PlayStopPlayRoundTripTests
         // ── PLAY 2 ──────────────────────────────────────────────────────
         var (ctx2, _) = CreateContext(fs);
         ctx2.Save.RequestLoadGame("save-002");
-        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx2.FlushFrame();
 
         Assert.NotNull(ctx2.Runtime.SessionManager.TryGet("bg_tick"));
         Assert.NotNull(ctx2.Runtime.SessionManager.TryGet("bg_store"));
@@ -118,7 +118,7 @@ public class PlayStopPlayRoundTripTests
         Assert.False(bg1.SessionBlackboard.TryGet<int>("fg_only").found);
 
         ctx1.Save.RequestSaveGame("save-003");
-        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx1.FlushFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
@@ -126,7 +126,7 @@ public class PlayStopPlayRoundTripTests
         // ── PLAY 2 ──────────────────────────────────────────────────────
         var (ctx2, _) = CreateContext(fs);
         ctx2.Save.RequestLoadGame("save-003");
-        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx2.FlushFrame();
 
         var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
         var bg2 = ctx2.Runtime.SessionManager.TryGet("bg1")!;
@@ -166,7 +166,7 @@ public class PlayStopPlayRoundTripTests
         ctx1.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level");
 
         ctx1.Save.RequestSaveGame("save-004");
-        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx1.FlushFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
@@ -174,7 +174,7 @@ public class PlayStopPlayRoundTripTests
         // ── PLAY 2 ──────────────────────────────────────────────────────
         var (ctx2, _) = CreateContext(fs);
         ctx2.Save.RequestLoadGame("save-004");
-        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx2.FlushFrame();
 
         // ProgressBlackboard data is restored and shared.
         var (found, val) = ctx2.Blackboard.ProgressBlackboard!.TryGet<string>("global_flag");
@@ -213,7 +213,7 @@ public class PlayStopPlayRoundTripTests
         Assert.DoesNotContain("cache_level", TickProbeStrategy.Ticked);
 
         ctx1.Save.RequestSaveGame("save-005");
-        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx1.FlushFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
@@ -221,7 +221,7 @@ public class PlayStopPlayRoundTripTests
         // ── PLAY 2: Full restore ────────────────────────────────────────
         var (ctx2, _) = CreateContext(fs);
         ctx2.Save.RequestLoadGame("save-005");
-        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx2.FlushFrame();
 
         // Foreground identity & data.
         var fg2 = ctx2.Runtime.SessionManager.ForegroundSession!;
@@ -296,7 +296,7 @@ public class PlayStopPlayRoundTripTests
         bgSim.Spawn(TickProbeMeta());
 
         ctx1.Save.RequestSaveGame("save-rt");
-        ctx1.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx1.FlushFrame();
 
         // ── STOP ────────────────────────────────────────────────────────
         pr1.Dispose();
@@ -309,7 +309,7 @@ public class PlayStopPlayRoundTripTests
         Assert.Empty(ctx2.Runtime.SessionManager.Keys);
 
         ctx2.Save.RequestLoadGame("save-rt");
-        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx2.FlushFrame();
 
         // After load: everything is restored from storage.
         Assert.NotNull(ctx2.Runtime.SessionManager.ForegroundSession);
@@ -337,31 +337,31 @@ public class PlayStopPlayRoundTripTests
         pr.ProgressBlackboard.SetValue("first_data", "A");
 
         ctx.Save.RequestSaveGame("save-1");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Create second state.
         ctx.Save.RequestSwitchForegroundLevel("second_level");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         pr.ProgressBlackboard.SetValue("second_data", "B");
         var bg2 = ctx.Runtime.SessionManager.CreateBackgroundSession("bg2", "bg2_level", true);
         bg2.Spawn(TickProbeMeta());
 
         ctx.Save.RequestSaveGame("save-2");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         pr.Dispose();
 
         // Restore from save-1.
         var (ctx2, _) = CreateContext(fs);
         ctx2.Save.RequestLoadGame("save-1");
-        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx2.FlushFrame();
 
         Assert.Equal("first_level", ctx2.Runtime.SessionManager.ForegroundSession!.LevelId);
         Assert.True(ctx2.Blackboard.ProgressBlackboard!.TryGet<string>("first_data").found);
 
         // Override with save-2.
         ctx2.Save.RequestLoadGame("save-2");
-        ctx2.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx2.FlushFrame();
 
         Assert.Equal("second_level", ctx2.Runtime.SessionManager.ForegroundSession!.LevelId);
         Assert.True(ctx2.Blackboard.ProgressBlackboard!.TryGet<string>("second_data").found);

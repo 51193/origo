@@ -84,7 +84,7 @@ public class SndContextWorkflowTests
         SetupProgressRun(ctx, fs);
 
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/progress.json"));
         var (found, saveId) = ctx.Blackboard.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
@@ -101,7 +101,7 @@ public class SndContextWorkflowTests
         ctx.Save.RequestSaveGame("slot_02");
         // Before flush, count should be > 0
         Assert.True(ctx.Deferred.GetPendingPersistenceRequestCount() > 0);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
@@ -115,7 +115,7 @@ public class SndContextWorkflowTests
 
         var effectiveId = ctx.Save.RequestSaveGameAuto("my_auto");
         Assert.Equal("my_auto", effectiveId);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.True(fs.Exists("root/save_my_auto/progress.json"));
     }
 
@@ -129,7 +129,7 @@ public class SndContextWorkflowTests
         Assert.False(string.IsNullOrWhiteSpace(effectiveId));
         // Should be parseable as a long (unix timestamp ms)
         Assert.True(long.TryParse(effectiveId, out _));
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
     }
 
     // ── RequestLoadGame ──
@@ -155,7 +155,7 @@ public class SndContextWorkflowTests
         SeedSaveSnapshot(fs, "root", "save1", "default");
 
         ctx.Save.RequestLoadGame("save1");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
@@ -172,7 +172,7 @@ public class SndContextWorkflowTests
 
         ctx.Save.RequestLoadGame("save2");
         Assert.True(ctx.Deferred.GetPendingPersistenceRequestCount() > 0);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
@@ -208,7 +208,7 @@ public class SndContextWorkflowTests
         ctx.Save.SetContinueTarget("cont");
 
         Assert.True(ctx.Lifecycle.RequestContinueGame());
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
@@ -223,7 +223,7 @@ public class SndContextWorkflowTests
         SeedInitialSave(fs, "res://initial");
 
         ctx.Lifecycle.RequestLoadInitialSave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
@@ -250,7 +250,7 @@ public class SndContextWorkflowTests
         SeedInitialSave(fs, "res://initial", "my_level");
 
         ctx.Lifecycle.RequestLoadInitialSave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -265,7 +265,7 @@ public class SndContextWorkflowTests
         fs.SeedFile("res://initial/save_000/extra/seed.json", """{"value":1}""");
 
         ctx.Lifecycle.RequestLoadInitialSave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/extra/seed.json"),
             "Initial-save extra/ files must be restored into current/extra/ by the initial-load workflow.");
@@ -292,7 +292,7 @@ public class SndContextWorkflowTests
         fs.SeedFile("root/current/level_b/session_state_machines.json", """{"machines":[]}""");
 
         ctx.Save.RequestSwitchForegroundLevel("b");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Equal("b", ctx.Runtime.SessionManager.ForegroundSession?.LevelId);
     }
@@ -451,7 +451,7 @@ public class SndContextWorkflowTests
         var executed = false;
         ctx.Deferred.EnqueueBusinessDeferred(() => executed = true);
         Assert.False(executed);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.True(executed);
     }
 
@@ -589,7 +589,7 @@ public class SndContextWorkflowTests
         // The second call will try BeginWorkflow while first is in progress within same flush
         // Both are enqueued as system deferred; first completes, second runs after
         // Actually both run in same flush, sequentially, so this should succeed
-        var ex = Record.Exception(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        var ex = Record.Exception(() => ctx.FlushFrame());
         // The first save succeeds and EndWorkflow is called, so the second should also succeed
         Assert.Null(ex);
     }
@@ -633,7 +633,7 @@ public class SndContextWorkflowTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
     }
 }
 

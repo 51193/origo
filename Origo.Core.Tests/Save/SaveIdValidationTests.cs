@@ -24,7 +24,7 @@ public class SaveIdValidationTests
         fs.SeedFile("res://levels/main_menu.json", "[]");
 
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         return ctx;
     }
 
@@ -69,7 +69,7 @@ public class SaveIdValidationTests
     {
         var ctx = CreateContext(new TestMemoryFileSystem());
         ctx.Save.RequestSaveGame(saveId);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Contains(saveId, ctx.Save.ListSaves());
     }
 }

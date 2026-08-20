@@ -40,7 +40,5 @@ internal sealed class SessionStateMachineContext : IStateMachineContext
 
     public void EnqueueBusinessDeferred(Action action) => _global.EnqueueBusinessDeferred(action);
 
-    public void FlushDeferredActionsForCurrentFrame() => _global.FlushDeferredActionsForCurrentFrame();
-
     public int GetPendingPersistenceRequestCount() => _global.GetPendingPersistenceRequestCount();
 }

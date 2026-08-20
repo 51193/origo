@@ -31,7 +31,7 @@ public class FrontSession_CreationWithCorrectFlagTests
 
         ctx.Runtime.SessionManager.ForegroundSession!.SessionBlackboard.SetValue("test", 42);
         ctx.Save.RequestSaveGame("fg_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_fg_test/progress.json"));
         Assert.True(ctx.Runtime.SessionManager.ForegroundSession!.IsFrontSession);
@@ -49,7 +49,7 @@ public class FrontSession_CreationWithCorrectFlagTests
 
         // Switch foreground (creates new one)
         ctx.Save.RequestSwitchForegroundLevel("level_b");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg2 = ctx.Runtime.SessionManager.ForegroundSession!;
         Assert.True(fg2.IsFrontSession);

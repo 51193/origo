@@ -87,7 +87,7 @@ public class SessionRunLoadRollbackMaskingTests
         // then the rollback tears down the recovered observer binding whose
         // OnUnmounted hook throws. The original flush failure must propagate,
         // not the cleanup failure.
-        var ex = Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        var ex = Assert.ThrowsAny<Exception>(() => ctx.FlushFrame());
         Assert.Contains("FLUSH_BOOM", ex.Message, StringComparison.Ordinal);
         Assert.DoesNotContain("UNMOUNT_BOOM", ex.Message, StringComparison.Ordinal);
 

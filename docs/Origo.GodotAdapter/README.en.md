@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter
 
@@ -55,7 +55,7 @@ The adapter layer does not participate in any aspect of strategy lifecycle manag
 
 - **Does not trigger strategy hooks**: `GodotSndManager.CreateEntity` only creates the entity and Godot node, without calling hooks like `AfterSpawn` / `AfterLoad` / `BeforeDead`
 - **Does not manage strategy teardown**: `RemoveEntity` only removes the Godot node and collection reference, without calling `ReleaseStrategiesOnly`
-- **Does not flush the deferred pipeline**: The frame loop does not bypass Core to call `FlushDeferredActionsForCurrentFrame` directly
+- **Does not flush the deferred pipeline**: The frame loop does not bypass Core to call the internal `FlushEndOfFrameDeferred` directly
 - **`OrigoAutoHost._Process` is the sole frame entry point**: Within it, Core's `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending` are delegated in order; the adapter layer only schedules, never makes decisions
 
 All this orchestration is the unified responsibility of the Core layer's session lifecycle (`SessionManager` / `SessionRun`). For detailed separation principles, see [Architecture Overview](../usage/architecture-overview.en.md#adapter-layer-and-core-layer-separation-principles).

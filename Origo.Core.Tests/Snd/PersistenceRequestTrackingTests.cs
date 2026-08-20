@@ -30,12 +30,12 @@ public class PersistenceRequestTrackingTests
         var fs = new TestMemoryFileSystem();
         var ctx = CreateContext(fs);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestSaveGame("tracked_slot");
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
@@ -45,14 +45,14 @@ public class PersistenceRequestTrackingTests
         var fs = new TestMemoryFileSystem();
         var ctx = CreateContext(fs);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         ctx.Save.RequestSaveGame("continue_slot");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(ctx.Lifecycle.RequestContinueGame());
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
@@ -78,7 +78,7 @@ public class PersistenceRequestTrackingTests
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
@@ -88,12 +88,12 @@ public class PersistenceRequestTrackingTests
         var fs = new TestMemoryFileSystem();
         var ctx = CreateContext(fs);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestSwitchForegroundLevel("other_level");
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 }

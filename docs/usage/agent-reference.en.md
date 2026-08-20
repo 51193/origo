@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -118,7 +118,6 @@ public interface ISndBlackboardAccess {
 // Deferred actions
 public interface ISndDeferredActions {
     void EnqueueBusinessDeferred(Action action);
-    void FlushDeferredActionsForCurrentFrame();
     int GetPendingPersistenceRequestCount();
 }
 
@@ -244,7 +243,6 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     //   IBlackboard? ProgressBlackboard { get; }
     // Inherited from ISndDeferredActions:
     //   void EnqueueBusinessDeferred(Action action);
-    //   void FlushDeferredActionsForCurrentFrame();
     //   int GetPendingPersistenceRequestCount();
 
     IBlackboard? SessionBlackboard { get; }

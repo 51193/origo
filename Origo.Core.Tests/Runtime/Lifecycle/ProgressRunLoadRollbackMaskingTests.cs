@@ -74,7 +74,7 @@ public class ProgressRunLoadRollbackMaskingTests
         // array). The rollback then destroys the already-mounted foreground
         // session, whose BeforeQuit hook throws. The cleanup failure must not
         // mask the original load failure.
-        var ex = Assert.ThrowsAny<Exception>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        var ex = Assert.ThrowsAny<Exception>(() => ctx.FlushFrame());
         Assert.DoesNotContain("QUIT_BOOM", ex.Message, StringComparison.Ordinal);
 
         // ThrowsAny is deliberate here: the original load failure or a cleanup

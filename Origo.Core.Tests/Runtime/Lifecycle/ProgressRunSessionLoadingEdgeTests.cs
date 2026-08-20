@@ -181,7 +181,7 @@ public class ProgressRunSessionLoadingEdgeTests
 
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "001", ctx.Runtime.Logger);
         ctx.Save.RequestLoadGame("001");
-        Assert.Throws<InvalidOperationException>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
         Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
         Assert.False(ctx.Runtime.SessionManager.Contains("bg"));
     }
@@ -218,7 +218,7 @@ public class ProgressRunSessionLoadingEdgeTests
 
         ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "002", ctx.Runtime.Logger);
         ctx.Save.RequestLoadGame("002");
-        Assert.Throws<InvalidOperationException>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
 
         // The failed progress run must not remain reachable: reads of the
         // progress blackboard and the progress-run accessor fail fast instead

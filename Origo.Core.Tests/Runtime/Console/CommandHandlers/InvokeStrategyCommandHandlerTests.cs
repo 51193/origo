@@ -100,7 +100,7 @@ public class InvokeStrategyCommandHandlerTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
         host.BindContext(ctx);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var output = new CollectingConsoleOutputChannel();
         return (runtime, host, output);

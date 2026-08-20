@@ -44,7 +44,7 @@ public class SwitchForegroundCleanupTests
         SeedEmptyLevel(fs, "level_b");
 
         ctx.Save.RequestSwitchForegroundLevel("level_b");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // BeforeQuit must have fired for every entity of the old foreground.
         Assert.Contains("BeforeQuit:target", quitEvents);
@@ -74,13 +74,13 @@ public class SwitchForegroundCleanupTests
 
         // Level A -> B
         ctx.Save.RequestSwitchForegroundLevel("level_b");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         observerEvents.Clear();
 
         // Level B -> A (back to the original level): the persisted observer
         // bindings must re-mount on the recovered entities.
         ctx.Save.RequestSwitchForegroundLevel("test_level");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fgAfter = ctx.EnsureProgressRun().SessionManager.ForegroundSession;
         Assert.NotNull(fgAfter);
@@ -104,7 +104,7 @@ public class SwitchForegroundCleanupTests
         var ex = Assert.Throws<InvalidOperationException>(() =>
         {
             ctx.Save.RequestSwitchForegroundLevel("bad_level");
-            ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+            ctx.FlushFrame();
         });
         Assert.Contains("not found", ex.Message, StringComparison.Ordinal);
 
@@ -118,7 +118,7 @@ public class SwitchForegroundCleanupTests
         // A subsequent switch to a healthy level must still succeed.
         SeedEmptyLevel(fs, "level_b");
         ctx.Save.RequestSwitchForegroundLevel("level_b");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fgAfter = ctx.EnsureProgressRun().SessionManager.ForegroundSession;
         Assert.NotNull(fgAfter);

@@ -39,7 +39,7 @@ public class ErrorPathIntegrationTests
         harness.RunFrames(3);
 
         var saveId = harness.Context.Save.RequestSaveGameAuto("corrupt_scene");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.Context.FlushFrame();
 
         harness.FileSystem.SeedFile(
             $"root/save_{saveId}/level_game_level/snd_scene.json", "{corrupted");
@@ -50,7 +50,7 @@ public class ErrorPathIntegrationTests
 
         harness.Context.Save.RequestLoadGame(saveId);
         var ex = Assert.ThrowsAny<JsonException>(
-            () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
+            () => harness.Context.FlushFrame());
         Assert.Contains("property name", ex.Message, StringComparison.Ordinal);
     }
 
@@ -62,7 +62,7 @@ public class ErrorPathIntegrationTests
 
         harness.Context.Save.RequestLoadGame("nonexistent_save_id");
         var ex = Assert.Throws<InvalidOperationException>(
-            () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
+            () => harness.Context.FlushFrame());
         Assert.Contains("nonexistent", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -77,7 +77,7 @@ public class ErrorPathIntegrationTests
         harness.RunFrames(3);
 
         var saveId = harness.Context.Save.RequestSaveGameAuto("corrupt_session");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.Context.FlushFrame();
 
         harness.FileSystem.SeedFile(
             $"root/save_{saveId}/level_game_level/session.json", "{corrupted");
@@ -88,7 +88,7 @@ public class ErrorPathIntegrationTests
 
         harness.Context.Save.RequestLoadGame(saveId);
         var ex = Assert.ThrowsAny<JsonException>(
-            () => harness.Context.Deferred.FlushDeferredActionsForCurrentFrame());
+            () => harness.Context.FlushFrame());
         Assert.Contains("property name", ex.Message, StringComparison.Ordinal);
     }
 
