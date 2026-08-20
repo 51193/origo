@@ -43,3 +43,11 @@ artifacts/
 
 # Rider IDE
 *.cs.uid
+
+# Local learning workspace
+/MISSION.md
+/RESOURCES.md
+/assets/
+/docs/agents/
+/lessons/
+/reference/
