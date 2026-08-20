@@ -49,6 +49,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - **BREAKING: scene orchestration interfaces are now `internal`** — `ISndSceneHost`, `ISndSceneAccess`, `ISndContextAttachableSceneHost`, `IOwningSessionBindable`, `SndEntityFactory`, and the `OrigoRuntime` constructor are no longer public. Business code can no longer cast `GodotSndManager` to a scene-host interface and bypass spawn/load/kill orchestration; scene queries go through the public `ISndSceneReadAccess`. Adapter/test assemblies retain access via `InternalsVisibleTo`.
+- **PR commit messages are now machine-linted** — `scripts/lint-commits.sh` and the
+  `commit-lint` workflow enforce Conventional Commits, the 72-character subject limit,
+  and the no-trailing-period rule on pull requests.
 - **BREAKING: deferred-frame flushing is no longer a business-visible API** —
   `ISndDeferredActions.FlushDeferredActionsForCurrentFrame` is removed, and
   `OrigoRuntime.EnqueueBusinessDeferred` / `EnqueueSystemDeferred` /

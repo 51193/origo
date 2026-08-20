@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 手册维护元指令
 
@@ -139,7 +139,7 @@ dotnet run --project tools/DocSyncTool -- generate
 
 ## Git 提交消息格式
 
-所有提交必须遵循 Conventional Commits 规范，保持仓库历史可读、可机器解析。
+所有提交必须遵循 Conventional Commits 规范，保持仓库历史可读、可机器解析。PR 提交消息由 `scripts/lint-commits.sh` 与 `.github/workflows/commit-lint.yml` 强制执行：类型、72 字符标题上限、禁止句尾句号。
 
 ### 基本格式
 

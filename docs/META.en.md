@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -139,7 +139,7 @@ After a code PR is merged, check:
 
 ## Git Commit Message Format
 
-All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable.
+All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. PR commit messages are enforced by `scripts/lint-commits.sh` and `.github/workflows/commit-lint.yml`: type, 72-character subject limit, and no trailing period.
 
 ### Basic Format
 
