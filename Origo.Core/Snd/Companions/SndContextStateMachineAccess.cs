@@ -6,6 +6,7 @@ namespace Origo.Core.Snd.Companions;
 /// <summary>Progress-level state machine container access for <see cref="SndContext" />.</summary>
 internal sealed class SndContextStateMachineAccess(SndContext owner) : ISndStateMachineAccess
 {
+    /// <inheritdoc/>
     public IStateMachineContainer? GetProgressStateMachines() =>
         owner._progressRun?.GetProgressStateMachines();
 }

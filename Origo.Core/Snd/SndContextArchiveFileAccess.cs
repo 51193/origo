@@ -20,24 +20,28 @@ internal sealed class SndContextArchiveFileAccess(
     string saveRootPath,
     ISavePathPolicy savePathPolicy) : ISndArchiveFileAccess
 {
+    /// <inheritdoc/>
     public DataSourceNode ReadFile(string relativePath)
     {
         RejectPathTraversal(relativePath);
         return dataSourceIo.ReadTree(ResolveExtraPath(relativePath));
     }
 
+    /// <inheritdoc/>
     public void WriteFile(string relativePath, DataSourceNode node, bool overwrite)
     {
         RejectPathTraversal(relativePath);
         dataSourceIo.WriteTree(ResolveExtraPath(relativePath), node, overwrite);
     }
 
+    /// <inheritdoc/>
     public bool FileExists(string relativePath)
     {
         RejectPathTraversal(relativePath);
         return metaAccess.FileExists(ResolveExtraPath(relativePath));
     }
 
+    /// <inheritdoc/>
     public T ReadObject<T>(string relativePath)
     {
         RejectPathTraversal(relativePath);
@@ -45,6 +49,7 @@ internal sealed class SndContextArchiveFileAccess(
         return converterRegistry.Read<T>(node);
     }
 
+    /// <inheritdoc/>
     public void WriteObject<T>(string relativePath, T value, bool overwrite)
     {
         RejectPathTraversal(relativePath);
@@ -52,6 +57,7 @@ internal sealed class SndContextArchiveFileAccess(
         dataSourceIo.WriteTree(ResolveExtraPath(relativePath), node, overwrite);
     }
 
+    /// <inheritdoc/>
     public void DeleteFile(string relativePath)
     {
         RejectPathTraversal(relativePath);

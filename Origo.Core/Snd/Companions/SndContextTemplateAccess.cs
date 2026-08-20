@@ -6,6 +6,7 @@ namespace Origo.Core.Snd.Companions;
 /// <summary>Template cloning and metadata resolution for <see cref="SndContext" />.</summary>
 internal sealed class SndContextTemplateAccess(SndContext owner) : ISndTemplateAccess
 {
+    /// <inheritdoc/>
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
     {
         var cloned = owner.Runtime.SndWorld.ResolveTemplate(templateKey);

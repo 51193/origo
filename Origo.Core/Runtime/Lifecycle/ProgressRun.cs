@@ -78,6 +78,7 @@ internal sealed partial class ProgressRun : IDisposable
 
     public string SaveId { get; private set; }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (_disposed || _disposing) return;

@@ -15,19 +15,24 @@ internal sealed class SndContextFileAccess(
     IFileMetaAccess metaAccess,
     DataSourceConverterRegistry converterRegistry) : ISndFileAccess
 {
+    /// <inheritdoc/>
     public DataSourceNode ReadFile(string path) => dataSourceIo.ReadTree(path);
 
+    /// <inheritdoc/>
     public void WriteFile(string path, DataSourceNode node, bool overwrite) =>
         dataSourceIo.WriteTree(path, node, overwrite);
 
+    /// <inheritdoc/>
     public bool FileExists(string path) => metaAccess.FileExists(path);
 
+    /// <inheritdoc/>
     public T ReadObject<T>(string path)
     {
         var node = dataSourceIo.ReadTree(path);
         return converterRegistry.Read<T>(node);
     }
 
+    /// <inheritdoc/>
     public void WriteObject<T>(string path, T value, bool overwrite)
     {
         var node = converterRegistry.Write(value);

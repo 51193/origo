@@ -93,6 +93,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
 
     internal event Action? Disposing;
 
+    /// <inheritdoc/>
     public IBlackboard SessionBlackboard
     {
         get
@@ -109,36 +110,44 @@ internal sealed class SessionRun : ISessionRun, IDisposable
     /// </summary>
     internal ISndSceneHost SceneHost => _sceneHost;
 
+    /// <inheritdoc/>
     public string LevelId { get; }
 
+    /// <inheritdoc/>
     public bool IsFrontSession { get; }
 
+    /// <inheritdoc/>
     public ISessionManager SessionManager => _sessionManager;
 
+    /// <inheritdoc/>
     public ISndEntity? FindByName(string name)
     {
         ThrowIfDisposed();
         return _sceneHost.FindByName(name);
     }
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<ISndEntity> GetEntities()
     {
         ThrowIfDisposed();
         return _sceneHost.GetEntities();
     }
 
+    /// <inheritdoc/>
     public ISndEntity Spawn(SndMetaData meta)
     {
         ThrowIfDisposed();
         return SndEntityFactory.Spawn(_sceneHost, meta);
     }
 
+    /// <inheritdoc/>
     public void SpawnMany(params SndMetaData[] metaList)
     {
         ThrowIfDisposed();
         SndEntityFactory.SpawnMany(_sceneHost, metaList);
     }
 
+    /// <inheritdoc/>
     public void RequestKillEntity(string entityName)
     {
         ThrowIfDisposed();
@@ -153,6 +162,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
 
     IStateMachineContainer ISessionRun.GetSessionStateMachines() => GetSessionStateMachines();
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (_disposed || _disposing) return;

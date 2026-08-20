@@ -9,8 +9,10 @@ internal sealed class GodotNodeHandle(Node node) : INodeHandle
     private readonly Node _node = node;
     private readonly string _cachedName = node.Name;
 
+    /// <inheritdoc/>
     public string Name => _cachedName;
 
+    /// <inheritdoc/>
     public void Free()
     {
         if (GodotObject.IsInstanceValid(_node))
@@ -25,6 +27,7 @@ internal sealed class GodotNodeHandle(Node node) : INodeHandle
     /// </summary>
     internal Node UnsafeGetNode() => _node;
 
+    /// <inheritdoc/>
     public void SetVisible(bool visible)
     {
         if (!GodotObject.IsInstanceValid(_node))

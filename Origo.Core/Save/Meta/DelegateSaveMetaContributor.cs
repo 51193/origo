@@ -13,6 +13,7 @@ internal sealed class DelegateSaveMetaContributor : ISaveMetaContributor
         _contribute = contribute;
     }
 
+    /// <inheritdoc/>
     public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context) =>
         _contribute(context);
 }

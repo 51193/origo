@@ -56,6 +56,7 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
     /// </summary>
     public ISessionRun? OwningSession { get; set; }
 
+    /// <inheritdoc/>
     public int Count => _entities.Count;
 
     public IReadOnlyList<SndMetaData> BuildMetaList()
@@ -210,6 +211,7 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         }
     }
 
+    /// <inheritdoc/>
     public IEnumerator<ISndEntity> GetEnumerator()
     {
         for (var i = 0; i < _entities.Count; i++)

@@ -6,12 +6,14 @@ namespace Origo.Core.Snd.Companions;
 /// <summary>Lifecycle entry points (continue game, initial save, main menu) for <see cref="SndContext" />.</summary>
 internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLifecycleOperations
 {
+    /// <inheritdoc/>
     public bool HasContinueData()
     {
         var (found, saveId) = owner._systemRun.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
         return found && !string.IsNullOrWhiteSpace(saveId);
     }
 
+    /// <inheritdoc/>
     public bool RequestContinueGame()
     {
         var (found, saveId) = owner._systemRun.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
@@ -23,9 +25,11 @@ internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLife
         return true;
     }
 
+    /// <inheritdoc/>
     public void RequestLoadInitialSave() =>
         owner.EnqueueTrackedSystemDeferred(owner.ExecuteLoadInitialSaveNow);
 
+    /// <inheritdoc/>
     public void RequestLoadMainMenuEntrySave() =>
         owner.EnqueueTrackedSystemDeferred(owner.ExecuteLoadMainMenuEntrySaveNow);
 }

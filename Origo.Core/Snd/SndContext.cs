@@ -108,7 +108,9 @@ public sealed class SndContext : ISndContext
     /// <exception cref="InvalidOperationException">
     ///     Thrown when Bootstrap is called more than once, or when the adapter
     ///     scene host is not fully wired (its observer topology context is not
-    ///     bound) before the entry workflow is enqueued.
+    ///     bound) before the entry workflow is enqueued. The single-use guard
+    ///     is committed before bootstrap work starts, so a failed first attempt
+    ///     also prevents a retry on the same context instance.
     /// </exception>
     public void Bootstrap()
     {

@@ -59,8 +59,10 @@ internal sealed class FullMemorySndSceneHost
         return CreateAndRecover(metaData);
     }
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<ISndEntity> GetEntities() => [.. _entries.Select(e => (ISndEntity)e.Entity)];
 
+    /// <inheritdoc/>
     public ISndEntity? FindByName(string name)
     {
         return _entries.FirstOrDefault(e =>

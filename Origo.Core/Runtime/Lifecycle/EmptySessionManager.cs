@@ -17,32 +17,41 @@ internal sealed class EmptySessionManager : ISessionManager
     {
     }
 
+    /// <inheritdoc/>
     public bool CanCreateSessions => false;
 
+    /// <inheritdoc/>
     public ISessionRun? ForegroundSession => null;
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<string> Keys => [];
 
+    /// <inheritdoc/>
     public ISessionRun? TryGet(string key) => null;
 
+    /// <inheritdoc/>
     public bool Contains(string key) => false;
 
+    /// <inheritdoc/>
     public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false)
     {
         throw new InvalidOperationException(
             "No active ProgressRun. Cannot create sessions before loading a save or starting a new game.");
     }
 
+    /// <inheritdoc/>
     public void DestroySession(string key)
     {
         // No-op: no sessions to destroy.
     }
 
+    /// <inheritdoc/>
     public void ProcessAllSessions(double delta, bool includeForeground = false)
     {
         // No-op: no sessions to process.
     }
 
+    /// <inheritdoc/>
     public void KillPendingAllSessions()
     {
         // No-op: no sessions to sweep.

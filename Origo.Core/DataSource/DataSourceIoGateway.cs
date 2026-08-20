@@ -29,6 +29,7 @@ internal sealed class DataSourceIoGateway : IDataSourceIoGateway
         _codecs = new Dictionary<DataSourceCodecKind, IDataSourceCodec>(codecs);
     }
 
+    /// <inheritdoc/>
     public DataSourceNode ReadTree(string filePath)
     {
         var codec = ResolveCodec(filePath, out var suffix);
@@ -45,6 +46,7 @@ internal sealed class DataSourceIoGateway : IDataSourceIoGateway
         }
     }
 
+    /// <inheritdoc/>
     public void WriteTree(string filePath, DataSourceNode node, bool overwrite = true)
     {
         ArgumentNullException.ThrowIfNull(node);
