@@ -110,6 +110,12 @@ internal sealed class SndStrategyPool
     internal int GetPriority(string index) =>
         _priorities.TryGetValue(index, out var priority) ? priority : 0;
 
+    /// <summary>
+    ///     Emits a warning for every strategy whose pool reference count is
+    ///     still non-zero. Called by SndContext workflow teardown so leaked
+    ///     strategy references stay observable in production logs, not only
+    ///     in test assertions.
+    /// </summary>
     internal void LogPoolLeaks()
     {
         foreach (var (index, count) in _refCounts)

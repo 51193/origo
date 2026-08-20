@@ -66,6 +66,8 @@ public sealed class SndContext : ISndContext
         SaveRootPath = parameters.SaveRootPath;
         InitialSaveRootPath = parameters.InitialSaveRootPath;
         EntryConfigPath = parameters.EntryConfigPath;
+        SavePathLayout.ValidateToken(
+            parameters.InitialLevelId, nameof(parameters.InitialLevelId), "initial level id");
 
         SavePathPolicy = parameters.SavePathPolicy ?? new DefaultSavePathPolicy();
         StorageService =
@@ -229,7 +231,18 @@ public sealed class SndContext : ISndContext
     /// </summary>
     internal void ShutdownCurrentProgressAndScene()
     {
-        _progressRun?.Dispose();
+        try
+        {
+            _progressRun?.Dispose();
+        }
+        finally
+        {
+            // Strategy-pool diagnostics are part of workflow teardown, not a
+            // test-only helper: a workflow that leaks strategy references must
+            // leave an observable warning even when it runs in production.
+            Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        }
+
         _progressRun = null;
     }
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -75,6 +75,8 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `Constructor_ThrowsOnEmptySaveRootPath` | 空白 SaveRootPath | ArgumentException |
 | `Constructor_ThrowsOnEmptyInitialSaveRootPath` | 空白 InitialSaveRootPath | ArgumentException |
 | `Constructor_ThrowsOnEmptyEntryConfigPath` | 空白 EntryConfigPath | ArgumentException |
+| `Constructor_ThrowsOnBlankInitialLevelId` | 空白 InitialLevelId | ArgumentException |
+| `Constructor_ThrowsOnInvalidInitialLevelId` | InitialLevelId 含路径分隔符 | ArgumentException |
 
 ### 边界路径
 

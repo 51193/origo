@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -72,6 +72,8 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `Constructor_ThrowsOnEmptySaveRootPath` | Blank SaveRootPath | ArgumentException |
 | `Constructor_ThrowsOnEmptyInitialSaveRootPath` | Blank InitialSaveRootPath | ArgumentException |
 | `Constructor_ThrowsOnEmptyEntryConfigPath` | Blank EntryConfigPath | ArgumentException |
+| `Constructor_ThrowsOnBlankInitialLevelId` | Blank InitialLevelId | ArgumentException |
+| `Constructor_ThrowsOnInvalidInitialLevelId` | InitialLevelId contains a path separator | ArgumentException |
 
 ### Boundary Paths
 

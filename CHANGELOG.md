@@ -85,6 +85,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   frame processing was already a documented caller contract).
 
 - **`PathUtility.NormalizeDirectoryPath(null)` throws `ArgumentNullException`** — matching `Combine`; previously it silently returned an empty string. `LogMessageBuilder.SetElapsedMs` rejects NaN/negative/infinite values; `SndMetaFluentBuilder.SetString`/`SetBytes` reject null values (consistent with the data layer's non-null invariant); `TypeStringMapping.GetTypeByName` rejects blank names; `ValueInference` no longer infers NaN/Infinity floats; `SndDataManager.TryGetData`/`GetRequiredData` validate key names like `SetData`.
+- **`SndContextParameters.InitialLevelId` is validated at context construction** — blank values and
+  non-token characters (such as path separators) now throw `ArgumentException` immediately instead
+  of failing later when a level directory path is assembled.
+- **Godot integration test script rejects `Godot.NET.Sdk` drift** — the adapter and integration-test
+  projects must reference the same Godot SDK version; `scripts/godot-test.sh` fails fast when they
+  differ instead of downloading the adapter's engine binary and testing a mismatched project.
 - **BREAKING: `GodotSndManager.BindRuntimeDependencies` is now `internal`** — runtime
   dependency binding (World + Logger) is framework-orchestrated startup wiring, driven only by
   `OrigoAutoHost` (and the `InternalsVisibleTo` test projects); business code can no longer rebind

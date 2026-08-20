@@ -532,6 +532,36 @@ public class SndContextWorkflowTests
             new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "init", "")));
     }
 
+    [Fact]
+    public void Constructor_ThrowsOnBlankInitialLevelId()
+    {
+        var runtime = TestFactory.CreateRuntime();
+        var fs = new TestMemoryFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var parameters = new SndContextParameters(
+            runtime, io, metaAccess, pathResolver, "root", "init", "e.json")
+        { InitialLevelId = "" };
+
+        Assert.Throws<ArgumentException>(() => new SndContext(parameters));
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnInvalidInitialLevelId()
+    {
+        var runtime = TestFactory.CreateRuntime();
+        var fs = new TestMemoryFileSystem();
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var parameters = new SndContextParameters(
+            runtime, io, metaAccess, pathResolver, "root", "init", "e.json")
+        { InitialLevelId = "bad/level" };
+
+        Assert.Throws<ArgumentException>(() => new SndContext(parameters));
+    }
+
     // ── SndContext initial state ──
 
     [Fact]

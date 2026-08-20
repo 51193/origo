@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -128,6 +128,10 @@ SystemRun (由 SndContext 构造并持有)
 ### 为什么 ISessionRun 不继承 IDisposable
 
 会话销毁是管理器的能力：业务代码必须通过 `ISessionManager.DestroySession`（或框架的前台切换/清理路径）销毁会话。`ISessionRun` 因此**不暴露** `Dispose()`（`IDisposable` 只由内部具体 `SessionRun` 实现，供框架与测试使用）——若策略可直接 `OwningSession.Dispose()`，销毁就会绕过管理器的挂载校验，形成 §1.4 禁止的第二条访问路径。
+
+### 为什么 DestroySession 是幂等 no-op
+
+销毁不存在的会话不构成契约违反，而是查询式接口的配套清理操作（与 `Contains` / `TryGet` 一致）。框架内部前台切换（`DestroyForeground`）与批量清理（`Clear`）都依赖这一语义，避免在调用方反复做存在性分支。这与“移除未挂载策略/状态机抛异常”不同：后者是修改一个已知聚合实例内部状态，调用方明确持有该对象；前者是按 key 清理管理器容器，调用方可能不知道也不关心槽位是否仍存在。
 
 ### 为什么运行时容器按层分离
 

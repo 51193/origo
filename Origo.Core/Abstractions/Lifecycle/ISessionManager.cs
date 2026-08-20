@@ -32,7 +32,12 @@ public interface ISessionManager
     /// </summary>
     ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false);
 
-    /// <summary>Destroy the session with the given key. Silently returns if the key does not exist.</summary>
+    /// <summary>
+    ///     Destroy the session with the given key. Idempotent: destroying a
+    ///     key that is not mounted (including a blank key) is a no-op, matching
+    ///     <see cref="Contains" /> / <see cref="TryGet" /> query semantics and
+    ///     keeping framework teardown paths (foreground switch, Clear) simple.
+    /// </summary>
     void DestroySession(string key);
 
     /// <summary>

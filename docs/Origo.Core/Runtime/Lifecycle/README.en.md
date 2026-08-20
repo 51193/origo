@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -127,6 +127,10 @@ Foreground and background sessions share the same `ISessionRun` interface; the o
 ### Why ISessionRun does not inherit IDisposable
 
 Session destruction is a manager capability: business code must destroy sessions through `ISessionManager.DestroySession` (or the framework's foreground switch / cleanup paths). `ISessionRun` therefore does **not** expose `Dispose()` (`IDisposable` is implemented only by the internal concrete `SessionRun`, for framework and test use) — if a strategy could call `OwningSession.Dispose()` directly, destruction would bypass the manager's mount validation, forming a second access path forbidden by §1.4.
+
+### Why DestroySession is an idempotent no-op
+
+Destroying a session that is not mounted is not a contract violation; it is the cleanup counterpart of the query-style `Contains` / `TryGet` operations. Internal foreground switching (`DestroyForeground`) and bulk cleanup (`Clear`) rely on this semantic to avoid existence branches at every call site. This differs from throwing when removing a strategy or state machine that is not mounted: those operations mutate a known aggregate instance held by the caller, while `DestroySession` cleans a manager container by key.
 
 ### Why runtime containers are separated by layer
 

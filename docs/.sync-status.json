@@ -428,12 +428,12 @@
     "Origo.Core.Tests/Snd-Context": {
       "status": "synced",
       "revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 9,
+        "en": 9
       },
       "previous_revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 8,
+        "en": 8
       },
       "files": {
         "zh": "Origo.Core.Tests/Snd-Context.zh.md",
@@ -998,8 +998,8 @@
     "Origo.Core/Runtime/Lifecycle/README": {
       "status": "synced",
       "revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
         "zh": 14,
@@ -1028,8 +1028,8 @@
     "Origo.Core/Runtime/StateMachine/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "previous_revisions": {
         "zh": 1,

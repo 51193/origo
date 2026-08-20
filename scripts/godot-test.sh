@@ -5,6 +5,19 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# Godot.NET.Sdk is a version-coupled pair across the adapter and the
+# integration-test project. download-godot.sh reads the adapter version as
+# the authority; fail here if the integration project ever drifts.
+ADAPTER_SDK_VERSION=$(grep -oP 'Godot\.NET\.Sdk/\K[0-9]+\.[0-9]+\.[0-9]+'     "$ROOT/Origo.GodotAdapter/Origo.GodotAdapter.csproj" | head -1)
+INTEGRATION_SDK_VERSION=$(grep -oP 'Godot\.NET\.Sdk/\K[0-9]+\.[0-9]+\.[0-9]+'     "$ROOT/Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj" | head -1)
+if [[ "$ADAPTER_SDK_VERSION" != "$INTEGRATION_SDK_VERSION" ]]; then
+    echo "ERROR: Godot.NET.Sdk version mismatch:" >&2
+    echo "  adapter:        $ADAPTER_SDK_VERSION" >&2
+    echo "  integration:    $INTEGRATION_SDK_VERSION" >&2
+    echo "Update both projects in the same change." >&2
+    exit 1
+fi
+
 GODOT_BIN=$(bash scripts/download-godot.sh)
 echo "Using Godot binary: $GODOT_BIN"
 
