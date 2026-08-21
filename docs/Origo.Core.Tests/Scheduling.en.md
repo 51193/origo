@@ -36,6 +36,8 @@ recursive depth protection (max re-entrant drain depth), concurrent enqueue safe
 |-------------|----------------|-------------------|
 | `ConcurrentActionQueue_Enqueue_ThrowsOnNull` | Enqueue(null) | ArgumentNullException |
 | `ConcurrentActionQueue_Constructor_ThrowsOnNullLogger` | new ConcurrentActionQueue(null) | ArgumentNullException |
+| `ConcurrentActionQueue_ExecuteAll_DiscardCallbackThrows_RunsRemainingCallbacksAndAggregates` | A discarded action's cleanup callback throws | Remaining cleanup callbacks still run; AggregateException contains both the original action exception and the cleanup exception |
+| `ConcurrentActionQueue_Clear_DiscardCallbackThrows_RunsRemainingCallbacksAndRethrowsFirst` | A cleanup callback throws during Clear | Remaining cleanup callbacks still run; the first cleanup exception propagates unchanged |
 
 ### Boundary Path
 

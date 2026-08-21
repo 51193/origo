@@ -27,7 +27,7 @@ Thin wrapper adapting `ConcurrentActionQueue` to `IScheduler`:
 Core implementation using `List<Action>` + `lock`:
 - **Batch drain**: Lock → snapshot all actions → clear → release lock → invoke
 - **Reentrancy protection**: Actions enqueuing new actions continue draining. `MaxReentrantDrainDepth=100`
-- **Exception handling**: Single action failure → log Error → rethrow (let-it-crash semantics); **the remaining actions in the same batch are dropped** (actions newly enqueued by earlier actions stay queued and run on the next `Tick`). Dropped actions registered with an `onDiscard` cleanup callback run that callback before the rethrow, so resource accounting such as the persistence-request counter does not leak. When the business queue throws in `OrigoRuntime.FlushEndOfFrameDeferred`, that frame's `KillPendingAllSessions` and system queue execution are postponed to the next frame (the cascading effect of fail-fast)
+- **Exception handling**: Single action failure → log Error → rethrow (let-it-crash semantics); **the remaining actions in the same batch are dropped** (actions newly enqueued by earlier actions stay queued and run on the next `Tick`). Dropped actions registered with an `onDiscard` cleanup callback run every callback before the rethrow; if a cleanup callback itself throws, the remaining callbacks still run and the failures are aggregated with the original action exception (resource accounting such as the persistence-request counter does not leak). When the business queue throws in `OrigoRuntime.FlushEndOfFrameDeferred`, that frame's `KillPendingAllSessions` and system queue execution are postponed to the next frame (the cascading effect of fail-fast)
 
 ## Design Decisions
 

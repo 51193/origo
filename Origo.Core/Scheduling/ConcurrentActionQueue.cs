@@ -1,6 +1,7 @@
 using System.Threading;
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Logging;
 
@@ -117,9 +118,12 @@ internal class ConcurrentActionQueue
                 {
                     _logger.Log(LogLevel.Error, nameof(ConcurrentActionQueue),
                         new LogMessageBuilder().Build($"Deferred action execution failed: {ex.Message}"));
-                    for (var j = i + 1; j < currentBatch.Count; j++)
-                        InvokeDiscard(currentBatch[j]);
-                    throw;
+                    var discardFailures = InvokeDiscardForRange(currentBatch, i + 1);
+                    if (discardFailures.Count == 0)
+                        throw;
+                    throw new AggregateException(
+                        "Deferred action failed and discard cleanup also failed; see inner exceptions.",
+                        [ex, .. discardFailures]);
                 }
             }
 
@@ -142,8 +146,50 @@ internal class ConcurrentActionQueue
             _actionQueue.Clear();
         }
 
-        foreach (var item in discarded)
-            InvokeDiscard(item);
+        var failures = InvokeDiscard(discarded);
+        if (failures.Count == 0)
+            return;
+        if (failures.Count == 1)
+            ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        throw new AggregateException(
+            "Multiple discard cleanup callbacks failed while clearing the queue; see inner exceptions.",
+            failures);
+    }
+
+    private static List<Exception> InvokeDiscardForRange(List<QueuedAction> batch, int startIndex)
+    {
+        var failures = new List<Exception>();
+        for (var i = startIndex; i < batch.Count; i++)
+        {
+            try
+            {
+                InvokeDiscard(batch[i]);
+            }
+            catch (Exception ex)
+            {
+                failures.Add(ex);
+            }
+        }
+
+        return failures;
+    }
+
+    private static List<Exception> InvokeDiscard(List<QueuedAction> items)
+    {
+        var failures = new List<Exception>();
+        foreach (var item in items)
+        {
+            try
+            {
+                InvokeDiscard(item);
+            }
+            catch (Exception ex)
+            {
+                failures.Add(ex);
+            }
+        }
+
+        return failures;
     }
 
     private static void InvokeDiscard(QueuedAction item) => item.OnDiscard?.Invoke();
