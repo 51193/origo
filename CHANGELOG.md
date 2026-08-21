@@ -41,10 +41,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`ConsoleBridgeOptions.OutputSendTimeoutMs`** — bounded send timeout (default 100ms)
   for console output writes: a client that stops reading is detached (and the undelivered
   lines stay buffered for the next connection) instead of stalling the game frame thread.
-- **`ISaveStorageService.RestoreExtraFilesFromSnapshot(ISaveStorageService, string)`** —
+- **BREAKING: `ISaveStorageService.RestoreExtraFilesFromSnapshot(ISaveStorageService, string)`** —
   cross-storage-root extra/ restore: the destination storage service can restore archive
   files from a snapshot owned by an explicitly named source storage service (used when an
-  initial save under `res://` is loaded into the writable runtime save root).
+  initial save under `res://` is loaded into the writable runtime save root). External
+  implementations must implement the new member. The default implementation supports only
+  a default source; custom source/destination pairs must be implemented together, and an
+  unsupported pair throws explicitly instead of silently copying from the wrong root.
 
 ### Changed
 
