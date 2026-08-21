@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -229,5 +229,8 @@ ActiveStrategy 在 `RecoverForLifecycle` (Phase 1) 中恢复，早于 `FireAfter
 
 `SndStrategyPool` 的引用计数、注册表和实例缓存仅在帧线程（单线程帧模型）上访问。跨线程场景（延迟队列的入队/出队、控制台输入等）只传递动作与数据，不触碰策略池；引擎回调与业务策略钩子全部在帧线程执行。因此引用计数无需加锁——并发访问策略池属于契约违规，行为未定义。
 
+- **备选方向：实体级并发（暂缓）**：策略无状态让策略类型可跨实体共享，但实体 Data、跨实体 `InvokeStrategy`、观察者同步通知和场景容器变更仍按单线程帧模型设计；同一实体内部多个策略的优先级顺序也必须保留。备选方案是“实体可并发”作为实体自身属性 + 数据容器并发模式 + 先并行执行并发实体、屏障后再串行执行剩余实体，因当前没有性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
+- **备选方向：生命周期策略的相对顺序约束（暂缓）**：当前 `Priority` 数字排序简单、确定性好，但策略规模变大时可能产生数值协调负担。备选方案是把顺序改为 `Before` / `After` 偏序约束，插入或注册时自动拓扑定位，有环立即抛异常；因当前规模下收益有限而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
+- **备选方向：ActiveStrategy 同名多实现（暂缓）**：当前策略索引全局唯一，每实体同一 active index 也只有一个实现。备选方案是把索引升级为“契约名/接口名”，目标实体绑定具体实现，`InvokeStrategy("hurt")` 时按实体绑定表分发；当前可用唯一策略内按实体字段 `switch` 或 `*_impl` 可替换实现模式覆盖，故暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
 ---
 [↑ 回到 Snd](../README.zh.md)

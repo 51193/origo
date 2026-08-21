@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo Manual
 
@@ -102,6 +102,7 @@ Root (this file)
 | 编写游戏策略 | [usage/snd-entity-model](usage/snd-entity-model.zh.md) |
 | 理解生命周期闭环 | [usage/strategy-lifecycle](usage/strategy-lifecycle.zh.md) |
 | 学习设计模式 | [usage/design-patterns](usage/design-patterns.zh.md) |
+| 查看扩展方向与暂缓设计 | [usage/extension-directions](usage/extension-directions.zh.md) |
 | 测试策略 | [usage/strategy-testing](usage/strategy-testing.zh.md) |
 | 使用存档系统 | [usage/persistence-flow](usage/persistence-flow.zh.md) |
 | 使用状态机 | [usage/state-machine](usage/state-machine.zh.md) |

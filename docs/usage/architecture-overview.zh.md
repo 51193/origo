@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构总览
 
@@ -117,6 +117,8 @@ Origo 采用单线程帧循环模型：
 - 单帧视为逻辑原子边界
 - 跨帧语义落入可恢复状态（黑板、状态机、实体 Data）
 
+> **暂缓方向**：策略无状态为实体级并发提供了基础，但实体内策略顺序、跨实体调用、观察者通知与容器变更仍需串行语义。备选方案是“实体可并发”标记 + 并发数据模式 + 先并行批后串行批；当前无性能瓶颈，暂缓。完整权衡见 [扩展方向与暂缓设计](extension-directions.zh.md)。
+
 ## I/O 边界
 
 Core 层所有文件操作通过三个接口完成：
@@ -133,6 +135,8 @@ Core 层所有文件操作通过三个接口完成：
 后缀路由、编解码策略与 I/O 错误语义集中在 Gateway 一侧统一治理。`.sha` 和 `.write_in_progress` 等原始文本文件同样经由 `RawStringDataSourceCodec` 走 codec 路由，不存在直读直写旁路。Gateway 采用 fail-fast 策略：codec 解码失败（如 `.map` 文件格式错误）时，Gateway 将异常包装为包含文件路径信息的 `InvalidOperationException` 立即抛出，不吞没错误。
 
 `IDataSourceIoGateway` 是框架的硬性 I/O 内容边界：**系统内的任何模块（包括策略）都应通过此边界访问文件内容**。文件元数据操作（存在性检查、目录管理等）通过 `IFileMetaAccess`，路径运算通过 `IPathResolver`。策略通过 `ISndFileAccess` 和 `ISndArchiveFileAccess` 接口暴露的文件操作均委托到上述三个接口，策略无需自行处理原始文本解析或平台路径差异。
+
+> **暂缓方向**：把本地文件系统、存档目录与网络资源统一挂载为 `DataSourceNode` 树根，以 `path -> to -> file -> entity -> health_point` 式导航替代多套文件 API。当前同步读树对本地文件足够，远端节点会阻塞帧，因此暂缓。完整权衡见 [扩展方向与暂缓设计](extension-directions.zh.md)。
 
 ## 适配层与 Core 层分离原则
 

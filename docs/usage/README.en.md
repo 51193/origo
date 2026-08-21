@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Usage Documentation
 
@@ -20,6 +20,7 @@ Documentation for Origo framework users (game developers, AI agents). Organized 
 | [console-commands](console-commands.en.md) | Debuggers | Complete reference of built-in console commands |
 | [strategy-lifecycle](strategy-lifecycle.en.md) | Strategy developers | Lifecycle hook closed-loop pairing, RAII resource management, BeforeSave deferred sync |
 | [design-patterns](design-patterns.en.md) | Strategy developers | Naming conventions, Manager service pattern, replaceable implementations, template best practices |
+| [extension-directions](extension-directions.en.md) | Developers / AI agents | Brainstormed extension directions and deferral reasons: unified tree namespace, entity-level concurrency, relative ordering constraints, multiple ActiveStrategy implementations per index |
 | [strategy-testing](strategy-testing.en.md) | Test authors | StrategyTestScenario usage guide |
 | [capabilities](capabilities.en.md) | All users | Complete framework capability checklist, indexed by functional domain — quickly understand what Origo can do |
 | [agent-reference](agent-reference.en.md) | AI agents | Complete runtime reference: interface signatures, lifecycle timeline, strategy writing templates |
@@ -32,6 +33,9 @@ New users:
 
 Strategy developers:
   snd-entity-model → strategy-lifecycle → design-patterns → state-machine → strategy-testing
+
+Facing architecture problems / need design inspiration:
+  architecture-overview → design-patterns → extension-directions
 
 Save system users:
   architecture-overview → persistence-flow → session-model

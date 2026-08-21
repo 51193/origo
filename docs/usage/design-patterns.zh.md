@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 设计模式
 
@@ -177,6 +177,8 @@ public sealed class SchedulingStrategy : LifecycleStrategyBase
 - 需要运行时切换行为（如地面移动 → 飞行移动）
 - 避免在模板中固化实现选择
 
+> **暂缓方向**：`*_impl` 模式解决的是生命周期策略按实体选实现；主动策略的“同名多实现”（如所有实体都响应 `hurt`，但实现不同）已作为接口式分发方向讨论，当前可用唯一 `hurt` 策略内按实体字段 `switch` 覆盖。完整权衡见 [扩展方向与暂缓设计](extension-directions.zh.md)。
+
 ---
 
 ## 实体间通信
@@ -188,6 +190,8 @@ var target = entity.OwningSession.FindByName("TraversabilityManager");
 var path = target.InvokeStrategy<GridPos[], List<GridPos>>(
     "traversability.find_path", new[] { start, end });
 ```
+
+> **暂缓方向**：`InvokeStrategy` 当前按全局唯一索引路由到唯一实现；如果出现大量实体共享同一交互动词，可评估“契约名 + 每实体实现绑定”的同名多实现分发。当前工作区是在唯一策略内按实体字段 `switch`，或直接调用具体索引。完整权衡见 [扩展方向与暂缓设计](extension-directions.zh.md)。
 
 ### 观察者策略：异步数据变更通知
 

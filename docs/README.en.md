@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Manual
 
@@ -102,6 +102,7 @@ Each directory's `README.md` contains:
 | Write game strategies | [usage/snd-entity-model](usage/snd-entity-model.en.md) |
 | Understand the lifecycle loop | [usage/strategy-lifecycle](usage/strategy-lifecycle.en.md) |
 | Learn design patterns | [usage/design-patterns](usage/design-patterns.en.md) |
+| View extension directions and deferred designs | [usage/extension-directions](usage/extension-directions.en.md) |
 | Test strategies | [usage/strategy-testing](usage/strategy-testing.en.md) |
 | Use the save system | [usage/persistence-flow](usage/persistence-flow.en.md) |
 | Use state machines | [usage/state-machine](usage/state-machine.en.md) |

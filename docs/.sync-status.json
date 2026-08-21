@@ -878,12 +878,12 @@
     "Origo.Core/DataSource/README": {
       "status": "synced",
       "revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "previous_revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "files": {
         "zh": "Origo.Core/DataSource/README.zh.md",
@@ -1103,12 +1103,12 @@
     "Origo.Core/Scheduling/README": {
       "status": "synced",
       "revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 8,
+        "en": 8
       },
       "previous_revisions": {
-        "zh": 6,
-        "en": 6
+        "zh": 7,
+        "en": 7
       },
       "files": {
         "zh": "Origo.Core/Scheduling/README.zh.md",
@@ -1223,12 +1223,12 @@
     "Origo.Core/Snd/Strategy/README": {
       "status": "synced",
       "revisions": {
-        "zh": 15,
-        "en": 15
+        "zh": 16,
+        "en": 16
       },
       "previous_revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "files": {
         "zh": "Origo.Core/Snd/Strategy/README.zh.md",
@@ -1703,8 +1703,8 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "previous_revisions": {
         "zh": 10,
@@ -1748,12 +1748,12 @@
     "usage/architecture-overview": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "previous_revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "usage/architecture-overview.zh.md",
@@ -1793,16 +1793,28 @@
     "usage/design-patterns": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "previous_revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "files": {
         "zh": "usage/design-patterns.zh.md",
         "en": "usage/design-patterns.en.md"
+      }
+    },
+    "usage/extension-directions": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "usage/extension-directions.zh.md",
+        "en": "usage/extension-directions.en.md"
       }
     },
     "usage/persistence-flow": {
@@ -1838,8 +1850,8 @@
     "usage/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "previous_revisions": {
         "zh": 1,
