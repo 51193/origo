@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：序列化 测试
 
@@ -54,6 +54,8 @@ PersistentBlackboard 磁盘读写。
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `SndSceneSerializer_DeserializeInto_InvalidJson_Throws` | 非法 JSON（对象而非数组） | 抛出异常 |
+| `SndSceneSerializer_RecoverInto_DuplicateNameInPayload_ThrowsBeforeCreatingAnyEntity` | 载荷内两个实体同名 | InvalidOperationException（含 "duplicate"），且不创建任何实体 |
+| `SndSceneSerializer_RecoverInto_NameAlreadyOnHost_ThrowsBeforeCreating` | 载荷实体名与宿主现存实体重复 | InvalidOperationException（含 "already exists"），且不追加新实体 |
 | `SndSceneSerializer_Constructor_ThrowsOnNullWorld` | null SndWorld | ArgumentNullException |
 
 ## SaveContextTests 测试详情

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
@@ -177,8 +178,11 @@ public class SessionRunHookIterationTests
     [StrategyIndex(InfiniteSpawnIdx)]
     private sealed class InfiniteSpawnStrategy : LifecycleStrategyBase
     {
+        private static int _spawnCounter;
+
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
-            entity.OwningSession.Spawn(CreateMeta("B", InfiniteSpawnIdx));
+            entity.OwningSession.Spawn(
+                CreateMeta($"B{Interlocked.Increment(ref _spawnCounter)}", InfiniteSpawnIdx));
     }
 
     [StrategyIndex(NormalIdx)]

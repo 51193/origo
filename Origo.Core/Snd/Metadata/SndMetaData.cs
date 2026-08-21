@@ -9,10 +9,7 @@ namespace Origo.Core.Snd.Metadata;
 /// </summary>
 public sealed class SndMetaData
 {
-    /// <summary>
-    ///     Stable name identifier of the entity. Callers must keep names unique
-    ///     within a session.
-    /// </summary>
+    /// <summary>Unique name identifier of the entity within its session; enforced by spawn/load orchestration.</summary>
     public string Name { get; set; } = string.Empty;
 
     /// <summary>Node metadata (logical name → resource ID mapping), used by the engine adapter layer to create nodes.</summary>

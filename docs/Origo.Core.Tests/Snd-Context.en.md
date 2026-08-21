@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -45,7 +45,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `CloneTemplate_ClonesAndOverridesName` | Clones a template and overrides the name | ISndTemplateAccess |
 | `CloneTemplate_WithoutOverrideName_KeepsOriginal` | Keeps the original name when not overriding | ISndTemplateAccess |
 | `TrySubmitConsoleCommand_ReturnsTrueWhenConsoleInputExists` | Command submission succeeds when console input exists | ISndConsoleAccess |
-| `ProcessConsolePending_ProcessesQueuedCommands` | ProcessConsolePending processes queued commands | ISndConsoleAccess |
+| `DriveFrame_ProcessesQueuedConsoleCommands` | Submitted commands are processed at frame end by `IOrigoFrameDriver.DriveFrame` | ISndConsoleAccess / IOrigoFrameDriver |
 | `SubscribeConsoleOutput_ReturnsPositiveId` | Subscribing returns a positive ID | ISndConsoleAccess |
 | `UnsubscribeConsoleOutput_RemovesSubscription` | After unsubscribing, no more messages are received | ISndConsoleAccess |
 | `EnqueueBusinessDeferred_ExecutesOnFlush` | Deferred action executes on Flush | ISndDeferredActions |

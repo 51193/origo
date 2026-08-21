@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -129,7 +129,6 @@ public interface ISndTemplateAccess {
 // Console
 public interface ISndConsoleAccess {
     bool TrySubmitConsoleCommand(string commandLine);
-    void ProcessConsolePending();
     long SubscribeConsoleOutput(Action<string> onLine);
     void UnsubscribeConsoleOutput(long subscriptionId);
 }

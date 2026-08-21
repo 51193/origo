@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体模型
 
@@ -152,8 +152,8 @@ public sealed class ShopBuyStrategy : ActiveStrategyJsonBase<int>
 if (other.IsSameEntityAs(entity)) continue;  // 排除自己
 ```
 
-> 同会话内实体名称唯一是框架的隐式要求（`FindByName`、观察者拓扑、存档恢复均按名称键控），
-> 业务代码须保证同一会话内不创建重名实体。
+> 同会话内实体名称唯一由框架强制（spawn 与 load 编排在执行创建前校验），
+> `FindByName`、观察者拓扑、存档恢复均按名称键控。
 
 ### 策略中禁止的行为
 

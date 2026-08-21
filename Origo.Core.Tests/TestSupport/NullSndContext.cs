@@ -70,10 +70,6 @@ public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDefe
 
     public bool TrySubmitConsoleCommand(string commandLine) => false;
 
-    public void ProcessConsolePending()
-    {
-    }
-
     public long SubscribeConsoleOutput(Action<string> onLine) => 0;
 
     public void UnsubscribeConsoleOutput(long subscriptionId)

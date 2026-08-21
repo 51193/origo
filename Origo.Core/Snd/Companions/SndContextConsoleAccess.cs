@@ -17,9 +17,6 @@ internal sealed class SndContextConsoleAccess(SndContext owner) : ISndConsoleAcc
     }
 
     /// <inheritdoc/>
-    public void ProcessConsolePending() => owner.Runtime.Console?.ProcessPending();
-
-    /// <inheritdoc/>
     public long SubscribeConsoleOutput(Action<string> onLine)
     {
         ArgumentNullException.ThrowIfNull(onLine);

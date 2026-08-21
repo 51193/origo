@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Quick Start
 
@@ -137,7 +137,7 @@ OrigoDefaultEntry._Ready()
 Per frame: _Process → IOrigoFrameDriver.DriveFrame(delta)
   → Snd.ProcessAll(delta)          # Entity frame processing
   → FlushEndOfFrameDeferred()      # Business queue → KillPendingEntities → System queue
-  → Console.ProcessPending()       # Console command processing
+  → Core-internal: Console.ProcessPending()  # Console command processing
 ```
 
 ## Next Steps

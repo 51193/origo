@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Scene/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene (Abstractions)
 
@@ -71,7 +71,7 @@
 
 ### 为什么 CreateEntity 不做重名校验
 
-`CreateEntity` 保持最小语义，不在接口层做重名校验；框架当前在 spawn 路径上也不强制重名唯一性。接口不承担业务校验职责，将其留给需要时的上层业务规则。
+`CreateEntity` 保持最小语义，不在宿主接口层做重名校验；重名唯一性由上层编排（`SndEntityFactory` 与 `SndSceneSerializer`）在调用宿主前统一强制。宿主可假定收到的名称在场景内唯一。
 
 ### 为什么 Kill 分为 RequestKillEntity（标记）和 RemoveEntity（拆解）
 

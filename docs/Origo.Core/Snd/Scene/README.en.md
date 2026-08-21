@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Scene
 
@@ -81,6 +81,10 @@ All strategy lifecycle hook triggering is uniformly orchestrated by session life
 ### Why spawn logic is centralized in SndEntityFactory
 
 `SndEntityFactory.Spawn/SpawnMany` is the single authoritative implementation of "create entity + trigger AfterSpawn". `ISessionRun.Spawn/SpawnMany` delegates to it; adapter layers and auto-initializers also reuse it. A single source ensures that adjusting spawn behavior only requires one change, avoiding divergence from multiple spawn logic paths. `SndEntityFactory.SpawnMany` uses a two-phase approach (all created first, then uniformly trigger hooks), making all sibling entities visible during AfterSpawn hooks. **Failure rollback**: when AfterSpawn throws the entity already exists (strategies/nodes acquired); `Spawn` rolls it back immediately (`host.RemoveEntity` + `TeardownObserverBindings` + `ReleaseStrategiesOnly` + `TeardownOnly`) and rethrows, so no half-initialized entity or leaked strategy reference survives; the four rollback steps are **independently protected** — a throwing step (e.g. a user `OnUnmounted` hook inside `TeardownObserverBindings`) neither masks the original AfterSpawn failure nor skips the remaining steps (teardown steps are best-effort: the static factory has no logger to report their failures through, so the original exception is authoritative); `SpawnMany` keeps entities whose hooks already fired and rolls back the rest (the throwing one and all not-yet-fired ones); if the **staging phase** itself fails (the host rejects a meta), every already-created entity is rolled back too — staged entities never fired AfterSpawn and must not remain on the host as registered-but-never-spawned ghosts.
+
+### Why entity names are validated before creation
+
+Lookup, observer topology, save recovery, and `IsSameEntityAs` all key on entity names; duplicates make those paths ambiguous or collapse two entities into one identity. `SndEntityFactory` and `SndSceneSerializer` validate before any host creation/recovery (unique within the batch and against the host's current entities), so ambiguity is rejected before the container changes.
 
 ### Why FullMemorySndSceneHost uses deferred binding for World/Context
 

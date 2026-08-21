@@ -51,6 +51,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: console processing is sealed behind the frame driver** — `ISndConsoleAccess.ProcessConsolePending()` is removed and `OrigoConsole.ProcessPending()` is now `internal`. Business code can submit commands and subscribe to output, but command execution now happens only through `IOrigoFrameDriver.DriveFrame(delta)` in the fixed frame order.
+- **BREAKING: entity names are now enforced as unique within a session** — `SndEntityFactory` (runtime spawn) and `SndSceneSerializer` (load recovery) reject duplicate names before any host mutation, both against existing scene entities and within a batch. Callers relying on duplicate names being tolerated now receive `InvalidOperationException` at spawn/load time.
 - **BREAKING: `DataSourceNode.Keys` / `Count` / `Elements` are shape-strict** — accessing `Keys` on a non-Map node or `Count`/`Elements` on a non-Array node now throws `InvalidOperationException` instead of silently returning an empty collection. This also makes all primitive-array converters reject null/scalar/object root nodes instead of deserializing corrupt save data as an empty array.
 - **BREAKING: `.map` encoding rejects keys and child kinds that cannot round-trip** — keys that are empty, contain a leading/trailing whitespace, start with `#`, or contain `:`/line breaks now throw; Number/Bool children are rejected because the string-only `.map` format would silently lose their type on decode.
 - **`ConsoleOutputChannel` aggregates every failed listener** — when multiple subscribers throw during `Publish`, the thrown `AggregateException` now contains every failure; the single-failure behavior remains a direct rethrow of that exception.

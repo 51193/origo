@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console
 
@@ -38,7 +38,7 @@ External input (Godot console / TCP bridge)
 ConsoleInputBuffer.Enqueue(line)
     │
     ▼
-OrigoConsole.ProcessPending()
+IOrigoFrameDriver.DriveFrame(delta) → OrigoConsole.ProcessPending() (internal)
     ├── TryDequeueCommand → line
     ├── ConsoleCommandParser.Parse(line)
     │   └── CommandInvocation { Command, PositionalArgs, NamedArgs }
@@ -51,7 +51,7 @@ OrigoConsole.ProcessPending()
 - **Named arg support**: besides positional args, `key=value` named args are supported (e.g. `spawn name=x template=y`). The two modes cannot be mixed. Duplicate named args (e.g. `name=a name=b`) are rejected with an error (fail-fast, no silent override)
 - **Pre-validation**: `ConsoleCommandHandlerBase.TryExecute` validates the argument count before execution, returning a clear error on failure
 - **Thread-safe input**: `ConsoleInputBuffer` is `lock`-protected, supporting concurrent enqueue from the TCP bridge thread
-- **Immediate exception propagation**: `ProcessPending()` does not catch exceptions thrown by command handlers. If a handler throws while executing (e.g. `InvalidOperationException`), the exception propagates directly to the caller — not degraded to a log or error message. This ensures bugs surface early in development
+- **Immediate exception propagation**: internal `ProcessPending()` does not catch exceptions thrown by command handlers. If a handler throws while executing (e.g. `InvalidOperationException`), the exception propagates directly to the frame-driver caller — not degraded to a log or error message. This ensures bugs surface early in development
 - **Unique command names**: `ConsoleCommandRouter.Register` requires globally unique command names. Registering a handler with a name already taken by an existing handler throws `InvalidOperationException`
 - **Output listener isolation**: `ConsoleOutputChannel.Publish()` wraps each subscriber's invocation in try-catch. If a single listener throws, subsequent subscribers still receive the output line. After all subscribers have been invoked, the first exception is rethrown to preserve fail-fast. This ensures output is never silently lost because of a single faulty listener
 

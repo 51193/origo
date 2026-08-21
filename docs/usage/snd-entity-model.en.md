@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Model
 
@@ -157,9 +157,9 @@ entity:
 if (other.IsSameEntityAs(entity)) continue;  // skip self
 ```
 
-> Unique entity names within a session are an implicit framework requirement (`FindByName`,
-> observer topology, and save recovery all key on names); business code must not create
-> duplicate-named entities in the same session.
+> Unique entity names within a session are enforced by the framework (spawn and load
+> orchestration validate before creating); `FindByName`, observer topology, and save
+> recovery all key on names.
 
 ### Forbidden Actions in Strategies
 

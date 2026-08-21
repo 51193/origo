@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Serialization Tests
 
@@ -54,6 +54,8 @@ PersistentBlackboard disk read/write.
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SndSceneSerializer_DeserializeInto_InvalidJson_Throws` | Invalid JSON (object instead of array) | Throws exception |
+| `SndSceneSerializer_RecoverInto_DuplicateNameInPayload_ThrowsBeforeCreatingAnyEntity` | Two entities in the payload share a name | InvalidOperationException (contains "duplicate"), and no entity is created |
+| `SndSceneSerializer_RecoverInto_NameAlreadyOnHost_ThrowsBeforeCreating` | Payload entity name duplicates an entity already on the host | InvalidOperationException (contains "already exists"), and no new entity is appended |
 | `SndSceneSerializer_Constructor_ThrowsOnNullWorld` | null SndWorld | ArgumentNullException |
 
 ## SaveContextTests Details

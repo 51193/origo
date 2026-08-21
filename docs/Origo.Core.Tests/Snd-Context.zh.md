@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -48,7 +48,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `CloneTemplate_ClonesAndOverridesName` | 克隆模板并覆盖名字 | ISndTemplateAccess |
 | `CloneTemplate_WithoutOverrideName_KeepsOriginal` | 不覆盖名字时保留原名 | ISndTemplateAccess |
 | `TrySubmitConsoleCommand_ReturnsTrueWhenConsoleInputExists` | 有控制台输入时提交命令成功 | ISndConsoleAccess |
-| `ProcessConsolePending_ProcessesQueuedCommands` | ProcessConsolePending 处理排队命令 | ISndConsoleAccess |
+| `DriveFrame_ProcessesQueuedConsoleCommands` | 提交命令后由 `IOrigoFrameDriver.DriveFrame` 在帧末处理 | ISndConsoleAccess / IOrigoFrameDriver |
 | `SubscribeConsoleOutput_ReturnsPositiveId` | 订阅返回正数 ID | ISndConsoleAccess |
 | `UnsubscribeConsoleOutput_RemovesSubscription` | 取消订阅后不再收到消息 | ISndConsoleAccess |
 | `EnqueueBusinessDeferred_ExecutesOnFlush` | 延迟动作在 Flush 时执行 | ISndDeferredActions |

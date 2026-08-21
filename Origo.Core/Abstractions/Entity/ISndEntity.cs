@@ -10,10 +10,10 @@ public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess
     ISndObserverStrategyAccess
 {
     /// <summary>
-    ///     Stable name of this entity within its session. Callers must keep
-    ///     names unique within a session: lookup, observer topology, save
-    ///     recovery, and <see cref="Snd.EntityExtensions.IsSameEntityAs" />
-    ///     key on the name.
+    ///     Unique stable name of this entity within its session. Uniqueness is
+    ///     enforced by spawn and load orchestration; lookup, observer
+    ///     topology, save recovery, and
+    ///     <see cref="Snd.EntityExtensions.IsSameEntityAs" /> key on the name.
     /// </summary>
     string Name { get; }
 

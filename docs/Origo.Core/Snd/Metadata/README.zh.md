@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Metadata
 
@@ -69,7 +69,7 @@ SND 系统的核心类型保留与内联存储机制。值类型（`int`、`floa
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `Name` | `string` | 实体稳定标识名；同会话内由调用方保证唯一（查找、观察者拓扑、存档恢复与 `IsSameEntityAs` 均按名称键控） |
+| `Name` | `string` | 实体唯一标识名；同会话唯一由 spawn/load 编排强制（查找、观察者拓扑、存档恢复与 `IsSameEntityAs` 均按名称键控） |
 | `NodeMetaData` | `NodeMetaData?` | 节点映射；后台实体可为 null |
 | `StrategyMetaData` | `StrategyMetaData?` | 策略索引列表 |
 | `DataMetaData` | `DataMetaData?` | 数据字典；默认为空容器 |

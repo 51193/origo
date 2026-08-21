@@ -119,10 +119,6 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
         return true;
     }
 
-    public void ProcessConsolePending()
-    {
-    }
-
     public long SubscribeConsoleOutput(Action<string> onLine) => 0L;
 
     public void UnsubscribeConsoleOutput(long subscriptionId)

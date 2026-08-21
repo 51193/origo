@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 快速开始
 
@@ -137,7 +137,7 @@ OrigoDefaultEntry._Ready()
 每帧: _Process → IOrigoFrameDriver.DriveFrame(delta)
   → Snd.ProcessAll(delta)          # 实体帧处理
   → FlushEndOfFrameDeferred()      # 业务队列 → KillPendingEntities → 系统队列
-  → Console.ProcessPending()       # 控制台命令处理
+  → Core 内部：Console.ProcessPending()  # 控制台命令处理
 ```
 
 ## 下一步

@@ -62,9 +62,11 @@ public sealed class OrigoConsole
     public void RegisterHandler(IConsoleCommandHandler handler) => _router.Register(handler);
 
     /// <summary>
-    ///     Processes all pending commands currently in the queue (typically invoked once per frame or on commit).
+    ///     Processes all pending commands currently in the queue. Internal:
+    ///     command processing is owned by <see cref="OrigoRuntime" />'s frame
+    ///     driver so commands always execute in the fixed frame order.
     /// </summary>
-    public void ProcessPending()
+    internal void ProcessPending()
     {
         while (_input.TryDequeueCommand(out var line))
         {

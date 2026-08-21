@@ -204,18 +204,16 @@ public class EntityKillTests
     }
 
     [Fact]
-    public void KillPending_DuplicateEntityNames_LogsWarning()
+    public void Spawn_DuplicateEntityName_Throws()
     {
-        var (ctx, host, logger) = SetupKillTest();
+        var (ctx, host, _) = SetupKillTest();
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         SpawnEntityWithoutStrategy(session, "Dup");
-        SpawnEntityWithoutStrategy(session, "Dup");
 
-        session.RequestKillEntity("Dup");
-        ctx.Runtime.SessionManager.KillPendingAllSessions();
-
-        Assert.Contains(logger.Warnings, w =>
-            w.Contains("Duplicate entity name", StringComparison.Ordinal));
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SpawnEntityWithoutStrategy(session, "Dup"));
+        Assert.Contains("already exists", ex.Message, StringComparison.Ordinal);
+        Assert.Single(host.GetEntities());
     }
 
     [Fact]

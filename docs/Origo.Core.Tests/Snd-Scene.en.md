@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Scene Tests
 
@@ -80,6 +80,8 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `SpawnMany_AfterSpawnHookThrows_RollsBackUnfiredEntitiesOnly` | AfterSpawn hook of the second entity in SpawnMany throws InvalidOperationException | E1 whose hook already fired stays; E2 and E3 whose hooks never fired are fully rolled back; rolled-back strategy references returned |
 | `Spawn_AfterSpawnHookThrows_OnDetachInvalidatingHost_PropagatesOriginalException` | AfterSpawn throws on a detach-invalidating host (Godot wrapper semantics) | Teardown happens before removal; the original exception is not masked by ObjectDisposedException |
 | `Spawn_AfterSpawnHookThrows_WhenRollbackStepAlsoThrows_PropagatesOriginalAndCompletesRollback` | AfterSpawn throws and `TeardownObserverBindings` (OnUnmounted hook) also throws during rollback | Original AfterSpawn exception propagates; `ReleaseStrategiesOnly`/`TeardownOnly`/`RemoveEntity` all still execute; host removal is best-effort |
+| `Spawn_DuplicateName_ThrowsBeforeCreating` | Host already contains an entity with the same name | InvalidOperationException (contains "already exists"), and no second entity is created |
+| `SpawnMany_DuplicateNameInBatch_ThrowsBeforeStagingAnyEntity` | Duplicate name inside the same batch | InvalidOperationException, and no entity in the batch is created |
 
 ## Test Helper Strategies
 

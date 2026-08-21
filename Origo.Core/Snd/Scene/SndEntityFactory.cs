@@ -25,6 +25,7 @@ internal static class SndEntityFactory
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(meta);
+        SndEntityNamePolicy.EnsureAvailable(host, meta);
         var entity = host.CreateEntity(meta);
         if (entity is IEntityLifecycle lifecycle)
         {
@@ -56,6 +57,7 @@ internal static class SndEntityFactory
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(metaList);
+        SndEntityNamePolicy.EnsureUniqueBatch(host, metaList);
         var staged = new List<ISndEntity>();
         try
         {

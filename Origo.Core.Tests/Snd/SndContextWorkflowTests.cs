@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.Core.Save;
 using Origo.Core.Snd;
@@ -396,14 +397,14 @@ public class SndContextWorkflowTests
     }
 
     [Fact]
-    public void ProcessConsolePending_ProcessesQueuedCommands()
+    public void DriveFrame_ProcessesQueuedConsoleCommands()
     {
         var ctx = CreateContextWithConsole(out _, out _, out var output);
         var received = new List<string>();
         output.Subscribe(line => received.Add(line));
 
         ctx.ConsoleAccess.TrySubmitConsoleCommand("snd_count");
-        ctx.ConsoleAccess.ProcessConsolePending();
+        ((IOrigoFrameDriver)ctx.Runtime).DriveFrame(0);
 
         Assert.Contains(received, s => s.Contains("Snd count:"));
     }

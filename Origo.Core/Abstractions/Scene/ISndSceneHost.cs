@@ -28,9 +28,10 @@ internal interface ISndSceneHost : ISndSceneAccess, ISndSceneReadAccess
     ///     <see cref="Origo.Core.Runtime.Lifecycle.SessionRun" />)
     ///     at the appropriate phase.
     ///     <para>
-    ///         Note: this method does not enforce name uniqueness checks;
-    ///         the framework currently does not mandate unique names at the
-    ///         upper layer either.
+    ///         Name uniqueness is enforced by the orchestration layers before
+    ///         this method is called (<see cref="Origo.Core.Snd.Scene.SndEntityFactory" />
+    ///         for spawn, <see cref="Origo.Core.Save.Serialization.SndSceneSerializer" />
+    ///         for load); hosts may assume names are unique within the scene.
     ///     </para>
     /// </summary>
     ISndEntity CreateEntity(SndMetaData metaData);
