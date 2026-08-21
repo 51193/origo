@@ -188,9 +188,28 @@ public class SndContextWorkflowTests
     [Fact]
     public void SetContinueTarget_MakesHasContinueDataTrue()
     {
-        var ctx = CreateContext(out _, out _);
+        var ctx = CreateContext(out var fs, out _);
+        SeedSaveSnapshot(fs, "root", "slot_x", "default");
         ctx.Save.SetContinueTarget("slot_x");
         Assert.True(ctx.Lifecycle.HasContinueData());
+    }
+
+    [Fact]
+    public void HasContinueData_FalseWhenTargetSaveDoesNotExist()
+    {
+        var ctx = CreateContext(out _, out _);
+        ctx.Save.SetContinueTarget("ghost_slot");
+
+        Assert.False(ctx.Lifecycle.HasContinueData());
+    }
+
+    [Fact]
+    public void RequestContinueGame_ReturnsFalseWhenTargetSaveDoesNotExist()
+    {
+        var ctx = CreateContext(out _, out _);
+        ctx.Save.SetContinueTarget("ghost_slot");
+
+        Assert.False(ctx.Lifecycle.RequestContinueGame());
     }
 
     [Fact]

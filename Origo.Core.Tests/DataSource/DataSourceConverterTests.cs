@@ -427,6 +427,37 @@ public class DataSourceConverterTests
     }
 
     [Fact]
+    public void ArrayConverter_Read_NullNode_Throws()
+    {
+        // A missing array must not silently drift into an empty collection.
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("null");
+
+        Assert.Throws<InvalidOperationException>(() => registry.Read<int[]>(node));
+        Assert.Throws<InvalidOperationException>(() => registry.Read<string[]>(node));
+    }
+
+    [Fact]
+    public void ArrayConverter_Read_ScalarNode_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson(""" "not-an-array" """);
+
+        Assert.Throws<InvalidOperationException>(() => registry.Read<int[]>(node));
+        Assert.Throws<InvalidOperationException>(() => registry.Read<string[]>(node));
+    }
+
+    [Fact]
+    public void ArrayConverter_Read_ObjectNode_Throws()
+    {
+        var registry = TestFactory.CreateRegistry();
+        var node = TestFactory.NodeFromJson("""{"x":1}""");
+
+        Assert.Throws<InvalidOperationException>(() => registry.Read<int[]>(node));
+        Assert.Throws<InvalidOperationException>(() => registry.Read<string[]>(node));
+    }
+
+    [Fact]
     public void NodeMetaDataConverter_Read_NullPairValue_Throws()
     {
         // A null node-pair value must not silently drift into an empty

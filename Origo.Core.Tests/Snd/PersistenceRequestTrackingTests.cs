@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Snd;
 using Xunit;
 
@@ -94,6 +95,27 @@ public class PersistenceRequestTrackingTests
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
         ctx.FlushFrame();
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+    }
+
+    [Fact]
+    public void FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero()
+    {
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateContext(fs);
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+
+        // The first tracked request fails while loading the initial save;
+        // fail-fast queue semantics discard the second tracked request in the
+        // same system-deferred batch. The discarded request is no longer
+        // pending and must release its persistence-request count.
+        ctx.Lifecycle.RequestLoadInitialSave();
+        ctx.Save.RequestSaveGame("doomed");
+        Assert.Equal(2, ctx.Deferred.GetPendingPersistenceRequestCount());
+
+        Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 }

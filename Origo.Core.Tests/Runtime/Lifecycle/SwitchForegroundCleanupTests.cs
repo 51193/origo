@@ -89,6 +89,29 @@ public class SwitchForegroundCleanupTests
     }
 
     [Fact]
+    public void SwitchForeground_InvalidLevelId_LeavesCurrentForegroundIntact()
+    {
+        var (ctx, fs, _) = CreateContext();
+
+        var fgBefore = ctx.EnsureProgressRun().SessionManager.ForegroundSession;
+        Assert.NotNull(fgBefore);
+        Assert.Equal("test_level", fgBefore.LevelId);
+
+        // The level ID is embedded in directory names and must be validated
+        // before any destructive switch step runs. A malformed token must not
+        // destroy the current foreground session.
+        Assert.Throws<ArgumentException>(() =>
+        {
+            ctx.Save.RequestSwitchForegroundLevel("bad/level");
+            ctx.FlushFrame();
+        });
+
+        var fgAfter = ctx.EnsureProgressRun().SessionManager.ForegroundSession;
+        Assert.NotNull(fgAfter);
+        Assert.Equal("test_level", fgAfter.LevelId);
+    }
+
+    [Fact]
     public void SwitchForeground_LoadFailure_LeavesNoHalfMountedForeground()
     {
         var (ctx, fs, _) = CreateContext();

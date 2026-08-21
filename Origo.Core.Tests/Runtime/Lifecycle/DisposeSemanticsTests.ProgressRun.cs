@@ -150,6 +150,24 @@ public class DisposeSemanticsTestsProgressRun
     }
 
     [Fact]
+    public void ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted()
+    {
+        var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
+
+        var progressRun = ctx.EnsureProgressRun();
+        fs.SeedFile("root/current/progress.json", "{}");
+
+        var fg = (SessionRun)progressRun.SessionManager.ForegroundSession!;
+        fg.Disposing += () => throw new InvalidOperationException("subscriber failure");
+
+        Assert.Throws<InvalidOperationException>(() => progressRun.Dispose());
+
+        // The session teardown failure must not skip directory cleanup;
+        // every Dispose step runs independently.
+        Assert.False(fs.DirectoryExists("root/current"));
+    }
+
+    [Fact]
     public void ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted()
     {
         var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext(world =>

@@ -278,6 +278,84 @@ public class DataSourceTests
     }
 
     [Fact]
+    public void MapCodec_Encode_RejectsColonInKey()
+    {
+        // A colon in the key is the decoder's field separator; writing it
+        // would silently split one entry into a different key/value pair.
+        var codec = TestFactory.CreateMapCodec();
+        var node = DataSourceNode.CreateObject()
+            .Add("a:b", DataSourceNode.CreateString("v"));
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(node));
+    }
+
+    [Fact]
+    public void MapCodec_Encode_RejectsCommentKey()
+    {
+        // A key starting with '#' would make the decoder treat the whole
+        // line as a comment and silently drop the entry.
+        var codec = TestFactory.CreateMapCodec();
+        var node = DataSourceNode.CreateObject()
+            .Add("#comment", DataSourceNode.CreateString("hidden"));
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(node));
+    }
+
+    [Fact]
+    public void MapCodec_Encode_RejectsUntrimmedKeyOrValue()
+    {
+        // The strict decoder trims both fields; writing leading/trailing
+        // whitespace would change the key/value on read-back.
+        var codec = TestFactory.CreateMapCodec();
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(
+            DataSourceNode.CreateObject().Add(" padded ", DataSourceNode.CreateString("v"))));
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(
+            DataSourceNode.CreateObject().Add("k", DataSourceNode.CreateString(" v "))));
+    }
+
+    [Fact]
+    public void MapCodec_Encode_RejectsNonTextChild()
+    {
+        // .map is a string-keyed string-value format. A number/bool child
+        // would decode back as Text and silently lose its type.
+        var codec = TestFactory.CreateMapCodec();
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(
+            DataSourceNode.CreateObject().Add("n", DataSourceNode.CreateNumber(42))));
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(
+            DataSourceNode.CreateObject().Add("b", DataSourceNode.CreateBoolean(true))));
+    }
+
+    [Fact]
+    public void MapCodec_Encode_EmptyKey_Throws()
+    {
+        var codec = TestFactory.CreateMapCodec();
+        var node = DataSourceNode.CreateObject().Add("", DataSourceNode.CreateString("v"));
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(node));
+    }
+
+    [Fact]
+    public void DataSourceNode_Keys_OnNonMap_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() => DataSourceNode.CreateArray().Keys.Count());
+        Assert.Throws<InvalidOperationException>(() => DataSourceNode.CreateString("x").Keys.Count());
+    }
+
+    [Fact]
+    public void DataSourceNode_CountAndElements_OnNonArray_Throw()
+    {
+        var scalar = DataSourceNode.CreateString("x");
+        var map = DataSourceNode.CreateObject();
+
+        Assert.Throws<InvalidOperationException>(() => scalar.Count);
+        Assert.Throws<InvalidOperationException>(() => scalar.Elements.Count());
+        Assert.Throws<InvalidOperationException>(() => map.Count);
+        Assert.Throws<InvalidOperationException>(() => map.Elements.Count());
+    }
+
+    [Fact]
     public void MapCodec_DuplicateKey_WarningIsObservable()
     {
         // The duplicate-key warning must reach a real logger instead of

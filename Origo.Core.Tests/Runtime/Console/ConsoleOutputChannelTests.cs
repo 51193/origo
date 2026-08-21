@@ -95,4 +95,20 @@ public class ConsoleOutputChannelTests
         Assert.Equal("e1", ex.InnerException!.Message);
         Assert.Single(received);
     }
+
+    [Fact]
+    public void ConsoleOutputChannel_Publish_MultipleListenerFailures_AggregatesEveryFailure()
+    {
+        var channel = new ConsoleOutputChannel();
+        channel.Subscribe(_ => throw new InvalidOperationException("e1"));
+        channel.Subscribe(_ => throw new InvalidOperationException("e2"));
+        channel.Subscribe(_ => throw new InvalidOperationException("e3"));
+
+        var ex = Assert.Throws<AggregateException>(() => channel.Publish("msg"));
+
+        Assert.Equal(3, ex.InnerExceptions.Count);
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "e1");
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "e2");
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "e3");
+    }
 }
