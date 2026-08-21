@@ -46,6 +46,32 @@ public class SndEntityFactoryRollbackTests
     }
 
     [Fact]
+    public void Spawn_DuplicateName_ThrowsBeforeCreating()
+    {
+        var (_, host, _) = CreateContext();
+
+        SndEntityFactory.Spawn(host, CreateMeta("E", NormalIdx));
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SndEntityFactory.Spawn(host, CreateMeta("E", NormalTwoIdx)));
+        Assert.Contains("already exists", ex.Message, StringComparison.Ordinal);
+        Assert.Single(host.GetEntities());
+    }
+
+    [Fact]
+    public void SpawnMany_DuplicateNameInBatch_ThrowsBeforeStagingAnyEntity()
+    {
+        var (_, host, _) = CreateContext();
+
+        Assert.Throws<InvalidOperationException>(() => SndEntityFactory.SpawnMany(host,
+            CreateMeta("E1", NormalIdx),
+            CreateMeta("E1", NormalTwoIdx)));
+
+        Assert.Empty(host.GetEntities());
+        Assert.Null(host.FindByName("E1"));
+    }
+
+    [Fact]
     public void SpawnMany_AfterSpawnHookThrows_RollsBackUnfiredEntitiesOnly()
     {
         var (ctx, host, logger) = CreateContext();

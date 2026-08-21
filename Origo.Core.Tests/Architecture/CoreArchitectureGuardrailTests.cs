@@ -8,6 +8,7 @@ using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime;
+using Origo.Core.Runtime.Console;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Scene;
@@ -117,6 +118,23 @@ public class CoreArchitectureGuardrailTests
         Assert.DoesNotContain(ownMethods, m => m.Name == "get_SystemBlackboard");
         Assert.DoesNotContain(ownMethods, m => m.Name == "get_ProgressBlackboard");
         Assert.DoesNotContain(ownMethods, m => m.Name == "EnqueueBusinessDeferred");
+    }
+
+    [Fact]
+    public void ConsolePump_ShouldNotBePublicBusinessSurface()
+    {
+        // Console processing belongs to the fixed frame order driven by
+        // IOrigoFrameDriver.DriveFrame. Neither the business-facing console
+        // companion nor the concrete OrigoConsole type may expose a direct
+        // pump that can execute commands outside that order.
+        var companionMethods = typeof(ISndConsoleAccess)
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+            .Select(m => m.Name);
+        Assert.DoesNotContain("ProcessConsolePending", companionMethods);
+        Assert.Null(typeof(OrigoConsole).GetMethod(
+            "ProcessPending", BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly));
+        Assert.NotNull(typeof(OrigoConsole).GetMethod(
+            "ProcessPending", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly));
     }
 
     [Fact]
