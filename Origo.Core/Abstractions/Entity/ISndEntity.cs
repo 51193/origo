@@ -9,7 +9,12 @@ namespace Origo.Core.Abstractions.Entity;
 public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess, ISndActiveStrategyAccess,
     ISndObserverStrategyAccess
 {
-    /// <summary>Unique stable name of this entity within its session.</summary>
+    /// <summary>
+    ///     Stable name of this entity within its session. Callers must keep
+    ///     names unique within a session: lookup, observer topology, save
+    ///     recovery, and <see cref="Snd.EntityExtensions.IsSameEntityAs" />
+    ///     key on the name.
+    /// </summary>
     string Name { get; }
 
     /// <summary>Whether this entity has been marked for removal at the end of the current frame.</summary>

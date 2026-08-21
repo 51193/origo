@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Utility 测试
 
@@ -36,7 +36,7 @@
 | `NormalizeDirectoryPath_SchemePath_TrimsTrailingSlash` | `user://dir/` 尾部斜杠去除 |
 | `NormalizeDirectoryPath_SchemeRoot_IsPreserved` | `user://`/`res://` scheme 根保留双斜杠 |
 | `Combine_SchemeRootBase_KeepsDoubleSlash` | `user://` 根拼接子路径保留双斜杠 |
-| `Combine_EmptyBase_RejectsTraversal` | 空基础路径 + 遍历序列（`../`、`..\\`） | ArgumentException（回归：遍历守卫此前在空 base 分支被跳过） |
+| `Combine_EmptyBase_RejectsTraversal` | 空基础路径 + 遍历序列（`../`、`..\\`） | ArgumentException（验证：空 base 分支同样应用遍历守卫） |
 | `Combine_SchemeRootBase_RejectsTraversal` | scheme 根 + 遍历序列 | ArgumentException |
 | `GetParentDirectory_SchemeFile_ReturnsSchemeRoot` | scheme 下文件返回其 scheme 根（`user://foo.map` → `user://`） |
 | `GetParentDirectory_BackslashPath_ReturnsParent` | Windows 反斜杠路径父目录提取（`C:\base\sub` → `C:\base`） |

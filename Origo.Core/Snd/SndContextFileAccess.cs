@@ -28,7 +28,7 @@ internal sealed class SndContextFileAccess(
     /// <inheritdoc/>
     public T ReadObject<T>(string path)
     {
-        var node = dataSourceIo.ReadTree(path);
+        using var node = dataSourceIo.ReadTree(path);
         return converterRegistry.Read<T>(node);
     }
 

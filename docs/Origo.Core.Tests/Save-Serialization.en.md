@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Persistence: Serialization Tests
 
@@ -105,7 +105,7 @@ PersistentBlackboard disk read/write.
 |-------------|-------------------|-------------------|
 | `PersistentBlackboard_StaleTempFile_CleanedUpOnLoad` | Stale `.tmp.json` residue exists | Temp file deleted on load |
 | `PersistentBlackboard_SuccessfulWrite_LeavesNoBackupFile` | After successful overwrite | No `.bak.json` residue |
-| `PersistentBlackboard_LoadFromDisk_RecoversPreviousVersionFromBackup` | Primary file missing, backup holds previous version (crash simulation) | Primary restored from backup, backup consumed |
+| `PersistentBlackboard_LoadFromDisk_RecoversPreviousVersionFromBackup` | Primary file missing, backup holds the last complete file (crash simulation) | Primary restored from backup, backup consumed |
 
 ## Test Helper Strategies
 

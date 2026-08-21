@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/state-machine -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 状态机
 
@@ -67,7 +67,7 @@ public readonly struct StateMachineStrategyContext
 ```csharp
 // Push 策略：入栈时执行的逻辑
 [StrategyIndex("my_game.menu_push")]
-public class MenuPushStrategy : StateMachineStrategyBase
+public sealed class MenuPushStrategy : StateMachineStrategyBase
 {
     public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
     {
@@ -79,7 +79,7 @@ public class MenuPushStrategy : StateMachineStrategyBase
 
 // Pop 策略：出栈时执行的逻辑
 [StrategyIndex("my_game.menu_pop")]
-public class MenuPopStrategy : StateMachineStrategyBase
+public sealed class MenuPopStrategy : StateMachineStrategyBase
 {
     public override void OnPopRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
     {

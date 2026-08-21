@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # FileSystem
 
@@ -26,7 +26,7 @@ A thin facade that delegates all `IFileSystem` methods to the appropriate static
 ### GodotFileOperations
 
 - **ReadAllText**: `FileAccess.Open(path, Read)` → `GetAsText()`
-- **WriteAllText**: `FileAccess.Open(path, Write)` → `StoreString(content)`
+- **WriteAllText**: ensures the parent directory exists (`DirAccess.MakeDirRecursiveAbsolute`) before `FileAccess.Open(path, Write)` → `StoreString(content)`; nested-path writes match the in-memory file-system double
 - **Copy**: ReadAllText + WriteAllText (simple copy, suitable for small files; large file copies can be optimized at a higher level)
 - **Delete**: `DirAccess.RemoveAbsolute(path)`
 

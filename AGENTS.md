@@ -278,6 +278,11 @@ missing language files) always fail the build.
   comments are lower-priority but should trend toward English over time.
 - **Test files are exempt** from this rule. Test methods may carry comments
   in either language or none at all.
+- **Vendored third-party source is exempt** from the XML doc requirement when
+  the vendor contract says the file is kept in its upstream form
+  (currently: `Origo.Core/Addons/FastNoiseLite/FastNoiseLite.cs`). The
+  exemption and the "why vendor, why not modify" rationale are recorded in
+  `docs/Origo.Core/Addons/FastNoiseLite/README`.
 - **Forbidden**: API documentation generation tools (DocFX, Sandcastle, etc.).
   The project maintains hand-written bilingual documentation under `docs/`;
   source comments complement it at the IDE level. No duplicate generated

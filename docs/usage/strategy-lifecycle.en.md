@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Strategy Lifecycle
 
@@ -126,7 +126,7 @@ Dynamically added/removed strategies (such as action strategies) use `AfterAdd` 
 
 ```csharp
 [StrategyIndex("game.action.move_to")]
-public class MoveToActionStrategy : LifecycleStrategyBase
+public sealed class MoveToActionStrategy : LifecycleStrategyBase
 {
     public override void AfterAdd(ISndEntity entity, ISndContext ctx)
     {

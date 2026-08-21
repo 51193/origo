@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体模型
 
@@ -94,7 +94,7 @@ entity.UnmountObserverStrategy(entity.Name, "character.intent_watcher");
 
 ```csharp
 [StrategyIndex("my_game.damage_tick", Priority = 100)]
-public class DamageTickStrategy : LifecycleStrategyBase
+public sealed class DamageTickStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
     {

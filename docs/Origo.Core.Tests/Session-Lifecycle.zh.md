@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话生命周期 测试
 
@@ -24,8 +24,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `EmptySessionManagerTests.cs` | EmptySessionManager 的无操作行为 |
 | `PlayStopPlayRoundTripTests.cs` | 多次 Play→Stop→Play 的往返一致性（身份/黑板/Tick/Progress） |
 | `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun 加载错误路径（拓扑格式错误/文件缺失/后台加载失败） |
-| `ProgressRunLoadRollbackMaskingTests.cs` | 回归：后台挂载失败后的会话清理若自身抛异常（BeforeQuit 钩子），不得遮蔽原始加载异常——清理失败仅记 Warning，原异常原样传播 |
-| `SessionRunLoadRollbackMaskingTests.cs` | 回归：SessionRun 加载失败回滚（`ResetAfterLoadFailure`）逐步执行清理；`OnUnmounted` 钩子抛异常时其余步骤仍执行（实体/黑板清空），原始异常不被遮蔽，清理失败记 Warning |
+| `ProgressRunLoadRollbackMaskingTests.cs` | 验证后台挂载失败后的会话清理若自身抛异常（BeforeQuit 钩子）不得遮蔽原始加载异常：清理失败仅记 Warning，原异常原样传播 |
+| `SessionRunLoadRollbackMaskingTests.cs` | 验证 SessionRun 加载失败回滚（`ResetAfterLoadFailure`）逐步执行清理；`OnUnmounted` 钩子抛异常时其余步骤仍执行（实体/黑板清空），原始异常不被遮蔽，清理失败记 Warning |
 | `SaveAndSwitchForegroundTests.cs` | 保存+切换关卡的组合操作、碰撞处理、延迟队列编排、旧前台自动持久化（含 progress） |
 | `SaveAndSwitchForegroundIntegrationTests.cs` | 场景宿主契约边界：FindByName 钩子中间态 + 保存后台→切换的实体/黑板/关卡冲突 |
 | `SessionDecouplingTests.cs` | 会话独立运行互不干扰（SessionStateMachineContext、SceneHost、路径策略） |
@@ -38,8 +38,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `FrontSession_CreationWithCorrectFlagTests.cs` | 前台 IsFrontSession=true |
 | `FrontSession_StrategyContextReceivesFrontFlagTests.cs` | 策略上下文接收前台标志 |
 | `FrontSession_UniqueConstraintValidationTests.cs` | 前台唯一性约束 |
-| `SwitchForegroundCleanupTests.cs` | 回归：SwitchForeground 完整销毁语义（BeforeQuit/观察者拆线/策略池归还）、切回原关卡重新挂载观察者、加载失败不残留半挂载前台 |
-| `SessionRunHookIterationTests.cs` | 回归：AfterLoad/BeforeSave/BeforeQuit 钩子内 spawn 新实体不破坏批量迭代（实时视图宿主）；销毁路径分轮收割收敛释放全部实体，钩子无限 spawn（非收敛）时显式抛异常而非挂死 |
+| `SwitchForegroundCleanupTests.cs` | 验证 SwitchForeground 完整销毁语义（BeforeQuit/观察者拆线/策略池归还）、非法 level ID 不破坏当前前台、切回原关卡重新挂载观察者、加载失败不残留半挂载前台 |
+| `SessionRunHookIterationTests.cs` | 验证 AfterLoad/BeforeSave/BeforeQuit 钩子内 spawn 新实体不破坏批量迭代（实时视图宿主）；销毁路径分轮收割收敛释放全部实体，钩子无限 spawn（非收敛）时显式抛异常而非挂死 |
 
 ## LifecycleRunsTests 测试详情
 
@@ -114,6 +114,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SessionRun_Dispose_StateMachineClearThrows_EntitiesStillReleased` | 状态机容器释放阶段抛异常 | 异常传播，但实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交（二次 Dispose 幂等、访问抛 ObjectDisposedException） |
 | `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | 退出 Pop 钩子抛异常 | 异常传播，但 progress 黑板清空、状态机释放、dispose 标志提交（二次 Dispose 幂等） |
 | `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | 会话 teardown 期间订阅者抛异常 | 异常传播，但 progress 状态仍释放、dispose 状态提交（二次 Dispose 无操作） |
+| `ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted` | 会话 teardown 期间订阅者抛异常 | 异常传播，但 current/ 目录仍被删除（各清理步骤独立执行） |
+| `ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted` | 会话 teardown 期间订阅者抛异常 | 异常传播，但 current/ 目录仍被删除（各清理步骤独立执行） |
 
 ### 边界路径
 
@@ -425,7 +427,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SaveAndLoad_RoundTrips_SyncProcessFlag` | 往返后 syncProcess 标志正确恢复 | session-model |
 | `SaveAndLoad_FromDisk_RestoresBackgroundSessions` | 写磁盘→读快照→加载→后台恢复 | session-model |
 | `ReadFromCurrent_IncludesAllLevelDirectories` | ReadFromCurrent 包含所有关卡目录（含后台） | ISaveStorageService |
-| `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | 完整保存触发前台实体 BeforeSave 钩子（回归：钩子曾被跳过） | session-model |
+| `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | 完整保存触发前台实体 BeforeSave 钩子（验证：BeforeSave 钩子在序列化前触发） | session-model |
 | `FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins` | BeforeSave 钩子覆写 SessionTopology 时框架计算值获胜并持久化 | session-model: 会话拓扑 |
 | `FullSave_BeforeSaveHookWrites_ArePersistedIntoForegroundSceneData` | BeforeSave 钩子写入的实体数据进入前台 snd_scene.json | session-model |
 | `SaveAndLoad_ReSolidifiesFullTopology_IncludingBackgroundSessions` | 保存→全部销毁→重载后拓扑重固化为完整会话集（前台+后台及 syncProcess） | session-model: 会话拓扑 |
@@ -476,6 +478,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `SwitchForeground_LoadFailure_LeavesNoHalfMountedForeground` | 目标关卡 snd_scene 引用未注册策略导致加载失败 | InvalidOperationException（含 "not found"），无半挂载前台残留（ForegroundSession 为 null），可再次切换到健康关卡 |
+| `SwitchForeground_InvalidLevelId_LeavesCurrentForegroundIntact` | level ID 含路径分隔符 | ArgumentException，且旧前台会话保持挂载（校验先于任何销毁步骤） |
+| `SwitchForeground_InvalidLevelId_LeavesCurrentForegroundIntact` | level ID 含路径分隔符 | ArgumentException，且旧前台会话保持挂载（校验先于任何销毁步骤） |
 
 ## BackgroundSession_CreationWithCorrectFlagTests 测试详情
 

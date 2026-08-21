@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Model
 
@@ -94,7 +94,7 @@ Hooks listed in execution order:
 
 ```csharp
 [StrategyIndex("my_game.damage_tick", Priority = 100)]
-public class DamageTickStrategy : LifecycleStrategyBase
+public sealed class DamageTickStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
     {

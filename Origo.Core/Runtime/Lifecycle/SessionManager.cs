@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Logging;
@@ -188,13 +189,38 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     Clears all sessions (disposes and removes them).
+    ///     Clears all sessions (disposes and removes them). Every session is
+    ///     disposed independently: the first user-hook failure is rethrown
+    ///     after all sessions have been removed, and later failures are
+    ///     logged so they stay observable.
     /// </summary>
     internal void Clear()
     {
         var keys = EnumerateManagedKeys(true);
+        Exception? firstFailure = null;
         foreach (var key in keys)
-            DestroySession(key);
+        {
+            try
+            {
+                DestroySession(key);
+            }
+            catch (Exception ex)
+            {
+                if (firstFailure is null)
+                {
+                    firstFailure = ex;
+                    continue;
+                }
+
+                _managerRuntime.Logger.Log(LogLevel.Warning, _logTag,
+                    new LogMessageBuilder()
+                        .AddContext("sessionKey", key)
+                        .Build($"Session dispose failed while clearing remaining sessions: {ex.Message}"));
+            }
+        }
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     /// <summary>

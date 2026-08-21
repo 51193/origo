@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -67,6 +67,8 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `TrySubmitConsoleCommand_ReturnsFalseWhenNoConsoleInput` | No console input source | Returns false |
 | `SubscribeConsoleOutput_ThrowsWhenNoChannel` | Subscribing when no output channel exists | InvalidOperationException |
 | `RequestContinueGame_ReturnsFalseWhenNoContinue` | Continue target not set | Returns false |
+| `HasContinueData_FalseWhenTargetSaveDoesNotExist` | Continue target points to a missing save slot | Returns false (the “save exists” contract must consult storage enumeration) |
+| `RequestContinueGame_ReturnsFalseWhenTargetSaveDoesNotExist` | Continue target points to a missing save slot | Returns false and does not enqueue a load request |
 | `Constructor_ThrowsOnNullRuntime` | null Runtime | ArgumentNullException |
 | `Constructor_ThrowsOnNullFileSystem` | null FileSystem | ArgumentNullException |
 | `Constructor_ThrowsOnEmptySaveRootPath` | Blank SaveRootPath | ArgumentException |
@@ -96,6 +98,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestLoadInitialSave_IsTrackedUntilFlushed` | RequestLoadInitialSave queues and the pending count is 1 (tracking semantics only) | ISndDeferredActions |
 | `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
+| `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | An earlier persistence request fails and a later request in the same batch is discarded by fail-fast | Pending count returns to 0 (discarded requests run their cleanup callbacks) | ISndDeferredActions |
 
 ## SndTemplateResolverTests Details
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # FileSystem
 
@@ -26,7 +26,7 @@
 ### GodotFileOperations
 
 - **ReadAllText**：`FileAccess.Open(path, Read)` → `GetAsText()`
-- **WriteAllText**：`FileAccess.Open(path, Write)` → `StoreString(content)`
+- **WriteAllText**：先确保父目录存在（`DirAccess.MakeDirRecursiveAbsolute`），再 `FileAccess.Open(path, Write)` → `StoreString(content)`；嵌套路径写入与内存文件系统替身语义一致
 - **Copy**：ReadAllText + WriteAllText（简单复制，适合小文件场景；大文件复制可由上层优化）
 - **Delete**：`DirAccess.RemoveAbsolute(path)`
 

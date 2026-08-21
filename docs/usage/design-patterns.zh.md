@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 设计模式
 
@@ -87,7 +87,7 @@ public override void AfterLoad(ISndEntity entity, ISndContext ctx)
 
 ```csharp
 [StrategyIndex("game.entity.init")]
-public class EntityInitStrategy : LifecycleStrategyBase
+public sealed class EntityInitStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -118,7 +118,7 @@ public class EntityInitStrategy : LifecycleStrategyBase
 ```csharp
 // Manager 策略：维护数据，无 Process 循环
 [StrategyIndex("food.manager")]
-public class FoodManagerStrategy : LifecycleStrategyBase
+public sealed class FoodManagerStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -130,7 +130,7 @@ public class FoodManagerStrategy : LifecycleStrategyBase
 
 // ActiveStrategy：提供查询服务
 [StrategyIndex("food.find_nearest")]
-public class FoodFindNearestStrategy : ActiveStrategyBase
+public sealed class FoodFindNearestStrategy : ActiveStrategyBase
 {
     public override object? Execute(ISndEntity entity, object? input, ISndContext ctx)
     {
@@ -154,7 +154,7 @@ public class FoodFindNearestStrategy : ActiveStrategyBase
 ```csharp
 // 调度器读取 impl 键，动态选择策略
 [StrategyIndex("game.scheduling")]
-public class SchedulingStrategy : LifecycleStrategyBase
+public sealed class SchedulingStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -227,7 +227,7 @@ entity.MountObserverStrategy(entity.Name, "schedule.intent_watcher");
 ```csharp
 // 策略：决策逻辑
 [StrategyIndex("ui.main_menu")]
-public class MainMenuStrategy : LifecycleStrategyBase
+public sealed class MainMenuStrategy : LifecycleStrategyBase
 {
     public override void AfterLoad(ISndEntity entity, ISndContext ctx)
     {

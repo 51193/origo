@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Session Lifecycle Tests
 
@@ -24,8 +24,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `EmptySessionManagerTests.cs` | No-op behavior of EmptySessionManager |
 | `PlayStopPlayRoundTripTests.cs` | Round-trip consistency of multiple Play→Stop→Play cycles (identity/blackboard/Tick/Progress) |
 | `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun load error paths (topology format errors/file missing/background load failure) |
-| `ProgressRunLoadRollbackMaskingTests.cs` | Regression: session cleanup after a background mount failure must not mask the original load exception if cleanup itself throws (BeforeQuit hook) — cleanup failure is only logged as Warning, the original exception propagates unchanged |
-| `SessionRunLoadRollbackMaskingTests.cs` | Regression: SessionRun load-failure rollback (`ResetAfterLoadFailure`) executes cleanup step by step; when the `OnUnmounted` hook throws, the remaining steps still execute (entities/blackboard cleared), the original exception is not masked, and cleanup failures are logged as Warning |
+| `ProgressRunLoadRollbackMaskingTests.cs` | Verifies that session cleanup after a background mount failure does not mask the original load exception when cleanup itself throws (BeforeQuit hook): cleanup failure is only logged as Warning and the original exception propagates unchanged |
+| `SessionRunLoadRollbackMaskingTests.cs` | Verifies that SessionRun load-failure rollback (`ResetAfterLoadFailure`) executes cleanup step by step; when the `OnUnmounted` hook throws, the remaining steps still execute (entities/blackboard cleared), the original exception is not masked, and cleanup failures are logged as Warning |
 | `SaveAndSwitchForegroundTests.cs` | Combined save + switch level operations, collision handling, deferred queue orchestration, old foreground auto-persist (incl. progress) |
 | `SaveAndSwitchForegroundIntegrationTests.cs` | Scene host contract boundary: FindByName hook intermediate state + save background→switch entity/blackboard/level conflicts |
 | `SessionDecouplingTests.cs` | Sessions run independently without interference (SessionStateMachineContext, SceneHost, path policy) |
@@ -38,8 +38,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `FrontSession_CreationWithCorrectFlagTests.cs` | Foreground IsFrontSession=true |
 | `FrontSession_StrategyContextReceivesFrontFlagTests.cs` | Strategy context receives foreground flag |
 | `FrontSession_UniqueConstraintValidationTests.cs` | Foreground uniqueness constraint |
-| `SwitchForegroundCleanupTests.cs` | Regression: SwitchForeground runs full disposal semantics (BeforeQuit / observer teardown / strategy pool release), re-mounts observer bindings when switching back to a previous level, and leaves no half-mounted foreground on load failure |
-| `SessionRunHookIterationTests.cs` | Regression: spawning entities inside AfterLoad/BeforeSave/BeforeQuit hooks does not break batch iteration (live-view host); disposal harvests in passes until convergence, and a non-converging quit hook (infinite spawn) fails loudly instead of hanging |
+| `SwitchForegroundCleanupTests.cs` | Verifies that SwitchForeground runs full disposal semantics (BeforeQuit / observer teardown / strategy pool release), keeps the current foreground intact for an invalid level ID, re-mounts observer bindings when switching back to a previous level, and leaves no half-mounted foreground on load failure |
+| `SessionRunHookIterationTests.cs` | Verifies that spawning entities inside AfterLoad/BeforeSave/BeforeQuit hooks does not break batch iteration (live-view host); disposal harvests in passes until convergence, and a non-converging quit hook (infinite spawn) fails loudly instead of hanging |
 
 ## LifecycleRunsTests Details
 
@@ -114,6 +114,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SessionRun_Dispose_StateMachineClearThrows_EntitiesStillReleased` | State-machine container release throws | Exception propagates, but entity strategies are still released (LogPoolLeaks finds no leak), disposed flag committed (second dispose idempotent, access throws ObjectDisposedException) |
 | `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | Quit pop hook throws | Exception propagates, but progress blackboard cleared, state machines released, disposed flag committed (second dispose idempotent) |
 | `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | Subscriber throws during session teardown | Exception propagates, but progress state still released and dispose state committed (second dispose no-op) |
+| `ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted` | Subscriber throws during session teardown | Exception propagates, but current/ is still deleted (each cleanup step runs independently) |
 
 ### Boundary Path
 
@@ -426,7 +427,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SaveAndLoad_RoundTrips_SyncProcessFlag` | syncProcess flag correctly restored after round-trip | session-model |
 | `SaveAndLoad_FromDisk_RestoresBackgroundSessions` | Write to disk→read snapshot→load→background restored | session-model |
 | `ReadFromCurrent_IncludesAllLevelDirectories` | ReadFromCurrent includes all level directories (including backgrounds) | ISaveStorageService |
-| `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | Full save triggers BeforeSave hooks on foreground entities (regression: hooks used to be skipped) | session-model |
+| `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | Full save triggers BeforeSave hooks on foreground entities (verifies BeforeSave hooks fire before serialization) | session-model |
 | `FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins` | When a BeforeSave hook overwrites SessionTopology, the framework-computed value wins and is persisted | session-model: Session Topology |
 | `FullSave_BeforeSaveHookWrites_ArePersistedIntoForegroundSceneData` | Data written by BeforeSave hooks lands in foreground snd_scene.json | session-model |
 | `SaveAndLoad_ReSolidifiesFullTopology_IncludingBackgroundSessions` | Save→full teardown→reload re-solidifies topology to the complete session set (foreground + background with syncProcess) | session-model: Session Topology |
@@ -477,6 +478,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SwitchForeground_LoadFailure_LeavesNoHalfMountedForeground` | Target level snd_scene references an unregistered strategy, load fails | InvalidOperationException (contains "not found"), no half-mounted foreground left (ForegroundSession null), subsequent switch to a healthy level succeeds |
+| `SwitchForeground_InvalidLevelId_LeavesCurrentForegroundIntact` | Level ID contains a path separator | ArgumentException, and the old foreground session stays mounted (validation runs before any destructive step) |
 
 ## BackgroundSession_CreationWithCorrectFlagTests Details
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 控制台系统 测试
 
@@ -102,6 +102,7 @@
 | `ConsoleOutputChannel_Subscribe_ThrowsOnNull` | Subscribe(null) | ArgumentNullException |
 | `ConsoleOutputChannel_Publish_FirstListenerThrows_SecondStillReceives` | 首个订阅者抛异常 | 异常传播，但后续订阅者仍收到消息 |
 | `ConsoleOutputChannel_Publish_FirstListenerThrows_ExceptionPropagates` | 多订阅者抛异常 | 传播首个异常（"e1"） |
+| `ConsoleOutputChannel_Publish_MultipleListenerFailures_AggregatesEveryFailure` | 三个订阅者全部抛异常 | AggregateException 包含全部 3 个 inner exception |
 
 ### 边界路径
 

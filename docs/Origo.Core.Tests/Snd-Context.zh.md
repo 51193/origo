@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -70,6 +70,8 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `TrySubmitConsoleCommand_ReturnsFalseWhenNoConsoleInput` | 无控制台输入源 | 返回 false |
 | `SubscribeConsoleOutput_ThrowsWhenNoChannel` | 无输出通道时订阅 | InvalidOperationException |
 | `RequestContinueGame_ReturnsFalseWhenNoContinue` | 未设置 Continue 目标 | 返回 false |
+| `HasContinueData_FalseWhenTargetSaveDoesNotExist` | Continue 目标指向不存在的存档槽 | 返回 false（“save exists”契约必须核对存储枚举） |
+| `RequestContinueGame_ReturnsFalseWhenTargetSaveDoesNotExist` | Continue 目标指向不存在的存档槽 | 返回 false，不入队加载请求 |
 | `Constructor_ThrowsOnNullRuntime` | null Runtime | ArgumentNullException |
 | `Constructor_ThrowsOnNullFileSystem` | null FileSystem | ArgumentNullException |
 | `Constructor_ThrowsOnEmptySaveRootPath` | 空白 SaveRootPath | ArgumentException |
@@ -99,6 +101,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `RequestLoadInitialSave_IsTrackedUntilFlushed` | RequestLoadInitialSave 入队后 pending 计数为 1（仅验证跟踪语义） | ISndDeferredActions |
 | `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
+| `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | 前一个持久化请求失败、同批后续请求被 fail-fast 丢弃 | pending 计数归 0（被丢弃请求的清理回调释放计数） | ISndDeferredActions |
 
 ## SndTemplateResolverTests 测试详情
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Strategy Tests
 
@@ -86,7 +86,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `Invoke_StringReferenceTypeInput_RoundTrips` | String reference type input round-trips (`"hello"` → `"hello"`) | Strategy README: ActiveStrategyJsonBase |
 | `Invoke_NullJsonInput_ExecutesWithNullReference` | JSON literal `null` input executes with a null reference and serializes as `null` | Strategy README: ActiveStrategyJsonBase |
 | `GenericInvoke_JsonBaseStrategy_RoundTripsThroughExtensions` | Generic InvokeStrategy<TestPayload,TestPayload> round-trips fully through the JSON base class | Snd README: ActiveStrategyExtensions |
-| `GenericInvoke_BareStringResult_ReturnsStringAsIs` | Legacy strategies returning bare strings return them as-is through the generic call without throwing JSON exceptions | Snd README: ActiveStrategyExtensions |
+| `GenericInvoke_BareStringResult_ReturnsStringAsIs` | Strategies that return bare strings return them as-is through the generic call without throwing JSON exceptions | Snd README: ActiveStrategyExtensions |
 | `GenericInvoke_ErrorBareString_ReturnsStringAsIs` | Bare string err result (`"err:no gold"`) returned as-is | Snd README: ActiveStrategyExtensions |
 
 ## LifecycleStrategyBaseTests Details
@@ -241,6 +241,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws` | Recover list contains ActiveStrategyBase type | InvalidOperationException ("LifecycleStrategyBase") |
 | `Register_AbstractStrategyType_Throws` | Registering an abstract strategy type | InvalidOperationException |
 | `Register_DuplicateIndex_Throws` | Registering the same strategy index twice | InvalidOperationException ("already registered") |
+| `GetStrategy_FactoryReturnsNull_ThrowsInvalidOperation` | Registered factory returns null | InvalidOperationException (contains "returned null"; must not degrade into an NRE) |
 
 ## SndStrategyPerformanceTests Details
 

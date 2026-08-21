@@ -51,6 +51,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `DataSourceNode.Keys` / `Count` / `Elements` are shape-strict** — accessing `Keys` on a non-Map node or `Count`/`Elements` on a non-Array node now throws `InvalidOperationException` instead of silently returning an empty collection. This also makes all primitive-array converters reject null/scalar/object root nodes instead of deserializing corrupt save data as an empty array.
+- **BREAKING: `.map` encoding rejects keys and child kinds that cannot round-trip** — keys that are empty, contain a leading/trailing whitespace, start with `#`, or contain `:`/line breaks now throw; Number/Bool children are rejected because the string-only `.map` format would silently lose their type on decode.
+- **`ConsoleOutputChannel` aggregates every failed listener** — when multiple subscribers throw during `Publish`, the thrown `AggregateException` now contains every failure; the single-failure behavior remains a direct rethrow of that exception.
 - **BREAKING: scene orchestration interfaces are now `internal`** — `ISndSceneHost`, `ISndSceneAccess`, `ISndContextAttachableSceneHost`, `IOwningSessionBindable`, `SndEntityFactory`, and the `OrigoRuntime` constructor are no longer public. Business code can no longer cast `GodotSndManager` to a scene-host interface and bypass spawn/load/kill orchestration; scene queries go through the public `ISndSceneReadAccess`. Adapter/test assemblies retain access via `InternalsVisibleTo`.
 - **PR commit messages are now machine-linted** — `scripts/lint-commits.sh` and the
   `commit-lint` workflow enforce Conventional Commits, the 72-character subject limit,
@@ -241,6 +244,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`HasContinueData` / `RequestContinueGame` verify the target save actually exists** — a continue target previously returned true for a missing save slot and then destroyed the current foreground while failing the load; both entry points now consult save enumeration and refuse missing slots before any workflow starts.
+- **`RequestSwitchForegroundLevel` validates level IDs before destructive switch steps** — malformed IDs (e.g. containing path separators) used to fail only after the old foreground had been persisted and destroyed; the token check now runs before any session is touched.
+- **Persistence-request accounting survives fail-fast queue abandonment** — when a tracked system request threw, later tracked requests in the same batch were discarded without running their decrement, leaving the pending count stuck forever; discarded actions now run an explicit cleanup callback.
+- **Godot batch-recovery rollback releases Core resources of already-recovered entities** — when a later entity failed during `RecoverFromMetaList`, earlier staged Godot entities were detached without releasing strategy/node acquisitions, leaking pool references; rollback now releases those resources before detaching.
+- **`GodotFileOperations.WriteAllText` creates missing parent directories** — nested writes under `user://`/`res://` previously failed when parent directories did not exist, diverging from the in-memory file-system behavior; the parent is now created recursively before opening the file.
+- **`ProgressRun.Dispose` and `SessionManager.Clear` keep cleaning after a throwing session hook** — a throwing `BeforeQuit`/subscriber hook previously skipped `current/` deletion and later sessions; every cleanup step now runs independently and the first failure is rethrown after the remaining cleanup completes.
+- **`DataSourceNode` rejects null builder inputs** — `CreateString(null)`, `CreateNumber((string)null)`, and `Add` with a null child now throw `ArgumentNullException` instead of silently creating empty text nodes or failing later at encode time.
+- **Null-returning strategy factories fail with a clear error** — acquiring a strategy whose registered factory returned null previously produced a `NullReferenceException`; the pool now throws `InvalidOperationException` naming the offending index.
 - **Initial saves now restore their `extra/` files from the initial storage root** — the
   initial-load workflow previously restored `extra/` through the runtime storage service,
   so archive files shipped in the initial save were ignored and stale runtime files could

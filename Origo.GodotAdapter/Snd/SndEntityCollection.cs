@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Snd.Metadata;
@@ -25,6 +26,8 @@ internal interface ISndEntityFacade : ISndEntity
     void ProcessSnd(double delta);
 
     void DetachFromManager();
+
+    void RollbackAcquiredResources();
 
     void MarkPendingKill();
 }
@@ -83,9 +86,9 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         }
         catch (Exception ex)
         {
-            RollbackPartialLoad(staged);
             if (failingMeta is not null)
                 onFailure?.Invoke(failingMeta, ex);
+            RollbackPartialLoad(staged, ex);
             throw;
         }
     }
@@ -109,9 +112,9 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         {
             return CreateAndStage(metaData, staged);
         }
-        catch
+        catch (Exception ex)
         {
-            RollbackPartialLoad(staged);
+            RollbackPartialLoad(staged, ex);
             throw;
         }
     }
@@ -200,15 +203,36 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         throw new InvalidOperationException($"No entity with StableName '{name}'.");
     }
 
-    private void RollbackPartialLoad(List<T> staged)
+    private void RollbackPartialLoad(List<T> staged, Exception originalException)
     {
+        var cleanupFailures = new List<Exception>();
         for (var i = staged.Count - 1; i >= 0; i--)
         {
             var entity = staged[i];
-            _entities.Remove(entity);
-            entity.DetachFromManager();
-            _detachCallback?.Invoke(entity);
+            try
+            {
+                entity.RollbackAcquiredResources();
+            }
+            catch (Exception cleanupEx)
+            {
+                cleanupFailures.Add(cleanupEx);
+            }
+            finally
+            {
+                _entities.Remove(entity);
+                entity.DetachFromManager();
+                _detachCallback?.Invoke(entity);
+            }
         }
+
+        if (cleanupFailures.Count == 0)
+        {
+            ExceptionDispatchInfo.Capture(originalException).Throw();
+        }
+
+        throw new AggregateException(
+            "Entity recovery failed and rollback cleanup also failed; see inner exceptions.",
+            [originalException, .. cleanupFailures]);
     }
 
     /// <inheritdoc/>

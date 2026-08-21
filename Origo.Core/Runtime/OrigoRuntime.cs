@@ -134,6 +134,9 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     /// </summary>
     internal void EnqueueSystemDeferred(Action action) => _systemDeferredScheduler.Enqueue(action);
 
+    internal void EnqueueSystemDeferred(Action action, Action onDiscard) =>
+        _systemDeferredScheduler.Enqueue(action, onDiscard);
+
     /// <summary>
     ///     Injects a provider for the current session manager.
     ///     Frame driver and session-scoped operations resolve <see cref="ISessionManager" />

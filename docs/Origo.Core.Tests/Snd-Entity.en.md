@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Entity Tests
 
@@ -21,7 +21,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `SndEntityLifecycleBatchTests.cs` | Batch lifecycle orchestration: all hook stages, cross-entity lookup, priority, SndEntityFactory/Spawn, ProcessAll frame processing |
 | `SndEntityOwningSessionTests.cs` | Entity OwningSession binding and unbinding |
 | `SndDataManagerFailureTests.cs` | SndDataManager.SetData leaves no dictionary entry when the converter throws (prevents leaking into saves) |
-| `SndEntityRecoveryRollbackTests.cs` | Regression: cross-stage rollback of RecoverForLifecycle (active phase failure releases previously acquired passive strategies; node phase failure releases created nodes and does not release unacquired indices) |
+| `SndEntityRecoveryRollbackTests.cs` | Verifies cross-stage rollback of RecoverForLifecycle (active phase failure releases previously acquired passive strategies; node phase failure releases created nodes and does not release unacquired indices) |
 | `SndNodeManagerTests.cs` | SndNodeManager guard contract: null SetSceneAliasResolver parameter fails fast |
 
 ## MemorySndEntityTests Details

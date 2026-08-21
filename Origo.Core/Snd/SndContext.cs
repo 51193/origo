@@ -260,7 +260,7 @@ public sealed class SndContext : ISndContext
     {
         ArgumentNullException.ThrowIfNull(action);
         Interlocked.Increment(ref _pendingPersistenceRequests);
-        EnqueueSystemDeferred(() =>
+        Runtime.EnqueueSystemDeferred(() =>
         {
             try
             {
@@ -270,7 +270,7 @@ public sealed class SndContext : ISndContext
             {
                 Interlocked.Decrement(ref _pendingPersistenceRequests);
             }
-        });
+        }, onDiscard: () => Interlocked.Decrement(ref _pendingPersistenceRequests));
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Logging;
@@ -87,31 +88,64 @@ internal sealed partial class ProgressRun : IDisposable
         _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
             $"Disposing ProgressRun (saveId: '{SaveId}').");
 
+        Exception? firstFailure = null;
+        void RecordFailure(Exception ex, string step)
+        {
+            if (firstFailure is not null)
+            {
+                _progressRuntime.Logger.Log(LogLevel.Warning, nameof(ProgressRun),
+                    new LogMessageBuilder()
+                        .AddContext("saveId", SaveId)
+                        .AddContext("cleanupStep", step)
+                        .Build($"ProgressRun dispose step failed after an earlier failure: {ex.Message}"));
+                return;
+            }
+
+            firstFailure = ex;
+        }
+
         try
         {
-            // Session and directory teardown can throw (exceptions propagate
-            // to the caller per the fail-fast contract, matching SessionRun.
-            // Dispose); the progress-level state machines and blackboard are
-            // still guaranteed to be released and the disposed flag committed
-            // via the finally block.
-            _sessionManager.Clear();
-            _progressRuntime.StorageService.DeleteCurrentDirectory();
+            // Session, directory, and progress-level teardown steps run
+            // independently: a throwing user hook must not skip later cleanup
+            // steps. The first failure is rethrown after every step has run.
+            try
+            {
+                _sessionManager.Clear();
+            }
+            catch (Exception ex)
+            {
+                RecordFailure(ex, "session clear");
+            }
+
+            try
+            {
+                _progressRuntime.StorageService.DeleteCurrentDirectory();
+            }
+            catch (Exception ex)
+            {
+                RecordFailure(ex, "current directory delete");
+            }
         }
         finally
         {
-            // Quit-pop hooks can throw (fail-fast: the exception propagates),
-            // but the machine disposal, blackboard clear, and the disposed
-            // flag commit must still run so no pool reference or half-closed
-            // state survives a hook failure.
             try
             {
                 ProgressScope.StateMachines.PopAllOnQuit();
+            }
+            catch (Exception ex)
+            {
+                RecordFailure(ex, "progress state machine quit pop");
             }
             finally
             {
                 try
                 {
                     ProgressScope.StateMachines.Clear();
+                }
+                catch (Exception ex)
+                {
+                    RecordFailure(ex, "progress state machine clear");
                 }
                 finally
                 {
@@ -125,6 +159,9 @@ internal sealed partial class ProgressRun : IDisposable
                 }
             }
         }
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     public IStateMachineContainer GetProgressStateMachines() => ProgressScope.StateMachines;

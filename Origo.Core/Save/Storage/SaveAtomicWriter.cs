@@ -46,7 +46,8 @@ internal static class SaveAtomicWriter
         if (!handle.MetaAccess.FileExists(snapshotShaAbs))
             return false;
 
-        var existingHash = handle.IoGateway.ReadTree(snapshotShaAbs).AsString().Trim();
+        using var existingHashNode = handle.IoGateway.ReadTree(snapshotShaAbs);
+        var existingHash = existingHashNode.AsString().Trim();
         if (existingHash.Length > 0
             && string.Equals(existingHash, combinedHash, StringComparison.Ordinal))
         {

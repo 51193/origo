@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 策略生命周期
 
@@ -126,7 +126,7 @@ public override void BeforeSave(ISndEntity entity, ISndContext ctx)
 
 ```csharp
 [StrategyIndex("game.action.move_to")]
-public class MoveToActionStrategy : LifecycleStrategyBase
+public sealed class MoveToActionStrategy : LifecycleStrategyBase
 {
     public override void AfterAdd(ISndEntity entity, ISndContext ctx)
     {

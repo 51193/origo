@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 持久化：序列化 测试
 
@@ -105,7 +105,7 @@ PersistentBlackboard 磁盘读写。
 |---------|---------|---------|
 | `PersistentBlackboard_StaleTempFile_CleanedUpOnLoad` | 存在陈旧 `.tmp.json` 残留 | 加载时删除临时文件 |
 | `PersistentBlackboard_SuccessfulWrite_LeavesNoBackupFile` | 覆写成功后 | 无 `.bak.json` 残留 |
-| `PersistentBlackboard_LoadFromDisk_RecoversPreviousVersionFromBackup` | 主文件缺失、备份存有旧版本（模拟崩溃） | 从备份恢复主文件并消费备份 |
+| `PersistentBlackboard_LoadFromDisk_RecoversPreviousVersionFromBackup` | 主文件缺失、备份存有上一份完整文件（模拟崩溃） | 从备份恢复主文件并消费备份 |
 
 ## 测试辅助策略
 

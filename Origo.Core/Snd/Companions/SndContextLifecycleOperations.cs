@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Save;
 
@@ -7,22 +8,39 @@ namespace Origo.Core.Snd.Companions;
 internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLifecycleOperations
 {
     /// <inheritdoc/>
-    public bool HasContinueData()
-    {
-        var (found, saveId) = owner._systemRun.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
-        return found && !string.IsNullOrWhiteSpace(saveId);
-    }
+    public bool HasContinueData() => TryGetExistingContinueSaveId(out _);
 
     /// <inheritdoc/>
     public bool RequestContinueGame()
     {
-        var (found, saveId) = owner._systemRun.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
-        if (!found || string.IsNullOrWhiteSpace(saveId))
+        if (!TryGetExistingContinueSaveId(out var saveId))
             return false;
 
         owner.EnqueueTrackedSystemDeferred(
             () => { owner.SetProgressRun(owner.LoadOrContinueStrict(saveId)); });
         return true;
+    }
+
+    private bool TryGetExistingContinueSaveId(out string saveId)
+    {
+        var (found, candidate) = owner._systemRun.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
+        if (!found || string.IsNullOrWhiteSpace(candidate))
+        {
+            saveId = string.Empty;
+            return false;
+        }
+
+        foreach (var existingSaveId in owner.StorageService.EnumerateSaveIds())
+        {
+            if (!string.Equals(existingSaveId, candidate, StringComparison.Ordinal))
+                continue;
+
+            saveId = candidate;
+            return true;
+        }
+
+        saveId = string.Empty;
+        return false;
     }
 
     /// <inheritdoc/>

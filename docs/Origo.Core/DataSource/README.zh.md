@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # DataSource
 
@@ -13,14 +13,14 @@ Origo 的数据源抽象层——Core 与外部格式（JSON、.map）之间的�
 
 | 子模块 | 能力 | 详情 |
 |--------|------|------|
-| [Codec](Codec/README.zh.md) | 格式编解码 | `JsonDataSourceCodec`（延迟展开）+ `MapDataSourceCodec`（key:value，strict fail-fast；**值含换行符拒绝编码**——否则产出自身解码器读不回的文件；解码的重复键警告经构造注入的 logger 可观测）+ `RawStringDataSourceCodec`（`.sha`/`.write_in_progress` 原始文本） |
+| [Codec](Codec/README.zh.md) | 格式编解码 | `JsonDataSourceCodec`（延迟展开）+ `MapDataSourceCodec`（key:value，strict fail-fast；**无法往返的 key/value 与非 Text 子节点拒绝编码**，否则产出自身解码器读不回或静默漂移的文件；解码的重复键警告经构造注入的 logger 可观测）+ `RawStringDataSourceCodec`（`.sha`/`.write_in_progress` 原始文本） |
 | [Converters](Converters/README.zh.md) | 类型转换 | 14 种基础类型 + 14 种数组 + 8 种领域类型 + TypedData |
 
 ## 本层核心文件
 
 | 文件 | 职责 |
 |------|------|
-| `DataSourceNode.cs` | 树形数据节点：Map/Array/Text/Number/Bool/Null + 延迟展开（Lazy）+ `As<T>()` 泛型值访问器（支持 string/char/byte/sbyte/short/ushort/int/uint/long/ulong/float/double/decimal/bool 14 种类型）+ Builder `Add`（**仅允许在 Map/Array 节点上调用**，scalar 节点调用立即抛 `InvalidOperationException`——子节点会被所有 codec 静默丢弃）+ `ComputeSha256Hash()` — 迭代后序遍历生成确定性字符串表示后计算 SHA-256 哈希，用于存档幂等去重。`Dispose()` 同样使用迭代遍历防止深度嵌套树的栈溢出 |
+| `DataSourceNode.cs` | 树形数据节点：Map/Array/Text/Number/Bool/Null + 延迟展开（Lazy）+ `As<T>()` 泛型值访问器（支持 string/char/byte/sbyte/short/ushort/int/uint/long/ulong/float/double/decimal/bool 14 种类型）+ Builder `Add`（**仅允许在 Map/Array 节点上调用**，scalar 节点调用立即抛 `InvalidOperationException`；`null` 子节点立即拒绝）+ `Keys`/`Count`/`Elements`（**形状严格**：对非 Map/Array 节点访问立即抛 `InvalidOperationException`，防止错误形状被静默读成空集合）+ `ComputeSha256Hash()` — 迭代后序遍历生成确定性字符串表示后计算 SHA-256 哈希，用于存档幂等去重。`Dispose()` 同样使用迭代遍历防止深度嵌套树的栈溢出 |
 | `DataSourceNodeKind.cs` | 节点类型枚举 |
 | `DataSourceCodecKind.cs` | 编解码格式枚举（Json / Map / RawString） |
 | `IDataSourceCodec.cs` | 编解码器接口：Decode/Encode |
@@ -63,7 +63,7 @@ CLR 对象 (TypedData / SndMetaData / etc.)
 - **延迟展开**：JSON 大型节点在访问时才展开子节点，避免全量解析
 - **零反射**：所有转换器显式注册，不使用反射自动发现
 - **运行时类型容器**：`DataSourceNode` 是通用序列化容器——整个 Save 系统和 DataSource 流转均通过它传递数据，类型安全推迟到 `DataSourceConverterRegistry` 查找时。这是刻意的设计权衡（"简单优于严格类型"），允许所有子系统共享同一棵数据树，代价是转换错误在运行时而非编译时暴露。
-- **严格读取**：存档载荷转换器（如 `StateMachineContainerPayloadConverter`）对框架必写字段（`machines` 条目的 `key`/`pushIndex`/`popIndex`）执行必填校验，并校验数组/对象字段的节点形状（stack、pairs、indices 等）；损坏存档立即抛 `InvalidOperationException`，绝不静默接受为默认值或空集合（fail-fast，与 Save 严格读取契约一致）
+- **严格读取**：存档载荷转换器（如 `StateMachineContainerPayloadConverter`）对框架必写字段（`machines` 条目的 `key`/`pushIndex`/`popIndex`）执行必填校验，并校验数组/对象字段的节点形状（stack、pairs、indices 等）；`DataSourceNode.Keys`/`Count`/`Elements` 同样按形状拒绝错误访问，数组转换器对 null/标量/对象节点不再静默返回空数组。损坏存档立即抛 `InvalidOperationException`，绝不静默接受为默认值或空集合（fail-fast，与 Save 严格读取契约一致）
 - **null 值不被静默漂移**：`Read<string>`（含运行时类型重载）遇 Null 节点抛 `InvalidOperationException`——读成空串会把 null 静默漂移为 `""`；调用方须先 `IsNull`/`TryGetValue` 检查（`TypedDataConverter` 即此模式）。`AsString()` 对 Null 节点返回空串的文档化行为保持不变（`DataSourceFactoryTests.AsString_OnNullNode_ReturnsEmpty` 钉定）
 
 ---

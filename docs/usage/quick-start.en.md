@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Quick Start
 
@@ -65,7 +65,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd.Strategy;
 
 [StrategyIndex("my_game.health")]
-public class HealthInitStrategy : LifecycleStrategyBase
+public sealed class HealthInitStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {

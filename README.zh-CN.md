@@ -15,7 +15,7 @@
 
 ```csharp
 [StrategyIndex("my_game.health")]
-public class HealthStrategy : LifecycleStrategyBase
+public sealed class HealthStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -135,7 +135,7 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 {
   "name": "Player",
   "node": { "pairs": { "sprite": "player_sprite" } },
-  "strategy": { "indices": ["game.player_move"] },
+  "strategy": { "lifecycle_indices": ["game.player_move"] },
   "data": { "pairs": { "speed": { "type": "Single", "data": 200.0 } } }
 }
 ```

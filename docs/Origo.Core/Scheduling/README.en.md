@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Scheduling/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Scheduling
 
@@ -27,7 +27,7 @@ Thin wrapper adapting `ConcurrentActionQueue` to `IScheduler`:
 Core implementation using `List<Action>` + `lock`:
 - **Batch drain**: Lock → snapshot all actions → clear → release lock → invoke
 - **Reentrancy protection**: Actions enqueuing new actions continue draining. `MaxReentrantDrainDepth=100`
-- **Exception handling**: Single action failure → log Error → rethrow (let-it-crash semantics); **the remaining actions in the same batch are dropped** (actions newly enqueued by earlier actions stay queued and run on the next `Tick`). When the business queue throws in `OrigoRuntime.FlushEndOfFrameDeferred`, that frame's `KillPendingAllSessions` and system queue execution are postponed to the next frame (the cascading effect of fail-fast)
+- **Exception handling**: Single action failure → log Error → rethrow (let-it-crash semantics); **the remaining actions in the same batch are dropped** (actions newly enqueued by earlier actions stay queued and run on the next `Tick`). Dropped actions registered with an `onDiscard` cleanup callback run that callback before the rethrow, so resource accounting such as the persistence-request counter does not leak. When the business queue throws in `OrigoRuntime.FlushEndOfFrameDeferred`, that frame's `KillPendingAllSessions` and system queue execution are postponed to the next frame (the cascading effect of fail-fast)
 
 ## Design Decisions
 

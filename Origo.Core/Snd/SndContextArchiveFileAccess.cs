@@ -45,7 +45,7 @@ internal sealed class SndContextArchiveFileAccess(
     public T ReadObject<T>(string relativePath)
     {
         RejectPathTraversal(relativePath);
-        var node = dataSourceIo.ReadTree(ResolveExtraPath(relativePath));
+        using var node = dataSourceIo.ReadTree(ResolveExtraPath(relativePath));
         return converterRegistry.Read<T>(node);
     }
 

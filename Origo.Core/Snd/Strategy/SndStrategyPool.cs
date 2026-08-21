@@ -73,7 +73,8 @@ internal sealed class SndStrategyPool
 
         if (_factories.TryGetValue(index, out var factory))
         {
-            strategy = factory();
+            strategy = factory() ?? throw new InvalidOperationException(
+                $"Strategy factory for '{index}' returned null. Strategy factories must return a non-null strategy instance.");
             if (strategy is not TBase typed)
                 throw new InvalidOperationException(
                     $"Strategy '{index}' instance type '{strategy.GetType().FullName}' is not assignable to '{typeof(TBase).FullName}'.");

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -191,7 +191,7 @@ All three are recovered separately during `RecoverForLifecycle` with no cross-co
 
 ```csharp
 [StrategyIndex("my_game.player_control", Priority = 100)]
-public class PlayerControlStrategy : LifecycleStrategyBase { ... }
+public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 ```
 
 - `Index`: required, unique index key for the strategy in the pool
@@ -204,6 +204,10 @@ public class PlayerControlStrategy : LifecycleStrategyBase { ... }
 Strategy instances are shared across multiple entities; instance fields (such as `int _hp`) would cause cross-entity contamination. Registration-time reflection checks all levels between `BaseStrategy` and the concrete type, rejecting strategies that declare instance fields or writable properties, blocking this error at the source.
 
 A side effect of this constraint: **test strategies cannot use instance fields as event receivers** and must use static fields (`static List<string>?`) to share event collection across strategy instances. Test classes using static fields must be serialized via `[Collection]` attributes or globally disable parallel execution via `[assembly: CollectionBehavior(DisableTestParallelization = true)]` to prevent race conditions between parallel tests. See `Origo.Core.Tests/Architecture.en.md`.
+
+### Why strategy types must be sealed
+
+Strategy instances are shared by the pool. Allowing inheritance would let derived types bypass registration-time field validation or let one strategy index produce different subclass instances at different call sites, breaking the one-to-one relationship between index and behavior. Registration enforces `sealed` so strategy behavior is fixed to the registered type.
 
 ### Why use reference counting instead of a single instance
 

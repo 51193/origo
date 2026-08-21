@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Planning 测试
 
@@ -18,7 +18,7 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `Planning/PlanExecutionStrategyBaseTests.cs` | 完整计划生命周期：启动/推进/完成/失败、Action 策略挂载/卸载、订阅防泄漏（含回归：连续相同步骤重置 ActionKey 后缀、StartIntent 失败回滚接线可重试、意图缺失时动作完成抛异常并清理） |
+| `Planning/PlanExecutionStrategyBaseTests.cs` | 完整计划生命周期：启动/推进/完成/失败、Action 策略挂载/卸载、订阅防泄漏（含验证：连续相同步骤重置 ActionKey 后缀、StartIntent 失败回滚接线可重试、意图缺失时动作完成抛异常并清理） |
 | `Planning/PlanExecutionStrategyBridgeTests.cs` | 桥接实体（包装内部 SndEntity 的适配层实体，如 GodotSndEntity）：静态 LifecycleIndices 复用、步骤推进与 Action 清理、ActionKey 终止清空、AfterAdd 失败后的幂等终止 |
 | `Planning/PlanExecutionStrategyBridgeTests.cs` | 桥接实体（包装内部 SndEntity 的适配层实体，如 GodotSndEntity）：静态 LifecycleIndices 复用、步骤推进与 Action 清理、ActionKey 终止清空、AfterAdd 失败后的幂等终止 |
 

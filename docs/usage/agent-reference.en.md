@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -342,7 +342,7 @@ using Origo.Core.DataSource;
 using Origo.Core.Snd.Strategy;
 
 [StrategyIndex("example.config_loader")]
-public class ConfigLoadStrategy : LifecycleStrategyBase
+public sealed class ConfigLoadStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {

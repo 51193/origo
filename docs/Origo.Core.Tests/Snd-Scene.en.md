@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Scene Tests
 
@@ -20,7 +20,7 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `MemorySndSceneHostTests.cs` | Basic entity add/remove/lookup/modify and list serialization behavior of StubSndSceneHost |
 | `FullMemorySndSceneHostTests.cs` | Binding prerequisites for FullMemorySndSceneHost, error paths for CreateEntity/RemoveEntity/RequestKillEntity |
 | `NullNodeFactoryTests.cs` | NullNodeFactory returns NullNodeHandle; Free/SetVisible are no-ops |
-| `SndEntityFactoryRollbackTests.cs` | Regression: Spawn/SpawnMany roll back when an AfterSpawn hook throws (entity removal, observer teardown, strategy/node release, original exception propagation); rollback order is correct on detach-invalidating hosts (Godot wrapper semantics) so the original exception is not masked; when a rollback step itself throws, the original exception still propagates and the remaining rollback steps all execute |
+| `SndEntityFactoryRollbackTests.cs` | Verifies that Spawn/SpawnMany roll back when an AfterSpawn hook throws (entity removal, observer teardown, strategy/node release, original exception propagation); rollback order is correct on detach-invalidating hosts (Godot wrapper semantics) so the original exception is not masked; when a rollback step itself throws, the original exception still propagates and the remaining rollback steps all execute |
 
 ## MemorySndSceneHostTests Details
 
