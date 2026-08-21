@@ -200,6 +200,31 @@ public class SndEntityCollectionTests
     }
 
     [Fact]
+    public void RecoverFromMetaList_Failure_CleanupStepsRunIndependentlyAndAllFailuresAggregate()
+    {
+        var recovered = new FakeSndEntity();
+        var failing = new FakeSndEntity { FailRecover = true };
+        var factories = new Queue<FakeSndEntity>([recovered, failing]);
+        var collection2 = new SndEntityCollection<FakeSndEntity>(
+            () => factories.Dequeue(),
+            _ => throw new InvalidOperationException("engine detach failed"));
+
+        var ex = Assert.Throws<AggregateException>(() =>
+            collection2.RecoverFromMetaList(
+                [Meta("a"), Meta("boom")],
+                (_, _) => throw new InvalidOperationException("callback failed")));
+
+        Assert.Equal(4, ex.InnerExceptions.Count);
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "recover failed");
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "engine detach failed");
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "callback failed");
+        Assert.Empty(collection2);
+        Assert.Equal(1, recovered.RollbackAcquiredResourcesCount);
+        Assert.Equal(1, recovered.DetachCount);
+        Assert.Equal(1, failing.DetachCount);
+    }
+
+    [Fact]
     public void RecoverFromMetaList_Failure_ReportsFailingMeta()
     {
         var collection = CreateCollection(out _);
