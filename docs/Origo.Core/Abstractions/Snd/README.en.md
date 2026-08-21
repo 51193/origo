@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd (Abstractions)
 
@@ -13,7 +13,7 @@ Role interface decomposition of ISndContext. 9 Snd role interfaces + `IStateMach
 | File | Responsibility |
 |------|------|
 | `ISndBlackboardAccess.cs` | System + progress-level blackboard access (2 members) |
-| `ISndDeferredActions.cs` | Deferred action queue: enqueue + flush + count (3 members) |
+| `ISndDeferredActions.cs` | Deferred action queue: enqueue + pending-persistence count (2 members) |
 | `ISndTemplateAccess.cs` | Template cloning (1 member) |
 | `ISndConsoleAccess.cs` | Console command submit/process/output subscribe (4 members) |
 | `ISndStateMachineAccess.cs` | Progress-level state machine container (1 member). Returns `IStateMachineContainer?` |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Abstractions
 
@@ -20,7 +20,7 @@ Origo.Core 的稳定公共抽象层。所有接口在此层定义为平台无关
 | [Lifecycle](Lifecycle/README.zh.md) | 会话管理抽象接口 | `ISessionManager`（会话生命周期）+ `ISessionRun`（会话运行时门面） |
 | [Logging](Logging/README.zh.md) | 引擎无关日志接口 | `ILogger` + `LogLevel` 枚举（Debug/Info/Warning/Error）|
 | [Node](Node/README.zh.md) | 抽象引擎节点操作 | `INodeFactory` + `INodeHandle` + `INodeHost`(internal) |
-| [Runtime](Runtime/README.zh.md) | 抽象帧驱动接口 | `IOrigoFrameDriver`：DriveFrame（帧驱动统一入口；EnqueueBusinessDeferred/EnqueueSystemDeferred 在 OrigoRuntime 上） |
+| [Runtime](Runtime/README.zh.md) | 抽象帧驱动接口 | `IOrigoFrameDriver`：DriveFrame（公开帧驱动统一入口；OrigoRuntime 的 Enqueue/Flush/Reset 管线方法为 internal） |
 | [Scene](Scene/README.zh.md) | SND 场景访问与宿主 | public `ISndSceneReadAccess`（GetEntities/FindByName）+ internal `ISndSceneAccess` / `ISndSceneHost`（编排） |
 | [Snd](Snd/README.zh.md) | ISndContext 10 个伴生属性 | IStateMachineContext 也继承其中部分 |
 | [StateMachine](StateMachine/README.zh.md) | 字符串栈状态机体系 | `IStateMachine` + `IStateMachineContext` + `IStateMachineContainer` |
