@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体 测试（适配层）
 
@@ -54,6 +54,7 @@
 | `RecoverFromMetaList_Failure_ReportsFailingMeta` | 恢复失败经失败回调报告失败的 meta 与异常 | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Failure_ReleasesResourcesForPreviouslyRecoveredEntities` | 批量恢复中途失败时，先前已成功恢复的实体也执行 `RollbackAcquiredResources`（策略/节点等 Core 资源释放）后再 detach | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Failure_RollbackCleanupFailure_AggregatesBothFailures` | 恢复失败且回滚清理也失败 | AggregateException 同时包含原始恢复异常与清理异常，集合仍清空 | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_CleanupStepsRunIndependentlyAndAllFailuresAggregate` | 恢复失败、engine detach 失败且失败回调也抛异常 | 每步独立执行，AggregateException 包含全部失败，集合仍清空 | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Null_Throws` | metaList 为 null 时抛 `ArgumentNullException` | Origo.GodotAdapter/Snd |
 | `RemoveEntity_Unknown_Throws` | 移除不存在的实体抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |
 | `RequestKillEntity_AlreadyPending_Throws` | 对已标记击杀的实体重复击杀抛 `InvalidOperationException` | Origo.GodotAdapter/Snd |

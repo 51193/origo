@@ -86,9 +86,11 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         }
         catch (Exception ex)
         {
-            if (failingMeta is not null)
-                onFailure?.Invoke(failingMeta, ex);
-            RollbackPartialLoad(staged, ex);
+            RollbackPartialLoad(
+                staged,
+                ex,
+                onFailure: failingMeta is not null ? onFailure : null,
+                failingMeta: failingMeta);
             throw;
         }
     }
@@ -203,27 +205,24 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         throw new InvalidOperationException($"No entity with StableName '{name}'.");
     }
 
-    private void RollbackPartialLoad(List<T> staged, Exception originalException)
+    private void RollbackPartialLoad(
+        List<T> staged,
+        Exception originalException,
+        Action<SndMetaData, Exception>? onFailure = null,
+        SndMetaData? failingMeta = null)
     {
         var cleanupFailures = new List<Exception>();
         for (var i = staged.Count - 1; i >= 0; i--)
         {
             var entity = staged[i];
-            try
-            {
-                entity.RollbackAcquiredResources();
-            }
-            catch (Exception cleanupEx)
-            {
-                cleanupFailures.Add(cleanupEx);
-            }
-            finally
-            {
-                _entities.Remove(entity);
-                entity.DetachFromManager();
-                _detachCallback?.Invoke(entity);
-            }
+            RunCleanupStep(entity.RollbackAcquiredResources, cleanupFailures);
+            RunCleanupStep(() => _entities.Remove(entity), cleanupFailures);
+            RunCleanupStep(entity.DetachFromManager, cleanupFailures);
+            RunCleanupStep(() => _detachCallback?.Invoke(entity), cleanupFailures);
         }
+
+        if (onFailure is not null && failingMeta is not null)
+            RunCleanupStep(() => onFailure(failingMeta, originalException), cleanupFailures);
 
         if (cleanupFailures.Count == 0)
         {
@@ -233,6 +232,18 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         throw new AggregateException(
             "Entity recovery failed and rollback cleanup also failed; see inner exceptions.",
             [originalException, .. cleanupFailures]);
+    }
+
+    private static void RunCleanupStep(Action step, List<Exception> failures)
+    {
+        try
+        {
+            step();
+        }
+        catch (Exception ex)
+        {
+            failures.Add(ex);
+        }
     }
 
     /// <inheritdoc/>

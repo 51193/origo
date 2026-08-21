@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -63,7 +63,7 @@ SystemRun (由 SndContext 构造并持有)
 ### 运行
 
 - 每帧（`OrigoRuntime.DriveFrame`）：`SessionManager.ProcessAllSessions()` → 业务延迟队列 → `SessionManager.KillPendingAllSessions()` → 系统延迟队列 → 控制台
-- 控制台命令路由到 `OrigoConsole.ProcessPending()`
+- 控制台命令由帧驱动路由到 internal `OrigoConsole.ProcessPending()`
 - **击杀收割（`KillPending`）的异常语义与 Dispose 对称**：每个 pending 实体按"观察者双向拆线 → `BeforeDead` 钩子 → 策略/节点/数据释放 → 物理移除"四阶段独立处理，阶段间互不阻塞。某个实体的钩子抛异常时，其余实体的清理照常执行、该实体仍被移除（不会永卡 pending），首个失败在收割完成后以原始异常传播（fail-fast），后续失败记 Warning。物理移除（宿主 `RemoveEntity`）失败则立即传播。
 
 ### 持久化

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Tests (Adapter)
 
@@ -52,6 +52,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | `RecoverFromMetaList_Failure_ReportsFailingMeta` | Recovery failure reports the failing meta and exception via the failure callback | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Failure_ReleasesResourcesForPreviouslyRecoveredEntities` | When batch recovery fails midway, entities recovered earlier also run `RollbackAcquiredResources` (releasing Core strategy/node resources) before detach | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Failure_RollbackCleanupFailure_AggregatesBothFailures` | Recovery fails and rollback cleanup also fails | AggregateException contains both the original recovery exception and the cleanup exception; collection still empty | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_CleanupStepsRunIndependentlyAndAllFailuresAggregate` | Recovery fails, engine detach fails, and the failure callback also throws | Every step runs independently, AggregateException contains all failures, collection still empty | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Null_Throws` | metaList is null — throws `ArgumentNullException` | Origo.GodotAdapter/Snd |
 | `RemoveEntity_Unknown_Throws` | Removing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 | `RequestKillEntity_AlreadyPending_Throws` | Duplicate kill on an already-marked entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |

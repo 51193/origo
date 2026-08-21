@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Lifecycle
 
@@ -63,7 +63,7 @@ Each layer container holds its layer's core object references and public access 
 ### Run
 
 - Every frame (`OrigoRuntime.DriveFrame`): `SessionManager.ProcessAllSessions()` → business deferred queue → `SessionManager.KillPendingAllSessions()` → system deferred queue → console
-- Console commands route to `OrigoConsole.ProcessPending()`
+- Console commands are routed by the frame driver to internal `OrigoConsole.ProcessPending()`
 - **Kill-sweep (`KillPending`) exception semantics mirror Dispose**: each pending entity runs through four independent phases (bidirectional observer teardown → `BeforeDead` hooks → strategy/node/data release → physical removal) that do not block each other. When one entity's hook throws, the other entities' cleanup still runs and the failing entity is still removed (never stuck pending); the first failure is rethrown as the original exception after the sweep completes (fail-fast), further failures are logged as warnings. A physical-removal failure (host `RemoveEntity`) propagates immediately.
 
 ### Persistence
