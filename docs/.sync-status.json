@@ -383,12 +383,12 @@
     "Origo.Core.Tests/Scheduling": {
       "status": "synced",
       "revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 8,
+        "en": 8
       },
       "previous_revisions": {
-        "zh": 6,
-        "en": 6
+        "zh": 7,
+        "en": 7
       },
       "files": {
         "zh": "Origo.Core.Tests/Scheduling.zh.md",
@@ -1103,12 +1103,12 @@
     "Origo.Core/Scheduling/README": {
       "status": "synced",
       "revisions": {
-        "zh": 6,
-        "en": 6
+        "zh": 7,
+        "en": 7
       },
       "previous_revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "files": {
         "zh": "Origo.Core/Scheduling/README.zh.md",

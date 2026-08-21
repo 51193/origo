@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Scheduling -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Scheduling Tests
 

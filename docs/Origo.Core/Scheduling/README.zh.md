@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Scheduling/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scheduling
 
