@@ -43,6 +43,7 @@ public sealed class SndContext : ISndContext
     internal int _pendingPersistenceRequests;
     internal ProgressRun? _progressRun;
     private bool _workflowInProgress;
+    private int _beforeSaveSessionMutationGuardDepth;
 
     /// <summary>
     ///     Constructs the SND context and initializes all companion objects,
@@ -226,6 +227,24 @@ public sealed class SndContext : ISndContext
 
     /// <summary>Exit the lifecycle workflow guard.</summary>
     internal void EndWorkflow() => _workflowInProgress = false;
+
+    /// <summary>
+    ///     True while BeforeSave hooks are executing. Session-set mutation
+    ///     (create/destroy session) is forbidden during that window because
+    ///     SaveCoordinator already snapshotted the topology and session list
+    ///     that will be serialized.
+    /// </summary>
+    internal bool IsSessionSetMutationForbidden => _beforeSaveSessionMutationGuardDepth > 0;
+
+    internal void EnterBeforeSaveSessionMutationGuard() => _beforeSaveSessionMutationGuardDepth++;
+
+    internal void ExitBeforeSaveSessionMutationGuard()
+    {
+        if (_beforeSaveSessionMutationGuardDepth == 0)
+            throw new InvalidOperationException(
+                "BeforeSave session-mutation guard is not active.");
+        _beforeSaveSessionMutationGuardDepth--;
+    }
 
     /// <summary>
     ///     Dispose the current ProgressRun and clear the reference.

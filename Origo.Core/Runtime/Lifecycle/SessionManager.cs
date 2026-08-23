@@ -71,6 +71,7 @@ internal sealed class SessionManager : ISessionManager
     /// <inheritdoc />
     public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false)
     {
+        ThrowIfSessionSetMutationForbidden();
         ValidateKey(key);
         ValidateLevelIdUnique(levelId, key);
         var session = CreateBackgroundSessionCore(levelId);
@@ -81,6 +82,7 @@ internal sealed class SessionManager : ISessionManager
     /// <inheritdoc />
     public void DestroySession(string key)
     {
+        ThrowIfSessionSetMutationForbidden();
         if (string.IsNullOrWhiteSpace(key))
             return;
 
@@ -325,6 +327,16 @@ internal sealed class SessionManager : ISessionManager
             if (session.MountKey is not null)
                 _sessions.Remove(session.MountKey);
         };
+    }
+
+    private void ThrowIfSessionSetMutationForbidden()
+    {
+        if (_managerRuntime.SndContext is SndContext sndContext
+            && sndContext.IsSessionSetMutationForbidden)
+            throw new InvalidOperationException(
+                "Sessions cannot be created or destroyed while BeforeSave hooks are running. " +
+                "SaveCoordinator snapshots the session set before hooks execute; mutating it would " +
+                "serialize an incomplete or inconsistent save.");
     }
 
     private MountedSession? TryGetMountedSession(string key) =>

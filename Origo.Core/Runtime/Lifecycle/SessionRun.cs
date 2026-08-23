@@ -37,6 +37,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
     private readonly ISessionManager _sessionManager;
     private readonly ILogger _logger;
     private readonly SaveContext _saveContext;
+    private readonly ISndContext _sndContext;
     private readonly ISndSceneHost _sceneHost;
     private readonly RunStateScope _sessionScope;
     private readonly ISaveStorageService _storageService;
@@ -59,6 +60,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
         _sessionManager = sessionManager;
         _storageService = managerRuntime.StorageService;
         _logger = managerRuntime.Logger;
+        _sndContext = managerRuntime.SndContext;
 
         var progressBb = managerRuntime.ProgressBlackboard;
         _saveContext = new SaveContext(progressBb, sessionParams.SessionBlackboard, managerRuntime.SndWorld);
@@ -428,14 +430,23 @@ internal sealed class SessionRun : ISessionRun, IDisposable
     internal void FireBeforeSaveHooks()
     {
         ThrowIfDisposed();
-        // Snapshot the collection: BeforeSave hooks may spawn new entities,
-        // and hosts expose a live entity view (the Godot adapter returns the
-        // backing list). Entities spawned inside a hook are serialized but do
-        // not fire BeforeSave (they entered the scene mid-save).
-        List<ISndEntity> saveEntities = [.. _sceneHost.GetEntities()];
-        foreach (var entity in saveEntities)
-            if (entity is IEntityLifecycle lifecycle)
-                lifecycle.FireBeforeSaveHooks();
+        var mutationGuard = _sndContext as SndContext;
+        mutationGuard?.EnterBeforeSaveSessionMutationGuard();
+        try
+        {
+            // Snapshot the collection: BeforeSave hooks may spawn new entities,
+            // and hosts expose a live entity view (the Godot adapter returns the
+            // backing list). Entities spawned inside a hook are serialized but do
+            // not fire BeforeSave (they entered the scene mid-save).
+            List<ISndEntity> saveEntities = [.. _sceneHost.GetEntities()];
+            foreach (var entity in saveEntities)
+                if (entity is IEntityLifecycle lifecycle)
+                    lifecycle.FireBeforeSaveHooks();
+        }
+        finally
+        {
+            mutationGuard?.ExitBeforeSaveSessionMutationGuard();
+        }
     }
 
     private LevelPayload BuildLevelPayload()

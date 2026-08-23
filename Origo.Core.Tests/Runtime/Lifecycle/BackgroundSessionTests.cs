@@ -31,6 +31,8 @@ public class BackgroundSessionTests
     private const string _sessionContextStrategyIndex = "test.session_context";
     private const string _beforeSaveWriterStrategyIndex = "test.before_save_writer";
     private const string _topologyOverwriteStrategyIndex = "test.topology_overwrite";
+    private const string _sessionCreateBeforeSaveStrategyIndex = "test.before_save_create_session";
+    private const string _sessionDestroyBeforeSaveStrategyIndex = "test.before_save_destroy_session";
 
     public static TheoryData<string?> CreateBackgroundSession_InvalidLevelIds_Data { get; } =
         CreateBackgroundSessionInvalidLevelIds();
@@ -473,6 +475,42 @@ public class BackgroundSessionTests
         Assert.Contains("BeforeSaveWrite:guard_01", events);
         var sndJson = fs.ReadAllText("root/save_fg_before_save_write/level_test_level/snd_scene.json");
         Assert.Contains("flushed_flag", sndJson);
+    }
+
+    [Fact]
+    public void FullSave_BeforeSaveHookCreatesBackgroundSession_Throws()
+    {
+        var (ctx, fs) = CreateForegroundContext(
+            world => world.RegisterStrategy(() => new CreateSessionBeforeSaveStrategy()),
+            new FullMemorySndSceneHost(new TestLogger()));
+
+        var fg = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
+        fg.Spawn(CreateMetaWithIndices("guard_01", _sessionCreateBeforeSaveStrategyIndex));
+
+        ctx.Save.RequestSaveGame("fg_before_save_session_create");
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+        Assert.Contains("BeforeSave hooks", ex.Message);
+
+        Assert.False(fs.Exists("root/save_fg_before_save_session_create/progress.json"));
+        Assert.False(ctx.Runtime.SessionManager.Contains("hook_background_session"));
+    }
+
+    [Fact]
+    public void FullSave_BeforeSaveHookDestroysForegroundSession_Throws()
+    {
+        var (ctx, fs) = CreateForegroundContext(
+            world => world.RegisterStrategy(() => new DestroySessionBeforeSaveStrategy()),
+            new FullMemorySndSceneHost(new TestLogger()));
+
+        var fg = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
+        fg.Spawn(CreateMetaWithIndices("guard_01", _sessionDestroyBeforeSaveStrategyIndex));
+
+        ctx.Save.RequestSaveGame("fg_before_save_session_destroy");
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+        Assert.Contains("BeforeSave hooks", ex.Message);
+
+        Assert.False(fs.Exists("root/save_fg_before_save_session_destroy/progress.json"));
+        Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
     }
 
     // ── SerializeToPayload / LoadFromPayload ─────────────────────────
@@ -1006,6 +1044,20 @@ public class BackgroundSessionTests
             ctx.Blackboard.ProgressBlackboard!.SetValue(
                 WellKnownKeys.SessionTopology, "__foreground__=corrupted_level=false");
         }
+    }
+
+    [StrategyIndex(_sessionCreateBeforeSaveStrategyIndex)]
+    private sealed class CreateSessionBeforeSaveStrategy : LifecycleStrategyBase
+    {
+        public override void BeforeSave(ISndEntity entity, ISndContext ctx) =>
+            entity.OwningSession.SessionManager.CreateBackgroundSession("hook_background_session", "hook_background_session");
+    }
+
+    [StrategyIndex(_sessionDestroyBeforeSaveStrategyIndex)]
+    private sealed class DestroySessionBeforeSaveStrategy : LifecycleStrategyBase
+    {
+        public override void BeforeSave(ISndEntity entity, ISndContext ctx) =>
+            entity.OwningSession.SessionManager.DestroySession(ISessionManager.ForegroundKey);
     }
 
     [StrategyIndex(_processStrategyIndex)]
