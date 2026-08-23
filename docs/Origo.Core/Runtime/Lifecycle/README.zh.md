@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -73,7 +73,7 @@ SystemRun (由 SndContext 构造并持有)
 - `ISndSaveOperations.RequestLoadGame` → `SavePayloadReader.ReadFromCurrent(handle, ...)` / `ReadFromSnapshot(handle, ...)` → 恢复黑板 + 场景
 - `SaveFileHandle`：统一 I/O 上下文（`Origo.Core.Save.Storage.SaveFileHandle`），封装 `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver` + `saveRootPath` + `ISavePathPolicy`。所有 Writer/Reader 方法通过 `SaveFileHandle` 参数接收依赖，消除多参数重载链。
 - `PersistProgress`：将流程黑板与完整会话拓扑（前台 + 所有后台）序列化写入 `current/progress.json`。若当前无前台会话则抛出 `InvalidOperationException`，不静默写入部分数据。
-- `SessionRun.BuildLevelPayload`：先批量触发 BeforeSave 钩子（`FireBeforeSaveHooks`）在所有实体上，再通过 `SaveContext.BuildSndScene` 构建场景元数据。这确保任何策略在存档前有最后的机会将内存状态刷新到实体 Data 中。完整存档路径（`SaveCoordinator.BuildSavePayload`）在序列化前台场景前同样批量触发 `FireBeforeSaveHooks`，与后台会话语义一致。 钩子内覆写框架管理的黑板键（如 `SessionTopology`）会被持久化流程在序列化前以框架计算值覆盖，覆写不生效。
+- `SessionRun.BuildLevelPayload`：先批量触发 BeforeSave 钩子（`FireBeforeSaveHooks`）在所有实体上，再通过 `SaveContext.BuildSndScene` 构建场景元数据。这确保任何策略在存档前有最后的机会将内存状态刷新到实体 Data 中。完整存档路径（`SaveCoordinator.BuildSavePayload`）在序列化前台场景前同样批量触发 `FireBeforeSaveHooks`，与后台会话语义一致。 钩子内覆写框架管理的黑板键（如 `SessionTopology`）会被持久化流程在序列化前以框架计算值覆盖，覆写不生效。BeforeSave 执行期间禁止创建或销毁 Session（`CreateBackgroundSession` / `DestroySession` 抛 `InvalidOperationException`）——会话集合在钩子前已快照，钩子内变更会序列化出不一致的存档。
 - `SessionRun.LoadFromPayload`：先通过 `SaveContext.RecoverSndScene` 恢复所有实体数据/策略/节点，再批量触发 AfterLoad 钩子（`FireAfterLoadHooks`），最后 Flush 状态机 AfterLoad。这确保所有实体和 ActiveStrategy 已完全恢复后才触发任何策略的 AfterLoad，实现加载顺序无关的跨实体互操作。AfterLoad 钩子按宿主实体集合快照迭代（钩子内 spawn 的新实体走 spawn 语义、不重复触发 AfterLoad）。观察者绑定随后经宿主拓扑 `RecoverBindingsFor` 恢复；存档的 observer_indices 中引用的实体在恢复场景中缺失时抛 `InvalidOperationException`（fail-fast，严格读取契约）。
 
 ### 关卡切换

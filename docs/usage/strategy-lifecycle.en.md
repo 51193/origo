@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Strategy Lifecycle
 
@@ -110,6 +110,8 @@ public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
 ### 5. BeforeSave for Deferred Sync
 
 For engine-managed state (such as `Node3D.GlobalTransform`), there is no need to write to entity Data every frame. Sync once at `BeforeSave` time to reduce unnecessary data write overhead.
+
+> Creating or destroying sessions is forbidden while BeforeSave hooks run: the save coordinator snapshots the session topology and session set before invoking hooks, so `ISessionManager.CreateBackgroundSession` / `DestroySession` throw `InvalidOperationException`, preventing incomplete saves or topology/payload mismatches.
 
 ```csharp
 public override void BeforeSave(ISndEntity entity, ISndContext ctx)

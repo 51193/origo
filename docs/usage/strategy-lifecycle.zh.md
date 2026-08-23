@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 策略生命周期
 
@@ -110,6 +110,8 @@ public override void BeforeQuit(ISndEntity entity, ISndContext ctx)
 ### 5. BeforeSave 用于延迟同步
 
 对于引擎管理的状态（如 `Node3D.GlobalTransform`），不需要每帧写入 entity Data。只在 `BeforeSave` 时一次性同步，减少不必要的数据写入开销。
+
+> BeforeSave 期间禁止创建或销毁 Session：存档协调器在钩子执行前已经快照会话拓扑与会话集合，钩子内调用 `ISessionManager.CreateBackgroundSession` / `DestroySession` 会抛 `InvalidOperationException`，防止存档不完整或拓扑与载荷不一致。
 
 ```csharp
 public override void BeforeSave(ISndEntity entity, ISndContext ctx)
