@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Linq;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Logging;
@@ -70,6 +71,7 @@ internal sealed class SessionManager : ISessionManager
     /// <inheritdoc />
     public ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false)
     {
+        ThrowIfSessionSetMutationForbidden();
         ValidateKey(key);
         ValidateLevelIdUnique(levelId, key);
         var session = CreateBackgroundSessionCore(levelId);
@@ -80,6 +82,7 @@ internal sealed class SessionManager : ISessionManager
     /// <inheritdoc />
     public void DestroySession(string key)
     {
+        ThrowIfSessionSetMutationForbidden();
         if (string.IsNullOrWhiteSpace(key))
             return;
 
@@ -188,13 +191,38 @@ internal sealed class SessionManager : ISessionManager
     }
 
     /// <summary>
-    ///     Clears all sessions (disposes and removes them).
+    ///     Clears all sessions (disposes and removes them). Every session is
+    ///     disposed independently: the first user-hook failure is rethrown
+    ///     after all sessions have been removed, and later failures are
+    ///     logged so they stay observable.
     /// </summary>
     internal void Clear()
     {
         var keys = EnumerateManagedKeys(true);
+        Exception? firstFailure = null;
         foreach (var key in keys)
-            DestroySession(key);
+        {
+            try
+            {
+                DestroySession(key);
+            }
+            catch (Exception ex)
+            {
+                if (firstFailure is null)
+                {
+                    firstFailure = ex;
+                    continue;
+                }
+
+                _managerRuntime.Logger.Log(LogLevel.Warning, _logTag,
+                    new LogMessageBuilder()
+                        .AddContext("sessionKey", key)
+                        .Build($"Session dispose failed while clearing remaining sessions: {ex.Message}"));
+            }
+        }
+
+        if (firstFailure is not null)
+            ExceptionDispatchInfo.Capture(firstFailure).Throw();
     }
 
     /// <summary>
@@ -299,6 +327,16 @@ internal sealed class SessionManager : ISessionManager
             if (session.MountKey is not null)
                 _sessions.Remove(session.MountKey);
         };
+    }
+
+    private void ThrowIfSessionSetMutationForbidden()
+    {
+        if (_managerRuntime.SndContext is SndContext sndContext
+            && sndContext.IsSessionSetMutationForbidden)
+            throw new InvalidOperationException(
+                "Sessions cannot be created or destroyed while BeforeSave hooks are running. " +
+                "SaveCoordinator snapshots the session set before hooks execute; mutating it would " +
+                "serialize an incomplete or inconsistent save.");
     }
 
     private MountedSession? TryGetMountedSession(string key) =>

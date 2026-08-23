@@ -79,13 +79,20 @@ public sealed class DataSourceNode : IDisposable
         }
     }
 
-    /// <summary>Enumerates the keys of a map node.</summary>
+    /// <summary>
+    ///     Enumerates the keys of a map node through a read-only view; the
+    ///     underlying key storage is not exposed for mutation.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when this node is not a map.</exception>
     public IEnumerable<string> Keys
     {
         get
         {
             EnsureExpanded();
-            return _orderedKeys;
+            if (_kind != DataSourceNodeKind.Map)
+                throw new InvalidOperationException(
+                    $"Cannot enumerate keys of a {_kind} DataSourceNode; expected Map.");
+            return _orderedKeys.AsReadOnly();
         }
     }
 
@@ -102,22 +109,29 @@ public sealed class DataSourceNode : IDisposable
     }
 
     /// <summary>Gets the element count of an array node.</summary>
+    /// <exception cref="InvalidOperationException">Thrown when this node is not an array.</exception>
     public int Count
     {
         get
         {
             EnsureExpanded();
+            ThrowIfNotKind(DataSourceNodeKind.Array, "count elements of");
             return _arrayChildren.Count;
         }
     }
 
-    /// <summary>Enumerates the child nodes of an array node.</summary>
+    /// <summary>
+    ///     Enumerates the child nodes of an array node through a read-only
+    ///     view; the underlying child storage is not exposed for mutation.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when this node is not an array.</exception>
     public IEnumerable<DataSourceNode> Elements
     {
         get
         {
             EnsureExpanded();
-            return _arrayChildren;
+            ThrowIfNotKind(DataSourceNodeKind.Array, "enumerate elements of");
+            return _arrayChildren.AsReadOnly();
         }
     }
 
@@ -239,6 +253,13 @@ public sealed class DataSourceNode : IDisposable
             "For complex types, use DataSourceConverterRegistry.Read<T>.");
     }
 
+    private void ThrowIfNotKind(DataSourceNodeKind expected, string operation)
+    {
+        if (_kind != expected)
+            throw new InvalidOperationException(
+                $"Cannot {operation} a {_kind} DataSourceNode; expected {expected}.");
+    }
+
     private void ThrowIfValueMissing()
     {
         if (_value is null)
@@ -270,6 +291,7 @@ public sealed class DataSourceNode : IDisposable
     public DataSourceNode Add(string key, DataSourceNode child)
     {
         EnsureExpanded();
+        ArgumentNullException.ThrowIfNull(child);
         if (_kind != DataSourceNodeKind.Map)
             throw new InvalidOperationException(
                 $"Cannot add a child to a {_kind} DataSourceNode: children are " +
@@ -290,6 +312,7 @@ public sealed class DataSourceNode : IDisposable
     public DataSourceNode Add(DataSourceNode child)
     {
         EnsureExpanded();
+        ArgumentNullException.ThrowIfNull(child);
         if (_kind != DataSourceNodeKind.Array)
             throw new InvalidOperationException(
                 $"Cannot append a child to a {_kind} DataSourceNode: children are " +
@@ -308,10 +331,18 @@ public sealed class DataSourceNode : IDisposable
     public static DataSourceNode CreateArray() => new(DataSourceNodeKind.Array);
 
     /// <summary>Creates a text node carrying the given string value.</summary>
-    public static DataSourceNode CreateString(string value) => new(DataSourceNodeKind.Text, value);
+    public static DataSourceNode CreateString(string value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return new DataSourceNode(DataSourceNodeKind.Text, value);
+    }
 
     /// <summary>Creates a number node from its invariant-culture string representation.</summary>
-    public static DataSourceNode CreateNumber(string value) => new(DataSourceNodeKind.Number, value);
+    public static DataSourceNode CreateNumber(string value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return new DataSourceNode(DataSourceNodeKind.Number, value);
+    }
 
     /// <summary>Creates a number node from an <see cref="int" /> value.</summary>
     public static DataSourceNode CreateNumber(int value) =>

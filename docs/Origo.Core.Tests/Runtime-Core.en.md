@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Runtime Core Tests
 
@@ -61,6 +61,7 @@ Validates basic OrigoRuntime construction and console injection, flushing of end
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `StubSndSceneHost_RequestKillEntity_Missing_Throws` | RequestKillEntity for non-existent entity | InvalidOperationException |
+| `Spawn_DuplicateEntityName_Throws` | Spawning an entity with a duplicate name in the session | InvalidOperationException (contains "already exists"), and only the first entity remains |
 | `StubSndSceneHost_RequestKillEntity_AlreadyPending_Throws` | Duplicate RequestKillEntity on already IsPendingKill entity | InvalidOperationException |
 | `StubSndSceneHost_DeadByName_MissingEntity_Throws` | RemoveEntity for non-existent entity | InvalidOperationException |
 

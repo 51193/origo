@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构总览
 
@@ -117,6 +117,8 @@ Origo 采用单线程帧循环模型：
 - 单帧视为逻辑原子边界
 - 跨帧语义落入可恢复状态（黑板、状态机、实体 Data）
 
+> **暂缓方向**：策略无状态为实体级并发提供了基础，但实体内策略顺序、跨实体调用、观察者通知与容器变更仍需串行语义。备选方案是“实体可并发”标记 + 并发数据模式 + 先并行批后串行批；当前无性能瓶颈，暂缓。完整权衡见 [扩展方向与暂缓设计](extension-directions.zh.md)。
+
 ## I/O 边界
 
 Core 层所有文件操作通过三个接口完成：
@@ -133,6 +135,8 @@ Core 层所有文件操作通过三个接口完成：
 后缀路由、编解码策略与 I/O 错误语义集中在 Gateway 一侧统一治理。`.sha` 和 `.write_in_progress` 等原始文本文件同样经由 `RawStringDataSourceCodec` 走 codec 路由，不存在直读直写旁路。Gateway 采用 fail-fast 策略：codec 解码失败（如 `.map` 文件格式错误）时，Gateway 将异常包装为包含文件路径信息的 `InvalidOperationException` 立即抛出，不吞没错误。
 
 `IDataSourceIoGateway` 是框架的硬性 I/O 内容边界：**系统内的任何模块（包括策略）都应通过此边界访问文件内容**。文件元数据操作（存在性检查、目录管理等）通过 `IFileMetaAccess`，路径运算通过 `IPathResolver`。策略通过 `ISndFileAccess` 和 `ISndArchiveFileAccess` 接口暴露的文件操作均委托到上述三个接口，策略无需自行处理原始文本解析或平台路径差异。
+
+> **暂缓方向**：把本地文件系统、存档目录与网络资源统一挂载为 `DataSourceNode` 树根，以 `path -> to -> file -> entity -> health_point` 式导航替代多套文件 API。当前同步读树对本地文件足够，远端节点会阻塞帧，因此暂缓。完整权衡见 [扩展方向与暂缓设计](extension-directions.zh.md)。
 
 ## 适配层与 Core 层分离原则
 
@@ -169,7 +173,7 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 通过 10 个伴生属
 |------|------|------|
 | **触发策略生命周期钩子** | 策略是 Core 层概念，钩子触发时机和顺序必须由 Core 统一编排 | `GodotSndManager` 不得调用 `FireAfterSpawnHooks()`、`FireBeforeDeadHooks()` 等 |
 | **管理策略释放/引用计数** | 策略池、引用计数、优先级排序在 Core 的 `SndStrategyPool` 和 `SndStrategyManager` 中管理 | `GodotSndManager` 不得调用 `ReleaseStrategiesOnly()` |
-| **直接调用 Core 管线方法** | 帧边界操作（实体处理→业务队列→杀实体→系统队列→控制台）的时机和顺序由 Core 控制。适配层只应调用 `IOrigoFrameDriver.DriveFrame(delta)` 移交帧控制权 | 适配层不得直接调用 `FlushDeferredActionsForCurrentFrame()` 或 `ProcessPending()` |
+| **直接调用 Core 管线方法** | 帧边界操作（实体处理→业务队列→杀实体→系统队列→控制台）的时机和顺序由 Core 控制。适配层只应调用 `IOrigoFrameDriver.DriveFrame(delta)` 移交帧控制权 | 适配层不得直接调用 internal 的 `FlushEndOfFrameDeferred` 或 `ProcessPending` |
 | **直接驱动 Core 启动流程** | 策略发现、别名/模板加载、入口存档加载是 Core 内部编排，统一在 `SndContext.Bootstrap()` 中执行。适配层仅通过 `SndContextParameters` 传入配置 | 适配层不得直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()` |
 | **持有 Core 编排状态** | 实体生命周期管理（如 pending kill、拆卸流程）的状态机由 Core 层维护 | 适配层不应有 `QuitFromManager`、`DeadFromManager` 等方法 |
 | **加载引擎无关的业务配置** | 模板解析、别名映射、策略索引解析全部在 Core 中完成 | 适配层不应读取和解析 `snd_templates.map` 等业务配置 |
@@ -226,7 +230,7 @@ Origo.GodotAdapter/   # Godot 4 适配层（~23 个 .cs 文件）
 ├── FileSystem/       # Godot 文件系统
 ├── Logging/          # Godot 日志
 ├── Serialization/    # Godot 类型序列化
-└── Snd/              # Godot 实体 + 管理器 + TypedDataInitializer
+└── Snd/              # Godot 实体 + 管理器 + 节点工厂
 
 Origo.ConsoleBridge/  # TCP 远程控制台（~2 个 .cs 文件）
 ```

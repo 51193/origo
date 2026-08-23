@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 手册维护元指令
 
@@ -120,7 +120,7 @@ dotnet run --project tools/DocSyncTool -- generate
 3. **设计决策变更** → 更新设计决策章节
 4. **新配置键/命令** → 更新相关 README 和 usage 文档
 5. **模块间依赖关系变化** → 更新模块 README 的链接
-6. **AGENTS.md 元指令变更** → 在本文档中同步引用新规则（如 AGENTS.md §1.7 注释语言要求、§1.8 git 历史考量、§1.9 依赖更新分组规则——版本耦合的包族必须整体升级，不得单独修改、§3 红测试先行规则——修复缺陷必须先写真实路径复现的红测试并验证转绿，修改/扩展文件前查看其 git 历史）
+6. **AGENTS.md 元指令变更** → 在本文档中同步引用新规则（如 AGENTS.md §1.7 注释语言要求与 vendor 源码豁免、§1.8 git 历史考量、§1.9 依赖更新分组规则——版本耦合的包族必须整体升级，不得单独修改、§1.10 环境引导——按 global.json 安装所需 SDK，禁止降级版本迁就本机、§3 红测试先行规则——修复缺陷必须先写真实路径复现的红测试并验证转绿，修改/扩展文件前查看其 git 历史）
 
 ### 无需同步的情况
 
@@ -139,7 +139,7 @@ dotnet run --project tools/DocSyncTool -- generate
 
 ## Git 提交消息格式
 
-所有提交必须遵循 Conventional Commits 规范，保持仓库历史可读、可机器解析。
+所有提交必须遵循 Conventional Commits 规范，保持仓库历史可读、可机器解析。PR 提交消息由 `scripts/lint-commits.sh` 与 `.github/workflows/commit-lint.yml` 强制执行：类型、72 字符标题上限、禁止句尾句号。
 
 ### 基本格式
 
@@ -256,7 +256,17 @@ docs/                            # 文档根（位于 origo 仓库内）
 
 > 顶层入口 [AGENTS.md](../AGENTS.md) 位于仓库根，自动注入每次会话，并链接到本文件。
 >
-> **英文文档启用后**，每个 `.zh.md` 旁会出现对应的 `.en.md` 文件，`README.md` 导航中枢会自动列出两种语言的入口。
+> 每个 `.zh.md` 内容文件旁都有对应的 `.en.md` 文件，`README.md` 导航中枢自动列出两种语言入口。
+
+## 环境引导
+
+运行任何 `dotnet` 命令前，必须按仓库要求配置环境，而不是根据本机已有内容修改 `global.json`（完整规则见 [AGENTS.md §1.10](../AGENTS.md#110-environment-bootstrap-install-the-required-sdk-never-downgrade-the-request)）：
+
+1. `global.json` 是 .NET SDK 功能带的唯一权威来源；禁止降级请求版本以迁就本机。
+2. 执行 `bash scripts/install-dotnet.sh`，使用官方 `dotnet-install.sh` 安装精确版本。
+3. 优先安装到默认安装根目录（`$HOME/.dotnet`），使登录 shell 直接解析 `dotnet`，不需要每次会话导出 `PATH` 或 `DOTNET_ROOT`。
+4. 默认根目录只读时，脚本回退安装到仓库内 `.dotnet/`；此时使用仓库根 `./dotnet` 包装器。仓库脚本会 source `scripts/dotnet-env.sh` 自动选择本地或系统 SDK。
+5. Godot 引擎二进制由 `scripts/download-godot.sh` 按 `Origo.GodotAdapter.csproj` 中的 `Godot.NET.Sdk` 版本下载并缓存到 `.godot_binary/`。
 
 ## 手册版本
 

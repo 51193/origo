@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Quick Start
 
@@ -65,7 +65,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd.Strategy;
 
 [StrategyIndex("my_game.health")]
-public class HealthInitStrategy : LifecycleStrategyBase
+public sealed class HealthInitStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -103,7 +103,26 @@ Create entity template JSON (via `snd_templates.map` or direct JSON):
 ]
 ```
 
-### 6. Run
+### 6. Spawning Template Entities at Runtime
+
+Templates are loaded during `Bootstrap` from `SndTemplateMapPath`. Strategies or game code spawn entities like this:
+
+```csharp
+// Spawn one template entity: deep-clone and rename, then use the unified session spawn pipeline
+var heroMeta = ctx.Template.CloneTemplate("player_template", "Player_01");
+var hero = entity.OwningSession.Spawn(heroMeta);
+
+// Resolve an entity list from a JSON array file (templateKey/sndName shorthand supported), then batch spawn
+var waveMeta = ctx.Template.LoadMetaListFromFile(
+    "res://origo/initial/levels/main_menu/snd_scene.json");
+entity.OwningSession.SpawnMany([.. waveMeta]);
+
+// Reload template/alias maps at runtime (for mods or hot config reload)
+ctx.Template.LoadTemplates("res://origo/maps/snd_templates.map");
+ctx.Template.LoadSceneAliases("res://origo/maps/scene_aliases.map");
+```
+
+### 7. Run
 
 Run the Godot project. `OrigoDefaultEntry._Ready()` will automatically:
 1. Create `OrigoRuntime`
@@ -137,7 +156,7 @@ OrigoDefaultEntry._Ready()
 Per frame: _Process → IOrigoFrameDriver.DriveFrame(delta)
   → Snd.ProcessAll(delta)          # Entity frame processing
   → FlushEndOfFrameDeferred()      # Business queue → KillPendingEntities → System queue
-  → Console.ProcessPending()       # Console command processing
+  → Core-internal: Console.ProcessPending()  # Console command processing
 ```
 
 ## Next Steps

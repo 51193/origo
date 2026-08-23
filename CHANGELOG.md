@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **`ISndSceneReadAccess`** — public read-only scene view (`GetEntities` / `FindByName`) for state-machine hooks and save-meta contributors, decoupled from internal scene orchestration.
-- **Complete English documentation** — 127 English `.en.md` files alongside existing Chinese `.zh.md` files.
+- **Complete English documentation** — 128 English `.en.md` files alongside existing Chinese `.zh.md` files.
 - **`camera_view` console command** — displays screen coordinates and depth of Godot entity nodes visible through the active `Camera3D`.
 - **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name.
 - **`SndContextParameters.InitialLevelId`** — configurable initial save level ID (defaults to `"default"`).
@@ -41,10 +41,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`ConsoleBridgeOptions.OutputSendTimeoutMs`** — bounded send timeout (default 100ms)
   for console output writes: a client that stops reading is detached (and the undelivered
   lines stay buffered for the next connection) instead of stalling the game frame thread.
+- **Local SDK bootstrap tooling** — `scripts/install-dotnet.sh` installs the exact SDK required by `global.json` into the default install root (or a repository-local fallback), repository scripts source `scripts/dotnet-env.sh`, and the tracked root `./dotnet` wrapper runs the local SDK without caller-side `PATH`/`DOTNET_ROOT` exports.
+- **NuGet packages embed the repository README** — Origo.Core, Origo.GodotAdapter, and Origo.ConsoleBridge now include the README in the generated `.nupkg`.
 
 ### Changed
 
+- **BREAKING: `OrigoAutoInitializer` and `SndWorld.LoadSceneAliases` / `LoadTemplates` are now `internal`** — strategy auto-discovery, JSON-array spawning, and alias/template map loading are reachable only through the `ISndContext.Bootstrap` orchestration (and its `SndContextParameters`); game-side strategy registration remains available through `SndWorld.RegisterStrategy`.
+- **BREAKING: `ISndTemplateAccess` now exposes the complete template-entity path** — in addition to `CloneTemplate`, it provides `ResolveMetaListFromJsonArray`, `LoadMetaListFromFile` (JSON array files with `templateKey`/`sndName` shorthand), and runtime `LoadTemplates` / `LoadSceneAliases` map reloads. External implementations of `ISndTemplateAccess` must implement the new members; business code no longer needs `OrigoAutoInitializer.LoadAndSpawnFromFile` or raw `SndWorld` access to load/spawn template entities.
+
+- **BREAKING: BeforeSave hooks cannot create or destroy sessions** — `ISessionManager.CreateBackgroundSession` and `DestroySession` throw `InvalidOperationException` while BeforeSave hooks run. The save coordinator snapshots the session topology and session set before invoking the hooks, so such mutations would otherwise serialize an incomplete or inconsistent save.
+
+- **BREAKING: `ISaveStorageService.RestoreExtraFilesFromSnapshot(ISaveStorageService, string)`** —
+  cross-storage-root extra/ restore: the destination storage service can restore archive
+  files from a snapshot owned by an explicitly named source storage service (used when an
+  initial save under `res://` is loaded into the writable runtime save root). External
+  implementations must implement the new member. The default implementation supports only
+  a default source; custom source/destination pairs must be implemented together, and an
+  unsupported pair throws explicitly instead of silently copying from the wrong root.
+
+- **BREAKING: console processing is sealed behind the frame driver** — `ISndConsoleAccess.ProcessConsolePending()` is removed and `OrigoConsole.ProcessPending()` is now `internal`. Business code can submit commands and subscribe to output, but command execution now happens only through `IOrigoFrameDriver.DriveFrame(delta)` in the fixed frame order.
+- **BREAKING: entity names are now enforced as unique within a session** — `SndEntityFactory` (runtime spawn) and `SndSceneSerializer` (load recovery) reject duplicate names before any host mutation, both against existing scene entities and within a batch. Callers relying on duplicate names being tolerated now receive `InvalidOperationException` at spawn/load time.
+- **BREAKING: `DataSourceNode.Keys` / `Count` / `Elements` are shape-strict** — accessing `Keys` on a non-Map node or `Count`/`Elements` on a non-Array node now throws `InvalidOperationException` instead of silently returning an empty collection. This also makes all primitive-array converters reject null/scalar/object root nodes instead of deserializing corrupt save data as an empty array.
+- **BREAKING: `.map` encoding rejects keys and child kinds that cannot round-trip** — keys that are empty, contain a leading/trailing whitespace, start with `#`, or contain `:`/line breaks now throw; Number/Bool children are rejected because the string-only `.map` format would silently lose their type on decode.
+- **`ConsoleOutputChannel` aggregates every failed listener** — when multiple subscribers throw during `Publish`, the thrown `AggregateException` now contains every failure; the single-failure behavior remains a direct rethrow of that exception.
 - **BREAKING: scene orchestration interfaces are now `internal`** — `ISndSceneHost`, `ISndSceneAccess`, `ISndContextAttachableSceneHost`, `IOwningSessionBindable`, `SndEntityFactory`, and the `OrigoRuntime` constructor are no longer public. Business code can no longer cast `GodotSndManager` to a scene-host interface and bypass spawn/load/kill orchestration; scene queries go through the public `ISndSceneReadAccess`. Adapter/test assemblies retain access via `InternalsVisibleTo`.
+- **PR commit messages are now machine-linted** — `scripts/lint-commits.sh` and the
+  `commit-lint` workflow enforce Conventional Commits, the 72-character subject limit,
+  and the no-trailing-period rule on pull requests.
+- **BREAKING: deferred-frame flushing is no longer a business-visible API** —
+  `ISndDeferredActions.FlushDeferredActionsForCurrentFrame` is removed, and
+  `OrigoRuntime.EnqueueBusinessDeferred` / `EnqueueSystemDeferred` /
+  `FlushEndOfFrameDeferred` / `ResetConsoleState` are now `internal`. The only
+  frame-boundary path is `IOrigoFrameDriver.DriveFrame(delta)`; tests reach the
+  internal pipeline via `InternalsVisibleTo`.
 - **`EnsureStrategy` mounts before writing its marker** — a failed `AddStrategy` (unregistered index, duplicate mount, or a throwing `AfterAdd`) no longer leaves a half-committed data marker; the idempotency marker is written only after the mount succeeds.
 - **`TypedData` no longer contains a test-only reset hook** — global kind-registry reset moved to `Origo.TestSupport.TypedDataTestSupport` (internal test helper), keeping production code free of test conveniences.
 - **String collection reads are strictly null-aware** — `string[]` arrays, string dictionaries, state-machine stacks, strategy-index lists, and node-pair maps now throw `InvalidOperationException` when an element/value is a null node, matching the existing `Read<string>` contract. Previously a null element silently drifted into an empty string, so corrupt save data surfaced later as an opaque strategy/node lookup failure instead of at the converter layer.
@@ -81,6 +110,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   frame processing was already a documented caller contract).
 
 - **`PathUtility.NormalizeDirectoryPath(null)` throws `ArgumentNullException`** — matching `Combine`; previously it silently returned an empty string. `LogMessageBuilder.SetElapsedMs` rejects NaN/negative/infinite values; `SndMetaFluentBuilder.SetString`/`SetBytes` reject null values (consistent with the data layer's non-null invariant); `TypeStringMapping.GetTypeByName` rejects blank names; `ValueInference` no longer infers NaN/Infinity floats; `SndDataManager.TryGetData`/`GetRequiredData` validate key names like `SetData`.
+- **`SndContextParameters.InitialLevelId` is validated at context construction** — blank values and
+  non-token characters (such as path separators) now throw `ArgumentException` immediately instead
+  of failing later when a level directory path is assembled.
+- **Godot integration test script rejects `Godot.NET.Sdk` drift** — the adapter and integration-test
+  projects must reference the same Godot SDK version; `scripts/godot-test.sh` fails fast when they
+  differ instead of downloading the adapter's engine binary and testing a mismatched project.
 - **BREAKING: `GodotSndManager.BindRuntimeDependencies` is now `internal`** — runtime
   dependency binding (World + Logger) is framework-orchestrated startup wiring, driven only by
   `OrigoAutoHost` (and the `InternalsVisibleTo` test projects); business code can no longer rebind
@@ -143,9 +178,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   across machines/runtime builds because JIT inlining decisions change per-instruction
   allocation, so cross-machine comparison was producing false failures). On the baseline
   machine the full gates still apply; CI benchmark steps act as smoke tests.
-- **BREAKING:** `TypedDataInitializer` is now `internal` — adapter layers no longer get a
-  public entry point; test projects access it via `InternalsVisibleTo` and call
-  `TypedDataInitializer.EnsureLoaded()` instead of the always-true `IsLoaded` property.
 - **BREAKING:** `GodotSndManager.ProcessTickCount` and `ProcessDeltaSum` removed — these were
   observability members with no production consumer (the integration test that read the tick
   counter now verifies `ProcessAll` behaviorally, by driving an entity's Process strategy).
@@ -194,7 +226,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Godot `DeleteRecursive` now best-effort removes the directory container** — after clearing all contents (including hidden files) it attempts to remove the container through its parent handle, matching `IFileSystem.DeleteDirectory`. When the engine holds an open handle (e.g. inside the Godot editor) the removal fails and the empty container is left behind, which is harmless; in headless/exported processes the container is removed, preventing `SwapSnapshotDirectory` from failing its rename over a stale empty `.bak` container.
 - **`PlanExecutionStrategyBase` marks the intent status `active` when a plan starts** — `StartIntent` now writes `IntentStatusActive` ("active") to the intent-status key, completing the three-state protocol (`active` → `completed`/`failed`); observers reading the status key no longer see a stale value from a previous plan while an intent is executing.
 - **`PathUtility.Combine` rejects a null base path** — a null `basePath` now throws `ArgumentNullException` instead of silently returning the relative path (an empty-string base still passes the relative path through).
-- **Grid coordinate conversions reject non-positive dimensions** — `cellSize <= 0` or `gridSize <= 0` now throws `ArgumentOutOfRangeException` instead of silently producing NaN/out-of-range coordinates through division by zero.
+- **Grid coordinate conversions reject non-positive or non-finite dimensions** — a non-finite `cellSize`, `cellSize <= 0`, or `gridSize <= 0` now throws `ArgumentOutOfRangeException` instead of silently producing NaN/out-of-range coordinates.
 - **Duplicate named console arguments are rejected** — `spawn name=a name=b` now fails parsing with an explicit error instead of silently letting the last value win.
 - **A failed save load disposes the progress run and clears the context reference** — after a load failure, the half-initialized `ProgressRun` is disposed, its strategy pool references are returned, and `ctx.Blackboard.ProgressBlackboard` / `ctx.StateMachines` fail fast (null / "no active progress run") instead of exposing partially deserialized state. The original load exception still propagates.
 - **Observer mounting is now fail-fast like strategy mounting** — mounting the same (observer, target, strategy index) twice throws `InvalidOperationException` (previously it double-subscribed and double-fired `OnDataChanged`), and unmounting a pair that is not mounted throws instead of silently succeeding.
@@ -204,8 +236,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`DocSyncTool.Tests` no longer pollutes the CI log with expected tool output** — the tool's "Validation FAILED" diagnostics (produced on purpose by the negative validator tests), generate progress lines, and migration banners are captured by a test helper (`ConsoleOutputCapture`) instead of being printed straight into the test-runner log, where "Validation FAILED" looks like a build failure. The four capturing test classes run in a serialized collection (redirecting the process-global console streams is not parallel-safe).
 - **`scripts/test.sh` runs the test projects sequentially** — parallel test processes on multi-core Windows runners stall xUnit v3's assembly-info child process long enough to hit upstream bug xunit/xunit#3576, where the "Waiting 10 seconds for foreground threads to exit..." message pollutes the assembly-info JSON and VSTest fails discovery with "Test process did not return valid JSON". Sequential runs keep each child process's exit fast enough to avoid the race (fixed upstream only in xunit.v3 4.0.0-pre.128+, which requires the Microsoft Testing Platform migration).
 
+- **BREAKING: `SaveMetaBuildContext.Progress` / `Session` are now enforced read-only adapters** — save-meta contributors receive `IBlackboard` views whose `SetValue` / `Clear` / `DeserializeAll` throw `InvalidOperationException`; the documented read-only context contract is now enforced by the framework instead of relying on contributor discipline.
+
 ### Removed
 
+- **BREAKING: `TypedDataInitializer` removed** — adapter layers no longer get a public
+  entry point just to force assembly loading. Referencing any public GodotAdapter type
+  loads the assembly and runs its generated `[ModuleInitializer]` registrations; tests
+  force loading through a public type reference instead of a production helper.
 - **`TypedData.ResetForTesting()`** — the production test-only reset hook is removed; tests reset the registry through `Origo.TestSupport` instead.
 - **BREAKING:** `GodotSndBootstrap` class and `BindRuntimeAndContext` method removed. The two-step binding (`BindRuntimeDependencies` then `BindContext`) is now framework-orchestrated startup wiring driven entirely by `OrigoAutoHost`.
 - **`SndEntity.QuitSingle` / `DeadSingle` removed** — single-entity teardown now goes exclusively through `ISessionRun.RequestKillEntity` / the session kill pipeline. The two methods had diverging hook orders from the session pipeline and were only exercised by tests.
@@ -217,7 +255,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING: `DiffUtility` removed** — it had no production consumers; its documented use cases (topology-change computation) were not backed by code.
 
 ### Fixed
+- **Observer binding teardown releases the pooled strategy even when `OnUnmounted` throws** — `FullCleanup` now runs unsubscription, the user hook, and the pool release as independent steps; previously a throwing hook skipped the release after the binding had already been removed, permanently leaking the pooled observer strategy.
+- **`GodotSndManager._ExitTree` runs strategy release independently of observer teardown** — when the manager node is removed directly and an `OnUnmounted` hook throws, entity strategy references are still returned to the pool instead of being skipped behind the failed teardown step.
+- **`DataSourceNode.Keys` / `Elements` no longer expose mutable backing lists** — the enumerations now return read-only views, so callers can no longer downcast them to `List<T>` and mutate the node graph behind the tree API.
 
+
+- **`HasContinueData` / `RequestContinueGame` verify the target save actually exists** — a continue target previously returned true for a missing save slot and then destroyed the current foreground while failing the load; both entry points now consult save enumeration and refuse missing slots before any workflow starts.
+- **`RequestSwitchForegroundLevel` validates level IDs before destructive switch steps** — malformed IDs (e.g. containing path separators) used to fail only after the old foreground had been persisted and destroyed; the token check now runs before any session is touched.
+- **Persistence-request accounting survives fail-fast queue abandonment** — when a tracked system request threw, later tracked requests in the same batch were discarded without running their decrement, leaving the pending count stuck forever; discarded actions now run an explicit cleanup callback.
+- **Godot batch-recovery rollback releases Core resources of already-recovered entities** — when a later entity failed during `RecoverFromMetaList`, earlier staged Godot entities were detached without releasing strategy/node acquisitions, leaking pool references; rollback now releases those resources before detaching.
+- **`GodotFileOperations.WriteAllText` creates missing parent directories** — nested writes under `user://`/`res://` previously failed when parent directories did not exist, diverging from the in-memory file-system behavior; the parent is now created recursively before opening the file.
+- **`ProgressRun.Dispose` and `SessionManager.Clear` keep cleaning after a throwing session hook** — a throwing `BeforeQuit`/subscriber hook previously skipped `current/` deletion and later sessions; every cleanup step now runs independently and the first failure is rethrown after the remaining cleanup completes.
+- **`DataSourceNode` rejects null builder inputs** — `CreateString(null)`, `CreateNumber((string)null)`, and `Add` with a null child now throw `ArgumentNullException` instead of silently creating empty text nodes or failing later at encode time.
+- **Null-returning strategy factories fail with a clear error** — acquiring a strategy whose registered factory returned null previously produced a `NullReferenceException`; the pool now throws `InvalidOperationException` naming the offending index.
+- **Initial saves now restore their `extra/` files from the initial storage root** — the
+  initial-load workflow previously restored `extra/` through the runtime storage service,
+  so archive files shipped in the initial save were ignored and stale runtime files could
+  be copied instead. It now names the initial storage service as the source, so
+  `res://.../save_000/extra/` reaches `current/extra/` through the real workflow.
 - **State-machine container clear releases every machine even when one dispose throws** — previously the first release failure aborted the clear loop, leaving later machines mounted and dictionaries uncleared; `StateMachineContainer.Clear` now disposes all machines independently, clears the container, then rethrows the first failure. `SessionRun.Dispose` / `ProgressRun.Dispose` nest the clear inside independent `finally` blocks so entity release, blackboard clear, and the disposed flag still commit when `Clear` throws.
 - **Godot integration tests leave no ObjectDB nodes behind, and `scripts/godot-test.sh` fails on leaks** — deferred/integration fixtures now free every node they create; null-argument `GodotSndEntity` construction validates before allocating a native node; the Godot test script treats `ObjectDB instances were leaked` as a hard failure.
 - **Local `scripts/ci.sh` now enforces committed generated docs** — after `doc-sync.sh`, any uncommitted changes under `docs/` fail the run, matching the CI PR gate.
@@ -275,8 +330,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`GridParser` parses coordinates culture-invariantly** — integer parsing previously used the
   ambient culture, so a locale with a dot thousands separator changed which inputs were accepted.
 - **`NoiseMapGenerator` validates its extended parameters** — `octaves`/`lacunarity`/`gain`/
-  `frequency`/`worleyFrequencyMultiplier` outside their valid ranges now throw
-  `ArgumentOutOfRangeException` instead of producing undefined noise.
+  `frequency`/`worleyFrequencyMultiplier` outside their valid ranges (including non-finite
+  float values) now throw `ArgumentOutOfRangeException` instead of producing undefined noise.
 - **`SndContextArchiveFileAccess` rejects null/blank relative paths** — the six archive methods
   previously threw a `NullReferenceException` on null paths instead of a parameter error.
 - **Generated `TypedData` bit-pattern conversions are `unchecked`** — consumers compiling with

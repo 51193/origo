@@ -125,14 +125,17 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     ///     <see cref="FlushEndOfFrameDeferred" />.
     ///     Suitable for game logic that should run at end of frame.
     /// </summary>
-    public void EnqueueBusinessDeferred(Action action) => _businessDeferredScheduler.Enqueue(action);
+    internal void EnqueueBusinessDeferred(Action action) => _businessDeferredScheduler.Enqueue(action);
 
     /// <summary>
     ///     Enqueues a system-level deferred action to be executed on the next
     ///     <see cref="FlushEndOfFrameDeferred" /> (after the business queue).
     ///     Suitable for system orchestration operations such as saving and level transitions.
     /// </summary>
-    public void EnqueueSystemDeferred(Action action) => _systemDeferredScheduler.Enqueue(action);
+    internal void EnqueueSystemDeferred(Action action) => _systemDeferredScheduler.Enqueue(action);
+
+    internal void EnqueueSystemDeferred(Action action, Action onDiscard) =>
+        _systemDeferredScheduler.Enqueue(action, onDiscard);
 
     /// <summary>
     ///     Injects a provider for the current session manager.
@@ -158,7 +161,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     ///     Executes all pending actions in the business deferred queue and system deferred queue
     ///     in sequence. Typically called by the host main loop at the end of each frame.
     /// </summary>
-    public void FlushEndOfFrameDeferred()
+    internal void FlushEndOfFrameDeferred()
     {
         _businessDeferredScheduler.Tick();
         _sessionManagerProvider().KillPendingAllSessions();
@@ -183,5 +186,5 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     ///     Resets console state: clears the pending input queue.
     ///     Output has been moved to a publish-subscribe model and no longer retains history in Core.
     /// </summary>
-    public void ResetConsoleState() => ConsoleInput?.Clear();
+    internal void ResetConsoleState() => ConsoleInput?.Clear();
 }

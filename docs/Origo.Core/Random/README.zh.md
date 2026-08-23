@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Random/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Random
 
@@ -33,7 +33,7 @@
 - **输出**：行优先 `float[size*size]` 数组，值域 `[0, 1]`
 - **归一化**：`(value + 1) * 0.5`，通过 `Math.Clamp` 确保安全
 - **默认参数**：seed=1337, frequency=0.01
-- **扩展重载**：支持 `octaves`、`lacunarity`、`gain`、`worleyFrequencyMultiplier` 参数，用于精细控制噪声细节层次
+- **扩展重载**：支持 `octaves`、`lacunarity`、`gain`、`worleyFrequencyMultiplier` 参数，用于精细控制噪声细节层次；所有浮点参数必须为有限正数，非有限输入抛 `ArgumentOutOfRangeException`
 
 ### PersistentRandom
 

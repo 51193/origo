@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -37,7 +37,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 |-----------|------|-------|--------------------------|
 | GodotRuntimeSmokeTests | `Tests/GodotRuntimeSmokeTests.cs` | 5 | Godot runtime smoke (GD.Print, FileAccess/DirAccess static classes, Vector2 type, SceneTree) |
 | GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 5 | `GodotFileSystem` (`res://`/`user://` read/write, directory creation, file enumeration, deletion) |
-| GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 7 | `GodotFileOperations` (ReadAllText/WriteAllText/Copy/Delete guards and correctness) |
+| GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 8 | `GodotFileOperations` (ReadAllText/WriteAllText/Copy/Delete guards and correctness; nested writes create parent directories) |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 10 | `GodotDirectoryOperations` (Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive, hidden-file enumeration/deletion) |
 | GodotNodeHandleIntegrationTests | `Tests/GodotNodeHandleIntegrationTests.cs` | 8 | `GodotNodeHandle` (Name cache, Free, SetVisible for CanvasItem/Node3D, UnsafeGetNode) |
 | GodotSndManagerInitializationTests | `Tests/GodotSndManagerInitializationTests.cs` | 6 | `GodotSndManager.BindRuntimeDependencies` / `BindContext` (null guards, chained bind flow); unbound entity operations throw the NotReady contract error instead of NRE |
@@ -50,7 +50,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | OrigoDefaultEntryBootstrapIntegrationTests | `Tests/OrigoDefaultEntryBootstrapIntegrationTests.cs` | 1 | `OrigoDefaultEntry` complete default property values |
 | BootstrapIntegrationTests | `Tests/BootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` / `OrigoDefaultEntry` property defaults and instantiation |
 | SndEntityNodeExtensionsIntegrationTests | `Tests/SndEntityNodeExtensionsIntegrationTests.cs` | 3 | `SndEntityNodeExtensions` (GetNativeNode/GetNodeFromSnd type guards) |
-| TypedDataInitializerIntegrationTests | `Tests/TypedDataInitializerIntegrationTests.cs` | 1 | `TypedDataInitializer` (EnsureLoaded triggers adapter kind registration) |
+| GodotAdapterTypedDataRegistrationIntegrationTests | `Tests/GodotAdapterTypedDataRegistrationIntegrationTests.cs` | 1 | GodotAdapter assembly load triggers the generated `[ModuleInitializer]` kind registration |
 | ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 3 | Observer bindings restored across save/load; session destroy fires OnUnmounted |
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | Pre-test user:// cleanup: leftover write markers / prefixed artifacts removed, non-test and Godot system content preserved, idempotent |
 | GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 1 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side |
@@ -106,7 +106,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── OrigoAutoHostBootstrapIntegrationTests.cs # Full startup tests
 │   ├── AdapterCommandHandlerIntegrationTests.cs # Command handler tests
 │   ├── SndEntityNodeExtensionsIntegrationTests.cs # Extension method tests
-│   ├── TypedDataInitializerIntegrationTests.cs # Typed data init tests
+│   ├── GodotAdapterTypedDataRegistrationIntegrationTests.cs # Assembly-load-triggered TypedData kind registration tests
 │   ├── BootstrapIntegrationTests.cs       # Bootstrap defaults / instantiation tests
 │   ├── OrigoDefaultEntryBootstrapIntegrationTests.cs # Default entry property tests
 │   ├── ObserverSaveReloadIntegrationTests.cs # Observer binding save/load recovery tests

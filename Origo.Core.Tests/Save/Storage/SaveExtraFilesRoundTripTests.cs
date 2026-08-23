@@ -120,6 +120,58 @@ public class SaveExtraFilesRoundTripTests
             SaveStorageFacade.CopyDirectoryFromSnapshot(handle, "001", "  "));
     }
 
+    // ── Cross-root restore through ISaveStorageService ──────────────────
+
+    [Fact]
+    public void RestoreExtraFilesFromSourceSnapshot_CopiesAcrossStorageRoots()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var source = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "res://initial");
+        var destination = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root");
+
+        fs.SeedFile("res://initial/save_000/extra/config.json", """{"key":"value"}""");
+        fs.SeedFile("res://initial/save_000/extra/nested/data.txt", "hello");
+
+        destination.RestoreExtraFilesFromSnapshot(source, "000");
+
+        Assert.True(fs.Exists("root/current/extra/config.json"));
+        Assert.True(fs.Exists("root/current/extra/nested/data.txt"));
+        Assert.Equal("""{"key":"value"}""", fs.ReadAllText("root/current/extra/config.json"));
+        Assert.Equal("hello", fs.ReadAllText("root/current/extra/nested/data.txt"));
+    }
+
+    [Fact]
+    public void RestoreExtraFilesFromSourceSnapshot_SourceWithoutExtra_ReturnsSilently()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var source = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "res://initial");
+        var destination = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root");
+
+        var ex = Record.Exception(() =>
+            destination.RestoreExtraFilesFromSnapshot(source, "000"));
+
+        Assert.Null(ex);
+        Assert.False(fs.DirectoryExists("root/current/extra"));
+    }
+
+    [Fact]
+    public void RestoreExtraFilesFromSourceSnapshot_NullSource_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var destination = new DefaultSaveStorageService(
+            metaAccess, dataSourceIo, pathResolver, "root");
+
+        Assert.Throws<ArgumentNullException>(() =>
+            destination.RestoreExtraFilesFromSnapshot(null!, "000"));
+    }
+
     [Fact]
     public void CopyDirectoryFromSnapshot_ExistingFilesInCurrent_Overwrites()
     {
@@ -155,13 +207,13 @@ public class SaveExtraFilesRoundTripTests
         archive.WriteFile("sequence.json", arrNode);
 
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/extra/state.json"), "state.json should be in snapshot");
         Assert.True(fs.Exists("root/save_slot_01/extra/sequence.json"), "sequence.json should be in snapshot");
 
         ctx.Save.RequestLoadGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(archive.FileExists("state.json"), "state.json should exist after reload");
         var readObj = archive.ReadFile("state.json");
@@ -184,12 +236,12 @@ public class SaveExtraFilesRoundTripTests
         archive.WriteFile("sub/dir/file.json", node);
 
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/extra/sub/dir/file.json"));
 
         ctx.Save.RequestLoadGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var readBack = archive.ReadFile("sub/dir/file.json");
         Assert.Equal("nested_content", readBack["data"].AsString());
@@ -205,16 +257,16 @@ public class SaveExtraFilesRoundTripTests
             .Add("version", DataSourceNode.CreateNumber(1));
         archive.WriteFile("data.json", v1);
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var v2 = DataSourceNode.CreateObject()
             .Add("version", DataSourceNode.CreateNumber(2));
         archive.WriteFile("data.json", v2);
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestLoadGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var readBack = archive.ReadFile("data.json");
         Assert.Equal(2, readBack["version"].As<int>());
@@ -230,14 +282,14 @@ public class SaveExtraFilesRoundTripTests
             .Add("data", DataSourceNode.CreateString("v1"));
         archive.WriteFile("state.json", node);
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var sha1 = fs.ReadAllText("root/save_slot_01/.payload.sha");
 
         archive.WriteFile("state.json",
             DataSourceNode.CreateObject().Add("data", DataSourceNode.CreateString("v2")));
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var sha2 = fs.ReadAllText("root/save_slot_01/.payload.sha");
 
@@ -254,12 +306,12 @@ public class SaveExtraFilesRoundTripTests
             .Add("marker", DataSourceNode.CreateString("before_save"));
         archive.WriteFile("temp.json", node);
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/extra/temp.json"));
 
         ctx.Save.RequestLoadGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(archive.FileExists("temp.json"));
     }
@@ -275,10 +327,10 @@ public class SaveExtraFilesRoundTripTests
         archive.WriteObject("text.json", "hello");
 
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestLoadGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Equal(42, archive.ReadObject<int>("numbers.json"));
         Assert.True(archive.ReadObject<bool>("flag.json"));
@@ -298,7 +350,7 @@ public class SaveExtraFilesRoundTripTests
         archive.DeleteFile("remove_me.json");
 
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.False(fs.Exists("root/save_slot_01/extra/remove_me.json"));
     }
@@ -461,7 +513,7 @@ public class SaveExtraFilesRoundTripTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         return ctx;
     }
 }

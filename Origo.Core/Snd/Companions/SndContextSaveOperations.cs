@@ -15,12 +15,14 @@ namespace Origo.Core.Snd.Companions;
 /// </summary>
 internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOperations
 {
+    /// <inheritdoc/>
     public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)
     {
         ArgumentNullException.ThrowIfNull(contributor);
         owner._saveMetaContributors.Add(contributor);
     }
 
+    /// <inheritdoc/>
     public void RegisterSaveMetaContributor(
         Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
     {
@@ -28,8 +30,10 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
         owner._saveMetaContributors.Add(new DelegateSaveMetaContributor(contribute));
     }
 
+    /// <inheritdoc/>
     public IReadOnlyList<string> ListSaves() => owner.StorageService.EnumerateSaveIds();
 
+    /// <inheritdoc/>
     public void RequestLoadGame(string saveId)
     {
         SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
@@ -38,6 +42,7 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
             owner.SetProgressRun(owner.LoadOrContinueStrict(saveId)));
     }
 
+    /// <inheritdoc/>
     public void RequestSaveGame(string newSaveId)
     {
         SavePathLayout.ValidateSaveId(newSaveId, nameof(newSaveId));
@@ -64,6 +69,7 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
         });
     }
 
+    /// <inheritdoc/>
     public string RequestSaveGameAuto(string? newSaveId = null)
     {
         var effectiveNewSaveId = string.IsNullOrWhiteSpace(newSaveId)
@@ -74,17 +80,20 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
         return effectiveNewSaveId;
     }
 
+    /// <inheritdoc/>
     public void SetContinueTarget(string saveId)
     {
         SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
         owner._systemRun.SetActiveSaveSlot(saveId);
     }
 
+    /// <inheritdoc/>
     public void RequestSwitchForegroundLevel(string newLevelId)
     {
         if (string.IsNullOrWhiteSpace(newLevelId))
             throw new ArgumentException(
                 "New level id cannot be null or whitespace.", nameof(newLevelId));
+        SavePathLayout.ValidateToken(newLevelId, nameof(newLevelId), "level id");
 
         // A level switch persists the foreground state and progress to disk,
         // so it is tracked as a pending persistence request like save/load.

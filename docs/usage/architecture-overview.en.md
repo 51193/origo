@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Overview
 
@@ -117,6 +117,8 @@ Origo uses a single-threaded frame loop model:
 - A single frame is treated as a logical atomic boundary
 - Cross-frame semantics fall into recoverable state (blackboard, state machines, entity Data)
 
+> **Deferred direction**: Stateless strategies provide a foundation for entity-level concurrency, but in-entity strategy ordering, cross-entity calls, observer notifications, and container mutation still require serial semantics. The candidate design is an "entity concurrency" flag + concurrency-mode data + a parallel batch followed by a serial batch; deferred because there is no performance bottleneck today. See [Extension Directions and Deferred Designs](extension-directions.en.md) for the full trade-off.
+
 ## I/O Boundary
 
 All file operations in the Core layer go through three interfaces:
@@ -133,6 +135,8 @@ Business modules → DataSourceNode → IDataSourceIoGateway / IFileMetaAccess /
 Suffix routing, codec strategy, and I/O error semantics are centrally governed on the Gateway side. Raw text files like `.sha` and `.write_in_progress` also go through the codec route via `RawStringDataSourceCodec` — there is no direct read/write bypass. The Gateway uses a fail-fast strategy: when codec decoding fails (e.g., `.map` file format error), the Gateway wraps the exception as an `InvalidOperationException` containing the file path and immediately throws — it does not swallow errors.
 
 `IDataSourceIoGateway` is the framework's hard I/O content boundary: **any module within the system (including strategies) should access file content through this boundary**. File metadata operations (existence checks, directory management, etc.) go through `IFileMetaAccess`, and path operations through `IPathResolver`. The file operations exposed to strategies via `ISndFileAccess` and `ISndArchiveFileAccess` delegate to the above three interfaces; strategies do not need to handle raw text parsing or platform path differences themselves.
+
+> **Deferred direction**: Mount the local file system, save directories, and network resources as `DataSourceNode` tree roots, replacing several file APIs with navigation such as `path -> to -> file -> entity -> health_point`. Synchronous tree reads are sufficient for local files today, but remote nodes would block the frame, so this is deferred. See [Extension Directions and Deferred Designs](extension-directions.en.md) for the full trade-off.
 
 ## Adapter Layer and Core Layer Separation Principles
 
@@ -169,7 +173,7 @@ Additionally, `ISessionManager` and `ISessionRun` live in the Abstractions layer
 |-----------|--------|-----------------|
 | **Fire strategy lifecycle hooks** | Strategies are a Core layer concept; hook firing timing and order must be centrally orchestrated by Core | `GodotSndManager` must not call `FireAfterSpawnHooks()`, `FireBeforeDeadHooks()`, etc. |
 | **Manage strategy release/ref counting** | Strategy pool, ref counting, and priority sorting are managed in Core's `SndStrategyPool` and `SndStrategyManager` | `GodotSndManager` must not call `ReleaseStrategiesOnly()` |
-| **Directly call Core pipeline methods** | The timing and order of frame boundary operations (entity processing → business queue → kill entities → system queue → console) are controlled by Core. The adapter layer should only call `IOrigoFrameDriver.DriveFrame(delta)` to hand over frame control | The adapter layer must not directly call `FlushDeferredActionsForCurrentFrame()` or `ProcessPending()` |
+| **Directly call Core pipeline methods** | The timing and order of frame boundary operations (entity processing → business queue → kill entities → system queue → console) are controlled by Core. The adapter layer should only call `IOrigoFrameDriver.DriveFrame(delta)` to hand over frame control | The adapter layer must not directly call the internal `FlushEndOfFrameDeferred` or `ProcessPending` |
 | **Directly drive Core startup flow** | Strategy discovery, alias/template loading, and entry save loading are internal Core orchestration, uniformly executed in `SndContext.Bootstrap()`. The adapter layer only passes configuration via `SndContextParameters` | The adapter layer must not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()` |
 | **Hold Core orchestration state** | The state machine for entity lifecycle management (e.g., pending kill, teardown flow) is maintained by the Core layer | The adapter layer should not have methods like `QuitFromManager`, `DeadFromManager` |
 | **Load engine-agnostic business configuration** | Template parsing, alias mapping, and strategy index resolution are all done in Core | The adapter layer should not read and parse business configurations like `snd_templates.map` |
@@ -226,7 +230,7 @@ Origo.GodotAdapter/   # Godot 4 adapter layer (~23 .cs files)
 ├── FileSystem/       # Godot file system
 ├── Logging/          # Godot logging
 ├── Serialization/    # Godot type serialization
-└── Snd/              # Godot entities + manager + TypedDataInitializer
+└── Snd/              # Godot entities + manager + node factory
 
 Origo.ConsoleBridge/  # TCP remote console (~2 .cs files)
 ```

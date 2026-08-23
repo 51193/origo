@@ -23,6 +23,8 @@ internal sealed class FakeSndEntity : ISndEntityFacade
     public int ProcessCount { get; private set; }
     public int DetachCount { get; private set; }
     public bool FailRecover { get; set; }
+    public bool FailRollback { get; set; }
+    public int RollbackAcquiredResourcesCount { get; private set; }
 
     public Action? OnProcess { get; set; }
 
@@ -46,6 +48,13 @@ internal sealed class FakeSndEntity : ISndEntityFacade
     }
 
     public void DetachFromManager() => DetachCount++;
+
+    public void RollbackAcquiredResources()
+    {
+        RollbackAcquiredResourcesCount++;
+        if (FailRollback)
+            throw new InvalidOperationException("rollback failed");
+    }
 
     public void MarkPendingKill() => IsPendingKill = true;
 
@@ -148,6 +157,70 @@ public class SndEntityCollectionTests
         Assert.Throws<InvalidOperationException>(() =>
             collection2.RecoverFromMetaList([Meta("a"), Meta("b"), Meta("boom")]));
         Assert.Empty(collection2);
+        Assert.Equal(1, failing.DetachCount);
+    }
+
+    [Fact]
+    public void RecoverFromMetaList_Failure_ReleasesResourcesForPreviouslyRecoveredEntities()
+    {
+        var first = new FakeSndEntity();
+        var second = new FakeSndEntity();
+        var failing = new FakeSndEntity { FailRecover = true };
+        var factories = new Queue<FakeSndEntity>([first, second, failing]);
+        var collection2 = new SndEntityCollection<FakeSndEntity>(() => factories.Dequeue());
+
+        Assert.Throws<InvalidOperationException>(() =>
+            collection2.RecoverFromMetaList([Meta("a"), Meta("b"), Meta("boom")]));
+
+        // Every staged entity, including the earlier successfully recovered
+        // ones, must release its acquired Core resources before being detached.
+        Assert.Equal(1, first.RollbackAcquiredResourcesCount);
+        Assert.Equal(1, second.RollbackAcquiredResourcesCount);
+        Assert.Equal(1, failing.RollbackAcquiredResourcesCount);
+        Assert.Equal(1, first.DetachCount);
+        Assert.Equal(1, second.DetachCount);
+        Assert.Equal(1, failing.DetachCount);
+    }
+
+    [Fact]
+    public void RecoverFromMetaList_Failure_RollbackCleanupFailure_AggregatesBothFailures()
+    {
+        var rollbackFailure = new FakeSndEntity { FailRollback = true };
+        var failing = new FakeSndEntity { FailRecover = true };
+        var factories = new Queue<FakeSndEntity>([rollbackFailure, failing]);
+        var collection2 = new SndEntityCollection<FakeSndEntity>(() => factories.Dequeue());
+
+        var ex = Assert.Throws<AggregateException>(() =>
+            collection2.RecoverFromMetaList([Meta("a"), Meta("boom")]));
+
+        Assert.Equal(2, ex.InnerExceptions.Count);
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "recover failed");
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "rollback failed");
+        Assert.Empty(collection2);
+    }
+
+    [Fact]
+    public void RecoverFromMetaList_Failure_CleanupStepsRunIndependentlyAndAllFailuresAggregate()
+    {
+        var recovered = new FakeSndEntity();
+        var failing = new FakeSndEntity { FailRecover = true };
+        var factories = new Queue<FakeSndEntity>([recovered, failing]);
+        var collection2 = new SndEntityCollection<FakeSndEntity>(
+            () => factories.Dequeue(),
+            _ => throw new InvalidOperationException("engine detach failed"));
+
+        var ex = Assert.Throws<AggregateException>(() =>
+            collection2.RecoverFromMetaList(
+                [Meta("a"), Meta("boom")],
+                (_, _) => throw new InvalidOperationException("callback failed")));
+
+        Assert.Equal(4, ex.InnerExceptions.Count);
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "recover failed");
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "engine detach failed");
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "callback failed");
+        Assert.Empty(collection2);
+        Assert.Equal(1, recovered.RollbackAcquiredResourcesCount);
+        Assert.Equal(1, recovered.DetachCount);
         Assert.Equal(1, failing.DetachCount);
     }
 

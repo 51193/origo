@@ -32,7 +32,7 @@ public class SaveAndSwitchForegroundTests
         using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg_level", true);
 
         ctx.Save.RequestSaveGame("topology_test");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/progress.json"));
         Assert.True(fs.Exists("root/current/progress_state_machines.json"));
@@ -57,7 +57,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("other");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var (found, topology) = progressRun.ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -78,7 +78,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("other");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var (found, topology) = progressRun.ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -100,7 +100,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("new_fg");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var (found, topology) = progressRun.ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -121,7 +121,7 @@ public class SaveAndSwitchForegroundTests
         bg.Spawn(CreateMeta("DiskEntity"));
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/level_game/snd_scene.json"));
         Assert.True(fs.Exists("root/current/level_game/session.json"));
@@ -129,7 +129,7 @@ public class SaveAndSwitchForegroundTests
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -145,11 +145,11 @@ public class SaveAndSwitchForegroundTests
         bg.Spawn(CreateMeta("Entity"));
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var (found, topology) = ctx.EnsureProgressRun().ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -172,20 +172,20 @@ public class SaveAndSwitchForegroundTests
         bg.SessionBlackboard.SetValue("round_key", "round_value");
 
         var saveId = ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestSaveGame(saveId);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
         ctx.Save.RequestLoadGame(saveId);
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -214,7 +214,7 @@ public class SaveAndSwitchForegroundTests
         bg.SessionBlackboard.SetValue("direct_key", 77);
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         fs.SeedFile("root/current/level_game/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_game/session.json", "{}");
@@ -223,7 +223,7 @@ public class SaveAndSwitchForegroundTests
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -240,7 +240,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("missing_level");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -263,14 +263,14 @@ public class SaveAndSwitchForegroundTests
         bg.SessionBlackboard.SetValue("queue_val", 123);
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         if (flushBetween)
-            ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+            ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -303,7 +303,7 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         ctx.Save.RequestSwitchForegroundLevel("new");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/level_test_level/snd_scene.json"));
         Assert.True(fs.Exists("root/current/level_test_level/session.json"));
@@ -327,7 +327,7 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         ctx.Save.RequestSwitchForegroundLevel("new");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var bgAlive = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.NotNull(bgAlive);
@@ -350,7 +350,7 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         ctx.Save.RequestSwitchForegroundLevel("new");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var (found, topology) = ctx.EnsureProgressRun().ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -376,7 +376,7 @@ public class SaveAndSwitchForegroundTests
         Assert.NotNull(fgBeforeFlush);
         Assert.Equal("test_level", fgBeforeFlush.LevelId);
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fgAfterFlush = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fgAfterFlush);
@@ -395,7 +395,7 @@ public class SaveAndSwitchForegroundTests
         var executionOrder = new List<string>();
         ctx.Deferred.EnqueueBusinessDeferred(() => executionOrder.Add("business"));
         ctx.Save.RequestSwitchForegroundLevel("after");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Equal("business", executionOrder[0]);
         Assert.Equal("after", ctx.Runtime.SessionManager.ForegroundSession!.LevelId);
@@ -412,11 +412,11 @@ public class SaveAndSwitchForegroundTests
         bg.SessionBlackboard.SetValue("note", "empty");
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("empty_game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -439,11 +439,11 @@ public class SaveAndSwitchForegroundTests
             bg.Spawn(CreateMeta($"Entity_{i:D3}"));
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("massive");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -471,7 +471,7 @@ public class SaveAndSwitchForegroundTests
             "{\"machines\":[]}");
 
         ctx.Save.RequestSwitchForegroundLevel("new");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Explicit PersistForegroundLevelState before ResetForeground writes old fg data
         Assert.True(fs.Exists("root/current/level_test_level/snd_scene.json"));
@@ -499,7 +499,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("new");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Background session's level data is NOT auto-persisted by SwitchForeground
         Assert.False(fs.Exists("root/current/level_bg_level/snd_scene.json"));
@@ -518,7 +518,7 @@ public class SaveAndSwitchForegroundTests
 
         // Explicitly persist all session state (including the background session) before switch
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         fs.SeedFile("root/current/level_new/snd_scene.json", "[]");
         fs.SeedFile("root/current/level_new/session.json", "{}");
@@ -527,7 +527,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("new");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/level_bg_level/snd_scene.json"));
         Assert.True(fs.Exists("root/current/level_bg_level/session.json"));
@@ -564,7 +564,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("test_level");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -601,7 +601,7 @@ public class SaveAndSwitchForegroundTests
         ctx.SetProgressRun(progressRun);
 
         ctx.Save.RequestSaveGame("no_fg");
-        Assert.Throws<InvalidOperationException>(() => ctx.Deferred.FlushDeferredActionsForCurrentFrame());
+        Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
     }
 
     // ── Auto-handle background session collision during switch ───────────
@@ -622,7 +622,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("bg"));
 
@@ -643,7 +643,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -675,7 +675,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("massive");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -698,7 +698,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("empty_level");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("empty_bg"));
 
@@ -721,7 +721,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("target"));
 
@@ -746,7 +746,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var (found, topology) = progressRun.ProgressBlackboard
             .TryGet<string>(WellKnownKeys.SessionTopology);
@@ -772,7 +772,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("target"));
 
@@ -801,7 +801,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/progress.json"));
         Assert.True(fs.Exists("root/current/progress_state_machines.json"));
@@ -828,7 +828,7 @@ public class SaveAndSwitchForegroundTests
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -845,13 +845,13 @@ public class SaveAndSwitchForegroundTests
         Assert.False(foundFg);
 
         ctx.Save.RequestSaveGame("roundtrip");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.EnsureProgressRun().Dispose();
         ctx.SetProgressRun(null);
 
         ctx.Save.RequestLoadGame("roundtrip");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var restoredFg = (SessionRun?)ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(restoredFg);
@@ -875,7 +875,7 @@ public class SaveAndSwitchForegroundTests
         target.SessionBlackboard.SetValue("deferred_key", 55);
 
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Null(ctx.Runtime.SessionManager.TryGet("target"));
 
@@ -908,7 +908,7 @@ public class SaveAndSwitchForegroundTests
         var progressRun = ctx.EnsureProgressRun();
 
         ctx.Save.RequestSwitchForegroundLevel("level_a");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         var fgA = (SessionRun?)progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fgA);
         Assert.Equal("level_a", fgA.LevelId);
@@ -917,7 +917,7 @@ public class SaveAndSwitchForegroundTests
         Assert.NotNull(ctx.Runtime.SessionManager.TryGet("bg2"));
 
         ctx.Save.RequestSwitchForegroundLevel("level_b");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         var fgB = (SessionRun?)progressRun.SessionManager.ForegroundSession;
         Assert.NotNull(fgB);
         Assert.Equal("level_b", fgB.LevelId);

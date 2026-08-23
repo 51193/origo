@@ -37,6 +37,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
     private readonly ISessionManager _sessionManager;
     private readonly ILogger _logger;
     private readonly SaveContext _saveContext;
+    private readonly ISndContext _sndContext;
     private readonly ISndSceneHost _sceneHost;
     private readonly RunStateScope _sessionScope;
     private readonly ISaveStorageService _storageService;
@@ -59,6 +60,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
         _sessionManager = sessionManager;
         _storageService = managerRuntime.StorageService;
         _logger = managerRuntime.Logger;
+        _sndContext = managerRuntime.SndContext;
 
         var progressBb = managerRuntime.ProgressBlackboard;
         _saveContext = new SaveContext(progressBb, sessionParams.SessionBlackboard, managerRuntime.SndWorld);
@@ -93,6 +95,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
 
     internal event Action? Disposing;
 
+    /// <inheritdoc/>
     public IBlackboard SessionBlackboard
     {
         get
@@ -109,36 +112,44 @@ internal sealed class SessionRun : ISessionRun, IDisposable
     /// </summary>
     internal ISndSceneHost SceneHost => _sceneHost;
 
+    /// <inheritdoc/>
     public string LevelId { get; }
 
+    /// <inheritdoc/>
     public bool IsFrontSession { get; }
 
+    /// <inheritdoc/>
     public ISessionManager SessionManager => _sessionManager;
 
+    /// <inheritdoc/>
     public ISndEntity? FindByName(string name)
     {
         ThrowIfDisposed();
         return _sceneHost.FindByName(name);
     }
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<ISndEntity> GetEntities()
     {
         ThrowIfDisposed();
         return _sceneHost.GetEntities();
     }
 
+    /// <inheritdoc/>
     public ISndEntity Spawn(SndMetaData meta)
     {
         ThrowIfDisposed();
         return SndEntityFactory.Spawn(_sceneHost, meta);
     }
 
+    /// <inheritdoc/>
     public void SpawnMany(params SndMetaData[] metaList)
     {
         ThrowIfDisposed();
         SndEntityFactory.SpawnMany(_sceneHost, metaList);
     }
 
+    /// <inheritdoc/>
     public void RequestKillEntity(string entityName)
     {
         ThrowIfDisposed();
@@ -153,6 +164,7 @@ internal sealed class SessionRun : ISessionRun, IDisposable
 
     IStateMachineContainer ISessionRun.GetSessionStateMachines() => GetSessionStateMachines();
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (_disposed || _disposing) return;
@@ -418,14 +430,23 @@ internal sealed class SessionRun : ISessionRun, IDisposable
     internal void FireBeforeSaveHooks()
     {
         ThrowIfDisposed();
-        // Snapshot the collection: BeforeSave hooks may spawn new entities,
-        // and hosts expose a live entity view (the Godot adapter returns the
-        // backing list). Entities spawned inside a hook are serialized but do
-        // not fire BeforeSave (they entered the scene mid-save).
-        List<ISndEntity> saveEntities = [.. _sceneHost.GetEntities()];
-        foreach (var entity in saveEntities)
-            if (entity is IEntityLifecycle lifecycle)
-                lifecycle.FireBeforeSaveHooks();
+        var mutationGuard = _sndContext as SndContext;
+        mutationGuard?.EnterBeforeSaveSessionMutationGuard();
+        try
+        {
+            // Snapshot the collection: BeforeSave hooks may spawn new entities,
+            // and hosts expose a live entity view (the Godot adapter returns the
+            // backing list). Entities spawned inside a hook are serialized but do
+            // not fire BeforeSave (they entered the scene mid-save).
+            List<ISndEntity> saveEntities = [.. _sceneHost.GetEntities()];
+            foreach (var entity in saveEntities)
+                if (entity is IEntityLifecycle lifecycle)
+                    lifecycle.FireBeforeSaveHooks();
+        }
+        finally
+        {
+            mutationGuard?.ExitBeforeSaveSessionMutationGuard();
+        }
     }
 
     private LevelPayload BuildLevelPayload()

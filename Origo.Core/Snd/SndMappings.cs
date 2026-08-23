@@ -42,7 +42,7 @@ internal sealed class SndMappings
         if (string.IsNullOrWhiteSpace(mapFilePath))
             throw new ArgumentException("Scene alias map file path cannot be null or whitespace.", nameof(mapFilePath));
 
-        var node = dataSourceIo.ReadTree(mapFilePath);
+        using var node = dataSourceIo.ReadTree(mapFilePath);
         var loaded = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
             loaded[key] = node[key].AsString();
@@ -93,7 +93,7 @@ internal sealed class SndMappings
             throw new ArgumentException("Snd template alias map file path cannot be null or whitespace.",
                 nameof(mapFilePath));
 
-        var node = dataSourceIo.ReadTree(mapFilePath);
+        using var node = dataSourceIo.ReadTree(mapFilePath);
         var loaded = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
             loaded[key] = node[key].AsString();

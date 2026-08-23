@@ -18,6 +18,8 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
 {
     private readonly SaveFileHandle _handle;
 
+    internal SaveFileHandle Handle => _handle;
+
     public DefaultSaveStorageService(
         IFileMetaAccess metaAccess,
         IDataSourceIoGateway ioGateway,
@@ -30,9 +32,11 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         _handle = new SaveFileHandle(metaAccess, ioGateway, pathResolver, saveRootPath, pathPolicy);
     }
 
+    /// <inheritdoc/>
     public IReadOnlyList<string> EnumerateSaveIds() =>
         SaveStorageFacade.EnumerateSaveIds(_handle);
 
+    /// <inheritdoc/>
     public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData() =>
         SaveStorageFacade.EnumerateSavesWithMetaData(_handle);
 
@@ -46,6 +50,7 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     public void WriteSavePayloadToCurrent(SaveGamePayload payload) =>
         SavePayloadWriter.WriteToCurrent(_handle, payload);
 
+    /// <inheritdoc/>
     public void WriteSavePayloadToCurrentThenSnapshot(
         SaveGamePayload payload,
         string newSaveId,
@@ -55,6 +60,7 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
             _handle, payload, newSaveId, logger);
     }
 
+    /// <inheritdoc/>
     public void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload)
     {
         var currentRel = _handle.PathPolicy.GetCurrentDirectory();
@@ -67,20 +73,26 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         _handle.MetaAccess.Delete(markerAbs);
     }
 
+    /// <inheritdoc/>
     public void WriteProgressOnlyToCurrent(
         DataSourceNode progressNode,
         DataSourceNode progressStateMachinesNode) => SavePayloadWriter.WriteProgressOnlyToCurrent(_handle, progressNode, progressStateMachinesNode, overwrite: true);
 
+    /// <inheritdoc/>
     public SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
         string activeLevelId) => SavePayloadReader.ReadFromSnapshot(_handle, saveId, activeLevelId);
 
+    /// <inheritdoc/>
     public DataSourceNode? ReadProgressNodeFromSnapshot(string saveId) => SavePayloadReader.ReadProgressNodeFromSnapshot(_handle, saveId);
 
+    /// <inheritdoc/>
     public LevelPayload? TryReadLevelPayloadFromCurrent(string levelId) => SavePayloadReader.TryReadLevelPayloadFromCurrent(_handle, levelId);
 
+    /// <inheritdoc/>
     public LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId) => SavePayloadReader.TryReadLevelPayloadFromSnapshot(_handle, saveId, levelId);
 
+    /// <inheritdoc/>
     public LevelPayload? ResolveLevelPayload(string saveId, string levelId)
     {
         var fromCurrent = TryReadLevelPayloadFromCurrent(levelId);
@@ -89,9 +101,11 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
         return TryReadLevelPayloadFromSnapshot(saveId, levelId);
     }
 
+    /// <inheritdoc/>
     public void SnapshotCurrentToSave(string newSaveId) =>
         SaveStorageFacade.SnapshotCurrentToSave(_handle, newSaveId);
 
+    /// <inheritdoc/>
     public void DeleteCurrentDirectory()
     {
         var currentRel = _handle.PathPolicy.GetCurrentDirectory();
@@ -100,9 +114,29 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
             _handle.MetaAccess.DeleteDirectory(currentAbs);
     }
 
+    /// <inheritdoc/>
     public void RestoreExtraFilesFromSnapshot(string saveId)
     {
         SaveStorageFacade.CopyDirectoryFromSnapshot(
             _handle, saveId, SavePathLayout.ExtraDirectoryName);
+    }
+
+    /// <inheritdoc/>
+    public void RestoreExtraFilesFromSnapshot(
+        ISaveStorageService sourceStorage,
+        string saveId)
+    {
+        ArgumentNullException.ThrowIfNull(sourceStorage);
+        if (sourceStorage is not DefaultSaveStorageService source)
+            throw new InvalidOperationException(
+                "DefaultSaveStorageService can only restore extra files from another " +
+                "DefaultSaveStorageService. Custom storage services must be paired with a " +
+                "custom destination implementation that understands their snapshot layout.");
+
+        SaveStorageFacade.CopyDirectoryFromSnapshot(
+            source.Handle,
+            saveId,
+            SavePathLayout.ExtraDirectoryName,
+            _handle);
     }
 }

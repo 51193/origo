@@ -133,6 +133,6 @@ internal static class TestRuntimeHelper
         var ctx = new SndContext(new SndContextParameters(
             runtime, io, metaAccess, pathResolver, "root", "initial", "entry.json"));
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
     }
 }

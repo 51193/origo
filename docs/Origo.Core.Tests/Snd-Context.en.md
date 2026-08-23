@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -40,11 +40,12 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `SetContinueTarget_MakesHasContinueDataTrue` | After setting Continue target, HasContinueData returns true | ISndLifecycleOperations |
 | `RequestContinueGame_ReturnsTrueAndLoadsWhenContinueSet` | Continue correctly loads the save | ISndLifecycleOperations |
 | `RequestLoadInitialSave_LoadsFromInitialRoot` | Loads initial save from the initial path | ISndLifecycleOperations |
+| `RequestLoadInitialSave_RestoresExtraFilesFromInitialRoot` | Initial-save extra/ files are restored from the initial storage root into runtime current/extra | ISndArchiveFileAccess |
 | `RequestSwitchForegroundLevel_SwitchesLevel` | After level switch, ForegroundSession.LevelId is correct | ISndLifecycleOperations |
 | `CloneTemplate_ClonesAndOverridesName` | Clones a template and overrides the name | ISndTemplateAccess |
 | `CloneTemplate_WithoutOverrideName_KeepsOriginal` | Keeps the original name when not overriding | ISndTemplateAccess |
 | `TrySubmitConsoleCommand_ReturnsTrueWhenConsoleInputExists` | Command submission succeeds when console input exists | ISndConsoleAccess |
-| `ProcessConsolePending_ProcessesQueuedCommands` | ProcessConsolePending processes queued commands | ISndConsoleAccess |
+| `DriveFrame_ProcessesQueuedConsoleCommands` | Submitted commands are processed at frame end by `IOrigoFrameDriver.DriveFrame` | ISndConsoleAccess / IOrigoFrameDriver |
 | `SubscribeConsoleOutput_ReturnsPositiveId` | Subscribing returns a positive ID | ISndConsoleAccess |
 | `UnsubscribeConsoleOutput_RemovesSubscription` | After unsubscribing, no more messages are received | ISndConsoleAccess |
 | `EnqueueBusinessDeferred_ExecutesOnFlush` | Deferred action executes on Flush | ISndDeferredActions |
@@ -66,11 +67,15 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `TrySubmitConsoleCommand_ReturnsFalseWhenNoConsoleInput` | No console input source | Returns false |
 | `SubscribeConsoleOutput_ThrowsWhenNoChannel` | Subscribing when no output channel exists | InvalidOperationException |
 | `RequestContinueGame_ReturnsFalseWhenNoContinue` | Continue target not set | Returns false |
+| `HasContinueData_FalseWhenTargetSaveDoesNotExist` | Continue target points to a missing save slot | Returns false (the “save exists” contract must consult storage enumeration) |
+| `RequestContinueGame_ReturnsFalseWhenTargetSaveDoesNotExist` | Continue target points to a missing save slot | Returns false and does not enqueue a load request |
 | `Constructor_ThrowsOnNullRuntime` | null Runtime | ArgumentNullException |
 | `Constructor_ThrowsOnNullFileSystem` | null FileSystem | ArgumentNullException |
 | `Constructor_ThrowsOnEmptySaveRootPath` | Blank SaveRootPath | ArgumentException |
 | `Constructor_ThrowsOnEmptyInitialSaveRootPath` | Blank InitialSaveRootPath | ArgumentException |
 | `Constructor_ThrowsOnEmptyEntryConfigPath` | Blank EntryConfigPath | ArgumentException |
+| `Constructor_ThrowsOnBlankInitialLevelId` | Blank InitialLevelId | ArgumentException |
+| `Constructor_ThrowsOnInvalidInitialLevelId` | InitialLevelId contains a path separator | ArgumentException |
 
 ### Boundary Paths
 
@@ -93,6 +98,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestLoadInitialSave_IsTrackedUntilFlushed` | RequestLoadInitialSave queues and the pending count is 1 (tracking semantics only) | ISndDeferredActions |
 | `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
+| `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | An earlier persistence request fails and a later request in the same batch is discarded by fail-fast | Pending count returns to 0 (discarded requests run their cleanup callbacks) | ISndDeferredActions |
 
 ## SndTemplateResolverTests Details
 

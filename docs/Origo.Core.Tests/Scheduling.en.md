@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Scheduling -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Scheduling Tests
 
@@ -36,6 +36,8 @@ recursive depth protection (max re-entrant drain depth), concurrent enqueue safe
 |-------------|----------------|-------------------|
 | `ConcurrentActionQueue_Enqueue_ThrowsOnNull` | Enqueue(null) | ArgumentNullException |
 | `ConcurrentActionQueue_Constructor_ThrowsOnNullLogger` | new ConcurrentActionQueue(null) | ArgumentNullException |
+| `ConcurrentActionQueue_ExecuteAll_DiscardCallbackThrows_RunsRemainingCallbacksAndAggregates` | A discarded action's cleanup callback throws | Remaining cleanup callbacks still run; AggregateException contains both the original action exception and the cleanup exception |
+| `ConcurrentActionQueue_Clear_DiscardCallbackThrows_RunsRemainingCallbacksAndRethrowsFirst` | A cleanup callback throws during Clear | Remaining cleanup callbacks still run; the first cleanup exception propagates unchanged |
 
 ### Boundary Path
 
@@ -64,7 +66,7 @@ recursive depth protection (max re-entrant drain depth), concurrent enqueue safe
 |-------------|-------------------|-------------------|
 | `ExecuteAll_EmptyQueue_IsIdempotent` | 3 consecutive ExecuteAll calls | Each returns 0 |
 | `ExecuteAll_AfterClear_DoesNotExecuteClearedActions` | ExecuteAll after Clear | Returns 0, action not executed |
-| `ExecuteAll_ExactlyMaxDepthBatches_ThenQueueEmpty_DoesNotThrow` | Exactly 100 chained re-enqueue batches then queue empty (regression) | Does not throw, all 100 actions executed |
+| `ExecuteAll_ExactlyMaxDepthBatches_ThenQueueEmpty_DoesNotThrow` | Exactly 100 chained re-enqueue batches then queue empty (re-entrancy boundary) | Does not throw, all 100 actions executed |
 
 ## Test Helper Strategies
 

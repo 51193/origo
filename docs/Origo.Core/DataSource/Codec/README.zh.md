@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/Codec/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Codec
 
@@ -30,7 +30,8 @@
 - 解析 `key: value` 格式的行文件（`#` 开头的行视为注释，跳过）
 - 所有值均为字符串类型
 - 不支持延迟加载（`.map` 文件通常较小且扁平，无需延迟）
-- 编码时按键的字典序输出，null 值被跳过
+- 编码时按键的字典序输出，null 值被跳过；仅接受 Text 子节点——Number/Bool 等会在解码时静默漂移成字符串，因此编码直接拒绝
+- **编码往返守卫**：key 为空、首尾空白、以 `#` 开头或含 `:`/换行时拒绝；value 含换行或首尾空白时拒绝。严格解码器会 trim 两侧字段、把首个冒号当分隔符、把 `#` 开头当注释，这些输入无法无损往返
 - **Strict 模式（`strict: true`）**：格式错误（无冒号、空 key）时立即抛出 `FormatException`，Gateway 将其包装为包含文件路径信息的 `InvalidOperationException`（fail-fast）；重复键不抛异常，仅记 Warning 日志且后者覆盖前者。**空 value（`key:` 行）被接受为空字符串**——`.map` 编码对空字符串值会输出 `key: ` 行，允许空 value 保证编码往返一致性；空 key 始终拒绝
 
 ### RawStringDataSourceCodec

@@ -89,4 +89,26 @@ public interface ISaveStorageService
     ///     extra/ directory does not exist in the snapshot.
     /// </summary>
     void RestoreExtraFilesFromSnapshot(string saveId);
+
+    /// <summary>
+    ///     Copies the extra/ subdirectory from the specified save snapshot of
+    ///     <paramref name="sourceStorage" /> into this service's current/
+    ///     directory. Used when payload data and extra files are loaded from
+    ///     different storage roots (for example, an initial save stored under
+    ///     a read-only <c>res://</c> root and restored into the writable
+    ///     runtime save root). Silently skipped when the source snapshot has
+    ///     no extra/ directory.
+    /// </summary>
+    /// <param name="sourceStorage">The storage service that owns the source save snapshot.</param>
+    /// <param name="saveId">The save slot ID in <paramref name="sourceStorage" />.</param>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="sourceStorage" /> is null.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the destination implementation cannot interpret the
+    ///     source service's snapshot layout. The default implementation
+    ///     supports only a default source; custom source/destination pairs
+    ///     must be implemented as a pair.
+    /// </exception>
+    void RestoreExtraFilesFromSnapshot(ISaveStorageService sourceStorage, string saveId);
 }

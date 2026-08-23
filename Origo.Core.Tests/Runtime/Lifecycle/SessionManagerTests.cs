@@ -235,7 +235,7 @@ public class SessionManagerTests
             "{\"machines\":[]}");
 
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var destroyedBg = ctx.Runtime.SessionManager.TryGet("bg");
         Assert.Null(destroyedBg);
@@ -259,11 +259,11 @@ public class SessionManagerTests
             "{\"machines\":[]}");
 
         ctx.Save.RequestSaveGameAuto();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Runtime.SessionManager.DestroySession("bg");
         ctx.Save.RequestSwitchForegroundLevel("game");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var fg = ctx.Runtime.SessionManager.ForegroundSession;
         Assert.NotNull(fg);
@@ -286,7 +286,7 @@ public class SessionManagerTests
         });
 
         ctx.Save.RequestSaveGame("test_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var payload = ctx.StorageService.ReadSavePayloadFromSnapshot("test_save", "default");
         Assert.True(payload.Levels.ContainsKey("default"));

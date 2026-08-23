@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Snd
 
@@ -27,7 +27,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | `ISndContext.cs` | SND context unified facade interface: exposes all capabilities through 10 companion properties ([see Abstractions/Snd](../Abstractions/Snd/README.en.md)) |
 | `SndContext.cs` | Default ISndContext implementation (global/progress-level). `Bootstrap()` method executes the complete startup flow: strategy discovery → alias/template loading → entry save loading. Provides `ISndFileAccess` through the companion `SndContextFileAccess` (file read/write delegated to `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`) |
 | `SndContextParameters.cs` | SndContext construction parameter object. Contains startup configuration properties such as `AutoDiscoverStrategies`, `DiscoverySkipPrefixes`, `SceneAliasMapPath`, `SndTemplateMapPath`, `InitialLevelId` |
-| `SndWorld.cs` | SND world: strategy pool + type mapping + converter registry + templates/aliases |
+| `SndWorld.cs` | SND world: strategy pool + type mapping + converter registry + templates/aliases. `LoadSceneAliases` / `LoadTemplates` are `internal`, invoked by `SndContext.Bootstrap` or the `ISndTemplateAccess` companion (`ctx.Template.LoadTemplates` / `ctx.Template.LoadSceneAliases`) |
 | `SndDefaults.cs` | `internal` — SND system default value constants. Defines `InitialSaveId` ("000"), `InitialLevelId` ("default"), `MainMenuLevelId` ("main_menu"), used by Core's internal persistence flow and startup orchestration. |
 | `SndMappings.cs` | Scene alias resolution + template registration and parsing |
 | `SndTemplateResolver.cs` | Template resolver: supports both JSON array and .map shorthand template formats |
@@ -97,14 +97,14 @@ Observer binding topology is serialized with entities through `StrategyMetaData.
 `SndContext.Bootstrap()` executes all Core initialization operations in a fixed order:
 
 1. **Converter registration**: if `SndContextParameters.ConfigureConverters` is set, it is invoked to register custom `DataSourceConverter`s
-2. **Strategy discovery**: If `SndContextParameters.AutoDiscoverStrategies` is true, scans assemblies for `[StrategyIndex]` annotated types via `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, using `DiscoverySkipPrefixes` to filter adapter-layer assemblies
-3. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls `SndWorld.LoadSceneAliases()`
-4. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls `SndWorld.LoadTemplates()`
+2. **Strategy discovery**: If `SndContextParameters.AutoDiscoverStrategies` is true, scans assemblies for `[StrategyIndex]` annotated types via the `internal` `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, using `DiscoverySkipPrefixes` to filter adapter-layer assemblies
+3. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls the `internal` `SndWorld.LoadSceneAliases()`
+4. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls the `internal` `SndWorld.LoadTemplates()`
 5. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`
 
 The adapter layer only passes configuration via `SndContextParameters` and does not need to know the execution order or internal implementation of the above steps.
 
-> **Bootstrap guard**: `Bootstrap()` may be executed only once (a second call throws `InvalidOperationException`), and it validates that the adapter scene host is ready before enqueuing the entry save load — if the host is an `IObserverTopologyHost` whose observer topology has no bound context (e.g. `Bootstrap` called before `SndManager.BindContext`), it throws immediately with a clear message instead of failing later at flush time. The entry save load is deferred (system deferred queue), so failing early prevents a misordered caller from getting a confusing late error.
+> **Bootstrap guard**: `Bootstrap()` may be executed only once (a second call throws `InvalidOperationException`), and it validates that the adapter scene host is ready before enqueuing the entry save load — if the host is an `IObserverTopologyHost` whose observer topology has no bound context (e.g. `Bootstrap` called before `SndManager.BindContext`), it throws immediately with a clear message instead of failing later at flush time. The entry save load is deferred (system deferred queue), so failing early prevents a misordered caller from getting a confusing late error. The single-use guard is committed before any bootstrap work starts, so **a failed first attempt also prevents retry on the same SndContext instance**; callers should construct a new context.
 
 ### Why Startup Orchestration Is Centralized in SndContext.Bootstrap()
 

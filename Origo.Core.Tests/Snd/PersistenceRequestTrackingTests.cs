@@ -1,3 +1,4 @@
+using System;
 using Origo.Core.Snd;
 using Xunit;
 
@@ -30,12 +31,12 @@ public class PersistenceRequestTrackingTests
         var fs = new TestMemoryFileSystem();
         var ctx = CreateContext(fs);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestSaveGame("tracked_slot");
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
@@ -45,14 +46,14 @@ public class PersistenceRequestTrackingTests
         var fs = new TestMemoryFileSystem();
         var ctx = CreateContext(fs);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         ctx.Save.RequestSaveGame("continue_slot");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(ctx.Lifecycle.RequestContinueGame());
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
@@ -78,7 +79,7 @@ public class PersistenceRequestTrackingTests
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 
@@ -88,12 +89,33 @@ public class PersistenceRequestTrackingTests
         var fs = new TestMemoryFileSystem();
         var ctx = CreateContext(fs);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestSwitchForegroundLevel("other_level");
         Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
 
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+    }
+
+    [Fact]
+    public void FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero()
+    {
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateContext(fs);
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        ctx.FlushFrame();
+
+        // The first tracked request fails while loading the initial save;
+        // fail-fast queue semantics discard the second tracked request in the
+        // same system-deferred batch. The discarded request is no longer
+        // pending and must release its persistence-request count.
+        ctx.Lifecycle.RequestLoadInitialSave();
+        ctx.Save.RequestSaveGame("doomed");
+        Assert.Equal(2, ctx.Deferred.GetPendingPersistenceRequestCount());
+
+        Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
 }

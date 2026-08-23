@@ -32,7 +32,7 @@ public class DisposeSemanticsTestsProgressRun
 
         var progressRun = ctx.EnsureProgressRun();
         ctx.Save.RequestSaveGame("temp");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/current/progress.json"));
 
@@ -147,6 +147,24 @@ public class DisposeSemanticsTestsProgressRun
         Assert.False(found);
         var second = Record.Exception(() => progressRun.Dispose());
         Assert.Null(second);
+    }
+
+    [Fact]
+    public void ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted()
+    {
+        var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
+
+        var progressRun = ctx.EnsureProgressRun();
+        fs.SeedFile("root/current/progress.json", "{}");
+
+        var fg = (SessionRun)progressRun.SessionManager.ForegroundSession!;
+        fg.Disposing += () => throw new InvalidOperationException("subscriber failure");
+
+        Assert.Throws<InvalidOperationException>(() => progressRun.Dispose());
+
+        // The session teardown failure must not skip directory cleanup;
+        // every Dispose step runs independently.
+        Assert.False(fs.DirectoryExists("root/current"));
     }
 
     [Fact]

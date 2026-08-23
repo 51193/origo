@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 运行时核心 测试
 
@@ -61,6 +61,7 @@
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `StubSndSceneHost_RequestKillEntity_Missing_Throws` | RequestKillEntity 不存在的实体 | InvalidOperationException |
+| `Spawn_DuplicateEntityName_Throws` | 在会话中生成同名实体 | InvalidOperationException（含 "already exists"），且只保留第一个实体 |
 | `StubSndSceneHost_RequestKillEntity_AlreadyPending_Throws` | 对已 IsPendingKill 的实体重复 RequestKillEntity | InvalidOperationException |
 | `StubSndSceneHost_DeadByName_MissingEntity_Throws` | RemoveEntity 不存在的实体 | InvalidOperationException |
 

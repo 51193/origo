@@ -216,35 +216,52 @@ internal static class SaveStorageFacade
     public static void CopyDirectoryFromSnapshot(
         SaveFileHandle handle,
         string saveId,
-        string relativeDirName)
+        string relativeDirName) =>
+        CopyDirectoryFromSnapshot(handle, saveId, relativeDirName, handle);
+
+    /// <summary>
+    ///     Copy a subdirectory from a snapshot owned by
+    ///     <paramref name="sourceHandle" /> into the current/ directory owned
+    ///     by <paramref name="destinationHandle" />. The two handles may use
+    ///     different roots and path policies; source-relative paths are
+    ///     computed with the source handle and destination paths with the
+    ///     destination handle. Silently returns when the source directory
+    ///     does not exist.
+    /// </summary>
+    public static void CopyDirectoryFromSnapshot(
+        SaveFileHandle sourceHandle,
+        string saveId,
+        string relativeDirName,
+        SaveFileHandle destinationHandle)
     {
-        ArgumentNullException.ThrowIfNull(handle);
+        ArgumentNullException.ThrowIfNull(sourceHandle);
+        ArgumentNullException.ThrowIfNull(destinationHandle);
         if (string.IsNullOrWhiteSpace(saveId))
             throw new ArgumentException("Save id cannot be null or whitespace.", nameof(saveId));
         if (string.IsNullOrWhiteSpace(relativeDirName))
             throw new ArgumentException("Relative directory name cannot be null or whitespace.", nameof(relativeDirName));
 
-        var saveRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        var saveRel = sourceHandle.PathPolicy.GetSaveDirectory(saveId);
         var srcRel = SavePathLayout.Combine(saveRel, relativeDirName);
-        var srcAbs = handle.GetAbsolutePath(srcRel);
+        var srcAbs = sourceHandle.GetAbsolutePath(srcRel);
 
-        if (!handle.MetaAccess.DirectoryExists(srcAbs))
+        if (!sourceHandle.MetaAccess.DirectoryExists(srcAbs))
             return;
 
-        var currentRel = handle.PathPolicy.GetCurrentDirectory();
+        var currentRel = destinationHandle.PathPolicy.GetCurrentDirectory();
         var destRel = SavePathLayout.Combine(currentRel, relativeDirName);
-        var destAbs = handle.GetAbsolutePath(destRel);
+        var destAbs = destinationHandle.GetAbsolutePath(destRel);
 
-        handle.MetaAccess.CreateDirectory(destAbs);
+        destinationHandle.MetaAccess.CreateDirectory(destAbs);
 
-        foreach (var srcFileAbs in handle.MetaAccess.EnumerateFiles(srcAbs, "*", true))
+        foreach (var srcFileAbs in sourceHandle.MetaAccess.EnumerateFiles(srcAbs, "*", true))
         {
-            var relFromRoot = handle.GetRelativePath(srcFileAbs);
+            var relFromRoot = sourceHandle.GetRelativePath(srcFileAbs);
             var relFromSrc = SavePathLayout.StripPathPrefix(relFromRoot, srcRel);
-            var destFileRel = $"{destRel}/{relFromSrc}";
-            var destFileAbs = handle.GetAbsolutePath(destFileRel);
-            handle.EnsureParentDirectory(destFileRel);
-            handle.MetaAccess.Copy(srcFileAbs, destFileAbs, true);
+            var destFileRel = SavePathLayout.Combine(destRel, relFromSrc);
+            var destFileAbs = destinationHandle.GetAbsolutePath(destFileRel);
+            destinationHandle.EnsureParentDirectory(destFileRel);
+            destinationHandle.MetaAccess.Copy(srcFileAbs, destFileAbs, true);
         }
     }
 }

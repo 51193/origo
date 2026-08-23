@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -120,7 +120,7 @@ This produces two kinds of derived files (commit them together):
 3. **Design decision change** → update the design decisions section
 4. **New config key/command** → update relevant README and usage docs
 5. **Inter-module dependency change** → update module README links
-6. **AGENTS.md meta-instruction changes** → synchronize references to new rules in this document (e.g., AGENTS.md §1.7 comment language requirements, §1.8 git history awareness, §1.9 dependency update grouping — version-coupled package families must be bumped together, never independently, §3 red-first rule — bug fixes require a red regression test that reproduces the bug through a real reachable path, and the file's git history must be consulted before fixing or extending it)
+6. **AGENTS.md meta-instruction changes** → synchronize references to new rules in this document (e.g., AGENTS.md §1.7 comment language requirements and the vendored-source exemption, §1.8 git history awareness, §1.9 dependency update grouping — version-coupled package families must be bumped together, never independently, §1.10 environment bootstrap — install the SDK requested by global.json and never downgrade the request to match the machine, §3 red-first rule — bug fixes require a red regression test that reproduces the bug through a real reachable path, and the file's git history must be consulted before fixing or extending it)
 
 ### Situations NOT Requiring Sync
 
@@ -139,7 +139,7 @@ After a code PR is merged, check:
 
 ## Git Commit Message Format
 
-All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable.
+All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. PR commit messages are enforced by `scripts/lint-commits.sh` and `.github/workflows/commit-lint.yml`: type, 72-character subject limit, and no trailing period.
 
 ### Basic Format
 
@@ -258,7 +258,17 @@ docs/                            # Documentation root (inside the origo reposito
 
 > Top-level entry point [AGENTS.md](../AGENTS.md) lives at the repo root, is auto-injected into every session, and links to this file.
 >
-> **After English documentation is enabled**, each `.zh.md` will have a corresponding `.en.md` file alongside it, and the `README.md` navigation hub will automatically list entries for both languages.
+> Every `.zh.md` content file has a corresponding `.en.md` file alongside it, and the `README.md` navigation hub automatically lists entries for both languages.
+
+## Environment Bootstrap
+
+Before running any `dotnet` command, configure the environment to match the repository instead of editing `global.json` to match the machine (full rules in [AGENTS.md §1.10](../AGENTS.md#110-environment-bootstrap-install-the-required-sdk-never-downgrade-the-request)):
+
+1. `global.json` is the single authority for the required .NET SDK feature band; never downgrade the request.
+2. Run `bash scripts/install-dotnet.sh`, which installs the exact version with the official `dotnet-install.sh`.
+3. Prefer the default install root (`$HOME/.dotnet`) so the login shell resolves plain `dotnet` without per-session `PATH` or `DOTNET_ROOT` exports.
+4. When the default root is read-only, the script falls back to the repository-local `.dotnet/`; use the `./dotnet` wrapper from the repo root. Repository scripts source `scripts/dotnet-env.sh` to select the local or system SDK automatically.
+5. The Godot engine binary is downloaded by `scripts/download-godot.sh` according to the `Godot.NET.Sdk` version in `Origo.GodotAdapter.csproj` and cached under `.godot_binary/`.
 
 ## Manual Version
 

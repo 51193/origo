@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Meta/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Meta
 
@@ -24,7 +24,7 @@
 ### 元数据贡献流程
 
 1. **注册贡献者**：实现 `ISaveMetaContributor`，通过 `ISndSaveOperations.RegisterSaveMetaContributor()` 注册（支持接口实例和委托两种重载）
-2. **构建上下文**：存档时创建 `SaveMetaBuildContext`（含 saveId、levelId、黑板、只读场景访问 `ISndSceneReadAccess`）
+2. **构建上下文**：存档时创建 `SaveMetaBuildContext`（含 saveId、levelId、黑板、只读场景访问 `ISndSceneReadAccess`）；Progress/Session 黑板包装为只读适配器，任何 `SetValue`/`Clear`/`DeserializeAll` 调用立即抛 `InvalidOperationException`
 3. **收集**：`SaveMetaMerger.Merge()` 按注册顺序调用每个贡献者的 `Contribute()`，同名键后者覆盖前者
 4. **持久化**：最终字典通过 `BuildStringMapNode()` 转为 JSON DataSourceNode 树，由 `SavePayloadWriter` 写入 `meta.map`
 

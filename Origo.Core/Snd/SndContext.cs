@@ -43,6 +43,7 @@ public sealed class SndContext : ISndContext
     internal int _pendingPersistenceRequests;
     internal ProgressRun? _progressRun;
     private bool _workflowInProgress;
+    private int _beforeSaveSessionMutationGuardDepth;
 
     /// <summary>
     ///     Constructs the SND context and initializes all companion objects,
@@ -66,6 +67,8 @@ public sealed class SndContext : ISndContext
         SaveRootPath = parameters.SaveRootPath;
         InitialSaveRootPath = parameters.InitialSaveRootPath;
         EntryConfigPath = parameters.EntryConfigPath;
+        SavePathLayout.ValidateToken(
+            parameters.InitialLevelId, nameof(parameters.InitialLevelId), "initial level id");
 
         SavePathPolicy = parameters.SavePathPolicy ?? new DefaultSavePathPolicy();
         StorageService =
@@ -106,7 +109,9 @@ public sealed class SndContext : ISndContext
     /// <exception cref="InvalidOperationException">
     ///     Thrown when Bootstrap is called more than once, or when the adapter
     ///     scene host is not fully wired (its observer topology context is not
-    ///     bound) before the entry workflow is enqueued.
+    ///     bound) before the entry workflow is enqueued. The single-use guard
+    ///     is committed before bootstrap work starts, so a failed first attempt
+    ///     also prevents a retry on the same context instance.
     /// </exception>
     public void Bootstrap()
     {
@@ -114,8 +119,8 @@ public sealed class SndContext : ISndContext
             throw new InvalidOperationException(
                 "SndContext.Bootstrap has already been executed. Bootstrap must be called exactly once.");
 
-        EnsureSceneHostReady();
         _bootstrapped = true;
+        EnsureSceneHostReady();
 
         _parameters.ConfigureConverters?.Invoke(Runtime.SndWorld.ConverterRegistry);
 
@@ -224,12 +229,41 @@ public sealed class SndContext : ISndContext
     internal void EndWorkflow() => _workflowInProgress = false;
 
     /// <summary>
+    ///     True while BeforeSave hooks are executing. Session-set mutation
+    ///     (create/destroy session) is forbidden during that window because
+    ///     SaveCoordinator already snapshotted the topology and session list
+    ///     that will be serialized.
+    /// </summary>
+    internal bool IsSessionSetMutationForbidden => _beforeSaveSessionMutationGuardDepth > 0;
+
+    internal void EnterBeforeSaveSessionMutationGuard() => _beforeSaveSessionMutationGuardDepth++;
+
+    internal void ExitBeforeSaveSessionMutationGuard()
+    {
+        if (_beforeSaveSessionMutationGuardDepth == 0)
+            throw new InvalidOperationException(
+                "BeforeSave session-mutation guard is not active.");
+        _beforeSaveSessionMutationGuardDepth--;
+    }
+
+    /// <summary>
     ///     Dispose the current ProgressRun and clear the reference.
     ///     Called at the start of every lifecycle workflow.
     /// </summary>
     internal void ShutdownCurrentProgressAndScene()
     {
-        _progressRun?.Dispose();
+        try
+        {
+            _progressRun?.Dispose();
+        }
+        finally
+        {
+            // Strategy-pool diagnostics are part of workflow teardown, not a
+            // test-only helper: a workflow that leaks strategy references must
+            // leave an observable warning even when it runs in production.
+            Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        }
+
         _progressRun = null;
     }
 
@@ -245,7 +279,7 @@ public sealed class SndContext : ISndContext
     {
         ArgumentNullException.ThrowIfNull(action);
         Interlocked.Increment(ref _pendingPersistenceRequests);
-        EnqueueSystemDeferred(() =>
+        Runtime.EnqueueSystemDeferred(() =>
         {
             try
             {
@@ -255,7 +289,7 @@ public sealed class SndContext : ISndContext
             {
                 Interlocked.Decrement(ref _pendingPersistenceRequests);
             }
-        });
+        }, onDiscard: () => Interlocked.Decrement(ref _pendingPersistenceRequests));
     }
 
     /// <summary>
@@ -309,7 +343,8 @@ public sealed class SndContext : ISndContext
 
             StorageService.DeleteCurrentDirectory();
             StorageService.WriteSavePayloadToCurrent(payload);
-            StorageService.RestoreExtraFilesFromSnapshot(SndDefaults.InitialSaveId);
+            StorageService.RestoreExtraFilesFromSnapshot(
+                InitialStorageService, SndDefaults.InitialSaveId);
 
             var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
             SetProgressRun(progressRun);

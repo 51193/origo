@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Scheduling/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Scheduling
 
@@ -27,7 +27,7 @@ Thin wrapper adapting `ConcurrentActionQueue` to `IScheduler`:
 Core implementation using `List<Action>` + `lock`:
 - **Batch drain**: Lock → snapshot all actions → clear → release lock → invoke
 - **Reentrancy protection**: Actions enqueuing new actions continue draining. `MaxReentrantDrainDepth=100`
-- **Exception handling**: Single action failure → log Error → rethrow (let-it-crash semantics); **the remaining actions in the same batch are dropped** (actions newly enqueued by earlier actions stay queued and run on the next `Tick`). When the business queue throws in `OrigoRuntime.FlushEndOfFrameDeferred`, that frame's `KillPendingAllSessions` and system queue execution are postponed to the next frame (the cascading effect of fail-fast)
+- **Exception handling**: Single action failure → log Error → rethrow (let-it-crash semantics); **the remaining actions in the same batch are dropped** (actions newly enqueued by earlier actions stay queued and run on the next `Tick`). Dropped actions registered with an `onDiscard` cleanup callback run every callback before the rethrow; if a cleanup callback itself throws, the remaining callbacks still run and the failures are aggregated with the original action exception (resource accounting such as the persistence-request counter does not leak). When the business queue throws in `OrigoRuntime.FlushEndOfFrameDeferred`, that frame's `KillPendingAllSessions` and system queue execution are postponed to the next frame (the cascading effect of fail-fast)
 
 ## Design Decisions
 
@@ -39,6 +39,8 @@ The scheduler is used only inside the Runtime layer. External code uses the sche
 
 ### Why exceptions are rethrown rather than swallowed
 Actions in the deferred queue are part of the frame model. If one action fails, the system should crash rather than silently skip, so business logic does not keep running in an unknown corrupted state. Exception details are logged, then thrown.
+
+- **Entity frame processing stays serial (deferred direction)**: `ConcurrentActionQueue` thread safety only covers deferred-action enqueue/dequeue; in-entity strategies are priority-ordered, and frame processing as a whole still runs serially under the single-threaded model. Entity-level concurrency has been discussed as an alternative direction and is deferred because there is no performance bottleneck today. See [Extension Directions and Deferred Designs](../../usage/extension-directions.en.md) for the full trade-off
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

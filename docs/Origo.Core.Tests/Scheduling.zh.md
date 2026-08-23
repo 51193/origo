@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Scheduling -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 调度 测试
 
@@ -36,6 +36,8 @@
 |---------|-----------|---------|
 | `ConcurrentActionQueue_Enqueue_ThrowsOnNull` | Enqueue(null) | ArgumentNullException |
 | `ConcurrentActionQueue_Constructor_ThrowsOnNullLogger` | new ConcurrentActionQueue(null) | ArgumentNullException |
+| `ConcurrentActionQueue_ExecuteAll_DiscardCallbackThrows_RunsRemainingCallbacksAndAggregates` | 被丢弃动作的清理回调抛异常 | 其余清理回调仍执行；AggregateException 同时包含原始动作异常与清理异常 |
+| `ConcurrentActionQueue_Clear_DiscardCallbackThrows_RunsRemainingCallbacksAndRethrowsFirst` | Clear 时清理回调抛异常 | 其余清理回调仍执行；首个清理异常原样传播 |
 
 ### 边界路径
 

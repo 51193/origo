@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Scheduling/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scheduling
 
@@ -30,7 +30,7 @@
 核心队列实现，使用 `List<Action>` + `lock` 确保线程安全：
 - **批次 drain**：每轮加锁取出当前所有动作快照，清空队列，释放锁后逐个 invoke
 - **重入保护**：若动作内部又 enqueue 新动作，下一次 while 循环继续 drain。`MaxReentrantDrainDepth=100` 防止无限循环
-- **异常处理**：单个动作异常时记录 Error 日志后重新抛出（let-it-crash 语义），**同批次剩余动作随之丢弃**（前序动作新入队的动作保留在队列中，下一次 `Tick` 照常执行）；`OrigoRuntime.FlushEndOfFrameDeferred` 中业务队列抛异常时，当帧的 `KillPendingAllSessions` 与系统队列执行被顺延到下一帧（fail-fast 的级联效应）
+- **异常处理**：单个动作异常时记录 Error 日志后重新抛出（let-it-crash 语义），**同批次剩余动作随之丢弃**（前序动作新入队的动作保留在队列中，下一次 `Tick` 照常执行）；被丢弃动作若注册了 `onDiscard` 清理回调，回调会在 rethrow 前全部执行；若清理回调自身抛异常，其余回调仍执行，失败与原始动作异常以 `AggregateException` 一并暴露（持久化请求计数等资源会计不因丢弃或清理失败而泄漏）。`OrigoRuntime.FlushEndOfFrameDeferred` 中业务队列抛异常时，当帧的 `KillPendingAllSessions` 与系统队列执行被顺延到下一帧（fail-fast 的级联效应）
 
 ## 设计决策
 
@@ -45,6 +45,8 @@
 ### 为什么异常时不吞掉而是重新抛出
 
 延迟队列中的动作是帧模型的一部分。若一个动作失败，系统应崩溃而非静默跳过，避免业务逻辑在未知损坏状态下继续执行。日志记录异常详情，然后 throw。
+
+- **实体帧处理保持串行（暂缓方向）**：`ConcurrentActionQueue` 的线程安全只覆盖延迟动作的入队/出队；实体内策略按优先级排序，帧处理整体仍按单线程模型串行执行。实体级并发已作为备选方向讨论，因当前无性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../usage/extension-directions.zh.md)
 
 ---
 [↑ 回到 Origo.Core](../README.zh.md)

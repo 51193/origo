@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 实体 测试
 
@@ -23,7 +23,7 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | `SndEntityLifecycleBatchTests.cs` | 批量生命周期编排：全部钩子阶段、跨实体查找、优先级、SndEntityFactory/Spawn、ProcessAll 帧处理 |
 | `SndEntityOwningSessionTests.cs` | 实体 OwningSession 绑定与解除 |
 | `SndDataManagerFailureTests.cs` | SndDataManager.SetData 转换器抛异常时不残留字典条目（防泄漏进存档） |
-| `SndEntityRecoveryRollbackTests.cs` | 回归：RecoverForLifecycle 跨阶段回滚（active 阶段失败释放已获取的被动策略；node 阶段失败释放已创建节点且不释放未获取索引） |
+| `SndEntityRecoveryRollbackTests.cs` | 验证 RecoverForLifecycle 跨阶段回滚（active 阶段失败释放已获取的被动策略；node 阶段失败释放已创建节点且不释放未获取索引） |
 | `SndNodeManagerTests.cs` | SndNodeManager 守卫契约：SetSceneAliasResolver null 参数快速失败 |
 
 ## MemorySndEntityTests 测试详情

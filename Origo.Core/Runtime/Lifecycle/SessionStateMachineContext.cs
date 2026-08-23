@@ -30,17 +30,21 @@ internal sealed class SessionStateMachineContext : IStateMachineContext
         SceneAccess = sceneAccess;
     }
 
+    /// <inheritdoc/>
     public IBlackboard SystemBlackboard => _global.SystemBlackboard;
 
+    /// <inheritdoc/>
     public IBlackboard? ProgressBlackboard => _global.ProgressBlackboard;
 
+    /// <inheritdoc/>
     public IBlackboard? SessionBlackboard => _sessionBlackboard;
 
+    /// <inheritdoc/>
     public ISndSceneReadAccess SceneAccess { get; }
 
+    /// <inheritdoc/>
     public void EnqueueBusinessDeferred(Action action) => _global.EnqueueBusinessDeferred(action);
 
-    public void FlushDeferredActionsForCurrentFrame() => _global.FlushDeferredActionsForCurrentFrame();
-
+    /// <inheritdoc/>
     public int GetPendingPersistenceRequestCount() => _global.GetPendingPersistenceRequestCount();
 }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene
 
@@ -81,6 +81,10 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 ### 为什么 spawn 逻辑集中在 SndEntityFactory
 
 `SndEntityFactory.Spawn/SpawnMany` 是"创建实体 + 触发 AfterSpawn"的唯一权威实现。`ISessionRun.Spawn/SpawnMany` 委托给它，适配层与自动初始化器也复用它。单一来源保证调整 spawn 行为只需改一处，避免多套 spawn 逻辑产生分歧。`SndEntityFactory.SpawnMany` 采用两阶段（全部创建后再统一触发钩子），使 AfterSpawn 钩子可见全部兄弟实体。**失败的回滚**：AfterSpawn 抛异常时实体已创建（策略/节点已获取），`Spawn` 立即回滚（`host.RemoveEntity` + `TeardownObserverBindings` + `ReleaseStrategiesOnly` + `TeardownOnly`）后原样传播异常，杜绝半生成实体与策略引用泄漏；回滚四步**各自独立保护**——任一步抛异常（如 `TeardownObserverBindings` 触发用户 `OnUnmounted` 钩子）不会遮蔽原始 AfterSpawn 异常，也不会跳过剩余回滚步骤（回滚步骤为尽力而为：静态工厂无日志通道，步骤失败不被记录，以原始异常为准）；`SpawnMany` 对"钩子已成功触发的实体"保留、对"未触发钩子的实体"（含抛异常的当前实体）一并回滚；若**创建阶段**本身失败（宿主拒绝某个 meta），已创建的实体同样全部回滚——创建阶段完成的实体从未触发 AfterSpawn，不允许以"已注册但从未 spawn"的幽灵实体残留在宿主中。
+
+### 为什么实体名在创建前校验唯一
+
+查找、观察者拓扑、存档恢复与 `IsSameEntityAs` 都按实体名键控；重名会让这些路径产生歧义甚至把两个实体误判为同一实体。`SndEntityFactory` 与 `SndSceneSerializer` 在调用宿主创建/恢复前统一校验（同批次互异 + 与宿主现存实体互异），把歧义挡在容器变更之前。
 
 ### 为什么 FullMemorySndSceneHost 延迟绑定 World/Context
 

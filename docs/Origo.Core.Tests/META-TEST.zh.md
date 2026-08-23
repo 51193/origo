@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 测试文档维护元指令
 
@@ -110,7 +110,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
    - `ProgressRun.LoadAndMountForeground(levelId)` 以**任意关卡**作为初始前台挂载的测试基础设施——生产中初始挂载只经入口/存档，无任意关卡初始挂载的公共 API。
    - `ProgressRun.BuildSavePayload`/`LoadFromPayload` 的**内存往返编解码契约**（`PayloadCodec_InMemoryRoundTrip_PreservesState`）——隔离验证序列化编解码本身、不经磁盘；公共 `RequestSaveGame`/`RequestLoadGame` 会把编解码与存储管线耦合，无法隔离验证 codec。
 
-8. **全局状态的测试复位**：测试程序集通过 `InternalsVisibleTo` 访问 TypedData 的 internal 注册表，并统一经 `Origo.TestSupport` 的 `TypedDataTestSupport.ResetKindRegistry()`（测试辅助程序集内部方法）复位 kind 注册表与多层转换链。生产代码不包含任何 `ResetForTesting` 之类的测试钩子。
+8. **全局状态的测试复位**：测试程序集通过 `InternalsVisibleTo` 访问 TypedData 的 internal 注册表，并统一经 `Origo.TestSupport` 的 `TypedDataTestSupport.ResetKindRegistry()`（测试辅助程序集内部方法）复位 kind 注册表；多层转换链的私有静态字段由测试辅助程序集集中反射置空。生产代码不包含任何 `ResetForTesting` 之类的测试钩子或只供测试调用的 reset 方法。
 
 9. **无公共触发路径的内部故障态注入**：当被测行为的故障态（faulted task、永不完成的 task、端口被占用前已启动的 listener、已损坏的客户端 writer 等）**没有任何公共 API 可以触发**时，允许经反射注入/读取私有字段构造故障态。此类注入比 `InternalsVisibleTo` 更脆弱（字段重命名即运行时失败），必须遵守：
    - 仅用于**该故障态本身无公共触发路径**的场景；可经公共路径触发的场景必须走公共路径（如 `Start_AfterDispose`、`Start_PortInUse` 均走公共调用）

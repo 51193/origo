@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Guardrail Tests
 
@@ -34,6 +34,8 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |
 | `SndContext_CompanionProperties_ShareConsistentState` | Companion properties share the same blackboard instances (SystemBlackboard/ProgressBlackboard) | Snd Abstraction: ISndContext composition |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext inherits ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
+| `DeferredFlush_ShouldNotBePublicBusinessSurface` | Frame flushing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndDeferredActions` and `OrigoRuntime` expose no bypassable public flush | architecture-overview: single access path |
+| `ConsolePump_ShouldNotBePublicBusinessSurface` | Console processing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndConsoleAccess` and `OrigoConsole` expose no bypassable public pump | architecture-overview: single access path |
 | `IEntityLifecycle_ShouldBeInternal` | IEntityLifecycle is internal — business code must not trigger lifecycle hooks directly | Runtime: lifecycle orchestration |
 | `SndEntity_LifecycleMethods_ShouldBeInternal` | Concrete lifecycle methods like SndEntity.Process are internal, invoked only by framework orchestration | Runtime: lifecycle orchestration |
 | `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | Completes save→load workflow using only public interfaces | architecture-overview: test strategy |

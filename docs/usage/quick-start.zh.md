@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 快速开始
 
@@ -65,7 +65,7 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Snd.Strategy;
 
 [StrategyIndex("my_game.health")]
-public class HealthInitStrategy : LifecycleStrategyBase
+public sealed class HealthInitStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -103,7 +103,26 @@ public class HealthInitStrategy : LifecycleStrategyBase
 ]
 ```
 
-### 6. 运行
+### 6. 运行时按模板生成实体
+
+模板在 `Bootstrap` 时由 `SndTemplateMapPath` 加载。策略或游戏代码生成实体：
+
+```csharp
+// 生成单个模板实体：深克隆模板并改名，再走会话统一 spawn 管线
+var heroMeta = ctx.Template.CloneTemplate("player_template", "Player_01");
+var hero = entity.OwningSession.Spawn(heroMeta);
+
+// 从 JSON 数组文件解析实体列表（支持 templateKey/sndName 简写）后批量生成
+var waveMeta = ctx.Template.LoadMetaListFromFile(
+    "res://origo/initial/levels/main_menu/snd_scene.json");
+entity.OwningSession.SpawnMany([.. waveMeta]);
+
+// 运行期重载模板/别名映射（用于 mod 或热更新配置）
+ctx.Template.LoadTemplates("res://origo/maps/snd_templates.map");
+ctx.Template.LoadSceneAliases("res://origo/maps/scene_aliases.map");
+```
+
+### 7. 运行
 
 运行 Godot 项目，`OrigoDefaultEntry._Ready()` 将自动：
 1. 创建 `OrigoRuntime`
@@ -137,7 +156,7 @@ OrigoDefaultEntry._Ready()
 每帧: _Process → IOrigoFrameDriver.DriveFrame(delta)
   → Snd.ProcessAll(delta)          # 实体帧处理
   → FlushEndOfFrameDeferred()      # 业务队列 → KillPendingEntities → 系统队列
-  → Console.ProcessPending()       # 控制台命令处理
+  → Core 内部：Console.ProcessPending()  # 控制台命令处理
 ```
 
 ## 下一步

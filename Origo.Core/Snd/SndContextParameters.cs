@@ -66,7 +66,12 @@ public sealed class SndContextParameters
     /// <summary>Path to the entry config file (<c>entry.json</c>).</summary>
     public string EntryConfigPath { get; }
 
-    /// <summary>The level ID for the initial save. Default value is <c>"default"</c>, corresponding to the initial/save_000/level_default/ directory structure.</summary>
+    /// <summary>
+    ///     The level ID for the initial save. Default value is <c>"default"</c>,
+    ///     corresponding to the initial/save_000/level_default/ directory
+    ///     structure. Validated by <see cref="SndContext" /> construction with
+    ///     the same token rules as save IDs and level IDs.
+    /// </summary>
     public string InitialLevelId { get; init; } = "default";
 
     /// <summary>Custom save storage service for runtime saves; defaults to <c>DefaultSaveStorageService</c>.</summary>

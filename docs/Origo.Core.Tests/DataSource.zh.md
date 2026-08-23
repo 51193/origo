@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 数据源 测试
 
@@ -21,7 +21,7 @@
 | `DataSourceTests.cs` | 余项：IDisposable 递归释放与深树防栈溢出、新访问器方法、TypeStringMapping 新类型注册、DataSourceConverterRegistry 类型层级回退、ReadOnlyDictionary 往返 |
 | `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` 规范化摘要计算 |
 | `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` 键值文件解析（严格/宽松模式、注释、重复键、null/空内容） |
-| `CorruptObserverIndicesStrictReadTests.cs`（位于 Save/） | 回归：`observer_indices` 含非对象元素、**含多个目标键**或**空对象**（损坏存档）时 `LoadFromPayload` 抛 `InvalidOperationException`（含 "observer_indices"），而非静默丢弃绑定 |
+| `CorruptObserverIndicesStrictReadTests.cs`（位于 Save/） | 验证：`observer_indices` 含非对象元素、**含多个目标键**或**空对象**（损坏存档）时 `LoadFromPayload` 抛 `InvalidOperationException`（含 "observer_indices"），而非静默丢弃绑定 |
 
 ## DataSourceTests 测试详情
 
@@ -130,6 +130,9 @@
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `AsInt_OnNonNumericString_Throws` | CreateString("hello") → AsInt() | FormatException |
+| `CreateString_Null_Throws` | CreateString(null) | ArgumentNullException（Null 节点是 CreateNull 的职责，不得漂移为 Text 空串） |
+| `CreateNumber_NullString_Throws` | CreateNumber(string) 传 null | ArgumentNullException |
+| `Add_NullChild_Throws` | Map/Array Add 传 null 子节点 | ArgumentNullException（把错误延迟到编码期会变成 NRE 或空数据） |
 | `ObjectNode_IndexerByKey_ThrowsOnMissingKey` | obj["missing"] | KeyNotFoundException |
 | `Registry_Get_ThrowsForUnregisteredType` | Get<DateTime>() 未注册 | InvalidOperationException |
 | `Registry_RuntimeRead_ThrowsForUnregisteredType` | Read(typeof(DateTime), …) 未注册 | InvalidOperationException |
@@ -150,6 +153,16 @@
 | `SndMetaDataConverter_Read_NonMap_Throws` | SndMetaData 根节点为数组 | InvalidOperationException（消息含 "object"） |
 | `SndMetaDataListConverter_Read_NonArray_Throws` | SndMetaData 列表根节点为对象 | InvalidOperationException（消息含 "array"） |
 | `MapCodec_Encode_ThrowsForNonObjectNode` | Map 编码 Array 节点 | InvalidOperationException |
+| `MapCodec_Encode_RejectsColonInKey` | key 含冒号 | InvalidOperationException（首个冒号是解码分隔符，会静默拆成另一对 key/value） |
+| `MapCodec_Encode_RejectsCommentKey` | key 以 `#` 开头 | InvalidOperationException（严格解码器会把整行当注释丢弃） |
+| `MapCodec_Encode_RejectsUntrimmedKeyOrValue` | key 或 value 首尾空白 | InvalidOperationException（严格解码器会 trim 两侧字段） |
+| `MapCodec_Encode_RejectsNonTextChild` | Number/Bool 子节点 | InvalidOperationException（`.map` 只承载字符串，否则解码后类型静默漂移） |
+| `MapCodec_Encode_EmptyKey_Throws` | 空 key | InvalidOperationException |
+| `ArrayConverter_Read_NullNode_Throws` | 数组转换器读 Null 根节点 | InvalidOperationException（不得静默变成空数组） |
+| `ArrayConverter_Read_ScalarNode_Throws` | 数组转换器读标量根节点 | InvalidOperationException |
+| `ArrayConverter_Read_ObjectNode_Throws` | 数组转换器读对象根节点 | InvalidOperationException |
+| `DataSourceNode_Keys_OnNonMap_Throws` | 非 Map 节点访问 Keys | InvalidOperationException（错误形状不得静默读成空键集合） |
+| `DataSourceNode_CountAndElements_OnNonArray_Throw` | 非 Array 节点访问 Count/Elements | InvalidOperationException |
 | `LazyNode_WhenExpanderThrows_NodeStaysLazy_AndCanRetrySuccessfully` | 首次展开抛 InvalidOperationException | 首次访问抛异常后节点保持 Lazy，二次访问展开成功（callCount=2） |
 | `LazyNode_WhenExpanderThrows_NodeCanStillBeDisposed` | 展开始终抛 InvalidOperationException | 展开失败后仍可 Dispose，后续访问抛 ObjectDisposedException |
 | `MapCodec_Decode_LineWithoutColon_Throws` | 含无冒号行的 Map 文本 | FormatException |
@@ -201,7 +214,7 @@
 | `NumberIntegerVsFloatWithSameValue_HaveDifferentHashes` | 整数 1 与 float 1.0 规范化后哈希相同（值等价） | DataSource |
 | `HashIsHexString` | 哈希为 64 位小写十六进制字符串 | DataSource |
 | `SameComplexTree_DifferentInstances_SameHash` | 相同结构的不同实例哈希相同 | DataSource |
-| `DecodedDeeplyNestedTree_AllLevelsExpanded_DepthThreeHashDiffers` | 解码树展开到第 3 层后叶值变化，哈希不同（回归：懒子树被纳入哈希） | DataSource |
+| `DecodedDeeplyNestedTree_AllLevelsExpanded_DepthThreeHashDiffers` | 解码树展开到第 3 层后叶值变化，哈希不同（验证：懒子树纳入哈希） | DataSource |
 | `DecodedNestedTree_ArrayDeepChange_ProducesDifferentHash` | 解码树中数组内深层对象值变化，哈希不同 | DataSource |
 | `DecodedNestedTree_DeepKeyChange_ProducesDifferentHash` | 解码树深层键名变化，哈希不同 | DataSource |
 | `DecodedNestedTree_DeepValueChange_ProducesDifferentHash` | 解码树深层叶值变化，哈希不同 | DataSource |

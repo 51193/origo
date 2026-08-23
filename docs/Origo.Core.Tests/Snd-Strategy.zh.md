@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 策略 测试
 
@@ -241,6 +241,7 @@
 | `RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws` | Recover 列表含 ActiveStrategyBase 类型 | InvalidOperationException（"LifecycleStrategyBase"） |
 | `Register_AbstractStrategyType_Throws` | 注册抽象策略类型 | InvalidOperationException |
 | `Register_DuplicateIndex_Throws` | 重复注册同一策略索引 | InvalidOperationException（"already registered"） |
+| `GetStrategy_FactoryReturnsNull_ThrowsInvalidOperation` | 注册工厂返回 null | InvalidOperationException（消息含 "returned null"，不得退化为 NRE） |
 
 ## SndStrategyPerformanceTests 测试详情
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # SND Entity Tests (Adapter)
 
@@ -15,7 +15,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | File | Verification focus |
 |------|-----------|
 | `Snd/SndEntityCollectionTests.cs` | Full entity collection capability: create/find/remove/kill marking, `RecoverFromMetaList` batch recovery with partial-failure rollback, `RemoveAllEntities`, frame processing `ProcessAll`, meta list building, `OwningSession` binding |
-| `Snd/TypedDataInitializerTests.cs` | `TypedDataInitializer.EnsureLoaded()` triggering adapter-layer kind registration: idempotency and availability |
+| `Snd/TypedDataAssemblyLoadTests.cs` | Forces assembly loading by referencing a public GodotAdapter type; verifies the generated `[ModuleInitializer]` completes adapter kind registration |
 | `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` contracts: non-Godot entity/handle returns null, node handle extraction |
 
 ## SndEntityCollectionTests Details
@@ -50,19 +50,22 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | `CreateEntity_RecoverFailure_RollsBackAndPropagates` | Recovery fails during creation: exception propagates, collection rolls back to empty, detach callback invoked | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Failure_RollsBackStaged` | When the N-th entity fails, all staged entities are rolled back (collection empty, detach callback invoked per entity) | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Failure_ReportsFailingMeta` | Recovery failure reports the failing meta and exception via the failure callback | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_ReleasesResourcesForPreviouslyRecoveredEntities` | When batch recovery fails midway, entities recovered earlier also run `RollbackAcquiredResources` (releasing Core strategy/node resources) before detach | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_RollbackCleanupFailure_AggregatesBothFailures` | Recovery fails and rollback cleanup also fails | AggregateException contains both the original recovery exception and the cleanup exception; collection still empty | Origo.GodotAdapter/Snd |
+| `RecoverFromMetaList_Failure_CleanupStepsRunIndependentlyAndAllFailuresAggregate` | Recovery fails, engine detach fails, and the failure callback also throws | Every step runs independently, AggregateException contains all failures, collection still empty | Origo.GodotAdapter/Snd |
 | `RecoverFromMetaList_Null_Throws` | metaList is null — throws `ArgumentNullException` | Origo.GodotAdapter/Snd |
 | `RemoveEntity_Unknown_Throws` | Removing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 | `RequestKillEntity_AlreadyPending_Throws` | Duplicate kill on an already-marked entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 | `ProcessAll_ContainerModifiedDuringProcess_Throws` | Collection mutated during frame processing (entity spawned inside ProcessSnd) | Throws `InvalidOperationException` (contains "modified during ProcessAll"; consistent with FullMemorySndSceneHost) |
 | `RequestKillEntity_Unknown_Throws` | Killing a missing entity throws `InvalidOperationException` | Origo.GodotAdapter/Snd |
 
-## TypedDataInitializerTests Details
+## TypedDataAssemblyLoadTests Details
 
 ### Happy Path
 
 | Test method | Verified behavior | Doc source |
 |---------|-----------|---------|
-| `EnsureLoaded_TriggersAdapterKindRegistration` | `TypedDataInitializer.EnsureLoaded()` triggers adapter-layer kind registration (Vector2 resolves to Kind 128) | Origo.GodotAdapter/Snd |
+| `GodotAdapterAssemblyLoad_RegistersTypedDataKinds` | Referencing a public GodotAdapter type forces assembly loading and the generated `[ModuleInitializer]`; Vector2 resolves to Kind 128 | Origo.GodotAdapter/Snd |
 
 ## SndEntityNodeExtensionsTests Details
 
@@ -77,7 +80,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 
 | Helper | Definition location | Purpose |
 |--------|---------|------|
-| `SndEntityCollectionTests` embedded fake entity | `SndEntityCollectionTests.cs` | Pure-C# fake entity implementing `ISndEntityFacade` (no Godot dependency), recording `RecoverForLifecycle`/`DetachFromManager` calls |
+| `SndEntityCollectionTests` embedded fake entity | `SndEntityCollectionTests.cs` | Pure-C# fake entity implementing `ISndEntityFacade` (no Godot dependency), recording `RecoverForLifecycle`/`DetachFromManager`/`RollbackAcquiredResources` calls |
 | `InMemoryLogger` | `SndEntityCollectionTests.cs` | Minimal `ILogger` stand-in |
 
 ## Known Coverage Gaps

@@ -22,7 +22,7 @@ public class FrontSession_UniqueConstraintValidationTests
 
         // Replace foreground with new level
         ctx.Save.RequestSwitchForegroundLevel("new_level");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         var fg2 = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
 
         Assert.True(fg2.IsFrontSession);

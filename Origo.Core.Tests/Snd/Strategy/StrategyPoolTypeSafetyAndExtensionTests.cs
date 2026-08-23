@@ -106,6 +106,17 @@ public class StrategyPoolTypeSafetyAndExtensionTests
         Assert.Contains("already registered", ex.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void GetStrategy_FactoryReturnsNull_ThrowsInvalidOperation()
+    {
+        var pool = new SndStrategyPool(NullLogger.Instance);
+        pool.Register(typeof(PoolEntityStrategy), () => null!);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            pool.GetStrategy<LifecycleStrategyBase>("pool.entity"));
+        Assert.Contains("returned null", ex.Message, StringComparison.Ordinal);
+    }
+
     [StrategyIndex("pool.entity")]
     private sealed class PoolEntityStrategy : LifecycleStrategyBase
     {

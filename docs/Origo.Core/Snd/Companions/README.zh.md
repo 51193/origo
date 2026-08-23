@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Companions/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Companions
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-`SndContext` 的 companion 对象层。每个 companion 是 `internal sealed class`，实现 `ISndContext` 暴露的一个角色接口。多数 companion 持有对 `SndContext` 的反向引用以访问框架内部状态；`SndContextFileAccess` / `SndContextArchiveFileAccess` 例外——它们直接注入 I/O 依赖（`IDataSourceIoGateway`、`IFileMetaAccess`、`IPathResolver` 等），不持有 `SndContext` 引用。策略通过 `ctx.Blackboard`、`ctx.Save` 等属性获取对应的 companion 实例，而非直接 cast `ISndContext` 到角色接口。
+`SndContext` 的 companion 对象层。每个 companion 是 `internal sealed class`，实现 `ISndContext` 暴露的一个角色接口。多数 companion 持有对 `SndContext` 的反向引用以访问框架内部状态；`SndContextFileAccess` / `SndContextArchiveFileAccess` 例外——它们直接注入 I/O 依赖（`IDataSourceIoGateway`、`IFileMetaAccess`、`IPathResolver` 等），不持有 `SndContext` 引用。`SndContextTemplateAccess` 除模板克隆外，还经 `SndContext` 的 I/O 依赖加载模板/别名 map，并解析实体列表 JSON 文件。策略通过 `ctx.Blackboard`、`ctx.Save` 等属性获取对应的 companion 实例，而非直接 cast `ISndContext` 到角色接口。
 
 ## 包含文件
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Runtime
 
@@ -23,7 +23,7 @@ Origo 的运行时核心。管理从系统级到会话级的四层生命周期�
 | 文件 | 职责 |
 |------|------|
 | `OrigoRuntime.cs` | 运行时聚合容器：持有 SystemBlackboard、SndWorld、Console、Logger；SndContext 在其上构造 SystemRun 与 ProgressRun |
-| `OrigoAutoInitializer.cs` | 策略自动发现与注册（反射扫描程序集） |
+| `OrigoAutoInitializer.cs` | `internal` — 策略自动发现与注册（反射扫描程序集）；仅由 `SndContext.Bootstrap` 编排调用 |
 
 ### OrigoRuntime
 

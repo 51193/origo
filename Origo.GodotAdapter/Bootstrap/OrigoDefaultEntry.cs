@@ -6,7 +6,7 @@ namespace Origo.GodotAdapter.Bootstrap;
 
 /// <summary>
 ///     Default program entry node. Inherits <see cref="OrigoAutoHost" /> to gain runtime self-binding capability,
-///     and delegates automatic initialization orchestration to the Core layer's <see cref="OrigoAutoInitializer" />.
+///     and delegates automatic initialization orchestration to the Core layer's <c>ISndContext.Bootstrap</c>.
 ///     The Adapter layer only provides Godot-specific I/O implementations and engine assembly filtering prefixes,
 ///     containing no orchestration logic.
 /// </summary>

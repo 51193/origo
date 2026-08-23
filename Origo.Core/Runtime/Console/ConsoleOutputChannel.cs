@@ -60,8 +60,7 @@ public sealed class ConsoleOutputChannel(ILogger? logger = null) : IConsoleOutpu
         }
 
         var payload = line ?? throw new ArgumentNullException(nameof(line));
-        Exception? firstError = null;
-        var errorCount = 0;
+        var failures = new List<Exception>();
         foreach (var listener in targets)
         {
             try
@@ -70,19 +69,19 @@ public sealed class ConsoleOutputChannel(ILogger? logger = null) : IConsoleOutpu
             }
             catch (Exception ex)
             {
-                firstError ??= ex;
-                errorCount++;
+                failures.Add(ex);
                 _logger.Log(LogLevel.Warning, nameof(ConsoleOutputChannel),
                     new LogMessageBuilder()
-                        .AddContext("subscriberErrorCount", errorCount)
+                        .AddContext("subscriberErrorCount", failures.Count)
                         .Build($"Subscriber threw during Publish: {ex.Message}"));
             }
         }
 
-        if (errorCount > 1)
-            throw new AggregateException(
-                $"Multiple listeners ({errorCount}) threw exceptions during Publish.", firstError!);
-        if (firstError is not null)
-            throw firstError;
+        if (failures.Count == 0)
+            return;
+        if (failures.Count == 1)
+            throw failures[0];
+        throw new AggregateException(
+            $"Multiple listeners ({failures.Count}) threw exceptions during Publish.", failures);
     }
 }

@@ -4,6 +4,7 @@ using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Scene;
 
 namespace Origo.Core.Save.Serialization;
 
@@ -35,7 +36,7 @@ internal sealed class SndSceneSerializer
     ///     not apply all metadata fields (e.g. observer binding topology),
     ///     so the returned list lets callers restore that state.
     /// </summary>
-    public IReadOnlyList<SndMetaData> RecoverInto(ISndSceneAccess sceneHost,
+    public IReadOnlyList<SndMetaData> RecoverInto(ISndSceneHost sceneHost,
         DataSourceNode serializedNode)
     {
         ArgumentNullException.ThrowIfNull(sceneHost);
@@ -48,6 +49,7 @@ internal sealed class SndSceneSerializer
             serializedNode,
             _world.ConverterRegistry);
 
+        SndEntityNamePolicy.EnsureUniqueBatch(sceneHost, metaList);
         sceneHost.RecoverFromMetaList(metaList);
         return metaList;
     }

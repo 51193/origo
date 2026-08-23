@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter
 
@@ -18,7 +18,7 @@
 | [FileSystem](FileSystem/README.en.md) | Godot file system | IFileSystem implementation: FileAccess/DirAccess + res:// and user:// support |
 | [Logging](Logging/README.en.md) | Godot logging | ILogger implementation: delegate-injected GD.Print/PushWarning/PushError |
 | [Serialization](Serialization/README.en.md) | Godot type serialization | 14 Godot types → DataSourceNode converters |
-| [Snd](Snd/README.en.md) | Godot SND entities | ISndSceneHost implementation: GodotSndManager + GodotSndEntity + PackedSceneNodeFactory + TypedDataInitializer |
+| [Snd](Snd/README.en.md) | Godot SND entities | ISndSceneHost implementation: GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
 | — | TypedData inline | Source Generator generates extension methods and Kind registrations for 14 Godot types |
 
 ## Startup Flow
@@ -55,7 +55,7 @@ The adapter layer does not participate in any aspect of strategy lifecycle manag
 
 - **Does not trigger strategy hooks**: `GodotSndManager.CreateEntity` only creates the entity and Godot node, without calling hooks like `AfterSpawn` / `AfterLoad` / `BeforeDead`
 - **Does not manage strategy teardown**: `RemoveEntity` only removes the Godot node and collection reference, without calling `ReleaseStrategiesOnly`
-- **Does not flush the deferred pipeline**: The frame loop does not bypass Core to call `FlushDeferredActionsForCurrentFrame` directly
+- **Does not flush the deferred pipeline**: The frame loop does not bypass Core to call the internal `FlushEndOfFrameDeferred` directly
 - **`OrigoAutoHost._Process` is the sole frame entry point**: Within it, Core's `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending` are delegated in order; the adapter layer only schedules, never makes decisions
 
 All this orchestration is the unified responsibility of the Core layer's session lifecycle (`SessionManager` / `SessionRun`). For detailed separation principles, see [Architecture Overview](../usage/architecture-overview.en.md#adapter-layer-and-core-layer-separation-principles).
@@ -107,7 +107,7 @@ Verified integration notes for embedding Origo into a Godot project:
 
 Origo.GodotAdapter references the `Origo.SourceGeneration` source generator and registers 14 Godot engine types at the assembly level via `[assembly: SndInlineTypes(startKind: 128, ...)]`. At compile time, the SG automatically generates extension methods (`TryGetVector2` / `AsVector3`, etc., inside the `internal` `TypedDataLayeredExtensions` class), `[ModuleInitializer]` registration logic, and KindResolver/Converter bridges.
 
-- **TypedDataInitializer** (`Origo.GodotAdapter.Snd`): an `internal` static class; `EnsureLoaded()` triggers GodotAdapter assembly loading, ensuring all `[ModuleInitializer]` methods have executed. Test projects call it via `InternalsVisibleTo` to force-load the adapter layer.
+- **Assembly load registers**: When the GodotAdapter assembly is referenced or loaded, its generated `[ModuleInitializer]` methods automatically perform Kind / Converter / TypeMap registration; no extra initialization entry point is needed. Tests force assembly loading by referencing a public type.
 - **Kind range 128–141**: Does not conflict with Core layer's 1–13, ensuring that `(TypedData)42` created in Core won't be misinterpreted as `Vector2` in GodotAdapter.
 
 See [Origo.SourceGeneration documentation](../Origo.SourceGeneration/README.en.md) for details.

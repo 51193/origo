@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
@@ -18,7 +19,9 @@ public class GodotTypedDataPerformanceTests(ITestOutputHelper output)
 
     static GodotTypedDataPerformanceTests()
     {
-        TypedDataInitializer.EnsureLoaded();
+        // Force the GodotAdapter assembly to load so its generated
+        // [ModuleInitializer] registrations run before TypedData kind use.
+        RuntimeHelpers.RunModuleConstructor(typeof(GodotSndManager).Module.ModuleHandle);
     }
 
     [Fact]

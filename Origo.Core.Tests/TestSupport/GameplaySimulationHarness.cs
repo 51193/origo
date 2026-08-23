@@ -127,14 +127,14 @@ internal sealed class GameplaySimulationHarness
     public string SaveAndReload(string saveName)
     {
         var saveId = Context.Save.RequestSaveGameAuto(saveName);
-        Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        Context.FlushFrame();
 
         foreach (var key in Context.Runtime.SessionManager.Keys)
             Context.Runtime.SessionManager.DestroySession(key);
         Context.SetProgressRun(null);
 
         Context.Save.RequestLoadGame(saveId);
-        Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        Context.FlushFrame();
 
         return saveId;
     }
@@ -195,7 +195,7 @@ internal sealed class GameplaySimulationBuilder
             "root", "res://initial", _entryConfigPath));
 
         context.Lifecycle.RequestLoadMainMenuEntrySave();
-        context.Deferred.FlushDeferredActionsForCurrentFrame();
+        context.FlushFrame();
 
         var gameSession = runtime.SessionManager.CreateBackgroundSession(
             "game", "game_level", syncProcess: true);

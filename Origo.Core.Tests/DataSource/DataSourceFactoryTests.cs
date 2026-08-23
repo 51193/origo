@@ -42,6 +42,30 @@ public class DataSourceFactoryTests
     }
 
     [Fact]
+    public void CreateString_Null_Throws()
+    {
+        // CreateNull() is the explicit null representation; CreateString(null)
+        // would otherwise silently drift into an empty Text node.
+        Assert.Throws<ArgumentNullException>(() => DataSourceNode.CreateString(null!));
+    }
+
+    [Fact]
+    public void CreateNumber_NullString_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => DataSourceNode.CreateNumber((string)null!));
+    }
+
+    [Fact]
+    public void Add_NullChild_Throws()
+    {
+        var map = DataSourceNode.CreateObject();
+        var array = DataSourceNode.CreateArray();
+
+        Assert.Throws<ArgumentNullException>(() => map.Add("key", null!));
+        Assert.Throws<ArgumentNullException>(() => array.Add(null!));
+    }
+
+    [Fact]
     public void CreateNumber_IntOverloads_ReturnNumberNode()
     {
         var fromInt = DataSourceNode.CreateNumber(42);

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Repository-local .NET SDK launcher.
+#
+# The SDK required by global.json is installed under .dotnet/; this wrapper
+# exports nothing into the caller's shell and requires no dotnet-specific PATH
+# entry. On CI, where .dotnet/ is absent, it falls back to the system dotnet.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOCAL_DOTNET="$ROOT/.dotnet/dotnet"
+
+resolve_system_dotnet() {
+    local dir
+    IFS=':' read -r -a path_entries <<<"$PATH"
+    for dir in "${path_entries[@]}"; do
+        [[ -z "$dir" ]] && continue
+        [[ "$(cd "$dir" 2>/dev/null && pwd)" == "$ROOT" ]] && continue
+        if [[ -x "$dir/dotnet" && "$(readlink -f "$dir/dotnet" 2>/dev/null || echo "$dir/dotnet")" != "$LOCAL_DOTNET" ]]; then
+            echo "$dir/dotnet"
+            return 0
+        fi
+    done
+    return 1
+}
+
+if [[ ! -x "$LOCAL_DOTNET" ]]; then
+    SYSTEM_DOTNET="$(resolve_system_dotnet || true)"
+    if [[ -n "$SYSTEM_DOTNET" ]]; then
+        exec "$SYSTEM_DOTNET" "$@"
+    fi
+    echo "No local SDK at $LOCAL_DOTNET and no system dotnet on PATH." >&2
+    echo "Run: bash scripts/install-dotnet.sh" >&2
+    exit 127
+fi
+
+export DOTNET_ROOT="$ROOT/.dotnet"
+export DOTNET_CLI_HOME="${DOTNET_CLI_HOME:-$ROOT/.dotnet-cli-home}"
+export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+export DOTNET_CLI_TELEMETRY_OPTOUT="${DOTNET_CLI_TELEMETRY_OPTOUT:-1}"
+mkdir -p "$DOTNET_CLI_HOME"
+
+# Use the repository-local NuGet cache only when the default user cache is
+# not writable (container/read-only-home environments).
+if [[ -z "${NUGET_PACKAGES:-}" ]]; then
+    DEFAULT_CACHE="$HOME/.nuget/packages"
+    if [[ -e "$DEFAULT_CACHE" ]]; then
+        if [[ ! -w "$DEFAULT_CACHE" ]]; then
+            export NUGET_PACKAGES="$ROOT/.nuget"
+        fi
+    elif [[ ! -w "$HOME" && ! -w "$HOME/.nuget" ]]; then
+        export NUGET_PACKAGES="$ROOT/.nuget"
+    fi
+fi
+mkdir -p "${NUGET_PACKAGES:-$DEFAULT_CACHE}"
+
+exec "$LOCAL_DOTNET" "$@"

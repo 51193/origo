@@ -43,7 +43,7 @@ public class SndContextEntryFlowTests
         var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
             "res://entry/entry.json"));
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.NotNull(ctx.Blackboard.ProgressBlackboard);
         Assert.NotNull(ctx.Runtime.SessionManager.ForegroundSession);
@@ -75,7 +75,7 @@ public class SndContextEntryFlowTests
         Assert.NotNull(host.FindByName("legacy"));
 
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.Null(host.FindByName("legacy"));
     }

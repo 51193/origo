@@ -45,6 +45,38 @@ public class SndSceneSerializerTests
     }
 
     [Fact]
+    public void SndSceneSerializer_RecoverInto_DuplicateNameInPayload_ThrowsBeforeCreatingAnyEntity()
+    {
+        var world = CreateWorld();
+        var serializer = new SndSceneSerializer(world);
+        var host = new TestSndSceneHost();
+
+        using var node = world.WriteMetaListNode(
+            [new SndMetaData { Name = "dup" }, new SndMetaData { Name = "dup" }]);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => serializer.RecoverInto(host, node));
+        Assert.Contains("duplicate", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(host.BuildMetaList());
+    }
+
+    [Fact]
+    public void SndSceneSerializer_RecoverInto_NameAlreadyOnHost_ThrowsBeforeCreating()
+    {
+        var world = CreateWorld();
+        var serializer = new SndSceneSerializer(world);
+        var host = new TestSndSceneHost();
+        host.CreateEntity(new SndMetaData { Name = "existing" });
+
+        using var node = world.WriteMetaListNode([new SndMetaData { Name = "existing" }]);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => serializer.RecoverInto(host, node));
+        Assert.Contains("already exists", ex.Message, StringComparison.Ordinal);
+        var metaList = host.BuildMetaList();
+        Assert.Single(metaList);
+        Assert.Equal("existing", metaList[0].Name);
+    }
+
+    [Fact]
     public void SndSceneSerializer_DeserializeInto_ClearsBeforeLoad()
     {
         var world = CreateWorld();

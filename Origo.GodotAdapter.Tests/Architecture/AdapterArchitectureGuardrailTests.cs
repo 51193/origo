@@ -48,7 +48,7 @@ public class AdapterArchitectureGuardrailTests
         var def = ctx.Deferred;
         var ran = false;
         def.EnqueueBusinessDeferred(() => ran = true);
-        def.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
         Assert.True(ran);
 
         Assert.NotNull(ctx.Runtime.SessionManager);
@@ -93,7 +93,7 @@ public class AdapterArchitectureGuardrailTests
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
 
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg_sess", "bg_level");
         bg.SessionBlackboard.SetValue("bg_data", "bg_value");

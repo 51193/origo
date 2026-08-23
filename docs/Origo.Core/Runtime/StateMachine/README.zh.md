@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/StateMachine/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # StateMachine (Runtime)
 
@@ -61,6 +61,10 @@
 ### 为什么 CreateOrGet 对策略索引不匹配抛异常
 
 状态机的 Push/Pop 策略索引是其行为的核心定义。如果创建时使用不同的索引，行为语义完全不同，此时静默返回已有实例是危险的。
+
+### 为什么 PopAllRuntime 保留为 internal 批量操作
+
+`PopAllOnQuit` 由会话退出管线调用，而 `PopAllRuntime` 提供对等的运行时批量清栈语义。它不进入 `IStateMachineContainer` 公共接口，仅作为 Runtime 内部具体容器的批量工具供框架编排与测试使用，避免业务代码把“弹空所有状态机”误用为跨会话清理捷径。
 
 ---
 [↑ 回到 Runtime](../README.zh.md)

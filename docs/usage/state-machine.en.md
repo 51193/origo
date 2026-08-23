@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/state-machine -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # State Machine
 
@@ -67,7 +67,7 @@ public readonly struct StateMachineStrategyContext
 ```csharp
 // Push strategy: logic executed on Push
 [StrategyIndex("my_game.menu_push")]
-public class MenuPushStrategy : StateMachineStrategyBase
+public sealed class MenuPushStrategy : StateMachineStrategyBase
 {
     public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
     {
@@ -79,7 +79,7 @@ public class MenuPushStrategy : StateMachineStrategyBase
 
 // Pop strategy: logic executed on Pop
 [StrategyIndex("my_game.menu_pop")]
-public class MenuPopStrategy : StateMachineStrategyBase
+public sealed class MenuPopStrategy : StateMachineStrategyBase
 {
     public override void OnPopRuntime(StateMachineStrategyContext context, IStateMachineContext ctx)
     {

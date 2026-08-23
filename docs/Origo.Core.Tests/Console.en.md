@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Console System Tests
 
@@ -102,6 +102,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | `ConsoleOutputChannel_Subscribe_ThrowsOnNull` | Subscribe(null) | ArgumentNullException |
 | `ConsoleOutputChannel_Publish_FirstListenerThrows_SecondStillReceives` | First subscriber throws exception | Exception propagates, but subsequent subscribers still receive the message |
 | `ConsoleOutputChannel_Publish_FirstListenerThrows_ExceptionPropagates` | Multiple subscribers throw | First exception ("e1") propagates |
+| `ConsoleOutputChannel_Publish_MultipleListenerFailures_AggregatesEveryFailure` | Three subscribers all throw | AggregateException contains all 3 inner exceptions |
 
 ### Boundary Path
 

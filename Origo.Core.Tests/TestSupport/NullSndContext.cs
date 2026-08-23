@@ -68,11 +68,19 @@ public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDefe
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null) =>
         throw new InvalidOperationException("NullSndContext does not support templates.");
 
-    public bool TrySubmitConsoleCommand(string commandLine) => false;
+    public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root) =>
+        throw new InvalidOperationException("NullSndContext does not support templates.");
 
-    public void ProcessConsolePending()
-    {
-    }
+    public IReadOnlyList<SndMetaData> LoadMetaListFromFile(string filePath) =>
+        throw new InvalidOperationException("NullSndContext does not support templates.");
+
+    public void LoadTemplates(string mapFilePath) =>
+        throw new InvalidOperationException("NullSndContext does not support templates.");
+
+    public void LoadSceneAliases(string mapFilePath) =>
+        throw new InvalidOperationException("NullSndContext does not support templates.");
+
+    public bool TrySubmitConsoleCommand(string commandLine) => false;
 
     public long SubscribeConsoleOutput(Action<string> onLine) => 0;
 

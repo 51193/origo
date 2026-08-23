@@ -227,6 +227,15 @@ public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEn
 
     void ISndEntityFacade.DetachFromManager() => DetachFromManager();
 
+    void ISndEntityFacade.RollbackAcquiredResources()
+    {
+        if (_entity is null)
+            return;
+
+        ((IEntityLifecycle)_entity).ReleaseStrategiesOnly();
+        ((IEntityLifecycle)_entity).TeardownOnly();
+    }
+
     void ISndEntityFacade.MarkPendingKill() => MarkPendingKill();
 
     internal void ProcessSnd(double delta)

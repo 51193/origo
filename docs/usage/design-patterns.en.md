@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Design Patterns
 
@@ -87,7 +87,7 @@ A one-shot initialization strategy removes itself after setup completes, avoidin
 
 ```csharp
 [StrategyIndex("game.entity.init")]
-public class EntityInitStrategy : LifecycleStrategyBase
+public sealed class EntityInitStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -118,7 +118,7 @@ Use an entity as a global service, exposing query/mutation interfaces through Ac
 ```csharp
 // Manager strategy: maintains data, no Process loop
 [StrategyIndex("food.manager")]
-public class FoodManagerStrategy : LifecycleStrategyBase
+public sealed class FoodManagerStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -130,7 +130,7 @@ public class FoodManagerStrategy : LifecycleStrategyBase
 
 // ActiveStrategy: provides query services
 [StrategyIndex("food.find_nearest")]
-public class FoodFindNearestStrategy : ActiveStrategyBase
+public sealed class FoodFindNearestStrategy : ActiveStrategyBase
 {
     public override object? Execute(ISndEntity entity, object? input, ISndContext ctx)
     {
@@ -154,7 +154,7 @@ Use data keys to store strategy indices, enabling runtime behavior switching:
 ```csharp
 // Scheduler reads impl keys and dynamically selects strategies
 [StrategyIndex("game.scheduling")]
-public class SchedulingStrategy : LifecycleStrategyBase
+public sealed class SchedulingStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {
@@ -177,6 +177,8 @@ Applicable scenarios:
 - Need to switch behavior at runtime (e.g., ground movement → flight movement)
 - Avoid baking implementation choices into templates
 
+> **Deferred direction**: The `*_impl` pattern solves per-entity implementation selection for lifecycle strategies; "multiple implementations per active index" (e.g. every entity responds to `hurt`, but with different implementations) has been discussed as interface-style dispatch. Today it can be covered by a single `hurt` strategy switching on entity fields. See [Extension Directions and Deferred Designs](extension-directions.en.md) for the full trade-off.
+
 ---
 
 ## Inter-Entity Communication
@@ -188,6 +190,8 @@ var target = entity.OwningSession.FindByName("TraversabilityManager");
 var path = target.InvokeStrategy<GridPos[], List<GridPos>>(
     "traversability.find_path", new[] { start, end });
 ```
+
+> **Deferred direction**: `InvokeStrategy` currently routes a globally unique index to a single implementation; if many entities share the same interaction verb, evaluate "contract name + per-entity implementation binding" dispatch with multiple implementations per index. Current workarounds are switching on entity fields inside one strategy or calling concrete indices directly. See [Extension Directions and Deferred Designs](extension-directions.en.md) for the full trade-off.
 
 ### Observer Strategies: Async Data Change Notification
 
@@ -227,7 +231,7 @@ Keep strategies as pure logic; delegate Godot node operations to `internal stati
 ```csharp
 // Strategy: decision logic
 [StrategyIndex("ui.main_menu")]
-public class MainMenuStrategy : LifecycleStrategyBase
+public sealed class MainMenuStrategy : LifecycleStrategyBase
 {
     public override void AfterLoad(ISndEntity entity, ISndContext ctx)
     {

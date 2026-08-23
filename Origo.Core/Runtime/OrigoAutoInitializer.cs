@@ -20,7 +20,7 @@ namespace Origo.Core.Runtime;
 ///     reflectively scans <see cref="BaseStrategy" /> subclasses and registers them in the strategy pool,
 ///     loads SndMetaData arrays from JSON configuration files and automatically spawns entities.
 /// </summary>
-public static class OrigoAutoInitializer
+internal static class OrigoAutoInitializer
 {
     private const string _logTag = nameof(OrigoAutoInitializer);
 

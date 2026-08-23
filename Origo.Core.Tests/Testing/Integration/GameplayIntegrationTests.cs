@@ -107,7 +107,7 @@ public class GameplayIntegrationTests
         harness.RunFrames(5);
 
         var saveId = harness.Context.Save.RequestSaveGameAuto("gameplay_save");
-        harness.Context.Deferred.FlushDeferredActionsForCurrentFrame();
+        harness.Context.FlushFrame();
 
         Assert.True(harness.FileSystem.Exists($"root/save_{saveId}/progress.json"));
         Assert.True(harness.FileSystem.Exists($"root/save_{saveId}/level_game_level/snd_scene.json"));

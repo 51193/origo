@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 会话模型
 
@@ -87,18 +87,18 @@ bg.SessionBlackboard.SetValue("data", 1);
 
 // 直接切换，SwitchForeground 会自动保存并销毁 bg
 ctx.Save.RequestSwitchForegroundLevel("game");
-ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+((IOrigoFrameDriver)runtime).DriveFrame(0); // 宿主帧边界执行延迟请求
 
 // 方式二：手动控制——调用方显式逐步保存和销毁，获得更细粒度控制
 var bg = sessionManager.CreateBackgroundSession("gen", "game", false);
 bg.Spawn(new SndMetaData { Name = "entity" });
 
 ctx.Save.RequestSaveGameAuto();
-ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+((IOrigoFrameDriver)runtime).DriveFrame(0); // 宿主帧边界执行延迟请求
 
 sessionManager.DestroySession("gen");
 ctx.Save.RequestSwitchForegroundLevel("game");
-ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+((IOrigoFrameDriver)runtime).DriveFrame(0); // 宿主帧边界执行延迟请求
 ```
 
 ## 会话拓扑
@@ -127,7 +127,6 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     IBlackboard? SessionBlackboard { get; }   // 当前会话级
     ISndSceneReadAccess SceneAccess { get; }      // 当前会话场景
     void EnqueueBusinessDeferred(Action action);           // 继承 ISndDeferredActions
-    void FlushDeferredActionsForCurrentFrame();            // 继承 ISndDeferredActions
     int GetPendingPersistenceRequestCount();               // 继承 ISndDeferredActions
 }
 ```

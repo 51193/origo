@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Manual
 
@@ -65,7 +65,7 @@ Each directory's `README.md` contains:
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.en.md) | TCP remote console bridge (port 9876) |
 | **Usage Docs** | [README](usage/README.en.md) | Usage guide from quick start to deep reference |
 | **Tests: Core** | [README](Origo.Core.Tests/README.en.md) | Behavioral test documentation for Core layer's 31 capabilities |
-| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 6 capability tests + 20 integration test classes (90 tests) |
+| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 6 capability tests + 20 integration test classes (91 tests) |
 | **Tests: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.en.md) | TCP bridge server behavioral test documentation |
 | **Tests: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.en.md) | TypedData source generator driver behavioral test documentation |
 | **Manual Meta-Instructions** | [META.md](META.en.md) | Writing and maintenance conventions for this manual |
@@ -102,6 +102,7 @@ Each directory's `README.md` contains:
 | Write game strategies | [usage/snd-entity-model](usage/snd-entity-model.en.md) |
 | Understand the lifecycle loop | [usage/strategy-lifecycle](usage/strategy-lifecycle.en.md) |
 | Learn design patterns | [usage/design-patterns](usage/design-patterns.en.md) |
+| View extension directions and deferred designs | [usage/extension-directions](usage/extension-directions.en.md) |
 | Test strategies | [usage/strategy-testing](usage/strategy-testing.en.md) |
 | Use the save system | [usage/persistence-flow](usage/persistence-flow.en.md) |
 | Use state machines | [usage/state-machine](usage/state-machine.en.md) |

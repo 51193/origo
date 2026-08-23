@@ -73,6 +73,26 @@ public class GodotFileOperationsIntegrationTests
             "File should not exist after delete.");
     }
 
+    [IntegrationTest(Description = "WriteAllText creates missing parent directories for nested paths")]
+    public void WriteAllText_NestedPath_CreatesParents()
+    {
+        var path = "user://origo_nested_write_probe/a/b/test.txt";
+        GodotFileOperations.WriteAllText(path, "nested", overwrite: true);
+
+        try
+        {
+            IntegrationTestRunner.Assert(
+                GodotFileOperations.Exists(path),
+                "Nested file should exist after write.");
+            IntegrationTestRunner.AssertEqual(
+                "nested", GodotFileOperations.ReadAllText(path), "nested content");
+        }
+        finally
+        {
+            GodotDirectoryOperations.DeleteRecursive("user://origo_nested_write_probe");
+        }
+    }
+
     [IntegrationTest(Description = "Copy duplicates file content")]
     public void Copy_DuplicatesContent()
     {

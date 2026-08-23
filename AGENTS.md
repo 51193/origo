@@ -278,6 +278,11 @@ missing language files) always fail the build.
   comments are lower-priority but should trend toward English over time.
 - **Test files are exempt** from this rule. Test methods may carry comments
   in either language or none at all.
+- **Vendored third-party source is exempt** from the XML doc requirement when
+  the vendor contract says the file is kept in its upstream form
+  (currently: `Origo.Core/Addons/FastNoiseLite/FastNoiseLite.cs`). The
+  exemption and the "why vendor, why not modify" rationale are recorded in
+  `docs/Origo.Core/Addons/FastNoiseLite/README`.
 - **Forbidden**: API documentation generation tools (DocFX, Sandcastle, etc.).
   The project maintains hand-written bilingual documentation under `docs/`;
   source comments complement it at the IDE level. No duplicate generated
@@ -344,6 +349,32 @@ missing language files) always fail the build.
   manually in the same PR as the matching `global.json` SDK update.
 - Apply the same grouping rule to any future package family with exact
   cross-package constraints.
+
+### 1.10 Environment Bootstrap — Install the Required SDK, Never Downgrade the Request
+
+> **Before running any `dotnet` command, make the environment match the
+> repository requirement instead of adapting the repository to the machine.**
+
+- `global.json` is authoritative for the required .NET SDK feature band.
+  Never edit `global.json` to match an already-installed SDK.
+- Install the exact requested SDK through `bash scripts/install-dotnet.sh`
+  (it parses `global.json` and uses the official `dotnet-install.sh`).
+  Prefer the machine default install root (`$HOME/.dotnet`, which
+  `dotnet-install.sh` uses by default) so a normally configured login shell
+  resolves plain `dotnet` with no per-session `PATH`/`DOTNET_ROOT` export.
+- When the default install roots are read-only (containers/restricted
+  sandboxes), `scripts/install-dotnet.sh` installs the SDK into the
+  repository-local `.dotnet/` directory. In that mode use `./dotnet` from
+  the repository root; the tracked wrapper sets the child-process
+  environment internally and exports nothing into the caller shell.
+- Repository scripts source `scripts/dotnet-env.sh`, which prefers
+  `.dotnet/` when present and otherwise falls back to the system `dotnet`.
+  Do not add `export DOTNET_ROOT=...`, `export PATH=.../.dotnet...`, or
+  `export NUGET_PACKAGES=...` to shell profiles or per-session workflows as
+  a substitute for running the install script.
+- Godot engine binaries are a separate dependency: `scripts/download-godot.sh`
+  parses the `Godot.NET.Sdk` version from `Origo.GodotAdapter.csproj` and
+  caches the matching engine under `.godot_binary/`.
 
 ---
 
@@ -552,6 +583,7 @@ markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md
 | Godot adapter | [`docs/Origo.GodotAdapter/README.md`](docs/Origo.GodotAdapter/README.md) | Godot 4 adapter layer. |
 | ConsoleBridge | [`docs/Origo.ConsoleBridge/README.md`](docs/Origo.ConsoleBridge/README.md) | TCP remote console bridge. |
 | Usage guide | [`docs/usage/README.md`](docs/usage/README.md) | From quick start to deep reference. |
+| Extension directions | [`docs/usage/extension-directions.zh.md`](docs/usage/extension-directions.zh.md) (or [English](docs/usage/extension-directions.en.md)) | Deferred brainstorm directions with "why not" trade-offs: unified tree namespace, entity-level concurrency, relative strategy ordering, multi-implementation active strategies. |
 | Test docs | [`docs/Origo.Core.Tests/README.md`](docs/Origo.Core.Tests/README.md), [`docs/Origo.GodotAdapter.Tests/README.md`](docs/Origo.GodotAdapter.Tests/README.md), [`docs/Origo.ConsoleBridge.Tests/README.md`](docs/Origo.ConsoleBridge.Tests/README.md), [`docs/Origo.SourceGeneration.Tests/README.md`](docs/Origo.SourceGeneration.Tests/README.md), [`docs/Origo.GodotAdapter.Integration.Tests/README.md`](docs/Origo.GodotAdapter.Integration.Tests/README.md), [`docs/Origo.TestSupport/README.md`](docs/Origo.TestSupport/README.md) | Test coverage by capability. |
 | Performance baseline | [`docs/benchmarks/baseline.zh.md`](docs/benchmarks/baseline.zh.md) (or [baseline.en.md](docs/benchmarks/baseline.en.md)) | TypedData performance snapshot and trade-offs. |
 | DocSyncTool | [`tools/DocSyncTool/`](tools/DocSyncTool/) | Bilingual doc sync tool (generate, validate, init). |

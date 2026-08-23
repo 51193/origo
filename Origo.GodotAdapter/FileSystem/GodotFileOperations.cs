@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Godot;
+using Origo.Core.Utility;
 using FileAccess = Godot.FileAccess;
 
 namespace Origo.GodotAdapter.FileSystem;
@@ -27,9 +28,19 @@ internal static class GodotFileOperations
         if (!overwrite && FileAccess.FileExists(path))
             throw new IOException($"File already exists and overwrite is disabled: {path}");
 
+        EnsureParentDirectory(path);
         using var file = FileAccess.Open(path, FileAccess.ModeFlags.Write) ?? throw new IOException($"Cannot open file for writing: {path}");
         if (!file.StoreString(content))
             throw new IOException($"Failed to write file '{path}'.");
+    }
+
+    private static void EnsureParentDirectory(string path)
+    {
+        var parentDir = PathUtility.GetParentDirectory(path);
+        if (string.IsNullOrEmpty(parentDir) || parentDir.EndsWith("://", StringComparison.Ordinal))
+            return;
+        if (!DirAccess.DirExistsAbsolute(parentDir))
+            GodotDirectoryOperations.Create(parentDir);
     }
 
     public static void Copy(string sourcePath, string destinationPath, bool overwrite)

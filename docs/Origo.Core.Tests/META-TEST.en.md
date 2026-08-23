@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -156,9 +156,10 @@ but must observe the following whitelist principle:
      codec with storage pipeline, unable to isolate codec verification.
 
 8. **Test-only reset of global state**: test assemblies reach TypedData's internal registry via
-   `InternalsVisibleTo` and reset the kind registry plus layered converter chains through
-   `Origo.TestSupport`'s internal `TypedDataTestSupport.ResetKindRegistry()`. Production code contains
-   no `ResetForTesting` test hook.
+   `InternalsVisibleTo` and reset the kind registry through `Origo.TestSupport`'s internal
+   `TypedDataTestSupport.ResetKindRegistry()`; the layered converter chain's private static fields
+   are cleared centrally by the test-support assembly via reflection. Production code contains no
+   `ResetForTesting` test hook and no reset method whose only callers are tests.
 
 9. **Internal fault-state injection without a public trigger path**: when the fault state under test
    (faulted task, never-completing task, a listener already started before a port conflict, a broken

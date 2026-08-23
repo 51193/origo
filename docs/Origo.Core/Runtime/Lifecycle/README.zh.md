@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Lifecycle
 
@@ -63,7 +63,7 @@ SystemRun (由 SndContext 构造并持有)
 ### 运行
 
 - 每帧（`OrigoRuntime.DriveFrame`）：`SessionManager.ProcessAllSessions()` → 业务延迟队列 → `SessionManager.KillPendingAllSessions()` → 系统延迟队列 → 控制台
-- 控制台命令路由到 `OrigoConsole.ProcessPending()`
+- 控制台命令由帧驱动路由到 internal `OrigoConsole.ProcessPending()`
 - **击杀收割（`KillPending`）的异常语义与 Dispose 对称**：每个 pending 实体按"观察者双向拆线 → `BeforeDead` 钩子 → 策略/节点/数据释放 → 物理移除"四阶段独立处理，阶段间互不阻塞。某个实体的钩子抛异常时，其余实体的清理照常执行、该实体仍被移除（不会永卡 pending），首个失败在收割完成后以原始异常传播（fail-fast），后续失败记 Warning。物理移除（宿主 `RemoveEntity`）失败则立即传播。
 
 ### 持久化
@@ -73,7 +73,7 @@ SystemRun (由 SndContext 构造并持有)
 - `ISndSaveOperations.RequestLoadGame` → `SavePayloadReader.ReadFromCurrent(handle, ...)` / `ReadFromSnapshot(handle, ...)` → 恢复黑板 + 场景
 - `SaveFileHandle`：统一 I/O 上下文（`Origo.Core.Save.Storage.SaveFileHandle`），封装 `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver` + `saveRootPath` + `ISavePathPolicy`。所有 Writer/Reader 方法通过 `SaveFileHandle` 参数接收依赖，消除多参数重载链。
 - `PersistProgress`：将流程黑板与完整会话拓扑（前台 + 所有后台）序列化写入 `current/progress.json`。若当前无前台会话则抛出 `InvalidOperationException`，不静默写入部分数据。
-- `SessionRun.BuildLevelPayload`：先批量触发 BeforeSave 钩子（`FireBeforeSaveHooks`）在所有实体上，再通过 `SaveContext.BuildSndScene` 构建场景元数据。这确保任何策略在存档前有最后的机会将内存状态刷新到实体 Data 中。完整存档路径（`SaveCoordinator.BuildSavePayload`）在序列化前台场景前同样批量触发 `FireBeforeSaveHooks`，与后台会话语义一致。 钩子内覆写框架管理的黑板键（如 `SessionTopology`）会被持久化流程在序列化前以框架计算值覆盖，覆写不生效。
+- `SessionRun.BuildLevelPayload`：先批量触发 BeforeSave 钩子（`FireBeforeSaveHooks`）在所有实体上，再通过 `SaveContext.BuildSndScene` 构建场景元数据。这确保任何策略在存档前有最后的机会将内存状态刷新到实体 Data 中。完整存档路径（`SaveCoordinator.BuildSavePayload`）在序列化前台场景前同样批量触发 `FireBeforeSaveHooks`，与后台会话语义一致。 钩子内覆写框架管理的黑板键（如 `SessionTopology`）会被持久化流程在序列化前以框架计算值覆盖，覆写不生效。BeforeSave 执行期间禁止创建或销毁 Session（`CreateBackgroundSession` / `DestroySession` 抛 `InvalidOperationException`）——会话集合在钩子前已快照，钩子内变更会序列化出不一致的存档。
 - `SessionRun.LoadFromPayload`：先通过 `SaveContext.RecoverSndScene` 恢复所有实体数据/策略/节点，再批量触发 AfterLoad 钩子（`FireAfterLoadHooks`），最后 Flush 状态机 AfterLoad。这确保所有实体和 ActiveStrategy 已完全恢复后才触发任何策略的 AfterLoad，实现加载顺序无关的跨实体互操作。AfterLoad 钩子按宿主实体集合快照迭代（钩子内 spawn 的新实体走 spawn 语义、不重复触发 AfterLoad）。观察者绑定随后经宿主拓扑 `RecoverBindingsFor` 恢复；存档的 observer_indices 中引用的实体在恢复场景中缺失时抛 `InvalidOperationException`（fail-fast，严格读取契约）。
 
 ### 关卡切换
@@ -128,6 +128,10 @@ SystemRun (由 SndContext 构造并持有)
 ### 为什么 ISessionRun 不继承 IDisposable
 
 会话销毁是管理器的能力：业务代码必须通过 `ISessionManager.DestroySession`（或框架的前台切换/清理路径）销毁会话。`ISessionRun` 因此**不暴露** `Dispose()`（`IDisposable` 只由内部具体 `SessionRun` 实现，供框架与测试使用）——若策略可直接 `OwningSession.Dispose()`，销毁就会绕过管理器的挂载校验，形成 §1.4 禁止的第二条访问路径。
+
+### 为什么 DestroySession 是幂等 no-op
+
+销毁不存在的会话不构成契约违反，而是查询式接口的配套清理操作（与 `Contains` / `TryGet` 一致）。框架内部前台切换（`DestroyForeground`）与批量清理（`Clear`）都依赖这一语义，避免在调用方反复做存在性分支。这与“移除未挂载策略/状态机抛异常”不同：后者是修改一个已知聚合实例内部状态，调用方明确持有该对象；前者是按 key 清理管理器容器，调用方可能不知道也不关心槽位是否仍存在。
 
 ### 为什么运行时容器按层分离
 

@@ -15,6 +15,8 @@ internal sealed class ActionScheduler(ILogger logger) : IScheduler
 
     public void Enqueue(Action action) => _queue.Enqueue(action);
 
+    public void Enqueue(Action action, Action? onDiscard) => _queue.Enqueue(action, onDiscard);
+
     /// <summary>
     ///     Called by the host loop to execute all queued actions.
     /// </summary>

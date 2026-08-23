@@ -36,7 +36,7 @@ public class StaleLevelDirectoryCleanupTests
         bg.Spawn(CreateMeta("B"));
 
         ctx.Save.RequestSaveGame("001");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // Both live sessions' levels are persisted.
         Assert.True(fs.Exists("root/current/level_level_a/snd_scene.json"));
@@ -45,7 +45,7 @@ public class StaleLevelDirectoryCleanupTests
         ctx.Runtime.SessionManager.DestroySession("bg");
 
         ctx.Save.RequestSaveGame("002");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         // The destroyed session's level is no longer part of the payload and
         // must not survive in current/ or leak into the new snapshot.

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -43,11 +43,12 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `SetContinueTarget_MakesHasContinueDataTrue` | 设置 Continue 目标后 HasContinueData 返回 true | ISndLifecycleOperations |
 | `RequestContinueGame_ReturnsTrueAndLoadsWhenContinueSet` | Continue 正确加载存档 | ISndLifecycleOperations |
 | `RequestLoadInitialSave_LoadsFromInitialRoot` | 从初始路径加载初始存档 | ISndLifecycleOperations |
+| `RequestLoadInitialSave_RestoresExtraFilesFromInitialRoot` | 初始存档的 extra/ 文件从初始存储根恢复到运行时 current/extra | ISndArchiveFileAccess |
 | `RequestSwitchForegroundLevel_SwitchesLevel` | 关卡切换后 ForegroundSession.LevelId 正确 | ISndLifecycleOperations |
 | `CloneTemplate_ClonesAndOverridesName` | 克隆模板并覆盖名字 | ISndTemplateAccess |
 | `CloneTemplate_WithoutOverrideName_KeepsOriginal` | 不覆盖名字时保留原名 | ISndTemplateAccess |
 | `TrySubmitConsoleCommand_ReturnsTrueWhenConsoleInputExists` | 有控制台输入时提交命令成功 | ISndConsoleAccess |
-| `ProcessConsolePending_ProcessesQueuedCommands` | ProcessConsolePending 处理排队命令 | ISndConsoleAccess |
+| `DriveFrame_ProcessesQueuedConsoleCommands` | 提交命令后由 `IOrigoFrameDriver.DriveFrame` 在帧末处理 | ISndConsoleAccess / IOrigoFrameDriver |
 | `SubscribeConsoleOutput_ReturnsPositiveId` | 订阅返回正数 ID | ISndConsoleAccess |
 | `UnsubscribeConsoleOutput_RemovesSubscription` | 取消订阅后不再收到消息 | ISndConsoleAccess |
 | `EnqueueBusinessDeferred_ExecutesOnFlush` | 延迟动作在 Flush 时执行 | ISndDeferredActions |
@@ -69,11 +70,15 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `TrySubmitConsoleCommand_ReturnsFalseWhenNoConsoleInput` | 无控制台输入源 | 返回 false |
 | `SubscribeConsoleOutput_ThrowsWhenNoChannel` | 无输出通道时订阅 | InvalidOperationException |
 | `RequestContinueGame_ReturnsFalseWhenNoContinue` | 未设置 Continue 目标 | 返回 false |
+| `HasContinueData_FalseWhenTargetSaveDoesNotExist` | Continue 目标指向不存在的存档槽 | 返回 false（“save exists”契约必须核对存储枚举） |
+| `RequestContinueGame_ReturnsFalseWhenTargetSaveDoesNotExist` | Continue 目标指向不存在的存档槽 | 返回 false，不入队加载请求 |
 | `Constructor_ThrowsOnNullRuntime` | null Runtime | ArgumentNullException |
 | `Constructor_ThrowsOnNullFileSystem` | null FileSystem | ArgumentNullException |
 | `Constructor_ThrowsOnEmptySaveRootPath` | 空白 SaveRootPath | ArgumentException |
 | `Constructor_ThrowsOnEmptyInitialSaveRootPath` | 空白 InitialSaveRootPath | ArgumentException |
 | `Constructor_ThrowsOnEmptyEntryConfigPath` | 空白 EntryConfigPath | ArgumentException |
+| `Constructor_ThrowsOnBlankInitialLevelId` | 空白 InitialLevelId | ArgumentException |
+| `Constructor_ThrowsOnInvalidInitialLevelId` | InitialLevelId 含路径分隔符 | ArgumentException |
 
 ### 边界路径
 
@@ -96,6 +101,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `RequestLoadInitialSave_IsTrackedUntilFlushed` | RequestLoadInitialSave 入队后 pending 计数为 1（仅验证跟踪语义） | ISndDeferredActions |
 | `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
+| `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | 前一个持久化请求失败、同批后续请求被 fail-fast 丢弃 | pending 计数归 0（被丢弃请求的清理回调释放计数） | ISndDeferredActions |
 
 ## SndTemplateResolverTests 测试详情
 

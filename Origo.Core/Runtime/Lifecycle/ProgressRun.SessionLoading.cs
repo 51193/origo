@@ -6,6 +6,7 @@ using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Save;
 using Origo.Core.Save.Serialization;
+using Origo.Core.Save.Storage;
 using Origo.Core.StateMachine;
 using Origo.Core.Abstractions.Lifecycle;
 
@@ -225,6 +226,7 @@ internal sealed partial class ProgressRun
         {
             if (string.IsNullOrWhiteSpace(levelId))
                 throw new ArgumentException(message, paramName);
+            SavePathLayout.ValidateToken(levelId, paramName, "level id");
         }
 
         private void ValidateLevelPayload(string levelId, LevelPayload payload)

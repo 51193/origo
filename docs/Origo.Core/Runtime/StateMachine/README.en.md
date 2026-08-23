@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/StateMachine/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # StateMachine (Runtime)
 
@@ -40,6 +40,9 @@ Full replacement ensures each state machine's reference count is consistent. Par
 
 ### Why CreateOrGet throws on strategy index mismatch
 Push/Pop strategy indices are the core behavior definition. Silently returning different behavior would be dangerous.
+
+### Why PopAllRuntime remains an internal batch operation
+`PopAllOnQuit` is invoked by the session-quit pipeline; `PopAllRuntime` provides the matching runtime bulk-clear semantic. It is intentionally absent from `IStateMachineContainer` and remains an internal batch utility on the concrete container for framework orchestration and tests, preventing business code from mistaking "pop all machines" for a cross-session cleanup shortcut.
 
 ---
 [↑ Back to Runtime](../README.en.md)

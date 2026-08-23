@@ -391,19 +391,19 @@ public class SndContextArchiveFileAccessTests
         fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var node = DataSourceNode.CreateObject();
         node.Add("game_data", DataSourceNode.CreateString("persisted"));
         AsFileAccess(ctx).WriteFile("game_state.json", node);
 
         ctx.Save.RequestSaveGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         Assert.True(fs.Exists("root/save_slot_01/extra/game_state.json"));
 
         ctx.Save.RequestLoadGame("slot_01");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var readBack = AsFileAccess(ctx).ReadFile("game_state.json");
         Assert.Equal("persisted", readBack["game_data"].AsString());

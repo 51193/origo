@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Data Source Tests
 
@@ -21,7 +21,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `DataSourceTests.cs` | Remaining items: IDisposable recursive disposal with deep-tree stack overflow prevention, new accessor methods, TypeStringMapping new type registration, DataSourceConverterRegistry type hierarchy fallback, ReadOnlyDictionary round-trip |
 | `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` canonical hash computation |
 | `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` key-value file parsing (strict/lenient mode, comments, duplicate keys, null/empty content) |
-| `CorruptObserverIndicesStrictReadTests.cs` (in Save/) | Regression: when `observer_indices` contains a non-object element, **multiple target keys**, or an **empty object** (corrupted save), `LoadFromPayload` throws `InvalidOperationException` (containing "observer_indices") instead of silently dropping bindings |
+| `CorruptObserverIndicesStrictReadTests.cs` (in Save/) | Verifies: when `observer_indices` contains a non-object element, **multiple target keys**, or an **empty object** (corrupted save), `LoadFromPayload` throws `InvalidOperationException` (containing "observer_indices") instead of silently dropping bindings |
 
 ## DataSourceTests Details
 
@@ -130,6 +130,9 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `AsInt_OnNonNumericString_Throws` | CreateString("hello") → AsInt() | FormatException |
+| `CreateString_Null_Throws` | CreateString(null) | ArgumentNullException (Null nodes are CreateNull's responsibility; null must not drift into an empty Text node) |
+| `CreateNumber_NullString_Throws` | CreateNumber(string) with null | ArgumentNullException |
+| `Add_NullChild_Throws` | Map/Array Add with a null child | ArgumentNullException (deferring the error to encode time becomes an NRE or empty data) |
 | `ObjectNode_IndexerByKey_ThrowsOnMissingKey` | obj["missing"] | KeyNotFoundException |
 | `Registry_Get_ThrowsForUnregisteredType` | Get<DateTime>() unregistered | InvalidOperationException |
 | `Registry_RuntimeRead_ThrowsForUnregisteredType` | Read(typeof(DateTime), …) unregistered | InvalidOperationException |
@@ -150,6 +153,16 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `SndMetaDataConverter_Read_NonMap_Throws` | SndMetaData root node is an array | InvalidOperationException (contains "object") |
 | `SndMetaDataListConverter_Read_NonArray_Throws` | SndMetaData list root node is an object | InvalidOperationException (contains "array") |
 | `MapCodec_Encode_ThrowsForNonObjectNode` | Map encode on Array node | InvalidOperationException |
+| `MapCodec_Encode_RejectsColonInKey` | Key contains a colon | InvalidOperationException (the first colon is the decode separator and would silently split into another key/value pair) |
+| `MapCodec_Encode_RejectsCommentKey` | Key starts with `#` | InvalidOperationException (the strict decoder would treat the whole line as a comment and drop it) |
+| `MapCodec_Encode_RejectsUntrimmedKeyOrValue` | Key or value has leading/trailing whitespace | InvalidOperationException (the strict decoder trims both fields) |
+| `MapCodec_Encode_RejectsNonTextChild` | Number/Bool child | InvalidOperationException (`.map` only carries strings; decoding would silently drift the type) |
+| `MapCodec_Encode_EmptyKey_Throws` | Empty key | InvalidOperationException |
+| `ArrayConverter_Read_NullNode_Throws` | Array converter reads a Null root node | InvalidOperationException (must not silently become an empty array) |
+| `ArrayConverter_Read_ScalarNode_Throws` | Array converter reads a scalar root node | InvalidOperationException |
+| `ArrayConverter_Read_ObjectNode_Throws` | Array converter reads an object root node | InvalidOperationException |
+| `DataSourceNode_Keys_OnNonMap_Throws` | Keys accessed on a non-Map node | InvalidOperationException (wrong shape must not silently become an empty key set) |
+| `DataSourceNode_CountAndElements_OnNonArray_Throw` | Count/Elements accessed on a non-Array node | InvalidOperationException |
 | `LazyNode_WhenExpanderThrows_NodeStaysLazy_AndCanRetrySuccessfully` | First expansion throws InvalidOperationException | After first access throws, node stays Lazy, second access succeeds (callCount=2) |
 | `LazyNode_WhenExpanderThrows_NodeCanStillBeDisposed` | Expander always throws InvalidOperationException | Can still Dispose after failed expansion, subsequent access throws ObjectDisposedException |
 | `MapCodec_Decode_LineWithoutColon_Throws` | Map text with line missing colon | FormatException |
@@ -201,7 +214,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `NumberIntegerVsFloatWithSameValue_HaveDifferentHashes` | Integer 1 and float 1.0 canonicalized to same hash (value-equivalent) | DataSource |
 | `HashIsHexString` | Hash is 64-character lowercase hex string | DataSource |
 | `SameComplexTree_DifferentInstances_SameHash` | Different instances of same structure produce same hash | DataSource |
-| `DecodedDeeplyNestedTree_AllLevelsExpanded_DepthThreeHashDiffers` | Decoded tree expanded to depth 3 with changed leaf value produces different hash (regression: lazy subtrees included in hash) | DataSource |
+| `DecodedDeeplyNestedTree_AllLevelsExpanded_DepthThreeHashDiffers` | Decoded tree expanded to depth 3 with changed leaf value produces different hash (verifies lazy subtrees are included in hash) | DataSource |
 | `DecodedNestedTree_ArrayDeepChange_ProducesDifferentHash` | Deep object value change inside decoded tree array produces different hash | DataSource |
 | `DecodedNestedTree_DeepKeyChange_ProducesDifferentHash` | Deep key change in decoded tree produces different hash | DataSource |
 | `DecodedNestedTree_DeepValueChange_ProducesDifferentHash` | Deep leaf value change in decoded tree produces different hash | DataSource |

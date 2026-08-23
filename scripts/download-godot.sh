@@ -8,8 +8,9 @@ cd "$ROOT"
 CSPROJ="$ROOT/Origo.GodotAdapter/Origo.GodotAdapter.csproj"
 GODOT_CACHE_DIR="$ROOT/.godot_binary"
 
-# Parse Godot.NET.Sdk version from csproj, e.g. "4.6.3"
-VERSION=$(grep -oP 'Godot\.NET\.Sdk/\K[0-9]+\.[0-9]+\.[0-9]+' "$CSPROJ" | head -1)
+# Parse Godot.NET.Sdk version from csproj, e.g. "4.6.3".
+# sed -E is used instead of grep -P because macOS ships BSD grep without PCRE.
+VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' "$CSPROJ" | head -1)
 if [[ -z "$VERSION" ]]; then
     echo "ERROR: Could not parse Godot.NET.Sdk version from $CSPROJ" >&2
     exit 1

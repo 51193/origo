@@ -75,4 +75,35 @@ public class ConcurrentActionQueueTests
         queue.Enqueue(() => throw new InvalidOperationException("boom"));
         Assert.Throws<InvalidOperationException>(() => queue.ExecuteAll());
     }
+
+    [Fact]
+    public void ConcurrentActionQueue_ExecuteAll_DiscardCallbackThrows_RunsRemainingCallbacksAndAggregates()
+    {
+        var queue = new ConcurrentActionQueue(new TestLogger());
+        var remainingDiscardRan = false;
+        queue.Enqueue(() => throw new InvalidOperationException("action failed"));
+        queue.Enqueue(() => { }, () => throw new InvalidOperationException("discard failed"));
+        queue.Enqueue(() => { }, () => remainingDiscardRan = true);
+
+        var ex = Assert.Throws<AggregateException>(() => queue.ExecuteAll());
+
+        Assert.Equal(2, ex.InnerExceptions.Count);
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "action failed");
+        Assert.Contains(ex.InnerExceptions, e => e.Message == "discard failed");
+        Assert.True(remainingDiscardRan);
+    }
+
+    [Fact]
+    public void ConcurrentActionQueue_Clear_DiscardCallbackThrows_RunsRemainingCallbacksAndRethrowsFirst()
+    {
+        var queue = new ConcurrentActionQueue(new TestLogger());
+        var remainingDiscardRan = false;
+        queue.Enqueue(() => { }, () => throw new InvalidOperationException("discard1 failed"));
+        queue.Enqueue(() => { }, () => remainingDiscardRan = true);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => queue.Clear());
+
+        Assert.Equal("discard1 failed", ex.Message);
+        Assert.True(remainingDiscardRan);
+    }
 }

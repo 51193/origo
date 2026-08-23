@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -118,19 +118,21 @@ public interface ISndBlackboardAccess {
 // 延迟动作
 public interface ISndDeferredActions {
     void EnqueueBusinessDeferred(Action action);
-    void FlushDeferredActionsForCurrentFrame();
     int GetPendingPersistenceRequestCount();
 }
 
 // 模板
 public interface ISndTemplateAccess {
     SndMetaData CloneTemplate(string templateKey, string? overrideName = null);
+    IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root);
+    IReadOnlyList<SndMetaData> LoadMetaListFromFile(string filePath);
+    void LoadTemplates(string mapFilePath);
+    void LoadSceneAliases(string mapFilePath);
 }
 
 // 控制台
 public interface ISndConsoleAccess {
     bool TrySubmitConsoleCommand(string commandLine);
-    void ProcessConsolePending();
     long SubscribeConsoleOutput(Action<string> onLine);
     void UnsubscribeConsoleOutput(long subscriptionId);
 }
@@ -244,7 +246,6 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     //   IBlackboard? ProgressBlackboard { get; }
     // 继承自 ISndDeferredActions:
     //   void EnqueueBusinessDeferred(Action action);
-    //   void FlushDeferredActionsForCurrentFrame();
     //   int GetPendingPersistenceRequestCount();
 
     IBlackboard? SessionBlackboard { get; }
@@ -344,7 +345,7 @@ using Origo.Core.DataSource;
 using Origo.Core.Snd.Strategy;
 
 [StrategyIndex("example.config_loader")]
-public class ConfigLoadStrategy : LifecycleStrategyBase
+public sealed class ConfigLoadStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)
     {

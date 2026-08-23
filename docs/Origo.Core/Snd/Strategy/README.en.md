@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -191,7 +191,7 @@ All three are recovered separately during `RecoverForLifecycle` with no cross-co
 
 ```csharp
 [StrategyIndex("my_game.player_control", Priority = 100)]
-public class PlayerControlStrategy : LifecycleStrategyBase { ... }
+public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 ```
 
 - `Index`: required, unique index key for the strategy in the pool
@@ -204,6 +204,10 @@ public class PlayerControlStrategy : LifecycleStrategyBase { ... }
 Strategy instances are shared across multiple entities; instance fields (such as `int _hp`) would cause cross-entity contamination. Registration-time reflection checks all levels between `BaseStrategy` and the concrete type, rejecting strategies that declare instance fields or writable properties, blocking this error at the source.
 
 A side effect of this constraint: **test strategies cannot use instance fields as event receivers** and must use static fields (`static List<string>?`) to share event collection across strategy instances. Test classes using static fields must be serialized via `[Collection]` attributes or globally disable parallel execution via `[assembly: CollectionBehavior(DisableTestParallelization = true)]` to prevent race conditions between parallel tests. See `Origo.Core.Tests/Architecture.en.md`.
+
+### Why strategy types must be sealed
+
+Strategy instances are shared by the pool. Allowing inheritance would let derived types bypass registration-time field validation or let one strategy index produce different subclass instances at different call sites, breaking the one-to-one relationship between index and behavior. Registration enforces `sealed` so strategy behavior is fixed to the registered type.
 
 ### Why use reference counting instead of a single instance
 
@@ -225,6 +229,9 @@ ActiveStrategy is recovered during `RecoverForLifecycle` (Phase 1), before `Fire
 
 `SndStrategyPool`'s reference counts, registration table, and instance cache are only accessed on the frame thread (single-threaded frame model). Cross-thread scenarios (deferred-queue enqueue/dequeue, console input, etc.) only carry actions and data and never touch the pool; engine callbacks and business strategy hooks all run on the frame thread. Reference counting therefore needs no locking — concurrent pool access is a contract violation with undefined behavior.
 
+- **Alternative direction: entity-level concurrency (deferred)**: Statelessness makes strategy types shareable across entities, but entity Data, cross-entity `InvokeStrategy`, synchronous observer notifications, and scene-container mutation are still designed for the single-threaded frame model; the priority order among multiple strategies inside one entity must also be preserved. The candidate design is "concurrency as an entity property" + a concurrency-mode data container + running concurrent entities first in parallel, then running the rest serially after a barrier; it is deferred because there is currently no performance bottleneck. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
+- **Alternative direction: relative ordering constraints for lifecycle strategies (deferred)**: The current numeric `Priority` ordering is simple and deterministic, but strategy growth may create numeric coordination burden. The candidate design replaces it with `Before` / `After` partial-order constraints, automatically positions strategies topologically at insertion or registration, and throws immediately on cycles; deferred because the benefit is limited at the current scale. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
+- **Alternative direction: multiple ActiveStrategy implementations per index (deferred)**: The strategy index is currently globally unique, and each entity also has only one implementation for the same active index. The candidate design upgrades the index into a "contract name / interface name", binds concrete implementations per target entity, and dispatches `InvokeStrategy("hurt")` through the entity binding table; the current workarounds — a single strategy switching on entity fields, or the `*_impl` replaceable-implementation pattern — cover today's needs, so it is deferred. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
 ---
 
 [↑ Back to Snd](../README.en.md)

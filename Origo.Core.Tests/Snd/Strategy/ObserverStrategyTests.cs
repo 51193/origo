@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
@@ -172,6 +174,58 @@ public class ObserverStrategyTests : IDisposable
         ((IEntityLifecycle)entity).ReleaseStrategiesOnly();
         runtime.SndWorld.StrategyPool.LogPoolLeaks();
         Assert.DoesNotContain(logger.Warnings, w => w.Contains("leak", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void SessionDestroy_WhenOnUnmountedThrows_PoolReferenceStillReleased()
+    {
+        var logger = new TestLogger();
+        var fs = new TestMemoryFileSystem();
+        var host = new FullMemorySndSceneHost(logger);
+        var runtime = TestFactory.CreateRuntime(
+            logger,
+            host,
+            new TypeStringMapping(),
+            new Blackboard.Blackboard(),
+            DataSourceFactory.CreateDefaultIoGateway(fs));
+        host.BindWorld(runtime.SndWorld);
+        runtime.SndWorld.RegisterStrategy(() => new ThrowOnUnmountObserver());
+
+        var io = DataSourceFactory.CreateDefaultIoGateway(fs);
+        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
+        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, io, metaAccess, pathResolver, "root", "res://initial", "entry.json")
+        {
+            AutoDiscoverStrategies = false
+        });
+        host.BindContext(ctx);
+        fs.SeedFile("entry.json",
+            "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]");
+
+        ctx.Bootstrap();
+        ctx.FlushFrame();
+
+        var session = ctx.Runtime.SessionManager.ForegroundSession!;
+        var observer = session.Spawn(CreateMeta("session_observer"));
+        var target = session.Spawn(CreateMeta("session_target"));
+        observer.MountObserverStrategy(target, _throwOnUnmountIdx);
+
+        // Session destruction is the real FullCleanup path: ReleaseAllEntities
+        // removes each binding and calls TeardownObserverBindings, where the
+        // throwing OnUnmounted hook must not skip the pool release.
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            session.SessionManager.DestroySession(ISessionManager.ForegroundKey));
+        Assert.Contains("OnUnmounted boom", ex.Message);
+
+        // The binding was removed before OnUnmounted ran, so only a
+        // guaranteed release inside FullCleanup can prevent this leak.
+        ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        Assert.DoesNotContain(
+            logger.Warnings,
+            w => w.Contains(_throwOnUnmountIdx, StringComparison.Ordinal)
+                 && w.Contains("refCount", StringComparison.Ordinal));
     }
 
     // ── Data change notification ───────────────────────────────────────
@@ -624,7 +678,7 @@ public class ObserverStrategyTests : IDisposable
             "res://entry/entry.json"));
         host.BindContext(ctx);
         ctx.Lifecycle.RequestLoadMainMenuEntrySave();
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
         var entity = session.Spawn(CreateMeta("bob"));

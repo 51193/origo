@@ -5,6 +5,13 @@ obj/
 *.user
 *.suo
 
+# Repository-local .NET SDK and CLI/NuGet caches installed by
+# scripts/install-dotnet.sh when the default user install roots are not
+# writable. The ./dotnet wrapper script at the repository root is tracked.
+/.dotnet/
+/.dotnet-cli-home/
+/.nuget/
+
 # JetBrains Rider / IntelliJ
 .idea/
 _ReSharper.Caches/
@@ -13,17 +20,8 @@ riderModule.iml
 # Godot
 .godot/
 
-# UID files: ignore all by default, then whitelist [GlobalClass] Node scripts
+# Godot UID files are generated artifacts and are not tracked.
 *.uid
-
-# Snd: only keep explicit UIDs
-!Origo.GodotAdapter/Snd/GodotSndEntity.cs.uid
-!Origo.GodotAdapter/Snd/GodotSndManager.cs.uid
-
-# Bootstrap: only keep explicit UIDs
-!Origo.GodotAdapter/Bootstrap/OrigoAutoHost.cs.uid
-!Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.cs.uid
-!Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs.uid
 
 # Build output
 publish/
@@ -38,6 +36,9 @@ TestResults/
 Thumbs.db
 # Godot binary cache (downloaded by scripts/download-godot.sh)
 .godot_binary/
+
+# Godot user-data home used when the real HOME/XDG directories are read-only
+.godot-home/
 
 artifacts/
 

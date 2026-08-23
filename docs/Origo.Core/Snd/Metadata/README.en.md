@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Metadata
 
@@ -69,7 +69,7 @@ Aggregates all entity metadata:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `Name` | `string` | Entity unique identifier name |
+| `Name` | `string` | Entity unique identifier name; per-session uniqueness is enforced by spawn/load orchestration (lookup, observer topology, save recovery, and `IsSameEntityAs` key on names) |
 | `NodeMetaData` | `NodeMetaData?` | Node mapping; may be null for background entities |
 | `StrategyMetaData` | `StrategyMetaData?` | Strategy index list |
 | `DataMetaData` | `DataMetaData?` | Data dictionary; defaults to empty container |

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
@@ -70,10 +71,10 @@ public class SessionRunHookIterationTests
         // construction; a hook that spawns an entity must not break
         // serialization, and the spawned entity must survive the round trip.
         ctx.Save.RequestSaveGame("hook_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         ctx.Save.RequestLoadGame("hook_save");
-        ctx.Deferred.FlushDeferredActionsForCurrentFrame();
+        ctx.FlushFrame();
 
         var names = ctx.Runtime.SessionManager.ForegroundSession!.GetEntities()
             .Select(e => e.Name).ToList();
@@ -177,8 +178,11 @@ public class SessionRunHookIterationTests
     [StrategyIndex(InfiniteSpawnIdx)]
     private sealed class InfiniteSpawnStrategy : LifecycleStrategyBase
     {
+        private static int _spawnCounter;
+
         public override void BeforeQuit(ISndEntity entity, ISndContext ctx) =>
-            entity.OwningSession.Spawn(CreateMeta("B", InfiniteSpawnIdx));
+            entity.OwningSession.Spawn(
+                CreateMeta($"B{Interlocked.Increment(ref _spawnCounter)}", InfiniteSpawnIdx));
     }
 
     [StrategyIndex(NormalIdx)]

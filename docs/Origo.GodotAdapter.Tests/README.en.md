@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter.Tests
 
@@ -41,7 +41,7 @@ runtime behavior (real file system, Node lifecycle, bootstrap orchestration).
 | Capability | Document | Files | Tests | Verification Focus |
 |------------|----------|-------|-------|--------------------|
 | Architecture Guardrails | [Architecture.md](Architecture.en.md) | 1 | 8 | SndContext public role interface completeness, session creation/destruction, CommandHandlerBase public visibility, GodotSndEntity internal lifecycle guard, GodotSndManager write-path sealing, private `_camelCase` field naming |
-| SND Entities | [Snd.md](Snd.en.md) | 3 | 23 | SndEntityCollection full capability with batch recovery rollback, TypedDataInitializer forced loading, node extension contracts |
+| SND Entities | [Snd.md](Snd.en.md) | 3 | 23 | SndEntityCollection full capability with batch recovery rollback, assembly-load-triggered kind registration, node extension contracts |
 | Console | [Console.md](Console.en.md) | 5 | 28 | press_button / camera_view / tree_debug commands, CommandHandlerBase argument validation and guards, ProjectionHelper world→screen projection |
 | File System | [FileSystem.md](FileSystem.en.md) | 1 | 3 | GodotFileSystem res:// / user:// path handling (delegated to PathUtility) |
 | Logging | [Logging.md](Logging.en.md) | 1 | 9 | GodotLogger delegate injection, null handler safety and level filtering |

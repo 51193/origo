@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd
 
@@ -27,7 +27,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | `ISndContext.cs` | SND 上下文统一门面接口：通过 10 个 companion 属性暴露所有能力（[详见 Abstractions/Snd](../Abstractions/Snd/README.zh.md)） |
 | `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→别名/模板加载→入口存档加载。经 companion 对象 `SndContextFileAccess` 提供 `ISndFileAccess`（文件读写委托 `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`） |
 | `SndContextParameters.cs` | SndContext 构造参数对象。含 `AutoDiscoverStrategies`、`DiscoverySkipPrefixes`、`SceneAliasMapPath`、`SndTemplateMapPath`、`InitialLevelId` 等启动配置属性 |
-| `SndWorld.cs` | SND 世界：策略池 + 类型映射 + 转换器注册表 + 模板/别名 |
+| `SndWorld.cs` | SND 世界：策略池 + 类型映射 + 转换器注册表 + 模板/别名。`LoadSceneAliases` / `LoadTemplates` 为 `internal`，由 `SndContext.Bootstrap` 或 `ISndTemplateAccess` companion（`ctx.Template.LoadTemplates` / `ctx.Template.LoadSceneAliases`）调用 |
 | `SndDefaults.cs` | `internal` — SND 系统默认值常量。定义 `InitialSaveId`（"000"）、`InitialLevelId`（"default"）、`MainMenuLevelId`（"main_menu"），供 Core 内部持久化流程和启动编排使用。 |
 | `SndMappings.cs` | 场景别名解析 + 模板注册与解析 |
 | `SndTemplateResolver.cs` | 模板解析器：支持 JSON 数组和 .map 简写两种模板格式 |
@@ -97,14 +97,14 @@ SND 的观察统一由观察者策略（`ObserverStrategyBase`）承载，自观
 `SndContext.Bootstrap()` 按固定顺序执行 Core 的全部初始化操作：
 
 1. **转换器注册**：若 `SndContextParameters.ConfigureConverters` 非空，调用之注册自定义 `DataSourceConverter`
-2. **策略发现**：若 `SndContextParameters.AutoDiscoverStrategies` 为 true，通过 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 扫描程序集中的 `[StrategyIndex]` 注解类型，使用 `DiscoverySkipPrefixes` 过滤适配层程序集
-3. **场景别名加载**：若 `SceneAliasMapPath` 非空，调用 `SndWorld.LoadSceneAliases()`
-4. **SND 模板加载**：若 `SndTemplateMapPath` 非空，调用 `SndWorld.LoadTemplates()`
+2. **策略发现**：若 `SndContextParameters.AutoDiscoverStrategies` 为 true，通过 `internal` 的 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 扫描程序集中的 `[StrategyIndex]` 注解类型，使用 `DiscoverySkipPrefixes` 过滤适配层程序集
+3. **场景别名加载**：若 `SceneAliasMapPath` 非空，调用 `internal` 的 `SndWorld.LoadSceneAliases()`
+4. **SND 模板加载**：若 `SndTemplateMapPath` 非空，调用 `internal` 的 `SndWorld.LoadTemplates()`
 5. **入口存档加载**：调用 `RequestLoadMainMenuEntrySave()`
 
 适配层仅通过 `SndContextParameters` 传入配置，不需要知道上述步骤的执行顺序和内部实现。
 
-> **Bootstrap 守卫**：`Bootstrap()` 只允许执行一次（重复调用抛 `InvalidOperationException`），并在入队入口存档加载前校验适配层场景宿主已就绪——若宿主是 `IObserverTopologyHost` 但观察者拓扑尚未绑定上下文（例如在 `SndManager.BindContext` 之前调用 `Bootstrap`），立即抛异常并给出明确错误信息，避免延迟到帧末冲刷时才失败。入口存档加载是延迟操作（系统延迟队列），早失败防止"顺序颠倒"的调用者得到混乱的延迟报错。
+> **Bootstrap 守卫**：`Bootstrap()` 只允许执行一次（重复调用抛 `InvalidOperationException`），并在入队入口存档加载前校验适配层场景宿主已就绪——若宿主是 `IObserverTopologyHost` 但观察者拓扑尚未绑定上下文（例如在 `SndManager.BindContext` 之前调用 `Bootstrap`），立即抛异常并给出明确错误信息，避免延迟到帧末冲刷时才失败。入口存档加载是延迟操作（系统延迟队列），早失败防止"顺序颠倒"的调用者得到混乱的延迟报错。单次守卫在任何 bootstrap 工作开始前提交，因此**首次调用失败后同一 SndContext 实例也不可重试**；调用方应重建 context。
 
 ### 为什么启动编排集中在 SndContext.Bootstrap()
 

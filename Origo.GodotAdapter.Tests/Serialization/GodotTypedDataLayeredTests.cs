@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Godot;
 using Origo.Core.Snd.Metadata;
 using Origo.GodotAdapter.Snd;
@@ -11,7 +12,9 @@ public class GodotTypedDataLayeredTests
 {
     static GodotTypedDataLayeredTests()
     {
-        TypedDataInitializer.EnsureLoaded();
+        // Force the GodotAdapter assembly to load so its generated
+        // [ModuleInitializer] registrations run before TypedData kind use.
+        RuntimeHelpers.RunModuleConstructor(typeof(GodotSndManager).Module.ModuleHandle);
     }
     [Fact]
     public void Godot_Vector2_Kind_Is_Resolved()
