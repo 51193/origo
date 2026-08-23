@@ -4,7 +4,7 @@
   The CI script (scripts/download-godot.sh) reads the authority version from
   the adapter .csproj and downloads the matching Godot engine binary.
 -->
-<Project Sdk="Godot.NET.Sdk/4.7.1">
+<Project Sdk="Godot.NET.Sdk/4.7.2">
 
     <PropertyGroup>
         <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>

@@ -46,6 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Godot upgraded to 4.7.2** — `Godot.NET.Sdk` now targets 4.7.2 in both the adapter and headless integration-test project, keeping the CI-downloaded engine aligned with the runtime dependency.
+
 - **BREAKING: `OrigoAutoInitializer` and `SndWorld.LoadSceneAliases` / `LoadTemplates` are now `internal`** — strategy auto-discovery, JSON-array spawning, and alias/template map loading are reachable only through the `ISndContext.Bootstrap` orchestration (and its `SndContextParameters`); game-side strategy registration remains available through `SndWorld.RegisterStrategy`.
 - **BREAKING: `ISndTemplateAccess` now exposes the complete template-entity path** — in addition to `CloneTemplate`, it provides `ResolveMetaListFromJsonArray`, `LoadMetaListFromFile` (JSON array files with `templateKey`/`sndName` shorthand), and runtime `LoadTemplates` / `LoadSceneAliases` map reloads. External implementations of `ISndTemplateAccess` must implement the new members; business code no longer needs `OrigoAutoInitializer.LoadAndSpawnFromFile` or raw `SndWorld` access to load/spawn template entities.
 
