@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
@@ -176,7 +177,7 @@ public class ObserverStrategyTests : IDisposable
     }
 
     [Fact]
-    public void KillPending_WhenOnUnmountedThrows_PoolReferenceStillReleased()
+    public void SessionDestroy_WhenOnUnmountedThrows_PoolReferenceStillReleased()
     {
         var logger = new TestLogger();
         var fs = new TestMemoryFileSystem();
@@ -207,17 +208,18 @@ public class ObserverStrategyTests : IDisposable
         ctx.FlushFrame();
 
         var session = ctx.Runtime.SessionManager.ForegroundSession!;
-        var observer = session.Spawn(CreateMeta("kill_observer"));
-        var target = session.Spawn(CreateMeta("kill_target"));
+        var observer = session.Spawn(CreateMeta("session_observer"));
+        var target = session.Spawn(CreateMeta("session_target"));
         observer.MountObserverStrategy(target, _throwOnUnmountIdx);
-        session.RequestKillEntity(observer.Name);
 
-        // The kill sweep must surface the throwing user hook...
-        var ex = Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+        // Session destruction is the real FullCleanup path: ReleaseAllEntities
+        // removes each binding and calls TeardownObserverBindings, where the
+        // throwing OnUnmounted hook must not skip the pool release.
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            session.SessionManager.DestroySession(ISessionManager.ForegroundKey));
         Assert.Contains("OnUnmounted boom", ex.Message);
 
-        // ...but the observer strategy reference must still return to the
-        // pool. The binding was removed before OnUnmounted ran, so only a
+        // The binding was removed before OnUnmounted ran, so only a
         // guaranteed release inside FullCleanup can prevent this leak.
         ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
         Assert.DoesNotContain(
