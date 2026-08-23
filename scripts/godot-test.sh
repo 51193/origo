@@ -5,11 +5,30 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# Godot writes logs/caches under the XDG user directories. In containers and
+# restricted sandboxes those directories are often read-only; redirect them to
+# a repository-local (git-ignored) home before any dotnet or Godot process
+# runs, so no caller-side HOME/XDG export is needed.
+GODOT_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
+GODOT_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
+GODOT_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
+if [[ ! -w "$GODOT_DATA_DIR" || ! -w "$GODOT_CONFIG_DIR" || ! -w "$GODOT_CACHE_DIR" ]]; then
+    mkdir -p "$ROOT/.godot-home/.local/share" "$ROOT/.godot-home/.config" "$ROOT/.godot-home/.cache"
+    export HOME="$ROOT/.godot-home"
+    export XDG_DATA_HOME="$ROOT/.godot-home/.local/share"
+    export XDG_CONFIG_HOME="$ROOT/.godot-home/.config"
+    export XDG_CACHE_HOME="$ROOT/.godot-home/.cache"
+fi
+
+source "$ROOT/scripts/dotnet-env.sh"
+
 # Godot.NET.Sdk is a version-coupled pair across the adapter and the
 # integration-test project. download-godot.sh reads the adapter version as
 # the authority; fail here if the integration project ever drifts.
-ADAPTER_SDK_VERSION=$(grep -oP 'Godot\.NET\.Sdk/\K[0-9]+\.[0-9]+\.[0-9]+'     "$ROOT/Origo.GodotAdapter/Origo.GodotAdapter.csproj" | head -1)
-INTEGRATION_SDK_VERSION=$(grep -oP 'Godot\.NET\.Sdk/\K[0-9]+\.[0-9]+\.[0-9]+'     "$ROOT/Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj" | head -1)
+# sed -E is portable to macOS; grep -oP requires GNU grep and would break
+# the documented local-CI reproduction on Darwin.
+ADAPTER_SDK_VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' "$ROOT/Origo.GodotAdapter/Origo.GodotAdapter.csproj" | head -1)
+INTEGRATION_SDK_VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' "$ROOT/Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj" | head -1)
 if [[ "$ADAPTER_SDK_VERSION" != "$INTEGRATION_SDK_VERSION" ]]; then
     echo "ERROR: Godot.NET.Sdk version mismatch:" >&2
     echo "  adapter:        $ADAPTER_SDK_VERSION" >&2

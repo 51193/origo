@@ -350,6 +350,32 @@ missing language files) always fail the build.
 - Apply the same grouping rule to any future package family with exact
   cross-package constraints.
 
+### 1.10 Environment Bootstrap — Install the Required SDK, Never Downgrade the Request
+
+> **Before running any `dotnet` command, make the environment match the
+> repository requirement instead of adapting the repository to the machine.**
+
+- `global.json` is authoritative for the required .NET SDK feature band.
+  Never edit `global.json` to match an already-installed SDK.
+- Install the exact requested SDK through `bash scripts/install-dotnet.sh`
+  (it parses `global.json` and uses the official `dotnet-install.sh`).
+  Prefer the machine default install root (`$HOME/.dotnet`, which
+  `dotnet-install.sh` uses by default) so a normally configured login shell
+  resolves plain `dotnet` with no per-session `PATH`/`DOTNET_ROOT` export.
+- When the default install roots are read-only (containers/restricted
+  sandboxes), `scripts/install-dotnet.sh` installs the SDK into the
+  repository-local `.dotnet/` directory. In that mode use `./dotnet` from
+  the repository root; the tracked wrapper sets the child-process
+  environment internally and exports nothing into the caller shell.
+- Repository scripts source `scripts/dotnet-env.sh`, which prefers
+  `.dotnet/` when present and otherwise falls back to the system `dotnet`.
+  Do not add `export DOTNET_ROOT=...`, `export PATH=.../.dotnet...`, or
+  `export NUGET_PACKAGES=...` to shell profiles or per-session workflows as
+  a substitute for running the install script.
+- Godot engine binaries are a separate dependency: `scripts/download-godot.sh`
+  parses the `Godot.NET.Sdk` version from `Origo.GodotAdapter.csproj` and
+  caches the matching engine under `.godot_binary/`.
+
 ---
 
 ## 2. Development Loop (Mandatory Order)

@@ -5,6 +5,13 @@ obj/
 *.user
 *.suo
 
+# Repository-local .NET SDK and CLI/NuGet caches installed by
+# scripts/install-dotnet.sh when the default user install roots are not
+# writable. The ./dotnet wrapper script at the repository root is tracked.
+/.dotnet/
+/.dotnet-cli-home/
+/.nuget/
+
 # JetBrains Rider / IntelliJ
 .idea/
 _ReSharper.Caches/
@@ -29,6 +36,9 @@ TestResults/
 Thumbs.db
 # Godot binary cache (downloaded by scripts/download-godot.sh)
 .godot_binary/
+
+# Godot user-data home used when the real HOME/XDG directories are read-only
+.godot-home/
 
 artifacts/
 

@@ -23,6 +23,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+source "$ROOT/scripts/dotnet-env.sh"
 
 BASELINE="docs/benchmarks/baseline.json"
 OPS_THRESHOLD=0.50
