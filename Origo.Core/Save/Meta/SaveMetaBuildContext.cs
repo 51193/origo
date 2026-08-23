@@ -28,8 +28,8 @@ public readonly struct SaveMetaBuildContext
         ArgumentNullException.ThrowIfNull(sceneAccess);
         SaveId = saveId;
         CurrentLevelId = currentLevelId;
-        Progress = progress;
-        Session = session;
+        Progress = new ReadOnlyBlackboard(progress);
+        Session = new ReadOnlyBlackboard(session);
         SceneAccess = sceneAccess;
     }
 

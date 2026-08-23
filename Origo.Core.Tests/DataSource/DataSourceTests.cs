@@ -356,6 +356,22 @@ public class DataSourceTests
     }
 
     [Fact]
+    public void DataSourceNode_Keys_DoesNotExposeMutableBackingList()
+    {
+        var node = DataSourceNode.CreateObject().Add("key", DataSourceNode.CreateString("value"));
+
+        Assert.False(node.Keys is List<string>);
+    }
+
+    [Fact]
+    public void DataSourceNode_Elements_DoesNotExposeMutableBackingList()
+    {
+        var node = DataSourceNode.CreateArray().Add(DataSourceNode.CreateNumber(1));
+
+        Assert.False(node.Elements is List<DataSourceNode>);
+    }
+
+    [Fact]
     public void MapCodec_DuplicateKey_WarningIsObservable()
     {
         // The duplicate-key warning must reach a real logger instead of

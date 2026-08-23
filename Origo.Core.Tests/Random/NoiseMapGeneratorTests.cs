@@ -90,4 +90,19 @@ public class NoiseMapGeneratorTests
 
         Assert.Equal(paramName, exception.ParamName);
     }
+
+    [Fact]
+    public void ExtendedOverload_NonFiniteFloatParameters_Throw()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            NoiseMapGenerator.GenerateSimplexWorleyBlendMap(16, 42, float.NaN, 3, 2f, 0.5f, 1f));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            NoiseMapGenerator.GenerateSimplexWorleyBlendMap(16, 42, float.PositiveInfinity, 3, 2f, 0.5f, 1f));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            NoiseMapGenerator.GenerateSimplexWorleyBlendMap(16, 42, 0.01f, 3, float.NaN, 0.5f, 1f));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            NoiseMapGenerator.GenerateSimplexWorleyBlendMap(16, 42, 0.01f, 3, 2f, float.PositiveInfinity, 1f));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            NoiseMapGenerator.GenerateSimplexWorleyBlendMap(16, 42, 0.01f, 3, 2f, 0.5f, float.NaN));
+    }
 }

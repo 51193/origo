@@ -118,8 +118,8 @@ public sealed class SndContext : ISndContext
             throw new InvalidOperationException(
                 "SndContext.Bootstrap has already been executed. Bootstrap must be called exactly once.");
 
-        EnsureSceneHostReady();
         _bootstrapped = true;
+        EnsureSceneHostReady();
 
         _parameters.ConfigureConverters?.Invoke(Runtime.SndWorld.ConverterRegistry);
 

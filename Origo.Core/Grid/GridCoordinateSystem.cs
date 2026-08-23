@@ -62,9 +62,9 @@ public static class GridCoordinateSystem
 
     private static void ValidateDimensions(float cellSize, int gridSize)
     {
-        if (cellSize <= 0f)
+        if (!float.IsFinite(cellSize) || cellSize <= 0f)
             throw new ArgumentOutOfRangeException(nameof(cellSize), cellSize,
-                "Cell size must be positive.");
+                "Cell size must be a finite positive number.");
         if (gridSize <= 0)
             throw new ArgumentOutOfRangeException(nameof(gridSize), gridSize,
                 "Grid size must be positive.");

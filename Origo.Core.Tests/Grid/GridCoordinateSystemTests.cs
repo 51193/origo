@@ -103,4 +103,20 @@ public class GridCoordinateSystemTests
         Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, 1f, 0, out _));
         Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, 1f, -5, out _));
     }
+
+    [Fact]
+    public void GridToWorld_NonFiniteCellSize_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.GridToWorld(0, float.NaN, 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.GridToWorld(0, float.PositiveInfinity, 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.GridToWorld(0, float.NegativeInfinity, 10));
+    }
+
+    [Fact]
+    public void WorldToGrid_NonFiniteCellSize_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, float.NaN, 10, out _));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, float.PositiveInfinity, 10, out _));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GridCoordinateSystem.WorldToGrid(0f, float.NegativeInfinity, 10, out _));
+    }
 }

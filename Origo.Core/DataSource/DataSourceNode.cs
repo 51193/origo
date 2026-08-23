@@ -79,7 +79,10 @@ public sealed class DataSourceNode : IDisposable
         }
     }
 
-    /// <summary>Enumerates the keys of a map node.</summary>
+    /// <summary>
+    ///     Enumerates the keys of a map node through a read-only view; the
+    ///     underlying key storage is not exposed for mutation.
+    /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when this node is not a map.</exception>
     public IEnumerable<string> Keys
     {
@@ -89,7 +92,7 @@ public sealed class DataSourceNode : IDisposable
             if (_kind != DataSourceNodeKind.Map)
                 throw new InvalidOperationException(
                     $"Cannot enumerate keys of a {_kind} DataSourceNode; expected Map.");
-            return _orderedKeys;
+            return _orderedKeys.AsReadOnly();
         }
     }
 
@@ -117,7 +120,10 @@ public sealed class DataSourceNode : IDisposable
         }
     }
 
-    /// <summary>Enumerates the child nodes of an array node.</summary>
+    /// <summary>
+    ///     Enumerates the child nodes of an array node through a read-only
+    ///     view; the underlying child storage is not exposed for mutation.
+    /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when this node is not an array.</exception>
     public IEnumerable<DataSourceNode> Elements
     {
@@ -125,7 +131,7 @@ public sealed class DataSourceNode : IDisposable
         {
             EnsureExpanded();
             ThrowIfNotKind(DataSourceNodeKind.Array, "enumerate elements of");
-            return _arrayChildren;
+            return _arrayChildren.AsReadOnly();
         }
     }
 
