@@ -181,25 +181,40 @@ public partial class GodotSndManager
         // enumeration and skip the remaining entities' cleanup.
         foreach (var entity in _collection.GetEntities())
         {
-            try
-            {
-                if (entity is IEntityLifecycle lifecycle)
-                {
-                    lifecycle.TeardownObserverBindings();
-                    lifecycle.ReleaseStrategiesOnly();
-                }
-            }
-            catch (Exception ex)
-            {
-                // The logger may be unbound when the node is torn down before
-                // BindRuntimeDependencies (a failed bootstrap); guard it here.
-                SharedLogger?.Log(LogLevel.Warning, nameof(GodotSndManager),
-                    new LogMessageBuilder().AddContext("entityName", entity.Name)
-                        .Build($"Entity cleanup on manager exit failed: {ex.Message}"));
-            }
+            if (entity is not IEntityLifecycle lifecycle)
+                continue;
+
+            // Each cleanup step runs independently: a throwing OnUnmounted
+            // hook during observer teardown must not skip the strategy-pool
+            // release (the binding is already removed, so nothing else can
+            // return those references). Failures are logged and dropped here:
+            // the node tree is already going away and this path exists for
+            // out-of-contract cleanup.
+            RunExitTreeCleanupStep(entity.Name, "observer teardown",
+                () => lifecycle.TeardownObserverBindings());
+            RunExitTreeCleanupStep(entity.Name, "strategy release",
+                () => lifecycle.ReleaseStrategiesOnly());
         }
 
         _collection.RemoveAllEntities();
+    }
+
+    private void RunExitTreeCleanupStep(string entityName, string step, Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            // The logger may be unbound when the node is torn down before
+            // BindRuntimeDependencies (a failed bootstrap); guard it here.
+            SharedLogger?.Log(LogLevel.Warning, nameof(GodotSndManager),
+                new LogMessageBuilder()
+                    .AddContext("entityName", entityName)
+                    .AddContext("cleanupStep", step)
+                    .Build($"Entity cleanup on manager exit failed: {ex.Message}"));
+        }
     }
 
     private void DetachAndFree(GodotSndEntity entity)
