@@ -49,6 +49,21 @@ public class CoreArchitectureGuardrailTests
     }
 
     [Fact]
+    public void BootstrapUtilitiesAndMappingLoaders_AreInternal()
+    {
+        // Strategy auto-discovery, JSON array spawning, and alias/template map
+        // loading are orchestrated exclusively by ISndContext.Bootstrap.
+        Assert.False(typeof(OrigoAutoInitializer).IsVisible,
+            "OrigoAutoInitializer must be internal.");
+        Assert.Null(typeof(SndWorld).GetMethod(
+            nameof(SndWorld.LoadSceneAliases),
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly));
+        Assert.Null(typeof(SndWorld).GetMethod(
+            nameof(SndWorld.LoadTemplates),
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly));
+    }
+
+    [Fact]
     public void ISndContext_ShouldBeCompositionInterface_WithCompanionProperties()
     {
         var type = typeof(ISndContext);

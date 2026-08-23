@@ -120,11 +120,11 @@ public sealed class SndWorld
     }
 
     /// <summary>Loads scene alias mappings from the given map file.</summary>
-    public void LoadSceneAliases(string mapFilePath, ILogger logger) =>
+    internal void LoadSceneAliases(string mapFilePath, ILogger logger) =>
         Mappings.LoadSceneAliases(DataSourceIo, mapFilePath, logger);
 
     /// <summary>Loads SND template mappings from the given map file.</summary>
-    public void LoadTemplates(string mapFilePath, ILogger logger)
+    internal void LoadTemplates(string mapFilePath, ILogger logger)
     {
         Mappings.LoadTemplates(
             DataSourceIo,
