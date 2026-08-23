@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Bootstrap
 
@@ -67,7 +67,7 @@ SndContext.Bootstrap() 内部顺序：
 
 ### 为什么启动编排集中在 SndContext.Bootstrap()
 
-适配层不应直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()`；其中前三者现在已是编译器层面的 `internal`，仅 `SndContext.Bootstrap` 可达。这些是 Core 内部编排操作——策略发现必须在 Core 层执行，别名/模板加载是 Core 配置解析，入口存档加载是 Core 生命周期入口。适配层仅通过 `SndContextParameters` 传入配置参数，`Bootstrap()` 确保这些操作以正确的依赖顺序在正确的层中完成。
+适配层不应直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()`；策略发现与 JSON 实体列表 spawn 现在已是编译器层面的 `internal`，仅 `SndContext.Bootstrap` 可达。模板/别名 map 的运行期重载应使用公开 companion：`ctx.Template.LoadTemplates(...)` / `ctx.Template.LoadSceneAliases(...)`。这些是 Core 内部编排操作——策略发现必须在 Core 层执行，别名/模板加载是 Core 配置解析，入口存档加载是 Core 生命周期入口。适配层仅通过 `SndContextParameters` 传入配置参数，`Bootstrap()` 确保这些操作以正确的依赖顺序在正确的层中完成。
 
 ---
 [↑ 回到 Origo.GodotAdapter](../README.zh.md)

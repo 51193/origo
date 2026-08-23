@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -124,6 +124,10 @@ public interface ISndDeferredActions {
 // 模板
 public interface ISndTemplateAccess {
     SndMetaData CloneTemplate(string templateKey, string? overrideName = null);
+    IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root);
+    IReadOnlyList<SndMetaData> LoadMetaListFromFile(string filePath);
+    void LoadTemplates(string mapFilePath);
+    void LoadSceneAliases(string mapFilePath);
 }
 
 // 控制台

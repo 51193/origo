@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -124,6 +124,10 @@ public interface ISndDeferredActions {
 // Templates
 public interface ISndTemplateAccess {
     SndMetaData CloneTemplate(string templateKey, string? overrideName = null);
+    IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root);
+    IReadOnlyList<SndMetaData> LoadMetaListFromFile(string filePath);
+    void LoadTemplates(string mapFilePath);
+    void LoadSceneAliases(string mapFilePath);
 }
 
 // Console

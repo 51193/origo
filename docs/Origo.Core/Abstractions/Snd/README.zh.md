@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Snd (Abstractions)
 
@@ -15,7 +15,7 @@ ISndContext 的角色接口拆分。9 个 Snd 角色接口 + `IStateMachineConte
 |------|------|
 | `ISndBlackboardAccess.cs` | 系统级 + 流程级黑板访问（2 成员） |
 | `ISndDeferredActions.cs` | 延迟动作队列：入队 + 待持久化请求计数（2 成员） |
-| `ISndTemplateAccess.cs` | 模板克隆（1 成员） |
+| `ISndTemplateAccess.cs` | 模板加载/重载、按 key 深克隆、JSON 实体列表解析（含模板简写）（5 成员） |
 | `ISndConsoleAccess.cs` | 控制台命令提交/输出订阅（3 成员）。命令处理归 `IOrigoFrameDriver.DriveFrame` 所有，不暴露业务 pump |
 | `ISndStateMachineAccess.cs` | 流程级状态机容器访问（1 成员）。返回 `IStateMachineContainer?`（Abstractions 层接口），而非具体 `StateMachineContainer` |
 | `ISndSaveOperations.cs` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册（8 成员） |
@@ -42,7 +42,7 @@ ISndContext 不继承任何角色接口，所有能力通过 10 个 companion �
 |---------------|------|------|
 | `Blackboard` | `ISndBlackboardAccess` | 系统级 + 流程级黑板访问 |
 | `Deferred` | `ISndDeferredActions` | 延迟动作队列：入队 + 待持久化请求计数 |
-| `Template` | `ISndTemplateAccess` | 模板克隆 |
+| `Template` | `ISndTemplateAccess` | 模板加载/重载、克隆、实体列表解析 |
 | `ConsoleAccess` | `ISndConsoleAccess` | 控制台命令提交/输出订阅 |
 | `StateMachines` | `ISndStateMachineAccess` | 流程级状态机容器访问 |
 | `Save` | `ISndSaveOperations` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册 |

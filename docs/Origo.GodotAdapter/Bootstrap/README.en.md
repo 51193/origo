@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Bootstrap
 
@@ -67,7 +67,7 @@ Startup logic (`OrigoDefaultEntry.Bootstrap.cs`) is separated from exported prop
 
 ### Why startup orchestration is centralized in SndContext.Bootstrap()
 
-The adapter layer should not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, or `RequestLoadMainMenuEntrySave()`; the first three are now compiler-level `internal` and reachable only by `SndContext.Bootstrap`. These are Core-internal orchestration operations — strategy discovery must execute in the Core layer, alias/template loading is Core configuration parsing, and entry save loading is the Core lifecycle entry point. The adapter layer only passes configuration parameters via `SndContextParameters`; `Bootstrap()` ensures these operations complete in the correct layer with the correct dependency order.
+The adapter layer should not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, or `RequestLoadMainMenuEntrySave()`; strategy discovery and JSON entity-list spawning are now compiler-level `internal` and reachable only by `SndContext.Bootstrap`. Runtime template/alias map reloads should use the public companion: `ctx.Template.LoadTemplates(...)` / `ctx.Template.LoadSceneAliases(...)`. These are Core-internal orchestration operations — strategy discovery must execute in the Core layer, alias/template loading is Core configuration parsing, and entry save loading is the Core lifecycle entry point. The adapter layer only passes configuration parameters via `SndContextParameters`; `Bootstrap()` ensures these operations complete in the correct layer with the correct dependency order.
 
 ---
 [↑ Back to Origo.GodotAdapter](../README.en.md)

@@ -1,12 +1,12 @@
 <!-- docsync-pair: Origo.Core/Snd/Companions/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Companions
 
 > [↑ Back to Snd](../README.en.md)
 
 ## Overview
-The companion object layer for `SndContext`. Each companion is `internal sealed class` implementing one role interface exposed by `ISndContext`. Most companions hold a back-reference to `SndContext` to access framework internal state; `SndContextFileAccess` / `SndContextArchiveFileAccess` are the exception — they inject their I/O dependencies directly (`IDataSourceIoGateway`, `IFileMetaAccess`, `IPathResolver`, etc.) and do not reference `SndContext`.
+The companion object layer for `SndContext`. Each companion is `internal sealed class` implementing one role interface exposed by `ISndContext`. Most companions hold a back-reference to `SndContext` to access framework internal state; `SndContextFileAccess` / `SndContextArchiveFileAccess` are the exception — they inject their I/O dependencies directly (`IDataSourceIoGateway`, `IFileMetaAccess`, `IPathResolver`, etc.) and do not reference `SndContext`. `SndContextTemplateAccess` additionally loads template/alias maps and resolves entity-list JSON files through the I/O dependencies held by `SndContext`.
 
 ## Included Files
 
