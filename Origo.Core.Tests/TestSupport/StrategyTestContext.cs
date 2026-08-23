@@ -113,6 +113,18 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
         return clone;
     }
 
+    public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root) =>
+        throw new NotSupportedException("StrategyTestContext does not support file-based template lists.");
+
+    public IReadOnlyList<SndMetaData> LoadMetaListFromFile(string filePath) =>
+        throw new NotSupportedException("StrategyTestContext does not support file-based template lists.");
+
+    public void LoadTemplates(string mapFilePath) =>
+        throw new NotSupportedException("StrategyTestContext does not support template map loading.");
+
+    public void LoadSceneAliases(string mapFilePath) =>
+        throw new NotSupportedException("StrategyTestContext does not support scene alias loading.");
+
     public bool TrySubmitConsoleCommand(string commandLine)
     {
         _consoleCommands.Add(commandLine);
