@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Grid
 
@@ -37,7 +37,7 @@ All static methods, stateless:
 - **GridToWorld(GridPos pos, float cellSize, int gridSize)**: 2D convenience overload, returns `(float X, float Z)` tuple
 - **WorldToGrid(float worldX, float worldZ, float cellSize, int gridSize, out bool outOfBounds)**: 2D inverse conversion, returns `GridPos`
 
-`cellSize` and `gridSize` must be positive, otherwise `ArgumentOutOfRangeException` is thrown (fail-fast, preventing division-by-zero NaN coordinates).
+`cellSize` must be a finite positive number and `gridSize` must be positive, otherwise `ArgumentOutOfRangeException` is thrown (fail-fast, preventing division-by-zero or non-finite input from producing NaN coordinates).
 
 Formula (single-axis): `worldCoord = gridCoord * cellSize - (gridSize * cellSize) / 2 + cellSize * 0.5f`.
 

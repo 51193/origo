@@ -5,8 +5,13 @@
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <Description>Origo Godot 4 Adapter — bootstrap and runtime integration for Origo.Core. Built against Godot.NET.Sdk/4.7.1.</Description>
         <PackageTags>godot;godot-4.7;godot-4.7.1;game;framework;csharp;origo;adapter;snd;entity</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>

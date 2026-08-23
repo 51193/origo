@@ -38,12 +38,12 @@
     "META": {
       "status": "synced",
       "revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 13,
+        "en": 13
       },
       "previous_revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "files": {
         "zh": "META.zh.md",
@@ -878,12 +878,12 @@
     "Origo.Core/DataSource/README": {
       "status": "synced",
       "revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 13,
+        "en": 13
       },
       "previous_revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "files": {
         "zh": "Origo.Core/DataSource/README.zh.md",
@@ -893,8 +893,8 @@
     "Origo.Core/Grid/README": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "previous_revisions": {
         "zh": 4,
@@ -938,8 +938,8 @@
     "Origo.Core/Random/README": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
         "zh": 3,
@@ -1043,12 +1043,12 @@
     "Origo.Core/Save/Meta/README": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "previous_revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "files": {
         "zh": "Origo.Core/Save/Meta/README.zh.md",
@@ -1703,12 +1703,12 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "previous_revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "files": {
         "zh": "README.zh.md",

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Random/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Random
 
@@ -26,7 +26,7 @@ Unified entry point for game random numbers. Two independent capabilities: XorSh
 ### NoiseMapGenerator
 - **Algorithm**: OpenSimplex2 (70%) + Worley Cellular (30%)
 - **Output**: Row-major `float[size*size]` array, range `[0, 1]`
-- **Extended overload**: Support for octaves, lacunarity, gain
+- **Extended overload**: Support for octaves, lacunarity, gain, and worleyFrequencyMultiplier; every float parameter must be a finite positive number (non-finite input throws `ArgumentOutOfRangeException`)
 
 ### PersistentRandom
 - Wraps `IBlackboard` storing state as two `ulong` key-value pairs

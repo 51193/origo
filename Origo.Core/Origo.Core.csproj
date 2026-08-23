@@ -3,8 +3,13 @@
     <PropertyGroup>
         <Description>Origo Core — a lightweight, platform-agnostic C# game framework using the SND (Strategy-Node-Data) model.</Description>
         <PackageTags>game;framework;csharp;snd;entity;strategy;dotnet;origo</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
     <ItemGroup>
         <!-- Origo.GodotAdapter needs internal access to ObserverTopology, IObserverTopologyHost,
