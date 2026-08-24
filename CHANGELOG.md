@@ -194,7 +194,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   entity detached from its manager now throws `InvalidOperationException` (consistent with
   the other members) instead of silently returning `false`.
 
-- **BREAKING: Target framework upgraded from `net8.0` to `net10.0`** — all projects (Origo.Core, Origo.ConsoleBridge, Origo.GodotAdapter, and test projects) now target `net10.0`; consumers must build with the .NET 10 SDK and run on the .NET 10 runtime. `Origo.SourceGeneration` keeps `netstandard2.0` (Roslyn analyzer constraint). GodotAdapter verified against Godot 4.7.1 mono (86 headless integration tests pass on `net10.0`).
+- **BREAKING: Target framework upgraded from `net8.0` to `net10.0`** — all projects (Origo.Core, Origo.ConsoleBridge, Origo.GodotAdapter, and test projects) now target `net10.0`; consumers must build with the .NET 10 SDK and run on the .NET 10 runtime. `Origo.SourceGeneration` keeps `netstandard2.0` (Roslyn analyzer constraint). GodotAdapter verified against Godot 4.7.2 mono (92 headless integration tests pass on `net10.0`).
 - **BREAKING:** `SndContext` and `ISndContext` refactored to companion-object pattern. All role interfaces (`ISndSaveOperations`, `ISndBlackboardAccess`, `ISndDeferredActions`, etc.) are now exposed through typed companion properties (`ctx.Save`, `ctx.Blackboard`, `ctx.Deferred`, etc.) instead of direct interface inheritance. `ISndEntityRawSubscription` made `internal`.
 - **BREAKING:** `DataSourceNode.AsByte`/`AsInt`/`AsFloat`/... (12 numeric-typed methods) replaced by a single unified `As<T>()` generic method. `AsString()` and `AsChar()` retained.
 - **BREAKING:** `DataSourceNode.AsChar` now throws `InvalidOperationException` on `Map`/`Array` nodes instead of silently returning `'\0'`.
@@ -209,7 +209,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING:** `GodotNodeHandle.SetVisible` throws `ObjectDisposedException` on freed nodes instead of silently returning.
 - **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value.
 - **Public API XML doc comments translated to English** — all previously Chinese `<summary>` comments are now in English for IDE IntelliSense.
-- **Godot upgraded to 4.7.1** — `Godot.NET.Sdk` version bumped from 4.6.3 to 4.7.1.
+- **Godot upgraded to 4.7.2** — `Godot.NET.Sdk` version bumped from 4.6.3 to 4.7.2 in `Origo.GodotAdapter` and `Origo.GodotAdapter.Integration.Tests`; `scripts/download-godot.sh` resolves the matching Godot 4.7.2 mono binary, and the demo project's offline NuGet configuration and launch scripts target 4.7.2 as well. All 92 Godot headless integration tests pass on `net10.0`.
 - **ConsoleBridgeServer** uses `async`/`await` for the accept/read loop, eliminating the 100ms polling loop. Connection handling is race-free and survives hard client disconnects and handler exceptions.
 - **Save idempotency now includes `extra/` files in hash computation**, preventing silent skip of changed side-channel files.
 - Source generator diagnostic messages carry source locations from `SndInlineTypesAttribute` syntax, so build errors point to the exact attribute location.
