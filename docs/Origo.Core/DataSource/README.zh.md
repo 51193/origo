@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # DataSource
 
@@ -28,7 +28,7 @@ Origo 的数据源抽象层——Core 与外部格式（JSON、.map）之间的�
 | `DataSourceIoGateway.cs` | I/O 网关实现：后缀 → CodecKind 映射 + 读写 |
 | `DataSourceIoOptions.cs` | I/O 路由配置：后缀 → Codec 映射（缩进选项在 `DataSourceFactory.BuildDefaultCodecs(bool)`） |
 | `DataSourceFactory.cs` | 工厂：创建默认 Registry + IoGateway |
-| `DataSourceConverter.cs` | 泛型转换器基类：`Read(DataSourceNode)` / `Write(T)` |
+| `DataSourceConverter.cs` | 转换器基类：非泛型 `DataSourceConverterBase`（注册表运行时调度）+ 泛型 `DataSourceConverter<T>`（`Read(DataSourceNode)` / `Write(T)`） |
 | `DataSourceConverterRegistry.cs` | 转换器注册表：按 Type 查找 Converter + 泛型 Read/Write。当精确类型未注册时，自动沿基类链和接口链回退查找。 |
 | `KeyValueFileParser.cs` | key:value 格式解析器（用于 .map 文件） |
 | `MemoryFileSystem.cs` | 内存文件系统实现 `IFileSystem`（internal，测试项目经 InternalsVisibleTo 使用，无生产消费者） |

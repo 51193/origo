@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo Manual
 
@@ -65,7 +65,7 @@ Root (this file)
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.zh.md) | TCP 远程控制台桥接（端口 9876） |
 | **使用文档** | [README](usage/README.zh.md) | 从快速入门到深度参考的使用指南 |
 | **测试: Core** | [README](Origo.Core.Tests/README.zh.md) | Core 层 31 个能力的行为测试文档 |
-| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.zh.md) | 适配层 6 个能力测试 + 20 个集成测试类（91 个测试） |
+| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.zh.md) | 适配层 6 个能力测试 + 20 个集成测试类（92 个测试） |
 | **测试: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.zh.md) | TCP 桥接服务器行为测试文档 |
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.zh.md) | TypedData 源码生成器的驱动器行为测试文档 |
 | **手册元指令** | [META.md](META.zh.md) | 本手册的编写与维护规范 |

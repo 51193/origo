@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -52,7 +52,7 @@
 | GodotAdapterTypedDataRegistrationIntegrationTests | `Tests/GodotAdapterTypedDataRegistrationIntegrationTests.cs` | 1 | GodotAdapter 程序集加载触发生成的 `[ModuleInitializer]` Kind 注册 |
 | ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 3 | 观察者绑定跨存档/读档恢复 + 会话销毁触发 OnUnmounted |
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | 测试进程启动前 user:// 清理：残留写中标记/前缀产物清除、非测试内容与 Godot 系统内容保留、幂等 |
-| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 1 | `GodotSndManager._ExitTree` 越界清理：直接移除管理器节点后 Core 侧策略池引用无泄漏 |
+| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` 越界清理：直接移除管理器节点后 Core 侧策略池引用无泄漏，即使 `OnUnmounted` 钩子抛出也继续释放 |
 | OrigoDefaultEntryBootstrapFailureTests | `Tests/OrigoDefaultEntryBootstrapFailureTests.cs` | 1 | `OrigoDefaultEntry` 派生入口在 base._Ready() 之后的启动步骤失败时，下一帧必须 fail-fast 而非驱动半初始化运行时 |
 
 ## 运行

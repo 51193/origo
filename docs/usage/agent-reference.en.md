@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Agent Reference
 
@@ -282,7 +282,7 @@ OrigoAutoHost._Ready()
 ├── 8. BindRuntimeDependencies (World + Logger to SndManager)
 │
 └── OrigoDefaultEntry._Ready() [override]
-    ├── 9. Register adapter-layer command handlers (press_button, tree_debug)
+    ├── 9. Register adapter-layer command handlers (press_button, tree_debug, camera_view)
     ├── 10. Create SndContext (inject Runtime + FileSystem + saveRoot + config)
     ├── 11. SndManager.BindContext(context)
     ├── 12. ConfigureSaveMetadataContributors(context)
@@ -290,7 +290,7 @@ OrigoAutoHost._Ready()
           ├── 13a. ConfigureConverters
           ├── 13b. OrigoAutoInitializer.DiscoverAndRegisterStrategies (reflection scan)
           ├── 13c. LoadSceneAliases + LoadTemplates
-          └── 13d. RequestLoadMainMenuEntrySave → FlushDeferredActions
+          └── 13d. RequestLoadMainMenuEntrySave (enqueues a system-deferred action; executed at frame end through IOrigoFrameDriver.DriveFrame)
 ```
 
 ## Complete Strategy Example

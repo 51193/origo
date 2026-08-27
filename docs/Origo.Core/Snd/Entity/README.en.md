@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Entity
 
@@ -57,9 +57,12 @@ These methods are used by the framework layer for batch orchestration; business 
 | `FireBeforeDeadHooks()` | Phase 2: Hooks | Trigger strategy BeforeDead by priority |
 | `ReleaseStrategiesOnly()` | Phase 3: Teardown | Release passive + active + observer strategy references (no hooks triggered) |
 | `TeardownOnly()` | Phase 3: Teardown | Release Node + Data resources |
+| `TeardownObserverBindings()` | Phase 3: Teardown | Unmount all of this entity's observer bindings through the host `ObserverTopology` (unsubscribe target data channels) |
 | `BuildMetaData()` | Serialization | Build metadata (including ObserverIndices; does not trigger BeforeSave) |
 
-> **Visibility**: `IEntityLifecycle` and the single-entity convenience methods (`SpawnSingle` / `LoadSingle` / `QuitSingle` / `DeadSingle` / `SaveSingle` / `Process`) are `internal` — entity lifecycle orchestration can only be triggered via `ISessionRun` (`Spawn` / `SpawnMany` / `RequestKillEntity`) and the framework's internal batch hook pipeline. Adapter and test projects access them via `InternalsVisibleTo`.
+> **Visibility**: `IEntityLifecycle` and `SndEntity.Process` are `internal` — entity lifecycle orchestration can only be triggered via `ISessionRun` (`Spawn` / `SpawnMany` / `RequestKillEntity`) and the framework's internal batch hook pipeline. Adapter and test projects access them via `InternalsVisibleTo`. Spawn/load/save always go through the batch paths in `SndEntityFactory` / `SessionRun` / the serialization pipeline; no single-entity convenience methods are provided.
+
+Session quit teardown order (`SessionRun.ReleaseAllEntitiesAndClear`): first fire `FireBeforeQuitHooks` in batch, then unmount all observer bindings (`TeardownObserverBindings`, firing `OnUnmounted` and unsubscribing target data channels), then release strategies (`ReleaseStrategiesOnly`), and finally `TeardownOnly`. The entity-kill path (`SessionRun.KillPending`) first tears down observer bindings bidirectionally, then fires `FireBeforeDeadHooks`, and finally releases and removes the entity.
 
 `Process(delta)` triggers strategy Process by priority + snapshot iteration (internal; invoked by scene host `ProcessAll` and adapter-layer frame processing).
 

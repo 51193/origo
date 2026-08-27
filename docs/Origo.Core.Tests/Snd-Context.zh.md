@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 上下文 测试
 
@@ -230,7 +230,6 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | RequestSaveGame 在无 ProgressRun 时的行为 | 未设置 ProgressRun 时 Save 应如何处理 | ISndSaveOperations |
-| SndContext 并发调用 FlushDeferredActions | 多线程 Flush 的线程安全 | — |
 | CloneTemplate 传入空 overrideName 的行为 | 空名字覆盖 | ISndTemplateAccess |
 
 ---

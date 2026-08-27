@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Agent Reference
 
@@ -282,7 +282,7 @@ OrigoAutoHost._Ready()
 ├── 8. BindRuntimeDependencies (World + Logger to SndManager)
 │
 └── OrigoDefaultEntry._Ready() [覆写]
-    ├── 9. 注册适配层命令处理器 (press_button, tree_debug)
+    ├── 9. 注册适配层命令处理器 (press_button, tree_debug, camera_view)
     ├── 10. 创建 SndContext (注入 Runtime + FileSystem + saveRoot + config)
     ├── 11. SndManager.BindContext(context)
     ├── 12. ConfigureSaveMetadataContributors(context)
@@ -290,7 +290,7 @@ OrigoAutoHost._Ready()
           ├── 13a. ConfigureConverters
           ├── 13b. OrigoAutoInitializer.DiscoverAndRegisterStrategies (反射扫描)
           ├── 13c. LoadSceneAliases + LoadTemplates
-          └── 13d. RequestLoadMainMenuEntrySave → FlushDeferredActions
+          └── 13d. RequestLoadMainMenuEntrySave（入队系统延迟动作；帧末经 IOrigoFrameDriver.DriveFrame 执行）
 ```
 
 ## 完整策略示例

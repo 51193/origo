@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -53,7 +53,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | GodotAdapterTypedDataRegistrationIntegrationTests | `Tests/GodotAdapterTypedDataRegistrationIntegrationTests.cs` | 1 | GodotAdapter assembly load triggers the generated `[ModuleInitializer]` kind registration |
 | ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 3 | Observer bindings restored across save/load; session destroy fires OnUnmounted |
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | Pre-test user:// cleanup: leftover write markers / prefixed artifacts removed, non-test and Godot system content preserved, idempotent |
-| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 1 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side |
+| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side, and strategy release still runs when `OnUnmounted` throws |
 | OrigoDefaultEntryBootstrapFailureTests | `Tests/OrigoDefaultEntryBootstrapFailureTests.cs` | 1 | `OrigoDefaultEntry` derived entry failure after base._Ready(): the next frame must fail fast instead of driving a half-initialized runtime |
 
 ## Running

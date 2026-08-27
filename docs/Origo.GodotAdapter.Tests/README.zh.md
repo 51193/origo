@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo.GodotAdapter.Tests
 
@@ -38,7 +38,7 @@ Origo.GodotAdapter 的测试验证 Godot 4 适配层的正确性。
 | 能力 | 文档 | 文件数 | 测试数 | 验证重点 |
 |------|------|-------|-------|---------|
 | 架构守卫 | [Architecture.md](Architecture.zh.md) | 1 | 8 | SndContext 公共角色接口完整性、会话创建/销毁、CommandHandlerBase 公共可见性、GodotSndEntity 生命周期 internal 守卫、GodotSndManager 写路径封闭、私有字段 `_camelCase` 命名 |
-| SND 实体 | [Snd.md](Snd.zh.md) | 3 | 23 | SndEntityCollection 全能力与批量恢复回滚、程序集加载触发 Kind 注册、节点扩展契约 |
+| SND 实体 | [Snd.md](Snd.zh.md) | 3 | 26 | SndEntityCollection 全能力与批量恢复回滚、程序集加载触发 Kind 注册、节点扩展契约 |
 | 控制台 | [Console.md](Console.zh.md) | 5 | 28 | press_button/camera_view/tree_debug 命令、CommandHandlerBase 参数校验与守卫、ProjectionHelper 世界→屏幕投影 |
 | 文件系统 | [FileSystem.md](FileSystem.zh.md) | 1 | 3 | GodotFileSystem 的 res:// / user:// 路径处理（委托给 PathUtility） |
 | 日志 | [Logging.md](Logging.zh.md) | 1 | 9 | GodotLogger 委托注入、null handler 安全与级别过滤 |

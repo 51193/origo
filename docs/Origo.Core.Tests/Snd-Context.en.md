@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # SND Context Tests
 
@@ -227,7 +227,6 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Gap Description | Impact | Documentation Basis |
 |-----------------|--------|---------------------|
 | RequestSaveGame behavior when no ProgressRun exists | How Save should be handled without a ProgressRun set | ISndSaveOperations |
-| SndContext concurrent FlushDeferredActions calls | Thread safety of multi-threaded Flush | — |
 | CloneTemplate behavior with empty overrideName | Empty name override | ISndTemplateAccess |
 
 ---
