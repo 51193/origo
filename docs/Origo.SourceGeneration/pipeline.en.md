@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
@@ -168,7 +168,7 @@ Kind allocation rules:
 |----|-----------|----------|--------|
 | Core | 1 | 1–13 | 13 BCL primitive types |
 | GodotAdapter | 128 | 128–141 | 14 Godot engine types |
-| Reserved (future adapters) | 192 | 192–254 | — |
+| Reserved (future adapters) | 192 | 192–254 | — (requires adding the assembly to Origo.Core's `InternalsVisibleTo` whitelist first) |
 
 Compile-time validation (fail-fast):
 
@@ -593,6 +593,7 @@ If the framework needs to support a new type (e.g., C# `nint`, a future BCL ≤8
 
 ### 7.2 Adding Adapter Layer Types (Register in a New Adapter Assembly)
 
+0. Precondition: the new adapter assembly must be in Origo.Core's `InternalsVisibleTo` whitelist (currently only `Origo.GodotAdapter`). Otherwise the generator reports `ORIGOSG007` and emits no source.
 1. Add `[assembly: SndInlineTypes(startKind: <unoccupied range>, typeof(NewType), ...)]` to the new assembly
 2. Choose Kind range: check the validation range in `TypedDataGenerator.cs`'s `KindValue` (1-254), ensure no overlap with other adapters
 3. Source Generator will auto-detect this assembly is not Home → use Adapter mode → generate complete extension methods + ModuleInitializer registration chain

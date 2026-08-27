@@ -11,3 +11,4 @@ ORIGOSG003 | Origo.SourceGeneration | Error | TypedDataGenerator: kind out of by
 ORIGOSG004 | Origo.SourceGeneration | Error | TypedDataGenerator: kind collision — overlapping SndInlineTypes ranges map one kind to multiple types
 ORIGOSG005 | Origo.SourceGeneration | Error | TypedDataGenerator: kind name collision — same-named types from different namespaces/generic instantiations map to one identifier
 ORIGOSG006 | Origo.SourceGeneration | Error | TypedDataGenerator: kind name is not a valid C# identifier (e.g. pointer types)
+ORIGOSG007 | Origo.SourceGeneration | Error | TypedDataGenerator: adapter assembly lacks friend access to TypedData internals

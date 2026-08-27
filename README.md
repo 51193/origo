@@ -67,7 +67,7 @@ public sealed class HealthStrategy : LifecycleStrategyBase
 nc localhost 9876
 ```
 
-- **Source generator**: Roslyn incremental generator emits compile-time typed data accessors, eliminating boxing and string-key lookups in hot paths. 6 diagnostics (`ORIGOSG001`–`006`) catch misconfigurations at build time.
+- **Source generator**: Roslyn incremental generator emits compile-time typed data accessors, eliminating boxing and string-key lookups in hot paths. 7 diagnostics (`ORIGOSG001`–`007`) catch misconfigurations at build time.
 - **Test infrastructure**: `StrategyTestScenario` for declarative strategy unit tests (Configure → Simulate → Inspect). Architecture guardrail tests enforce dependency direction and strategy constraints.
 
 ### Godot 4 adapter

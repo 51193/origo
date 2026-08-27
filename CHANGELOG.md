@@ -38,6 +38,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Source generator diagnostic `ORIGOSG005`** — reports kind-name collisions (same-named
   types from different namespaces, or generic instantiations whose sanitized names collapse
   to one identifier) as build errors instead of emitting uncompilable code.
+- **Source generator diagnostic `ORIGOSG007`** — a non-home assembly that declares
+  `SndInlineTypes` adapter registrations without being in Origo.Core's
+  `InternalsVisibleTo` whitelist now gets one actionable build error instead of
+  generated code that fails with CS0122/CS0117. Only Origo.GodotAdapter is
+  currently whitelisted for adapter-mode generation.
 - **`ConsoleBridgeOptions.OutputSendTimeoutMs`** — bounded send timeout (default 100ms)
   for console output writes: a client that stops reading is detached (and the undelivered
   lines stay buffered for the next connection) instead of stalling the game frame thread.

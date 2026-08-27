@@ -25,6 +25,15 @@ public class TypedDataGeneratorTests
         [assembly: InternalsVisibleTo("Origo.AdapterUnderTest")]
         """;
 
+    // Same scaffold without the InternalsVisibleTo grant. Used to model an
+    // external adapter assembly that references the real Origo.Core package:
+    // the generated adapter code needs TypedData internals and must fail with
+    // ORIGOSG007 instead of a wall of CS0122 compiler errors.
+    private const string _scaffoldHeaderWithoutIvt = """
+        using System;
+        using System.Runtime.CompilerServices;
+        """;
+
     private const string _scaffoldBody = """
         namespace Origo.Core.Snd.Metadata
         {
@@ -165,6 +174,23 @@ public class TypedDataGeneratorTests
     }
 
     // ─── Adapter mode ──────────────────────────────────────────────
+
+    [Fact]
+    public void Adapter_WithoutFriendAccess_ReportsORIGOSG007_AndEmitsNoSources()
+    {
+        var homeCompilation = GeneratorTestHarness.CreateCompilation(
+            "Origo.CoreUnderTest", _scaffoldHeaderWithoutIvt + "\n" + _scaffoldBody);
+        var homeRef = homeCompilation.ToMetadataReference();
+        var output = GeneratorTestHarness.Run(
+            "Origo.AdapterUnderTest", _adapterTypes, [homeRef]);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG007"));
+        Assert.All(
+            output.GeneratorDiagnostics.Where(d => d.Id == "ORIGOSG007"),
+            d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+        Assert.Empty(output.GeneratedSources);
+        Assert.Empty(output.CompileErrors);
+    }
 
     [Fact]
     public void Adapter_ValueAndRefTypes_UseRefSlot_AndCompiles()

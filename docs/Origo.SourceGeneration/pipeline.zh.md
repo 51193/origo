@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # TypedData 编译期优化全链路解析
 
@@ -168,7 +168,7 @@ Kind 分配规则：
 |----|-----------|----------|--------|
 | Core | 1 | 1–13 | 13 种 BCL 基础类型 |
 | GodotAdapter | 128 | 128–141 | 14 种 Godot 引擎类型 |
-| 预留（未来适配器） | 192 | 192–254 | — |
+| 预留（未来适配器） | 192 | 192–254 | —（需先将对应程序集加入 Origo.Core 的 `InternalsVisibleTo` 白名单） |
 
 编译期校验（fail-fast）：
 
@@ -593,6 +593,7 @@ offset 16: _ref (8B)
 
 ### 7.2 新增适配层类型（在新适配器程序集中注册）
 
+0. 前置条件：新适配器程序集必须位于 Origo.Core 的 `InternalsVisibleTo` 白名单中（当前仅 `Origo.GodotAdapter`）。否则生成器报告 `ORIGOSG007`，且不产出任何源码。
 1. 在新程序集中添加 `[assembly: SndInlineTypes(startKind: <未占用号段>, typeof(NewType), ...)]`
 2. 选择 Kind 号段：检查 `TypedDataGenerator.cs` 中 `KindValue` 的校验范围（1-254），确保不与其他适配器重叠
 3. Source Generator 会自动检测此程序集非 Home → 走 Adapter 模式 → 生成完整的扩展方法 + ModuleInitializer 注册链
