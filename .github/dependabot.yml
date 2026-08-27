@@ -4,6 +4,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Dependabot's default "Bump <package> from <a> to <b> (#n)" subject is
+    # not a Conventional Commit and fails scripts/lint-commits.sh. The prefix
+    # makes every NuGet PR subject pass the commit-lint workflow without
+    # weakening the lint rule for human-authored commits.
+    commit-message:
+      prefix: "chore(deps)"
     groups:
       roslyn:
         patterns:
