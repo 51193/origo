@@ -3,7 +3,9 @@ using Origo.Core.Abstractions.Blackboard;
 namespace Origo.Core.Abstractions.Snd;
 
 /// <summary>
-///     Read-only access to the system-level and progress-level blackboards.
+///     Access to the system-level and progress-level blackboards. The
+///     returned <see cref="IBlackboard" /> instances are mutable; "access"
+///     here refers to the capability facet, not a read-only view.
 ///     Consumed by both <see cref="Origo.Core.Snd.ISndContext" /> and
 ///     <see cref="Origo.Core.Abstractions.StateMachine.IStateMachineContext" />.
 /// </summary>

@@ -20,10 +20,11 @@ namespace Origo.Core.Runtime;
 ///     Unified runtime entry point for Origo within the host game.
 ///     Aggregates the SND subsystem and system-level blackboard.
 ///     <para>
-///         Threading model: no cross-thread synchronization is performed;
-///         <see cref="EnqueueBusinessDeferred" /> and <see cref="EnqueueSystemDeferred" />
-///         should be called on the host main thread (or single-threaded game main loop),
-///         paired with <see cref="FlushEndOfFrameDeferred" />.
+///         Threading model: enqueue operations are thread-safe (they
+///         synchronize through the internal concurrent queue), while frame
+///         progression is single-threaded. <see cref="FlushEndOfFrameDeferred" />
+///         and <see cref="IOrigoFrameDriver.DriveFrame" /> must run on the host
+///         main thread (or the single-threaded game main loop).
 ///     </para>
 /// </summary>
 public sealed class OrigoRuntime : IOrigoFrameDriver
