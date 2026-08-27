@@ -3,9 +3,10 @@
 ## Reporting a vulnerability
 
 If you discover a security vulnerability in Origo, please **do not** open a
-public issue. Instead, open an issue with the `security` label and mark it as
-private, or ping the maintainer directly. The maintainer checks daily and will
-acknowledge receipt within 48 hours.
+public issue. Report it through GitHub Security Advisories (the repository's
+Security tab → Report a vulnerability) so the report stays private, or ping
+the maintainer directly through a private channel. The maintainer checks daily
+and will acknowledge receipt within 48 hours.
 
 ## Supported versions
 
