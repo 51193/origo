@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Strategy
 
@@ -202,6 +202,8 @@ public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 ### 为什么策略强制无状态（注册期校验）
 
 策略实例在多个实体间共享，若持有实例字段（如 `int _hp`），多实体间会互相污染。注册期通过反射检查 `BaseStrategy` 到具体类型之间的所有层级，拒绝声明可变实例字段或可写属性的策略，从源头阻止此错误；`readonly` 实例字段（`IsInitOnly`）作为例外被豁免。
+
+> **重要边界**：`readonly` 只禁止重新赋值字段本身，**不校验引用类型对象的内部可变性**。例如 `private readonly List<int> _buffer = [];` 可以通过注册，且其内容可被修改，仍会造成跨实体共享污染。框架刻意不在注册期深度判定“引用对象是否不可变”——这种判定既不可靠，也会误伤 `readonly ILogger` 等合法依赖。选择声明 `readonly` 引用类型字段的策略作者，必须自行保证该对象在运行时不会被修改。
 
 此约束的一个副作用：**测试策略无法使用实例字段作为事件接收器**，必须使用静态字段（`static List<string>?`）在各策略实例间共享事件收集。使用静态字段的测试类必须通过 `[Collection]` 属性串行化执行，或通过 `[assembly: CollectionBehavior(DisableTestParallelization = true)]` 全局禁用并行，以防止并行测试间的竞态。详见 `Origo.Core.Tests/Architecture.zh.md`。
 

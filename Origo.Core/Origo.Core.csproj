@@ -23,8 +23,8 @@
         <InternalsVisibleTo Include="Origo.GodotAdapter.Tests"/>
         <InternalsVisibleTo Include="Origo.GodotAdapter.Integration.Tests"/>
         <InternalsVisibleTo Include="Origo.SourceGeneration.Tests"/>
-        <!-- Test support library (shared test doubles/helpers) wraps internal
-             MemoryFileSystem in TestMemoryFileSystem. -->
+        <!-- Test support library (shared test doubles/helpers) reaches the
+             framework-internal test pipeline via InternalsVisibleTo. -->
         <InternalsVisibleTo Include="Origo.TestSupport"/>
     </ItemGroup>
 

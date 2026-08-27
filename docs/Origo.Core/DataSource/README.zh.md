@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # DataSource
 
@@ -31,7 +31,6 @@ Origo 的数据源抽象层——Core 与外部格式（JSON、.map）之间的�
 | `DataSourceConverter.cs` | 转换器基类：非泛型 `DataSourceConverterBase`（注册表运行时调度）+ 泛型 `DataSourceConverter<T>`（`Read(DataSourceNode)` / `Write(T)`） |
 | `DataSourceConverterRegistry.cs` | 转换器注册表：按 Type 查找 Converter + 泛型 Read/Write。当精确类型未注册时，自动沿基类链和接口链回退查找。 |
 | `KeyValueFileParser.cs` | key:value 格式解析器（用于 .map 文件） |
-| `MemoryFileSystem.cs` | 内存文件系统实现 `IFileSystem`（internal，测试项目经 InternalsVisibleTo 使用，无生产消费者） |
 | `IFileMetaAccess.cs` | 文件元数据操作接口（public）：FileExists / DirectoryExists / EnumerateFiles / EnumerateDirectories / CreateDirectory / Delete / DeleteDirectory / Copy / Rename，与 IDataSourceIoGateway 并行使用——前者负责内容读写（含 codec 路由），本接口负责文件系统结构操作 |
 | `FileMetaAccess.cs` | IFileMetaAccess 默认实现（internal），委托给 IFileSystem |
 | `PathResolver.cs` | IPathResolver 默认实现（internal）：CombinePath / GetParentDirectory，委托给 IFileSystem |

@@ -668,8 +668,8 @@
     "Origo.Core/Abstractions/FileSystem/README": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "previous_revisions": {
         "zh": 5,
@@ -878,12 +878,12 @@
     "Origo.Core/DataSource/README": {
       "status": "synced",
       "revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
-        "zh": 13,
-        "en": 13
+        "zh": 14,
+        "en": 14
       },
       "files": {
         "zh": "Origo.Core/DataSource/README.zh.md",
@@ -1223,12 +1223,12 @@
     "Origo.Core/Snd/Strategy/README": {
       "status": "synced",
       "revisions": {
-        "zh": 16,
-        "en": 16
+        "zh": 17,
+        "en": 17
       },
       "previous_revisions": {
-        "zh": 15,
-        "en": 15
+        "zh": 16,
+        "en": 16
       },
       "files": {
         "zh": "Origo.Core/Snd/Strategy/README.zh.md",
@@ -1583,8 +1583,8 @@
     "Origo.TestSupport/FileSystem/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "previous_revisions": {
         "zh": 1,

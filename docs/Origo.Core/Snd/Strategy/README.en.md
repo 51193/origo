@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Strategy
 
@@ -201,7 +201,9 @@ public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 ### Why strategies must be stateless (registration-time validation)
 
-Strategy instances are shared across multiple entities; instance fields (such as `int _hp`) would cause cross-entity contamination. Registration-time reflection checks all levels between `BaseStrategy` and the concrete type, rejecting strategies that declare instance fields or writable properties, blocking this error at the source.
+Strategy instances are shared across multiple entities; instance fields (such as `int _hp`) would cause cross-entity contamination. Registration-time reflection checks all levels between `BaseStrategy` and the concrete type, rejecting strategies that declare instance fields or writable properties, blocking this error at the source. `readonly` instance fields (`IsInitOnly`) are exempt.
+
+> **Important boundary**: `readonly` only prevents reassigning the field itself; it does **not** validate the internal mutability of a referenced object. For example, `private readonly List<int> _buffer = [];` passes registration, but its contents can still be mutated and cause cross-entity contamination. The framework deliberately does not perform a deep "is this referenced object immutable" check at registration time — such a check is unreliable and would also reject legitimate dependencies such as `readonly ILogger`. Strategy authors who declare `readonly` reference-type fields must guarantee that the referenced object is never mutated at runtime.
 
 A side effect of this constraint: **test strategies cannot use instance fields as event receivers** and must use static fields (`static List<string>?`) to share event collection across strategy instances. Test classes using static fields must be serialized via `[Collection]` attributes or globally disable parallel execution via `[assembly: CollectionBehavior(DisableTestParallelization = true)]` to prevent race conditions between parallel tests. See `Origo.Core.Tests/Architecture.en.md`.
 

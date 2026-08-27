@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # FileSystem (Abstractions)
 
@@ -62,7 +62,7 @@
 - 文件元数据操作通过 `IFileMetaAccess`，路径运算通过 `IPathResolver`
 - 策略无需自行解析原始 JSON/Map 文本，也无需处理平台路径差异
 - 编码/解码策略集中管理，更换引擎时无需修改策略代码
-- `IFileSystem` 接口本身供适配层实现；Core 内置的 `MemoryFileSystem` 是 `internal` 的零依赖参考实现，供测试项目经 InternalsVisibleTo 使用（见 DataSource 模块文档）
+- `IFileSystem` 接口本身供适配层实现；纯内存的 `MemoryFileSystem` 参考实现位于 `Origo.TestSupport`（测试支撑程序集），供测试项目复用，不再占用 Core 生产程序集（见 [TestSupport/FileSystem](../../../Origo.TestSupport/FileSystem/README.zh.md)）
 
 ---
 [↑ 回到 Abstractions](../README.zh.md)

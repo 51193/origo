@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # FileSystem (Abstractions)
 
@@ -57,7 +57,7 @@ Different platforms (Godot virtual file system vs OS local file system) handle r
 - File metadata operations go through `IFileMetaAccess`, path computation through `IPathResolver`
 - Strategies never parse raw JSON/Map text themselves or deal with platform path differences
 - Encoding/decoding policies are centrally managed; swapping engines requires no strategy changes
-- The `IFileSystem` interface itself is implemented by the adapter layer; Core's built-in `MemoryFileSystem` is an `internal` zero-dependency reference implementation, used by test projects via InternalsVisibleTo (see the DataSource module docs)
+- The `IFileSystem` interface itself is implemented by the adapter layer; the pure in-memory `MemoryFileSystem` reference implementation lives in `Origo.TestSupport` (the test-support assembly) for reuse by test projects, keeping it out of the Core production assembly (see [TestSupport/FileSystem](../../../Origo.TestSupport/FileSystem/README.en.md))
 
 ---
 [↑ Back to Abstractions](../README.en.md)
