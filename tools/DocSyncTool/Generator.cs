@@ -59,7 +59,7 @@ internal static class Generator
             filesByDir.TryGetValue(dirRel, out var dirFiles);
             dirFiles ??= [];
 
-            var subDirs = GetSubDirectories(docsRoot, dir);
+            var subDirs = GetSubDirectories(docsRoot, dir, languages);
             var hasContent = dirFiles.Count > 0 || subDirs.Count > 0;
             if (!hasContent)
             {
@@ -148,7 +148,10 @@ internal static class Generator
         return [.. dirs.OrderBy(d => d.Length).ThenBy(d => d)];
     }
 
-    private static List<string> GetSubDirectories(string docsRoot, string parentRel)
+    private static List<string> GetSubDirectories(
+        string docsRoot,
+        string parentRel,
+        List<string> languages)
     {
         var parentDir = string.IsNullOrEmpty(parentRel) ? docsRoot : Path.Combine(docsRoot, parentRel);
         if (!Directory.Exists(parentDir))
@@ -157,24 +160,24 @@ internal static class Generator
         var subDirs = Directory.GetDirectories(parentDir);
         return [.. subDirs
             .Select(d => Path.GetRelativePath(docsRoot, d).Replace('\\', '/'))
-            .Where(d => HasDocFiles(Path.Combine(docsRoot, d)))
+            .Where(d => HasDocFiles(Path.Combine(docsRoot, d), languages))
             .OrderBy(d => d)];
     }
 
-    private static bool HasDocFiles(string fullPath)
+    private static bool HasDocFiles(string fullPath, List<string> languages)
     {
         if (!Directory.Exists(fullPath))
             return false;
 
-        // Only content files count (e.g. README.zh.md); a leftover auto-
+        // Only configured-language content files count; a leftover auto-
         // generated README.md hub must not keep a doc-less directory alive
         // in the parent hub's subdirectory list.
         var mdFiles = Directory.GetFiles(fullPath, "*.md", SearchOption.AllDirectories);
         return mdFiles.Any(f =>
         {
             var name = Path.GetFileName(f);
-            return name.EndsWith(".zh.md", StringComparison.OrdinalIgnoreCase)
-                || name.EndsWith(".en.md", StringComparison.OrdinalIgnoreCase);
+            return languages.Any(lang =>
+                name.EndsWith($".{lang}.md", StringComparison.OrdinalIgnoreCase));
         });
     }
 

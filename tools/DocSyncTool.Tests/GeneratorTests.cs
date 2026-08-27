@@ -159,6 +159,26 @@ public class GeneratorTests
     }
 
     [Fact]
+    public void Generate_HonorsConfiguredLanguagesForSubdirectoryHubs()
+    {
+        // The configured language list is the source of truth for content
+        // files. A directory containing only a newly configured language
+        // (here "fr") must still appear in its parent navigation hub.
+        using var repo = TestRepo.Create(["zh", "fr"]);
+        repo.Write("docs/README.zh.md", TestRepo.Header("README") + "# root zh\n");
+        repo.Write("docs/README.fr.md", TestRepo.Header("README") + "# root fr\n");
+        repo.Write("docs/a/notes.fr.md", TestRepo.Header("a/notes") + "# notes fr\n");
+
+        RunGenerator(repo.LoadConfig());
+
+        var rootHub = repo.Read("docs/README.md");
+        Assert.Contains("- [a/](a/)", rootHub);
+        Assert.True(repo.Exists("docs/a/README.md"));
+        var aHub = repo.Read("docs/a/README.md");
+        Assert.Contains("- [notes](notes.fr.md)", aHub);
+    }
+
+    [Fact]
     public void Generate_DirectoryWithoutDocs_Skipped()
     {
         using var repo = TestRepo.Create();
