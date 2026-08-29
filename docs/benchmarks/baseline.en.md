@@ -1,6 +1,6 @@
 <!-- docsync-pair: benchmarks/baseline -->
 <!-- docsync-revision: 9 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Performance Baseline
 
 > [↑ Back to Origo.manual](../README.en.md)

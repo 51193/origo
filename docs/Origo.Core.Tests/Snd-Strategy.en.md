@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
 <!-- docsync-revision: 13 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Strategy Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

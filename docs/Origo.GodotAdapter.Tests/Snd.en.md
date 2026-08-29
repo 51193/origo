@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
 <!-- docsync-revision: 11 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Entity Tests (Adapter)
 
 > [↑ Back to Origo.GodotAdapter.Tests](README.en.md)

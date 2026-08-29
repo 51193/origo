@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **DocSyncTool derives `docsync-revision` from git history** — `generate` now plans revision headers automatically from content-changing commits since the last generated snapshot, catches stale translations up to the peer revision, and records content hashes in `.sync-status.json` as an idempotent planning anchor. Doc authors no longer bump revision numbers by hand; CI fetches full history so multi-commit pushes are counted commit-by-commit even though GitHub Actions runs only the final commit.
 - **BREAKING: `OrigoAutoInitializer` and `SndWorld.LoadSceneAliases` / `LoadTemplates` are now `internal`** — strategy auto-discovery, JSON-array spawning, and alias/template map loading are reachable only through the `ISndContext.Bootstrap` orchestration (and its `SndContextParameters`); game-side strategy registration remains available through `SndWorld.RegisterStrategy`.
 - **BREAKING: `ISndTemplateAccess` now exposes the complete template-entity path** — in addition to `CloneTemplate`, it provides `ResolveMetaListFromJsonArray`, `LoadMetaListFromFile` (JSON array files with `templateKey`/`sndName` shorthand), and runtime `LoadTemplates` / `LoadSceneAliases` map reloads. External implementations of `ISndTemplateAccess` must implement the new members; business code no longer needs `OrigoAutoInitializer.LoadAndSpawnFromFile` or raw `SndWorld` access to load/spawn template entities.
 

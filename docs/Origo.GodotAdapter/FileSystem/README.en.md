@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
 <!-- docsync-revision: 8 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # FileSystem
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core abstraction: Abstractions/FileSystem](../../Origo.Core/Abstractions/FileSystem/README.en.md)

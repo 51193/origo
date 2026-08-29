@@ -77,8 +77,8 @@ internal static class Program
         Console.Error.WriteLine();
         Console.Error.WriteLine("Commands:");
         Console.Error.WriteLine("  init       One-time migration: rename .md -> .zh.md, inject metadata, update links");
-        Console.Error.WriteLine("  validate   Check all pairs have matching revisions and links are language-correct");
-        Console.Error.WriteLine("  generate   Create README.md navigation hubs and .sync-status.json");
+        Console.Error.WriteLine("  validate   Check pair revisions (auto/manual source state) and links are language-correct");
+        Console.Error.WriteLine("  generate   Auto-plan docsync-revision and create README.md hubs + .sync-status.json");
         Console.Error.WriteLine();
         return 1;
     }

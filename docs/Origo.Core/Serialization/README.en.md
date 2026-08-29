@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Serialization/README -->
 <!-- docsync-revision: 1 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Serialization
 
 > [↑ Back to Origo.Core](../README.en.md) · [↔ DataSource: Converters](../DataSource/Converters/README.en.md)

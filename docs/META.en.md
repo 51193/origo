@@ -1,6 +1,6 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 13 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 14 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
 > [↑ Back to Origo Manual](README.en.md)
@@ -60,39 +60,47 @@ Two files with the same base name but different language suffixes form a **sync 
 ```markdown
 <!-- docsync-pair: Origo.Core/Snd/README -->
 <!-- docsync-revision: 8 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 ```
 
 | Field | Meaning |
 |-------|---------|
 | `docsync-pair` | Globally unique pair identifier (file path minus language suffix). Automatically derived; must be identical across languages. |
-| `docsync-revision` | Monotonic integer. **Two files of a pair are in sync when their revisions are equal.** The trailing comment is a mandatory reminder — CI validates its presence. |
+| `docsync-revision` | Monotonic integer, **computed by DocSyncTool from git history**. **Two files of a pair are in sync when their revisions are equal.** Do not edit it by hand. |
 
-**Revision rules** (manually operated by developer, validated by CI):
+**Revision rules** (computed automatically by `generate`, verified by `validate`):
 
-| Action | What to do |
-|--------|-----------|
-| Modify `.zh.md` content | **Increment** `docsync-revision` in that file. `.en.md` is now stale. |
-| Translate `.zh.md` changes into `.en.md` | **Set** `docsync-revision` in `.en.md` equal to `.zh.md` |
-| Add new original content to `.en.md` (not a translation) | **Set** `docsync-revision` in `.en.md` to `max(zh.rev, old_en.rev) + 1`. `.zh.md` is now stale. |
-| Create a brand new doc file | Start at `docsync-revision: 1` |
+| Git change | Computed revision |
+|-----------|-------------------|
+| New file / new pair | Starts at `1`. A new translation added to an existing pair catches up to the peer revision. |
+| One language of a pair changed | The leading side advances by one generation; a change to the stale side catches up to the peer (translation catch-up). |
+| Both languages changed in the same commit | Both advance together by one generation. |
+| Metadata-only / pure-rename commits | No revision change. |
+| Multiple content commits in one push | Every content commit is counted; the final CI checkout does not collapse them. |
 
-**After any doc content or revision change**, you must run:
+The planner hashes each file with the DocSync metadata block removed, finds
+the last generated content state in that file's git history, and replays the
+content-changing commits since then. CI fetches the complete history
+(`fetch-depth: 0`) because GitHub only runs CI for the final commit of a
+multi-commit push.
+
+**After any doc content change**, you must run:
 
 ```bash
 dotnet run --project tools/DocSyncTool -- generate
 ```
 
-This produces two kinds of derived files (commit them together):
+This rewrites the revision headers and produces two kinds of derived files
+(commit them together):
 
 1. **`README.md`** navigation hubs in every directory — auto-generated index listing all docs by language
-2. **`docs/.sync-status.json`** — machine-readable snapshot of every pair's revision state
+2. **`docs/.sync-status.json`** — machine-readable snapshot of every pair's revision state, including content hashes used as the idempotent planning anchor
 
 **DocSyncTool cheat-sheet** (run from repo root):
 
 | Command | What it does |
 |---------|-------------|
-| `dotnet run --project tools/DocSyncTool -- generate` | Regenerate all `README.md` nav hubs + `.sync-status.json`. Always succeeds. |
+| `dotnet run --project tools/DocSyncTool -- generate` | Auto-compute `docsync-revision` from git history, regenerate all `README.md` nav hubs + `.sync-status.json`. Idempotent and always succeeds. |
 | `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: matching and monotonic pair revisions (floored by the previous revisions recorded by `generate`), same-language links, existing file/directory/anchor targets, and complete reference-style link definitions. Exit code 1 on failure. |
 | `dotnet run --project tools/DocSyncTool -- init` | **One-time migration** — rename `.md` → `.zh.md`, inject metadata, update links. Already executed; do not re-run. |
 

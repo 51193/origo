@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
 <!-- docsync-revision: 22 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Snd](../../Origo.Core/Snd/README.en.md)

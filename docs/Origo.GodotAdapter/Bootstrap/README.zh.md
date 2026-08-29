@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
 <!-- docsync-revision: 6 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Bootstrap
 
 > [↑ 回到 Origo.GodotAdapter](../README.zh.md)

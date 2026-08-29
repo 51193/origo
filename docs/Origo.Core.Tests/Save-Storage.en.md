@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
 <!-- docsync-revision: 16 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

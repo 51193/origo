@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/quick-start -->
 <!-- docsync-revision: 12 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Quick Start
 
 > [↑ Back to usage](README.en.md)

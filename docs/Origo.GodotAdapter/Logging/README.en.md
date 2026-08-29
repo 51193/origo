@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/Logging/README -->
 <!-- docsync-revision: 2 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Logging
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core abstraction: Abstractions/Logging](../../Origo.Core/Abstractions/Logging/README.en.md)

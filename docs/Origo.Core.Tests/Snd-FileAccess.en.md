@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
 <!-- docsync-revision: 2 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # File Access Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

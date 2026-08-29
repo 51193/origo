@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
 <!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # State Machine Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

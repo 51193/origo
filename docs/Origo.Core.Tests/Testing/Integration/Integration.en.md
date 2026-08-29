@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
 <!-- docsync-revision: 7 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Frame-Driven Game Simulation Integration Tests
 
 > [↑ Back to Origo.Core.Tests](../../README.en.md)

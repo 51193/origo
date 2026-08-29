@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Logging/README -->
 <!-- docsync-revision: 2 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Logging (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Logging](../../Logging/README.en.md)

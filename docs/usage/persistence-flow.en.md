@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/persistence-flow -->
 <!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence Flow
 
 > [↑ Back to usage](README.en.md)

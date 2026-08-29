@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
 <!-- docsync-revision: 15 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Documentation Maintenance Meta-Instructions
 
 > [↑ Back to Origo Manual](../README.en.md)

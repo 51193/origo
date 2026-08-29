@@ -45,6 +45,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Release validation runs scripts/doc-sync.sh, whose git-derived
+          # revision planner needs the complete history available at a tag
+          # checkout.
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4

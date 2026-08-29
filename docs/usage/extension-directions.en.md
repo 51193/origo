@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/extension-directions -->
 <!-- docsync-revision: 1 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Extension Directions and Deferred Designs
 
 > [↑ Back to usage](README.en.md)

@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
 <!-- docsync-revision: 7 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 帧驱动游戏模拟集成测试
 
 > [↑ 回到 Origo.Core.Tests](../../README.zh.md)

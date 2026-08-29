@@ -10,6 +10,7 @@ internal sealed class DocFile(string fullPath, string relativePath, string langu
     public string Language { get; } = language;
     public string PairId { get; set; } = "";
     public int Revision { get; set; }
+    public string ContentHash { get; set; } = "";
 
     public static string ExtractLanguage(string fileName)
     {

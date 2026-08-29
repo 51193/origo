@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/agent-reference -->
 <!-- docsync-revision: 17 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Agent Reference
 
 > [↑ 回到 usage](README.zh.md)

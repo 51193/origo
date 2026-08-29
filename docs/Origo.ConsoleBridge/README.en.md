@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
 <!-- docsync-revision: 9 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.ConsoleBridge
 
 > [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Runtime/Console](../Origo.Core/Runtime/Console/README.en.md)

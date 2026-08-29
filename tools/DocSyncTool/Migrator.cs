@@ -87,7 +87,7 @@ internal static partial class Migrator
             var content = File.ReadAllText(newPath);
             var header = $"<!-- docsync-pair: {pairId} -->\n" +
                          $"<!-- docsync-revision: 1 -->\n" +
-                         "<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->\n";
+                         "<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->\n";
             File.WriteAllText(newPath, header + content);
             Console.WriteLine($"  INJECTED: {relPath} (pair={pairId}, lang={lang})");
         }

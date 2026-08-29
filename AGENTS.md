@@ -194,41 +194,50 @@ content file:
 ```markdown
 <!-- docsync-pair: docs/Origo.Core/Snd/README -->
 <!-- docsync-revision: 7 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 ```
 
 | Field | Meaning |
 |-------|---------|
 | `docsync-pair` | Globally unique pair identifier (file path minus language suffix). Derived automatically; must match across languages. |
-| `docsync-revision` | Monotonic integer. **Two files of a pair are in sync when their revisions are equal.** The trailing comment is a mandatory reminder — validated by CI. |
+| `docsync-revision` | Monotonic integer, **computed by DocSyncTool from git history**. **Two files of a pair are in sync when their revisions are equal.** Do not edit it by hand. |
 
-**Revision rules** (enforced by developer, verified by CI):
+**Revision rules** (computed automatically by `generate`, verified by `validate`):
 
-| Action | What to do |
-|--------|-----------|
-| You change content in a `.zh.md` file | **Increment** `docsync-revision` in that file. The `.en.md` is now stale. |
-| You translate the `.zh.md` changes into `.en.md` | **Set** `docsync-revision` in `.en.md` to match `.zh.md` |
-| You add new original content to `.en.md` (not a translation) | **Set** `docsync-revision` in `.en.md` to `max(zh.rev, old_en.rev) + 1`. Now `.zh.md` is stale. |
-| You create a brand new doc file | Start at `docsync-revision: 1` |
+| Git change | Computed revision |
+|-----------|-------------------|
+| New file / new pair | Starts at `1`. A new translation added to an existing pair catches up to the peer revision. |
+| One language of a pair changed | The leading side advances by one generation; if the stale side changed, it catches up to the peer (translation catch-up). |
+| Both languages changed in the same commit | Both advance together by one generation. |
+| Metadata-only / pure-rename commits | No revision change (the hash excludes the DocSync metadata block). |
+| Multiple content commits in one push | Each content commit is counted; the final CI checkout does not collapse them. |
 
-After any doc content or revision change, you **must** run:
+The planner hashes each file with the DocSync metadata block removed, finds
+the last generated content state in that file's git history, and replays the
+content-changing commits since then. CI therefore fetches the complete
+history (`fetch-depth: 0`) so a multi-commit push is visible even though
+GitHub only runs CI for the final commit.
+
+After any doc content change, you **must** run:
 
 ```bash
 dotnet run --project tools/DocSyncTool -- generate
 ```
 
-This produces two kinds of derived files (commit them together with your change):
+This rewrites the revision headers and produces two kinds of derived files
+(commit them together with your change):
 
 1. **`README.md`** navigation hubs in every directory — auto-generated
    index listing all `.zh.md` / `.en.md` files grouped by language.
 2. **`docs/.sync-status.json`** — machine-readable snapshot of every pair's
-   revision state.
+   revision state, including content hashes used as the idempotent planning
+   anchor.
 
 **DocSyncTool cheat-sheet** (run from repo root):
 
 | Command | What it does |
 |---------|-------------|
-| `dotnet run --project tools/DocSyncTool -- generate` | Regenerates all `README.md` hubs + `.sync-status.json`. Always succeeds. |
+| `dotnet run --project tools/DocSyncTool -- generate` | Auto-computes `docsync-revision` headers from git history, regenerates all `README.md` hubs + `.sync-status.json`. Idempotent and always succeeds. |
 | `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: pair/revision consistency (including monotonic revision floors recorded by `generate`), same-language links, file/directory/anchor existence, and reference-style link definitions. **Exit code 1 on failure.** |
 | `dotnet run --project tools/DocSyncTool -- init` | **One-time migration only** — renames `.md` → `.zh.md`, injects metadata, updates links. Already executed; do not re-run. |
 
@@ -254,12 +263,10 @@ missing language files) always fail the build.
 
 **Rules summary for agents**:
 
-- When you change a doc file → bump its `docsync-revision`
-- When you add a new doc file → create it as `.zh.md` (or `.en.md`) with
-  `docsync-revision: 1` and a `docsync-pair` header
-- When you sync a translation → match the peer's revision
-- After any doc change → run `generate` and commit the result
-- **Never edit** auto-generated `README.md` hubs or `.sync-status.json`
+- Change doc content without touching `docsync-revision` — `generate` plans it
+- After any doc change → run `generate` and commit all rewritten doc files
+- **Never edit** `docsync-revision`, auto-generated `README.md` hubs, or
+  `.sync-status.json` by hand
 
 ### 1.7 Source Code Comments — English Only, IntelliSense-Ready
 
@@ -390,7 +397,7 @@ missing language files) always fail the build.
 | 3 | **Execute tests** | During development iteration, run `bash scripts/test.sh` (restore → build → test + coverage gates). **Before committing, you must run** `bash scripts/ci.sh`, which mirrors CI exactly: format + doc-sync + test + benchmarks + Godot integration. |
 | 4 | **Fix source + re-test loop** | If tests are not all green, go back to fix the source and re-run step 3. **Loop until all pass.** Fixes must still comply with §1 (especially avoid false-positive fixes). |
 | 5 | **Changelog alignment** | Write user-facing significant changes into `CHANGELOG.md` under the `[Unreleased]` section (conventions in §4). |
-| 6 | **Docs sync** | Sync the `docs/` mirror: directory structure, interface lists, design decisions,   usage / test docs (rules in §5 and `docs/META.zh.md` / `docs/META.en.md`). **After any doc change, bump `docsync-revision`, run `DocSyncTool generate`, and commit all derived files** (per §1.6). |
+| 6 | **Docs sync** | Sync the `docs/` mirror: directory structure, interface lists, design decisions,   usage / test docs (rules in §5 and `docs/META.zh.md` / `docs/META.en.md`). **After any doc change, run `DocSyncTool generate` (it plans `docsync-revision` automatically) and commit all derived files** (per §1.6). |
 
 **Partial completion is forbidden.** If a step is genuinely not applicable
 (e.g., pure internal refactor with no public API or doc impact), you must

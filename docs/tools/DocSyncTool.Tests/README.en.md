@@ -1,6 +1,6 @@
 <!-- docsync-pair: tools/DocSyncTool.Tests/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 5 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # DocSyncTool Tests
 
 > [↑ Back to Origo Manual](../../README.en.md)
@@ -14,8 +14,8 @@ temporary repo scaffolds.
 
 | Unit under test | Covered behavior |
 |-----------------|------------------|
-| `Validator` | Bilingual pair revision consistency, missing language files, cross-language / bare `.md` / broken links, missing metadata headers and revision-bump reminder comments, pair id mismatching the file path, invalid revision values; code blocks / inline code and external URL links are exempt |
-| `Generator` | Per-directory `README.md` navigation hub generation, idempotency (no rewrite when unchanged), `.sync-status.json` status determination (`synced` / `zh-ahead` / `missing-en`), recursive subdirectory hubs, skipping doc-less directories, derived defaults for files without metadata |
+| `Validator` | Bilingual pair revision consistency, missing language files, cross-language / bare `.md` / broken links, missing metadata headers and managed-revision reminder comments, pair id mismatching the file path, invalid revision values; code blocks / inline code and external URL links are exempt |
+| `Generator` | Per-directory `README.md` navigation hub generation, idempotency (no rewrite when unchanged), `.sync-status.json` status determination (`synced` / `zh-ahead` / `missing-en`), recursive subdirectory hubs, skipping doc-less directories, derived defaults for files without metadata, and git-derived `docsync-revision` planning (multi-commit pushes, translation catch-up, metadata-only commits, uncommitted local edits) |
 | `Migrator` | `.md` → `.zh.md` rename with metadata injection, bare `.md` link rewrite to `.zh.md`, external URL links are never rewritten, skipping already-suffixed / already-migrated / conflicting-target files, nested-directory pair derivation |
 | `Config` | Config parsing (case-insensitive keys), language code validation (rejects whitespace / slashes / backslashes), missing config file and invalid JSON failure modes |
 | `DocFile` | Language suffix extraction and pair id derivation |
@@ -31,12 +31,15 @@ temporary repo scaffolds.
   "Validation FAILED" diagnostics, generate progress lines, migration banners)
   does not pollute the test-runner log — "Validation FAILED" looks like a
   build failure in CI logs. Because redirecting the process-global console
-  streams affects all tests, the four capturing test classes
-  (`ProgramTests`/`ValidatorTests`/`GeneratorTests`/`MigratorTests`) run in
-  the serialized `DocSyncToolConsoleCapture` collection.
+  streams affects all tests, the capturing test classes
+  (`ProgramTests`/`ValidatorTests`/`GeneratorTests`/`MigratorTests`/
+  `GitRevisionTests`/`GitRevisionAdvancedTests`) run in the serialized
+  `DocSyncToolConsoleCapture` collection.
 - Every test builds a repo scaffold in its own temp directory (with
   `AGENTS.md`, `docs/` and `tools/DocSyncTool/docsync-config.json`); the
-  real repository is never touched.
+  real repository is never touched. Git-revision tests additionally `git
+  init` their scaffold and exercise the same commit/replay logic used by
+  local `generate` and CI.
 - Coverage gate: line coverage ≥ 90% (`ThresholdStat=total`), matching the
   other test projects.
 

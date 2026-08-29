@@ -11,6 +11,12 @@ namespace DocSyncTool;
 
 internal static class Generator
 {
+    private const int _statusSchemaVersion = 2;
+    private const string _autoRevisionReminderEn =
+        "<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->";
+    private const string _autoRevisionReminderZh =
+        "<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->";
+
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,
@@ -22,6 +28,7 @@ internal static class Generator
     {
         var docsRoot = config.DocsFullPath;
         var languages = config.Languages;
+        var previousStatus = ReadPreviousStatus(config);
 
         var allFiles = new List<DocFile>();
         foreach (var lang in languages)
@@ -37,6 +44,7 @@ internal static class Generator
                 {
                     var content = File.ReadAllText(file);
                     ParseMetadataQuick(docFile, content);
+                    docFile.ContentHash = ContentHash.Compute(content);
                 }
                 catch
                 {
@@ -46,6 +54,10 @@ internal static class Generator
                 allFiles.Add(docFile);
             }
         }
+
+        var git = GitRepository.TryCreate(config.RepoRoot);
+        if (git is not null)
+            ApplyAutomaticRevisions(config, allFiles, previousStatus, git);
 
         var filesByDir = allFiles
             .GroupBy(f => Path.GetDirectoryName(f.RelativePath)?.Replace('\\', '/') ?? "")
@@ -133,7 +145,177 @@ internal static class Generator
             }
         }
 
-        GenerateStatusFile(config, allFiles);
+        GenerateStatusFile(config, allFiles, previousStatus);
+    }
+
+    private static void ApplyAutomaticRevisions(
+        Config config,
+        List<DocFile> allFiles,
+        StatusFile? previousStatus,
+        GitRepository git)
+    {
+        var tracker = new RevisionTracker(git);
+        var plans = new List<RevisionPlan>(allFiles.Count);
+
+        foreach (var file in allFiles)
+        {
+            var previousPair = GetPreviousPair(previousStatus, file.PairId);
+            var oldRevision = 0;
+            var hasPrevious = previousPair is not null
+                && previousPair.Revisions.TryGetValue(file.Language, out oldRevision);
+
+            if (!hasPrevious)
+            {
+                plans.Add(new RevisionPlan(file, 0, null, true, []));
+                continue;
+            }
+
+            var oldHash = previousPair!.ContentHashes is not null
+                && previousPair.ContentHashes.TryGetValue(file.Language, out var previousHash)
+                    ? previousHash
+                    : null;
+
+            var content = File.ReadAllText(file.FullPath);
+            var repoRelativePath = Path.GetRelativePath(config.RepoRoot, file.FullPath).Replace('\\', '/');
+            List<DocContentEvent> events;
+            if (oldHash is null)
+            {
+                var headerAlreadyAhead = file.Revision > oldRevision;
+                if (headerAlreadyAhead)
+                    oldRevision = file.Revision;
+
+                events = PlanLegacyStatusTransition(file, git, repoRelativePath, headerAlreadyAhead);
+            }
+            else
+            {
+                events = tracker.GetContentEvents(repoRelativePath, content, oldHash);
+            }
+
+            plans.Add(new RevisionPlan(file, oldRevision, oldHash, false, events));
+        }
+
+        var commitOrder = git.GetCommitTopologyOrder();
+        foreach (var pair in plans.GroupBy(p => p.File.PairId))
+        {
+            var revisions = ComputePairRevisions([.. pair], commitOrder);
+            foreach (var plan in pair)
+            {
+                var previousRevision = plan.File.Revision;
+                plan.File.Revision = revisions[plan.File.Language];
+                UpdateDocSyncHeaders(plan.File, previousRevision);
+            }
+        }
+    }
+
+    private static List<DocContentEvent> PlanLegacyStatusTransition(
+        DocFile file,
+        GitRepository git,
+        string repoRelativePath,
+        bool headerAlreadyAhead)
+    {
+        // Schema v1 snapshots had no content hashes. If the author already
+        // bumped the header manually during the one-time migration, keep
+        // that revision. Otherwise a content change that was not followed
+        // by 'generate' is counted as exactly one pending change.
+        if (headerAlreadyAhead)
+            return [];
+
+        var headBlob = git.ReadBlobTexts([(git.HeadSha, repoRelativePath)])[0];
+        var headHash = headBlob is null ? null : ContentHash.Compute(headBlob);
+
+        if (headHash is not null && !string.Equals(headHash, file.ContentHash, StringComparison.Ordinal))
+            return [new DocContentEvent(null, long.MaxValue)];
+
+        return [];
+    }
+
+    private static StatusPairEntry? GetPreviousPair(StatusFile? previousStatus, string pairId)
+    {
+        if (previousStatus is null)
+            return null;
+
+        previousStatus.Pairs.TryGetValue(pairId, out var entry);
+        return entry;
+    }
+
+    private static Dictionary<string, int> ComputePairRevisions(
+        List<RevisionPlan> plans,
+        Dictionary<string, int> commitOrder)
+    {
+        var revisions = plans
+            .Where(p => !p.IsNew)
+            .ToDictionary(p => p.File.Language, p => p.OldRevision);
+
+        var events = plans
+            .Where(p => !p.IsNew)
+            .SelectMany(p => p.Events.Select(e => new PairRevisionEvent(
+                e.CommitSha,
+                e.Timestamp,
+                p.File.Language)))
+            .OrderBy(e => GetCommitOrder(e.CommitSha, commitOrder))
+            .ThenBy(e => e.Timestamp)
+            .ThenBy(e => e.CommitSha ?? "")
+            .ToList();
+
+        foreach (var group in events.GroupBy(e => (e.CommitSha ?? "", e.Timestamp)))
+        {
+            if (revisions.Count == 0)
+                continue;
+
+            var maxBefore = revisions.Values.Max();
+            var changedLanguages = group.Select(e => e.Language).Distinct().ToList();
+
+            foreach (var language in changedLanguages)
+            {
+                // A stale side catching up (for example a translation commit)
+                // adopts the pair's current revision instead of jumping ahead.
+                // Editing the leading side, or editing both sides together,
+                // advances the pair by one generation.
+                revisions[language] = revisions[language] < maxBefore
+                    ? maxBefore
+                    : maxBefore + 1;
+            }
+        }
+
+        var maxExisting = revisions.Count == 0 ? 0 : revisions.Values.Max();
+        foreach (var plan in plans.Where(p => p.IsNew))
+            revisions[plan.File.Language] = maxExisting == 0 ? 1 : maxExisting;
+
+        return revisions;
+    }
+
+    private static void UpdateDocSyncHeaders(DocFile file, int previousRevision)
+    {
+        var content = File.ReadAllText(file.FullPath);
+        var newContent = WithDocSyncHeaders(content, file.PairId, file.Revision, file.Language);
+
+        if (string.Equals(content, newContent, StringComparison.Ordinal))
+            return;
+
+        File.WriteAllText(file.FullPath, newContent);
+        if (previousRevision != file.Revision)
+            Console.WriteLine($"  UPDATED REVISION: {file.RelativePath} ({previousRevision} -> {file.Revision})");
+        else
+            Console.WriteLine($"  UPDATED HEADER: {file.RelativePath}");
+    }
+
+    private static string WithDocSyncHeaders(string content, string pairId, int revision, string language)
+    {
+        var normalized = content.Replace("\r\n", "\n").Replace('\r', '\n');
+        var lines = normalized.Split('\n');
+        var body = lines
+            .Where((line, index) => index >= 12 || !ContentHash.IsDocSyncMetadataLine(line.Trim()))
+            .ToList();
+
+        var header = new List<string>
+        {
+            $"<!-- docsync-pair: {pairId} -->",
+            $"<!-- docsync-revision: {revision} -->",
+            language == "zh" ? _autoRevisionReminderZh : _autoRevisionReminderEn
+        };
+        header.AddRange(body);
+
+        return string.Join('\n', header);
     }
 
     private static List<string> GetAllDirectories(string docsRoot)
@@ -238,7 +420,10 @@ internal static class Generator
             docFile.Revision = 1;
     }
 
-    private static void GenerateStatusFile(Config config, List<DocFile> allFiles)
+    private static void GenerateStatusFile(
+        Config config,
+        List<DocFile> allFiles,
+        StatusFile? previousStatus)
     {
         var pairs = allFiles
             .GroupBy(f => f.PairId)
@@ -249,18 +434,16 @@ internal static class Generator
 
         var statusData = new StatusFile
         {
-            SchemaVersion = 1,
+            SchemaVersion = _statusSchemaVersion,
             Languages = config.Languages,
             Pairs = []
         };
-
-        var previousStatus = ReadPreviousStatus(config);
 
         foreach (var (pairId, langDict) in pairs.OrderBy(p => p.Key))
         {
             var revisions = new Dictionary<string, int>();
             var files = new Dictionary<string, string>();
-            var maxRevision = 0;
+            var contentHashes = new Dictionary<string, string>();
 
             foreach (var lang in config.Languages)
             {
@@ -268,8 +451,8 @@ internal static class Generator
                 {
                     revisions[lang] = docFile.Revision;
                     files[lang] = docFile.RelativePath;
-                    if (docFile.Revision > maxRevision)
-                        maxRevision = docFile.Revision;
+                    if (!string.IsNullOrEmpty(docFile.ContentHash))
+                        contentHashes[lang] = docFile.ContentHash;
                 }
             }
 
@@ -288,7 +471,8 @@ internal static class Generator
                 Status = status,
                 Revisions = revisions,
                 PreviousRevisions = previousRevisions,
-                Files = files
+                Files = files,
+                ContentHashes = contentHashes
             };
         }
 
@@ -355,6 +539,32 @@ internal static class Generator
         return $"{maxLang.Key}-ahead";
     }
 
+    private sealed class RevisionPlan(
+        DocFile file,
+        int oldRevision,
+        string? oldHash,
+        bool isNew,
+        List<DocContentEvent> events)
+    {
+        public DocFile File { get; } = file;
+        public int OldRevision { get; } = oldRevision;
+        public string? OldHash { get; } = oldHash;
+        public bool IsNew { get; } = isNew;
+        public List<DocContentEvent> Events { get; } = events;
+    }
+
+    private static int GetCommitOrder(string? commitSha, Dictionary<string, int> commitOrder)
+    {
+        // A null sha is the synthetic uncommitted working-tree event and must
+        // always replay after every committed event.
+        if (commitSha is not null && commitOrder.TryGetValue(commitSha, out var order))
+            return order;
+
+        return int.MaxValue;
+    }
+
+    private sealed record PairRevisionEvent(string? CommitSha, long Timestamp, string Language);
+
     private sealed class StatusFile
     {
         [JsonPropertyName("schema_version")]
@@ -380,5 +590,8 @@ internal static class Generator
 
         [JsonPropertyName("files")]
         public Dictionary<string, string> Files { get; set; } = [];
+
+        [JsonPropertyName("content_hashes")]
+        public Dictionary<string, string>? ContentHashes { get; set; }
     }
 }

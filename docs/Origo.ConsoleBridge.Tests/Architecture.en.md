@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/Architecture -->
 <!-- docsync-revision: 2 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Assembly Architecture Guardrail Tests
 
 > [↑ Back to Origo.ConsoleBridge.Tests](README.en.md)

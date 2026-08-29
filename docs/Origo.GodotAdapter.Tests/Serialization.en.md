@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Serialization -->
 <!-- docsync-revision: 4 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Serialization Tests (Adapter Layer)
 
 > [↑ Back to Origo.GodotAdapter.Tests](README.en.md)

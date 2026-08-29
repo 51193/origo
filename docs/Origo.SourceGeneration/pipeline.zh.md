@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
 <!-- docsync-revision: 9 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # TypedData 编译期优化全链路解析
 
 > [↑ 回到 Origo.SourceGeneration](README.zh.md) ·

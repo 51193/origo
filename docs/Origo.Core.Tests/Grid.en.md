@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Grid -->
 <!-- docsync-revision: 6 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Grid Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

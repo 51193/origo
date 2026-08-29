@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
 <!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Grid
 
 > [↑ Back to Origo.Core](../README.en.md)

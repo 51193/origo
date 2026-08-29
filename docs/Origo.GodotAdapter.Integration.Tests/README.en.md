@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
 <!-- docsync-revision: 14 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter.Integration.Tests
 
 > [↑ Back to Origo.manual](../README.en.md)

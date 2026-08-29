@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Blackboard/README -->
 <!-- docsync-revision: 1 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Blackboard
 
 > [↑ Back to Origo.Core](../README.en.md) · [↔ Abstractions: Blackboard](../Abstractions/Blackboard/README.en.md) · [Related Tests: Blackboard](../../Origo.Core.Tests/Blackboard.en.md)

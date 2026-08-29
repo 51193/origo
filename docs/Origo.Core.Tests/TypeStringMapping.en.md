@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
 <!-- docsync-revision: 4 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Type Serialization Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

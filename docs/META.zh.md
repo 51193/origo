@@ -1,6 +1,6 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 13 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 14 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 手册维护元指令
 
 > [↑ 回到 Origo 手册](README.zh.md)
@@ -60,39 +60,45 @@
 ```markdown
 <!-- docsync-pair: Origo.Core/Snd/README -->
 <!-- docsync-revision: 8 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 ```
 
 | 字段 | 含义 |
 |------|------|
 | `docsync-pair` | 全局唯一的 pair 标识符（文件路径去语言后缀）。自动推导，跨语言必须一致。 |
-| `docsync-revision` | 单调递增整数。**同一 pair 两个文件的 revision 相等 = 同步。** 尾部注释为强制提醒——CI 会校验其存在。 |
+| `docsync-revision` | 单调递增整数，**由 DocSyncTool 根据 git 历史自动计算**。**同一 pair 两个文件的 revision 相等 = 同步。** 请勿手工修改。 |
 
-**revision 更新规则**（由开发者手动操作，CI 校验）：
+**revision 计算规则**（由 `generate` 自动计算，`validate` 校验）：
 
-| 操作 | 做法 |
-|------|------|
-| 修改 `.zh.md` 内容 | **递增**该文件的 `docsync-revision`。`.en.md` 即刻 stale。 |
-| 将 `.zh.md` 的改动翻译到 `.en.md` | **设置** `.en.md` 的 `docsync-revision` 等于 `.zh.md` |
-| 在 `.en.md` 中新增原创内容（非翻译） | **设置** `.en.md` 的 `docsync-revision` 为 `max(zh.rev, old_en.rev) + 1`。`.zh.md` 即刻 stale。 |
-| 新建文档文件 | 初始 `docsync-revision: 1` |
+| git 变化 | 计算出的 revision |
+|----------|-------------------|
+| 新建文件 / 新 pair | 从 `1` 开始。为已有 pair 新增翻译文件时，直接追上对侧 revision。 |
+| pair 中仅一种语言变化 | 领先侧前进一代；若落后侧变化，则追上对侧（翻译追赶）。 |
+| 同一 commit 中两种语言都变化 | 两者一起前进一代。 |
+| 仅元数据变化 / 纯重命名 commit | revision 不变（内容哈希排除 DocSync 元数据块）。 |
+| 一次 push 多个内容 commit | 每个内容 commit 都计数；最终 CI checkout 不会合并掉中间变更。 |
 
-**每次文档内容或 revision 变更后**，必须运行：
+规划器会剔除 DocSync 元数据块后对文件做内容哈希，在该文件的 git
+历史中定位上次生成的内容状态，并重放之后的每个内容变更 commit。因为
+GitHub 对一次多 commit 的 push 只会为最后一个 commit 跑 CI，所以 CI
+必须使用 `fetch-depth: 0` 拉取完整历史。
+
+**每次文档内容变化后**，必须运行：
 
 ```bash
 dotnet run --project tools/DocSyncTool -- generate
 ```
 
-这会生成两类派生文件（应一并提交）：
+这会重写 revision 头并生成两类派生文件（应一并提交）：
 
 1. **每个目录的 `README.md`** 导航中枢——自动生成的索引，按语言列出所有文档
-2. **`docs/.sync-status.json`** ——所有 pair revision 状态的机器可读快照
+2. **`docs/.sync-status.json`** ——所有 pair revision 状态的机器可读快照，其中包含作为幂等规划锚点的内容哈希
 
 **DocSyncTool 命令速查**（在仓库根目录执行）：
 
 | 命令 | 作用 |
 |------|------|
-| `dotnet run --project tools/DocSyncTool -- generate` | 重新生成所有 `README.md` 导航中枢 + `.sync-status.json`。永远成功。 |
+| `dotnet run --project tools/DocSyncTool -- generate` | 根据 git 历史自动计算 `docsync-revision`，重新生成所有 `README.md` 导航中枢 + `.sync-status.json`。幂等且永远成功。 |
 | `dotnet run --project tools/DocSyncTool -- validate` | 只读检查：所有 pair 的 revision 一致且单调递增（以 `generate` 记录的上次 revision 为下限）、所有链接指向同语言文件、文件/目录/锚点目标存在、reference-style 链接定义完整。失败时 exit code 1。 |
 | `dotnet run --project tools/DocSyncTool -- init` | **一次性迁移** —— 重命名 `.md` → `.zh.md`，注入元数据，更新链接。已执行完毕，切勿重复运行。 |
 

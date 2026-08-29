@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
 <!-- docsync-revision: 10 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Storage
 
 > [↑ Back to Save](../README.en.md)

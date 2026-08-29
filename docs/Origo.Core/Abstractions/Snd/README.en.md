@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
 <!-- docsync-revision: 9 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd](../../Snd/README.en.md)

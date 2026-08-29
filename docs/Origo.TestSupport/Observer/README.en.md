@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.TestSupport/Observer/README -->
 <!-- docsync-revision: 2 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 
 # Observer
 

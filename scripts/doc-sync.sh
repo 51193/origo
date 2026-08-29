@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # DocSync step: generation and validation.
-# 1. Runs DocSyncTool generate to update navigation hubs and status file.
+# 1. Runs DocSyncTool generate to plan docsync-revision headers from git
+#    history and update navigation hubs and the status file.
 # 2. Runs DocSyncTool validate to check revision consistency and link correctness.
 # The committed-hubs check runs inline in ci.yml (auto-commit on push, fail
 # with instructions on pull_request), not here; this script mirrors the

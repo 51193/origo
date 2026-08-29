@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Scene/README -->
 <!-- docsync-revision: 5 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Scene (Abstractions)
 
 > [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Snd/Scene](../../Snd/Scene/README.zh.md)

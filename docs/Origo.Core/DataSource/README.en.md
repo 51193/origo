@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
 <!-- docsync-revision: 16 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # DataSource
 
 > [↑ Back to Origo.Core](../README.en.md)

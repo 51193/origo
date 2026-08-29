@@ -127,7 +127,7 @@ internal static partial class Validator
         }
 
         if (!hasReminder)
-            errors.Add($"ERROR: {docFile.RelativePath} — missing revision-bump reminder comment (required after docsync-revision header; see META.zh.md)");
+            errors.Add($"ERROR: {docFile.RelativePath} — missing managed-revision reminder comment (required after docsync-revision header; see META.zh.md)");
     }
 
     private static string ExtractCommentValue(string commentLine)

@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
 <!-- docsync-revision: 14 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scene
 
 > [↑ Back to Snd](../README.en.md)
