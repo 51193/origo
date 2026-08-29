@@ -2,12 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using Xunit;
 
 namespace Origo.TestSupport;
 
 public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
 {
+    private static readonly HashSet<string> _emittedMetricKeys = new(StringComparer.Ordinal);
+    private static readonly Lock _emittedMetricKeysLock = new();
+
     private readonly TextWriter _output = output;
     private readonly ITestOutputHelper? _testOutput = testOutput;
 
@@ -38,6 +42,20 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
     /// </summary>
     public void EmitMetric(string kind, string label, string side, double opsPerSec, long allocatedBytes)
     {
+        var key = string.IsNullOrEmpty(side)
+            ? $"{kind}|{label}"
+            : $"{kind}|{label}|{side}";
+
+        lock (_emittedMetricKeysLock)
+        {
+            if (!_emittedMetricKeys.Add(key))
+                throw new InvalidOperationException(
+                    $"Duplicate BENCH metric key '{key}' emitted in the current test process. " +
+                    "Metric keys must be unique within a benchmark run; otherwise the run log " +
+                    "cannot be compared against docs/benchmarks/baseline.json without one " +
+                    "measurement overwriting another.");
+        }
+
         var line = string.Create(CultureInfo.InvariantCulture,
             $"BENCH|{kind}|{label}|{side}|{opsPerSec:F2}|{allocatedBytes}");
         _output.WriteLine(line);

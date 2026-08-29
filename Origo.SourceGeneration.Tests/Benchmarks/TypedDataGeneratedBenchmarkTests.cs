@@ -45,12 +45,12 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     {
         var rows = new List<(string, int, TimeSpan, long, TimeSpan, long)>
         {
-            RunWriteMeasurement("Int32", MakeSamples(i => i), static v => (TypedData)v),
-            RunWriteMeasurement("Int64", MakeSamples(i => (long)i), static v => (TypedData)v),
-            RunWriteMeasurement("Single", MakeSamples(i => i * 1.5f), static v => (TypedData)v),
-            RunWriteMeasurement("Double", MakeSamples(i => i * 1.5d), static v => (TypedData)v),
-            RunWriteMeasurement("Boolean", MakeSamples(i => i % 2 == 0), static v => (TypedData)v),
-            RunWriteMeasurement("Char", MakeSamples(i => (char)('A' + i % 26)), static v => (TypedData)v),
+            RunWriteMeasurement("SG Write Int32", MakeSamples(i => i), static v => (TypedData)v),
+            RunWriteMeasurement("SG Write Int64", MakeSamples(i => (long)i), static v => (TypedData)v),
+            RunWriteMeasurement("SG Write Single", MakeSamples(i => i * 1.5f), static v => (TypedData)v),
+            RunWriteMeasurement("SG Write Double", MakeSamples(i => i * 1.5d), static v => (TypedData)v),
+            RunWriteMeasurement("SG Write Boolean", MakeSamples(i => i % 2 == 0), static v => (TypedData)v),
+            RunWriteMeasurement("SG Write Char", MakeSamples(i => (char)('A' + i % 26)), static v => (TypedData)v),
         };
 
         _perf.CompareTable(
@@ -65,27 +65,27 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     {
         var rows = new List<(string, int, TimeSpan, long, TimeSpan, long)>
         {
-            RunReadMeasurement("Int32", MakeSamples(i => i),
+            RunReadMeasurement("SG Read Int32", MakeSamples(i => i),
                 static v => (TypedData)v,
                 static (in td, out v) => td.TryGetInt32(out v),
                 static o => o.Data is int),
-            RunReadMeasurement("Int64", MakeSamples(i => (long)i),
+            RunReadMeasurement("SG Read Int64", MakeSamples(i => (long)i),
                 static v => (TypedData)v,
                 static (in td, out v) => td.TryGetInt64(out v),
                 static o => o.Data is long),
-            RunReadMeasurement("Single", MakeSamples(i => i * 1.5f),
+            RunReadMeasurement("SG Read Single", MakeSamples(i => i * 1.5f),
                 static v => (TypedData)v,
                 static (in td, out v) => td.TryGetSingle(out v),
                 static o => o.Data is float),
-            RunReadMeasurement("Double", MakeSamples(i => i * 1.5d),
+            RunReadMeasurement("SG Read Double", MakeSamples(i => i * 1.5d),
                 static v => (TypedData)v,
                 static (in td, out v) => td.TryGetDouble(out v),
                 static o => o.Data is double),
-            RunReadMeasurement("Boolean", MakeSamples(i => i % 2 == 0),
+            RunReadMeasurement("SG Read Boolean", MakeSamples(i => i % 2 == 0),
                 static v => (TypedData)v,
                 static (in td, out v) => td.TryGetBoolean(out v),
                 static o => o.Data is bool),
-            RunReadMeasurement("Char", MakeSamples(i => (char)('A' + i % 26)),
+            RunReadMeasurement("SG Read Char", MakeSamples(i => (char)('A' + i % 26)),
                 static v => (TypedData)v,
                 static (in td, out v) => td.TryGetChar(out v),
                 static o => o.Data is char),
@@ -105,9 +105,9 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
 
         var rows = new List<(string, int, TimeSpan, long, TimeSpan, long)>
         {
-            RunWriteMeasurement("Write String", samples,
+            RunWriteMeasurement("SG Write String", samples,
                 static v => new TypedData(TypedData.KindMap.String, 0, v)),
-            RunReadMeasurement("Read String", samples,
+            RunReadMeasurement("SG Read String", samples,
                 static v => new TypedData(TypedData.KindMap.String, 0, v),
                 static (in td, out v) => td.TryGetString(out v),
                 static o => o.Data is string),
@@ -122,7 +122,7 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
     public void StringRead_IsString_vs_BoxedIsT()
     {
         var samples = MakeSamples(i => "s_" + i);
-        var result = RunIsMeasurement("String", samples,
+        var result = RunIsMeasurement("SG IsString String", samples,
             static v => new TypedData(TypedData.KindMap.String, 0, v),
             static (in td) => td.IsString,
             static o => o.Data is string);

@@ -37,13 +37,13 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 
         var rows = new List<(string, int, TimeSpan, long, TimeSpan, long)>
         {
-            RunDictReadMeasurement("String", genDict, boxedDict, "string", keys,
+            RunDictReadMeasurement("Dict Read String", genDict, boxedDict, "string", keys,
                 static td => td.TryGetString(out _)),
-            RunDictReadMeasurement("Int32", genDict, boxedDict, "int", keys,
+            RunDictReadMeasurement("Dict Read Int32", genDict, boxedDict, "int", keys,
                 static td => td.TryGetInt32(out _)),
-            RunDictReadMeasurement("Single", genDict, boxedDict, "float", keys,
+            RunDictReadMeasurement("Dict Read Single", genDict, boxedDict, "float", keys,
                 static td => td.TryGetSingle(out _)),
-            RunDictReadMeasurement("Boolean", genDict, boxedDict, "bool", keys,
+            RunDictReadMeasurement("Dict Read Boolean", genDict, boxedDict, "bool", keys,
                 static td => td.TryGetBoolean(out _)),
         };
 
@@ -104,13 +104,13 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     {
         var rows = new List<(string, int, TimeSpan, long, TimeSpan, long)>
         {
-            RunDictWriteMeasurement("String", MakeSamples(i => "s_" + i),
+            RunDictWriteMeasurement("Dict Write String", MakeSamples(i => "s_" + i),
                 v => new TypedData(TypedData.KindMap.String, 0, v)),
-            RunDictWriteMeasurement("Int32", MakeSamples(i => i),
+            RunDictWriteMeasurement("Dict Write Int32", MakeSamples(i => i),
                 v => (TypedData)v),
-            RunDictWriteMeasurement("Single", MakeSamples(i => i * 1.5f),
+            RunDictWriteMeasurement("Dict Write Single", MakeSamples(i => i * 1.5f),
                 v => (TypedData)v),
-            RunDictWriteMeasurement("Boolean", MakeSamples(i => i % 2 == 0),
+            RunDictWriteMeasurement("Dict Write Boolean", MakeSamples(i => i % 2 == 0),
                 v => (TypedData)v),
         };
 

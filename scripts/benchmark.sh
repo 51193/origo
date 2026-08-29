@@ -89,6 +89,11 @@ with open(log, encoding='utf-8', errors='replace') as f:
             continue
         kind, label, side, ops, alloc = m.groups()
         key = f"{kind}|{label}|{side}" if side else f"{kind}|{label}"
+        if key in metrics:
+            print(f"ERROR: duplicate BENCH metric key '{key}' in one benchmark run; "
+                  "labels must be unique per test so baseline entries cannot overwrite each other.",
+                  file=sys.stderr)
+            sys.exit(1)
         metrics[key] = {"ops": float(ops), "alloc": int(alloc)}
 json.dump(metrics, open(out, 'w'), indent=2, sort_keys=True)
 EOF
