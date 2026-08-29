@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene
 

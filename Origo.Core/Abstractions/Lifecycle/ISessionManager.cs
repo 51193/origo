@@ -48,8 +48,8 @@ public interface ISessionManager
     /// <summary>
     ///     Harvest entities marked for removal across all sessions (including foreground):
     ///     tear down observer bindings, fire BeforeDead hooks, then physically remove.
-    ///     Called once per frame-end to give foreground and background sessions identical
-    ///     kill-pending semantics — the foreground is no longer special-cased.
+    ///     Called once per frame-end so foreground and background sessions share
+    ///     identical kill-pending semantics.
     /// </summary>
     void KillPendingAllSessions();
 }

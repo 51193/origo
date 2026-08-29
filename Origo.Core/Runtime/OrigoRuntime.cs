@@ -184,8 +184,8 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     }
 
     /// <summary>
-    ///     Resets console state: clears the pending input queue.
-    ///     Output has been moved to a publish-subscribe model and no longer retains history in Core.
+    ///     Resets console state by clearing the pending input queue.
+    ///     Console output is publish-subscribe; Core retains no output history.
     /// </summary>
     internal void ResetConsoleState() => ConsoleInput?.Clear();
 }

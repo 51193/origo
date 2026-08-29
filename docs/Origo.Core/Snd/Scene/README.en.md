@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
 # Scene
 
@@ -97,7 +97,7 @@ Strategy hooks may need to reference sibling entities during creation (e.g., usi
 
 ### Why observer topology is per-scene-host
 
-Observer bindings form a session-internal directed graph (target resolution always within a single host's `FindByName` scope). Each host that creates real `SndEntity` instances (`FullMemorySndSceneHost`, `GodotSndManager`) holds an `ObserverTopology` and implements `IObserverTopologyHost`, with the topology sharing the host's lifecycle. `SessionRun` obtains the host topology via this interface, orchestrating kill/clear bidirectional teardown and load-time recovery for **all entity types** — bare `SndEntity` and adapter wrapper entities (e.g., Godot foreground entities) — since teardown resolves bindings by entity name and operates through the `ISndEntityRawSubscription` interface, independent of the concrete entity type. `StubSndSceneHost` does not create real entities and does not implement this interface. Centralizing to host-level topology means entities no longer need to expose their internal observer managers in reverse to accomplish cross-entity wiring, teardown, and recovery.
+Observer bindings form a session-internal directed graph (target resolution always within a single host's `FindByName` scope). Each host that creates real `SndEntity` instances (`FullMemorySndSceneHost`, `GodotSndManager`) holds an `ObserverTopology` and implements `IObserverTopologyHost`, with the topology sharing the host's lifecycle. `SessionRun` obtains the host topology via this interface, orchestrating kill/clear bidirectional teardown and load-time recovery for **all entity types** — bare `SndEntity` and adapter wrapper entities (e.g., Godot foreground entities) — since teardown resolves bindings by entity name and operates through the `ISndEntityRawSubscription` interface, independent of the concrete entity type. `StubSndSceneHost` does not create real entities and does not implement this interface. Centralizing to host-level topology means entities do not need to expose their internal observer managers in reverse to accomplish cross-entity wiring, teardown, and recovery.
 
 ### Why entities bind to owning session at creation time
 
