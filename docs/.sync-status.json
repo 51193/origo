@@ -46,20 +46,20 @@
     "META": {
       "status": "synced",
       "revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
-        "zh": 13,
-        "en": 13
+        "zh": 14,
+        "en": 14
       },
       "files": {
         "zh": "META.zh.md",
         "en": "META.en.md"
       },
       "content_hashes": {
-        "zh": "05D7361282F2C0876C9BCB5C8DF370E441F977A879AC6D1799ECCA7015F6099A",
-        "en": "E19ECED57D0EF720AF9BB96015E82B8D04898598067BD53060389D354E07B54A"
+        "zh": "A1BC3699280D4D98A14545D5E4EF1F9C7CACE86663F71E7DCD09A476009C004E",
+        "en": "42B15AB34F2A7AFC0D71D834BAB936F8F117FA4D1BB45DF2428838B9021F404B"
       }
     },
     "Origo.ConsoleBridge.Tests/Architecture": {
@@ -1984,8 +1984,8 @@
     "Origo.TestSupport/Architecture/README": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "previous_revisions": {
         "zh": 1,
@@ -1996,8 +1996,8 @@
         "en": "Origo.TestSupport/Architecture/README.en.md"
       },
       "content_hashes": {
-        "zh": "3CD2ACBD5263D18EDEB900DD9B770F6B9F0FD1B5F32E78F3C781550DB6210E4B",
-        "en": "59FF865CF0CCB6FA6556FFD530E3C843CCBA0F0DADF55956D7AB5DFE1DBD3D36"
+        "zh": "5A0A1BB351D82198E6E7549D072CD13FCC05B1248AAE9A79B68D0500B4642DE1",
+        "en": "53FC086E535A32AFAA3F07A50EBE289CDEEA3C214713F735FF3558EF95BDA6E2"
       }
     },
     "Origo.TestSupport/FileSystem/README": {
@@ -2079,20 +2079,20 @@
     "Origo.TestSupport/README": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "previous_revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "Origo.TestSupport/README.zh.md",
         "en": "Origo.TestSupport/README.en.md"
       },
       "content_hashes": {
-        "zh": "0CBECD4337B8F9B4542D8B64140D0510E09E0E0D0289157FDE1F614B50E66620",
-        "en": "70D2DB3844A33E535F7B857543D8A10201D3346C4CA5816428CB3148492CA4A9"
+        "zh": "97E7C5F18B90C00F71F7C4252F6A4BA4DB746B07DAB2259F373D74553B11584B",
+        "en": "F8702E420B1EE18F523883634210F20B4E3EF6DF82D4B95AC356E9EF764FA24E"
       }
     },
     "Origo.TestSupport/Reporting/README": {
@@ -2155,20 +2155,20 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 13,
-        "en": 13
+        "zh": 14,
+        "en": 14
       },
       "previous_revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 13,
+        "en": 13
       },
       "files": {
         "zh": "README.zh.md",
         "en": "README.en.md"
       },
       "content_hashes": {
-        "zh": "FCF94A671C2CFDA440698EA1D6A1DE5E3CC573D4F0B4E3EC4C27A3B84043B5C8",
-        "en": "6CE019EAEAAC4F62579D0C13AD0F71E1F83671F93DF6626F5446F93E7860469B"
+        "zh": "933ABF7DB03609D0E1BE93441B32FE2DA4CFA9428FC259F07BFBD3CFD8C1C2FD",
+        "en": "4662A8E5C487B010F4314C0C6B4B000D7DEA5AE302AC5301F658D29CFF48F5C2"
       }
     },
     "tools/DocSyncTool.Tests/README": {
@@ -2193,20 +2193,20 @@
     "usage/agent-reference": {
       "status": "synced",
       "revisions": {
-        "zh": 17,
-        "en": 17
+        "zh": 18,
+        "en": 18
       },
       "previous_revisions": {
-        "zh": 16,
-        "en": 16
+        "zh": 17,
+        "en": 17
       },
       "files": {
         "zh": "usage/agent-reference.zh.md",
         "en": "usage/agent-reference.en.md"
       },
       "content_hashes": {
-        "zh": "6D7858FB5196A622A6785521F1721BB439FC02D78544DD883205A7F244A0C880",
-        "en": "EA1FACBE4BC5D088E83EA2B75DB685C3B3BA0172840FB2E8F231A5819E75FC25"
+        "zh": "3107B023A09495F3BF4DC2DCB831C9939716440FA963DAB4ACAD3F64C21BC9DE",
+        "en": "42309D7136DFC91649A4580F1386BD315FECD1AEFB209B0FAE2FAF4F5862471B"
       }
     },
     "usage/architecture-overview": {
@@ -2380,20 +2380,20 @@
     "usage/snd-entity-model": {
       "status": "synced",
       "revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "previous_revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "files": {
         "zh": "usage/snd-entity-model.zh.md",
         "en": "usage/snd-entity-model.en.md"
       },
       "content_hashes": {
-        "zh": "0A9952FB0A0F58C0E0B793A4C6FD0D58D932888F8B998091A45119CAECA93F65",
-        "en": "2C9CA4F3ED64BEC5E9C18CAED14BB0547A7EF7206302C3527E7804173199BD51"
+        "zh": "DE9BA895AD4DF9BA8C8098BA5DE43C74381B7DA8C730DFBEB385A13A4B40D655",
+        "en": "A9C883EE01D163DC39CD35D8D2B5ECC7248EEC64794F3DFAFDF83E2B8946A03A"
       }
     },
     "usage/state-machine": {

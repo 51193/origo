@@ -20,8 +20,9 @@ namespace Origo.Core.Snd.Strategy;
 ///     </para>
 ///     <para>
 ///         Invalid or non-JSON input yields the conventional error result
-///         <c>"err:Invalid request"</c> instead of throwing, matching the
-///         fail-fast contract at the strategy boundary.
+///         <c>"err:Invalid request"</c> instead of throwing. This is an
+///         explicit, caller-observable failure at the strategy service
+///         boundary — not a silent fallback.
 ///     </para>
 /// </summary>
 /// <typeparam name="TInput">The strongly-typed input payload type.</typeparam>

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 
 # Origo.TestSupport
@@ -14,7 +14,7 @@ base classes.
 
 | Sub-module | Description |
 |------------|-------------|
-| [Architecture](Architecture/README.en.md) | `PrivateFieldNamingConvention` naming guard and TypedData test reset helper |
+| [Architecture](Architecture/README.en.md) | `PrivateFieldNamingConvention` naming guard, TypedData test reset helper, and test-side frame-flush driver |
 | [FileSystem](FileSystem/README.en.md) | Pure in-memory `IFileSystem` test double |
 | [Logging](Logging/README.en.md) | `ILogger` in-memory log collector |
 | [Node](Node/README.en.md) | `INodeHandle` / `INodeFactory` test doubles |

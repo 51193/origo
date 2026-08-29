@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
@@ -29,25 +29,25 @@ Origo 框架遵循以下核心设计约束，所有模块实现和接口设计�
 ```
 Root (this file)
   ├── 我需要了解"框架整体提供哪些能力"
-  │   └── usage/capabilities.md → 按功能域浏览全部能力
+  │   └── usage/capabilities.zh.md → 按功能域浏览全部能力
   │
   ├── 我需要了解"如何使用 Origo"
-  │   └── usage/README.md → 按场景选择文档
+  │   └── usage/README.zh.md → 按场景选择文档
   │
   ├── 我需要了解"某个模块的能力和设计决策"
-  │   ├── Origo.Core/README.md → 子系统一览 → 进入具体子模块
-  │   │   └── Snd/README.md → Entity/README.md → ...
-  │   ├── Origo.GodotAdapter/README.md → 适配层子模块
-  │   └── Origo.ConsoleBridge/README.md → TCP 桥接
+  │   ├── Origo.Core/README.zh.md → 子系统一览 → 进入具体子模块
+  │   │   └── Snd/README.zh.md → Entity/README.zh.md → ...
+  │   ├── Origo.GodotAdapter/README.zh.md → 适配层子模块
+  │   └── Origo.ConsoleBridge/README.zh.md → TCP 桥接
   │
   ├── 我需要了解"测试覆盖了什么能力"
-  │   ├── Origo.Core.Tests/README.md → 按能力查看 Core 测试
-  │   ├── Origo.GodotAdapter.Tests/README.md → 适配层 7 个能力测试
-  │   ├── Origo.ConsoleBridge.Tests/README.md → TCP 桥接测试
-  │   └── Origo.SourceGeneration.Tests/README.md → 源码生成器测试
+  │   ├── Origo.Core.Tests/README.zh.md → 按能力查看 Core 测试
+  │   ├── Origo.GodotAdapter.Tests/README.zh.md → 适配层 7 个能力测试
+  │   ├── Origo.ConsoleBridge.Tests/README.zh.md → TCP 桥接测试
+  │   └── Origo.SourceGeneration.Tests/README.zh.md → 源码生成器测试
   │
   └── 我需要了解"这个手册本身怎么维护"
-      └── META.md
+      └── META.zh.md
 ```
 
 每个目录下的 `README.md` 包含：
@@ -64,8 +64,8 @@ Root (this file)
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.zh.md) | Godot 4 适配层：文件系统、日志、序列化、启动 |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.zh.md) | TCP 远程控制台桥接（端口 9876） |
 | **使用文档** | [README](usage/README.zh.md) | 从快速入门到深度参考的使用指南 |
-| **测试: Core** | [README](Origo.Core.Tests/README.zh.md) | Core 层 31 个能力的行为测试文档 |
-| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.zh.md) | 适配层 6 个能力测试 + 20 个集成测试类（92 个测试） |
+| **测试: Core** | [README](Origo.Core.Tests/README.zh.md) | Core 层 32 个能力的行为测试文档 |
+| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.zh.md) | 适配层 7 个能力文档 + 20 个集成测试类（92 个测试） |
 | **测试: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.zh.md) | TCP 桥接服务器行为测试文档 |
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.zh.md) | TypedData 源码生成器的驱动器行为测试文档 |
 | **手册元指令** | [META.md](META.zh.md) | 本手册的编写与维护规范 |

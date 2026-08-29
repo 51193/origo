@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Entity Model
 
@@ -143,7 +143,10 @@ public sealed class ShopBuyStrategy : ActiveStrategyJsonBase<int>
 ```
 
 See `ActiveStrategyResults` for the success/error conventions (`Ok()` / `Err(message)`,
-error messages prefixed with `err:`).
+error messages prefixed with `err:`). When the input is not valid JSON, the base class
+does not throw: it returns the explicit error result `"err:Invalid request"`. This is the
+strategy service boundary's explicit-failure protocol, so callers always observe the
+failure.
 
 ### Entity identity comparison
 

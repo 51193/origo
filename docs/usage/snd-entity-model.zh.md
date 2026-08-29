@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 实体模型
 
@@ -141,6 +141,7 @@ public sealed class ShopBuyStrategy : ActiveStrategyJsonBase<int>
 ```
 
 成功/失败约定见 `ActiveStrategyResults`（`Ok()` / `Err(message)`，失败消息以 `err:` 前缀）。
+输入不是合法 JSON 时，基类不抛异常，而是返回明确的错误结果 `"err:Invalid request"`——这是策略服务边界的显式失败协议，调用方始终能观察到失败。
 
 ### 实体身份比较
 
