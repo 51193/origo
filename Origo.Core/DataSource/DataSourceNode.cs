@@ -253,6 +253,64 @@ public sealed class DataSourceNode : IDisposable
             "For complex types, use DataSourceConverterRegistry.Read<T>.");
     }
 
+    private static bool IsValidJsonNumberLiteral(string value)
+    {
+        if (value.Length == 0)
+            return false;
+
+        var index = 0;
+        if (value[index] == '-')
+        {
+            index++;
+            if (index >= value.Length)
+                return false;
+        }
+
+        if (value[index] == '0')
+        {
+            index++;
+            if (index < value.Length && value[index] is >= '0' and <= '9')
+                return false;
+        }
+        else if (value[index] is >= '1' and <= '9')
+        {
+            do
+            {
+                index++;
+            } while (index < value.Length && value[index] is >= '0' and <= '9');
+        }
+        else
+        {
+            return false;
+        }
+
+        if (index < value.Length && value[index] == '.')
+        {
+            index++;
+            if (index >= value.Length || value[index] is not (>= '0' and <= '9'))
+                return false;
+            do
+            {
+                index++;
+            } while (index < value.Length && value[index] is >= '0' and <= '9');
+        }
+
+        if (index < value.Length && value[index] is 'e' or 'E')
+        {
+            index++;
+            if (index < value.Length && value[index] is '+' or '-')
+                index++;
+            if (index >= value.Length || value[index] is not (>= '0' and <= '9'))
+                return false;
+            do
+            {
+                index++;
+            } while (index < value.Length && value[index] is >= '0' and <= '9');
+        }
+
+        return index == value.Length;
+    }
+
     private void ThrowIfNotKind(DataSourceNodeKind expected, string operation)
     {
         if (_kind != expected)
@@ -337,10 +395,23 @@ public sealed class DataSourceNode : IDisposable
         return new DataSourceNode(DataSourceNodeKind.Text, value);
     }
 
-    /// <summary>Creates a number node from its invariant-culture string representation.</summary>
+    /// <summary>
+    ///     Creates a number node from its invariant-culture string
+    ///     representation. The value must be a valid JSON number literal:
+    ///     number nodes are encoded verbatim into JSON, and an invalid
+    ///     literal would produce non-portable output or fail later at
+    ///     encode time.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value" /> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not a valid JSON number literal.</exception>
     public static DataSourceNode CreateNumber(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
+        if (!IsValidJsonNumberLiteral(value))
+            throw new ArgumentException(
+                $"'{value}' is not a valid JSON number literal. Number nodes are encoded " +
+                "verbatim into JSON and must follow the JSON number grammar.",
+                nameof(value));
         return new DataSourceNode(DataSourceNodeKind.Number, value);
     }
 
@@ -352,13 +423,33 @@ public sealed class DataSourceNode : IDisposable
     public static DataSourceNode CreateNumber(long value) =>
         new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
 
-    /// <summary>Creates a number node from a <see cref="float" /> value.</summary>
-    public static DataSourceNode CreateNumber(float value) =>
-        new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
+    /// <summary>
+    ///     Creates a number node from a <see cref="float" /> value. Non-finite
+    ///     values are rejected because JSON has no representation for NaN or
+    ///     infinity.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="value" /> is NaN or infinity.</exception>
+    public static DataSourceNode CreateNumber(float value)
+    {
+        if (!float.IsFinite(value))
+            throw new ArgumentOutOfRangeException(nameof(value), value,
+                "Number node values must be finite; JSON has no NaN or infinity literal.");
+        return CreateNumber(value.ToString(CultureInfo.InvariantCulture));
+    }
 
-    /// <summary>Creates a number node from a <see cref="double" /> value.</summary>
-    public static DataSourceNode CreateNumber(double value) =>
-        new(DataSourceNodeKind.Number, value.ToString(CultureInfo.InvariantCulture));
+    /// <summary>
+    ///     Creates a number node from a <see cref="double" /> value. Non-finite
+    ///     values are rejected because JSON has no representation for NaN or
+    ///     infinity.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="value" /> is NaN or infinity.</exception>
+    public static DataSourceNode CreateNumber(double value)
+    {
+        if (!double.IsFinite(value))
+            throw new ArgumentOutOfRangeException(nameof(value), value,
+                "Number node values must be finite; JSON has no NaN or infinity literal.");
+        return CreateNumber(value.ToString(CultureInfo.InvariantCulture));
+    }
 
     /// <summary>Creates a boolean node.</summary>
     public static DataSourceNode CreateBoolean(bool value) => new(DataSourceNodeKind.Bool, value ? "true" : "false");

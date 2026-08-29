@@ -55,6 +55,53 @@ public class DataSourceFactoryTests
         Assert.Throws<ArgumentNullException>(() => DataSourceNode.CreateNumber((string)null!));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("abc")]
+    [InlineData("1e")]
+    [InlineData("0x10")]
+    [InlineData("--1")]
+    [InlineData(" 42")]
+    [InlineData("42 ")]
+    [InlineData("NaN")]
+    [InlineData("Infinity")]
+    [InlineData("-Infinity")]
+    public void CreateNumber_NonJsonNumberLiteral_Throws(string literal)
+    {
+        // A Number node is written into JSON via WriteRawValue, so every
+        // accepted literal must be a valid JSON number. Invalid literals
+        // must fail here instead of producing non-portable JSON (or failing
+        // later at encode time with a wrapped writer error).
+        Assert.Throws<ArgumentException>(() => DataSourceNode.CreateNumber(literal));
+    }
+
+    [Fact]
+    public void CreateNumber_NonFiniteFloatingPoint_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceNode.CreateNumber(float.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceNode.CreateNumber(float.PositiveInfinity));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceNode.CreateNumber(float.NegativeInfinity));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceNode.CreateNumber(double.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceNode.CreateNumber(double.PositiveInfinity));
+        Assert.Throws<ArgumentOutOfRangeException>(() => DataSourceNode.CreateNumber(double.NegativeInfinity));
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-0")]
+    [InlineData("42")]
+    [InlineData("-42")]
+    [InlineData("3.14")]
+    [InlineData("-0.5")]
+    [InlineData("1e999")]
+    [InlineData("1E+20")]
+    [InlineData("1.0e-9")]
+    public void CreateNumber_ValidJsonNumberLiteral_IsAccepted(string literal)
+    {
+        var node = DataSourceNode.CreateNumber(literal);
+        Assert.Equal(DataSourceNodeKind.Number, node.Kind);
+    }
+
     [Fact]
     public void Add_NullChild_Throws()
     {
