@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 手册维护元指令
 
@@ -145,7 +145,7 @@ dotnet run --project tools/DocSyncTool -- generate
 
 ## Git 提交消息格式
 
-所有提交必须遵循 Conventional Commits 规范，保持仓库历史可读、可机器解析。PR 提交消息由 `scripts/lint-commits.sh` 与 `.github/workflows/commit-lint.yml` 强制执行：类型、72 字符标题上限、禁止句尾句号。
+所有提交必须遵循 Conventional Commits 规范，保持仓库历史可读、可机器解析。PR 提交消息由 `scripts/lint-commits.sh` 与 `.github/workflows/commit-lint.yml` 强制执行：类型、72 字符标题上限、禁止句尾句号、正文每行不超过 72 字符。
 
 ### 基本格式
 
@@ -169,6 +169,10 @@ type: 简述
 | `docs` | 仅文档变更 |
 | `test` | 仅测试新增或修改 |
 | `chore` | 构建、依赖、版本号等维护性变更 |
+| `build` | 构建系统或外部依赖变更 |
+| `ci` | CI 配置或 CI 脚本变更 |
+| `style` | 不影响代码含义的格式/风格变更 |
+| `revert` | 回退一个之前的提交 |
 
 ### 简述规则
 

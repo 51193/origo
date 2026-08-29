@@ -7,7 +7,7 @@ process.
 
 - Read the development workflow in [`AGENTS.md`](AGENTS.md) — it is the
   authoritative entry point for all code changes.
-- Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). PR commit subjects are linted by `scripts/lint-commits.sh` in the `commit-lint` workflow.
+- Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). PR commit messages are linted by `scripts/lint-commits.sh` in the `commit-lint` workflow (type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters).
 - Use the [pull request template](PULL_REQUEST_TEMPLATE.md) when opening a PR.
 - Read the [code of conduct](CODE_OF_CONDUCT.md).
 

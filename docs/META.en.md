@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -147,7 +147,7 @@ After a code PR is merged, check:
 
 ## Git Commit Message Format
 
-All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. PR commit messages are enforced by `scripts/lint-commits.sh` and `.github/workflows/commit-lint.yml`: type, 72-character subject limit, and no trailing period.
+All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. PR commit messages are enforced by `scripts/lint-commits.sh` and `.github/workflows/commit-lint.yml`: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters.
 
 ### Basic Format
 
@@ -173,6 +173,10 @@ multiple sub-projects.
 | `docs` | Documentation-only changes |
 | `test` | Test-only additions or modifications |
 | `chore` | Build, dependencies, version bumps, and other maintenance changes |
+| `build` | Build-system or external dependency changes |
+| `ci` | CI configuration or CI script changes |
+| `style` | Formatting/style changes that do not affect code meaning |
+| `revert` | Revert a previous commit |
 
 ### Short Description Rules
 
