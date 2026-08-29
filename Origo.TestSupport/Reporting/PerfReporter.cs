@@ -7,6 +7,12 @@ using Xunit;
 
 namespace Origo.TestSupport;
 
+/// <summary>
+///     Benchmark reporter that writes human-readable tables and
+///     machine-readable <c>BENCH|</c> metric lines consumed by
+///     <c>scripts/benchmark.sh</c>. Emitted metric keys must be unique within
+///     the test process.
+/// </summary>
 public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = null)
 {
     private static readonly HashSet<string> _emittedMetricKeys = new(StringComparer.Ordinal);
@@ -15,8 +21,10 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
     private readonly TextWriter _output = output;
     private readonly ITestOutputHelper? _testOutput = testOutput;
 
+    /// <summary>Singleton reporter that writes to the process console.</summary>
     public static PerfReporter ToConsole { get; } = new(Console.Out);
 
+    /// <summary>Creates a reporter that writes to both the console and xUnit output.</summary>
     public static PerfReporter ForTest(ITestOutputHelper output) => new(Console.Out, output);
 
     private void WriteLine(string? line = null)
@@ -62,6 +70,7 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         _testOutput?.WriteLine(line);
     }
 
+    /// <summary>Emits a single-sided throughput report.</summary>
     public void Report(string title, int iterations, TimeSpan elapsed, long allocatedBytes,
         string? baselineName = null, double? baselineTimeMs = null, long? baselineAlloc = null)
     {
@@ -99,6 +108,7 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         WriteLine($"  {divider}");
     }
 
+    /// <summary>Emits a two-sided throughput and allocation comparison.</summary>
     public void Compare(string title, string nameA, int iterationsA, TimeSpan timeA, long allocA,
         string nameB, int iterationsB, TimeSpan timeB, long allocB)
     {
@@ -125,6 +135,7 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         WriteLine($"  {divider}");
     }
 
+    /// <summary>Emits a multi-row single-sided report table.</summary>
     public void ReportTable(string title, List<(string label, int iterations, TimeSpan elapsed, long alloc)> rows)
     {
         var divider = new string('-', 86);
@@ -144,6 +155,7 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
         WriteLine($"  {divider}");
     }
 
+    /// <summary>Emits a multi-row two-sided comparison table.</summary>
     public void CompareTable(string title, string nameA, string nameB,
         List<(string label, int iterations, TimeSpan timeA, long allocA, TimeSpan timeB, long allocB)> rows)
     {
@@ -212,8 +224,12 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
     }
 }
 
+/// <summary>Small timing-unit helpers used by <see cref="PerfReporter" />.</summary>
 public static class TimeSpanExtensions
 {
+    /// <summary>Converts the elapsed ticks to total nanoseconds.</summary>
     public static double TotalNanoseconds(this TimeSpan ts) => ts.Ticks * 100.0;
+
+    /// <summary>Converts the elapsed ticks to total microseconds.</summary>
     public static double TotalMicroseconds(this TimeSpan ts) => ts.Ticks / 10.0;
 }

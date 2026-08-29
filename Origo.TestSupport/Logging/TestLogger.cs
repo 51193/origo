@@ -14,11 +14,20 @@ namespace Origo.TestSupport;
 public sealed class TestLogger : ILogger
 {
     private readonly Lock _lock = new();
+
+    /// <summary>Debug log records in insertion order.</summary>
     public readonly List<string> Debugs = [];
+
+    /// <summary>Error log records in insertion order.</summary>
     public readonly List<string> Errors = [];
+
+    /// <summary>Information log records in insertion order.</summary>
     public readonly List<string> Infos = [];
+
+    /// <summary>Warning log records in insertion order.</summary>
     public readonly List<string> Warnings = [];
 
+    /// <summary>Minimum severity recorded; lower severities are discarded.</summary>
     public LogLevel MinimumLevel { get; set; } = LogLevel.Debug;
 
     /// <summary>Gets a thread-safe snapshot of the warnings recorded so far.</summary>
@@ -30,6 +39,7 @@ public sealed class TestLogger : ILogger
         }
     }
 
+    /// <inheritdoc/>
     public void Log(LogLevel level, string tag, string message)
     {
         if (level < MinimumLevel)
@@ -56,6 +66,7 @@ public sealed class TestLogger : ILogger
         }
     }
 
+    /// <summary>Removes every recorded log entry.</summary>
     public void Clear()
     {
         lock (_lock)
