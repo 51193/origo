@@ -29,18 +29,16 @@ public class SaveCoordinatorTests
         SessionManager,
         ProgressBlackboard,
         StateMachines,
-        ProgressRuntime,
-        SaveId
+        ProgressRuntime
     }
 
     [Theory]
-    [InlineData(NullParam.SessionManager, null!, "bb", "sc", "pr", "save_01")]
-    [InlineData(NullParam.ProgressBlackboard, "sm", null!, "sc", "pr", "save_01")]
-    [InlineData(NullParam.StateMachines, "sm", "bb", null!, "pr", "save_01")]
-    [InlineData(NullParam.ProgressRuntime, "sm", "bb", "sc", null!, "save_01")]
-    [InlineData(NullParam.SaveId, "sm", "bb", "sc", "pr", null!)]
+    [InlineData(NullParam.SessionManager, null!, "bb", "sc", "pr")]
+    [InlineData(NullParam.ProgressBlackboard, "sm", null!, "sc", "pr")]
+    [InlineData(NullParam.StateMachines, "sm", "bb", null!, "pr")]
+    [InlineData(NullParam.ProgressRuntime, "sm", "bb", "sc", null!)]
     public void Constructor_NullParam_Throws(NullParam _, string? smMarker, string? bbMarker,
-        string? scMarker, string? prMarker, string? saveIdMarker)
+        string? scMarker, string? prMarker)
     {
         var sm = CreateSessionManager();
         var bb = new Blackboard.Blackboard();
@@ -51,10 +49,9 @@ public class SaveCoordinatorTests
         var blackboard = bbMarker is null ? null! : (IBlackboard)bb;
         var stateMachines = scMarker is null ? null! : (IStateMachineContainer)sc;
         var progressRuntime = prMarker is null ? null! : pr;
-        var saveId = saveIdMarker is null ? null! : "save_01";
 
         Assert.Throws<ArgumentNullException>(() =>
-            new SaveCoordinator(sessionManager, blackboard, stateMachines, progressRuntime, saveId));
+            new SaveCoordinator(sessionManager, blackboard, stateMachines, progressRuntime));
     }
 
     [Fact]
@@ -64,7 +61,7 @@ public class SaveCoordinatorTests
         var bb = new Blackboard.Blackboard();
         var sc = new StateMachineContainer(new SndStrategyPool(new TestLogger()), new TestStateMachineContext());
         var pr = CreateProgressRuntime();
-        var coordinator = new SaveCoordinator(sm, bb, sc, pr, "test_save");
+        var coordinator = new SaveCoordinator(sm, bb, sc, pr);
 
         var ex = Assert.Throws<InvalidOperationException>(() => coordinator.PersistProgress());
         Assert.Contains("foreground", ex.Message, StringComparison.OrdinalIgnoreCase);

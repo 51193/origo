@@ -62,8 +62,7 @@ internal sealed partial class ProgressRun : IDisposable
             _sessionManager,
             ProgressScope.Blackboard,
             ProgressScope.StateMachines,
-            _progressRuntime,
-            progressParams.SaveId);
+            _progressRuntime);
 
         _progressRuntime.Logger.Log(LogLevel.Info, nameof(ProgressRun),
             new LogMessageBuilder()

@@ -33,11 +33,7 @@ public static class SndArchetypeLoader
             return false;
 
         foreach (var key in node.Keys)
-        {
-            var raw = node[key].AsString();
-            if (raw != null)
-                attributes[key] = raw;
-        }
+            attributes[key] = node[key].AsString();
 
         return attributes.Count > 0;
     }

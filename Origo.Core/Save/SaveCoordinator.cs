@@ -29,14 +29,12 @@ internal sealed class SaveCoordinator
         SessionManager sessionManager,
         IBlackboard progressBlackboard,
         IStateMachineContainer progressStateMachines,
-        ProgressRuntime progressRuntime,
-        string saveId)
+        ProgressRuntime progressRuntime)
     {
         ArgumentNullException.ThrowIfNull(sessionManager);
         ArgumentNullException.ThrowIfNull(progressBlackboard);
         ArgumentNullException.ThrowIfNull(progressStateMachines);
         ArgumentNullException.ThrowIfNull(progressRuntime);
-        ArgumentException.ThrowIfNullOrWhiteSpace(saveId);
         _sessionManager = sessionManager;
         _progressBlackboard = progressBlackboard;
         _progressStateMachines = progressStateMachines;
