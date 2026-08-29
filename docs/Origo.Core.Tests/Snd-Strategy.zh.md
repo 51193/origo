@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # SND 策略 测试
 
@@ -11,7 +11,7 @@
 
 验证 SND 策略系统的全部行为：策略优先级排序、池引用计数/回收、实体策略的 8 个生命周期钩子、主动策略的 Invoke 调用、观察者策略的挂载/卸载/数据变更通知/持久化/拓扑查询、策略注册时的类型安全校验。
 
-`SndStrategyPerformanceTests` 中的三个性能测试使用 `Stopwatch` + `PerfReporter` 测量吞吐/分配并附带正确性断言，不携带 `[Trait("Category","Benchmark")]` 标签，随功能测试管线一同执行。
+`SndStrategyPerformanceTests` 中的三个性能测试使用 `Stopwatch` + `PerfReporter` 测量吞吐/分配并附带正确性断言，标记 `[Trait("Category","Benchmark")]`，由 `scripts/benchmark.sh` 执行，不进入常规功能测试管线。
 
 ## 测试文件清单
 
@@ -24,7 +24,7 @@
 | `StrategyPriorityTests.cs` | 策略按 Priority 升序排列、同优先级按插入顺序 FIFO、所有生命周期钩子遵循优先级、序列化/恢复保持顺序 |
 | `StrategyPoolTypeSafetyAndExtensionTests.cs` | 策略池类型分支安全（泛型 GetStrategy 类型不匹配不泄漏 ref count）、StackStateMachine 二阶段获取失败回滚、第三领域根基类扩展、RecoverStrategiesOnly 拒绝非 Lifecycle 策略 |
 | `SndStrategyPoolLeakDetectionTests.cs` | 策略池泄漏检测：实体正常释放/异常中途失败时策略引用计数归零、无泄漏；LogPoolLeaks 无残留告警 |
-| `SndStrategyPerformanceTests.cs` | 策略池 Get/Release 吞吐、Process 策略数缩放、TriggerAll ToArray 分配（性能测量，非基准标签） |
+| `SndStrategyPerformanceTests.cs` | 策略池 Get/Release 吞吐、Process 策略数缩放、TriggerAll ToArray 分配（标记 `[Trait("Category","Benchmark")]`，由 `scripts/benchmark.sh` 执行） |
 
 ## ActiveStrategyTests 测试详情
 

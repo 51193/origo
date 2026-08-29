@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Meta/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Meta
 
@@ -16,6 +16,7 @@
 | `ISaveMetaContributor.cs` | 元数据贡献者接口 |
 | `DelegateSaveMetaContributor.cs` | 委托适配的贡献者实现 |
 | `SaveMetaBuildContext.cs` | 单次存档时的只读构建上下文 |
+| `ReadOnlyBlackboard.cs` | 只读黑板适配器：读操作透传，所有写操作抛 `InvalidOperationException` |
 | `SaveMetaDataEntry.cs` | 存档槽条目模型（SaveId + MetaData 字典） |
 | `SaveMetaMerger.cs` | 合并贡献者 + 入参覆写的合并逻辑 |
 

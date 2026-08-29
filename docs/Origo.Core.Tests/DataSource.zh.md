@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 数据源 测试
 
@@ -9,7 +9,7 @@
 
 ## 被测行为概览
 
-验证 DataSourceNode 树模型及其编解码、转换与摘要能力：节点工厂（Map/Array/Text/Number/Bool/Null）、强类型值访问器（AsString/AsInt/AsLong/AsFloat/AsDouble/AsByte/AsSByte/AsShort/AsUShort/AsUInt/AsULong/AsDecimal/AsChar）、对象/数组访问（索引器、TryGetValue、ContainsKey、Keys、Count、Elements）、Builder 链式 Add、懒展开（访问前不调用 expander、只展开一次、展开失败保持 Lazy 可重试）、JSON 编解码往返（复杂嵌套树/顶层数组/空对象/空数组、嵌套对象懒展开、基本类型非懒展开）、Map 编解码（注释/空行跳过、值中冒号、跳过 null 值、空值、无冒号行报错）、`DataSourceConverterRegistry`（注册/获取、泛型与运行时类型读写、未注册类型报错、null 写入、类型层级回退）、14 种基本类型 + 14 种数组类型 + 领域类型（TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary）的完整往返、`TypeStringMapping` 类型名注册、`IDisposable` 递归释放与深树防栈溢出、`ComputeSha256Hash` 规范化摘要、以及 `KeyValueFileParser` 的严格/宽松解析行为。
+验证 DataSourceNode 树模型及其编解码、转换与摘要能力：节点工厂（Map/Array/Text/Number/Bool/Null）、强类型值访问器（AsString/AsChar + 泛型 As<T>：As<int>/As<long>/As<float>/As<double>/As<byte>/As<sbyte>/As<short>/As<ushort>/As<uint>/As<ulong>/As<decimal>）、对象/数组访问（索引器、TryGetValue、ContainsKey、Keys、Count、Elements）、Builder 链式 Add、懒展开（访问前不调用 expander、只展开一次、展开失败保持 Lazy 可重试）、JSON 编解码往返（复杂嵌套树/顶层数组/空对象/空数组、嵌套对象懒展开、基本类型非懒展开）、Map 编解码（注释/空行跳过、值中冒号、跳过 null 值、空值、无冒号行报错）、`DataSourceConverterRegistry`（注册/获取、泛型与运行时类型读写、未注册类型报错、null 写入、类型层级回退）、14 种基本类型 + 14 种数组类型 + 领域类型（TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary）的完整往返、`TypeStringMapping` 类型名注册、`IDisposable` 递归释放与深树防栈溢出、`ComputeSha256Hash` 规范化摘要、以及 `KeyValueFileParser` 的严格/宽松解析行为。
 
 ## 测试文件清单
 
@@ -37,10 +37,10 @@
 | `CreateNull_ReturnsNullNode` | CreateNull 返回 Null 节点，IsNull=true | DataSource |
 | `AsString_OnStringNode_ReturnsValue` | 字符串节点 AsString 返回原值 | DataSource |
 | `AsString_OnNumberNode_ReturnsStringRepresentation` | 数字节点 AsString 返回字符串表示 | DataSource |
-| `AsInt_ParsesCorrectly` | 数字节点 AsInt 解析为 int | DataSource |
-| `AsLong_ParsesCorrectly` | 数字节点 AsLong 解析为 long | DataSource |
-| `AsFloat_ParsesCorrectly` | 数字节点 AsFloat 解析为 float | DataSource |
-| `AsDouble_ParsesCorrectly` | 数字节点 AsDouble 解析为 double | DataSource |
+| `AsInt_ParsesCorrectly` | 数字节点 `As<int>()` 解析为 int | DataSource |
+| `AsLong_ParsesCorrectly` | 数字节点 `As<long>()` 解析为 long | DataSource |
+| `AsFloat_ParsesCorrectly` | 数字节点 `As<float>()` 解析为 float | DataSource |
+| `AsDouble_ParsesCorrectly` | 数字节点 `As<double>()` 解析为 double | DataSource |
 | `ObjectNode_IndexerByKey_ReturnsChild` | obj["x"] 返回子节点 | DataSource |
 | `ObjectNode_TryGetValue_ReturnsTrueForExistingKey` | TryGetValue 存在键返回 true 并输出子节点 | DataSource |
 | `ObjectNode_ContainsKey_WorksCorrectly` | ContainsKey 对存在/缺失键分别返回 true/false | DataSource |
@@ -61,7 +61,7 @@
 | `MapCodec_Decode_HandlesColonsInValues` | Map 解码保留值中冒号（如 URL） | DataSource |
 | `MapCodec_Encode_SkipsNullValues` | Map 编码跳过 null 值键 | DataSource |
 | `MapCodec_Encode_RejectsMultilineValue` | 值含换行符 | InvalidOperationException（编码产出自身严格解码无法读回的文件，须拒绝） |
-| `MapCodec_DuplicateKey_WarningIsObservable` | 解码重复键 | 记 Warning 日志（不再经 NullLogger 静默丢弃） |
+| `MapCodec_DuplicateKey_WarningIsObservable` | 解码重复键 | 记 Warning 日志（经注入的 Logger 可观测） |
 | `Registry_RegisterAndGet_RoundTrips` | Register→Get→Write→Read 往返 | DataSource |
 | `Registry_ReadWrite_ByGenericType` | 按泛型类型 Write/Read 往返 | DataSource |
 | `Registry_ReadWrite_ByRuntimeType` | 按运行时 Type Write/Read 往返 | DataSource |
@@ -111,13 +111,13 @@
 | `TypedDataConverter_RoundTrip_CharValue` | TypedData(char) 往返保持 DataType=char | DataSource |
 | `TypedDataConverter_RoundTrip_IntArrayValue` | TypedData(int[]) 往返保持 DataType=int[] | DataSource |
 | `TypedDataConverter_RoundTrip_ByteArrayValue` | TypedData(byte[]) 往返保持 DataType=byte[] | DataSource |
-| `AsByte_ParsesCorrectly` | 数字节点 AsByte 解析 0/255 | DataSource |
-| `AsSByte_ParsesCorrectly` | 数字节点 AsSByte 解析 -128/127 | DataSource |
-| `AsShort_ParsesCorrectly` | 数字节点 AsShort 解析 -32768/32767 | DataSource |
-| `AsUShort_ParsesCorrectly` | 数字节点 AsUShort 解析 0/65535 | DataSource |
-| `AsUInt_ParsesCorrectly` | 数字节点 AsUInt 解析 0/4294967295 | DataSource |
-| `AsULong_ParsesCorrectly` | 数字节点 AsULong 解析 0/18446744073709551615 | DataSource |
-| `AsDecimal_ParsesCorrectly` | 数字节点 AsDecimal 解析 3.14159/-99.99 | DataSource |
+| `AsByte_ParsesCorrectly` | 数字节点 `As<byte>()` 解析 0/255 | DataSource |
+| `AsSByte_ParsesCorrectly` | 数字节点 `As<sbyte>()` 解析 -128/127 | DataSource |
+| `AsShort_ParsesCorrectly` | 数字节点 `As<short>()` 解析 -32768/32767 | DataSource |
+| `AsUShort_ParsesCorrectly` | 数字节点 `As<ushort>()` 解析 0/65535 | DataSource |
+| `AsUInt_ParsesCorrectly` | 数字节点 `As<uint>()` 解析 0/4294967295 | DataSource |
+| `AsULong_ParsesCorrectly` | 数字节点 `As<ulong>()` 解析 0/18446744073709551615 | DataSource |
+| `AsDecimal_ParsesCorrectly` | 数字节点 `As<decimal>()` 解析 3.14159/-99.99 | DataSource |
 | `AsChar_ParsesCorrectly` | 字符串节点 AsChar 解析 'A'/中文 | DataSource |
 | `TypeStringMapping_RegistersAllNewTypes` | TypeStringMapping 注册全部基本类型与数组类型名 | DataSource |
 | `TypeStringMapping_RegistersReadOnlyDictionary` | TypeStringMapping 注册 ReadOnlyDictionary 与接口类型名 | DataSource |
@@ -129,7 +129,7 @@
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `AsInt_OnNonNumericString_Throws` | CreateString("hello") → AsInt() | FormatException |
+| `AsInt_OnNonNumericString_Throws` | CreateString("hello") → `As<int>()` | FormatException |
 | `CreateString_Null_Throws` | CreateString(null) | ArgumentNullException（Null 节点是 CreateNull 的职责，不得漂移为 Text 空串） |
 | `CreateNumber_NullString_Throws` | CreateNumber(string) 传 null | ArgumentNullException |
 | `Add_NullChild_Throws` | Map/Array Add 传 null 子节点 | ArgumentNullException（把错误延迟到编码期会变成 NRE 或空数据） |

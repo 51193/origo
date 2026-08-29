@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Benchmarks -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Performance Benchmarks
 
@@ -18,7 +18,7 @@ random number generation, and Strategy pool subsystems.
 Benchmarks are marked `[Trait("Category","Benchmark")]`, excluded from `test.sh`'s full test run via
 `--filter "Category!=Benchmark"`, and instead run as a separate step by `scripts/benchmark.sh`.
 This script runs this suite, [SG pure micro-benchmarks](../Origo.SourceGeneration.Tests/README.en.md),
-and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) together.
+and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) together, and verifies that every `BENCH` metric key is unique within a run before comparing baselines; duplicate keys fail immediately.
 
 > **Performance numbers are not recorded in this document.** Volatile absolute throughput and ratio
 > snapshots live in the authoritative baseline [benchmarks/baseline.md](../benchmarks/baseline.en.md);
@@ -37,7 +37,8 @@ and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) 
 | `Benchmarks/ConcurrentActionQueueBenchmarkTests.cs` | ConcurrentActionQueue Enqueue+ExecuteAll scaling, Enqueue throughput |
 | `Benchmarks/RandomGeneratorBenchmarkTests.cs` | XorShift128+ NextUInt64/NextInt64/NextInt32 throughput |
 | `Snd/Strategy/SndStrategyPerformanceTests.cs` | Strategy pool Get/Release round-trip, Process frame handling scaling, TriggerAll allocation |
-| `TestSupport/PerfReporter.cs` | Performance comparison table outputter (`Report`, `Compare`, `CompareTable`, `ReportTable`), writes to both console and xUnit test output |
+| `Origo.TestSupport/Reporting/PerfReporter.cs` | Performance comparison table outputter (`Report`, `Compare`, `CompareTable`, `ReportTable`), writes to both console and xUnit test output; duplicate `BENCH` metric keys within one process throw `InvalidOperationException` |
+| `TestSupport/PerfReporterMetricKeyUniquenessTests.cs` | Pins the PerfReporter metric-key uniqueness guard: duplicate keys must fail immediately |
 
 ## Benchmark Methods
 

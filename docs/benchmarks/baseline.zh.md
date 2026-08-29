@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Origo 性能基线
 
@@ -7,6 +7,8 @@
 
 > Origo 框架各子系统的性能现状快照，作为后续性能优化的权威对照来源。
 > 数值与运行环境、运行时版本强相关，跨机器不可直接比较；优化前后须在**同一环境同一运行时**下复测。
+
+> 当前 `baseline.json` 仅保留 metric key 未变化且仍可对应的条目；重新命名或重新设计测量路径的指标暂无基线条目，需在基线机运行 `bash scripts/benchmark.sh --update-baseline` 后回填并提交。
 
 ## 复现
 

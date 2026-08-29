@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Benchmarks -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 性能基准 (Benchmarks)
 
@@ -10,7 +10,7 @@
 
 这套基准覆盖 Origo 框架核心子系统的吞吐与分配特征。其中 TypedData 相关基准在贴近真实使用的路径上，对比源生成的 `TypedData`（内联存储 + Kind 分派）与无优化的「装箱进 `Dictionary<string, object>`」实现的吞吐；其余基准测量实体生命周期、Observer 拓扑、DataSourceNode 树构建/遍历、Blackboard 读写、Save 持久化、并发队列、随机数生成和 Strategy 池等子系统的性能特征。
 
-基准标记 `[Trait("Category","Benchmark")]`，从 `test.sh` 的全量测试运行中以 `--filter "Category!=Benchmark"` 排除，改由独立步骤 `scripts/benchmark.sh` 运行一次。该脚本同时运行本套件、[SG 纯净微基准](../Origo.SourceGeneration.Tests/README.zh.md)和 [Godot 适配器基准](../Origo.GodotAdapter.Tests/Serialization.zh.md)。
+基准标记 `[Trait("Category","Benchmark")]`，从 `test.sh` 的全量测试运行中以 `--filter "Category!=Benchmark"` 排除，改由独立步骤 `scripts/benchmark.sh` 运行一次。该脚本同时运行本套件、[SG 纯净微基准](../Origo.SourceGeneration.Tests/README.zh.md)和 [Godot 适配器基准](../Origo.GodotAdapter.Tests/Serialization.zh.md)，并在比对基线前检查同一轮运行中所有 `BENCH` metric key 唯一；重复 key 直接失败。
 
 > **性能数值不记录在本文档。** 易变的绝对吞吐与倍率快照见权威基线 [benchmarks/baseline.md](../benchmarks/baseline.zh.md)，本文档只描述被测能力与设计意图。
 
@@ -27,7 +27,8 @@
 | `Benchmarks/ConcurrentActionQueueBenchmarkTests.cs` | ConcurrentActionQueue Enqueue+ExecuteAll 缩放、Enqueue 吞吐 |
 | `Benchmarks/RandomGeneratorBenchmarkTests.cs` | XorShift128+ NextUInt64/NextInt64/NextInt32 吞吐 |
 | `Snd/Strategy/SndStrategyPerformanceTests.cs` | 策略池 Get/Release 往返、Process 帧处理缩放、TriggerAll 分配 |
-| `TestSupport/PerfReporter.cs` | 性能比对表格输出器（`Report`、`Compare`、`CompareTable`、`ReportTable`），同时写控制台与 xUnit 测试输出 |
+| `Origo.TestSupport/Reporting/PerfReporter.cs` | 性能比对表格输出器（`Report`、`Compare`、`CompareTable`、`ReportTable`），同时写控制台与 xUnit 测试输出；同一进程内重复 `BENCH` metric key 抛 `InvalidOperationException` |
+| `TestSupport/PerfReporterMetricKeyUniquenessTests.cs` | 钉定 PerfReporter 的 metric key 唯一性守卫：重复 key 必须立即失败 |
 
 ## 基准方法
 

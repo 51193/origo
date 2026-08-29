@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Scene
 
@@ -14,6 +14,7 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 | 文件 | 职责 |
 |------|------|
 | `SndEntityFactory.cs` | internal 静态工具：`Spawn(host, meta)` = `host.CreateEntity` + 触发 AfterSpawn（钩子抛异常时回滚实体：移出宿主 + 拆观察者 + 释放策略/节点）；`SpawnMany(host, metas)` = 两阶段（全部创建后再统一触发 AfterSpawn，创建阶段失败与钩子阶段失败都会回滚所有未完成 AfterSpawn 的实体） |
+| `SndEntityNamePolicy.cs` | 实体名唯一性校验的唯一来源：运行时 `SndEntityFactory` 与读档恢复 `SndSceneSerializer` 共用，拒绝空白名、批内重名和与现有实体重名 |
 | `FullMemorySndSceneHost.cs` | 完整内存场景宿主，创建真实 SndEntity，持有 per-scene-host 观察者拓扑，支持归属会话绑定 |
 | `StubSndSceneHost.cs` | 轻量存根场景宿主，使用简单 StubSndEntity（无策略/节点），用于单元测试和 LevelBuilder 离线构建 |
 | `ISndContextAttachableSceneHost.cs` | internal 接口：允许会话构造时把 `ISndContext` 绑定到宿主（`BindContext`） |

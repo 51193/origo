@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 性能基线
 
@@ -38,7 +38,7 @@ Origo 框架的性能基线数据与设计权衡分析，覆盖 TypedData 内联
 bash scripts/benchmark.sh
 ```
 
-该脚本依次运行三套基准（均标记 `[Trait("Category","Benchmark")]`，从 `test.sh` 排除）：
+该脚本依次运行三套基准（均标记 `[Trait("Category","Benchmark")]`，从 `test.sh` 排除），并在比对前检查同一轮运行中所有 `BENCH` metric key 唯一；重复 key 直接失败：
 
 - **SG 纯净微基准** — `Origo.SourceGeneration.Tests`
 - **Core 基准** — `Origo.Core.Tests`（TypedData 真实模拟 + 实体生命周期 + Observer 拓扑 + DataSourceNode + Blackboard + Save + 并发队列 + 随机数 + Strategy 性能）

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Meta/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Meta
 
@@ -15,6 +15,7 @@ Save display metadata (meta.map) building and merging system. Display metadata i
 | `ISaveMetaContributor.cs` | Metadata contributor interface |
 | `DelegateSaveMetaContributor.cs` | Delegate-adapted contributor |
 | `SaveMetaBuildContext.cs` | Read-only build context |
+| `ReadOnlyBlackboard.cs` | Read-only blackboard adapter: reads pass through, every mutation throws `InvalidOperationException` |
 | `SaveMetaDataEntry.cs` | Save slot entry model |
 | `SaveMetaMerger.cs` | Merge logic: contributors in registration order |
 

@@ -46,7 +46,7 @@ public interface ISndContext
     /// <summary>Template cloning.</summary>
     ISndTemplateAccess Template { get; }
 
-    /// <summary>Console command submission, processing, and output subscription.</summary>
+    /// <summary>Console command submission and output subscription.</summary>
     ISndConsoleAccess ConsoleAccess { get; }
 
     /// <summary>Progress-level state machine container access.</summary>

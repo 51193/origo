@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构总览
 
@@ -204,7 +204,7 @@ Godot._Process
 ## 项目结构
 
 ```
-Origo.Core/           # 平台无关核心（~198 个 .cs 文件）
+Origo.Core/           # 平台无关核心（211 个 .cs 文件）
 ├── Abstractions/     # 公共接口（Blackboard/Entity/StateMachine/...）
 ├── Addons/           # 外部算法库（FastNoiseLite）
 ├── Blackboard/       # 黑板实现

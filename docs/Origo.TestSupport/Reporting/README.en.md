@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Reporting/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 
 # Reporting
@@ -14,7 +14,7 @@ Performance benchmark reporting utilities. Provides unified tabular output metho
 
 | File | Responsibility |
 |------|---------------|
-| `PerfReporter.cs` | Performance reporter wrapping `TextWriter` and `ITestOutputHelper`. Provides `CompareTable` (multi-type comparison table), `ReportTable` (single-method report table), and `newline()` separator methods. |
+| `PerfReporter.cs` | Performance reporter wrapping `TextWriter` and `ITestOutputHelper`. Provides `CompareTable` (multi-type comparison table), `ReportTable` (single-method report table), and `newline()` separator methods; duplicate `BENCH` metric keys within one test process throw `InvalidOperationException` |
 
 ## Design Decisions
 

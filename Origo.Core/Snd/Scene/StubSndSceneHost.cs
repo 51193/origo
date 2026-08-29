@@ -92,6 +92,11 @@ internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
     }
 }
 
+/// <summary>
+///     Lightweight <see cref="ISndEntity" /> and raw subscription test
+///     implementation for the in-memory stub scene host. It stores data and
+///     observer subscriptions directly without strategy or node managers.
+/// </summary>
 internal sealed class StubSndEntity : ISndEntity, ISndEntityRawSubscription
 {
     private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Architecture Overview
 
@@ -204,7 +204,7 @@ The frame loop entry is in the adapter layer (Godot's `_Process` callback), but 
 ## Project Structure
 
 ```
-Origo.Core/           # Platform-agnostic core (~198 .cs files)
+Origo.Core/           # Platform-agnostic core (211 .cs files)
 ├── Abstractions/     # Public interfaces (Blackboard/Entity/StateMachine/...)
 ├── Addons/           # External algorithm library (FastNoiseLite)
 ├── Blackboard/       # Blackboard implementation

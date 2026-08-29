@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo Performance Baseline
 
@@ -7,6 +7,8 @@
 
 > A snapshot of the performance status of Origo framework subsystems, serving as the authoritative reference for future performance optimization.
 > Values are tightly coupled to the runtime environment and runtime version; cross-machine comparison is not meaningful. Before-and-after optimization comparisons must be retested **in the same environment with the same runtime**.
+
+> The current `baseline.json` keeps only entries whose metric keys are unchanged and still correspond to the same measurement. Renamed or redesigned measurements have no baseline entry yet; run `bash scripts/benchmark.sh --update-baseline` on the baseline machine to refill and commit them.
 
 ## Reproduction
 

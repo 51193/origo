@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
 # Origo.Core.Tests
 
@@ -40,7 +40,7 @@ The test project provides the following core support facilities via `TestSupport
 | `GameplaySimulationHarness` | Fluent Builder + Harness | One-click creation of complete frame-driven game simulation environment: OrigoRuntime + SndContext + background game session (syncProcess=true), supports DriveFrame/RunFrames/SpawnEntity/GetEntityData/SaveAndReload |
 | `TestStrategies` | Abstract base class collection | `SharedFrameCounterStrategy`, `SharedEchoActiveStrategy`, `SharedKillProbeStrategy`, `SharedNoopLifecycleStrategy`, `SharedNoopStateMachineStrategy` — referenced by integration test files via 1-line sealed subclass, eliminating duplicate strategy definitions |
 | `TestObserverEvents` | Structured event recording | `TestObserverEvent` record (EventType/TargetName/DataKey/OldValue/NewValue) + `EventCollector` static AsyncLocal collector + `SharedDataChangeObserverStrategy` abstract base class — observer test assertions upgrade from substring matching to typed field exact comparison |
-| `PerfReporter` | Static utility class | Performance test output formatting: Compare/Report methods, prints time/throughput/allocation comparison. Supports dual-channel output (`Console.Out` + `ITestOutputHelper`), ensuring results visible in both CI and local |
+| `PerfReporter` | Performance reporter | Performance test output formatting: Compare/Report methods, prints time/throughput/allocation comparison. Supports dual-channel output (`Console.Out` + `ITestOutputHelper`), ensuring results visible in both CI and local; duplicate metric keys within one process throw `InvalidOperationException` |
 | `ConsoleInputBuffer` | `IConsoleInputSource` implementation | Console input queue (Core production code, used directly in tests) |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` implementation | Console output channel (Core production code, used directly in tests) |
 | `PrivateFieldNamingConvention` | Architecture guardrail helper | Reflectively verifies production private fields follow `_camelCase` (dotnet format cannot verify fix-only naming rules) |

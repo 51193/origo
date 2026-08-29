@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Serialization/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # Serialization
 
@@ -50,7 +50,7 @@ Godot 引擎类型在 Origo 序列化系统中的注册。向 Core 的 `TypeStri
 
 ### 为什么 Plane 的 d 字段使用 AsFloat 而非组合
 
-`Plane` = `Normal(Vector3)` + `D(float)`。`D` 是标量而非向量，直接使用 `AsFloat()` 简单直接。组合方式（如继续用 Vector3DataSourceConverter）会引入不必要的嵌套。
+`Plane` = `Normal(Vector3)` + `D(float)`。`D` 是标量而非向量，直接使用 DataSourceNode 的 `As<float>()` 简单直接。组合方式（如继续用 Vector3DataSourceConverter）会引入不必要的嵌套。
 
 ---
 [↑ 回到 Origo.GodotAdapter](../README.zh.md)

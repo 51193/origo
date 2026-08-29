@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
 # 架构守卫 测试
 
@@ -33,7 +33,7 @@
 | `SndContext_ShouldNotImplementRoleInterfaces` | SndContext 具体类型不实现任何角色接口（纯组合对象） | Snd Abstraction: ISndContext 组合 |
 | `SndContext_CompanionProperties_ShareConsistentState` | 各 companion 属性共享同一黑板实例（SystemBlackboard/ProgressBlackboard） | Snd Abstraction: ISndContext 组合 |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext 继承 ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
-| `DeferredFlush_ShouldNotBePublicBusinessSurface` | 帧冲刷仅经 `IOrigoFrameDriver.DriveFrame`；`ISndDeferredActions` 与 `OrigoRuntime` 不再暴露可绕过的 public flush | architecture-overview: 单一访问路径 |
+| `DeferredFlush_ShouldNotBePublicBusinessSurface` | 帧冲刷仅经 `IOrigoFrameDriver.DriveFrame`；`ISndDeferredActions` 与 `OrigoRuntime` 不暴露可绕过的 public flush | architecture-overview: 单一访问路径 |
 | `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture-overview: 单一访问路径 |
 | `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture-overview: 单一访问路径 |
 | `IEntityLifecycle_ShouldBeInternal` | IEntityLifecycle 接口为 internal——业务代码不得直接触发生命周期钩子 | Runtime: 生命周期编排 |
