@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：存储 测试
 
@@ -26,7 +26,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SavePathResolverTests.cs` | 路径解析：SaveFileHandle 相对路径提取、父目录创建、遍历攻击拒绝、叶目录名 |
 | `SaveGamePayloadTests.cs` | 数据模型：SaveGamePayload/LevelPayload 默认值、多关卡访问、CustomMeta |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ 侧信道文件：快照→current 复制往返、目录结构保留、缺失/空目录容错、参数校验 |
-| `SaveFormatVersionTests.cs` | 存档格式版本：meta.map 写入 origo.format_version、新版本拒绝加载、缺版本键兼容、保留键隐藏 |
+| `SaveFormatVersionTests.cs` | 存档格式版本：meta.map 写入 origo.format_version、新版本拒绝加载、缺版本键兼容、保留键隐藏、公开存档元数据列表 |
 | `SaveSnapshotMarkerTests.cs` | 快照完整性：快照目录无 .write_in_progress 残留 |
 | `StaleLevelDirectoryCleanupTests.cs` | 验证完整保存后 `current/` 与 payload 关卡集合一致——销毁后台会话后其关卡目录被清理，不泄漏进后续快照 |
 | `WellKnownKeysTests.cs` | 常量：ActiveSaveId、SessionTopology 键名正确性 |
@@ -86,6 +86,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 |---------|-----------|---------|
 | `Save_WritesFormatVersionToMetaMap` | 保存时 meta.map 写入 `origo.format_version: 1` | persistence-flow: meta.map |
 | `ListSaves_HidesFrameworkReservedMetaKeys` | ListSaves/EnumerateSavesWithMetaData 隐藏 `origo.*` 框架保留键 | persistence-flow: meta.map |
+| `ListSavesWithMetaData_PublicFacadeReturnsDisplayMetaAndHidesReservedKeys` | `ctx.Save.ListSavesWithMetaData()` 经公共门面返回展示元数据并隐藏保留键 | persistence-flow: meta.map |
 
 ### 错误路径
 
@@ -233,7 +234,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SndContext_DefaultInitialStorage_Uses_Injected_SavePathPolicy` | SndContext 初始存储使用注入的 ISavePathPolicy | ISavePathPolicy |
 | `SystemRuntime_DefaultStorage_Uses_Injected_SavePathPolicy` | SystemRuntime 默认存储使用注入的 ISavePathPolicy | ISavePathPolicy |
 | `DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` | 自定义策略下存档枚举经公共 `ctx.Save.ListSaves()` 链路验证 | ISavePathPolicy |
-| `DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy` | EnumerateSavesWithMetaData 通过策略读 meta.map | ISavePathPolicy |
+| `DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy` | 自定义策略下存档元数据枚举经公共 `ctx.Save.ListSavesWithMetaData()` 链路验证 | ISavePathPolicy |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_Uses_PathPolicy` | 两阶段写入全部经过策略拼装路径 | ISavePathPolicy |
 | `DefaultSaveStorageService_SnapshotCurrentToSave_Uses_PathPolicy` | SnapshotCurrentToSave 经策略拼装快照路径 | ISavePathPolicy |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrent_Uses_PathPolicy` | WriteToCurrent 经策略拼装文件路径 | ISavePathPolicy |
@@ -380,10 +381,11 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 `DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` 经 `ctx.Save.ListSaves()`）。
 
 但存储层的**隔离契约验证**（自定义 `ISavePathPolicy` 注入下各方法逐一路径断言、
-无公共等价的低层方法如 `EnumerateSavesWithMetaData` / `SnapshotCurrentToSave` /
-`WriteSavePayloadToCurrent` / `ReadSavePayloadFromCurrent` 的读写往返）无法经公共
-管线忠实复现——`RequestSaveGame`/`RequestLoadGame` 会连带进度文件与幂等逻辑，无法
-隔离验证存储服务自身。这类用例经 `InternalsVisibleTo` 直接构造
+无公共等价的低层方法如 `SnapshotCurrentToSave` / `WriteSavePayloadToCurrent` /
+`ReadSavePayloadFromCurrent` 的读写往返）无法经公共管线忠实复现——
+`RequestSaveGame`/`RequestLoadGame` 会连带进度文件与幂等逻辑，无法隔离验证存储
+服务自身；`EnumerateSavesWithMetaData` 已有公共等价
+`ctx.Save.ListSavesWithMetaData()`，须走公共路径。这类用例经 `InternalsVisibleTo` 直接构造
 `DefaultSaveStorageService` 验证，属 META-TEST 白名单第 7 条（"无公共等价的低层
 操作"）的豁免记录。
 

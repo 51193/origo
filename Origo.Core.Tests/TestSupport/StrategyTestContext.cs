@@ -141,6 +141,8 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
 
     public IReadOnlyList<string> ListSaves() => [];
 
+    public IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData() => [];
+
     public void RequestLoadGame(string saveId) => LoadRequests.Add(saveId);
 
     public void RequestSaveGame(string newSaveId) => SaveRequests.Add(newSaveId);

@@ -12,6 +12,13 @@ public interface ISndSaveOperations
     /// <summary>List available save slots.</summary>
     IReadOnlyList<string> ListSaves();
 
+    /// <summary>
+    ///     Lists available save slots with their display metadata read from
+    ///     each snapshot's <c>meta.map</c>. Framework-reserved <c>origo.*</c>
+    ///     keys are stripped from the returned metadata.
+    /// </summary>
+    IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData();
+
     /// <summary>Request to load a specific save.</summary>
     void RequestLoadGame(string saveId);
 

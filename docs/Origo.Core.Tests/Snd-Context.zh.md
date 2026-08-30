@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 上下文 测试
 
@@ -34,6 +34,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 |---------|-----------|---------|
 | `ListSaves_ReturnsEmptyWhenNoSaves` | 无存档时 ListSaves 返回空 | ISndSaveOperations |
 | `ListSaves_ReturnsSaveIds` | 有存档时 ListSaves 返回存档 ID | ISndSaveOperations |
+| `ListSavesWithMetaData_ReturnsEmptyWhenNoSaves` | 无存档时 ListSavesWithMetaData 返回空 | ISndSaveOperations |
 | `RequestSaveGame_PersistsAndSetsActiveSaveSlot` | 保存后文件存在、ActiveSaveId 正确设置 | persistence-flow |
 | `RequestSaveGame_IncrementsThenDecrementsPendingCount` | 保存请求先增后减 pending 计数 | ISndDeferredActions |
 | `RequestSaveGameAuto_WithExplicitId_UsesIt` | RequestSaveGameAuto 使用传入 ID | ISndSaveOperations |

@@ -15,6 +15,14 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
 {
     private static readonly string[] _godotSkipPrefixes = ["Godot", "GodotSharp"];
 
+    /// <summary>
+    ///     The unified SND context created during <see cref="_Ready" /> and
+    ///     exposed to presentation/game code after bootstrap. This is the
+    ///     same facade passed to
+    ///     <see cref="ConfigureSaveMetadataContributors" />.
+    /// </summary>
+    public ISndContext Context { get; private set; } = null!;
+
     /// <summary>Path to the entry config file (levels-structured <c>entry.json</c>).</summary>
     [Export] public string ConfigPath { get; set; } = "res://origo/entry/entry.json";
 

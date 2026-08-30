@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -55,6 +55,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | Pre-test user:// cleanup: leftover write markers / prefixed artifacts removed, non-test and Godot system content preserved, idempotent |
 | GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side, and strategy release still runs when `OnUnmounted` throws |
 | OrigoDefaultEntryBootstrapFailureTests | `Tests/OrigoDefaultEntryBootstrapFailureTests.cs` | 1 | `OrigoDefaultEntry` derived entry failure after base._Ready(): the next frame must fail fast instead of driving a half-initialized runtime |
+| OrigoDefaultEntryContextIntegrationTests | `Tests/OrigoDefaultEntryContextIntegrationTests.cs` | 1 | `OrigoDefaultEntry.Context` exposes the SndContext after successful startup and shares the same instance with `ConfigureSaveMetadataContributors` |
 
 ## Running
 
@@ -112,6 +113,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── ObserverSaveReloadIntegrationTests.cs # Observer binding save/load recovery tests
 │   ├── UserDataCleanupIntegrationTests.cs # Test-process user:// cleanup tests
 │   └── OrigoDefaultEntryBootstrapFailureTests.cs # Derived entry bootstrap failure fail-fast test
+│   └── OrigoDefaultEntryContextIntegrationTests.cs # Context exposure / shared-instance test
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs
 │   ├── StubNodeFactory.cs

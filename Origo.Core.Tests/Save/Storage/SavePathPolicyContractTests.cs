@@ -169,15 +169,23 @@ public class SavePathPolicyContractTests
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
         var policy = new TestPrefixedPathPolicy("p_");
-        var storage = new DefaultSaveStorageService(metaAccess, dataSourceIo, pathResolver, "root", policy);
+        var runtime = TestFactory.CreateRuntime(new TestLogger(), new TestSndSceneHost());
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, dataSourceIo, metaAccess, pathResolver,
+            "root", "initial", "entry.json")
+        {
+            SavePathPolicy = policy
+        });
 
-        // Seed a save directory with meta at the custom policy path
+        // EnumerateSaveIds discovers slots by the fixed save_ directory
+        // prefix; the custom policy then assembles the per-slot meta.map
+        // path. Seed both pieces and verify through the public facade.
         fs.CreateDirectory("root/save_002");
         var saveRel = policy.GetSaveDirectory("002");
         var metaRel = policy.GetCustomMetaFile(saveRel);
         fs.SeedFile($"root/{metaRel}", "display_name: Test Save\n");
 
-        var entries = storage.EnumerateSavesWithMetaData();
+        var entries = ctx.Save.ListSavesWithMetaData();
         Assert.Single(entries);
         Assert.Equal("002", entries[0].SaveId);
         Assert.True(entries[0].MetaData.ContainsKey("display_name"));

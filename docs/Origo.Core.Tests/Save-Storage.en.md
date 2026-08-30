@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
@@ -28,7 +28,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `WellKnownKeysTests.cs` | Constants: ActiveSaveId, SessionTopology key name correctness |
 | `SaveIdValidationTests.cs` | Save id validation: `RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` reject invalid ids (path separators / out-of-range chars), accept valid ids |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
-| `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden |
+| `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden, public save-metadata listing |
 | `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |
 | `StaleLevelDirectoryCleanupTests.cs` | Verifies that after a full save `current/` is consistent with the payload's level set — level directories of destroyed background sessions are cleaned up, not leaked into subsequent snapshots |
 
@@ -86,6 +86,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 |-------------|-----------------|-----------|
 | `Save_WritesFormatVersionToMetaMap` | Save writes `origo.format_version: 1` to meta.map | persistence-flow: meta.map |
 | `ListSaves_HidesFrameworkReservedMetaKeys` | ListSaves/EnumerateSavesWithMetaData hide `origo.*` framework-reserved keys | persistence-flow: meta.map |
+| `ListSavesWithMetaData_PublicFacadeReturnsDisplayMetaAndHidesReservedKeys` | `ctx.Save.ListSavesWithMetaData()` returns display metadata through the public facade and hides reserved keys | persistence-flow: meta.map |
 
 ### Error Path
 
@@ -233,7 +234,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SndContext_DefaultInitialStorage_Uses_Injected_SavePathPolicy` | SndContext initial storage uses injected ISavePathPolicy | ISavePathPolicy |
 | `SystemRuntime_DefaultStorage_Uses_Injected_SavePathPolicy` | SystemRuntime default storage uses injected ISavePathPolicy | ISavePathPolicy |
 | `DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` | Save enumeration under a custom policy, verified through the public `ctx.Save.ListSaves()` pipeline | ISavePathPolicy |
-| `DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy` | EnumerateSavesWithMetaData reads meta.map through policy | ISavePathPolicy |
+| `DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy` | Save-metadata enumeration under a custom policy, verified through the public `ctx.Save.ListSavesWithMetaData()` pipeline | ISavePathPolicy |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_Uses_PathPolicy` | Two-phase write fully passes through policy-assembled paths | ISavePathPolicy |
 | `DefaultSaveStorageService_SnapshotCurrentToSave_Uses_PathPolicy` | SnapshotCurrentToSave assembles snapshot path through policy | ISavePathPolicy |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrent_Uses_PathPolicy` | WriteToCurrent assembles file paths through policy | ISavePathPolicy |
@@ -381,10 +382,11 @@ Therefore tests should not depend on the real file system — this would break t
 
 However, the storage layer's **isolated contract verification** (per-method path assertions under a custom
 `ISavePathPolicy` injection, and read/write round-trips of low-level methods with no public equivalent such as
-`EnumerateSavesWithMetaData` / `SnapshotCurrentToSave` / `WriteSavePayloadToCurrent` /
+`SnapshotCurrentToSave` / `WriteSavePayloadToCurrent` /
 `ReadSavePayloadFromCurrent`) cannot be faithfully reproduced through the public pipeline —
 `RequestSaveGame`/`RequestLoadGame` also carries progress files and idempotency logic, making it impossible to
-isolate the storage service itself. These cases construct `DefaultSaveStorageService` directly via
+isolate the storage service itself. `EnumerateSavesWithMetaData` now has the public equivalent
+`ctx.Save.ListSavesWithMetaData()` and must be verified through that path. These cases construct `DefaultSaveStorageService` directly via
 `InternalsVisibleTo` and are recorded as exemptions under META-TEST whitelist item 7 ("low-level operations
 with no public equivalent").
 

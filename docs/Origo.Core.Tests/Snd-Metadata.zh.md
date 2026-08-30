@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 元数据 测试
 
@@ -24,7 +24,7 @@
 | `TypedDataTests.cs` | TypedData 构造、类型保留、值/引用类型行为、struct 值语义 |
 | `TypedDataGeneratedTests.cs` | Source Generator 输出：隐式/显式转换、TryGet、IEquatable、GetHashCode、DataType、TypedDataFactory、多层 KindResolver、ObjectConverter fallback |
 | `SndMetaDataTests.cs` | SndMetaData 默认值、DeepClone 深拷贝、修改不影响原对象 |
-| `SndMetaFluentBuilderTests.cs` | SndMetaFluentBuilder 流式 API：名称、Node、Strategy、各类型数据设置、链式调用 |
+| `SndMetaFluentBuilderTests.cs` | SndMetaFluentBuilder 流式 API：默认可恢复元数据、观察者绑定、Node/Strategy/Data 设置、链式调用与参数守卫 |
 | `TypedDataIntegrationTests.cs` | TypedData 在实体 CRUD、Blackboard 序列化往返、DataObserverManager 通知中的集成行为 |
 
 > `TypedDataTestContext.cs` 是 xUnit 集合夹具，非测试文件。
@@ -163,12 +163,17 @@
 | `SetDouble_StoresCorrectTypedData` | SetDouble 存储 TypedData with typeof(double) | SndMetaFluentBuilder |
 | `SetLong_StoresCorrectTypedData` | SetLong 存储 TypedData with typeof(long) | SndMetaFluentBuilder |
 | `ChainedCalls_AllStored` | 链式调用正确存储 Node/Strategy/Data 全部配置 | SndMetaFluentBuilder |
+| `Build_WithoutExplicitNodeOrStrategy_ProducesRecoverableMeta` | 新建 builder 默认生成空 Node/Strategy，经真实实体恢复路径可直接创建 | SndMetaFluentBuilder |
+| `AddObserverBinding_StoresTopologyShape` | 同 target 合并、异 target 分组，生成框架 observer_indices 形状 | SndMetaFluentBuilder |
 
 ### 错误路径
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `Build_EmptyName_Throws` | 空串或 null 名称 | ArgumentException / ArgumentNullException |
+| `AddObserverBinding_BlankTargetOrIndex_Throws` | 空 target / 空 observer index / 空 observer 列表 | ArgumentException |
+| `AddObserverBinding_NullIndices_Throws` | null observerIndices | ArgumentNullException |
+| `AddObserverBinding_DuplicateIndex_Throws` | 同 target 重复 observer index | ArgumentException |
 
 ## TypedDataIntegrationTests 测试详情
 

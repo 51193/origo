@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter
 
@@ -72,6 +72,10 @@ OrigoDefaultEntry._Ready()
 - **命令行运行不重新编译 C#**：`godot --path .` 直接运行加载的是上次构建的 DLL。
   编辑器模式会自动构建；命令行方式需先 `dotnet build`（或使用
   `dotnet build && godot --path .`）。
+- **项目名避免空格**：Godot 4.7.2 在 `project.godot` 的 `config/name`
+  含空格时可能无法加载 C# 项目程序集（报 `Failed to load project assembly`，
+  随后脚本提示 associated class 不存在）。`config/name` 使用与程序集兼容的
+  无空格名称，窗口标题可改用游戏内 UI 展示。
 - **UI 根节点吞掉 3D 点击**：覆盖全屏的 Control 默认 `mouse_filter = Stop`，会拦截所有
   鼠标事件导致 3D 交互（如棋盘点击）失效。UI 根节点应设 `MouseFilter = Ignore`，
   子面板保持默认 Stop 以正常响应按钮。

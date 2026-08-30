@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence Flow
 
@@ -185,10 +185,10 @@ ctx.Lifecycle.RequestLoadMainMenuEntrySave();  // Load the main menu entry save
 
 ```csharp
 // Get all save slot IDs
-var ids = saveStorageService.EnumerateSaveIds();
+var ids = ctx.Save.ListSaves();
 
 // Get save slots + display metadata (for save selection UI)
-var entries = saveStorageService.EnumerateSavesWithMetaData();
+var entries = ctx.Save.ListSavesWithMetaData();
 // entries[i].SaveId → "001"
 // entries[i].MetaData → { "play_time": "2h30m", "level": "town" }
 ```

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Bootstrap
 
@@ -14,7 +14,7 @@ Godot 适配层的启动与编排。负责创建完整的运行时栈（`OrigoRu
 | 文件 | 职责 |
 |------|------|
 | `OrigoAutoHost.cs` | Godot Node，创建运行时：GodotFileSystem + TypeStringMapping + ConverterRegistry + PersistentBlackboard + ConsoleInput/Output。`_Process` 委托给 `IOrigoFrameDriver.DriveFrame(delta)` |
-| `OrigoDefaultEntry.cs` | 继承 OrigoAutoHost，持有启动配置属性（`AutoDiscoverStrategies`、`_godotSkipPrefixes`（`private static readonly` 字段）、`SceneAliasMapPath` 等） |
+| `OrigoDefaultEntry.cs` | 继承 OrigoAutoHost，持有启动配置属性（`AutoDiscoverStrategies`、`_godotSkipPrefixes`（`private static readonly` 字段）、`SceneAliasMapPath` 等），并公开 `Context` 供表现层读取统一业务门面 |
 | `OrigoDefaultEntry.Bootstrap.cs` | partial class，`_Ready` 实现：注册命令处理器 → 创建 SndContext → 调用 `Bootstrap()`；任何步骤失败都会标记启动失败（`MarkBootstrapFailed`），使下一帧 fail-fast |
 
 ## 启动流程
@@ -41,6 +41,7 @@ OrigoDefaultEntry._Ready()
   │       SceneAliasMapPath = ...,
   │       SndTemplateMapPath = ...
   │   })
+  ├── Context = sndContext                   // 暴露给表现层/游戏代码
   ├── SndManager.BindContext(sndContext)
   └── sndContext.Bootstrap()                 // Core 内部编排：
 
@@ -64,6 +65,11 @@ SndContext.Bootstrap() 内部顺序：
 ### 为什么策略发现过滤 Godot 前缀
 
 `OrigoAutoInitializer.DiscoverAndRegisterStrategies` 扫描当前 AppDomain 中所有程序集。Godot 和 GodotSharp 的程序集包含大量非策略类，过滤前缀避免无效扫描和注册错误。此前缀通过 `SndContextParameters.DiscoverySkipPrefixes` 传入 Core，而非在适配层硬编码。
+
+
+### 为什么公开 Context
+
+`OrigoAutoHost` 已经公开 `Runtime` 与 `SndManager`，而表现层常见需求（存档列表、continue 可用性、生命周期入口、模板与黑板查询）都集中在 `ISndContext`。`Context` 与宿主入口保持同一生命周期，在 `_Ready()` 中创建并赋值，`ConfigureSaveMetadataContributors` 收到同一实例。
 
 ### 为什么启动编排集中在 SndContext.Bootstrap()
 

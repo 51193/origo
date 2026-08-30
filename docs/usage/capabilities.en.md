@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
@@ -40,7 +40,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 |------------|-------------|-----------|
 | Two-phase write | Write `current/` first (with .write_in_progress marker), atomically copy to `save_{id}/` after validation | [Persistence Flow](persistence-flow.en.md) |
 | Strict read validation | .write_in_progress marker detection, level three-file integrity check, progress.json mandatory presence | [Persistence Flow](persistence-flow.en.md) |
-| Snapshot management | EnumerateSaveIds / EnumerateSavesWithMetaData, supports save-selection UI | [Persistence Flow](persistence-flow.en.md) |
+| Snapshot management | `ctx.Save.ListSaves()` / `ListSavesWithMetaData()`, supports save-selection UI | [Persistence Flow](persistence-flow.en.md) |
 | meta.map display metadata | Display metadata system separated from business data, ISaveMetaContributor pluggable contributor pattern | [Persistence Flow](persistence-flow.en.md) |
 | Idempotent deduplication | SHA256 hash comparison; same game state skips I/O write | [↔ Save/Storage](../Origo.Core/Save/Storage/README.en.md) |
 

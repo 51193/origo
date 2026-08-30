@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -133,12 +133,12 @@ but must observe the following whitelist principle:
    situations have no public path that can faithfully reproduce the same contract, so internal APIs are retained:
    - **Isolated contract verification of `DefaultSaveStorageService`** (`SavePathPolicyContractTests`,
      `SaveStorageContractTests`): per-method path assertions under a custom `ISavePathPolicy` injection, plus
-     low-level methods with no public equivalent such as `EnumerateSavesWithMetaData`/`SnapshotCurrentToSave`/
+     low-level methods with no public equivalent such as `SnapshotCurrentToSave`/
      `WriteSavePayloadToCurrent` (the full `current/` read, `SavePayloadReader.ReadFromCurrent`, is a
      framework-internal reader with no public equivalent either) — the public `RequestSaveGame`/`RequestLoadGame`
      also carries progress files and idempotency logic, unable to isolate the storage service itself; observable
-     behavior with a public equivalent (e.g. `EnumerateSaveIds` → `ctx.Save.ListSaves()`) must go through the
-     public path.
+     behavior with a public equivalent (`EnumerateSaveIds` → `ctx.Save.ListSaves()`,
+     `EnumerateSavesWithMetaData` → `ctx.Save.ListSavesWithMetaData()`) must go through the public path.
    - `LevelBuilder`'s commit delegation contract (`LevelBuilder_Commit_UsesStorageService`): internal type,
      no public equivalent.
    - `ProgressRun.LoadFromPayload` validation of **manually constructed malformed/missing-field payloads**

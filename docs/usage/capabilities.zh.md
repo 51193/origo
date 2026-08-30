@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -40,7 +40,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 |------|------|----------|
 | 两阶段写入 | 先写 `current/`（带 .write_in_progress 标记），校验通过后原子复制到 `save_{id}/` | [持久化流程](persistence-flow.zh.md) |
 | 严格读取校验 | .write_in_progress 标记检测、关卡三件套完整性校验、progress.json 强制存在 | [持久化流程](persistence-flow.zh.md) |
-| 快照管理 | EnumerateSaveIds / EnumerateSavesWithMetaData，支持保存选择 UI | [持久化流程](persistence-flow.zh.md) |
+| 快照管理 | `ctx.Save.ListSaves()` / `ListSavesWithMetaData()`，支持保存选择 UI | [持久化流程](persistence-flow.zh.md) |
 | meta.map 显示元数据 | 与业务数据分离的显示元数据系统，ISaveMetaContributor 插件式贡献者模式 | [持久化流程](persistence-flow.zh.md) |
 | 幂等去重 | SHA256 哈希比对，相同游戏状态跳过 I/O 写入 | [↔ Save/Storage](../Origo.Core/Save/Storage/README.zh.md) |
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Agent Reference
 
@@ -146,6 +146,7 @@ public interface ISndStateMachineAccess {
 // 存档操作
 public interface ISndSaveOperations {
     IReadOnlyList<string> ListSaves();
+    IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData();
     void RequestLoadGame(string saveId);
     void RequestSaveGame(string newSaveId);
     string RequestSaveGameAuto(string? newSaveId = null);

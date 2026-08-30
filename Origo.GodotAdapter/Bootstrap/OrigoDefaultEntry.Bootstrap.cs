@@ -42,6 +42,7 @@ public partial class OrigoDefaultEntry
                 ConfigureConverters = RegisterCustomConverters,
             });
 
+            Context = sndContext;
             ((ISndContextAttachableSceneHost)SndManager).BindContext(sndContext);
             ConfigureSaveMetadataContributors(sndContext);
 

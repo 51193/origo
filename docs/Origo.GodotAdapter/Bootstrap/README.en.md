@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Bootstrap
 
@@ -14,7 +14,7 @@ Startup and orchestration for the Godot adapter layer. Responsible for creating 
 | File | Responsibility |
 |------|------|
 | `OrigoAutoHost.cs` | Godot Node, creates the runtime: GodotFileSystem + TypeStringMapping + ConverterRegistry + PersistentBlackboard + ConsoleInput/Output. `_Process` delegates to `IOrigoFrameDriver.DriveFrame(delta)` |
-| `OrigoDefaultEntry.cs` | Inherits OrigoAutoHost, holds startup configuration properties (`AutoDiscoverStrategies`, `_godotSkipPrefixes` (`private static readonly` field), `SceneAliasMapPath`, etc.) |
+| `OrigoDefaultEntry.cs` | Inherits OrigoAutoHost, holds startup configuration properties (`AutoDiscoverStrategies`, `_godotSkipPrefixes` (`private static readonly` field), `SceneAliasMapPath`, etc.), and exposes `Context` so presentation code can reach the unified business facade |
 | `OrigoDefaultEntry.Bootstrap.cs` | Partial class, `_Ready` implementation: register command handlers → create SndContext → call `Bootstrap()`. Any step failure marks the bootstrap failed (`MarkBootstrapFailed`) so the next frame fails fast |
 
 ## Startup Flow
@@ -41,6 +41,7 @@ OrigoDefaultEntry._Ready()
   │       SceneAliasMapPath = ...,
   │       SndTemplateMapPath = ...
   │   })
+  ├── Context = sndContext                   // Exposed to presentation/game code
   ├── SndManager.BindContext(sndContext)
   └── sndContext.Bootstrap()                 // Core-internal orchestration:
 
@@ -64,6 +65,11 @@ Startup logic (`OrigoDefaultEntry.Bootstrap.cs`) is separated from exported prop
 ### Why strategy discovery filters Godot prefixes
 
 `OrigoAutoInitializer.DiscoverAndRegisterStrategies` scans all assemblies in the current AppDomain. Godot and GodotSharp assemblies contain a large number of non-strategy classes; filtering prefixes avoids pointless scanning and registration errors. The prefix is passed into Core via `SndContextParameters.DiscoverySkipPrefixes`, rather than being hardcoded in the adapter layer.
+
+
+### Why Context Is Public
+
+`OrigoAutoHost` already exposes `Runtime` and `SndManager`. Common presentation needs (save listing, continue availability, lifecycle entry points, template and blackboard queries) are concentrated on `ISndContext`. `Context` shares the host entry lifecycle: it is assigned during `_Ready()` and is the same instance passed to `ConfigureSaveMetadataContributors`.
 
 ### Why startup orchestration is centralized in SndContext.Bootstrap()
 

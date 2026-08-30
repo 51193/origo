@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Metadata
 
@@ -14,7 +14,7 @@ SND 实体元数据的数据模型。这些模型是纯数据容器，不包含�
 | 文件 | 职责 |
 |------|------|
 | `TypedData.cs` | 带类型信息的内联存储结构体（`readonly partial struct`），含 `RegisterKind()` 方法 |
-| `SndMetaFluentBuilder.cs` | SND 实体元数据流式构建器，消除 `??= new DataMetaData()` 和手动 `new TypedData(...)` 样板代码 |
+| `SndMetaFluentBuilder.cs` | SND 实体元数据流式构建器，默认生成可直接恢复的 Node/Strategy/Data 三部分，并提供观察者绑定流式 API |
 | `SndInlineTypesAttribute.cs` | 程序集级属性，声明哪些类型在 TypedData 中内联存储 + 可选 `StartKind` 偏移 |
 | `TypedDataLayeredRegistry.cs` | 多层适配扩展点：KindResolver / FromObject / ToObject 委托链注册 |
 | `DataMetaData.cs` | 实体数据字典容器 |
@@ -70,7 +70,7 @@ SND 系统的核心类型保留与内联存储机制。值类型（`int`、`floa
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `Name` | `string` | 实体唯一标识名；同会话唯一由 spawn/load 编排强制（查找、观察者拓扑、存档恢复与 `IsSameEntityAs` 均按名称键控） |
-| `NodeMetaData` | `NodeMetaData?` | 节点映射；后台实体可为 null |
+| `NodeMetaData` | `NodeMetaData?` | 节点映射；原始元数据中可为 null（用于严格读取检测），但 spawn/恢复要求非 null；builder 默认生成空映射 |
 | `StrategyMetaData` | `StrategyMetaData?` | 策略索引列表 |
 | `DataMetaData` | `DataMetaData?` | 数据字典；默认为空容器 |
 
@@ -102,11 +102,29 @@ var meta = new SndMetaFluentBuilder("Player")
 
 流式链式 API 构建 `SndMetaData`，消除手动 `meta.DataMetaData ??= new DataMetaData()` + `meta.DataMetaData.Pairs["key"] = <TypedData 显式转换>` 的样板代码（`TypedData` 不暴露 `new TypedData(Type, object?)` 万能构造器，见下节）。
 
-提供 `SndMetaFluentBuilder.From(SndMetaData)` 静态工厂，在 `ctx.Template.CloneTemplate` 后流式添加数据：
+新建 builder 的 `Build()` 结果包含空的 `NodeMetaData` 和 `StrategyMetaData`，可直接交给 `ISessionRun.Spawn` / 场景恢复路径，无需手动补空对象：
+
+```csharp
+var marketMeta = new SndMetaFluentBuilder("MarketSim")
+    .AddLifecycleStrategy("game.market_sim")
+    .Build();
+session.Spawn(marketMeta);
+```
+
+提供 `SndMetaFluentBuilder.From(SndMetaData)` 静态工厂，在 `ctx.Template.CloneTemplate` 后流式添加数据。`From` 保持原元数据字段不变，不掩盖损坏模板中的缺失字段：
 
 ```csharp
 var meta = SndMetaFluentBuilder.From(ctx.Template.CloneTemplate("player_template", "Player"))
     .SetInt("hp", 100)
+    .Build();
+```
+
+观察者绑定使用 `AddObserverBinding(target, observerIndices)`，生成框架序列化格式 `{ "<target>": ["<observer>"] }`；同一 target 的多次调用会合并，重复 observer index 立即抛异常：
+
+```csharp
+var watcher = new SndMetaFluentBuilder("Watcher")
+    .AddObserverBinding("Player", "watch.hp", "watch.energy")
+    .AddObserverBinding("Goblin", "watch.threat")
     .Build();
 ```
 

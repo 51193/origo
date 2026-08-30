@@ -12,6 +12,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`OrigoDefaultEntry.Context`** — the default Godot entry now exposes the
+  created `ISndContext` after `_Ready`, so presentation/game code can query
+  saves, continue availability, lifecycle entry points, templates, and
+  blackboards without routing every read through an entity active strategy.
+- **`ISndSaveOperations.ListSavesWithMetaData()`** — save-selection UI can
+  now list save slots together with their `meta.map` display metadata through
+  the public save companion; framework-reserved `origo.*` keys are stripped.
+- **`SndMetaFluentBuilder` recoverable defaults** — builders created with a
+  name now emit empty `NodeMetaData` and `StrategyMetaData` sections, so
+  their output is directly usable by `ISessionRun.Spawn` and scene recovery.
+- **`SndMetaFluentBuilder.AddObserverBinding(target, observerIndices)`** —
+  fluent observer-topology construction that generates the framework's
+  `{ "target": ["observer.index"] }` serialization shape; same-target calls
+  merge and duplicate indices fail fast.
 - **`ISndSceneReadAccess`** — public read-only scene view (`GetEntities` / `FindByName`) for state-machine hooks and save-meta contributors, decoupled from internal scene orchestration.
 - **Complete English documentation** — 129 English `.en.md` files alongside existing Chinese `.zh.md` files.
 - **`camera_view` console command** — displays screen coordinates and depth of Godot entity nodes visible through the active `Camera3D`.
@@ -50,6 +64,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `ISndSaveOperations` gains `ListSavesWithMetaData()`** — external
+  implementations of the save companion must implement the new metadata
+  listing member.
+- **`SndMetaFluentBuilder.Build()` behavior clarified** — name-constructed
+  builders now always produce complete recoverable metadata; `From(existing)`
+  preserves the original metadata so corrupted templates still fail strict
+  recovery.
 - **`DataSourceNode.CreateNumber` validates number literals at construction** — the string overload now accepts only valid JSON number literals and rejects malformed literals (`"abc"`, `" 42"`, `"NaN"`, ...) with `ArgumentException`; the `float`/`double` overloads reject NaN and infinity with `ArgumentOutOfRangeException`. Invalid values previously reached the JSON writer (or produced non-portable JSON) instead of failing at the API boundary.
 - **PR commit lint enforces the 72-character body-line rule** — `scripts/lint-commits.sh` now rejects commit body lines longer than 72 characters, matching `docs/META` instead of enforcing only the subject rules.
 - **Documentation drift corrections** — capability counts in the top-level manual now match the actual Core (32) and GodotAdapter (7) test-doc indexes; `agent-reference` includes the `TryGetData<T>(string, out T?)` overload; manual examples use language-suffixed paths; TestSupport documents the test-side frame-flush driver; the active-strategy JSON error protocol is explicit.

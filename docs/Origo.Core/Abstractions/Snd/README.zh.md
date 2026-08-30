@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd (Abstractions)
 
@@ -18,7 +18,7 @@ ISndContext 的角色接口拆分。9 个 Snd 角色接口 + `IStateMachineConte
 | `ISndTemplateAccess.cs` | 模板加载/重载、按 key 深克隆、JSON 实体列表解析（含模板简写）（5 成员） |
 | `ISndConsoleAccess.cs` | 控制台命令提交/输出订阅（3 成员）。命令处理归 `IOrigoFrameDriver.DriveFrame` 所有，不暴露业务 pump |
 | `ISndStateMachineAccess.cs` | 流程级状态机容器访问（1 成员）。返回 `IStateMachineContainer?`（Abstractions 层接口），而非具体 `StateMachineContainer` |
-| `ISndSaveOperations.cs` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册（8 成员） |
+| `ISndSaveOperations.cs` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册（9 成员） |
 | `ISndLifecycleOperations.cs` | Continue/Initial/MainMenu 生命周期入口（4 成员） |
 | `ISndFileAccess.cs` | 文件访问：结构化读写 + 强类型读写 + 存在检查（5 成员）。所有文件内容读写统一通过 `IDataSourceIoGateway` 边界，策略无需自行处理原始文本解析 |
 | `ISndArchiveFileAccess.cs` | 存档内文件访问：结构化读写 + 强类型读写 + 存在检查 + 删除（6 成员）。路径相对于存档活动目录的 extra/ 子目录，随存档生命周期 |

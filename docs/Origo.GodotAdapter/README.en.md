@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter
 
@@ -76,6 +76,11 @@ Verified integration notes for embedding Origo into a Godot project:
 - **Command line runs do not rebuild C#**: `godot --path .` loads the previously built
   DLL. The editor rebuilds automatically; from the command line run `dotnet build` first
   (or use `dotnet build && godot --path .`).
+- **Avoid spaces in the project name**: Godot 4.7.2 may fail to load the C#
+  project assembly when `project.godot` `config/name` contains spaces
+  (`Failed to load project assembly`, followed by "associated class could not
+  be found" script errors). Use an assembly-safe name without spaces in
+  `config/name`; display the desired title in game UI instead.
 - **Full-screen UI swallows 3D clicks**: A Control covering the whole screen defaults to
   `mouse_filter = Stop`, blocking all mouse events so 3D interactions (e.g. board clicks)
   stop working. Set `MouseFilter = Ignore` on the UI root; keep child panels at Stop so

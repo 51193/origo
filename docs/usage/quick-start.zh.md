@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 快速开始
 
@@ -84,23 +84,45 @@ public sealed class HealthInitStrategy : LifecycleStrategyBase
 
 ### 5. 定义实体模板
 
-创建实体模板 JSON（通过 `snd_templates.map` 或直接 JSON）：
+`snd_templates.map` 中每个 key 指向一个**单个 SndMetaData 对象文件**，例如
+`res://origo/templates/player.json`：
 
 ```json
-[
-  {
-    "name": "player",
-    "strategy": {
-      "lifecycle_indices": ["my_game.health"]
-    },
-    "data": {
-      "pairs": {
-        "hp": { "type": "Int32", "data": 100 },
-        "max_hp": { "type": "Int32", "data": 100 }
-      }
+{
+  "name": "player_template",
+  "node": { "pairs": {} },
+  "strategy": {
+    "lifecycle_indices": ["my_game.health"],
+    "active_indices": [],
+    "observer_indices": []
+  },
+  "data": {
+    "pairs": {
+      "hp": { "type": "Int32", "data": 100 },
+      "max_hp": { "type": "Int32", "data": 100 }
     }
   }
-]
+}
+```
+
+程序化创建实体时优先使用 `SndMetaFluentBuilder`；新建 builder 默认生成
+可直接 spawn 的空 Node/Strategy/Data 三部分：
+
+```csharp
+var marketMeta = new SndMetaFluentBuilder("MarketSim")
+    .AddLifecycleStrategy("game.market_sim")
+    .Build();
+session.Spawn(marketMeta);
+```
+
+观察者绑定用 `AddObserverBinding(target, observerIndices)` 生成框架期望的
+`{ "target_entity": ["observer.index"] }` 格式，避免手写存档 JSON 时把
+`observer_indices` 写成错误形状：
+
+```csharp
+var watcher = new SndMetaFluentBuilder("Watcher")
+    .AddObserverBinding("Player", "watch.hp")
+    .Build();
 ```
 
 ### 6. 运行时按模板生成实体
@@ -131,6 +153,18 @@ ctx.Template.LoadSceneAliases("res://origo/maps/scene_aliases.map");
 4. 加载别名和模板
 5. 从 `initial/` 加载入口关卡
 
+`OrigoDefaultEntry.Context` 在 `_Ready()` 后可供表现层读取，用于存档列表、
+continue 可用性、生命周期入口等查询：
+
+```csharp
+public override void _Ready()
+{
+    base._Ready();
+    var entries = Context.Save.ListSavesWithMetaData();
+    // 使用 entries 构建存档选择 UI
+}
+```
+
 ## 运行时流程
 
 ```
@@ -146,6 +180,7 @@ OrigoAutoHost._Ready()
 OrigoDefaultEntry._Ready()
   → 注册适配层命令处理器 (press_button, tree_debug, camera_view)
   → 创建 SndContext
+  → Context = sndContext (公开给表现层)
   → SndManager.BindContext(context)
   → ConfigureSaveMetadataContributors(context)
   → SndContext.Bootstrap()

@@ -111,4 +111,19 @@ public class SaveFormatVersionTests
             Assert.DoesNotContain(entry.MetaData.Keys, k => k.StartsWith("origo.", StringComparison.Ordinal));
         }
     }
+
+    [Fact]
+    public void ListSavesWithMetaData_PublicFacadeReturnsDisplayMetaAndHidesReservedKeys()
+    {
+        var (_, ctx) = CreateSavedGame("ver_slot");
+
+        var entries = ctx.Save.ListSavesWithMetaData();
+
+        var entry = Assert.Single(entries);
+        Assert.Equal("ver_slot", entry.SaveId);
+        Assert.Equal("version test", entry.MetaData["display_name"]);
+        Assert.DoesNotContain(
+            entry.MetaData.Keys,
+            k => k.StartsWith("origo.", StringComparison.Ordinal));
+    }
 }

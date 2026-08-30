@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化流程
 
@@ -185,10 +185,10 @@ ctx.Lifecycle.RequestLoadMainMenuEntrySave();  // 加载主菜单入口存档
 
 ```csharp
 // 获取所有存档槽 ID
-var ids = saveStorageService.EnumerateSaveIds();
+var ids = ctx.Save.ListSaves();
 
 // 获取存档槽 + 展示元数据（用于存档选择界面）
-var entries = saveStorageService.EnumerateSavesWithMetaData();
+var entries = ctx.Save.ListSavesWithMetaData();
 // entries[i].SaveId → "001"
 // entries[i].MetaData → { "play_time": "2h30m", "level": "town" }
 ```

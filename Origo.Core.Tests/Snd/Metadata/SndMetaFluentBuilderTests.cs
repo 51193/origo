@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Origo.Core.DataSource;
+using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.Core.Snd.Scene;
 using Xunit;
 
 namespace Origo.Core.Tests;
@@ -19,6 +23,44 @@ public class SndMetaFluentBuilderTests
     {
         Assert.Throws<ArgumentException>(() => new SndMetaFluentBuilder(""));
         Assert.Throws<ArgumentNullException>(() => new SndMetaFluentBuilder(null!));
+    }
+
+    [Fact]
+    public void Build_WithoutExplicitNodeOrStrategy_ProducesRecoverableMeta()
+    {
+        // The builder is the recommended programmatic entry point for entity
+        // metadata; its output must be directly recoverable through the real
+        // entity recovery path without forcing callers to know that
+        // NodeMetaData / StrategyMetaData are implementation requirements.
+        var host = CreateBoundHost();
+        var meta = new SndMetaFluentBuilder("E").Build();
+
+        var entity = host.CreateEntity(meta);
+
+        Assert.NotNull(entity);
+        Assert.Equal("E", entity.Name);
+    }
+
+    private static FullMemorySndSceneHost CreateBoundHost()
+    {
+        var logger = new TestLogger();
+        var host = new FullMemorySndSceneHost(logger);
+        var world = TestFactory.CreateSndWorld(logger: logger);
+        host.BindWorld(world);
+
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("res://entry/entry.json",
+            "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]");
+        var runtime = TestFactory.CreateRuntime(logger, host);
+        var io = TestFactory.CreateIoGateway(fs);
+        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
+        var pathResolver = TestFactory.CreatePathResolver(fs);
+        var ctx = new SndContext(new SndContextParameters(
+            runtime, io, metaAccess, pathResolver,
+            "root", "res://initial", "res://entry/entry.json"));
+        host.BindContext(ctx);
+        return host;
     }
 
     [Fact]
@@ -56,6 +98,59 @@ public class SndMetaFluentBuilderTests
         Assert.NotNull(meta.StrategyMetaData);
         Assert.Single(meta.StrategyMetaData.ActiveIndices);
         Assert.Contains("food.find_nearest", meta.StrategyMetaData.ActiveIndices);
+    }
+
+    [Fact]
+    public void AddObserverBinding_StoresTopologyShape()
+    {
+        var meta = new SndMetaFluentBuilder("Watcher")
+            .AddObserverBinding("Player", "watch.hp")
+            .AddObserverBinding("Player", "watch.energy")
+            .AddObserverBinding("Goblin", "watch.threat")
+            .Build();
+
+        Assert.NotNull(meta.StrategyMetaData);
+        Assert.Equal(2, meta.StrategyMetaData.ObserverIndices.Count);
+
+        var playerBinding = meta.StrategyMetaData.ObserverIndices
+            .Single(b => b.Target == "Player");
+        Assert.Equal(["watch.hp", "watch.energy"], playerBinding.ObserverIndices);
+
+        var goblinBinding = meta.StrategyMetaData.ObserverIndices
+            .Single(b => b.Target == "Goblin");
+        Assert.Equal(["watch.threat"], goblinBinding.ObserverIndices);
+    }
+
+    [Fact]
+    public void AddObserverBinding_BlankTargetOrIndex_Throws()
+    {
+        var builder = new SndMetaFluentBuilder("Watcher");
+
+        Assert.Throws<ArgumentException>(
+            () => builder.AddObserverBinding("", "watch.hp"));
+        Assert.Throws<ArgumentException>(
+            () => builder.AddObserverBinding("Player", ""));
+        Assert.Throws<ArgumentException>(
+            () => builder.AddObserverBinding("Player"));
+    }
+
+    [Fact]
+    public void AddObserverBinding_NullIndices_Throws()
+    {
+        var builder = new SndMetaFluentBuilder("Watcher");
+
+        Assert.Throws<ArgumentNullException>(
+            () => builder.AddObserverBinding("Player", null!));
+    }
+
+    [Fact]
+    public void AddObserverBinding_DuplicateIndex_Throws()
+    {
+        var builder = new SndMetaFluentBuilder("Watcher")
+            .AddObserverBinding("Player", "watch.hp");
+
+        Assert.Throws<ArgumentException>(
+            () => builder.AddObserverBinding("Player", "watch.hp"));
     }
 
     [Fact]

@@ -34,6 +34,10 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
     public IReadOnlyList<string> ListSaves() => owner.StorageService.EnumerateSaveIds();
 
     /// <inheritdoc/>
+    public IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData() =>
+        owner.StorageService.EnumerateSavesWithMetaData();
+
+    /// <inheritdoc/>
     public void RequestLoadGame(string saveId)
     {
         SavePathLayout.ValidateSaveId(saveId, nameof(saveId));

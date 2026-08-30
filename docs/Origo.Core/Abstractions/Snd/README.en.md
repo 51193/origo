@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd (Abstractions)
 
@@ -17,7 +17,7 @@ Role interface decomposition of ISndContext. 9 Snd role interfaces + `IStateMach
 | `ISndTemplateAccess.cs` | Template load/reload, deep clone by key, JSON entity-list resolution (including template shorthand) (5 members) |
 | `ISndConsoleAccess.cs` | Console command submit/process/output subscribe (4 members) |
 | `ISndStateMachineAccess.cs` | Progress-level state machine container (1 member). Returns `IStateMachineContainer?` |
-| `ISndSaveOperations.cs` | Save list/read/write + level switch + continue + meta contributor (8 members) |
+| `ISndSaveOperations.cs` | Save list/read/write + level switch + continue + meta contributor (9 members) |
 | `ISndLifecycleOperations.cs` | Continue/Initial/MainMenu entry points (4 members) |
 | `ISndFileAccess.cs` | File access: structured + strongly-typed + exists (5 members). All via IDataSourceIoGateway boundary |
 | `ISndArchiveFileAccess.cs` | In-save file access: structured + strongly-typed + exists + delete (6 members) |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Metadata
 
@@ -14,7 +14,7 @@ The data model for SND entity metadata. These models are pure data containers wi
 | File | Responsibility |
 |------|---------------|
 | `TypedData.cs` | Inline storage struct with type information (`readonly partial struct`), includes `RegisterKind()` method |
-| `SndMetaFluentBuilder.cs` | SND entity metadata fluent builder, eliminating `??= new DataMetaData()` and manual `new TypedData(...)` boilerplate |
+| `SndMetaFluentBuilder.cs` | SND entity metadata fluent builder; new builders emit recoverable Node/Strategy/Data sections by default and provide a fluent observer-binding API |
 | `SndInlineTypesAttribute.cs` | Assembly-level attribute declaring which types are stored inline in TypedData + optional `StartKind` offset |
 | `TypedDataLayeredRegistry.cs` | Multi-layer adapter extension points: KindResolver / FromObject / ToObject delegate chain registration |
 | `DataMetaData.cs` | Entity data dictionary container |
@@ -70,7 +70,7 @@ Aggregates all entity metadata:
 | Field | Type | Description |
 |-------|------|-------------|
 | `Name` | `string` | Entity unique identifier name; per-session uniqueness is enforced by spawn/load orchestration (lookup, observer topology, save recovery, and `IsSameEntityAs` key on names) |
-| `NodeMetaData` | `NodeMetaData?` | Node mapping; may be null for background entities |
+| `NodeMetaData` | `NodeMetaData?` | Node mapping; nullable in raw metadata (used by strict-read detection), but spawn/recovery requires non-null; the builder emits an empty mapping by default |
 | `StrategyMetaData` | `StrategyMetaData?` | Strategy index list |
 | `DataMetaData` | `DataMetaData?` | Data dictionary; defaults to empty container |
 
@@ -102,11 +102,29 @@ var meta = new SndMetaFluentBuilder("Player")
 
 Fluent chained API for building `SndMetaData`, eliminating the manual `meta.DataMetaData ??= new DataMetaData()` + `meta.DataMetaData.Pairs["key"] = <TypedData explicit conversion>` boilerplate (`TypedData` exposes no `new TypedData(Type, object?)` universal constructor, see below).
 
-Provides a `SndMetaFluentBuilder.From(SndMetaData)` static factory for fluent data addition after `ctx.Template.CloneTemplate`:
+New builders return metadata containing empty `NodeMetaData` and `StrategyMetaData` sections, so the result is directly usable with `ISessionRun.Spawn` and scene recovery without manual empty-object construction:
+
+```csharp
+var marketMeta = new SndMetaFluentBuilder("MarketSim")
+    .AddLifecycleStrategy("game.market_sim")
+    .Build();
+session.Spawn(marketMeta);
+```
+
+The `SndMetaFluentBuilder.From(SndMetaData)` static factory supports fluent data addition after `ctx.Template.CloneTemplate`. `From` preserves the original metadata fields so a missing section in a corrupted template is not masked:
 
 ```csharp
 var meta = SndMetaFluentBuilder.From(ctx.Template.CloneTemplate("player_template", "Player"))
     .SetInt("hp", 100)
+    .Build();
+```
+
+Observer bindings use `AddObserverBinding(target, observerIndices)`, which generates the framework serialization shape `{ "<target>": ["<observer>"] }`. Multiple calls for the same target merge indices; duplicate observer indices fail immediately:
+
+```csharp
+var watcher = new SndMetaFluentBuilder("Watcher")
+    .AddObserverBinding("Player", "watch.hp", "watch.energy")
+    .AddObserverBinding("Goblin", "watch.threat")
     .Build();
 ```
 

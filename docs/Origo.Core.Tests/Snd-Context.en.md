@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Context Tests
 
@@ -31,6 +31,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 |-------------|------------------|---------------------|
 | `ListSaves_ReturnsEmptyWhenNoSaves` | ListSaves returns empty when no saves exist | ISndSaveOperations |
 | `ListSaves_ReturnsSaveIds` | ListSaves returns save IDs when saves exist | ISndSaveOperations |
+| `ListSavesWithMetaData_ReturnsEmptyWhenNoSaves` | ListSavesWithMetaData returns empty when no saves exist | ISndSaveOperations |
 | `RequestSaveGame_PersistsAndSetsActiveSaveSlot` | After save the file exists and ActiveSaveId is correctly set | persistence-flow |
 | `RequestSaveGame_IncrementsThenDecrementsPendingCount` | Save request increments then decrements pending count | ISndDeferredActions |
 | `RequestSaveGameAuto_WithExplicitId_UsesIt` | RequestSaveGameAuto uses the provided ID | ISndSaveOperations |

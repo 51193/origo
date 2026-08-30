@@ -62,6 +62,14 @@ public class SndContextWorkflowTests
         Assert.Contains("abc", saves);
     }
 
+    [Fact]
+    public void ListSavesWithMetaData_ReturnsEmptyWhenNoSaves()
+    {
+        var ctx = CreateContext(out _, out _);
+        var saves = ctx.Save.ListSavesWithMetaData();
+        Assert.Empty(saves);
+    }
+
     // ── RequestSaveGame ──
 
     [Fact]

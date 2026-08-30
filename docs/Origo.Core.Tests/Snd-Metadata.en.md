@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Metadata Tests
 
@@ -24,7 +24,7 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | `TypedDataTests.cs` | TypedData construction, type preservation, value/reference type behavior, struct value semantics |
 | `TypedDataGeneratedTests.cs` | Source Generator output: implicit/explicit conversions, TryGet, IEquatable, GetHashCode, DataType, TypedDataFactory, multi-layer KindResolver, ObjectConverter fallback |
 | `SndMetaDataTests.cs` | SndMetaData default values, DeepClone deep copy, modification does not affect the original |
-| `SndMetaFluentBuilderTests.cs` | SndMetaFluentBuilder fluent API: name, Node, Strategy, typed data settings, chained calls |
+| `SndMetaFluentBuilderTests.cs` | SndMetaFluentBuilder fluent API: recoverable metadata defaults, observer bindings, Node/Strategy/Data settings, chained calls, and parameter guards |
 | `TypedDataIntegrationTests.cs` | TypedData integration behavior in entity CRUD, Blackboard serialization round-trips, and DataObserverManager notifications |
 
 > `TypedDataTestContext.cs` is an xUnit collection fixture, not a test file.
@@ -163,12 +163,17 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | `SetDouble_StoresCorrectTypedData` | SetDouble stores TypedData with typeof(double) | SndMetaFluentBuilder |
 | `SetLong_StoresCorrectTypedData` | SetLong stores TypedData with typeof(long) | SndMetaFluentBuilder |
 | `ChainedCalls_AllStored` | Chained calls correctly store all Node/Strategy/Data configurations | SndMetaFluentBuilder |
+| `Build_WithoutExplicitNodeOrStrategy_ProducesRecoverableMeta` | New builders emit empty Node/Strategy sections by default and pass real entity recovery | SndMetaFluentBuilder |
+| `AddObserverBinding_StoresTopologyShape` | Same-target indices merge, different targets group separately, producing the framework observer_indices shape | SndMetaFluentBuilder |
 
 ### Error Paths
 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Build_EmptyName_Throws` | Empty string or null name | ArgumentException / ArgumentNullException |
+| `AddObserverBinding_BlankTargetOrIndex_Throws` | Blank target / blank observer index / empty observer list | ArgumentException |
+| `AddObserverBinding_NullIndices_Throws` | Null observerIndices | ArgumentNullException |
+| `AddObserverBinding_DuplicateIndex_Throws` | Duplicate observer index for the same target | ArgumentException |
 
 ## TypedDataIntegrationTests Details
 
