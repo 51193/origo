@@ -284,6 +284,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING: `DiffUtility` removed** — it had no production consumers; its documented use cases (topology-change computation) were not backed by code.
 
 ### Fixed
+- **`CreateForegroundSession` honors its foreground replacement contract** — replacing the foreground slot with the same or a different level now validates level conflicts against other sessions first, then destroys the old foreground before constructing the new one. A conflict with a background session leaves the current foreground untouched, and old-session teardown hooks run before the adapter scene host is rebound to the replacement.
 - **Observer binding teardown releases the pooled strategy even when `OnUnmounted` throws** — `FullCleanup` now runs unsubscription, the user hook, and the pool release as independent steps; previously a throwing hook skipped the release after the binding had already been removed, permanently leaking the pooled observer strategy.
 - **`GodotSndManager._ExitTree` runs strategy release independently of observer teardown** — when the manager node is removed directly and an `OnUnmounted` hook throws, entity strategy references are still returned to the pool instead of being skipped behind the failed teardown step.
 - **`DataSourceNode.Keys` / `Elements` no longer expose mutable backing lists** — the enumerations now return read-only views, so callers can no longer downcast them to `List<T>` and mutate the node graph behind the tree API.

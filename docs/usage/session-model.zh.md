@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话模型
 
@@ -73,7 +73,7 @@ bgSession.Spawn(dungeonEntityMeta);
 bgSession.SessionBlackboard.SetValue("explored", true);
 ```
 
-**levelId 唯一性约束：** 同一时刻，一个 levelId 只能被一个会话持有。若尝试创建后台会话时已有前台或其他后台使用了该 levelId，`CreateBackgroundSession` 会抛出 `InvalidOperationException`。
+**levelId 唯一性约束：** 同一时刻，一个 levelId 只能被一个会话持有。若尝试创建后台会话时已有前台或其他后台使用了该 levelId，`CreateBackgroundSession` 会抛出 `InvalidOperationException`。前台槽位自身的替换不算并发冲突：`CreateForegroundSession` 会先校验与其他会话的冲突，再销毁旧前台并挂载新会话。
 
 `SwitchForeground` 在执行前会**自动检测**是否有后台会话持有目标 `levelId`。若存在冲突，会先保存该后台会话的数据到 `current/`，再销毁它，最后创建新前台会话。调用方无需手动销毁后台会话。
 

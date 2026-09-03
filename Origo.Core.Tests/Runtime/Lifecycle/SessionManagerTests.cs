@@ -271,6 +271,59 @@ public class SessionManagerTests
     }
 
     [Fact]
+    public void CreateForegroundSession_SameLevelId_ReplacesExistingForeground()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+        var manager = (SessionManager)ctx.EnsureProgressRun().SessionManager;
+        var oldForeground = manager.ForegroundSession!;
+        oldForeground.Spawn(CreateEmptyMeta("old_entity"));
+
+        var replacement = manager.CreateForegroundSession("default");
+
+        Assert.Same(replacement, manager.ForegroundSession);
+        Assert.NotSame(oldForeground, replacement);
+        Assert.Null(replacement.FindByName("old_entity"));
+        Assert.Throws<ObjectDisposedException>(() => oldForeground.FindByName("old_entity"));
+    }
+
+    [Fact]
+    public void CreateForegroundSession_DifferentLevelId_ReplacesExistingForeground()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+        var manager = (SessionManager)ctx.EnsureProgressRun().SessionManager;
+        var oldForeground = manager.ForegroundSession!;
+        oldForeground.Spawn(CreateEmptyMeta("old_entity"));
+
+        var replacement = manager.CreateForegroundSession("other");
+
+        Assert.Same(replacement, manager.ForegroundSession);
+        Assert.NotSame(oldForeground, replacement);
+        Assert.Equal("other", replacement.LevelId);
+        Assert.Null(replacement.FindByName("old_entity"));
+        Assert.Throws<ObjectDisposedException>(() => oldForeground.FindByName("old_entity"));
+    }
+
+    [Fact]
+    public void CreateForegroundSession_LevelConflictWithBackground_PreservesExistingForeground()
+    {
+        var (ctx, _) = CreateContext();
+        SetupForegroundSession(ctx);
+        var manager = (SessionManager)ctx.EnsureProgressRun().SessionManager;
+        var oldForeground = manager.ForegroundSession!;
+        var oldEntity = oldForeground.Spawn(CreateEmptyMeta("old_entity"));
+        manager.CreateBackgroundSession("bg", "game", true);
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => manager.CreateForegroundSession("game"));
+
+        Assert.Contains("already manages this level", ex.Message, StringComparison.Ordinal);
+        Assert.Same(oldForeground, manager.ForegroundSession);
+        Assert.Same(oldEntity, manager.ForegroundSession!.FindByName("old_entity"));
+    }
+
+    [Fact]
     public void AppendBackgroundPayloads_DifferentLevelIds_IncludesBothInPayload()
     {
         var (ctx, _) = CreateContext();
@@ -459,6 +512,15 @@ public class SessionManagerTests
     }
 
     // ── Helpers ─────────────────────────────────────────────────────
+
+    private static SndMetaData CreateEmptyMeta(string name) =>
+        new()
+        {
+            Name = name,
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        };
 
     private static (SndContext ctx, TestMemoryFileSystem fs) CreateContext()
     {

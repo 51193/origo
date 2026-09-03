@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Lifecycle
 
@@ -148,6 +148,8 @@ SystemRun (由 SndContext 构造并持有)
 ### 为什么 levelId 必须全局唯一
 
 每个 levelId 对应 `current/level_{id}/` 目录和 `SaveGamePayload.Levels` 中的一个 key。若两个会话同时持有同一 levelId，持久化时后写入者会覆盖前者数据；加载时双方读取同一份已覆盖的 payload。为此 `SessionManager` 在创建会话时校验 levelId 唯一性——若冲突则立即抛出 `InvalidOperationException`。
+
+前台槽位的替换不构成并发冲突：`CreateForegroundSession` 先校验目标 levelId 是否被**其他**会话占用，通过后才销毁旧前台，并在此之后构造、挂载新会话。这个顺序保证：与后台会话冲突时当前前台原样保留；旧前台的拆卸钩子执行期间 adapter scene host 仍归属旧会话（新会话尚未构造，不会抢占 `OwningSession` 绑定）。
 
 `SwitchForeground` 在创建新前台前会自动检测后台会话是否持有目标 `levelId`。若冲突，会先调用 `PersistSession` 保存后台数据，再调用 `DestroySession` 销毁该后台，确保 `LoadAndMountForeground` 可以无冲突地创建新前台。调用方无需手动清理冲突的后台会话。
 

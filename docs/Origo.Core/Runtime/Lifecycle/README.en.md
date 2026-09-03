@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Lifecycle
 
@@ -147,6 +147,8 @@ Level switching is a composite save-destroy-load operation that should run after
 ### Why levelId must be globally unique
 
 Each levelId maps to a `current/level_{id}/` directory and a key in `SaveGamePayload.Levels`. If two sessions hold the same levelId, the later writer overwrites the former's data on persist, and both read the same overwritten payload on load. Therefore `SessionManager` validates levelId uniqueness when creating sessions — a conflict throws `InvalidOperationException` immediately.
+
+Replacing the foreground slot is not a concurrent conflict: `CreateForegroundSession` first validates that the target levelId is not held by any **other** session, and only then destroys the old foreground before constructing and mounting the replacement. This order guarantees that a conflict with a background session leaves the current foreground untouched, and that the adapter scene host still belongs to the old session while its teardown hooks run (the new session is not constructed yet, so it cannot preempt the `OwningSession` binding).
 
 `SwitchForeground` automatically detects whether a background session holds the target `levelId` before creating the new foreground. On conflict it calls `PersistSession` to save the background data, then `DestroySession` to destroy that background, so `LoadAndMountForeground` can create the new foreground without conflict. Callers need no manual conflict cleanup.
 

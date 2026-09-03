@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Model
 
@@ -73,7 +73,7 @@ bgSession.Spawn(dungeonEntityMeta);
 bgSession.SessionBlackboard.SetValue("explored", true);
 ```
 
-**levelId uniqueness constraint:** At any given time, a levelId can only be held by one session. If attempting to create a background session while a foreground or another background session already uses that levelId, `CreateBackgroundSession` throws `InvalidOperationException`.
+**levelId uniqueness constraint:** At any given time, a levelId can only be held by one session. If attempting to create a background session while a foreground or another background session already uses that levelId, `CreateBackgroundSession` throws `InvalidOperationException`. Replacing the foreground slot itself is not a concurrent conflict: `CreateForegroundSession` validates conflicts with other sessions first, then destroys the old foreground and mounts the replacement.
 
 Before executing, `SwitchForeground` **automatically checks** whether a background session holds the target `levelId`. If a conflict exists, it saves that background session's data to `current/`, destroys it, and then creates a new foreground session. The caller does not need to manually destroy the background session.
 

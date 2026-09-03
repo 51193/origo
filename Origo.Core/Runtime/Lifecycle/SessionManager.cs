@@ -124,8 +124,10 @@ internal sealed class SessionManager : ISessionManager
     // ── Internal methods for ProgressRun ──────────────────────────────
 
     /// <summary>
-    ///     Creates a foreground session and mounts it automatically. If a foreground session already exists,
-    ///     destroys the old one first.
+    ///     Creates a foreground session and mounts it automatically. If a
+    ///     foreground session already exists, validates level conflicts
+    ///     against every other session first, then destroys the old
+    ///     foreground before constructing and mounting the replacement.
     /// </summary>
     internal ISessionRun CreateForegroundSession(string levelId)
     {
@@ -133,6 +135,15 @@ internal sealed class SessionManager : ISessionManager
             throw new ArgumentException("Level id cannot be null or whitespace.", nameof(levelId));
 
         ValidateLevelIdUnique(levelId, ISessionManager.ForegroundKey);
+
+        // Destroy the old foreground before constructing the replacement:
+        // the SessionRun constructor rebinds the adapter scene host to its
+        // owning session, so old-session teardown hooks must still see the
+        // old owner while they run. Validation above already rejected
+        // conflicts with background sessions without touching the current
+        // foreground.
+        if (TryGetMountedSession(ISessionManager.ForegroundKey) is not null)
+            DestroyForeground();
 
         var sessionParams = new SessionParameters(levelId, new Blackboard.Blackboard(), _adapterSceneHost, true);
         var session = new SessionRun(_managerRuntime, sessionParams, this);
@@ -290,11 +301,21 @@ internal sealed class SessionManager : ISessionManager
     {
         ValidateTopologyToken(levelId, nameof(levelId));
         foreach (var (existingKey, mounted) in _sessions)
+        {
+            // Replacing the same mount slot is not a duplicate session:
+            // CreateForegroundSession destroys the old foreground after this
+            // validation and before the replacement is constructed. Background
+            // creation never reaches this branch for the same key because
+            // ValidateKey rejects duplicate keys first.
+            if (string.Equals(existingKey, newSessionKey, StringComparison.Ordinal))
+                continue;
+
             if (string.Equals(mounted.Session.LevelId, levelId, StringComparison.Ordinal))
                 throw new InvalidOperationException(
                     $"Cannot create session '{newSessionKey}' with levelId '{levelId}': " +
                     $"session '{existingKey}' already manages this level. " +
                     "Destroy the existing session before reusing its levelId.");
+        }
     }
 
     private static void ValidateTopologyToken(string value, string paramName) =>
@@ -307,11 +328,10 @@ internal sealed class SessionManager : ISessionManager
 
         var watch = Stopwatch.StartNew();
 
-        // If mounting foreground and old foreground exists, destroy old first.
-        if (string.Equals(key, ISessionManager.ForegroundKey, StringComparison.Ordinal)
-            && TryGetMountedSession(key) is not null)
-            DestroyForeground();
-
+        // Mounting is append-only: foreground replacement is performed by
+        // CreateForegroundSession before this method is called, and background
+        // creation rejects duplicate keys in ValidateKey. An existing key here
+        // is therefore a framework invariant violation.
         if (TryGetMountedSession(key) is not null)
             throw new InvalidOperationException($"A session with key '{key}' is already mounted.");
 
