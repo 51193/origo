@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -112,7 +112,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── OrigoDefaultEntryBootstrapIntegrationTests.cs # Default entry property tests
 │   ├── ObserverSaveReloadIntegrationTests.cs # Observer binding save/load recovery tests
 │   ├── UserDataCleanupIntegrationTests.cs # Test-process user:// cleanup tests
-│   └── OrigoDefaultEntryBootstrapFailureTests.cs # Derived entry bootstrap failure fail-fast test
+│   ├── OrigoDefaultEntryBootstrapFailureTests.cs # Derived entry bootstrap failure fail-fast test
 │   └── OrigoDefaultEntryContextIntegrationTests.cs # Context exposure / shared-instance test
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs

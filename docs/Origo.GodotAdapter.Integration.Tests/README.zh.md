@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -111,7 +111,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── OrigoDefaultEntryBootstrapIntegrationTests.cs # 默认入口属性测试
 │   ├── ObserverSaveReloadIntegrationTests.cs # 观察者绑定跨存档恢复测试
 │   ├── UserDataCleanupIntegrationTests.cs # 测试进程 user:// 清理测试
-│   └── OrigoDefaultEntryBootstrapFailureTests.cs # 派生入口启动失败 fail-fast 测试
+│   ├── OrigoDefaultEntryBootstrapFailureTests.cs # 派生入口启动失败 fail-fast 测试
 │   └── OrigoDefaultEntryContextIntegrationTests.cs # Context 公开与共享实例测试
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs

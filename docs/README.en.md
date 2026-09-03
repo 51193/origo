@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Manual
 
@@ -65,7 +65,7 @@ Each directory's `README.md` contains:
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.en.md) | TCP remote console bridge (port 9876) |
 | **Usage Docs** | [README](usage/README.en.md) | Usage guide from quick start to deep reference |
 | **Tests: Core** | [README](Origo.Core.Tests/README.en.md) | Behavioral test documentation for Core layer's 32 capabilities |
-| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 7 capability documents + 20 integration test classes (92 tests) |
+| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 7 capability documents + 21 integration test classes (93 tests) |
 | **Tests: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.en.md) | TCP bridge server behavioral test documentation |
 | **Tests: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.en.md) | TypedData source generator driver behavioral test documentation |
 | **Manual Meta-Instructions** | [META.md](META.en.md) | Writing and maintenance conventions for this manual |
@@ -114,7 +114,7 @@ Each directory's `README.md` contains:
 
 ## Version
 
-Current Origo framework version: **0.0.9-nightly** (in development; nightly carries a date suffix, see `Directory.Build.props`). Documentation is co-located with source code in the same repository; versions are naturally synchronized (the docs do not track the nightly date suffix). When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
+Current Origo framework version: **0.0.9**. Documentation is co-located with source code in the same repository; versions are naturally synchronized. When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
 
 - Framework source and docs: this repository [origo](https://github.com/51193/origo) (docs under `docs/`)
 - Example project: [origo.demo](https://github.com/51193/origo.demo)
