@@ -120,11 +120,17 @@ internal sealed class SaveCoordinator
             SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, fgSession.LevelId, false)
         };
 
-        topologyItems.AddRange(bgSessions.Select(kvp =>
-        {
-            var syncProcess = _sessionManager.GetSyncProcess(kvp.Key);
-            return SessionTopologyCodec.Serialize(kvp.Key, kvp.Value.LevelId, syncProcess);
-        }));
+        // The topology string is persisted into the progress blackboard and
+        // hashed as a text node. Dictionary enumeration order is not part of
+        // the logical session set, so sort background entries by key; the same
+        // sessions must produce the same payload hash (canonical save).
+        topologyItems.AddRange(bgSessions
+            .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
+            .Select(kvp =>
+            {
+                var syncProcess = _sessionManager.GetSyncProcess(kvp.Key);
+                return SessionTopologyCodec.Serialize(kvp.Key, kvp.Value.LevelId, syncProcess);
+            }));
 
         return topologyItems;
     }

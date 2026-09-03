@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Model
 
@@ -111,7 +111,7 @@ key=levelId=syncProcess,key=levelId=syncProcess
 
 Example: `__foreground__=town=false,dungeon=dungeon_level=true,farm=farm_level=false`
 
-Due to the levelId uniqueness constraint, no two entries in the topology will point to the same levelId.
+The foreground entry is always first and background entries are written in ordinal session-key order; the same session set produces the same topology string and payload hash regardless of creation order. Due to the levelId uniqueness constraint, no two entries in the topology will point to the same levelId.
 
 On load recovery, `SessionTopologyCodec` parses this string and rebuilds all background sessions. If the parsed topology contains duplicate levelIds, `CreateBackgroundSession`'s levelId validation will throw — ensuring corrupted save data is never silently loaded.
 

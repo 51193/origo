@@ -1262,20 +1262,20 @@
     "Origo.Core/Runtime/Lifecycle/README": {
       "status": "synced",
       "revisions": {
-        "zh": 19,
-        "en": 19
+        "zh": 20,
+        "en": 20
       },
       "previous_revisions": {
-        "zh": 18,
-        "en": 18
+        "zh": 19,
+        "en": 19
       },
       "files": {
         "zh": "Origo.Core/Runtime/Lifecycle/README.zh.md",
         "en": "Origo.Core/Runtime/Lifecycle/README.en.md"
       },
       "content_hashes": {
-        "zh": "3C8EC1DB4C38B56B085AF848F76A7B85C1AD6C395BE5B856C8CCD10883EDFF69",
-        "en": "A5D5B15723AB6479352A5CED56FF398A9BD3F9740C6A36D2B7CCD60D169959A3"
+        "zh": "28FAE16E5828E47A575A20947E3C32D1E3D1A869F3DD255B93C3AE0ECAE79C00",
+        "en": "07E08BC542973BB8D704FAABCB6EF929E8A9C2619800EAE67CBBDBF0037A8C37"
       }
     },
     "Origo.Core/Runtime/README": {
@@ -2361,20 +2361,20 @@
     "usage/session-model": {
       "status": "synced",
       "revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 9,
+        "en": 9
       },
       "previous_revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 8,
+        "en": 8
       },
       "files": {
         "zh": "usage/session-model.zh.md",
         "en": "usage/session-model.en.md"
       },
       "content_hashes": {
-        "zh": "9D672623281FCE037EE291FF75D1DD53B9525FFDBE1E2A2FA3283CC71BF2FAB4",
-        "en": "8A9C1C35D747234001E4AF8BC7CAD2F9C3FE2244D5BDF5CB6E73553F257A785D"
+        "zh": "A8ACBAAB55FDDD255814C5B83C5E100E7597E5E76CED9A2E639AEAF14268880C",
+        "en": "655DBE3D27AB451219D655BE70F772B3A4CD9CC06CFDDCA9FCFC1C0505D431A6"
       }
     },
     "usage/snd-entity-model": {

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Lifecycle
 
@@ -139,6 +139,10 @@ Each layer container (`SystemRuntime`, `ProgressRuntime`, etc.) exposes only its
 ### Why PersistProgress and WriteForegroundTopology write the full session topology
 
 The session topology records the complete relation of foreground and all background session keys, levels, and sync modes. Writing only foreground info would leave the topology string in the progress blackboard without background sessions, so `progress.json` would lose background session markers after a switch — the background sessions survive in memory, but a crash-restart cannot restore them. Writing the full topology keeps the progress blackboard a restorable snapshot of the current runtime state.
+
+### Why session topology is written in key order
+
+The topology string participates in the payload canonical hash as a Text node in the progress blackboard, while `Dictionary` enumeration order is not part of the logical session set. `BuildSessionTopology` keeps the foreground entry first and orders background entries by their key using ordinal comparison; the same session set therefore produces the same topology string and payload hash regardless of creation order, preserving idempotent save deduplication. Topology readers restore sessions from entry content, so entry order carries no recovery semantics.
 
 ### Why RequestSwitchForegroundLevel executes in the system deferred queue
 

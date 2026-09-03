@@ -55,6 +55,26 @@ public class SaveCoordinatorTests
     }
 
     [Fact]
+    public void BuildSessionTopology_SameSessionSet_IsIndependentOfBackgroundCreationOrder()
+    {
+        var (alphaFirstCoordinator, alphaFirstForeground) =
+            CreateCoordinatorWithBackgrounds(alphaFirst: true);
+        var (betaFirstCoordinator, betaFirstForeground) =
+            CreateCoordinatorWithBackgrounds(alphaFirst: false);
+
+        var alphaFirstTopology = alphaFirstCoordinator.BuildSessionTopology(alphaFirstForeground);
+        var betaFirstTopology = betaFirstCoordinator.BuildSessionTopology(betaFirstForeground);
+
+        Assert.Equal(alphaFirstTopology, betaFirstTopology);
+        Assert.Equal(
+        [
+            SessionTopologyCodec.Serialize(ISessionManager.ForegroundKey, "default", false),
+            SessionTopologyCodec.Serialize("alpha", "level_alpha", false),
+            SessionTopologyCodec.Serialize("beta", "level_beta", false)
+        ], betaFirstTopology);
+    }
+
+    [Fact]
     public void PersistProgress_WithoutForegroundSession_Throws()
     {
         var sm = CreateSessionManager();
@@ -67,7 +87,34 @@ public class SaveCoordinatorTests
         Assert.Contains("foreground", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static SessionManager CreateSessionManager()
+    private static (SaveCoordinator Coordinator, ISessionRun Foreground)
+        CreateCoordinatorWithBackgrounds(bool alphaFirst)
+    {
+        var (sm, progressRuntime) = CreateSessionManagerWithRuntime();
+        var bb = new Blackboard.Blackboard();
+        var sc = new StateMachineContainer(new SndStrategyPool(new TestLogger()), new TestStateMachineContext());
+        var coordinator = new SaveCoordinator(sm, bb, sc, progressRuntime);
+        var foreground = sm.CreateForegroundSession("default");
+
+        if (alphaFirst)
+        {
+            sm.CreateBackgroundSession("alpha", "level_alpha");
+            sm.CreateBackgroundSession("beta", "level_beta");
+        }
+        else
+        {
+            sm.CreateBackgroundSession("beta", "level_beta");
+            sm.CreateBackgroundSession("alpha", "level_alpha");
+        }
+
+        return (coordinator, foreground);
+    }
+
+    private static SessionManager CreateSessionManager() =>
+        CreateSessionManagerWithRuntime().Manager;
+
+    private static (SessionManager Manager, ProgressRuntime ProgressRuntime)
+        CreateSessionManagerWithRuntime()
     {
         var logger = new TestLogger();
         var bb = new Blackboard.Blackboard();
@@ -80,7 +127,7 @@ public class SaveCoordinatorTests
         var systemRuntime = new SystemRuntime(runtime, systemParams);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial", "entry.json"));
         var progressRuntime = new ProgressRuntime(systemRuntime, new TestStateMachineContext(), ctx);
-        return new SessionManager(progressRuntime, bb);
+        return (new SessionManager(progressRuntime, bb), progressRuntime);
     }
 
     private static ProgressRuntime CreateProgressRuntime()

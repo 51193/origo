@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Lifecycle
 
@@ -140,6 +140,10 @@ SystemRun (由 SndContext 构造并持有)
 ### 为什么 PersistProgress 和 WriteForegroundTopology 写入完整会话拓扑
 
 会话拓扑记录了前台与所有后台会话的键-关卡-同步模式的完整关系。若仅写入前台信息，流程黑板中的拓扑字符串将不包含后台会话，导致 `progress.json` 在切换后丢失后台会话标记。虽然在内存中后台会话仍然存活，但 crash 重启后无法恢复。写入完整拓扑保证了流程黑板始终是当前运行时状态的可恢复快照。
+
+### 为什么会话拓扑按 key 排序写入
+
+拓扑字符串作为 progress 黑板中的 Text 节点参与 payload canonical hash，而 `Dictionary` 枚举顺序不是逻辑会话集合的一部分。`BuildSessionTopology` 固定前台条目在最前，后台条目按 key 的 ordinal 顺序排列；同一组会话无论创建顺序如何都产生相同的拓扑字符串和相同的 payload hash，避免破坏幂等保存去重。拓扑解析方按条目内容恢复会话，条目顺序不影响恢复语义。
 
 ### 为什么 RequestSwitchForegroundLevel 在系统延迟队列中执行
 

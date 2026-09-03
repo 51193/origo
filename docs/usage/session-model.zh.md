@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话模型
 
@@ -111,7 +111,7 @@ key=levelId=syncProcess,key=levelId=syncProcess
 
 例如：`__foreground__=town=false,dungeon=dungeon_level=true,farm=farm_level=false`
 
-由于 levelId 唯一性约束，topology 中不会出现两个条目指向同一 levelId。
+前台条目固定在最前，后台条目按 session key 的 ordinal 顺序写入；同一组会话无论创建顺序如何都得到相同的 topology 字符串和 payload hash。由于 levelId 唯一性约束，topology 中不会出现两个条目指向同一 levelId。
 
 读档恢复时，`SessionTopologyCodec` 解析此字符串，重建所有后台会话。若解析到的 topology 中包含 levelId 重复，会因 `CreateBackgroundSession` 的 levelId 校验而抛异常——这确保了损坏的存档数据不会静默加载。
 
