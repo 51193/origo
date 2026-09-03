@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Lifecycle Tests
 
@@ -221,6 +221,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `LoadFromPayload_WhenFlushFails_OriginalExceptionSurvivesCleanupFailure` | `FlushAllAfterLoad` throws (push strategy failure) + `OnUnmounted` hook throws during rollback | Original FLUSH exception propagates (without the OnUnmounted message); scene host cleared, session blackboard cleared; cleanup failure logged as Warning |
+| `LoadFromPayload_WhenObserverRecoveryFailsMidBatch_SessionRollsBackCompletely` | The first observer binding mounts successfully and the second binding fails because its index is unregistered | Original exception propagates; no foreground session, no session keys, no Progress blackboard; strategy pool has no leaks (the first binding's pool reference is returned) |
 
 ## SaveAndSwitchForegroundIntegrationTests Details
 

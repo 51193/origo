@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy
 
@@ -52,7 +52,7 @@ Each scene host that creates real `SndEntity` instances (`FullMemorySndSceneHost
 - **Mount(observer, target, observerIndex)**: Acquire strategy instance → establish `SubscribeDataRaw` wiring on target for each key declared by `[ObserveData]` attribute → record binding → trigger `OnMounted`. Mounting is atomic: if wiring or `OnMounted` throws, all established subscriptions are canceled, partially-added bindings are removed, strategy reference is returned to pool, and the exception propagates. Mounting the same (observer, target, observerIndex) twice throws `InvalidOperationException` (consistent with the passive/active strategy managers' duplicate-mount rejection)
 - **Unmount(observer, target, observerIndex)**: Remove binding record → tear down `UnsubscribeDataRaw` → trigger `OnUnmounted` → release pool reference. The binding is removed before the callbacks so re-entrant unmounting from inside `OnUnmounted` is safe; a `finally` block guarantees the pool reference is returned even when a hook throws. Throws `InvalidOperationException` when the binding does not exist (fail-fast, consistent with `RemoveStrategy` throwing on a non-mounted index)
 - **ReleaseStrategiesFor(observer)**: Release all strategy references held by an observer and clear its outgoing edges (does not trigger `OnUnmounted`, does not unsubscribe), corresponding to the `ReleaseStrategiesOnly` phase of entity teardown
-- **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`. A missing or blank target (inconsistent save topology) throws `InvalidOperationException` (fail-fast) instead of being silently skipped
+- **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`. A missing or blank target (inconsistent save topology) throws `InvalidOperationException` (fail-fast) instead of being silently skipped. This method mounts bindings one by one and does not promise local cross-binding rollback; the load transaction boundary is `SessionRun.LoadFromPayload` — a mid-recovery failure runs `ResetAfterLoadFailure` and clears the whole session (entities, topology, state machines, blackboard)
 - **BuildBindingsFor(observerName)**: Serialize an observer's full outgoing edges as `List<ObserverBinding>` (grouped by target) into `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**: Clean an observer's full outgoing edges; if target is resolvable, full `Unmount`; otherwise return strategy and remove record
 - **TeardownAllBindingsFor(observer)**: Self-contained cleanup path that calls `FullCleanup` on all outgoing edges of the observer (unsubscribe + `OnUnmounted` + release strategy), not depending on the scene host — binding entries already hold `TargetEntity` references. Invoked by `SessionRun.ReleaseAllEntitiesAndClear` through `IEntityLifecycle.TeardownObserverBindings` when a session quits
@@ -226,6 +226,14 @@ Hook callbacks frequently need to add or remove strategies (e.g., removing one's
 ### Why ActiveStrategy is recovered before entity strategy hooks
 
 ActiveStrategy is recovered during `RecoverForLifecycle` (Phase 1), before `FireAfterSpawnHooks` / `FireAfterLoadHooks` (Phase 2). This ensures entity strategy hooks can call their own ActiveStrategy via `InvokeStrategy` and can also call ActiveStrategies of other recovered entities — enabling loading-order-independent cross-entity interoperability.
+
+### Why Observer recovery runs after AfterLoad on load
+
+`AfterLoad` is the entity business-initialization phase: all entities already have Data, Nodes, passive strategies, and active strategies recovered, so entities can interoperate safely. Recovering Observers first would fire `OnMounted` before the observer entity's own `AfterLoad` and would let observers consume intermediate state while a target writes data inside `AfterLoad`. Running every `AfterLoad` first and mounting bindings afterwards makes `OnMounted` observe the stabilized post-initialization state, and business code never needs to reconnect bindings manually inside `AfterLoad`.
+
+### Why Observer unwiring runs before BeforeDead on death
+
+`BeforeDead` is the entity strategy's final business-processing phase, during which the entity must still be locatable and its observer subscriptions must be fully releasable. Running bidirectional unwiring (firing `OnUnmounted`) before `BeforeDead` guarantees that no unreleasable subscription remains after the entity is removed; observer hooks also finish before the target death hook.
 
 ### Why the strategy pool's reference counting is not thread-safe
 

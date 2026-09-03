@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话生命周期 测试
 
@@ -222,6 +222,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `LoadFromPayload_WhenFlushFails_OriginalExceptionSurvivesCleanupFailure` | `FlushAllAfterLoad` 抛（push 策略失败）+ 回滚时 `OnUnmounted` 钩子抛 | 传播原始 FLUSH 异常（不含 OnUnmounted 消息）；场景宿主清空、会话黑板清空；清理失败记 Warning |
+| `LoadFromPayload_WhenObserverRecoveryFailsMidBatch_SessionRollsBackCompletely` | 首个 observer binding 成功后第二个 binding 因未注册索引失败 | 原始异常传播；无前台会话、无会话键、无 Progress 黑板；策略池无泄漏（首个 binding 的池引用已归还） |
 
 ## SaveAndSwitchForegroundIntegrationTests 测试详情
 

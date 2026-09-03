@@ -502,20 +502,20 @@
     "Origo.Core.Tests/Session-Lifecycle": {
       "status": "synced",
       "revisions": {
-        "zh": 16,
-        "en": 16
+        "zh": 17,
+        "en": 17
       },
       "previous_revisions": {
-        "zh": 15,
-        "en": 15
+        "zh": 16,
+        "en": 16
       },
       "files": {
         "zh": "Origo.Core.Tests/Session-Lifecycle.zh.md",
         "en": "Origo.Core.Tests/Session-Lifecycle.en.md"
       },
       "content_hashes": {
-        "zh": "52FC32BB3A4C78442F45EF84289C0F703BFF469F01ED54979A49244B0FDB285A",
-        "en": "9C6CCC89B07A910DC1C3CA42E4D0161E0D5A8834233849CB3F4FCDDFD53546A2"
+        "zh": "D977068B828CDF7C04443B60EC5B443807A07AED5D4A8FC5B6F0AAB7B630C8A2",
+        "en": "DB26958788655B48689B77326BA72E91A1C33A124A72A5CEC55CBA8345E68F5E"
       }
     },
     "Origo.Core.Tests/Snd-ArchiveFileAccess": {
@@ -730,8 +730,8 @@
     "Origo.Core.Tests/Testing/Integration/Integration": {
       "status": "synced",
       "revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 8,
+        "en": 8
       },
       "previous_revisions": {
         "zh": 7,
@@ -742,8 +742,8 @@
         "en": "Origo.Core.Tests/Testing/Integration/Integration.en.md"
       },
       "content_hashes": {
-        "zh": "97A1D0D48B989589F449A8537167CE91F661C9B0BC4E1B27AD10536F31D5D6FF",
-        "en": "BE3F1F756E5099CACC99047418E20A2BB83507BE5C3C2C590D210D166753FD40"
+        "zh": "CAEB7819524203EC52A3CC6B6EE9F68AEE90C3BA48D7338EEBABDAE938C64319",
+        "en": "796A25E9155FB469901CE80E457887348625480CC60BA9EE43FCA2CFC4C8FB33"
       }
     },
     "Origo.Core.Tests/TypeStringMapping": {
@@ -1547,20 +1547,20 @@
     "Origo.Core/Snd/Strategy/README": {
       "status": "synced",
       "revisions": {
-        "zh": 17,
-        "en": 17
+        "zh": 18,
+        "en": 18
       },
       "previous_revisions": {
-        "zh": 16,
-        "en": 16
+        "zh": 17,
+        "en": 17
       },
       "files": {
         "zh": "Origo.Core/Snd/Strategy/README.zh.md",
         "en": "Origo.Core/Snd/Strategy/README.en.md"
       },
       "content_hashes": {
-        "zh": "F54313C83B5C4ABECDE4D6B6F39EB788BC3AA3A1B69A8B04A0D2EF32737D8C98",
-        "en": "30535DE1D8327D2DC5496006F48619186710E58E92813DF09EFEC99F83A41A6A"
+        "zh": "FA215812B46047EC1E3554A3DE77720B6E4DFDE0465AD02044A44DD63B0F798C",
+        "en": "A7D29680E1DF68C07297E6193E364AC5C83814E5E2C45C3AB3A38315EF429CE9"
       }
     },
     "Origo.Core/StateMachine/README": {

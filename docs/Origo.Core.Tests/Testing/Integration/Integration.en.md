@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Frame-Driven Game Simulation Integration Tests
 
@@ -149,6 +149,8 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `Observer_FrameDriven_StrategyMountsObserverInProcess` | A Lifecycle strategy auto-mounts an observer in AfterSpawn; notifications work in the frame loop | snd-entity-model: Observer |
 | `Observer_Bindings_RestoredAcrossSaveAndReload` | Observer bindings are restored after save/reload; data changes still notify | persistence-flow |
 | `Observer_OnMounted_FiresAgainAfterReload` | OnMounted fires again after reload restores the binding | persistence-flow |
+| `Observer_AfterLoadFiresBeforeObserverRecoveryOnReload` | During reload, every entity's AfterLoad runs before Observer bindings recover and fire OnMounted | snd-entity-model: Observer |
+| `Observer_OnUnmountedFiresBeforeTargetBeforeDead` | When a target dies, Observer unwiring fires OnUnmounted before the target's BeforeDead runs | snd-entity-model: Observer |
 | `Observer_OnUnmounted_FiresWhenSessionIsDestroyed` | Observers receive OnUnmounted when the session is destroyed | snd-entity-model: Observer |
 | `Observer_TargetDataNoLongerNotifiesAfterSessionDestroyed` | Target data changes no longer notify after the session is destroyed | snd-entity-model: Observer |
 
@@ -238,6 +240,7 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `ValueCapturingObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase watching hp; records oldValue/newValue |
 | `TargetAwareObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase watching hp; records TargetName |
 | `AutoMountObserverLifecycleStrategy` | `ObserverTopologyIntegrationTests.cs` | Auto-mounts an observer onto "target" in AfterSpawn; verifies frame-driven mounting |
+| `LifecycleOrderProbeStrategy` | `ObserverTopologyIntegrationTests.cs` | Records AfterLoad / BeforeDead events to verify observer wiring order relative to lifecycle hooks |
 | `TwoStepPlanStrategy` | `PlanningIntegrationTests.cs` | PlanExecutionStrategyBase subclass: two-step plans (step_a→step_b) for intents "build"/"repair" |
 | `NoopActionStrategy` | `PlanningIntegrationTests.cs` | SharedNoopLifecycleStrategy subclass; plan Action placeholder |
 | `PushTrackingStateMachineStrategy` | `StateMachineIntegrationTests.cs` | SharedNoopStateMachineStrategy subclass; drives Push/Pop stack in the frame loop |

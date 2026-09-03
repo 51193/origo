@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 帧驱动游戏模拟集成测试
 
@@ -150,6 +150,8 @@
 | `Observer_FrameDriven_StrategyMountsObserverInProcess` | Lifecycle 策略在 AfterSpawn 中自动挂载观察者，帧循环后通知正常 | snd-entity-model: 观察者 |
 | `Observer_Bindings_RestoredAcrossSaveAndReload` | 观察者绑定存档重载后恢复，数据变更仍通知 | persistence-flow |
 | `Observer_OnMounted_FiresAgainAfterReload` | 重载恢复绑定后 OnMounted 再次触发 | persistence-flow |
+| `Observer_AfterLoadFiresBeforeObserverRecoveryOnReload` | 重载时所有实体的 AfterLoad 先执行，Observer 绑定随后恢复并触发 OnMounted | snd-entity-model: 观察者 |
+| `Observer_OnUnmountedFiresBeforeTargetBeforeDead` | 目标死亡时 Observer 先拆线触发 OnUnmounted，目标 BeforeDead 随后执行 | snd-entity-model: 观察者 |
 | `Observer_OnUnmounted_FiresWhenSessionIsDestroyed` | 会话销毁时观察者收到 OnUnmounted | snd-entity-model: 观察者 |
 | `Observer_TargetDataNoLongerNotifiesAfterSessionDestroyed` | 会话销毁后目标数据变更不再通知 | snd-entity-model: 观察者 |
 
@@ -239,6 +241,7 @@
 | `ValueCapturingObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase 观察 hp，记录 oldValue/newValue |
 | `TargetAwareObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase 观察 hp，记录 TargetName |
 | `AutoMountObserverLifecycleStrategy` | `ObserverTopologyIntegrationTests.cs` | AfterSpawn 中自动挂载观察者到 "target"，验证帧驱动挂载 |
+| `LifecycleOrderProbeStrategy` | `ObserverTopologyIntegrationTests.cs` | 记录 AfterLoad / BeforeDead 事件，验证观察者接线与生命周期钩子的先后顺序 |
 | `TwoStepPlanStrategy` | `PlanningIntegrationTests.cs` | PlanExecutionStrategyBase 子类：intent "build"/"repair" 分 step_a→step_b 两步骤计划 |
 | `NoopActionStrategy` | `PlanningIntegrationTests.cs` | SharedNoopLifecycleStrategy 子类，计划 Action 占位 |
 | `PushTrackingStateMachineStrategy` | `StateMachineIntegrationTests.cs` | SharedNoopStateMachineStrategy 子类，帧循环 Push/Pop 栈驱动 |

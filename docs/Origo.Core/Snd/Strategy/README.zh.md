@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Strategy
 
@@ -52,7 +52,7 @@ BaseStrategy
 - **Mount(observer, target, observerIndex)**：获取策略实例 → 按 `[ObserveData]` 属性为每个 key 在 target 上建立 `SubscribeDataRaw` 接线 → 记录绑定 → 触发 `OnMounted`。挂载是原子的：若接线或 `OnMounted` 抛异常，已建立的订阅全部取消、半加入的绑定被移除、策略引用归还池后异常再传播。同一 (observer, target, observerIndex) 重复挂载会抛 `InvalidOperationException`（与被动/主动策略管理器的重复挂载拒绝一致）
 - **Unmount(observer, target, observerIndex)**：移除绑定记录 → 拆线 `UnsubscribeDataRaw` → 触发 `OnUnmounted` → 释放池引用。绑定记录先于回调摘除，保证 `OnUnmounted` 内的重入安全；`finally` 兜底确保钩子抛异常时池引用仍归还。目标绑定不存在时抛 `InvalidOperationException`（fail-fast，与 `RemoveStrategy` 对未挂载索引抛异常一致）
 - **ReleaseStrategiesFor(observer)**：释放某 observer 持有的全部策略引用并清空其出边（不触发 `OnUnmounted`、不退订），对应实体整体销毁流程的 `ReleaseStrategiesOnly` 阶段
-- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`。目标实体缺失或目标为空白（存档拓扑不一致）时抛 `InvalidOperationException`（fail-fast），不静默跳过
+- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`。目标实体缺失或目标为空白（存档拓扑不一致）时抛 `InvalidOperationException`（fail-fast），不静默跳过。该方法逐 binding 挂载、不承诺跨 binding 的本地回滚；读档事务边界在 `SessionRun.LoadFromPayload`——恢复中途失败会执行 `ResetAfterLoadFailure`，将整个会话（实体、拓扑、状态机、黑板）清空
 - **BuildBindingsFor(observerName)**：序列化某 observer 的全部出边为 `List<ObserverBinding>`（按 target 分组）写入 `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**：清理某 observer 的全部出边；目标可解析则完整 `Unmount`，否则归还策略并移除记录
 - **TeardownAllBindingsFor(observer)**：对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略）的自包含清理路径，不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用。由 `SessionRun.ReleaseAllEntitiesAndClear` 在会话退出时经 `IEntityLifecycle.TeardownObserverBindings` 调用
@@ -226,6 +226,14 @@ public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 ### 为什么 ActiveStrategy 在实体策略钩子之前恢复
 
 ActiveStrategy 在 `RecoverForLifecycle` (Phase 1) 中恢复，早于 `FireAfterSpawnHooks` / `FireAfterLoadHooks` (Phase 2)。这确保实体策略钩子中可以通过 `InvokeStrategy` 调用自身的 ActiveStrategy，也可以调用其他已恢复实体的 ActiveStrategy——实现加载顺序无关的跨实体互操作。
+
+### 为什么读档时 Observer 恢复晚于 AfterLoad
+
+`AfterLoad` 是实体业务初始化阶段：此时所有实体的 Data、Node、被动策略和主动策略都已恢复，实体之间可以安全互操作。若先恢复 Observer，`OnMounted` 会早于 observer 实体自己的 `AfterLoad`，且 target 在 `AfterLoad` 中写入数据会让观察者提前消费中间状态。先完成全部 `AfterLoad` 再统一 Mount，使 `OnMounted` 看到的是初始化完成后的稳定状态，业务代码也无需在 `AfterLoad` 中手动重连绑定。
+
+### 为什么死亡时 Observer 拆线早于 BeforeDead
+
+`BeforeDead` 是实体策略的最后业务处理阶段，此时实体必须仍然可被定位，观察者订阅也必须能够完整解除。先执行双向拆线（触发 `OnUnmounted`），再触发 `BeforeDead`，保证实体移除后不会残留无法解除的订阅；观察者钩子也先于目标死亡钩子完成。
 
 ### 为什么策略池引用计数不保证线程安全
 
