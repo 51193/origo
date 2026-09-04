@@ -294,6 +294,12 @@ public class TypedDataGeneratorTests
         var second = RunHome(_homePrimitivesAttribute).AllGeneratedText;
 
         Assert.Equal(first, second);
+
+        // Generated text must use LF on every host. StringBuilder.AppendLine
+        // would emit CRLF on Windows, making the same input produce different
+        // source text depending on the build machine.
+        Assert.DoesNotContain("\r\n", first);
+        Assert.DoesNotContain("\r\n", RunAdapter(_adapterTypes).AllGeneratedText);
     }
 
     [Fact]

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.SourceGeneration.Tests
 
@@ -33,7 +33,7 @@
 | `Home_PublicGeneratedMembers_EmitDocCommentsBeforeAttributes` | 生成的 public 成员先输出 XML doc 注释再输出 `[MethodImpl]`，保证 CS1591 可识别 | Origo.SourceGeneration |
 | `Home_StringStoredViaRefSlot` | `string` 通过 `_ref` 槽存取（`AsString() => (string?)_ref`、`case 13: return td._ref`） | Origo.SourceGeneration |
 | `Adapter_ValueAndRefTypes_UseRefSlot_AndCompiles` | 适配层非系统值类型与引用类型统一走 `_ref`，生成 `TypedDataLayeredExtensions`、`RegisterKind`、Converter/TypeMap 分支，合并编译零错误 | Origo.SourceGeneration |
-| `Generation_IsDeterministic` | 相同输入两次运行产出完全一致的源文本 | Origo.SourceGeneration |
+| `Generation_IsDeterministic` | 相同输入两次运行产出完全一致的源文本；Home 与 Adapter 输出在所有宿主上均使用 LF 换行 | Origo.SourceGeneration |
 | `StartKind_OffsetIsHonored_AndNumberingIsSequential` | `StartKind` 偏移生效（128/129），且按声明顺序递增 | Origo.SourceGeneration |
 | `OverlappingStartKinds_SameType_Deduplicated` | 同一类型在重叠 `StartKind` 组中重复声明被去重，无诊断、无编译错误 | Origo.SourceGeneration |
 | `Incremental_SameInputTwice_ProducesIdenticalOutput` | 同一输入连续运行两次，生成源逐项一致 | Origo.SourceGeneration |

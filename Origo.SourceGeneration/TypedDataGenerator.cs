@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -452,6 +453,31 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         }
 
         return result;
+    }
+
+    /// <summary>
+    ///     StringBuilder variant that always terminates lines with LF.
+    ///     Generated source must not depend on <see cref="Environment.NewLine" />:
+    ///     the same generator input would otherwise produce CRLF on Windows
+    ///     and LF elsewhere, making emitted sources host-dependent.
+    /// </summary>
+    private sealed class SourceBuilder
+    {
+        private readonly StringBuilder _builder = new();
+
+        public SourceBuilder AppendLine()
+        {
+            _builder.Append('\n');
+            return this;
+        }
+
+        public SourceBuilder AppendLine(string? value)
+        {
+            _builder.Append(value);
+            return AppendLine();
+        }
+
+        public override string ToString() => _builder.ToString();
     }
 
     private sealed record GenerationInput

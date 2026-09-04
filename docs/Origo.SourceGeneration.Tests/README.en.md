@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.SourceGeneration.Tests
 
@@ -33,7 +33,7 @@
 | `Home_PublicGeneratedMembers_EmitDocCommentsBeforeAttributes` | Generated public members emit XML doc comments before `[MethodImpl]` so CS1591 recognizes them | Origo.SourceGeneration |
 | `Home_StringStoredViaRefSlot` | `string` accessed via `_ref` slot (`AsString() => (string?)_ref`, `case 13: return td._ref`) | Origo.SourceGeneration |
 | `Adapter_ValueAndRefTypes_UseRefSlot_AndCompiles` | Adapter layer non-system value types and reference types uniformly go through `_ref`, generating `TypedDataLayeredExtensions`, `RegisterKind`, Converter/TypeMap branches, merged compilation zero errors | Origo.SourceGeneration |
-| `Generation_IsDeterministic` | Same input run twice produces completely identical source text | Origo.SourceGeneration |
+| `Generation_IsDeterministic` | Same input run twice produces completely identical source text; Home and Adapter outputs use LF line endings on every host | Origo.SourceGeneration |
 | `StartKind_OffsetIsHonored_AndNumberingIsSequential` | `StartKind` offset honored (128/129), numbering is sequential per declaration order | Origo.SourceGeneration |
 | `OverlappingStartKinds_SameType_Deduplicated` | Same type declared redundantly in overlapping `StartKind` groups is deduplicated, no diagnostics, no compilation errors | Origo.SourceGeneration |
 | `Incremental_SameInputTwice_ProducesIdenticalOutput` | Same input run twice consecutively, generated sources are item-by-item identical | Origo.SourceGeneration |

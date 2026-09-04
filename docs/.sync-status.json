@@ -1927,20 +1927,20 @@
     "Origo.SourceGeneration.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 13,
+        "en": 13
       },
       "previous_revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "files": {
         "zh": "Origo.SourceGeneration.Tests/README.zh.md",
         "en": "Origo.SourceGeneration.Tests/README.en.md"
       },
       "content_hashes": {
-        "zh": "3E6F8E1588F14FF80E39B08A10E0F6C9BCDE74C2D5105DCBA81F65422A0B5FCB",
-        "en": "2D99EAAE27234154960837D98C6A6BF6DE737685845A2915C6726C8BADA9EB64"
+        "zh": "D4FFE96E5322236CECB575EC7F26B3B285289B5DB8CF4C5C6601739703BF507F",
+        "en": "E65120156A8AC3443402E20E92B87CD2CB1D4965E16457B4BEB24878E3F744E1"
       }
     },
     "Origo.SourceGeneration/pipeline": {
