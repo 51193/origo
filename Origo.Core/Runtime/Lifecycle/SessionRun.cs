@@ -82,15 +82,6 @@ internal sealed class SessionRun : ISessionRun, IDisposable
                 .Build($"Created SessionRun for level '{sessionParams.LevelId}'."));
     }
 
-    internal RunStateScope SessionScope
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return _sessionScope;
-        }
-    }
-
     internal string? MountKey { get; set; }
 
     internal event Action? Disposing;

@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 手册维护元指令
 
@@ -100,7 +100,6 @@ dotnet run --project tools/DocSyncTool -- generate
 |------|------|
 | `dotnet run --project tools/DocSyncTool -- generate` | 根据 git 历史自动计算 `docsync-revision`，重新生成所有 `README.md` 导航中枢 + `.sync-status.json`。幂等且永远成功。 |
 | `dotnet run --project tools/DocSyncTool -- validate` | 只读检查：所有 pair 的 revision 一致且单调递增（以 `generate` 记录的上次 revision 为下限）、所有链接指向同语言文件、文件/目录/锚点目标存在、reference-style 链接定义完整。失败时 exit code 1。 |
-| `dotnet run --project tools/DocSyncTool -- init` | **一次性迁移** —— 重命名 `.md` → `.zh.md`，注入元数据，更新链接。已执行完毕，切勿重复运行。 |
 
 **链接规则**（由 `validate` 以 ERROR 级别强制检查）：
 
@@ -240,29 +239,25 @@ chore: bump Origo to 0.0.7-nightly.20260608
 ```
 docs/                            # 文档根（位于 origo 仓库内）
 ├── README.md                    # 自动生成：双语导航中枢
-├── README.zh.md                 # 中文顶级索引（手工编写）
-├── META.zh.md                   # 本文件（维护元指令）
+├── README.zh.md / README.en.md  # 顶级索引（手工编写，双语成对）
+├── META.zh.md / META.en.md      # 本维护元指令（双语成对）
 ├── .sync-status.json            # 自动生成：所有 pair 的同步状态
-├── usage/                       # 系统使用文档
-│   ├── README.md               # 自动生成：导航中枢
-│   ├── README.zh.md            # 使用文档索引（手工编写）
-│   └── *.zh.md                 # 按使用场景组织的文档（手工编写）
-├── benchmarks/                  # 性能基线（TypedData 现状快照）
-│   ├── README.md               # 自动生成
-│   ├── README.zh.md            # 手工编写
-│   └── baseline.zh.md
+├── usage/                       # 系统使用文档（zh/en 成对）
+├── benchmarks/                  # 性能基线（zh/en 成对 + baseline.json）
 ├── Origo.Core/                  # 镜像仓根 Origo.Core/ 的目录结构
-│   ├── README.md               # 自动生成：导航中枢
-│   ├── README.zh.md            # 模块根文档（手工编写）
-│   └── 子目录/                  # 每个子目录内：README.md(自动) + README.zh.md(手工)
-├── Origo.Core.Tests/            # 镜像仓根 Origo.Core.Tests/
+├── Origo.Core.Tests/            # 测试能力文档（按能力分组，zh/en 成对）
 ├── Origo.GodotAdapter/          # 镜像仓根 Origo.GodotAdapter/
-├── Origo.GodotAdapter.Tests/    # 镜像仓根 Origo.GodotAdapter.Tests/
+├── Origo.GodotAdapter.Tests/    # GodotAdapter 测试能力文档
+├── Origo.GodotAdapter.Integration.Tests/ # Godot headless 集成测试文档
 ├── Origo.ConsoleBridge/         # 镜像仓根 Origo.ConsoleBridge/
-├── Origo.ConsoleBridge.Tests/   # 镜像仓根 Origo.ConsoleBridge.Tests/
+├── Origo.ConsoleBridge.Tests/   # ConsoleBridge 测试能力文档
 ├── Origo.SourceGeneration/      # 镜像仓根 Origo.SourceGeneration/
-└── Origo.SourceGeneration.Tests/ # 镜像仓根 Origo.SourceGeneration.Tests/
+├── Origo.SourceGeneration.Tests/ # 源码生成器测试能力文档
+├── Origo.TestSupport/           # 测试支撑库文档
+└── tools/                       # 仓库工具测试文档（DocSyncTool.Tests）
 ```
+
+每个手工内容文件都有 `.zh.md` / `.en.md` 双语成对；目录中的 `README.md` 导航中枢由 `generate` 自动生成。
 
 > 顶层入口 [AGENTS.md](../AGENTS.md) 位于仓库根，自动注入每次会话，并链接到本文件。
 >

@@ -13,7 +13,6 @@ namespace Origo.Core.Tests;
 ///     Tests that verify the SessionRun Dispose contract: no persist,
 ///     no BeforeSave, idempotency, and post-dispose state.
 /// </summary>
-[Collection("StrategyStateTests")]
 public class DisposeSemanticsTestsSessionRun
 {
     [Fact]

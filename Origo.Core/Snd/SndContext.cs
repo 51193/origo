@@ -267,9 +267,6 @@ public sealed class SndContext : ISndContext
         _progressRun = null;
     }
 
-    /// <summary>Enqueue an action on the system deferred queue.</summary>
-    internal void EnqueueSystemDeferred(Action action) => Runtime.EnqueueSystemDeferred(action);
-
     /// <summary>
     ///     Enqueue a system deferred action with a tracked persistence request
     ///     counter. The counter is incremented before execution and decremented

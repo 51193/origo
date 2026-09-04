@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Save
 
@@ -26,7 +26,6 @@ Origo's persistence system. Responsible for the complete save lifecycle: payload
 | `SavePayloads.cs` | Save payload model: `SaveGamePayload` / `LevelPayload` / serialization containers |
 | `WellKnownKeys.cs` | `internal` — Blackboard key constants: `SessionTopology` / `ActiveSaveId`, etc. |
 | `SaveCoordinator.cs` | Save coordinator: an independent class responsible for building save payloads, persisting progress state, managing metadata |
-| `SaveFileHandle.cs` | Unified I/O context (in the Storage sub-module): encapsulates FileSystem + IoGateway + SaveRootPath + PathPolicy |
 
 ## Persistence Flow
 

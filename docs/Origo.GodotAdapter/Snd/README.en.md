@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 22 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
@@ -17,7 +17,6 @@ The concrete implementation of the SND entity system in the Godot engine. Bridge
 | `GodotSndEntity.cs` | Godot entity: binds Core SndEntity to Godot Node lifecycle, delegates all ISndEntity calls |
 | `GodotPackedSceneNodeFactory.cs` | INodeFactory implementation: creates Godot Nodes via PackedScene.Instantiate |
 | `GodotNodeHandle.cs` | INodeHandle implementation: wraps Godot.Node, provides Free / SetVisible / UnsafeGetNode |
-| `SndEntityNodeExtensions.cs` | Adapter-layer convenience extensions: `GetNativeNode()` (extracts Godot Node from INodeHandle), `GetNodeFromSnd<T>()` (resolves via the SND node registry by logical name and casts). Physically located at project root `Origo.GodotAdapter/SndEntityNodeExtensions.cs` (not in Snd/ subdirectory), namespace belongs to `Origo.GodotAdapter` |
 | `SndEntityCollection.cs` | internal — pure C# entity collection: entity add/remove, batch recovery rollback, kill marking, frame processing orchestration; no Godot dependency, covered directly by unit tests |
 
 ## Module Details

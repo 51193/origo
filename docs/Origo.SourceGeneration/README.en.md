@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.SourceGeneration
 
@@ -20,8 +20,8 @@
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home mode code generation (Core BCL type extension methods) |
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — `TypedDataFactory<T>` Create/TryExtract branch generation (type mapping `TypedDataTypeMap` and Kind allocation live in HomeGeneration.cs) |
 | `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-007) |
-| `AnalyzerReleases.Shipped.md` | Analyzer release tracking (shipped rules, currently empty) |
-| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (unshipped rules: `ORIGOSG001`-`ORIGOSG007`) |
+| `AnalyzerReleases.Shipped.md` | Analyzer release tracking (rules shipped in 0.0.9: `ORIGOSG001`-`ORIGOSG007`) |
+| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (rules for the next release, currently empty) |
 | `pipeline.en.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |
 
 ## Dual-Mode Architecture

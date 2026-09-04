@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Entity
 
@@ -23,7 +23,7 @@ Strategy lifecycle hooks are triggered via phased methods exposed by the `IEntit
 | `DataObserverManager.cs` | `internal` — Generic data observer subscription/notification infrastructure (key → callback list) |
 | `ISndEntityRawSubscription.cs` | `internal` raw data subscription interface (`SubscribeDataRaw` / `UnsubscribeDataRaw`). Used by `ObserverTopology` in internal pipelines to directly operate on the target entity's `SndDataManager`, wiring observer strategies into data changes |
 
-> `TryGetNumericExtensions.cs` (in the `Origo.Core.Snd` namespace) provides `TryGetNumeric` / `GetNumeric` extension methods, bridging the type mismatch between `SetData("k", 5)` (int) and `TryGetData<float>("k")` (float). Attempts reading in float → int → remaining integer types (byte/sbyte/short/ushort/char/uint/ulong) → long → double order. See [TryGetNumeric](../README.en.md).
+> The `TryGetNumeric` / `GetNumeric` extension methods (in the `Origo.Core.Snd` namespace) bridge the type mismatch between `SetData("k", 5)` (int) and `TryGetData<float>("k")` (float). Reads are attempted in float → int → remaining integer types (byte/sbyte/short/ushort/char/uint/ulong) → long → double order; see [Snd/README](../README.en.md).
 
 ## Module Details
 

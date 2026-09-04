@@ -144,27 +144,6 @@ public class GitRevisionAdvancedTests
     }
 
     [Fact]
-    public void Generate_V1StatusWithDifferentRevisionCount_UsesOldEntryAsFloor()
-    {
-        using var repo = TestRepo.Create();
-        repo.Write("docs/README.zh.md", TestRepo.Header("README", 2) + "# README zh\n");
-        repo.Write("docs/README.en.md", TestRepo.Header("README", 2) + "# README en\n");
-        repo.Write("docs/.sync-status.json",
-            """{"schema_version":1,"languages":["zh","en"],"pairs":{"README":{"status":"missing-en","revisions":{"zh":2},"previous_revisions":{"zh":1},"files":{"zh":"README.zh.md"}}}}""");
-        repo.InitGit();
-        repo.CommitAll("docs: legacy one-language v1 snapshot");
-
-        RunGenerator(repo);
-
-        var pair = ReadStatus(repo).GetProperty("pairs").GetProperty("README");
-        Assert.Equal("synced", pair.GetProperty("status").GetString());
-        Assert.Equal(2, pair.GetProperty("revisions").GetProperty("zh").GetInt32());
-        Assert.Equal(2, pair.GetProperty("revisions").GetProperty("en").GetInt32());
-        Assert.Equal(2, pair.GetProperty("previous_revisions").GetProperty("zh").GetInt32());
-        Assert.False(pair.GetProperty("previous_revisions").TryGetProperty("en", out _));
-    }
-
-    [Fact]
     public void GitRepository_EmptyBlobRequestAndTopologyOrder()
     {
         using var repo = CreateGeneratedPairRepo("README");

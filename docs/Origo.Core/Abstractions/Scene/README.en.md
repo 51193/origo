@@ -1,12 +1,12 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Scene/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scene (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Scene](../../Snd/Scene/README.en.md)
 
 ## Overview
-Defines the Core layer's abstract capabilities for orchestrating SND scenes. The four orchestration interfaces (`ISndSceneAccess`, `ISndSceneHost`, `ISndContextAttachableSceneHost`, `IOwningSessionBindable`) are `internal` — visible only to the Core session lifecycle and adapter assemblies granted `InternalsVisibleTo`. The only business-visible scene interface is the read-only `ISndSceneReadAccess`.
+Defines the Core layer's abstract capabilities for orchestrating SND scenes. `ISndSceneReadAccess` is the public read-only view; `ISndSceneAccess`, `ISndSceneHost`, and `IOwningSessionBindable` are `internal` — visible only to the Core session lifecycle and adapter assemblies granted `InternalsVisibleTo`. The context-binding interface `ISndContextAttachableSceneHost` lives in [Snd/Scene](../../Snd/Scene/README.en.md).
 
 ## Included Files
 
@@ -16,7 +16,6 @@ Defines the Core layer's abstract capabilities for orchestrating SND scenes. The
 | `ISndSceneAccess.cs` | Internal scene serialization access: BuildMetaList / RecoverFromMetaList (no hooks) |
 | `ISndSceneHost.cs` | Internal scene host (inherits ISndSceneAccess + ISndSceneReadAccess): entity container management |
 | `IOwningSessionBindable.cs` | Internal owning-session binding for auto-binding entities |
-| `ISndContextAttachableSceneHost.cs` | Internal context binding (`BindContext`) driven by `SndContext` / `SessionRun` startup orchestration |
 
 ## Interface Details
 

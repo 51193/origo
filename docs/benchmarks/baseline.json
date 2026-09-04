@@ -3,259 +3,259 @@
   "metrics": {
     "CompareTable|Dict Read Boolean|A": {
       "alloc": 0,
-      "ops": 112189375.67
+      "ops": 125171328.26
     },
     "CompareTable|Dict Read Boolean|B": {
       "alloc": 0,
-      "ops": 108673799.29
+      "ops": 122129946.26
     },
     "CompareTable|Dict Read Int32|A": {
       "alloc": 0,
-      "ops": 124213572.82
+      "ops": 125161144.97
     },
     "CompareTable|Dict Read Int32|B": {
       "alloc": 0,
-      "ops": 133280909.51
+      "ops": 140899644.23
     },
     "CompareTable|Dict Read Single|A": {
       "alloc": 0,
-      "ops": 120405042.56
+      "ops": 125265406.08
     },
     "CompareTable|Dict Read Single|B": {
       "alloc": 0,
-      "ops": 120297857.5
+      "ops": 127550206.95
     },
     "CompareTable|Dict Read String|A": {
       "alloc": 0,
-      "ops": 190826948.58
+      "ops": 195997726.43
     },
     "CompareTable|Dict Read String|B": {
       "alloc": 0,
-      "ops": 169296404.14
+      "ops": 185939272.23
     },
     "CompareTable|Dict Write Boolean|A": {
       "alloc": 24670448,
-      "ops": 202938550.21
+      "ops": 207563618.25
     },
     "CompareTable|Dict Write Boolean|B": {
-      "alloc": 27699432,
-      "ops": 65048265.81
+      "alloc": 27699440,
+      "ops": 130852372.35
     },
     "CompareTable|Dict Write Int32|A": {
       "alloc": 24670448,
-      "ops": 210872590.78
+      "ops": 209126270.44
     },
     "CompareTable|Dict Write Int32|B": {
       "alloc": 27699440,
-      "ops": 81764811.7
+      "ops": 138846463.58
     },
     "CompareTable|Dict Write Single|A": {
       "alloc": 24670448,
-      "ops": 206799569.86
+      "ops": 206483584.56
     },
     "CompareTable|Dict Write Single|B": {
-      "alloc": 27699440,
-      "ops": 82557294.76
+      "alloc": 27699424,
+      "ops": 129376148.21
     },
     "CompareTable|Dict Write String|A": {
       "alloc": 24670448,
-      "ops": 172022294.09
+      "ops": 177116542.69
     },
     "CompareTable|Dict Write String|B": {
       "alloc": 15699424,
-      "ops": 189444170.8
+      "ops": 194734382.3
     },
     "CompareTable|Godot FromObject Color|A": {
       "alloc": 12800040,
-      "ops": 54893780.53
+      "ops": 54875706.52
     },
     "CompareTable|Godot FromObject Color|B": {
       "alloc": 12800040,
-      "ops": 63159224.4
+      "ops": 62501953.19
     },
     "CompareTable|Godot Read Vector3|A": {
       "alloc": 40,
-      "ops": 442673749.45
+      "ops": 445831475.7
     },
     "CompareTable|Godot Read Vector3|B": {
       "alloc": 6400040,
-      "ops": 113604089.75
+      "ops": 102938905.76
     },
     "CompareTable|Godot Write Vector3|A": {
       "alloc": 35200040,
-      "ops": 13703323.06
+      "ops": 13563000.14
     },
     "CompareTable|Godot Write Vector3|B": {
       "alloc": 6400040,
-      "ops": 425803704.49
+      "ops": 425713069.39
     },
     "CompareTable|Hetero|A": {
       "alloc": 39312000,
-      "ops": 412969833.84
+      "ops": 418266481.5
     },
     "CompareTable|Hetero|B": {
       "alloc": 0,
-      "ops": 2897976510.54
+      "ops": 3024217365.62
     },
     "CompareTable|Mixed|A": {
       "alloc": 0,
-      "ops": 1282725535.22
+      "ops": 1249406531.9
     },
     "CompareTable|Mixed|B": {
       "alloc": 0,
-      "ops": 816353187.04
+      "ops": 815567553.46
     },
     "CompareTable|NumChain|A": {
       "alloc": 0,
-      "ops": 259292391.06
+      "ops": 261273971.89
     },
     "CompareTable|NumChain|B": {
       "alloc": 0,
-      "ops": 248685077.65
+      "ops": 251885996.4
     },
     "CompareTable|Observer|A": {
       "alloc": 0,
-      "ops": 1867762420.62
+      "ops": 1863064741.5
     },
     "CompareTable|Observer|B": {
       "alloc": 0,
-      "ops": 1840095684.98
+      "ops": 1842299189.39
     },
     "CompareTable|SG IsString String|A": {
       "alloc": 0,
-      "ops": 571183778.38
+      "ops": 572318117.3
     },
     "CompareTable|SG IsString String|B": {
       "alloc": 0,
-      "ops": 655815112.6
+      "ops": 660440910.35
     },
     "CompareTable|SG Read Boolean|A": {
       "alloc": 0,
-      "ops": 530594053.1
+      "ops": 527184256.17
     },
     "CompareTable|SG Read Boolean|B": {
       "alloc": 0,
-      "ops": 597750068.74
+      "ops": 651173088.32
     },
     "CompareTable|SG Read Char|A": {
       "alloc": 0,
-      "ops": 552702993.99
+      "ops": 551915976.31
     },
     "CompareTable|SG Read Char|B": {
       "alloc": 0,
-      "ops": 658349517.76
+      "ops": 595730991.71
     },
     "CompareTable|SG Read Double|A": {
       "alloc": 0,
-      "ops": 559487509.44
+      "ops": 560497273.18
     },
     "CompareTable|SG Read Double|B": {
       "alloc": 0,
-      "ops": 647169603.74
+      "ops": 597514340.34
     },
     "CompareTable|SG Read Int32|A": {
       "alloc": 0,
-      "ops": 552608311.23
+      "ops": 551937299.92
     },
     "CompareTable|SG Read Int32|B": {
       "alloc": 0,
-      "ops": 651279112.18
+      "ops": 656180895.95
     },
     "CompareTable|SG Read Int64|A": {
       "alloc": 0,
-      "ops": 554081084.23
+      "ops": 554007412.62
     },
     "CompareTable|SG Read Int64|B": {
       "alloc": 0,
-      "ops": 598823909.84
+      "ops": 652831001.64
     },
     "CompareTable|SG Read Single|A": {
       "alloc": 0,
-      "ops": 565022826.92
+      "ops": 564359564.77
     },
     "CompareTable|SG Read Single|B": {
       "alloc": 0,
-      "ops": 646629765.66
+      "ops": 654685914.43
     },
     "CompareTable|SG Read String|A": {
       "alloc": 0,
-      "ops": 407677380.43
+      "ops": 416399477.0
     },
     "CompareTable|SG Read String|B": {
       "alloc": 0,
-      "ops": 601800587.36
+      "ops": 659574047.08
     },
     "CompareTable|SG Write Boolean|A": {
       "alloc": 0,
-      "ops": 875465090.83
+      "ops": 905633037.49
     },
     "CompareTable|SG Write Boolean|B": {
       "alloc": 112000000,
-      "ops": 75030012.0
+      "ops": 72006163.73
     },
     "CompareTable|SG Write Char|A": {
       "alloc": 0,
-      "ops": 921149594.69
+      "ops": 921404220.03
     },
     "CompareTable|SG Write Char|B": {
       "alloc": 112000000,
-      "ops": 76404700.42
+      "ops": 72107411.2
     },
     "CompareTable|SG Write Double|A": {
       "alloc": 0,
-      "ops": 880979649.37
+      "ops": 888494002.67
     },
     "CompareTable|SG Write Double|B": {
       "alloc": 112000000,
-      "ops": 77526892.14
+      "ops": 71605026.67
     },
     "CompareTable|SG Write Int32|A": {
       "alloc": 0,
-      "ops": 923744861.67
+      "ops": 920047842.49
     },
     "CompareTable|SG Write Int32|B": {
       "alloc": 112000000,
-      "ops": 73060428.28
+      "ops": 72324621.83
     },
     "CompareTable|SG Write Int64|A": {
       "alloc": 0,
-      "ops": 913784438.25
+      "ops": 899361453.37
     },
     "CompareTable|SG Write Int64|B": {
       "alloc": 112000000,
-      "ops": 73338247.0
+      "ops": 71111869.64
     },
     "CompareTable|SG Write Single|A": {
       "alloc": 0,
-      "ops": 887311446.32
+      "ops": 883704489.22
     },
     "CompareTable|SG Write Single|B": {
       "alloc": 112000000,
-      "ops": 75789154.57
+      "ops": 72006682.22
     },
     "CompareTable|SG Write String|A": {
       "alloc": 0,
-      "ops": 687450589.49
+      "ops": 602899948.75
     },
     "CompareTable|SG Write String|B": {
       "alloc": 64000000,
-      "ops": 124421440.3
+      "ops": 130034784.3
     },
     "ReportTable|1 strategies": {
       "alloc": 96,
-      "ops": 1334311.83
+      "ops": 1154481.12
     },
     "ReportTable|10 strategies": {
       "alloc": 144,
-      "ops": 49229557.43
+      "ops": 49487801.26
     },
     "ReportTable|100 actions": {
       "alloc": 896,
-      "ops": 3115264.8
+      "ops": 3300330.03
     },
     "ReportTable|100 keys \u00d7 2 ops": {
       "alloc": 4952,
-      "ops": 4555808.66
+      "ops": 4901960.78
     },
     "ReportTable|1000 actions": {
       "alloc": 8096,
@@ -263,219 +263,219 @@
     },
     "ReportTable|1000 enqueues": {
       "alloc": 48672,
-      "ops": 22988505.75
+      "ops": 29850746.27
     },
     "ReportTable|1000 keys \u00d7 2 ops": {
       "alloc": 48776,
-      "ops": 31897926.63
+      "ops": 32000000.0
     },
     "ReportTable|10000 actions": {
       "alloc": 80096,
-      "ops": 8599191.68
+      "ops": 7975753.71
     },
     "ReportTable|10000 enqueues": {
       "alloc": 582464,
-      "ops": 2208285.49
+      "ops": 2305741.3
     },
     "ReportTable|10e \u00d7 1s": {
       "alloc": 600,
-      "ops": 24271844.66
+      "ops": 17467248.91
     },
     "ReportTable|20 strategies": {
       "alloc": 224,
-      "ops": 58745777.65
+      "ops": 58802775.49
     },
     "ReportTable|200e \u00d7 10s": {
       "alloc": 20840,
-      "ops": 55394756.89
+      "ops": 48704461.33
     },
     "ReportTable|5 strategies": {
       "alloc": 104,
-      "ops": 37738697.26
+      "ops": 33654169.75
     },
     "ReportTable|500 keys \u00d7 2 ops": {
       "alloc": 23168,
-      "ops": 23529411.76
+      "ops": 30581039.76
     },
     "ReportTable|50000 enqueues": {
       "alloc": 2648944,
-      "ops": 58119260.72
+      "ops": 51213766.26
     },
     "ReportTable|50e \u00d7 5s": {
       "alloc": 3240,
-      "ops": 40364898.68
+      "ops": 39516320.24
     },
     "ReportTable|As<T> dispatch": {
       "alloc": 40,
-      "ops": 66781084.93
+      "ops": 81535329.83
     },
     "ReportTable|Build d=2 w=5 (~31 nodes)": {
-      "alloc": 41144,
-      "ops": 50153.7
+      "alloc": 41120,
+      "ops": 194968.55
     },
     "ReportTable|Build d=3 w=8 (~585 nodes)": {
       "alloc": 781568,
-      "ops": 1490066.23
+      "ops": 2059859.15
     },
     "ReportTable|Build d=4 w=8 (~4681 nodes)": {
       "alloc": 6364416,
-      "ops": 1315885.64
+      "ops": 1739243.52
     },
     "ReportTable|Create 100 entities": {
       "alloc": 383744,
-      "ops": 488281.25
+      "ops": 553709.86
     },
     "ReportTable|Create 2000 entities": {
       "alloc": 7643992,
-      "ops": 493388.59
+      "ops": 575705.24
     },
     "ReportTable|Create 500 entities": {
       "alloc": 1912680,
-      "ops": 518941.36
+      "ops": 576169.62
     },
     "ReportTable|Get Boolean": {
       "alloc": 19992040,
-      "ops": 15383668.7
+      "ops": 14209187.66
     },
     "ReportTable|Get Int32": {
       "alloc": 19992040,
-      "ops": 9188609.07
+      "ops": 9108529.96
     },
     "ReportTable|Get Single": {
       "alloc": 19992040,
-      "ops": 11941838.47
+      "ops": 11789199.68
     },
     "ReportTable|Get String": {
       "alloc": 19992040,
-      "ops": 11639952.97
+      "ops": 11601466.43
     },
     "ReportTable|Godot Create+Extract": {
       "alloc": 41600040,
-      "ops": 23943780.0
+      "ops": 23675503.55
     },
     "ReportTable|Godot EntitySim": {
       "alloc": 10560040,
-      "ops": 11251209.51
+      "ops": 11435018.6
     },
     "ReportTable|Hash 10 entities": {
-      "alloc": 51256,
-      "ops": 154559.51
+      "alloc": 54376,
+      "ops": 169491.53
     },
     "ReportTable|Hash 100 entities": {
-      "alloc": 453904,
-      "ops": 359841.67
+      "alloc": 515440,
+      "ops": 394944.71
     },
     "ReportTable|Hash 500 entities": {
-      "alloc": 2226640,
-      "ops": 447627.57
+      "alloc": 2423296,
+      "ops": 388983.97
     },
     "ReportTable|Mount \u00d7 10": {
       "alloc": 24168,
-      "ops": 228310.5
+      "ops": 168918.92
     },
     "ReportTable|Mount \u00d7 200": {
       "alloc": 461520,
-      "ops": 577034.05
+      "ops": 459453.25
     },
     "ReportTable|Mount \u00d7 50": {
       "alloc": 115192,
-      "ops": 877192.98
+      "ops": 700280.11
     },
     "ReportTable|NextInt32": {
       "alloc": 0,
-      "ops": 919980128.43
+      "ops": 920013984.21
     },
     "ReportTable|NextInt64": {
       "alloc": 0,
-      "ops": 919743207.7
+      "ops": 920064772.56
     },
     "ReportTable|NextUInt64": {
       "alloc": 0,
-      "ops": 920132499.08
+      "ops": 920217171.25
     },
     "ReportTable|PayloadIO 10 entities": {
       "alloc": 27952,
-      "ops": 86058.52
+      "ops": 77279.75
     },
     "ReportTable|PayloadIO 100 entities": {
       "alloc": 138744,
-      "ops": 707213.58
+      "ops": 698812.02
     },
     "ReportTable|PayloadIO 300 entities": {
       "alloc": 355584,
-      "ops": 903342.37
+      "ops": 783085.36
     },
     "ReportTable|Pool Roundtrip": {
       "alloc": 221794992,
-      "ops": 906975.18
+      "ops": 949496.29
     },
     "ReportTable|SaveSingle 10 entities": {
       "alloc": 9800,
-      "ops": 226757.37
+      "ops": 215982.72
     },
     "ReportTable|SaveSingle 100 entities": {
       "alloc": 97640,
-      "ops": 2032520.33
+      "ops": 961538.46
     },
     "ReportTable|SaveSingle 500 entities": {
       "alloc": 488040,
-      "ops": 2341920.37
+      "ops": 1887504.72
     },
     "ReportTable|Set Boolean": {
-      "alloc": 19673760,
-      "ops": 9443227.32
+      "alloc": 19673768,
+      "ops": 10929439.54
     },
     "ReportTable|Set Int32": {
       "alloc": 17513712,
-      "ops": 9598679.22
+      "ops": 9746683.69
     },
     "ReportTable|Set Single": {
-      "alloc": 19673752,
-      "ops": 8863362.41
+      "alloc": 19673736,
+      "ops": 10053585.61
     },
     "ReportTable|Set String": {
       "alloc": 26865760,
-      "ops": 5823874.39
+      "ops": 6405698.51
     },
     "ReportTable|SnapshotIO 10 entities": {
       "alloc": 6416,
-      "ops": 847457.63
+      "ops": 854700.85
     },
     "ReportTable|SnapshotIO 100 entities": {
       "alloc": 6416,
-      "ops": 8771929.82
+      "ops": 13888888.89
     },
     "ReportTable|SnapshotIO 300 entities": {
       "alloc": 6416,
-      "ops": 28037383.18
+      "ops": 40540540.54
     },
     "ReportTable|Standalone NextUInt64": {
       "alloc": 0,
-      "ops": 919988592.14
+      "ops": 919768586.22
     },
     "ReportTable|Unmount \u00d7 10": {
       "alloc": 20264,
-      "ops": 191938.58
+      "ops": 95057.03
     },
     "ReportTable|Unmount \u00d7 200": {
       "alloc": 383624,
-      "ops": 805152.98
+      "ops": 513215.29
     },
     "ReportTable|Unmount \u00d7 50": {
       "alloc": 96552,
-      "ops": 1012145.75
+      "ops": 800000.0
     },
     "ReportTable|d=3 w=8 (~585 nodes)": {
-      "alloc": 1973592,
-      "ops": 226972.92
+      "alloc": 1842992,
+      "ops": 129333.22
     },
     "ReportTable|d=4 w=8 (~4681 nodes)": {
-      "alloc": 19389320,
-      "ops": 337549.4
+      "alloc": 19258224,
+      "ops": 635737.66
     },
     "Report|Godot ToObject: Registered Vector3 conversion": {
       "alloc": 6400040,
-      "ops": 118469375.67
+      "ops": 105457421.57
     }
   },
   "schema_version": 1

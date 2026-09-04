@@ -27,6 +27,13 @@ public class CoreArchitectureGuardrailTests
     }
 
     [Fact]
+    public void TestSupport_PrivateFields_FollowUnderscoreCamelCase()
+    {
+        var violations = PrivateFieldNamingConvention.FindViolations(typeof(MemoryFileSystem).Assembly);
+        Assert.Empty(violations);
+    }
+
+    [Fact]
     public void CoreAssembly_ShouldNotReferenceGodot()
     {
         var refs = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();

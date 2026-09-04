@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core
 
@@ -36,6 +36,7 @@
 | 文件 | 职责 |
 |------|------|
 | `OrigoMeta.cs` | 框架元数据：名称、版本号、默认横幅 |
+| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(...)]` 宿主内联类型注册：声明 Core 支持的系统基础类型与 string |
 
 ## 架构约束
 

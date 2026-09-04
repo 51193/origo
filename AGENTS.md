@@ -239,7 +239,6 @@ This rewrites the revision headers and produces two kinds of derived files
 |---------|-------------|
 | `dotnet run --project tools/DocSyncTool -- generate` | Auto-computes `docsync-revision` headers from git history, regenerates all `README.md` hubs + `.sync-status.json`. Idempotent and always succeeds. |
 | `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: pair/revision consistency (including monotonic revision floors recorded by `generate`), same-language links, file/directory/anchor existence, and reference-style link definitions. **Exit code 1 on failure.** |
-| `dotnet run --project tools/DocSyncTool -- init` | **One-time migration only** — renames `.md` → `.zh.md`, injects metadata, updates links. Already executed; do not re-run. |
 
 **Link discipline** (validated as ERROR by `validate`):
 
@@ -276,7 +275,11 @@ missing language files) always fail the build.
 
 - **Every `public` and `protected` type and member** must carry a
   `<summary>` XML doc comment in English. This is the primary source of
-  IDE tooltip content for library consumers.
+  IDE tooltip content for library consumers. For interface implementations
+  and overrides whose base/interface declaration already carries the
+  contract documentation, C#'s standard `<inheritdoc />` element is an
+  accepted equivalent — it keeps the IDE tooltip populated without
+  duplicating the same contract on every implementation.
 - **`internal` classes that implement public interfaces** should also have
   English comments describing their role and any non-trivial contracts
   (e.g., constructor preconditions, disposal semantics, thread safety).
@@ -454,9 +457,12 @@ been demonstrated:
   run via `scripts/godot-test.sh`), and `tools/DocSyncTool.Tests`.
   `Origo.TestSupport` is a test support library (not a test project)
   referenced by `Origo.Core.Tests` and `Origo.GodotAdapter.Tests`.
-- **Coverage gates** are enforced by Coverlet in `test.sh` (≥ 90% line coverage
-  across all test projects); falling
-  below the threshold causes `dotnet test` to fail directly.
+- **Coverage gates** are enforced by Coverlet in `test.sh` for every xUnit
+  test project (Core, GodotAdapter, ConsoleBridge, SourceGeneration, and
+  DocSyncTool; ≥ 90% line coverage for each measured production assembly).
+  The Godot integration test runner is exercised separately by
+  `godot-test.sh` and is not part of the Coverlet gate. Falling below the
+  threshold causes `dotnet test` to fail directly.
 - Test style conventions, `InternalsVisibleTo` whitelist principles, static
   mutable state isolation, etc. are documented in
   [`docs/Origo.Core.Tests/META-TEST.zh.md`](docs/Origo.Core.Tests/META-TEST.zh.md)
@@ -593,7 +599,7 @@ markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md
 | Extension directions | [`docs/usage/extension-directions.zh.md`](docs/usage/extension-directions.zh.md) (or [English](docs/usage/extension-directions.en.md)) | Deferred brainstorm directions with "why not" trade-offs: unified tree namespace, entity-level concurrency, relative strategy ordering, multi-implementation active strategies. |
 | Test docs | [`docs/Origo.Core.Tests/README.md`](docs/Origo.Core.Tests/README.md), [`docs/Origo.GodotAdapter.Tests/README.md`](docs/Origo.GodotAdapter.Tests/README.md), [`docs/Origo.ConsoleBridge.Tests/README.md`](docs/Origo.ConsoleBridge.Tests/README.md), [`docs/Origo.SourceGeneration.Tests/README.md`](docs/Origo.SourceGeneration.Tests/README.md), [`docs/Origo.GodotAdapter.Integration.Tests/README.md`](docs/Origo.GodotAdapter.Integration.Tests/README.md), [`docs/Origo.TestSupport/README.md`](docs/Origo.TestSupport/README.md) | Test coverage by capability. |
 | Performance baseline | [`docs/benchmarks/baseline.zh.md`](docs/benchmarks/baseline.zh.md) (or [baseline.en.md](docs/benchmarks/baseline.en.md)) | TypedData performance snapshot and trade-offs. |
-| DocSyncTool | [`tools/DocSyncTool/`](tools/DocSyncTool/) | Bilingual doc sync tool (generate, validate, init). |
+| DocSyncTool | [`tools/DocSyncTool/`](tools/DocSyncTool/) | Bilingual doc sync tool (generate, validate). |
 | Formatting rules | [`.editorconfig`](.editorconfig) | C# code style + IDE/CA diagnostic rules. |
 | CI workflows | [`.github/workflows/`](.github/workflows/) | CI / Release / CodeQL workflow definitions. |
-| CI scripts | [`scripts/ci.sh`](scripts/ci.sh) | Full local CI reproduction; per-step scripts: `format.sh`, `doc-sync.sh`, `test.sh`, `benchmark.sh`, `godot-test.sh`. |
+| CI scripts | [`scripts/ci.sh`](scripts/ci.sh) | Full local CI reproduction; per-step scripts: `lint-scripts.sh`, `format.sh`, `doc-sync.sh`, `test.sh`, `benchmark.sh`, `godot-test.sh`; release-only `verify-release.sh`. |

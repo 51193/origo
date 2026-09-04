@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -35,6 +35,7 @@
 | 测试类 | 文件 | 测试数 | 覆盖的引擎依赖 |
 |--------|------|--------|---------------|
 | GodotRuntimeSmokeTests | `Tests/GodotRuntimeSmokeTests.cs` | 5 | Godot 运行时冒烟（GD.Print、FileAccess/DirAccess 静态类、Vector2 类型、SceneTree） |
+| PrivateFieldNamingIntegrationTests | `Tests/PrivateFieldNamingIntegrationTests.cs` | 1 | 反射扫描集成测试程序集自身，校验私有字段遵循 `_camelCase` 仓库约定 |
 | GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 5 | `GodotFileSystem`（`res://`/`user://` 读写、目录创建、文件枚举、删除） |
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 8 | `GodotFileOperations`（ReadAllText/WriteAllText/Copy/Delete 守卫和正确性；嵌套写入自动创建父目录） |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 10 | `GodotDirectoryOperations`（Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive、隐藏文件枚举/删除） |
@@ -94,6 +95,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   └── TestResult.cs                      # 结果 DTO
 ├── Tests/
 │   ├── GodotRuntimeSmokeTests.cs          # 运行时冒烟测试
+│   ├── PrivateFieldNamingIntegrationTests.cs # 集成测试程序集私有字段命名守卫
 │   ├── GodotFileSystemIntegrationTests.cs # 文件系统集成测试
 │   ├── GodotFileOperationsIntegrationTests.cs # 文件操作守卫测试
 │   ├── GodotDirectoryOperationsIntegrationTests.cs # 目录操作测试

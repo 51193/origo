@@ -18,7 +18,12 @@ public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
     private const int _readIterations = 2_000_000;
     private const int _writeIterations = 500_000;
     private const int _iterateIterations = 2_000;
-    private const int _warmupRounds = 1;
+    // Ten warmup rounds let the CPU leave power-saving/low-frequency states
+    // before timed rounds start. This benchmark runs immediately after the
+    // SourceGeneration benchmark process in scripts/benchmark.sh; with only
+    // one warmup round, NumChain's first timed side was repeatedly captured
+    // during the frequency ramp (37-74 Mops/s instead of ~260 Mops/s).
+    private const int _warmupRounds = 10;
     private const int _timedRounds = 5;
 
     private static readonly TimeSpan _perBenchmarkCap = TimeSpan.FromSeconds(8);

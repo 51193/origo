@@ -8,7 +8,6 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
-[Collection("StrategyStateTests")]
 public class StrategyPriorityTests
 {
     private static ILogger NoLog => NullLogger.Instance;

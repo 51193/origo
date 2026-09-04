@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.SourceGeneration
 
@@ -20,8 +20,8 @@
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home 模式代码生成（Core BCL 类型扩展方法） |
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — `TypedDataFactory<T>` 的 Create/TryExtract 分支生成（类型映射 `TypedDataTypeMap` 与 Kind 分配在 HomeGeneration.cs） |
 | `TypedDataGenerator.Diagnostics.cs` | partial — 诊断定义（ORIGOSG001-007） |
-| `AnalyzerReleases.Shipped.md` | 分析器发布跟踪（已发布规则，当前为空） |
-| `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（未发布规则：`ORIGOSG001`~`ORIGOSG007`） |
+| `AnalyzerReleases.Shipped.md` | 分析器发布跟踪（已在 0.0.9 发布的规则：`ORIGOSG001`~`ORIGOSG007`） |
+| `AnalyzerReleases.Unshipped.md` | 分析器发布跟踪（下一版本尚未发布的规则，当前为空） |
 | `pipeline.zh.md` | 全链路性能解析：从装箱问题到编译期优化的完整推理与基准说明 |
 
 ## 双模式架构

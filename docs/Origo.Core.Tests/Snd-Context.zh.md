@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 上下文 测试
 
@@ -25,6 +25,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `LevelBuilderExtendedTests.cs` | LevelBuilder 构建和写入关卡数据 |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad 解析与 ApplyAttributes 类型推断 |
 | `SndTemplateResolverTests.cs` | 模板别名解析、缓存、克隆不影响缓存 |
+| `TemplateAccessPublicPathTests.cs` | 公共 `ISndTemplateAccess` 路径：模板克隆后经会话 Spawn、运行时加载模板/别名 map、JSON 实体列表模板简写解析 |
 
 ## SndContextWorkflowTests 测试详情
 
@@ -124,6 +125,16 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `Resolve_WhitespaceAlias_ThrowsArgumentException` | 空白别名 | ArgumentException |
 | `Resolve_InvalidJson_Throws` | 无效 JSON 模板文件 | Exception |
 | `Resolve_ConverterReturnsNull_ThrowsInvalidOperationException` | 转换器返回 null | InvalidOperationException（含 "deserialized to null"） |
+
+## TemplateAccessPublicPathTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `CloneTemplate_AndSessionSpawn_CreateTemplateEntity` | `ctx.Template.CloneTemplate` 克隆模板并通过 `ISessionRun.Spawn` 生成实体 | ISndTemplateAccess / ISessionRun |
+| `LoadTemplates_AndLoadMetaListFromFile_ResolveTemplateShorthand` | 运行时加载模板 map，并从 JSON 实体列表解析 `templateKey` / `sndName` 简写后经 `SpawnMany` 生成 | ISndTemplateAccess / ISessionRun |
+| `LoadSceneAliases_LoadsAliasMap_ThroughPublicTemplateAccess` | 经 `ctx.Template.LoadSceneAliases` 重载别名 map，查询结果可被运行时映射解析 | ISndTemplateAccess |
 
 ## NullSndContext（测试基础设施）
 

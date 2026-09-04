@@ -11,7 +11,6 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
-[Collection("StrategyStateTests")]
 [Trait("Category", "Benchmark")]
 public class SndStrategyPerformanceTests(ITestOutputHelper output)
 {

@@ -3,7 +3,6 @@ using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
-using Origo.Core.DataSource;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
@@ -52,6 +51,4 @@ internal sealed class SessionManagerRuntime
     ///     may be null before the context is fully wired (e.g. in tests or startup ordering).
     /// </summary>
     internal IBlackboard ProgressBlackboard { get; }
-
-    internal DataSourceConverterRegistry ConverterRegistry => SndWorld.ConverterRegistry;
 }

@@ -20,7 +20,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props', 'Directory.Packages.props', 'global.json') }}
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Cache Godot binary
@@ -67,13 +67,29 @@ jobs:
           fi
           echo "Tag version v$TAG_VERSION matches Directory.Build.props version $PROPS_VERSION."
 
+      - name: Verify release metadata
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          bash scripts/verify-release.sh
+
       - name: DocSync validate
         run: bash scripts/doc-sync.sh
+
+      - name: Check generated doc files are committed
+        run: |
+          if ! git diff --quiet -- docs/; then
+            echo "ERROR: generated doc files are out of date for this tag."
+            echo "Run 'dotnet run --project tools/DocSyncTool -- generate' and commit before tagging."
+            git status --short -- docs/
+            exit 1
+          fi
 
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props', 'Directory.Packages.props', 'global.json') }}
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Restore

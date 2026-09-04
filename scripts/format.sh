@@ -11,4 +11,5 @@ echo " Format check (dotnet format --verify-no-changes --severity info)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 dotnet restore Origo.sln --verbosity quiet
 dotnet format Origo.sln --verify-no-changes --severity info
+dotnet format analyzers Origo.sln --verify-no-changes --severity info --diagnostics IDE0051 IDE0052
 echo "Format: OK"

@@ -1,22 +1,21 @@
 <!-- docsync-pair: tools/DocSyncTool.Tests/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # DocSyncTool Tests
 
 > [↑ Back to Origo Manual](../../README.en.md)
 
 Test project for the `DocSyncTool` tool (`tools/DocSyncTool/`), located at
-`tools/DocSyncTool.Tests/`. It verifies the tool's four core commands —
-`generate`, `validate`, `init` — and config loading against isolated
+`tools/DocSyncTool.Tests/`. It verifies the tool's two commands —
+`generate` and `validate` — plus config loading against isolated
 temporary repo scaffolds.
 
 ## Capabilities
 
 | Unit under test | Covered behavior |
 |-----------------|------------------|
-| `Validator` | Bilingual pair revision consistency, missing language files, cross-language / bare `.md` / broken links, missing metadata headers and managed-revision reminder comments, pair id mismatching the file path, invalid revision values; code blocks / inline code and external URL links are exempt |
+| `Validator` | Bilingual pair revision consistency, missing language files, cross-language / bare `.md` / broken links, missing metadata headers and managed-revision reminder comments, pair id mismatching the file path, invalid revision values; code blocks / inline code and external URL links are exempt; source-directory → doc-directory structural mirror and file-list checks (including SourceDocOverrides exception mappings) |
 | `Generator` | Per-directory `README.md` navigation hub generation, idempotency (no rewrite when unchanged), `.sync-status.json` status determination (`synced` / `zh-ahead` / `missing-en`), recursive subdirectory hubs, skipping doc-less directories, derived defaults for files without metadata, and git-derived `docsync-revision` planning (multi-commit pushes, translation catch-up, metadata-only commits, uncommitted local edits) |
-| `Migrator` | `.md` → `.zh.md` rename with metadata injection, bare `.md` link rewrite to `.zh.md`, external URL links are never rewritten, skipping already-suffixed / already-migrated / conflicting-target files, nested-directory pair derivation |
 | `Config` | Config parsing (case-insensitive keys), language code validation (rejects whitespace / slashes / backslashes), missing config file and invalid JSON failure modes |
 | `DocFile` | Language suffix extraction and pair id derivation |
 | `Program` | Command dispatch and exit codes, unknown-command usage, FATAL when no repo root is found (CWD-sensitive tests run in a serialized collection) |
@@ -28,11 +27,11 @@ temporary repo scaffolds.
 - Reaches the tool's `internal` types via `InternalsVisibleTo`.
 - **Test helper `ConsoleOutputCapture`**: redirects `Console.Out`/`Console.Error`
   to silent writers so the tool's expected output (the negative tests'
-  "Validation FAILED" diagnostics, generate progress lines, migration banners)
+  "Validation FAILED" diagnostics and generate progress lines)
   does not pollute the test-runner log — "Validation FAILED" looks like a
   build failure in CI logs. Because redirecting the process-global console
   streams affects all tests, the capturing test classes
-  (`ProgramTests`/`ValidatorTests`/`GeneratorTests`/`MigratorTests`/
+  (`ProgramTests`/`ValidatorTests`/`GeneratorTests`/
   `GitRevisionTests`/`GitRevisionAdvancedTests`) run in the serialized
   `DocSyncToolConsoleCapture` collection.
 - Every test builds a repo scaffold in its own temp directory (with

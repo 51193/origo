@@ -1,3 +1,4 @@
+using System.Linq;
 using Xunit;
 
 namespace DocSyncTool.Tests;
@@ -380,5 +381,62 @@ public class ValidatorTests
 
         Assert.Equal(0, exitCode);
         Assert.Empty(warnings);
+    }
+    [Fact]
+    public void Validate_SourceDirectoryWithoutDocMirror_Fails()
+    {
+        using var repo = TestRepo.Create();
+        ConfigureSourceMirror(repo, []);
+        repo.Write("Origo.Core/Widget.cs", "public sealed class Widget { }");
+        WriteSyncedPair(repo, "README", "docs/README.zh.md");
+        WriteSyncedPair(repo, "README", "docs/README.en.md");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_SourceFileNotListedInDocMirror_Fails()
+    {
+        using var repo = TestRepo.Create();
+        ConfigureSourceMirror(repo, []);
+        repo.Write("Origo.Core/Widget.cs", "public sealed class Widget { }");
+        WriteSyncedPair(repo, "Origo.Core/README", "docs/Origo.Core/README.zh.md");
+        WriteSyncedPair(repo, "Origo.Core/README", "docs/Origo.Core/README.en.md");
+
+        Assert.Equal(1, RunValidator(repo.LoadConfig()));
+    }
+
+    [Fact]
+    public void Validate_SourceMirrorOverride_Passes()
+    {
+        using var repo = TestRepo.Create();
+        ConfigureSourceMirror(
+            repo,
+            [("Origo.TestSupport/Metadata", "docs/Origo.TestSupport/Architecture")]);
+        repo.Write("Origo.TestSupport/Metadata/Widget.cs", "internal sealed class Widget { }");
+        WriteSyncedPair(repo, "Origo.TestSupport/Architecture/README", "docs/Origo.TestSupport/Architecture/README.zh.md");
+        WriteSyncedPair(repo, "Origo.TestSupport/Architecture/README", "docs/Origo.TestSupport/Architecture/README.en.md");
+        repo.Write(
+            "docs/Origo.TestSupport/Architecture/README.zh.md",
+            TestRepo.Header("Origo.TestSupport/Architecture/README") + "# Architecture\n\n`Widget.cs`\n");
+        repo.Write(
+            "docs/Origo.TestSupport/Architecture/README.en.md",
+            TestRepo.Header("Origo.TestSupport/Architecture/README") + "# Architecture\n\n`Widget.cs`\n");
+
+        Assert.Equal(0, RunValidator(repo.LoadConfig()));
+    }
+
+    private static void ConfigureSourceMirror(
+        TestRepo repo,
+        (string SourceDir, string DocDir)[] overrides)
+    {
+        var overrideEntries = string.Join(
+            ",",
+            overrides.Select(o => $"\"{o.SourceDir}\":\"{o.DocDir}\""));
+        var json = "{\"languages\":[\"zh\",\"en\"]," +
+            "\"DocsRoot\":\"docs\"," +
+            "\"SourceMirrorRoots\":[\"Origo.TestSupport\"]," +
+            $"\"SourceDocOverrides\":{{{overrideEntries}}}}}";
+        repo.Write("tools/DocSyncTool/docsync-config.json", json);
     }
 }

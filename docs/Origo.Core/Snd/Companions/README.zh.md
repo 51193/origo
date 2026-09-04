@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Companions/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Companions
 
@@ -22,7 +22,6 @@
 | `SndContextLifecycleOperations.cs` | `ISndLifecycleOperations` | `ISndContext.Lifecycle` |
 | `SndContextStateMachineContext.cs` | `IStateMachineContext` | `ISndContext.StateMachineContext` |
 
-另有 `SndContextFileAccess.cs` 和 `SndContextArchiveFileAccess.cs` 位于 `Snd/` 层，分别实现 `ISndFileAccess`（`ISndContext.FileAccess`）和 `ISndArchiveFileAccess`（`ISndContext.ArchiveFileAccess`）。
 
 ## 设计决策
 

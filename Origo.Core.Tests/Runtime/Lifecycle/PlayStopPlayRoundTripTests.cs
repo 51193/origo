@@ -23,7 +23,6 @@ namespace Origo.Core.Tests;
 ///         探针实体来间接验证，而非直接读取内部属性。
 ///     </para>
 /// </summary>
-[Collection("StrategyStateTests")]
 public class PlayStopPlayRoundTripTests
 {
     // ── Full round-trip: save → dispose → recreate → reload ──

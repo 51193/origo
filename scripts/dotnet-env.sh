@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Source-only environment bootstrap for repository scripts.
 #
 # Prefer the repository-local SDK installed under .dotnet/ (created by

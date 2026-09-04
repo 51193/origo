@@ -3,6 +3,8 @@ name: Commit Lint
 on:
   pull_request:
     branches: [main, master]
+  push:
+    branches: [main, master]
 
 jobs:
   commit-lint:
@@ -13,12 +15,13 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch PR base
+        if: github.event_name == 'pull_request'
         run: git fetch --no-tags origin "$BASE_SHA"
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
       - name: Lint commit subjects
-        run: bash scripts/lint-commits.sh "$BASE_SHA" "$HEAD_SHA"
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: bash scripts/lint-commits.sh "$BASE_SHA" "$HEAD_SHA"

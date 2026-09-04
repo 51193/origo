@@ -18,7 +18,6 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
-[Collection("StrategyStateTests")]
 public class EntityKillTests
 {
     // ── RequestKillEntity ──────────────────────────────────────────────

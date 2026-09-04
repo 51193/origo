@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter
 
@@ -8,6 +8,13 @@
 ## Module Overview
 
 **Origo.GodotAdapter** is the Godot 4 adapter layer for the Origo framework. It bridges the platform-agnostic abstractions in the Core layer with Godot engine's concrete APIs, including the file system (via `FileAccess`/`DirAccess`), logging output (via `GD.Print`), node lifecycle (via `Node`/`PackedScene`), and engine type serialization (14 types including `Vector2`, `Transform3D`, etc.).
+
+## Root Files
+
+| File | Responsibility |
+|------|----------------|
+| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(startKind: 128, ...)]`: registers 14 Godot engine types in the adapter kind range (128–141) of TypedData |
+| `SndEntityNodeExtensions.cs` | `GetNativeNode()` / `GetNodeFromSnd<T>()` adapter convenience extensions in namespace `Origo.GodotAdapter` |
 
 ## Subsystem Overview
 

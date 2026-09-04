@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy
 
@@ -23,7 +23,6 @@ Strategies are divided into four categories: passive entity strategies (frame-dr
 | `ObserverBindingEntry.cs` | `internal` — single observer binding record (observerName / targetName / observerIndex / strategy / data subscription wrapper); `FullCleanup` unsubscribes + triggers `OnUnmounted` + returns strategy |
 | `ObserverStrategyMetadata.cs` | `internal` — per-type reflection cache of data keys declared by `[ObserveData]` |
 | `ObserveDataAttribute.cs` | Observation data key declaration attribute: `[ObserveData("key")]`, supports multiple declarations |
-| `ActiveStrategyExtensions.cs` | `ISndEntity` extension methods: generic `InvokeStrategy<TInput, TOutput>` eliminates JSON serialization boilerplate; `EnsureStrategy` lazy strategy mount + idempotent guard. Physically located at `Origo.Core/Snd/` root (not under Strategy/) |
 | `ActiveStrategyManager.cs` | `internal` — per-entity active strategy manager: Dictionary container + add/remove + serialization |
 | `SndStrategyPool.cs` | `internal` — Strategy pool: registration, instantiation, reference counting, statelessness validation |
 | `SndStrategyManager.cs` | `internal` — per-entity passive strategy manager: strategy container add/remove + lifecycle hook coordination |

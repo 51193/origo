@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Origo full CI reproduction — runs every GitHub Actions step in order:
+#   0. scripts/lint-scripts.sh — shell + workflow lint
 #   1. scripts/format.sh   — dotnet format verification
 #   2. scripts/doc-sync.sh — doc sync validate + generation
 #   3. scripts/test.sh     — build + test + Coverlet line coverage gates
@@ -13,6 +14,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+bash scripts/lint-scripts.sh
 bash scripts/format.sh
 bash scripts/doc-sync.sh
 

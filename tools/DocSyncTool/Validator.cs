@@ -41,6 +41,7 @@ internal static partial class Validator
         }
 
         ValidatePairs(fileMetadatas, config.Languages, docsRoot, errors);
+        ValidateSourceMirror(config, errors);
         warnings = ComputeHeadingParityWarnings(fileMetadatas, config.Languages);
 
         if (errors.Count > 0)
@@ -453,6 +454,77 @@ internal static partial class Validator
     {
         [JsonPropertyName("previous_revisions")]
         public Dictionary<string, int>? PreviousRevisions { get; set; }
+    }
+
+
+    private static void ValidateSourceMirror(Config config, List<string> errors)
+    {
+        foreach (var sourceRoot in config.SourceMirrorRoots)
+        {
+            var rootFullPath = Path.GetFullPath(Path.Combine(config.RepoRoot, sourceRoot));
+            if (!Directory.Exists(rootFullPath))
+            {
+                errors.Add($"ERROR: source mirror root does not exist: {sourceRoot}");
+                continue;
+            }
+
+            var sourceDirectories = Directory.GetDirectories(rootFullPath, "*", SearchOption.AllDirectories)
+                .Prepend(rootFullPath)
+                .Where(dir => Directory.GetFiles(dir, "*.cs", SearchOption.TopDirectoryOnly).Length > 0)
+                .Select(dir => Path.GetRelativePath(config.RepoRoot, dir).Replace('\\', '/'))
+                .Where(dir => !dir.StartsWith("Origo.", StringComparison.Ordinal)
+                              || (!dir.Contains("/obj/", StringComparison.Ordinal)
+                                  && !dir.Contains("/bin/", StringComparison.Ordinal)
+                                  && !dir.Contains("/.godot/", StringComparison.Ordinal)))
+                .OrderBy(dir => dir, StringComparer.Ordinal)
+                .ToList();
+
+            foreach (var sourceDir in sourceDirectories)
+            {
+                var overrideKey = sourceDir.Replace('\\', '/');
+                var docDirRel = config.SourceDocOverrides.TryGetValue(overrideKey, out var overrideValue)
+                    ? overrideValue.TrimStart('/')
+                    : $"docs/{sourceDir}";
+                var docDir = Path.GetFullPath(Path.Combine(config.RepoRoot, docDirRel));
+                if (!Directory.Exists(docDir))
+                {
+                    errors.Add($"ERROR: source directory '{sourceDir}' has no documentation directory '{docDirRel}'");
+                    continue;
+                }
+
+                var sourceFiles = Directory.GetFiles(
+                        Path.Combine(config.RepoRoot, sourceDir), "*.cs", SearchOption.TopDirectoryOnly)
+                    .Select(file => Path.GetFileName(file))
+                    .OrderBy(file => file, StringComparer.Ordinal)
+                    .ToList();
+
+                foreach (var language in config.Languages)
+                {
+                    var docFile = Path.Combine(docDir, $"README.{language}.md");
+                    if (!File.Exists(docFile))
+                    {
+                        errors.Add($"ERROR: source directory '{sourceDir}' is missing '{Path.GetRelativePath(config.RepoRoot, docFile).Replace('\\', '/')}'");
+                        continue;
+                    }
+
+                    var content = File.ReadAllText(docFile);
+                    foreach (var sourceFile in sourceFiles)
+                    {
+                        var basename = Path.GetFileNameWithoutExtension(sourceFile);
+                        var listed = content.Contains($"`{sourceFile}`", StringComparison.Ordinal)
+                            || content.Contains($"`{Path.DirectorySeparatorChar}{sourceFile}`", StringComparison.Ordinal)
+                            || content.Contains($"`/{sourceFile}`", StringComparison.Ordinal)
+                            || content.Contains($"`\\{sourceFile}`", StringComparison.Ordinal)
+                            || content.Contains($"/{sourceFile}`", StringComparison.Ordinal)
+                            || content.Contains($"\\{sourceFile}`", StringComparison.Ordinal)
+                            || (sourceFile != basename
+                                && content.Contains($"`{basename}`", StringComparison.Ordinal));
+                        if (!listed)
+                            errors.Add($"ERROR: {Path.GetRelativePath(config.RepoRoot, docFile).Replace('\\', '/')} does not list source file `{sourceFile}` from '{sourceDir}'");
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Save
 
@@ -26,7 +26,6 @@ Origo 的持久化系统。负责存档的完整生命周期：Payload 构建、
 | `SavePayloads.cs` | 存档载荷模型：`SaveGamePayload` / `LevelPayload` / 序列化容器 |
 | `WellKnownKeys.cs` | `internal` — 黑板键常量：`SessionTopology` / `ActiveSaveId` 等 |
 | `SaveCoordinator.cs` | 存档协调器：负责构建存档 payload、持久化 progress 状态、管理元数据的独立类 |
-| `SaveFileHandle.cs` | 统一 I/O 上下文（位于 Storage 子模块）：封装 FileSystem + IoGateway + SaveRootPath + PathPolicy |
 
 ## 持久化流程
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core
 
@@ -36,6 +36,7 @@
 | File | Responsibility |
 |------|---------------|
 | `OrigoMeta.cs` | Framework metadata: name, version number, default banner |
+| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(...)]` home inline-type registration declaring the system primitives and string supported by Core |
 
 ## Architectural Constraints
 

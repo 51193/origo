@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Context Tests
 
@@ -22,6 +22,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `LevelBuilderExtendedTests.cs` | LevelBuilder building and writing level data |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad parsing and ApplyAttributes type inference |
 | `SndTemplateResolverTests.cs` | Template alias resolution, caching, clone does not affect cache |
+| `TemplateAccessPublicPathTests.cs` | Public `ISndTemplateAccess` path: cloning templates then session spawn, runtime template/alias map loading, JSON entity-list template shorthand resolution |
 
 ## SndContextWorkflowTests Details
 
@@ -121,6 +122,16 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `Resolve_WhitespaceAlias_ThrowsArgumentException` | Whitespace alias | ArgumentException |
 | `Resolve_InvalidJson_Throws` | Invalid JSON template file | Exception |
 | `Resolve_ConverterReturnsNull_ThrowsInvalidOperationException` | Converter returns null | InvalidOperationException (contains "deserialized to null") |
+
+## TemplateAccessPublicPathTests Details
+
+### Correct Path
+
+| Test Method | Verified Behavior | Doc Source |
+|---------|-----------|---------|
+| `CloneTemplate_AndSessionSpawn_CreateTemplateEntity` | `ctx.Template.CloneTemplate` clones a template and `ISessionRun.Spawn` creates the entity | ISndTemplateAccess / ISessionRun |
+| `LoadTemplates_AndLoadMetaListFromFile_ResolveTemplateShorthand` | Loads a template map at runtime, resolves `templateKey` / `sndName` shorthand from a JSON entity list, then spawns via `SpawnMany` | ISndTemplateAccess / ISessionRun |
+| `LoadSceneAliases_LoadsAliasMap_ThroughPublicTemplateAccess` | Reloads an alias map via `ctx.Template.LoadSceneAliases` and the runtime mapping resolves the new alias | ISndTemplateAccess |
 
 ## NullSndContext (Test Infrastructure)
 

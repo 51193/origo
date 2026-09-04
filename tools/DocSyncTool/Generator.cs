@@ -180,11 +180,10 @@ internal static class Generator
             List<DocContentEvent> events;
             if (oldHash is null)
             {
-                var headerAlreadyAhead = file.Revision > oldRevision;
-                if (headerAlreadyAhead)
-                    oldRevision = file.Revision;
-
-                events = PlanLegacyStatusTransition(file, git, repoRelativePath, headerAlreadyAhead);
+                // A schema 2 snapshot always records content hashes. A
+                // hand-edited snapshot without hashes is re-anchored on this
+                // run; no historical event can be reconstructed for it.
+                events = [];
             }
             else
             {
@@ -205,28 +204,6 @@ internal static class Generator
                 UpdateDocSyncHeaders(plan.File, previousRevision);
             }
         }
-    }
-
-    private static List<DocContentEvent> PlanLegacyStatusTransition(
-        DocFile file,
-        GitRepository git,
-        string repoRelativePath,
-        bool headerAlreadyAhead)
-    {
-        // Schema v1 snapshots had no content hashes. If the author already
-        // bumped the header manually during the one-time migration, keep
-        // that revision. Otherwise a content change that was not followed
-        // by 'generate' is counted as exactly one pending change.
-        if (headerAlreadyAhead)
-            return [];
-
-        var headBlob = git.ReadBlobTexts([(git.HeadSha, repoRelativePath)])[0];
-        var headHash = headBlob is null ? null : ContentHash.Compute(headBlob);
-
-        if (headHash is not null && !string.Equals(headHash, file.ContentHash, StringComparison.Ordinal))
-            return [new DocContentEvent(null, long.MaxValue)];
-
-        return [];
     }
 
     private static StatusPairEntry? GetPreviousPair(StatusFile? previousStatus, string pairId)

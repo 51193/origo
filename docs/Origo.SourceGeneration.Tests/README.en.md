@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.SourceGeneration.Tests
 
@@ -19,6 +19,7 @@
 | `GeneratorTestHarness.cs` | Constructs in-memory `CSharpCompilation`, runs `TypedDataGenerator`, exposes generated sources, generator diagnostics, merged compilation errors |
 | `TypedDataGeneratorTests.cs` | Generator behavior tests: Home/Adapter mode output, two storage models, `ORIGOSG001`–`ORIGOSG007` diagnostics, generation determinism and incremental pipeline |
 | `PrivateFieldNamingTests.cs` | Architecture guardrail: production assembly private fields follow `_camelCase` naming |
+| `ApiDocumentationGuardrailTests.cs` | Architecture guardrail: public/protected API declarations in production source must carry `<summary>` or `<inheritdoc />` (vendored FastNoiseLite exempt) |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | Generated artifact performance benchmarks: write/read/mixed dispatch for multiple value types + `string`, generated inline `TypedData` vs unoptimized boxing; fixed pool + large iterations + multi-round min noise reduction, relaxed thresholds + comparison tables, and per-side measured allocation (`GC.GetAllocatedBytesForCurrentThread`, placed in separate `NoInlining` methods to avoid polluting timing) |
 | `TestSupport/PerfReporter.cs` | Performance comparison table output (writes to both console and xUnit test output) |
 
@@ -29,6 +30,7 @@
 | Test Method | Verified Behavior | Doc Source |
 |---------|-----------|---------|
 | `Home_Primitives_GeneratesExpectedMembers_AndCompiles` | Home mode registers system primitive types, generates `KindMap`/`TryGetInt32`/`AsInt32`/`explicit operator`/`TypedDataFactory<T>`/`TypedDataHomeKindRegistration` + `[ModuleInitializer]`, merged compilation zero errors | Origo.SourceGeneration |
+| `Home_PublicGeneratedMembers_EmitDocCommentsBeforeAttributes` | Generated public members emit XML doc comments before `[MethodImpl]` so CS1591 recognizes them | Origo.SourceGeneration |
 | `Home_StringStoredViaRefSlot` | `string` accessed via `_ref` slot (`AsString() => (string?)_ref`, `case 13: return td._ref`) | Origo.SourceGeneration |
 | `Adapter_ValueAndRefTypes_UseRefSlot_AndCompiles` | Adapter layer non-system value types and reference types uniformly go through `_ref`, generating `TypedDataLayeredExtensions`, `RegisterKind`, Converter/TypeMap branches, merged compilation zero errors | Origo.SourceGeneration |
 | `Generation_IsDeterministic` | Same input run twice produces completely identical source text | Origo.SourceGeneration |

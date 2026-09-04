@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Companions/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Companions
 
@@ -21,7 +21,6 @@ The companion object layer for `SndContext`. Each companion is `internal sealed 
 | `SndContextLifecycleOperations.cs` | `ISndLifecycleOperations` | `ISndContext.Lifecycle` |
 | `SndContextStateMachineContext.cs` | `IStateMachineContext` | `ISndContext.StateMachineContext` |
 
-`SndContextFileAccess.cs` and `SndContextArchiveFileAccess.cs` reside at the `Snd/` layer.
 
 ## Design Decisions
 

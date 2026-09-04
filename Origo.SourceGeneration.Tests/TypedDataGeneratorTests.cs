@@ -107,6 +107,28 @@ public class TypedDataGeneratorTests
     // ─── Home mode ─────────────────────────────────────────────────
 
     [Fact]
+    public void Home_PublicGeneratedMembers_EmitDocCommentsBeforeAttributes()
+    {
+        var text = RunHome(_homePrimitivesAttribute).AllGeneratedText;
+
+        // XML doc comments are only recognized when they precede any
+        // attributes. Emitting [MethodImpl] first makes CS1591 report the
+        // public generated member as undocumented even though a summary
+        // string is present one line later.
+        Assert.Contains(
+            "    /// <summary>Reads the stored value as <c>byte</c> when this instance uses the matching registered kind.</summary>\n" +
+            "    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n" +
+            "    public readonly bool TryGetByte(out byte value)",
+            text);
+        Assert.Contains(
+            "    /// <summary>Creates a <see cref=\"TypedData\"/> instance from a <c>int</c> value.</summary>\n" +
+            "    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n" +
+            "    public static explicit operator TypedData(int value)",
+            text);
+        Assert.DoesNotContain("    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    /// <summary>", text);
+    }
+
+    [Fact]
     public void Home_Primitives_GeneratesExpectedMembers_AndCompiles()
     {
         var output = RunHome(_homePrimitivesAttribute);

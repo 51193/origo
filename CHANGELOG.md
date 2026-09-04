@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`TypedData` generated accessors now expose their XML summaries to IntelliSense** — the source generator emitted `[MethodImpl]` before the `/// <summary>` block, so the compiler did not associate the comments with the generated public members. Doc comments are now emitted before attributes, making `TryGetXxx` and conversion operators show their English summaries in the IDE.
+
 ## [0.0.9] - 2026-09-03
 
 ### Added

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -36,6 +36,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | Test Class | File | Tests | Engine Dependency Covered |
 |-----------|------|-------|--------------------------|
 | GodotRuntimeSmokeTests | `Tests/GodotRuntimeSmokeTests.cs` | 5 | Godot runtime smoke (GD.Print, FileAccess/DirAccess static classes, Vector2 type, SceneTree) |
+| PrivateFieldNamingIntegrationTests | `Tests/PrivateFieldNamingIntegrationTests.cs` | 1 | Reflectively scans the integration test assembly itself and verifies private fields follow the repository `_camelCase` convention |
 | GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 5 | `GodotFileSystem` (`res://`/`user://` read/write, directory creation, file enumeration, deletion) |
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 8 | `GodotFileOperations` (ReadAllText/WriteAllText/Copy/Delete guards and correctness; nested writes create parent directories) |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 10 | `GodotDirectoryOperations` (Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive, hidden-file enumeration/deletion) |
@@ -95,6 +96,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   └── TestResult.cs                      # Result DTO
 ├── Tests/
 │   ├── GodotRuntimeSmokeTests.cs          # Runtime smoke tests
+│   ├── PrivateFieldNamingIntegrationTests.cs # Integration assembly private-field naming guard
 │   ├── GodotFileSystemIntegrationTests.cs # File system integration tests
 │   ├── GodotFileOperationsIntegrationTests.cs # File operation guard tests
 │   ├── GodotDirectoryOperationsIntegrationTests.cs # Directory operation tests

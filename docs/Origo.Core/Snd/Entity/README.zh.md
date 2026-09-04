@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Entity
 
@@ -23,7 +23,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 | `DataObserverManager.cs` | `internal` — 通用数据观察者订阅/通知基础设施（键 → 回调列表）|
 | `ISndEntityRawSubscription.cs` | `internal` 原始数据订阅接口（`SubscribeDataRaw` / `UnsubscribeDataRaw`）。供 `ObserverTopology` 在内部链路中直接操作目标实体的 `SndDataManager`，将观察者策略接入数据变更 |
 
-> `TryGetNumericExtensions.cs`（位于 `Origo.Core.Snd` 命名空间）提供 `TryGetNumeric` / `GetNumeric` 扩展方法，桥接 `SetData("k", 5)`（int）和 `TryGetData<float>("k")`（float）之间的类型不匹配。按 float → int → 其余整数类型（byte/sbyte/short/ushort/char/uint/ulong）→ long → double 顺序尝试读取，详见 [TryGetNumeric](../README.zh.md)。
+> `TryGetNumeric` / `GetNumeric` 扩展方法（位于 `Origo.Core.Snd` 命名空间）桥接 `SetData("k", 5)`（int）和 `TryGetData<float>("k")`（float）之间的类型不匹配。按 float → int → 其余整数类型（byte/sbyte/short/ushort/char/uint/ulong）→ long → double 顺序尝试读取，详见 [Snd/README](../README.zh.md)。
 
 ## 模块详解
 

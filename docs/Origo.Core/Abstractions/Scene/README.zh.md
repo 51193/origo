@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Scene/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Scene (Abstractions)
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-定义 Core 层编排 SND 场景的抽象能力。四个编排接口（`ISndSceneAccess`、`ISndSceneHost`、`ISndContextAttachableSceneHost`、`IOwningSessionBindable`）均为 `internal`，仅供 Core 会话生命周期与持有 `InternalsVisibleTo` 的适配层实现；业务代码唯一可见的场景接口是只读的 `ISndSceneReadAccess`。策略生命周期钩子由上层会话生命周期（`SndEntityFactory` / `SessionRun`）统一编排。
+定义 Core 层编排 SND 场景的抽象能力。本目录的 `ISndSceneReadAccess` 为 public 只读视图；`ISndSceneAccess`、`ISndSceneHost`、`IOwningSessionBindable` 均为 `internal`，仅供 Core 会话生命周期与持有 `InternalsVisibleTo` 的适配层实现。上下文绑定接口 `ISndContextAttachableSceneHost` 位于 [Snd/Scene](../../Snd/Scene/README.zh.md)。策略生命周期钩子由上层会话生命周期（`SndEntityFactory` / `SessionRun`）统一编排。
 
 ## 包含文件
 
@@ -17,7 +17,6 @@
 | `ISndSceneAccess.cs` | internal 场景序列化访问：构建元数据列表 / 从元数据恢复（无钩子触发） |
 | `ISndSceneHost.cs` | internal 场景宿主（继承 ISndSceneAccess + ISndSceneReadAccess）：实体容器（创建/移除/帧更新） |
 | `IOwningSessionBindable.cs` | internal 归属会话绑定：`SetOwningSession(session)`，宿主据此在创建实体时自动绑定 `ISndEntity.OwningSession` |
-| `ISndContextAttachableSceneHost.cs` | internal 上下文绑定：`BindContext(context)`，由 `SndContext` / `SessionRun` 启动编排调用 |
 
 ## 接口详细
 

@@ -214,55 +214,6 @@ public class GitRevisionTests
     }
 
     [Fact]
-    public void Generate_LegacyV1Status_PreservesExistingManualBump()
-    {
-        using var repo = TestRepo.Create();
-        repo.Write("docs/README.zh.md", TestRepo.Header("README", 1) + "# README zh\n");
-        repo.Write("docs/README.en.md", TestRepo.Header("README", 1) + "# README en\n");
-        repo.Write("docs/.sync-status.json",
-            """{"schema_version":1,"languages":["zh","en"],"pairs":{"README":{"status":"synced","revisions":{"zh":1,"en":1},"previous_revisions":{},"files":{"zh":"README.zh.md","en":"README.en.md"}}}}""");
-        repo.InitGit();
-        repo.CommitAll("docs: legacy v1 snapshot");
-
-        // The old manual workflow: content changed and the author already
-        // bumped the header before generate. The one-time v1 migration must
-        // preserve revision 2 rather than add another generation.
-        repo.Write("docs/README.zh.md", TestRepo.Header("README", 2) + "# README zh\n\nchanged zh\n");
-        repo.Write("docs/README.en.md", TestRepo.Header("README", 2) + "# README en\n\nchanged en\n");
-
-        RunGenerator(repo);
-
-        AssertRevision(repo, "docs/README.zh.md", 2);
-        AssertRevision(repo, "docs/README.en.md", 2);
-        var pair = ReadStatus(repo).GetProperty("pairs").GetProperty("README");
-        Assert.Equal(2, pair.GetProperty("revisions").GetProperty("zh").GetInt32());
-        Assert.Equal(2, pair.GetProperty("revisions").GetProperty("en").GetInt32());
-    }
-
-    [Fact]
-    public void Generate_LegacyV1Status_CountsForgottenBumpOnce()
-    {
-        using var repo = TestRepo.Create();
-        repo.Write("docs/README.zh.md", TestRepo.Header("README", 1) + "# README zh\n");
-        repo.Write("docs/README.en.md", TestRepo.Header("README", 1) + "# README en\n");
-        repo.Write("docs/.sync-status.json",
-            """{"schema_version":1,"languages":["zh","en"],"pairs":{"README":{"status":"synced","revisions":{"zh":1,"en":1},"previous_revisions":{},"files":{"zh":"README.zh.md","en":"README.en.md"}}}}""");
-        repo.InitGit();
-        repo.CommitAll("docs: legacy v1 snapshot");
-
-        // Content changed but the header was not bumped. The automatic
-        // planner counts the working-tree change exactly once during
-        // migration.
-        repo.Write("docs/README.zh.md", repo.Read("docs/README.zh.md") + "changed zh\n");
-        repo.Write("docs/README.en.md", repo.Read("docs/README.en.md") + "changed en\n");
-
-        RunGenerator(repo);
-
-        AssertRevision(repo, "docs/README.zh.md", 2);
-        AssertRevision(repo, "docs/README.en.md", 2);
-    }
-
-    [Fact]
     public void Generate_TwoUncommittedEdits_CountsLatestDeltaOnce()
     {
         using var repo = CreateGeneratedGitRepo();

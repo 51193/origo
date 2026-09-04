@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
@@ -11,7 +11,7 @@
 
 Verifies Origo's architectural constraints: Core assembly does not reference Godot (layer isolation),
 ISndContext is a pure composition interface (Interface Segregation Principle), strategies are validated
-as stateless via reflection at registration (rejects instance fields and writable properties).
+as stateless via reflection at registration (rejects instance fields and writable properties), and private-field naming is checked for both Core and Origo.TestSupport.
 
 ## Test File List
 
@@ -29,6 +29,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `CoreAssembly_ShouldNotReferenceGodot` | Core assembly does not reference any Godot assemblies | architecture-overview: platform independence |
 | `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` and `SndEntityFactory` are internal | architecture-overview: single access path |
 | `PrivateFields_FollowUnderscoreCamelCase` | Core production private fields follow `_camelCase` naming | .editorconfig naming rule |
+| `TestSupport_PrivateFields_FollowUnderscoreCamelCase` | Origo.TestSupport private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext itself declares no methods/properties | Snd Abstraction: ISP |
 | `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext exposes all role-interface capabilities through 10 companion properties, not interface inheritance | Snd Abstraction: ISndContext composition |
 | `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |

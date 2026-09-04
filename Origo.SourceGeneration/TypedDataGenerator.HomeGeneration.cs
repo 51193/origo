@@ -90,8 +90,8 @@ public sealed partial class TypedDataGenerator
         sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("    internal readonly string? AsString() => (string?)_ref;");
         sb.AppendLine();
-        sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("    /// <summary>Reads the stored value as a string when this instance uses the string kind.</summary>");
+        sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("    public readonly bool TryGetString(out string value)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (_kind == KindMap.String) { value = Unsafe.As<string>(_ref)!; return true; }");
@@ -152,8 +152,8 @@ public sealed partial class TypedDataGenerator
             var returnType = t.ClrTypeName;
             var methodName = $"TryGet{t.KindIndex}";
 
-            sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    /// <summary>Reads the stored value as <c>{returnType}</c> when this instance uses the matching registered kind.</summary>");
+            sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    public readonly bool {methodName}(out {returnType} value)");
             sb.AppendLine("    {");
             sb.AppendLine($"        if (_kind == KindMap.{t.KindIndex})");
@@ -182,8 +182,8 @@ public sealed partial class TypedDataGenerator
         {
             var typeName = t.ClrTypeName;
 
-            sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    /// <summary>Creates a <see cref=\"TypedData\"/> instance from a <c>{typeName}</c> value.</summary>");
+            sb.AppendLine($"    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine($"    public static explicit operator TypedData({typeName} value)");
             sb.AppendLine("    {");
             sb.AppendLine($"        return new TypedData(KindMap.{t.KindIndex}, {InlineTypeExprs.Pack(t, "value")}, null);");

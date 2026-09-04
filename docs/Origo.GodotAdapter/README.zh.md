@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter
 
@@ -8,6 +8,13 @@
 ## 模块概述
 
 **Origo.GodotAdapter** 是 Origo 框架的 Godot 4 适配层。负责将 Core 层的平台无关抽象与 Godot 引擎的具体 API 对接，包括文件系统（通过 `FileAccess`/`DirAccess`）、日志输出（通过 `GD.Print`）、节点生命周期（通过 `Node`/`PackedScene`）以及引擎类型序列化（`Vector2`、`Transform3D` 等 14 种类型）。
+
+## 本层文件
+
+| 文件 | 职责 |
+|------|------|
+| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(startKind: 128, ...)]`：注册 14 种 Godot 引擎类型到 TypedData 适配层 Kind 区间（128–141） |
+| `SndEntityNodeExtensions.cs` | `GetNativeNode()` / `GetNodeFromSnd<T>()` 适配层便利扩展，命名空间 `Origo.GodotAdapter` |
 
 ## 子系统一览
 

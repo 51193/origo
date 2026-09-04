@@ -175,15 +175,6 @@ internal sealed class SessionManager : ISessionManager
     internal void ClearAdapterScene() => _adapterSceneHost.RemoveAllEntities();
 
     /// <summary>
-    ///     Serializes the session with the specified key into a <see cref="LevelPayload" />.
-    /// </summary>
-    internal LevelPayload SerializeSession(string key)
-    {
-        var session = RequireMountedSession(key).Session;
-        return session.SerializeToPayload();
-    }
-
-    /// <summary>
     ///     Persists the session state for the specified key to the <c>current/</c> directory.
     /// </summary>
     internal void PersistSession(string key)
