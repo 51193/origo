@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
@@ -15,7 +15,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 |-----------|-----------|---------|
 | [Entity](Entity/README.en.md) | Runtime entity aggregate root | SndEntity + four internal managers (data/node/passive/active strategy) |
 | [Metadata](Metadata/README.en.md) | Entity metadata model | TypedData / SndMetaData / NodeMetaData / StrategyMetaData / DataMetaData / SndMetaFluentBuilder |
-| [Scene](Scene/README.en.md) | Scene host & spawn factory | SndEntityFactory + FullMemorySndSceneHost + StubSndSceneHost |
+| [Scene](Scene/README.en.md) | Scene host & spawn factory | SndEntityFactory + FullMemorySndSceneHost |
 | [Strategy](Strategy/README.en.md) | Strategy system core | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase. Strategy pool, passive/active/observer three kinds of managers + generic invocation extensions |
 | [Archetype](Archetype/README.en.md) | Numeric recipe loading | SndArchetypeLoader: key-value pair file parsing and type inference |
 | [Companions](Companions/README.en.md) | SndContext role companion objects | 8 internal companion classes in the `Companions/` subdirectory, 2 (FileAccess, ArchiveFileAccess) at the Snd/ root. Together implement ISndBlackboardAccess / ISndSaveOperations etc., exposed through ISndContext's companion properties |
@@ -33,7 +33,6 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | `SndTemplateResolver.cs` | Template resolver: supports both JSON array and .map shorthand template formats |
 | `TryGetNumericExtensions.cs` | Entity data numeric-type compatible read extensions: tries float → int → the remaining integer types (byte/sbyte/short/ushort/char/uint/ulong) → long → double in order. Note the precision boundary: int→float may lose precision above 2²⁴, uint/ulong→float loses precision, double→float narrowing may overflow to ±Infinity — none of these is checked — suitable for close-range gameplay values, not for metrology that needs exact representation |
 | `ActiveStrategyExtensions.cs` | Generic ActiveStrategy invocation extension: eliminates JSON serialization boilerplate on the `InvokeStrategy` side |
-| `LevelBuilder.cs` | `internal` — Offline level building tool. Only used internally by framework tests and StubSndSceneHost; business code should build levels via templates and entry.json. |
 | `EntityExtensions.cs` | Entity identity comparison extension methods such as `IsSameEntityAs` |
 | `SndContextFileAccess.cs` | `internal` — `ISndFileAccess` companion implementation (see Companions) |
 | `SndContextArchiveFileAccess.cs` | `internal` — `ISndArchiveFileAccess` companion implementation (see Companions) |

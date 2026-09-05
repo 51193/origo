@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -139,7 +139,8 @@ but must observe the following whitelist principle:
      also carries progress files and idempotency logic, unable to isolate the storage service itself; observable
      behavior with a public equivalent (`EnumerateSaveIds` → `ctx.Save.ListSaves()`,
      `EnumerateSavesWithMetaData` → `ctx.Save.ListSavesWithMetaData()`) must go through the public path.
-   - `LevelBuilder`'s commit delegation contract (`LevelBuilder_Commit_UsesStorageService`): internal type,
+   - `Origo.TestSupport.LevelBuilder`'s commit delegation contract
+     (`LevelBuilder_Commit_UsesStorageService`): internal test-support type,
      no public equivalent.
    - `ProgressRun.LoadFromPayload` validation of **manually constructed malformed/missing-field payloads**
      (malformed/missing topology, null `ProgressStateMachinesNode`) — the public `RequestLoadGame` goes through

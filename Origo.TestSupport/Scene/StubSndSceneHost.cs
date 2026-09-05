@@ -8,13 +8,12 @@ using Origo.Core.Abstractions.Scene;
 using Origo.Core.Snd.Entity;
 using Origo.Core.Snd.Metadata;
 
-namespace Origo.Core.Snd.Scene;
+namespace Origo.TestSupport;
 
 /// <summary>
 ///     Pure in-memory <see cref="ISndSceneHost" /> implementation that does not depend
-///     on any engine adapter layer. Used by <see cref="LevelBuilder" /> and other Core-layer
-///     offline level scene construction, as well as for fully in-memory scene hosts
-///     needed in unit tests.
+///     on any engine adapter layer. Used by <see cref="LevelBuilder" /> and for
+///     fully in-memory scene hosts needed in unit tests.
 /// </summary>
 internal sealed class StubSndSceneHost : ISndSceneHost, IOwningSessionBindable
 {

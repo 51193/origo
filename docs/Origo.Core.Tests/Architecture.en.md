@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
@@ -27,6 +27,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
 | `CoreAssembly_ShouldNotReferenceGodot` | Core assembly does not reference any Godot assemblies | architecture-overview: platform independence |
+| `CoreAssembly_ShouldNotContainTestOnlyStubOrLevelBuilder` | The Core production assembly contains no test/offline stubs (StubSndSceneHost/StubSndEntity/LevelBuilder); they belong in Origo.TestSupport | AGENTS §1.2 |
 | `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` and `SndEntityFactory` are internal | architecture-overview: single access path |
 | `PrivateFields_FollowUnderscoreCamelCase` | Core production private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `TestSupport_PrivateFields_FollowUnderscoreCamelCase` | Origo.TestSupport private fields follow `_camelCase` naming | .editorconfig naming rule |

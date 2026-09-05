@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Scene
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内存宿主（用于后台会话）、轻量存根宿主（用于测试和设备无关的离线构建）。场景宿主仅负责实体容器管理（创建/查找/移除/帧更新），**不触发任何策略生命周期钩子**。钩子编排归属上层会话生命周期：`SndEntityFactory` 负责 spawn 后的 AfterSpawn，`SessionRun` 负责 load/save/quit/kill 阶段的批量钩子，`SessionManager` 驱动多会话的帧更新与帧末收割。
+SND 场景宿主实现层。提供 `ISndSceneHost` 的完整内存宿主实现（用于后台会话）；轻量存根宿主与离线 `LevelBuilder` 已迁往 `Origo.TestSupport`。场景宿主仅负责实体容器管理（创建/查找/移除/帧更新），**不触发任何策略生命周期钩子**。钩子编排归属上层会话生命周期：`SndEntityFactory` 负责 spawn 后的 AfterSpawn，`SessionRun` 负责 load/save/quit/kill 阶段的批量钩子，`SessionManager` 驱动多会话的帧更新与帧末收割。
 
 ## 包含文件
 
@@ -16,7 +16,6 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 | `SndEntityFactory.cs` | internal 静态工具：`Spawn(host, meta)` = `host.CreateEntity` + 触发 AfterSpawn（钩子抛异常时回滚实体：移出宿主 + 拆观察者 + 释放策略/节点）；`SpawnMany(host, metas)` = 两阶段（全部创建后再统一触发 AfterSpawn，创建阶段失败与钩子阶段失败都会回滚所有未完成 AfterSpawn 的实体） |
 | `SndEntityNamePolicy.cs` | 实体名唯一性校验的唯一来源：运行时 `SndEntityFactory` 与读档恢复 `SndSceneSerializer` 共用，拒绝空白名、批内重名和与现有实体重名 |
 | `FullMemorySndSceneHost.cs` | 完整内存场景宿主，创建真实 SndEntity，持有 per-scene-host 观察者拓扑，支持归属会话绑定 |
-| `StubSndSceneHost.cs` | 轻量存根场景宿主，使用简单 StubSndEntity（无策略/节点），用于单元测试和 LevelBuilder 离线构建 |
 | `ISndContextAttachableSceneHost.cs` | internal 接口：允许会话构造时把 `ISndContext` 绑定到宿主（`BindContext`） |
 | `IObserverTopologyHost.cs` | `internal` 接口：暴露宿主持有的 per-scene-host 观察者拓扑（`ObserverTopology`），供 `SessionRun`/`SessionManager` 编排跨实体观察者绑定的拆线与读档恢复 |
 | `NullNodeFactory.cs` | 内存级节点工厂，创建无操作句柄 |
@@ -55,12 +54,6 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 - **RemoveAllEntities**：仅清空内部集合
 - **ProcessAll**：按索引循环迭代所有存活实体（迭代期间宿主容器不应被修改）
 
-### StubSndSceneHost
-
-轻量实现，直接使用内嵌的 `StubSndEntity` 类。这个实体不支持节点访问和策略执行（节点访问抛异常，策略/观察者操作静默 no-op），仅支持基础键值数据存取。用于单元测试和 `LevelBuilder` 离线构建。
-
-> `StubSndSceneHost` 的命名表达其"存根"语义——无策略/无节点的轻量占位实现，非完整内存宿主。
-
 ### NullNodeFactory / NullNodeHandle
 
 用于 `FullMemorySndSceneHost`。`Create()` 返回不绑定任何引擎节点的句柄，所有操作（`Free`、`SetVisible`）为空操作。Core 层后台会话不需要实际渲染节点。
@@ -75,9 +68,9 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 - 批量操作可以在"全部创建/恢复"阶段和"全部触发钩子"阶段之间进行
 - 钩子触发期间，所有实体已完全恢复并注册到查找集合，实现加载顺序无关的跨实体互操作
 
-### 为什么需要两个场景宿主
+### 为什么 Core 只保留完整内存宿主
 
-`FullMemorySndSceneHost` 提供完整策略生命周期但需要 `SndWorld` 和 `ISndContext` 的上游依赖；`StubSndSceneHost` 零依赖、完全自治但不能运行策略。前者用于后台会话，后者用于测试和离线构建（测试中通常只测数据流转而无需策略执行）。
+`FullMemorySndSceneHost` 是 Core 运行时唯一的内存宿主，提供完整策略生命周期但需要 `SndWorld` 和 `ISndContext` 的上游依赖。零依赖的轻量 `StubSndSceneHost` / `StubSndEntity` 与离线 `LevelBuilder` 属于测试支撑设施，已迁往 `Origo.TestSupport`，不进入生产程序集。
 
 ### 为什么 spawn 逻辑集中在 SndEntityFactory
 
@@ -97,13 +90,13 @@ SND 场景宿主实现层。提供 `ISndSceneHost` 的两种实现：完整内�
 
 ### 为什么观察者拓扑按场景宿主划分
 
-观察者绑定是 session 内的有向图（target 解析始终在单一宿主的 `FindByName` 范围内）。每个创建真实 `SndEntity` 的宿主（`FullMemorySndSceneHost`、`GodotSndManager`）持有一个 `ObserverTopology` 并实现 `IObserverTopologyHost`，拓扑与宿主同生命周期。`SessionRun` 经该接口获取宿主拓扑，对所有实体类型（裸 `SndEntity` 与适配层包装实体，如 Godot 前台的 `GodotSndEntity`）编排 kill/clear 双向 teardown 与读档恢复——拆线经实体名称解析与 `ISndEntityRawSubscription` 接口完成，不依赖具体实体类型。`StubSndSceneHost` 不创建真实实体，不实现该接口。集中到宿主级拓扑后，实体无需反向暴露内部观察者管理器即可完成跨实体的接线、拆线与恢复。
+观察者绑定是 session 内的有向图（target 解析始终在单一宿主的 `FindByName` 范围内）。每个创建真实 `SndEntity` 的宿主（`FullMemorySndSceneHost`、`GodotSndManager`）持有一个 `ObserverTopology` 并实现 `IObserverTopologyHost`，拓扑与宿主同生命周期。`SessionRun` 经该接口获取宿主拓扑，对所有实体类型（裸 `SndEntity` 与适配层包装实体，如 Godot 前台的 `GodotSndEntity`）编排 kill/clear 双向 teardown 与读档恢复——拆线经实体名称解析与 `ISndEntityRawSubscription` 接口完成，不依赖具体实体类型。集中到宿主级拓扑后，实体无需反向暴露内部观察者管理器即可完成跨实体的接线、拆线与恢复。
 
 ### 为什么实体在创建期绑定归属会话
 
 策略钩子经 `entity.OwningSession` 获知自身所属会话（而非反查全局上下文）。归属在实体**创建期**即确定：`SessionRun` 构造时经 `IOwningSessionBindable.SetOwningSession` 把自身绑定到宿主，此后宿主 `CreateEntity` 创建的每个实体都在 `RecoverForLifecycle` 之后经 `entity.BindSession` 绑定到该会话。
 
-这样无论实体经 `SessionManager` 编排路径创建，还是被**直接 spawn 到某后台会话的宿主**（如在后台预构建世界后再切前台），其 `OwningSession` 始终指向真正拥有它的会话，钩子归属不会误判。`StubSndSceneHost` 不创建真实实体，不实现该接口。
+这样无论实体经 `SessionManager` 编排路径创建，还是被**直接 spawn 到某后台会话的宿主**（如在后台预构建世界后再切前台），其 `OwningSession` 始终指向真正拥有它的会话，钩子归属不会误判。
 
 ---
 

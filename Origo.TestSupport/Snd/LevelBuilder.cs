@@ -2,18 +2,19 @@ using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Scene;
+using Origo.Core.Blackboard;
 using Origo.Core.Save;
 using Origo.Core.Save.Serialization;
+using Origo.Core.Snd;
 using Origo.Core.Save.Storage;
 using Origo.Core.Snd.Metadata;
-using Origo.Core.Snd.Scene;
 using Origo.Core.StateMachine;
 
-namespace Origo.Core.Snd;
+namespace Origo.TestSupport;
 
 /// <summary>
 ///     Structured level builder that provides a fluent API for offline level scene construction
-///     at the Core layer. Uses <see cref="StubSndSceneHost" /> as an in-memory scene host,
+///     in tests and tooling. Uses <see cref="StubSndSceneHost" /> as an in-memory scene host,
 ///     supports adding entities and setting session blackboard key-value pairs,
 ///     and ultimately produces a <see cref="LevelPayload" /> via <see cref="Build" />
 ///     or directly persists to disk via <see cref="Commit" />.
@@ -26,7 +27,7 @@ namespace Origo.Core.Snd;
 internal sealed class LevelBuilder
 {
     private readonly StubSndSceneHost _sceneHost = new();
-    private readonly Blackboard.Blackboard _sessionBlackboard = new();
+    private readonly Blackboard _sessionBlackboard = new();
     private readonly SndWorld _sndWorld;
     private readonly ISaveStorageService _storageService;
     private bool _built;

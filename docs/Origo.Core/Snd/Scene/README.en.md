@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Scene/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scene
 
@@ -7,7 +7,7 @@
 
 ## Overview
 
-SND scene host implementation layer. Provides two implementations of `ISndSceneHost`: a full in-memory host (for background sessions) and a lightweight stub host (for testing and device-independent offline construction). The scene host is solely responsible for entity container management (create/lookup/remove/frame update) and **does not trigger any strategy lifecycle hooks**. Hook orchestration belongs to higher-level session lifecycle: `SndEntityFactory` is responsible for AfterSpawn after spawn, `SessionRun` for batch hooks during load/save/quit/kill phases, and `SessionManager` drives multi-session frame updates and end-of-frame harvesting.
+SND scene host implementation layer. Provides the full in-memory `ISndSceneHost` implementation (for background sessions); the lightweight stub host and offline `LevelBuilder` have moved to `Origo.TestSupport`. The scene host is solely responsible for entity container management (create/lookup/remove/frame update) and **does not trigger any strategy lifecycle hooks**. Hook orchestration belongs to higher-level session lifecycle: `SndEntityFactory` is responsible for AfterSpawn after spawn, `SessionRun` for batch hooks during load/save/quit/kill phases, and `SessionManager` drives multi-session frame updates and end-of-frame harvesting.
 
 ## Included Files
 
@@ -16,7 +16,6 @@ SND scene host implementation layer. Provides two implementations of `ISndSceneH
 | `SndEntityFactory.cs` | Internal static utility: `Spawn(host, meta)` = `host.CreateEntity` + trigger AfterSpawn (rolls the entity back — remove from host + teardown observer bindings + release strategies/nodes — when the hook throws); `SpawnMany(host, metas)` = two-phase (create all first, then uniformly trigger AfterSpawn; staging-phase and hook-phase failures both roll back every entity whose AfterSpawn never fired) |
 | `SndEntityNamePolicy.cs` | Single source of truth for entity-name uniqueness validation: shared by runtime `SndEntityFactory` and load-time `SndSceneSerializer`; rejects blank names, duplicate names within a batch, and names already present in the host |
 | `FullMemorySndSceneHost.cs` | Full in-memory scene host, creates real SndEntity, holds per-scene-host observer topology, supports owning session binding |
-| `StubSndSceneHost.cs` | Lightweight stub scene host, uses simple StubSndEntity (no strategies/nodes), for unit tests and LevelBuilder offline construction |
 | `ISndContextAttachableSceneHost.cs` | Internal interface: allows binding `ISndContext` to the host during session construction (`BindContext`) |
 | `IObserverTopologyHost.cs` | `internal` interface: exposes the host's per-scene-host observer topology (`ObserverTopology`), used by `SessionRun`/`SessionManager` to orchestrate cross-entity observer binding teardown and load-time recovery |
 | `NullNodeFactory.cs` | In-memory node factory, creates no-op handles |
@@ -55,12 +54,6 @@ The default scene host for background sessions. Key characteristics:
 - **RemoveAllEntities**: only clears the internal collection
 - **ProcessAll**: iterates all alive entities with an index loop (the host container must not be modified during iteration)
 
-### StubSndSceneHost
-
-Lightweight implementation using an embedded `StubSndEntity` class directly. This entity does not support node access or strategy execution (node access throws, strategy/observer operations are silent no-ops); only basic key-value data access is supported. Used for unit tests and `LevelBuilder` offline construction.
-
-> `StubSndSceneHost`'s naming expresses its "stub" semantics — a lightweight placeholder implementation without strategies/nodes, not a full in-memory host.
-
 ### NullNodeFactory / NullNodeHandle
 
 Used by `FullMemorySndSceneHost`. `Create()` returns a handle not bound to any engine node; all operations (`Free`, `SetVisible`) are no-ops. Core-layer background sessions do not need actual rendered nodes.
@@ -75,9 +68,9 @@ All strategy lifecycle hook triggering is uniformly orchestrated by session life
 - Batch operations can proceed in two phases: "create/recover all" and then "trigger all hooks"
 - During hook triggering, all entities are fully recovered and registered in the lookup collection, enabling loading-order-independent cross-entity interoperability
 
-### Why two scene hosts are needed
+### Why Core keeps only the full in-memory host
 
-`FullMemorySndSceneHost` provides full strategy lifecycle support but requires upstream dependencies of `SndWorld` and `ISndContext`; `StubSndSceneHost` has zero dependencies and is fully self-contained but cannot run strategies. The former is used for background sessions; the latter for testing and offline construction (tests typically only need data flow without strategy execution).
+`FullMemorySndSceneHost` is the only in-memory host in the Core runtime and provides full strategy lifecycle support, but it requires the upstream `SndWorld` and `ISndContext` dependencies. The zero-dependency `StubSndSceneHost` / `StubSndEntity` and offline `LevelBuilder` are test-support facilities and have moved to `Origo.TestSupport`, outside the production assembly.
 
 ### Why spawn logic is centralized in SndEntityFactory
 
@@ -97,13 +90,13 @@ Strategy hooks may need to reference sibling entities during creation (e.g., usi
 
 ### Why observer topology is per-scene-host
 
-Observer bindings form a session-internal directed graph (target resolution always within a single host's `FindByName` scope). Each host that creates real `SndEntity` instances (`FullMemorySndSceneHost`, `GodotSndManager`) holds an `ObserverTopology` and implements `IObserverTopologyHost`, with the topology sharing the host's lifecycle. `SessionRun` obtains the host topology via this interface, orchestrating kill/clear bidirectional teardown and load-time recovery for **all entity types** — bare `SndEntity` and adapter wrapper entities (e.g., Godot foreground entities) — since teardown resolves bindings by entity name and operates through the `ISndEntityRawSubscription` interface, independent of the concrete entity type. `StubSndSceneHost` does not create real entities and does not implement this interface. Centralizing to host-level topology means entities do not need to expose their internal observer managers in reverse to accomplish cross-entity wiring, teardown, and recovery.
+Observer bindings form a session-internal directed graph (target resolution always within a single host's `FindByName` scope). Each host that creates real `SndEntity` instances (`FullMemorySndSceneHost`, `GodotSndManager`) holds an `ObserverTopology` and implements `IObserverTopologyHost`, with the topology sharing the host's lifecycle. `SessionRun` obtains the host topology via this interface, orchestrating kill/clear bidirectional teardown and load-time recovery for **all entity types** — bare `SndEntity` and adapter wrapper entities (e.g., Godot foreground entities) — since teardown resolves bindings by entity name and operates through the `ISndEntityRawSubscription` interface, independent of the concrete entity type. Centralizing to host-level topology means entities do not need to expose their internal observer managers in reverse to accomplish cross-entity wiring, teardown, and recovery.
 
 ### Why entities bind to owning session at creation time
 
 Strategy hooks learn which session they belong to via `entity.OwningSession` (rather than reverse-querying a global context). Ownership is determined at entity **creation time**: during `SessionRun` construction, the session binds itself to the host via `IOwningSessionBindable.SetOwningSession`; thereafter, every entity created by the host's `CreateEntity` is bound to that session via `entity.BindSession` after `RecoverForLifecycle`.
 
-Thus, regardless of whether the entity is created through the `SessionManager` orchestration path or **directly spawned into some background session's host** (e.g., pre-building a world in the background before switching to foreground), its `OwningSession` always points to the session that truly owns it; hook attribution will not be misjudged. `StubSndSceneHost` does not create real entities and does not implement this interface.
+Thus, regardless of whether the entity is created through the `SessionManager` orchestration path or **directly spawned into some background session's host** (e.g., pre-building a world in the background before switching to foreground), its `OwningSession` always points to the session that truly owns it; hook attribution will not be misjudged.
 
 ---
 

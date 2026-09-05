@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构守卫 测试
 
@@ -26,6 +26,7 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `CoreAssembly_ShouldNotReferenceGodot` | Core 程序集不引用任何 Godot 程序集 | architecture-overview: 平台无关 |
+| `CoreAssembly_ShouldNotContainTestOnlyStubOrLevelBuilder` | Core 生产程序集不包含测试/离线 stub（StubSndSceneHost/StubSndEntity/LevelBuilder），它们归属 Origo.TestSupport | AGENTS §1.2 |
 | `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` 与 `SndEntityFactory` 为 internal | architecture-overview: 单一访问路径 |
 | `PrivateFields_FollowUnderscoreCamelCase` | Core 生产程序集私有字段遵循 `_camelCase` 命名 | .editorconfig 命名规则 |
 | `TestSupport_PrivateFields_FollowUnderscoreCamelCase` | Origo.TestSupport 私有字段遵循 `_camelCase` 命名 | .editorconfig 命名规则 |

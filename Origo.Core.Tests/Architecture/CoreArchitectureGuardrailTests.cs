@@ -34,6 +34,19 @@ public class CoreArchitectureGuardrailTests
     }
 
     [Fact]
+    public void CoreAssembly_ShouldNotContainTestOnlyStubOrLevelBuilder()
+    {
+        // StubSndSceneHost / StubSndEntity / LevelBuilder are test and offline
+        // stub infrastructure. They must live in Origo.TestSupport, not in the
+        // production Core assembly (AGENTS §1.2: framework code is written as
+        // if tests do not exist).
+        var assembly = typeof(OrigoRuntime).Assembly;
+        Assert.Null(assembly.GetType("Origo.Core.Snd.Scene.StubSndSceneHost"));
+        Assert.Null(assembly.GetType("Origo.Core.Snd.Scene.StubSndEntity"));
+        Assert.Null(assembly.GetType("Origo.Core.Snd.LevelBuilder"));
+    }
+
+    [Fact]
     public void CoreAssembly_ShouldNotReferenceGodot()
     {
         var refs = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();

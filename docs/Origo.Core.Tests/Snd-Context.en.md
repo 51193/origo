@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Context Tests
 
@@ -9,7 +9,7 @@
 
 ## Behavior Under Test Overview
 
-Validates the full workflows of SndContext as the central orchestrator of the SND system: save/load/continue operations, console command submission, template cloning, deferred action queues, NullSndContext no-op behavior, LevelBuilder level construction, Archetype loading and attribute parsing, entry config startup flow, and template alias resolution and caching.
+Validates the full workflows of SndContext as the central orchestrator of the SND system: save/load/continue operations, console command submission, template cloning, deferred action queues, NullSndContext no-op behavior, TestSupport LevelBuilder level construction, Archetype loading and attribute parsing, entry config startup flow, and template alias resolution and caching.
 
 ## Test File List
 

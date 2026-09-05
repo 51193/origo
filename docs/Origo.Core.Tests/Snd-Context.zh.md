@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 上下文 测试
 
@@ -11,7 +11,7 @@
 
 验证 SndContext 作为 SND 系统的核心编排器的全部工作流：save/load/continue 操作、
 控制台命令提交、模板克隆、延迟动作队列、NullSndContext 的无操作行为、
-LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动流程、
+TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入口配置启动流程、
 模板别名解析与缓存。
 
 ## 测试文件清单

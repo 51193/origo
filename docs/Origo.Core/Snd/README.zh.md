@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd
 
@@ -15,7 +15,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 |--------|------|------|
 | [Entity](Entity/README.zh.md) | 运行时实体聚合根 | SndEntity + 数据/节点/被动策略/主动策略四个内部管理器 |
 | [Metadata](Metadata/README.zh.md) | 实体元数据模型 | TypedData / SndMetaData / NodeMetaData / StrategyMetaData / DataMetaData / SndMetaFluentBuilder |
-| [Scene](Scene/README.zh.md) | 场景宿主与 spawn 工厂 | SndEntityFactory + FullMemorySndSceneHost + StubSndSceneHost |
+| [Scene](Scene/README.zh.md) | 场景宿主与 spawn 工厂 | SndEntityFactory + FullMemorySndSceneHost |
 | [Strategy](Strategy/README.zh.md) | 策略系统核心 | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase。策略池、被动/主动/观察者三类管理器 + 泛型调用扩展 |
 | [Archetype](Archetype/README.zh.md) | 数值配方加载 | SndArchetypeLoader：键值对文件解析与类型推断 |
 | [Companions](Companions/README.zh.md) | SndContext 角色 companion 对象 | 8 个 internal companion 类位于 `Companions/` 子目录，2 个（FileAccess、ArchiveFileAccess）位于 Snd/ 根目录。共同实现 ISndBlackboardAccess / ISndSaveOperations 等接口，通过 ISndContext 的 companion 属性暴露 |
@@ -33,7 +33,6 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | `SndTemplateResolver.cs` | 模板解析器：支持 JSON 数组和 .map 简写两种模板格式 |
 | `TryGetNumericExtensions.cs` | 实体数据数值类型兼容读取扩展：按 float → int → 其余整数类型（byte/sbyte/short/ushort/char/uint/ulong）→ long → double 顺序尝试。注意精度边界：int→float 在 >2²⁴ 时可能丢失精度，uint/ulong→float 有精度损失，double→float 收缩可能溢出为 ±Infinity，均不检查——适合游戏内近距离数值，不适合需要精确表示的计量场景 |
 | `ActiveStrategyExtensions.cs` | 泛型 ActiveStrategy 调用扩展：消除 `InvokeStrategy` 侧的 JSON 序列化样板 |
-| `LevelBuilder.cs` | `internal` — 离线关卡构建工具。仅框架测试和 StubSndSceneHost 内部使用；业务代码应通过模板和 entry.json 构建关卡。 |
 | `EntityExtensions.cs` | `IsSameEntityAs` 等实体身份比较扩展方法 |
 | `SndContextFileAccess.cs` | `internal` — `ISndFileAccess` companion 实现（见 Companions） |
 | `SndContextArchiveFileAccess.cs` | `internal` — `ISndArchiveFileAccess` companion 实现（见 Companions） |

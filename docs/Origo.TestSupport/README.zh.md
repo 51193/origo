@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 
 # Origo.TestSupport
@@ -19,7 +19,8 @@
 | [Node](Node/README.zh.md) | `INodeHandle` / `INodeFactory` 测试替身 |
 | [Observer](Observer/README.zh.md) | 观察者事件采集基础设施 |
 | [Reporting](Reporting/README.zh.md) | 性能基准报告工具 |
-| [Scene](Scene/README.zh.md) | `ISndSceneHost` 测试替身 |
+| [Scene](Scene/README.zh.md) | `ISndSceneHost` 测试替身（含 `StubSndSceneHost` / `StubSndEntity`） |
+| [Snd](Snd/README.zh.md) | `LevelBuilder` 离线关卡构建工具 |
 | [Strategies](Strategies/README.zh.md) | 共享测试策略基类和索引常量 |
 
 ## 使用
