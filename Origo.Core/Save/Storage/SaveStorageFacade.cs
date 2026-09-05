@@ -103,21 +103,6 @@ internal static class SaveStorageFacade
         return list;
     }
 
-    /// <summary>
-    ///     Writes a payload to current/ without the write-in-progress marker
-    ///     dance. The .payload.sha is written with the payload-only hash:
-    ///     this method is used by tests, where no extra/ side channel exists,
-    ///     so the combined hash computed by the snapshot path would be stale.
-    ///     The load-recovery path (see <see cref="ISaveStorageService" />)
-    ///     writes without a hash at all — it has no idempotency contract.
-    /// </summary>
-    public static void WriteSavePayloadToCurrent(SaveFileHandle handle, SaveGamePayload payload)
-    {
-        SavePayloadWriter.WriteToCurrent(handle, payload);
-        SaveAtomicWriter.WritePayloadSha(handle, handle.PathPolicy.GetCurrentDirectory(),
-            SavePayloadWriter.ComputePayloadHash(payload));
-    }
-
     public static void WriteSavePayloadToCurrentThenSnapshot(
         SaveFileHandle handle,
         SaveGamePayload payload,

@@ -36,7 +36,7 @@ public class SaveStorageAndPayloadTests
             }
         };
 
-        SaveStorageFacade.WriteSavePayloadToCurrent(handle, payload);
+        WritePayloadWithPayloadSha(handle, payload);
         var loaded = SaveStorageFacade.ReadSavePayloadFromCurrent(handle, "001", "default");
 
         Assert.Equal("001", loaded.SaveId);
@@ -48,6 +48,13 @@ public class SaveStorageAndPayloadTests
             CanonicalJsonLiteral(TestFactory.JsonFromNode(loaded.ProgressStateMachinesNode)));
         Assert.Equal(CanonicalJsonLiteral(sessionSm),
             CanonicalJsonLiteral(TestFactory.JsonFromNode(loaded.Levels["default"].SessionStateMachinesNode)));
+    }
+
+    private static void WritePayloadWithPayloadSha(SaveFileHandle handle, SaveGamePayload payload)
+    {
+        SavePayloadWriter.WriteToCurrent(handle, payload);
+        SaveAtomicWriter.WritePayloadSha(handle, handle.PathPolicy.GetCurrentDirectory(),
+            SavePayloadWriter.ComputePayloadHash(payload));
     }
 
     private static string CanonicalJsonLiteral(string json)
@@ -293,7 +300,7 @@ public class SaveStorageAndPayloadTests
                 }
             }
         };
-        SaveStorageFacade.WriteSavePayloadToCurrent(handle, payload);
+        WritePayloadWithPayloadSha(handle, payload);
 
         SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
         var ids = SaveStorageFacade.EnumerateSaveIds(handle);
