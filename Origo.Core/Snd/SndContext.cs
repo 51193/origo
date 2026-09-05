@@ -258,13 +258,16 @@ public sealed class SndContext : ISndContext
         }
         finally
         {
+            // The reference is cleared even when Dispose throws: a failed
+            // workflow must not leave a disposed ProgressRun reachable as the
+            // "active" one for the next save/load request.
+            _progressRun = null;
+
             // Strategy-pool diagnostics are part of workflow teardown, not a
             // test-only helper: a workflow that leaks strategy references must
             // leave an observable warning even when it runs in production.
             Runtime.SndWorld.StrategyPool.LogPoolLeaks();
         }
-
-        _progressRun = null;
     }
 
     /// <summary>

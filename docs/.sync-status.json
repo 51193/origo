@@ -540,20 +540,20 @@
     "Origo.Core.Tests/Snd-Context": {
       "status": "synced",
       "revisions": {
-        "zh": 17,
-        "en": 17
+        "zh": 18,
+        "en": 18
       },
       "previous_revisions": {
-        "zh": 16,
-        "en": 16
+        "zh": 18,
+        "en": 17
       },
       "files": {
         "zh": "Origo.Core.Tests/Snd-Context.zh.md",
         "en": "Origo.Core.Tests/Snd-Context.en.md"
       },
       "content_hashes": {
-        "zh": "B0D2787E7FDB8357618070D490F4A42F5E7F5348F02C3107416B9E5E136545F1",
-        "en": "E2754FCF950CEBE3E50843EC112F18E3AFEA0A3C324C27E3E0164042E4B5B098"
+        "zh": "07A04F282C20EEE3BE82B37E44773D6F7DF2B6A312F43B9E5BCAE2D9B7713DD7",
+        "en": "3317DA2917352C4927FDBFF2AC94FF4E91723E83E7E018621F7891842250EE28"
       }
     },
     "Origo.Core.Tests/Snd-Entity": {

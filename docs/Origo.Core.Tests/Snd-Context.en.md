@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Context Tests
 
@@ -16,6 +16,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | File | Verification Focus |
 |------|-------------------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch full-chain workflows |
+| `SndContextShutdownFailureTests.cs` | Cleanup invariant when unloading the old ProgressRun throws: both the ProgressRun reference and the foreground session are cleared |
 | `SndContextEntryFlowTests.cs` | SndContext workflow starting from entry configuration |
 | `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, alias/template loading, entry save loading, and configuration switches |
 | `PersistenceRequestTrackingTests.cs` | Persistence requests (save/continue/initial/main menu entry/switch level) tracked as pending count until flushed |
@@ -206,6 +207,14 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `SaveRootPath_ReturnsConstructorValue` | Constructor parameter | Returns the save root path passed to the constructor |
 | `InitialSaveRootPath_ReturnsConstructorValue` | Constructor parameter | Returns the initial save root path |
 | `EntryConfigPath_ReturnsConstructorValue` | Constructor parameter | Returns the entry config path |
+
+## SndContextShutdownFailureTests Details
+
+### Error Paths
+
+| Test Method | Triggered Error | Expected Behavior |
+|------------|-----------------|-------------------|
+| `Workflow_WhenOldProgressDisposeThrows_ClearsProgressRunReference` | The old ProgressRun's session state machine throws from its quit-time pop hook during unload | The original exception propagates; `ForegroundSession` is null; the `_progressRun` reference is cleared (internal invariant asserted via InternalsVisibleTo) |
 
 ## SndArchetypeLoaderTests Details
 

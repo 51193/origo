@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **A failed lifecycle workflow no longer leaves the disposed `ProgressRun` reachable as active** — when disposing the previous progress run throws (for example a state-machine quit hook), `SndContext` now clears the progress-run reference as part of the same cleanup block, so the next save/load request fails with the documented “no active ProgressRun” contract instead of operating on a disposed instance.
 - **`TypedData` generated accessors now expose their XML summaries to IntelliSense** — the source generator emitted `[MethodImpl]` before the `/// <summary>` block, so the compiler did not associate the comments with the generated public members. Doc comments are now emitted before attributes, making `TryGetXxx` and conversion operators show their English summaries in the IDE.
 - **`TypedData` generated source is line-ending deterministic** — the source generator no longer emits CRLF on Windows via `StringBuilder.AppendLine`; generated Home and Adapter sources now always use LF, so identical input produces identical generated text on every build host.
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 上下文 测试
 
@@ -19,6 +19,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch 全链路工作流 |
+| `SndContextShutdownFailureTests.cs` | 工作流卸载旧 ProgressRun 抛异常时的清理不变量：ProgressRun 引用与前台会话均被清空 |
 | `SndContextEntryFlowTests.cs` | SndContext 从入口配置开始的工作流 |
 | `SndContextBootstrapTests.cs` | Bootstrap 启动流程：策略发现、别名/模板加载、入口存档加载的顺序与配置开关 |
 | `PersistenceRequestTrackingTests.cs` | 持久化请求（save/continue/initial/main menu entry/switch level）入队后 pending 计数跟踪直至冲刷 |
@@ -209,6 +210,14 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `SaveRootPath_ReturnsConstructorValue` | 构造参数 | 返回构造时传入的存档根路径 |
 | `InitialSaveRootPath_ReturnsConstructorValue` | 构造参数 | 返回初始存档根路径 |
 | `EntryConfigPath_ReturnsConstructorValue` | 构造参数 | 返回入口配置路径 |
+
+## SndContextShutdownFailureTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Workflow_WhenOldProgressDisposeThrows_ClearsProgressRunReference` | 旧 ProgressRun 卸载时 session 状态机的退出 pop 钩子抛异常 | 原异常传播；`ForegroundSession` 为 null；`_progressRun` 引用被清空（通过 InternalsVisibleTo 断言内部不变量） |
 
 ## SndArchetypeLoaderTests 测试详情
 
