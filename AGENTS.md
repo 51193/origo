@@ -416,6 +416,20 @@ missing language files) always fail the build.
 | 5 | **Changelog alignment** | Write user-facing significant changes into `CHANGELOG.md` under the `[Unreleased]` section (conventions in §4). |
 | 6 | **Docs sync** | Sync the `docs/` mirror: directory structure, interface lists, design decisions,   usage / test docs (rules in §5 and `docs/META.zh.md` / `docs/META.en.md`). **After any doc change, run `DocSyncTool generate` (it plans `docsync-revision` automatically) and commit all derived files** (per §1.6). |
 
+**After committing, run the commit-message lint once more.** The commit you
+just created is invisible to `scripts/lint-commits.sh` until it exists, so a
+pre-commit run of the development loop cannot validate that commit. After
+`git commit` (and before pushing), run:
+
+```bash
+bash scripts/lint-commits.sh
+```
+
+The script checks `origin/main..HEAD`; it fails on non-conventional subjects,
+subjects over 72 characters, trailing periods, or body lines over 72
+characters. Do not treat the earlier step-3 run as sufficient — re-run it
+with the new commit in place.
+
 **Partial completion is forbidden.** If a step is genuinely not applicable
 (e.g., pure internal refactor with no public API or doc impact), you must
 **explicitly state the reason for skipping** in the commit message.
