@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 状态机 测试
 
@@ -66,6 +66,7 @@ StateMachineStrategyBase 默认钩子语义、StateMachineStrategyContext 快照
 | `Push_EmptyString_Throws` | Push("") | ArgumentException |
 | `Push_WhitespaceString_Throws` | Push("   ") | ArgumentException |
 | `Push_AfterDispose_Throws` | Dispose 后 Push | ObjectDisposedException |
+| `Push_WhenPushHookThrows_RollsBackPushedValue` | OnPushRuntime 抛异常 | 原异常传播，栈恢复为 Push 前状态 |
 | `TryPopRuntime_AfterDispose_Throws` | Dispose 后 TryPopRuntime | ObjectDisposedException |
 | `Peek_AfterDispose_Throws` | Dispose 后 Peek | ObjectDisposedException |
 | `RestoreStackWithoutHooks_NullList_Throws` | Restore(null) | ArgumentNullException |

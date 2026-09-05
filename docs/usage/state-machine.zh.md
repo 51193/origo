@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/state-machine -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 状态机
 
@@ -35,7 +35,7 @@ public interface IStateMachine
 ```csharp
 public abstract class StateMachineStrategyBase : BaseStrategy
 {
-    // 运行时 Push 成功后调用
+    // 运行时 Push 调度期间调用；钩子抛异常时本次 Push 回滚
     public virtual void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) { }
 
     // 读档恢复后，栈自底向顶对每层调用
@@ -120,6 +120,10 @@ sm.TryPopRuntime(out var popped);  // popped == "settings"
 ```
 
 两阶段分离确保：栈结构调整时不触发钩子（避免不完整状态），调整完成后统一重放。
+
+### Push 失败回滚
+
+`Push` 先把值压入栈顶，再调用 `OnPushRuntime`；若钩子抛异常，本次压栈值会被移除，栈恢复到 Push 之前的状态，异常原样传播。这样失败的 Push 不会留下“业务逻辑未执行但栈已改变”的部分状态。
 
 ## 序列化格式
 

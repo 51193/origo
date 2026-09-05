@@ -673,20 +673,20 @@
     "Origo.Core.Tests/StateMachine": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "previous_revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 6
       },
       "files": {
         "zh": "Origo.Core.Tests/StateMachine.zh.md",
         "en": "Origo.Core.Tests/StateMachine.en.md"
       },
       "content_hashes": {
-        "zh": "82F747E1A086C341285737178861DDA2ACD2497DFCED76FB3B355A437CD360F3",
-        "en": "97F0A860F2F5176DD5DF45A49C2C50F7586DBB703B27E821B0E301A13E27A250"
+        "zh": "444657095018245C96893379DFAF8B6691C7E25A73B5C62D7AC53754A77AF050",
+        "en": "533BD2D59444608E890095DDF1570F98368CFC38626C1ADF02E201F672EBDCFF"
       }
     },
     "Origo.Core.Tests/StrategyTestContext-FileAccess": {
@@ -2399,20 +2399,20 @@
     "usage/state-machine": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "previous_revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 6,
+        "en": 5
       },
       "files": {
         "zh": "usage/state-machine.zh.md",
         "en": "usage/state-machine.en.md"
       },
       "content_hashes": {
-        "zh": "FD3B403EE8E5F1959D1AE906A9FF82B73C9AF99BE5975EBDD3B8EF48F409F4F5",
-        "en": "978DE9DD8A71B958A17078514D4C287990783567292193894E64D05E352BF013"
+        "zh": "A70370A714514963147F5BD92025AC2D669802391FF82A9E15C5211F786A0C70",
+        "en": "C5095F477627DB8D2A8F9019AF93BA097F4FCCC6210C4A9A06C5072D3B9CD647"
       }
     },
     "usage/strategy-lifecycle": {
