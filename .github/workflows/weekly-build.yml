@@ -1,0 +1,89 @@
+name: Weekly Build
+
+on:
+  schedule:
+    # Monday 02:30 UTC. A snapshot is published only when the current week
+    # (Monday 00:00 UTC or later) contains at least one new commit.
+    - cron: '30 2 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  weekly-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Check for new commits this week
+        id: check
+        shell: bash
+        run: |
+          WEEK_START="$(python3 - <<'PY'
+          from datetime import datetime, timedelta, timezone
+          now = datetime.now(timezone.utc)
+          monday = (now - timedelta(days=now.weekday())).replace(
+              hour=0, minute=0, second=0, microsecond=0)
+          print(monday.strftime('%Y-%m-%dT%H:%M:%SZ'))
+          PY
+          )"
+          echo "Week starts at: $WEEK_START"
+
+          if [[ -z "$(git rev-list -1 --since="$WEEK_START" HEAD)" ]]; then
+            echo "No commits this week; nothing to publish."
+            exit 0
+          fi
+
+          BASE_VERSION="$(grep -oP '<Version>\K[^<]+' Directory.Build.props | head -1 | sed -E 's/-nightly\.[0-9]{8}$//')"
+          if ! [[ "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: cannot derive base version from Directory.Build.props: '$BASE_VERSION'" >&2
+            exit 1
+          fi
+
+          DATE="$(date -u +%Y%m%d)"
+          NEW_VERSION="${BASE_VERSION}-nightly.${DATE}"
+          TAG="v${NEW_VERSION}"
+
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists; nothing to publish."
+            exit 0
+          fi
+
+          echo "Publishing weekly snapshot version: ${NEW_VERSION}"
+          echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Bump version, commit, and tag
+        if: steps.check.outputs.new_version != ''
+        shell: bash
+        run: |
+          python3 - "${{ steps.check.outputs.new_version }}" <<'PY'
+          import re
+          import sys
+
+          version = sys.argv[1]
+          path = "Directory.Build.props"
+          with open(path, encoding="utf-8") as handle:
+              content = handle.read()
+          updated, count = re.subn(
+              r"(<Version>)[^<]+(</Version>)",
+              lambda match: f"{match.group(1)}{version}{match.group(2)}",
+              content,
+              count=1)
+          if count != 1:
+              raise SystemExit("Failed to locate a single <Version> element.")
+          with open(path, "w", encoding="utf-8") as handle:
+              handle.write(updated)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Directory.Build.props
+          git commit -m "chore: bump version to ${{ steps.check.outputs.new_version }} for weekly build"
+
+          git push origin HEAD:main
+          git push origin "refs/tags/${{ steps.check.outputs.tag }}"

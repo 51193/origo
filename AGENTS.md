@@ -526,9 +526,11 @@ location: `CHANGELOG.md`.
    not internal implementation details.
 6. **Comply with §1.3.** Do not record "cross-module co-designed constructs"
    as `Fixed`.
-7. **Daily changes go into `[Unreleased]`.** Nightly builds daily; changes
-   accumulate in `[Unreleased]`. When cutting a formal release, move them
-   into a versioned block.
+7. **Snapshot builds publish weekly when the week has new commits.** Changes
+   accumulate in `[Unreleased]`. A scheduled weekly workflow publishes a
+   `-nightly.YYYYMMDD` build only for weeks with new pushes; an idle week
+   publishes nothing. When cutting a formal release, move the accumulated
+   entries into a versioned block.
 
 ### Writing process
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -141,7 +141,7 @@ The tool configuration (languages, docs root, source-mirror roots, and source→
 3. **Design decision change** → update the design decisions section
 4. **New config key/command** → update relevant README and usage docs
 5. **Inter-module dependency change** → update module README links
-6. **AGENTS.md meta-instruction changes** → synchronize references to new rules in this document (e.g., AGENTS.md §1.7 comment language requirements and the vendored-source exemption, §1.8 git history awareness, §1.9 dependency update grouping — version-coupled package families must be bumped together, never independently, §1.10 environment bootstrap — install the SDK requested by global.json and never downgrade the request to match the machine, §3 red-first rule — bug fixes require a red regression test that reproduces the bug through a real reachable path, and the file's git history must be consulted before fixing or extending it)
+6. **AGENTS.md meta-instruction changes** → synchronize references to new rules in this document (e.g., AGENTS.md §1.7 comment language requirements and the vendored-source exemption, §1.8 git history awareness, §1.9 dependency update grouping — version-coupled package families must be bumped together, never independently, §1.10 environment bootstrap — install the SDK requested by global.json and never downgrade the request to match the machine, §3 red-first rule — bug fixes require a red regression test that reproduces the bug through a real reachable path, and the file's git history must be consulted before fixing or extending it, §4 weekly snapshot builds — publish a `-nightly.YYYYMMDD` build only for weeks with new pushes)
 
 ### Situations NOT Requiring Sync
 

@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Weekly snapshot build workflow** — a scheduled GitHub Actions workflow publishes a `-nightly.YYYYMMDD` build only when the current week has new commits; idle weeks publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
+
 ### Changed
 
 - **`GodotPackedSceneNodeFactory.Create` rejects Godot-invalid node names up front** — Godot's `Node.Name` setter silently replaces prohibited characters with underscores; the factory now checks the logical name with Godot's native `StringExtensions.ValidateNodeName` and throws `ArgumentException` before loading or instantiating anything, so framework validation cannot drift from engine rules.
