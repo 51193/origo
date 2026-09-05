@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **`SndMetaFluentBuilder.SetNode` rejects blank node names and resource IDs** — null or whitespace keys/values now fail at the fluent call site instead of being accepted into metadata and failing later during entity recovery or node lookup.
+
 ### Fixed
 
 - **`TypedData` generated accessors now expose their XML summaries to IntelliSense** — the source generator emitted `[MethodImpl]` before the `/// <summary>` block, so the compiler did not associate the comments with the generated public members. Doc comments are now emitted before attributes, making `TryGetXxx` and conversion operators show their English summaries in the IDE.

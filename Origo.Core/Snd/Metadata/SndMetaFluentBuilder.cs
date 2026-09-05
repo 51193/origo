@@ -14,9 +14,8 @@ public sealed class SndMetaFluentBuilder
 
     /// <summary>Creates a builder for a new entity metadata named <paramref name="name" />.</summary>
     /// <exception cref="ArgumentException">Thrown when <paramref name="name" /> is null or whitespace.</exception>
-    public SndMetaFluentBuilder(string name) : this(CreateRecoverableMeta(name))
+    public SndMetaFluentBuilder(string name) : this(CreateRecoverableMeta(ValidateName(name)))
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
     }
 
     private SndMetaFluentBuilder(SndMetaData meta)
@@ -30,9 +29,19 @@ public sealed class SndMetaFluentBuilder
     /// </summary>
     public static SndMetaFluentBuilder From(SndMetaData meta) => new(meta);
 
-    /// <summary>Sets a node handle value under the given key.</summary>
+    /// <summary>
+    ///     Sets a node handle value under the given key. Both the logical
+    ///     node name and the resource id must be non-blank: blank values
+    ///     would otherwise fail later during entity recovery or node lookup.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="key" /> or <paramref name="value" />
+    ///     is null or whitespace.
+    /// </exception>
     public SndMetaFluentBuilder SetNode(string key, string value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
         _meta.NodeMetaData ??= new NodeMetaData();
         _meta.NodeMetaData.Pairs[key] = value;
         return this;
@@ -160,6 +169,12 @@ public sealed class SndMetaFluentBuilder
 
     /// <summary>Returns the fully-built <see cref="SndMetaData" />.</summary>
     public SndMetaData Build() => _meta;
+
+    private static string ValidateName(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return name;
+    }
 
     private static SndMetaData CreateRecoverableMeta(string name)
     {

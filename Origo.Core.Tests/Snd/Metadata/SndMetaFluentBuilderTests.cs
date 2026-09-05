@@ -75,6 +75,32 @@ public class SndMetaFluentBuilderTests
     }
 
     [Fact]
+    public void SetNode_WhitespaceKey_Throws()
+    {
+        // A blank logical node name cannot be retrieved later (GetNode
+        // rejects blank names), so accepting it here would defer the
+        // failure to spawn/serialization time.
+        Assert.Throws<ArgumentException>(
+            () => new SndMetaFluentBuilder("E").SetNode("   ", "res://test.tscn"));
+    }
+
+    [Fact]
+    public void SetNode_NullValue_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(
+            () => new SndMetaFluentBuilder("E").SetNode("scene", null!));
+    }
+
+    [Fact]
+    public void SetNode_WhitespaceValue_Throws()
+    {
+        // A blank resource id is rejected by scene-alias resolution during
+        // entity recovery; fail here instead of deferring the error.
+        Assert.Throws<ArgumentException>(
+            () => new SndMetaFluentBuilder("E").SetNode("scene", "   "));
+    }
+
+    [Fact]
     public void AddLifecycleStrategy_StoresIndex()
     {
         var meta = new SndMetaFluentBuilder("E")
