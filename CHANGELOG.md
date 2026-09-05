@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`TypedData` generated accessors now expose their XML summaries to IntelliSense** — the source generator emitted `[MethodImpl]` before the `/// <summary>` block, so the compiler did not associate the comments with the generated public members. Doc comments are now emitted before attributes, making `TryGetXxx` and conversion operators show their English summaries in the IDE.
 - **`TypedData` generated source is line-ending deterministic** — the source generator no longer emits CRLF on Windows via `StringBuilder.AppendLine`; generated Home and Adapter sources now always use LF, so identical input produces identical generated text on every build host.
 
+- **Generated `TypedData.TryGetString` now declares `out string?`** — null is a legal stored value for the registered string kind (the kind is preserved while the reference is null), so the previous non-nullable `out string` annotation hid that result from consumers and contradicted the handwritten API reference.
+
 ## [0.0.9] - 2026-09-03
 
 ### Added

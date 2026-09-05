@@ -155,6 +155,14 @@ public class TypedDataGeneratorTests
 
         Assert.Contains("internal readonly string? AsString() => (string?)_ref;", text);
         Assert.Contains("case 13: return td._ref;", text);
+
+        // TryGetString is the public read path for the string kind. Null is
+        // a legal stored value for registered reference kinds (the kind is
+        // preserved while _ref is null), so the out parameter must be
+        // annotated string? — the handwritten API reference documents the
+        // same signature. Emitting a non-nullable out string would hide the
+        // null result from consumers.
+        Assert.Contains("public readonly bool TryGetString(out string? value)", text);
     }
 
     // Regression: the abandoned non-system inline path emitted accessors that
@@ -813,7 +821,7 @@ public class TypedDataGeneratorTests
             "/// <summary>Creates a <see cref=\"TypedData\"/> instance from a <c>int</c> value.</summary>",
             text);
         Assert.Contains(
-            "/// <summary>Reads the stored value as a string when this instance uses the string kind.</summary>",
+            "/// <summary>Reads the stored value as a string when this instance uses the string kind. The result is null when a null string was stored under the string kind.</summary>",
             text);
     }
 }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Metadata
 
@@ -54,7 +54,7 @@ SND 系统的核心类型保留与内联存储机制。值类型（`int`、`floa
 
 | 方式 | 前提 | 装箱 | 适用 |
 |------|------|------|------|
-| `TryGetInt32(out int)` / `TryGetString(out string)` 等生成的 `TryGetXxx` 访问器 | 编译期已知目标类型 | **零装箱** | **热路径、已知类型的读取与类型判定**（数据变更处理、每帧读写、替代 `is T` 判定）。`AsXxx()`（Home 与 Adapter 均为 `internal`）无 Kind 守卫，仅供框架内部在 switch 匹配后调用 |
+| `TryGetInt32(out int)` / `TryGetString(out string?)` 等生成的 `TryGetXxx` 访问器 | 编译期已知目标类型 | **零装箱** | **热路径、已知类型的读取与类型判定**（数据变更处理、每帧读写、替代 `is T` 判定）。`AsXxx()`（Home 与 Adapter 均为 `internal`）无 Kind 守卫，仅供框架内部在 switch 匹配后调用 |
 | `TypedDataObjectConverter.ToObject(td)` | 类型擦除 | 值类型**装箱** | **仅框架内部冷路径**：序列化、控制台/调试输出、`ToString`。`internal`，外部代码不可访问 |
 
 **推荐用法**：

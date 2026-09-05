@@ -1490,20 +1490,20 @@
     "Origo.Core/Snd/Metadata/README": {
       "status": "synced",
       "revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "previous_revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 9,
+        "en": 9
       },
       "files": {
         "zh": "Origo.Core/Snd/Metadata/README.zh.md",
         "en": "Origo.Core/Snd/Metadata/README.en.md"
       },
       "content_hashes": {
-        "zh": "C9D43608C2B8917198538AB8B56650DD5434B0D87926A0AE2AC1142B7BE2E8C9",
-        "en": "49AA754E91FBDE34668B2DA617184A59C81FD41A0F9C082DD9F75F6639D32DF2"
+        "zh": "FBFF7D976592BCEB4BB11FFD32CB609A8AA811356EA1B0FF60017A33018FE3CB",
+        "en": "2C1D60830D32D7B4BB3746702EBF02AAD798F117A57369A52589EB0EAF1B174A"
       }
     },
     "Origo.Core/Snd/README": {

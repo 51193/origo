@@ -89,9 +89,9 @@ public sealed partial class TypedDataGenerator
         sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("    internal readonly string? AsString() => (string?)_ref;");
         sb.AppendLine();
-        sb.AppendLine("    /// <summary>Reads the stored value as a string when this instance uses the string kind.</summary>");
+        sb.AppendLine("    /// <summary>Reads the stored value as a string when this instance uses the string kind. The result is null when a null string was stored under the string kind.</summary>");
         sb.AppendLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        sb.AppendLine("    public readonly bool TryGetString(out string value)");
+        sb.AppendLine("    public readonly bool TryGetString(out string? value)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (_kind == KindMap.String) { value = Unsafe.As<string>(_ref)!; return true; }");
         sb.AppendLine("        value = null!; return false;");

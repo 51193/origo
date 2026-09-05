@@ -109,7 +109,7 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
                 static v => new TypedData(TypedData.KindMap.String, 0, v)),
             RunReadMeasurement("SG Read String", samples,
                 static v => new TypedData(TypedData.KindMap.String, 0, v),
-                static (in td, out v) => td.TryGetString(out v),
+                ReadString,
                 static o => o.Data is string),
         };
 
@@ -256,6 +256,13 @@ public class TypedDataGeneratedBenchmarkTests(ITestOutputHelper output)
         AssertWithinBudget($"Write {typeLabel}", genBest, boxedBest);
 
         return (typeLabel, _writeIterations, genBest, genAlloc, boxedBest, boxedAlloc);
+    }
+
+    private static bool ReadString(in TypedData td, out string value)
+    {
+        var ok = td.TryGetString(out var result);
+        value = result!;
+        return ok;
     }
 
     private static (string label, int iter, TimeSpan genTime, long genAlloc, TimeSpan boxedTime, long boxedAlloc)

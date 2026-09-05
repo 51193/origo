@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Metadata/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Metadata
 
@@ -54,7 +54,7 @@ At serialization boundaries (during deserialization), construction occurs throug
 
 | Mode | Prerequisite | Boxing | Applicable |
 |------|-------------|--------|------------|
-| Generated strongly-typed accessors like `TryGetInt32(out int)` / `TryGetString(out string)` | Known target type at compile time | **Zero boxing** | **Hot paths, known-type reads and type checks** (data change handling, per-frame reads/writes, replacing `is T` checks). `AsXxx()` (`internal` in both Home and Adapter modes) has no Kind guard and is reserved for framework-internal use after a switch match |
+| Generated strongly-typed accessors like `TryGetInt32(out int)` / `TryGetString(out string?)` | Known target type at compile time | **Zero boxing** | **Hot paths, known-type reads and type checks** (data change handling, per-frame reads/writes, replacing `is T` checks). `AsXxx()` (`internal` in both Home and Adapter modes) has no Kind guard and is reserved for framework-internal use after a switch match |
 | `TypedDataObjectConverter.ToObject(td)` | Type-erased | Value types **boxed** | **Framework-internal cold paths only**: serialization, console/debug output, `ToString`. `internal`, external code cannot access |
 
 **Recommended usage**:
