@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
 using Godot;
 using Origo.Core;
@@ -206,8 +207,17 @@ public partial class OrigoAutoHost : Node
 
     private static OrigoMeta ResolveOrigoMeta()
     {
-        var version = typeof(OrigoRuntime).Assembly.GetName().Version?.ToString()
-                      ?? "unknown";
+        // The informational version carries the repository <Version> value
+        // (e.g. 0.0.9 or 0.0.9-nightly.20260827) plus the source commit hash.
+        // Strip the hash so runtime metadata matches the release/tag version
+        // instead of the four-part assembly version (0.0.9.0).
+        var version = typeof(OrigoRuntime).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (string.IsNullOrWhiteSpace(version))
+            version = typeof(OrigoRuntime).Assembly.GetName().Version?.ToString() ?? "unknown";
+        var commitSeparator = version!.IndexOf('+');
+        if (commitSeparator >= 0)
+            version = version[..commitSeparator];
         return new OrigoMeta("Origo", version, OrigoMeta.DefaultBanner);
     }
 }

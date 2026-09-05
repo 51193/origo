@@ -1,5 +1,7 @@
 using System;
+using System.Reflection;
 using Godot;
+using Origo.Core.Runtime;
 using Origo.GodotAdapter.Bootstrap;
 using Origo.GodotAdapter.Integration.Tests.Runner;
 
@@ -42,5 +44,27 @@ public class OrigoAutoHostBootstrapIntegrationTests : IDeferredTestFixture, Syst
 
         IntegrationTestRunner.AssertNotNull(_autoHost.ConsoleInput, "ConsoleInput");
         IntegrationTestRunner.AssertNotNull(_autoHost.ConsoleOutputChannel, "ConsoleOutputChannel");
+    }
+
+    [DeferredTest(Description = "OrigoAutoHost._Ready runtime metadata version matches the assembly informational version")]
+    public void Ready_RuntimeMetaVersion_MatchesInformationalVersion()
+    {
+        _autoHost = new OrigoAutoHost { Name = "TestAutoHost3" };
+        var root = ((SceneTree)Engine.GetMainLoop()).Root;
+        root.AddChild(_autoHost);
+
+        var informational = typeof(OrigoRuntime).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        IntegrationTestRunner.AssertNotNull(informational, "AssemblyInformationalVersionAttribute");
+
+        var expected = informational!;
+        var plus = expected.IndexOf('+');
+        if (plus >= 0)
+            expected = expected[..plus];
+
+        IntegrationTestRunner.AssertEqual(
+            expected,
+            _autoHost.Runtime.Meta.Version,
+            "Runtime.Meta.Version");
     }
 }
