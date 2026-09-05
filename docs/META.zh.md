@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 手册维护元指令
 
@@ -108,10 +108,24 @@ dotnet run --project tools/DocSyncTool -- generate
 - **跨语言链接禁止**
 - 不带语言后缀的裸 `.md` 链接禁止（迁移后）
 
-**配置的语言**定义在 `tools/DocSyncTool/docsync-config.json`：
+**工具配置**（语言、文档根、源码镜像根与 source→doc 覆盖）定义在 `tools/DocSyncTool/docsync-config.json`：
 
 ```json
-{ "languages": ["zh", "en"], "docs_root": "docs" }
+{
+  "Languages": ["zh", "en"],
+  "DocsRoot": "docs",
+  "SourceMirrorRoots": [
+    "Origo.Core",
+    "Origo.GodotAdapter",
+    "Origo.ConsoleBridge",
+    "Origo.SourceGeneration",
+    "Origo.TestSupport"
+  ],
+  "SourceDocOverrides": {
+    "Origo.TestSupport/Metadata": "docs/Origo.TestSupport/Architecture",
+    "Origo.TestSupport/Runtime": "docs/Origo.TestSupport/Architecture"
+  }
+}
 ```
 
 **CI 强制执行**：`scripts/doc-sync.sh`（由 `scripts/ci.sh` 调用）会运行 `generate` 然后 `validate`。`push` 到 main 时，CI 自动提交过时的生成文件；`pull_request` 时，检查到生成文件过时则失败并提示本地运行 `generate`。Validation 失败始终阻断构建。

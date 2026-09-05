@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -110,10 +110,24 @@ This rewrites the revision headers and produces two kinds of derived files
 - **Cross-language links are forbidden**
 - Bare `.md` links without language suffix are forbidden (after migration)
 
-**Configured languages** are defined in `tools/DocSyncTool/docsync-config.json`:
+The tool configuration (languages, docs root, source-mirror roots, and source→doc overrides) lives in `tools/DocSyncTool/docsync-config.json`:
 
 ```json
-{ "languages": ["zh", "en"], "docs_root": "docs" }
+{
+  "Languages": ["zh", "en"],
+  "DocsRoot": "docs",
+  "SourceMirrorRoots": [
+    "Origo.Core",
+    "Origo.GodotAdapter",
+    "Origo.ConsoleBridge",
+    "Origo.SourceGeneration",
+    "Origo.TestSupport"
+  ],
+  "SourceDocOverrides": {
+    "Origo.TestSupport/Metadata": "docs/Origo.TestSupport/Architecture",
+    "Origo.TestSupport/Runtime": "docs/Origo.TestSupport/Architecture"
+  }
+}
 ```
 
 **CI enforcement**: `scripts/doc-sync.sh` (called by `scripts/ci.sh`) runs `generate` then `validate`. On `push` to main, CI auto-commits stale generated files; on `pull_request`, stale generated files cause failure with instructions to run `generate` locally. Validation failure always blocks the build.

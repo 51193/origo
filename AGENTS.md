@@ -247,11 +247,25 @@ This rewrites the revision headers and produces two kinds of derived files
 - Cross-language links are **forbidden**
 - Bare `.md` links without language suffix are **forbidden** (after migration)
 
-**Configured languages** are defined in
-`tools/DocSyncTool/docsync-config.json`:
+The tool configuration (languages, docs root, source-mirror roots, and
+source→doc overrides) lives in `tools/DocSyncTool/docsync-config.json`:
 
 ```json
-{ "languages": ["zh", "en"], "docs_root": "docs" }
+{
+  "Languages": ["zh", "en"],
+  "DocsRoot": "docs",
+  "SourceMirrorRoots": [
+    "Origo.Core",
+    "Origo.GodotAdapter",
+    "Origo.ConsoleBridge",
+    "Origo.SourceGeneration",
+    "Origo.TestSupport"
+  ],
+  "SourceDocOverrides": {
+    "Origo.TestSupport/Metadata": "docs/Origo.TestSupport/Architecture",
+    "Origo.TestSupport/Runtime": "docs/Origo.TestSupport/Architecture"
+  }
+}
 ```
 
 **CI enforcement**: `scripts/doc-sync.sh` (called by `scripts/ci.sh`) runs
