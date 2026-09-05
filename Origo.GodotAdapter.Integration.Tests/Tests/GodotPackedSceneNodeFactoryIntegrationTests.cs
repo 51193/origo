@@ -48,6 +48,22 @@ public class GodotPackedSceneNodeFactoryIntegrationTests : IDeferredTestFixture,
             "nonexistent scene should throw");
     }
 
+    [DeferredTest(Description = "Create with Godot-prohibited node-name characters throws before loading")]
+    public void Create_InvalidNodeName_ThrowsBeforeLoading()
+    {
+        _parent = new Node();
+        ((SceneTree)Engine.GetMainLoop()).Root.AddChild(_parent);
+        _factory = new GodotPackedSceneNodeFactory(_parent);
+
+        IntegrationTestRunner.AssertThrows<ArgumentException>(
+            () => _factory.Create("bad.name", "res://nonexistent_scene.tscn"),
+            "prohibited node name should fail before resource loading");
+        IntegrationTestRunner.AssertEqual(
+            0,
+            _parent.GetChildCount(),
+            "no child should be added for an invalid node name");
+    }
+
     [DeferredTest(Description = "Create adds child node to parent")]
     public void Create_AddsChildToParent()
     {

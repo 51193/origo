@@ -1604,20 +1604,20 @@
     "Origo.GodotAdapter.Integration.Tests/README": {
       "status": "synced",
       "revisions": {
-        "zh": 18,
-        "en": 18
+        "zh": 19,
+        "en": 19
       },
       "previous_revisions": {
         "zh": 18,
-        "en": 17
+        "en": 18
       },
       "files": {
         "zh": "Origo.GodotAdapter.Integration.Tests/README.zh.md",
         "en": "Origo.GodotAdapter.Integration.Tests/README.en.md"
       },
       "content_hashes": {
-        "zh": "2729F820DF4C28DE86C16E1C96A583612B5657FFD67464F5CD53146565F4A583",
-        "en": "FBC7735C4C024887B424E55F88466949DB36F8FD8AE1FA2F4AECE3319E6B8C12"
+        "zh": "2E06118031183B53CC11658F445E383394E476BD4F43F9AA260673623E4045ED",
+        "en": "B871B21973B4915BBF2041636F4CDEB98D59B07AE7A7BF065AE3A63CA9FAA12D"
       }
     },
     "Origo.GodotAdapter.Tests/Architecture": {
@@ -1889,20 +1889,20 @@
     "Origo.GodotAdapter/Snd/README": {
       "status": "synced",
       "revisions": {
-        "zh": 23,
-        "en": 23
+        "zh": 24,
+        "en": 24
       },
       "previous_revisions": {
-        "zh": 22,
-        "en": 22
+        "zh": 23,
+        "en": 24
       },
       "files": {
         "zh": "Origo.GodotAdapter/Snd/README.zh.md",
         "en": "Origo.GodotAdapter/Snd/README.en.md"
       },
       "content_hashes": {
-        "zh": "82F3644188B82CFE82ADF78001499C33D036C3B34C4E2D2C76FED9F5FE2BD194",
-        "en": "E9764ECC43C5A42B843B74866E829304D59042C618F4CE2F6CAEC6BC123F656F"
+        "zh": "D1C33D9A0FF7FFE87A7E6B613B9259B0F149563810B711D4C088FA723CB1DA20",
+        "en": "9CC713AD539B1D21AC20F2CFCEF103C971AA4A038ECDFDA164CF880440371EAE"
       }
     },
     "Origo.SourceGeneration.Tests/Benchmarks": {
@@ -2155,11 +2155,11 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 17,
-        "en": 17
+        "zh": 18,
+        "en": 18
       },
       "previous_revisions": {
-        "zh": 16,
+        "zh": 17,
         "en": 17
       },
       "files": {
@@ -2167,8 +2167,8 @@
         "en": "README.en.md"
       },
       "content_hashes": {
-        "zh": "8323BF7949C8DEE9854F728512B5F5C50748A8D1D89FDB61475FDEBAFE716305",
-        "en": "9B54B6FF7AAFE424231812B03E3F619CE381FBFE83FBDD74DA10AE76A8EA5E84"
+        "zh": "74BDC284A0008BE71BBE6338D4B4D3E3A55E90668E55E1A0929451DCC5863876",
+        "en": "64B717031FE16D43F4BCB7AF690857BDF1601A641BDF25832D9DB2D4BFAC3706"
       }
     },
     "tools/DocSyncTool.Tests/README": {

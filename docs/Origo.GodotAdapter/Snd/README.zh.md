@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 23 -->
+<!-- docsync-revision: 24 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd
 
@@ -55,6 +55,7 @@ Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
 ### GodotPackedSceneNodeFactory
 
 - **Create**：`ResourceLoader.Load<PackedScene>(resourceId)` → `Instantiate<Node>()` → `parent.AddChild(node)` → 返回 GodotNodeHandle
+- **节点名前置校验**：Godot 的 `Node.Name` setter 会把禁用字符静默替换为下划线；工厂在加载资源前用引擎原生 `StringExtensions.ValidateNodeName` 检查逻辑名，若清洗结果与原名不同则抛 `ArgumentException`，避免框架侧规则与引擎侧漂移，也避免调用方请求的名字被静默改名
 - resourceId 在 Core 侧（`SndWorld` 创建实体时传入 `SndMappings.ResolveSceneAlias` 委托）已解析为最终路径（支持别名），因此工厂收到的始终是原始 `res://` 路径或已解析路径
 - 已加载的 `PackedScene` 实例会缓存，避免同一资源多次实例化时的重复磁盘 I/O
 

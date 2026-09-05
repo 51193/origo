@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **`GodotPackedSceneNodeFactory.Create` rejects Godot-invalid node names up front** — Godot's `Node.Name` setter silently replaces prohibited characters with underscores; the factory now checks the logical name with Godot's native `StringExtensions.ValidateNodeName` and throws `ArgumentException` before loading or instantiating anything, so framework validation cannot drift from engine rules.
 - **`StackStateMachine.Push` now rolls back when the push hook throws** — the stack value is pushed only as part of the hook dispatch attempt; if `OnPushRuntime` throws, the value is removed and the exception propagates, leaving the stack unchanged.
 - **`SndMetaFluentBuilder.SetNode` rejects blank node names and resource IDs** — null or whitespace keys/values now fail at the fluent call site instead of being accepted into metadata and failing later during entity recovery or node lookup.
 
