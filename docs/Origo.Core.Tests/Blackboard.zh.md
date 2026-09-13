@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Blackboard -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 黑板 测试
 
@@ -10,7 +10,7 @@
 ## 被测行为概览
 
 验证 `IBlackboard` 接口的默认内存实现的全部行为：SetValue/Get 返回类型安全的元组、
-键校验（null/空白键拒绝）、类型不匹配检测、Clear/GetKeys/SerializeAll/DeserializeAll 全生命周期。
+键校验（null/空白键拒绝）、类型不匹配检测、null 语义（已注册引用 kind 支持 null，未注册引用类型拒绝 null）、Clear/GetKeys/SerializeAll/DeserializeAll 全生命周期。
 
 ## 测试文件清单
 
@@ -26,6 +26,7 @@
 |---------|-----------|---------|
 | `Blackboard_SetValue_And_TryGet_Int` | SetValue(100) → TryGet<int> 返回 (true, 100) | Blackboard Abstraction |
 | `Blackboard_SetValue_And_TryGet_String` | SetValue("player") → TryGet<string> 返回 (true, "player") | Blackboard Abstraction |
+| `Blackboard_SetValue_NullString_RemainsSupported` | 已注册引用 kind `string` 可以存 null，TryGet 仍返回 found=true | Blackboard Abstraction |
 | `Blackboard_Clear_RemovesAll` | Clear 后 GetKeys 为空 | Blackboard Abstraction |
 | `Blackboard_GetKeys_ReturnsAllKeys` | GetKeys 返回全部键名 | Blackboard Abstraction |
 | `Blackboard_SerializeAll_And_DeserializeAll_RoundTrip` | 序列化后反序列化数据一致 | Blackboard Abstraction |
@@ -40,6 +41,7 @@
 | `Blackboard_SetValue_ThrowsOnNullKey` | null 键 | ArgumentException |
 | `Blackboard_TryGet_ThrowsOnNullKey` | null 键 | ArgumentException |
 | `Blackboard_SetValue_ThrowsOnWhitespaceKey` | 空白键 | ArgumentException |
+| `Blackboard_SetValue_NullUnregisteredReference_Throws` | 未注册引用类型 `object?` 写入 null | ArgumentNullException，不产生不可命中的条目 |
 
 | `Blackboard_DeserializeAll_Null_Throws` | null 数据传入 | 抛出 Exception |
 

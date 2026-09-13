@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence Flow
 
@@ -154,6 +154,8 @@ SaveGamePayload {
     }
 }
 ```
+
+> **Node ownership**: Every `DataSourceNode` tree inside a `SaveGamePayload` / `LevelPayload` must be disposed by its owner. The framework releases temporary payloads it creates at internal load/mount and write/snapshot boundaries; payloads returned by public `ISaveStorageService` read methods are owned by the caller, and write methods must consume their node trees during the call.
 
 ## Save API
 

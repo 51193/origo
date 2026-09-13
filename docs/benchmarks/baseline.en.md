@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Performance Baseline
 
@@ -34,6 +34,11 @@ lines emitted by `PerfReporter.EmitMetric`):
   `machine_id`**: throughput drop over 50% (min-of-rounds measurements
   `CompareTable` / `Compare` / `Report` only) and allocation growth over 20%
   both fail at that point
+- **A failed throughput comparison automatically reruns the full benchmark
+  suite once; only a throughput regression that fails both attempts is
+  reported**: this filters one-off CPU frequency, GC, or JIT measurement
+  noise. Allocation gates fail immediately and do not trigger the retry
+  because this suite's allocation counts are deterministic
 - **On a machine mismatch all numeric gates are skipped** (CI runners are
   random machines / fresh VMs; both throughput and allocation depend on CPU
   frequency scaling, tiered-JIT inlining decisions, and runtime builds, so

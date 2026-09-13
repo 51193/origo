@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Save
 
@@ -23,7 +23,7 @@ Origo 的持久化系统。负责存档的完整生命周期：Payload 构建、
 | 文件 | 职责 |
 |------|------|
 | `PersistentBlackboard.cs` | 持久化黑板：每次修改自动保存到磁盘；通过原子写入（临时文件 + 重命名 + 备份交换）防止崩溃导致文件损坏。磁盘状态需显式调用 `LoadFromDisk()` 加载（构造时不自动加载）。中断写入的残留临时文件在加载时自动清理。 |
-| `SavePayloads.cs` | 存档载荷模型：`SaveGamePayload` / `LevelPayload` / 序列化容器 |
+| `SavePayloads.cs` | 存档载荷模型：`SaveGamePayload` / `LevelPayload`；包含 internal `SavePayloadDisposal`，用于内部边界确定性释放节点树 |
 | `WellKnownKeys.cs` | `internal` — 黑板键常量：`SessionTopology` / `ActiveSaveId` 等 |
 | `SaveCoordinator.cs` | 存档协调器：负责构建存档 payload、持久化 progress 状态、管理元数据的独立类 |
 
@@ -72,6 +72,10 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 - **progress.json 或 progress_state_machines.json 缺失** → 抛异常（含 current/ 完全不存在的情形）
 - **格式版本高于当前支持版本** → 抛异常（拒绝加载未来版本存档）
 - **拓扑引用的关卡无对应载荷**（前台或后台）→ 抛异常（拓扑不一致的存档，前台与后台均拒绝静默降级为空会话）
+
+## DataSourceNode 所有权
+
+`SaveGamePayload` / `LevelPayload` 中的每个 `DataSourceNode` 树归调用方所有，使用完后必须 `Dispose`。框架在内部加载/挂载、写入/快照边界使用 `SavePayloadDisposal` 及时释放临时 payload（包括只持久化 progress 的节点），不依赖 GC。通过公共 `ISaveStorageService` 读取方法取得的 payload 由调用方负责释放；写入方法必须在本次调用内消费完节点树，调用方可在方法返回后立即释放。
 
 ---
 [↑ 回到 Origo.Core](../README.zh.md)

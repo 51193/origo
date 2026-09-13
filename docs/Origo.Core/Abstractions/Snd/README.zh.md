@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd (Abstractions)
 
@@ -109,7 +109,7 @@ Abstractions 层接口的返回值不得引用 Runtime 层具体实现类型。`
 - `ReadObject<T>` / `WriteObject<T>` → 在 Gateway 基础上集成 `DataSourceConverterRegistry` → 强类型对象
 - `FileExists` → `IFileMetaAccess.FileExists`
 
-策略不应直接调用 `IFileSystem`（已完全内部化）或自行解析原始 JSON/Map 文本——后缀路由、编解码策略与 I/O 错误语义统一在 Gateway 一侧治理。路径拼接（`CombinePath`、`GetParentDirectory`）和目录检查（`DirectoryExists`）由框架内部的 `IPathResolver` 和 `IFileMetaAccess` 提供，不通过 `ISndFileAccess` 暴露给策略层。
+策略不应直接调用 `IFileSystem`（它是宿主/适配层扩展点，已从策略层接口面收敛）或自行解析原始 JSON/Map 文本——后缀路由、编解码策略与 I/O 错误语义统一在 Gateway 一侧治理。路径拼接（`CombinePath`、`GetParentDirectory`）和目录检查（`DirectoryExists`）由框架内部的 `IPathResolver` 和 `IFileMetaAccess` 提供，不通过 `ISndFileAccess` 暴露给策略层。
 
 ### 为什么 WriteFile 不限制路径
 

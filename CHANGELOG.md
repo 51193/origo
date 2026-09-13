@@ -12,13 +12,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Weekly snapshot build workflow** — a scheduled GitHub Actions workflow publishes a `-nightly.YYYYMMDD` build only when the current week has new commits; idle weeks publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
+- **Weekly snapshot build workflow** — a scheduled GitHub Actions workflow publishes a `-nightly.YYYYMMDD` build only when the weekly window beginning at the previous Monday 00:00 UTC contains new commits; idle windows publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
 
 ### Changed
 
-- **`GodotPackedSceneNodeFactory.Create` rejects Godot-invalid node names up front** — Godot's `Node.Name` setter silently replaces prohibited characters with underscores; the factory now checks the logical name with Godot's native `StringExtensions.ValidateNodeName` and throws `ArgumentException` before loading or instantiating anything, so framework validation cannot drift from engine rules.
+- **`GodotPackedSceneNodeFactory` validates its inputs up front** — the constructor now rejects a null parent, and `Create` rejects null or blank logical names in addition to Godot-prohibited node-name characters, all before loading or instantiating anything; framework validation can no longer drift from engine rules.
 - **`StackStateMachine.Push` now rolls back when the push hook throws** — the stack value is pushed only as part of the hook dispatch attempt; if `OnPushRuntime` throws, the value is removed and the exception propagates, leaving the stack unchanged.
 - **`SndMetaFluentBuilder.SetNode` rejects blank node names and resource IDs** — null or whitespace keys/values now fail at the fluent call site instead of being accepted into metadata and failing later during entity recovery or node lookup.
+- **Benchmark regression gate retries once on a failed throughput comparison** — on the baseline machine, a throughput comparison failure now re-runs the full benchmark suite once, and only a throughput regression that fails both attempts is reported. Allocation gates fail immediately because this suite's allocation counts are deterministic.
+- **BREAKING: `Blackboard.SetValue` rejects null for unregistered reference types** — a null reference of an unregistered CLR type cannot be recovered from `TypedData` (it degrades to `object`), so it now fails fast with `ArgumentNullException` instead of being stored as an unfindable entry. Null values for registered reference kinds such as `string` remain supported.
+- **BREAKING: invalid save-meta contributor output now fails the save** — a contributor returning a null dictionary, a blank key, or a null value causes `RequestSaveGame` to throw `InvalidOperationException` with contributor context instead of silently dropping metadata, matching the interface contract and fail-fast policy.
+- **Internal save payload node trees are released deterministically** — framework load/mount and write/snapshot paths now dispose the `DataSourceNode` trees of `SaveGamePayload`/`LevelPayload` (and progress-only snapshots) as soon as they are no longer needed instead of relying on GC. Public `ISaveStorageService` read methods return caller-owned trees; write methods consume theirs during the call.
 
 ### Fixed
 

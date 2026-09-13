@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Blackboard/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Blackboard (Abstractions)
 
@@ -19,7 +19,7 @@ Defines the generic key-value blackboard interface `IBlackboard`, providing glob
 
 | Method | Description |
 |------|------|
-| `SetValue<T>(string key, T value)` | Write a key-value pair, preserving full type information |
+| `SetValue<T>(string key, T value)` | Write a key-value pair, preserving full type information; a null of an unregistered reference type throws `ArgumentNullException` (null of a registered reference kind such as `string` remains supported) |
 | `TryGet<T>(string key)` | Safe read: returns a `(found, value)` tuple |
 | `Clear()` | Clear all key-value entries |
 | `GetKeys()` | Enumerate all key names |

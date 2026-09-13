@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 24 -->
+<!-- docsync-revision: 25 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
@@ -52,8 +52,9 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 
 ### GodotPackedSceneNodeFactory
 
+- **Constructor guard**: the constructor rejects a null parent so later attaches cannot target a null reference
 - **Create**: `ResourceLoader.Load<PackedScene>(resourceId)` → `Instantiate<Node>()` → `parent.AddChild(node)` → returns GodotNodeHandle
-- **Up-front node-name validation**: Godot's `Node.Name` setter silently replaces prohibited characters with underscores. The factory validates the logical name with the engine-native `StringExtensions.ValidateNodeName` before loading resources; if sanitization changes the name, `ArgumentException` is thrown so framework-side rules cannot drift from engine rules and requested names are never silently renamed
+- **Up-front node-name validation**: null or blank logical names are rejected before any resource load, then the name is checked with the engine-native `StringExtensions.ValidateNodeName`; if sanitization changes the name, `ArgumentException` is thrown so framework-side rules cannot drift from engine rules and requested names are never silently renamed
 - resourceId is resolved on the Core side (`SndWorld` passes the `SndMappings.ResolveSceneAlias` delegate when creating entities), so the factory always receives the final path
 - Loaded `PackedScene` instances are cached to avoid repeated disk I/O when the same resource is instantiated multiple times
 

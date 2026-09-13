@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化流程
 
@@ -154,6 +154,8 @@ SaveGamePayload {
     }
 }
 ```
+
+> **节点所有权**：`SaveGamePayload` / `LevelPayload` 内的每个 `DataSourceNode` 树由持有方负责 `Dispose`。框架内部在加载/挂载与写入/快照边界释放自己创建的临时 payload；通过公共 `ISaveStorageService` 读取方法取得的 payload 由调用方释放，写入方法必须在其调用期间消费完节点树。
 
 ## 存档 API
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Storage
 
@@ -7,7 +7,7 @@
 
 ## 概述
 
-存档存储层的完整实现。负责文件 I/O（读写、目录管理、快照）、路径布局策略、Payload 构造。所有文件操作通过 `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver` 进行，不直接调用 `File.*` API（`IFileSystem` 内部化）。
+存档存储层的完整实现。负责文件 I/O（读写、目录管理、快照）、路径布局策略、Payload 构造。所有文件操作通过 `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver` 进行，不直接调用 `File.*` API（`IFileSystem` 是适配层扩展点，由宿主注入）。
 
 ## 包含文件
 
@@ -63,6 +63,12 @@
 - **关卡三件套不全** → 拒绝读取（部分存在 = 损坏）
 - **progress.json 缺失** → 拒绝读取
 - **拓扑引用的后台关卡无 payload** → 拒绝加载（与前台一致：存档拓扑引用了不存在的关卡数据，加载必须显式失败，静默空挂载会掩盖数据丢失）
+
+## DataSourceNode 所有权契约
+
+- **读取方法**（`ReadSavePayloadFromSnapshot` / `ReadProgressNodeFromSnapshot` / `TryReadLevelPayload*` / `ResolveLevelPayload`）返回的 payload 或节点归调用方所有，调用方必须负责 `Dispose` 其中的 `DataSourceNode` 树。
+- **写入方法**（`WriteSavePayloadToCurrent*` / `WriteLevelPayloadOnlyToCurrent` / `WriteProgressOnlyToCurrent`）必须在本次调用返回前完整消费传入的节点树，不得保留引用延迟读取；框架在这些写入边界之后立即释放节点，因此自定义实现返回后也不得再访问节点。
+- 框架内部加载/挂载路径在 payload 不再使用后立即释放；公共接口的调用方所有权不会被框架内部路径代为管理。
 
 ## 设计决策
 

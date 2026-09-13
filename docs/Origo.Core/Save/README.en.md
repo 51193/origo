@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Save
 
@@ -23,7 +23,7 @@ Origo's persistence system. Responsible for the complete save lifecycle: payload
 | File | Responsibility |
 |------|---------------|
 | `PersistentBlackboard.cs` | Persistent blackboard: auto-saves to disk on every mutation; uses atomic write (temp file + rename + backup swap) to prevent file corruption on crash. Disk state is loaded explicitly via `LoadFromDisk()` (not at construction). Stale temp files from interrupted writes are cleaned up on load. |
-| `SavePayloads.cs` | Save payload model: `SaveGamePayload` / `LevelPayload` / serialization containers |
+| `SavePayloads.cs` | Save payload model: `SaveGamePayload` / `LevelPayload`; includes the internal `SavePayloadDisposal` used by internal boundaries to release node trees deterministically |
 | `WellKnownKeys.cs` | `internal` — Blackboard key constants: `SessionTopology` / `ActiveSaveId`, etc. |
 | `SaveCoordinator.cs` | Save coordinator: an independent class responsible for building save payloads, persisting progress state, managing metadata |
 
@@ -72,6 +72,10 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 - **progress.json or progress_state_machines.json missing** → throw exception (including when current/ does not exist at all)
 - **Format version newer than the supported one** → throw exception (refuses to load future saves)
 - **A level referenced by the topology has no payload** (foreground or background) → throw exception (an inconsistent topology; both foreground and background reject the silent fallback to an empty session)
+
+## DataSourceNode Ownership
+
+Every `DataSourceNode` tree in a `SaveGamePayload` / `LevelPayload` is owned by its caller and must be disposed when no longer needed. The framework uses `SavePayloadDisposal` at internal load/mount and write/snapshot boundaries to release temporary payloads promptly (including nodes created only to persist progress) instead of relying on GC. Payloads obtained through public `ISaveStorageService` read methods are caller-owned; write methods must fully consume the node trees during the call, so callers may dispose them immediately after the method returns.
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

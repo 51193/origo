@@ -540,10 +540,12 @@ location: `CHANGELOG.md`.
    not internal implementation details.
 6. **Comply with §1.3.** Do not record "cross-module co-designed constructs"
    as `Fixed`.
-7. **Snapshot builds publish weekly when the week has new commits.** Changes
-   accumulate in `[Unreleased]`. A scheduled weekly workflow publishes a
-   `-nightly.YYYYMMDD` build only for weeks with new pushes; an idle week
-   publishes nothing. When cutting a formal release, move the accumulated
+7. **Snapshot builds publish weekly when the weekly window has new commits.**
+   Changes accumulate in `[Unreleased]`. The Monday 02:30 UTC run looks back
+   to the previous Monday 00:00 UTC, so a `-nightly.YYYYMMDD` build is
+   published only when the week that just ended contains new pushes; an idle
+   window publishes nothing, and manual dispatch sees the current partial week
+   in the same window. When cutting a formal release, move the accumulated
    entries into a versioned block.
 
 ### Writing process

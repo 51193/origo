@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
@@ -25,6 +25,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SavePathPolicyContractTests.cs` | Path policy interface contract: ISavePathPolicy injection and policy-aware verification of all storage methods |
 | `SavePathResolverTests.cs` | Path resolution: SaveFileHandle relative path extraction, parent directory creation, traversal attack rejection, leaf directory name |
 | `SaveGamePayloadTests.cs` | Data model: SaveGamePayload/LevelPayload defaults, multi-level access, CustomMeta |
+| `SavePayloadDisposalTests.cs` | Deterministic release at internal boundaries: payload node trees and progress snapshot nodes are disposed after load/mount, save/snapshot, and switch-foreground flows |
 | `WellKnownKeysTests.cs` | Constants: ActiveSaveId, SessionTopology key name correctness |
 | `SaveIdValidationTests.cs` | Save id validation: `RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` reject invalid ids (path separators / out-of-range chars), accept valid ids |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
@@ -77,6 +78,17 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `StaleWriteMarker_AfterDeleteCurrentDirectory_WriteThenSucceeds` | stale marker → DeleteCurrentDirectory → rewrite | New data writable and readable |
 | `RecoverFromStaleWriteMarker_CleanStateAfterRecovery` | Clean current/ state after recovery | No marker residue, data normal |
 | `DeleteCurrentDirectory_WhenNoDirectory_DoesNotThrow` | Delete when current/ does not exist | Does not throw (idempotent) |
+
+## SavePayloadDisposalTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `LoadGame_AfterMount_DisposesPayloadNodeTrees` | After `RequestLoadGame` mounts, every SaveGamePayload node tree returned by storage is disposed; accessing `Kind` throws ObjectDisposedException | SaveGamePayload ownership |
+| `LoadInitialSave_AfterMount_DisposesPayloadNodeTrees` | The initial-save flow likewise disposes its payload node trees after mount | SaveGamePayload ownership |
+| `SaveGame_AfterWrite_DisposesBuiltPayloadNodeTrees` | After `RequestSaveGame` writes and snapshots, the framework-built payload node trees are disposed | SaveGamePayload ownership |
+| `SwitchForeground_DisposesPersistedAndTargetPayloadNodeTrees` | Foreground switch disposes the persisted LevelPayload, the target LevelPayload read from storage, and the progress/state-machine nodes written by `PersistProgress` | DataSourceNode ownership contract |
 
 ## SaveFormatVersionTests Details
 

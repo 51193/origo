@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd (Abstractions)
 
@@ -97,7 +97,7 @@ All file operations go through three base interfaces — `IDataSourceIoGateway` 
 - `ReadObject<T>` / `WriteObject<T>` → Gateway plus `DataSourceConverterRegistry` → strongly-typed objects
 - `FileExists` → `IFileMetaAccess.FileExists`
 
-Strategies must not call `IFileSystem` directly (fully internalized) or parse raw JSON/Map text themselves — suffix routing, codec policy, and I/O error semantics are governed on the Gateway side. Path concatenation (`CombinePath`, `GetParentDirectory`) and directory checks (`DirectoryExists`) come from the framework-internal `IPathResolver` and `IFileMetaAccess`, and are not exposed to strategies through `ISndFileAccess`.
+Strategies must not call `IFileSystem` directly (it is a host/adapter-layer extension point, removed from the strategy-layer surface) or parse raw JSON/Map text themselves — suffix routing, codec policy, and I/O error semantics are governed on the Gateway side. Path concatenation (`CombinePath`, `GetParentDirectory`) and directory checks (`DirectoryExists`) come from the framework-internal `IPathResolver` and `IFileMetaAccess`, and are not exposed to strategies through `ISndFileAccess`.
 
 ### Why WriteFile does not restrict paths
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：存储 测试
 
@@ -25,6 +25,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SavePathPolicyContractTests.cs` | 路径策略接口契约：ISavePathPolicy 注入与全部存储方法的策略感知验证 |
 | `SavePathResolverTests.cs` | 路径解析：SaveFileHandle 相对路径提取、父目录创建、遍历攻击拒绝、叶目录名 |
 | `SaveGamePayloadTests.cs` | 数据模型：SaveGamePayload/LevelPayload 默认值、多关卡访问、CustomMeta |
+| `SavePayloadDisposalTests.cs` | 内部边界确定性释放：load/mount、save/snapshot、switch foreground 后 payload 节点树与 progress 快照节点被 Dispose |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ 侧信道文件：快照→current 复制往返、目录结构保留、缺失/空目录容错、参数校验 |
 | `SaveFormatVersionTests.cs` | 存档格式版本：meta.map 写入 origo.format_version、新版本拒绝加载、缺版本键兼容、保留键隐藏、公开存档元数据列表 |
 | `SaveSnapshotMarkerTests.cs` | 快照完整性：快照目录无 .write_in_progress 残留 |
@@ -77,6 +78,17 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `StaleWriteMarker_AfterDeleteCurrentDirectory_WriteThenSucceeds` | stale marker → DeleteCurrentDirectory → 重写 | 新数据可正常写入和读取 |
 | `RecoverFromStaleWriteMarker_CleanStateAfterRecovery` | 恢复后 current/ 状态干净 | 无 marker 残留，数据正常 |
 | `DeleteCurrentDirectory_WhenNoDirectory_DoesNotThrow` | current/ 不存在时调用 Delete | 不抛异常（幂等） |
+
+## SavePayloadDisposalTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `LoadGame_AfterMount_DisposesPayloadNodeTrees` | `RequestLoadGame` 挂载完成后，callback 返回的全部 SaveGamePayload 节点树已 Dispose，访问 `Kind` 抛 ObjectDisposedException | SaveGamePayload 所有权 |
+| `LoadInitialSave_AfterMount_DisposesPayloadNodeTrees` | 初始存档加载挂载完成后同样释放 payload 节点树 | SaveGamePayload 所有权 |
+| `SaveGame_AfterWrite_DisposesBuiltPayloadNodeTrees` | `RequestSaveGame` 写入并快照完成后，框架构建的 payload 节点树被释放 | SaveGamePayload 所有权 |
+| `SwitchForeground_DisposesPersistedAndTargetPayloadNodeTrees` | 前景切换释放持久化生成的 LevelPayload、目标关卡读取的 LevelPayload，以及 `PersistProgress` 写入的 progress/state-machine 节点 | DataSourceNode 所有权契约 |
 
 ## SaveFormatVersionTests 测试详情
 
