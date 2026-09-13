@@ -19,7 +19,14 @@ public sealed class Blackboard : IBlackboard
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
 
-        _data[key] = TypedDataFactory<T>.Create(value);
+        var typedData = TypedDataFactory<T>.Create(value);
+        if (value is null && typedData.DataType == typeof(object))
+            throw new ArgumentNullException(nameof(value),
+                "Cannot store a null value for an unregistered reference type: " +
+                "TypedData cannot recover the CLR type from a null reference. " +
+                "Register the type as an inline kind or use a registered reference type.");
+
+        _data[key] = typedData;
     }
 
     /// <inheritdoc />

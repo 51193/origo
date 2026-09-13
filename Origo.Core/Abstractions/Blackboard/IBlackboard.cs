@@ -15,6 +15,11 @@ public interface IBlackboard
     /// <typeparam name="T">The value type; preserved across serialization.</typeparam>
     /// <param name="key">The key to store under.</param>
     /// <param name="value">The value to store.</param>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown when <paramref name="value" /> is null and <typeparamref name="T" />
+    ///     has no registered TypedData kind, because the type cannot be recovered
+    ///     from a null reference.
+    /// </exception>
     void SetValue<T>(string key, T value);
 
     /// <summary>Gets a typed value; reports whether the key exists with a matching type.</summary>

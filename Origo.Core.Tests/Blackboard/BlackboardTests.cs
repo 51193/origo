@@ -91,6 +91,27 @@ public class BlackboardTests
     }
 
     [Fact]
+    public void Blackboard_SetValue_NullUnregisteredReference_Throws()
+    {
+        var bb = new Blackboard.Blackboard();
+
+        var ex = Assert.Throws<ArgumentNullException>(
+            () => bb.SetValue<object?>("key", null));
+        Assert.Contains("registered", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Blackboard_SetValue_NullString_RemainsSupported()
+    {
+        var bb = new Blackboard.Blackboard();
+        bb.SetValue<string?>("key", null);
+
+        var (found, value) = bb.TryGet<string?>("key");
+        Assert.True(found);
+        Assert.Null(value);
+    }
+
+    [Fact]
     public void Blackboard_SetValue_ThrowsOnNullKey()
     {
         var bb = new Blackboard.Blackboard();
