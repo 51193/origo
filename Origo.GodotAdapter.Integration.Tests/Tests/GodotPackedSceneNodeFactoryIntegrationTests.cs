@@ -64,6 +64,22 @@ public class GodotPackedSceneNodeFactoryIntegrationTests : IDeferredTestFixture,
             "no child should be added for an invalid node name");
     }
 
+    [DeferredTest(Description = "Create with a blank node name throws before loading")]
+    public void Create_BlankNodeName_ThrowsBeforeLoading()
+    {
+        _parent = new Node();
+        ((SceneTree)Engine.GetMainLoop()).Root.AddChild(_parent);
+        _factory = new GodotPackedSceneNodeFactory(_parent);
+
+        IntegrationTestRunner.AssertThrows<ArgumentException>(
+            () => _factory.Create("", "res://nonexistent_scene.tscn"),
+            "blank node name should fail before resource loading");
+        IntegrationTestRunner.AssertEqual(
+            0,
+            _parent.GetChildCount(),
+            "no child should be added for a blank node name");
+    }
+
     [DeferredTest(Description = "Create adds child node to parent")]
     public void Create_AddsChildToParent()
     {

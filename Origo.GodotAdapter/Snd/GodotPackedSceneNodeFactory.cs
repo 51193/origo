@@ -9,11 +9,23 @@ namespace Origo.GodotAdapter.Snd;
 ///     Creates Godot nodes by loading <c>PackedScene</c> resources.
 ///     Scenes are cached by resource ID to avoid redundant disk I/O.
 /// </summary>
-/// <param name="parent">The scene-tree node newly created nodes are attached to.</param>
-public sealed class GodotPackedSceneNodeFactory(Node parent) : INodeFactory
+public sealed class GodotPackedSceneNodeFactory : INodeFactory
 {
-    private readonly Node _parent = parent;
+    private readonly Node _parent;
     private readonly Dictionary<string, PackedScene> _cache = [];
+
+    /// <summary>
+    ///     Creates a factory that attaches newly created nodes to
+    ///     <paramref name="parent" />.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown when <paramref name="parent" /> is null.
+    /// </exception>
+    public GodotPackedSceneNodeFactory(Node parent)
+    {
+        ArgumentNullException.ThrowIfNull(parent);
+        _parent = parent;
+    }
 
     /// <summary>
     ///     Instantiates the scene identified by <paramref name="resourceId" />
@@ -21,20 +33,20 @@ public sealed class GodotPackedSceneNodeFactory(Node parent) : INodeFactory
     ///     loads are cached by resource id; failed loads are not cached, so a
     ///     missing resource can be retried after it becomes available.
     /// </summary>
-    /// <exception cref="ArgumentNullException">
+    /// <exception cref="System.ArgumentNullException">
     ///     Thrown when <paramref name="logicalName" /> is null.
     /// </exception>
-    /// <exception cref="ArgumentException">
-    ///     Thrown when <paramref name="logicalName" /> contains characters
-    ///     prohibited in Godot node names.
+    /// <exception cref="System.ArgumentException">
+    ///     Thrown when <paramref name="logicalName" /> is blank or contains
+    ///     characters prohibited in Godot node names.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="System.InvalidOperationException">
     ///     Thrown when the <paramref name="resourceId" /> does not resolve to a
     ///     <see cref="PackedScene" /> resource.
     /// </exception>
     public INodeHandle Create(string logicalName, string resourceId)
     {
-        ArgumentNullException.ThrowIfNull(logicalName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(logicalName);
 
         // Godot's Node.Name setter silently replaces prohibited characters
         // with underscores. Reject them up front through the engine's own
