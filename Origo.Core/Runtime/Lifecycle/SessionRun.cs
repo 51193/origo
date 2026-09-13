@@ -326,7 +326,17 @@ internal sealed class SessionRun : ISessionRun, IDisposable
         ThrowIfDisposed();
         var watch = Stopwatch.StartNew();
         _logger.Log(LogLevel.Info, _logTag, $"Persisting level state for '{LevelId}'.");
-        _storageService.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload());
+
+        var payload = BuildLevelPayload();
+        try
+        {
+            _storageService.WriteLevelPayloadOnlyToCurrent(payload);
+        }
+        finally
+        {
+            SavePayloadDisposal.Dispose(payload);
+        }
+
         _logger.Log(LogLevel.Info, _logTag,
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)

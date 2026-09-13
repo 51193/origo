@@ -54,13 +54,14 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
         owner.EnqueueTrackedSystemDeferred(() =>
         {
             owner.BeginWorkflow();
+            SaveGamePayload? payload = null;
             try
             {
                 var progressRun = owner.EnsureProgressRun();
                 var metaContext = progressRun.BuildSaveMetaContext(newSaveId);
                 var mergedMeta = SaveMetaMerger.Merge(
                     owner._saveMetaContributors, in metaContext);
-                var payload = progressRun.BuildSavePayload(newSaveId, mergedMeta);
+                payload = progressRun.BuildSavePayload(newSaveId, mergedMeta);
                 owner.StorageService.WriteSavePayloadToCurrentThenSnapshot(
                     payload, newSaveId, owner.Runtime.Logger);
                 progressRun.SetSaveId(newSaveId);
@@ -68,6 +69,8 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
             }
             finally
             {
+                if (payload is not null)
+                    SavePayloadDisposal.Dispose(payload);
                 owner.EndWorkflow();
             }
         });

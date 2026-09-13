@@ -101,8 +101,9 @@ internal sealed class SaveCoordinator
             SessionTopologyCodec.Join(topologyItems));
 
         var serializer = new SaveContext(_progressBlackboard, fgSession.SessionBlackboard, _progressRuntime.SndWorld);
-        var progressNode = serializer.SerializeProgress();
-        var smNode = ((StateMachineContainer)_progressStateMachines).SerializeToNode(_progressRuntime.ConverterRegistry);
+        using var progressNode = serializer.SerializeProgress();
+        using var smNode = ((StateMachineContainer)_progressStateMachines)
+            .SerializeToNode(_progressRuntime.ConverterRegistry);
 
         _progressRuntime.StorageService.WriteProgressOnlyToCurrent(progressNode, smNode);
     }

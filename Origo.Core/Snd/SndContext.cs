@@ -315,15 +315,22 @@ public sealed class SndContext : ISndContext
             var activeLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
 
             var payload = StorageService.ReadSavePayloadFromSnapshot(saveId, activeLevelId);
-            StorageService.DeleteCurrentDirectory();
-            StorageService.WriteSavePayloadToCurrent(payload);
-            StorageService.RestoreExtraFilesFromSnapshot(saveId);
+            try
+            {
+                StorageService.DeleteCurrentDirectory();
+                StorageService.WriteSavePayloadToCurrent(payload);
+                StorageService.RestoreExtraFilesFromSnapshot(saveId);
 
-            var progressRun = CreateProgressRun(saveId);
-            SetProgressRun(progressRun);
-            MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
-            _systemRun.SetActiveSaveSlot(saveId);
-            return progressRun;
+                var progressRun = CreateProgressRun(saveId);
+                SetProgressRun(progressRun);
+                MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
+                _systemRun.SetActiveSaveSlot(saveId);
+                return progressRun;
+            }
+            finally
+            {
+                SavePayloadDisposal.Dispose(payload);
+            }
         });
     }
 
@@ -339,17 +346,24 @@ public sealed class SndContext : ISndContext
             var payload = InitialStorageService.ReadSavePayloadFromSnapshot(
                 SndDefaults.InitialSaveId,
                 _parameters.InitialLevelId);
-            payload.SaveId = SndDefaults.InitialSaveId;
+            try
+            {
+                payload.SaveId = SndDefaults.InitialSaveId;
 
-            StorageService.DeleteCurrentDirectory();
-            StorageService.WriteSavePayloadToCurrent(payload);
-            StorageService.RestoreExtraFilesFromSnapshot(
-                InitialStorageService, SndDefaults.InitialSaveId);
+                StorageService.DeleteCurrentDirectory();
+                StorageService.WriteSavePayloadToCurrent(payload);
+                StorageService.RestoreExtraFilesFromSnapshot(
+                    InitialStorageService, SndDefaults.InitialSaveId);
 
-            var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
-            SetProgressRun(progressRun);
-            MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
-            _systemRun.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
+                var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
+                SetProgressRun(progressRun);
+                MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
+                _systemRun.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
+            }
+            finally
+            {
+                SavePayloadDisposal.Dispose(payload);
+            }
         });
     }
 

@@ -102,8 +102,15 @@ internal sealed partial class ProgressRun
             var levelPayload = _owner._progressRuntime.StorageService.ResolveLevelPayload(_owner.SaveId, levelId);
             if (levelPayload is not null)
             {
-                ValidateLevelPayload(levelId, levelPayload);
-                return MountForegroundFromPayload(levelId, levelPayload, writeTopology: true);
+                try
+                {
+                    ValidateLevelPayload(levelId, levelPayload);
+                    return MountForegroundFromPayload(levelId, levelPayload, writeTopology: true);
+                }
+                finally
+                {
+                    SavePayloadDisposal.Dispose(levelPayload);
+                }
             }
 
             return MountEmptyForeground(levelId, writeTopology: true);

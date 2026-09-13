@@ -7,6 +7,7 @@ using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
+using Origo.Core.Save.Storage;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
@@ -25,7 +26,9 @@ internal static class DisposeSemanticsTestInfrastructure
 
     public static (SndContext ctx, TestMemoryFileSystem fs) CreateForegroundContext(
         Action<SndWorld>? configureWorld = null,
-        ISndSceneHost? host = null)
+        ISndSceneHost? host = null,
+        ISaveStorageService? storageService = null,
+        ISaveStorageService? initialStorageService = null)
     {
         var logger = new TestLogger();
         host ??= new TestSndSceneHost();
@@ -41,10 +44,15 @@ internal static class DisposeSemanticsTestInfrastructure
         var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
         var pathResolver = DataSourceFactory.CreatePathResolver(fs);
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "res://initial",
-            "res://entry/entry.json"));
+            "res://entry/entry.json")
+        {
+            StorageService = storageService,
+            InitialStorageService = initialStorageService
+        });
 
         var progressRun = TestFactory.CreateProgressRun(
-            "test_save", logger, metaAccess, pathResolver, "root", runtime, ctx, sharedDataSourceIo: dataSourceIo);
+            "test_save", logger, metaAccess, pathResolver, "root", runtime, ctx,
+            storageService: storageService, sharedDataSourceIo: dataSourceIo);
         ctx.SetProgressRun(progressRun);
         progressRun.LoadAndMountForeground("test_level");
 
