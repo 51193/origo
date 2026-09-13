@@ -11,8 +11,9 @@ internal static class SaveMetaMerger
 {
     /// <summary>
     ///     Returns the merged dictionary; returns <c>null</c> when there are
-    ///     no keys, consistent with the semantics of not providing custom
-    ///     meta.
+    ///     no keys. Contributors that violate the interface contract (null
+    ///     dictionary, blank key, or null value) fail the save instead of
+    ///     silently dropping metadata.
     /// </summary>
     public static IReadOnlyDictionary<string, string>? Merge(
         IReadOnlyList<ISaveMetaContributor> contributors,
@@ -24,12 +25,20 @@ internal static class SaveMetaMerger
         foreach (var c in contributors)
         {
             ArgumentNullException.ThrowIfNull(c);
-            var contributed = c.Contribute(in context);
-            if (contributed is null) continue;
+
+            var contributed = c.Contribute(in context) ?? throw new InvalidOperationException(
+                $"Save meta contributor '{c.GetType().FullName}' returned null; " +
+                "contribute an empty dictionary instead.");
+
             foreach (var kv in contributed)
             {
-                if (string.IsNullOrEmpty(kv.Key) || kv.Value is null)
-                    continue;
+                if (string.IsNullOrWhiteSpace(kv.Key))
+                    throw new InvalidOperationException(
+                        $"Save meta contributor '{c.GetType().FullName}' returned a blank key.");
+                if (kv.Value is null)
+                    throw new InvalidOperationException(
+                        $"Save meta contributor '{c.GetType().FullName}' returned a null value for key '{kv.Key}'.");
+
                 merged[kv.Key] = kv.Value;
             }
         }
