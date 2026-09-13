@@ -101,10 +101,10 @@ public interface ISaveStorageService
     /// </summary>
     /// <param name="sourceStorage">The storage service that owns the source save snapshot.</param>
     /// <param name="saveId">The save slot ID in <paramref name="sourceStorage" />.</param>
-    /// <exception cref="ArgumentNullException">
+    /// <exception cref="System.ArgumentNullException">
     ///     Thrown when <paramref name="sourceStorage" /> is null.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="System.InvalidOperationException">
     ///     Thrown when the destination implementation cannot interpret the
     ///     source service's snapshot layout. The default implementation
     ///     supports only a default source; custom source/destination pairs

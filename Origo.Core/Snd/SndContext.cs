@@ -198,7 +198,7 @@ public sealed class SndContext : ISndContext
     /// </summary>
     /// <exception cref="InvalidOperationException">
     ///     Thrown when no ProgressRun is active (call
-    ///     <see cref="RequestLoadMainMenuEntrySave" /> first).
+    ///     <see cref="ISndLifecycleOperations.RequestLoadMainMenuEntrySave" /> first).
     /// </exception>
     internal ProgressRun EnsureProgressRun()
     {

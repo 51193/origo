@@ -7,7 +7,7 @@ public interface ISndDataAccess
     /// Sets a typed data value by key. The value must not be null when
     /// <typeparamref name="T"/> is a reference type.
     /// </summary>
-    /// <exception cref="ArgumentNullException">
+    /// <exception cref="System.ArgumentNullException">
     /// <paramref name="value"/> is null and <typeparamref name="T"/> is a reference type.
     /// </exception>
     void SetData<T>(string name, T value);
@@ -23,10 +23,10 @@ public interface ISndDataAccess
 
     /// <summary>
     /// Gets a strongly-typed data value by key.
-    /// Throws <see cref="InvalidOperationException"/> if the key is not found
+    /// Throws <see cref="System.InvalidOperationException"/> if the key is not found
     /// or the value is not of type <typeparamref name="T"/>.
     /// </summary>
     /// <typeparam name="T">Must be a non-nullable type.</typeparam>
-    /// <exception cref="InvalidOperationException">The key is not found or the value is not of the expected type.</exception>
+    /// <exception cref="System.InvalidOperationException">The key is not found or the value is not of the expected type.</exception>
     T GetData<T>(string name) where T : notnull;
 }

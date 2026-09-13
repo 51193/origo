@@ -5,7 +5,7 @@ namespace Origo.Core.Abstractions.Scene;
 /// <summary>
 ///     Scene hosts can use this interface to bind the owning session at
 ///     session construction time, so that subsequent entity creation
-///     automatically binds <see cref="ISndEntity.OwningSession" />.
+///     automatically binds <see cref="Origo.Core.Abstractions.Entity.ISndEntity.OwningSession" />.
 /// </summary>
 internal interface IOwningSessionBindable
 {

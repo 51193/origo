@@ -13,7 +13,7 @@ namespace Origo.Core.Abstractions.StateMachine;
 ///         <list type="bullet">
 ///             <item>
 ///                 <description>
-///                     <see cref="Snd.SndContext" /> provides the global / progress-level default
+///                     <see cref="Origo.Core.Snd.SndContext" /> provides the global / progress-level default
 ///                     implementation, where <see cref="SessionBlackboard" /> and
 ///                     <see cref="SceneAccess" /> point to the foreground session.
 ///                     This implementation is only used as the context entry for progress-level
@@ -22,7 +22,7 @@ namespace Origo.Core.Abstractions.StateMachine;
 ///             </item>
 ///             <item>
 ///                 <description>
-///                     <see cref="SessionStateMachineContext" /> is a session-level adapter
+///                     <c>SessionStateMachineContext</c> is a session-level adapter
 ///                     that binds <see cref="SessionBlackboard" /> and <see cref="SceneAccess" />
 ///                     to the current session, ensuring that state machine hooks in both
 ///                     foreground and background sessions point to their respective session

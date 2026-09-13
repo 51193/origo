@@ -8,7 +8,7 @@ namespace Origo.Core.Runtime.Lifecycle;
 ///     <para>
 ///         <see cref="IsFrontSession" /> is assigned by <see cref="SessionManager" /> at creation time
 ///         and indicates whether this session is the foreground session. This flag is pinned into the runtime
-///         after SessionRun construction; strategy hooks retrieve it via <see cref="ISessionRun.IsFrontSession" />.
+///         after SessionRun construction; strategy hooks retrieve it via <see cref="Origo.Core.Abstractions.Lifecycle.ISessionRun.IsFrontSession" />.
 ///     </para>
 /// </summary>
 internal readonly record struct SessionParameters(

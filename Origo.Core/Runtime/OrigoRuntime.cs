@@ -154,7 +154,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     /// <summary>
     ///     The current session manager. Non-entity code (such as console command handlers)
     ///     accesses <see cref="ISessionManager" /> through this property; strategy code should use
-    ///     <see cref="ISndEntity.OwningSession" />. SessionManager itself is returned as public.
+    ///     <see cref="Origo.Core.Abstractions.Entity.ISndEntity.OwningSession" />. SessionManager itself is returned as public.
     /// </summary>
     public ISessionManager SessionManager => _sessionManagerProvider();
 
