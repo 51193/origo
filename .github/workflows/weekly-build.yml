@@ -2,10 +2,10 @@ name: Weekly Build
 
 on:
   schedule:
-    # Monday 02:30 UTC. A snapshot is published only when the weekly
-    # window that starts at the previous Monday 00:00 UTC contains at
-    # least one new commit, so the scheduled run covers the week that
-    # just ended instead of the few hours since midnight.
+    # Monday 02:30 UTC. Scheduled runs evaluate exactly the week that just
+    # ended: [previous Monday 00:00, current Monday 00:00) UTC. Idle weeks
+    # publish nothing, and a commit made in the first hours of Monday cannot
+    # leak into the ended-week window or be published twice.
     - cron: '30 2 * * 1'
   workflow_dispatch:
 
@@ -25,23 +25,35 @@ jobs:
         id: check
         shell: bash
         run: |
-          # The scheduled run happens on Monday morning. Looking back to
-          # the start of the previous calendar week makes that run cover
-          # the week that just ended instead of the few hours since
-          # midnight. A workflow_dispatch run during the current week also
-          # sees the current partial week in the same window.
-          WEEK_START="$(python3 - <<'PY'
+          # Scheduled runs evaluate exactly [previous Monday 00:00, current
+          # Monday 00:00) so a commit in the first hours of Monday is picked
+          # up by the following week's run instead of being published twice.
+          # Manual dispatch intentionally leaves the window open to now so a
+          # human can snapshot the current partial week on demand.
+          WEEK_WINDOW="$(python3 - <<'PY'
           from datetime import datetime, timedelta, timezone
           now = datetime.now(timezone.utc)
           current_monday = (now - timedelta(days=now.weekday())).replace(
               hour=0, minute=0, second=0, microsecond=0)
           previous_monday = current_monday - timedelta(days=7)
+          ended_week_end = current_monday - timedelta(seconds=1)
           print(previous_monday.strftime('%Y-%m-%dT%H:%M:%SZ'))
+          print(ended_week_end.strftime('%Y-%m-%dT%H:%M:%SZ'))
           PY
           )"
+          WEEK_START="$(printf '%s\n' "$WEEK_WINDOW" | sed -n '1p')"
+          WEEK_END="$(printf '%s\n' "$WEEK_WINDOW" | sed -n '2p')"
           echo "Weekly window starts at: $WEEK_START"
 
-          if [[ -z "$(git rev-list -1 --since="$WEEK_START" HEAD)" ]]; then
+          if [[ "${GITHUB_EVENT_NAME:-workflow_dispatch}" == "schedule" ]]; then
+            REVISION_ARGS=(--since="$WEEK_START" --until="$WEEK_END")
+            echo "Scheduled run window ends at: $WEEK_END"
+          else
+            REVISION_ARGS=(--since="$WEEK_START")
+            echo "Manual dispatch window includes commits up to now."
+          fi
+
+          if [[ -z "$(git rev-list -1 "${REVISION_ARGS[@]}" HEAD)" ]]; then
             echo "No commits in the weekly window; nothing to publish."
             exit 0
           fi
