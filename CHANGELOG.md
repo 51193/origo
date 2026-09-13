@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Weekly snapshot build workflow** — a scheduled GitHub Actions workflow publishes a `-nightly.YYYYMMDD` build only when the weekly window beginning at the previous Monday 00:00 UTC contains new commits; idle windows publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
+- **Weekly snapshot build workflow** — the Monday 02:30 UTC scheduled run publishes a `-nightly.YYYYMMDD` build only when the week that just ended ([previous Monday 00:00, current Monday 00:00) UTC) contains new commits; manual dispatch additionally covers the current partial week. Idle scheduled weeks publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
 
 ### Changed
 
@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Benchmark regression gate retries once on a failed throughput comparison** — on the baseline machine, a throughput comparison failure now re-runs the full benchmark suite once, and only a throughput regression that fails both attempts is reported. Allocation gates fail immediately because this suite's allocation counts are deterministic.
 - **BREAKING: `Blackboard.SetValue` rejects null for unregistered reference types** — a null reference of an unregistered CLR type cannot be recovered from `TypedData` (it degrades to `object`), so it now fails fast with `ArgumentNullException` instead of being stored as an unfindable entry. Null values for registered reference kinds such as `string` remain supported.
 - **BREAKING: invalid save-meta contributor output now fails the save** — a contributor returning a null dictionary, a blank key, or a null value causes `RequestSaveGame` to throw `InvalidOperationException` with contributor context instead of silently dropping metadata, matching the interface contract and fail-fast policy.
-- **Internal save payload node trees are released deterministically** — framework load/mount and write/snapshot paths now dispose the `DataSourceNode` trees of `SaveGamePayload`/`LevelPayload` (and progress-only snapshots) as soon as they are no longer needed instead of relying on GC. Public `ISaveStorageService` read methods return caller-owned trees; write methods consume theirs during the call.
+- **BREAKING: save payload node trees are released deterministically** — framework load/mount and write/snapshot paths now dispose the `DataSourceNode` trees of `SaveGamePayload`/`LevelPayload` (and progress-only snapshots) as soon as they are no longer needed instead of relying on GC. Public `ISaveStorageService` read methods return caller-owned trees, and write implementations must consume their node trees during the call; implementations that retained the trees for later reads must be adapted.
 
 ### Fixed
 
