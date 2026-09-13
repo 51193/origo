@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Data Source Tests
 
@@ -146,6 +146,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `StrategyMetaDataConverter_LifecycleIndicesNotArray_Throws` | lifecycle_indices is an object instead of an array | InvalidOperationException (contains "array") |
 | `StrategyMetaDataConverter_ObserverIndicesNotArray_Throws` | observer_indices is an object instead of an array | InvalidOperationException (contains "array") |
 | `StrategyMetaDataConverter_BlankObserverTarget_Throws` | observer_indices entry target is empty | InvalidOperationException (contains "target"; binding must not be silently dropped) |
+| `StrategyMetaDataConverter_Write_BlankObserverTarget_Throws` | Observer binding target is empty during write | InvalidOperationException (contains "target"; binding must not be silently dropped) |
 | `NodeMetaDataConverter_PairsNotMap_Throws` | node.pairs is an array instead of an object | InvalidOperationException (contains "object") |
 | `DataMetaDataConverter_PairsNotMap_Throws` | data.pairs is an array instead of an object | InvalidOperationException (contains "object") |
 | `StringDictionaryConverter_Read_NonMap_Throws` | String dictionary root node is an array | InvalidOperationException (contains "object") |

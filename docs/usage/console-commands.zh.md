@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 控制台命令
 
@@ -109,12 +109,12 @@ health = 100 (type: Int32)
 
 ```
 > invoke_strategy FoodManager food.get_registry
-InvokeStrategy 'food.get_registry' on 'FoodManager': [{"K":"food_001","T":"berry",...}]
+InvokeStrategy('food.get_registry') on 'FoodManager' => [{"K":"food_001","T":"berry",...}]
 ```
 
 ```
 > invoke_strategy TraversabilityManager traversability.is_passable 10,10
-InvokeStrategy 'traversability.is_passable' on 'TraversabilityManager': true
+InvokeStrategy('traversability.is_passable') on 'TraversabilityManager' => true
 ```
 
 对指定实体调用其主动策略（ActiveStrategyBase）。第一个位置参数为实体名称，第二个为策略索引，第三个可选为 JSON 输入参数。结果以字符串形式输出。若实体不存在或策略非主动类型，输出错误。

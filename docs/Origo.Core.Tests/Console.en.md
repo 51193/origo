@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console System Tests
 
@@ -170,6 +170,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | `EntitySetData_NewKey_BoolLiteral_StoredAsBoolean` | entity_set_data player alive true → Boolean | console-commands |
 | `EntitySetData_NewKey_StringLiteral_StoredAsString` | entity_set_data player tag hero → String | console-commands |
 | `EntitySetData_ExistingKey_PreservesType` | Existing float-typed "hunger" key, write 15 → preserved as Single(15.0f) | console-commands: entity_set_data |
+| `EntitySetData_ExistingInt64Key_PreservesInt64` | Existing Int64-typed "coins" key, write 4000000000 → preserved as Int64(4000000000) | console-commands: entity_set_data |
 | `BlackboardSet_BeyondIntRange_StoredAsInt64` | bb_set system big 3000000000 (beyond int range) → Int64(3000000000) | console-commands: bb_set |
 | `EntitySetData_NewKey_BeyondIntRange_StoredAsInt64` | entity_set_data player coins 3000000000 → Int64 | console-commands: entity_set_data |
 

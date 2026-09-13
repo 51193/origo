@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console Commands
 
@@ -109,12 +109,12 @@ Type inference rules are the same as `bb_set` (int/long/float/bool/string). If t
 
 ```
 > invoke_strategy FoodManager food.get_registry
-InvokeStrategy 'food.get_registry' on 'FoodManager': [{"K":"food_001","T":"berry",...}]
+InvokeStrategy('food.get_registry') on 'FoodManager' => [{"K":"food_001","T":"berry",...}]
 ```
 
 ```
 > invoke_strategy TraversabilityManager traversability.is_passable 10,10
-InvokeStrategy 'traversability.is_passable' on 'TraversabilityManager': true
+InvokeStrategy('traversability.is_passable') on 'TraversabilityManager' => true
 ```
 
 Invokes an active strategy (`ActiveStrategyBase`) on the specified entity. The first positional argument is the entity name, the second is the strategy index, and the optional third is a JSON input parameter. The result is output as a string. Outputs an error if the entity does not exist or the strategy is not of active type.

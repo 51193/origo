@@ -8,9 +8,7 @@ namespace Origo.Core.Save.Meta;
 ///     Each contributor returns its own dictionary of produced key-value
 ///     pairs (must not modify others' contributions); the framework merger
 ///     combines them all. Multiple contributors execute in registration order;
-///     same-name keys from later contributors override earlier ones. Finally,
-///     <c>customMeta</c> provided by the caller performs key-level overrides
-///     once more.
+///     same-name keys from later contributors override earlier ones.
 /// </summary>
 public interface ISaveMetaContributor
 {

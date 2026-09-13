@@ -45,7 +45,7 @@ public readonly struct SaveMetaBuildContext
     /// <summary>The current session-level blackboard (read-only snapshot).</summary>
     public IBlackboard Session { get; }
 
-    /// <summary>Read-only access interface for the current scene; can be used
-    /// to serialize entity metadata lists.</summary>
+    /// <summary>Read-only entity view for the current session; callers can
+    /// query but not mutate or serialize the scene.</summary>
     public ISndSceneReadAccess SceneAccess { get; }
 }

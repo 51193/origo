@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话生命周期 测试
 
@@ -112,6 +112,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SessionRun_Dispose_DisposingSubscriberThrows_SessionMachinesAndEntitiesStillReleased` | Disposing 订阅者抛异常 | 异常传播，但会话状态机与实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交 |
 | `SessionRun_Dispose_PopHookThrows_SessionMachinesAndEntitiesStillReleased` | 会话状态机退出 Pop 钩子抛异常 | 异常传播，但会话状态机与实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交 |
 | `SessionRun_Dispose_StateMachineClearThrows_EntitiesStillReleased` | 状态机容器释放阶段抛异常 | 异常传播，但实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交（二次 Dispose 幂等、访问抛 ObjectDisposedException） |
+| `SessionRun_Dispose_HostCleanupThrows_DisposedFlagStillCommitted` | 场景宿主 RemoveAllEntities 抛异常 | 异常传播，但 dispose 标志提交（二次 Dispose 幂等、访问抛 ObjectDisposedException） |
 | `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | 退出 Pop 钩子抛异常 | 异常传播，但 progress 黑板清空、状态机释放、dispose 标志提交（二次 Dispose 幂等） |
 | `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | 会话 teardown 期间订阅者抛异常 | 异常传播，但 progress 状态仍释放、dispose 状态提交（二次 Dispose 无操作） |
 | `ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted` | 会话 teardown 期间订阅者抛异常 | 异常传播，但 current/ 目录仍被删除（各清理步骤独立执行） |

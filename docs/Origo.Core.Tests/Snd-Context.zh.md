@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 上下文 测试
 
@@ -226,6 +226,7 @@ TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入�
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `TryLoad_ValidMapFile_ReturnsAttributes` | 有效 map 文件解析返回 4 个属性，键值正确 | SndArchetypeLoader.TryLoad |
+| `TryLoad_DisposesReturnedSourceNode` | TryLoad 复制属性后释放从 ISndFileAccess 读取的 DataSourceNode | SndArchetypeLoader.TryLoad |
 | `ApplyAttributes_IntString_StoresAsInt` | 整数字符串 "100" 存储为 int(100) | SndArchetypeLoader.ApplyAttributes |
 | `ApplyAttributes_LargeIntegerString_StoresAsLong` | 超大整数字符串超过 int.MaxValue 时存储为 long，不存为 float | SndArchetypeLoader.ApplyAttributes |
 | `ApplyAttributes_FloatString_StoresAsFloat` | 浮点字符串 "3.14" 存储为 float(3.14f) | SndArchetypeLoader.ApplyAttributes |

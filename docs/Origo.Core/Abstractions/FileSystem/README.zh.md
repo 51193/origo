@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # FileSystem (Abstractions)
 
@@ -50,7 +50,7 @@
 
 ### 为什么策略不直接使用 IFileSystem
 
-`IFileSystem` 完全内部化——策略和基础设施模块均不直接引用它。策略通过 `ISndFileAccess`（静态资源文件访问，`ISndContext` 的 `FileAccess` companion 属性）和 `ISndArchiveFileAccess`（存档内文件访问，`ArchiveFileAccess` companion 属性）访问文件。`ISndFileAccess` 内部委托到三个基础接口：
+`IFileSystem` 是平台实现接口：框架内部模块和策略均不直接引用它，仅由适配层/宿主实现；策略通过 `ISndFileAccess`（静态资源文件访问，`ISndContext` 的 `FileAccess` companion 属性）和 `ISndArchiveFileAccess`（存档内文件访问，`ArchiveFileAccess` companion 属性）访问文件。`ISndFileAccess` 内部委托到三个基础接口：
 
 - `IDataSourceIoGateway`：内容读写（仅 `ReadTree`/`WriteTree`，所有文件强制走 codec 路由——包括 `.sha`、`.write_in_progress` 等无结构化后缀，通过 `RawStringDataSourceCodec` 路由），返回已解析的 `DataSourceNode` 树
 - `IFileMetaAccess`：文件元数据（FileExists、DirectoryExists、Enumerate、CreateDirectory、Delete、Copy、Rename）

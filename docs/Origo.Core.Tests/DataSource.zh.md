@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 数据源 测试
 
@@ -146,6 +146,7 @@
 | `StrategyMetaDataConverter_LifecycleIndicesNotArray_Throws` | lifecycle_indices 为对象而非数组 | InvalidOperationException（消息含 "array"） |
 | `StrategyMetaDataConverter_ObserverIndicesNotArray_Throws` | observer_indices 为对象而非数组 | InvalidOperationException（消息含 "array"） |
 | `StrategyMetaDataConverter_BlankObserverTarget_Throws` | observer_indices 条目的 target 为空 | InvalidOperationException（消息含 "target"；不得静默丢弃绑定） |
+| `StrategyMetaDataConverter_Write_BlankObserverTarget_Throws` | 写入的 observer binding target 为空 | InvalidOperationException（消息含 "target"；不得静默丢弃绑定） |
 | `NodeMetaDataConverter_PairsNotMap_Throws` | node.pairs 为数组而非对象 | InvalidOperationException（消息含 "object"） |
 | `DataMetaDataConverter_PairsNotMap_Throws` | data.pairs 为数组而非对象 | InvalidOperationException（消息含 "object"） |
 | `StringDictionaryConverter_Read_NonMap_Throws` | 字符串字典根节点为数组 | InvalidOperationException（消息含 "object"） |

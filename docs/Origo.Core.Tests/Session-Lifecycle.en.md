@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Lifecycle Tests
 
@@ -112,6 +112,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SessionRun_Dispose_DisposingSubscriberThrows_SessionMachinesAndEntitiesStillReleased` | Disposing subscriber throws | Exception propagates, but session state machines and entity strategies are all released (LogPoolLeaks finds no leak), disposed flag committed |
 | `SessionRun_Dispose_PopHookThrows_SessionMachinesAndEntitiesStillReleased` | Session state-machine quit pop hook throws | Exception propagates, but session state machines and entity strategies are all released (LogPoolLeaks finds no leak), disposed flag committed |
 | `SessionRun_Dispose_StateMachineClearThrows_EntitiesStillReleased` | State-machine container release throws | Exception propagates, but entity strategies are still released (LogPoolLeaks finds no leak), disposed flag committed (second dispose idempotent, access throws ObjectDisposedException) |
+| `SessionRun_Dispose_HostCleanupThrows_DisposedFlagStillCommitted` | Scene-host RemoveAllEntities throws | Exception propagates, but the disposed flag is committed (second dispose idempotent, access throws ObjectDisposedException) |
 | `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | Quit pop hook throws | Exception propagates, but progress blackboard cleared, state machines released, disposed flag committed (second dispose idempotent) |
 | `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | Subscriber throws during session teardown | Exception propagates, but progress state still released and dispose state committed (second dispose no-op) |
 | `ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted` | Subscriber throws during session teardown | Exception propagates, but current/ is still deleted (each cleanup step runs independently) |

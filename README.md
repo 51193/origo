@@ -93,8 +93,9 @@ nc localhost 9876
 ```
 
 ```xml
-<PackageReference Include="Origo.Core" />
-<PackageReference Include="Origo.GodotAdapter" />
+<!-- Use the exact version of the .nupkg files downloaded from the release. -->
+<PackageReference Include="Origo.Core" Version="0.0.9" />
+<PackageReference Include="Origo.GodotAdapter" Version="0.0.9" />
 ```
 
 ### 2. Create folder structure
@@ -113,7 +114,7 @@ Attach `OrigoDefaultEntry` to your startup scene and configure paths.
 > If Godot can't resolve the `[GlobalClass]`, create a one-line bridge class:
 > ```csharp
 > [GlobalClass]
-> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> public partial class MyOrigoEntry : Origo.GodotAdapter.Bootstrap.OrigoDefaultEntry { }
 > ```
 
 ### 4. Write a strategy and define entities

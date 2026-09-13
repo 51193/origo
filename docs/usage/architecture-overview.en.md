@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
@@ -9,7 +9,7 @@
 
 The Origo framework follows these core design constraints:
 
-- **Platform-agnostic**: Core has zero engine dependencies; all I/O goes through `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver` (internalized by `IFileSystem`)
+- **Platform-agnostic**: Core has zero engine dependencies; all I/O goes through `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver` (with `IFileSystem` as an adapter/host-provided implementation detail)
 - **Adapter-layer isolation**: The adapter layer only provides capability encapsulation and bridging; it must not fire strategy hooks or manage strategy lifecycles
 - **Interface Segregation (ISP)**: `ISndContext` exposes capabilities through 10 companion properties; `ISessionRun` returns an abstract `IStateMachineContainer`
 - **Unidirectional dependency**: Adapter → Core → Abstractions; reverse is strictly forbidden
@@ -126,10 +126,10 @@ All file operations in the Core layer go through three interfaces:
 - `IFileMetaAccess`: File metadata operations (FileExists, directory management, enumeration, deletion, copy)
 - `IPathResolver`: Platform path operations (CombinePath, GetParentDirectory)
 
-`IFileSystem` is an implementation detail; the above three interfaces are its public facade. Business code should not directly depend on `IFileSystem`.
+`IFileSystem` is a platform implementation detail: Core-internal modules do not depend on it directly and instead use the three interfaces above. The interface remains public so adapters and test hosts can provide custom file-system implementations, but business code must not depend on `IFileSystem` to bypass codec routing.
 
 ```
-Business modules → DataSourceNode → IDataSourceIoGateway / IFileMetaAccess / IPathResolver → IFileSystem (internal) → File system
+Business modules → DataSourceNode → IDataSourceIoGateway / IFileMetaAccess / IPathResolver → IFileSystem (adapter/host-provided) → File system
 ```
 
 Suffix routing, codec strategy, and I/O error semantics are centrally governed on the Gateway side. Raw text files like `.sha` and `.write_in_progress` also go through the codec route via `RawStringDataSourceCodec` — there is no direct read/write bypass. The Gateway uses a fail-fast strategy: when codec decoding fails (e.g., `.map` file format error), the Gateway wraps the exception as an `InvalidOperationException` containing the file path and immediately throws — it does not swallow errors.
@@ -204,7 +204,7 @@ The frame loop entry is in the adapter layer (Godot's `_Process` callback), but 
 ## Project Structure
 
 ```
-Origo.Core/           # Platform-agnostic core (211 .cs files)
+Origo.Core/           # Platform-agnostic core (209 .cs files)
 ├── Abstractions/     # Public interfaces (Blackboard/Entity/StateMachine/...)
 ├── Addons/           # External algorithm library (FastNoiseLite)
 ├── Blackboard/       # Blackboard implementation
@@ -224,7 +224,7 @@ Origo.Core/           # Platform-agnostic core (211 .cs files)
 Origo.SourceGeneration/  # Roslyn source generator (5 .cs files)
 └── TypedDataGenerator*.cs  # Home/Adapter dual-mode code generation (1 main file + 4 partial)
 
-Origo.GodotAdapter/   # Godot 4 adapter layer (~23 .cs files)
+Origo.GodotAdapter/   # Godot 4 adapter layer (22 .cs files)
 ├── Bootstrap/        # Startup orchestration
 ├── Console/          # Godot commands
 ├── FileSystem/       # Godot file system

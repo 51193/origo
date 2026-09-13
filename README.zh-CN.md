@@ -93,8 +93,9 @@ nc localhost 9876
 ```
 
 ```xml
-<PackageReference Include="Origo.Core" />
-<PackageReference Include="Origo.GodotAdapter" />
+<!-- 版本号需与下载的 .nupkg 文件版本一致。 -->
+<PackageReference Include="Origo.Core" Version="0.0.9" />
+<PackageReference Include="Origo.GodotAdapter" Version="0.0.9" />
 ```
 
 ### 2. 创建目录结构
@@ -113,7 +114,7 @@ res://origo/
 > 若 Godot 无法解析 `[GlobalClass]`，创建一行桥接类：
 > ```csharp
 > [GlobalClass]
-> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> public partial class MyOrigoEntry : Origo.GodotAdapter.Bootstrap.OrigoDefaultEntry { }
 > ```
 
 ### 4. 编写策略与定义实体

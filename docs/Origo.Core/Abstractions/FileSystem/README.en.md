@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # FileSystem (Abstractions)
 
@@ -45,7 +45,7 @@ The safety semantics of path operations should be explicitly readable. Implicit 
 Different platforms (Godot virtual file system vs OS local file system) handle renaming onto an existing target differently. The Core layer should not presume a behavior; the adapter layer implements the safest policy according to platform semantics.
 
 ### Why strategies do not directly use IFileSystem
-`IFileSystem` is completely internalized — neither strategies nor infrastructure modules reference it directly. Strategies access files through `ISndFileAccess` (static resource file access, the `FileAccess` companion property of `ISndContext`) and `ISndArchiveFileAccess` (save-internal file access, the `ArchiveFileAccess` companion property). `ISndFileAccess` internally delegates to three base interfaces:
+`IFileSystem` is a platform implementation interface: neither framework-internal modules nor strategies reference it directly; it is implemented by adapters/hosts. Strategies access files through `ISndFileAccess` (static resource file access, the `FileAccess` companion property of `ISndContext`) and `ISndArchiveFileAccess` (save-internal file access, the `ArchiveFileAccess` companion property). `ISndFileAccess` internally delegates to three base interfaces:
 
 - `IDataSourceIoGateway`: content read/write (only `ReadTree`/`WriteTree`; all files are forced through the codec routing — including files without structured suffixes like `.sha` and `.write_in_progress`, routed via `RawStringDataSourceCodec`), returning parsed `DataSourceNode` trees
 - `IFileMetaAccess`: file metadata (FileExists, DirectoryExists, Enumerate, CreateDirectory, Delete, Copy, Rename)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Context Tests
 
@@ -223,6 +223,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
 | `TryLoad_ValidMapFile_ReturnsAttributes` | Valid map file parsing returns 4 attributes with correct key/value pairs | SndArchetypeLoader.TryLoad |
+| `TryLoad_DisposesReturnedSourceNode` | TryLoad disposes the DataSourceNode from ISndFileAccess after copying attributes | SndArchetypeLoader.TryLoad |
 | `ApplyAttributes_IntString_StoresAsInt` | Integer string "100" stored as int(100) | SndArchetypeLoader.ApplyAttributes |
 | `ApplyAttributes_LargeIntegerString_StoresAsLong` | Large integer string exceeding int.MaxValue stored as long, not float | SndArchetypeLoader.ApplyAttributes |
 | `ApplyAttributes_FloatString_StoresAsFloat` | Float string "3.14" stored as float(3.14f) | SndArchetypeLoader.ApplyAttributes |
