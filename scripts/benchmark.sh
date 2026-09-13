@@ -7,8 +7,8 @@
 # throughput benchmarks.
 #
 # Tagged [Trait("Category","Benchmark")], these run here only: they are excluded
-# from the regular test run (scripts/test.sh filters them out) and executed once
-# by this dedicated CI step, which scripts/ci.sh invokes.
+# from the regular test run (scripts/test.sh filters them out) and executed by
+# this dedicated CI step, which scripts/ci.sh invokes.
 #
 # Every measurement is emitted as a machine-readable BENCH|... line by
 # PerfReporter.EmitMetric and compared against docs/benchmarks/baseline.json.
@@ -17,7 +17,11 @@
 # and tiered-JIT state, and even allocation counts vary across machines/runtime
 # builds because JIT inlining decisions change per-instruction allocation.
 # GitHub Actions runners are random VMs with fresh machine ids, so on CI the
-# comparison is skipped entirely and the step acts as a smoke test.
+# comparison is skipped entirely and the step acts as a smoke test. On the
+# baseline machine, a failed throughput comparison triggers one automatic full
+# rerun; only a throughput regression that fails both attempts is reported,
+# which filters transient CPU/GC/JIT noise without hiding deterministic
+# regressions. Allocation-only failures fail immediately.
 # Pass --update-baseline to refresh baseline.json from the current run
 # (e.g. after a confirmed improvement or an environment change).
 set -euo pipefail
@@ -138,6 +142,7 @@ EOF
   exit $RUN_EXIT_CODE
 fi
 
+set +e
 python3 - "$CURRENT_JSON" "$BASELINE" "$OPS_THRESHOLD" "$ALLOC_THRESHOLD" "$MACHINE_ID" <<'EOF'
 import json, sys
 current_path, baseline_path = sys.argv[1], sys.argv[2]
@@ -159,6 +164,7 @@ if not same_machine:
     print("  benchmark run still acts as a smoke test.")
 
 fails = []
+throughput_regressed = False
 skipped = 0
 # Throughput gates only apply to min-of-rounds measurements (CompareTable /
 # Compare / Report kinds); single-shot ReportTable rows swing with CPU
@@ -187,6 +193,7 @@ for key, cur in sorted(current.items()):
         # gated only when a meaningful baseline exists.
         ops_regressed = base["ops"] > 0 and cur["ops"] / base["ops"] < 1.0 - ops_th
         if ops_regressed:
+            throughput_regressed = True
             fails.append(f"  FAIL throughput: {key} {cur['ops']:.0f} ops/s vs baseline {base['ops']:.0f}")
 
 if skipped:
@@ -201,14 +208,41 @@ if fails:
     print("If the change is a real improvement or the environment changed,")
     print("re-run with: bash scripts/benchmark.sh --update-baseline")
     print("and commit the refreshed docs/benchmarks/baseline.json.")
-    sys.exit(1)
+    # Exit 2 marks a throughput failure, which the shell retries once to
+    # filter out CPU frequency/GC/JIT noise; allocation-only failures exit 1
+    # immediately because allocation counts are deterministic in this suite.
+    sys.exit(2 if throughput_regressed else 1)
 
 print("All benchmark metrics within thresholds.")
 EOF
 COMPARE_EXIT_CODE=$?
+set -e
 
 rm -f "$RUN_LOG" "$CURRENT_JSON"
-if [[ $RUN_EXIT_CODE -ne 0 || $COMPARE_EXIT_CODE -ne 0 ]]; then
+
+if [[ $RUN_EXIT_CODE -ne 0 ]]; then
   exit 1
 fi
+
+if [[ $COMPARE_EXIT_CODE -eq 2 ]]; then
+  # Throughput measurements on the baseline machine can be perturbed by
+  # CPU frequency/thermal state or JIT/GC timing. Re-run the whole
+  # benchmark once; a real code regression fails both attempts, while a
+  # transient measurement failure clears on the second run. Allocation-only
+  # failures (exit 1, handled below) skip the retry because this suite's
+  # allocation counts are deterministic.
+  if [[ "${BENCHMARK_RETRY:-0}" != "1" ]]; then
+    echo ""
+    echo "Benchmark throughput comparison failed; rerunning once to rule out transient noise."
+    export BENCHMARK_RETRY=1
+    exec "$ROOT/scripts/benchmark.sh" "$@"
+  fi
+
+  exit 1
+fi
+
+if [[ $COMPARE_EXIT_CODE -ne 0 ]]; then
+  exit 1
+fi
+
 exit 0
