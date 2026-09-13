@@ -2,8 +2,10 @@ name: Weekly Build
 
 on:
   schedule:
-    # Monday 02:30 UTC. A snapshot is published only when the current week
-    # (Monday 00:00 UTC or later) contains at least one new commit.
+    # Monday 02:30 UTC. A snapshot is published only when the weekly
+    # window that starts at the previous Monday 00:00 UTC contains at
+    # least one new commit, so the scheduled run covers the week that
+    # just ended instead of the few hours since midnight.
     - cron: '30 2 * * 1'
   workflow_dispatch:
 
@@ -19,22 +21,28 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Check for new commits this week
+      - name: Check for commits in the weekly window
         id: check
         shell: bash
         run: |
+          # The scheduled run happens on Monday morning. Looking back to
+          # the start of the previous calendar week makes that run cover
+          # the week that just ended instead of the few hours since
+          # midnight. A workflow_dispatch run during the current week also
+          # sees the current partial week in the same window.
           WEEK_START="$(python3 - <<'PY'
           from datetime import datetime, timedelta, timezone
           now = datetime.now(timezone.utc)
-          monday = (now - timedelta(days=now.weekday())).replace(
+          current_monday = (now - timedelta(days=now.weekday())).replace(
               hour=0, minute=0, second=0, microsecond=0)
-          print(monday.strftime('%Y-%m-%dT%H:%M:%SZ'))
+          previous_monday = current_monday - timedelta(days=7)
+          print(previous_monday.strftime('%Y-%m-%dT%H:%M:%SZ'))
           PY
           )"
-          echo "Week starts at: $WEEK_START"
+          echo "Weekly window starts at: $WEEK_START"
 
           if [[ -z "$(git rev-list -1 --since="$WEEK_START" HEAD)" ]]; then
-            echo "No commits this week; nothing to publish."
+            echo "No commits in the weekly window; nothing to publish."
             exit 0
           fi
 
