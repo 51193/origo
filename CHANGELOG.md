@@ -28,6 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`TypedData` generated source is line-ending deterministic** — the source generator no longer emits CRLF on Windows via `StringBuilder.AppendLine`; generated Home and Adapter sources now always use LF, so identical input produces identical generated text on every build host.
 
 - **Generated `TypedData.TryGetString` now declares `out string?`** — null is a legal stored value for the registered string kind (the kind is preserved while the reference is null), so the previous non-nullable `out string` annotation hid that result from consumers and contradicted the handwritten API reference.
+- **`RandomNumberGenerator` sequence restored to canonical XorShift128+** — the stateless refactor rotated the wrong state half and mixed the wrong operand, so seeded sequences no longer matched the documented algorithm. The canonical transition is restored and pinned by reference-vector regression tests.
+- **`entity_set_data` preserves an existing `Int64` key** — a key previously inferred as `long` can now be updated by a subsequent command instead of failing with “Cannot parse as Int64”.
+- **Blank observer-binding targets fail metadata writes** — `StrategyMetaDataConverter` now rejects blank targets instead of silently dropping the binding, matching the strict read path.
+- **`SessionRun.Dispose` commits its disposed state when host cleanup throws** — a throwing `RemoveAllEntities` no longer leaves the run permanently stuck between `_disposing` and `_disposed`; subsequent access fails with `ObjectDisposedException` as documented.
+- **`SndArchetypeLoader.TryLoad` disposes its source node** — the `DataSourceNode` returned by `ISndFileAccess.ReadFile` is now released after its attributes are copied.
 
 ## [0.0.9] - 2026-09-03
 

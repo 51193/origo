@@ -28,7 +28,7 @@ public static class SndArchetypeLoader
         if (!fileAccess.FileExists(path))
             return false;
 
-        var node = fileAccess.ReadFile(path);
+        using var node = fileAccess.ReadFile(path);
         if (node.Kind != DataSourceNodeKind.Map)
             return false;
 

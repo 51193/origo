@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
+using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
@@ -23,10 +24,11 @@ internal static class DisposeSemanticsTestInfrastructure
     public const string PopHookThrowsPopIndex = "dispose_sem.pop_hook_throwing";
 
     public static (SndContext ctx, TestMemoryFileSystem fs) CreateForegroundContext(
-        Action<SndWorld>? configureWorld = null)
+        Action<SndWorld>? configureWorld = null,
+        ISndSceneHost? host = null)
     {
         var logger = new TestLogger();
-        var host = new TestSndSceneHost();
+        host ??= new TestSndSceneHost();
         var fs = new TestMemoryFileSystem();
         fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
         fs.SeedFile("res://levels/main_menu.json", "[]"); ;

@@ -534,6 +534,23 @@ public class DataSourceConverterTests
     }
 
     [Fact]
+    public void StrategyMetaDataConverter_Write_BlankObserverTarget_Throws()
+    {
+        // The strict read rejects blank targets; the write path must fail the
+        // same way instead of silently dropping the binding from the save.
+        var registry = TestFactory.CreateRegistry();
+        var meta = new StrategyMetaData();
+        meta.ObserverIndices.Add(new StrategyMetaData.ObserverBinding
+        {
+            Target = "",
+            ObserverIndices = ["watch.health"]
+        });
+
+        var ex = Assert.Throws<InvalidOperationException>(() => registry.Write(meta));
+        Assert.Contains("target", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void NodeMetaDataConverter_PairsNotMap_Throws()
     {
         var registry = TestFactory.CreateRegistry();

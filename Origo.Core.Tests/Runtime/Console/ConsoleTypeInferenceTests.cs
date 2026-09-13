@@ -251,6 +251,26 @@ public class ConsoleTypeInferenceTests
     }
 
     [Fact]
+    public void EntitySetData_ExistingInt64Key_PreservesInt64()
+    {
+        var (runtime, host) = CreateRuntimeWithConsoleAndEntity("player");
+        var entity = host.FindByName("player")!;
+        entity.SetData("coins", 3_000_000_000L);
+
+        var handler = new SetEntityDataCommandHandler(runtime);
+        var output = new ConsoleOutputChannel();
+
+        var ok = handler.TryExecute(
+            CreateInvocation("entity_set_data", "player", "coins", "4000000000"), output, out var err);
+
+        Assert.True(ok);
+        Assert.Null(err);
+        var (found, value) = entity.TryGetData<long>("coins");
+        Assert.True(found);
+        Assert.Equal(4_000_000_000L, value);
+    }
+
+    [Fact]
     public void EntitySetData_EntityNotFound_ReturnsError()
     {
         var (runtime, _) = CreateRuntimeWithConsole();

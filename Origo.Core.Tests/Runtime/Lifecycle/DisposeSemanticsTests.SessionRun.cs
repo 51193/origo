@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Scene;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Metadata;
 using Origo.Core.Save;
 using Origo.TestSupport;
 using Xunit;
@@ -300,6 +303,23 @@ public class DisposeSemanticsTestsSessionRun
     }
 
     [Fact]
+    public void SessionRun_Dispose_HostCleanupThrows_DisposedFlagStillCommitted()
+    {
+        var host = new ThrowingRemoveAllSceneHost();
+        var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext(host: host);
+        host.ThrowOnRemove = true;
+        var foreground = (SessionRun)ctx.Runtime.SessionManager.ForegroundSession!;
+
+        // The host cleanup failure propagates (fail-fast), but the session's
+        // disposed flag must still be committed so no half-disposed session
+        // remains reachable.
+        Assert.Throws<InvalidOperationException>(() => foreground.Dispose());
+
+        Assert.Null(Record.Exception(() => foreground.Dispose()));
+        Assert.Throws<ObjectDisposedException>(() => foreground.SessionBlackboard);
+    }
+
+    [Fact]
     public void SessionRun_Dispose_EntityQuitHookThrows_LaterEntitiesStillReleased()
     {
         var (ctx, logger) = CreateContext(world =>
@@ -322,6 +342,37 @@ public class DisposeSemanticsTestsSessionRun
 
         ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
         Assert.DoesNotContain(logger.Warnings, w => w.Contains("refCount"));
+    }
+
+    private sealed class ThrowingRemoveAllSceneHost : ISndSceneHost
+    {
+        private readonly TestSndSceneHost _inner = new();
+
+        public bool ThrowOnRemove { get; set; }
+
+        public ISndEntity CreateEntity(SndMetaData metaData) => _inner.CreateEntity(metaData);
+
+        public IReadOnlyCollection<ISndEntity> GetEntities() => _inner.GetEntities();
+
+        public ISndEntity? FindByName(string name) => _inner.FindByName(name);
+
+        public IReadOnlyList<SndMetaData> BuildMetaList() => _inner.BuildMetaList();
+
+        public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList) => _inner.RecoverFromMetaList(metaList);
+
+        public void ProcessAll(double delta) => _inner.ProcessAll(delta);
+
+        public void RemoveEntity(string name) => _inner.RemoveEntity(name);
+
+        public void RequestKillEntity(string name) => _inner.RequestKillEntity(name);
+
+        public void RemoveAllEntities()
+        {
+            if (ThrowOnRemove)
+                throw new InvalidOperationException("Intentional host cleanup failure for testing.");
+
+            _inner.RemoveAllEntities();
+        }
     }
 
     private static (SndContext ctx, TestLogger logger) CreateContext(
