@@ -2171,20 +2171,20 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 18,
-        "en": 18
+        "zh": 19,
+        "en": 19
       },
       "previous_revisions": {
-        "zh": 17,
-        "en": 17
+        "zh": 18,
+        "en": 18
       },
       "files": {
         "zh": "README.zh.md",
         "en": "README.en.md"
       },
       "content_hashes": {
-        "zh": "74BDC284A0008BE71BBE6338D4B4D3E3A55E90668E55E1A0929451DCC5863876",
-        "en": "64B717031FE16D43F4BCB7AF690857BDF1601A641BDF25832D9DB2D4BFAC3706"
+        "zh": "875C2676CDCDE4B2418E7A36C371053191B6EBD9E0C3A360ED86436107902588",
+        "en": "DB1276760E46DABA7B0A8451189A7E49518E9648C6456083A1C0CECC8CC09880"
       }
     },
     "tools/DocSyncTool.Tests/README": {
