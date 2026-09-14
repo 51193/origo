@@ -41,6 +41,7 @@ public sealed class ConsoleBridgeServer : IDisposable
     private StreamWriter? _writer;
     private TcpClient? _client;
     private bool _detachRequested;
+    private int _disposeRequested;
     private Task? _acceptTask;
 
     /// <summary>
@@ -70,14 +71,18 @@ public sealed class ConsoleBridgeServer : IDisposable
     public int ActualPort { get; private set; }
 
     /// <summary>
-    ///     Stops the listener, cancels the accept loop, and releases the
-    ///     output subscription. Idempotent.
+    ///     Stops accepting connections, joins the accept loop, closes the
+    ///     listener, cancels active reads, and releases the output
+    ///     subscription. A pending accept is woken before listener teardown
+    ///     so no accept can be abandoned half-open. Idempotent.
     /// </summary>
     public void Dispose()
     {
-        if (_cts.IsCancellationRequested)
+        if (Interlocked.Exchange(ref _disposeRequested, 1) != 0)
             return;
 
+        // Cancel active reads first. The token must never be passed to
+        // AcceptTcpClientAsync; a pending accept is woken separately below.
         _cts.Cancel();
 
         // Do not dispose the writer here: it wraps the same NetworkStream the
@@ -90,9 +95,12 @@ public sealed class ConsoleBridgeServer : IDisposable
             _writer = null;
         }
 
-        _listener?.Stop();
-        _listener?.Dispose();
-        _output.Unsubscribe(_outputSubId);
+        // A pending accept cannot be stopped by just closing the listener:
+        // the abort can race an accept that already completed at the OS level
+        // and leave the peer connected to a socket nobody owns. Wake the
+        // pending accept with a loopback connection instead, let the loop
+        // observe the cancellation, and only then close the listener.
+        TryWakePendingAccept();
 
         if (_acceptTask is not null)
         {
@@ -115,6 +123,14 @@ public sealed class ConsoleBridgeServer : IDisposable
                         new LogMessageBuilder().Build($"Accept loop faulted: {inner.Message}"));
             }
 
+            // Closing the listener only after the accept task completed means
+            // no AcceptTcpClientAsync call is in flight while the listening
+            // socket is destroyed, so an already accepted-but-unhandled peer
+            // cannot be abandoned half-open.
+            _listener?.Stop();
+            _listener?.Dispose();
+            _output.Unsubscribe(_outputSubId);
+
             // Only dispose the CTS once the accept loop has actually stopped.
             // Disposing it while the loop is still running makes the task
             // register callbacks on a disposed token and surface a misleading
@@ -124,6 +140,9 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
         else
         {
+            _listener?.Stop();
+            _listener?.Dispose();
+            _output.Unsubscribe(_outputSubId);
             _cts.Dispose();
         }
     }
@@ -243,33 +262,35 @@ public sealed class ConsoleBridgeServer : IDisposable
 
     private async Task AcceptLoopAsync(CancellationToken ct)
     {
-        while (!ct.IsCancellationRequested)
+        while (!ct.IsCancellationRequested && !IsDisposeRequested())
         {
             TcpClient client;
             try
             {
-                client = await _listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
+                // The cancellation token is deliberately not passed here.
+                // Socket cancellation can race an accept that already
+                // completed at the OS level: the canceled operation then
+                // throws without returning the accepted TcpClient, leaving
+                // the peer connected to a server socket nobody owns or
+                // closes. The wake-up connection from Dispose ends this
+                // await instead; the returned client is closed below.
+                client = await _listener.AcceptTcpClientAsync(CancellationToken.None).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                if (ct.IsCancellationRequested)
+                if (IsDisposeRequested() || ct.IsCancellationRequested)
                 {
-                    // Dispose cancelled the token before stopping the
-                    // listener; the stop can surface as a plain socket error
-                    // instead of OperationCanceledException. Treat it as a
-                    // normal shutdown rather than a genuine failure.
+                    // Dispose stopped the listener before/while an accept
+                    // was pending; the stop can surface as a plain socket
+                    // or object-disposed error. Treat it as a normal
+                    // shutdown rather than a genuine failure.
                     break;
                 }
 
-                // A cancellation makes AcceptTcpClientAsync throw
-                // OperationCanceledException (handled above); anything else is a
-                // genuine system-level socket error — stop the listener so the
-                // host can restart the server (Start rolls the started flag
-                // back and is retryable).
+                // Anything that is not caused by Dispose is a genuine
+                // system-level socket error — stop the listener so the host
+                // can restart the server (Start rolls the started flag back
+                // and is retryable).
                 _logger.Log(LogLevel.Error, nameof(ConsoleBridgeServer),
                     new LogMessageBuilder().Build(
                         $"Accept loop stopped after a non-cancellation error: {ex.Message}"));
@@ -285,6 +306,16 @@ public sealed class ConsoleBridgeServer : IDisposable
                 }
 
                 Interlocked.Exchange(ref _started, 0);
+                break;
+            }
+
+            if (ct.IsCancellationRequested || IsDisposeRequested())
+            {
+                // This client was accepted by the wake-up connection (or
+                // arrived in the same race window as Dispose); close it
+                // directly instead of starting a handler that can no longer
+                // serve it.
+                client.Close();
                 break;
             }
 
@@ -420,11 +451,33 @@ public sealed class ConsoleBridgeServer : IDisposable
         }
     }
 
+    private void TryWakePendingAccept()
+    {
+        if (_acceptTask is null || _acceptTask.IsCompleted || ActualPort <= 0)
+            return;
+
+        try
+        {
+            using var wake = new TcpClient();
+            wake.Connect(IPAddress.Loopback, ActualPort);
+        }
+        catch (Exception ex) when (ex is SocketException or ObjectDisposedException or InvalidOperationException)
+        {
+            // The accept loop already faulted or the listener is no longer
+            // accepting; the join below handles the remaining shutdown.
+        }
+    }
+
     private bool IsDetachRequested()
     {
         lock (_writerLock)
         {
             return _detachRequested;
         }
+    }
+
+    private bool IsDisposeRequested()
+    {
+        return Volatile.Read(ref _disposeRequested) != 0;
     }
 }

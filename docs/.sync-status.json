@@ -122,8 +122,8 @@
     "Origo.ConsoleBridge/README": {
       "status": "synced",
       "revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "previous_revisions": {
         "zh": 9,
@@ -134,8 +134,8 @@
         "en": "Origo.ConsoleBridge/README.en.md"
       },
       "content_hashes": {
-        "zh": "99CF5ADFB93E111CDD0D4CF76B2F21BC48F52E65EABEA86F105845872CCB48A4",
-        "en": "A2DEC12F7F6A57E4EDDF34F996281BFCFD50D734656A817FF674B8594A81C8A1"
+        "zh": "80A253410100CC060908AD4A76288CFABE06B67E3444E7336063C97C53B1B2C7",
+        "en": "31CD2CB5F0DA33820D475BE3B16A01008A044BAB2F9318D508313DBBC3999A76"
       }
     },
     "Origo.Core.Tests/Abstractions": {
