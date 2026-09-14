@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Conventional Commits gate for pull requests: conventional type,
 # 72-character subject limit, no trailing period, and body lines no longer
-# than 72 characters (docs/META commit message rules).
+# than 72 characters (docs/META commit message rules). Dependabot-authored
+# commits are skipped because Dependabot generates their message and supports
+# only a commit-message prefix, not the generated body (see
+# .github/dependabot.yml).
 # Usage:
 #   bash scripts/lint-commits.sh <base-sha> <head-sha>
 #   bash scripts/lint-commits.sh          # uses origin/main..HEAD locally
@@ -26,6 +29,19 @@ git rev-list --no-merges "$BASE_SHA..$HEAD_SHA" > "$COMMITS"
 
 FAILED=0
 while IFS= read -r sha; do
+  author_name="$(git log -1 --pretty=format:'%an' "$sha")"
+  author_email="$(git log -1 --pretty=format:'%ae' "$sha")"
+
+  # Dependabot controls neither the generated body nor an arbitrary subject
+  # template; commit-message.prefix in .github/dependabot.yml keeps generated
+  # subjects conventional. Exempt bot-authored commits so dependency PRs pass
+  # CI as proposed; human-authored commits keep the full gate.
+  if [[ "$author_name" == "dependabot[bot]" ]] ||
+     [[ "$author_email" == *"dependabot[bot]@users.noreply.github.com" ]]; then
+    echo "SKIP Dependabot-authored commit $sha"
+    continue
+  fi
+
   subject="$(git log -1 --pretty=format:'%s' "$sha")"
 
   if [[ -z "$subject" ]]; then

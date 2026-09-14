@@ -347,6 +347,12 @@ missing language files) always fail the build.
 > cross-package constraints are grouped; never bump one member
 > independently.**
 
+- Dependabot cannot fully customize its commit message: it supports only a
+  `commit-message.prefix`, and the generated body exceeds the 72-character
+  line rule. Every ecosystem in `.github/dependabot.yml` sets the
+  `chore(deps)` prefix, and `scripts/lint-commits.sh` skips
+  Dependabot-authored commits so dependency PRs pass CI as proposed;
+  human-authored commits keep the full commit-message gate.
 - Dependency versions are centralized in `Directory.Packages.props` and
   updated through `.github/dependabot.yml`. When a package family must stay
   version-compatible, configure a Dependabot group so every member is

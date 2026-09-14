@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 手册维护元指令
 
@@ -158,7 +158,7 @@ dotnet run --project tools/DocSyncTool -- generate
 
 ## Git 提交消息格式
 
-所有提交必须遵循 Conventional Commits 规范，保持仓库历史可读、可机器解析。PR 提交消息由 `scripts/lint-commits.sh` 与 `.github/workflows/commit-lint.yml` 强制执行：类型、72 字符标题上限、禁止句尾句号、正文每行不超过 72 字符。
+所有提交必须遵循 Conventional Commits 规范，保持仓库历史可读、可机器解析。PR 提交消息由 `scripts/lint-commits.sh` 与 `.github/workflows/commit-lint.yml` 强制执行：类型、72 字符标题上限、禁止句尾句号、正文每行不超过 72 字符。Dependabot 自动提交是唯一例外：Dependabot 只能配置提交消息前缀，不支持自定义消息模板，且自动生成的正文行宽超过 72 字符。`.github/dependabot.yml` 为所有生态系统配置 `chore(deps)` 前缀，使生成的标题保持 Conventional Commits；`scripts/lint-commits.sh` 会跳过 Dependabot 作为作者的提交，同一 PR 中人类编写的提交仍会被完整检查。
 
 ### 基本格式
 
