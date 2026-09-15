@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Weekly snapshot build workflow** — the Monday 02:30 UTC scheduled run publishes a `-nightly.YYYYMMDD` build only when the week that just ended ([previous Monday 00:00, current Monday 00:00) UTC) contains new commits; manual dispatch additionally covers the current partial week. Idle scheduled weeks publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
 - **Local agent work buffer (`_origo_local/`)** — scans, reviews, and design sessions can record structured findings and handoff state in a git-ignored single-book buffer under `_origo_local/`; implementation sessions claim the book and may close it only after the full development loop (source, tests, `scripts/ci.sh`, post-commit commit lint, changelog, docs sync) is complete. The entry summary is in `AGENTS.md` and the full tracked protocol in `docs/META.*`; the repository root `.gitignore` keeps the buffer out of version control.
+- **`OrigoDefaultEntry.ConfigureStrategies` hook** — derived Godot entries can register strategies manually before `SndContext.Bootstrap` freezes the ordering registry, covering `AutoDiscoverStrategies = false` and strategies that auto-discovery cannot reach.
 
 ### Changed
 
@@ -30,6 +31,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Dependabot-authored commits are exempt from commit-message lint** — Dependabot supports only a commit-message prefix, not a custom message template, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem, and `scripts/lint-commits.sh` skips Dependabot-authored commits so dependency PRs pass CI as proposed; human-authored commits keep the full subject and body gate.
 
 ### Fixed
+
+- **Duplicate strategy indices in entity metadata now fail recovery** — a duplicated lifecycle index mounted the same pooled instance twice, running its `Process` twice per frame; a duplicated active index overwrote the dictionary entry and leaked one pool reference. Entity and active recovery now reject duplicate indices before acquiring or releasing anything, matching the public mount contract and the strict save-read policy.
 
 - **`ConsoleBridgeServer.Dispose` no longer abandons a connection accepted while disposal races the accept loop** — disposal now cancels active reads, wakes the pending accept with a loopback connection, joins the accept loop, and only then closes the listener. Previously an aborted accept could discard a connection that had already completed at the OS level, leaving the client's blocked read hanging (observed as a Windows CI `TimeoutException` in the agent-disposal test).
 - **`OrigoAutoHost` runtime metadata now reports the repository version** — the version logged as `OrigoMeta.Version` previously used the four-part assembly version (`0.0.9.0`); it now uses the assembly informational version (`0.0.9`, or the full `-nightly` suffix), matching `Directory.Build.props` and the release tag.

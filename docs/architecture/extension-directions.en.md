@@ -1,13 +1,13 @@
-<!-- docsync-pair: usage/extension-directions -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-pair: architecture/extension-directions -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Extension Directions and Deferred Designs
 
-> [↑ Back to usage](README.en.md)
+> [↑ Back to Architecture](README.en.md)
 
 > **Nature of this document**: This page records alternative design directions produced by brainstorming. They are all "discussed, not implemented, deferred" ideas. They are not current framework capabilities, not roadmap commitments, and they do not change any existing interface semantics. The value of this page is to keep the complete "why not" trade-offs in the manual: when a developer or agent meets a related problem, they can first see the boundary of the current design and judge whether the benefit has grown enough to justify re-evaluation; when it has, they can pick up these pre-thought skeletons instead of reinventing them from scratch.
 
-Before reading this page, understand the current baseline: [Architecture Overview](architecture-overview.en.md), [SND Entity Model](snd-entity-model.en.md), [Strategy Lifecycle](strategy-lifecycle.en.md), and [Design Patterns](design-patterns.en.md).
+Before reading this page, understand the current baseline: [Architecture Overview](overview.en.md), [SND Entity Model](../usage/snd-entity-model.en.md), [Strategy Lifecycle](../usage/strategy-lifecycle.en.md), and [Design Patterns](../usage/design-patterns.en.md).
 
 ## Direction Summary
 
@@ -57,7 +57,7 @@ If re-evaluated, first build a read-only local file-system tree (still delegatin
 
 ### Relationship to the Current Design
 
-The framework uses a single-threaded frame model: entities process serially within a frame, and deferred queues carry cross-frame actions. Strategy instances are stateless and globally shared, so strategy classes are conceptually thread-friendly; however, strategies within one entity are sorted by partial-order constraints, and that execution order is part of the design — all strategies of one entity cannot simply run concurrently.
+The framework uses a single-threaded frame model: entities process serially within a frame, and deferred queues carry cross-frame actions. Strategy instances are stateless and globally shared, so strategy classes are conceptually thread-friendly; however, strategies within one entity are sorted by their partial-order constraints, and that execution order is part of the design — all strategies of one entity cannot simply run concurrently.
 
 ### Envisioned Shape
 
@@ -135,20 +135,20 @@ Until the benefit materializes, the current capabilities can cover this:
 
 | Symptom | Read Current Baseline First | Then Consider |
 |---------|------------------------------|---------------|
-| Strategies concatenate file paths, JSON paths, and entity data paths | [Architecture Overview - I/O Boundary](architecture-overview.en.md#io-boundary) | Direction 1 |
-| Frame time concentrates in many entity updates, but in-entity strategy order must be preserved | [Architecture Overview - Concurrency Model](architecture-overview.en.md#concurrency-model) | Direction 2 |
-| A single ActiveStrategy contains a large switch by entity type | [Design Patterns - Entity Communication](design-patterns.en.md#inter-entity-communication) | Direction 3 |
-| The save directory needs to be an inescapable sandbox | [Persistence Flow](persistence-flow.en.md) | Direction 1 |
-| Observer notifications or cross-entity calls make concurrency dangerous | [SND Entity Model](snd-entity-model.en.md) | Direction 2 |
+| Strategies concatenate file paths, JSON paths, and entity data paths | [Architecture Overview - I/O Boundary](overview.en.md#io-boundary) | Direction 1 |
+| Frame time concentrates in many entity updates, but in-entity strategy order must be preserved | [Architecture Overview - Concurrency Model](overview.en.md#concurrency-model) | Direction 2 |
+| A single ActiveStrategy contains a large switch by entity type | [Design Patterns - Entity Communication](../usage/design-patterns.en.md#inter-entity-communication) | Direction 3 |
+| The save directory needs to be an inescapable sandbox | [Persistence Flow](../usage/persistence-flow.en.md) | Direction 1 |
+| Observer notifications or cross-entity calls make concurrency dangerous | [SND Entity Model](../usage/snd-entity-model.en.md) | Direction 2 |
 
 ## Related Documents
 
-- Current architecture: [Architecture Overview](architecture-overview.en.md)
+- Current architecture: [Architecture Overview](overview.en.md)
 - Strategy system implementation: [Strategy Module](../Origo.Core/Snd/Strategy/README.en.md)
 - Data source implementation: [DataSource Module](../Origo.Core/DataSource/README.en.md)
 - Scheduling implementation: [Scheduling Module](../Origo.Core/Scheduling/README.en.md)
 - Entity implementation: [Entity Module](../Origo.Core/Snd/Entity/README.en.md)
-- Common patterns: [Design Patterns](design-patterns.en.md)
+- Common patterns: [Design Patterns](../usage/design-patterns.en.md)
 
 ---
-[↑ Back to usage](README.en.md)
+[↑ Back to Architecture](README.en.md)

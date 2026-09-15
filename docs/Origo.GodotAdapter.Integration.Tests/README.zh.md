@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -56,6 +56,7 @@
 | GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` 越界清理：直接移除管理器节点后 Core 侧策略池引用无泄漏，即使 `OnUnmounted` 钩子抛出也继续释放 |
 | OrigoDefaultEntryBootstrapFailureTests | `Tests/OrigoDefaultEntryBootstrapFailureTests.cs` | 1 | `OrigoDefaultEntry` 派生入口在 base._Ready() 之后的启动步骤失败时，下一帧必须 fail-fast 而非驱动半初始化运行时 |
 | OrigoDefaultEntryContextIntegrationTests | `Tests/OrigoDefaultEntryContextIntegrationTests.cs` | 1 | `OrigoDefaultEntry.Context` 在成功启动后公开 SndContext，并与 `ConfigureSaveMetadataContributors` 收到同一实例 |
+| OrigoDefaultEntryStrategyRegistrationIntegrationTests | `Tests/OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs` | 1 | 派生入口覆写 `ConfigureStrategies`，在 `Bootstrap` 冻结注册表前完成手动策略注册 |
 
 ## 运行
 
@@ -114,7 +115,8 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── ObserverSaveReloadIntegrationTests.cs # 观察者绑定跨存档恢复测试
 │   ├── UserDataCleanupIntegrationTests.cs # 测试进程 user:// 清理测试
 │   ├── OrigoDefaultEntryBootstrapFailureTests.cs # 派生入口启动失败 fail-fast 测试
-│   └── OrigoDefaultEntryContextIntegrationTests.cs # Context 公开与共享实例测试
+│   ├── OrigoDefaultEntryContextIntegrationTests.cs # Context 公开与共享实例测试
+│   └── OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs # ConfigureStrategies 手动注册测试
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs
 │   ├── StubNodeFactory.cs

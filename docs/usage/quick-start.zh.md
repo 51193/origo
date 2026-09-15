@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 快速开始
 
@@ -185,6 +185,7 @@ OrigoDefaultEntry._Ready()
   → ConfigureSaveMetadataContributors(context)
   → SndContext.Bootstrap()
       → DiscoverAndRegisterStrategies
+      → SealStrategyRegistration（校验 Before/After 并冻结注册）
       → LoadSceneAliases + LoadTemplates
       → RequestLoadMainMenuEntrySave → 启动游戏
 
@@ -196,7 +197,7 @@ OrigoDefaultEntry._Ready()
 
 ## 下一步
 
-- [架构总览](architecture-overview.zh.md) — 理解 Origo 的整体设计
+- [架构总览](../architecture/overview.zh.md) — 理解 Origo 的整体设计
 - [SND 实体模型](snd-entity-model.zh.md) — 学习如何编写策略
 - [策略测试](strategy-testing.zh.md) — 使用 StrategyTestScenario 测试策略
 

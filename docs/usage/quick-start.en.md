@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Quick Start
 
@@ -185,6 +185,7 @@ OrigoDefaultEntry._Ready()
   → ConfigureSaveMetadataContributors(context)
   → SndContext.Bootstrap()
       → DiscoverAndRegisterStrategies
+      → SealStrategyRegistration (validate Before/After and freeze registration)
       → LoadSceneAliases + LoadTemplates
       → RequestLoadMainMenuEntrySave → Start game
 
@@ -196,7 +197,7 @@ Per frame: _Process → IOrigoFrameDriver.DriveFrame(delta)
 
 ## Next Steps
 
-- [Architecture Overview](architecture-overview.en.md) — Understand Origo's overall design
+- [Architecture Overview](../architecture/overview.en.md) — Understand Origo's overall design
 - [SND Entity Model](snd-entity-model.en.md) — Learn how to write strategies
 - [Strategy Testing](strategy-testing.en.md) — Test strategies using StrategyTestScenario
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd (Abstractions)
 
@@ -31,7 +31,7 @@ ISndContext 除 10 个 companion 属性外，还直接暴露以下成员：
 
 | 成员 | 说明 |
 |------|------|
-| `Bootstrap()` | 启动入口：策略发现 → 别名/模板加载 → 入口存档加载 |
+| `Bootstrap()` | 启动入口：策略发现 → 排序校验与注册冻结 → 别名/模板加载 → 入口存档加载 |
 | `SaveRootPath` | 当前存档根路径 |
 | `InitialSaveRootPath` | 初始存档根路径 |
 | `EntryConfigPath` | 入口配置文件路径 |

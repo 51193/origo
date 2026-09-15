@@ -1,9 +1,9 @@
-<!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-pair: architecture/overview -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构总览
 
-> [↑ 回到 usage](README.zh.md)
+> [↑ 回到 architecture](README.zh.md)
 
 ## 设计原则
 
@@ -174,7 +174,7 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 通过 10 个伴生属
 | **触发策略生命周期钩子** | 策略是 Core 层概念，钩子触发时机和顺序必须由 Core 统一编排 | `GodotSndManager` 不得调用 `FireAfterSpawnHooks()`、`FireBeforeDeadHooks()` 等 |
 | **管理策略释放/引用计数** | 策略池、引用计数、偏序排序在 Core 的 `SndStrategyPool` 和 `SndStrategyManager` 中管理 | `GodotSndManager` 不得调用 `ReleaseStrategiesOnly()` |
 | **直接调用 Core 管线方法** | 帧边界操作（实体处理→业务队列→杀实体→系统队列→控制台）的时机和顺序由 Core 控制。适配层只应调用 `IOrigoFrameDriver.DriveFrame(delta)` 移交帧控制权 | 适配层不得直接调用 internal 的 `FlushEndOfFrameDeferred` 或 `ProcessPending` |
-| **直接驱动 Core 启动流程** | 策略发现、别名/模板加载、入口存档加载是 Core 内部编排，统一在 `SndContext.Bootstrap()` 中执行。适配层仅通过 `SndContextParameters` 传入配置 | 适配层不得直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()` |
+| **直接驱动 Core 启动流程** | 策略发现、排序校验与注册冻结、别名/模板加载、入口存档加载是 Core 内部编排，统一在 `SndContext.Bootstrap()` 中执行。适配层仅通过 `SndContextParameters` 传入配置 | 适配层不得直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()` |
 | **持有 Core 编排状态** | 实体生命周期管理（如 pending kill、拆卸流程）的状态机由 Core 层维护 | 适配层不应有 `QuitFromManager`、`DeadFromManager` 等方法 |
 | **加载引擎无关的业务配置** | 模板解析、别名映射、策略索引解析全部在 Core 中完成 | 适配层不应读取和解析 `snd_templates.map` 等业务配置 |
 
@@ -186,7 +186,7 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 通过 10 个伴生属
 | **实体生命周期编排** | `SndEntityFactory.Spawn`/`SpawnMany`（AfterSpawn）、`SessionRun` 的 load/save/quit 与 `KillPending`（经 `SessionManager.KillPendingAllSessions`）统一编排所有钩子 |
 | **场景宿主抽象** | `ISndSceneHost` 仅定义容器操作（创建/查找/移除），不含钩子语义 |
 | **延迟动作管线** | `ActionScheduler` 业务队列 + 系统队列，`IOrigoFrameDriver.DriveFrame` 统一冲刷 |
-| **启动编排** | `SndContext.Bootstrap()` 统一执行策略发现→别名/模板加载→入口存档加载 |
+| **启动编排** | `SndContext.Bootstrap()` 统一执行策略发现→排序校验与注册冻结→别名/模板加载→入口存档加载 |
 
 ### 帧循环中的职责划分
 
@@ -243,4 +243,4 @@ Origo.ConsoleBridge/  # TCP 远程控制台（~2 个 .cs 文件）
 - 测试目录结构与生产代码镜像
 
 ---
-[↑ 回到 usage](README.zh.md)
+[↑ 回到 architecture](README.zh.md)

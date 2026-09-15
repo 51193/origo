@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化流程
 
@@ -258,7 +258,7 @@ public interface ISavePathPolicy
 ## 相关文档
 
 - [会话模型](session-model.zh.md) — Session 与存档的关系
-- [架构总览](architecture-overview.zh.md) — 持久化在整体架构中的位置
+- [架构总览](../architecture/overview.zh.md) — 持久化在整体架构中的位置
 
 ---
 [↑ 回到 usage](README.zh.md)

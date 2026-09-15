@@ -1,13 +1,13 @@
-<!-- docsync-pair: usage/extension-directions -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-pair: architecture/extension-directions -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 扩展方向与暂缓设计
 
-> [↑ 回到 usage](README.zh.md)
+> [↑ 回到 architecture](README.zh.md)
 
 > **性质说明**：本文档记录头脑风暴产生的备选设计方向，均属于“已讨论、未进入实现、暂缓”的思考。它们不是当前框架能力，不构成路线图承诺，也不改变任何现有接口语义。本文的价值在于把“为什么不这样做”的完整权衡留在文档里：当开发者或 agent 遇到相关问题时，可以先看到现状的设计边界，再判断收益是否已经高到值得重新评估；当收益条件成熟时，也可以直接拾起这些已经想过的骨架，而不是从零重新发明。
 
-阅读本文前，应先理解当前现状：[架构总览](architecture-overview.zh.md)、[SND 实体模型](snd-entity-model.zh.md)、[策略生命周期](strategy-lifecycle.zh.md)、[设计模式](design-patterns.zh.md)。
+阅读本文前，应先理解当前现状：[架构总览](overview.zh.md)、[SND 实体模型](../usage/snd-entity-model.zh.md)、[策略生命周期](../usage/strategy-lifecycle.zh.md)、[设计模式](../usage/design-patterns.zh.md)。
 
 ## 方向速览
 
@@ -57,7 +57,7 @@ path -> to -> file -> entity -> health_point
 
 ### 现状关系
 
-框架采用单线程帧模型：一帧内实体串行 `Process`，延迟队列负责跨帧动作。策略实例无状态且全局共享，因此策略类本身适合多线程；但实体内部的多个策略存在 偏序排序，执行顺序是设计的一部分，不能把同一个实体的所有策略直接并发。
+框架采用单线程帧模型：一帧内实体串行 `Process`，延迟队列负责跨帧动作。策略实例无状态且全局共享，因此策略类本身适合多线程；但实体内部的多个策略存在偏序排序，执行顺序是设计的一部分，不能把同一个实体的所有策略直接并发。
 
 ### 备选愿景
 
@@ -135,20 +135,20 @@ path -> to -> file -> entity -> health_point
 
 | 遇到的现象 | 先看现状 | 再参考方向 |
 |------------|----------|-----------|
-| 策略里同时拼接文件路径、JSON 路径和实体数据路径 | [架构总览 - I/O 边界](architecture-overview.zh.md#io-边界) | 方向一 |
-| 帧耗时集中在大量实体更新，但实体内策略顺序需要保留 | [架构总览 - 并发模型](architecture-overview.zh.md#并发模型) | 方向二 |
-| 一个 ActiveStrategy 里按实体类型写大 switch | [设计模式 - 实体间通信](design-patterns.zh.md#实体间通信) | 方向三 |
-| 想把存档目录做成不可逃逸的沙箱 | [持久化流程](persistence-flow.zh.md) | 方向一 |
-| 观察者通知或跨实体调用让并发设计变得危险 | [SND 实体模型](snd-entity-model.zh.md) | 方向二 |
+| 策略里同时拼接文件路径、JSON 路径和实体数据路径 | [架构总览 - I/O 边界](overview.zh.md#io-边界) | 方向一 |
+| 帧耗时集中在大量实体更新，但实体内策略顺序需要保留 | [架构总览 - 并发模型](overview.zh.md#并发模型) | 方向二 |
+| 一个 ActiveStrategy 里按实体类型写大 switch | [设计模式 - 实体间通信](../usage/design-patterns.zh.md#实体间通信) | 方向三 |
+| 想把存档目录做成不可逃逸的沙箱 | [持久化流程](../usage/persistence-flow.zh.md) | 方向一 |
+| 观察者通知或跨实体调用让并发设计变得危险 | [SND 实体模型](../usage/snd-entity-model.zh.md) | 方向二 |
 
 ## 关联文档
 
-- 现状架构：[架构总览](architecture-overview.zh.md)
+- 现状架构：[架构总览](overview.zh.md)
 - 策略系统实现：[Strategy 模块](../Origo.Core/Snd/Strategy/README.zh.md)
 - 数据源实现：[DataSource 模块](../Origo.Core/DataSource/README.zh.md)
 - 调度实现：[Scheduling 模块](../Origo.Core/Scheduling/README.zh.md)
 - 实体实现：[Entity 模块](../Origo.Core/Snd/Entity/README.zh.md)
-- 常用模式：[设计模式](design-patterns.zh.md)
+- 常用模式：[设计模式](../usage/design-patterns.zh.md)
 
 ---
-[↑ 回到 usage](README.zh.md)
+[↑ 回到 architecture](README.zh.md)

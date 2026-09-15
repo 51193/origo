@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter
 
@@ -38,11 +38,12 @@ OrigoDefaultEntry._Ready()
   │       ├── GodotSndManager
   │       ├── GodotJsonConverterRegistry 注册
   │       └── OrigoRuntime
+  ├── ConfigureStrategies(Runtime.SndWorld)  // 手动策略注册（Bootstrap 冻结前）
   ├── RegisterConsoleCommandHandlers()       // 适配层命令
   ├── new SndContext(...)                    // 传入启动配置
   ├── SndManager.BindContext(sndContext)
   └── sndContext.Bootstrap()                 // Core 内部按序执行：
-        ├── 策略发现 (reflection scan, skip Godot assemblies)
+        ├── 策略发现与排序校验/注册冻结 (reflection scan, skip Godot assemblies)
         ├── LoadSceneAliases / LoadTemplates
         └── RequestLoadMainMenuEntrySave
 ```
@@ -62,7 +63,7 @@ OrigoDefaultEntry._Ready()
 - **不冲刷延迟管线**：帧循环中不绕过 Core 直接调用 internal 的 `FlushEndOfFrameDeferred`
 - **`OrigoAutoHost._Process` 为唯一帧入口**：在其中依次委托 Core 的 `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending`，适配层仅做调度，不做决策
 
-所有这些编排由 Core 层的会话生命周期（`SessionManager` / `SessionRun`）统一负责。详细分离原则见 [架构总览](../usage/architecture-overview.zh.md#适配层与-core-层分离原则)。
+所有这些编排由 Core 层的会话生命周期（`SessionManager` / `SessionRun`）统一负责。详细分离原则见 [架构总览](../architecture/overview.zh.md#适配层与-core-层分离原则)。
 
 ### 桥接模式
 

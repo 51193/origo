@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 实体模型
 
@@ -244,6 +244,8 @@ entity.MountObserverStrategy(entity.Name, "my_game.hp_watcher");
 上述特性分别标注各自策略类型。完整注册图 A → B → C 在实体只挂载 A/C 时仍保证 A 在 C 前；关系不要求目标挂载。拓扑候选按索引 `StringComparer.Ordinal` 选择，注册、挂载和读档输入顺序不影响结果。Process 与 AfterSpawn、AfterLoad、BeforeSave、BeforeQuit、BeforeDead 同向；AfterAdd / BeforeRemove 仅作用于当前策略。
 
 所有注册必须在启动阶段完成。Bootstrap 自动发现结束后固定注册表；公共启动工作流执行前也固定。直接使用实体时，首次非空生命周期恢复或动态挂载前固定。未知索引、非生命周期引用、空白/null 声明、自引用及环明确失败，环显示实际路径。存档保留挂载索引，恢复按固定关系排序。
+
+> **顺序边界**：上面的 Ordinal 规则描述的是完整注册表的拓扑候选选择，不等于“任意两个互不相关的已挂载策略在所有实体上都保持 Ordinal”。已注册但未挂载的策略参与全局排序，其约束可能改变两个已挂载策略的相对顺序；需要稳定顺序时应为相关策略显式声明 `Before` / `After`。完整分析、已知问题与演进选项见 [架构决策记录](../architecture/strategy-ordering.zh.md)。
 
 ## 实体元数据
 

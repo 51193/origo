@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 26 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Strategy
 
@@ -94,7 +94,7 @@ BaseStrategy
 
 | 方法 | 说明 |
 |------|------|
-| `RecoverStrategiesOnly(indices)` | 从策略池按索引获取策略并排序插入（释放旧策略，不触发钩子） |
+| `RecoverStrategiesOnly(indices)` | 从策略池按索引获取策略并排序插入（释放旧策略，不触发钩子；重复索引在获取前抛异常） |
 | `ReleaseStrategiesOnly()` | 释放全部策略引用并清空列表（不触发钩子） |
 | `TriggerAfterSpawn(entity, ctx)` | 快照迭代触发 AfterSpawn |
 | `TriggerAfterLoad(entity, ctx)` | 快照迭代触发 AfterLoad |
@@ -106,7 +106,7 @@ BaseStrategy
 | `Add(entity, index, ctx)` | 动态添加策略并触发 `AfterAdd`；若 `AfterAdd` 抛异常，回滚插入并归还池引用后再传播（添加是原子的）。同一 index 重复挂载会抛 `InvalidOperationException`；计划引擎（`PlanExecutionStrategyBase`）在目标 action 已挂载时会复用而不是重复挂载，因此计划管理的 action 也可出现在 `LifecycleIndices` 中 |
 | `Remove(entity, index, ctx)` | 动态移除策略（触发 BeforeRemove）；索引未挂载时抛 `InvalidOperationException`（fail-fast，与 `Add` 的严格性对称） |
 
-- **Recover**：从池获取时进行类型过滤，仅保留 `LifecycleStrategyBase` 子类；非 `LifecycleStrategyBase` 类型（如 `ActiveStrategyBase`、`ObserverStrategyBase`）立即抛 `InvalidOperationException`
+- **Recover**：先校验索引唯一性，再从池获取时进行类型过滤，仅保留 `LifecycleStrategyBase` 子类；重复索引或非 `LifecycleStrategyBase` 类型（如 `ActiveStrategyBase`、`ObserverStrategyBase`）立即抛 `InvalidOperationException`
 - **生命周期钩子触发**：全部基于 `ToArray()` 快照迭代——因为钩子内可增删策略。五个触发器方法（`TriggerAfterSpawn/Load/Save/Quit/Dead`）统一委托给 `TriggerAll`，消除复制粘贴重复
 
 ### ActiveStrategyManager
@@ -114,7 +114,7 @@ BaseStrategy
 每个 `SndEntity` 持有一个 manager 实例，管理主动策略：
 
 - **容器**：`Dictionary<string, ActiveStrategyBase>` — O(1) 按索引查找，不参与每帧遍历
-- **Recover**：从 metadata 批量恢复（不触发钩子）；遇非 `ActiveStrategyBase` 类型立即抛 `InvalidOperationException`，并回滚本次恢复已获取的全部主动策略，不残留半初始化状态——与 `SndStrategyManager` 的实体策略恢复保持一致的 fail-fast 语义
+- **Recover**：先校验索引唯一性，再从 metadata 批量恢复（不触发钩子）；重复索引或非 `ActiveStrategyBase` 类型立即抛 `InvalidOperationException`，并回滚本次恢复已获取的全部主动策略，不残留半初始化状态——与 `SndStrategyManager` 的实体策略恢复保持一致的 fail-fast 语义
 - **ReleaseAll**：逐个 `ReleaseStrategy` 并清空容器（不触发钩子）
 - **Add / Remove**：动态增删主动策略；`Remove` 对未挂载索引抛 `InvalidOperationException`（fail-fast）
 - **Invoke**：按索引查找策略实例，调用 `Invoke(entity, ctx, input)` 并返回结果
@@ -186,6 +186,8 @@ StrategyMetaData
 }
 ```
 
+`LifecycleIndices` 与 `ActiveIndices` 中的索引在各自列表内必须唯一；重复索引在读档时于获取策略实例前抛异常。
+
 三者在 `RecoverForLifecycle` 时分别恢复，互不交叉。
 
 ### StrategyIndexAttribute
@@ -202,8 +204,13 @@ public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 ### 为什么固定完整注册图
 
-顺序约束表达全局类型关系，实体只执行已挂载策略，不能因缺少中间策略而丢失传递关系。启动时一次校验支持前向引用，也避免运行中注册改变已有实体的顺序。Process、AfterSpawn、AfterLoad、BeforeSave、BeforeQuit 和 BeforeDead 全部沿同一顺序；AfterAdd 与 BeforeRemove 是单策略操作，不批量调度。存档仅保存挂载索引，恢复时按固定关系排序。动态移除在 BeforeRemove 返回后按条目身份摘除，钩子内插入导致列表位移不会误删其他策略。
+顺序约束是类型级全局关系，必须在任何实体创建前一次性校验并冻结，避免运行期注册改变既有实体顺序；实体按冻结顺序投影，未挂载中间策略时仍保留传递关系。Process 与全部批量钩子同向，存档只保存挂载索引，恢复按同一关系排序；动态移除按条目身份摘除，钩子内插入不会误删其他策略。完整的动机、取舍与替代方案见 [架构决策记录：生命周期策略的顺序约束](../../../architecture/strategy-ordering.zh.md)。
 
+
+### 已知顺序边界
+
+- 完整注册图包含已注册但未挂载的策略：约束目标必须已注册，因此可选策略包会在启动期耦合。缺失目标的处理和演进选项见[架构决策记录](../../../architecture/strategy-ordering.zh.md)。
+- 实体顺序是全局拓扑秩的投影；Ordinal 是全局候选选择规则，不保证任意两个不可比较的已挂载策略保持 Ordinal。顺序敏感时应显式声明 `Before` / `After`；完整分析与后续重构方向见[架构决策记录](../../../architecture/strategy-ordering.zh.md)。
 
 ### 为什么策略强制无状态（注册期校验）
 
@@ -245,7 +252,7 @@ ActiveStrategy 在 `RecoverForLifecycle` (Phase 1) 中恢复，早于 `FireAfter
 
 `SndStrategyPool` 的引用计数、注册表和实例缓存仅在帧线程（单线程帧模型）上访问。跨线程场景（延迟队列的入队/出队、控制台输入等）只传递动作与数据，不触碰策略池；引擎回调与业务策略钩子全部在帧线程执行。因此引用计数无需加锁——并发访问策略池属于契约违规，行为未定义。
 
-- **备选方向：实体级并发（暂缓）**：策略无状态让策略类型可跨实体共享，但实体 Data、跨实体 `InvokeStrategy`、观察者同步通知和场景容器变更仍按单线程帧模型设计；同一实体内部多个策略的偏序顺序也必须保留。备选方案是“实体可并发”作为实体自身属性 + 数据容器并发模式 + 先并行执行并发实体、屏障后再串行执行剩余实体，因当前没有性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
-- **备选方向：ActiveStrategy 同名多实现（暂缓）**：当前策略索引全局唯一，每实体同一 active index 也只有一个实现。备选方案是把索引升级为“契约名/接口名”，目标实体绑定具体实现，`InvokeStrategy("hurt")` 时按实体绑定表分发；当前可用唯一策略内按实体字段 `switch` 或 `*_impl` 可替换实现模式覆盖，故暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
+- **备选方向：实体级并发（暂缓）**：策略无状态让策略类型可跨实体共享，但实体 Data、跨实体 `InvokeStrategy`、观察者同步通知和场景容器变更仍按单线程帧模型设计；同一实体内部多个策略的偏序顺序也必须保留。备选方案是“实体可并发”作为实体自身属性 + 数据容器并发模式 + 先并行执行并发实体、屏障后再串行执行剩余实体，因当前没有性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../architecture/extension-directions.zh.md)
+- **备选方向：ActiveStrategy 同名多实现（暂缓）**：当前策略索引全局唯一，每实体同一 active index 也只有一个实现。备选方案是把索引升级为“契约名/接口名”，目标实体绑定具体实现，`InvokeStrategy("hurt")` 时按实体绑定表分发；当前可用唯一策略内按实体字段 `switch` 或 `*_impl` 可替换实现模式覆盖，故暂缓。完整权衡见 [扩展方向与暂缓设计](../../../architecture/extension-directions.zh.md)
 ---
 [↑ 回到 Snd](../README.zh.md)

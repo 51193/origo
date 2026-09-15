@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd
 
@@ -25,7 +25,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | 文件 | 职责 |
 |------|------|
 | `ISndContext.cs` | SND 上下文统一门面接口：通过 10 个 companion 属性暴露所有能力（[详见 Abstractions/Snd](../Abstractions/Snd/README.zh.md)） |
-| `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→别名/模板加载→入口存档加载。经 companion 对象 `SndContextFileAccess` 提供 `ISndFileAccess`（文件读写委托 `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`） |
+| `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→排序校验与注册冻结→别名/模板加载→入口存档加载。经 companion 对象 `SndContextFileAccess` 提供 `ISndFileAccess`（文件读写委托 `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`） |
 | `SndContextParameters.cs` | SndContext 构造参数对象。含 `AutoDiscoverStrategies`、`DiscoverySkipPrefixes`、`SceneAliasMapPath`、`SndTemplateMapPath`、`InitialLevelId` 等启动配置属性 |
 | `SndWorld.cs` | SND 世界：策略池 + 类型映射 + 转换器注册表 + 模板/别名。`LoadSceneAliases` / `LoadTemplates` 为 `internal`，由 `SndContext.Bootstrap` 或 `ISndTemplateAccess` companion（`ctx.Template.LoadTemplates` / `ctx.Template.LoadSceneAliases`）调用 |
 | `SndDefaults.cs` | `internal` — SND 系统默认值常量。定义 `InitialSaveId`（"000"）、`InitialLevelId`（"default"）、`MainMenuLevelId`（"main_menu"），供 Core 内部持久化流程和启动编排使用。 |
@@ -97,9 +97,10 @@ SND 的观察统一由观察者策略（`ObserverStrategyBase`）承载，自观
 
 1. **转换器注册**：若 `SndContextParameters.ConfigureConverters` 非空，调用之注册自定义 `DataSourceConverter`
 2. **策略发现**：若 `SndContextParameters.AutoDiscoverStrategies` 为 true，通过 `internal` 的 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 扫描程序集中的 `[StrategyIndex]` 注解类型，使用 `DiscoverySkipPrefixes` 过滤适配层程序集
-3. **场景别名加载**：若 `SceneAliasMapPath` 非空，调用 `internal` 的 `SndWorld.LoadSceneAliases()`
-4. **SND 模板加载**：若 `SndTemplateMapPath` 非空，调用 `internal` 的 `SndWorld.LoadTemplates()`
-5. **入口存档加载**：调用 `RequestLoadMainMenuEntrySave()`
+3. **排序校验与注册冻结**：调用 `internal` 的 `SndStrategyPool.SealRegistration()`，校验已注册生命周期策略的 `Before` / `After` 目标与环，并冻结完整注册图；冻结后 `SndWorld.RegisterStrategy` 抛异常
+4. **场景别名加载**：若 `SceneAliasMapPath` 非空，调用 `internal` 的 `SndWorld.LoadSceneAliases()`
+5. **SND 模板加载**：若 `SndTemplateMapPath` 非空，调用 `internal` 的 `SndWorld.LoadTemplates()`
+6. **入口存档加载**：调用 `RequestLoadMainMenuEntrySave()`
 
 适配层仅通过 `SndContextParameters` 传入配置，不需要知道上述步骤的执行顺序和内部实现。
 
@@ -107,7 +108,7 @@ SND 的观察统一由观察者策略（`ObserverStrategyBase`）承载，自观
 
 ### 为什么启动编排集中在 SndContext.Bootstrap()
 
-适配层不应直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()`。这些是 Core 内部编排操作——策略发现必须在 Core 层执行（使用适配层提供的 skip prefixes），别名/模板加载是 Core 配置解析，入口存档加载是 Core 生命周期入口。统一在 `Bootstrap()` 中执行确保这些操作以正确的依赖顺序在正确的层中完成。
+适配层不应直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()`。这些是 Core 内部编排操作——策略发现与排序校验必须在 Core 层执行（使用适配层提供的 skip prefixes），别名/模板加载是 Core 配置解析，入口存档加载是 Core 生命周期入口。统一在 `Bootstrap()` 中执行确保这些操作以正确的依赖顺序在正确的层中完成。
 
 ---
 [↑ 回到 Origo.Core](../README.zh.md)

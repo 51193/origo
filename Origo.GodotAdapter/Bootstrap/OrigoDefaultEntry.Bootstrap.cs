@@ -24,6 +24,8 @@ public partial class OrigoDefaultEntry
         {
             base._Ready();
 
+            ConfigureStrategies(Runtime.SndWorld);
+
             RegisterConsoleCommandHandlers();
 
             var sndContext = new SndContext(new SndContextParameters(

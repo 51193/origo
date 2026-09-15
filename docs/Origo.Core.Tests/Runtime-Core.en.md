@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Runtime Core Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
 > [↔ Module under test: Origo.Core/Runtime](../Origo.Core/Runtime/README.en.md)
-> [↔ Behavior under test: usage/architecture-overview](../usage/architecture-overview.en.md)
+> [↔ Behavior under test: architecture/overview](../architecture/overview.en.md)
 
 ## Behavior Overview
 

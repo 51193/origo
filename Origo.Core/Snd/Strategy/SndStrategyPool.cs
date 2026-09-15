@@ -43,13 +43,14 @@ internal sealed class SndStrategyPool
             throw new InvalidOperationException(
                 $"Strategy type '{strategyType.FullName}' declares invalid instance members ({invalidMembers}); " +
                 "shared pooled strategies must be stateless.");
-        var index = ResolveRequiredIndex(strategyType);
+        var attribute = ResolveRequiredAttribute(strategyType);
+        var index = attribute.Index;
         ArgumentNullException.ThrowIfNull(factory);
         if (_factories.ContainsKey(index))
             throw new InvalidOperationException(
                 $"Strategy index '{index}' is already registered. " +
                 "Each strategy index must map to exactly one strategy type.");
-        var declaration = LifecycleStrategyOrder.ReadDeclaration(strategyType, index);
+        var declaration = LifecycleStrategyOrder.ReadDeclaration(strategyType, attribute, index);
         _orderingDeclarations.Add(index, declaration);
         _factories.Add(index, factory);
     }
@@ -146,14 +147,27 @@ internal sealed class SndStrategyPool
         }
     }
 
-    private static string ResolveRequiredIndex(Type strategyType)
+    private static StrategyIndexAttribute ResolveRequiredAttribute(Type strategyType)
     {
         var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>() ?? throw new InvalidOperationException(
                 $"Strategy type '{strategyType.FullName}' must declare [StrategyIndex(\"...\")].");
         if (string.IsNullOrWhiteSpace(attr.Index))
             throw new InvalidOperationException(
                 $"Strategy type '{strategyType.FullName}' has an empty StrategyIndexAttribute value.");
-        return attr.Index;
+        return attr;
+    }
+
+    internal static string[] RequireDistinctIndices(IEnumerable<string> indices, string field)
+    {
+        ArgumentNullException.ThrowIfNull(indices);
+        var registeredIndices = indices.ToArray();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var index in registeredIndices)
+            if (!seen.Add(index))
+                throw new InvalidOperationException(
+                    $"Strategy index '{index}' appears more than once in {field}. " +
+                    "Each strategy index can be attached to an entity at most once.");
+        return registeredIndices;
     }
 
     internal static bool ValidateStrategyType(Type strategyType, out string invalidMembers)

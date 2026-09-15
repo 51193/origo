@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -29,7 +29,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 
 | 能力 | 说明 | 文档入口 |
 |------|------|----------|
-| 四层运行时 | SystemRun → ProgressRun → SessionManager → SessionRun 分层生命周期 | [架构概览](architecture-overview.zh.md) |
+| 四层运行时 | SystemRun → ProgressRun → SessionManager → SessionRun 分层生命周期 | [架构概览](../architecture/overview.zh.md) |
 | 前后台 Session 同构 | 后台 Session 与前台走同一套 ISessionRun 接口与策略管线 | [Session 模型](session-model.zh.md) |
 | 会话拓扑编码 | SessionTopology 文本格式编解码，记录所有活跃 Session 的 key/levelId/syncProcess | [Session 模型](session-model.zh.md) |
 | LevelId 全局唯一 | 每个 levelId 同一时刻只允许一个 Session 存在，冲突时抛出异常 | [Session 模型](session-model.zh.md) |
@@ -71,8 +71,8 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 类型-字符串双向映射 | TypeStringMapping 保持 CLR 类型与稳定字符串标识的双向映射，避免 FullName 版本耦合 | [↔ Serialization](../Origo.Core/Serialization/README.zh.md) |
 | Godot 14 种类型序列化 | Vector2/3/4、Vector2I/3I、Quaternion、Color、Basis、Transform2D/3D、Rect2/2I、Aabb、Plane 完整 JSON 往返 | [↔ GodotAdapter/Serialization](../Origo.GodotAdapter/Serialization/README.zh.md) |
 | 转换器注册与继承回溯 | DataSourceConverterRegistry 在精确类型未注册时沿基类链和接口链回溯查找转换器 | [↔ DataSource/Converters](../Origo.Core/DataSource/Converters/README.zh.md) |
-| 策略文件访问（ISndFileAccess） | 策略通过 ISndContext 读写 JSON/Map 文件，经 IDataSourceIoGateway 边界自动解析为 DataSourceNode 树或强类型对象 | [架构概览](architecture-overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.zh.md) |
-| 存档内文件访问（ISndArchiveFileAccess） | 策略通过 ISndContext 在存档 extra/ 子目录中读写文件（含删除），文件随存档生命周期管理：写入后纳入 save snapshot，load 时自动恢复 | [架构概览](architecture-overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.zh.md) |
+| 策略文件访问（ISndFileAccess） | 策略通过 ISndContext 读写 JSON/Map 文件，经 IDataSourceIoGateway 边界自动解析为 DataSourceNode 树或强类型对象 | [架构概览](../architecture/overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.zh.md) |
+| 存档内文件访问（ISndArchiveFileAccess） | 策略通过 ISndContext 在存档 extra/ 子目录中读写文件（含删除），文件随存档生命周期管理：写入后纳入 save snapshot，load 时自动恢复 | [架构概览](../architecture/overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.zh.md) |
 
 ## Godot 适配器
 
@@ -109,10 +109,10 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 
 | 属性 | 说明 | 文档入口 |
 |------|------|----------|
-| 平台无关 | Origo.Core 仅依赖 System.\*，不引用任何引擎特定代码 | [架构概览](architecture-overview.zh.md) |
-| 适配层隔离 | 引擎代码仅在 Origo.GodotAdapter 实现 Core 抽象，适配层不参与策略生命周期管理 | [架构概览](architecture-overview.zh.md) |
-| 接口隔离（ISP） | ISndContext 拆分为 9 个窄角色接口，ISessionRun 返回抽象 IStateMachineContainer | [架构概览](architecture-overview.zh.md) |
-| 单线程帧模型 | 一帧 = 一个逻辑原子边界，延迟动作通过队列顺序执行。宿主（如 Godot `_Process`）通过 `IOrigoFrameDriver.DriveFrame(double delta)` 驱动帧，Core 内部顺序：实体 Process → 业务队列 → Kill 待处理 → 系统队列 → 控制台 | [架构概览](architecture-overview.zh.md) |
+| 平台无关 | Origo.Core 仅依赖 System.\*，不引用任何引擎特定代码 | [架构概览](../architecture/overview.zh.md) |
+| 适配层隔离 | 引擎代码仅在 Origo.GodotAdapter 实现 Core 抽象，适配层不参与策略生命周期管理 | [架构概览](../architecture/overview.zh.md) |
+| 接口隔离（ISP） | ISndContext 拆分为 9 个窄角色接口，ISessionRun 返回抽象 IStateMachineContainer | [架构概览](../architecture/overview.zh.md) |
+| 单线程帧模型 | 一帧 = 一个逻辑原子边界，延迟动作通过队列顺序执行。宿主（如 Godot `_Process`）通过 `IOrigoFrameDriver.DriveFrame(double delta)` 驱动帧，Core 内部顺序：实体 Process → 业务队列 → Kill 待处理 → 系统队列 → 控制台 | [架构概览](../architecture/overview.zh.md) |
 
 ---
 

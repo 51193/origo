@@ -145,7 +145,7 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 
 `OrigoDefaultEntry._Ready()` 自动发现所有 `[StrategyIndex]` 策略、加载别名和模板、启动游戏。
 
-> 完整教程：[快速开始](docs/usage/quick-start.zh.md) · [架构概览](docs/usage/architecture-overview.zh.md) · [SND 实体模型](docs/usage/snd-entity-model.zh.md)
+> 完整教程：[快速开始](docs/usage/quick-start.zh.md) · [架构概览](docs/architecture/overview.zh.md) · [SND 实体模型](docs/usage/snd-entity-model.zh.md)
 
 ## 文档
 
@@ -156,7 +156,7 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 | 我想... | 去这里 |
 |---|---|
 | 浏览全部能力 | [能力清单](docs/usage/capabilities.zh.md) |
-| 理解架构设计 | [架构概览](docs/usage/architecture-overview.zh.md) |
+| 理解架构设计 | [架构概览](docs/architecture/overview.zh.md) |
 | 学习 SND 模型 | [SND 实体模型](docs/usage/snd-entity-model.zh.md) |
 | 测试我的策略 | [策略测试](docs/usage/strategy-testing.zh.md) |
 | 使用存档系统 | [持久化流程](docs/usage/persistence-flow.zh.md) |

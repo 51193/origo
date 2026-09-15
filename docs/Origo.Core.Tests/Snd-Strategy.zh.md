@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 策略 测试
 
@@ -181,14 +181,43 @@
 | `KillPendingEntities_NoObserverBindings_NoError` | KillPending 无观察者绑定的实体 | 正常完成，实体数变为 0 |
 | `ClearAll_NoObserverBindings_NoError` | RemoveAllEntities 无观察者绑定的实体 | 正常完成，实体数变为 0 |
 
-## 策略偏序测试详情
+## StrategyOrderingTests 测试详情
 
-- 完整注册表中的 A → B → C 投影到仅挂载 A/C 的实体，仍按 A/C 执行；注册和挂载顺序不影响结果。
-- Before / After 等价边及重复声明去重；无约束策略按 Ordinal 顺序执行。
-- 动态添加、移除及 BeforeRemove 内新增策略保持排序，并正确归还池引用。
-- Process 和全部五个批量钩子同向；保存只含挂载索引，加载重新排序，退出和死亡无池泄漏。
-- Bootstrap 自动发现后、公共启动工作流执行前以及直接恢复/挂载生命周期策略前固定注册表，之后拒绝注册。
-- 未知目标、非生命周期目标、空白/null 声明、自引用和环明确抛异常；环信息包含实际路径。
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `FullRegistry_ProjectsTransitiveOrder_RegardlessOfRegistrationAndMountingOrder` | 注册与挂载顺序均不影响结果；仅挂载 A/C 时仍保留 A → B → C 的传递关系；AfterSpawn、Process 与元数据使用同一顺序 | snd-entity-model: 策略执行顺序 |
+| `DynamicAddAndRemove_KeepTransitiveOrderAndOptionalTargets` | 动态增删按完整注册关系插入和重排；目标策略未挂载仍保留约束；重复添加与移除未挂载索引抛异常 | snd-entity-model: 策略执行顺序 |
+| `SaveLoadQuitAndDead_AllUseSameProjectedOrder` | 存档、恢复、退出和死亡全部使用同一投影顺序；恢复后的元数据顺序正确，退出后无池引用泄漏 | snd-entity-model: 策略执行顺序 |
+| `EquivalentBeforeAfterAndDuplicateEdges_DoNotCreateFalseCycles` | Before / After 等价边与重复声明去重，不产生假环；未知索引查询排序抛异常；固定后注册被拒绝 | Strategy README: SndStrategyPool |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `BootstrapWithoutAutoDiscovery_ValidatesUnusedConstraintsImmediately` | 未被挂载的策略声明了未注册目标 | 启动固定注册表时抛 InvalidOperationException |
+| `UnknownTarget_FailsBeforeAnyEntityOrPoolReferenceIsCreated` | Before 指向未注册索引 | SealRegistration 抛 InvalidOperationException，消息含目标索引与 unregistered |
+| `NonLifecycleTarget_IsRejected` | 生命周期策略引用非生命周期目标 | SealRegistration 抛 InvalidOperationException，消息含 non-lifecycle |
+| `Cycles_FailWithAnActualClosedPath_WithoutIncludingUnrelatedPredecessors` | 生命周期顺序声明成环且存在无关前驱 | 抛 InvalidOperationException，消息含实际闭合路径且不含无关前驱；重复 Seal 仍抛异常 |
+| `Cycles_WithAcyclicBranch_ReportOnlyClosedPath` | 环外存在已完成遍历的无关无环节点 | 抛 InvalidOperationException，消息只含闭合路径，不含无环节点 |
+| `InvalidDeclarations_FailAtRegistration` | 自引用、空白目标、null 数组，或非生命周期策略声明约束 | 注册时立即抛 InvalidOperationException |
+| `DirectEntityRecovery_SealsRegistrationWithoutBootstrap` | 直接恢复生命周期策略后再次注册 | 恢复触发固定注册表，后续 Register 抛 InvalidOperationException |
+
+## StrategyOrderingIntegrationTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `SpawnAndProcess_UnconstrainedStrategies_UseOrdinalIndexOrder` | 未声明约束的生命周期策略按索引 Ordinal 顺序执行，与挂载顺序无关 | snd-entity-model: 策略执行顺序 |
+| `RemoveStrategy_HookChangesOtherEntries_RemovesRequestedEntry` | BeforeRemove 内移除其他策略并新增策略后，按条目身份摘除目标策略，不误删其他条目、不重复释放池引用 | Strategy README: 为什么固定完整注册图 |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `RegisterStrategy_AfterFirstLifecycleEntity_FailsExplicitly` | 生命周期实体启动后注册新策略 | 抛 InvalidOperationException，注册表保持固定 |
 
 ## StrategyPoolTypeSafetyAndExtensionTests 测试详情
 
@@ -206,6 +235,8 @@
 |---------|-----------|---------|
 | `GetStrategy_WrongBranchGeneric_ThrowsInvalidOperation` | 用 LifecycleStrategyBase 泛型获取 Active/StateMachine 策略 | InvalidOperationException |
 | `RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws` | Recover 列表含 ActiveStrategyBase 类型 | InvalidOperationException（"LifecycleStrategyBase"） |
+| `RecoverStrategiesOnly_DuplicateIndex_ThrowsBeforeAcquiring` | Recover 列表含重复生命周期索引 | InvalidOperationException（"more than once"），未获取任何策略引用 |
+| `Recover_DuplicateActiveIndex_ThrowsBeforeAcquiring` | Recover 列表含重复主动策略索引 | InvalidOperationException（"more than once"），未获取或泄漏策略引用 |
 | `Register_AbstractStrategyType_Throws` | 注册抽象策略类型 | InvalidOperationException |
 | `Register_DuplicateIndex_Throws` | 重复注册同一策略索引 | InvalidOperationException（"already registered"） |
 | `GetStrategy_FactoryReturnsNull_ThrowsInvalidOperation` | 注册工厂返回 null | InvalidOperationException（消息含 "returned null"，不得退化为 NRE） |
@@ -262,6 +293,16 @@
 | `ThrowOnUnmountObserver` | ObserverStrategyTests.cs | OnUnmounted 抛出 InvalidOperationException，验证失败卸载仍归还池引用 |
 | `StatefulObserver` | ObserverStrategyTests.cs | 有实例字段 _counter 的观察者，验证注册时被拒绝 |
 | `UnannotatedObserver` | ObserverStrategyTests.cs | 无 [StrategyIndex] 属性的观察者，验证注册拒绝 |
+| `Probe`（abstract） | StrategyOrderingTests.cs | 记录 8 个生命周期钩子事件的抽象基类，供 Producer / Bridge / Consumer 复用 |
+| `Producer` / `Bridge` / `Consumer` | StrategyOrderingTests.cs | 以重复 Before、等价 After 和未挂载中间策略验证 A → B → C 投影、去重与无约束 Ordinal 兜底 |
+| `MissingTarget` | StrategyOrderingTests.cs | Before 指向未注册索引，验证 SealRegistration 的未知目标错误 |
+| `ActiveTarget` | StrategyOrderingTests.cs | ActiveStrategy 目标，验证生命周期约束引用非生命周期策略被拒绝 |
+| `ReferencesActive` | StrategyOrderingTests.cs | 生命周期策略引用 ActiveTarget，验证非生命周期引用错误 |
+| `OrderedActive` | StrategyOrderingTests.cs | ActiveStrategy 声明 Before 约束，验证注册时拒绝 |
+| `CycleA` / `CycleB` / `CycleC` / `CycleRoot` | StrategyOrderingTests.cs | 构成真实环并附带无关前驱，验证闭合路径诊断不包含无关节点 |
+| `AcyclicLeaf` | StrategyOrderingTests.cs | 无出边的无环节点，验证环检测完成该分支后只报告闭合路径 |
+| `SelfReference` / `BlankReference` / `NullReference` | StrategyOrderingTests.cs | 自引用、空白目标和 null 数组声明的非法注册用例 |
+| `OrderingAlpha` / `OrderingZulu` / `OrderingRemover` | StrategyOrderingIntegrationTests.cs | 真实模拟宿主中验证 Ordinal 兜底顺序，以及 BeforeRemove 重入增删时的条目身份摘除 |
 | `ExtensionDomainStrategyBase`（abstract） | StrategyPoolTypeSafetyAndExtensionTests.cs | 在 LifecycleStrategyBase 之上扩展的第三领域抽象根基类，定义 ProbeValue() 抽象方法 |
 | `ExtensionDomainConcreteStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | ExtensionDomainStrategyBase 的具体实现，ProbeValue() 返回 "ok" |
 | `PoolEntityStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | LifecycleStrategyBase 空实现，用于泛型分支安全测试 |

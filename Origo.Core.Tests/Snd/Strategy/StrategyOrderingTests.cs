@@ -117,6 +117,19 @@ public class StrategyOrderingTests
     }
 
     [Fact]
+    public void Cycles_WithAcyclicBranch_ReportOnlyClosedPath()
+    {
+        var world = TestFactory.CreateSndWorld();
+        world.RegisterStrategy(() => new AcyclicLeaf());
+        world.RegisterStrategy(() => new CycleA());
+        world.RegisterStrategy(() => new CycleB());
+        world.RegisterStrategy(() => new CycleC());
+        var ex = Assert.Throws<InvalidOperationException>(() => world.StrategyPool.SealRegistration());
+        Assert.Contains("cycle.a -> cycle.b -> cycle.c -> cycle.a", ex.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("cycle.0leaf", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void InvalidDeclarations_FailAtRegistration()
     {
         Assert.Throws<InvalidOperationException>(() => TestFactory.CreateSndWorld().RegisterStrategy(() => new SelfReference()));
@@ -186,6 +199,8 @@ public class StrategyOrderingTests
     private sealed class CycleC : LifecycleStrategyBase { }
     [StrategyIndex("cycle.0root", Before = new[] { "cycle.a" })]
     private sealed class CycleRoot : LifecycleStrategyBase { }
+    [StrategyIndex("cycle.0leaf")]
+    private sealed class AcyclicLeaf : LifecycleStrategyBase { }
     [StrategyIndex("invalid.self", After = new[] { "invalid.self" })]
     private sealed class SelfReference : LifecycleStrategyBase { }
     [StrategyIndex("invalid.blank", Before = new[] { " " })]

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
@@ -25,7 +25,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | File | Responsibility |
 |------|---------------|
 | `ISndContext.cs` | SND context unified facade interface: exposes all capabilities through 10 companion properties ([see Abstractions/Snd](../Abstractions/Snd/README.en.md)) |
-| `SndContext.cs` | Default ISndContext implementation (global/progress-level). `Bootstrap()` method executes the complete startup flow: strategy discovery → alias/template loading → entry save loading. Provides `ISndFileAccess` through the companion `SndContextFileAccess` (file read/write delegated to `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`) |
+| `SndContext.cs` | Default ISndContext implementation (global/progress-level). `Bootstrap()` method executes the complete startup flow: strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading. Provides `ISndFileAccess` through the companion `SndContextFileAccess` (file read/write delegated to `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`) |
 | `SndContextParameters.cs` | SndContext construction parameter object. Contains startup configuration properties such as `AutoDiscoverStrategies`, `DiscoverySkipPrefixes`, `SceneAliasMapPath`, `SndTemplateMapPath`, `InitialLevelId` |
 | `SndWorld.cs` | SND world: strategy pool + type mapping + converter registry + templates/aliases. `LoadSceneAliases` / `LoadTemplates` are `internal`, invoked by `SndContext.Bootstrap` or the `ISndTemplateAccess` companion (`ctx.Template.LoadTemplates` / `ctx.Template.LoadSceneAliases`) |
 | `SndDefaults.cs` | `internal` — SND system default value constants. Defines `InitialSaveId` ("000"), `InitialLevelId` ("default"), `MainMenuLevelId` ("main_menu"), used by Core's internal persistence flow and startup orchestration. |
@@ -97,9 +97,10 @@ Observer binding topology is serialized with entities through `StrategyMetaData.
 
 1. **Converter registration**: if `SndContextParameters.ConfigureConverters` is set, it is invoked to register custom `DataSourceConverter`s
 2. **Strategy discovery**: If `SndContextParameters.AutoDiscoverStrategies` is true, scans assemblies for `[StrategyIndex]` annotated types via the `internal` `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, using `DiscoverySkipPrefixes` to filter adapter-layer assemblies
-3. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls the `internal` `SndWorld.LoadSceneAliases()`
-4. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls the `internal` `SndWorld.LoadTemplates()`
-5. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`
+3. **Ordering validation and registration freeze**: Calls the `internal` `SndStrategyPool.SealRegistration()` to validate registered lifecycle `Before` / `After` targets and cycles, then freezes the complete registry; later `SndWorld.RegisterStrategy` calls throw
+4. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls the `internal` `SndWorld.LoadSceneAliases()`
+5. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls the `internal` `SndWorld.LoadTemplates()`
+6. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`
 
 The adapter layer only passes configuration via `SndContextParameters` and does not need to know the execution order or internal implementation of the above steps.
 
@@ -107,7 +108,7 @@ The adapter layer only passes configuration via `SndContextParameters` and does 
 
 ### Why Startup Orchestration Is Centralized in SndContext.Bootstrap()
 
-The adapter layer should not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()`. These are Core internal orchestration operations — strategy discovery must execute in the Core layer (using skip prefixes provided by the adapter), alias/template loading is Core configuration parsing, and entry save loading is a Core lifecycle entry point. Centralizing them in `Bootstrap()` ensures these operations complete in the correct dependency order in the correct layer.
+The adapter layer should not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()`. These are Core internal orchestration operations — strategy discovery and ordering validation must execute in the Core layer (using skip prefixes provided by the adapter), alias/template loading is Core configuration parsing, and entry save loading is a Core lifecycle entry point. Centralizing them in `Bootstrap()` ensures these operations complete in the correct dependency order in the correct layer.
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd (Abstractions)
 
@@ -28,7 +28,7 @@ Beyond its 10 companion properties, ISndContext directly exposes the following m
 
 | Member | Description |
 |------|------|
-| `Bootstrap()` | Entry point: strategy discovery → alias/template loading → entry save loading |
+| `Bootstrap()` | Entry point: strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading |
 | `SaveRootPath` | Current save root path |
 | `InitialSaveRootPath` | Initial save root path |
 | `EntryConfigPath` | Entry configuration file path |

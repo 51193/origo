@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter
 
@@ -41,11 +41,12 @@ OrigoDefaultEntry._Ready()
   │       │    └── OrigoRuntime
   │       ├── ConsoleInput/Output
   │       └── OrigoRuntime
+  ├── ConfigureStrategies(Runtime.SndWorld)  // Manual strategy registration before Bootstrap freeze
   ├── RegisterConsoleCommandHandlers()       // Adapter commands
   ├── new SndContext(...)                    // Pass startup config
   ├── SndManager.BindContext(sndContext)
   └── sndContext.Bootstrap()                 // Core-internal sequence:
-        ├── Strategy discovery (reflection scan, skip Godot assemblies)
+        ├── Strategy discovery and ordering validation/registration freeze (reflection scan, skip Godot assemblies)
         ├── LoadSceneAliases / LoadTemplates
         └── RequestLoadMainMenuEntrySave
 ```
@@ -65,7 +66,7 @@ The adapter layer does not participate in any aspect of strategy lifecycle manag
 - **Does not flush the deferred pipeline**: The frame loop does not bypass Core to call the internal `FlushEndOfFrameDeferred` directly
 - **`OrigoAutoHost._Process` is the sole frame entry point**: Within it, Core's `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending` are delegated in order; the adapter layer only schedules, never makes decisions
 
-All this orchestration is the unified responsibility of the Core layer's session lifecycle (`SessionManager` / `SessionRun`). For detailed separation principles, see [Architecture Overview](../usage/architecture-overview.en.md#adapter-layer-and-core-layer-separation-principles).
+All this orchestration is the unified responsibility of the Core layer's session lifecycle (`SessionManager` / `SessionRun`). For detailed separation principles, see [Architecture Overview](../architecture/overview.en.md#adapter-layer-and-core-layer-separation-principles).
 
 ### Bridge Pattern
 

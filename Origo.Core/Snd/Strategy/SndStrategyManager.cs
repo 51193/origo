@@ -36,7 +36,7 @@ internal sealed class SndStrategyManager
 
     internal void RecoverStrategiesOnly(IEnumerable<string> indices)
     {
-        var registeredIndices = indices.ToArray();
+        var registeredIndices = SndStrategyPool.RequireDistinctIndices(indices, "LifecycleIndices");
         if (registeredIndices.Length > 0)
             _pool.SealRegistration();
         ReleaseStrategiesOnly();

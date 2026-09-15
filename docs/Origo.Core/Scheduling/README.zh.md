@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Scheduling/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Scheduling
 
@@ -46,7 +46,7 @@
 
 延迟队列中的动作是帧模型的一部分。若一个动作失败，系统应崩溃而非静默跳过，避免业务逻辑在未知损坏状态下继续执行。日志记录异常详情，然后 throw。
 
-- **实体帧处理保持串行（暂缓方向）**：`ConcurrentActionQueue` 的线程安全只覆盖延迟动作的入队/出队；实体内生命周期策略按相对顺序约束排序，帧处理整体仍按单线程模型串行执行。实体级并发已作为备选方向讨论，因当前无性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../usage/extension-directions.zh.md)
+- **实体帧处理保持串行（暂缓方向）**：`ConcurrentActionQueue` 的线程安全只覆盖延迟动作的入队/出队；实体内生命周期策略按相对顺序约束排序，帧处理整体仍按单线程模型串行执行。实体级并发已作为备选方向讨论，因当前无性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../architecture/extension-directions.zh.md)
 
 ---
 [↑ 回到 Origo.Core](../README.zh.md)

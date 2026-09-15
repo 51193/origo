@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
@@ -70,7 +70,7 @@ Root (this file)
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.zh.md) | TypedData 源码生成器的驱动器行为测试文档 |
 | **手册元指令** | [META.md](META.zh.md) | 本手册的编写与维护规范 |
 | **发布与 Changelog** | [release-process](release-process.zh.md) | 正式发布、每周快照与 Changelog 规则 |
-| **架构决策（ADR）** | [ADR 0001](adr/0001-strategy-ordering.zh.md) | 策略顺序等关键架构决策与取舍 |
+| **架构文档** | [README](architecture/README.zh.md) | 架构总览、架构决策记录与暂缓设计方向 |
 | **Agent 工作流** | [AGENTS.md](../AGENTS.md) | 强制开发循环（源码→测试→Changelog→文档→提交→提交后 CI → post-commit lint）、核心原则与文档总索引 |
 | **性能基线** | [benchmarks/baseline.md](benchmarks/baseline.zh.md) | TypedData 内联存储 + 框架子系统性能基线与设计权衡 |
 
@@ -100,11 +100,11 @@ Root (this file)
 |---------|--------|
 | 浏览框架全部能力 | [usage/capabilities](usage/capabilities.zh.md) |
 | 快速接入 Origo | [usage/quick-start](usage/quick-start.zh.md) |
-| 理解整体架构 | [usage/architecture-overview](usage/architecture-overview.zh.md) |
+| 理解整体架构 | [architecture/overview](architecture/overview.zh.md) |
 | 编写游戏策略 | [usage/snd-entity-model](usage/snd-entity-model.zh.md) |
 | 理解生命周期闭环 | [usage/strategy-lifecycle](usage/strategy-lifecycle.zh.md) |
 | 学习设计模式 | [usage/design-patterns](usage/design-patterns.zh.md) |
-| 查看扩展方向与暂缓设计 | [usage/extension-directions](usage/extension-directions.zh.md) |
+| 查看扩展方向与暂缓设计 | [architecture/extension-directions](architecture/extension-directions.zh.md) |
 | 测试策略 | [usage/strategy-testing](usage/strategy-testing.zh.md) |
 | 使用存档系统 | [usage/persistence-flow](usage/persistence-flow.zh.md) |
 | 使用状态机 | [usage/state-machine](usage/state-machine.zh.md) |

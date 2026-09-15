@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Context Tests
 
@@ -18,7 +18,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch full-chain workflows |
 | `SndContextShutdownFailureTests.cs` | Cleanup invariant when unloading the old ProgressRun throws: both the ProgressRun reference and the foreground session are cleared |
 | `SndContextEntryFlowTests.cs` | SndContext workflow starting from entry configuration |
-| `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, alias/template loading, entry save loading, and configuration switches |
+| `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, ordering validation and registration freeze, alias/template loading, entry save loading, and configuration switches |
 | `PersistenceRequestTrackingTests.cs` | Persistence requests (save/continue/initial/main menu entry/switch level) tracked as pending count until flushed |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder building and writing level data |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad parsing and ApplyAttributes type inference |
@@ -196,6 +196,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | entry.json missing | Deferred flush throws (fail-fast) |
 | `Bootstrap_Twice_Throws` | Calling Bootstrap twice | InvalidOperationException |
 | `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | Bootstrap when the scene host topology is not bound to a context | InvalidOperationException (message contains "not bound to a context") |
+| `Bootstrap_InvalidStrategyOrdering_ThrowsDuringSeal` | A registered lifecycle strategy references an unregistered Before target | Bootstrap throws InvalidOperationException while sealing (message contains the missing target index) |
 | `CloneTemplate_NullKey_ThrowsArgumentException` | CloneTemplate with null key | ArgumentException |
 | `CloneTemplate_WhitespaceKey_ThrowsArgumentException` | CloneTemplate with whitespace key | ArgumentException |
 | `CloneTemplate_NonExistingKey_Throws` | CloneTemplate with a non-existent template alias | InvalidOperationException |

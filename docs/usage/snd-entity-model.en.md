@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Entity Model
 
@@ -252,6 +252,8 @@ Declare index arrays with `Before` / `After` on `StrategyIndexAttribute`:
 Each attribute belongs to its respective strategy type. A complete registry A → B → C still places A before C when an entity mounts only A/C; constraints do not require targets to be mounted. Topological candidates use index `StringComparer.Ordinal`, making registration, mount and load input order irrelevant. Process, AfterSpawn, AfterLoad, BeforeSave, BeforeQuit and BeforeDead run in the same direction; AfterAdd / BeforeRemove operate on the current strategy only.
 
 Registration must finish during startup. Bootstrap seals after discovery and public startup workflows seal before execution. Direct entity use seals before the first nonempty lifecycle recovery or dynamic mount. Unknown indices, non-lifecycle references, blank/null declarations, self references and cycles fail explicitly, with an actual cycle path. Saves retain mounted indices; recovery sorts with the frozen relationships.
+
+> **Ordering boundary**: The ordinal rule above describes topological candidate selection over the complete registry; it does not mean that any two unrelated mounted strategies keep ordinal order on every entity. Registered but unmounted strategies participate in the global order, and their constraints can change the relative order of two mounted strategies. Declare explicit `Before` / `After` constraints when stable order matters. See the [architecture decision record](../architecture/strategy-ordering.en.md) for the full analysis, known issues, and evolution options.
 
 ## Entity Metadata
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter.Integration.Tests
 
@@ -57,6 +57,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side, and strategy release still runs when `OnUnmounted` throws |
 | OrigoDefaultEntryBootstrapFailureTests | `Tests/OrigoDefaultEntryBootstrapFailureTests.cs` | 1 | `OrigoDefaultEntry` derived entry failure after base._Ready(): the next frame must fail fast instead of driving a half-initialized runtime |
 | OrigoDefaultEntryContextIntegrationTests | `Tests/OrigoDefaultEntryContextIntegrationTests.cs` | 1 | `OrigoDefaultEntry.Context` exposes the SndContext after successful startup and shares the same instance with `ConfigureSaveMetadataContributors` |
+| OrigoDefaultEntryStrategyRegistrationIntegrationTests | `Tests/OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs` | 1 | A derived entry overrides `ConfigureStrategies` to register a strategy manually before `Bootstrap` seals the registry |
 
 ## Running
 
@@ -115,7 +116,8 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── ObserverSaveReloadIntegrationTests.cs # Observer binding save/load recovery tests
 │   ├── UserDataCleanupIntegrationTests.cs # Test-process user:// cleanup tests
 │   ├── OrigoDefaultEntryBootstrapFailureTests.cs # Derived entry bootstrap failure fail-fast test
-│   └── OrigoDefaultEntryContextIntegrationTests.cs # Context exposure / shared-instance test
+│   ├── OrigoDefaultEntryContextIntegrationTests.cs # Context exposure / shared-instance test
+│   └── OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs # ConfigureStrategies manual-registration test
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs
 │   ├── StubNodeFactory.cs

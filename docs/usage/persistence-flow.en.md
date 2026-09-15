@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence Flow
 
@@ -258,7 +258,7 @@ The default implementation `DefaultSavePathPolicy` → `SavePathLayout` provides
 ## Related Documents
 
 - [Session Model](session-model.en.md) — Relationship between Session and saves
-- [Architecture Overview](architecture-overview.en.md) — Persistence's position in the overall architecture
+- [Architecture Overview](../architecture/overview.en.md) — Persistence's position in the overall architecture
 
 ---
 [↑ Back to usage](README.en.md)

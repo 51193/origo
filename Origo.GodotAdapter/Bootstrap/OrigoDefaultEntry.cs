@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
@@ -40,6 +41,18 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
 
     /// <summary>Whether to auto-discover strategy types during <see cref="SndContext.Bootstrap" />.</summary>
     [Export] public bool AutoDiscoverStrategies { get; set; } = true;
+
+    /// <summary>
+    ///     Called after <see cref="OrigoAutoHost.Runtime" /> is created and before
+    ///     <see cref="SndContext.Bootstrap" /> seals strategy registration. Override to
+    ///     register strategies manually, for example when <see cref="AutoDiscoverStrategies" />
+    ///     is disabled or when a strategy type cannot be discovered automatically.
+    /// </summary>
+    /// <param name="world">The world whose strategy pool is still open for registration.</param>
+    protected virtual void ConfigureStrategies(SndWorld world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+    }
 
     /// <summary>
     ///     Called after <see cref="SndContext" /> is created and bound to <see cref="GodotSndManager" />;

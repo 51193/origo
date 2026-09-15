@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Strategy Tests
 
@@ -181,14 +181,43 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `KillPendingEntities_NoObserverBindings_NoError` | KillPending on entities with no observer bindings | Completes normally; entity count becomes 0 |
 | `ClearAll_NoObserverBindings_NoError` | RemoveAllEntities with no observer bindings | Completes normally; entity count becomes 0 |
 
-## Strategy Partial-Ordering Test Details
+## StrategyOrderingTests Details
 
-- The complete registry A → B → C projects onto an entity mounting only A/C while retaining A before C; registration and mounting order do not affect results.
-- Equivalent Before / After edges and duplicate declarations are deduplicated; unconstrained strategies execute in Ordinal order.
-- Dynamic additions, removals, and insertion inside BeforeRemove preserve order and return pool references correctly.
-- Process and all five batch hooks follow the same direction; saves contain mounted indices only, load reorders them, and quit/death leave no pool leaks.
-- Registration freezes after Bootstrap discovery, before public startup workflows, or before direct lifecycle recovery/mounting; subsequent registration is rejected.
-- Unknown targets, non-lifecycle targets, blank/null declarations, self references, and cycles throw explicitly; cycles report actual paths.
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `FullRegistry_ProjectsTransitiveOrder_RegardlessOfRegistrationAndMountingOrder` | Registration and mounting order do not affect results; A → B → C stays transitive when only A/C are mounted; AfterSpawn, Process, and metadata share one order | snd-entity-model: Strategy execution order |
+| `DynamicAddAndRemove_KeepTransitiveOrderAndOptionalTargets` | Dynamic add/remove inserts and reorders by the complete registry; constraints hold when the target is unmounted; duplicate add and removal of an unmounted index throw | snd-entity-model: Strategy execution order |
+| `SaveLoadQuitAndDead_AllUseSameProjectedOrder` | Save, load, quit, and death all use the same projected order; recovered metadata order is correct and quit leaves no pool reference leaks | snd-entity-model: Strategy execution order |
+| `EquivalentBeforeAfterAndDuplicateEdges_DoNotCreateFalseCycles` | Equivalent Before / After edges and duplicate declarations are deduplicated without false cycles; unknown order queries throw; registration after sealing is rejected | Strategy README: SndStrategyPool |
+
+### Error Paths
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `BootstrapWithoutAutoDiscovery_ValidatesUnusedConstraintsImmediately` | An unmounted strategy declares an unregistered target | Throws InvalidOperationException while sealing startup registration |
+| `UnknownTarget_FailsBeforeAnyEntityOrPoolReferenceIsCreated` | Before points to an unregistered index | SealRegistration throws InvalidOperationException containing the target index and "unregistered" |
+| `NonLifecycleTarget_IsRejected` | A lifecycle strategy references a non-lifecycle target | SealRegistration throws InvalidOperationException containing "non-lifecycle" |
+| `Cycles_FailWithAnActualClosedPath_WithoutIncludingUnrelatedPredecessors` | Lifecycle ordering declarations form a cycle with an unrelated predecessor | Throws InvalidOperationException with the actual closed path and no unrelated predecessor; repeated Seal still throws |
+| `Cycles_WithAcyclicBranch_ReportOnlyClosedPath` | An unrelated acyclic node completes traversal before the cycle is found | Throws InvalidOperationException with only the closed path; the acyclic node is absent |
+| `InvalidDeclarations_FailAtRegistration` | Self reference, blank target, null array, or a non-lifecycle strategy declaring constraints | Throws InvalidOperationException at registration |
+| `DirectEntityRecovery_SealsRegistrationWithoutBootstrap` | Registering again after direct lifecycle-strategy recovery | Recovery seals the registry; subsequent Register throws InvalidOperationException |
+
+## StrategyOrderingIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `SpawnAndProcess_UnconstrainedStrategies_UseOrdinalIndexOrder` | Lifecycle strategies without constraints execute in index Ordinal order regardless of mounting order | snd-entity-model: Strategy execution order |
+| `RemoveStrategy_HookChangesOtherEntries_RemovesRequestedEntry` | When BeforeRemove removes another strategy and adds a new one, removal still targets the requested entry by identity without deleting the wrong entry or double-releasing the pool reference | Strategy README: Why freeze the complete registry graph |
+
+### Error Paths
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `RegisterStrategy_AfterFirstLifecycleEntity_FailsExplicitly` | Registering a new strategy after a lifecycle entity starts | Throws InvalidOperationException and keeps the registry frozen |
 
 ## StrategyPoolTypeSafetyAndExtensionTests Details
 
@@ -206,6 +235,8 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 |-------------|----------------|-------------------|
 | `GetStrategy_WrongBranchGeneric_ThrowsInvalidOperation` | Using LifecycleStrategyBase generic to acquire Active/StateMachine strategy | InvalidOperationException |
 | `RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws` | Recover list contains ActiveStrategyBase type | InvalidOperationException ("LifecycleStrategyBase") |
+| `RecoverStrategiesOnly_DuplicateIndex_ThrowsBeforeAcquiring` | Recover list contains a duplicate lifecycle index | InvalidOperationException ("more than once"); no strategy reference acquired |
+| `Recover_DuplicateActiveIndex_ThrowsBeforeAcquiring` | Recover list contains a duplicate active index | InvalidOperationException ("more than once"); no strategy reference acquired or leaked |
 | `Register_AbstractStrategyType_Throws` | Registering an abstract strategy type | InvalidOperationException |
 | `Register_DuplicateIndex_Throws` | Registering the same strategy index twice | InvalidOperationException ("already registered") |
 | `GetStrategy_FactoryReturnsNull_ThrowsInvalidOperation` | Registered factory returns null | InvalidOperationException (contains "returned null"; must not degrade into an NRE) |
@@ -246,6 +277,16 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `ThrowOnUnmountObserver` | ObserverStrategyTests.cs | OnUnmounted throws InvalidOperationException; verifies the failed unmount still returns the pool reference |
 | `StatefulObserver` | ObserverStrategyTests.cs | Observer with instance field _counter; verifies registration rejection |
 | `UnannotatedObserver` | ObserverStrategyTests.cs | Observer without [StrategyIndex] attribute; verifies registration rejection |
+| `Probe` (abstract) | StrategyOrderingTests.cs | Abstract base recording all eight lifecycle hook events for Producer / Bridge / Consumer |
+| `Producer` / `Bridge` / `Consumer` | StrategyOrderingTests.cs | Verify A → B → C projection, deduplication, and Ordinal fallback using duplicate Before, equivalent After, and an unmounted intermediate |
+| `MissingTarget` | StrategyOrderingTests.cs | Before points to an unregistered index; verifies the SealRegistration unknown-target error |
+| `ActiveTarget` | StrategyOrderingTests.cs | ActiveStrategy target; verifies a lifecycle constraint referencing a non-lifecycle strategy is rejected |
+| `ReferencesActive` | StrategyOrderingTests.cs | Lifecycle strategy referencing ActiveTarget; verifies the non-lifecycle reference error |
+| `OrderedActive` | StrategyOrderingTests.cs | ActiveStrategy declaring Before; verifies rejection at registration |
+| `CycleA` / `CycleB` / `CycleC` / `CycleRoot` | StrategyOrderingTests.cs | Form a real cycle with an unrelated predecessor; verifies closed-path diagnostics omit unrelated nodes |
+| `AcyclicLeaf` | StrategyOrderingTests.cs | Acyclic node with no outgoing edges; verifies the cycle search completes its branch and reports only the closed path |
+| `SelfReference` / `BlankReference` / `NullReference` | StrategyOrderingTests.cs | Invalid-registration cases: self reference, blank target, and null array |
+| `OrderingAlpha` / `OrderingZulu` / `OrderingRemover` | StrategyOrderingIntegrationTests.cs | Real simulation host verifying Ordinal fallback order and identity-based removal under reentrant insertion in BeforeRemove |
 | `ExtensionDomainStrategyBase` (abstract) | StrategyPoolTypeSafetyAndExtensionTests.cs | Third-domain abstract base class extending LifecycleStrategyBase; defines ProbeValue() abstract method |
 | `ExtensionDomainConcreteStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | Concrete implementation of ExtensionDomainStrategyBase; ProbeValue() returns "ok" |
 | `PoolEntityStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | LifecycleStrategyBase empty implementation for generic branch safety tests |

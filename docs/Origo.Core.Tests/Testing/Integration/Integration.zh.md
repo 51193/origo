@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 帧驱动游戏模拟集成测试
 
 > [↑ 回到 Origo.Core.Tests](../../README.zh.md)
-> [↔ 被测行为: usage/architecture-overview](../../../usage/architecture-overview.zh.md)
+> [↔ 被测行为: architecture/overview](../../../architecture/overview.zh.md)
 > [↔ 被测模块: Origo.Core/Runtime](../../../Origo.Core/Runtime/README.zh.md)
 
 ## 被测行为概览
@@ -34,9 +34,9 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `MultiFrameProcessing_AccumulatesData` | 策略每帧递增 count，RunFrames(10) 后 count=10 | architecture-overview: 帧循环 |
+| `MultiFrameProcessing_AccumulatesData` | 策略每帧递增 count，RunFrames(10) 后 count=10 | architecture/overview: 帧循环 |
 | `EntityInteraction_FindByName_ReadsPeerData` | 实体 A 在 Process 中通过 OwningSession.FindByName("peer") 读取实体 B 的 peer_value | ISessionRun.FindByName |
-| `EntityInteraction_ViaBlackboard_TransfersDataBetweenFrames` | 实体 A 写入 SessionBlackboard → 同帧实体 B 读取 bridge_value | architecture-overview: 会话模型 |
+| `EntityInteraction_ViaBlackboard_TransfersDataBetweenFrames` | 实体 A 写入 SessionBlackboard → 同帧实体 B 读取 bridge_value | architecture/overview: 会话模型 |
 | `DeferredAction_ExecutesAfterFlush` | 策略 EnqueueBusinessDeferred → DriveFrame FlushEndOfFrameDeferred 后 deferred_ran=true | Scheduling |
 | `SaveDuringGameplay_PersistsToDisk` | 运行帧 → RequestSaveGameAuto → 验证 progress.json/level snd_scene.json 存在，实体数据不变 | persistence-flow |
 | `EntityKill_BeforeDeadAndRemoval` | RequestKillEntity → DriveFrame → KillPendingAllSessions 收割，BeforeDead 触发，实体移除 | Runtime: SessionManager |
@@ -77,7 +77,7 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `BatchSpawn_100Entities_AllProcessed` | 批量 spawn 100 实体后运行 5 帧，全部实体的 count=5 | architecture-overview: 帧循环 |
+| `BatchSpawn_100Entities_AllProcessed` | 批量 spawn 100 实体后运行 5 帧，全部实体的 count=5 | architecture/overview: 帧循环 |
 | `BatchSpawn_ThenBatchKill_AllCleanedUp` | 100 实体批量 spawn 后同帧批量 kill，DriveFrame 后全部收割移除 | Runtime: SessionManager |
 | `ConsoleCommand_SndCount_PublishesOutput` | 提交 snd_count 命令后控制台输出包含 "Snd count:" | console-commands |
 | `ConsoleCommand_BbSetSystemLayer_RoundTrip` | bb_set/bb_get system 层命令：写入 int/string 经 SystemBlackboard 读回，bb_get 输出值 | console-commands |
@@ -268,7 +268,7 @@ Assert.Equal(10, count);
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| 多实体批量 spawn + 帧处理的扩展场景（实体数量 > 100） | 未验证大量实体时帧循环的稳定性 | architecture-overview: 帧循环 |
+| 多实体批量 spawn + 帧处理的扩展场景（实体数量 > 100） | 未验证大量实体时帧循环的稳定性 | architecture/overview: 帧循环 |
 | StrategyStateMachine 在帧循环中的跨实体状态机交互 | 未验证状态机变换触发的跨实体作用 | state-machine |
 
 ---

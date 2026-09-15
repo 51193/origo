@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Agent Reference
 
@@ -291,8 +291,9 @@ OrigoAutoHost._Ready()
     └── 13. SndContext.Bootstrap()
           ├── 13a. ConfigureConverters
           ├── 13b. OrigoAutoInitializer.DiscoverAndRegisterStrategies (reflection scan)
-          ├── 13c. LoadSceneAliases + LoadTemplates
-          └── 13d. RequestLoadMainMenuEntrySave (enqueues a system-deferred action; executed at frame end through IOrigoFrameDriver.DriveFrame)
+          ├── 13c. SndStrategyPool.SealRegistration (validate Before/After and freeze the registry)
+          ├── 13d. LoadSceneAliases + LoadTemplates
+          └── 13e. RequestLoadMainMenuEntrySave (enqueues a system-deferred action; executed at frame end through IOrigoFrameDriver.DriveFrame)
 ```
 
 ## Complete Strategy Example

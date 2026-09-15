@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Origo.Core.Snd.Strategy;
 
@@ -14,9 +13,10 @@ internal static class LifecycleStrategyOrder
 {
     internal sealed record Declaration(bool IsLifecycle, string[] Before, string[] After);
 
-    internal static Declaration ReadDeclaration(Type type, string index)
+    internal static Declaration ReadDeclaration(Type type, StrategyIndexAttribute attribute, string index)
     {
-        var attribute = type.GetCustomAttribute<StrategyIndexAttribute>()!;
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(attribute);
         var before = ValidateIndices(attribute.Before, index, nameof(attribute.Before));
         var after = ValidateIndices(attribute.After, index, nameof(attribute.After));
         var isLifecycle = typeof(LifecycleStrategyBase).IsAssignableFrom(type);

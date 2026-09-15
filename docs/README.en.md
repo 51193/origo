@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Manual
 
@@ -70,7 +70,7 @@ Each directory's `README.md` contains:
 | **Tests: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.en.md) | TypedData source generator driver behavioral test documentation |
 | **Manual Meta-Instructions** | [META.md](META.en.md) | Writing and maintenance conventions for this manual |
 | **Release & Changelog** | [release-process](release-process.en.md) | Formal releases, weekly snapshots, and Changelog rules |
-| **Architecture Decisions (ADR)** | [ADR 0001](adr/0001-strategy-ordering.en.md) | Key architecture decisions and trade-offs, such as strategy ordering |
+| **Architecture** | [README](architecture/README.en.md) | Architecture overview, decision records, and deferred design directions |
 | **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory loop (source → tests → Changelog → docs → commit → post-commit CI → post-commit lint), core principles, and document master index |
 | **Performance Baselines** | [benchmarks/baseline.md](benchmarks/baseline.en.md) | TypedData inline storage + framework subsystem performance baseline and design trade-offs |
 
@@ -100,11 +100,11 @@ Each directory's `README.md` contains:
 |-------------|---------|
 | Browse all framework capabilities | [usage/capabilities](usage/capabilities.en.md) |
 | Quickly integrate Origo | [usage/quick-start](usage/quick-start.en.md) |
-| Understand the overall architecture | [usage/architecture-overview](usage/architecture-overview.en.md) |
+| Understand the overall architecture | [architecture/overview](architecture/overview.en.md) |
 | Write game strategies | [usage/snd-entity-model](usage/snd-entity-model.en.md) |
 | Understand the lifecycle loop | [usage/strategy-lifecycle](usage/strategy-lifecycle.en.md) |
 | Learn design patterns | [usage/design-patterns](usage/design-patterns.en.md) |
-| View extension directions and deferred designs | [usage/extension-directions](usage/extension-directions.en.md) |
+| View extension directions and deferred designs | [architecture/extension-directions](architecture/extension-directions.en.md) |
 | Test strategies | [usage/strategy-testing](usage/strategy-testing.en.md) |
 | Use the save system | [usage/persistence-flow](usage/persistence-flow.en.md) |
 | Use state machines | [usage/state-machine](usage/state-machine.en.md) |

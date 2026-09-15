@@ -1,9 +1,9 @@
-<!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-pair: architecture/overview -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
-> [↑ Back to usage](README.en.md)
+> [↑ Back to Architecture](README.en.md)
 
 ## Design Principles
 
@@ -174,7 +174,7 @@ Additionally, `ISessionManager` and `ISessionRun` live in the Abstractions layer
 | **Fire strategy lifecycle hooks** | Strategies are a Core layer concept; hook firing timing and order must be centrally orchestrated by Core | `GodotSndManager` must not call `FireAfterSpawnHooks()`, `FireBeforeDeadHooks()`, etc. |
 | **Manage strategy release/ref counting** | Strategy pool, ref counting, and partial-order sorting are managed in Core's `SndStrategyPool` and `SndStrategyManager` | `GodotSndManager` must not call `ReleaseStrategiesOnly()` |
 | **Directly call Core pipeline methods** | The timing and order of frame boundary operations (entity processing → business queue → kill entities → system queue → console) are controlled by Core. The adapter layer should only call `IOrigoFrameDriver.DriveFrame(delta)` to hand over frame control | The adapter layer must not directly call the internal `FlushEndOfFrameDeferred` or `ProcessPending` |
-| **Directly drive Core startup flow** | Strategy discovery, alias/template loading, and entry save loading are internal Core orchestration, uniformly executed in `SndContext.Bootstrap()`. The adapter layer only passes configuration via `SndContextParameters` | The adapter layer must not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()` |
+| **Directly drive Core startup flow** | Strategy discovery, ordering validation and registration freeze, alias/template loading, and entry save loading are internal Core orchestration, uniformly executed in `SndContext.Bootstrap()`. The adapter layer only passes configuration via `SndContextParameters` | The adapter layer must not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()` |
 | **Hold Core orchestration state** | The state machine for entity lifecycle management (e.g., pending kill, teardown flow) is maintained by the Core layer | The adapter layer should not have methods like `QuitFromManager`, `DeadFromManager` |
 | **Load engine-agnostic business configuration** | Template parsing, alias mapping, and strategy index resolution are all done in Core | The adapter layer should not read and parse business configurations like `snd_templates.map` |
 
@@ -186,7 +186,7 @@ Additionally, `ISessionManager` and `ISessionRun` live in the Abstractions layer
 | **Entity lifecycle orchestration** | `SndEntityFactory.Spawn`/`SpawnMany` (AfterSpawn), `SessionRun` load/save/quit and `KillPending` (via `SessionManager.KillPendingAllSessions`) uniformly orchestrate all hooks |
 | **Scene host abstraction** | `ISndSceneHost` only defines container operations (create/lookup/remove), without hook semantics |
 | **Deferred action pipeline** | `ActionScheduler` business queue + system queue, `IOrigoFrameDriver.DriveFrame` uniformly flushes |
-| **Startup orchestration** | `SndContext.Bootstrap()` uniformly executes strategy discovery → alias/template loading → entry save loading |
+| **Startup orchestration** | `SndContext.Bootstrap()` uniformly executes strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading |
 
 ### Responsibility Division in the Frame Loop
 
@@ -243,4 +243,4 @@ Origo.ConsoleBridge/  # TCP remote console (~2 .cs files)
 - Test directory structure mirrors production code
 
 ---
-[↑ Back to usage](README.en.md)
+[↑ Back to Architecture](README.en.md)

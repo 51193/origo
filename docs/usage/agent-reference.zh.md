@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Agent Reference
 
@@ -291,8 +291,9 @@ OrigoAutoHost._Ready()
     └── 13. SndContext.Bootstrap()
           ├── 13a. ConfigureConverters
           ├── 13b. OrigoAutoInitializer.DiscoverAndRegisterStrategies (反射扫描)
-          ├── 13c. LoadSceneAliases + LoadTemplates
-          └── 13d. RequestLoadMainMenuEntrySave（入队系统延迟动作；帧末经 IOrigoFrameDriver.DriveFrame 执行）
+          ├── 13c. SndStrategyPool.SealRegistration（校验 Before/After 并冻结注册表）
+          ├── 13d. LoadSceneAliases + LoadTemplates
+          └── 13e. RequestLoadMainMenuEntrySave（入队系统延迟动作；帧末经 IOrigoFrameDriver.DriveFrame 执行）
 ```
 
 ## 完整策略示例

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 上下文 测试
 
@@ -21,7 +21,7 @@ TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入�
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch 全链路工作流 |
 | `SndContextShutdownFailureTests.cs` | 工作流卸载旧 ProgressRun 抛异常时的清理不变量：ProgressRun 引用与前台会话均被清空 |
 | `SndContextEntryFlowTests.cs` | SndContext 从入口配置开始的工作流 |
-| `SndContextBootstrapTests.cs` | Bootstrap 启动流程：策略发现、别名/模板加载、入口存档加载的顺序与配置开关 |
+| `SndContextBootstrapTests.cs` | Bootstrap 启动流程：策略发现、排序校验与注册冻结、别名/模板加载、入口存档加载的顺序与配置开关 |
 | `PersistenceRequestTrackingTests.cs` | 持久化请求（save/continue/initial/main menu entry/switch level）入队后 pending 计数跟踪直至冲刷 |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder 构建和写入关卡数据 |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad 解析与 ApplyAttributes 类型推断 |
@@ -199,6 +199,7 @@ TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入�
 | `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | 缺少 entry.json | 冲刷延迟队列时抛出异常（fail-fast） |
 | `Bootstrap_Twice_Throws` | 重复调用 Bootstrap | InvalidOperationException |
 | `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | 场景宿主未绑定 context（topology 未绑定）时 Bootstrap | InvalidOperationException（消息含 "not bound to a context"） |
+| `Bootstrap_InvalidStrategyOrdering_ThrowsDuringSeal` | 已注册生命周期策略引用未注册的 Before 目标 | Bootstrap 在固定注册表时抛 InvalidOperationException（消息含缺失目标索引） |
 | `CloneTemplate_NullKey_ThrowsArgumentException` | CloneTemplate 传入 null key | ArgumentException |
 | `CloneTemplate_WhitespaceKey_ThrowsArgumentException` | CloneTemplate 传入空白 key | ArgumentException |
 | `CloneTemplate_NonExistingKey_Throws` | CloneTemplate 传入不存在的模板别名 | InvalidOperationException |

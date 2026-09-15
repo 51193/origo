@@ -4,11 +4,9 @@
 
 ## 中文
 - [agent-reference](agent-reference.zh.md)
-- [architecture-overview](architecture-overview.zh.md)
 - [capabilities](capabilities.zh.md)
 - [console-commands](console-commands.zh.md)
 - [design-patterns](design-patterns.zh.md)
-- [extension-directions](extension-directions.zh.md)
 - [persistence-flow](persistence-flow.zh.md)
 - [quick-start](quick-start.zh.md)
 - [README](README.zh.md)
@@ -20,11 +18,9 @@
 
 ## English
 - [agent-reference](agent-reference.en.md)
-- [architecture-overview](architecture-overview.en.md)
 - [capabilities](capabilities.en.md)
 - [console-commands](console-commands.en.md)
 - [design-patterns](design-patterns.en.md)
-- [extension-directions](extension-directions.en.md)
 - [persistence-flow](persistence-flow.en.md)
 - [quick-start](quick-start.en.md)
 - [README](README.en.md)
