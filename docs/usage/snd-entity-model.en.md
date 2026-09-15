@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Entity Model
 
@@ -93,7 +93,7 @@ Hooks listed in execution order:
 ### Writing Strategies
 
 ```csharp
-[StrategyIndex("my_game.damage_tick", Priority = 100)]
+[StrategyIndex("my_game.damage_tick")]
 public sealed class DamageTickStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -114,7 +114,7 @@ public sealed class DamageTickStrategy : LifecycleStrategyBase
 - **Statelessness enforcement**: Strategy classes must not declare instance fields or writable properties (validated via reflection at registration)
 - **Registration**: `[StrategyIndex("xxx.yyy")]` attribute + assembly scanning
 - **Index naming**: Dot-separated namespace + lowercase snake_case segments (e.g., `core.player.health`)
-- **Priority**: The `Priority` attribute determines execution order of multiple strategies on the same entity (default 6205; lower executes earlier)
+- **Ordering constraints**: `Before` / `After` type attributes declare the lifecycle partial order; the frozen complete registry determines execution order.
 - **Reference counting**: When the same strategy is referenced by multiple entities, count increments; only recycled when all are released
 
 
@@ -242,16 +242,16 @@ Observer binding relationships are persisted into save files via the `StrategyMe
 
 ## Strategy Execution Order
 
-Multiple strategies on the same entity execute in ascending `Priority` order; equal priority uses insertion order:
+Declare index arrays with `Before` / `After` on `StrategyIndexAttribute`:
 
-```
-Priority: 10  →  Strategy A  (executes first)
-Priority: 50  →  Strategy B
-Priority: 100 →  Strategy C
-Priority: 6205 (default) → Strategy D
+```csharp
+[StrategyIndex("game.perception", Before = new[] { "game.scheduling" })]
+[StrategyIndex("game.scheduling", Before = new[] { "game.action" })]
 ```
 
-All hooks (Process / AfterSpawn / etc.) follow this order.
+Each attribute belongs to its respective strategy type. A complete registry A → B → C still places A before C when an entity mounts only A/C; constraints do not require targets to be mounted. Topological candidates use index `StringComparer.Ordinal`, making registration, mount and load input order irrelevant. Process, AfterSpawn, AfterLoad, BeforeSave, BeforeQuit and BeforeDead run in the same direction; AfterAdd / BeforeRemove operate on the current strategy only.
+
+Registration must finish during startup. Bootstrap seals after discovery and public startup workflows seal before execution. Direct entity use seals before the first nonempty lifecycle recovery or dynamic mount. Unknown indices, non-lifecycle references, blank/null declarations, self references and cycles fail explicitly, with an actual cycle path. Saves retain mounted indices; recovery sorts with the frozen relationships.
 
 ## Entity Metadata
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy
 
@@ -24,6 +24,7 @@ Strategies are divided into four categories: passive entity strategies (frame-dr
 | `ObserverStrategyMetadata.cs` | `internal` — per-type reflection cache of data keys declared by `[ObserveData]` |
 | `ObserveDataAttribute.cs` | Observation data key declaration attribute: `[ObserveData("key")]`, supports multiple declarations |
 | `ActiveStrategyManager.cs` | `internal` — per-entity active strategy manager: Dictionary container + add/remove + serialization |
+| `LifecycleStrategyOrder.cs` | Complete registry validation, deterministic topological ordering, and cycle diagnostics |
 | `SndStrategyPool.cs` | `internal` — Strategy pool: registration, instantiation, reference counting, statelessness validation |
 | `SndStrategyManager.cs` | `internal` — per-entity passive strategy manager: strategy container add/remove + lifecycle hook coordination |
 | `StrategyIndexAttribute.cs` | Strategy index declaration attribute: `[StrategyIndex("core.health")]` |
@@ -82,9 +83,10 @@ Global registry and instance pool for strategies:
 - **Register**: `Register(Type strategyType, Func<BaseStrategy> factory)` — validates statelessness via reflection before registering the type (checks instance fields and writable properties)
 - **GetStrategy<TBase>(index)**: If an instance exists in the pool, reuse it (reference count +1); otherwise create via factory
 - **ReleaseStrategy(index)**: Reference count -1; when it reaches zero, remove from pool (but factory is retained for future creation)
-- **GetPriority(index)**: Returns the strategy's execution priority on an entity (default 6205)
+- **SealRegistration()**: Validate every relationship and freeze registration at startup. Further `Register` calls throw. `Bootstrap` seals after discovery; public startup workflows seal before execution; direct entity use seals before the first nonempty lifecycle recovery or dynamic mount.
+- **GetLifecycleOrder(index)**: Return the topological position in the complete registry; unknown or non-lifecycle indices throw.
 - **LogPoolLeaks()**: Diagnostic method, iterates all reference counts; if any non-zero counts exist, outputs a Warning log. Called during testing or shutdown to detect unreturned strategy references (leaks)
-- **Strategy ordering**: Only passive entity strategies are sorted ascending by priority; same priority sorts by insertion order
+- **Strategy ordering**: Only lifecycle strategies use `Before` / `After`. Topological candidates in the complete registry are selected with `StringComparer.Ordinal`. Entity lists project that order, preserving A → C in A → B → C when B is unmounted.
 
 ### SndStrategyManager
 
@@ -189,14 +191,19 @@ All three are recovered separately during `RecoverForLifecycle` with no cross-co
 ### StrategyIndexAttribute
 
 ```csharp
-[StrategyIndex("my_game.player_control", Priority = 100)]
+[StrategyIndex("my_game.player_control", Before = new[] { "my_game.movement" })]
 public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 ```
 
 - `Index`: required, unique index key for the strategy in the pool
-- `Priority`: optional, default 6205, determines the execution order of multiple passive strategies on the same entity; active strategies do not participate in ordering
+- `Before` / `After`: Optional index arrays, declared only by lifecycle strategies and referencing lifecycle strategies. Targets must be registered but need not be mounted. Null arrays, blank targets, self references, unknown indices, non-lifecycle references, and cycles fail explicitly; cycle diagnostics include an actual closed path.
 
 ## Design Decisions
+
+### Why freeze the complete registry graph
+
+Constraints express global type relationships. Entities execute mounted strategies only, retaining transitive relationships through missing intermediate strategies. One startup validation supports forward references and prevents later registrations from changing running entity order. Process, AfterSpawn, AfterLoad, BeforeSave, BeforeQuit, and BeforeDead all follow the same order. AfterAdd and BeforeRemove operate on one strategy rather than a batch. Saves contain mounted indices only; recovery sorts using the frozen relationships. Dynamic removal identifies its entry after BeforeRemove returns, so insertion inside the hook cannot shift removal onto another strategy.
+
 
 ### Why strategies must be stateless (registration-time validation)
 
@@ -216,7 +223,7 @@ The same strategy may be referenced by multiple entities simultaneously (e.g., t
 
 ### Why passive and active strategy containers are separate
 
-Active strategies only require index-based lookup (O(1) Dictionary) and do not participate in per-frame traversal. Passive strategies require priority-ordered iteration (List). Separate containers avoid type checks and irrelevant data during traversal and provide clear grouping boundaries for serialization.
+Active strategies only require index-based lookup (O(1) Dictionary) and do not participate in per-frame traversal. Passive strategies require partial-order iteration (List). Separate containers avoid type checks and irrelevant data during traversal and provide clear grouping boundaries for serialization.
 
 ### Why all lifecycle hooks use snapshot iteration
 
@@ -238,8 +245,7 @@ ActiveStrategy is recovered during `RecoverForLifecycle` (Phase 1), before `Fire
 
 `SndStrategyPool`'s reference counts, registration table, and instance cache are only accessed on the frame thread (single-threaded frame model). Cross-thread scenarios (deferred-queue enqueue/dequeue, console input, etc.) only carry actions and data and never touch the pool; engine callbacks and business strategy hooks all run on the frame thread. Reference counting therefore needs no locking — concurrent pool access is a contract violation with undefined behavior.
 
-- **Alternative direction: entity-level concurrency (deferred)**: Statelessness makes strategy types shareable across entities, but entity Data, cross-entity `InvokeStrategy`, synchronous observer notifications, and scene-container mutation are still designed for the single-threaded frame model; the priority order among multiple strategies inside one entity must also be preserved. The candidate design is "concurrency as an entity property" + a concurrency-mode data container + running concurrent entities first in parallel, then running the rest serially after a barrier; it is deferred because there is currently no performance bottleneck. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
-- **Alternative direction: relative ordering constraints for lifecycle strategies (deferred)**: The current numeric `Priority` ordering is simple and deterministic, but strategy growth may create numeric coordination burden. The candidate design replaces it with `Before` / `After` partial-order constraints, automatically positions strategies topologically at insertion or registration, and throws immediately on cycles; deferred because the benefit is limited at the current scale. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
+- **Alternative direction: entity-level concurrency (deferred)**: Statelessness makes strategy types shareable across entities, but entity Data, cross-entity `InvokeStrategy`, synchronous observer notifications, and scene-container mutation are still designed for the single-threaded frame model; the partial order among multiple strategies inside one entity must also be preserved. The candidate design is "concurrency as an entity property" + a concurrency-mode data container + running concurrent entities first in parallel, then running the rest serially after a barrier; it is deferred because there is currently no performance bottleneck. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
 - **Alternative direction: multiple ActiveStrategy implementations per index (deferred)**: The strategy index is currently globally unique, and each entity also has only one implementation for the same active index. The candidate design upgrades the index into a "contract name / interface name", binds concrete implementations per target entity, and dispatches `InvokeStrategy("hurt")` through the entity binding table; the current workarounds — a single strategy switching on entity fields, or the `*_impl` replaceable-implementation pattern — cover today's needs, so it is deferred. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
 ---
 

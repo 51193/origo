@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: lifecycle strategies use `Before` / `After` ordering constraints** — `StrategyIndexAttribute.Priority` and `DefaultPriority` are removed. Startup registration validates all references and cycles, then freezes the complete graph. Entities project that order onto mounted strategies, retaining transitive relationships; unconstrained topological candidates use index Ordinal order. Process and batch lifecycle hooks follow the same direction.
+
 - **`GodotPackedSceneNodeFactory` validates its inputs up front** — the constructor now rejects a null parent, and `Create` rejects null or blank logical names in addition to Godot-prohibited node-name characters, all before loading or instantiating anything; framework validation can no longer drift from engine rules.
 - **`StackStateMachine.Push` now rolls back when the push hook throws** — the stack value is pushed only as part of the hook dispatch attempt; if `OnPushRuntime` throws, the value is removed and the exception propagates, leaving the stack unchanged.
 - **`SndMetaFluentBuilder.SetNode` rejects blank node names and resource IDs** — null or whitespace keys/values now fail at the fluent call site instead of being accepted into metadata and failing later during entity recovery or node lookup.

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 策略生命周期
 
@@ -150,7 +150,7 @@ public sealed class MoveToActionStrategy : LifecycleStrategyBase
 ## 完整闭环示例
 
 ```csharp
-[StrategyIndex("game.character.core", Priority = 10)]
+[StrategyIndex("game.character.core")]
 public sealed class CharacterCoreStrategy : LifecycleStrategyBase
 {
     // 游戏逻辑闭环：注册/注销到管理器（AfterSpawn ↔ BeforeDead 配对）
@@ -224,7 +224,7 @@ public sealed class HpDeathObserver : ObserverStrategyBase
 **示例：**
 
 ```csharp
-[StrategyIndex("character.scheduling", Priority = 5)]
+[StrategyIndex("character.scheduling")]
 public sealed class CharacterSchedulingStrategy : PlanExecutionStrategyBase
 {
     public override string IntentKey => "character.intent";

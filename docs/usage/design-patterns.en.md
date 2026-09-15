@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Design Patterns
 
@@ -258,27 +258,24 @@ Benefits:
 
 ---
 
-## Priority Layered Execution
+## Partial-Order Layered Execution
 
-Use different `Priority` values to divide strategy execution layers (smaller values execute first):
+Use Before / After constraints to order strategy layers:
 
-```
-P4   Perception layer      Read environment / self state → produce intent
-P5   Scheduling layer       Based on intent → decompose action plan
-P6   Action layer           Execute specific behavior → report completion/failure
-P20  Pathfinding layer      Read target → compute path
-P30  Movement layer         Read next step → execute displacement
-P35  Detection layer        Per-frame condition detection → trigger outcomes
+```text
+Perception layer → Scheduling layer → Action layer
+Pathfinding layer → Movement layer
+Detection layer (declare its relationships as required by the domain)
 ```
 
 Design points:
-- Within the same frame, lower Priority executes first; produced data is consumed by higher Priority strategies in the same frame
-- Continuously running subsystems (pathfinding, movement) use different priority bands from decision systems (perception, scheduling)
+- Within the same frame, strategies earlier in the partial order execute first; produced data is consumed by later strategies in the same frame
+- Continuously running subsystems (pathfinding, movement) declare ordering constraints with decision systems (perception, scheduling)
 - Different layers communicate through data keys with no direct coupling
 
 ### Scheduling Layer's PlanExecutionStrategyBase
 
-The framework provides [`PlanExecutionStrategyBase`](../Origo.Core/Planning/README.en.md) as the standard base class for the scheduling layer (P5). It encapsulates the complete lifecycle of intent → plan → step → action:
+The framework provides [`PlanExecutionStrategyBase`](../Origo.Core/Planning/README.en.md) as the standard base class for the scheduling layer. It encapsulates the complete lifecycle of intent → plan → step → action:
 
 - **Subscription wiring**: Auto-manages the RAII closed loop for `intent` and `action_status` data subscriptions
 - **Plan advancement**: Intent change restarts the plan; action completion/failure advances to the next step or terminates
@@ -289,7 +286,7 @@ Any step type (idle, patrol, standby, etc.) should be implemented as an independ
 Users only need to implement two abstract methods:
 
 ```csharp
-[StrategyIndex("character.scheduling", Priority = 5)]
+[StrategyIndex("character.scheduling", After = new[] { "character.perception" }, Before = new[] { "character.action" })]
 public sealed class MySchedulingStrategy : PlanExecutionStrategyBase
 {
     protected override string IntentKey => "my.intent";

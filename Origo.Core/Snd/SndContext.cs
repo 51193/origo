@@ -128,6 +128,8 @@ public sealed class SndContext : ISndContext
             OrigoAutoInitializer.DiscoverAndRegisterStrategies(
                 Runtime.SndWorld, Runtime.Logger, _parameters.DiscoverySkipPrefixes);
 
+        Runtime.SndWorld.StrategyPool.SealRegistration();
+
         if (_parameters.SceneAliasMapPath is not null)
             Runtime.SndWorld.LoadSceneAliases(_parameters.SceneAliasMapPath, Runtime.Logger);
 
@@ -492,6 +494,7 @@ public sealed class SndContext : ISndContext
 
     private T RunWorkflow<T>(Func<T> body)
     {
+        Runtime.SndWorld.StrategyPool.SealRegistration();
         BeginWorkflow();
         try
         {

@@ -120,7 +120,7 @@ res://origo/
 ### 4. 编写策略与定义实体
 
 ```csharp
-[StrategyIndex("game.player_move", Priority = 100)]
+[StrategyIndex("game.player_move")]
 public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)

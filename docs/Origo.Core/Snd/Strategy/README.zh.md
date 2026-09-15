@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Strategy
 
@@ -24,6 +24,7 @@ SND 策略系统的完整实现。策略是实体行为逻辑的载体，遵循"
 | `ObserverStrategyMetadata.cs` | `internal` — 按类型反射缓存 `[ObserveData]` 声明的观察数据键 |
 | `ObserveDataAttribute.cs` | 观察数据键声明特性：`[ObserveData("key")]`，支持多重声明 |
 | `ActiveStrategyManager.cs` | `internal` — 单实体主动策略管理器：Dictionary 容器 + 增删 + 序列化 |
+| `LifecycleStrategyOrder.cs` | 完整注册图校验、确定性拓扑排序与环路径诊断 |
 | `SndStrategyPool.cs` | `internal` — 策略池：注册、实例化、引用计数、无状态校验 |
 | `SndStrategyManager.cs` | `internal` — 单实体被动策略管理器：策略容器的增删 + 生命周期钩子协调 |
 | `StrategyIndexAttribute.cs` | 策略索引声明特性：`[StrategyIndex("core.health")]` |
@@ -82,9 +83,10 @@ BaseStrategy
 - **Register**：`Register(Type strategyType, Func<BaseStrategy> factory)` —— 注册类型前通过反射校验无状态性（检查实例字段和可写属性）
 - **GetStrategy<TBase>(index)**：若池中已有则复用（引用计数 +1），否则通过工厂创建
 - **ReleaseStrategy(index)**：引用计数 -1，归零时从池中移除（但工厂保留，下次可再创建）
-- **GetPriority(index)**：返回策略在实体上的执行优先级（注册时未显式指定 Priority 则取默认 6205；未注册索引返回 0 哨兵）
+- **SealRegistration()**：启动阶段结束时校验全部关系并固定注册表；固定后 `Register` 抛异常。`Bootstrap` 在自动发现后固定，公共启动工作流在执行前固定；直接使用实体时，首次恢复非空生命周期策略列表或动态挂载前固定。
+- **GetLifecycleOrder(index)**：返回完整注册图中的拓扑位置，未知或非生命周期策略索引抛异常。
 - **LogPoolLeaks()**：诊断方法，遍历所有引用计数；若存在非零计数则输出 Warning 日志。供测试或 shutdown 阶段调用，检测策略引用未归还的泄漏
-- **策略排序**：仅被动实体策略按优先级升序排列，同优先级按插入顺序
+- **策略排序**：仅生命周期策略使用 `Before` / `After`。完整注册图按拓扑候选索引的 `StringComparer.Ordinal` 排序；实体列表取该顺序的投影，因此 A → B → C 中未挂载 B 仍保留 A → C。
 
 ### SndStrategyManager
 
@@ -189,14 +191,19 @@ StrategyMetaData
 ### StrategyIndexAttribute
 
 ```csharp
-[StrategyIndex("my_game.player_control", Priority = 100)]
+[StrategyIndex("my_game.player_control", Before = new[] { "my_game.movement" })]
 public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 ```
 
 - `Index`：必填，策略在池中的唯一索引键
-- `Priority`：可选，默认 6205，决定同实体上多被动策略的执行顺序；主动策略不参与排序
+- `Before` / `After`：可选索引数组，只允许生命周期策略声明和引用生命周期策略。目标必须已注册，但无需挂载。空白目标、null 数组、自引用、未知索引、非生命周期引用和环均明确失败；环诊断显示实际闭合路径。
 
 ## 设计决策
+
+### 为什么固定完整注册图
+
+顺序约束表达全局类型关系，实体只执行已挂载策略，不能因缺少中间策略而丢失传递关系。启动时一次校验支持前向引用，也避免运行中注册改变已有实体的顺序。Process、AfterSpawn、AfterLoad、BeforeSave、BeforeQuit 和 BeforeDead 全部沿同一顺序；AfterAdd 与 BeforeRemove 是单策略操作，不批量调度。存档仅保存挂载索引，恢复时按固定关系排序。动态移除在 BeforeRemove 返回后按条目身份摘除，钩子内插入导致列表位移不会误删其他策略。
+
 
 ### 为什么策略强制无状态（注册期校验）
 
@@ -216,7 +223,7 @@ public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 ### 为什么被动和主动策略容器分离
 
-主动策略只需按索引查找（O(1) Dictionary），不参与每帧遍历。被动策略需要按优先级排序迭代（List）。容器分离避免遍历时的类型检查和无关数据，也给序列化提供清晰的分组边界。
+主动策略只需按索引查找（O(1) Dictionary），不参与每帧遍历。被动策略需要按偏序排序迭代（List）。容器分离避免遍历时的类型检查和无关数据，也给序列化提供清晰的分组边界。
 
 ### 为什么生命周期钩子全都基于快照迭代
 
@@ -238,8 +245,7 @@ ActiveStrategy 在 `RecoverForLifecycle` (Phase 1) 中恢复，早于 `FireAfter
 
 `SndStrategyPool` 的引用计数、注册表和实例缓存仅在帧线程（单线程帧模型）上访问。跨线程场景（延迟队列的入队/出队、控制台输入等）只传递动作与数据，不触碰策略池；引擎回调与业务策略钩子全部在帧线程执行。因此引用计数无需加锁——并发访问策略池属于契约违规，行为未定义。
 
-- **备选方向：实体级并发（暂缓）**：策略无状态让策略类型可跨实体共享，但实体 Data、跨实体 `InvokeStrategy`、观察者同步通知和场景容器变更仍按单线程帧模型设计；同一实体内部多个策略的优先级顺序也必须保留。备选方案是“实体可并发”作为实体自身属性 + 数据容器并发模式 + 先并行执行并发实体、屏障后再串行执行剩余实体，因当前没有性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
-- **备选方向：生命周期策略的相对顺序约束（暂缓）**：当前 `Priority` 数字排序简单、确定性好，但策略规模变大时可能产生数值协调负担。备选方案是把顺序改为 `Before` / `After` 偏序约束，插入或注册时自动拓扑定位，有环立即抛异常；因当前规模下收益有限而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
+- **备选方向：实体级并发（暂缓）**：策略无状态让策略类型可跨实体共享，但实体 Data、跨实体 `InvokeStrategy`、观察者同步通知和场景容器变更仍按单线程帧模型设计；同一实体内部多个策略的偏序顺序也必须保留。备选方案是“实体可并发”作为实体自身属性 + 数据容器并发模式 + 先并行执行并发实体、屏障后再串行执行剩余实体，因当前没有性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
 - **备选方向：ActiveStrategy 同名多实现（暂缓）**：当前策略索引全局唯一，每实体同一 active index 也只有一个实现。备选方案是把索引升级为“契约名/接口名”，目标实体绑定具体实现，`InvokeStrategy("hurt")` 时按实体绑定表分发；当前可用唯一策略内按实体字段 `switch` 或 `*_impl` 可替换实现模式覆盖，故暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
 ---
 [↑ 回到 Snd](../README.zh.md)

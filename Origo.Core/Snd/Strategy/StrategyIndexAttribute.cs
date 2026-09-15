@@ -17,16 +17,12 @@ public sealed class StrategyIndexAttribute : Attribute
         Index = index;
     }
 
-    /// <summary>
-    ///     Default execution priority for strategy lifecycle hooks.
-    ///     Chosen as a midpoint (centered between 0 and ~12410) to leave
-    ///     equal headroom for higher- and lower-priority strategies.
-    /// </summary>
-    public const int DefaultPriority = 6205;
-
     /// <summary>The unique index of the strategy in the strategy pool.</summary>
     public string Index { get; }
 
-    /// <summary>Execution priority for lifecycle hooks; defaults to <see cref="DefaultPriority" />.</summary>
-    public int Priority { get; set; } = DefaultPriority;
+    /// <summary>Indices of lifecycle strategies that must execute after this strategy.</summary>
+    public string[] Before { get; set; } = [];
+
+    /// <summary>Indices of lifecycle strategies that must execute before this strategy.</summary>
+    public string[] After { get; set; } = [];
 }

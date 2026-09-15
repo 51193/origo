@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 测试文档维护元指令
 
@@ -92,7 +92,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 2. **内部编排的正确性契约**：策略池的引用计数、类型分支安全、回滚行为等
    - 示例：`SndStrategyPool` 的 `GetStrategy`/`ReleaseStrategy` 引用计数正确性
    - 示例：`StackStateMachine` 构造时 `SndStrategyPool` 获取失败的回滚行为
-   - 示例：实体分阶段生命周期编排（AfterLoad/AfterSpawn/BeforeSave/BeforeQuit/BeforeDead 的触发时机、LIFO/优先级顺序、跨实体可见性、以及"已创建但钩子未触发""BeforeQuit 已触发但实体仍在集合中"等中间态）通过 `IEntityLifecycle` 分阶段方法 + `FullMemorySndSceneHost` 直接验证（`SndEntityLifecycleBatchTests`）。这些中间态与排序**无法**通过 `ISessionRun` 公共 API 观察，故属白名单。
+   - 示例：实体分阶段生命周期编排（AfterLoad/AfterSpawn/BeforeSave/BeforeQuit/BeforeDead 的触发时机、LIFO/偏序顺序、跨实体可见性、以及"已创建但钩子未触发""BeforeQuit 已触发但实体仍在集合中"等中间态）通过 `IEntityLifecycle` 分阶段方法 + `FullMemorySndSceneHost` 直接验证（`SndEntityLifecycleBatchTests`）。这些中间态与排序**无法**通过 `ISessionRun` 公共 API 观察，故属白名单。
 
 3. **场景宿主自身契约**：`FullMemorySndSceneHost`/`MemorySndSceneHost`/`StubSndSceneHost` 的 `CreateEntity`/`RemoveEntity`/`RemoveAllEntities`/`ProcessAll`/`RequestKillEntity` 方法契约本身，以及 `SndEntityFactory.Spawn`/`SpawnMany`。这些是被测宿主/工厂的直接 API（见 [Snd-Scene.md](Snd-Scene.zh.md)、[Snd-Entity.md](Snd-Entity.zh.md)）。
 

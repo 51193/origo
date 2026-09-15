@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Agent Reference
 
@@ -303,7 +303,7 @@ using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 
 // Entity strategy: initialize data, and mount an observer strategy to respond to hp changes
-[StrategyIndex("example.simple_health", Priority = 6205)]
+[StrategyIndex("example.simple_health", Before = new[] { "example.damage_resolution" })]
 public sealed class SimpleHealthStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Tests
 
@@ -74,7 +74,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | SND Metadata | [Snd-Metadata.md](Snd-Metadata.en.md) | TypedData struct value semantics and IEquatable, SndMetaData deep copy, SG output verification, Fluent construction, TypedData integration |
 | Performance Benchmarks | [Benchmarks.md](Benchmarks.en.md) | `[Category=Benchmark]` suite (run separately by `benchmark.sh`): TypedData real simulation + Entity lifecycle + Observer topology + DataSourceNode + Blackboard + Save + Concurrent queue + Random + Strategy performance |
 | SND Scene | [Snd-Scene.md](Snd-Scene.en.md) | MemorySndSceneHost and FullMemorySndSceneHost Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity, NullNodeFactory |
-| SND Strategy | [Snd-Strategy.md](Snd-Strategy.en.md) | Strategy priority ordering, pool reference counting/recycling, entity strategy lifecycle hooks, observer strategies, active strategy Invoke, strategy pool Get/Release and Process scaling performance measurement |
+| SND Strategy | [Snd-Strategy.md](Snd-Strategy.en.md) | Strategy partial ordering, pool reference counting/recycling, entity strategy lifecycle hooks, observer strategies, active strategy Invoke, strategy pool Get/Release and Process scaling performance measurement |
 | SND Context | [Snd-Context.md](Snd-Context.en.md) | SndContext save/load/continue workflow, LevelBuilder, template resolution, Archetype loading |
 | SND Extensions | [Snd-Extensions.md](Snd-Extensions.en.md) | EnsureStrategy lazy strategy attachment (idempotent), TryGetNumeric cross-numeric type read, InvokeStrategy generic invocation |
 | File Access | [Snd-FileAccess.md](Snd-FileAccess.en.md) | ISndFileAccess DataSourceNode read/write round-trip on SndContext, strongly-typed round-trip, overwrite semantics, error/boundary paths |

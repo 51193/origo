@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -107,7 +107,7 @@ but must observe the following whitelist principle:
    - Example: `SndStrategyPool` `GetStrategy` / `ReleaseStrategy` reference counting correctness
    - Example: `StackStateMachine` rollback behavior when `SndStrategyPool` acquisition fails during construction
    - Example: Entity phased lifecycle orchestration (AfterLoad/AfterSpawn/BeforeSave/BeforeQuit/BeforeDead trigger
-     timing, LIFO/priority ordering, cross-entity visibility, and intermediate states like "created but hooks not
+     timing, LIFO/partial ordering, cross-entity visibility, and intermediate states like "created but hooks not
      yet triggered" and "BeforeQuit triggered but entity still in collection") verified directly via
      `IEntityLifecycle` phased methods + `FullMemorySndSceneHost` (`SndEntityLifecycleBatchTests`).
      These intermediate states and ordering **cannot** be observed through `ISessionRun` public API and are

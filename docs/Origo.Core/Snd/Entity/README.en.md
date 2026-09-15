@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Entity
 
@@ -50,11 +50,11 @@ These methods are used by the framework layer for batch orchestration; business 
 | Method | Phase | Description |
 |--------|-------|-------------|
 | `RecoverForLifecycle(meta)` | Phase 1: Recovery | Recover Name + Data + Node + EntityStrategy + ActiveStrategy; does not trigger any hooks. On failure, rolls back atomically across phases: acquired strategy references are returned to the pool and created nodes are freed before the exception propagates |
-| `FireAfterSpawnHooks()` | Phase 2: Hooks | Trigger strategy AfterSpawn by priority |
-| `FireAfterLoadHooks()` | Phase 2: Hooks | Trigger strategy AfterLoad by priority |
-| `FireBeforeSaveHooks()` | Phase 2: Hooks | Trigger strategy BeforeSave by priority |
-| `FireBeforeQuitHooks()` | Phase 2: Hooks | Trigger strategy BeforeQuit by priority |
-| `FireBeforeDeadHooks()` | Phase 2: Hooks | Trigger strategy BeforeDead by priority |
+| `FireAfterSpawnHooks()` | Phase 2: Hooks | Trigger strategy AfterSpawn in partial order |
+| `FireAfterLoadHooks()` | Phase 2: Hooks | Trigger strategy AfterLoad in partial order |
+| `FireBeforeSaveHooks()` | Phase 2: Hooks | Trigger strategy BeforeSave in partial order |
+| `FireBeforeQuitHooks()` | Phase 2: Hooks | Trigger strategy BeforeQuit in partial order |
+| `FireBeforeDeadHooks()` | Phase 2: Hooks | Trigger strategy BeforeDead in partial order |
 | `ReleaseStrategiesOnly()` | Phase 3: Teardown | Release passive + active + observer strategy references (no hooks triggered) |
 | `TeardownOnly()` | Phase 3: Teardown | Release Node + Data resources |
 | `TeardownObserverBindings()` | Phase 3: Teardown | Unmount all of this entity's observer bindings through the host `ObserverTopology` (unsubscribe target data channels) |
@@ -64,7 +64,7 @@ These methods are used by the framework layer for batch orchestration; business 
 
 Session quit teardown order (`SessionRun.ReleaseAllEntitiesAndClear`): first fire `FireBeforeQuitHooks` in batch, then unmount all observer bindings (`TeardownObserverBindings`, firing `OnUnmounted` and unsubscribing target data channels), then release strategies (`ReleaseStrategiesOnly`), and finally `TeardownOnly`. The entity-kill path (`SessionRun.KillPending`) first tears down observer bindings bidirectionally, then fires `FireBeforeDeadHooks`, and finally releases and removes the entity.
 
-`Process(delta)` triggers strategy Process by priority + snapshot iteration (internal; invoked by scene host `ProcessAll` and adapter-layer frame processing).
+`Process(delta)` triggers strategy Process in partial order + snapshot iteration (internal; invoked by scene host `ProcessAll` and adapter-layer frame processing).
 
 `IsPendingKill` flag is set immediately by `RequestKillEntity()`. BeforeDead hooks are triggered in batch by `SessionRun.KillPending()`; `RemoveEntity()` only performs teardown.
 
