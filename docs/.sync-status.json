@@ -62,20 +62,20 @@
     "META": {
       "status": "synced",
       "revisions": {
-        "zh": 20,
-        "en": 20
+        "zh": 21,
+        "en": 21
       },
       "previous_revisions": {
-        "zh": 19,
-        "en": 19
+        "zh": 20,
+        "en": 20
       },
       "files": {
         "zh": "META.zh.md",
         "en": "META.en.md"
       },
       "content_hashes": {
-        "zh": "492011BCFB4DCF4BB919F0C1DE45AAC37E3A3FB3C6E6078A559172773C5C19BD",
-        "en": "8A13ADDF15DE6299ADE4B76CD0738F2DD6299237CCD6C37BC902EEB157C4C843"
+        "zh": "5D9A681AA716AB39789C517F7B188B17AE921B5515DE36EE4DF9A91E02069A9B",
+        "en": "55CACAD76705308DCC5E2B55023C57F8AA4BBBDEC85A1F6DCCECE9DCCABD2FD7"
       }
     },
     "Origo.ConsoleBridge.Tests/Architecture": {

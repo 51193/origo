@@ -42,4 +42,7 @@ Thumbs.db
 
 artifacts/
 
+# Local agent work buffer (untracked by design; see AGENTS.md §1.11)
+_origo_local/
+
 # Rider IDE

@@ -29,6 +29,10 @@ read the following in full:**
    `docs/<mirror-path>/README.en.md` (English), **as well as the
    documentation for its upstream/downstream and related facilities**
    (per §1.3 full-chain principle).
+4. **The local work buffer, when present** — if `_origo_local/` exists, read
+   its `README.md` and any `inbox` / `in-progress` / `blocked` item that
+   relates to your task. The buffer may contain the exact finding, context,
+   and handoff state your session is expected to act on (§1.11).
 
 `docs/` is a **structural mirror** of the source code published in two
 languages side by side. Every directory contains:
@@ -405,6 +409,92 @@ missing language files) always fail the build.
   parses the `Godot.NET.Sdk` version from `Origo.GodotAdapter.csproj` and
   caches the matching engine under `.godot_binary/`.
 
+### 1.11 Local Agent Work Buffer — `_origo_local/` (Untracked, Producer/Consumer)
+
+> **When a scan, review, or design session discovers work that cannot be
+> implemented immediately — or when a session approaches its context/token
+> limit — write the finding and its full context into `_origo_local/` before
+> ending the session. Chat history is not durable; this buffer is.**
+
+`_origo_local/` is a **git-ignored local working area**. It is intentionally
+not part of the repository history and must never be committed. It acts as a
+**producer/consumer buffer**:
+
+| Role | Activity | Responsibility |
+|------|----------|----------------|
+| **Producer** | vulnerability scan, extension design, review, planning | Deposits an item with enough context for an agent with no prior knowledge |
+| **Consumer** | implementation | Claims an item, implements it through the full §2 loop, then closes it out |
+
+#### Producer rules
+
+Any agent that finds a defect, gap, extension direction, or unfinished
+investigation must create or update an item in `_origo_local/` with:
+
+- a stable **status header** (`inbox`, `in-progress`, `blocked`, `done`, or
+  `superseded`), owner/session marker, date, and baseline commit;
+- problem statement and concrete evidence (file paths, commands, observed
+  behavior);
+- the **full chain context** required by §1.3: official docs, upstream and
+  downstream collaborators, related tests, and relevant git history;
+- suggested scope, acceptance criteria, and known unknowns;
+- the exact commands already run and their results, if any.
+
+Producers must not delete or rewrite another agent's `in-progress` item, and
+must not dump raw chat transcripts without structure.
+
+#### Consumer rules
+
+A consumer may claim an item only after re-reading its full chain context and
+revalidating that its baseline assumptions still hold. On claiming, update the
+item status to `in-progress` and add the owner/branch or new baseline commit.
+
+A consumer **must not delete the item — or mark it `done` — until the complete
+development loop is finished**:
+
+1. source implementation;
+2. tests extended/adapted (red-first for defect fixes);
+3. `bash scripts/test.sh` green;
+4. fix/re-test loop finished;
+5. `CHANGELOG.md` updated for user-facing impact;
+6. `docs/` synchronized and `DocSyncTool generate` run;
+7. the change committed, `bash scripts/ci.sh` green, and the post-commit
+   `bash scripts/lint-commits.sh` green (per §2).
+
+Only then may the consumer record the final commit hash and durable
+documentation locations, and delete the item or mark it `done`. If the session
+ends or is blocked before that point, the item **must remain** in
+`_origo_local/` with a precise handoff: current worktree state, changed files,
+commands run, failures, and the exact next action. Deleting an unverified or
+partially implemented item is forbidden.
+
+#### Recommended layout
+
+```text
+_origo_local/
+├── README.md          # local entry point and current session context
+├── inbox/             # producer deposits, consumer claims
+├── in-progress/       # claimed items; must not be deleted mid-loop
+├── blocked/           # paused/blocked items with exact handoff state
+└── done/              # completed items, optionally retained before deletion
+```
+
+Flat files are allowed when a single item does not need attachments, but every
+item must carry the status header described above. The root `README.md` should
+index all current items and state the reading order.
+
+#### Hard constraints
+
+- Never `git add` or commit anything under `_origo_local/`; the repository-root
+  `.gitignore` ignores it.
+- Do not store secrets, credentials, or other sensitive data there.
+- This buffer is not official documentation. Any conclusion that must survive
+  repository changes or guide future contributors beyond the active session
+  must be migrated into tracked `docs/`, tests, or `CHANGELOG.md`.
+- Stale items are not deleted merely for cleanliness: mark them `superseded`
+  with a pointer to the replacement, or leave them for a consumer to close out.
+- If the buffer grows large, organize it by date/topic; do not break the
+  producer/consumer lifecycle above.
+
 ---
 
 ## 2. Development Loop (Mandatory Order)
@@ -434,6 +524,14 @@ The script checks `origin/main..HEAD`; it fails on non-conventional subjects,
 subjects over 72 characters, trailing periods, or body lines over 72
 characters. Do not treat the earlier step-3 run as sufficient — re-run it
 with the new commit in place.
+
+**Local work buffer closeout (§1.11).** If this change implements an item from
+`_origo_local/`, the item is closed out only **after** the steps above,
+`bash scripts/ci.sh`, and the post-commit `bash scripts/lint-commits.sh` all
+pass. Record the final commit hash and where durable knowledge now lives
+(tracked docs / tests / changelog), then mark the item `done` or delete it.
+Never delete or mark `done` a half-implemented, unverified, or uncommitted
+item; update it with an exact handoff instead.
 
 **Partial completion is forbidden.** If a step is genuinely not applicable
 (e.g., pure internal refactor with no public API or doc impact), you must
@@ -627,6 +725,7 @@ markers, and commit message conventions, see [`docs/META.zh.md`](docs/META.zh.md
 |-------|------|---------|
 | Manual index | [`docs/README.md`](docs/README.md) | Top-level navigation for all modules / usage / test docs. |
 | Docs maintenance | [`docs/META.zh.md`](docs/META.zh.md) (or [META.en.md](docs/META.en.md)) | Documentation conventions + Git commit message conventions. |
+| Local agent work buffer | `_origo_local/README.md` (only when present; git-ignored, untracked) | Producer/consumer buffer for scan findings, extension proposals, blocked work, and session handoffs; protocol in §1.11. |
 | Changelog | [`CHANGELOG.md`](CHANGELOG.md) | User-facing change log. |
 | Core module | [`docs/Origo.Core/README.md`](docs/Origo.Core/README.md) | Platform-agnostic core: SND entities, runtime, persistence, state machines, etc. |
 | Source generation | [`docs/Origo.SourceGeneration/README.md`](docs/Origo.SourceGeneration/README.md) | TypedData incremental source generator. |

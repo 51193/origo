@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **Weekly snapshot build workflow** — the Monday 02:30 UTC scheduled run publishes a `-nightly.YYYYMMDD` build only when the week that just ended ([previous Monday 00:00, current Monday 00:00) UTC) contains new commits; manual dispatch additionally covers the current partial week. Idle scheduled weeks publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
+- **Local agent work buffer (`_origo_local/`)** — scans, reviews, and design sessions can record structured findings and handoff state in a git-ignored producer/consumer buffer under `_origo_local/`; implementation sessions claim those items and may delete or mark them done only after the full development loop (source, tests, `scripts/ci.sh`, post-commit commit lint, changelog, docs sync) is complete. The protocol is documented in `AGENTS.md` §1.11, and the repository root `.gitignore` keeps the buffer out of version control.
 
 ### Changed
 
