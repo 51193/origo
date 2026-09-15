@@ -1,11 +1,11 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
 Origo 框架的完整文档手册。采用**自底向上**的结构——从源代码目录逐级向上汇总，确保任何问题都能通过目录的多级索引找到目标位置，无需从源代码从头读起。
 
-> **开发循环（强制顺序）**：① 开发源码 → ② 测试扩展/适配 → ③ 测试执行 → ④ 修复源码+重测试直到通过 → ⑤ Changelog → ⑥ 文档同步。
+> **开发循环（强制顺序）**：① 开发源码 → ② 测试扩展/适配 → ③ 测试执行 → ④ 修复源码+重测试直到通过 → ⑤ Changelog → ⑥ 文档同步 → ⑦ 提交 → ⑧ 提交后 `scripts/ci.sh` → ⑨ 提交后 `scripts/lint-commits.sh`。
 > 改动源码前必先阅读其上下游与相关设施的文档，杜绝把跨模块共同作用的设计误判为缺陷。完整准则与文档总索引见仓库根 [AGENTS.md](../AGENTS.md)。
 
 ## 设计原则
@@ -69,7 +69,9 @@ Root (this file)
 | **测试: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.zh.md) | TCP 桥接服务器行为测试文档 |
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.zh.md) | TypedData 源码生成器的驱动器行为测试文档 |
 | **手册元指令** | [META.md](META.zh.md) | 本手册的编写与维护规范 |
-| **Agent 工作流** | [AGENTS.md](../AGENTS.md) | 强制开发循环（源码→测试扩展→测试执行→修复重测→Changelog→文档）、核心原则与文档总索引 |
+| **发布与 Changelog** | [release-process](release-process.zh.md) | 正式发布、每周快照与 Changelog 规则 |
+| **架构决策（ADR）** | [ADR 0001](adr/0001-strategy-ordering.zh.md) | 策略顺序等关键架构决策与取舍 |
+| **Agent 工作流** | [AGENTS.md](../AGENTS.md) | 强制开发循环（源码→测试→Changelog→文档→提交→提交后 CI → post-commit lint）、核心原则与文档总索引 |
 | **性能基线** | [benchmarks/baseline.md](benchmarks/baseline.zh.md) | TypedData 内联存储 + 框架子系统性能基线与设计权衡 |
 
 ## Origo.Core 子系统
@@ -108,6 +110,7 @@ Root (this file)
 | 使用状态机 | [usage/state-machine](usage/state-machine.zh.md) |
 | 使用控制台命令 | [usage/console-commands](usage/console-commands.zh.md) |
 | 查看接口签名 | [usage/agent-reference](usage/agent-reference.zh.md) |
+| 准备正式发布 / 更新 Changelog | [release-process](release-process.zh.md) |
 | 理解 Core 模块实现 | [Origo.Core/](Origo.Core/README.zh.md) |
 | 理解 Source Generation | [Origo.SourceGeneration/](Origo.SourceGeneration/README.zh.md) |
 | 理解 Godot 适配 | [Origo.GodotAdapter/](Origo.GodotAdapter/README.zh.md) |

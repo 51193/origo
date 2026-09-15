@@ -5,6 +5,7 @@
 ## 中文
 - [META](META.zh.md)
 - [README](README.zh.md)
+- [release-process](release-process.zh.md)
 - [adr/](adr/)
 - [benchmarks/](benchmarks/)
 - [Origo.ConsoleBridge/](Origo.ConsoleBridge/)
@@ -23,6 +24,7 @@
 ## English
 - [META](META.en.md)
 - [README](README.en.md)
+- [release-process](release-process.en.md)
 - [adr/](adr/)
 - [benchmarks/](benchmarks/)
 - [Origo.ConsoleBridge/](Origo.ConsoleBridge/)

@@ -1,11 +1,11 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
 > [↑ Back to Origo Manual](README.en.md)
 
-> **⚠️ Mandatory Development Loop: Every change must close the loop in order — ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Docs sync. Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full rules in [AGENTS.md](../AGENTS.md).**
+> **⚠️ Mandatory Development Loop: Every change must close the loop in order — ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Docs sync → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ post-commit `scripts/lint-commits.sh`. Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full rules in [AGENTS.md](../AGENTS.md).**
 
 ## Documentation Positioning
 
@@ -47,13 +47,13 @@
 
 ### Bilingual Documentation Mechanism (DocSyncTool)
 
-`docs/` organizes multilingual documentation using **co-located language suffixes**. Every directory contains:
+`docs/` organizes multilingual documentation as **same-basename `.zh.md`/`.en.md` pairs**. The common case is a `README` pair; other basenames (for example `Integration.*`, `pipeline.*`) are valid too. Navigation-only directories contain only the generated `README.md` hub.
 
 | File | Purpose |
 |------|---------|
-| `README.md` | **Auto-generated** navigation hub (lists all `.zh.md` / `.en.md` files). **Do not edit manually.** |
-| `README.zh.md` | Chinese content |
-| `README.en.md` | English content |
+| `README.md` | **Auto-generated** navigation hub (lists all language pairs and subdirectories). **Do not edit manually.** |
+| `<name>.zh.md` | Chinese content file; `<name>` is commonly `README` |
+| `<name>.en.md` | English content file; `<name>` is commonly `README` |
 
 Two files with the same base name but different language suffixes form a **sync pair**. Sync status is tracked through metadata headers at the top of each content file:
 
@@ -101,14 +101,14 @@ This rewrites the revision headers and produces two kinds of derived files
 | Command | What it does |
 |---------|-------------|
 | `dotnet run --project tools/DocSyncTool -- generate` | Auto-compute `docsync-revision` from git history, regenerate all `README.md` nav hubs + `.sync-status.json`. Idempotent and always succeeds. |
-| `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: matching and monotonic pair revisions (floored by the previous revisions recorded by `generate`), same-language links, existing file/directory/anchor targets, and complete reference-style link definitions. Exit code 1 on failure. |
+| `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: matching and monotonic pair revisions (floored by the previous revisions recorded by `generate`), same-language links inside the mirror, no cross-language/bare `.md` links, existing file/directory/anchor targets, complete reference-style definitions, and every `.cs` file in each mirrored source directory listed in that directory's bilingual READMEs. Heading-structure differences are warning-only. Exit code 1 on failure. |
 
-**Link discipline** (enforced as ERROR by `validate`):
+**Link discipline** (enforced as ERROR by `validate` inside the docs mirror):
 
 - Chinese docs (`.zh.md`) link only to `.zh.md` targets
 - English docs (`.en.md`) link only to `.en.md` targets
 - **Cross-language links are forbidden**
-- Bare `.md` links without language suffix are forbidden (after migration)
+- Bare `.md` links without a language suffix are forbidden inside the mirror; links that leave the mirror for root files (for example `../AGENTS.md` or `../CHANGELOG.md`) are allowed
 
 The tool configuration (languages, docs root, source-mirror roots, and source→doc overrides) lives in `tools/DocSyncTool/docsync-config.json`:
 
@@ -137,17 +137,20 @@ The tool configuration (languages, docs root, source-mirror roots, and source→
 ### Situations Requiring Sync Update
 
 1. **Add/delete/rename source code directory** → mirror the same operation in `docs/`
-2. **Add public interface/method** → update the interface list in the corresponding leaf README
-3. **Design decision change** → update the design decisions section
-4. **New config key/command** → update relevant README and usage docs
-5. **Inter-module dependency change** → update module README links
-6. **AGENTS.md meta-instruction changes** → synchronize references to new rules in this document (e.g., AGENTS.md §1.7 comment language requirements and the vendored-source exemption, §1.8 git history awareness, §1.9 dependency update grouping — version-coupled package families must be bumped together, never independently, §1.10 environment bootstrap — install the SDK requested by global.json and never downgrade the request to match the machine, §3 red-first rule — bug fixes require a red regression test that reproduces the bug through a real reachable path, and the file's git history must be consulted before fixing or extending it, §1.11 local agent work buffer — findings and unfinished design work must be written into the git-ignored `_origo_local/` producer/consumer buffer; a consumer may delete or mark an item done only after the full development loop (source, tests, `scripts/ci.sh`, post-commit commit lint, changelog, docs sync) is complete, so a token-limit interruption or half-finished implementation never leaves work nobody can understand, §4 weekly snapshot builds — the Monday window looks back to the previous Monday 00:00 UTC and publishes a `-nightly.YYYYMMDD` build only when that window has new pushes)
+2. **Add/rename/delete any `.cs` file under `SourceMirrorRoots`** → update that directory's mirror README file list in both languages (internal files included; `validate` enforces this). Test-project/tool `.cs` changes follow item 7 instead.
+3. **Add public interface/method** → update the interface list in the corresponding leaf README
+4. **Design decision change** → update the design decisions section
+5. **New config key/command** → update relevant README and usage docs
+6. **Inter-module dependency change** → update module README links
+7. **Test capability/method change** → update the corresponding `docs/Origo.*.Tests/` capability docs
+8. **Release or Changelog rule change** → update [release-process.en.md](release-process.en.md) (Chinese peer: `release-process.zh.md`)
+9. **AGENTS.md meta-instruction changes** → [AGENTS.md](../AGENTS.md) is authoritative on conflict; synchronize the affected sections of this document in the same change. Do not hard-code AGENTS section numbers; when a rule is owned by this document, keep the full rule here rather than a summary that can go stale.
 
 ### Situations NOT Requiring Sync
 
-- Pure internal implementation detail changes (not affecting public API or design intent)
-- Code refactoring (not changing module responsibilities or interfaces)
-- Performance optimizations (not changing external behavioral semantics)
+- Pure internal implementation detail changes (not affecting public API or design intent) — no design prose update, but item 2 still requires the mirror README file list
+- Code refactoring (not changing module responsibilities or interfaces) — file additions/renames/deletions still follow item 2
+- Performance optimizations (not changing external behavioral semantics) — file structure changes still follow item 2
 
 ### Sync Checklist
 
@@ -157,6 +160,9 @@ After a code PR is merged, check:
 - [ ] Are intermediate README sub-module indexes complete?
 - [ ] Are all links valid (no 404)?
 - [ ] Does the design decisions section reflect current design intent?
+- [ ] Do `docs/usage/` and test capability docs cover new scenarios/capabilities?
+- [ ] Are all added/renamed/deleted `.cs` files listed in both mirror READMEs (internal files included)?
+- [ ] If release or Changelog rules changed, were `release-process.zh/en.md` updated?
 
 ## Git Commit Message Format
 
@@ -259,8 +265,10 @@ docs/                            # Documentation root (inside the origo reposito
 ├── README.md                    # Auto-generated: bilingual navigation hub
 ├── README.zh.md / README.en.md  # Top-level indexes (hand-authored, bilingual pair)
 ├── META.zh.md / META.en.md      # These maintenance meta-instructions (bilingual pair)
+├── release-process.zh/.en.md    # Formal releases, weekly snapshots, Changelog rules (bilingual pair)
 ├── .sync-status.json            # Auto-generated: sync status for all pairs
 ├── usage/                       # System usage documentation (zh/en pairs)
+├── adr/                         # Architecture decision records (bilingual pairs)
 ├── benchmarks/                  # Performance baselines (zh/en pairs + baseline.json)
 ├── Origo.Core/                  # Mirrors the repo root Origo.Core/ directory structure
 ├── Origo.Core.Tests/            # Test capability docs (grouped by capability, zh/en pairs)
@@ -275,7 +283,7 @@ docs/                            # Documentation root (inside the origo reposito
 └── tools/                       # Repository tool test docs (DocSyncTool.Tests)
 ```
 
-Every hand-authored content file has paired `.zh.md` / `.en.md` versions; each directory `README.md` navigation hub is auto-generated by `generate`.
+Every hand-authored content file has paired `.zh.md` / `.en.md` versions; every directory `README.md` navigation hub is auto-generated by `generate`. Navigation-only directories have no language-suffixed pair files. Architecture decisions live in `docs/adr/`; the root `CONTEXT.md` holds strategy-ordering domain vocabulary.
 
 > Top-level entry point [AGENTS.md](../AGENTS.md) lives at the repo root, is auto-injected into every session, and links to this file.
 >
@@ -283,17 +291,61 @@ Every hand-authored content file has paired `.zh.md` / `.en.md` versions; each d
 
 ## Environment Bootstrap
 
-Before running any `dotnet` command, configure the environment to match the repository instead of editing `global.json` to match the machine (full rules in [AGENTS.md §1.10](../AGENTS.md#110-environment-bootstrap-install-the-required-sdk-never-downgrade-the-request)):
+Before running any `dotnet` command, configure the environment to match the
+repository instead of editing `global.json` to match the machine:
 
-1. `global.json` is the single authority for the required .NET SDK feature band; never downgrade the request.
-2. Run `bash scripts/install-dotnet.sh`, which installs the exact version with the official `dotnet-install.sh`.
-3. Prefer the default install root (`$HOME/.dotnet`) so the login shell resolves plain `dotnet` without per-session `PATH` or `DOTNET_ROOT` exports.
-4. When the default root is read-only, the script falls back to the repository-local `.dotnet/`; use the `./dotnet` wrapper from the repo root. Repository scripts source `scripts/dotnet-env.sh` to select the local or system SDK automatically.
-5. The Godot engine binary is downloaded by `scripts/download-godot.sh` according to the `Godot.NET.Sdk` version in `Origo.GodotAdapter.csproj` and cached under `.godot_binary/`.
+1. `global.json` is the single authority for the required .NET SDK feature band.
+   Never downgrade the request or edit `global.json` to match an
+   already-installed SDK.
+2. Run `bash scripts/install-dotnet.sh`. It parses `global.json` and installs the
+   exact SDK through the official `dotnet-install.sh`, preferring the default
+   install root (`$HOME/.dotnet`) so a normal login shell resolves plain
+   `dotnet` without per-session exports.
+3. When the default install root is read-only, the script falls back to the
+   repository-local `.dotnet/`; use the tracked `./dotnet` wrapper. The wrapper
+   sets the child-process environment internally and exports nothing into the
+   caller shell.
+4. Repository scripts source `scripts/dotnet-env.sh`, which prefers `.dotnet/`
+   when present and otherwise falls back to the system `dotnet`. Do not add
+   `PATH` / `DOTNET_ROOT` / `NUGET_PACKAGES` exports to shell profiles or
+   per-session workflows as a substitute for the install script.
+5. The Godot engine binary is separate: `scripts/download-godot.sh` reads the
+   `Godot.NET.Sdk` version from `Origo.GodotAdapter/Origo.GodotAdapter.csproj`
+   and caches the matching engine under `.godot_binary/`.
+
+## Local Agent Work Buffer
+
+`_origo_local/` is a git-ignored single-book work buffer for findings and
+handoffs that cannot be finished immediately. Root `README.md` is the live
+index/status holder; numbered chapters belong to the same work item.
+
+- **Status**: `inbox`, `in-progress`, `blocked`, `done`, or `superseded`;
+  record owner/date/baseline commit.
+- **Producer**: include problem evidence, official docs, upstream/downstream
+  collaborators, related tests, relevant git history, scope/acceptance criteria,
+  commands run, and known unknowns. Do not dump raw chat transcripts.
+- **Consumer**: claim only after re-reading the full chain context and
+  revalidating that its baseline assumptions still hold; set `in-progress` and
+  add owner/branch or a new baseline commit; never delete or rewrite another
+  agent's `in-progress` work.
+- **Closeout**: only after the full AGENTS development loop passes; record the
+  final commit and durable documentation location. Never delete or mark `done`
+  an unverified, partially implemented, or uncommitted item; leave an exact
+  handoff instead: worktree state, changed files, commands run, failures, and
+  exact next action.
+- **Constraints**: never `git add` or commit anything under `_origo_local/`;
+  never store secrets. Stale content is marked `superseded` with a pointer to
+  the replacement, not deleted for cleanliness. Durable conclusions must be
+  migrated into tracked `docs/`, tests, or `CHANGELOG.md`.
+- If the buffer grows large, organize it by date/topic without breaking the
+  producer/consumer lifecycle.
+
+Live protocol: `_origo_local/README.md`. These tracked rules are authoritative
+when the buffer is present.
 
 ## Manual Version
 
-Documentation is synchronized with the `<Version>` in the repository's `Directory.Build.props` — since docs and source code are co-located in the same repo, versioning is naturally consistent.
+Documentation is synchronized with the `<Version>` in the repository's `Directory.Build.props` — since docs and source code are co-located in the same repo, versioning is naturally consistent. A formal release must also update the version text in `docs/README.zh.md` / `docs/README.en.md` as described in [release-process.en.md](release-process.en.md); `scripts/verify-release.sh` checks that both files mention the release version.
 
 ## Generation
 

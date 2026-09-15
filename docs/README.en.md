@@ -1,11 +1,11 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Manual
 
 The complete documentation manual for the Origo framework. Uses a **bottom-up** structure — aggregating upward from source code directories level by level, ensuring any question can reach its target via multi-level directory indexing without reading source code from scratch.
 
-> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Docs sync.
+> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Docs sync → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ post-commit `scripts/lint-commits.sh`.
 > Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full guidelines and document master index at repo root [AGENTS.md](../AGENTS.md).
 
 ## Design Principles
@@ -69,7 +69,9 @@ Each directory's `README.md` contains:
 | **Tests: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.en.md) | TCP bridge server behavioral test documentation |
 | **Tests: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.en.md) | TypedData source generator driver behavioral test documentation |
 | **Manual Meta-Instructions** | [META.md](META.en.md) | Writing and maintenance conventions for this manual |
-| **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory development loop (source → test extension → test execution → fix & re-test → Changelog → docs), core principles, and document master index |
+| **Release & Changelog** | [release-process](release-process.en.md) | Formal releases, weekly snapshots, and Changelog rules |
+| **Architecture Decisions (ADR)** | [ADR 0001](adr/0001-strategy-ordering.en.md) | Key architecture decisions and trade-offs, such as strategy ordering |
+| **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory loop (source → tests → Changelog → docs → commit → post-commit CI → post-commit lint), core principles, and document master index |
 | **Performance Baselines** | [benchmarks/baseline.md](benchmarks/baseline.en.md) | TypedData inline storage + framework subsystem performance baseline and design trade-offs |
 
 ## Origo.Core Subsystems
@@ -108,6 +110,7 @@ Each directory's `README.md` contains:
 | Use state machines | [usage/state-machine](usage/state-machine.en.md) |
 | Use console commands | [usage/console-commands](usage/console-commands.en.md) |
 | View interface signatures | [usage/agent-reference](usage/agent-reference.en.md) |
+| Prepare a formal release / update Changelog | [release-process](release-process.en.md) |
 | Understand Core module implementations | [Origo.Core/](Origo.Core/README.en.md) |
 | Understand Source Generation | [Origo.SourceGeneration/](Origo.SourceGeneration/README.en.md) |
 | Understand Godot adapter | [Origo.GodotAdapter/](Origo.GodotAdapter/README.en.md) |

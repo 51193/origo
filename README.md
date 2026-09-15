@@ -165,11 +165,12 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 | Use the state machine | [State Machine](docs/usage/state-machine.en.md) |
 | Use the console | [Console Commands](docs/usage/console-commands.en.md) |
 | Reference for AI agents | [Agent Reference](docs/usage/agent-reference.en.md) |
+| Prepare a release / update Changelog | [Release & Changelog process](docs/release-process.en.md) |
 
 ## Development
 
 ```bash
-bash scripts/ci.sh        # Full CI pipeline (format + test + benchmarks + Godot integration)
+bash scripts/ci.sh        # Local full pipeline (lint-scripts + format + doc-sync + test + benchmarks + Godot)
 bash scripts/test.sh      # Build + test + coverage gates (dev iteration)
 bash scripts/format.sh    # Format check only
 ```

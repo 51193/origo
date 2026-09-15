@@ -21,9 +21,28 @@ else
 fi
 
 # benchmark.sh previously embedded Python in heredocs. Any extracted or new
-# Python helper must be syntax-checked alongside the shell scripts.
+# Python helper must be syntax-checked alongside the shell scripts. Compile in
+# memory: py_compile would leave a scripts/__pycache__ artifact in the worktree.
 if compgen -G "scripts/*.py" >/dev/null 2>&1; then
-    python3 -m py_compile scripts/*.py
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - <<'PYEOF'
+import pathlib
+import sys
+
+failed = False
+for path in sorted(pathlib.Path("scripts").glob("*.py")):
+    try:
+        compile(path.read_text(encoding="utf-8"), str(path), "exec")
+    except SyntaxError as exc:
+        failed = True
+        print(f"Python syntax error in {path}: {exc}", file=sys.stderr)
+if failed:
+    sys.exit(1)
+print("Script Python syntax OK")
+PYEOF
+  else
+    echo "WARNING: python3 is not installed; skipping Python syntax check."
+  fi
 fi
 
 if python3 -c "import yaml" >/dev/null 2>&1; then
@@ -54,6 +73,15 @@ elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
     exit 1
 else
     echo "WARNING: PyYAML is not installed; skipping workflow YAML syntax check."
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+    python3 scripts/validate-agent-docs.py
+elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
+    echo "ERROR: python3 is required to run scripts/validate-agent-docs.py." >&2
+    exit 1
+else
+    echo "WARNING: python3 is not installed; skipping agent-doc guard (bash -n still runs)."
 fi
 
 echo "Script lint: OK"

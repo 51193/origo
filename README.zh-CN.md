@@ -163,11 +163,12 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 | 使用状态机 | [状态机](docs/usage/state-machine.zh.md) |
 | 使用控制台 | [控制台命令](docs/usage/console-commands.zh.md) |
 | AI Agent 参考 | [Agent Reference](docs/usage/agent-reference.zh.md) |
+| 准备发布 / 更新 Changelog | [发布与 Changelog 流程](docs/release-process.zh.md) |
 
 ## 开发
 
 ```bash
-bash scripts/ci.sh        # 完整 CI 流水线（格式检查 + 测试 + 基准 + Godot 集成）
+bash scripts/ci.sh        # 本地完整流水线（lint-scripts + 格式检查 + 文档同步 + 测试 + 基准 + Godot）
 bash scripts/test.sh      # 构建 + 测试 + 覆盖率门禁（日常迭代）
 bash scripts/format.sh    # 仅格式检查
 ```

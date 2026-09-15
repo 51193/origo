@@ -18,9 +18,14 @@ HEAD_SHA="${2:-HEAD}"
 if [[ -z "$BASE_SHA" ]]; then
   BASE_SHA="$(git merge-base origin/main HEAD 2>/dev/null || echo '')"
   if [[ -z "$BASE_SHA" ]]; then
-    echo "ERROR: cannot determine base SHA and origin/main is unavailable." >&2
-    echo "Usage: bash scripts/lint-commits.sh <base-sha> <head-sha>" >&2
-    exit 2
+    if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+      BASE_SHA="HEAD~1"
+      echo "WARNING: origin/main is unavailable; linting HEAD~1..HEAD only." >&2
+    else
+      echo "ERROR: cannot determine a base commit (origin/main unavailable and HEAD has no parent)." >&2
+      echo "Usage: bash scripts/lint-commits.sh <base-sha> <head-sha>" >&2
+      exit 2
+    fi
   fi
 fi
 

@@ -7,42 +7,39 @@ process.
 
 - Read the development workflow in [`AGENTS.md`](AGENTS.md) — it is the
   authoritative entry point for all code changes.
-- Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). PR commit messages are linted by `scripts/lint-commits.sh` in the `commit-lint` workflow (type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters). Dependabot-authored commits are skipped because Dependabot generates their message and supports only a prefix; `.github/dependabot.yml` sets that prefix to `chore(deps)` for every ecosystem.
+- Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). PR commit messages are linted by `scripts/lint-commits.sh` in the `commit-lint` workflow (type, 72-character subject limit, no trailing period, body lines no longer than 72 characters). Dependabot-authored commits are skipped because Dependabot generates their message and supports only a prefix; `.github/dependabot.yml` sets that prefix to `chore(deps)` for every ecosystem.
+- Read [`docs/release-process.en.md`](docs/release-process.en.md) before touching `CHANGELOG.md` or cutting a release.
 - Use the [pull request template](PULL_REQUEST_TEMPLATE.md) when opening a PR.
 - Read the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Development loop
 
-Every change must follow this cycle (see `AGENTS.md` §2 for details):
+Every change must follow this cycle (see the Development Loop section in `AGENTS.md` for details):
 
 1. Develop the source change.
-2. Extend or adapt tests.
-3. Run `bash scripts/ci.sh` (format + build + test + coverage gates + benchmarks + Godot integration).
-4. Fix and retest until everything passes.
-5. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing.
-6. Sync `docs/` if public API, design decisions, or module structure changed.
+2. Extend or adapt tests (red-first, real-path regression for bug fixes — see `docs/Origo.Core.Tests/META-TEST.en.md`).
+3. Iterate with `bash scripts/test.sh`; fix and retest until green.
+4. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing.
+5. Sync `docs/` (including mirror README file lists for any `.cs` file under `SourceMirrorRoots`) and run `dotnet run --project tools/DocSyncTool -- generate`.
+6. Commit source, tests, Changelog, docs content, generated hubs, and `.sync-status.json`.
+7. After the commit, run `bash scripts/ci.sh` (lint-scripts + format + doc-sync + build/test + coverage gates + benchmarks + Godot integration); amend and rerun if it fails.
+8. After the commit, run `bash scripts/lint-commits.sh`.
 
 ## Dependency updates
 
-Dependabot owns package version bumps. Version-coupled package families are
-grouped in [`.github/dependabot.yml`](.github/dependabot.yml) and must be
-updated in a single PR.
+Dependabot owns package version bumps; package versions are centralized in
+`Directory.Packages.props`. Version-coupled package families are
+grouped in [`.github/dependabot.yml`](.github/dependabot.yml); never bump one
+member independently. The authoritative groups, ignore rules, and rationale
+live in that file's comments.
 
-- `xunit.v3` and `xunit.v3.extensibility.core` are grouped because the
-  xunit.v3 3.x metapackage pins its transitive dependencies with exact `=`
-  version ranges. Bumping only one member causes NU1608 restore errors in
-  every test project. `xunit.runner.visualstudio` has an independent version
-  line and may move separately.
-- Semver-major `xunit.v3` / `xunit.v3.extensibility.core` updates are
-  ignored until the coordinated xunit.v3 4.0 / Microsoft Testing Platform
-  migration. Do not remove those ignore rules without updating the xUnit
-  packages, test projects, and `scripts/test.sh` in the same PR.
-- `Microsoft.CodeAnalysis.*` updates are ignored because the source
-  generator is loaded as an analyzer and must not reference a Roslyn
-  compiler newer than the SDK in `global.json` (otherwise the build fails
-  with CS9057). Bump Roslyn packages manually together with the matching
-  SDK update in one PR.
-- See `AGENTS.md` §1.9 for the full dependency update policy.
+- `xunit.v3` and `xunit.v3.extensibility.core` move together; semver-major
+  updates stay ignored until the coordinated xUnit v4 / Microsoft Testing
+  Platform migration updates the packages, test projects, and
+  `scripts/test.sh` in one PR.
+- `Microsoft.CodeAnalysis.*` is coupled to the SDK's Roslyn compiler in
+  `global.json`; bump it manually together with the matching SDK update.
+- See the dependency-update rule in `AGENTS.md` for the short policy.
 
 ## Reporting issues
 
@@ -55,4 +52,4 @@ updated in a single PR.
 - C# code style is enforced by `.editorconfig` and validated via
   `dotnet format --verify-no-changes --severity info` in CI.
 - Follow fail-fast: contracts violated → exception. No silent fallback.
-- Early development: no backward-compatibility shims. See `AGENTS.md` §1.2.
+- Early development: no backward-compatibility shims. See the early-development rule in `AGENTS.md`.

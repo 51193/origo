@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Documentation Maintenance Meta-Instructions
 
@@ -292,6 +292,33 @@ public class MyTests : IDisposable
 
 This is preferred over per-test `try/finally` blocks when many tests share the same cleanup
 pattern — it centralizes cleanup and guarantees execution after every test.
+
+### Red-First and Real-Path Regression (Bug Fixes)
+
+A bug fix is valid only after this red-to-green loop is demonstrated:
+
+1. **Write the regression test first** — it must reproduce the bug through a
+   real, reachable user/business path (real hosts, real strategies, real save
+   payloads, the real deferred-queue flow; when a specific collaborator is
+   required, exercise that collaborator or a faithful stand-in with the same
+   contract). A synthetic path that exists only inside the test, or a test
+   that quietly passes through a different code path, is a test blind spot,
+   not a regression test.
+2. **Verify red** — run it against the unmodified code and confirm it fails
+   for the bug's own symptom (wrong value, missing hook, leaked reference,
+   unexpected exception), not for an unrelated error. If it does not fail,
+   fix the test instead of the source.
+3. **Fix the source, verify green** — the same test must pass unchanged.
+   Optionally revert the fix temporarily to confirm it goes red again and
+   keep the test pinned to the defect rather than the implementation.
+4. **Check sibling paths** — inspect parallel code paths for the same defect
+   pattern (scene-host teardown orders, sibling converters, batch loops) and
+   cover the collaborator whose contract makes the fix order-dependent;
+   re-run the full suite before committing.
+
+This rule expands the Test Requirements section of
+[AGENTS.md](../../AGENTS.md); the full development loop is in the same file's
+Development Loop section.
 
 ## Sync Rules
 

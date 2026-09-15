@@ -62,8 +62,8 @@
     "META": {
       "status": "synced",
       "revisions": {
-        "zh": 21,
-        "en": 21
+        "zh": 22,
+        "en": 22
       },
       "previous_revisions": {
         "zh": 20,
@@ -74,8 +74,8 @@
         "en": "META.en.md"
       },
       "content_hashes": {
-        "zh": "5D9A681AA716AB39789C517F7B188B17AE921B5515DE36EE4DF9A91E02069A9B",
-        "en": "55CACAD76705308DCC5E2B55023C57F8AA4BBBDEC85A1F6DCCECE9DCCABD2FD7"
+        "zh": "6B728E9D97961D6DEB2D714BAFD52B058C81531021D1899C6BD32CBA3361855C",
+        "en": "E2B149741851A696043F5EE815B553A94C1063CF24D13C349186F11980D678E6"
       }
     },
     "Origo.ConsoleBridge.Tests/Architecture": {
@@ -347,20 +347,20 @@
     "Origo.Core.Tests/META-TEST": {
       "status": "synced",
       "revisions": {
-        "zh": 18,
-        "en": 18
+        "zh": 19,
+        "en": 19
       },
       "previous_revisions": {
-        "zh": 17,
-        "en": 17
+        "zh": 18,
+        "en": 18
       },
       "files": {
         "zh": "Origo.Core.Tests/META-TEST.zh.md",
         "en": "Origo.Core.Tests/META-TEST.en.md"
       },
       "content_hashes": {
-        "zh": "B8069228F00AE4F44F42A98785C6F721CA85AA3F3646CBCB3980C29F507D9F23",
-        "en": "6806D30AF1A11C71AA07DD0938EB6B6D9773C7FE904F4052467797F5122A5555"
+        "zh": "F84758E0B14A44DD74AA3AAA3903E04F1312A87C5EB96329D2BDC19331802643",
+        "en": "9E5F24EC1165A8A39654C61713311AC26DDB637BAEB61A24A98E8F1148811E07"
       }
     },
     "Origo.Core.Tests/Planning": {
@@ -2187,20 +2187,36 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 19,
-        "en": 19
+        "zh": 20,
+        "en": 20
       },
       "previous_revisions": {
-        "zh": 18,
-        "en": 18
+        "zh": 19,
+        "en": 19
       },
       "files": {
         "zh": "README.zh.md",
         "en": "README.en.md"
       },
       "content_hashes": {
-        "zh": "875C2676CDCDE4B2418E7A36C371053191B6EBD9E0C3A360ED86436107902588",
-        "en": "DB1276760E46DABA7B0A8451189A7E49518E9648C6456083A1C0CECC8CC09880"
+        "zh": "7463EEEB81998A6ADD23E0B089D6A3ED49C1358F41B3D442F432AB2C63FFF7C6",
+        "en": "5EE067475DB49EC28C86FA5BB427776340DAAD68E8FCE87E3C668D32098E9DD5"
+      }
+    },
+    "release-process": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "release-process.zh.md",
+        "en": "release-process.en.md"
+      },
+      "content_hashes": {
+        "zh": "18A8C3A0140D6AAF27A94CFD24E7AE4158D03247BDA88F3DAA95B5C78309B958",
+        "en": "B3472BD0F879276FAF2B9560345C4C7B1098D7C0785D22E1AA8F75CF95E2A545"
       }
     },
     "tools/DocSyncTool.Tests/README": {

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Origo full CI reproduction — runs every GitHub Actions step in order:
+# Origo local CI reproduction — runs the same single-platform gate steps as
+# GitHub Actions in order:
 #   0. scripts/lint-scripts.sh — shell + workflow lint
 #   1. scripts/format.sh   — dotnet format verification
 #   2. scripts/doc-sync.sh — doc sync validate + generation
@@ -8,8 +9,9 @@
 #   5. scripts/godot-test.sh — Godot headless integration tests (downloads Godot)
 #
 # Each step is a standalone script mapped 1:1 to a CI step. Run this master
-# script for a complete local reproduction of CI. For fast dev iteration, run
-# an individual step script directly (e.g. `bash scripts/test.sh`).
+# script for a complete local reproduction of the single-platform gate set;
+# GitHub Actions additionally runs the OS matrix and the separate commit-lint
+# workflow. For fast dev iteration, run an individual step script directly.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -20,7 +22,7 @@ bash scripts/doc-sync.sh
 
 # Committed-hubs check (the CI PR gate): generated README.md hubs and
 # .sync-status.json must be committed together with documentation changes.
-# This is what makes local scripts/ci.sh equivalent to CI.
+# Local runs therefore enforce the same committed-docs gate as CI pull requests.
 if [[ -n $(git status --porcelain -- docs/) ]]; then
   echo "" >&2
   echo "ERROR: generated doc files (README.md hubs, .sync-status.json) are not committed." >&2
