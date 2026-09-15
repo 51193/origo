@@ -172,7 +172,7 @@ public class SndEntityLifecycleBatchTests
             $"hello_from:{entity.Name}";
     }
 
-    [StrategyIndex(_p50Idx, Priority = 50)]
+    [StrategyIndex(_p50Idx, Before = new[] { _p100Idx })]
     private sealed class SP50 : LifecycleStrategyBase
     {
         private static readonly AsyncLocal<List<string>?> _spEvents = new();
@@ -180,7 +180,7 @@ public class SndEntityLifecycleBatchTests
         public override void AfterLoad(ISndEntity entity, ISndContext ctx) => Events?.Add("p50:" + entity.Name);
     }
 
-    [StrategyIndex(_p100Idx, Priority = 100)]
+    [StrategyIndex(_p100Idx)]
     private sealed class SP100 : LifecycleStrategyBase
     {
         public static List<string>? Events { get => SP50.Events; set => SP50.Events = value; }
@@ -632,10 +632,10 @@ public class SndEntityLifecycleBatchTests
         Assert.Contains("dead_found:B", CrossRefStrategy.Events);
     }
 
-    // ── Strategy priority within entity ─────────────────────────────────
+    // ── Strategy partial order within entity ─────────────────────────────────
 
     [Fact]
-    public void BatchLoad_StrategyPriorityWithinEntity_Preserved()
+    public void BatchLoad_StrategyOrderingWithinEntity_Preserved()
     {
         var merged = new List<string>();
         SP50.Events = merged;

@@ -9,7 +9,7 @@ namespace Origo.Core.Snd.Strategy;
 
 /// <summary>
 ///     Per-entity passive strategy manager. Stores strategies acquired from
-///     the <see cref="SndStrategyPool" /> in priority-sorted order and
+///     the <see cref="SndStrategyPool" /> in relative execution order and
 ///     dispatches lifecycle hooks (AfterSpawn, AfterLoad, BeforeSave,
 ///     BeforeQuit, BeforeDead) via snapshot iteration.
 ///     <para>
@@ -36,10 +36,13 @@ internal sealed class SndStrategyManager
 
     internal void RecoverStrategiesOnly(IEnumerable<string> indices)
     {
+        var registeredIndices = indices.ToArray();
+        if (registeredIndices.Length > 0)
+            _pool.SealRegistration();
         ReleaseStrategiesOnly();
         try
         {
-            foreach (var index in indices)
+            foreach (var index in registeredIndices)
             {
                 var strategy = _pool.GetStrategy<BaseStrategy>(index);
                 if (strategy is LifecycleStrategyBase lifecycleStrategy)
@@ -106,10 +109,11 @@ internal sealed class SndStrategyManager
                 $"Strategy '{index}' is already mounted on entity '{entity.Name}'. " +
                 "Remove the existing strategy before adding it again.");
 
+        var order = _pool.GetLifecycleOrder(index);
         var strategy = _pool.GetStrategy<LifecycleStrategyBase>(index);
         var entry = new StrategyEntry { Index = index, Strategy = strategy };
 
-        InsertSorted(entry);
+        InsertSorted(entry, order);
         try
         {
             strategy.AfterAdd(entity, ctx);
@@ -146,8 +150,8 @@ internal sealed class SndStrategyManager
 
         var entry = _strategies[i];
         entry.Strategy.BeforeRemove(entity, ctx);
-        _strategies.RemoveAt(i);
-        _pool.ReleaseStrategy(index);
+        if (_strategies.Remove(entry))
+            _pool.ReleaseStrategy(index);
         _logger.Log(LogLevel.Debug, _logTag, new LogMessageBuilder()
             .AddContext("entityName", entity.Name)
             .AddContext("strategyIndex", index)
@@ -162,12 +166,12 @@ internal sealed class SndStrategyManager
             entry.Strategy.Process(entity, delta, ctx);
     }
 
-    private void InsertSorted(StrategyEntry entry)
+    private void InsertSorted(StrategyEntry entry, int? resolvedOrder = null)
     {
-        var priority = _pool.GetPriority(entry.Index);
+        var order = resolvedOrder ?? _pool.GetLifecycleOrder(entry.Index);
         var insertIndex = _strategies.Count;
         for (var i = 0; i < _strategies.Count; i++)
-            if (_pool.GetPriority(_strategies[i].Index) > priority)
+            if (_pool.GetLifecycleOrder(_strategies[i].Index) > order)
             {
                 insertIndex = i;
                 break;

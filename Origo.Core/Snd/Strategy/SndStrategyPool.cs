@@ -19,7 +19,8 @@ internal sealed class SndStrategyPool
     private readonly Dictionary<string, Func<BaseStrategy>> _factories = [];
     private readonly ILogger _logger;
     private readonly Dictionary<string, BaseStrategy> _pool = [];
-    private readonly Dictionary<string, int> _priorities = [];
+    private readonly Dictionary<string, LifecycleStrategyOrder.Declaration> _orderingDeclarations = [];
+    private Dictionary<string, int>? _lifecycleOrder;
     private readonly Dictionary<string, int> _refCounts = [];
 
     public SndStrategyPool(ILogger logger)
@@ -31,6 +32,8 @@ internal sealed class SndStrategyPool
     public void Register(Type strategyType, Func<BaseStrategy> factory)
     {
         ArgumentNullException.ThrowIfNull(strategyType);
+        if (_lifecycleOrder is not null)
+            throw new InvalidOperationException("Strategy registration is closed. Register every strategy during startup.");
         if (strategyType.IsAbstract || !strategyType.IsSealed)
             throw new InvalidOperationException(
                 $"Strategy type '{strategyType.FullName}' must be sealed. " +
@@ -46,8 +49,9 @@ internal sealed class SndStrategyPool
             throw new InvalidOperationException(
                 $"Strategy index '{index}' is already registered. " +
                 "Each strategy index must map to exactly one strategy type.");
-        _factories[index] = factory;
-        _priorities[index] = ResolvePriority(strategyType);
+        var declaration = LifecycleStrategyOrder.ReadDeclaration(strategyType, index);
+        _orderingDeclarations.Add(index, declaration);
+        _factories.Add(index, factory);
     }
 
     public void Register<TStrategy>(Func<TStrategy> factory) where TStrategy : BaseStrategy
@@ -108,8 +112,18 @@ internal sealed class SndStrategyPool
         }
     }
 
-    internal int GetPriority(string index) =>
-        _priorities.TryGetValue(index, out var priority) ? priority : 0;
+    internal void SealRegistration()
+    {
+        _lifecycleOrder ??= LifecycleStrategyOrder.Build(_orderingDeclarations);
+    }
+
+    internal int GetLifecycleOrder(string index)
+    {
+        SealRegistration();
+        return _lifecycleOrder!.TryGetValue(index, out var order)
+            ? order
+            : throw new InvalidOperationException($"Strategy '{index}' is not a registered lifecycle strategy.");
+    }
 
     /// <summary>
     ///     Emits a warning for every strategy whose pool reference count is
@@ -169,9 +183,4 @@ internal sealed class SndStrategyPool
         return names.Count == 0;
     }
 
-    private static int ResolvePriority(Type strategyType)
-    {
-        var attr = strategyType.GetCustomAttribute<StrategyIndexAttribute>();
-        return attr?.Priority ?? StrategyIndexAttribute.DefaultPriority;
-    }
 }

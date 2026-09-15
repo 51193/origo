@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
@@ -14,7 +14,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | SND entity model | Strategy (behavior), Node (presentation), Data (state) — ternary decoupled model | [SND Entity Model](snd-entity-model.en.md) |
 | 8 lifecycle hooks | AfterSpawn / AfterLoad / AfterAdd / Process / BeforeRemove / BeforeSave / BeforeQuit / BeforeDead | [SND Entity Model](snd-entity-model.en.md) |
 | Stateless strategy pool | Strategy instances are shared and reused; registration validates statelessness via reflection; ref-counted management | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.en.md) |
-| Strategy priority ordering | Process and other hooks execute in ascending Priority order; equal priority uses FIFO | [SND Entity Model](snd-entity-model.en.md) |
+| Strategy partial ordering | Before / After complete registry projection; Process and batch hooks follow the same order, candidates use Ordinal | [SND Entity Model](snd-entity-model.en.md) |
 | TypedData type preservation | Read-only partial struct inline storage; Source Generator generates typed conversions; JSON round-trip preserves precision | [SND Entity Model](snd-entity-model.en.md) |
 | Data observers | Observer strategies (`ObserverStrategyBase` + `[ObserveData]` attribute) respond to entity data changes; mount/unmount via `MountObserverStrategy`/`UnmountObserverStrategy`; bindings persist with saves, auto-restore on load, auto-cleanup on entity death | [SND Entity Model](snd-entity-model.en.md) |
 | Cross-entity observation | `MountObserverStrategy(target, observerIndex)` supports self-observation and cross-entity observation; `OnMounted`/`OnUnmounted` carries lifecycle awareness | [SND Entity Model](snd-entity-model.en.md) |

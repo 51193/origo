@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Entity (Abstractions)
 
@@ -108,7 +108,7 @@
 
 ### 为什么主动策略独立为 ISndActiveStrategyAccess
 
-主动策略与被动实体策略共享 `BaseStrategy` 和 `SndStrategyPool` 基础设施，但容器完全独立：主动策略使用 Dictionary 实现 O(1) 按索引查找，不参与帧遍历；被动策略使用排序列表，每帧按优先级迭代。接口分离避免消费者耦合到不必要的策略类型。
+主动策略与被动实体策略共享 `BaseStrategy` 和 `SndStrategyPool` 基础设施，但容器完全独立：主动策略使用 Dictionary 实现 O(1) 按索引查找，不参与帧遍历；被动策略使用按偏序关系排列的列表，每帧确定性迭代。接口分离避免消费者耦合到不必要的策略类型。
 
 ### 为什么观察统一为观察者策略
 

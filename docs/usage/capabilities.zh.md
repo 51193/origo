@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -14,7 +14,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | SND 实体模型 | Strategy（行为）、Node（表现）、Data（状态）三元解耦模型 | [SND 实体模型](snd-entity-model.zh.md) |
 | 8 个生命周期钩子 | AfterSpawn / AfterLoad / AfterAdd / Process / BeforeRemove / BeforeSave / BeforeQuit / BeforeDead | [SND 实体模型](snd-entity-model.zh.md) |
 | 无状态策略池 | 策略实例共享复用，注册时反射校验无状态约束，引用计数管理 | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.zh.md) |
-| 策略优先级排序 | Process 等钩子按 Priority 升序执行，同优先级 FIFO | [SND 实体模型](snd-entity-model.zh.md) |
+| 策略偏序排序 | Before / After 完整注册图投影；Process 与批量钩子同向，候选按 Ordinal 排序 | [SND 实体模型](snd-entity-model.zh.md) |
 | TypedData 类型保持 | 只读 partial struct 内联存储，Source Generator 生成类型化转换，JSON 往返不丢失精度 | [SND 实体模型](snd-entity-model.zh.md) |
 | 数据观察者 | 观察者策略（`ObserverStrategyBase` + `[ObserveData]` 属性）响应实体数据变更；挂载/卸载经 `MountObserverStrategy`/`UnmountObserverStrategy`，绑定随存档持久化、读档自动恢复、实体死亡自动清理 | [SND 实体模型](snd-entity-model.zh.md) |
 | 跨实体观察 | `MountObserverStrategy(target, observerIndex)` 支持自观察与跨实体观察；`OnMounted`/`OnUnmounted` 承载生命周期感知 | [SND 实体模型](snd-entity-model.zh.md) |

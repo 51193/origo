@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
@@ -48,7 +48,7 @@ SndEntity (aggregate root)
 │   ├── Dictionary<string, INodeHandle> (node storage)
 │   └── INodeFactory (node creation, injected by adapter layer)
 ├── SndStrategyManager (passive strategies)
-│   ├── List<StrategyEntry> (sorted by priority, iterated per frame)
+│   ├── List<StrategyEntry> (sorted in partial order, iterated per frame)
 │   └── SndStrategyPool (global strategy pool reference)
 ├── ActiveStrategyManager (active strategies)
 │   ├── Dictionary<string, ActiveStrategyBase> (O(1) lookup by index)
@@ -63,13 +63,13 @@ SndEntity (aggregate root)
 1. **AfterSpawn** — After new entity creation
 2. **AfterLoad** — After entity recovered from save
 3. **AfterAdd** — After strategy dynamically added to entity
-4. **Process** — Per frame execution (by priority)
+4. **Process** — Per frame execution (in partial order)
 5. **BeforeRemove** — Before strategy removed from entity
 6. **BeforeSave** — Before serialization for save
 7. **BeforeQuit** — Before entity normal exit
 8. **BeforeDead** — Before entity destruction
 
-> **Batch lifecycle (batch orchestration):** `CreateEntity`, `RecoverFromMetaList`, `RemoveAllEntities` are holistic container operations; they do not fire AfterSpawn / AfterLoad / BeforeDead hooks per entity. Hooks are uniformly fired by the upper layer (`SndEntityFactory`'s spawn, `SessionRun`'s load/save/quit/kill lifecycle) after batch operations complete, sorted by priority.
+> **Batch lifecycle (batch orchestration):** `CreateEntity`, `RecoverFromMetaList`, `RemoveAllEntities` are holistic container operations; they do not fire AfterSpawn / AfterLoad / BeforeDead hooks per entity. Hooks are uniformly fired by the upper layer (`SndEntityFactory`'s spawn, `SessionRun`'s load/save/quit/kill lifecycle) after batch operations complete, sorted in partial order.
 
 ## Observation System
 

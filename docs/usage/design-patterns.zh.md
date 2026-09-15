@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 设计模式
 
@@ -258,27 +258,24 @@ internal static class MenuBuilder
 
 ---
 
-## 优先级分层执行
+## 相对顺序分层执行
 
-用不同 `Priority` 值划分策略的执行层次（数值越小越先执行）：
+用 `Before` / `After` 明确声明生命周期策略的执行层次：
 
-```
-P4   感知层      读取环境/自身状态 → 产出意图
-P5   调度层      根据意图 → 拆解行动计划
-P6   行动层      执行具体行为 → 报告完成/失败
-P20  寻路层      读取目标 → 计算路径
-P30  移动层      读取下一步 → 执行位移
-P35  检测层      逐帧检测条件 → 触发结果
+```text
+感知层 → 调度层 → 行动层
+寻路层 → 移动层
+检测层（按业务需要声明与其他层的关系）
 ```
 
 设计要点：
-- 同一帧内，低 Priority 先执行，产出的数据在同帧被高 Priority 策略消费
-- 持续运行的子系统（寻路、移动）与决策系统（感知、调度）使用不同优先级段
+- 同一帧内，偏序中靠前的策略先执行，产出的数据在同帧被后续策略消费
+- 持续运行的子系统（寻路、移动）与决策系统（感知、调度）声明相对顺序关系
 - 不同层之间通过 data 键通信，无直接耦合
 
 ### 调度层的 PlanExecutionStrategyBase
 
-框架提供 [`PlanExecutionStrategyBase`](../Origo.Core/Planning/README.zh.md) 作为调度层（P5）的标准基类。它封装了 intent → plan → step → action 的完整生命周期：
+框架提供 [`PlanExecutionStrategyBase`](../Origo.Core/Planning/README.zh.md) 作为调度层的标准基类。它封装了 intent → plan → step → action 的完整生命周期：
 
 - **订阅 wiring**：自动管理 `intent` 和 `action_status` 的数据订阅 RAII 闭环
 - **计划推进**：intent 变更重启计划；action 完成/失败推进到下一步或终止
@@ -289,7 +286,7 @@ P35  检测层      逐帧检测条件 → 触发结果
 用户仅需实现两个抽象方法：
 
 ```csharp
-[StrategyIndex("character.scheduling", Priority = 5)]
+[StrategyIndex("character.scheduling", After = new[] { "character.perception" }, Before = new[] { "character.action" })]
 public sealed class MySchedulingStrategy : PlanExecutionStrategyBase
 {
     protected override string IntentKey => "my.intent";

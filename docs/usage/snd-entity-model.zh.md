@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 实体模型
 
@@ -93,7 +93,7 @@ entity.UnmountObserverStrategy(entity.Name, "character.intent_watcher");
 ### 编写策略
 
 ```csharp
-[StrategyIndex("my_game.damage_tick", Priority = 100)]
+[StrategyIndex("my_game.damage_tick")]
 public sealed class DamageTickStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -114,7 +114,7 @@ public sealed class DamageTickStrategy : LifecycleStrategyBase
 - **无状态强制**：策略类不得声明实例字段或可写属性（注册时反射校验）
 - **注册方式**：`[StrategyIndex("xxx.yyy")]` 特性 + 程序集扫描
 - **索引命名**：点分命名空间 + 小写蛇形分段（如 `core.player.health`）
-- **优先级**：`Priority` 属性决定同实体上多策略的执行序（默认 6205，越小越先执行）
+- **顺序约束**：`Before` / `After` 类型特性声明同一实体的生命周期策略偏序，完整注册图固定后确定执行顺序。
 - **引用计数**：同一策略被多实体引用时计数 +1，全部释放后才回收
 
 
@@ -234,16 +234,16 @@ entity.MountObserverStrategy(entity.Name, "my_game.hp_watcher");
 
 ## 策略执行顺序
 
-同实体上的多个策略按 `Priority` 升序执行，同优先级按添加顺序：
+在 `StrategyIndexAttribute` 上声明 `Before` / `After` 索引数组：
 
-```
-Priority: 10  →  Strategy A  (先执行)
-Priority: 50  →  Strategy B
-Priority: 100 →  Strategy C
-Priority: 6205 (默认) → Strategy D
+```csharp
+[StrategyIndex("game.perception", Before = new[] { "game.scheduling" })]
+[StrategyIndex("game.scheduling", Before = new[] { "game.action" })]
 ```
 
-所有钩子（Process / AfterSpawn / etc.）均遵循此顺序。
+上述特性分别标注各自策略类型。完整注册图 A → B → C 在实体只挂载 A/C 时仍保证 A 在 C 前；关系不要求目标挂载。拓扑候选按索引 `StringComparer.Ordinal` 选择，注册、挂载和读档输入顺序不影响结果。Process 与 AfterSpawn、AfterLoad、BeforeSave、BeforeQuit、BeforeDead 同向；AfterAdd / BeforeRemove 仅作用于当前策略。
+
+所有注册必须在启动阶段完成。Bootstrap 自动发现结束后固定注册表；公共启动工作流执行前也固定。直接使用实体时，首次非空生命周期恢复或动态挂载前固定。未知索引、非生命周期引用、空白/null 声明、自引用及环明确失败，环显示实际路径。存档保留挂载索引，恢复按固定关系排序。
 
 ## 实体元数据
 

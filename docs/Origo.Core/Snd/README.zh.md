@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd
 
@@ -48,7 +48,7 @@ SndEntity (聚合根)
 │   ├── Dictionary<string, INodeHandle> (节点存储)
 │   └── INodeFactory (节点创建，由适配层注入)
 ├── SndStrategyManager (被动策略)
-│   ├── List<StrategyEntry> (按优先级排序，每帧遍历)
+│   ├── List<StrategyEntry> (按偏序关系排序，每帧遍历)
 │   └── SndStrategyPool (全局策略池引用)
 ├── ActiveStrategyManager (主动策略)
 │   ├── Dictionary<string, ActiveStrategyBase> (O(1) 按索引查找)
@@ -63,13 +63,13 @@ SndEntity (聚合根)
 1. **AfterSpawn** — 实体新生成后
 2. **AfterLoad** — 实体从存档恢复后
 3. **AfterAdd** — 策略动态添加到实体后
-4. **Process** — 每帧执行（按优先级）
+4. **Process** — 每帧执行（按偏序关系）
 5. **BeforeRemove** — 策略从实体移除前
 6. **BeforeSave** — 序列化存档前
 7. **BeforeQuit** — 实体正常退出前
 8. **BeforeDead** — 实体销毁前
 
-> **批量生命周期（batch orchestration）：** `CreateEntity`、`RecoverFromMetaList`、`RemoveAllEntities` 为整体容器操作，不逐实体触发 AfterSpawn / AfterLoad / BeforeDead 钩子。钩子统一由上层（`SndEntityFactory` 的 spawn、`SessionRun` 的 load/save/quit/kill 生命周期）在批量操作完成后按优先级集中触发。
+> **批量生命周期（batch orchestration）：** `CreateEntity`、`RecoverFromMetaList`、`RemoveAllEntities` 为整体容器操作，不逐实体触发 AfterSpawn / AfterLoad / BeforeDead 钩子。钩子统一由上层（`SndEntityFactory` 的 spawn、`SessionRun` 的 load/save/quit/kill 生命周期）在批量操作完成后按偏序关系集中触发。
 
 ## 观察系统
 

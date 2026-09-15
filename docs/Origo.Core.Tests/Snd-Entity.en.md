@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Entity Tests
 
@@ -18,7 +18,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `MemorySndEntityTests.cs` | SndEntity SetData/GetData/TryGetData/data isolation |
 | `SndEntityAfterLoadTests.cs` | AfterLoad hook trigger ordering and error propagation |
 | `SndEntityAndAutoInitializerTests.cs` | AutoInitializer recovering strategy and data from metadata; SndEntity AddStrategy/RemoveStrategy index updates |
-| `SndEntityLifecycleBatchTests.cs` | Batch lifecycle orchestration: all hook stages, cross-entity lookup, priority, SndEntityFactory/Spawn, ProcessAll frame processing |
+| `SndEntityLifecycleBatchTests.cs` | Batch lifecycle orchestration: all hook stages, cross-entity lookup, partial order, SndEntityFactory/Spawn, ProcessAll frame processing |
 | `SndEntityOwningSessionTests.cs` | Entity OwningSession binding and unbinding |
 | `SndDataManagerFailureTests.cs` | SndDataManager.SetData leaves no dictionary entry when the converter throws (prevents leaking into saves) |
 | `SndEntityRecoveryRollbackTests.cs` | Verifies cross-stage rollback of RecoverForLifecycle (active phase failure releases previously acquired passive strategies; node phase failure releases created nodes and does not release unacquired indices) |
@@ -116,7 +116,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `BatchQuit_CrossEntity_FindByNameSucceedsDuringBeforeQuit` | During BeforeQuit, FindByName can still find other entities | snd-entity-model: Batch lifecycle |
 | `BatchDead_BeforeDead_FiresBeforeAnyTeardown` | BeforeDead fires before RemoveEntity | snd-entity-model: Batch lifecycle |
 | `BatchDead_CrossEntity_FindByNameSucceedsDuringBeforeDead` | During BeforeDead, FindByName can still find other entities | snd-entity-model: Batch lifecycle |
-| `BatchLoad_StrategyPriorityWithinEntity_Preserved` | Multiple strategies on the same entity are sorted by Priority (lower first) | snd-entity-model: Strategy priority |
+| `BatchLoad_StrategyOrderingWithinEntity_Preserved` | Multiple strategies on the same entity follow Before / After ordering | snd-entity-model: Strategy partial order |
 | `BatchLoad_SingleEntity_BehaviorCorrect` | Single-entity batch recovery correctly triggers AfterLoad | snd-entity-model: Batch lifecycle |
 | `Spawn_ActiveStrategyAvailableDuringAfterSpawn` | After single-entity Spawn, ActiveStrategy is available during AfterSpawn | snd-entity-model: Batch lifecycle |
 | `Load_ActiveStrategyAvailableDuringAfterLoad` | After single-entity Load, ActiveStrategy is available during AfterLoad | snd-entity-model: Batch lifecycle |
@@ -200,7 +200,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `CrossRefStrategy` | SndEntityLifecycleBatchTests | Cross-entity FindByName verification: within AfterLoad/AfterSpawn/BeforeQuit/BeforeDead, validates whether a named peer entity can be found |
 | `QueryActiveProxy` | SndEntityLifecycleBatchTests | Cross-entity InvokeStrategy verification: during AfterLoad/AfterSpawn, validates calling another entity via ActiveStrategy |
 | `SimpleActiveStrategy` | SndEntityLifecycleBatchTests | Active strategy; Invoke returns `hello_from:{entity.Name}` string |
-| `SP50` / `SP100` | SndEntityLifecycleBatchTests | Priority verification: two strategies with Priority=50 and Priority=100 share an event collector, confirming lower priority executes first |
+| `SP50` / `SP100` | SndEntityLifecycleBatchTests | Partial-order verification: two strategies declare Before and share an event collector, confirming the declared order |
 | `FailingStrategy` | SndEntityLifecycleBatchTests | Always-throws: AfterLoad always throws InvalidOperationException for error path testing |
 | `SubscribeStrategy` | SndEntityLifecycleBatchTests | Data subscription test: cross-entity data change subscription during AfterLoad, recording notification events via AsyncLocal |
 | `ProcessRecordingStrategy` | SndEntityLifecycleBatchTests | Records (entity.Name, delta) tuples of Process invocations |

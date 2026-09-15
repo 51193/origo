@@ -120,7 +120,7 @@ Attach `OrigoDefaultEntry` to your startup scene and configure paths.
 ### 4. Write a strategy and define entities
 
 ```csharp
-[StrategyIndex("game.player_move", Priority = 100)]
+[StrategyIndex("game.player_move")]
 public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)

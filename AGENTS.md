@@ -1,8 +1,7 @@
 # Origo Agent — Mandatory Workflow & Development Rules
 
-> **Language**: If you are an AI agent reading this file, ask the user
-> "Which language do you prefer?" before your first substantive response.
-> Use that language for all subsequent communication.
+> **Language**: 始终使用中文与用户沟通，无需再次询问语言偏好。
+> 公共 API 的 XML 注释仍遵循 §1.7，使用英文。
 
 > This file is the **single authoritative entry point** for AI agents and
 > developers working on this repository. It is automatically injected at the

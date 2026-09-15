@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构总览
 
@@ -69,7 +69,7 @@ Strategy + Node + Data
 - 策略通过 `[StrategyIndex("xxx")]` 显式注册
 - 索引缺失、空值、类型不匹配必须抛错
 - 策略注册时通过反射校验无状态性（拒绝实例字段/可写属性）
-- 策略按优先级排序，同优先级按插入顺序
+- 生命周期策略按 Before / After 偏序排序，无约束策略按索引排序
 
 ## 会话模型
 
@@ -172,7 +172,7 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 通过 10 个伴生属
 | 禁止 | 原因 | 反例 |
 |------|------|------|
 | **触发策略生命周期钩子** | 策略是 Core 层概念，钩子触发时机和顺序必须由 Core 统一编排 | `GodotSndManager` 不得调用 `FireAfterSpawnHooks()`、`FireBeforeDeadHooks()` 等 |
-| **管理策略释放/引用计数** | 策略池、引用计数、优先级排序在 Core 的 `SndStrategyPool` 和 `SndStrategyManager` 中管理 | `GodotSndManager` 不得调用 `ReleaseStrategiesOnly()` |
+| **管理策略释放/引用计数** | 策略池、引用计数、偏序排序在 Core 的 `SndStrategyPool` 和 `SndStrategyManager` 中管理 | `GodotSndManager` 不得调用 `ReleaseStrategiesOnly()` |
 | **直接调用 Core 管线方法** | 帧边界操作（实体处理→业务队列→杀实体→系统队列→控制台）的时机和顺序由 Core 控制。适配层只应调用 `IOrigoFrameDriver.DriveFrame(delta)` 移交帧控制权 | 适配层不得直接调用 internal 的 `FlushEndOfFrameDeferred` 或 `ProcessPending` |
 | **直接驱动 Core 启动流程** | 策略发现、别名/模板加载、入口存档加载是 Core 内部编排，统一在 `SndContext.Bootstrap()` 中执行。适配层仅通过 `SndContextParameters` 传入配置 | 适配层不得直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()` |
 | **持有 Core 编排状态** | 实体生命周期管理（如 pending kill、拆卸流程）的状态机由 Core 层维护 | 适配层不应有 `QuitFromManager`、`DeadFromManager` 等方法 |
