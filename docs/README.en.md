@@ -1,11 +1,11 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 12 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 22 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Manual
 
 The complete documentation manual for the Origo framework. Uses a **bottom-up** structure — aggregating upward from source code directories level by level, ensuring any question can reach its target via multi-level directory indexing without reading source code from scratch.
 
-> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Docs sync.
+> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Docs sync → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ post-commit `scripts/lint-commits.sh`.
 > Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full guidelines and document master index at repo root [AGENTS.md](../AGENTS.md).
 
 ## Design Principles
@@ -29,25 +29,25 @@ The Origo framework follows these core design constraints; all module implementa
 ```
 Root (this file)
   ├── I need to know "what capabilities the framework provides overall"
-  │   └── usage/capabilities.md → browse all capabilities by functional domain
+  │   └── usage/capabilities.en.md → browse all capabilities by functional domain
   │
   ├── I need to know "how to use Origo"
-  │   └── usage/README.md → choose docs by scenario
+  │   └── usage/README.en.md → choose docs by scenario
   │
   ├── I need to know "a module's capabilities and design decisions"
-  │   ├── Origo.Core/README.md → subsystem overview → dive into specific sub-modules
-  │   │   └── Snd/README.md → Entity/README.md → ...
-  │   ├── Origo.GodotAdapter/README.md → adapter layer sub-modules
-  │   └── Origo.ConsoleBridge/README.md → TCP bridge
+  │   ├── Origo.Core/README.en.md → subsystem overview → dive into specific sub-modules
+  │   │   └── Snd/README.en.md → Entity/README.en.md → ...
+  │   ├── Origo.GodotAdapter/README.en.md → adapter layer sub-modules
+  │   └── Origo.ConsoleBridge/README.en.md → TCP bridge
   │
   ├── I need to know "what capabilities are covered by tests"
-  │   ├── Origo.Core.Tests/README.md → view Core tests by capability
-  │   ├── Origo.GodotAdapter.Tests/README.md → adapter layer 6 capability tests
-  │   ├── Origo.ConsoleBridge.Tests/README.md → TCP bridge tests
-  │   └── Origo.SourceGeneration.Tests/README.md → source generator tests
+  │   ├── Origo.Core.Tests/README.en.md → view Core tests by capability
+  │   ├── Origo.GodotAdapter.Tests/README.en.md → adapter layer 7 capability documents
+  │   ├── Origo.ConsoleBridge.Tests/README.en.md → TCP bridge tests
+  │   └── Origo.SourceGeneration.Tests/README.en.md → source generator tests
   │
   └── I need to know "how this manual itself is maintained"
-      └── META.md
+      └── META.en.md
 ```
 
 Each directory's `README.md` contains:
@@ -64,12 +64,14 @@ Each directory's `README.md` contains:
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.en.md) | Godot 4 adapter layer: file system, logging, serialization, bootstrap |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.en.md) | TCP remote console bridge (port 9876) |
 | **Usage Docs** | [README](usage/README.en.md) | Usage guide from quick start to deep reference |
-| **Tests: Core** | [README](Origo.Core.Tests/README.en.md) | Behavioral test documentation for Core layer's 31 capabilities |
-| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 6 capability tests + 20 integration test classes (91 tests) |
+| **Tests: Core** | [README](Origo.Core.Tests/README.en.md) | Behavioral test documentation for Core layer's 32 capabilities |
+| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 7 capability documents + 22 integration test classes (96 tests) |
 | **Tests: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.en.md) | TCP bridge server behavioral test documentation |
 | **Tests: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.en.md) | TypedData source generator driver behavioral test documentation |
 | **Manual Meta-Instructions** | [META.md](META.en.md) | Writing and maintenance conventions for this manual |
-| **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory development loop (source → test extension → test execution → fix & re-test → Changelog → docs), core principles, and document master index |
+| **Release & Changelog** | [release-process](release-process.en.md) | Formal releases, weekly snapshots, and Changelog rules |
+| **Architecture** | [README](architecture/README.en.md) | Architecture overview, decision records, and deferred design directions |
+| **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory loop (source → tests → Changelog → docs → commit → post-commit CI → post-commit lint), core principles, and document master index |
 | **Performance Baselines** | [benchmarks/baseline.md](benchmarks/baseline.en.md) | TypedData inline storage + framework subsystem performance baseline and design trade-offs |
 
 ## Origo.Core Subsystems
@@ -98,23 +100,24 @@ Each directory's `README.md` contains:
 |-------------|---------|
 | Browse all framework capabilities | [usage/capabilities](usage/capabilities.en.md) |
 | Quickly integrate Origo | [usage/quick-start](usage/quick-start.en.md) |
-| Understand the overall architecture | [usage/architecture-overview](usage/architecture-overview.en.md) |
+| Understand the overall architecture | [architecture/overview](architecture/overview.en.md) |
 | Write game strategies | [usage/snd-entity-model](usage/snd-entity-model.en.md) |
 | Understand the lifecycle loop | [usage/strategy-lifecycle](usage/strategy-lifecycle.en.md) |
 | Learn design patterns | [usage/design-patterns](usage/design-patterns.en.md) |
-| View extension directions and deferred designs | [usage/extension-directions](usage/extension-directions.en.md) |
+| View extension directions and deferred designs | [architecture/extension-directions](architecture/extension-directions.en.md) |
 | Test strategies | [usage/strategy-testing](usage/strategy-testing.en.md) |
 | Use the save system | [usage/persistence-flow](usage/persistence-flow.en.md) |
 | Use state machines | [usage/state-machine](usage/state-machine.en.md) |
 | Use console commands | [usage/console-commands](usage/console-commands.en.md) |
 | View interface signatures | [usage/agent-reference](usage/agent-reference.en.md) |
+| Prepare a formal release / update Changelog | [release-process](release-process.en.md) |
 | Understand Core module implementations | [Origo.Core/](Origo.Core/README.en.md) |
 | Understand Source Generation | [Origo.SourceGeneration/](Origo.SourceGeneration/README.en.md) |
 | Understand Godot adapter | [Origo.GodotAdapter/](Origo.GodotAdapter/README.en.md) |
 
 ## Version
 
-Current Origo framework version: **0.0.9-nightly** (in development; nightly carries a date suffix, see `Directory.Build.props`). Documentation is co-located with source code in the same repository; versions are naturally synchronized (the docs do not track the nightly date suffix). When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
+Current Origo framework version: **0.0.10-nightly** (in development; nightly carries a date suffix, see `Directory.Build.props`). Documentation is co-located with source code in the same repository; versions are naturally synchronized (the docs do not track the nightly date suffix). When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
 
 - Framework source and docs: this repository [origo](https://github.com/51193/origo) (docs under `docs/`)
 - Example project: [origo.demo](https://github.com/51193/origo.demo)

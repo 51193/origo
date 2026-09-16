@@ -128,6 +128,8 @@ public sealed class SndContext : ISndContext
             OrigoAutoInitializer.DiscoverAndRegisterStrategies(
                 Runtime.SndWorld, Runtime.Logger, _parameters.DiscoverySkipPrefixes);
 
+        Runtime.SndWorld.StrategyPool.SealRegistration();
+
         if (_parameters.SceneAliasMapPath is not null)
             Runtime.SndWorld.LoadSceneAliases(_parameters.SceneAliasMapPath, Runtime.Logger);
 
@@ -198,7 +200,7 @@ public sealed class SndContext : ISndContext
     /// </summary>
     /// <exception cref="InvalidOperationException">
     ///     Thrown when no ProgressRun is active (call
-    ///     <see cref="RequestLoadMainMenuEntrySave" /> first).
+    ///     <see cref="ISndLifecycleOperations.RequestLoadMainMenuEntrySave" /> first).
     /// </exception>
     internal ProgressRun EnsureProgressRun()
     {
@@ -258,17 +260,17 @@ public sealed class SndContext : ISndContext
         }
         finally
         {
+            // The reference is cleared even when Dispose throws: a failed
+            // workflow must not leave a disposed ProgressRun reachable as the
+            // "active" one for the next save/load request.
+            _progressRun = null;
+
             // Strategy-pool diagnostics are part of workflow teardown, not a
             // test-only helper: a workflow that leaks strategy references must
             // leave an observable warning even when it runs in production.
             Runtime.SndWorld.StrategyPool.LogPoolLeaks();
         }
-
-        _progressRun = null;
     }
-
-    /// <summary>Enqueue an action on the system deferred queue.</summary>
-    internal void EnqueueSystemDeferred(Action action) => Runtime.EnqueueSystemDeferred(action);
 
     /// <summary>
     ///     Enqueue a system deferred action with a tracked persistence request
@@ -315,15 +317,22 @@ public sealed class SndContext : ISndContext
             var activeLevelId = SessionTopologyCodec.ExtractForegroundLevelId(rawTopology);
 
             var payload = StorageService.ReadSavePayloadFromSnapshot(saveId, activeLevelId);
-            StorageService.DeleteCurrentDirectory();
-            StorageService.WriteSavePayloadToCurrent(payload);
-            StorageService.RestoreExtraFilesFromSnapshot(saveId);
+            try
+            {
+                StorageService.DeleteCurrentDirectory();
+                StorageService.WriteSavePayloadToCurrent(payload);
+                StorageService.RestoreExtraFilesFromSnapshot(saveId);
 
-            var progressRun = CreateProgressRun(saveId);
-            SetProgressRun(progressRun);
-            MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
-            _systemRun.SetActiveSaveSlot(saveId);
-            return progressRun;
+                var progressRun = CreateProgressRun(saveId);
+                SetProgressRun(progressRun);
+                MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
+                _systemRun.SetActiveSaveSlot(saveId);
+                return progressRun;
+            }
+            finally
+            {
+                SavePayloadDisposal.Dispose(payload);
+            }
         });
     }
 
@@ -339,17 +348,24 @@ public sealed class SndContext : ISndContext
             var payload = InitialStorageService.ReadSavePayloadFromSnapshot(
                 SndDefaults.InitialSaveId,
                 _parameters.InitialLevelId);
-            payload.SaveId = SndDefaults.InitialSaveId;
+            try
+            {
+                payload.SaveId = SndDefaults.InitialSaveId;
 
-            StorageService.DeleteCurrentDirectory();
-            StorageService.WriteSavePayloadToCurrent(payload);
-            StorageService.RestoreExtraFilesFromSnapshot(
-                InitialStorageService, SndDefaults.InitialSaveId);
+                StorageService.DeleteCurrentDirectory();
+                StorageService.WriteSavePayloadToCurrent(payload);
+                StorageService.RestoreExtraFilesFromSnapshot(
+                    InitialStorageService, SndDefaults.InitialSaveId);
 
-            var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
-            SetProgressRun(progressRun);
-            MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
-            _systemRun.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
+                var progressRun = CreateProgressRun(SndDefaults.InitialSaveId);
+                SetProgressRun(progressRun);
+                MountNewProgressRun(progressRun, () => progressRun.LoadFromPayload(payload));
+                _systemRun.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, string.Empty);
+            }
+            finally
+            {
+                SavePayloadDisposal.Dispose(payload);
+            }
         });
     }
 
@@ -478,6 +494,7 @@ public sealed class SndContext : ISndContext
 
     private T RunWorkflow<T>(Func<T> body)
     {
+        Runtime.SndWorld.StrategyPool.SealRegistration();
         BeginWorkflow();
         try
         {

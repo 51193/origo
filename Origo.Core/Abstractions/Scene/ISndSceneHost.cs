@@ -51,7 +51,7 @@ internal interface ISndSceneHost : ISndSceneAccess, ISndSceneReadAccess
     ///     The entity is destroyed at frame-end (after the business deferred
     ///     queue, before the system deferred queue).
     /// </summary>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="System.InvalidOperationException">
     ///     If the entity does not exist or is already marked as pending
     ///     destruction.
     /// </exception>

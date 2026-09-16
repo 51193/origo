@@ -51,7 +51,7 @@ public class EntityLifecycleBenchmarkTests(ITestOutputHelper output)
             sw.Stop();
             var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-            rows.Add(($"{count} entities", count, sw.Elapsed, totalAlloc));
+            rows.Add(($"Create {count} entities", count, sw.Elapsed, totalAlloc));
 
             Assert.NotNull(host.FindByName($"E_{count - 1}"));
         }
@@ -158,7 +158,7 @@ public class EntityLifecycleBenchmarkTests(ITestOutputHelper output)
             sw.Stop();
             var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-            rows.Add(($"{count} entities", count, sw.Elapsed, totalAlloc));
+            rows.Add(($"SaveSingle {count} entities", count, sw.Elapsed, totalAlloc));
         }
 
         _perf.ReportTable("Entity SaveSingle — scaling by entity count", rows);

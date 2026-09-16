@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Save/Meta/README -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 8 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Meta
 
 > [↑ 回到 Save](../README.zh.md)
@@ -16,8 +16,9 @@
 | `ISaveMetaContributor.cs` | 元数据贡献者接口 |
 | `DelegateSaveMetaContributor.cs` | 委托适配的贡献者实现 |
 | `SaveMetaBuildContext.cs` | 单次存档时的只读构建上下文 |
+| `ReadOnlyBlackboard.cs` | 只读黑板适配器：读操作透传，所有写操作抛 `InvalidOperationException` |
 | `SaveMetaDataEntry.cs` | 存档槽条目模型（SaveId + MetaData 字典） |
-| `SaveMetaMerger.cs` | 合并贡献者 + 入参覆写的合并逻辑 |
+| `SaveMetaMerger.cs` | 按注册顺序合并贡献者输出的合并逻辑 |
 
 ## 模块详解
 
@@ -35,11 +36,11 @@
 IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 ```
 
-贡献者返回自己产出的键值对字典，而非修改外部传入的可变字典。多个贡献者的结果由 `SaveMetaMerger` 按注册顺序合并——同名键后者覆盖前者。此设计防止贡献者调用 `target.Clear()` 或 `target.Remove()` 破坏其他贡献者的输出。
+贡献者返回自己产出的键值对字典，而非修改外部传入的可变字典。多个贡献者的结果由 `SaveMetaMerger` 按注册顺序合并——同名键后者覆盖前者。此设计防止贡献者调用 `target.Clear()` 或 `target.Remove()` 破坏其他贡献者的输出。返回 `null` 字典、空白 key 或 null value 都会使本次存档抛出 `InvalidOperationException`（带贡献者类型上下文），而不是静默丢弃条目。
 
 ### SaveMetaMerger
 
-静态工具类。合并逻辑：非空 contributors → 按序贡献 → 覆写键（跳过空值键）→ null 或无键时返回 null。
+静态工具类。合并逻辑：遍历 contributors → 按注册顺序贡献、同名键后者覆盖 → 无键时返回 null。贡献者输出违反接口契约（null 字典、空白 key、null value）时立即抛出 `InvalidOperationException`，让非法元数据使存档失败，不静默降级。
 
 ## 设计决策
 
@@ -50,6 +51,10 @@ IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 ### 为什么贡献者是按序同名覆盖而非去重
 
 不同贡献者可能对同一键有不同视角（如"play_time"，一个贡献者从流程黑板读取，另一个可能从会话黑板）。后注册者的值可能更准确。按序覆盖提供可预测的优先级模型。
+
+### 为什么非法贡献输出必须让存档失败
+
+贡献者接口承诺返回可合并的键值对；静默跳过 null 字典、空白 key 或 null value 会把实现错误伪装成“没有元数据”，用户无法定位是哪个贡献者产生了非法输出。存档属于严格校验路径，因此由 `SaveMetaMerger` 带贡献者类型上下文抛出异常，保留 fail-fast 语义。
 
 ### 为什么贡献者返回独立字典而非修改可变 target
 

@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 13 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 21 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter.Integration.Tests
 
 > [↑ 回到 Origo.manual](../README.zh.md)
@@ -35,6 +35,7 @@
 | 测试类 | 文件 | 测试数 | 覆盖的引擎依赖 |
 |--------|------|--------|---------------|
 | GodotRuntimeSmokeTests | `Tests/GodotRuntimeSmokeTests.cs` | 5 | Godot 运行时冒烟（GD.Print、FileAccess/DirAccess 静态类、Vector2 类型、SceneTree） |
+| PrivateFieldNamingIntegrationTests | `Tests/PrivateFieldNamingIntegrationTests.cs` | 1 | 反射扫描集成测试程序集自身，校验私有字段遵循 `_camelCase` 仓库约定 |
 | GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 5 | `GodotFileSystem`（`res://`/`user://` 读写、目录创建、文件枚举、删除） |
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 8 | `GodotFileOperations`（ReadAllText/WriteAllText/Copy/Delete 守卫和正确性；嵌套写入自动创建父目录） |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 10 | `GodotDirectoryOperations`（Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive、隐藏文件枚举/删除） |
@@ -43,8 +44,8 @@
 | GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 9 | `GodotSndEntity`（构造 null 守卫、SetData/GetData/TryGetData、类型安全、释放后 fail-fast） |
 | GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager`（BindRuntimeDeps 双重绑定守卫、BindContext 顺序守卫、null 守卫、ProcessAll 空列表） |
 | GodotSndManagerCreationIntegrationTests | `Tests/GodotSndManagerCreationIntegrationTests.cs` | 5 | `GodotSndManager`（CreateEntity/RemoveEntity/BuildMetaList/RequestKillEntity/GetEntities） |
-| GodotPackedSceneNodeFactoryIntegrationTests | `Tests/GodotPackedSceneNodeFactoryIntegrationTests.cs` | 4 | `GodotPackedSceneNodeFactory`（有效/无效场景加载、子节点添加、缓存复用） |
-| OrigoAutoHostBootstrapIntegrationTests | `Tests/OrigoAutoHostBootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` 完整 `_Ready()` 启动（Runtime/SndManager/ConsoleChannels） |
+| GodotPackedSceneNodeFactoryIntegrationTests | `Tests/GodotPackedSceneNodeFactoryIntegrationTests.cs` | 6 | `GodotPackedSceneNodeFactory`（有效/无效场景加载、子节点添加、缓存复用、空白与 Godot 禁用节点名前置校验） |
+| OrigoAutoHostBootstrapIntegrationTests | `Tests/OrigoAutoHostBootstrapIntegrationTests.cs` | 3 | `OrigoAutoHost` 完整 `_Ready()` 启动（Runtime/SndManager/ConsoleChannels、Runtime.Meta.Version 与程序集 informational version 对齐） |
 | AdapterCommandHandlerIntegrationTests | `Tests/AdapterCommandHandlerIntegrationTests.cs` | 5 | `TreeDebugCommandHandler`、`PressButtonCommandHandler`、`CameraViewCommandHandler` |
 | OrigoDefaultEntryBootstrapIntegrationTests | `Tests/OrigoDefaultEntryBootstrapIntegrationTests.cs` | 1 | `OrigoDefaultEntry` 属性完整默认值 |
 | BootstrapIntegrationTests | `Tests/BootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` / `OrigoDefaultEntry` 属性默认值与实例化 |
@@ -52,8 +53,10 @@
 | GodotAdapterTypedDataRegistrationIntegrationTests | `Tests/GodotAdapterTypedDataRegistrationIntegrationTests.cs` | 1 | GodotAdapter 程序集加载触发生成的 `[ModuleInitializer]` Kind 注册 |
 | ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 3 | 观察者绑定跨存档/读档恢复 + 会话销毁触发 OnUnmounted |
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | 测试进程启动前 user:// 清理：残留写中标记/前缀产物清除、非测试内容与 Godot 系统内容保留、幂等 |
-| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 1 | `GodotSndManager._ExitTree` 越界清理：直接移除管理器节点后 Core 侧策略池引用无泄漏 |
+| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` 越界清理：直接移除管理器节点后 Core 侧策略池引用无泄漏，即使 `OnUnmounted` 钩子抛出也继续释放 |
 | OrigoDefaultEntryBootstrapFailureTests | `Tests/OrigoDefaultEntryBootstrapFailureTests.cs` | 1 | `OrigoDefaultEntry` 派生入口在 base._Ready() 之后的启动步骤失败时，下一帧必须 fail-fast 而非驱动半初始化运行时 |
+| OrigoDefaultEntryContextIntegrationTests | `Tests/OrigoDefaultEntryContextIntegrationTests.cs` | 1 | `OrigoDefaultEntry.Context` 在成功启动后公开 SndContext，并与 `ConfigureSaveMetadataContributors` 收到同一实例 |
+| OrigoDefaultEntryStrategyRegistrationIntegrationTests | `Tests/OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs` | 1 | 派生入口覆写 `ConfigureStrategies`，在 `Bootstrap` 冻结注册表前完成手动策略注册 |
 
 ## 运行
 
@@ -93,6 +96,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   └── TestResult.cs                      # 结果 DTO
 ├── Tests/
 │   ├── GodotRuntimeSmokeTests.cs          # 运行时冒烟测试
+│   ├── PrivateFieldNamingIntegrationTests.cs # 集成测试程序集私有字段命名守卫
 │   ├── GodotFileSystemIntegrationTests.cs # 文件系统集成测试
 │   ├── GodotFileOperationsIntegrationTests.cs # 文件操作守卫测试
 │   ├── GodotDirectoryOperationsIntegrationTests.cs # 目录操作测试
@@ -110,7 +114,9 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── OrigoDefaultEntryBootstrapIntegrationTests.cs # 默认入口属性测试
 │   ├── ObserverSaveReloadIntegrationTests.cs # 观察者绑定跨存档恢复测试
 │   ├── UserDataCleanupIntegrationTests.cs # 测试进程 user:// 清理测试
-│   └── OrigoDefaultEntryBootstrapFailureTests.cs # 派生入口启动失败 fail-fast 测试
+│   ├── OrigoDefaultEntryBootstrapFailureTests.cs # 派生入口启动失败 fail-fast 测试
+│   ├── OrigoDefaultEntryContextIntegrationTests.cs # Context 公开与共享实例测试
+│   └── OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs # ConfigureStrategies 手动注册测试
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs
 │   ├── StubNodeFactory.cs

@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 9 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 12 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd](../../Snd/README.en.md)
@@ -17,7 +17,7 @@ Role interface decomposition of ISndContext. 9 Snd role interfaces + `IStateMach
 | `ISndTemplateAccess.cs` | Template load/reload, deep clone by key, JSON entity-list resolution (including template shorthand) (5 members) |
 | `ISndConsoleAccess.cs` | Console command submit/process/output subscribe (4 members) |
 | `ISndStateMachineAccess.cs` | Progress-level state machine container (1 member). Returns `IStateMachineContainer?` |
-| `ISndSaveOperations.cs` | Save list/read/write + level switch + continue + meta contributor (8 members) |
+| `ISndSaveOperations.cs` | Save list/read/write + level switch + continue + meta contributor (9 members) |
 | `ISndLifecycleOperations.cs` | Continue/Initial/MainMenu entry points (4 members) |
 | `ISndFileAccess.cs` | File access: structured + strongly-typed + exists (5 members). All via IDataSourceIoGateway boundary |
 | `ISndArchiveFileAccess.cs` | In-save file access: structured + strongly-typed + exists + delete (6 members) |
@@ -28,7 +28,7 @@ Beyond its 10 companion properties, ISndContext directly exposes the following m
 
 | Member | Description |
 |------|------|
-| `Bootstrap()` | Entry point: strategy discovery → alias/template loading → entry save loading |
+| `Bootstrap()` | Entry point: strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading |
 | `SaveRootPath` | Current save root path |
 | `InitialSaveRootPath` | Initial save root path |
 | `EntryConfigPath` | Entry configuration file path |
@@ -97,7 +97,7 @@ All file operations go through three base interfaces — `IDataSourceIoGateway` 
 - `ReadObject<T>` / `WriteObject<T>` → Gateway plus `DataSourceConverterRegistry` → strongly-typed objects
 - `FileExists` → `IFileMetaAccess.FileExists`
 
-Strategies must not call `IFileSystem` directly (fully internalized) or parse raw JSON/Map text themselves — suffix routing, codec policy, and I/O error semantics are governed on the Gateway side. Path concatenation (`CombinePath`, `GetParentDirectory`) and directory checks (`DirectoryExists`) come from the framework-internal `IPathResolver` and `IFileMetaAccess`, and are not exposed to strategies through `ISndFileAccess`.
+Strategies must not call `IFileSystem` directly (it is a host/adapter-layer extension point, removed from the strategy-layer surface) or parse raw JSON/Map text themselves — suffix routing, codec policy, and I/O error semantics are governed on the Gateway side. Path concatenation (`CombinePath`, `GetParentDirectory`) and directory checks (`DirectoryExists`) come from the framework-internal `IPathResolver` and `IFileMetaAccess`, and are not exposed to strategies through `ISndFileAccess`.
 
 ### Why WriteFile does not restrict paths
 

@@ -25,6 +25,15 @@ public class TypedDataGeneratorTests
         [assembly: InternalsVisibleTo("Origo.AdapterUnderTest")]
         """;
 
+    // Same scaffold without the InternalsVisibleTo grant. Used to model an
+    // external adapter assembly that references the real Origo.Core package:
+    // the generated adapter code needs TypedData internals and must fail with
+    // ORIGOSG007 instead of a wall of CS0122 compiler errors.
+    private const string _scaffoldHeaderWithoutIvt = """
+        using System;
+        using System.Runtime.CompilerServices;
+        """;
+
     private const string _scaffoldBody = """
         namespace Origo.Core.Snd.Metadata
         {
@@ -98,6 +107,28 @@ public class TypedDataGeneratorTests
     // ─── Home mode ─────────────────────────────────────────────────
 
     [Fact]
+    public void Home_PublicGeneratedMembers_EmitDocCommentsBeforeAttributes()
+    {
+        var text = RunHome(_homePrimitivesAttribute).AllGeneratedText;
+
+        // XML doc comments are only recognized when they precede any
+        // attributes. Emitting [MethodImpl] first makes CS1591 report the
+        // public generated member as undocumented even though a summary
+        // string is present one line later.
+        Assert.Contains(
+            "    /// <summary>Reads the stored value as <c>byte</c> when this instance uses the matching registered kind.</summary>\n" +
+            "    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n" +
+            "    public readonly bool TryGetByte(out byte value)",
+            text);
+        Assert.Contains(
+            "    /// <summary>Creates a <see cref=\"TypedData\"/> instance from a <c>int</c> value.</summary>\n" +
+            "    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n" +
+            "    public static explicit operator TypedData(int value)",
+            text);
+        Assert.DoesNotContain("    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    /// <summary>", text);
+    }
+
+    [Fact]
     public void Home_Primitives_GeneratesExpectedMembers_AndCompiles()
     {
         var output = RunHome(_homePrimitivesAttribute);
@@ -124,6 +155,14 @@ public class TypedDataGeneratorTests
 
         Assert.Contains("internal readonly string? AsString() => (string?)_ref;", text);
         Assert.Contains("case 13: return td._ref;", text);
+
+        // TryGetString is the public read path for the string kind. Null is
+        // a legal stored value for registered reference kinds (the kind is
+        // preserved while _ref is null), so the out parameter must be
+        // annotated string? — the handwritten API reference documents the
+        // same signature. Emitting a non-nullable out string would hide the
+        // null result from consumers.
+        Assert.Contains("public readonly bool TryGetString(out string? value)", text);
     }
 
     // Regression: the abandoned non-system inline path emitted accessors that
@@ -165,6 +204,23 @@ public class TypedDataGeneratorTests
     }
 
     // ─── Adapter mode ──────────────────────────────────────────────
+
+    [Fact]
+    public void Adapter_WithoutFriendAccess_ReportsORIGOSG007_AndEmitsNoSources()
+    {
+        var homeCompilation = GeneratorTestHarness.CreateCompilation(
+            "Origo.CoreUnderTest", _scaffoldHeaderWithoutIvt + "\n" + _scaffoldBody);
+        var homeRef = homeCompilation.ToMetadataReference();
+        var output = GeneratorTestHarness.Run(
+            "Origo.AdapterUnderTest", _adapterTypes, [homeRef]);
+
+        Assert.True(output.HasGeneratorDiagnostic("ORIGOSG007"));
+        Assert.All(
+            output.GeneratorDiagnostics.Where(d => d.Id == "ORIGOSG007"),
+            d => Assert.Equal(DiagnosticSeverity.Error, d.Severity));
+        Assert.Empty(output.GeneratedSources);
+        Assert.Empty(output.CompileErrors);
+    }
 
     [Fact]
     public void Adapter_ValueAndRefTypes_UseRefSlot_AndCompiles()
@@ -246,6 +302,12 @@ public class TypedDataGeneratorTests
         var second = RunHome(_homePrimitivesAttribute).AllGeneratedText;
 
         Assert.Equal(first, second);
+
+        // Generated text must use LF on every host. StringBuilder.AppendLine
+        // would emit CRLF on Windows, making the same input produce different
+        // source text depending on the build machine.
+        Assert.DoesNotContain("\r\n", first);
+        Assert.DoesNotContain("\r\n", RunAdapter(_adapterTypes).AllGeneratedText);
     }
 
     [Fact]
@@ -759,7 +821,7 @@ public class TypedDataGeneratorTests
             "/// <summary>Creates a <see cref=\"TypedData\"/> instance from a <c>int</c> value.</summary>",
             text);
         Assert.Contains(
-            "/// <summary>Reads the stored value as a string when this instance uses the string kind.</summary>",
+            "/// <summary>Reads the stored value as a string when this instance uses the string kind. The result is null when a null string was stored under the string kind.</summary>",
             text);
     }
 }

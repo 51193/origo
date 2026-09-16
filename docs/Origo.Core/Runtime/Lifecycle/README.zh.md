@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 17 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 20 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Lifecycle
 
 > [↑ 回到 Runtime](../README.zh.md)
@@ -117,7 +117,7 @@ SystemRun (由 SndContext 构造并持有)
 
 ### 为什么读档失败后弃置 ProgressRun 并清空引用
 
-`ProgressRun.LoadFromPayload` 作用于 `SndContext` 刚创建的全新 `ProgressRun`（先 `CreateProgressRun` 再 `LoadFromPayload`），且磁盘 `current/` 在反序列化之前已写入完整 payload。若反序列化或会话挂载中途失败，`SndContext` 会 **Dispose 该 ProgressRun 并清空上下文引用**（`MountNewProgressRun` 的失败路径）：策略池引用立即归还、`current/` 被清理，且 `ctx.Blackboard.ProgressBlackboard` 与 `ctx.StateMachines` 等读取入口 fail-fast 返回 null/抛出"无活动流程"，不再暴露半反序列化状态。失败异常原样传播（清理失败仅记 Warning 日志，不遮蔽原始异常）。下次流程（如重新 `RequestLoadGame`）从干净状态重新创建 ProgressRun。
+`ProgressRun.LoadFromPayload` 作用于 `SndContext` 刚创建的全新 `ProgressRun`（先 `CreateProgressRun` 再 `LoadFromPayload`），且磁盘 `current/` 在反序列化之前已写入完整 payload。若反序列化或会话挂载中途失败，`SndContext` 会 **Dispose 该 ProgressRun 并清空上下文引用**（`MountNewProgressRun` 的失败路径）：策略池引用立即归还、`current/` 被清理，且 `ctx.Blackboard.ProgressBlackboard` 与 `ctx.StateMachines` 等读取入口 fail-fast 返回 null/抛出"无活动流程"，不会暴露半反序列化状态。失败异常原样传播（清理失败仅记 Warning 日志，不遮蔽原始异常）。下次流程（如重新 `RequestLoadGame`）从干净状态重新创建 ProgressRun。
 
 回滚的清理步骤同样遵守"不遮蔽原始异常"纪律：`SessionRun.LoadFromPayload` 失败时 `ResetAfterLoadFailure` 逐步执行清理（状态机、实体、场景宿主、黑板），每步独立 try/catch——某一步的用户钩子（如 `OnUnmounted`）抛异常时，后续步骤仍执行，失败汇总为 `AggregateException` 记录 Warning 后，原始加载异常仍原样传播；`ProgressRun` 挂载循环失败时的 `Clear()` 同理（清理失败仅记 Warning）。
 
@@ -141,6 +141,10 @@ SystemRun (由 SndContext 构造并持有)
 
 会话拓扑记录了前台与所有后台会话的键-关卡-同步模式的完整关系。若仅写入前台信息，流程黑板中的拓扑字符串将不包含后台会话，导致 `progress.json` 在切换后丢失后台会话标记。虽然在内存中后台会话仍然存活，但 crash 重启后无法恢复。写入完整拓扑保证了流程黑板始终是当前运行时状态的可恢复快照。
 
+### 为什么会话拓扑按 key 排序写入
+
+拓扑字符串作为 progress 黑板中的 Text 节点参与 payload canonical hash，而 `Dictionary` 枚举顺序不是逻辑会话集合的一部分。`BuildSessionTopology` 固定前台条目在最前，后台条目按 key 的 ordinal 顺序排列；同一组会话无论创建顺序如何都产生相同的拓扑字符串和相同的 payload hash，避免破坏幂等保存去重。拓扑解析方按条目内容恢复会话，条目顺序不影响恢复语义。
+
 ### 为什么 RequestSwitchForegroundLevel 在系统延迟队列中执行
 
 关卡切换是保存-销毁-加载的组合操作，应排在业务逻辑之后、与 Save 操作同队 FIFO 执行。放在系统延迟队列（System Deferred）确保：同帧内的 Save 请求先写入 `current/`，后续的 Switch 的 `LoadAndMountForeground` 从 `current/` 解析时能找到数据。若 Switch 放在业务延迟队列（Business Deferred），Save 尚未执行时 Switch 已尝试加载目标关卡，导致 `current/` 中无数据而回退到空载入。
@@ -148,6 +152,8 @@ SystemRun (由 SndContext 构造并持有)
 ### 为什么 levelId 必须全局唯一
 
 每个 levelId 对应 `current/level_{id}/` 目录和 `SaveGamePayload.Levels` 中的一个 key。若两个会话同时持有同一 levelId，持久化时后写入者会覆盖前者数据；加载时双方读取同一份已覆盖的 payload。为此 `SessionManager` 在创建会话时校验 levelId 唯一性——若冲突则立即抛出 `InvalidOperationException`。
+
+前台槽位的替换不构成并发冲突：`CreateForegroundSession` 先校验目标 levelId 是否被**其他**会话占用，通过后才销毁旧前台，并在此之后构造、挂载新会话。这个顺序保证：与后台会话冲突时当前前台原样保留；旧前台的拆卸钩子执行期间 adapter scene host 仍归属旧会话（新会话尚未构造，不会抢占 `OwningSession` 绑定）。
 
 `SwitchForeground` 在创建新前台前会自动检测后台会话是否持有目标 `levelId`。若冲突，会先调用 `PersistSession` 保存后台数据，再调用 `DestroySession` 销毁该后台，确保 `LoadAndMountForeground` 可以无冲突地创建新前台。调用方无需手动清理冲突的后台会话。
 

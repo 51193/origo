@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 7 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision: 9 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Frame-Driven Game Simulation Integration Tests
 
 > [↑ Back to Origo.Core.Tests](../../README.en.md)
-> [↔ Behavior under test: usage/architecture-overview](../../../usage/architecture-overview.en.md)
+> [↔ Behavior under test: architecture/overview](../../../architecture/overview.en.md)
 > [↔ Module under test: Origo.Core/Runtime](../../../Origo.Core/Runtime/README.en.md)
 
 ## Behavior Under Test Overview
@@ -33,9 +33,9 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
-| `MultiFrameProcessing_AccumulatesData` | Strategy increments count each frame; after RunFrames(10) count=10 | architecture-overview: Frame loop |
+| `MultiFrameProcessing_AccumulatesData` | Strategy increments count each frame; after RunFrames(10) count=10 | architecture/overview: Frame loop |
 | `EntityInteraction_FindByName_ReadsPeerData` | Entity A reads peer_value of entity B via OwningSession.FindByName("peer") in Process | ISessionRun.FindByName |
-| `EntityInteraction_ViaBlackboard_TransfersDataBetweenFrames` | Entity A writes to SessionBlackboard → same-frame entity B reads bridge_value | architecture-overview: Session model |
+| `EntityInteraction_ViaBlackboard_TransfersDataBetweenFrames` | Entity A writes to SessionBlackboard → same-frame entity B reads bridge_value | architecture/overview: Session model |
 | `DeferredAction_ExecutesAfterFlush` | Strategy EnqueueBusinessDeferred → DriveFrame FlushEndOfFrameDeferred; deferred_ran=true | Scheduling |
 | `SaveDuringGameplay_PersistsToDisk` | Run frames → RequestSaveGameAuto → verify progress.json/level snd_scene.json exist; entity data unchanged | persistence-flow |
 | `EntityKill_BeforeDeadAndRemoval` | RequestKillEntity → DriveFrame → KillPendingAllSessions harvest; BeforeDead fires; entity removed | Runtime: SessionManager |
@@ -76,7 +76,7 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
-| `BatchSpawn_100Entities_AllProcessed` | Batch-spawning 100 entities then running 5 frames: every entity has count=5 | architecture-overview: Frame loop |
+| `BatchSpawn_100Entities_AllProcessed` | Batch-spawning 100 entities then running 5 frames: every entity has count=5 | architecture/overview: Frame loop |
 | `BatchSpawn_ThenBatchKill_AllCleanedUp` | Batch-spawn 100 entities then batch-kill them in the same frame; all harvested and removed after DriveFrame | Runtime: SessionManager |
 | `ConsoleCommand_SndCount_PublishesOutput` | Submitting the snd_count command produces console output containing "Snd count:" | console-commands |
 | `ConsoleCommand_BbSetSystemLayer_RoundTrip` | bb_set/bb_get system-layer commands: int/string written and read back via SystemBlackboard; bb_get prints the value | console-commands |
@@ -149,6 +149,8 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `Observer_FrameDriven_StrategyMountsObserverInProcess` | A Lifecycle strategy auto-mounts an observer in AfterSpawn; notifications work in the frame loop | snd-entity-model: Observer |
 | `Observer_Bindings_RestoredAcrossSaveAndReload` | Observer bindings are restored after save/reload; data changes still notify | persistence-flow |
 | `Observer_OnMounted_FiresAgainAfterReload` | OnMounted fires again after reload restores the binding | persistence-flow |
+| `Observer_AfterLoadFiresBeforeObserverRecoveryOnReload` | During reload, every entity's AfterLoad runs before Observer bindings recover and fire OnMounted | snd-entity-model: Observer |
+| `Observer_OnUnmountedFiresBeforeTargetBeforeDead` | When a target dies, Observer unwiring fires OnUnmounted before the target's BeforeDead runs | snd-entity-model: Observer |
 | `Observer_OnUnmounted_FiresWhenSessionIsDestroyed` | Observers receive OnUnmounted when the session is destroyed | snd-entity-model: Observer |
 | `Observer_TargetDataNoLongerNotifiesAfterSessionDestroyed` | Target data changes no longer notify after the session is destroyed | snd-entity-model: Observer |
 
@@ -238,6 +240,7 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `ValueCapturingObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase watching hp; records oldValue/newValue |
 | `TargetAwareObserverStrategy` | `ObserverTopologyIntegrationTests.cs` | ObserverStrategyBase watching hp; records TargetName |
 | `AutoMountObserverLifecycleStrategy` | `ObserverTopologyIntegrationTests.cs` | Auto-mounts an observer onto "target" in AfterSpawn; verifies frame-driven mounting |
+| `LifecycleOrderProbeStrategy` | `ObserverTopologyIntegrationTests.cs` | Records AfterLoad / BeforeDead events to verify observer wiring order relative to lifecycle hooks |
 | `TwoStepPlanStrategy` | `PlanningIntegrationTests.cs` | PlanExecutionStrategyBase subclass: two-step plans (step_a→step_b) for intents "build"/"repair" |
 | `NoopActionStrategy` | `PlanningIntegrationTests.cs` | SharedNoopLifecycleStrategy subclass; plan Action placeholder |
 | `PushTrackingStateMachineStrategy` | `StateMachineIntegrationTests.cs` | SharedNoopStateMachineStrategy subclass; drives Push/Pop stack in the frame loop |
@@ -264,7 +267,7 @@ Assert.Equal(10, count);
 
 | Gap Description | Impact | Documentation Basis |
 |-----------------|--------|---------------------|
-| Extended scenarios of multi-entity batch spawn + frame processing (entity count > 100) | Stability of frame loop with large entity counts not verified | architecture-overview: Frame loop |
+| Extended scenarios of multi-entity batch spawn + frame processing (entity count > 100) | Stability of frame loop with large entity counts not verified | architecture/overview: Frame loop |
 | Cross-entity state machine interaction of StrategyStateMachine in frame loop | Cross-entity effects triggered by state machine transitions not verified | state-machine |
 
 ---

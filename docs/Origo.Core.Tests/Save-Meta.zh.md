@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Meta -->
-<!-- docsync-revision: 4 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 5 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：元数据 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
@@ -12,7 +12,7 @@
 验证 `meta.map` 展示元数据的构建、合并与持久化。
 覆盖 `ISaveMetaContributor` 贡献者接口、`DelegateSaveMetaContributor` 委托包装、
 `SaveMetaBuildContext` 上下文数据传递、`SaveMetaMerger` 多来源合并、
-贡献者注册与 SaveGame 完整链路。
+贡献者注册、非法贡献输出 fail-fast 与 SaveGame 完整链路。
 
 ## 测试文件清单
 
@@ -21,7 +21,7 @@
 | `DelegateSaveMetaContributorTests.cs` | DelegateSaveMetaContributor 委托调用与 null 构造守卫 |
 | `SaveMetaBuildContextTests.cs` | SaveMetaBuildContext 属性存储与 null 参数守卫 |
 | `SaveMetaIntegrationTests.cs` | 完整链路：注册→RequestSaveGame→CustomMeta 写入 meta.map，也包含 SaveMetaNullAndSessionContextTests |
-| `SaveMetaMergerTests.cs` | SaveMetaMerger 多贡献者合并、覆盖优先级、null 处理 |
+| `SaveMetaMergerTests.cs` | SaveMetaMerger 多贡献者合并、覆盖优先级、非法输出 fail-fast |
 
 ## DelegateSaveMetaContributorTests 测试详情
 
@@ -71,6 +71,9 @@
 |---------|-----------|---------|
 | `RegisterSaveMetaContributor_ThrowsOnNullContributor` | null ISaveMetaContributor | ArgumentNullException |
 | `RegisterSaveMetaContributor_ThrowsOnNullDelegate` | null 委托 | ArgumentNullException |
+| `RegisterSaveMetaContributor_NullContribution_FailsSave` | 贡献者返回 null 字典 | RequestSaveGame 的 FlushFrame 抛 InvalidOperationException，存档不产出 |
+| `RegisterSaveMetaContributor_BlankContributionKey_FailsSave` | 贡献者返回空白 key | RequestSaveGame 的 FlushFrame 抛 InvalidOperationException，存档不产出 |
+| `RegisterSaveMetaContributor_NullContributionValue_FailsSave` | 贡献者返回 null value | RequestSaveGame 的 FlushFrame 抛 InvalidOperationException，存档不产出 |
 
 ## SaveMetaNullAndSessionContextTests 测试详情
 
@@ -86,15 +89,22 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `Merge_ContributorsThenOverrides_OverridesWin` | 贡献者键值被 overrides 覆盖，非冲突键各自保留 | SaveMetaMerger |
 | `Merge_LaterContributorOverwritesEarlierSameKey` | 多个贡献者相同 key 时靠后者覆盖靠前者 | SaveMetaMerger |
 
 ### 边界路径
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
-| `Merge_NoContributorsNoOverrides_ReturnsNull` | 无贡献者且无 overrides | 返回 null |
-| `Merge_SkipsNullOverrideValues` | overrides 中某个 key 的值为 null | 保留贡献者原值，不覆盖为 null |
+| `Merge_NoContributors_ReturnsNull` | 无贡献者 | 返回 null |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Merge_NullContribution_Throws` | 贡献者返回 null 字典 | InvalidOperationException（含贡献者类型） |
+| `Merge_BlankKey_Throws` | 贡献者返回空字符串 key | InvalidOperationException（含贡献者类型） |
+| `Merge_WhitespaceKey_Throws` | 贡献者返回纯空白 key | InvalidOperationException（含贡献者类型） |
+| `Merge_NullValue_Throws` | 贡献者某 key 的 value 为 null | InvalidOperationException（含贡献者类型） |
 
 ## 测试辅助策略
 

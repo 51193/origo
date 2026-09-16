@@ -28,16 +28,12 @@ public static class SndArchetypeLoader
         if (!fileAccess.FileExists(path))
             return false;
 
-        var node = fileAccess.ReadFile(path);
+        using var node = fileAccess.ReadFile(path);
         if (node.Kind != DataSourceNodeKind.Map)
             return false;
 
         foreach (var key in node.Keys)
-        {
-            var raw = node[key].AsString();
-            if (raw != null)
-                attributes[key] = raw;
-        }
+            attributes[key] = node[key].AsString();
 
         return attributes.Count > 0;
     }

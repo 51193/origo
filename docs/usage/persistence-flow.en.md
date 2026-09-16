@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 8 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence Flow
 
 > [↑ Back to usage](README.en.md)
@@ -155,6 +155,8 @@ SaveGamePayload {
 }
 ```
 
+> **Node ownership**: Every `DataSourceNode` tree inside a `SaveGamePayload` / `LevelPayload` must be disposed by its owner. The framework releases temporary payloads it creates at internal load/mount and write/snapshot boundaries; payloads returned by public `ISaveStorageService` read methods are owned by the caller, and write methods must consume their node trees during the call.
+
 ## Save API
 
 ### Requesting a Save
@@ -185,10 +187,10 @@ ctx.Lifecycle.RequestLoadMainMenuEntrySave();  // Load the main menu entry save
 
 ```csharp
 // Get all save slot IDs
-var ids = saveStorageService.EnumerateSaveIds();
+var ids = ctx.Save.ListSaves();
 
 // Get save slots + display metadata (for save selection UI)
-var entries = saveStorageService.EnumerateSavesWithMetaData();
+var entries = ctx.Save.ListSavesWithMetaData();
 // entries[i].SaveId → "001"
 // entries[i].MetaData → { "play_time": "2h30m", "level": "town" }
 ```
@@ -256,7 +258,7 @@ The default implementation `DefaultSavePathPolicy` → `SavePathLayout` provides
 ## Related Documents
 
 - [Session Model](session-model.en.md) — Relationship between Session and saves
-- [Architecture Overview](architecture-overview.en.md) — Persistence's position in the overall architecture
+- [Architecture Overview](../architecture/overview.en.md) — Persistence's position in the overall architecture
 
 ---
 [↑ Back to usage](README.en.md)

@@ -1,15 +1,15 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 11 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 14 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Data Source Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
 > [↔ Module under test: Origo.Core/DataSource](../Origo.Core/DataSource/README.en.md)
-> [↔ Behavior under test: usage/architecture-overview](../usage/architecture-overview.en.md)
+> [↔ Behavior under test: architecture/overview](../architecture/overview.en.md)
 
 ## Behavior Overview
 
-Validates the DataSourceNode tree model and its encode/decode, conversion, and hashing capabilities: node factory (Map/Array/Text/Number/Bool/Null), strongly-typed value accessors (AsString/AsInt/AsLong/AsFloat/AsDouble/AsByte/AsSByte/AsShort/AsUShort/AsUInt/AsULong/AsDecimal/AsChar), object/array access (indexer, TryGetValue, ContainsKey, Keys, Count, Elements), Builder chained Add, lazy expansion (expander not called before access, expand only once, expansion failure keeps Lazy with retry), JSON codec round-trip (complex nested tree/top-level array/empty object/empty array, nested objects lazy, primitives not lazy), Map codec (comments/empty lines skipped, colons in values, skip null values, empty value, line without colon throws), `DataSourceConverterRegistry` (register/get, generic and runtime-typed read/write, unregistered type throws, null write, type hierarchy fallback), complete round-trip for 14 primitive types + 14 array types + domain types (TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary), `TypeStringMapping` type name registration, `IDisposable` recursive disposal with deep-tree stack overflow prevention, `ComputeSha256Hash` canonical hashing, and strict/lenient parse behavior of `KeyValueFileParser`.
+Validates the DataSourceNode tree model and its encode/decode, conversion, and hashing capabilities: node factory (Map/Array/Text/Number/Bool/Null), strongly-typed value accessors (AsString/AsChar plus the generic As<T>: As<int>/As<long>/As<float>/As<double>/As<byte>/As<sbyte>/As<short>/As<ushort>/As<uint>/As<ulong>/As<decimal>), object/array access (indexer, TryGetValue, ContainsKey, Keys, Count, Elements), Builder chained Add, lazy expansion (expander not called before access, expand only once, expansion failure keeps Lazy with retry), JSON codec round-trip (complex nested tree/top-level array/empty object/empty array, nested objects lazy, primitives not lazy), Map codec (comments/empty lines skipped, colons in values, skip null values, empty value, line without colon throws), `DataSourceConverterRegistry` (register/get, generic and runtime-typed read/write, unregistered type throws, null write, type hierarchy fallback), complete round-trip for 14 primitive types + 14 array types + domain types (TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary), `TypeStringMapping` type name registration, `IDisposable` recursive disposal with deep-tree stack overflow prevention, `ComputeSha256Hash` canonical hashing, and strict/lenient parse behavior of `KeyValueFileParser`.
 
 ## Test File List
 
@@ -37,10 +37,10 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `CreateNull_ReturnsNullNode` | CreateNull returns Null node, IsNull=true | DataSource |
 | `AsString_OnStringNode_ReturnsValue` | String node AsString returns original value | DataSource |
 | `AsString_OnNumberNode_ReturnsStringRepresentation` | Number node AsString returns string representation | DataSource |
-| `AsInt_ParsesCorrectly` | Number node AsInt parses to int | DataSource |
-| `AsLong_ParsesCorrectly` | Number node AsLong parses to long | DataSource |
-| `AsFloat_ParsesCorrectly` | Number node AsFloat parses to float | DataSource |
-| `AsDouble_ParsesCorrectly` | Number node AsDouble parses to double | DataSource |
+| `AsInt_ParsesCorrectly` | Number node `As<int>()` parses to int | DataSource |
+| `AsLong_ParsesCorrectly` | Number node `As<long>()` parses to long | DataSource |
+| `AsFloat_ParsesCorrectly` | Number node `As<float>()` parses to float | DataSource |
+| `AsDouble_ParsesCorrectly` | Number node `As<double>()` parses to double | DataSource |
 | `ObjectNode_IndexerByKey_ReturnsChild` | obj["x"] returns child node | DataSource |
 | `ObjectNode_TryGetValue_ReturnsTrueForExistingKey` | TryGetValue for existing key returns true and outputs child node | DataSource |
 | `ObjectNode_ContainsKey_WorksCorrectly` | ContainsKey returns true/false for existing/missing keys | DataSource |
@@ -61,7 +61,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `MapCodec_Decode_HandlesColonsInValues` | Map decode preserves colons in values (e.g. URLs) | DataSource |
 | `MapCodec_Encode_SkipsNullValues` | Map encode skips null-valued keys | DataSource |
 | `MapCodec_Encode_RejectsMultilineValue` | Value contains newline characters | InvalidOperationException (encode would produce a file that its own strict decode cannot read back, so it must be rejected) |
-| `MapCodec_DuplicateKey_WarningIsObservable` | Duplicate keys on decode | Warning logged (no longer silently dropped via NullLogger) |
+| `MapCodec_DuplicateKey_WarningIsObservable` | Duplicate keys on decode | Warning logged (observable through the injected logger) |
 | `Registry_RegisterAndGet_RoundTrips` | Register→Get→Write→Read round-trip | DataSource |
 | `Registry_ReadWrite_ByGenericType` | Write/Read round-trip by generic type | DataSource |
 | `Registry_ReadWrite_ByRuntimeType` | Write/Read round-trip by runtime Type | DataSource |
@@ -111,13 +111,13 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `TypedDataConverter_RoundTrip_CharValue` | TypedData(char) round-trip preserves DataType=char | DataSource |
 | `TypedDataConverter_RoundTrip_IntArrayValue` | TypedData(int[]) round-trip preserves DataType=int[] | DataSource |
 | `TypedDataConverter_RoundTrip_ByteArrayValue` | TypedData(byte[]) round-trip preserves DataType=byte[] | DataSource |
-| `AsByte_ParsesCorrectly` | Number node AsByte parses 0/255 | DataSource |
-| `AsSByte_ParsesCorrectly` | Number node AsSByte parses -128/127 | DataSource |
-| `AsShort_ParsesCorrectly` | Number node AsShort parses -32768/32767 | DataSource |
-| `AsUShort_ParsesCorrectly` | Number node AsUShort parses 0/65535 | DataSource |
-| `AsUInt_ParsesCorrectly` | Number node AsUInt parses 0/4294967295 | DataSource |
-| `AsULong_ParsesCorrectly` | Number node AsULong parses 0/18446744073709551615 | DataSource |
-| `AsDecimal_ParsesCorrectly` | Number node AsDecimal parses 3.14159/-99.99 | DataSource |
+| `AsByte_ParsesCorrectly` | Number node `As<byte>()` parses 0/255 | DataSource |
+| `AsSByte_ParsesCorrectly` | Number node `As<sbyte>()` parses -128/127 | DataSource |
+| `AsShort_ParsesCorrectly` | Number node `As<short>()` parses -32768/32767 | DataSource |
+| `AsUShort_ParsesCorrectly` | Number node `As<ushort>()` parses 0/65535 | DataSource |
+| `AsUInt_ParsesCorrectly` | Number node `As<uint>()` parses 0/4294967295 | DataSource |
+| `AsULong_ParsesCorrectly` | Number node `As<ulong>()` parses 0/18446744073709551615 | DataSource |
+| `AsDecimal_ParsesCorrectly` | Number node `As<decimal>()` parses 3.14159/-99.99 | DataSource |
 | `AsChar_ParsesCorrectly` | String node AsChar parses 'A'/Chinese | DataSource |
 | `TypeStringMapping_RegistersAllNewTypes` | TypeStringMapping registers all primitive and array type names | DataSource |
 | `TypeStringMapping_RegistersReadOnlyDictionary` | TypeStringMapping registers ReadOnlyDictionary and interface type names | DataSource |
@@ -129,7 +129,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
-| `AsInt_OnNonNumericString_Throws` | CreateString("hello") → AsInt() | FormatException |
+| `AsInt_OnNonNumericString_Throws` | CreateString("hello") → `As<int>()` | FormatException |
 | `CreateString_Null_Throws` | CreateString(null) | ArgumentNullException (Null nodes are CreateNull's responsibility; null must not drift into an empty Text node) |
 | `CreateNumber_NullString_Throws` | CreateNumber(string) with null | ArgumentNullException |
 | `Add_NullChild_Throws` | Map/Array Add with a null child | ArgumentNullException (deferring the error to encode time becomes an NRE or empty data) |
@@ -146,6 +146,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `StrategyMetaDataConverter_LifecycleIndicesNotArray_Throws` | lifecycle_indices is an object instead of an array | InvalidOperationException (contains "array") |
 | `StrategyMetaDataConverter_ObserverIndicesNotArray_Throws` | observer_indices is an object instead of an array | InvalidOperationException (contains "array") |
 | `StrategyMetaDataConverter_BlankObserverTarget_Throws` | observer_indices entry target is empty | InvalidOperationException (contains "target"; binding must not be silently dropped) |
+| `StrategyMetaDataConverter_Write_BlankObserverTarget_Throws` | Observer binding target is empty during write | InvalidOperationException (contains "target"; binding must not be silently dropped) |
 | `NodeMetaDataConverter_PairsNotMap_Throws` | node.pairs is an array instead of an object | InvalidOperationException (contains "object") |
 | `DataMetaDataConverter_PairsNotMap_Throws` | data.pairs is an array instead of an object | InvalidOperationException (contains "object") |
 | `StringDictionaryConverter_Read_NonMap_Throws` | String dictionary root node is an array | InvalidOperationException (contains "object") |

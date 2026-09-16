@@ -17,7 +17,6 @@ namespace Origo.Core.Tests;
 ///     idempotent action-strategy mount/removal guards must work through the
 ///     <see cref="IEntityLifecycle" /> contract instead of a concrete-type check.
 /// </summary>
-[Collection("StrategyStateTests")]
 public class PlanExecutionStrategyBridgeTests
 {
     private const string _intentKey = "test.intent";

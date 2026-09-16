@@ -1,0 +1,109 @@
+name: Weekly Build
+
+on:
+  schedule:
+    # Monday 02:30 UTC. Scheduled runs evaluate exactly the week that just
+    # ended: [previous Monday 00:00, current Monday 00:00) UTC. Idle weeks
+    # publish nothing, and a commit made in the first hours of Monday cannot
+    # leak into the ended-week window or be published twice.
+    - cron: '30 2 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  weekly-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Check for commits in the weekly window
+        id: check
+        shell: bash
+        run: |
+          # Scheduled runs evaluate exactly [previous Monday 00:00, current
+          # Monday 00:00) so a commit in the first hours of Monday is picked
+          # up by the following week's run instead of being published twice.
+          # Manual dispatch intentionally leaves the window open to now so a
+          # human can snapshot the current partial week on demand.
+          WEEK_WINDOW="$(python3 - <<'PY'
+          from datetime import datetime, timedelta, timezone
+          now = datetime.now(timezone.utc)
+          current_monday = (now - timedelta(days=now.weekday())).replace(
+              hour=0, minute=0, second=0, microsecond=0)
+          previous_monday = current_monday - timedelta(days=7)
+          ended_week_end = current_monday - timedelta(seconds=1)
+          print(previous_monday.strftime('%Y-%m-%dT%H:%M:%SZ'))
+          print(ended_week_end.strftime('%Y-%m-%dT%H:%M:%SZ'))
+          PY
+          )"
+          WEEK_START="$(printf '%s\n' "$WEEK_WINDOW" | sed -n '1p')"
+          WEEK_END="$(printf '%s\n' "$WEEK_WINDOW" | sed -n '2p')"
+          echo "Weekly window starts at: $WEEK_START"
+
+          if [[ "${GITHUB_EVENT_NAME:-workflow_dispatch}" == "schedule" ]]; then
+            REVISION_ARGS=(--since="$WEEK_START" --until="$WEEK_END")
+            echo "Scheduled run window ends at: $WEEK_END"
+          else
+            REVISION_ARGS=(--since="$WEEK_START")
+            echo "Manual dispatch window includes commits up to now."
+          fi
+
+          if [[ -z "$(git rev-list -1 "${REVISION_ARGS[@]}" HEAD)" ]]; then
+            echo "No commits in the weekly window; nothing to publish."
+            exit 0
+          fi
+
+          BASE_VERSION="$(grep -oP '<Version>\K[^<]+' Directory.Build.props | head -1 | sed -E 's/-nightly\.[0-9]{8}$//')"
+          if ! [[ "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: cannot derive base version from Directory.Build.props: '$BASE_VERSION'" >&2
+            exit 1
+          fi
+
+          DATE="$(date -u +%Y%m%d)"
+          NEW_VERSION="${BASE_VERSION}-nightly.${DATE}"
+          TAG="v${NEW_VERSION}"
+
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists; nothing to publish."
+            exit 0
+          fi
+
+          echo "Publishing weekly snapshot version: ${NEW_VERSION}"
+          echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Bump version, commit, and tag
+        if: steps.check.outputs.new_version != ''
+        shell: bash
+        run: |
+          python3 - "${{ steps.check.outputs.new_version }}" <<'PY'
+          import re
+          import sys
+
+          version = sys.argv[1]
+          path = "Directory.Build.props"
+          with open(path, encoding="utf-8") as handle:
+              content = handle.read()
+          updated, count = re.subn(
+              r"(<Version>)[^<]+(</Version>)",
+              lambda match: f"{match.group(1)}{version}{match.group(2)}",
+              content,
+              count=1)
+          if count != 1:
+              raise SystemExit("Failed to locate a single <Version> element.")
+          with open(path, "w", encoding="utf-8") as handle:
+              handle.write(updated)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Directory.Build.props
+          git commit -m "chore: bump version to ${{ steps.check.outputs.new_version }} for weekly build"
+
+          git push origin HEAD:main
+          git push origin "refs/tags/${{ steps.check.outputs.tag }}"

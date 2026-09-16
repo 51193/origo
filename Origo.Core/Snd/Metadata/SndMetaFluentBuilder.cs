@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Origo.Core.Snd.Metadata;
 
@@ -13,10 +14,8 @@ public sealed class SndMetaFluentBuilder
 
     /// <summary>Creates a builder for a new entity metadata named <paramref name="name" />.</summary>
     /// <exception cref="ArgumentException">Thrown when <paramref name="name" /> is null or whitespace.</exception>
-    public SndMetaFluentBuilder(string name) : this(new SndMetaData())
+    public SndMetaFluentBuilder(string name) : this(CreateRecoverableMeta(ValidateName(name)))
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        _meta.Name = name;
     }
 
     private SndMetaFluentBuilder(SndMetaData meta)
@@ -30,9 +29,19 @@ public sealed class SndMetaFluentBuilder
     /// </summary>
     public static SndMetaFluentBuilder From(SndMetaData meta) => new(meta);
 
-    /// <summary>Sets a node handle value under the given key.</summary>
+    /// <summary>
+    ///     Sets a node handle value under the given key. Both the logical
+    ///     node name and the resource id must be non-blank: blank values
+    ///     would otherwise fail later during entity recovery or node lookup.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="key" /> or <paramref name="value" />
+    ///     is null or whitespace.
+    /// </exception>
     public SndMetaFluentBuilder SetNode(string key, string value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
         _meta.NodeMetaData ??= new NodeMetaData();
         _meta.NodeMetaData.Pairs[key] = value;
         return this;
@@ -51,6 +60,50 @@ public sealed class SndMetaFluentBuilder
     {
         _meta.StrategyMetaData ??= new StrategyMetaData();
         _meta.StrategyMetaData.ActiveIndices.Add(index);
+        return this;
+    }
+
+    /// <summary>
+    ///     Adds an observer binding to the metadata. Multiple calls with the
+    ///     same target append observer indices to the existing binding; a
+    ///     duplicate observer index is rejected so the recovered topology
+    ///     never attempts a double mount.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="target" /> or an observer index is
+    ///     blank, or when <paramref name="observerIndices" /> is empty.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="observerIndices" /> is null.
+    /// </exception>
+    public SndMetaFluentBuilder AddObserverBinding(string target, params string[] observerIndices)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(target);
+        ArgumentNullException.ThrowIfNull(observerIndices);
+        if (observerIndices.Length == 0)
+            throw new ArgumentException(
+                "Observer binding requires at least one observer index.",
+                nameof(observerIndices));
+
+        _meta.StrategyMetaData ??= new StrategyMetaData();
+        var binding = _meta.StrategyMetaData.ObserverIndices
+            .FirstOrDefault(b => string.Equals(b.Target, target, StringComparison.Ordinal));
+        if (binding is null)
+        {
+            binding = new StrategyMetaData.ObserverBinding { Target = target };
+            _meta.StrategyMetaData.ObserverIndices.Add(binding);
+        }
+
+        foreach (var observerIndex in observerIndices)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(observerIndex);
+            if (binding.ObserverIndices.Contains(observerIndex, StringComparer.Ordinal))
+                throw new ArgumentException(
+                    $"Observer index '{observerIndex}' is already bound to target '{target}'.",
+                    nameof(observerIndices));
+            binding.ObserverIndices.Add(observerIndex);
+        }
+
         return this;
     }
 
@@ -116,6 +169,23 @@ public sealed class SndMetaFluentBuilder
 
     /// <summary>Returns the fully-built <see cref="SndMetaData" />.</summary>
     public SndMetaData Build() => _meta;
+
+    private static string ValidateName(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return name;
+    }
+
+    private static SndMetaData CreateRecoverableMeta(string name)
+    {
+        return new SndMetaData
+        {
+            Name = name,
+            NodeMetaData = new NodeMetaData(),
+            StrategyMetaData = new StrategyMetaData(),
+            DataMetaData = new DataMetaData()
+        };
+    }
 
     private void EnsureDataMetaData() => _meta.DataMetaData ??= new DataMetaData();
 }

@@ -67,7 +67,7 @@ public sealed class HealthStrategy : LifecycleStrategyBase
 nc localhost 9876
 ```
 
-- **Source generator**: Roslyn incremental generator emits compile-time typed data accessors, eliminating boxing and string-key lookups in hot paths. 6 diagnostics (`ORIGOSG001`–`006`) catch misconfigurations at build time.
+- **Source generator**: Roslyn incremental generator emits compile-time typed data accessors, eliminating boxing and string-key lookups in hot paths. 7 diagnostics (`ORIGOSG001`–`007`) catch misconfigurations at build time.
 - **Test infrastructure**: `StrategyTestScenario` for declarative strategy unit tests (Configure → Simulate → Inspect). Architecture guardrail tests enforce dependency direction and strategy constraints.
 
 ### Godot 4 adapter
@@ -93,8 +93,9 @@ nc localhost 9876
 ```
 
 ```xml
-<PackageReference Include="Origo.Core" />
-<PackageReference Include="Origo.GodotAdapter" />
+<!-- Use the exact version of the .nupkg files downloaded from the release. -->
+<PackageReference Include="Origo.Core" Version="0.0.9" />
+<PackageReference Include="Origo.GodotAdapter" Version="0.0.9" />
 ```
 
 ### 2. Create folder structure
@@ -113,13 +114,13 @@ Attach `OrigoDefaultEntry` to your startup scene and configure paths.
 > If Godot can't resolve the `[GlobalClass]`, create a one-line bridge class:
 > ```csharp
 > [GlobalClass]
-> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> public partial class MyOrigoEntry : Origo.GodotAdapter.Bootstrap.OrigoDefaultEntry { }
 > ```
 
 ### 4. Write a strategy and define entities
 
 ```csharp
-[StrategyIndex("game.player_move", Priority = 100)]
+[StrategyIndex("game.player_move")]
 public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -144,7 +145,7 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 
 `OrigoDefaultEntry._Ready()` discovers all `[StrategyIndex]` strategies, loads aliases and templates, and boots the game.
 
-> Full walkthrough: [Quick Start](docs/usage/quick-start.en.md) &middot; [Architecture Overview](docs/usage/architecture-overview.en.md) &middot; [SND Entity Model](docs/usage/snd-entity-model.en.md)
+> Full walkthrough: [Quick Start](docs/usage/quick-start.en.md) &middot; [Architecture Overview](docs/architecture/overview.en.md) &middot; [SND Entity Model](docs/usage/snd-entity-model.en.md)
 
 ## Documentation
 
@@ -157,18 +158,19 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 | I want to... | Go to |
 |---|---|
 | Browse all capabilities | [Capabilities](docs/usage/capabilities.en.md) |
-| Understand the architecture | [Architecture Overview](docs/usage/architecture-overview.en.md) |
+| Understand the architecture | [Architecture Overview](docs/architecture/overview.en.md) |
 | Learn the SND model | [SND Entity Model](docs/usage/snd-entity-model.en.md) |
 | Test my strategies | [Strategy Testing](docs/usage/strategy-testing.en.md) |
 | Use the save system | [Persistence Flow](docs/usage/persistence-flow.en.md) |
 | Use the state machine | [State Machine](docs/usage/state-machine.en.md) |
 | Use the console | [Console Commands](docs/usage/console-commands.en.md) |
 | Reference for AI agents | [Agent Reference](docs/usage/agent-reference.en.md) |
+| Prepare a release / update Changelog | [Release & Changelog process](docs/release-process.en.md) |
 
 ## Development
 
 ```bash
-bash scripts/ci.sh        # Full CI pipeline (format + test + benchmarks + Godot integration)
+bash scripts/ci.sh        # Local full pipeline (lint-scripts + format + doc-sync + test + benchmarks + Godot)
 bash scripts/test.sh      # Build + test + coverage gates (dev iteration)
 bash scripts/format.sh    # Format check only
 ```

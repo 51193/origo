@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Runtime/Lifecycle/README -->
-<!-- docsync-revision: 17 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 20 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Lifecycle
 
 > [↑ Back to Runtime](../README.en.md)
@@ -140,6 +140,10 @@ Each layer container (`SystemRuntime`, `ProgressRuntime`, etc.) exposes only its
 
 The session topology records the complete relation of foreground and all background session keys, levels, and sync modes. Writing only foreground info would leave the topology string in the progress blackboard without background sessions, so `progress.json` would lose background session markers after a switch — the background sessions survive in memory, but a crash-restart cannot restore them. Writing the full topology keeps the progress blackboard a restorable snapshot of the current runtime state.
 
+### Why session topology is written in key order
+
+The topology string participates in the payload canonical hash as a Text node in the progress blackboard, while `Dictionary` enumeration order is not part of the logical session set. `BuildSessionTopology` keeps the foreground entry first and orders background entries by their key using ordinal comparison; the same session set therefore produces the same topology string and payload hash regardless of creation order, preserving idempotent save deduplication. Topology readers restore sessions from entry content, so entry order carries no recovery semantics.
+
 ### Why RequestSwitchForegroundLevel executes in the system deferred queue
 
 Level switching is a composite save-destroy-load operation that should run after business logic, FIFO with Save operations. Placing it in the System Deferred queue ensures: the same frame's Save request writes `current/` first, and the subsequent Switch's `LoadAndMountForeground` finds the data when resolving from `current/`. If Switch ran in the Business Deferred queue, it would try to load the target level before Save had executed, falling back to an empty load when `current/` has no data.
@@ -147,6 +151,8 @@ Level switching is a composite save-destroy-load operation that should run after
 ### Why levelId must be globally unique
 
 Each levelId maps to a `current/level_{id}/` directory and a key in `SaveGamePayload.Levels`. If two sessions hold the same levelId, the later writer overwrites the former's data on persist, and both read the same overwritten payload on load. Therefore `SessionManager` validates levelId uniqueness when creating sessions — a conflict throws `InvalidOperationException` immediately.
+
+Replacing the foreground slot is not a concurrent conflict: `CreateForegroundSession` first validates that the target levelId is not held by any **other** session, and only then destroys the old foreground before constructing and mounting the replacement. This order guarantees that a conflict with a background session leaves the current foreground untouched, and that the adapter scene host still belongs to the old session while its teardown hooks run (the new session is not constructed yet, so it cannot preempt the `OwningSession` binding).
 
 `SwitchForeground` automatically detects whether a background session holds the target `levelId` before creating the new foreground. On conflict it calls `PersistSession` to save the background data, then `DestroySession` to destroy that background, so `LoadAndMountForeground` can create the new foreground without conflict. Callers need no manual conflict cleanup.
 

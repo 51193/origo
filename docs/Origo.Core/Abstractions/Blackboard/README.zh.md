@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Blackboard/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 2 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Blackboard (Abstractions)
 
 > [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Blackboard](../../Blackboard/README.zh.md)
@@ -19,7 +19,7 @@
 
 | 方法 | 说明 |
 |------|------|
-| `SetValue<T>(string key, T value)` | 写入键值对，保留完整类型信息 |
+| `SetValue<T>(string key, T value)` | 写入键值对，保留完整类型信息；未注册引用类型写入 null 抛 `ArgumentNullException`（已注册引用 kind 如 `string` 的 null 仍支持） |
 | `TryGet<T>(string key)` | 安全读取：返回 `(found, value)` 元组 |
 | `Clear()` | 清空所有键值 |
 | `GetKeys()` | 枚举全部键名 |

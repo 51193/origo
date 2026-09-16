@@ -82,6 +82,20 @@ public class StackStateMachineTests
     }
 
     [Fact]
+    public void Push_WhenPushHookThrows_RollsBackPushedValue()
+    {
+        var (pool, ctx) = CreatePoolAndContext();
+        pool.Register(() => new SmThrowOnPush());
+        using var sm = new StackStateMachine("test", "sm.push.throw", "sm.pop.stub", pool, ctx.StateMachineContext);
+
+        Assert.Throws<InvalidOperationException>(() => sm.Push("boom"));
+
+        var (found, top) = sm.Peek();
+        Assert.False(found);
+        Assert.Null(top);
+    }
+
+    [Fact]
     public void TryPopRuntime_EmptyStack_ReturnsFalse()
     {
         var (pool, ctx) = CreatePoolAndContext();
@@ -230,5 +244,12 @@ public class StackStateMachineTests
     [StrategyIndex("sm.pop.stub")]
     private sealed class SmPopStub : StateMachineStrategyBase
     {
+    }
+
+    [StrategyIndex("sm.push.throw")]
+    private sealed class SmThrowOnPush : StateMachineStrategyBase
+    {
+        public override void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) =>
+            throw new InvalidOperationException("PUSH_BOOM");
     }
 }

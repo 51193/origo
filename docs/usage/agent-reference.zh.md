@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 16 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 21 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Agent Reference
 
 > [↑ 回到 usage](README.zh.md)
@@ -26,6 +26,7 @@ public interface ISndDataAccess
 {
     void SetData<T>(string name, T value);
     (bool found, T? value) TryGetData<T>(string name);
+    bool TryGetData<T>(string name, out T? value);
     T GetData<T>(string name) where T : notnull;
 }
 
@@ -145,6 +146,7 @@ public interface ISndStateMachineAccess {
 // 存档操作
 public interface ISndSaveOperations {
     IReadOnlyList<string> ListSaves();
+    IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData();
     void RequestLoadGame(string saveId);
     void RequestSaveGame(string newSaveId);
     string RequestSaveGameAuto(string? newSaveId = null);
@@ -282,15 +284,16 @@ OrigoAutoHost._Ready()
 ├── 8. BindRuntimeDependencies (World + Logger to SndManager)
 │
 └── OrigoDefaultEntry._Ready() [覆写]
-    ├── 9. 注册适配层命令处理器 (press_button, tree_debug)
+    ├── 9. 注册适配层命令处理器 (press_button, tree_debug, camera_view)
     ├── 10. 创建 SndContext (注入 Runtime + FileSystem + saveRoot + config)
     ├── 11. SndManager.BindContext(context)
     ├── 12. ConfigureSaveMetadataContributors(context)
     └── 13. SndContext.Bootstrap()
           ├── 13a. ConfigureConverters
           ├── 13b. OrigoAutoInitializer.DiscoverAndRegisterStrategies (反射扫描)
-          ├── 13c. LoadSceneAliases + LoadTemplates
-          └── 13d. RequestLoadMainMenuEntrySave → FlushDeferredActions
+          ├── 13c. SndStrategyPool.SealRegistration（校验 Before/After 并冻结注册表）
+          ├── 13d. LoadSceneAliases + LoadTemplates
+          └── 13e. RequestLoadMainMenuEntrySave（入队系统延迟动作；帧末经 IOrigoFrameDriver.DriveFrame 执行）
 ```
 
 ## 完整策略示例
@@ -301,7 +304,7 @@ using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 
 // 实体策略：初始化数据，并挂载一个观察者策略响应 hp 变化
-[StrategyIndex("example.simple_health", Priority = 6205)]
+[StrategyIndex("example.simple_health", Before = new[] { "example.damage_resolution" })]
 public sealed class SimpleHealthStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)

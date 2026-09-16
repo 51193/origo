@@ -1,11 +1,11 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 12 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 22 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
 Origo 框架的完整文档手册。采用**自底向上**的结构——从源代码目录逐级向上汇总，确保任何问题都能通过目录的多级索引找到目标位置，无需从源代码从头读起。
 
-> **开发循环（强制顺序）**：① 开发源码 → ② 测试扩展/适配 → ③ 测试执行 → ④ 修复源码+重测试直到通过 → ⑤ Changelog → ⑥ 文档同步。
+> **开发循环（强制顺序）**：① 开发源码 → ② 测试扩展/适配 → ③ 测试执行 → ④ 修复源码+重测试直到通过 → ⑤ Changelog → ⑥ 文档同步 → ⑦ 提交 → ⑧ 提交后 `scripts/ci.sh` → ⑨ 提交后 `scripts/lint-commits.sh`。
 > 改动源码前必先阅读其上下游与相关设施的文档，杜绝把跨模块共同作用的设计误判为缺陷。完整准则与文档总索引见仓库根 [AGENTS.md](../AGENTS.md)。
 
 ## 设计原则
@@ -29,25 +29,25 @@ Origo 框架遵循以下核心设计约束，所有模块实现和接口设计�
 ```
 Root (this file)
   ├── 我需要了解"框架整体提供哪些能力"
-  │   └── usage/capabilities.md → 按功能域浏览全部能力
+  │   └── usage/capabilities.zh.md → 按功能域浏览全部能力
   │
   ├── 我需要了解"如何使用 Origo"
-  │   └── usage/README.md → 按场景选择文档
+  │   └── usage/README.zh.md → 按场景选择文档
   │
   ├── 我需要了解"某个模块的能力和设计决策"
-  │   ├── Origo.Core/README.md → 子系统一览 → 进入具体子模块
-  │   │   └── Snd/README.md → Entity/README.md → ...
-  │   ├── Origo.GodotAdapter/README.md → 适配层子模块
-  │   └── Origo.ConsoleBridge/README.md → TCP 桥接
+  │   ├── Origo.Core/README.zh.md → 子系统一览 → 进入具体子模块
+  │   │   └── Snd/README.zh.md → Entity/README.zh.md → ...
+  │   ├── Origo.GodotAdapter/README.zh.md → 适配层子模块
+  │   └── Origo.ConsoleBridge/README.zh.md → TCP 桥接
   │
   ├── 我需要了解"测试覆盖了什么能力"
-  │   ├── Origo.Core.Tests/README.md → 按能力查看 Core 测试
-  │   ├── Origo.GodotAdapter.Tests/README.md → 适配层 7 个能力测试
-  │   ├── Origo.ConsoleBridge.Tests/README.md → TCP 桥接测试
-  │   └── Origo.SourceGeneration.Tests/README.md → 源码生成器测试
+  │   ├── Origo.Core.Tests/README.zh.md → 按能力查看 Core 测试
+  │   ├── Origo.GodotAdapter.Tests/README.zh.md → 适配层 7 个能力测试
+  │   ├── Origo.ConsoleBridge.Tests/README.zh.md → TCP 桥接测试
+  │   └── Origo.SourceGeneration.Tests/README.zh.md → 源码生成器测试
   │
   └── 我需要了解"这个手册本身怎么维护"
-      └── META.md
+      └── META.zh.md
 ```
 
 每个目录下的 `README.md` 包含：
@@ -64,12 +64,14 @@ Root (this file)
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.zh.md) | Godot 4 适配层：文件系统、日志、序列化、启动 |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.zh.md) | TCP 远程控制台桥接（端口 9876） |
 | **使用文档** | [README](usage/README.zh.md) | 从快速入门到深度参考的使用指南 |
-| **测试: Core** | [README](Origo.Core.Tests/README.zh.md) | Core 层 31 个能力的行为测试文档 |
-| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.zh.md) | 适配层 6 个能力测试 + 20 个集成测试类（91 个测试） |
+| **测试: Core** | [README](Origo.Core.Tests/README.zh.md) | Core 层 32 个能力的行为测试文档 |
+| **测试: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.zh.md) | 适配层 7 个能力文档 + 22 个集成测试类（96 个测试） |
 | **测试: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.zh.md) | TCP 桥接服务器行为测试文档 |
 | **测试: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.zh.md) | TypedData 源码生成器的驱动器行为测试文档 |
 | **手册元指令** | [META.md](META.zh.md) | 本手册的编写与维护规范 |
-| **Agent 工作流** | [AGENTS.md](../AGENTS.md) | 强制开发循环（源码→测试扩展→测试执行→修复重测→Changelog→文档）、核心原则与文档总索引 |
+| **发布与 Changelog** | [release-process](release-process.zh.md) | 正式发布、每周快照与 Changelog 规则 |
+| **架构文档** | [README](architecture/README.zh.md) | 架构总览、架构决策记录与暂缓设计方向 |
+| **Agent 工作流** | [AGENTS.md](../AGENTS.md) | 强制开发循环（源码→测试→Changelog→文档→提交→提交后 CI → post-commit lint）、核心原则与文档总索引 |
 | **性能基线** | [benchmarks/baseline.md](benchmarks/baseline.zh.md) | TypedData 内联存储 + 框架子系统性能基线与设计权衡 |
 
 ## Origo.Core 子系统
@@ -98,23 +100,24 @@ Root (this file)
 |---------|--------|
 | 浏览框架全部能力 | [usage/capabilities](usage/capabilities.zh.md) |
 | 快速接入 Origo | [usage/quick-start](usage/quick-start.zh.md) |
-| 理解整体架构 | [usage/architecture-overview](usage/architecture-overview.zh.md) |
+| 理解整体架构 | [architecture/overview](architecture/overview.zh.md) |
 | 编写游戏策略 | [usage/snd-entity-model](usage/snd-entity-model.zh.md) |
 | 理解生命周期闭环 | [usage/strategy-lifecycle](usage/strategy-lifecycle.zh.md) |
 | 学习设计模式 | [usage/design-patterns](usage/design-patterns.zh.md) |
-| 查看扩展方向与暂缓设计 | [usage/extension-directions](usage/extension-directions.zh.md) |
+| 查看扩展方向与暂缓设计 | [architecture/extension-directions](architecture/extension-directions.zh.md) |
 | 测试策略 | [usage/strategy-testing](usage/strategy-testing.zh.md) |
 | 使用存档系统 | [usage/persistence-flow](usage/persistence-flow.zh.md) |
 | 使用状态机 | [usage/state-machine](usage/state-machine.zh.md) |
 | 使用控制台命令 | [usage/console-commands](usage/console-commands.zh.md) |
 | 查看接口签名 | [usage/agent-reference](usage/agent-reference.zh.md) |
+| 准备正式发布 / 更新 Changelog | [release-process](release-process.zh.md) |
 | 理解 Core 模块实现 | [Origo.Core/](Origo.Core/README.zh.md) |
 | 理解 Source Generation | [Origo.SourceGeneration/](Origo.SourceGeneration/README.zh.md) |
 | 理解 Godot 适配 | [Origo.GodotAdapter/](Origo.GodotAdapter/README.zh.md) |
 
 ## 版本
 
-当前 Origo 框架版本：**0.0.9-nightly**（开发中，nightly 附带日期后缀，见 `Directory.Build.props`）。文档与源代码同仓维护，版本天然同步（文档不跟踪 nightly 日期后缀）。代码目录结构变更时，应同步更新本手册的目录镜像和索引。
+当前 Origo 框架版本：**0.0.10-nightly**（开发中，nightly 附带日期后缀，见 `Directory.Build.props`）。文档与源代码同仓维护，版本天然同步（文档不跟踪 nightly 日期后缀）。代码目录结构变更时，应同步更新本手册的目录镜像和索引。
 
 - 框架源码与文档：本仓库 [origo](https://github.com/51193/origo)（文档位于 `docs/`）
 - 示例项目：[origo.demo](https://github.com/51193/origo.demo)

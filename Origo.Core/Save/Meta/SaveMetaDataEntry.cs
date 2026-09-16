@@ -4,9 +4,8 @@ namespace Origo.Core.Save.Meta;
 
 /// <summary>
 ///     Save slot entry, containing the slot ID and the associated display
-///     metadata key-value pairs. Populated by the save system and indirectly
-///     consumed by metadata consumers such as the return value of
-///     <c>ISndSaveOperations.ListSaves()</c>.
+///     metadata key-value pairs. Populated by the save system and consumed
+///     through <c>ISndSaveOperations.ListSavesWithMetaData()</c>.
 /// </summary>
 public sealed class SaveMetaDataEntry
 {

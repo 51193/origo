@@ -1,4 +1,15 @@
 {
   "Languages": ["zh", "en"],
-  "DocsRoot": "docs"
+  "DocsRoot": "docs",
+  "SourceMirrorRoots": [
+    "Origo.Core",
+    "Origo.GodotAdapter",
+    "Origo.ConsoleBridge",
+    "Origo.SourceGeneration",
+    "Origo.TestSupport"
+  ],
+  "SourceDocOverrides": {
+    "Origo.TestSupport/Metadata": "docs/Origo.TestSupport/Architecture",
+    "Origo.TestSupport/Runtime": "docs/Origo.TestSupport/Architecture"
+  }
 }

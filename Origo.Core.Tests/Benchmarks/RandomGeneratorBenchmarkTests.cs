@@ -52,7 +52,7 @@ public class RandomGeneratorBenchmarkTests(ITestOutputHelper output)
         _perf.ReportTable(
             $"XorShift128+ NextUInt64 ({iterations:N0} iters, min of {_timedRounds})",
             [
-                ("NextUInt64", iterations, best, totalAlloc)
+                ("Standalone NextUInt64", iterations, best, totalAlloc)
             ]);
     }
 

@@ -87,6 +87,37 @@ public class StrategyPoolTypeSafetyAndExtensionTests
     }
 
     [Fact]
+    public void RecoverStrategiesOnly_DuplicateIndex_ThrowsBeforeAcquiring()
+    {
+        var logger = new TestLogger();
+        var pool = new SndStrategyPool(logger);
+        pool.Register(() => new PoolEntityStrategy());
+        var mgr = new SndStrategyManager(pool, logger);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            mgr.RecoverStrategiesOnly(["pool.entity", "pool.entity"]));
+        Assert.Contains("more than once", ex.Message, StringComparison.Ordinal);
+        Assert.Empty(mgr.GetStrategyIndices());
+        pool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, warning => warning.Contains("Strategy leak", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Recover_DuplicateActiveIndex_ThrowsBeforeAcquiring()
+    {
+        var logger = new TestLogger();
+        var pool = new SndStrategyPool(logger);
+        pool.Register(() => new PoolActiveStrategy());
+        var mgr = new ActiveStrategyManager(pool);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            mgr.Recover(["pool.active_for_entity", "pool.active_for_entity"]));
+        Assert.Contains("more than once", ex.Message, StringComparison.Ordinal);
+        pool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings, warning => warning.Contains("Strategy leak", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Register_AbstractStrategyType_Throws()
     {
         var pool = new SndStrategyPool(NullLogger.Instance);

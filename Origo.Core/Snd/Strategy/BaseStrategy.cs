@@ -13,7 +13,7 @@ namespace Origo.Core.Snd.Strategy;
 ///             via <see cref="SndStrategyPool" />. Concrete strategy implementations must
 ///             remain stateless — declaring instance fields or properties to store runtime
 ///             data is forbidden. Mutable state on the entity side must be stored in the
-///             entity's Data (via <see cref="ISndEntity.SetData{T}" /> / <see cref="ISndEntity.GetData{T}" />).
+///             entity's Data (via <see cref="ISndDataAccess.SetData{T}" /> / <see cref="ISndDataAccess.GetData{T}" />).
 ///             During strategy registration, the strategy type is validated; if instance fields
 ///             or writable instance properties are present, registration is rejected and an error is logged.
 ///         </b>

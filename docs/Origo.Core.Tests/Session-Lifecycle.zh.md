@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 16 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 18 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话生命周期 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
@@ -112,6 +112,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SessionRun_Dispose_DisposingSubscriberThrows_SessionMachinesAndEntitiesStillReleased` | Disposing 订阅者抛异常 | 异常传播，但会话状态机与实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交 |
 | `SessionRun_Dispose_PopHookThrows_SessionMachinesAndEntitiesStillReleased` | 会话状态机退出 Pop 钩子抛异常 | 异常传播，但会话状态机与实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交 |
 | `SessionRun_Dispose_StateMachineClearThrows_EntitiesStillReleased` | 状态机容器释放阶段抛异常 | 异常传播，但实体策略仍全部释放（LogPoolLeaks 无泄漏）、dispose 标志提交（二次 Dispose 幂等、访问抛 ObjectDisposedException） |
+| `SessionRun_Dispose_HostCleanupThrows_DisposedFlagStillCommitted` | 场景宿主 RemoveAllEntities 抛异常 | 异常传播，但 dispose 标志提交（二次 Dispose 幂等、访问抛 ObjectDisposedException） |
 | `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | 退出 Pop 钩子抛异常 | 异常传播，但 progress 黑板清空、状态机释放、dispose 标志提交（二次 Dispose 幂等） |
 | `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | 会话 teardown 期间订阅者抛异常 | 异常传播，但 progress 状态仍释放、dispose 状态提交（二次 Dispose 无操作） |
 | `ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted` | 会话 teardown 期间订阅者抛异常 | 异常传播，但 current/ 目录仍被删除（各清理步骤独立执行） |
@@ -222,6 +223,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `LoadFromPayload_WhenFlushFails_OriginalExceptionSurvivesCleanupFailure` | `FlushAllAfterLoad` 抛（push 策略失败）+ 回滚时 `OnUnmounted` 钩子抛 | 传播原始 FLUSH 异常（不含 OnUnmounted 消息）；场景宿主清空、会话黑板清空；清理失败记 Warning |
+| `LoadFromPayload_WhenObserverRecoveryFailsMidBatch_SessionRollsBackCompletely` | 首个 observer binding 成功后第二个 binding 因未注册索引失败 | 原始异常传播；无前台会话、无会话键、无 Progress 黑板；策略池无泄漏（首个 binding 的池引用已归还） |
 
 ## SaveAndSwitchForegroundIntegrationTests 测试详情
 

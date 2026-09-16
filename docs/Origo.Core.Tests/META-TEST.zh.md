@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 19 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 测试文档维护元指令
 
 > [↑ 回到 Origo 手册](../README.zh.md)
@@ -92,7 +92,7 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 2. **内部编排的正确性契约**：策略池的引用计数、类型分支安全、回滚行为等
    - 示例：`SndStrategyPool` 的 `GetStrategy`/`ReleaseStrategy` 引用计数正确性
    - 示例：`StackStateMachine` 构造时 `SndStrategyPool` 获取失败的回滚行为
-   - 示例：实体分阶段生命周期编排（AfterLoad/AfterSpawn/BeforeSave/BeforeQuit/BeforeDead 的触发时机、LIFO/优先级顺序、跨实体可见性、以及"已创建但钩子未触发""BeforeQuit 已触发但实体仍在集合中"等中间态）通过 `IEntityLifecycle` 分阶段方法 + `FullMemorySndSceneHost` 直接验证（`SndEntityLifecycleBatchTests`）。这些中间态与排序**无法**通过 `ISessionRun` 公共 API 观察，故属白名单。
+   - 示例：实体分阶段生命周期编排（AfterLoad/AfterSpawn/BeforeSave/BeforeQuit/BeforeDead 的触发时机、LIFO/偏序顺序、跨实体可见性、以及"已创建但钩子未触发""BeforeQuit 已触发但实体仍在集合中"等中间态）通过 `IEntityLifecycle` 分阶段方法 + `FullMemorySndSceneHost` 直接验证（`SndEntityLifecycleBatchTests`）。这些中间态与排序**无法**通过 `ISessionRun` 公共 API 观察，故属白名单。
 
 3. **场景宿主自身契约**：`FullMemorySndSceneHost`/`MemorySndSceneHost`/`StubSndSceneHost` 的 `CreateEntity`/`RemoveEntity`/`RemoveAllEntities`/`ProcessAll`/`RequestKillEntity` 方法契约本身，以及 `SndEntityFactory.Spawn`/`SpawnMany`。这些是被测宿主/工厂的直接 API（见 [Snd-Scene.md](Snd-Scene.zh.md)、[Snd-Entity.md](Snd-Entity.zh.md)）。
 
@@ -103,8 +103,8 @@ Origo 将大量编排逻辑（`OrigoRuntime`、`SndWorld`、`SessionRun`、`Prog
 6. **静态方法的直接调用**：`OrigoAutoInitializer.DiscoverAndRegisterStrategies()` 等引导期工具方法
 
 7. **载荷反序列化校验与无公共等价的低层操作**：以下情形没有能忠实复现同一契约的公共路径，故保留内部 API：
-   - `DefaultSaveStorageService` 的**隔离契约验证**（`SavePathPolicyContractTests`、`SaveStorageContractTests`）：自定义 `ISavePathPolicy` 注入下逐方法路径断言、以及 `EnumerateSavesWithMetaData`/`SnapshotCurrentToSave`/`WriteSavePayloadToCurrent` 等无公共等价的低层方法（`current/` 的完整读取 `SavePayloadReader.ReadFromCurrent` 属框架内部读取器，同样无公共等价）——公共 `RequestSaveGame`/`RequestLoadGame` 会连带进度文件与幂等逻辑，无法隔离验证存储服务自身；有公共等价的可观察行为（如 `EnumerateSaveIds` → `ctx.Save.ListSaves()`）必须走公共路径。
-   - `LevelBuilder` 的提交委托契约（`LevelBuilder_Commit_UsesStorageService`）：内部类型，无公共等价。
+   - `DefaultSaveStorageService` 的**隔离契约验证**（`SavePathPolicyContractTests`、`SaveStorageContractTests`）：自定义 `ISavePathPolicy` 注入下逐方法路径断言、以及 `SnapshotCurrentToSave`/`WriteSavePayloadToCurrent` 等无公共等价的低层方法（`EnumerateSavesWithMetaData` 已有公共等价 `ctx.Save.ListSavesWithMetaData()`，须走公共路径）（`current/` 的完整读取 `SavePayloadReader.ReadFromCurrent` 属框架内部读取器，同样无公共等价）——公共 `RequestSaveGame`/`RequestLoadGame` 会连带进度文件与幂等逻辑，无法隔离验证存储服务自身；有公共等价的可观察行为（如 `EnumerateSaveIds` → `ctx.Save.ListSaves()`）必须走公共路径。
+   - `Origo.TestSupport.LevelBuilder` 的提交委托契约（`LevelBuilder_Commit_UsesStorageService`）：测试支撑程序集内部类型，无公共等价。
    - `ProgressRun.LoadFromPayload` 对**手工构造的畸形/缺失字段载荷**的校验（畸形/缺失拓扑、null 的 `ProgressStateMachinesNode`）——公共 `RequestLoadGame` 走磁盘，存档写入器会在读档校验前就拒绝这类畸形载荷，无法忠实复现（`ProgressRunSessionLoadingEdgeTests`、`LifecycleRunsTests`）。
    - `ProgressRun.PersistProgress`（仅持久化 progress、不含会话数据）——公共 `RequestSaveGame` 会连带持久化会话，无"仅 progress"的公共等价（`DisposeSemanticsTests`）。
    - `ProgressRun.LoadAndMountForeground(levelId)` 以**任意关卡**作为初始前台挂载的测试基础设施——生产中初始挂载只经入口/存档，无任意关卡初始挂载的公共 API。
@@ -182,6 +182,22 @@ public class MyTests : IDisposable
 ```
 
 相比为每个测试单独包裹 `try/finally`，这是更推荐的模式——集中清理并保证始终执行。
+
+### 红测试先行与真实路径（缺陷修复）
+
+缺陷修复只有在完成下面的红→绿循环后才是有效修复：
+
+1. **先写回归测试**：测试必须通过真实、可达的用户/业务路径复现缺陷（真实宿主、真实策略、
+   真实存档 payload、真实延迟队列流；依赖特定协作者时，使用该协作者或同契约的忠实替身）。
+   只在测试内部存在的合成路径，或用不同代码路径悄悄通过的测试，都是测试盲点，不是回归测试。
+2. **确认红**：在未修改源码上运行，测试必须因缺陷自身的症状失败（错误的值、缺失的钩子、
+   泄漏的引用、意外的异常等），而不是无关错误。若不红，先修测试，不要改源码。
+3. **修源码、确认绿**：同一测试不做改动地通过；可临时回退修复再次确认红，以把测试钉在缺陷上。
+4. **检查兄弟路径**：同类缺陷在并行代码路径（场景宿主清理顺序、相似转换器、批处理循环等）
+   必须一并检查并覆盖，且要覆盖使修复顺序相关的协作者；提交前重跑全量测试。
+
+本规则是 [AGENTS.md](../../AGENTS.md) 中 Test Requirements 章节的详细展开；
+完整开发循环见同文件的 Development Loop 章节。
 
 ## 同步规则
 

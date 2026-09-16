@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 11 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 12 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Entity Tests (Adapter)
 
 > [↑ Back to Origo.GodotAdapter.Tests](README.en.md)
@@ -17,6 +17,7 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 | `Snd/SndEntityCollectionTests.cs` | Full entity collection capability: create/find/remove/kill marking, `RecoverFromMetaList` batch recovery with partial-failure rollback, `RemoveAllEntities`, frame processing `ProcessAll`, meta list building, `OwningSession` binding |
 | `Snd/TypedDataAssemblyLoadTests.cs` | Forces assembly loading by referencing a public GodotAdapter type; verifies the generated `[ModuleInitializer]` completes adapter kind registration |
 | `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` contracts: non-Godot entity/handle returns null, node handle extraction |
+| `Snd/GodotPackedSceneNodeFactoryTests.cs` | `GodotPackedSceneNodeFactory` constructor rejects a null parent (pure .NET executable; does not invoke Godot APIs) |
 
 ## SndEntityCollectionTests Details
 
@@ -75,6 +76,14 @@ Verifies the parts of the adapter-layer SND entity system that **do not require 
 |---------|-----------|---------|
 | `GetNativeNode_NonGodotHandle_ReturnsNull` | `GetNativeNode()` returns null when the node handle is not a Godot node handle (graceful contract deviation, no crash) | Origo.GodotAdapter/Snd |
 | `GetNodeFromSnd_NonGodotEntity_ReturnsNull` | `GetNodeFromSnd<T>()` returns null when the entity is not a Godot entity | Origo.GodotAdapter/Snd |
+
+## GodotPackedSceneNodeFactoryTests Details
+
+### Error Paths
+
+| Test method | Verified behavior | Doc source |
+|---------|-----------|---------|
+| `Constructor_NullParent_Throws` | Constructor is passed a null parent | ArgumentNullException (does not invoke Godot APIs) |
 
 ## Test Support Strategy
 

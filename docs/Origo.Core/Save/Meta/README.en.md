@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Save/Meta/README -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 8 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Meta
 
 > [↑ Back to Save](../README.en.md)
@@ -15,8 +15,9 @@ Save display metadata (meta.map) building and merging system. Display metadata i
 | `ISaveMetaContributor.cs` | Metadata contributor interface |
 | `DelegateSaveMetaContributor.cs` | Delegate-adapted contributor |
 | `SaveMetaBuildContext.cs` | Read-only build context |
+| `ReadOnlyBlackboard.cs` | Read-only blackboard adapter: reads pass through, every mutation throws `InvalidOperationException` |
 | `SaveMetaDataEntry.cs` | Save slot entry model |
-| `SaveMetaMerger.cs` | Merge logic: contributors in registration order |
+| `SaveMetaMerger.cs` | Merge logic: merges contributor outputs in registration order |
 
 ## Module Details
 
@@ -31,11 +32,11 @@ Save display metadata (meta.map) building and merging system. Display metadata i
 IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 ```
 
-Contributors return independent dictionaries. `SaveMetaMerger` merges in registration order.
+Contributors return independent dictionaries. `SaveMetaMerger` merges in registration order. Returning a null dictionary, a blank key, or a null value throws `InvalidOperationException` with contributor-type context instead of silently dropping entries.
 
 ### SaveMetaMerger
 
-Static utility class. Merge logic: non-empty contributors → contribute in order → overwrite keys (skipping empty-value keys) → return null when no contributor or no key is present.
+Static utility class. Merge logic: iterate contributors → contribute in registration order, later same-name keys overwrite earlier ones → return null when no keys are present. A contributor output that violates the interface contract (null dictionary, blank key, or null value) throws `InvalidOperationException` immediately, so invalid metadata fails the save instead of degrading silently.
 
 ## Design Decisions
 
@@ -44,6 +45,10 @@ Business data (progress.json) contains complete state, potentially MB-scale. Dis
 
 ### Why contributors overwrite by registration order
 Different contributors may have different perspectives on the same key. Ordered overwrite provides predictable priority.
+
+### Why invalid contributor output must fail the save
+
+The contributor interface promises mergeable key-value pairs; silently skipping a null dictionary, blank key, or null value would disguise an implementation bug as "no metadata" and make the offending contributor impossible to identify. Saves are a strict-validation path, so `SaveMetaMerger` throws with contributor-type context and preserves fail-fast semantics.
 
 ### Why contributors return independent dictionaries
 Prevents contributors from calling `Clear()` or `Remove()` on a shared mutable target. Isolation via `IReadOnlyDictionary`.

@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 7 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 9 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Model
 
 > [↑ Back to usage](README.en.md)
@@ -73,7 +73,7 @@ bgSession.Spawn(dungeonEntityMeta);
 bgSession.SessionBlackboard.SetValue("explored", true);
 ```
 
-**levelId uniqueness constraint:** At any given time, a levelId can only be held by one session. If attempting to create a background session while a foreground or another background session already uses that levelId, `CreateBackgroundSession` throws `InvalidOperationException`.
+**levelId uniqueness constraint:** At any given time, a levelId can only be held by one session. If attempting to create a background session while a foreground or another background session already uses that levelId, `CreateBackgroundSession` throws `InvalidOperationException`. Replacing the foreground slot itself is not a concurrent conflict: `CreateForegroundSession` validates conflicts with other sessions first, then destroys the old foreground and mounts the replacement.
 
 Before executing, `SwitchForeground` **automatically checks** whether a background session holds the target `levelId`. If a conflict exists, it saves that background session's data to `current/`, destroys it, and then creates a new foreground session. The caller does not need to manually destroy the background session.
 
@@ -111,7 +111,7 @@ key=levelId=syncProcess,key=levelId=syncProcess
 
 Example: `__foreground__=town=false,dungeon=dungeon_level=true,farm=farm_level=false`
 
-Due to the levelId uniqueness constraint, no two entries in the topology will point to the same levelId.
+The foreground entry is always first and background entries are written in ordinal session-key order; the same session set produces the same topology string and payload hash regardless of creation order. Due to the levelId uniqueness constraint, no two entries in the topology will point to the same levelId.
 
 On load recovery, `SessionTopologyCodec` parses this string and rebuilds all background sessions. If the parsed topology contains duplicate levelIds, `CreateBackgroundSession`'s levelId validation will throw — ensuring corrupted save data is never silently loaded.
 

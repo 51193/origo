@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Meta -->
-<!-- docsync-revision: 4 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 5 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Metadata Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
@@ -12,7 +12,7 @@
 Validates the construction, merging, and persistence of `meta.map` display metadata.
 Covers the `ISaveMetaContributor` contributor interface, `DelegateSaveMetaContributor` delegate wrapper,
 `SaveMetaBuildContext` context data passing, `SaveMetaMerger` multi-source merging,
-contributor registration, and the full SaveGame chain.
+contributor registration, fail-fast on invalid contributor output, and the full SaveGame chain.
 
 ## Test File List
 
@@ -21,7 +21,7 @@ contributor registration, and the full SaveGame chain.
 | `DelegateSaveMetaContributorTests.cs` | DelegateSaveMetaContributor delegate invocation and null constructor guard |
 | `SaveMetaBuildContextTests.cs` | SaveMetaBuildContext property storage and null parameter guards |
 | `SaveMetaIntegrationTests.cs` | Full chain: register→RequestSaveGame→CustomMeta written to meta.map; also includes SaveMetaNullAndSessionContextTests |
-| `SaveMetaMergerTests.cs` | SaveMetaMerger multi-contributor merging, override priority, null handling |
+| `SaveMetaMergerTests.cs` | SaveMetaMerger multi-contributor merging, override priority, fail-fast on invalid output |
 
 ## DelegateSaveMetaContributorTests Details
 
@@ -71,6 +71,9 @@ contributor registration, and the full SaveGame chain.
 |-------------|----------------|-------------------|
 | `RegisterSaveMetaContributor_ThrowsOnNullContributor` | null ISaveMetaContributor | ArgumentNullException |
 | `RegisterSaveMetaContributor_ThrowsOnNullDelegate` | null delegate | ArgumentNullException |
+| `RegisterSaveMetaContributor_NullContribution_FailsSave` | Contributor returns a null dictionary | `FlushFrame` for RequestSaveGame throws InvalidOperationException; no save is produced |
+| `RegisterSaveMetaContributor_BlankContributionKey_FailsSave` | Contributor returns a blank key | `FlushFrame` for RequestSaveGame throws InvalidOperationException; no save is produced |
+| `RegisterSaveMetaContributor_NullContributionValue_FailsSave` | Contributor returns a null value | `FlushFrame` for RequestSaveGame throws InvalidOperationException; no save is produced |
 
 ## SaveMetaNullAndSessionContextTests Details
 
@@ -86,15 +89,22 @@ contributor registration, and the full SaveGame chain.
 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
-| `Merge_ContributorsThenOverrides_OverridesWin` | Contributor key-values overridden by overrides, non-conflicting keys each retained | SaveMetaMerger |
-| `Merge_LaterContributorOverwritesEarlierSameKey` | For same key across multiple contributors, later overwrites earlier | SaveMetaMerger |
+| `Merge_LaterContributorOverwritesEarlierSameKey` | For the same key across multiple contributors, later overwrites earlier | SaveMetaMerger |
 
 ### Boundary Path
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
-| `Merge_NoContributorsNoOverrides_ReturnsNull` | No contributors and no overrides | Returns null |
-| `Merge_SkipsNullOverrideValues` | Override key with null value | Retains contributor original value, does not override with null |
+| `Merge_NoContributors_ReturnsNull` | No contributors | Returns null |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `Merge_NullContribution_Throws` | Contributor returns a null dictionary | InvalidOperationException (includes contributor type) |
+| `Merge_BlankKey_Throws` | Contributor returns an empty key | InvalidOperationException (includes contributor type) |
+| `Merge_WhitespaceKey_Throws` | Contributor returns a whitespace-only key | InvalidOperationException (includes contributor type) |
+| `Merge_NullValue_Throws` | Contributor returns a null value for a key | InvalidOperationException (includes contributor type) |
 
 ## Test Helper Strategies
 

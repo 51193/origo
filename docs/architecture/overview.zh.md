@@ -1,15 +1,15 @@
-<!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 6 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-pair: architecture/overview -->
+<!-- docsync-revision: 1 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构总览
 
-> [↑ 回到 usage](README.zh.md)
+> [↑ 回到 architecture](README.zh.md)
 
 ## 设计原则
 
 Origo 框架遵循以下核心设计约束：
 
-- **平台无关**：Core 零引擎依赖，所有 I/O 通过 `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver`（`IFileSystem` 内部化）
+- **平台无关**：Core 零引擎依赖，所有 I/O 通过 `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver`（`IFileSystem` 为适配层/宿主提供的实现细节）
 - **适配层隔离**：适配层仅提供能力封装和桥接，不得触发策略钩子、管理策略生命周期
 - **接口隔离（ISP）**：`ISndContext` 通过 10 个伴生属性暴露能力；`ISessionRun` 返回抽象 `IStateMachineContainer`
 - **依赖方向单向**：Adapter → Core → Abstractions，反向严格禁止
@@ -69,7 +69,7 @@ Strategy + Node + Data
 - 策略通过 `[StrategyIndex("xxx")]` 显式注册
 - 索引缺失、空值、类型不匹配必须抛错
 - 策略注册时通过反射校验无状态性（拒绝实例字段/可写属性）
-- 策略按优先级排序，同优先级按插入顺序
+- 生命周期策略按 Before / After 偏序排序，无约束策略按索引排序
 
 ## 会话模型
 
@@ -126,10 +126,10 @@ Core 层所有文件操作通过三个接口完成：
 - `IFileMetaAccess`：文件元数据操作（FileExists、目录管理、枚举、删除、复制）
 - `IPathResolver`：平台路径运算（CombinePath、GetParentDirectory）
 
-`IFileSystem` 是实现细节，上述三个接口是其公共门面。业务代码不应直接依赖 `IFileSystem`。
+`IFileSystem` 是平台实现细节：Core 内部模块不直接依赖它，而通过上述三个接口访问。该接口仍公开给适配层与测试宿主实现自定义文件系统，但业务代码不应直接依赖 `IFileSystem` 绕过 codec 路由。
 
 ```
-业务模块 → DataSourceNode → IDataSourceIoGateway / IFileMetaAccess / IPathResolver → IFileSystem（内部） → 文件系统
+业务模块 → DataSourceNode → IDataSourceIoGateway / IFileMetaAccess / IPathResolver → IFileSystem（适配层实现/宿主提供） → 文件系统
 ```
 
 后缀路由、编解码策略与 I/O 错误语义集中在 Gateway 一侧统一治理。`.sha` 和 `.write_in_progress` 等原始文本文件同样经由 `RawStringDataSourceCodec` 走 codec 路由，不存在直读直写旁路。Gateway 采用 fail-fast 策略：codec 解码失败（如 `.map` 文件格式错误）时，Gateway 将异常包装为包含文件路径信息的 `InvalidOperationException` 立即抛出，不吞没错误。
@@ -172,9 +172,9 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 通过 10 个伴生属
 | 禁止 | 原因 | 反例 |
 |------|------|------|
 | **触发策略生命周期钩子** | 策略是 Core 层概念，钩子触发时机和顺序必须由 Core 统一编排 | `GodotSndManager` 不得调用 `FireAfterSpawnHooks()`、`FireBeforeDeadHooks()` 等 |
-| **管理策略释放/引用计数** | 策略池、引用计数、优先级排序在 Core 的 `SndStrategyPool` 和 `SndStrategyManager` 中管理 | `GodotSndManager` 不得调用 `ReleaseStrategiesOnly()` |
+| **管理策略释放/引用计数** | 策略池、引用计数、偏序排序在 Core 的 `SndStrategyPool` 和 `SndStrategyManager` 中管理 | `GodotSndManager` 不得调用 `ReleaseStrategiesOnly()` |
 | **直接调用 Core 管线方法** | 帧边界操作（实体处理→业务队列→杀实体→系统队列→控制台）的时机和顺序由 Core 控制。适配层只应调用 `IOrigoFrameDriver.DriveFrame(delta)` 移交帧控制权 | 适配层不得直接调用 internal 的 `FlushEndOfFrameDeferred` 或 `ProcessPending` |
-| **直接驱动 Core 启动流程** | 策略发现、别名/模板加载、入口存档加载是 Core 内部编排，统一在 `SndContext.Bootstrap()` 中执行。适配层仅通过 `SndContextParameters` 传入配置 | 适配层不得直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()` |
+| **直接驱动 Core 启动流程** | 策略发现、排序校验与注册冻结、别名/模板加载、入口存档加载是 Core 内部编排，统一在 `SndContext.Bootstrap()` 中执行。适配层仅通过 `SndContextParameters` 传入配置 | 适配层不得直接调用 `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`、`LoadSceneAliases()`、`LoadTemplates()`、`RequestLoadMainMenuEntrySave()` |
 | **持有 Core 编排状态** | 实体生命周期管理（如 pending kill、拆卸流程）的状态机由 Core 层维护 | 适配层不应有 `QuitFromManager`、`DeadFromManager` 等方法 |
 | **加载引擎无关的业务配置** | 模板解析、别名映射、策略索引解析全部在 Core 中完成 | 适配层不应读取和解析 `snd_templates.map` 等业务配置 |
 
@@ -186,7 +186,7 @@ Core 层遵循接口隔离原则（ISP），`ISndContext` 通过 10 个伴生属
 | **实体生命周期编排** | `SndEntityFactory.Spawn`/`SpawnMany`（AfterSpawn）、`SessionRun` 的 load/save/quit 与 `KillPending`（经 `SessionManager.KillPendingAllSessions`）统一编排所有钩子 |
 | **场景宿主抽象** | `ISndSceneHost` 仅定义容器操作（创建/查找/移除），不含钩子语义 |
 | **延迟动作管线** | `ActionScheduler` 业务队列 + 系统队列，`IOrigoFrameDriver.DriveFrame` 统一冲刷 |
-| **启动编排** | `SndContext.Bootstrap()` 统一执行策略发现→别名/模板加载→入口存档加载 |
+| **启动编排** | `SndContext.Bootstrap()` 统一执行策略发现→排序校验与注册冻结→别名/模板加载→入口存档加载 |
 
 ### 帧循环中的职责划分
 
@@ -204,7 +204,7 @@ Godot._Process
 ## 项目结构
 
 ```
-Origo.Core/           # 平台无关核心（~198 个 .cs 文件）
+Origo.Core/           # 平台无关核心（209 个 .cs 文件）
 ├── Abstractions/     # 公共接口（Blackboard/Entity/StateMachine/...）
 ├── Addons/           # 外部算法库（FastNoiseLite）
 ├── Blackboard/       # 黑板实现
@@ -224,7 +224,7 @@ Origo.Core/           # 平台无关核心（~198 个 .cs 文件）
 Origo.SourceGeneration/  # Roslyn 源码生成器（5 个 .cs 文件）
 └── TypedDataGenerator*.cs  # Home/Adapter 双模式代码生成（1 主文件 + 4 partial）
 
-Origo.GodotAdapter/   # Godot 4 适配层（~23 个 .cs 文件）
+Origo.GodotAdapter/   # Godot 4 适配层（22 个 .cs 文件）
 ├── Bootstrap/        # 启动编排
 ├── Console/          # Godot 命令
 ├── FileSystem/       # Godot 文件系统
@@ -243,4 +243,4 @@ Origo.ConsoleBridge/  # TCP 远程控制台（~2 个 .cs 文件）
 - 测试目录结构与生产代码镜像
 
 ---
-[↑ 回到 usage](README.zh.md)
+[↑ 回到 architecture](README.zh.md)

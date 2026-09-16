@@ -4,6 +4,11 @@ using Origo.Core.Abstractions.Node;
 
 namespace Origo.GodotAdapter.Snd;
 
+/// <summary>
+///     Adapter implementation of <see cref="INodeHandle" /> that wraps a
+///     Godot <see cref="Node" /> and exposes only the lifecycle operations
+///     defined by the Core abstraction.
+/// </summary>
 internal sealed class GodotNodeHandle(Node node) : INodeHandle
 {
     private readonly Node _node = node;

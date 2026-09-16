@@ -13,7 +13,7 @@ public interface ISndEntity : ISndDataAccess, ISndNodeAccess, ISndStrategyAccess
     ///     Unique stable name of this entity within its session. Uniqueness is
     ///     enforced by spawn and load orchestration; lookup, observer
     ///     topology, save recovery, and
-    ///     <see cref="Snd.EntityExtensions.IsSameEntityAs" /> key on the name.
+    ///     <see cref="Origo.Core.Snd.EntityExtensions.IsSameEntityAs" /> key on the name.
     /// </summary>
     string Name { get; }
 

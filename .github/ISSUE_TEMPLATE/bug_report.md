@@ -25,8 +25,8 @@ assignees: ""
 ## Environment
 
 - **OS:** [e.g. Ubuntu 26.04, Windows 11, macOS 15]
-- **.NET SDK:** [e.g. `10.0.109` — run `dotnet --version`]
-- **Origo version:** [e.g. `0.0.8`]
+- **.NET SDK:** [e.g. `10.0.400` — run `dotnet --version`]
+- **Origo version:** [e.g. `0.0.9`]
 
 ## Additional context
 

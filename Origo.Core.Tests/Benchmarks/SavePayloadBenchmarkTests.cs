@@ -43,7 +43,7 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
             Assert.NotNull(hash);
             Assert.NotEmpty(hash);
 
-            rows.Add(($"{count} entities", count, sw.Elapsed, totalAlloc));
+            rows.Add(($"Hash {count} entities", count, sw.Elapsed, totalAlloc));
         }
 
         _perf.ReportTable("SavePayloadWriter.ComputePayloadHash — scaling by entity count", rows);
@@ -89,7 +89,7 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
             Assert.Equal(payload.SaveId, loaded.SaveId);
             Assert.Equal(payload.Levels.Count, loaded.Levels.Count);
 
-            rows.Add(($"{count} entities", count, sw.Elapsed, totalAlloc));
+            rows.Add(($"PayloadIO {count} entities", count, sw.Elapsed, totalAlloc));
         }
 
         _perf.ReportTable("SavePayload WriteToCurrent + ReadFromCurrent roundtrip", rows);
@@ -136,7 +136,7 @@ public class SavePayloadBenchmarkTests(ITestOutputHelper output)
 
             Assert.Equal(payload.SaveId, loaded.SaveId);
 
-            rows.Add(($"{count} entities", count, sw.Elapsed, totalAlloc));
+            rows.Add(($"SnapshotIO {count} entities", count, sw.Elapsed, totalAlloc));
         }
 
         _perf.ReportTable("SaveStorageFacade WriteThenSnapshot + ReadFromSnapshot roundtrip", rows);

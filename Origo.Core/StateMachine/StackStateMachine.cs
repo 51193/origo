@@ -78,7 +78,12 @@ internal sealed class StackStateMachine : IStateMachine, IDisposable
     /// <summary>The index of the pop strategy in the strategy pool.</summary>
     public string PopStrategyIndex { get; }
 
-    /// <summary>Runtime push: pushes the value to the top of the stack, then invokes the push strategy's <see cref="StateMachineStrategyBase.OnPushRuntime" />.</summary>
+    /// <summary>
+    ///     Runtime push: pushes the value to the top of the stack, then invokes
+    ///     the push strategy's <see cref="StateMachineStrategyBase.OnPushRuntime" />.
+    ///     When the hook throws, the pushed value is rolled back before the
+    ///     exception propagates, so a failed push leaves the stack unchanged.
+    /// </summary>
     public void Push(string value)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -90,7 +95,15 @@ internal sealed class StackStateMachine : IStateMachine, IDisposable
         var afterTop = PeekTopOrNull();
 
         var context = new StateMachineStrategyContext(MachineKey, beforeTop, afterTop);
-        _pushStrategy.OnPushRuntime(context, _ctx);
+        try
+        {
+            _pushStrategy.OnPushRuntime(context, _ctx);
+        }
+        catch
+        {
+            _stack.RemoveAt(_stack.Count - 1);
+            throw;
+        }
     }
 
     /// <summary>Runtime pop: invokes the Pop strategy's <see cref="StateMachineStrategyBase.OnPopRuntime" />, then removes the top of the stack.</summary>

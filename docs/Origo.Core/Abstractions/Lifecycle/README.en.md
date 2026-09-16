@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Lifecycle/README -->
 <!-- docsync-revision: 4 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Lifecycle (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Lifecycle](../../Runtime/Lifecycle/README.en.md)

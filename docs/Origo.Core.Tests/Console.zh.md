@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 11 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 12 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 控制台系统 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
@@ -170,6 +170,7 @@
 | `EntitySetData_NewKey_BoolLiteral_StoredAsBoolean` | entity_set_data player alive true → Boolean | console-commands |
 | `EntitySetData_NewKey_StringLiteral_StoredAsString` | entity_set_data player tag hero → String | console-commands |
 | `EntitySetData_ExistingKey_PreservesType` | 已有 float 类型的 hunger 键，写 15 → 保持 Single(15.0f) | console-commands: entity_set_data |
+| `EntitySetData_ExistingInt64Key_PreservesInt64` | 已有 long 类型的 coins 键，写 4000000000 → 保持 Int64(4000000000) | console-commands: entity_set_data |
 | `BlackboardSet_BeyondIntRange_StoredAsInt64` | bb_set system big 3000000000（超出 int 范围）→ Int64(3000000000) | console-commands: bb_set |
 | `EntitySetData_NewKey_BeyondIntRange_StoredAsInt64` | entity_set_data player coins 3000000000 → Int64 | console-commands: entity_set_data |
 

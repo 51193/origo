@@ -1,18 +1,17 @@
 <!-- docsync-pair: usage/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 3 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 使用文档
 
 > [↑ 回到 Origo.manual](../README.zh.md)
 
 ## 文档索引
 
-Origo 框架的使用方（游戏开发者、AI Agent）文档。按照使用场景组织，从新手入门到深度参考。
+Origo 框架的使用方（游戏开发者、AI Agent）文档。按照使用场景组织，从新手入门到深度参考。架构总览、决策记录与暂缓设计位于 [架构文档](../architecture/README.zh.md)。
 
 | 文档 | 适用对象 | 说明 |
 |------|---------|------|
 | [quick-start](quick-start.zh.md) | 新用户 | 5 分钟在 Godot 4 项目中接入 Origo |
-| [architecture-overview](architecture-overview.zh.md) | 开发者 | 四层运行时架构、SND 模型、持久化、并发模型 |
 | [snd-entity-model](snd-entity-model.zh.md) | 策略开发者 | Strategy + Node + Data 模型详解、策略编写指南 |
 | [session-model](session-model.zh.md) | 进阶开发者 | 前台/后台会话、会话生命周期、拓扑编解码 |
 | [persistence-flow](persistence-flow.zh.md) | 进阶开发者 | 两阶段写入、严格读取、文件布局、存档恢复 |
@@ -20,7 +19,6 @@ Origo 框架的使用方（游戏开发者、AI Agent）文档。按照使用场
 | [console-commands](console-commands.zh.md) | 调试者 | 内置控制台命令完整参考 |
 | [strategy-lifecycle](strategy-lifecycle.zh.md) | 策略开发者 | 生命周期钩子闭环配对、RAII 资源管理、BeforeSave 延迟同步 |
 | [design-patterns](design-patterns.zh.md) | 策略开发者 | 命名约定、Manager 服务模式、可替换实现、模板最佳实践 |
-| [extension-directions](extension-directions.zh.md) | 开发者 / AI Agent | 头脑风暴产生的扩展方向与暂缓原因：统一树形命名空间、实体级并发、相对顺序约束、ActiveStrategy 同名多实现 |
 | [strategy-testing](strategy-testing.zh.md) | 测试编写者 | StrategyTestScenario 使用指南 |
 | [capabilities](capabilities.zh.md) | 所有用户 | 框架完整能力清单，按功能域索引，快速了解 Origo 能做什么 |
 | [agent-reference](agent-reference.zh.md) | AI Agent | 完整运行时参考：接口签名、生命周期时间线、策略编写模板 |
@@ -29,16 +27,16 @@ Origo 框架的使用方（游戏开发者、AI Agent）文档。按照使用场
 
 ```
 新用户:
-  quick-start → capabilities（浏览全部能力）→ architecture-overview → snd-entity-model
+  quick-start → capabilities（浏览全部能力）→ 架构总览 → snd-entity-model
 
 策略开发者:
   snd-entity-model → strategy-lifecycle → design-patterns → state-machine → strategy-testing
 
 遇到架构问题 / 需要设计灵感:
-  architecture-overview → design-patterns → extension-directions
+  架构总览 → design-patterns → 扩展方向与暂缓设计
 
 存档系统使用者:
-  architecture-overview → persistence-flow → session-model
+  架构总览 → persistence-flow → session-model
 
 控制台调试者:
   quick-start → console-commands

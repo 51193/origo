@@ -15,6 +15,8 @@ internal sealed class Config
 
     public List<string> Languages { get; set; } = ["zh"];
     public string DocsRoot { get; set; } = "docs";
+    public List<string> SourceMirrorRoots { get; set; } = [];
+    public Dictionary<string, string> SourceDocOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     [JsonIgnore]
     public string RepoRoot { get; private set; } = "";
@@ -32,6 +34,8 @@ internal sealed class Config
             ?? throw new InvalidOperationException("Failed to parse docsync-config.json");
 
         config.RepoRoot = repoRoot;
+        config.SourceDocOverrides = new Dictionary<string, string>(
+            config.SourceDocOverrides, StringComparer.OrdinalIgnoreCase);
 
         foreach (var lang in config.Languages)
         {

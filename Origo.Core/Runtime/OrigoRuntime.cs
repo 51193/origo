@@ -20,10 +20,11 @@ namespace Origo.Core.Runtime;
 ///     Unified runtime entry point for Origo within the host game.
 ///     Aggregates the SND subsystem and system-level blackboard.
 ///     <para>
-///         Threading model: no cross-thread synchronization is performed;
-///         <see cref="EnqueueBusinessDeferred" /> and <see cref="EnqueueSystemDeferred" />
-///         should be called on the host main thread (or single-threaded game main loop),
-///         paired with <see cref="FlushEndOfFrameDeferred" />.
+///         Threading model: enqueue operations are thread-safe (they
+///         synchronize through the internal concurrent queue), while frame
+///         progression is single-threaded. <see cref="FlushEndOfFrameDeferred" />
+///         and <see cref="IOrigoFrameDriver.DriveFrame" /> must run on the host
+///         main thread (or the single-threaded game main loop).
 ///     </para>
 /// </summary>
 public sealed class OrigoRuntime : IOrigoFrameDriver
@@ -153,7 +154,7 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     /// <summary>
     ///     The current session manager. Non-entity code (such as console command handlers)
     ///     accesses <see cref="ISessionManager" /> through this property; strategy code should use
-    ///     <see cref="ISndEntity.OwningSession" />. SessionManager itself is returned as public.
+    ///     <see cref="Origo.Core.Abstractions.Entity.ISndEntity.OwningSession" />. SessionManager itself is returned as public.
     /// </summary>
     public ISessionManager SessionManager => _sessionManagerProvider();
 
@@ -183,8 +184,8 @@ public sealed class OrigoRuntime : IOrigoFrameDriver
     }
 
     /// <summary>
-    ///     Resets console state: clears the pending input queue.
-    ///     Output has been moved to a publish-subscribe model and no longer retains history in Core.
+    ///     Resets console state by clearing the pending input queue.
+    ///     Console output is publish-subscribe; Core retains no output history.
     /// </summary>
     internal void ResetConsoleState() => ConsoleInput?.Clear();
 }

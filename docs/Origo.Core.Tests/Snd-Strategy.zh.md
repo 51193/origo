@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 12 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 16 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 策略 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
@@ -9,9 +9,9 @@
 
 ## 被测行为概览
 
-验证 SND 策略系统的全部行为：策略优先级排序、池引用计数/回收、实体策略的 8 个生命周期钩子、主动策略的 Invoke 调用、观察者策略的挂载/卸载/数据变更通知/持久化/拓扑查询、策略注册时的类型安全校验。
+验证 SND 策略系统的全部行为：策略偏序排序、池引用计数/回收、实体策略的 8 个生命周期钩子、主动策略的 Invoke 调用、观察者策略的挂载/卸载/数据变更通知/持久化/拓扑查询、策略注册时的类型安全校验。
 
-`SndStrategyPerformanceTests` 中的三个性能测试使用 `Stopwatch` + `PerfReporter` 测量吞吐/分配并附带正确性断言，不携带 `[Trait("Category","Benchmark")]` 标签，随功能测试管线一同执行。
+`SndStrategyPerformanceTests` 中的三个性能测试使用 `Stopwatch` + `PerfReporter` 测量吞吐/分配并附带正确性断言，标记 `[Trait("Category","Benchmark")]`，由 `scripts/benchmark.sh` 执行，不进入常规功能测试管线。
 
 ## 测试文件清单
 
@@ -21,10 +21,11 @@
 | `ActiveStrategyJsonBaseTests.cs` | ActiveStrategyJsonBase JSON 契约：输入反序列化/结果序列化、错误输入返回 err 结果、裸字符串结果直通、null 输入执行、泛型扩展调用往返 |
 | `LifecycleStrategyBaseTests.cs` | 默认钩子不变更数据；Process 中 Add/Kill/SelfKill/OtherKill 的并发语义；AfterAdd 失败回滚；不存在策略操作的安全处理 |
 | `ObserverStrategyTests.cs` | 观察者注册/无状态校验；Mount/Unmount 生命周期与参数正确性；数据变更通知（正确键/非观察键/卸载后）及新旧值；多键观察；序列化（ObserverIndices 填充/空绑定/分组）；Dead/Quit 释放与 OnUnmounted；属性反射提取；跨实体挂载拒绝；null/空/未知参数防御；RecoverBindings 容错；Has/Remove 拓扑查询；Teardown/KillPending/ClearAll 清理路径 |
-| `StrategyPriorityTests.cs` | 策略按 Priority 升序排列、同优先级按插入顺序 FIFO、所有生命周期钩子遵循优先级、序列化/恢复保持顺序 |
+| `StrategyOrderingTests.cs` | 完整注册图投影、动态增删、保存/加载/退出/死亡、启动固定、错误声明和环诊断 |
+| `StrategyOrderingIntegrationTests.cs` | 真实模拟宿主：Ordinal 排序、BeforeRemove 重入插入、启动后拒绝注册；均已验证红 → 绿 |
 | `StrategyPoolTypeSafetyAndExtensionTests.cs` | 策略池类型分支安全（泛型 GetStrategy 类型不匹配不泄漏 ref count）、StackStateMachine 二阶段获取失败回滚、第三领域根基类扩展、RecoverStrategiesOnly 拒绝非 Lifecycle 策略 |
 | `SndStrategyPoolLeakDetectionTests.cs` | 策略池泄漏检测：实体正常释放/异常中途失败时策略引用计数归零、无泄漏；LogPoolLeaks 无残留告警 |
-| `SndStrategyPerformanceTests.cs` | 策略池 Get/Release 吞吐、Process 策略数缩放、TriggerAll ToArray 分配（性能测量，非基准标签） |
+| `SndStrategyPerformanceTests.cs` | 策略池 Get/Release 吞吐、Process 策略数缩放、TriggerAll ToArray 分配（标记 `[Trait("Category","Benchmark")]`，由 `scripts/benchmark.sh` 执行） |
 
 ## ActiveStrategyTests 测试详情
 
@@ -180,48 +181,43 @@
 | `KillPendingEntities_NoObserverBindings_NoError` | KillPending 无观察者绑定的实体 | 正常完成，实体数变为 0 |
 | `ClearAll_NoObserverBindings_NoError` | RemoveAllEntities 无观察者绑定的实体 | 正常完成，实体数变为 0 |
 
-## StrategyPriorityTests 测试详情
+## StrategyOrderingTests 测试详情
 
 ### 正确路径
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `Pool_GetPriority_ReturnsExplicitPriorityFromAttribute` | Priority=100 属性正确解析 | snd-entity-model: 优先级 |
-| `Pool_GetPriority_ReturnsDefault6205WhenNotSpecified` | 未指定优先级时返回默认值 6205 | snd-entity-model: 优先级 |
-| `Add_DifferentPriorities_SortedAscending` | 不同 priority 按升序排列 | snd-entity-model: 策略执行顺序 |
-| `Add_SamePriority_MaintainsInsertionFifoOrder` | 同 priority 保持 FIFO 插入序 | snd-entity-model |
-| `Add_MixedPriorities_SortedAscWithStableFifoInSamePriority` | 混合优先级排正确，同优先保持插入序 | snd-entity-model |
-| `Add_InsertBetweenExisting_PositionsCorrectly` | 中间插入排到正确位置 | snd-entity-model |
-| `Process_ExecutesInPriorityAscendingOrder` | Process 按优先级升序执行 | snd-entity-model |
-| `Process_SamePriority_ExecutesInInsertionOrder` | 同优先级按插入序执行 | snd-entity-model |
-| `Spawn_DifferentPriorities_SortedAscending` | Spawn 时按优先级排序 | snd-entity-model |
-| `Spawn_SamePriority_MaintainsInputOrder` | Spawn 同优先级保持输入序 | snd-entity-model |
-| `Load_DifferentPriorities_ResortedAscending` | Load 恢复时重排为升序 | snd-entity-model |
-| `SerializeIndices_ReturnsIndicesInPriorityOrder` | 序列化索引按优先级排列 | snd-entity-model |
-| `SaveLoadRoundtrip_MaintainsProcessingOrder` | 序列化→恢复后 Process 顺序一致 | snd-entity-model |
-| `AfterSpawn_ExecutesInPriorityAscendingOrder` | AfterSpawn 钩子按优先级 | snd-entity-model |
-| `BeforeQuit_ExecutesInPriorityAscendingOrder` | BeforeQuit 钩子按优先级 | snd-entity-model |
-| `AfterLoad_ExecutesInPriorityAscendingOrder` | AfterLoad 钩子按优先级 | snd-entity-model |
-| `Remove_Middle_RemainingOrderPreserved` | 删除中间策略，余下顺序不变 | — |
-| `Remove_First_RemainingOrderPreserved` | 删除首个策略，余下顺序不变 | — |
-| `Remove_Last_RemainingOrderPreserved` | 删除末个策略，余下顺序不变 | — |
-| `AddAfterRemove_InsertsAtCorrectPosition` | 删除后重新插入到正确位置 | — |
+| `FullRegistry_ProjectsTransitiveOrder_RegardlessOfRegistrationAndMountingOrder` | 注册与挂载顺序均不影响结果；仅挂载 A/C 时仍保留 A → B → C 的传递关系；AfterSpawn、Process 与元数据使用同一顺序 | snd-entity-model: 策略执行顺序 |
+| `DynamicAddAndRemove_KeepTransitiveOrderAndOptionalTargets` | 动态增删按完整注册关系插入和重排；目标策略未挂载仍保留约束；重复添加与移除未挂载索引抛异常 | snd-entity-model: 策略执行顺序 |
+| `SaveLoadQuitAndDead_AllUseSameProjectedOrder` | 存档、恢复、退出和死亡全部使用同一投影顺序；恢复后的元数据顺序正确，退出后无池引用泄漏 | snd-entity-model: 策略执行顺序 |
+| `EquivalentBeforeAfterAndDuplicateEdges_DoNotCreateFalseCycles` | Before / After 等价边与重复声明去重，不产生假环；未知索引查询排序抛异常；固定后注册被拒绝 | Strategy README: SndStrategyPool |
 
-### 边界路径
+### 错误路径
 
-| 测试方法 | 边界条件 | 预期行为 |
-|---------|---------|---------|
-| `Pool_GetPriority_ReturnsZeroForUnknownIndex` | 未知索引查优先级 | 返回 0 |
-| `EmptyList_ProcessDoesNotThrow` | 空策略列表 Process | 不抛异常 |
-| `EmptyList_SerializeIndicesReturnsEmpty` | 空策略列表序列化 | 返回空 |
-| `SingleStrategy_Works` | 单策略 | 正常工作 |
-| `NegativePriorities_SortedCorrectly` | 负优先级正确排序（-10, -5, 0, 50） | — |
-| `IntMinAndIntMaxPriority_SortedCorrectly` | int.MinValue 和 int.MaxValue 排序 | — |
-| `DescendingPriorityInsertion_SortedAscending` | 降序插入自动升序排列 | — |
-| `AscendingPriorityInsertion_SortedAscending` | 升序插入保持升序 | — |
-| `AlternatingPriorityInsertion_SortedCorrectly` | 交替优先级插入后排升序 | — |
-| `Remove_NonexistentStrategy_Throws` | 删除不存在的策略抛异常，已挂载策略不受影响 | — |
-| `AllDefaultPriority6205_MaintainsInsertionOrder` | 全部默认优先级 6205 保持插入序 | snd-entity-model |
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `BootstrapWithoutAutoDiscovery_ValidatesUnusedConstraintsImmediately` | 未被挂载的策略声明了未注册目标 | 启动固定注册表时抛 InvalidOperationException |
+| `UnknownTarget_FailsBeforeAnyEntityOrPoolReferenceIsCreated` | Before 指向未注册索引 | SealRegistration 抛 InvalidOperationException，消息含目标索引与 unregistered |
+| `NonLifecycleTarget_IsRejected` | 生命周期策略引用非生命周期目标 | SealRegistration 抛 InvalidOperationException，消息含 non-lifecycle |
+| `Cycles_FailWithAnActualClosedPath_WithoutIncludingUnrelatedPredecessors` | 生命周期顺序声明成环且存在无关前驱 | 抛 InvalidOperationException，消息含实际闭合路径且不含无关前驱；重复 Seal 仍抛异常 |
+| `Cycles_WithAcyclicBranch_ReportOnlyClosedPath` | 环外存在已完成遍历的无关无环节点 | 抛 InvalidOperationException，消息只含闭合路径，不含无环节点 |
+| `InvalidDeclarations_FailAtRegistration` | 自引用、空白目标、null 数组，或非生命周期策略声明约束 | 注册时立即抛 InvalidOperationException |
+| `DirectEntityRecovery_SealsRegistrationWithoutBootstrap` | 直接恢复生命周期策略后再次注册 | 恢复触发固定注册表，后续 Register 抛 InvalidOperationException |
+
+## StrategyOrderingIntegrationTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `SpawnAndProcess_UnconstrainedStrategies_UseOrdinalIndexOrder` | 未声明约束的生命周期策略按索引 Ordinal 顺序执行，与挂载顺序无关 | snd-entity-model: 策略执行顺序 |
+| `RemoveStrategy_HookChangesOtherEntries_RemovesRequestedEntry` | BeforeRemove 内移除其他策略并新增策略后，按条目身份摘除目标策略，不误删其他条目、不重复释放池引用 | Strategy README: 为什么固定完整注册图 |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `RegisterStrategy_AfterFirstLifecycleEntity_FailsExplicitly` | 生命周期实体启动后注册新策略 | 抛 InvalidOperationException，注册表保持固定 |
 
 ## StrategyPoolTypeSafetyAndExtensionTests 测试详情
 
@@ -239,6 +235,8 @@
 |---------|-----------|---------|
 | `GetStrategy_WrongBranchGeneric_ThrowsInvalidOperation` | 用 LifecycleStrategyBase 泛型获取 Active/StateMachine 策略 | InvalidOperationException |
 | `RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws` | Recover 列表含 ActiveStrategyBase 类型 | InvalidOperationException（"LifecycleStrategyBase"） |
+| `RecoverStrategiesOnly_DuplicateIndex_ThrowsBeforeAcquiring` | Recover 列表含重复生命周期索引 | InvalidOperationException（"more than once"），未获取任何策略引用 |
+| `Recover_DuplicateActiveIndex_ThrowsBeforeAcquiring` | Recover 列表含重复主动策略索引 | InvalidOperationException（"more than once"），未获取或泄漏策略引用 |
 | `Register_AbstractStrategyType_Throws` | 注册抽象策略类型 | InvalidOperationException |
 | `Register_DuplicateIndex_Throws` | 重复注册同一策略索引 | InvalidOperationException（"already registered"） |
 | `GetStrategy_FactoryReturnsNull_ThrowsInvalidOperation` | 注册工厂返回 null | InvalidOperationException（消息含 "returned null"，不得退化为 NRE） |
@@ -273,16 +271,6 @@
 
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
-| `SP50 / SP100 / SP200` | StrategyPriorityTests.cs | 不同 Priority 的策略（50/100/200），Process 中记录执行日志 |
-| `S5 / S10A / S10B / S10C / S15 / S20 / S25 / S30 / S40 / S60 / S80 / S10` | StrategyPriorityTests.cs | 覆盖全范围优先级的策略组（5 ~ 80），部分重写 Process 记录日志 |
-| `SDemo` | StrategyPriorityTests.cs | 无显式 Priority 属性的策略（默认 6205） |
-| `SA / SB / SC` | StrategyPriorityTests.cs | 同默认优先级（6205）的三策略，观察 FIFO 插入序 |
-| `SN10 / SN5 / SN0` | StrategyPriorityTests.cs | 负优先级策略（-10/-5/0） |
-| `S0 / SMin / SMax` | StrategyPriorityTests.cs | int.Zero / int.MinValue / int.MaxValue 优先级策略 |
-| `LC10 / LC20 / LC30` | StrategyPriorityTests.cs | 重写 AfterSpawn 钩子（Priority=10/20/30），验证生命周期钩子优先级 |
-| `Q10 / Q20 / Q30` | StrategyPriorityTests.cs | 重写 BeforeQuit 钩子（Priority=10/20/30） |
-| `LD10 / LD20 / LD30` | StrategyPriorityTests.cs | 重写 AfterLoad 钩子（Priority=10/20/30） |
-| `Rec`（AsyncLocal 记录器） | StrategyPriorityTests.cs | 执行顺序日志收集器，BeginTest/Add/Reset/Log，AsyncLocal 隔离并行测试 |
 | `TestLifecycleStrategy` | LifecycleStrategyBaseTests.cs | 不重写任何钩子的空白策略，验证默认实现不修改实体数据 |
 | `TestLifecycleStrategyWithAdd` | LifecycleStrategyBaseTests.cs | Process 中调用 entity.AddStrategy 的场景策略 |
 | `TestLifecycleStrategyKillSelf` | LifecycleStrategyBaseTests.cs | Process 中调用 RequestKillEntity(self) |
@@ -305,6 +293,16 @@
 | `ThrowOnUnmountObserver` | ObserverStrategyTests.cs | OnUnmounted 抛出 InvalidOperationException，验证失败卸载仍归还池引用 |
 | `StatefulObserver` | ObserverStrategyTests.cs | 有实例字段 _counter 的观察者，验证注册时被拒绝 |
 | `UnannotatedObserver` | ObserverStrategyTests.cs | 无 [StrategyIndex] 属性的观察者，验证注册拒绝 |
+| `Probe`（abstract） | StrategyOrderingTests.cs | 记录 8 个生命周期钩子事件的抽象基类，供 Producer / Bridge / Consumer 复用 |
+| `Producer` / `Bridge` / `Consumer` | StrategyOrderingTests.cs | 以重复 Before、等价 After 和未挂载中间策略验证 A → B → C 投影、去重与无约束 Ordinal 兜底 |
+| `MissingTarget` | StrategyOrderingTests.cs | Before 指向未注册索引，验证 SealRegistration 的未知目标错误 |
+| `ActiveTarget` | StrategyOrderingTests.cs | ActiveStrategy 目标，验证生命周期约束引用非生命周期策略被拒绝 |
+| `ReferencesActive` | StrategyOrderingTests.cs | 生命周期策略引用 ActiveTarget，验证非生命周期引用错误 |
+| `OrderedActive` | StrategyOrderingTests.cs | ActiveStrategy 声明 Before 约束，验证注册时拒绝 |
+| `CycleA` / `CycleB` / `CycleC` / `CycleRoot` | StrategyOrderingTests.cs | 构成真实环并附带无关前驱，验证闭合路径诊断不包含无关节点 |
+| `AcyclicLeaf` | StrategyOrderingTests.cs | 无出边的无环节点，验证环检测完成该分支后只报告闭合路径 |
+| `SelfReference` / `BlankReference` / `NullReference` | StrategyOrderingTests.cs | 自引用、空白目标和 null 数组声明的非法注册用例 |
+| `OrderingAlpha` / `OrderingZulu` / `OrderingRemover` | StrategyOrderingIntegrationTests.cs | 真实模拟宿主中验证 Ordinal 兜底顺序，以及 BeforeRemove 重入增删时的条目身份摘除 |
 | `ExtensionDomainStrategyBase`（abstract） | StrategyPoolTypeSafetyAndExtensionTests.cs | 在 LifecycleStrategyBase 之上扩展的第三领域抽象根基类，定义 ProbeValue() 抽象方法 |
 | `ExtensionDomainConcreteStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | ExtensionDomainStrategyBase 的具体实现，ProbeValue() 返回 "ok" |
 | `PoolEntityStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | LifecycleStrategyBase 空实现，用于泛型分支安全测试 |

@@ -9,12 +9,20 @@ using Origo.Core.Snd.Metadata;
 
 namespace Origo.TestSupport;
 
+/// <summary>
+///     Test scene host that stores lightweight <see cref="DummySndEntity" />
+///     instances and mirrors the production scene-host contracts relevant to
+///     tests (snapshot reads, append-only recovery, strict removal).
+/// </summary>
 public sealed class TestSndSceneHost : ISndSceneHost
 {
     private readonly List<ISndEntity> _entities = [];
     private readonly List<SndMetaData> _metaList = [];
+
+    /// <summary>Number of times <see cref="RemoveAllEntities" /> has been called.</summary>
     public int ClearAllCount { get; private set; }
 
+    /// <inheritdoc/>
     public ISndEntity CreateEntity(SndMetaData metaData)
     {
         _metaList.Add(metaData);
@@ -23,12 +31,16 @@ public sealed class TestSndSceneHost : ISndSceneHost
         return entity;
     }
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<ISndEntity> GetEntities() => [.. _entities];
 
+    /// <inheritdoc/>
     public ISndEntity? FindByName(string name) => _entities.FirstOrDefault(e => e.Name == name);
 
+    /// <inheritdoc/>
     public IReadOnlyList<SndMetaData> BuildMetaList() => [.. _metaList];
 
+    /// <inheritdoc/>
     public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
     {
         // Matches the production scene-host contract (SndEntityCollection /
@@ -41,6 +53,7 @@ public sealed class TestSndSceneHost : ISndSceneHost
         }
     }
 
+    /// <inheritdoc/>
     public void RemoveAllEntities()
     {
         ClearAllCount++;
@@ -48,10 +61,12 @@ public sealed class TestSndSceneHost : ISndSceneHost
         _entities.Clear();
     }
 
+    /// <inheritdoc/>
     public void ProcessAll(double delta)
     {
     }
 
+    /// <inheritdoc/>
     public void RemoveEntity(string name)
     {
         // Matches the production scene-host contract (SndEntityCollection):
@@ -67,6 +82,7 @@ public sealed class TestSndSceneHost : ISndSceneHost
             _metaList.Remove(meta);
     }
 
+    /// <inheritdoc/>
     public void RequestKillEntity(string name)
     {
         var entity = _entities.FirstOrDefault(e => e.Name == name);
@@ -78,25 +94,38 @@ public sealed class TestSndSceneHost : ISndSceneHost
     }
 }
 
+/// <summary>
+///     Minimal <see cref="ISndEntity" /> test double with in-memory data and
+///     no-op strategy operations. Node access and active-strategy invocation
+///     fail explicitly.
+/// </summary>
 public sealed class DummySndEntity : ISndEntity
 {
+    /// <summary>Owning session; assign before exercising session-dependent paths.</summary>
     public ISessionRun OwningSession { get; set; } = null!;
 
     private readonly Dictionary<string, object?> _data = new(StringComparer.Ordinal);
+
+    /// <summary>Stable entity name used by the host and by name-based lookups.</summary>
     public readonly string EntityName;
 
+    /// <summary>Creates an entity with the given name.</summary>
     public DummySndEntity(string entityName)
     {
         EntityName = entityName;
         _data["name"] = entityName;
     }
 
+    /// <inheritdoc/>
     public string Name => EntityName;
 
+    /// <inheritdoc/>
     public bool IsPendingKill { get; set; }
 
+    /// <inheritdoc/>
     public void SetData<T>(string name, T value) => _data[name] = value;
 
+    /// <inheritdoc/>
     public T GetData<T>(string name) where T : notnull
     {
         if (!_data.TryGetValue(name, out var value))
@@ -107,6 +136,7 @@ public sealed class DummySndEntity : ISndEntity
             $"Data key '{name}' is of type '{value?.GetType().Name ?? "null"}' but requested as '{typeof(T).Name}'.");
     }
 
+    /// <inheritdoc/>
     public (bool found, T? value) TryGetData<T>(string name)
     {
         if (_data.TryGetValue(name, out var value) && value is T cast)
@@ -114,6 +144,7 @@ public sealed class DummySndEntity : ISndEntity
         return (false, default);
     }
 
+    /// <inheritdoc/>
     public bool TryGetData<T>(string name, out T? value)
     {
         if (_data.TryGetValue(name, out var stored) && stored is T cast)
@@ -126,32 +157,43 @@ public sealed class DummySndEntity : ISndEntity
         return false;
     }
 
+    /// <inheritdoc/>
     public void MountObserverStrategy(string targetName, string observerIndex) { }
 
+    /// <inheritdoc/>
     public void UnmountObserverStrategy(string targetName, string observerIndex) { }
+    /// <inheritdoc/>
     public void MountObserverStrategy(ISndEntity target, string observerIndex) { }
+    /// <inheritdoc/>
     public void UnmountObserverStrategy(ISndEntity target, string observerIndex) { }
 
+    /// <inheritdoc/>
     public INodeHandle GetNode(string name) => throw new InvalidOperationException($"Node '{name}' not found.");
 
+    /// <inheritdoc/>
     public IReadOnlyCollection<string> GetNodeNames() => [];
 
+    /// <inheritdoc/>
     public void AddStrategy(string index)
     {
     }
 
+    /// <inheritdoc/>
     public void RemoveStrategy(string index)
     {
     }
 
+    /// <inheritdoc/>
     public void AddActiveStrategy(string index)
     {
     }
 
+    /// <inheritdoc/>
     public void RemoveActiveStrategy(string index)
     {
     }
 
+    /// <inheritdoc/>
     public object? InvokeStrategy(string strategyIndex, object? input = null) =>
         throw new InvalidOperationException("InvokeStrategy not supported on DummySndEntity.");
 }

@@ -12,7 +12,6 @@ namespace Origo.Core.Tests;
 ///     Tests that verify save-then-dispose round-trip, background session
 ///     switching, and BeforeQuit strategy edge cases.
 /// </summary>
-[Collection("StrategyStateTests")]
 public class DisposeSemanticsTestsRoundTrip
 {
     [Fact]

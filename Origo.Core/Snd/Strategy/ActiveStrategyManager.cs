@@ -30,10 +30,11 @@ internal sealed class ActiveStrategyManager
     /// </summary>
     public void Recover(IEnumerable<string> indices)
     {
+        var registeredIndices = SndStrategyPool.RequireDistinctIndices(indices, "ActiveIndices");
         ReleaseAll();
         try
         {
-            foreach (var index in indices)
+            foreach (var index in registeredIndices)
                 AcquireOrThrow(index);
         }
         catch

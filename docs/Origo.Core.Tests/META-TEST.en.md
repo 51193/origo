@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 19 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Documentation Maintenance Meta-Instructions
 
 > [↑ Back to Origo Manual](../README.en.md)
@@ -107,7 +107,7 @@ but must observe the following whitelist principle:
    - Example: `SndStrategyPool` `GetStrategy` / `ReleaseStrategy` reference counting correctness
    - Example: `StackStateMachine` rollback behavior when `SndStrategyPool` acquisition fails during construction
    - Example: Entity phased lifecycle orchestration (AfterLoad/AfterSpawn/BeforeSave/BeforeQuit/BeforeDead trigger
-     timing, LIFO/priority ordering, cross-entity visibility, and intermediate states like "created but hooks not
+     timing, LIFO/partial ordering, cross-entity visibility, and intermediate states like "created but hooks not
      yet triggered" and "BeforeQuit triggered but entity still in collection") verified directly via
      `IEntityLifecycle` phased methods + `FullMemorySndSceneHost` (`SndEntityLifecycleBatchTests`).
      These intermediate states and ordering **cannot** be observed through `ISessionRun` public API and are
@@ -133,13 +133,14 @@ but must observe the following whitelist principle:
    situations have no public path that can faithfully reproduce the same contract, so internal APIs are retained:
    - **Isolated contract verification of `DefaultSaveStorageService`** (`SavePathPolicyContractTests`,
      `SaveStorageContractTests`): per-method path assertions under a custom `ISavePathPolicy` injection, plus
-     low-level methods with no public equivalent such as `EnumerateSavesWithMetaData`/`SnapshotCurrentToSave`/
+     low-level methods with no public equivalent such as `SnapshotCurrentToSave`/
      `WriteSavePayloadToCurrent` (the full `current/` read, `SavePayloadReader.ReadFromCurrent`, is a
      framework-internal reader with no public equivalent either) — the public `RequestSaveGame`/`RequestLoadGame`
      also carries progress files and idempotency logic, unable to isolate the storage service itself; observable
-     behavior with a public equivalent (e.g. `EnumerateSaveIds` → `ctx.Save.ListSaves()`) must go through the
-     public path.
-   - `LevelBuilder`'s commit delegation contract (`LevelBuilder_Commit_UsesStorageService`): internal type,
+     behavior with a public equivalent (`EnumerateSaveIds` → `ctx.Save.ListSaves()`,
+     `EnumerateSavesWithMetaData` → `ctx.Save.ListSavesWithMetaData()`) must go through the public path.
+   - `Origo.TestSupport.LevelBuilder`'s commit delegation contract
+     (`LevelBuilder_Commit_UsesStorageService`): internal test-support type,
      no public equivalent.
    - `ProgressRun.LoadFromPayload` validation of **manually constructed malformed/missing-field payloads**
      (malformed/missing topology, null `ProgressStateMachinesNode`) — the public `RequestLoadGame` goes through
@@ -291,6 +292,33 @@ public class MyTests : IDisposable
 
 This is preferred over per-test `try/finally` blocks when many tests share the same cleanup
 pattern — it centralizes cleanup and guarantees execution after every test.
+
+### Red-First and Real-Path Regression (Bug Fixes)
+
+A bug fix is valid only after this red-to-green loop is demonstrated:
+
+1. **Write the regression test first** — it must reproduce the bug through a
+   real, reachable user/business path (real hosts, real strategies, real save
+   payloads, the real deferred-queue flow; when a specific collaborator is
+   required, exercise that collaborator or a faithful stand-in with the same
+   contract). A synthetic path that exists only inside the test, or a test
+   that quietly passes through a different code path, is a test blind spot,
+   not a regression test.
+2. **Verify red** — run it against the unmodified code and confirm it fails
+   for the bug's own symptom (wrong value, missing hook, leaked reference,
+   unexpected exception), not for an unrelated error. If it does not fail,
+   fix the test instead of the source.
+3. **Fix the source, verify green** — the same test must pass unchanged.
+   Optionally revert the fix temporarily to confirm it goes red again and
+   keep the test pinned to the defect rather than the implementation.
+4. **Check sibling paths** — inspect parallel code paths for the same defect
+   pattern (scene-host teardown orders, sibling converters, batch loops) and
+   cover the collaborator whose contract makes the fix order-dependent;
+   re-run the full suite before committing.
+
+This rule expands the Test Requirements section of
+[AGENTS.md](../../AGENTS.md); the full development loop is in the same file's
+Development Loop section.
 
 ## Sync Rules
 

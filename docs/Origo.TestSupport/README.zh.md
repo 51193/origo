@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.TestSupport/README -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 7 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 
 # Origo.TestSupport
 
@@ -13,13 +13,14 @@
 
 | 子模块 | 说明 |
 |--------|------|
-| [Architecture](Architecture/README.zh.md) | `PrivateFieldNamingConvention` 私有字段命名守卫与 TypedData 测试复位助手 |
+| [Architecture](Architecture/README.zh.md) | `PrivateFieldNamingConvention` 私有字段命名守卫、TypedData 测试复位助手与测试侧帧冲刷驱动 |
 | [FileSystem](FileSystem/README.zh.md) | `IFileSystem` 纯内存测试替身 |
 | [Logging](Logging/README.zh.md) | `ILogger` 内存日志采集器 |
 | [Node](Node/README.zh.md) | `INodeHandle` / `INodeFactory` 测试替身 |
 | [Observer](Observer/README.zh.md) | 观察者事件采集基础设施 |
 | [Reporting](Reporting/README.zh.md) | 性能基准报告工具 |
-| [Scene](Scene/README.zh.md) | `ISndSceneHost` 测试替身 |
+| [Scene](Scene/README.zh.md) | `ISndSceneHost` 测试替身（含 `StubSndSceneHost` / `StubSndEntity`） |
+| [Snd](Snd/README.zh.md) | `LevelBuilder` 离线关卡构建工具 |
 | [Strategies](Strategies/README.zh.md) | 共享测试策略基类和索引常量 |
 
 ## 使用

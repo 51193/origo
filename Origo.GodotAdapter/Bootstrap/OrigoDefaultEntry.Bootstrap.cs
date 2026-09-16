@@ -24,6 +24,8 @@ public partial class OrigoDefaultEntry
         {
             base._Ready();
 
+            ConfigureStrategies(Runtime.SndWorld);
+
             RegisterConsoleCommandHandlers();
 
             var sndContext = new SndContext(new SndContextParameters(
@@ -42,6 +44,7 @@ public partial class OrigoDefaultEntry
                 ConfigureConverters = RegisterCustomConverters,
             });
 
+            Context = sndContext;
             ((ISndContextAttachableSceneHost)SndManager).BindContext(sndContext);
             ConfigureSaveMetadataContributors(sndContext);
 

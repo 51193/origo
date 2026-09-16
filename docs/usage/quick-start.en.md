@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 12 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 15 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Quick Start
 
 > [↑ Back to usage](README.en.md)
@@ -84,23 +84,45 @@ public sealed class HealthInitStrategy : LifecycleStrategyBase
 
 ### 5. Define Entity Templates
 
-Create entity template JSON (via `snd_templates.map` or direct JSON):
+Each key in `snd_templates.map` points to a file containing a **single
+SndMetaData object**, for example `res://origo/templates/player.json`:
 
 ```json
-[
-  {
-    "name": "player",
-    "strategy": {
-      "lifecycle_indices": ["my_game.health"]
-    },
-    "data": {
-      "pairs": {
-        "hp": { "type": "Int32", "data": 100 },
-        "max_hp": { "type": "Int32", "data": 100 }
-      }
+{
+  "name": "player_template",
+  "node": { "pairs": {} },
+  "strategy": {
+    "lifecycle_indices": ["my_game.health"],
+    "active_indices": [],
+    "observer_indices": []
+  },
+  "data": {
+    "pairs": {
+      "hp": { "type": "Int32", "data": 100 },
+      "max_hp": { "type": "Int32", "data": 100 }
     }
   }
-]
+}
+```
+
+Prefer `SndMetaFluentBuilder` for programmatic metadata. New builders emit
+spawn-ready empty Node/Strategy/Data sections by default:
+
+```csharp
+var marketMeta = new SndMetaFluentBuilder("MarketSim")
+    .AddLifecycleStrategy("game.market_sim")
+    .Build();
+session.Spawn(marketMeta);
+```
+
+Use `AddObserverBinding(target, observerIndices)` for observer bindings. It
+generates the expected `{ "target_entity": ["observer.index"] }` shape, so
+hand-authored `observer_indices` JSON cannot accidentally use the wrong form:
+
+```csharp
+var watcher = new SndMetaFluentBuilder("Watcher")
+    .AddObserverBinding("Player", "watch.hp")
+    .Build();
 ```
 
 ### 6. Spawning Template Entities at Runtime
@@ -131,6 +153,18 @@ Run the Godot project. `OrigoDefaultEntry._Ready()` will automatically:
 4. Load aliases and templates
 5. Load the entry level from `initial/`
 
+`OrigoDefaultEntry.Context` is available after `_Ready()` for presentation
+queries such as save listing, continue availability, and lifecycle entry points:
+
+```csharp
+public override void _Ready()
+{
+    base._Ready();
+    var entries = Context.Save.ListSavesWithMetaData();
+    // Build a save-selection UI from entries
+}
+```
+
 ## Runtime Flow
 
 ```
@@ -146,10 +180,12 @@ OrigoAutoHost._Ready()
 OrigoDefaultEntry._Ready()
   → Register adapter-layer command handlers (press_button, tree_debug, camera_view)
   → Create SndContext
+  → Context = sndContext (exposed to presentation)
   → SndManager.BindContext(context)
   → ConfigureSaveMetadataContributors(context)
   → SndContext.Bootstrap()
       → DiscoverAndRegisterStrategies
+      → SealStrategyRegistration (validate Before/After and freeze registration)
       → LoadSceneAliases + LoadTemplates
       → RequestLoadMainMenuEntrySave → Start game
 
@@ -161,7 +197,7 @@ Per frame: _Process → IOrigoFrameDriver.DriveFrame(delta)
 
 ## Next Steps
 
-- [Architecture Overview](architecture-overview.en.md) — Understand Origo's overall design
+- [Architecture Overview](../architecture/overview.en.md) — Understand Origo's overall design
 - [SND Entity Model](snd-entity-model.en.md) — Learn how to write strategies
 - [Strategy Testing](strategy-testing.en.md) — Test strategies using StrategyTestScenario
 

@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 13 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.SourceGeneration.Tests
 
 > [↑ 回到 Origo.manual](../README.zh.md) · [↔ 被测模块: Origo.SourceGeneration](../Origo.SourceGeneration/README.zh.md)
@@ -17,8 +17,9 @@
 | 文件 | 职责 |
 |------|------|
 | `GeneratorTestHarness.cs` | 构造内存 `CSharpCompilation`，运行 `TypedDataGenerator`，暴露生成源、生成器诊断、合并编译错误 |
-| `TypedDataGeneratorTests.cs` | 生成器行为测试：Home/Adapter 模式输出、两存储模型、`ORIGOSG001`–`ORIGOSG006` 诊断、生成确定性与增量管线 |
+| `TypedDataGeneratorTests.cs` | 生成器行为测试：Home/Adapter 模式输出、两存储模型、`ORIGOSG001`–`ORIGOSG007` 诊断、生成确定性与增量管线 |
 | `PrivateFieldNamingTests.cs` | 架构守卫：生产程序集私有字段遵循 `_camelCase` 命名 |
+| `ApiDocumentationGuardrailTests.cs` | 架构守卫：生产源码的 public/protected API 声明必须带 `<summary>` 或 `<inheritdoc />`（FastNoiseLite 供应商源码豁免） |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | 生成产物性能基准：多值类型 + `string` 的写/读/混合分发，生成的内联 `TypedData` vs 无优化装箱；固定池 + 大迭代 + 多轮取最小降噪，宽松阈值 + 比对表格，并对每侧实测分配（`GC.GetAllocatedBytesForCurrentThread`，置于独立 `NoInlining` 方法以免污染计时） |
 | `TestSupport/PerfReporter.cs` | 性能比对表格输出器（同时写控制台与 xUnit 测试输出） |
 
@@ -29,9 +30,10 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `Home_Primitives_GeneratesExpectedMembers_AndCompiles` | 宿主模式注册系统基础类型，生成 `KindMap`/`TryGetInt32`/`AsInt32`/`explicit operator`/`TypedDataFactory<T>`/`TypedDataHomeKindRegistration` + `[ModuleInitializer]`，合并编译零错误 | Origo.SourceGeneration |
+| `Home_PublicGeneratedMembers_EmitDocCommentsBeforeAttributes` | 生成的 public 成员先输出 XML doc 注释再输出 `[MethodImpl]`，保证 CS1591 可识别 | Origo.SourceGeneration |
 | `Home_StringStoredViaRefSlot` | `string` 通过 `_ref` 槽存取（`AsString() => (string?)_ref`、`case 13: return td._ref`） | Origo.SourceGeneration |
 | `Adapter_ValueAndRefTypes_UseRefSlot_AndCompiles` | 适配层非系统值类型与引用类型统一走 `_ref`，生成 `TypedDataLayeredExtensions`、`RegisterKind`、Converter/TypeMap 分支，合并编译零错误 | Origo.SourceGeneration |
-| `Generation_IsDeterministic` | 相同输入两次运行产出完全一致的源文本 | Origo.SourceGeneration |
+| `Generation_IsDeterministic` | 相同输入两次运行产出完全一致的源文本；Home 与 Adapter 输出在所有宿主上均使用 LF 换行 | Origo.SourceGeneration |
 | `StartKind_OffsetIsHonored_AndNumberingIsSequential` | `StartKind` 偏移生效（128/129），且按声明顺序递增 | Origo.SourceGeneration |
 | `OverlappingStartKinds_SameType_Deduplicated` | 同一类型在重叠 `StartKind` 组中重复声明被去重，无诊断、无编译错误 | Origo.SourceGeneration |
 | `Incremental_SameInputTwice_ProducesIdenticalOutput` | 同一输入连续运行两次，生成源逐项一致 | Origo.SourceGeneration |

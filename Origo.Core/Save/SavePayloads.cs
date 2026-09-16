@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Origo.Core.DataSource;
 
@@ -7,6 +8,11 @@ namespace Origo.Core.Save;
 ///     Represents a single level within a save, containing the serialized
 ///     SND scene and Session blackboard.
 /// </summary>
+/// <remarks>
+///     The caller owns the contained <see cref="DataSourceNode" /> trees and
+///     must dispose them when no longer needed; the framework disposes
+///     payloads it reads or builds at internal load/mount/write boundaries.
+/// </remarks>
 public sealed class LevelPayload
 {
     /// <summary>
@@ -37,6 +43,11 @@ public sealed class LevelPayload
 ///     <see cref="DataSourceNode" />; on-disk encoding is handled by
 ///     <see cref="IDataSourceIoGateway" />.
 /// </summary>
+/// <remarks>
+///     The caller owns every contained <see cref="DataSourceNode" /> tree and
+///     must dispose them when no longer needed; the framework disposes
+///     payloads it reads or builds at internal load/mount/write boundaries.
+/// </remarks>
 public sealed class SaveGamePayload
 {
     /// <summary>
@@ -85,4 +96,32 @@ public sealed class SaveGamePayload
     ///     All level save data indexed by level ID.
     /// </summary>
     public Dictionary<string, LevelPayload> Levels { get; set; } = [];
+}
+
+/// <summary>
+///     Releases the <see cref="DataSourceNode" /> trees held by save payloads
+///     at internal mount/write boundaries; the nodes are not needed after the
+///     payload has been persisted or deserialized into runtime state.
+/// </summary>
+internal static class SavePayloadDisposal
+{
+    public static void Dispose(SaveGamePayload payload)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+
+        payload.ProgressNode.Dispose();
+        payload.ProgressStateMachinesNode.Dispose();
+
+        foreach (var level in payload.Levels.Values)
+            Dispose(level);
+    }
+
+    public static void Dispose(LevelPayload payload)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+
+        payload.SndSceneNode.Dispose();
+        payload.SessionNode.Dispose();
+        payload.SessionStateMachinesNode.Dispose();
+    }
 }

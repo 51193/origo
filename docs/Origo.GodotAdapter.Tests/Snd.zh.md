@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Snd -->
-<!-- docsync-revision: 11 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 12 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 实体 测试（适配层）
 
 > [↑ 回到 Origo.GodotAdapter.Tests](README.zh.md)
@@ -19,6 +19,7 @@
 | `Snd/SndEntityCollectionTests.cs` | 实体集合全能力：创建/查找/移除/击杀标记、`RecoverFromMetaList` 批量恢复与部分失败回滚、`RemoveAllEntities`、帧处理 `ProcessAll`、元数据列表构建、`OwningSession` 绑定 |
 | `Snd/TypedDataAssemblyLoadTests.cs` | 通过引用公开 GodotAdapter 类型强制程序集加载，验证生成的 `[ModuleInitializer]` 完成适配层 Kind 注册 |
 | `SndEntityNodeExtensionsTests.cs` | `GetNodeFromSnd<T>()` / `GetNativeNode()` 的契约：非 Godot 实体/句柄返回 null、节点句柄提取 |
+| `Snd/GodotPackedSceneNodeFactoryTests.cs` | `GodotPackedSceneNodeFactory` 构造函数拒绝 null parent（纯 .NET 可执行，不触发 Godot API） |
 
 ## SndEntityCollectionTests 测试详情
 
@@ -77,6 +78,14 @@
 |---------|-----------|---------|
 | `GetNativeNode_NonGodotHandle_ReturnsNull` | `GetNativeNode()` 在节点句柄非 Godot 节点句柄时返回 null（契约违约静默降级，不崩溃） | Origo.GodotAdapter/Snd |
 | `GetNodeFromSnd_NonGodotEntity_ReturnsNull` | `GetNodeFromSnd<T>()` 在实体非 Godot 实体时返回 null | Origo.GodotAdapter/Snd |
+
+## GodotPackedSceneNodeFactoryTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `Constructor_NullParent_Throws` | 构造函数传入 null parent | ArgumentNullException（不触发 Godot API 调用） |
 
 ## 测试辅助策略
 

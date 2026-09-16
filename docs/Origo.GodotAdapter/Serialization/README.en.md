@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/Serialization/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 2 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Serialization
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Serialization](../../Origo.Core/Serialization/README.en.md)
@@ -50,7 +50,7 @@ Additionally, Origo.GodotAdapter registers these 14 types with the TypedData mul
 
 ### Why Plane's d field uses AsFloat instead of composition
 
-`Plane` = `Normal(Vector3)` + `D(float)`. `D` is a scalar, not a vector; using `AsFloat()` directly is straightforward. A compositional approach (e.g., continuing to use Vector3DataSourceConverter) would introduce unnecessary nesting.
+`Plane` = `Normal(Vector3)` + `D(float)`. `D` is a scalar, not a vector; using the DataSourceNode `As<float>()` accessor directly is straightforward. A compositional approach (e.g., continuing to use Vector3DataSourceConverter) would introduce unnecessary nesting.
 
 ---
 [↑ Back to Origo.GodotAdapter](../README.en.md)

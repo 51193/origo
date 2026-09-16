@@ -82,15 +82,6 @@ internal sealed class SessionRun : ISessionRun, IDisposable
                 .Build($"Created SessionRun for level '{sessionParams.LevelId}'."));
     }
 
-    internal RunStateScope SessionScope
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return _sessionScope;
-        }
-    }
-
     internal string? MountKey { get; set; }
 
     internal event Action? Disposing;
@@ -208,14 +199,26 @@ internal sealed class SessionRun : ISessionRun, IDisposable
                     }
                     finally
                     {
-                        _sceneHost.RemoveAllEntities();
-                        _sessionScope.Blackboard.Clear();
-                        _disposed = true;
-                        _disposing = false;
-                        _logger.Log(LogLevel.Info, _logTag,
-                            new LogMessageBuilder()
-                                .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
-                                .Build($"Disposed SessionRun for level '{LevelId}'."));
+                        try
+                        {
+                            _sceneHost.RemoveAllEntities();
+                        }
+                        finally
+                        {
+                            try
+                            {
+                                _sessionScope.Blackboard.Clear();
+                            }
+                            finally
+                            {
+                                _disposed = true;
+                                _disposing = false;
+                                _logger.Log(LogLevel.Info, _logTag,
+                                    new LogMessageBuilder()
+                                        .SetElapsedMs(watch.Elapsed.TotalMilliseconds)
+                                        .Build($"Disposed SessionRun for level '{LevelId}'."));
+                            }
+                        }
                     }
                 }
             }
@@ -323,7 +326,17 @@ internal sealed class SessionRun : ISessionRun, IDisposable
         ThrowIfDisposed();
         var watch = Stopwatch.StartNew();
         _logger.Log(LogLevel.Info, _logTag, $"Persisting level state for '{LevelId}'.");
-        _storageService.WriteLevelPayloadOnlyToCurrent(BuildLevelPayload());
+
+        var payload = BuildLevelPayload();
+        try
+        {
+            _storageService.WriteLevelPayloadOnlyToCurrent(payload);
+        }
+        finally
+        {
+            SavePayloadDisposal.Dispose(payload);
+        }
+
         _logger.Log(LogLevel.Info, _logTag,
             new LogMessageBuilder()
                 .SetElapsedMs(watch.Elapsed.TotalMilliseconds)

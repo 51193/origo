@@ -38,6 +38,54 @@ public class SaveMetaMergerTests
         Assert.Null(merged);
     }
 
+    [Fact]
+    public void Merge_NullContribution_Throws()
+    {
+        var contributors = new ISaveMetaContributor[]
+        {
+            new FuncContributor(_ => null!)
+        };
+
+        Assert.Throws<InvalidOperationException>(
+            () => SaveMetaMerger.Merge(contributors, DummyContext()));
+    }
+
+    [Fact]
+    public void Merge_BlankKey_Throws()
+    {
+        var contributors = new ISaveMetaContributor[]
+        {
+            new FuncContributor(_ => new Dictionary<string, string> { [""] = "value" })
+        };
+
+        Assert.Throws<InvalidOperationException>(
+            () => SaveMetaMerger.Merge(contributors, DummyContext()));
+    }
+
+    [Fact]
+    public void Merge_WhitespaceKey_Throws()
+    {
+        var contributors = new ISaveMetaContributor[]
+        {
+            new FuncContributor(_ => new Dictionary<string, string> { ["   "] = "value" })
+        };
+
+        Assert.Throws<InvalidOperationException>(
+            () => SaveMetaMerger.Merge(contributors, DummyContext()));
+    }
+
+    [Fact]
+    public void Merge_NullValue_Throws()
+    {
+        var contributors = new ISaveMetaContributor[]
+        {
+            new FuncContributor(_ => new Dictionary<string, string> { ["key"] = null! })
+        };
+
+        Assert.Throws<InvalidOperationException>(
+            () => SaveMetaMerger.Merge(contributors, DummyContext()));
+    }
+
     private sealed class FuncContributor(Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> func) : ISaveMetaContributor
     {
         private readonly Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> _func = func;

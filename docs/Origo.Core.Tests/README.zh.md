@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 12 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Tests
 
 > [↑ 回到 Origo.manual](../README.zh.md)
@@ -32,7 +32,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | `GameplaySimulationHarness` | Fluent Builder + Harness | 一键创建完整帧驱动游戏模拟环境：OrigoRuntime + SndContext + 后台游戏会话（syncProcess=true），支持 DriveFrame/RunFrames/SpawnEntity/GetEntityData/SaveAndReload |
 | `TestStrategies` | 抽象基类集合 | `SharedFrameCounterStrategy`、`SharedEchoActiveStrategy`、`SharedKillProbeStrategy`、`SharedNoopLifecycleStrategy`、`SharedNoopStateMachineStrategy` — 供集成测试文件通过 1 行 sealed 子类引用，消除重复策略定义 |
 | `TestObserverEvents` | 结构化事件记录 | `TestObserverEvent` record（EventType/TargetName/DataKey/OldValue/NewValue）+ `EventCollector` 静态 AsyncLocal 收集器 + `SharedDataChangeObserverStrategy` 抽象基类 — 观察者测试断言从子串匹配升级为类型化字段精确比较 |
-| `PerfReporter` | 静态工具类 | 性能测试输出格式化：Compare/Report 方法，打印时间/吞吐/分配对比。支持双通道输出（`Console.Out` + `ITestOutputHelper`），确保 CI 和本地均可看到结果 |
+| `PerfReporter` | 性能报告器 | 性能测试输出格式化：Compare/Report 方法，打印时间/吞吐/分配对比。支持双通道输出（`Console.Out` + `ITestOutputHelper`），确保 CI 和本地均可看到结果；同一进程内重复 metric key 抛 `InvalidOperationException` |
 | `ConsoleInputBuffer` | `IConsoleInputSource` 实现 | 控制台输入队列（Core 生产代码，测试中直接使用） |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` 实现 | 控制台输出通道（Core 生产代码，测试中直接使用） |
 | `PrivateFieldNamingConvention` | 架构守卫辅助 | 反射校验生产程序集私有字段遵循 `_camelCase` 命名（`dotnet format` 无法验证 fix-only 命名规则） |
@@ -66,7 +66,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | SND 元数据 | [Snd-Metadata.md](Snd-Metadata.zh.md) | TypedData struct 值语义与 IEquatable、SndMetaData 深拷贝、SG 输出验证、Fluent 构建、TypedData 集成 |
 | 性能基准 | [Benchmarks.md](Benchmarks.zh.md) | `[Category=Benchmark]` 套件（`benchmark.sh` 独立运行）：TypedData 真实模拟 + 实体生命周期 + Observer 拓扑 + DataSourceNode + Blackboard + Save + 并发队列 + 随机数 + Strategy 性能 |
 | SND 场景 | [Snd-Scene.md](Snd-Scene.zh.md) | MemorySndSceneHost 与 FullMemorySndSceneHost 的 Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity、NullNodeFactory |
-| SND 策略 | [Snd-Strategy.md](Snd-Strategy.zh.md) | 策略优先级排序、池引用计数/回收、实体策略生命周期钩子、观察者策略、主动策略 Invoke、策略池 Get/Release 与 Process 缩放性能测量 |
+| SND 策略 | [Snd-Strategy.md](Snd-Strategy.zh.md) | 策略偏序排序、池引用计数/回收、实体策略生命周期钩子、观察者策略、主动策略 Invoke、策略池 Get/Release 与 Process 缩放性能测量 |
 | SND 上下文 | [Snd-Context.md](Snd-Context.zh.md) | SndContext save/load/continue 工作流、LevelBuilder、模板解析、Archetype 加载 |
 | SND 扩展 | [Snd-Extensions.md](Snd-Extensions.zh.md) | EnsureStrategy 惰性策略挂载（幂等）、TryGetNumeric 跨数值类型读取、InvokeStrategy 泛型调用 |
 | 文件访问 | [Snd-FileAccess.md](Snd-FileAccess.zh.md) | ISndFileAccess 在 SndContext 上的 DataSourceNode 读写往返、强类型往返、overwrite 语义、错误/边界路径 |

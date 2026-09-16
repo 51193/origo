@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 9 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 12 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd (Abstractions)
 
 > [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Snd](../../Snd/README.zh.md)
@@ -18,7 +18,7 @@ ISndContext 的角色接口拆分。9 个 Snd 角色接口 + `IStateMachineConte
 | `ISndTemplateAccess.cs` | 模板加载/重载、按 key 深克隆、JSON 实体列表解析（含模板简写）（5 成员） |
 | `ISndConsoleAccess.cs` | 控制台命令提交/输出订阅（3 成员）。命令处理归 `IOrigoFrameDriver.DriveFrame` 所有，不暴露业务 pump |
 | `ISndStateMachineAccess.cs` | 流程级状态机容器访问（1 成员）。返回 `IStateMachineContainer?`（Abstractions 层接口），而非具体 `StateMachineContainer` |
-| `ISndSaveOperations.cs` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册（8 成员） |
+| `ISndSaveOperations.cs` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册（9 成员） |
 | `ISndLifecycleOperations.cs` | Continue/Initial/MainMenu 生命周期入口（4 成员） |
 | `ISndFileAccess.cs` | 文件访问：结构化读写 + 强类型读写 + 存在检查（5 成员）。所有文件内容读写统一通过 `IDataSourceIoGateway` 边界，策略无需自行处理原始文本解析 |
 | `ISndArchiveFileAccess.cs` | 存档内文件访问：结构化读写 + 强类型读写 + 存在检查 + 删除（6 成员）。路径相对于存档活动目录的 extra/ 子目录，随存档生命周期 |
@@ -31,7 +31,7 @@ ISndContext 除 10 个 companion 属性外，还直接暴露以下成员：
 
 | 成员 | 说明 |
 |------|------|
-| `Bootstrap()` | 启动入口：策略发现 → 别名/模板加载 → 入口存档加载 |
+| `Bootstrap()` | 启动入口：策略发现 → 排序校验与注册冻结 → 别名/模板加载 → 入口存档加载 |
 | `SaveRootPath` | 当前存档根路径 |
 | `InitialSaveRootPath` | 初始存档根路径 |
 | `EntryConfigPath` | 入口配置文件路径 |
@@ -109,7 +109,7 @@ Abstractions 层接口的返回值不得引用 Runtime 层具体实现类型。`
 - `ReadObject<T>` / `WriteObject<T>` → 在 Gateway 基础上集成 `DataSourceConverterRegistry` → 强类型对象
 - `FileExists` → `IFileMetaAccess.FileExists`
 
-策略不应直接调用 `IFileSystem`（已完全内部化）或自行解析原始 JSON/Map 文本——后缀路由、编解码策略与 I/O 错误语义统一在 Gateway 一侧治理。路径拼接（`CombinePath`、`GetParentDirectory`）和目录检查（`DirectoryExists`）由框架内部的 `IPathResolver` 和 `IFileMetaAccess` 提供，不通过 `ISndFileAccess` 暴露给策略层。
+策略不应直接调用 `IFileSystem`（它是宿主/适配层扩展点，已从策略层接口面收敛）或自行解析原始 JSON/Map 文本——后缀路由、编解码策略与 I/O 错误语义统一在 Gateway 一侧治理。路径拼接（`CombinePath`、`GetParentDirectory`）和目录检查（`DirectoryExists`）由框架内部的 `IPathResolver` 和 `IFileMetaAccess` 提供，不通过 `ISndFileAccess` 暴露给策略层。
 
 ### 为什么 WriteFile 不限制路径
 

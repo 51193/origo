@@ -23,34 +23,66 @@ public interface ISaveStorageService
     IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData();
 
     /// <summary>Writes a save payload to the current/ directory.</summary>
+    /// <remarks>
+    ///     The implementation must fully consume the payload's
+    ///     <see cref="DataSourceNode" /> trees during the call; callers may
+    ///     dispose them as soon as the method returns.
+    /// </remarks>
     void WriteSavePayloadToCurrent(SaveGamePayload payload);
 
     /// <summary>Writes a save payload to current/, then snapshots it to the save_* directory.</summary>
+    /// <remarks>
+    ///     The implementation must fully consume the payload's
+    ///     <see cref="DataSourceNode" /> trees during the call; callers may
+    ///     dispose them as soon as the method returns.
+    /// </remarks>
     void WriteSavePayloadToCurrentThenSnapshot(
         SaveGamePayload payload,
         string newSaveId,
         ILogger logger);
 
     /// <summary>Writes only a single level payload to the current/ directory.</summary>
+    /// <remarks>
+    ///     The implementation must fully consume the payload's
+    ///     <see cref="DataSourceNode" /> trees during the call; callers may
+    ///     dispose them as soon as the method returns.
+    /// </remarks>
     void WriteLevelPayloadOnlyToCurrent(LevelPayload levelPayload);
 
     /// <summary>Writes only Progress-related files to the current/ directory.</summary>
+    /// <remarks>
+    ///     The implementation must fully consume both node trees during the
+    ///     call; callers may dispose them as soon as the method returns.
+    /// </remarks>
     void WriteProgressOnlyToCurrent(
         DataSourceNode progressNode,
         DataSourceNode progressStateMachinesNode);
 
     /// <summary>Reads a complete save payload from a save_* snapshot directory.</summary>
+    /// <remarks>
+    ///     The returned payload and all of its node trees are owned by the
+    ///     caller and must be disposed when no longer needed.
+    /// </remarks>
     SaveGamePayload ReadSavePayloadFromSnapshot(
         string saveId,
         string activeLevelId);
 
     /// <summary>Reads only the Progress node from a save_* snapshot directory.</summary>
+    /// <remarks>The returned node is owned by the caller and must be disposed.</remarks>
     DataSourceNode? ReadProgressNodeFromSnapshot(string saveId);
 
     /// <summary>Attempts to read the payload of the specified level from current/; returns null when not found.</summary>
+    /// <remarks>
+    ///     The returned payload and all of its node trees are owned by the
+    ///     caller and must be disposed when no longer needed.
+    /// </remarks>
     LevelPayload? TryReadLevelPayloadFromCurrent(string levelId);
 
     /// <summary>Attempts to read the payload of the specified level from a save_* snapshot directory; returns null when not found.</summary>
+    /// <remarks>
+    ///     The returned payload and all of its node trees are owned by the
+    ///     caller and must be disposed when no longer needed.
+    /// </remarks>
     LevelPayload? TryReadLevelPayloadFromSnapshot(string saveId, string levelId);
 
     /// <summary>
@@ -64,6 +96,10 @@ public interface ISaveStorageService
     /// <param name="saveId">The current save slot ID (used to locate the save_* directory during snapshot fallback).</param>
     /// <param name="levelId">The target level ID.</param>
     /// <returns>The resolved LevelPayload, or null if neither location has data.</returns>
+    /// <remarks>
+    ///     The returned payload and all of its node trees are owned by the
+    ///     caller and must be disposed when no longer needed.
+    /// </remarks>
     LevelPayload? ResolveLevelPayload(string saveId, string levelId);
 
     /// <summary>Snapshots current/ to a save_* directory.</summary>
@@ -101,10 +137,10 @@ public interface ISaveStorageService
     /// </summary>
     /// <param name="sourceStorage">The storage service that owns the source save snapshot.</param>
     /// <param name="saveId">The save slot ID in <paramref name="sourceStorage" />.</param>
-    /// <exception cref="ArgumentNullException">
+    /// <exception cref="System.ArgumentNullException">
     ///     Thrown when <paramref name="sourceStorage" /> is null.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="System.InvalidOperationException">
     ///     Thrown when the destination implementation cannot interpret the
     ///     source service's snapshot layout. The default implementation
     ///     supports only a default source; custom source/destination pairs

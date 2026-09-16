@@ -102,7 +102,9 @@ internal sealed class StrategyMetaDataConverter : DataSourceConverter<StrategyMe
         foreach (var binding in value.ObserverIndices)
         {
             if (string.IsNullOrWhiteSpace(binding.Target))
-                continue;
+                throw new InvalidOperationException(
+                    "Strategy metadata observer binding target cannot be blank; " +
+                    "serializing it would silently drop the observer binding.");
 
             var indices = DataSourceNode.CreateArray();
             foreach (var index in binding.ObserverIndices)

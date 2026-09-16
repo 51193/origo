@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-> See [AGENTS.md](AGENTS.md) for the development loop and changelog rules. Changes are recorded only after passing the test loop (source -> tests -> run -> fix & retest -> changelog -> docs sync).
+> See [AGENTS.md](AGENTS.md) for the development loop and [docs/release-process.en.md](docs/release-process.en.md) for Changelog and release rules. Changes are recorded only after passing the full loop (source -> tests -> run/fix/retest -> changelog -> docs sync -> commit -> post-commit `scripts/ci.sh` -> post-commit `scripts/lint-commits.sh`).
 
 ---
 
@@ -12,12 +12,64 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Weekly snapshot build workflow** — the Monday 02:30 UTC scheduled run publishes a `-nightly.YYYYMMDD` build only when the week that just ended ([previous Monday 00:00, current Monday 00:00) UTC) contains new commits; manual dispatch additionally covers the current partial week. Idle scheduled weeks publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
+- **Local agent work buffer (`_origo_local/`)** — scans, reviews, and design sessions can record structured findings and handoff state in a git-ignored single-book buffer under `_origo_local/`; implementation sessions claim the book and may close it only after the full development loop (source, tests, `scripts/ci.sh`, post-commit commit lint, changelog, docs sync) is complete. The entry summary is in `AGENTS.md` and the full tracked protocol in `docs/META.*`; the repository root `.gitignore` keeps the buffer out of version control.
+- **`OrigoDefaultEntry.ConfigureStrategies` hook** — derived Godot entries can register strategies manually before `SndContext.Bootstrap` freezes the ordering registry, covering `AutoDiscoverStrategies = false` and strategies that auto-discovery cannot reach.
+
+### Changed
+
+- **BREAKING: lifecycle strategies use `Before` / `After` ordering constraints** — `StrategyIndexAttribute.Priority` and `DefaultPriority` are removed. Startup registration validates all references and cycles, then freezes the complete graph. Entities project that order onto mounted strategies, retaining transitive relationships; unconstrained topological candidates use index Ordinal order. Process and batch lifecycle hooks follow the same direction.
+
+- **Agent instruction system slimmed and corrected** — `AGENTS.md` is now a compact every-turn gate/router (223 lines, within the 16 KB budget) instead of a 742-line manual. Release/Changelog rules live in the new bilingual `docs/release-process.*` pair, red-first regression details in `docs/Origo.Core.Tests/META-TEST.*`, and `_origo_local/` is documented as a single-book buffer whose root README holds status. The development loop commits before the post-commit `scripts/ci.sh` and `scripts/lint-commits.sh`; the pre-tag checklist covers `verify-release.sh`, analyzer release tracking, and docs version stamps; any `.cs` add/rename/delete under `SourceMirrorRoots` requires the corresponding mirror README file-list update. Added `scripts/validate-agent-docs.py` and an `origin/main` fallback in `scripts/lint-commits.sh`; the language directive follows the user's current language.
+- **`GodotPackedSceneNodeFactory` validates its inputs up front** — the constructor now rejects a null parent, and `Create` rejects null or blank logical names in addition to Godot-prohibited node-name characters, all before loading or instantiating anything; framework validation can no longer drift from engine rules.
+- **`StackStateMachine.Push` now rolls back when the push hook throws** — the stack value is pushed only as part of the hook dispatch attempt; if `OnPushRuntime` throws, the value is removed and the exception propagates, leaving the stack unchanged.
+- **`SndMetaFluentBuilder.SetNode` rejects blank node names and resource IDs** — null or whitespace keys/values now fail at the fluent call site instead of being accepted into metadata and failing later during entity recovery or node lookup.
+- **Benchmark regression gate retries once on a failed throughput comparison** — on the baseline machine, a throughput comparison failure now re-runs the full benchmark suite once, and only a throughput regression that fails both attempts is reported. Allocation gates fail immediately because this suite's allocation counts are deterministic.
+- **BREAKING: `Blackboard.SetValue` rejects null for unregistered reference types** — a null reference of an unregistered CLR type cannot be recovered from `TypedData` (it degrades to `object`), so it now fails fast with `ArgumentNullException` instead of being stored as an unfindable entry. Null values for registered reference kinds such as `string` remain supported.
+- **BREAKING: invalid save-meta contributor output now fails the save** — a contributor returning a null dictionary, a blank key, or a null value causes `RequestSaveGame` to throw `InvalidOperationException` with contributor context instead of silently dropping metadata, matching the interface contract and fail-fast policy.
+- **BREAKING: save payload node trees are released deterministically** — framework load/mount and write/snapshot paths now dispose the `DataSourceNode` trees of `SaveGamePayload`/`LevelPayload` (and progress-only snapshots) as soon as they are no longer needed instead of relying on GC. Public `ISaveStorageService` read methods return caller-owned trees, and write implementations must consume their node trees during the call; implementations that retained the trees for later reads must be adapted.
+- **Dependabot-authored commits are exempt from commit-message lint** — Dependabot supports only a commit-message prefix, not a custom message template, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem, and `scripts/lint-commits.sh` skips Dependabot-authored commits so dependency PRs pass CI as proposed; human-authored commits keep the full subject and body gate.
+
+### Fixed
+
+- **Duplicate strategy indices in entity metadata now fail recovery** — a duplicated lifecycle index mounted the same pooled instance twice, running its `Process` twice per frame; a duplicated active index overwrote the dictionary entry and leaked one pool reference. Entity and active recovery now reject duplicate indices before acquiring or releasing anything, matching the public mount contract and the strict save-read policy.
+
+- **`ConsoleBridgeServer.Dispose` no longer abandons a connection accepted while disposal races the accept loop** — disposal now cancels active reads, wakes the pending accept with a loopback connection, joins the accept loop, and only then closes the listener. Previously an aborted accept could discard a connection that had already completed at the OS level, leaving the client's blocked read hanging (observed as a Windows CI `TimeoutException` in the agent-disposal test).
+- **`OrigoAutoHost` runtime metadata now reports the repository version** — the version logged as `OrigoMeta.Version` previously used the four-part assembly version (`0.0.9.0`); it now uses the assembly informational version (`0.0.9`, or the full `-nightly` suffix), matching `Directory.Build.props` and the release tag.
+- **A failed lifecycle workflow no longer leaves the disposed `ProgressRun` reachable as active** — when disposing the previous progress run throws (for example a state-machine quit hook), `SndContext` now clears the progress-run reference as part of the same cleanup block, so the next save/load request fails with the documented “no active ProgressRun” contract instead of operating on a disposed instance.
+- **`TypedData` generated accessors now expose their XML summaries to IntelliSense** — the source generator emitted `[MethodImpl]` before the `/// <summary>` block, so the compiler did not associate the comments with the generated public members. Doc comments are now emitted before attributes, making `TryGetXxx` and conversion operators show their English summaries in the IDE.
+- **`TypedData` generated source is line-ending deterministic** — the source generator no longer emits CRLF on Windows via `StringBuilder.AppendLine`; generated Home and Adapter sources now always use LF, so identical input produces identical generated text on every build host.
+
+- **Generated `TypedData.TryGetString` now declares `out string?`** — null is a legal stored value for the registered string kind (the kind is preserved while the reference is null), so the previous non-nullable `out string` annotation hid that result from consumers and contradicted the handwritten API reference.
+- **`RandomNumberGenerator` sequence restored to canonical XorShift128+** — the stateless refactor rotated the wrong state half and mixed the wrong operand, so seeded sequences no longer matched the documented algorithm. The canonical transition is restored and pinned by reference-vector regression tests.
+- **`entity_set_data` preserves an existing `Int64` key** — a key previously inferred as `long` can now be updated by a subsequent command instead of failing with “Cannot parse as Int64”.
+- **Blank observer-binding targets fail metadata writes** — `StrategyMetaDataConverter` now rejects blank targets instead of silently dropping the binding, matching the strict read path.
+- **`SessionRun.Dispose` commits its disposed state when host cleanup throws** — a throwing `RemoveAllEntities` no longer leaves the run permanently stuck between `_disposing` and `_disposed`; subsequent access fails with `ObjectDisposedException` as documented.
+- **`SndArchetypeLoader.TryLoad` disposes its source node** — the `DataSourceNode` returned by `ISndFileAccess.ReadFile` is now released after its attributes are copied.
+
+## [0.0.9] - 2026-09-03
+
+### Added
+
+- **`OrigoDefaultEntry.Context`** — the default Godot entry now exposes the
+  created `ISndContext` after `_Ready`, so presentation/game code can query
+  saves, continue availability, lifecycle entry points, templates, and
+  blackboards without routing every read through an entity active strategy.
+- **`ISndSaveOperations.ListSavesWithMetaData()`** — save-selection UI can
+  now list save slots together with their `meta.map` display metadata through
+  the public save companion; framework-reserved `origo.*` keys are stripped.
+- **`SndMetaFluentBuilder` recoverable defaults** — builders created with a
+  name now emit empty `NodeMetaData` and `StrategyMetaData` sections, so
+  their output is directly usable by `ISessionRun.Spawn` and scene recovery.
+- **`SndMetaFluentBuilder.AddObserverBinding(target, observerIndices)`** —
+  fluent observer-topology construction that generates the framework's
+  `{ "target": ["observer.index"] }` serialization shape; same-target calls
+  merge and duplicate indices fail fast.
 - **`ISndSceneReadAccess`** — public read-only scene view (`GetEntities` / `FindByName`) for state-machine hooks and save-meta contributors, decoupled from internal scene orchestration.
-- **Complete English documentation** — 128 English `.en.md` files alongside existing Chinese `.zh.md` files.
+- **Complete English documentation** — 129 English `.en.md` files alongside existing Chinese `.zh.md` files.
 - **`camera_view` console command** — displays screen coordinates and depth of Godot entity nodes visible through the active `Camera3D`.
 - **`ILogger<TCategory>`** — generic logging interface that auto-derives the log tag from the category type name.
 - **`SndContextParameters.InitialLevelId`** — configurable initial save level ID (defaults to `"default"`).
-
 
 - **`ActiveStrategyJsonBase<TInput>`** — active strategy base class that owns the JSON
   serialization contract: input strings are deserialized to `TInput` and `Execute` results
@@ -38,6 +90,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Source generator diagnostic `ORIGOSG005`** — reports kind-name collisions (same-named
   types from different namespaces, or generic instantiations whose sanitized names collapse
   to one identifier) as build errors instead of emitting uncompilable code.
+- **Source generator diagnostic `ORIGOSG007`** — a non-home assembly that declares
+  `SndInlineTypes` adapter registrations without being in Origo.Core's
+  `InternalsVisibleTo` whitelist now gets one actionable build error instead of
+  generated code that fails with CS0122/CS0117. Only Origo.GodotAdapter is
+  currently whitelisted for adapter-mode generation.
 - **`ConsoleBridgeOptions.OutputSendTimeoutMs`** — bounded send timeout (default 100ms)
   for console output writes: a client that stops reading is detached (and the undelivered
   lines stay buffered for the next connection) instead of stalling the game frame thread.
@@ -46,6 +103,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: `ISndSaveOperations` gains `ListSavesWithMetaData()`** — external
+  implementations of the save companion must implement the new metadata
+  listing member.
+- **`SndMetaFluentBuilder.Build()` behavior clarified** — name-constructed
+  builders now always produce complete recoverable metadata; `From(existing)`
+  preserves the original metadata so corrupted templates still fail strict
+  recovery.
+- **`DataSourceNode.CreateNumber` validates number literals at construction** — the string overload now accepts only valid JSON number literals and rejects malformed literals (`"abc"`, `" 42"`, `"NaN"`, ...) with `ArgumentException`; the `float`/`double` overloads reject NaN and infinity with `ArgumentOutOfRangeException`. Invalid values previously reached the JSON writer (or produced non-portable JSON) instead of failing at the API boundary.
+- **PR commit lint enforces the 72-character body-line rule** — `scripts/lint-commits.sh` now rejects commit body lines longer than 72 characters, matching `docs/META` instead of enforcing only the subject rules.
+- **Documentation drift corrections** — capability counts in the top-level manual now match the actual Core (32) and GodotAdapter (7) test-doc indexes; `agent-reference` includes the `TryGetData<T>(string, out T?)` overload; manual examples use language-suffixed paths; TestSupport documents the test-side frame-flush driver; the active-strategy JSON error protocol is explicit.
+- **DocSyncTool derives `docsync-revision` from git history** — `generate` now plans revision headers automatically from content-changing commits since the last generated snapshot, catches stale translations up to the peer revision, and records content hashes in `.sync-status.json` as an idempotent planning anchor. Doc authors no longer bump revision numbers by hand; CI fetches full history so multi-commit pushes are counted commit-by-commit even though GitHub Actions runs only the final commit.
 - **BREAKING: `OrigoAutoInitializer` and `SndWorld.LoadSceneAliases` / `LoadTemplates` are now `internal`** — strategy auto-discovery, JSON-array spawning, and alias/template map loading are reachable only through the `ISndContext.Bootstrap` orchestration (and its `SndContextParameters`); game-side strategy registration remains available through `SndWorld.RegisterStrategy`.
 - **BREAKING: `ISndTemplateAccess` now exposes the complete template-entity path** — in addition to `CloneTemplate`, it provides `ResolveMetaListFromJsonArray`, `LoadMetaListFromFile` (JSON array files with `templateKey`/`sndName` shorthand), and runtime `LoadTemplates` / `LoadSceneAliases` map reloads. External implementations of `ISndTemplateAccess` must implement the new members; business code no longer needs `OrigoAutoInitializer.LoadAndSpawnFromFile` or raw `SndWorld` access to load/spawn template entities.
 
@@ -194,7 +262,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   entity detached from its manager now throws `InvalidOperationException` (consistent with
   the other members) instead of silently returning `false`.
 
-- **BREAKING: Target framework upgraded from `net8.0` to `net10.0`** — all projects (Origo.Core, Origo.ConsoleBridge, Origo.GodotAdapter, and test projects) now target `net10.0`; consumers must build with the .NET 10 SDK and run on the .NET 10 runtime. `Origo.SourceGeneration` keeps `netstandard2.0` (Roslyn analyzer constraint). GodotAdapter verified against Godot 4.7.1 mono (86 headless integration tests pass on `net10.0`).
+- **BREAKING: Target framework upgraded from `net8.0` to `net10.0`** — all projects (Origo.Core, Origo.ConsoleBridge, Origo.GodotAdapter, and test projects) now target `net10.0`; consumers must build with the .NET 10 SDK and run on the .NET 10 runtime. `Origo.SourceGeneration` keeps `netstandard2.0` (Roslyn analyzer constraint). GodotAdapter verified against Godot 4.7.2 mono (93 headless integration tests pass on `net10.0`).
 - **BREAKING:** `SndContext` and `ISndContext` refactored to companion-object pattern. All role interfaces (`ISndSaveOperations`, `ISndBlackboardAccess`, `ISndDeferredActions`, etc.) are now exposed through typed companion properties (`ctx.Save`, `ctx.Blackboard`, `ctx.Deferred`, etc.) instead of direct interface inheritance. `ISndEntityRawSubscription` made `internal`.
 - **BREAKING:** `DataSourceNode.AsByte`/`AsInt`/`AsFloat`/... (12 numeric-typed methods) replaced by a single unified `As<T>()` generic method. `AsString()` and `AsChar()` retained.
 - **BREAKING:** `DataSourceNode.AsChar` now throws `InvalidOperationException` on `Map`/`Array` nodes instead of silently returning `'\0'`.
@@ -209,7 +277,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING:** `GodotNodeHandle.SetVisible` throws `ObjectDisposedException` on freed nodes instead of silently returning.
 - **BREAKING:** `GetNumeric` extension method no longer accepts a default fallback — callers must explicitly pass a fallback value.
 - **Public API XML doc comments translated to English** — all previously Chinese `<summary>` comments are now in English for IDE IntelliSense.
-- **Godot upgraded to 4.7.1** — `Godot.NET.Sdk` version bumped from 4.6.3 to 4.7.1.
+- **Godot upgraded to 4.7.2** — `Godot.NET.Sdk` version bumped from 4.6.3 to 4.7.2 in `Origo.GodotAdapter` and `Origo.GodotAdapter.Integration.Tests`; `scripts/download-godot.sh` resolves the matching Godot 4.7.2 mono binary, and the demo project's offline NuGet configuration and launch scripts target 4.7.2 as well. All 93 Godot headless integration tests pass on `net10.0`.
 - **ConsoleBridgeServer** uses `async`/`await` for the accept/read loop, eliminating the 100ms polling loop. Connection handling is race-free and survives hard client disconnects and handler exceptions.
 - **Save idempotency now includes `extra/` files in hash computation**, preventing silent skip of changed side-channel files.
 - Source generator diagnostic messages carry source locations from `SndInlineTypesAttribute` syntax, so build errors point to the exact attribute location.
@@ -231,7 +299,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **A failed save load disposes the progress run and clears the context reference** — after a load failure, the half-initialized `ProgressRun` is disposed, its strategy pool references are returned, and `ctx.Blackboard.ProgressBlackboard` / `ctx.StateMachines` fail fast (null / "no active progress run") instead of exposing partially deserialized state. The original load exception still propagates.
 - **Observer mounting is now fail-fast like strategy mounting** — mounting the same (observer, target, strategy index) twice throws `InvalidOperationException` (previously it double-subscribed and double-fired `OnDataChanged`), and unmounting a pair that is not mounted throws instead of silently succeeding.
 - **DocSync validation warns on bilingual heading-structure drift** — `DocSyncTool validate` now compares `##`/`###` section counts between a pair's languages and warns when they differ (revision equality alone cannot prove content parity); warnings do not fail the build.
-- **`scripts/ci.sh` doc-sync step no longer fails on uncommitted doc changes** — the committed-files check is restricted to CI runs; local runs only execute generate + validate, resolving the conflict between the pre-commit CI loop and uncommitted documentation edits.
+- **`scripts/doc-sync.sh` no longer fails local runs on uncommitted doc changes** — its committed-files check is restricted to CI runs, while `scripts/ci.sh` keeps a separate local committed-docs gate that must run after the commit.
 - **`DataSourceFactory.CreateDefaultIoGateway` accepts an optional logger** — `.map` codec decode warnings (e.g. duplicate keys) now reach a real logger instead of being silently discarded; the optional parameter keeps existing call sites source-compatible.
 - **`DocSyncTool.Tests` no longer pollutes the CI log with expected tool output** — the tool's "Validation FAILED" diagnostics (produced on purpose by the negative validator tests), generate progress lines, and migration banners are captured by a test helper (`ConsoleOutputCapture`) instead of being printed straight into the test-runner log, where "Validation FAILED" looks like a build failure. The four capturing test classes run in a serialized collection (redirecting the process-global console streams is not parallel-safe).
 - **`scripts/test.sh` runs the test projects sequentially** — parallel test processes on multi-core Windows runners stall xUnit v3's assembly-info child process long enough to hit upstream bug xunit/xunit#3576, where the "Waiting 10 seconds for foreground threads to exit..." message pollutes the assembly-info JSON and VSTest fails discovery with "Test process did not return valid JSON". Sequential runs keep each child process's exit fast enough to avoid the race (fixed upstream only in xunit.v3 4.0.0-pre.128+, which requires the Microsoft Testing Platform migration).
@@ -255,6 +323,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING: `DiffUtility` removed** — it had no production consumers; its documented use cases (topology-change computation) were not backed by code.
 
 ### Fixed
+- **Session topology entries are written in canonical key order** — the same set of background sessions now produces the same topology string and payload hash regardless of creation order, preventing dictionary enumeration order from defeating save idempotency deduplication.
+- **`CreateForegroundSession` honors its foreground replacement contract** — replacing the foreground slot with the same or a different level now validates level conflicts against other sessions first, then destroys the old foreground before constructing the new one. A conflict with a background session leaves the current foreground untouched, and old-session teardown hooks run before the adapter scene host is rebound to the replacement.
 - **Observer binding teardown releases the pooled strategy even when `OnUnmounted` throws** — `FullCleanup` now runs unsubscription, the user hook, and the pool release as independent steps; previously a throwing hook skipped the release after the binding had already been removed, permanently leaking the pooled observer strategy.
 - **`GodotSndManager._ExitTree` runs strategy release independently of observer teardown** — when the manager node is removed directly and an `OnUnmounted` hook throws, entity strategy references are still returned to the pool instead of being skipped behind the failed teardown step.
 - **`DataSourceNode.Keys` / `Elements` no longer expose mutable backing lists** — the enumerations now return read-only views, so callers can no longer downcast them to `List<T>` and mutate the node graph behind the tree API.

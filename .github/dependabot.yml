@@ -1,9 +1,17 @@
+# Dependabot generates the commit subject and body itself; it only supports
+# configuring a message prefix, not a full template. Every ecosystem below
+# sets the chore(deps) prefix so generated subjects are Conventional Commits.
+# scripts/lint-commits.sh skips Dependabot-authored commits because their
+# generated body cannot satisfy the 72-character line rule; human-authored
+# commits keep the full gate.
 version: 2
 updates:
   - package-ecosystem: nuget
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
     groups:
       roslyn:
         patterns:
@@ -44,3 +52,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"

@@ -11,7 +11,6 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
-[Collection("StrategyStateTests")]
 [Trait("Category", "Benchmark")]
 public class SndStrategyPerformanceTests(ITestOutputHelper output)
 {
@@ -140,7 +139,7 @@ public class SndStrategyPerformanceTests(ITestOutputHelper output)
             ((IEntityLifecycle)entity).FireAfterSpawnHooks();
             var singleTriggerAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-            rows.Add(($"{sc} strategies", 1, TimeSpan.Zero, singleTriggerAlloc));
+            rows.Add(($"TriggerAll {sc} strategies", 1, TimeSpan.Zero, singleTriggerAlloc));
 
             Assert.Equal("E", entity.Name);
         }

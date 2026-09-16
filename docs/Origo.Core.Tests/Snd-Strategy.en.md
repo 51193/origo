@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 12 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision: 16 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Strategy Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
@@ -9,9 +9,9 @@
 
 ## Behavior Under Test Overview
 
-Validates the full behavior of the SND strategy system: strategy priority ordering, pool reference counting/recycling, 8 lifecycle hooks for entity strategies, ActiveStrategy Invoke calls, observer strategy mount/unmount/data change notifications/persistence/topology queries, and type-safety checks during strategy registration.
+Validates the full behavior of the SND strategy system: strategy partial ordering, pool reference counting/recycling, 8 lifecycle hooks for entity strategies, ActiveStrategy Invoke calls, observer strategy mount/unmount/data change notifications/persistence/topology queries, and type-safety checks during strategy registration.
 
-The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `PerfReporter` to measure throughput/allocation with accompanying correctness assertions, do not carry `[Trait("Category","Benchmark")]` tags, and execute alongside the functional test pipeline.
+The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `PerfReporter` to measure throughput/allocation with accompanying correctness assertions, carry `[Trait("Category","Benchmark")]`, and execute through `scripts/benchmark.sh` rather than the functional test pipeline.
 
 ## Test File List
 
@@ -21,10 +21,11 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `ActiveStrategyJsonBaseTests.cs` | ActiveStrategyJsonBase JSON contract: input deserialization/result serialization, invalid input returns err result, bare string results pass through, null input execution, generic extension round-trip |
 | `LifecycleStrategyBaseTests.cs` | Default hooks do not mutate data; concurrent semantics of Add/Kill/SelfKill/OtherKill during Process; AfterAdd failure rollback; safe handling of non-existent strategy operations |
 | `ObserverStrategyTests.cs` | Observer registration & statelessness enforcement; Mount/Unmount lifecycle and parameter correctness; data change notifications (correct key/non-observed key/after unmount) and old/new values; multi-key observation; serialization (ObserverIndices population/empty bindings/grouping); Dead/Quit release and OnUnmounted; attribute reflection extraction; cross-entity mount rejection; null/empty/unknown parameter defenses; RecoverBindings fault tolerance; Has/Remove topology queries; Teardown/KillPending/ClearAll cleanup paths |
-| `StrategyPriorityTests.cs` | Strategies sorted ascending by Priority, same priority preserves insertion order FIFO, all lifecycle hooks respect priority, serialization/recovery preserves order |
+| `StrategyOrderingTests.cs` | Complete registry projection, dynamic mutation, save/load/quit/death, startup sealing, invalid declarations and cycle diagnostics |
+| `StrategyOrderingIntegrationTests.cs` | Real simulation host: Ordinal order, reentrant insertion in BeforeRemove, and rejection of late registration; verified red → green |
 | `StrategyPoolTypeSafetyAndExtensionTests.cs` | Strategy pool type-branch safety (generic GetStrategy type mismatch does not leak ref count), StackStateMachine two-phase acquisition failure rollback, third-domain base class extension, RecoverStrategiesOnly rejects non-Lifecycle strategies |
 | `SndStrategyPoolLeakDetectionTests.cs` | Strategy pool leak detection: refcounts return to zero on normal release / mid-failure teardown; LogPoolLeaks emits no residual warnings |
-| `SndStrategyPerformanceTests.cs` | Strategy pool Get/Release throughput, Process strategy count scaling, TriggerAll ToArray allocation (performance measurement, not benchmark-tagged) |
+| `SndStrategyPerformanceTests.cs` | Strategy pool Get/Release throughput, Process strategy count scaling, TriggerAll ToArray allocation (marked `[Trait("Category","Benchmark")]`, run by `scripts/benchmark.sh`) |
 
 ## ActiveStrategyTests Details
 
@@ -180,48 +181,43 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `KillPendingEntities_NoObserverBindings_NoError` | KillPending on entities with no observer bindings | Completes normally; entity count becomes 0 |
 | `ClearAll_NoObserverBindings_NoError` | RemoveAllEntities with no observer bindings | Completes normally; entity count becomes 0 |
 
-## StrategyPriorityTests Details
+## StrategyOrderingTests Details
 
 ### Correct Paths
 
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
-| `Pool_GetPriority_ReturnsExplicitPriorityFromAttribute` | Priority=100 attribute correctly parsed | snd-entity-model: Priority |
-| `Pool_GetPriority_ReturnsDefault6205WhenNotSpecified` | Returns default value 6205 when priority not specified | snd-entity-model: Priority |
-| `Add_DifferentPriorities_SortedAscending` | Different priorities sorted ascending | snd-entity-model: Strategy execution order |
-| `Add_SamePriority_MaintainsInsertionFifoOrder` | Same priority maintains FIFO insertion order | snd-entity-model |
-| `Add_MixedPriorities_SortedAscWithStableFifoInSamePriority` | Mixed priorities sorted correctly; same priority maintains insertion order | snd-entity-model |
-| `Add_InsertBetweenExisting_PositionsCorrectly` | Inserting between existing entries goes to the correct position | snd-entity-model |
-| `Process_ExecutesInPriorityAscendingOrder` | Process executes in ascending priority order | snd-entity-model |
-| `Process_SamePriority_ExecutesInInsertionOrder` | Same priority executes in insertion order | snd-entity-model |
-| `Spawn_DifferentPriorities_SortedAscending` | On Spawn, sorted by priority | snd-entity-model |
-| `Spawn_SamePriority_MaintainsInputOrder` | On Spawn, same priority maintains input order | snd-entity-model |
-| `Load_DifferentPriorities_ResortedAscending` | On Load recovery, re-sorted ascending | snd-entity-model |
-| `SerializeIndices_ReturnsIndicesInPriorityOrder` | Serialized indices are in priority order | snd-entity-model |
-| `SaveLoadRoundtrip_MaintainsProcessingOrder` | After serialization → recovery, Process order is consistent | snd-entity-model |
-| `AfterSpawn_ExecutesInPriorityAscendingOrder` | AfterSpawn hooks respect priority | snd-entity-model |
-| `BeforeQuit_ExecutesInPriorityAscendingOrder` | BeforeQuit hooks respect priority | snd-entity-model |
-| `AfterLoad_ExecutesInPriorityAscendingOrder` | AfterLoad hooks respect priority | snd-entity-model |
-| `Remove_Middle_RemainingOrderPreserved` | Removing a middle strategy preserves remaining order | — |
-| `Remove_First_RemainingOrderPreserved` | Removing the first strategy preserves remaining order | — |
-| `Remove_Last_RemainingOrderPreserved` | Removing the last strategy preserves remaining order | — |
-| `AddAfterRemove_InsertsAtCorrectPosition` | Inserting after removal goes to the correct position | — |
+| `FullRegistry_ProjectsTransitiveOrder_RegardlessOfRegistrationAndMountingOrder` | Registration and mounting order do not affect results; A → B → C stays transitive when only A/C are mounted; AfterSpawn, Process, and metadata share one order | snd-entity-model: Strategy execution order |
+| `DynamicAddAndRemove_KeepTransitiveOrderAndOptionalTargets` | Dynamic add/remove inserts and reorders by the complete registry; constraints hold when the target is unmounted; duplicate add and removal of an unmounted index throw | snd-entity-model: Strategy execution order |
+| `SaveLoadQuitAndDead_AllUseSameProjectedOrder` | Save, load, quit, and death all use the same projected order; recovered metadata order is correct and quit leaves no pool reference leaks | snd-entity-model: Strategy execution order |
+| `EquivalentBeforeAfterAndDuplicateEdges_DoNotCreateFalseCycles` | Equivalent Before / After edges and duplicate declarations are deduplicated without false cycles; unknown order queries throw; registration after sealing is rejected | Strategy README: SndStrategyPool |
 
-### Boundary Paths
+### Error Paths
 
-| Test Method | Boundary Condition | Expected Behavior |
-|-------------|-------------------|-------------------|
-| `Pool_GetPriority_ReturnsZeroForUnknownIndex` | Querying priority for unknown index | Returns 0 |
-| `EmptyList_ProcessDoesNotThrow` | Process on empty strategy list | No exception |
-| `EmptyList_SerializeIndicesReturnsEmpty` | Serialize empty strategy list | Returns empty |
-| `SingleStrategy_Works` | Single strategy | Works normally |
-| `NegativePriorities_SortedCorrectly` | Negative priorities sorted correctly (-10, -5, 0, 50) | — |
-| `IntMinAndIntMaxPriority_SortedCorrectly` | int.MinValue and int.MaxValue sorted correctly | — |
-| `DescendingPriorityInsertion_SortedAscending` | Descending priority insertion auto-sorted ascending | — |
-| `AscendingPriorityInsertion_SortedAscending` | Ascending priority insertion stays ascending | — |
-| `AlternatingPriorityInsertion_SortedCorrectly` | Alternating priority insertion sorted ascending afterwards | — |
-| `Remove_NonexistentStrategy_Throws` | Removing non-existent strategy throws; mounted strategies unaffected | — |
-| `AllDefaultPriority6205_MaintainsInsertionOrder` | All default priority 6205 maintains insertion order | snd-entity-model |
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `BootstrapWithoutAutoDiscovery_ValidatesUnusedConstraintsImmediately` | An unmounted strategy declares an unregistered target | Throws InvalidOperationException while sealing startup registration |
+| `UnknownTarget_FailsBeforeAnyEntityOrPoolReferenceIsCreated` | Before points to an unregistered index | SealRegistration throws InvalidOperationException containing the target index and "unregistered" |
+| `NonLifecycleTarget_IsRejected` | A lifecycle strategy references a non-lifecycle target | SealRegistration throws InvalidOperationException containing "non-lifecycle" |
+| `Cycles_FailWithAnActualClosedPath_WithoutIncludingUnrelatedPredecessors` | Lifecycle ordering declarations form a cycle with an unrelated predecessor | Throws InvalidOperationException with the actual closed path and no unrelated predecessor; repeated Seal still throws |
+| `Cycles_WithAcyclicBranch_ReportOnlyClosedPath` | An unrelated acyclic node completes traversal before the cycle is found | Throws InvalidOperationException with only the closed path; the acyclic node is absent |
+| `InvalidDeclarations_FailAtRegistration` | Self reference, blank target, null array, or a non-lifecycle strategy declaring constraints | Throws InvalidOperationException at registration |
+| `DirectEntityRecovery_SealsRegistrationWithoutBootstrap` | Registering again after direct lifecycle-strategy recovery | Recovery seals the registry; subsequent Register throws InvalidOperationException |
+
+## StrategyOrderingIntegrationTests Details
+
+### Correct Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `SpawnAndProcess_UnconstrainedStrategies_UseOrdinalIndexOrder` | Lifecycle strategies without constraints execute in index Ordinal order regardless of mounting order | snd-entity-model: Strategy execution order |
+| `RemoveStrategy_HookChangesOtherEntries_RemovesRequestedEntry` | When BeforeRemove removes another strategy and adds a new one, removal still targets the requested entry by identity without deleting the wrong entry or double-releasing the pool reference | Strategy README: Why freeze the complete registry graph |
+
+### Error Paths
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `RegisterStrategy_AfterFirstLifecycleEntity_FailsExplicitly` | Registering a new strategy after a lifecycle entity starts | Throws InvalidOperationException and keeps the registry frozen |
 
 ## StrategyPoolTypeSafetyAndExtensionTests Details
 
@@ -239,6 +235,8 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 |-------------|----------------|-------------------|
 | `GetStrategy_WrongBranchGeneric_ThrowsInvalidOperation` | Using LifecycleStrategyBase generic to acquire Active/StateMachine strategy | InvalidOperationException |
 | `RecoverStrategiesOnly_WithNonLifecycleStrategy_Throws` | Recover list contains ActiveStrategyBase type | InvalidOperationException ("LifecycleStrategyBase") |
+| `RecoverStrategiesOnly_DuplicateIndex_ThrowsBeforeAcquiring` | Recover list contains a duplicate lifecycle index | InvalidOperationException ("more than once"); no strategy reference acquired |
+| `Recover_DuplicateActiveIndex_ThrowsBeforeAcquiring` | Recover list contains a duplicate active index | InvalidOperationException ("more than once"); no strategy reference acquired or leaked |
 | `Register_AbstractStrategyType_Throws` | Registering an abstract strategy type | InvalidOperationException |
 | `Register_DuplicateIndex_Throws` | Registering the same strategy index twice | InvalidOperationException ("already registered") |
 | `GetStrategy_FactoryReturnsNull_ThrowsInvalidOperation` | Registered factory returns null | InvalidOperationException (contains "returned null"; must not degrade into an NRE) |
@@ -257,16 +255,6 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 
 | Strategy Class | Defined In | Purpose |
 |----------------|-----------|---------|
-| `SP50 / SP100 / SP200` | StrategyPriorityTests.cs | Strategies with different Priority (50/100/200); record execution log in Process |
-| `S5 / S10A / S10B / S10C / S15 / S20 / S25 / S30 / S40 / S60 / S80 / S10` | StrategyPriorityTests.cs | Strategy group covering full priority range (5–80); some override Process to log |
-| `SDemo` | StrategyPriorityTests.cs | Strategy without explicit Priority attribute (default 6205) |
-| `SA / SB / SC` | StrategyPriorityTests.cs | Three strategies with same default priority (6205) to observe FIFO insertion order |
-| `SN10 / SN5 / SN0` | StrategyPriorityTests.cs | Negative priority strategies (-10/-5/0) |
-| `S0 / SMin / SMax` | StrategyPriorityTests.cs | int.Zero / int.MinValue / int.MaxValue priority strategies |
-| `LC10 / LC20 / LC30` | StrategyPriorityTests.cs | Override AfterSpawn hook (Priority=10/20/30); verify lifecycle hook priority |
-| `Q10 / Q20 / Q30` | StrategyPriorityTests.cs | Override BeforeQuit hook (Priority=10/20/30) |
-| `LD10 / LD20 / LD30` | StrategyPriorityTests.cs | Override AfterLoad hook (Priority=10/20/30) |
-| `Rec` (AsyncLocal recorder) | StrategyPriorityTests.cs | Execution order log collector; BeginTest/Add/Reset/Log; AsyncLocal isolates parallel tests |
 | `TestLifecycleStrategy` | LifecycleStrategyBaseTests.cs | Empty strategy with no hook overrides; verifies default implementation does not modify entity data |
 | `TestLifecycleStrategyWithAdd` | LifecycleStrategyBaseTests.cs | Scenario strategy calling entity.AddStrategy during Process |
 | `TestLifecycleStrategyKillSelf` | LifecycleStrategyBaseTests.cs | Calls RequestKillEntity(self) during Process |
@@ -289,6 +277,16 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `ThrowOnUnmountObserver` | ObserverStrategyTests.cs | OnUnmounted throws InvalidOperationException; verifies the failed unmount still returns the pool reference |
 | `StatefulObserver` | ObserverStrategyTests.cs | Observer with instance field _counter; verifies registration rejection |
 | `UnannotatedObserver` | ObserverStrategyTests.cs | Observer without [StrategyIndex] attribute; verifies registration rejection |
+| `Probe` (abstract) | StrategyOrderingTests.cs | Abstract base recording all eight lifecycle hook events for Producer / Bridge / Consumer |
+| `Producer` / `Bridge` / `Consumer` | StrategyOrderingTests.cs | Verify A → B → C projection, deduplication, and Ordinal fallback using duplicate Before, equivalent After, and an unmounted intermediate |
+| `MissingTarget` | StrategyOrderingTests.cs | Before points to an unregistered index; verifies the SealRegistration unknown-target error |
+| `ActiveTarget` | StrategyOrderingTests.cs | ActiveStrategy target; verifies a lifecycle constraint referencing a non-lifecycle strategy is rejected |
+| `ReferencesActive` | StrategyOrderingTests.cs | Lifecycle strategy referencing ActiveTarget; verifies the non-lifecycle reference error |
+| `OrderedActive` | StrategyOrderingTests.cs | ActiveStrategy declaring Before; verifies rejection at registration |
+| `CycleA` / `CycleB` / `CycleC` / `CycleRoot` | StrategyOrderingTests.cs | Form a real cycle with an unrelated predecessor; verifies closed-path diagnostics omit unrelated nodes |
+| `AcyclicLeaf` | StrategyOrderingTests.cs | Acyclic node with no outgoing edges; verifies the cycle search completes its branch and reports only the closed path |
+| `SelfReference` / `BlankReference` / `NullReference` | StrategyOrderingTests.cs | Invalid-registration cases: self reference, blank target, and null array |
+| `OrderingAlpha` / `OrderingZulu` / `OrderingRemover` | StrategyOrderingIntegrationTests.cs | Real simulation host verifying Ordinal fallback order and identity-based removal under reentrant insertion in BeforeRemove |
 | `ExtensionDomainStrategyBase` (abstract) | StrategyPoolTypeSafetyAndExtensionTests.cs | Third-domain abstract base class extending LifecycleStrategyBase; defines ProbeValue() abstract method |
 | `ExtensionDomainConcreteStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | Concrete implementation of ExtensionDomainStrategyBase; ProbeValue() returns "ok" |
 | `PoolEntityStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | LifecycleStrategyBase empty implementation for generic branch safety tests |

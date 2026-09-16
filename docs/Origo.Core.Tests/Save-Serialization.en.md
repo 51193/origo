@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
 <!-- docsync-revision: 10 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Serialization Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

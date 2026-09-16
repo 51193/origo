@@ -1,13 +1,13 @@
-<!-- docsync-pair: usage/extension-directions -->
+<!-- docsync-pair: architecture/extension-directions -->
 <!-- docsync-revision: 1 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Extension Directions and Deferred Designs
 
-> [↑ Back to usage](README.en.md)
+> [↑ Back to Architecture](README.en.md)
 
 > **Nature of this document**: This page records alternative design directions produced by brainstorming. They are all "discussed, not implemented, deferred" ideas. They are not current framework capabilities, not roadmap commitments, and they do not change any existing interface semantics. The value of this page is to keep the complete "why not" trade-offs in the manual: when a developer or agent meets a related problem, they can first see the boundary of the current design and judge whether the benefit has grown enough to justify re-evaluation; when it has, they can pick up these pre-thought skeletons instead of reinventing them from scratch.
 
-Before reading this page, understand the current baseline: [Architecture Overview](architecture-overview.en.md), [SND Entity Model](snd-entity-model.en.md), [Strategy Lifecycle](strategy-lifecycle.en.md), and [Design Patterns](design-patterns.en.md).
+Before reading this page, understand the current baseline: [Architecture Overview](overview.en.md), [SND Entity Model](../usage/snd-entity-model.en.md), [Strategy Lifecycle](../usage/strategy-lifecycle.en.md), and [Design Patterns](../usage/design-patterns.en.md).
 
 ## Direction Summary
 
@@ -15,7 +15,6 @@ Before reading this page, understand the current baseline: [Architecture Overvie
 |-----------|------------------------|--------------------------|----------------------|
 | Unified tree namespace | `DataSourceNode` tree + `IDataSourceIoGateway` file-content boundary | Synchronous local reads are sufficient; remote access would block the frame, and a unified namespace affects every I/O contract | Local files, saves, and network resources need one access protocol |
 | Entity-level concurrency | Single-threaded frame model + stateless strategy pool | Cross-entity reads/writes, observer notifications, dependencies, and teardown semantics would all need to be redefined; extremely high cost | Profiling shows entity `Process` dominates frame time, and entities are highly independent |
-| Relative lifecycle strategy ordering | `StrategyIndexAttribute.Priority` numeric ordering | Numeric ordering is simple and sufficient at current scale; graph-based ordering has no realized benefit yet | Strategy count explodes and multi-person collaboration causes frequent priority collisions |
 | Multiple ActiveStrategy implementations per index | Globally unique strategy index + per-entity single-implementation dictionary | The existing single-strategy switch covers current needs; dispatch and persistence complexity do not match the benefit | Many entity types share the same interaction verb and the switch becomes unmanageable |
 
 ## Direction 1: Unified Tree Namespace
@@ -58,11 +57,11 @@ If re-evaluated, first build a read-only local file-system tree (still delegatin
 
 ### Relationship to the Current Design
 
-The framework uses a single-threaded frame model: entities process serially within a frame, and deferred queues carry cross-frame actions. Strategy instances are stateless and globally shared, so strategy classes are conceptually thread-friendly; however, strategies within one entity are sorted by `Priority`, and that execution order is part of the design — all strategies of one entity cannot simply run concurrently.
+The framework uses a single-threaded frame model: entities process serially within a frame, and deferred queues carry cross-frame actions. Strategy instances are stateless and globally shared, so strategy classes are conceptually thread-friendly; however, strategies within one entity are sorted by their partial-order constraints, and that execution order is part of the design — all strategies of one entity cannot simply run concurrently.
 
 ### Envisioned Shape
 
-The concurrency granularity should be the **entity**, not the strategy: strategies within one entity still run serially by priority, while different entities may run in parallel. For safety, concurrency should not be the default; it should be a property of the entity:
+The concurrency granularity should be the **entity**, not the strategy: strategies within one entity still run serially in partial order, while different entities may run in parallel. For safety, concurrency should not be the default; it should be a property of the entity:
 
 - The developer explicitly marks an entity as "concurrent", confirming that its logic does not depend on other concurrent entities.
 - The entity data container switches to a concurrent mode (or uses a concurrency-safe structure / partitioned snapshot).
@@ -89,44 +88,7 @@ Stateless strategies solve the "shared strategy instance across entities" pollut
 - Large-scale background simulation appears, or on-screen entity counts exceed what the current serial model can cover.
 - The team is willing to declare dependency and data-access constraints for "concurrent" entities.
 
-## Direction 3: Relative Ordering Constraints for Lifecycle Strategies
-
-### Relationship to the Current Design
-
-Lifecycle strategy execution order is determined by `StrategyIndexAttribute.Priority`: smaller integers run first, the default is 6205, and equal priority uses insertion order. The framework also relies on this ordering for the layered "low priority produces, high priority consumes" execution model.
-
-### Envisioned Shape
-
-Replace "one global number" with explicit constraints:
-
-```csharp
-// Conceptual sketch; Before/After APIs do not currently exist
-[StrategyIndex("game.action.move", Before = ["game.action.resolve"], After = ["game.intent"])]
-public sealed class MoveActionStrategy : LifecycleStrategyBase { }
-```
-
-On registration or insertion, build a partial-order graph over the strategy indices and compute a topological order automatically; contradictions (cycles) throw immediately, and the remaining unordered strategies keep a deterministic order (for example insertion order / original Priority as a fallback).
-
-### Benefits
-
-- Eliminates the "what number should I choose near the default 6205" mental burden; teams no longer need to coordinate priority ranges.
-- Ordering intent lives next to the strategy declaration and is locally readable; plugin strategies only declare their position relative to known strategies.
-- Conflicts change from "silently wrong runtime results" to "fail fast at insertion/registration".
-
-### Costs and Risks
-
-- Dynamic `AddStrategy` / `RemoveStrategy` would need incremental topological insertion; current metadata stores only index lists. If constraints come from type attributes, the save format does not need to change, but per-entity constraint overrides would require extending `StrategyMetaData`.
-- Transitive constraints can create distant orderings the developer did not expect; cycle detection fails fast, but locating the real contradictory edge still requires graph diagnostics.
-- The complexity of graph construction and incremental sorting at large strategy counts is unverified; today's O(n) insertion plus O(n) traversal cost is negligible, and that guarantee becomes more complex once a graph is introduced.
-- Numeric Priority is already intuitive enough for the current layered conventions (perception P4, scheduling P5, action P6).
-
-### Re-evaluation Signals
-
-- Strategy counts grow to the point where multiple people or plugins must collaborate, and priority-range conflicts become common.
-- Repeated "two strategies both use 6205, and the order silently depends on insertion order" bugs appear.
-- Business code starts requiring a hard constraint such as "strategy X must always run after strategy Y".
-
-## Direction 4: Multiple ActiveStrategy Implementations per Index
+## Direction 3: Multiple ActiveStrategy Implementations per Index
 
 ### Relationship to the Current Design
 
@@ -173,21 +135,20 @@ Until the benefit materializes, the current capabilities can cover this:
 
 | Symptom | Read Current Baseline First | Then Consider |
 |---------|------------------------------|---------------|
-| Strategies concatenate file paths, JSON paths, and entity data paths | [Architecture Overview - I/O Boundary](architecture-overview.en.md#io-boundary) | Direction 1 |
-| Frame time concentrates in many entity updates, but in-entity strategy order must be preserved | [Architecture Overview - Concurrency Model](architecture-overview.en.md#concurrency-model) | Direction 2 |
-| Priority numbers keep being adjusted and teams coordinate ranges around 6205 | [Design Patterns - Priority-Layered Execution](design-patterns.en.md#priority-layered-execution) | Direction 3 |
-| A single ActiveStrategy contains a large switch by entity type | [Design Patterns - Entity Communication](design-patterns.en.md#inter-entity-communication) | Direction 4 |
-| The save directory needs to be an inescapable sandbox | [Persistence Flow](persistence-flow.en.md) | Direction 1 |
-| Observer notifications or cross-entity calls make concurrency dangerous | [SND Entity Model](snd-entity-model.en.md) | Direction 2 |
+| Strategies concatenate file paths, JSON paths, and entity data paths | [Architecture Overview - I/O Boundary](overview.en.md#io-boundary) | Direction 1 |
+| Frame time concentrates in many entity updates, but in-entity strategy order must be preserved | [Architecture Overview - Concurrency Model](overview.en.md#concurrency-model) | Direction 2 |
+| A single ActiveStrategy contains a large switch by entity type | [Design Patterns - Entity Communication](../usage/design-patterns.en.md#inter-entity-communication) | Direction 3 |
+| The save directory needs to be an inescapable sandbox | [Persistence Flow](../usage/persistence-flow.en.md) | Direction 1 |
+| Observer notifications or cross-entity calls make concurrency dangerous | [SND Entity Model](../usage/snd-entity-model.en.md) | Direction 2 |
 
 ## Related Documents
 
-- Current architecture: [Architecture Overview](architecture-overview.en.md)
+- Current architecture: [Architecture Overview](overview.en.md)
 - Strategy system implementation: [Strategy Module](../Origo.Core/Snd/Strategy/README.en.md)
 - Data source implementation: [DataSource Module](../Origo.Core/DataSource/README.en.md)
 - Scheduling implementation: [Scheduling Module](../Origo.Core/Scheduling/README.en.md)
 - Entity implementation: [Entity Module](../Origo.Core/Snd/Entity/README.en.md)
-- Common patterns: [Design Patterns](design-patterns.en.md)
+- Common patterns: [Design Patterns](../usage/design-patterns.en.md)
 
 ---
-[↑ Back to usage](README.en.md)
+[↑ Back to Architecture](README.en.md)

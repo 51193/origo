@@ -67,7 +67,7 @@ public sealed class HealthStrategy : LifecycleStrategyBase
 nc localhost 9876
 ```
 
-- **源码生成器**：Roslyn 增量生成器在编译期生成类型化数据访问器，消除装箱和字符串 key 查找。6 个诊断规则（`ORIGOSG001`–`006`）在编译时捕获配置错误。
+- **源码生成器**：Roslyn 增量生成器在编译期生成类型化数据访问器，消除装箱和字符串 key 查找。7 个诊断规则（`ORIGOSG001`–`007`）在编译时捕获配置错误。
 - **测试基础设施**：`StrategyTestScenario` 声明式策略单元测试框架（Configure → Simulate → Inspect）。架构护栏测试强制执行依赖方向和策略约束。
 
 ### Godot 4 适配器
@@ -93,8 +93,9 @@ nc localhost 9876
 ```
 
 ```xml
-<PackageReference Include="Origo.Core" />
-<PackageReference Include="Origo.GodotAdapter" />
+<!-- 版本号需与下载的 .nupkg 文件版本一致。 -->
+<PackageReference Include="Origo.Core" Version="0.0.9" />
+<PackageReference Include="Origo.GodotAdapter" Version="0.0.9" />
 ```
 
 ### 2. 创建目录结构
@@ -113,13 +114,13 @@ res://origo/
 > 若 Godot 无法解析 `[GlobalClass]`，创建一行桥接类：
 > ```csharp
 > [GlobalClass]
-> public partial class MyOrigoEntry : GodotAdapter.Bootstrap.OrigoDefaultEntry { }
+> public partial class MyOrigoEntry : Origo.GodotAdapter.Bootstrap.OrigoDefaultEntry { }
 > ```
 
 ### 4. 编写策略与定义实体
 
 ```csharp
-[StrategyIndex("game.player_move", Priority = 100)]
+[StrategyIndex("game.player_move")]
 public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -144,7 +145,7 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 
 `OrigoDefaultEntry._Ready()` 自动发现所有 `[StrategyIndex]` 策略、加载别名和模板、启动游戏。
 
-> 完整教程：[快速开始](docs/usage/quick-start.zh.md) · [架构概览](docs/usage/architecture-overview.zh.md) · [SND 实体模型](docs/usage/snd-entity-model.zh.md)
+> 完整教程：[快速开始](docs/usage/quick-start.zh.md) · [架构概览](docs/architecture/overview.zh.md) · [SND 实体模型](docs/usage/snd-entity-model.zh.md)
 
 ## 文档
 
@@ -155,18 +156,19 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 | 我想... | 去这里 |
 |---|---|
 | 浏览全部能力 | [能力清单](docs/usage/capabilities.zh.md) |
-| 理解架构设计 | [架构概览](docs/usage/architecture-overview.zh.md) |
+| 理解架构设计 | [架构概览](docs/architecture/overview.zh.md) |
 | 学习 SND 模型 | [SND 实体模型](docs/usage/snd-entity-model.zh.md) |
 | 测试我的策略 | [策略测试](docs/usage/strategy-testing.zh.md) |
 | 使用存档系统 | [持久化流程](docs/usage/persistence-flow.zh.md) |
 | 使用状态机 | [状态机](docs/usage/state-machine.zh.md) |
 | 使用控制台 | [控制台命令](docs/usage/console-commands.zh.md) |
 | AI Agent 参考 | [Agent Reference](docs/usage/agent-reference.zh.md) |
+| 准备发布 / 更新 Changelog | [发布与 Changelog 流程](docs/release-process.zh.md) |
 
 ## 开发
 
 ```bash
-bash scripts/ci.sh        # 完整 CI 流水线（格式检查 + 测试 + 基准 + Godot 集成）
+bash scripts/ci.sh        # 本地完整流水线（lint-scripts + 格式检查 + 文档同步 + 测试 + 基准 + Godot）
 bash scripts/test.sh      # 构建 + 测试 + 覆盖率门禁（日常迭代）
 bash scripts/format.sh    # 仅格式检查
 ```

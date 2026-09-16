@@ -10,21 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props', 'Directory.Packages.props', 'global.json') }}
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Cache Godot binary
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .godot_binary
           key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
@@ -44,10 +44,15 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          # Release validation runs scripts/doc-sync.sh, whose git-derived
+          # revision planner needs the complete history available at a tag
+          # checkout.
+          fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -62,13 +67,29 @@ jobs:
           fi
           echo "Tag version v$TAG_VERSION matches Directory.Build.props version $PROPS_VERSION."
 
+      - name: Verify release metadata
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          bash scripts/verify-release.sh
+
       - name: DocSync validate
         run: bash scripts/doc-sync.sh
 
-      - uses: actions/cache@v4
+      - name: Check generated doc files are committed
+        run: |
+          if ! git diff --quiet -- docs/; then
+            echo "ERROR: generated doc files are out of date for this tag."
+            echo "Run 'dotnet run --project tools/DocSyncTool -- generate' and commit before tagging."
+            git status --short -- docs/
+            exit 1
+          fi
+
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props', 'Directory.Packages.props', 'global.json') }}
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Restore
@@ -112,7 +133,7 @@ jobs:
           zip -rq "./artifacts/${DIRNAME}.zip" "${DIRNAME}"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ./artifacts/*
           generate_release_notes: true

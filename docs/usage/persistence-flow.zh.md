@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 8 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化流程
 
 > [↑ 回到 usage](README.zh.md)
@@ -155,6 +155,8 @@ SaveGamePayload {
 }
 ```
 
+> **节点所有权**：`SaveGamePayload` / `LevelPayload` 内的每个 `DataSourceNode` 树由持有方负责 `Dispose`。框架内部在加载/挂载与写入/快照边界释放自己创建的临时 payload；通过公共 `ISaveStorageService` 读取方法取得的 payload 由调用方释放，写入方法必须在其调用期间消费完节点树。
+
 ## 存档 API
 
 ### 请求保存
@@ -185,10 +187,10 @@ ctx.Lifecycle.RequestLoadMainMenuEntrySave();  // 加载主菜单入口存档
 
 ```csharp
 // 获取所有存档槽 ID
-var ids = saveStorageService.EnumerateSaveIds();
+var ids = ctx.Save.ListSaves();
 
 // 获取存档槽 + 展示元数据（用于存档选择界面）
-var entries = saveStorageService.EnumerateSavesWithMetaData();
+var entries = ctx.Save.ListSavesWithMetaData();
 // entries[i].SaveId → "001"
 // entries[i].MetaData → { "play_time": "2h30m", "level": "town" }
 ```
@@ -256,7 +258,7 @@ public interface ISavePathPolicy
 ## 相关文档
 
 - [会话模型](session-model.zh.md) — Session 与存档的关系
-- [架构总览](architecture-overview.zh.md) — 持久化在整体架构中的位置
+- [架构总览](../architecture/overview.zh.md) — 持久化在整体架构中的位置
 
 ---
 [↑ 回到 usage](README.zh.md)

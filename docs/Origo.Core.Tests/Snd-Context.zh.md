@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 14 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 21 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 上下文 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
@@ -11,7 +11,7 @@
 
 验证 SndContext 作为 SND 系统的核心编排器的全部工作流：save/load/continue 操作、
 控制台命令提交、模板克隆、延迟动作队列、NullSndContext 的无操作行为、
-LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动流程、
+TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入口配置启动流程、
 模板别名解析与缓存。
 
 ## 测试文件清单
@@ -19,12 +19,14 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | 文件 | 验证侧重点 |
 |------|-----------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch 全链路工作流 |
+| `SndContextShutdownFailureTests.cs` | 工作流卸载旧 ProgressRun 抛异常时的清理不变量：ProgressRun 引用与前台会话均被清空 |
 | `SndContextEntryFlowTests.cs` | SndContext 从入口配置开始的工作流 |
-| `SndContextBootstrapTests.cs` | Bootstrap 启动流程：策略发现、别名/模板加载、入口存档加载的顺序与配置开关 |
+| `SndContextBootstrapTests.cs` | Bootstrap 启动流程：策略发现、排序校验与注册冻结、别名/模板加载、入口存档加载的顺序与配置开关 |
 | `PersistenceRequestTrackingTests.cs` | 持久化请求（save/continue/initial/main menu entry/switch level）入队后 pending 计数跟踪直至冲刷 |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder 构建和写入关卡数据 |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad 解析与 ApplyAttributes 类型推断 |
 | `SndTemplateResolverTests.cs` | 模板别名解析、缓存、克隆不影响缓存 |
+| `TemplateAccessPublicPathTests.cs` | 公共 `ISndTemplateAccess` 路径：模板克隆后经会话 Spawn、运行时加载模板/别名 map、JSON 实体列表模板简写解析 |
 
 ## SndContextWorkflowTests 测试详情
 
@@ -34,6 +36,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 |---------|-----------|---------|
 | `ListSaves_ReturnsEmptyWhenNoSaves` | 无存档时 ListSaves 返回空 | ISndSaveOperations |
 | `ListSaves_ReturnsSaveIds` | 有存档时 ListSaves 返回存档 ID | ISndSaveOperations |
+| `ListSavesWithMetaData_ReturnsEmptyWhenNoSaves` | 无存档时 ListSavesWithMetaData 返回空 | ISndSaveOperations |
 | `RequestSaveGame_PersistsAndSetsActiveSaveSlot` | 保存后文件存在、ActiveSaveId 正确设置 | persistence-flow |
 | `RequestSaveGame_IncrementsThenDecrementsPendingCount` | 保存请求先增后减 pending 计数 | ISndDeferredActions |
 | `RequestSaveGameAuto_WithExplicitId_UsesIt` | RequestSaveGameAuto 使用传入 ID | ISndSaveOperations |
@@ -124,6 +127,16 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `Resolve_InvalidJson_Throws` | 无效 JSON 模板文件 | Exception |
 | `Resolve_ConverterReturnsNull_ThrowsInvalidOperationException` | 转换器返回 null | InvalidOperationException（含 "deserialized to null"） |
 
+## TemplateAccessPublicPathTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `CloneTemplate_AndSessionSpawn_CreateTemplateEntity` | `ctx.Template.CloneTemplate` 克隆模板并通过 `ISessionRun.Spawn` 生成实体 | ISndTemplateAccess / ISessionRun |
+| `LoadTemplates_AndLoadMetaListFromFile_ResolveTemplateShorthand` | 运行时加载模板 map，并从 JSON 实体列表解析 `templateKey` / `sndName` 简写后经 `SpawnMany` 生成 | ISndTemplateAccess / ISessionRun |
+| `LoadSceneAliases_LoadsAliasMap_ThroughPublicTemplateAccess` | 经 `ctx.Template.LoadSceneAliases` 重载别名 map，查询结果可被运行时映射解析 | ISndTemplateAccess |
+
 ## NullSndContext（测试基础设施）
 
 `NullSndContext` 位于测试项目（`Origo.Core.Tests/TestSupport/`），作为测试辅助类使用。
@@ -186,6 +199,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | 缺少 entry.json | 冲刷延迟队列时抛出异常（fail-fast） |
 | `Bootstrap_Twice_Throws` | 重复调用 Bootstrap | InvalidOperationException |
 | `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | 场景宿主未绑定 context（topology 未绑定）时 Bootstrap | InvalidOperationException（消息含 "not bound to a context"） |
+| `Bootstrap_InvalidStrategyOrdering_ThrowsDuringSeal` | 已注册生命周期策略引用未注册的 Before 目标 | Bootstrap 在固定注册表时抛 InvalidOperationException（消息含缺失目标索引） |
 | `CloneTemplate_NullKey_ThrowsArgumentException` | CloneTemplate 传入 null key | ArgumentException |
 | `CloneTemplate_WhitespaceKey_ThrowsArgumentException` | CloneTemplate 传入空白 key | ArgumentException |
 | `CloneTemplate_NonExistingKey_Throws` | CloneTemplate 传入不存在的模板别名 | InvalidOperationException |
@@ -198,6 +212,14 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | `InitialSaveRootPath_ReturnsConstructorValue` | 构造参数 | 返回初始存档根路径 |
 | `EntryConfigPath_ReturnsConstructorValue` | 构造参数 | 返回入口配置路径 |
 
+## SndContextShutdownFailureTests 测试详情
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `Workflow_WhenOldProgressDisposeThrows_ClearsProgressRunReference` | 旧 ProgressRun 卸载时 session 状态机的退出 pop 钩子抛异常 | 原异常传播；`ForegroundSession` 为 null；`_progressRun` 引用被清空（通过 InternalsVisibleTo 断言内部不变量） |
+
 ## SndArchetypeLoaderTests 测试详情
 
 ### 正确路径
@@ -205,6 +227,7 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `TryLoad_ValidMapFile_ReturnsAttributes` | 有效 map 文件解析返回 4 个属性，键值正确 | SndArchetypeLoader.TryLoad |
+| `TryLoad_DisposesReturnedSourceNode` | TryLoad 复制属性后释放从 ISndFileAccess 读取的 DataSourceNode | SndArchetypeLoader.TryLoad |
 | `ApplyAttributes_IntString_StoresAsInt` | 整数字符串 "100" 存储为 int(100) | SndArchetypeLoader.ApplyAttributes |
 | `ApplyAttributes_LargeIntegerString_StoresAsLong` | 超大整数字符串超过 int.MaxValue 时存储为 long，不存为 float | SndArchetypeLoader.ApplyAttributes |
 | `ApplyAttributes_FloatString_StoresAsFloat` | 浮点字符串 "3.14" 存储为 float(3.14f) | SndArchetypeLoader.ApplyAttributes |
@@ -230,7 +253,6 @@ LevelBuilder 关卡构建、Archetype 加载与属性解析、入口配置启动
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | RequestSaveGame 在无 ProgressRun 时的行为 | 未设置 ProgressRun 时 Save 应如何处理 | ISndSaveOperations |
-| SndContext 并发调用 FlushDeferredActions | 多线程 Flush 的线程安全 | — |
 | CloneTemplate 传入空 overrideName 的行为 | 空名字覆盖 | ISndTemplateAccess |
 
 ---

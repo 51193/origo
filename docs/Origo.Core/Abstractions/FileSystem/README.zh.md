@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 8 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # FileSystem (Abstractions)
 
 > [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: GodotAdapter/FileSystem](../../../Origo.GodotAdapter/FileSystem/README.zh.md)
@@ -50,7 +50,7 @@
 
 ### 为什么策略不直接使用 IFileSystem
 
-`IFileSystem` 完全内部化——策略和基础设施模块均不直接引用它。策略通过 `ISndFileAccess`（静态资源文件访问，`ISndContext` 的 `FileAccess` companion 属性）和 `ISndArchiveFileAccess`（存档内文件访问，`ArchiveFileAccess` companion 属性）访问文件。`ISndFileAccess` 内部委托到三个基础接口：
+`IFileSystem` 是平台实现接口：框架内部模块和策略均不直接引用它，仅由适配层/宿主实现；策略通过 `ISndFileAccess`（静态资源文件访问，`ISndContext` 的 `FileAccess` companion 属性）和 `ISndArchiveFileAccess`（存档内文件访问，`ArchiveFileAccess` companion 属性）访问文件。`ISndFileAccess` 内部委托到三个基础接口：
 
 - `IDataSourceIoGateway`：内容读写（仅 `ReadTree`/`WriteTree`，所有文件强制走 codec 路由——包括 `.sha`、`.write_in_progress` 等无结构化后缀，通过 `RawStringDataSourceCodec` 路由），返回已解析的 `DataSourceNode` 树
 - `IFileMetaAccess`：文件元数据（FileExists、DirectoryExists、Enumerate、CreateDirectory、Delete、Copy、Rename）
@@ -62,7 +62,7 @@
 - 文件元数据操作通过 `IFileMetaAccess`，路径运算通过 `IPathResolver`
 - 策略无需自行解析原始 JSON/Map 文本，也无需处理平台路径差异
 - 编码/解码策略集中管理，更换引擎时无需修改策略代码
-- `IFileSystem` 接口本身供适配层实现；Core 内置的 `MemoryFileSystem` 是 `internal` 的零依赖参考实现，供测试项目经 InternalsVisibleTo 使用（见 DataSource 模块文档）
+- `IFileSystem` 接口本身供适配层实现；纯内存的 `MemoryFileSystem` 参考实现位于 `Origo.TestSupport`（测试支撑程序集），供测试项目复用，位于 TestSupport 程序集（见 [TestSupport/FileSystem](../../../Origo.TestSupport/FileSystem/README.zh.md)）
 
 ---
 [↑ 回到 Abstractions](../README.zh.md)

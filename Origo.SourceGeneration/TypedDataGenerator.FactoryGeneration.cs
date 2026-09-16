@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace Origo.SourceGeneration;
 
 public sealed partial class TypedDataGenerator
 {
-    private static void GenerateTypedDataFactory(StringBuilder sb, List<InlineTypeInfo> types)
+    private static void GenerateTypedDataFactory(SourceBuilder sb, List<InlineTypeInfo> types)
     {
         sb.AppendLine("internal static class TypedDataFactory<T>");
         sb.AppendLine("{");

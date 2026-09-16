@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 16 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision: 26 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy
 
 > [↑ Back to Snd](../README.en.md)
@@ -23,8 +23,8 @@ Strategies are divided into four categories: passive entity strategies (frame-dr
 | `ObserverBindingEntry.cs` | `internal` — single observer binding record (observerName / targetName / observerIndex / strategy / data subscription wrapper); `FullCleanup` unsubscribes + triggers `OnUnmounted` + returns strategy |
 | `ObserverStrategyMetadata.cs` | `internal` — per-type reflection cache of data keys declared by `[ObserveData]` |
 | `ObserveDataAttribute.cs` | Observation data key declaration attribute: `[ObserveData("key")]`, supports multiple declarations |
-| `ActiveStrategyExtensions.cs` | `ISndEntity` extension methods: generic `InvokeStrategy<TInput, TOutput>` eliminates JSON serialization boilerplate; `EnsureStrategy` lazy strategy mount + idempotent guard. Physically located at `Origo.Core/Snd/` root (not under Strategy/) |
 | `ActiveStrategyManager.cs` | `internal` — per-entity active strategy manager: Dictionary container + add/remove + serialization |
+| `LifecycleStrategyOrder.cs` | Complete registry validation, deterministic topological ordering, and cycle diagnostics |
 | `SndStrategyPool.cs` | `internal` — Strategy pool: registration, instantiation, reference counting, statelessness validation |
 | `SndStrategyManager.cs` | `internal` — per-entity passive strategy manager: strategy container add/remove + lifecycle hook coordination |
 | `StrategyIndexAttribute.cs` | Strategy index declaration attribute: `[StrategyIndex("core.health")]` |
@@ -52,7 +52,7 @@ Each scene host that creates real `SndEntity` instances (`FullMemorySndSceneHost
 - **Mount(observer, target, observerIndex)**: Acquire strategy instance → establish `SubscribeDataRaw` wiring on target for each key declared by `[ObserveData]` attribute → record binding → trigger `OnMounted`. Mounting is atomic: if wiring or `OnMounted` throws, all established subscriptions are canceled, partially-added bindings are removed, strategy reference is returned to pool, and the exception propagates. Mounting the same (observer, target, observerIndex) twice throws `InvalidOperationException` (consistent with the passive/active strategy managers' duplicate-mount rejection)
 - **Unmount(observer, target, observerIndex)**: Remove binding record → tear down `UnsubscribeDataRaw` → trigger `OnUnmounted` → release pool reference. The binding is removed before the callbacks so re-entrant unmounting from inside `OnUnmounted` is safe; a `finally` block guarantees the pool reference is returned even when a hook throws. Throws `InvalidOperationException` when the binding does not exist (fail-fast, consistent with `RemoveStrategy` throwing on a non-mounted index)
 - **ReleaseStrategiesFor(observer)**: Release all strategy references held by an observer and clear its outgoing edges (does not trigger `OnUnmounted`, does not unsubscribe), corresponding to the `ReleaseStrategiesOnly` phase of entity teardown
-- **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`. A missing or blank target (inconsistent save topology) throws `InvalidOperationException` (fail-fast) instead of being silently skipped
+- **RecoverBindingsFor(observer, bindings, resolveTarget)**: Recover from archived observer_indices topology, resolve target entities by name, re-wire and trigger `OnMounted`. A missing or blank target (inconsistent save topology) throws `InvalidOperationException` (fail-fast) instead of being silently skipped. This method mounts bindings one by one and does not promise local cross-binding rollback; the load transaction boundary is `SessionRun.LoadFromPayload` — a mid-recovery failure runs `ResetAfterLoadFailure` and clears the whole session (entities, topology, state machines, blackboard)
 - **BuildBindingsFor(observerName)**: Serialize an observer's full outgoing edges as `List<ObserverBinding>` (grouped by target) into `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**: Clean an observer's full outgoing edges; if target is resolvable, full `Unmount`; otherwise return strategy and remove record
 - **TeardownAllBindingsFor(observer)**: Self-contained cleanup path that calls `FullCleanup` on all outgoing edges of the observer (unsubscribe + `OnUnmounted` + release strategy), not depending on the scene host — binding entries already hold `TargetEntity` references. Invoked by `SessionRun.ReleaseAllEntitiesAndClear` through `IEntityLifecycle.TeardownObserverBindings` when a session quits
@@ -83,9 +83,10 @@ Global registry and instance pool for strategies:
 - **Register**: `Register(Type strategyType, Func<BaseStrategy> factory)` — validates statelessness via reflection before registering the type (checks instance fields and writable properties)
 - **GetStrategy<TBase>(index)**: If an instance exists in the pool, reuse it (reference count +1); otherwise create via factory
 - **ReleaseStrategy(index)**: Reference count -1; when it reaches zero, remove from pool (but factory is retained for future creation)
-- **GetPriority(index)**: Returns the strategy's execution priority on an entity (default 6205)
+- **SealRegistration()**: Validate every relationship and freeze registration at startup. Further `Register` calls throw. `Bootstrap` seals after discovery; public startup workflows seal before execution; direct entity use seals before the first nonempty lifecycle recovery or dynamic mount.
+- **GetLifecycleOrder(index)**: Return the topological position in the complete registry; unknown or non-lifecycle indices throw.
 - **LogPoolLeaks()**: Diagnostic method, iterates all reference counts; if any non-zero counts exist, outputs a Warning log. Called during testing or shutdown to detect unreturned strategy references (leaks)
-- **Strategy ordering**: Only passive entity strategies are sorted ascending by priority; same priority sorts by insertion order
+- **Strategy ordering**: Only lifecycle strategies use `Before` / `After`. Topological candidates in the complete registry are selected with `StringComparer.Ordinal`. Entity lists project that order, preserving A → C in A → B → C when B is unmounted.
 
 ### SndStrategyManager
 
@@ -93,7 +94,7 @@ Each `SndEntity` holds one manager instance, managing passive entity strategies.
 
 | Method | Description |
 |--------|-------------|
-| `RecoverStrategiesOnly(indices)` | Acquire strategies from pool by index, sort-insert (releases old strategies, does not trigger hooks) |
+| `RecoverStrategiesOnly(indices)` | Acquire strategies from pool by index, sort-insert (releases old strategies, does not trigger hooks; duplicate indices throw before acquisition) |
 | `ReleaseStrategiesOnly()` | Release all strategy references and clear list (does not trigger hooks) |
 | `TriggerAfterSpawn(entity, ctx)` | Snapshot-iterate to trigger AfterSpawn |
 | `TriggerAfterLoad(entity, ctx)` | Snapshot-iterate to trigger AfterLoad |
@@ -105,7 +106,7 @@ Each `SndEntity` holds one manager instance, managing passive entity strategies.
 | `Add(entity, index, ctx)` | Dynamically add strategy and trigger `AfterAdd`; if `AfterAdd` throws, roll back insertion and return pool reference before propagating (addition is atomic). Mounting the same index twice throws `InvalidOperationException`; the plan engine (`PlanExecutionStrategyBase`) reuses an already-mounted action instead of remounting it, so plan-managed actions may also appear in `LifecycleIndices` |
 | `Remove(entity, index, ctx)` | Dynamically remove strategy (triggers BeforeRemove); a non-mounted index throws `InvalidOperationException` (fail-fast, symmetric with `Add`'s strictness) |
 
-- **Recover**: Type filter on pool acquisition, keeping only `LifecycleStrategyBase` subclasses; non-`LifecycleStrategyBase` types (such as `ActiveStrategyBase`, `ObserverStrategyBase`) immediately throw `InvalidOperationException`
+- **Recover**: Validate index uniqueness first, then type-filter on pool acquisition, keeping only `LifecycleStrategyBase` subclasses; duplicate indices or non-`LifecycleStrategyBase` types (such as `ActiveStrategyBase`, `ObserverStrategyBase`) immediately throw `InvalidOperationException`
 - **Lifecycle hook triggering**: All based on `ToArray()` snapshot iteration — because hooks may add or remove strategies. The five trigger methods (`TriggerAfterSpawn/Load/Save/Quit/Dead`) uniformly delegate to `TriggerAll`, eliminating copy-paste duplication
 
 ### ActiveStrategyManager
@@ -113,7 +114,7 @@ Each `SndEntity` holds one manager instance, managing passive entity strategies.
 Each `SndEntity` holds one manager instance, managing active strategies:
 
 - **Container**: `Dictionary<string, ActiveStrategyBase>` — O(1) lookup by index, does not participate in per-frame traversal
-- **Recover**: Batch recovery from metadata (does not trigger hooks); upon encountering non-`ActiveStrategyBase` types, immediately throws `InvalidOperationException` and rolls back all active strategies already acquired in this recovery, leaving no half-initialized state — consistent fail-fast semantics with `SndStrategyManager`'s entity strategy recovery
+- **Recover**: Validate index uniqueness first, then batch-recover from metadata (does not trigger hooks); duplicate indices or non-`ActiveStrategyBase` types immediately throw `InvalidOperationException`, rolling back all active strategies already acquired in this recovery and leaving no half-initialized state — consistent fail-fast semantics with `SndStrategyManager`'s entity strategy recovery
 - **ReleaseAll**: Call `ReleaseStrategy` on each and clear container (does not trigger hooks)
 - **Add / Remove**: Dynamic addition and removal of active strategies; `Remove` throws `InvalidOperationException` for a non-attached index (fail-fast)
 - **Invoke**: Look up strategy instance by index, call `Invoke(entity, ctx, input)` and return the result
@@ -185,23 +186,37 @@ Serialized JSON format:
 }
 ```
 
+Indices inside `LifecycleIndices` and `ActiveIndices` must be unique within their own list; duplicate indices throw during load before any strategy instance is acquired.
+
 All three are recovered separately during `RecoverForLifecycle` with no cross-contamination.
 
 ### StrategyIndexAttribute
 
 ```csharp
-[StrategyIndex("my_game.player_control", Priority = 100)]
+[StrategyIndex("my_game.player_control", Before = new[] { "my_game.movement" })]
 public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 ```
 
 - `Index`: required, unique index key for the strategy in the pool
-- `Priority`: optional, default 6205, determines the execution order of multiple passive strategies on the same entity; active strategies do not participate in ordering
+- `Before` / `After`: Optional index arrays, declared only by lifecycle strategies and referencing lifecycle strategies. Targets must be registered but need not be mounted. Null arrays, blank targets, self references, unknown indices, non-lifecycle references, and cycles fail explicitly; cycle diagnostics include an actual closed path.
 
 ## Design Decisions
 
+### Why freeze the complete registry graph
+
+Ordering constraints are global type-level relationships and must be validated and frozen in one startup pass so later registrations cannot change existing entity order; entities project that order and retain transitive relationships through unmounted intermediate strategies. Process and all batch hooks use the same direction, saves contain mounted indices only, and recovery sorts by the same relations; dynamic removal targets entries by identity so insertion inside the hook cannot remove a different strategy. See [Architecture decision: Lifecycle strategy ordering constraints](../../../architecture/strategy-ordering.en.md) for the full motivation, trade-offs, and alternatives.
+
+
+### Known ordering boundaries
+
+- The complete registry includes registered but unmounted strategies: constraint targets must be registered, so optional strategy packs are coupled at startup. Missing-target handling and evolution options are documented in the [architecture decision record](../../../architecture/strategy-ordering.en.md).
+- Entity order is a projection of global topological ranks; ordinal is a global candidate-selection rule and does not guarantee that two incomparable mounted strategies keep ordinal order. Declare explicit `Before` / `After` constraints when order matters; see the [architecture decision record](../../../architecture/strategy-ordering.en.md) for the full analysis and refactor paths.
+
 ### Why strategies must be stateless (registration-time validation)
 
-Strategy instances are shared across multiple entities; instance fields (such as `int _hp`) would cause cross-entity contamination. Registration-time reflection checks all levels between `BaseStrategy` and the concrete type, rejecting strategies that declare instance fields or writable properties, blocking this error at the source.
+Strategy instances are shared across multiple entities; instance fields (such as `int _hp`) would cause cross-entity contamination. Registration-time reflection checks all levels between `BaseStrategy` and the concrete type, rejecting strategies that declare instance fields or writable properties, blocking this error at the source. `readonly` instance fields (`IsInitOnly`) are exempt.
+
+> **Important boundary**: `readonly` only prevents reassigning the field itself; it does **not** validate the internal mutability of a referenced object. For example, `private readonly List<int> _buffer = [];` passes registration, but its contents can still be mutated and cause cross-entity contamination. The framework deliberately does not perform a deep "is this referenced object immutable" check at registration time — such a check is unreliable and would also reject legitimate dependencies such as `readonly ILogger`. Strategy authors who declare `readonly` reference-type fields must guarantee that the referenced object is never mutated at runtime.
 
 A side effect of this constraint: **test strategies cannot use instance fields as event receivers** and must use static fields (`static List<string>?`) to share event collection across strategy instances. Test classes using static fields must be serialized via `[Collection]` attributes or globally disable parallel execution via `[assembly: CollectionBehavior(DisableTestParallelization = true)]` to prevent race conditions between parallel tests. See `Origo.Core.Tests/Architecture.en.md`.
 
@@ -215,7 +230,7 @@ The same strategy may be referenced by multiple entities simultaneously (e.g., t
 
 ### Why passive and active strategy containers are separate
 
-Active strategies only require index-based lookup (O(1) Dictionary) and do not participate in per-frame traversal. Passive strategies require priority-ordered iteration (List). Separate containers avoid type checks and irrelevant data during traversal and provide clear grouping boundaries for serialization.
+Active strategies only require index-based lookup (O(1) Dictionary) and do not participate in per-frame traversal. Passive strategies require partial-order iteration (List). Separate containers avoid type checks and irrelevant data during traversal and provide clear grouping boundaries for serialization.
 
 ### Why all lifecycle hooks use snapshot iteration
 
@@ -225,13 +240,20 @@ Hook callbacks frequently need to add or remove strategies (e.g., removing one's
 
 ActiveStrategy is recovered during `RecoverForLifecycle` (Phase 1), before `FireAfterSpawnHooks` / `FireAfterLoadHooks` (Phase 2). This ensures entity strategy hooks can call their own ActiveStrategy via `InvokeStrategy` and can also call ActiveStrategies of other recovered entities — enabling loading-order-independent cross-entity interoperability.
 
+### Why Observer recovery runs after AfterLoad on load
+
+`AfterLoad` is the entity business-initialization phase: all entities already have Data, Nodes, passive strategies, and active strategies recovered, so entities can interoperate safely. Recovering Observers first would fire `OnMounted` before the observer entity's own `AfterLoad` and would let observers consume intermediate state while a target writes data inside `AfterLoad`. Running every `AfterLoad` first and mounting bindings afterwards makes `OnMounted` observe the stabilized post-initialization state, and business code never needs to reconnect bindings manually inside `AfterLoad`.
+
+### Why Observer unwiring runs before BeforeDead on death
+
+`BeforeDead` is the entity strategy's final business-processing phase, during which the entity must still be locatable and its observer subscriptions must be fully releasable. Running bidirectional unwiring (firing `OnUnmounted`) before `BeforeDead` guarantees that no unreleasable subscription remains after the entity is removed; observer hooks also finish before the target death hook.
+
 ### Why the strategy pool's reference counting is not thread-safe
 
 `SndStrategyPool`'s reference counts, registration table, and instance cache are only accessed on the frame thread (single-threaded frame model). Cross-thread scenarios (deferred-queue enqueue/dequeue, console input, etc.) only carry actions and data and never touch the pool; engine callbacks and business strategy hooks all run on the frame thread. Reference counting therefore needs no locking — concurrent pool access is a contract violation with undefined behavior.
 
-- **Alternative direction: entity-level concurrency (deferred)**: Statelessness makes strategy types shareable across entities, but entity Data, cross-entity `InvokeStrategy`, synchronous observer notifications, and scene-container mutation are still designed for the single-threaded frame model; the priority order among multiple strategies inside one entity must also be preserved. The candidate design is "concurrency as an entity property" + a concurrency-mode data container + running concurrent entities first in parallel, then running the rest serially after a barrier; it is deferred because there is currently no performance bottleneck. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
-- **Alternative direction: relative ordering constraints for lifecycle strategies (deferred)**: The current numeric `Priority` ordering is simple and deterministic, but strategy growth may create numeric coordination burden. The candidate design replaces it with `Before` / `After` partial-order constraints, automatically positions strategies topologically at insertion or registration, and throws immediately on cycles; deferred because the benefit is limited at the current scale. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
-- **Alternative direction: multiple ActiveStrategy implementations per index (deferred)**: The strategy index is currently globally unique, and each entity also has only one implementation for the same active index. The candidate design upgrades the index into a "contract name / interface name", binds concrete implementations per target entity, and dispatches `InvokeStrategy("hurt")` through the entity binding table; the current workarounds — a single strategy switching on entity fields, or the `*_impl` replaceable-implementation pattern — cover today's needs, so it is deferred. See [Extension Directions and Deferred Designs](../../../usage/extension-directions.en.md) for the full trade-off
+- **Alternative direction: entity-level concurrency (deferred)**: Statelessness makes strategy types shareable across entities, but entity Data, cross-entity `InvokeStrategy`, synchronous observer notifications, and scene-container mutation are still designed for the single-threaded frame model; the partial order among multiple strategies inside one entity must also be preserved. The candidate design is "concurrency as an entity property" + a concurrency-mode data container + running concurrent entities first in parallel, then running the rest serially after a barrier; it is deferred because there is currently no performance bottleneck. See [Extension Directions and Deferred Designs](../../../architecture/extension-directions.en.md) for the full trade-off
+- **Alternative direction: multiple ActiveStrategy implementations per index (deferred)**: The strategy index is currently globally unique, and each entity also has only one implementation for the same active index. The candidate design upgrades the index into a "contract name / interface name", binds concrete implementations per target entity, and dispatches `InvokeStrategy("hurt")` through the entity binding table; the current workarounds — a single strategy switching on entity fields, or the `*_impl` replaceable-implementation pattern — cover today's needs, so it is deferred. See [Extension Directions and Deferred Designs](../../../architecture/extension-directions.en.md) for the full trade-off
 ---
 
 [↑ Back to Snd](../README.en.md)

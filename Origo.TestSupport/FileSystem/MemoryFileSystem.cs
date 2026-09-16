@@ -4,14 +4,14 @@ using System.IO;
 using System.Linq;
 using Origo.Core.Abstractions.FileSystem;
 
-namespace Origo.Core.DataSource;
+namespace Origo.TestSupport;
 
 /// <summary>
 ///     A pure in-memory <see cref="IFileSystem" /> implementation, with no dependency on any physical
-///     file system or engine API. Internal: used by the test projects (via InternalsVisibleTo)
-///     as a dependency-free reference implementation. No production code consumes it.
+///     file system or engine API. Shared test-support reference implementation
+///     used directly by test projects and wrapped by <see cref="TestMemoryFileSystem" />.
 /// </summary>
-internal sealed class MemoryFileSystem : IFileSystem
+public sealed class MemoryFileSystem : IFileSystem
 {
     private readonly HashSet<string> _directories = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _files = new(StringComparer.Ordinal);

@@ -12,7 +12,6 @@ using static Origo.Core.Tests.SaveAndSwitchForegroundTestInfrastructure;
 
 namespace Origo.Core.Tests;
 
-[Collection("StrategyStateTests")]
 public class SaveAndSwitchForegroundIntegrationTests
 {
     // ── FullMemorySndSceneHost: FindByName during hooks ──────────────────

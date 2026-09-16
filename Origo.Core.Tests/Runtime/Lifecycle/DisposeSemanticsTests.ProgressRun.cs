@@ -9,7 +9,6 @@ namespace Origo.Core.Tests;
 ///     Tests that verify the ProgressRun Dispose contract: directory cleanup,
 ///     idempotency, post-dispose state, and exception safety.
 /// </summary>
-[Collection("StrategyStateTests")]
 public class DisposeSemanticsTestsProgressRun
 {
     [Fact]

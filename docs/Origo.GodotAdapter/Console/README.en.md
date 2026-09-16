@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
 <!-- docsync-revision: 3 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Runtime/Console](../../Origo.Core/Runtime/Console/README.en.md)

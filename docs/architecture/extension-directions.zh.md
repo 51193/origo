@@ -1,13 +1,13 @@
-<!-- docsync-pair: usage/extension-directions -->
+<!-- docsync-pair: architecture/extension-directions -->
 <!-- docsync-revision: 1 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 扩展方向与暂缓设计
 
-> [↑ 回到 usage](README.zh.md)
+> [↑ 回到 architecture](README.zh.md)
 
 > **性质说明**：本文档记录头脑风暴产生的备选设计方向，均属于“已讨论、未进入实现、暂缓”的思考。它们不是当前框架能力，不构成路线图承诺，也不改变任何现有接口语义。本文的价值在于把“为什么不这样做”的完整权衡留在文档里：当开发者或 agent 遇到相关问题时，可以先看到现状的设计边界，再判断收益是否已经高到值得重新评估；当收益条件成熟时，也可以直接拾起这些已经想过的骨架，而不是从零重新发明。
 
-阅读本文前，应先理解当前现状：[架构总览](architecture-overview.zh.md)、[SND 实体模型](snd-entity-model.zh.md)、[策略生命周期](strategy-lifecycle.zh.md)、[设计模式](design-patterns.zh.md)。
+阅读本文前，应先理解当前现状：[架构总览](overview.zh.md)、[SND 实体模型](../usage/snd-entity-model.zh.md)、[策略生命周期](../usage/strategy-lifecycle.zh.md)、[设计模式](../usage/design-patterns.zh.md)。
 
 ## 方向速览
 
@@ -15,7 +15,6 @@
 |------|----------|--------------|--------------|
 | 统一树形命名空间 | `DataSourceNode` 树 + `IDataSourceIoGateway` 文件内容边界 | 本地同步读足够，远端异步访问会阻塞帧；统一命名空间会牵动所有 I/O 契约 | 需要把本地文件、存档、网络资源用同一种访问协议处理 |
 | 实体级并发 | 单线程帧模型 + 无状态策略池 | 跨实体读写、观察者通知、依赖与销毁语义都要重新定义，成本极高 | 性能分析确认实体 `Process` 成为帧瓶颈，且实体间高度独立 |
-| 生命周期策略相对顺序 | `StrategyIndexAttribute.Priority` 数字排序 | 数字方案简单且当前规模足够；图排序收益尚未出现 | 策略数量膨胀、多人协作频繁发生优先级冲突 |
 | ActiveStrategy 同名多实现 | 策略索引全局唯一 + 每实体单实现字典 | 现有单策略内 switch 已可覆盖；分发与持久化复杂度收益不匹配 | 大量实体类型共享同一交互动词，switch 开始失控 |
 
 ## 方向一：统一树形命名空间
@@ -58,11 +57,11 @@ path -> to -> file -> entity -> health_point
 
 ### 现状关系
 
-框架采用单线程帧模型：一帧内实体串行 `Process`，延迟队列负责跨帧动作。策略实例无状态且全局共享，因此策略类本身适合多线程；但实体内部的多个策略存在 `Priority` 排序，执行顺序是设计的一部分，不能把同一个实体的所有策略直接并发。
+框架采用单线程帧模型：一帧内实体串行 `Process`，延迟队列负责跨帧动作。策略实例无状态且全局共享，因此策略类本身适合多线程；但实体内部的多个策略存在偏序排序，执行顺序是设计的一部分，不能把同一个实体的所有策略直接并发。
 
 ### 备选愿景
 
-并发粒度放在**实体**而不是策略：一个实体的策略仍按优先级串行，不同实体之间可以并行。为保证安全，并发不应成为默认行为，而应作为实体的自身属性：
+并发粒度放在**实体**而不是策略：一个实体的策略仍按偏序串行，不同实体之间可以并行。为保证安全，并发不应成为默认行为，而应作为实体的自身属性：
 
 - 开发者显式标记某实体“可并发”，表示其逻辑已确认不依赖其他并发实体。
 - 实体数据容器切换到并发模式（或使用并发安全的数据结构/分区快照）。
@@ -89,44 +88,7 @@ path -> to -> file -> entity -> health_point
 - 出现大规模后台模拟或同屏单位数量达到当前串行模型无法覆盖的程度。
 - 团队愿意为“可并发”实体额外声明依赖与数据访问约束。
 
-## 方向三：生命周期策略的相对顺序约束
-
-### 现状关系
-
-生命周期策略的执行顺序由 `StrategyIndexAttribute.Priority` 决定：整数越小越先执行，默认 6205，同优先级按插入顺序。框架也依赖该顺序实现“低优先级产出、高优先级消费”的分层执行模式。
-
-### 备选愿景
-
-将“一个全局数字”改为显式约束：
-
-```csharp
-// 概念示意，当前并不存在 Before/After API
-[StrategyIndex("game.action.move", Before = ["game.action.resolve"], After = ["game.intent"])]
-public sealed class MoveActionStrategy : LifecycleStrategyBase { }
-```
-
-注册或插入策略时，把索引集合建成偏序图并自动求拓扑序；出现矛盾（环）立即抛异常，同批次剩余节点保持确定性顺序（如沿用插入顺序/原 Priority 兜底）。
-
-### 收益
-
-- 消除“默认 6205 附近应该取多少”的心智负担，团队不需要协调优先级区间。
-- 顺序意图写在策略声明附近，局部可读；插件策略只需声明自己与哪些已知策略的相对位置。
-- 冲突从“运行结果悄悄错了”变成“插入/注册时 fail-fast”。
-
-### 成本与风险
-
-- 动态 `AddStrategy` / `RemoveStrategy` 需要增量拓扑插入；当前元数据只保存索引列表，若约束来自类型特性则无需改存档格式，若允许每实体覆盖约束则需要扩展 `StrategyMetaData`。
-- 传递约束可能产生开发者没有意识到的远距离排序；环检测虽可 fail-fast，但定位真实约束矛盾仍需要图诊断。
-- 大规模策略集合下构图/增量排序的复杂度尚未验证；当前框架的 O(n) 插入 + O(n) 遍历成本可忽略，引入图后这部分保证会变复杂。
-- 数字 Priority 对当前分层约定（感知 P4、调度 P5、行动 P6）已经足够直观。
-
-### 重新评估信号
-
-- 策略数量增长到需要多人/多插件协作，优先级区间冲突成为常见问题。
-- 反复出现“两个策略都写了 6205，顺序靠插入顺序碰运气”导致的隐性依赖。
-- 业务侧开始需要“某策略必须永远在另一策略之后”的硬约束表达。
-
-## 方向四：ActiveStrategy 同名多实现
+## 方向三：ActiveStrategy 同名多实现
 
 ### 现状关系
 
@@ -173,21 +135,20 @@ public sealed class MoveActionStrategy : LifecycleStrategyBase { }
 
 | 遇到的现象 | 先看现状 | 再参考方向 |
 |------------|----------|-----------|
-| 策略里同时拼接文件路径、JSON 路径和实体数据路径 | [架构总览 - I/O 边界](architecture-overview.zh.md#io-边界) | 方向一 |
-| 帧耗时集中在大量实体更新，但实体内策略顺序需要保留 | [架构总览 - 并发模型](architecture-overview.zh.md#并发模型) | 方向二 |
-| 优先级数字越调越乱，团队需要协调 6205 附近区间 | [设计模式 - 优先级分层执行](design-patterns.zh.md#优先级分层执行) | 方向三 |
-| 一个 ActiveStrategy 里按实体类型写大 switch | [设计模式 - 实体间通信](design-patterns.zh.md#实体间通信) | 方向四 |
-| 想把存档目录做成不可逃逸的沙箱 | [持久化流程](persistence-flow.zh.md) | 方向一 |
-| 观察者通知或跨实体调用让并发设计变得危险 | [SND 实体模型](snd-entity-model.zh.md) | 方向二 |
+| 策略里同时拼接文件路径、JSON 路径和实体数据路径 | [架构总览 - I/O 边界](overview.zh.md#io-边界) | 方向一 |
+| 帧耗时集中在大量实体更新，但实体内策略顺序需要保留 | [架构总览 - 并发模型](overview.zh.md#并发模型) | 方向二 |
+| 一个 ActiveStrategy 里按实体类型写大 switch | [设计模式 - 实体间通信](../usage/design-patterns.zh.md#实体间通信) | 方向三 |
+| 想把存档目录做成不可逃逸的沙箱 | [持久化流程](../usage/persistence-flow.zh.md) | 方向一 |
+| 观察者通知或跨实体调用让并发设计变得危险 | [SND 实体模型](../usage/snd-entity-model.zh.md) | 方向二 |
 
 ## 关联文档
 
-- 现状架构：[架构总览](architecture-overview.zh.md)
+- 现状架构：[架构总览](overview.zh.md)
 - 策略系统实现：[Strategy 模块](../Origo.Core/Snd/Strategy/README.zh.md)
 - 数据源实现：[DataSource 模块](../Origo.Core/DataSource/README.zh.md)
 - 调度实现：[Scheduling 模块](../Origo.Core/Scheduling/README.zh.md)
 - 实体实现：[Entity 模块](../Origo.Core/Snd/Entity/README.zh.md)
-- 常用模式：[设计模式](design-patterns.zh.md)
+- 常用模式：[设计模式](../usage/design-patterns.zh.md)
 
 ---
-[↑ 回到 usage](README.zh.md)
+[↑ 回到 architecture](README.zh.md)

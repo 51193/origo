@@ -92,6 +92,8 @@ public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDefe
 
     public IReadOnlyList<string> ListSaves() => [];
 
+    public IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData() => [];
+
     public void RequestLoadGame(string saveId) =>
         throw new InvalidOperationException("NullSndContext does not support load operations.");
 

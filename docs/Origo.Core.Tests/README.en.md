@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 12 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Tests
 
 > [↑ Back to Origo.manual](../README.en.md)
@@ -40,7 +40,7 @@ The test project provides the following core support facilities via `TestSupport
 | `GameplaySimulationHarness` | Fluent Builder + Harness | One-click creation of complete frame-driven game simulation environment: OrigoRuntime + SndContext + background game session (syncProcess=true), supports DriveFrame/RunFrames/SpawnEntity/GetEntityData/SaveAndReload |
 | `TestStrategies` | Abstract base class collection | `SharedFrameCounterStrategy`, `SharedEchoActiveStrategy`, `SharedKillProbeStrategy`, `SharedNoopLifecycleStrategy`, `SharedNoopStateMachineStrategy` — referenced by integration test files via 1-line sealed subclass, eliminating duplicate strategy definitions |
 | `TestObserverEvents` | Structured event recording | `TestObserverEvent` record (EventType/TargetName/DataKey/OldValue/NewValue) + `EventCollector` static AsyncLocal collector + `SharedDataChangeObserverStrategy` abstract base class — observer test assertions upgrade from substring matching to typed field exact comparison |
-| `PerfReporter` | Static utility class | Performance test output formatting: Compare/Report methods, prints time/throughput/allocation comparison. Supports dual-channel output (`Console.Out` + `ITestOutputHelper`), ensuring results visible in both CI and local |
+| `PerfReporter` | Performance reporter | Performance test output formatting: Compare/Report methods, prints time/throughput/allocation comparison. Supports dual-channel output (`Console.Out` + `ITestOutputHelper`), ensuring results visible in both CI and local; duplicate metric keys within one process throw `InvalidOperationException` |
 | `ConsoleInputBuffer` | `IConsoleInputSource` implementation | Console input queue (Core production code, used directly in tests) |
 | `ConsoleOutputChannel` | `IConsoleOutputChannel` implementation | Console output channel (Core production code, used directly in tests) |
 | `PrivateFieldNamingConvention` | Architecture guardrail helper | Reflectively verifies production private fields follow `_camelCase` (dotnet format cannot verify fix-only naming rules) |
@@ -74,7 +74,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | SND Metadata | [Snd-Metadata.md](Snd-Metadata.en.md) | TypedData struct value semantics and IEquatable, SndMetaData deep copy, SG output verification, Fluent construction, TypedData integration |
 | Performance Benchmarks | [Benchmarks.md](Benchmarks.en.md) | `[Category=Benchmark]` suite (run separately by `benchmark.sh`): TypedData real simulation + Entity lifecycle + Observer topology + DataSourceNode + Blackboard + Save + Concurrent queue + Random + Strategy performance |
 | SND Scene | [Snd-Scene.md](Snd-Scene.en.md) | MemorySndSceneHost and FullMemorySndSceneHost Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity, NullNodeFactory |
-| SND Strategy | [Snd-Strategy.md](Snd-Strategy.en.md) | Strategy priority ordering, pool reference counting/recycling, entity strategy lifecycle hooks, observer strategies, active strategy Invoke, strategy pool Get/Release and Process scaling performance measurement |
+| SND Strategy | [Snd-Strategy.md](Snd-Strategy.en.md) | Strategy partial ordering, pool reference counting/recycling, entity strategy lifecycle hooks, observer strategies, active strategy Invoke, strategy pool Get/Release and Process scaling performance measurement |
 | SND Context | [Snd-Context.md](Snd-Context.en.md) | SndContext save/load/continue workflow, LevelBuilder, template resolution, Archetype loading |
 | SND Extensions | [Snd-Extensions.md](Snd-Extensions.en.md) | EnsureStrategy lazy strategy attachment (idempotent), TryGetNumeric cross-numeric type read, InvokeStrategy generic invocation |
 | File Access | [Snd-FileAccess.md](Snd-FileAccess.en.md) | ISndFileAccess DataSourceNode read/write round-trip on SndContext, strongly-typed round-trip, overwrite semantics, error/boundary paths |

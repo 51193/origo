@@ -8,9 +8,7 @@ namespace Origo.Core.Save.Meta;
 ///     Each contributor returns its own dictionary of produced key-value
 ///     pairs (must not modify others' contributions); the framework merger
 ///     combines them all. Multiple contributors execute in registration order;
-///     same-name keys from later contributors override earlier ones. Finally,
-///     <c>customMeta</c> provided by the caller performs key-level overrides
-///     once more.
+///     same-name keys from later contributors override earlier ones.
 /// </summary>
 public interface ISaveMetaContributor
 {
@@ -19,5 +17,13 @@ public interface ISaveMetaContributor
     ///     metadata. Implementations must return a fresh dictionary and must
     ///     not mutate the <paramref name="context" /> beyond reading it.
     /// </summary>
+    /// <returns>
+    ///     A non-null dictionary with non-blank keys and non-null values.
+    /// </returns>
+    /// <exception cref="System.InvalidOperationException">
+    ///     The framework merger throws when the returned dictionary is null,
+    ///     contains a blank key, or contains a null value; invalid metadata
+    ///     fails the save instead of being silently dropped.
+    /// </exception>
     IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 }

@@ -1,13 +1,13 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision: 11 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Storage
 
 > [↑ Back to Save](../README.en.md)
 
 ## Overview
 
-Complete implementation of the save storage layer. Responsible for file I/O (read/write, directory management, snapshots), path layout strategy, and Payload construction. All file operations go through `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver`; no direct `File.*` API calls (`IFileSystem` is internalized).
+Complete implementation of the save storage layer. Responsible for file I/O (read/write, directory management, snapshots), path layout strategy, and Payload construction. All file operations go through `IFileMetaAccess` + `IDataSourceIoGateway` + `IPathResolver`; no direct `File.*` API calls (`IFileSystem` is an adapter-layer extension point injected by the host).
 
 ## Included Files
 
@@ -63,6 +63,12 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 - **Per-level three-piece set incomplete** → refuse to read (partial existence = corruption)
 - **progress.json missing** → refuse to read
 - **Background level referenced by the topology has no payload** → refuse to load (consistent with the foreground: a topology referencing level data that does not exist must fail explicitly; silently mounting an empty session would hide data loss)
+
+## DataSourceNode Ownership Contract
+
+- **Read methods** (`ReadSavePayloadFromSnapshot` / `ReadProgressNodeFromSnapshot` / `TryReadLevelPayload*` / `ResolveLevelPayload`) return payloads or nodes owned by the caller; the caller must dispose the contained `DataSourceNode` trees.
+- **Write methods** (`WriteSavePayloadToCurrent*` / `WriteLevelPayloadOnlyToCurrent` / `WriteProgressOnlyToCurrent`) must fully consume the supplied node trees before returning; they must not retain references for later reads. The framework disposes nodes immediately after these write boundaries, so custom implementations must not access the nodes after returning either.
+- Internal framework load/mount paths dispose payloads as soon as they are no longer needed; public-interface caller ownership is never managed on their behalf by internal framework paths.
 
 ## Design Decisions
 

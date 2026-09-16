@@ -70,4 +70,18 @@ public sealed partial class TypedDataGenerator
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor _adapterFriendAccessRequired = new(
+        id: "ORIGOSG007",
+        title: "TypedData adapter assembly requires friend access",
+        messageFormat:
+        "Assembly '{0}' declares SndInlineTypes adapter registrations but is not a friend "
+        + "assembly of Origo.Core. Adapter-mode generated code reads TypedData internals "
+        + "(_kind/_ref) and calls internal registration APIs, which are accessible only to "
+        + "assemblies in Origo.Core's InternalsVisibleTo whitelist (currently only "
+        + "Origo.GodotAdapter). Contact the Origo maintainer before registering adapter "
+        + "inline types from this assembly.",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

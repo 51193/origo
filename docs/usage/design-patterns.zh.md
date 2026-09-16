@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 8 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 设计模式
 
 > [↑ 回到 usage](README.zh.md)
@@ -177,7 +177,7 @@ public sealed class SchedulingStrategy : LifecycleStrategyBase
 - 需要运行时切换行为（如地面移动 → 飞行移动）
 - 避免在模板中固化实现选择
 
-> **暂缓方向**：`*_impl` 模式解决的是生命周期策略按实体选实现；主动策略的“同名多实现”（如所有实体都响应 `hurt`，但实现不同）已作为接口式分发方向讨论，当前可用唯一 `hurt` 策略内按实体字段 `switch` 覆盖。完整权衡见 [扩展方向与暂缓设计](extension-directions.zh.md)。
+> **暂缓方向**：`*_impl` 模式解决的是生命周期策略按实体选实现；主动策略的“同名多实现”（如所有实体都响应 `hurt`，但实现不同）已作为接口式分发方向讨论，当前可用唯一 `hurt` 策略内按实体字段 `switch` 覆盖。完整权衡见 [扩展方向与暂缓设计](../architecture/extension-directions.zh.md)。
 
 ---
 
@@ -191,7 +191,7 @@ var path = target.InvokeStrategy<GridPos[], List<GridPos>>(
     "traversability.find_path", new[] { start, end });
 ```
 
-> **暂缓方向**：`InvokeStrategy` 当前按全局唯一索引路由到唯一实现；如果出现大量实体共享同一交互动词，可评估“契约名 + 每实体实现绑定”的同名多实现分发。当前工作区是在唯一策略内按实体字段 `switch`，或直接调用具体索引。完整权衡见 [扩展方向与暂缓设计](extension-directions.zh.md)。
+> **暂缓方向**：`InvokeStrategy` 当前按全局唯一索引路由到唯一实现；如果出现大量实体共享同一交互动词，可评估“契约名 + 每实体实现绑定”的同名多实现分发。当前工作区是在唯一策略内按实体字段 `switch`，或直接调用具体索引。完整权衡见 [扩展方向与暂缓设计](../architecture/extension-directions.zh.md)。
 
 ### 观察者策略：异步数据变更通知
 
@@ -258,27 +258,24 @@ internal static class MenuBuilder
 
 ---
 
-## 优先级分层执行
+## 相对顺序分层执行
 
-用不同 `Priority` 值划分策略的执行层次（数值越小越先执行）：
+用 `Before` / `After` 明确声明生命周期策略的执行层次：
 
-```
-P4   感知层      读取环境/自身状态 → 产出意图
-P5   调度层      根据意图 → 拆解行动计划
-P6   行动层      执行具体行为 → 报告完成/失败
-P20  寻路层      读取目标 → 计算路径
-P30  移动层      读取下一步 → 执行位移
-P35  检测层      逐帧检测条件 → 触发结果
+```text
+感知层 → 调度层 → 行动层
+寻路层 → 移动层
+检测层（按业务需要声明与其他层的关系）
 ```
 
 设计要点：
-- 同一帧内，低 Priority 先执行，产出的数据在同帧被高 Priority 策略消费
-- 持续运行的子系统（寻路、移动）与决策系统（感知、调度）使用不同优先级段
+- 同一帧内，偏序中靠前的策略先执行，产出的数据在同帧被后续策略消费
+- 持续运行的子系统（寻路、移动）与决策系统（感知、调度）声明相对顺序关系
 - 不同层之间通过 data 键通信，无直接耦合
 
 ### 调度层的 PlanExecutionStrategyBase
 
-框架提供 [`PlanExecutionStrategyBase`](../Origo.Core/Planning/README.zh.md) 作为调度层（P5）的标准基类。它封装了 intent → plan → step → action 的完整生命周期：
+框架提供 [`PlanExecutionStrategyBase`](../Origo.Core/Planning/README.zh.md) 作为调度层的标准基类。它封装了 intent → plan → step → action 的完整生命周期：
 
 - **订阅 wiring**：自动管理 `intent` 和 `action_status` 的数据订阅 RAII 闭环
 - **计划推进**：intent 变更重启计划；action 完成/失败推进到下一步或终止
@@ -289,7 +286,7 @@ P35  检测层      逐帧检测条件 → 触发结果
 用户仅需实现两个抽象方法：
 
 ```csharp
-[StrategyIndex("character.scheduling", Priority = 5)]
+[StrategyIndex("character.scheduling", After = new[] { "character.perception" }, Before = new[] { "character.action" })]
 public sealed class MySchedulingStrategy : PlanExecutionStrategyBase
 {
     protected override string IntentKey => "my.intent";

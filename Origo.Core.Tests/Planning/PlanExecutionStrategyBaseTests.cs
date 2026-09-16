@@ -14,7 +14,6 @@ using Xunit;
 
 namespace Origo.Core.Tests;
 
-[Collection("StrategyStateTests")]
 public class PlanExecutionStrategyBaseTests
 {
     // ── Test strategy: minimal plan ─────────────────────────────────

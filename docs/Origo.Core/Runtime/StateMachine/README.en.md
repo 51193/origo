@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Runtime/StateMachine/README -->
 <!-- docsync-revision: 2 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # StateMachine (Runtime)
 
 > [↑ Back to Runtime](../README.en.md) · [↔ Implementation: StateMachine](../../StateMachine/README.en.md)

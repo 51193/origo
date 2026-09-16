@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
@@ -14,6 +15,14 @@ namespace Origo.GodotAdapter.Bootstrap;
 public partial class OrigoDefaultEntry : OrigoAutoHost
 {
     private static readonly string[] _godotSkipPrefixes = ["Godot", "GodotSharp"];
+
+    /// <summary>
+    ///     The unified SND context created during <see cref="_Ready" /> and
+    ///     exposed to presentation/game code after bootstrap. This is the
+    ///     same facade passed to
+    ///     <see cref="ConfigureSaveMetadataContributors" />.
+    /// </summary>
+    public ISndContext Context { get; private set; } = null!;
 
     /// <summary>Path to the entry config file (levels-structured <c>entry.json</c>).</summary>
     [Export] public string ConfigPath { get; set; } = "res://origo/entry/entry.json";
@@ -32,6 +41,18 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
 
     /// <summary>Whether to auto-discover strategy types during <see cref="SndContext.Bootstrap" />.</summary>
     [Export] public bool AutoDiscoverStrategies { get; set; } = true;
+
+    /// <summary>
+    ///     Called after <see cref="OrigoAutoHost.Runtime" /> is created and before
+    ///     <see cref="SndContext.Bootstrap" /> seals strategy registration. Override to
+    ///     register strategies manually, for example when <see cref="AutoDiscoverStrategies" />
+    ///     is disabled or when a strategy type cannot be discovered automatically.
+    /// </summary>
+    /// <param name="world">The world whose strategy pool is still open for registration.</param>
+    protected virtual void ConfigureStrategies(SndWorld world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+    }
 
     /// <summary>
     ///     Called after <see cref="SndContext" /> is created and bound to <see cref="GodotSndManager" />;

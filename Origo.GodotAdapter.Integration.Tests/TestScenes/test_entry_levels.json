@@ -1,0 +1,9 @@
+{
+  "levels": {
+    "main_menu": {
+      "snd_scene": "res://TestScenes/empty_scene.json",
+      "type": "main_menu"
+    }
+  },
+  "main_menu_level": "main_menu"
+}

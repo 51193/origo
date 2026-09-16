@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 14 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6. -->
+<!-- docsync-revision: 21 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Context Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
@@ -9,19 +9,21 @@
 
 ## Behavior Under Test Overview
 
-Validates the full workflows of SndContext as the central orchestrator of the SND system: save/load/continue operations, console command submission, template cloning, deferred action queues, NullSndContext no-op behavior, LevelBuilder level construction, Archetype loading and attribute parsing, entry config startup flow, and template alias resolution and caching.
+Validates the full workflows of SndContext as the central orchestrator of the SND system: save/load/continue operations, console command submission, template cloning, deferred action queues, NullSndContext no-op behavior, TestSupport LevelBuilder level construction, Archetype loading and attribute parsing, entry config startup flow, and template alias resolution and caching.
 
 ## Test File List
 
 | File | Verification Focus |
 |------|-------------------|
 | `SndContextWorkflowTests.cs` | SndContext save/load/continue/switch full-chain workflows |
+| `SndContextShutdownFailureTests.cs` | Cleanup invariant when unloading the old ProgressRun throws: both the ProgressRun reference and the foreground session are cleared |
 | `SndContextEntryFlowTests.cs` | SndContext workflow starting from entry configuration |
-| `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, alias/template loading, entry save loading, and configuration switches |
+| `SndContextBootstrapTests.cs` | Bootstrap startup flow: order of strategy discovery, ordering validation and registration freeze, alias/template loading, entry save loading, and configuration switches |
 | `PersistenceRequestTrackingTests.cs` | Persistence requests (save/continue/initial/main menu entry/switch level) tracked as pending count until flushed |
 | `LevelBuilderExtendedTests.cs` | LevelBuilder building and writing level data |
 | `SndArchetypeLoaderTests.cs` | SndArchetypeLoader.TryLoad parsing and ApplyAttributes type inference |
 | `SndTemplateResolverTests.cs` | Template alias resolution, caching, clone does not affect cache |
+| `TemplateAccessPublicPathTests.cs` | Public `ISndTemplateAccess` path: cloning templates then session spawn, runtime template/alias map loading, JSON entity-list template shorthand resolution |
 
 ## SndContextWorkflowTests Details
 
@@ -31,6 +33,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 |-------------|------------------|---------------------|
 | `ListSaves_ReturnsEmptyWhenNoSaves` | ListSaves returns empty when no saves exist | ISndSaveOperations |
 | `ListSaves_ReturnsSaveIds` | ListSaves returns save IDs when saves exist | ISndSaveOperations |
+| `ListSavesWithMetaData_ReturnsEmptyWhenNoSaves` | ListSavesWithMetaData returns empty when no saves exist | ISndSaveOperations |
 | `RequestSaveGame_PersistsAndSetsActiveSaveSlot` | After save the file exists and ActiveSaveId is correctly set | persistence-flow |
 | `RequestSaveGame_IncrementsThenDecrementsPendingCount` | Save request increments then decrements pending count | ISndDeferredActions |
 | `RequestSaveGameAuto_WithExplicitId_UsesIt` | RequestSaveGameAuto uses the provided ID | ISndSaveOperations |
@@ -121,6 +124,16 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `Resolve_InvalidJson_Throws` | Invalid JSON template file | Exception |
 | `Resolve_ConverterReturnsNull_ThrowsInvalidOperationException` | Converter returns null | InvalidOperationException (contains "deserialized to null") |
 
+## TemplateAccessPublicPathTests Details
+
+### Correct Path
+
+| Test Method | Verified Behavior | Doc Source |
+|---------|-----------|---------|
+| `CloneTemplate_AndSessionSpawn_CreateTemplateEntity` | `ctx.Template.CloneTemplate` clones a template and `ISessionRun.Spawn` creates the entity | ISndTemplateAccess / ISessionRun |
+| `LoadTemplates_AndLoadMetaListFromFile_ResolveTemplateShorthand` | Loads a template map at runtime, resolves `templateKey` / `sndName` shorthand from a JSON entity list, then spawns via `SpawnMany` | ISndTemplateAccess / ISessionRun |
+| `LoadSceneAliases_LoadsAliasMap_ThroughPublicTemplateAccess` | Reloads an alias map via `ctx.Template.LoadSceneAliases` and the runtime mapping resolves the new alias | ISndTemplateAccess |
+
 ## NullSndContext (Test Infrastructure)
 
 `NullSndContext` lives in the test project (`Origo.Core.Tests/TestSupport/`) and is used as a test utility class.
@@ -183,6 +196,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | entry.json missing | Deferred flush throws (fail-fast) |
 | `Bootstrap_Twice_Throws` | Calling Bootstrap twice | InvalidOperationException |
 | `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | Bootstrap when the scene host topology is not bound to a context | InvalidOperationException (message contains "not bound to a context") |
+| `Bootstrap_InvalidStrategyOrdering_ThrowsDuringSeal` | A registered lifecycle strategy references an unregistered Before target | Bootstrap throws InvalidOperationException while sealing (message contains the missing target index) |
 | `CloneTemplate_NullKey_ThrowsArgumentException` | CloneTemplate with null key | ArgumentException |
 | `CloneTemplate_WhitespaceKey_ThrowsArgumentException` | CloneTemplate with whitespace key | ArgumentException |
 | `CloneTemplate_NonExistingKey_Throws` | CloneTemplate with a non-existent template alias | InvalidOperationException |
@@ -195,6 +209,14 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `InitialSaveRootPath_ReturnsConstructorValue` | Constructor parameter | Returns the initial save root path |
 | `EntryConfigPath_ReturnsConstructorValue` | Constructor parameter | Returns the entry config path |
 
+## SndContextShutdownFailureTests Details
+
+### Error Paths
+
+| Test Method | Triggered Error | Expected Behavior |
+|------------|-----------------|-------------------|
+| `Workflow_WhenOldProgressDisposeThrows_ClearsProgressRunReference` | The old ProgressRun's session state machine throws from its quit-time pop hook during unload | The original exception propagates; `ForegroundSession` is null; the `_progressRun` reference is cleared (internal invariant asserted via InternalsVisibleTo) |
+
 ## SndArchetypeLoaderTests Details
 
 ### Correct Paths
@@ -202,6 +224,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
 | `TryLoad_ValidMapFile_ReturnsAttributes` | Valid map file parsing returns 4 attributes with correct key/value pairs | SndArchetypeLoader.TryLoad |
+| `TryLoad_DisposesReturnedSourceNode` | TryLoad disposes the DataSourceNode from ISndFileAccess after copying attributes | SndArchetypeLoader.TryLoad |
 | `ApplyAttributes_IntString_StoresAsInt` | Integer string "100" stored as int(100) | SndArchetypeLoader.ApplyAttributes |
 | `ApplyAttributes_LargeIntegerString_StoresAsLong` | Large integer string exceeding int.MaxValue stored as long, not float | SndArchetypeLoader.ApplyAttributes |
 | `ApplyAttributes_FloatString_StoresAsFloat` | Float string "3.14" stored as float(3.14f) | SndArchetypeLoader.ApplyAttributes |
@@ -227,7 +250,6 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Gap Description | Impact | Documentation Basis |
 |-----------------|--------|---------------------|
 | RequestSaveGame behavior when no ProgressRun exists | How Save should be handled without a ProgressRun set | ISndSaveOperations |
-| SndContext concurrent FlushDeferredActions calls | Thread safety of multi-threaded Flush | — |
 | CloneTemplate behavior with empty overrideName | Empty name override | ISndTemplateAccess |
 
 ---

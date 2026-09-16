@@ -195,6 +195,75 @@ public class ObserverTopologyIntegrationTests
         }
     }
 
+    [Fact]
+    public void Observer_AfterLoadFiresBeforeObserverRecoveryOnReload()
+    {
+        var events = new List<TestObserverEvent>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .WithStrategy(() => new LifecycleOrderProbeStrategy())
+            .Build();
+
+        EventCollector.Events = events;
+        try
+        {
+            var target = harness.SpawnEntity("target", []);
+            var observer = harness.SpawnEntity("observer", ["test.int.obs.lifecycle_order_probe"]);
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+
+            events.Clear();
+            harness.SaveAndReload("observer_order_afterload");
+
+            var afterLoad = events.FindIndex(e =>
+                e.EventType == "after_load" && e.TargetName == "observer");
+            var onMounted = events.FindIndex(e =>
+                e.EventType == "on_mounted" && e.TargetName == "target");
+
+            Assert.True(afterLoad >= 0, "Observer AfterLoad must run during reload.");
+            Assert.True(onMounted > afterLoad,
+                "Observer recovery must mount bindings only after every entity AfterLoad has run.");
+        }
+        finally
+        {
+            EventCollector.Events = null;
+        }
+    }
+
+    [Fact]
+    public void Observer_OnUnmountedFiresBeforeTargetBeforeDead()
+    {
+        var events = new List<TestObserverEvent>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .WithStrategy(() => new LifecycleOrderProbeStrategy())
+            .Build();
+
+        EventCollector.Events = events;
+        try
+        {
+            var target = harness.SpawnEntity("target", ["test.int.obs.lifecycle_order_probe"]);
+            var observer = harness.SpawnEntity("observer", []);
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+
+            events.Clear();
+            harness.RequestKillEntity("target");
+            harness.DriveFrame();
+
+            var onUnmounted = events.FindIndex(e =>
+                e.EventType == "on_unmounted" && e.TargetName == "target");
+            var beforeDead = events.FindIndex(e =>
+                e.EventType == "before_dead" && e.TargetName == "target");
+
+            Assert.True(onUnmounted >= 0, "Observer teardown must run during target death.");
+            Assert.True(beforeDead > onUnmounted,
+                "Observer bindings must be unwired before the target BeforeDead hook runs.");
+        }
+        finally
+        {
+            EventCollector.Events = null;
+        }
+    }
+
     // ── error paths ─────────────────────────────────────────────────
 
     [Fact]
@@ -427,6 +496,18 @@ public class ObserverTopologyIntegrationTests
     }
 
     // ── test strategies ──────────────────────────────────────────────
+
+    [StrategyIndex("test.int.obs.lifecycle_order_probe")]
+    private sealed class LifecycleOrderProbeStrategy : LifecycleStrategyBase
+    {
+        public override void AfterLoad(ISndEntity entity, ISndContext ctx) =>
+            EventCollector.Events?.Add(
+                new TestObserverEvent("after_load", entity.Name, null, null, null));
+
+        public override void BeforeDead(ISndEntity entity, ISndContext ctx) =>
+            EventCollector.Events?.Add(
+                new TestObserverEvent("before_dead", entity.Name, null, null, null));
+    }
 
     [StrategyIndex("test.int.obs.topology")]
     [ObserveData("hp")]

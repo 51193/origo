@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 16 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 18 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
@@ -25,10 +25,11 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SavePathPolicyContractTests.cs` | Path policy interface contract: ISavePathPolicy injection and policy-aware verification of all storage methods |
 | `SavePathResolverTests.cs` | Path resolution: SaveFileHandle relative path extraction, parent directory creation, traversal attack rejection, leaf directory name |
 | `SaveGamePayloadTests.cs` | Data model: SaveGamePayload/LevelPayload defaults, multi-level access, CustomMeta |
+| `SavePayloadDisposalTests.cs` | Deterministic release at internal boundaries: payload node trees and progress snapshot nodes are disposed after load/mount, save/snapshot, and switch-foreground flows |
 | `WellKnownKeysTests.cs` | Constants: ActiveSaveId, SessionTopology key name correctness |
 | `SaveIdValidationTests.cs` | Save id validation: `RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` reject invalid ids (path separators / out-of-range chars), accept valid ids |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
-| `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden |
+| `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden, public save-metadata listing |
 | `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |
 | `StaleLevelDirectoryCleanupTests.cs` | Verifies that after a full save `current/` is consistent with the payload's level set — level directories of destroyed background sessions are cleaned up, not leaked into subsequent snapshots |
 
@@ -78,6 +79,17 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `RecoverFromStaleWriteMarker_CleanStateAfterRecovery` | Clean current/ state after recovery | No marker residue, data normal |
 | `DeleteCurrentDirectory_WhenNoDirectory_DoesNotThrow` | Delete when current/ does not exist | Does not throw (idempotent) |
 
+## SavePayloadDisposalTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `LoadGame_AfterMount_DisposesPayloadNodeTrees` | After `RequestLoadGame` mounts, every SaveGamePayload node tree returned by storage is disposed; accessing `Kind` throws ObjectDisposedException | SaveGamePayload ownership |
+| `LoadInitialSave_AfterMount_DisposesPayloadNodeTrees` | The initial-save flow likewise disposes its payload node trees after mount | SaveGamePayload ownership |
+| `SaveGame_AfterWrite_DisposesBuiltPayloadNodeTrees` | After `RequestSaveGame` writes and snapshots, the framework-built payload node trees are disposed | SaveGamePayload ownership |
+| `SwitchForeground_DisposesPersistedAndTargetPayloadNodeTrees` | Foreground switch disposes the persisted LevelPayload, the target LevelPayload read from storage, and the progress/state-machine nodes written by `PersistProgress` | DataSourceNode ownership contract |
+
 ## SaveFormatVersionTests Details
 
 ### Happy Path
@@ -86,6 +98,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 |-------------|-----------------|-----------|
 | `Save_WritesFormatVersionToMetaMap` | Save writes `origo.format_version: 1` to meta.map | persistence-flow: meta.map |
 | `ListSaves_HidesFrameworkReservedMetaKeys` | ListSaves/EnumerateSavesWithMetaData hide `origo.*` framework-reserved keys | persistence-flow: meta.map |
+| `ListSavesWithMetaData_PublicFacadeReturnsDisplayMetaAndHidesReservedKeys` | `ctx.Save.ListSavesWithMetaData()` returns display metadata through the public facade and hides reserved keys | persistence-flow: meta.map |
 
 ### Error Path
 
@@ -233,7 +246,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SndContext_DefaultInitialStorage_Uses_Injected_SavePathPolicy` | SndContext initial storage uses injected ISavePathPolicy | ISavePathPolicy |
 | `SystemRuntime_DefaultStorage_Uses_Injected_SavePathPolicy` | SystemRuntime default storage uses injected ISavePathPolicy | ISavePathPolicy |
 | `DefaultSaveStorageService_EnumerateSaveIds_Uses_PathPolicy` | Save enumeration under a custom policy, verified through the public `ctx.Save.ListSaves()` pipeline | ISavePathPolicy |
-| `DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy` | EnumerateSavesWithMetaData reads meta.map through policy | ISavePathPolicy |
+| `DefaultSaveStorageService_EnumerateSavesWithMetaData_Uses_PathPolicy` | Save-metadata enumeration under a custom policy, verified through the public `ctx.Save.ListSavesWithMetaData()` pipeline | ISavePathPolicy |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrentThenSnapshot_Uses_PathPolicy` | Two-phase write fully passes through policy-assembled paths | ISavePathPolicy |
 | `DefaultSaveStorageService_SnapshotCurrentToSave_Uses_PathPolicy` | SnapshotCurrentToSave assembles snapshot path through policy | ISavePathPolicy |
 | `DefaultSaveStorageService_WriteSavePayloadToCurrent_Uses_PathPolicy` | WriteToCurrent assembles file paths through policy | ISavePathPolicy |
@@ -381,10 +394,11 @@ Therefore tests should not depend on the real file system — this would break t
 
 However, the storage layer's **isolated contract verification** (per-method path assertions under a custom
 `ISavePathPolicy` injection, and read/write round-trips of low-level methods with no public equivalent such as
-`EnumerateSavesWithMetaData` / `SnapshotCurrentToSave` / `WriteSavePayloadToCurrent` /
+`SnapshotCurrentToSave` / `WriteSavePayloadToCurrent` /
 `ReadSavePayloadFromCurrent`) cannot be faithfully reproduced through the public pipeline —
 `RequestSaveGame`/`RequestLoadGame` also carries progress files and idempotency logic, making it impossible to
-isolate the storage service itself. These cases construct `DefaultSaveStorageService` directly via
+isolate the storage service itself. `EnumerateSavesWithMetaData` now has the public equivalent
+`ctx.Save.ListSavesWithMetaData()` and must be verified through that path. These cases construct `DefaultSaveStorageService` directly via
 `InternalsVisibleTo` and are recorded as exemptions under META-TEST whitelist item 7 ("low-level operations
 with no public equivalent").
 

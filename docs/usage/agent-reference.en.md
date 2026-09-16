@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 16 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 21 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Agent Reference
 
 > [↑ Back to usage](README.en.md)
@@ -26,6 +26,7 @@ public interface ISndDataAccess
 {
     void SetData<T>(string name, T value);
     (bool found, T? value) TryGetData<T>(string name);
+    bool TryGetData<T>(string name, out T? value);
     T GetData<T>(string name) where T : notnull;
 }
 
@@ -145,6 +146,7 @@ public interface ISndStateMachineAccess {
 // Save operations
 public interface ISndSaveOperations {
     IReadOnlyList<string> ListSaves();
+    IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData();
     void RequestLoadGame(string saveId);
     void RequestSaveGame(string newSaveId);
     string RequestSaveGameAuto(string? newSaveId = null);
@@ -282,15 +284,16 @@ OrigoAutoHost._Ready()
 ├── 8. BindRuntimeDependencies (World + Logger to SndManager)
 │
 └── OrigoDefaultEntry._Ready() [override]
-    ├── 9. Register adapter-layer command handlers (press_button, tree_debug)
+    ├── 9. Register adapter-layer command handlers (press_button, tree_debug, camera_view)
     ├── 10. Create SndContext (inject Runtime + FileSystem + saveRoot + config)
     ├── 11. SndManager.BindContext(context)
     ├── 12. ConfigureSaveMetadataContributors(context)
     └── 13. SndContext.Bootstrap()
           ├── 13a. ConfigureConverters
           ├── 13b. OrigoAutoInitializer.DiscoverAndRegisterStrategies (reflection scan)
-          ├── 13c. LoadSceneAliases + LoadTemplates
-          └── 13d. RequestLoadMainMenuEntrySave → FlushDeferredActions
+          ├── 13c. SndStrategyPool.SealRegistration (validate Before/After and freeze the registry)
+          ├── 13d. LoadSceneAliases + LoadTemplates
+          └── 13e. RequestLoadMainMenuEntrySave (enqueues a system-deferred action; executed at frame end through IOrigoFrameDriver.DriveFrame)
 ```
 
 ## Complete Strategy Example
@@ -301,7 +304,7 @@ using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
 
 // Entity strategy: initialize data, and mount an observer strategy to respond to hp changes
-[StrategyIndex("example.simple_health", Priority = 6205)]
+[StrategyIndex("example.simple_health", Before = new[] { "example.damage_resolution" })]
 public sealed class SimpleHealthStrategy : LifecycleStrategyBase
 {
     public override void AfterSpawn(ISndEntity entity, ISndContext ctx)

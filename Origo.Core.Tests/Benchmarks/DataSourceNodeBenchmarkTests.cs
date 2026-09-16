@@ -33,7 +33,7 @@ public class DataSourceNodeBenchmarkTests(ITestOutputHelper output)
             var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
             var nodeCount = EstimateNodeCount(depth, width);
-            rows.Add(($"d={depth} w={width} (~{nodeCount} nodes)", nodeCount, sw.Elapsed, totalAlloc));
+            rows.Add(($"Build d={depth} w={width} (~{nodeCount} nodes)", nodeCount, sw.Elapsed, totalAlloc));
 
             root.Dispose();
         }

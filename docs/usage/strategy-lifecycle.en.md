@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 6 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy Lifecycle
 
 > [↑ Back to usage](README.en.md)
@@ -150,7 +150,7 @@ public sealed class MoveToActionStrategy : LifecycleStrategyBase
 ## Complete Closed-Loop Example
 
 ```csharp
-[StrategyIndex("game.character.core", Priority = 10)]
+[StrategyIndex("game.character.core")]
 public sealed class CharacterCoreStrategy : LifecycleStrategyBase
 {
     // Game logic loop: register/unregister with manager (AfterSpawn ↔ BeforeDead paired)
@@ -224,7 +224,7 @@ For entities that need multi-step plan execution (such as AI character schedulin
 **Example:**
 
 ```csharp
-[StrategyIndex("character.scheduling", Priority = 5)]
+[StrategyIndex("character.scheduling")]
 public sealed class CharacterSchedulingStrategy : PlanExecutionStrategyBase
 {
     public override string IntentKey => "character.intent";

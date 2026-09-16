@@ -21,12 +21,11 @@ public static class EntityExtensions
     ///         within a session is the intended identity criterion.
     ///     </para>
     ///     <para>
-    ///         When both entities have no owning session (unbound stubs, e.g.
-    ///         <c>StubSndEntity</c> created before session binding), the
+    ///         When both entities have no owning session (for example
+    ///         unbound test doubles or offline-built entities), the
     ///         comparison degenerates to name equality — containers that
-    ///         produce unbound entities enforce unique names (see
-    ///         <c>LevelBuilder</c>), so same-name unbound entities denote the
-    ///         same entity in practice.
+    ///         produce unbound entities enforce unique names, so same-name
+    ///         unbound entities denote the same entity in practice.
     ///     </para>
     /// </summary>
     public static bool IsSameEntityAs(this ISndEntity a, ISndEntity b)

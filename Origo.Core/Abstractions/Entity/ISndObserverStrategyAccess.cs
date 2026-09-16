@@ -3,15 +3,27 @@ namespace Origo.Core.Abstractions.Entity;
 /// <summary>Observer strategy lifecycle operations on an SND entity.</summary>
 public interface ISndObserverStrategyAccess
 {
-    /// <summary>Mount an observer strategy on a target entity by name.</summary>
+    /// <summary>
+    ///     Mounts an observer strategy from this entity to itself.
+    ///     <paramref name="targetName"/> must equal this entity's
+    ///     <see cref="ISndEntity.Name"/>. Cross-entity mounts must resolve the
+    ///     target through <c>OwningSession.FindByName</c> and use the
+    ///     <see cref="MountObserverStrategy(ISndEntity, string)"/> overload.
+    /// </summary>
     void MountObserverStrategy(string targetName, string observerIndex);
 
-    /// <summary>Unmount an observer strategy from a target entity by name.</summary>
+    /// <summary>
+    ///     Unmounts an observer strategy from this entity itself.
+    ///     <paramref name="targetName"/> must equal this entity's
+    ///     <see cref="ISndEntity.Name"/>. Cross-entity unmounts must resolve
+    ///     the target through <c>OwningSession.FindByName</c> and use the
+    ///     <see cref="UnmountObserverStrategy(ISndEntity, string)"/> overload.
+    /// </summary>
     void UnmountObserverStrategy(string targetName, string observerIndex);
 
-    /// <summary>Mount an observer strategy on a target entity by reference.</summary>
+    /// <summary>Mounts an observer strategy on an already resolved target entity.</summary>
     void MountObserverStrategy(ISndEntity target, string observerIndex);
 
-    /// <summary>Unmount an observer strategy from a target entity by reference.</summary>
+    /// <summary>Unmounts an observer strategy from an already resolved target entity.</summary>
     void UnmountObserverStrategy(ISndEntity target, string observerIndex);
 }

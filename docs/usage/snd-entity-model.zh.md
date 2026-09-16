@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 15 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 实体模型
 
 > [↑ 回到 usage](README.zh.md)
@@ -93,7 +93,7 @@ entity.UnmountObserverStrategy(entity.Name, "character.intent_watcher");
 ### 编写策略
 
 ```csharp
-[StrategyIndex("my_game.damage_tick", Priority = 100)]
+[StrategyIndex("my_game.damage_tick")]
 public sealed class DamageTickStrategy : LifecycleStrategyBase
 {
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -114,7 +114,7 @@ public sealed class DamageTickStrategy : LifecycleStrategyBase
 - **无状态强制**：策略类不得声明实例字段或可写属性（注册时反射校验）
 - **注册方式**：`[StrategyIndex("xxx.yyy")]` 特性 + 程序集扫描
 - **索引命名**：点分命名空间 + 小写蛇形分段（如 `core.player.health`）
-- **优先级**：`Priority` 属性决定同实体上多策略的执行序（默认 6205，越小越先执行）
+- **顺序约束**：`Before` / `After` 类型特性声明同一实体的生命周期策略偏序，完整注册图固定后确定执行顺序。
 - **引用计数**：同一策略被多实体引用时计数 +1，全部释放后才回收
 
 
@@ -141,6 +141,7 @@ public sealed class ShopBuyStrategy : ActiveStrategyJsonBase<int>
 ```
 
 成功/失败约定见 `ActiveStrategyResults`（`Ok()` / `Err(message)`，失败消息以 `err:` 前缀）。
+输入不是合法 JSON 时，基类不抛异常，而是返回明确的错误结果 `"err:Invalid request"`——这是策略服务边界的显式失败协议，调用方始终能观察到失败。
 
 ### 实体身份比较
 
@@ -233,16 +234,18 @@ entity.MountObserverStrategy(entity.Name, "my_game.hp_watcher");
 
 ## 策略执行顺序
 
-同实体上的多个策略按 `Priority` 升序执行，同优先级按添加顺序：
+在 `StrategyIndexAttribute` 上声明 `Before` / `After` 索引数组：
 
-```
-Priority: 10  →  Strategy A  (先执行)
-Priority: 50  →  Strategy B
-Priority: 100 →  Strategy C
-Priority: 6205 (默认) → Strategy D
+```csharp
+[StrategyIndex("game.perception", Before = new[] { "game.scheduling" })]
+[StrategyIndex("game.scheduling", Before = new[] { "game.action" })]
 ```
 
-所有钩子（Process / AfterSpawn / etc.）均遵循此顺序。
+上述特性分别标注各自策略类型。完整注册图 A → B → C 在实体只挂载 A/C 时仍保证 A 在 C 前；关系不要求目标挂载。拓扑候选按索引 `StringComparer.Ordinal` 选择，注册、挂载和读档输入顺序不影响结果。Process 与 AfterSpawn、AfterLoad、BeforeSave、BeforeQuit、BeforeDead 同向；AfterAdd / BeforeRemove 仅作用于当前策略。
+
+所有注册必须在启动阶段完成。Bootstrap 自动发现结束后固定注册表；公共启动工作流执行前也固定。直接使用实体时，首次非空生命周期恢复或动态挂载前固定。未知索引、非生命周期引用、空白/null 声明、自引用及环明确失败，环显示实际路径。存档保留挂载索引，恢复按固定关系排序。
+
+> **顺序边界**：上面的 Ordinal 规则描述的是完整注册表的拓扑候选选择，不等于“任意两个互不相关的已挂载策略在所有实体上都保持 Ordinal”。已注册但未挂载的策略参与全局排序，其约束可能改变两个已挂载策略的相对顺序；需要稳定顺序时应为相关策略显式声明 `Before` / `After`。完整分析、已知问题与演进选项见 [架构决策记录](../architecture/strategy-ordering.zh.md)。
 
 ## 实体元数据
 

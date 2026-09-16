@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Snd/Entity/README -->
-<!-- docsync-revision: 12 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 15 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Entity
 
 > [↑ 回到 Snd](../README.zh.md) · [↔ 抽象: Abstractions/Entity](../../Abstractions/Entity/README.zh.md)
@@ -23,7 +23,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 | `DataObserverManager.cs` | `internal` — 通用数据观察者订阅/通知基础设施（键 → 回调列表）|
 | `ISndEntityRawSubscription.cs` | `internal` 原始数据订阅接口（`SubscribeDataRaw` / `UnsubscribeDataRaw`）。供 `ObserverTopology` 在内部链路中直接操作目标实体的 `SndDataManager`，将观察者策略接入数据变更 |
 
-> `TryGetNumericExtensions.cs`（位于 `Origo.Core.Snd` 命名空间）提供 `TryGetNumeric` / `GetNumeric` 扩展方法，桥接 `SetData("k", 5)`（int）和 `TryGetData<float>("k")`（float）之间的类型不匹配。按 float → int → 其余整数类型（byte/sbyte/short/ushort/char/uint/ulong）→ long → double 顺序尝试读取，详见 [TryGetNumeric](../README.zh.md)。
+> `TryGetNumeric` / `GetNumeric` 扩展方法（位于 `Origo.Core.Snd` 命名空间）桥接 `SetData("k", 5)`（int）和 `TryGetData<float>("k")`（float）之间的类型不匹配。按 float → int → 其余整数类型（byte/sbyte/short/ushort/char/uint/ulong）→ long → double 顺序尝试读取，详见 [Snd/README](../README.zh.md)。
 
 ## 模块详解
 
@@ -50,11 +50,11 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 | 方法 | 阶段 | 说明 |
 |------|------|------|
 | `RecoverForLifecycle(meta)` | Phase 1: 恢复 | 恢复 Name + Data + Node + EntityStrategy + ActiveStrategy，不触发任何钩子。失败时跨阶段原子回滚：已获取的策略引用归还池、已创建的节点释放后异常再传播 |
-| `FireAfterSpawnHooks()` | Phase 2: 钩子 | 按优先级触发策略 AfterSpawn |
-| `FireAfterLoadHooks()` | Phase 2: 钩子 | 按优先级触发策略 AfterLoad |
-| `FireBeforeSaveHooks()` | Phase 2: 钩子 | 按优先级触发策略 BeforeSave |
-| `FireBeforeQuitHooks()` | Phase 2: 钩子 | 按优先级触发策略 BeforeQuit |
-| `FireBeforeDeadHooks()` | Phase 2: 钩子 | 按优先级触发策略 BeforeDead |
+| `FireAfterSpawnHooks()` | Phase 2: 钩子 | 按策略顺序约束触发策略 AfterSpawn |
+| `FireAfterLoadHooks()` | Phase 2: 钩子 | 按策略顺序约束触发策略 AfterLoad |
+| `FireBeforeSaveHooks()` | Phase 2: 钩子 | 按策略顺序约束触发策略 BeforeSave |
+| `FireBeforeQuitHooks()` | Phase 2: 钩子 | 按策略顺序约束触发策略 BeforeQuit |
+| `FireBeforeDeadHooks()` | Phase 2: 钩子 | 按策略顺序约束触发策略 BeforeDead |
 | `ReleaseStrategiesOnly()` | Phase 3: 拆卸 | 释放被动策略 + 主动策略 + 观察者策略引用（不触发钩子） |
 | `TeardownOnly()` | Phase 3: 拆卸 | 释放 Node + Data 资源 |
 | `TeardownObserverBindings()` | Phase 3: 拆卸 | 经宿主 `ObserverTopology` 卸载本实体全部观察者绑定（退订目标数据通道） |
@@ -64,7 +64,7 @@ SND 实体模型的具体实现。`SndEntity` 是运行时实体聚合根，组�
 
 会话退出（quit）的拆卸顺序（`SessionRun.ReleaseAllEntitiesAndClear`）：先批量触发 `FireBeforeQuitHooks`，再卸载全部观察者绑定（`TeardownObserverBindings`，触发 `OnUnmounted` 并退订目标数据通道），然后批量 `ReleaseStrategiesOnly`，最后 `TeardownOnly`。实体销毁（kill）路径（`SessionRun.KillPending`）先做观察者双向拆线，再触发 `FireBeforeDeadHooks`，最后释放并移除。
 
-`Process(delta)` 按优先级 + 快照迭代触发策略 Process（`internal`，由场景宿主 `ProcessAll` 与适配层帧处理调用）。
+`Process(delta)` 按策略顺序约束 + 快照迭代触发策略 Process（`internal`，由场景宿主 `ProcessAll` 与适配层帧处理调用）。
 
 `IsPendingKill` 标记由 `RequestKillEntity()` 立即设置。BeforeDead 钩子由 `SessionRun.KillPending()` 批量触发，`RemoveEntity()` 仅做拆解。
 

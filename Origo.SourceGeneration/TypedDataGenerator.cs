@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -18,6 +19,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
 {
     private const string _attributeFullName = "Origo.Core.Snd.Metadata.SndInlineTypesAttribute";
     private const string _typedDataFullName = "Origo.Core.Snd.Metadata.TypedData";
+    private const string _typedDataLayeredRegistryFullName =
+        "Origo.Core.Snd.Metadata.TypedDataLayeredRegistry";
 
     /// <summary>
     ///     Registers the incremental pipeline: the generation input is derived
@@ -51,9 +54,15 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
                 typeGroups.Add(new TypeGroup { StartKind = startKind, Types = types });
         }
 
+        var hasTypedDataFriendAccess = isHome || HasTypedDataFriendAccess(compilation);
+        var assemblyLocation = compilation.Assembly.Locations.FirstOrDefault() ?? Location.None;
+
         return new GenerationInput
         {
             IsHome = isHome,
+            HasTypedDataFriendAccess = hasTypedDataFriendAccess,
+            AssemblyName = compilation.AssemblyName ?? "<unknown>",
+            AdapterDiagnosticLocation = assemblyLocation,
             TypeGroups = typeGroups
         };
     }
@@ -63,6 +72,32 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         var typedDataSymbol = compilation.GetTypeByMetadataName(_typedDataFullName);
         return typedDataSymbol?.ContainingAssembly
             .Equals(compilation.Assembly, SymbolEqualityComparer.Default) == true;
+    }
+
+    /// <summary>
+    ///     True when the current assembly can legally access TypedData's
+    ///     internal registration surface. Adapter-mode generated code reads
+    ///     <c>_kind</c>/<c>_ref</c> and calls internal registration APIs, so an
+    ///     adapter without friend access would fail with CS0122/CS0117 after
+    ///     generation. Detecting friend access here turns that into the
+    ///     actionable ORIGOSG007 diagnostic before any source is emitted.
+    /// </summary>
+    private static bool HasTypedDataFriendAccess(Compilation compilation)
+    {
+        var typedDataSymbol = compilation.GetTypeByMetadataName(_typedDataFullName);
+        if (typedDataSymbol is null)
+            return false;
+
+        var registerKind = typedDataSymbol.GetMembers("RegisterKind").FirstOrDefault();
+        if (registerKind is null)
+            return false;
+
+        var layeredRegistry = compilation.GetTypeByMetadataName(_typedDataLayeredRegistryFullName);
+        if (layeredRegistry is null)
+            return false;
+
+        return compilation.IsSymbolAccessibleWithin(registerKind, compilation.Assembly)
+            && compilation.IsSymbolAccessibleWithin(layeredRegistry, compilation.Assembly);
     }
 
     private static int ExtractStartKind(AttributeData attr)
@@ -167,6 +202,15 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     {
         var allTypes = input.TypeGroups.SelectMany(g => g.Types).ToList();
         if (allTypes.Count == 0) return;
+
+        if (!input.IsHome && !input.HasTypedDataFriendAccess)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                _adapterFriendAccessRequired,
+                input.AdapterDiagnosticLocation ?? Location.None,
+                input.AssemblyName));
+            return;
+        }
 
         var validTypes = ValidateAndFilter(context, input.IsHome, allTypes);
         validTypes = RejectKindCollisions(context, validTypes);
@@ -411,9 +455,37 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         return result;
     }
 
+    /// <summary>
+    ///     StringBuilder variant that always terminates lines with LF.
+    ///     Generated source must not depend on <see cref="Environment.NewLine" />:
+    ///     the same generator input would otherwise produce CRLF on Windows
+    ///     and LF elsewhere, making emitted sources host-dependent.
+    /// </summary>
+    private sealed class SourceBuilder
+    {
+        private readonly StringBuilder _builder = new();
+
+        public SourceBuilder AppendLine()
+        {
+            _builder.Append('\n');
+            return this;
+        }
+
+        public SourceBuilder AppendLine(string? value)
+        {
+            _builder.Append(value);
+            return AppendLine();
+        }
+
+        public override string ToString() => _builder.ToString();
+    }
+
     private sealed record GenerationInput
     {
         public bool IsHome { get; set; }
+        public bool HasTypedDataFriendAccess { get; set; }
+        public string AssemblyName { get; set; } = string.Empty;
+        public Location? AdapterDiagnosticLocation { get; set; }
         public List<TypeGroup> TypeGroups { get; set; } = [];
     }
 
@@ -432,6 +504,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
             if (ReferenceEquals(x, y)) return true;
             if (x is null || y is null) return false;
             if (x.IsHome != y.IsHome) return false;
+            if (x.HasTypedDataFriendAccess != y.HasTypedDataFriendAccess) return false;
+            if (!string.Equals(x.AssemblyName, y.AssemblyName, StringComparison.Ordinal)) return false;
             if (x.TypeGroups.Count != y.TypeGroups.Count) return false;
 
             for (var i = 0; i < x.TypeGroups.Count; i++)
@@ -463,6 +537,8 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
         {
             var hash = new HashCode();
             hash.Add(obj.IsHome);
+            hash.Add(obj.HasTypedDataFriendAccess);
+            hash.Add(obj.AssemblyName);
             hash.Add(obj.TypeGroups.Count);
             foreach (var g in obj.TypeGroups)
             {

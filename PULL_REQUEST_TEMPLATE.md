@@ -20,9 +20,12 @@
 
 ## Checklist
 
-- [ ] `bash scripts/ci.sh` passes locally (format + build + test + coverage + benchmarks + Godot integration)
+- [ ] `bash scripts/test.sh` passes during iteration
+- [ ] `bash scripts/ci.sh` passes after the final commit (lint-scripts + format + doc-sync + build/test + coverage + benchmarks + Godot integration)
+- [ ] Post-commit `bash scripts/lint-commits.sh` passes
 - [ ] New public API has corresponding behavior tests
 - [ ] Bug fix has regression test (red → green)
-- [ ] `docs/` mirror updated (interface list, design decisions, usage docs)
+- [ ] `docs/` mirror updated (interface list, design decisions, usage docs, and bilingual mirror README file lists for any `.cs` under `SourceMirrorRoots`)
+- [ ] `DocSyncTool generate` run; generated hubs and `.sync-status.json` committed
 - [ ] `CHANGELOG.md` updated under `[Unreleased]`
 - [ ] Breaking changes are prefixed `BREAKING:` and migration path is documented

@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Console/README -->
 <!-- docsync-revision: 2 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Runtime/Console](../../Runtime/Console/README.en.md)

@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Random -->
-<!-- docsync-revision: 4 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 5 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Random Number Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
@@ -30,6 +30,7 @@ and noise map generator (OpenSimplex2 + Worley blend).
 |-------------|-----------------|-----------|
 | `SameSeed_ProducesSameSequence` | "same-seed" generates identical sequence twice | Random |
 | `DifferentSeed_ProducesDifferentSequence` | "seed-a" and "seed-b" produce different sequences | Random |
+| `NextUInt64_MatchesCanonicalXorShift128PlusReferenceVectors` | First two steps for "same-seed" match canonical XorShift128+ reference vectors | Random |
 
 ## RandomNumberGeneratorExtendedTests Details
 

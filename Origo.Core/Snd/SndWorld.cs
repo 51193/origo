@@ -71,8 +71,10 @@ public sealed class SndWorld
 
     /// <summary>
     ///     Registers a strategy type with the strategy pool, applying the
-    ///     statelessness validation performed at registration time.
+    ///     statelessness validation performed at registration time. Registration is
+    ///     allowed only during startup, before bootstrap or the first lifecycle use.
     /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when registration is closed or the declaration is invalid.</exception>
     public void RegisterStrategy<TStrategy>(Func<TStrategy> factory) where TStrategy : BaseStrategy =>
         StrategyPool.Register(factory);
 

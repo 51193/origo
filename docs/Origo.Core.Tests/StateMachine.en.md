@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 6 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # State Machine Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
@@ -66,6 +66,7 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `Push_EmptyString_Throws` | Push("") | ArgumentException |
 | `Push_WhitespaceString_Throws` | Push("   ") | ArgumentException |
 | `Push_AfterDispose_Throws` | Push after Dispose | ObjectDisposedException |
+| `Push_WhenPushHookThrows_RollsBackPushedValue` | OnPushRuntime throws | Original exception propagates; the stack returns to its pre-Push state |
 | `TryPopRuntime_AfterDispose_Throws` | TryPopRuntime after Dispose | ObjectDisposedException |
 | `Peek_AfterDispose_Throws` | Peek after Dispose | ObjectDisposedException |
 | `RestoreStackWithoutHooks_NullList_Throws` | Restore(null) | ArgumentNullException |

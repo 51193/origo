@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 15 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter
 
 > [↑ 回到 Origo.manual](../README.zh.md)
@@ -8,6 +8,13 @@
 ## 模块概述
 
 **Origo.GodotAdapter** 是 Origo 框架的 Godot 4 适配层。负责将 Core 层的平台无关抽象与 Godot 引擎的具体 API 对接，包括文件系统（通过 `FileAccess`/`DirAccess`）、日志输出（通过 `GD.Print`）、节点生命周期（通过 `Node`/`PackedScene`）以及引擎类型序列化（`Vector2`、`Transform3D` 等 14 种类型）。
+
+## 本层文件
+
+| 文件 | 职责 |
+|------|------|
+| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(startKind: 128, ...)]`：注册 14 种 Godot 引擎类型到 TypedData 适配层 Kind 区间（128–141） |
+| `SndEntityNodeExtensions.cs` | `GetNativeNode()` / `GetNodeFromSnd<T>()` 适配层便利扩展，命名空间 `Origo.GodotAdapter` |
 
 ## 子系统一览
 
@@ -31,11 +38,12 @@ OrigoDefaultEntry._Ready()
   │       ├── GodotSndManager
   │       ├── GodotJsonConverterRegistry 注册
   │       └── OrigoRuntime
+  ├── ConfigureStrategies(Runtime.SndWorld)  // 手动策略注册（Bootstrap 冻结前）
   ├── RegisterConsoleCommandHandlers()       // 适配层命令
   ├── new SndContext(...)                    // 传入启动配置
   ├── SndManager.BindContext(sndContext)
   └── sndContext.Bootstrap()                 // Core 内部按序执行：
-        ├── 策略发现 (reflection scan, skip Godot assemblies)
+        ├── 策略发现与排序校验/注册冻结 (reflection scan, skip Godot assemblies)
         ├── LoadSceneAliases / LoadTemplates
         └── RequestLoadMainMenuEntrySave
 ```
@@ -55,7 +63,7 @@ OrigoDefaultEntry._Ready()
 - **不冲刷延迟管线**：帧循环中不绕过 Core 直接调用 internal 的 `FlushEndOfFrameDeferred`
 - **`OrigoAutoHost._Process` 为唯一帧入口**：在其中依次委托 Core 的 `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending`，适配层仅做调度，不做决策
 
-所有这些编排由 Core 层的会话生命周期（`SessionManager` / `SessionRun`）统一负责。详细分离原则见 [架构总览](../usage/architecture-overview.zh.md#适配层与-core-层分离原则)。
+所有这些编排由 Core 层的会话生命周期（`SessionManager` / `SessionRun`）统一负责。详细分离原则见 [架构总览](../architecture/overview.zh.md#适配层与-core-层分离原则)。
 
 ### 桥接模式
 
@@ -72,6 +80,10 @@ OrigoDefaultEntry._Ready()
 - **命令行运行不重新编译 C#**：`godot --path .` 直接运行加载的是上次构建的 DLL。
   编辑器模式会自动构建；命令行方式需先 `dotnet build`（或使用
   `dotnet build && godot --path .`）。
+- **项目名避免空格**：Godot 4.7.2 在 `project.godot` 的 `config/name`
+  含空格时可能无法加载 C# 项目程序集（报 `Failed to load project assembly`，
+  随后脚本提示 associated class 不存在）。`config/name` 使用与程序集兼容的
+  无空格名称，窗口标题可改用游戏内 UI 展示。
 - **UI 根节点吞掉 3D 点击**：覆盖全屏的 Control 默认 `mouse_filter = Stop`，会拦截所有
   鼠标事件导致 3D 交互（如棋盘点击）失效。UI 根节点应设 `MouseFilter = Ignore`，
   子面板保持默认 Stop 以正常响应按钮。

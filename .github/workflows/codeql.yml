@@ -3,6 +3,7 @@ name: CodeQL
 on:
   push:
     branches: [main, master]
+    tags: ['v*']
   pull_request:
     branches: [main, master]
   schedule:
@@ -15,16 +16,16 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: csharp
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
       - run: dotnet build Origo.sln --configuration Release
 
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4

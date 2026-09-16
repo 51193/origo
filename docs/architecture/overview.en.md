@@ -1,15 +1,15 @@
-<!-- docsync-pair: usage/architecture-overview -->
-<!-- docsync-revision: 6 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-pair: architecture/overview -->
+<!-- docsync-revision: 1 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
-> [↑ Back to usage](README.en.md)
+> [↑ Back to Architecture](README.en.md)
 
 ## Design Principles
 
 The Origo framework follows these core design constraints:
 
-- **Platform-agnostic**: Core has zero engine dependencies; all I/O goes through `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver` (internalized by `IFileSystem`)
+- **Platform-agnostic**: Core has zero engine dependencies; all I/O goes through `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver` (with `IFileSystem` as an adapter/host-provided implementation detail)
 - **Adapter-layer isolation**: The adapter layer only provides capability encapsulation and bridging; it must not fire strategy hooks or manage strategy lifecycles
 - **Interface Segregation (ISP)**: `ISndContext` exposes capabilities through 10 companion properties; `ISessionRun` returns an abstract `IStateMachineContainer`
 - **Unidirectional dependency**: Adapter → Core → Abstractions; reverse is strictly forbidden
@@ -69,7 +69,7 @@ Strategy + Node + Data
 - Strategies are explicitly registered via `[StrategyIndex("xxx")]`
 - Missing index, null value, or type mismatch must throw an error
 - Strategies are validated for statelessness at registration time via reflection (instance fields / writable properties are rejected)
-- Strategies are sorted by priority; equal priority uses insertion order
+- Strategies follow the complete registry partial order; topological candidates use index Ordinal order
 
 ## Session Model
 
@@ -126,10 +126,10 @@ All file operations in the Core layer go through three interfaces:
 - `IFileMetaAccess`: File metadata operations (FileExists, directory management, enumeration, deletion, copy)
 - `IPathResolver`: Platform path operations (CombinePath, GetParentDirectory)
 
-`IFileSystem` is an implementation detail; the above three interfaces are its public facade. Business code should not directly depend on `IFileSystem`.
+`IFileSystem` is a platform implementation detail: Core-internal modules do not depend on it directly and instead use the three interfaces above. The interface remains public so adapters and test hosts can provide custom file-system implementations, but business code must not depend on `IFileSystem` to bypass codec routing.
 
 ```
-Business modules → DataSourceNode → IDataSourceIoGateway / IFileMetaAccess / IPathResolver → IFileSystem (internal) → File system
+Business modules → DataSourceNode → IDataSourceIoGateway / IFileMetaAccess / IPathResolver → IFileSystem (adapter/host-provided) → File system
 ```
 
 Suffix routing, codec strategy, and I/O error semantics are centrally governed on the Gateway side. Raw text files like `.sha` and `.write_in_progress` also go through the codec route via `RawStringDataSourceCodec` — there is no direct read/write bypass. The Gateway uses a fail-fast strategy: when codec decoding fails (e.g., `.map` file format error), the Gateway wraps the exception as an `InvalidOperationException` containing the file path and immediately throws — it does not swallow errors.
@@ -172,9 +172,9 @@ Additionally, `ISessionManager` and `ISessionRun` live in the Abstractions layer
 | Forbidden | Reason | Counter-Example |
 |-----------|--------|-----------------|
 | **Fire strategy lifecycle hooks** | Strategies are a Core layer concept; hook firing timing and order must be centrally orchestrated by Core | `GodotSndManager` must not call `FireAfterSpawnHooks()`, `FireBeforeDeadHooks()`, etc. |
-| **Manage strategy release/ref counting** | Strategy pool, ref counting, and priority sorting are managed in Core's `SndStrategyPool` and `SndStrategyManager` | `GodotSndManager` must not call `ReleaseStrategiesOnly()` |
+| **Manage strategy release/ref counting** | Strategy pool, ref counting, and partial-order sorting are managed in Core's `SndStrategyPool` and `SndStrategyManager` | `GodotSndManager` must not call `ReleaseStrategiesOnly()` |
 | **Directly call Core pipeline methods** | The timing and order of frame boundary operations (entity processing → business queue → kill entities → system queue → console) are controlled by Core. The adapter layer should only call `IOrigoFrameDriver.DriveFrame(delta)` to hand over frame control | The adapter layer must not directly call the internal `FlushEndOfFrameDeferred` or `ProcessPending` |
-| **Directly drive Core startup flow** | Strategy discovery, alias/template loading, and entry save loading are internal Core orchestration, uniformly executed in `SndContext.Bootstrap()`. The adapter layer only passes configuration via `SndContextParameters` | The adapter layer must not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()` |
+| **Directly drive Core startup flow** | Strategy discovery, ordering validation and registration freeze, alias/template loading, and entry save loading are internal Core orchestration, uniformly executed in `SndContext.Bootstrap()`. The adapter layer only passes configuration via `SndContextParameters` | The adapter layer must not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()` |
 | **Hold Core orchestration state** | The state machine for entity lifecycle management (e.g., pending kill, teardown flow) is maintained by the Core layer | The adapter layer should not have methods like `QuitFromManager`, `DeadFromManager` |
 | **Load engine-agnostic business configuration** | Template parsing, alias mapping, and strategy index resolution are all done in Core | The adapter layer should not read and parse business configurations like `snd_templates.map` |
 
@@ -186,7 +186,7 @@ Additionally, `ISessionManager` and `ISessionRun` live in the Abstractions layer
 | **Entity lifecycle orchestration** | `SndEntityFactory.Spawn`/`SpawnMany` (AfterSpawn), `SessionRun` load/save/quit and `KillPending` (via `SessionManager.KillPendingAllSessions`) uniformly orchestrate all hooks |
 | **Scene host abstraction** | `ISndSceneHost` only defines container operations (create/lookup/remove), without hook semantics |
 | **Deferred action pipeline** | `ActionScheduler` business queue + system queue, `IOrigoFrameDriver.DriveFrame` uniformly flushes |
-| **Startup orchestration** | `SndContext.Bootstrap()` uniformly executes strategy discovery → alias/template loading → entry save loading |
+| **Startup orchestration** | `SndContext.Bootstrap()` uniformly executes strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading |
 
 ### Responsibility Division in the Frame Loop
 
@@ -204,7 +204,7 @@ The frame loop entry is in the adapter layer (Godot's `_Process` callback), but 
 ## Project Structure
 
 ```
-Origo.Core/           # Platform-agnostic core (~198 .cs files)
+Origo.Core/           # Platform-agnostic core (209 .cs files)
 ├── Abstractions/     # Public interfaces (Blackboard/Entity/StateMachine/...)
 ├── Addons/           # External algorithm library (FastNoiseLite)
 ├── Blackboard/       # Blackboard implementation
@@ -224,7 +224,7 @@ Origo.Core/           # Platform-agnostic core (~198 .cs files)
 Origo.SourceGeneration/  # Roslyn source generator (5 .cs files)
 └── TypedDataGenerator*.cs  # Home/Adapter dual-mode code generation (1 main file + 4 partial)
 
-Origo.GodotAdapter/   # Godot 4 adapter layer (~23 .cs files)
+Origo.GodotAdapter/   # Godot 4 adapter layer (22 .cs files)
 ├── Bootstrap/        # Startup orchestration
 ├── Console/          # Godot commands
 ├── FileSystem/       # Godot file system
@@ -243,4 +243,4 @@ Origo.ConsoleBridge/  # TCP remote console (~2 .cs files)
 - Test directory structure mirrors production code
 
 ---
-[↑ Back to usage](README.en.md)
+[↑ Back to Architecture](README.en.md)

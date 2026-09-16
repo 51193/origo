@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 14 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 15 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Entity (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Entity](../../Snd/Entity/README.en.md)
@@ -107,7 +107,7 @@ The five sub-interfaces (`ISndDataAccess`, `ISndNodeAccess`, `ISndStrategyAccess
 
 ### Why active strategies separated into ISndActiveStrategyAccess
 
-Active and passive strategies share the `BaseStrategy` and `SndStrategyPool` infrastructure but keep fully independent containers: active uses a Dictionary for O(1) index lookup without frame iteration; passive uses a sorted list iterated by priority every frame. The interface separation keeps consumers from coupling to unnecessary strategy types.
+Active and passive strategies share the `BaseStrategy` and `SndStrategyPool` infrastructure but keep fully independent containers: active uses a Dictionary for O(1) index lookup without frame iteration; passive uses a sorted list iterated in partial order every frame. The interface separation keeps consumers from coupling to unnecessary strategy types.
 
 ### Why observation unified as observer strategies
 

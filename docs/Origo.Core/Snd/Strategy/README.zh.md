@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Snd/Strategy/README -->
-<!-- docsync-revision: 16 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 26 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Strategy
 
 > [↑ 回到 Snd](../README.zh.md)
@@ -23,8 +23,8 @@ SND 策略系统的完整实现。策略是实体行为逻辑的载体，遵循"
 | `ObserverBindingEntry.cs` | `internal` — 单条观察者绑定记录（observerName / targetName / observerIndex / 策略 / 数据订阅包装），`FullCleanup` 退订 + 触发 `OnUnmounted` + 归还策略 |
 | `ObserverStrategyMetadata.cs` | `internal` — 按类型反射缓存 `[ObserveData]` 声明的观察数据键 |
 | `ObserveDataAttribute.cs` | 观察数据键声明特性：`[ObserveData("key")]`，支持多重声明 |
-| `ActiveStrategyExtensions.cs` | `ISndEntity` 扩展方法：泛型 `InvokeStrategy<TInput, TOutput>` 消除 JSON 序列化样板；`EnsureStrategy` 惰性策略挂载 + 幂等守卫。物理位置在 `Origo.Core/Snd/` 根目录（非 Strategy/ 子目录） |
 | `ActiveStrategyManager.cs` | `internal` — 单实体主动策略管理器：Dictionary 容器 + 增删 + 序列化 |
+| `LifecycleStrategyOrder.cs` | 完整注册图校验、确定性拓扑排序与环路径诊断 |
 | `SndStrategyPool.cs` | `internal` — 策略池：注册、实例化、引用计数、无状态校验 |
 | `SndStrategyManager.cs` | `internal` — 单实体被动策略管理器：策略容器的增删 + 生命周期钩子协调 |
 | `StrategyIndexAttribute.cs` | 策略索引声明特性：`[StrategyIndex("core.health")]` |
@@ -52,7 +52,7 @@ BaseStrategy
 - **Mount(observer, target, observerIndex)**：获取策略实例 → 按 `[ObserveData]` 属性为每个 key 在 target 上建立 `SubscribeDataRaw` 接线 → 记录绑定 → 触发 `OnMounted`。挂载是原子的：若接线或 `OnMounted` 抛异常，已建立的订阅全部取消、半加入的绑定被移除、策略引用归还池后异常再传播。同一 (observer, target, observerIndex) 重复挂载会抛 `InvalidOperationException`（与被动/主动策略管理器的重复挂载拒绝一致）
 - **Unmount(observer, target, observerIndex)**：移除绑定记录 → 拆线 `UnsubscribeDataRaw` → 触发 `OnUnmounted` → 释放池引用。绑定记录先于回调摘除，保证 `OnUnmounted` 内的重入安全；`finally` 兜底确保钩子抛异常时池引用仍归还。目标绑定不存在时抛 `InvalidOperationException`（fail-fast，与 `RemoveStrategy` 对未挂载索引抛异常一致）
 - **ReleaseStrategiesFor(observer)**：释放某 observer 持有的全部策略引用并清空其出边（不触发 `OnUnmounted`、不退订），对应实体整体销毁流程的 `ReleaseStrategiesOnly` 阶段
-- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`。目标实体缺失或目标为空白（存档拓扑不一致）时抛 `InvalidOperationException`（fail-fast），不静默跳过
+- **RecoverBindingsFor(observer, bindings, resolveTarget)**：从存档的 observer_indices 拓扑恢复，按名解析目标实体，重新接线并触发 `OnMounted`。目标实体缺失或目标为空白（存档拓扑不一致）时抛 `InvalidOperationException`（fail-fast），不静默跳过。该方法逐 binding 挂载、不承诺跨 binding 的本地回滚；读档事务边界在 `SessionRun.LoadFromPayload`——恢复中途失败会执行 `ResetAfterLoadFailure`，将整个会话（实体、拓扑、状态机、黑板）清空
 - **BuildBindingsFor(observerName)**：序列化某 observer 的全部出边为 `List<ObserverBinding>`（按 target 分组）写入 `StrategyMetaData`
 - **TeardownOutgoingFor(observer, resolveTarget)**：清理某 observer 的全部出边；目标可解析则完整 `Unmount`，否则归还策略并移除记录
 - **TeardownAllBindingsFor(observer)**：对该 observer 全部出边调用 `FullCleanup`（退订 + `OnUnmounted` + 释放策略）的自包含清理路径，不依赖场景宿主——绑定条目内已存 `TargetEntity` 引用。由 `SessionRun.ReleaseAllEntitiesAndClear` 在会话退出时经 `IEntityLifecycle.TeardownObserverBindings` 调用
@@ -83,9 +83,10 @@ BaseStrategy
 - **Register**：`Register(Type strategyType, Func<BaseStrategy> factory)` —— 注册类型前通过反射校验无状态性（检查实例字段和可写属性）
 - **GetStrategy<TBase>(index)**：若池中已有则复用（引用计数 +1），否则通过工厂创建
 - **ReleaseStrategy(index)**：引用计数 -1，归零时从池中移除（但工厂保留，下次可再创建）
-- **GetPriority(index)**：返回策略在实体上的执行优先级（注册时未显式指定 Priority 则取默认 6205；未注册索引返回 0 哨兵）
+- **SealRegistration()**：启动阶段结束时校验全部关系并固定注册表；固定后 `Register` 抛异常。`Bootstrap` 在自动发现后固定，公共启动工作流在执行前固定；直接使用实体时，首次恢复非空生命周期策略列表或动态挂载前固定。
+- **GetLifecycleOrder(index)**：返回完整注册图中的拓扑位置，未知或非生命周期策略索引抛异常。
 - **LogPoolLeaks()**：诊断方法，遍历所有引用计数；若存在非零计数则输出 Warning 日志。供测试或 shutdown 阶段调用，检测策略引用未归还的泄漏
-- **策略排序**：仅被动实体策略按优先级升序排列，同优先级按插入顺序
+- **策略排序**：仅生命周期策略使用 `Before` / `After`。完整注册图按拓扑候选索引的 `StringComparer.Ordinal` 排序；实体列表取该顺序的投影，因此 A → B → C 中未挂载 B 仍保留 A → C。
 
 ### SndStrategyManager
 
@@ -93,7 +94,7 @@ BaseStrategy
 
 | 方法 | 说明 |
 |------|------|
-| `RecoverStrategiesOnly(indices)` | 从策略池按索引获取策略并排序插入（释放旧策略，不触发钩子） |
+| `RecoverStrategiesOnly(indices)` | 从策略池按索引获取策略并排序插入（释放旧策略，不触发钩子；重复索引在获取前抛异常） |
 | `ReleaseStrategiesOnly()` | 释放全部策略引用并清空列表（不触发钩子） |
 | `TriggerAfterSpawn(entity, ctx)` | 快照迭代触发 AfterSpawn |
 | `TriggerAfterLoad(entity, ctx)` | 快照迭代触发 AfterLoad |
@@ -105,7 +106,7 @@ BaseStrategy
 | `Add(entity, index, ctx)` | 动态添加策略并触发 `AfterAdd`；若 `AfterAdd` 抛异常，回滚插入并归还池引用后再传播（添加是原子的）。同一 index 重复挂载会抛 `InvalidOperationException`；计划引擎（`PlanExecutionStrategyBase`）在目标 action 已挂载时会复用而不是重复挂载，因此计划管理的 action 也可出现在 `LifecycleIndices` 中 |
 | `Remove(entity, index, ctx)` | 动态移除策略（触发 BeforeRemove）；索引未挂载时抛 `InvalidOperationException`（fail-fast，与 `Add` 的严格性对称） |
 
-- **Recover**：从池获取时进行类型过滤，仅保留 `LifecycleStrategyBase` 子类；非 `LifecycleStrategyBase` 类型（如 `ActiveStrategyBase`、`ObserverStrategyBase`）立即抛 `InvalidOperationException`
+- **Recover**：先校验索引唯一性，再从池获取时进行类型过滤，仅保留 `LifecycleStrategyBase` 子类；重复索引或非 `LifecycleStrategyBase` 类型（如 `ActiveStrategyBase`、`ObserverStrategyBase`）立即抛 `InvalidOperationException`
 - **生命周期钩子触发**：全部基于 `ToArray()` 快照迭代——因为钩子内可增删策略。五个触发器方法（`TriggerAfterSpawn/Load/Save/Quit/Dead`）统一委托给 `TriggerAll`，消除复制粘贴重复
 
 ### ActiveStrategyManager
@@ -113,7 +114,7 @@ BaseStrategy
 每个 `SndEntity` 持有一个 manager 实例，管理主动策略：
 
 - **容器**：`Dictionary<string, ActiveStrategyBase>` — O(1) 按索引查找，不参与每帧遍历
-- **Recover**：从 metadata 批量恢复（不触发钩子）；遇非 `ActiveStrategyBase` 类型立即抛 `InvalidOperationException`，并回滚本次恢复已获取的全部主动策略，不残留半初始化状态——与 `SndStrategyManager` 的实体策略恢复保持一致的 fail-fast 语义
+- **Recover**：先校验索引唯一性，再从 metadata 批量恢复（不触发钩子）；重复索引或非 `ActiveStrategyBase` 类型立即抛 `InvalidOperationException`，并回滚本次恢复已获取的全部主动策略，不残留半初始化状态——与 `SndStrategyManager` 的实体策略恢复保持一致的 fail-fast 语义
 - **ReleaseAll**：逐个 `ReleaseStrategy` 并清空容器（不触发钩子）
 - **Add / Remove**：动态增删主动策略；`Remove` 对未挂载索引抛 `InvalidOperationException`（fail-fast）
 - **Invoke**：按索引查找策略实例，调用 `Invoke(entity, ctx, input)` 并返回结果
@@ -185,23 +186,37 @@ StrategyMetaData
 }
 ```
 
+`LifecycleIndices` 与 `ActiveIndices` 中的索引在各自列表内必须唯一；重复索引在读档时于获取策略实例前抛异常。
+
 三者在 `RecoverForLifecycle` 时分别恢复，互不交叉。
 
 ### StrategyIndexAttribute
 
 ```csharp
-[StrategyIndex("my_game.player_control", Priority = 100)]
+[StrategyIndex("my_game.player_control", Before = new[] { "my_game.movement" })]
 public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 ```
 
 - `Index`：必填，策略在池中的唯一索引键
-- `Priority`：可选，默认 6205，决定同实体上多被动策略的执行顺序；主动策略不参与排序
+- `Before` / `After`：可选索引数组，只允许生命周期策略声明和引用生命周期策略。目标必须已注册，但无需挂载。空白目标、null 数组、自引用、未知索引、非生命周期引用和环均明确失败；环诊断显示实际闭合路径。
 
 ## 设计决策
+
+### 为什么固定完整注册图
+
+顺序约束是类型级全局关系，必须在任何实体创建前一次性校验并冻结，避免运行期注册改变既有实体顺序；实体按冻结顺序投影，未挂载中间策略时仍保留传递关系。Process 与全部批量钩子同向，存档只保存挂载索引，恢复按同一关系排序；动态移除按条目身份摘除，钩子内插入不会误删其他策略。完整的动机、取舍与替代方案见 [架构决策记录：生命周期策略的顺序约束](../../../architecture/strategy-ordering.zh.md)。
+
+
+### 已知顺序边界
+
+- 完整注册图包含已注册但未挂载的策略：约束目标必须已注册，因此可选策略包会在启动期耦合。缺失目标的处理和演进选项见[架构决策记录](../../../architecture/strategy-ordering.zh.md)。
+- 实体顺序是全局拓扑秩的投影；Ordinal 是全局候选选择规则，不保证任意两个不可比较的已挂载策略保持 Ordinal。顺序敏感时应显式声明 `Before` / `After`；完整分析与后续重构方向见[架构决策记录](../../../architecture/strategy-ordering.zh.md)。
 
 ### 为什么策略强制无状态（注册期校验）
 
 策略实例在多个实体间共享，若持有实例字段（如 `int _hp`），多实体间会互相污染。注册期通过反射检查 `BaseStrategy` 到具体类型之间的所有层级，拒绝声明可变实例字段或可写属性的策略，从源头阻止此错误；`readonly` 实例字段（`IsInitOnly`）作为例外被豁免。
+
+> **重要边界**：`readonly` 只禁止重新赋值字段本身，**不校验引用类型对象的内部可变性**。例如 `private readonly List<int> _buffer = [];` 可以通过注册，且其内容可被修改，仍会造成跨实体共享污染。框架刻意不在注册期深度判定“引用对象是否不可变”——这种判定既不可靠，也会误伤 `readonly ILogger` 等合法依赖。选择声明 `readonly` 引用类型字段的策略作者，必须自行保证该对象在运行时不会被修改。
 
 此约束的一个副作用：**测试策略无法使用实例字段作为事件接收器**，必须使用静态字段（`static List<string>?`）在各策略实例间共享事件收集。使用静态字段的测试类必须通过 `[Collection]` 属性串行化执行，或通过 `[assembly: CollectionBehavior(DisableTestParallelization = true)]` 全局禁用并行，以防止并行测试间的竞态。详见 `Origo.Core.Tests/Architecture.zh.md`。
 
@@ -215,7 +230,7 @@ public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 ### 为什么被动和主动策略容器分离
 
-主动策略只需按索引查找（O(1) Dictionary），不参与每帧遍历。被动策略需要按优先级排序迭代（List）。容器分离避免遍历时的类型检查和无关数据，也给序列化提供清晰的分组边界。
+主动策略只需按索引查找（O(1) Dictionary），不参与每帧遍历。被动策略需要按偏序排序迭代（List）。容器分离避免遍历时的类型检查和无关数据，也给序列化提供清晰的分组边界。
 
 ### 为什么生命周期钩子全都基于快照迭代
 
@@ -225,12 +240,19 @@ public sealed class PlayerControlStrategy : LifecycleStrategyBase { ... }
 
 ActiveStrategy 在 `RecoverForLifecycle` (Phase 1) 中恢复，早于 `FireAfterSpawnHooks` / `FireAfterLoadHooks` (Phase 2)。这确保实体策略钩子中可以通过 `InvokeStrategy` 调用自身的 ActiveStrategy，也可以调用其他已恢复实体的 ActiveStrategy——实现加载顺序无关的跨实体互操作。
 
+### 为什么读档时 Observer 恢复晚于 AfterLoad
+
+`AfterLoad` 是实体业务初始化阶段：此时所有实体的 Data、Node、被动策略和主动策略都已恢复，实体之间可以安全互操作。若先恢复 Observer，`OnMounted` 会早于 observer 实体自己的 `AfterLoad`，且 target 在 `AfterLoad` 中写入数据会让观察者提前消费中间状态。先完成全部 `AfterLoad` 再统一 Mount，使 `OnMounted` 看到的是初始化完成后的稳定状态，业务代码也无需在 `AfterLoad` 中手动重连绑定。
+
+### 为什么死亡时 Observer 拆线早于 BeforeDead
+
+`BeforeDead` 是实体策略的最后业务处理阶段，此时实体必须仍然可被定位，观察者订阅也必须能够完整解除。先执行双向拆线（触发 `OnUnmounted`），再触发 `BeforeDead`，保证实体移除后不会残留无法解除的订阅；观察者钩子也先于目标死亡钩子完成。
+
 ### 为什么策略池引用计数不保证线程安全
 
 `SndStrategyPool` 的引用计数、注册表和实例缓存仅在帧线程（单线程帧模型）上访问。跨线程场景（延迟队列的入队/出队、控制台输入等）只传递动作与数据，不触碰策略池；引擎回调与业务策略钩子全部在帧线程执行。因此引用计数无需加锁——并发访问策略池属于契约违规，行为未定义。
 
-- **备选方向：实体级并发（暂缓）**：策略无状态让策略类型可跨实体共享，但实体 Data、跨实体 `InvokeStrategy`、观察者同步通知和场景容器变更仍按单线程帧模型设计；同一实体内部多个策略的优先级顺序也必须保留。备选方案是“实体可并发”作为实体自身属性 + 数据容器并发模式 + 先并行执行并发实体、屏障后再串行执行剩余实体，因当前没有性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
-- **备选方向：生命周期策略的相对顺序约束（暂缓）**：当前 `Priority` 数字排序简单、确定性好，但策略规模变大时可能产生数值协调负担。备选方案是把顺序改为 `Before` / `After` 偏序约束，插入或注册时自动拓扑定位，有环立即抛异常；因当前规模下收益有限而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
-- **备选方向：ActiveStrategy 同名多实现（暂缓）**：当前策略索引全局唯一，每实体同一 active index 也只有一个实现。备选方案是把索引升级为“契约名/接口名”，目标实体绑定具体实现，`InvokeStrategy("hurt")` 时按实体绑定表分发；当前可用唯一策略内按实体字段 `switch` 或 `*_impl` 可替换实现模式覆盖，故暂缓。完整权衡见 [扩展方向与暂缓设计](../../../usage/extension-directions.zh.md)
+- **备选方向：实体级并发（暂缓）**：策略无状态让策略类型可跨实体共享，但实体 Data、跨实体 `InvokeStrategy`、观察者同步通知和场景容器变更仍按单线程帧模型设计；同一实体内部多个策略的偏序顺序也必须保留。备选方案是“实体可并发”作为实体自身属性 + 数据容器并发模式 + 先并行执行并发实体、屏障后再串行执行剩余实体，因当前没有性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../../architecture/extension-directions.zh.md)
+- **备选方向：ActiveStrategy 同名多实现（暂缓）**：当前策略索引全局唯一，每实体同一 active index 也只有一个实现。备选方案是把索引升级为“契约名/接口名”，目标实体绑定具体实现，`InvokeStrategy("hurt")` 时按实体绑定表分发；当前可用唯一策略内按实体字段 `switch` 或 `*_impl` 可替换实现模式覆盖，故暂缓。完整权衡见 [扩展方向与暂缓设计](../../../architecture/extension-directions.zh.md)
 ---
 [↑ 回到 Snd](../README.zh.md)

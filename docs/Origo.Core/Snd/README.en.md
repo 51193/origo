@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 11 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 14 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
 > [↑ Back to Origo.Core](../README.en.md)
@@ -15,7 +15,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 |-----------|-----------|---------|
 | [Entity](Entity/README.en.md) | Runtime entity aggregate root | SndEntity + four internal managers (data/node/passive/active strategy) |
 | [Metadata](Metadata/README.en.md) | Entity metadata model | TypedData / SndMetaData / NodeMetaData / StrategyMetaData / DataMetaData / SndMetaFluentBuilder |
-| [Scene](Scene/README.en.md) | Scene host & spawn factory | SndEntityFactory + FullMemorySndSceneHost + StubSndSceneHost |
+| [Scene](Scene/README.en.md) | Scene host & spawn factory | SndEntityFactory + FullMemorySndSceneHost |
 | [Strategy](Strategy/README.en.md) | Strategy system core | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase. Strategy pool, passive/active/observer three kinds of managers + generic invocation extensions |
 | [Archetype](Archetype/README.en.md) | Numeric recipe loading | SndArchetypeLoader: key-value pair file parsing and type inference |
 | [Companions](Companions/README.en.md) | SndContext role companion objects | 8 internal companion classes in the `Companions/` subdirectory, 2 (FileAccess, ArchiveFileAccess) at the Snd/ root. Together implement ISndBlackboardAccess / ISndSaveOperations etc., exposed through ISndContext's companion properties |
@@ -25,7 +25,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | File | Responsibility |
 |------|---------------|
 | `ISndContext.cs` | SND context unified facade interface: exposes all capabilities through 10 companion properties ([see Abstractions/Snd](../Abstractions/Snd/README.en.md)) |
-| `SndContext.cs` | Default ISndContext implementation (global/progress-level). `Bootstrap()` method executes the complete startup flow: strategy discovery → alias/template loading → entry save loading. Provides `ISndFileAccess` through the companion `SndContextFileAccess` (file read/write delegated to `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`) |
+| `SndContext.cs` | Default ISndContext implementation (global/progress-level). `Bootstrap()` method executes the complete startup flow: strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading. Provides `ISndFileAccess` through the companion `SndContextFileAccess` (file read/write delegated to `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`) |
 | `SndContextParameters.cs` | SndContext construction parameter object. Contains startup configuration properties such as `AutoDiscoverStrategies`, `DiscoverySkipPrefixes`, `SceneAliasMapPath`, `SndTemplateMapPath`, `InitialLevelId` |
 | `SndWorld.cs` | SND world: strategy pool + type mapping + converter registry + templates/aliases. `LoadSceneAliases` / `LoadTemplates` are `internal`, invoked by `SndContext.Bootstrap` or the `ISndTemplateAccess` companion (`ctx.Template.LoadTemplates` / `ctx.Template.LoadSceneAliases`) |
 | `SndDefaults.cs` | `internal` — SND system default value constants. Defines `InitialSaveId` ("000"), `InitialLevelId` ("default"), `MainMenuLevelId` ("main_menu"), used by Core's internal persistence flow and startup orchestration. |
@@ -33,7 +33,6 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 | `SndTemplateResolver.cs` | Template resolver: supports both JSON array and .map shorthand template formats |
 | `TryGetNumericExtensions.cs` | Entity data numeric-type compatible read extensions: tries float → int → the remaining integer types (byte/sbyte/short/ushort/char/uint/ulong) → long → double in order. Note the precision boundary: int→float may lose precision above 2²⁴, uint/ulong→float loses precision, double→float narrowing may overflow to ±Infinity — none of these is checked — suitable for close-range gameplay values, not for metrology that needs exact representation |
 | `ActiveStrategyExtensions.cs` | Generic ActiveStrategy invocation extension: eliminates JSON serialization boilerplate on the `InvokeStrategy` side |
-| `LevelBuilder.cs` | `internal` — Offline level building tool. Only used internally by framework tests and StubSndSceneHost; business code should build levels via templates and entry.json. |
 | `EntityExtensions.cs` | Entity identity comparison extension methods such as `IsSameEntityAs` |
 | `SndContextFileAccess.cs` | `internal` — `ISndFileAccess` companion implementation (see Companions) |
 | `SndContextArchiveFileAccess.cs` | `internal` — `ISndArchiveFileAccess` companion implementation (see Companions) |
@@ -49,7 +48,7 @@ SndEntity (aggregate root)
 │   ├── Dictionary<string, INodeHandle> (node storage)
 │   └── INodeFactory (node creation, injected by adapter layer)
 ├── SndStrategyManager (passive strategies)
-│   ├── List<StrategyEntry> (sorted by priority, iterated per frame)
+│   ├── List<StrategyEntry> (sorted in partial order, iterated per frame)
 │   └── SndStrategyPool (global strategy pool reference)
 ├── ActiveStrategyManager (active strategies)
 │   ├── Dictionary<string, ActiveStrategyBase> (O(1) lookup by index)
@@ -64,13 +63,13 @@ SndEntity (aggregate root)
 1. **AfterSpawn** — After new entity creation
 2. **AfterLoad** — After entity recovered from save
 3. **AfterAdd** — After strategy dynamically added to entity
-4. **Process** — Per frame execution (by priority)
+4. **Process** — Per frame execution (in partial order)
 5. **BeforeRemove** — Before strategy removed from entity
 6. **BeforeSave** — Before serialization for save
 7. **BeforeQuit** — Before entity normal exit
 8. **BeforeDead** — Before entity destruction
 
-> **Batch lifecycle (batch orchestration):** `CreateEntity`, `RecoverFromMetaList`, `RemoveAllEntities` are holistic container operations; they do not fire AfterSpawn / AfterLoad / BeforeDead hooks per entity. Hooks are uniformly fired by the upper layer (`SndEntityFactory`'s spawn, `SessionRun`'s load/save/quit/kill lifecycle) after batch operations complete, sorted by priority.
+> **Batch lifecycle (batch orchestration):** `CreateEntity`, `RecoverFromMetaList`, `RemoveAllEntities` are holistic container operations; they do not fire AfterSpawn / AfterLoad / BeforeDead hooks per entity. Hooks are uniformly fired by the upper layer (`SndEntityFactory`'s spawn, `SessionRun`'s load/save/quit/kill lifecycle) after batch operations complete, sorted in partial order.
 
 ## Observation System
 
@@ -98,9 +97,10 @@ Observer binding topology is serialized with entities through `StrategyMetaData.
 
 1. **Converter registration**: if `SndContextParameters.ConfigureConverters` is set, it is invoked to register custom `DataSourceConverter`s
 2. **Strategy discovery**: If `SndContextParameters.AutoDiscoverStrategies` is true, scans assemblies for `[StrategyIndex]` annotated types via the `internal` `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, using `DiscoverySkipPrefixes` to filter adapter-layer assemblies
-3. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls the `internal` `SndWorld.LoadSceneAliases()`
-4. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls the `internal` `SndWorld.LoadTemplates()`
-5. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`
+3. **Ordering validation and registration freeze**: Calls the `internal` `SndStrategyPool.SealRegistration()` to validate registered lifecycle `Before` / `After` targets and cycles, then freezes the complete registry; later `SndWorld.RegisterStrategy` calls throw
+4. **Scene alias loading**: If `SceneAliasMapPath` is non-empty, calls the `internal` `SndWorld.LoadSceneAliases()`
+5. **SND template loading**: If `SndTemplateMapPath` is non-empty, calls the `internal` `SndWorld.LoadTemplates()`
+6. **Entry save loading**: Calls `RequestLoadMainMenuEntrySave()`
 
 The adapter layer only passes configuration via `SndContextParameters` and does not need to know the execution order or internal implementation of the above steps.
 
@@ -108,7 +108,7 @@ The adapter layer only passes configuration via `SndContextParameters` and does 
 
 ### Why Startup Orchestration Is Centralized in SndContext.Bootstrap()
 
-The adapter layer should not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()`. These are Core internal orchestration operations — strategy discovery must execute in the Core layer (using skip prefixes provided by the adapter), alias/template loading is Core configuration parsing, and entry save loading is a Core lifecycle entry point. Centralizing them in `Bootstrap()` ensures these operations complete in the correct dependency order in the correct layer.
+The adapter layer should not directly call `OrigoAutoInitializer.DiscoverAndRegisterStrategies()`, `LoadSceneAliases()`, `LoadTemplates()`, `RequestLoadMainMenuEntrySave()`. These are Core internal orchestration operations — strategy discovery and ordering validation must execute in the Core layer (using skip prefixes provided by the adapter), alias/template loading is Core configuration parsing, and entry save loading is a Core lifecycle entry point. Centralizing them in `Bootstrap()` ensures these operations complete in the correct dependency order in the correct layer.
 
 ---
 [↑ Back to Origo.Core](../README.en.md)

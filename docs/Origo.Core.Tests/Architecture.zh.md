@@ -1,16 +1,16 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 14 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构守卫 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
 > [↔ 被测模块: Origo.Core/README.md](../Origo.Core/README.zh.md)
-> [↔ 被测行为: usage/architecture-overview](../usage/architecture-overview.zh.md)
+> [↔ 被测行为: architecture/overview](../architecture/overview.zh.md)
 
 ## 被测行为概览
 
 验证 Origo 的架构约束：Core 程序集不引用 Godot（分层隔离）、ISndContext 是纯组合接口（接口隔离原则）、
-策略注册时通过反射无状态校验（拒绝实例字段和可写属性）。
+策略注册时通过反射无状态校验（拒绝实例字段和可写属性），并校验 Core 与 Origo.TestSupport 私有字段命名。
 
 ## 测试文件清单
 
@@ -25,20 +25,22 @@
 
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
-| `CoreAssembly_ShouldNotReferenceGodot` | Core 程序集不引用任何 Godot 程序集 | architecture-overview: 平台无关 |
-| `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` 与 `SndEntityFactory` 为 internal | architecture-overview: 单一访问路径 |
+| `CoreAssembly_ShouldNotReferenceGodot` | Core 程序集不引用任何 Godot 程序集 | architecture/overview: 平台无关 |
+| `CoreAssembly_ShouldNotContainTestOnlyStubOrLevelBuilder` | Core 生产程序集不包含测试/离线 stub（StubSndSceneHost/StubSndEntity/LevelBuilder），它们归属 Origo.TestSupport | AGENTS §1.2 |
+| `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` 与 `SndEntityFactory` 为 internal | architecture/overview: 单一访问路径 |
 | `PrivateFields_FollowUnderscoreCamelCase` | Core 生产程序集私有字段遵循 `_camelCase` 命名 | .editorconfig 命名规则 |
+| `TestSupport_PrivateFields_FollowUnderscoreCamelCase` | Origo.TestSupport 私有字段遵循 `_camelCase` 命名 | .editorconfig 命名规则 |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext 自身不声明任何方法/属性 | Snd Abstraction: ISP |
 | `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext 以 10 个 companion 属性暴露全部角色接口能力，不通过接口继承 | Snd Abstraction: ISndContext 组合 |
 | `SndContext_ShouldNotImplementRoleInterfaces` | SndContext 具体类型不实现任何角色接口（纯组合对象） | Snd Abstraction: ISndContext 组合 |
 | `SndContext_CompanionProperties_ShareConsistentState` | 各 companion 属性共享同一黑板实例（SystemBlackboard/ProgressBlackboard） | Snd Abstraction: ISndContext 组合 |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext 继承 ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
-| `DeferredFlush_ShouldNotBePublicBusinessSurface` | 帧冲刷仅经 `IOrigoFrameDriver.DriveFrame`；`ISndDeferredActions` 与 `OrigoRuntime` 不再暴露可绕过的 public flush | architecture-overview: 单一访问路径 |
-| `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture-overview: 单一访问路径 |
-| `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture-overview: 单一访问路径 |
+| `DeferredFlush_ShouldNotBePublicBusinessSurface` | 帧冲刷仅经 `IOrigoFrameDriver.DriveFrame`；`ISndDeferredActions` 与 `OrigoRuntime` 不暴露可绕过的 public flush | architecture/overview: 单一访问路径 |
+| `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture/overview: 单一访问路径 |
+| `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture/overview: 单一访问路径 |
 | `IEntityLifecycle_ShouldBeInternal` | IEntityLifecycle 接口为 internal——业务代码不得直接触发生命周期钩子 | Runtime: 生命周期编排 |
 | `SndEntity_LifecycleMethods_ShouldBeInternal` | SndEntity.Process 等具体生命周期方法为 internal，仅经框架编排调用 | Runtime: 生命周期编排 |
-| `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | 仅通过公共接口完成 save→load 工作流 | architecture-overview: 测试策略 |
+| `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | 仅通过公共接口完成 save→load 工作流 | architecture/overview: 测试策略 |
 | `Consumer_AccessesAllRoleInterfaces_ThroughISndContext` | 通过 ISndContext 可访问全部角色接口的能力（含 ISndFileAccess 读写文件，ISndArchiveFileAccess 存档内文件） | Snd Abstraction |
 | `SaveLoad_TriggeredThroughISndSaveOperations` | Save/Load 通过 ISndSaveOperations 接口触发 | persistence-flow |
 | `SessionLifecycle_ManagedThroughISessionManager` | 会话生命周期通过 ISessionManager 管理 | session-model |
@@ -75,7 +77,7 @@
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| Core 公共 API 中不应暴露 internal 类型的具体名字 | API 稳定性 | architecture-overview: public 白名单 |
+| Core 公共 API 中不应暴露 internal 类型的具体名字 | API 稳定性 | architecture/overview: public 白名单 |
 
 ---
 

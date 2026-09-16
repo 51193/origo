@@ -123,7 +123,7 @@ internal static class OrigoAutoInitializer
             var wrapped = new InvalidOperationException(
                 $"Failed to enumerate types from assembly '{assembly.FullName}'.", ex);
             logger.Log(LogLevel.Error, _logTag, new LogMessageBuilder()
-                .AddContext("filePath", assembly.FullName)
+                .AddContext("assemblyName", assembly.FullName)
                 .Build($"Discover strategy types failed: {wrapped.Message}"));
             throw wrapped;
         }

@@ -11,6 +11,7 @@
 - [Observer/](Observer/)
 - [Reporting/](Reporting/)
 - [Scene/](Scene/)
+- [Snd/](Snd/)
 - [Strategies/](Strategies/)
 
 ## English
@@ -22,5 +23,6 @@
 - [Observer/](Observer/)
 - [Reporting/](Reporting/)
 - [Scene/](Scene/)
+- [Snd/](Snd/)
 - [Strategies/](Strategies/)
 

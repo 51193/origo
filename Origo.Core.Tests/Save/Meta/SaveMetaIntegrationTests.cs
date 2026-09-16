@@ -190,6 +190,37 @@ public class SaveMetaContributorRegistrationTests
         Assert.Equal("2", payload2.CustomMeta!["ts"]);
     }
 
+    [Fact]
+    public void RegisterSaveMetaContributor_NullContribution_FailsSave()
+    {
+        AssertSaveFailsForInvalidContribution(_ => null!);
+    }
+
+    [Fact]
+    public void RegisterSaveMetaContributor_BlankContributionKey_FailsSave()
+    {
+        AssertSaveFailsForInvalidContribution(
+            _ => new Dictionary<string, string> { [""] = "value" });
+    }
+
+    [Fact]
+    public void RegisterSaveMetaContributor_NullContributionValue_FailsSave()
+    {
+        AssertSaveFailsForInvalidContribution(
+            _ => new Dictionary<string, string> { ["key"] = null! });
+    }
+
+    private static void AssertSaveFailsForInvalidContribution(
+        Func<SaveMetaBuildContext, IReadOnlyDictionary<string, string>> contribute)
+    {
+        var ctx = SndContextTestHelper.Create(out var fs);
+        SndContextTestHelper.SetupProgressRun(ctx, fs);
+        ctx.Save.RegisterSaveMetaContributor(contribute);
+
+        ctx.Save.RequestSaveGame("invalid_meta_slot");
+        Assert.Throws<InvalidOperationException>(() => ctx.FlushFrame());
+    }
+
     private sealed class KeyValueContributor(string key, string value) : ISaveMetaContributor
     {
         public IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context) => new Dictionary<string, string> { [key] = value };

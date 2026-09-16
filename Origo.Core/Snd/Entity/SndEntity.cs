@@ -86,7 +86,7 @@ public sealed class SndEntity : ISndEntity, IEntityLifecycle, ISndEntityRawSubsc
     /// <inheritdoc cref="ISndDataAccess.TryGetData{T}(string)"/>
     public (bool found, T? value) TryGetData<T>(string name) => _dataManager.TryGetData<T>(name);
 
-    /// <inheritdoc cref="ISndDataAccess.TryGetData{T}(string, out T?)"/>
+    /// <inheritdoc cref="ISndDataAccess.TryGetData{T}(string, out T)"/>
     public bool TryGetData<T>(string name, out T? value) => _dataManager.TryGetData<T>(name, out value);
 
     /// <inheritdoc cref="ISndObserverStrategyAccess.MountObserverStrategy(string, string)"/>

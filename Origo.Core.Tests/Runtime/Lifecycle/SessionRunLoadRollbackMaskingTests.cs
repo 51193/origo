@@ -29,6 +29,8 @@ public class SessionRunLoadRollbackMaskingTests
     private const string FlushBoomIdx = "rollback.flush_boom";
     private const string UnmountBoomIdx = "rollback.unmount_boom";
     private const string DummyPopIdx = "rollback.dummy_pop";
+    private const string GoodObserverIdx = "rollback.good_observer";
+    private const string MissingObserverIdx = "rollback.missing_observer";
 
     [Fact]
     public void LoadFromPayload_WhenFlushFails_OriginalExceptionSurvivesCleanupFailure()
@@ -100,6 +102,79 @@ public class SessionRunLoadRollbackMaskingTests
         Assert.Contains(logger.Warnings, w => w.Contains("UNMOUNT_BOOM", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void LoadFromPayload_WhenObserverRecoveryFailsMidBatch_SessionRollsBackCompletely()
+    {
+        var (ctx, logger) = CreateContext();
+
+        var payload = new SaveGamePayload
+        {
+            SaveId = "007",
+            ActiveLevelId = "target",
+            ProgressNode = TestFactory.NodeFromJson(
+                """{"origo.session_topology":{"type":"String","data":"__foreground__=target=false"}}"""),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}"),
+            Levels = new Dictionary<string, LevelPayload>
+            {
+                ["target"] = new()
+                {
+                    LevelId = "target",
+                    SndSceneNode = TestFactory.NodeFromJson(
+                        """
+                        [
+                          {
+                            "name": "OBS",
+                            "node": { "pairs": {} },
+                            "strategy": {
+                              "lifecycle_indices": [],
+                              "active_indices": [],
+                              "observer_indices": [
+                                { "GOOD_TARGET": ["rollback.good_observer"] },
+                                { "BAD_TARGET": ["rollback.missing_observer"] }
+                              ]
+                            },
+                            "data": { "pairs": {} }
+                          },
+                          {
+                            "name": "GOOD_TARGET",
+                            "node": { "pairs": {} },
+                            "strategy": { "lifecycle_indices": [], "active_indices": [] },
+                            "data": { "pairs": {} }
+                          },
+                          {
+                            "name": "BAD_TARGET",
+                            "node": { "pairs": {} },
+                            "strategy": { "lifecycle_indices": [], "active_indices": [] },
+                            "data": { "pairs": {} }
+                          }
+                        ]
+                        """),
+                    SessionNode = TestFactory.NodeFromJson("{}"),
+                    SessionStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}")
+                }
+            }
+        };
+
+        ctx.StorageService.WriteSavePayloadToCurrentThenSnapshot(payload, "007", ctx.Runtime.Logger);
+        ctx.Save.RequestLoadGame("007");
+
+        var ex = Assert.ThrowsAny<Exception>(() => ctx.FlushFrame());
+        Assert.Contains("rollback.missing_observer", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("not found", ex.Message, StringComparison.OrdinalIgnoreCase);
+
+        // The load transaction boundary is the whole session: the first
+        // binding mounted successfully before the second one failed, but the
+        // failed load must leave no session, no entity, and no pooled
+        // observer strategy behind.
+        Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
+        Assert.Empty(ctx.Runtime.SessionManager.Keys);
+        Assert.Null(ctx.Blackboard.ProgressBlackboard);
+
+        ctx.Runtime.SndWorld.StrategyPool.LogPoolLeaks();
+        Assert.DoesNotContain(logger.Warnings,
+            w => w.Contains("Strategy leak detected", StringComparison.Ordinal));
+    }
+
     private static (SndContext ctx, TestLogger logger) CreateContext()
     {
         var logger = new TestLogger();
@@ -111,6 +186,7 @@ public class SessionRunLoadRollbackMaskingTests
         var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
         runtime.SndWorld.RegisterStrategy(() => new FlushBoomPushStrategy());
         runtime.SndWorld.RegisterStrategy(() => new UnmountBoomObserver());
+        runtime.SndWorld.RegisterStrategy(() => new GoodObserver());
         runtime.SndWorld.RegisterStrategy(() => new DummyPopStrategy());
         var ctx = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver,
             "root", "initial", "entry.json"));
@@ -136,6 +212,12 @@ public class SessionRunLoadRollbackMaskingTests
 
     [StrategyIndex(DummyPopIdx)]
     private sealed class DummyPopStrategy : StateMachineStrategyBase
+    {
+    }
+
+    [StrategyIndex(GoodObserverIdx)]
+    [ObserveData("any.key")]
+    private sealed class GoodObserver : ObserverStrategyBase
     {
     }
 

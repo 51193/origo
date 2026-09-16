@@ -1,17 +1,17 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 14 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
 > [↔ Module under test: Origo.Core/README.md](../Origo.Core/README.en.md)
-> [↔ Behavior under test: usage/architecture-overview](../usage/architecture-overview.en.md)
+> [↔ Behavior under test: architecture/overview](../architecture/overview.en.md)
 
 ## Behavior Under Test Overview
 
 Verifies Origo's architectural constraints: Core assembly does not reference Godot (layer isolation),
 ISndContext is a pure composition interface (Interface Segregation Principle), strategies are validated
-as stateless via reflection at registration (rejects instance fields and writable properties).
+as stateless via reflection at registration (rejects instance fields and writable properties), and private-field naming is checked for both Core and Origo.TestSupport.
 
 ## Test File List
 
@@ -26,19 +26,21 @@ as stateless via reflection at registration (rejects instance fields and writabl
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
-| `CoreAssembly_ShouldNotReferenceGodot` | Core assembly does not reference any Godot assemblies | architecture-overview: platform independence |
-| `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` and `SndEntityFactory` are internal | architecture-overview: single access path |
+| `CoreAssembly_ShouldNotReferenceGodot` | Core assembly does not reference any Godot assemblies | architecture/overview: platform independence |
+| `CoreAssembly_ShouldNotContainTestOnlyStubOrLevelBuilder` | The Core production assembly contains no test/offline stubs (StubSndSceneHost/StubSndEntity/LevelBuilder); they belong in Origo.TestSupport | AGENTS §1.2 |
+| `SceneWriteInterfacesAndSpawnFactory_AreInternal` | `ISndSceneHost`/`ISndSceneAccess`/`ISndContextAttachableSceneHost`/`IOwningSessionBindable` and `SndEntityFactory` are internal | architecture/overview: single access path |
 | `PrivateFields_FollowUnderscoreCamelCase` | Core production private fields follow `_camelCase` naming | .editorconfig naming rule |
+| `TestSupport_PrivateFields_FollowUnderscoreCamelCase` | Origo.TestSupport private fields follow `_camelCase` naming | .editorconfig naming rule |
 | `ISndContext_ShouldBeCompositionInterface_WithCompanionProperties` | ISndContext itself declares no methods/properties | Snd Abstraction: ISP |
 | `ISndContext_ShouldExposeAllRoleInterfacesAsCompanionProperties` | ISndContext exposes all role-interface capabilities through 10 companion properties, not interface inheritance | Snd Abstraction: ISndContext composition |
 | `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |
 | `SndContext_CompanionProperties_ShareConsistentState` | Companion properties share the same blackboard instances (SystemBlackboard/ProgressBlackboard) | Snd Abstraction: ISndContext composition |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext inherits ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
-| `DeferredFlush_ShouldNotBePublicBusinessSurface` | Frame flushing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndDeferredActions` and `OrigoRuntime` expose no bypassable public flush | architecture-overview: single access path |
-| `ConsolePump_ShouldNotBePublicBusinessSurface` | Console processing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndConsoleAccess` and `OrigoConsole` expose no bypassable public pump | architecture-overview: single access path |
+| `DeferredFlush_ShouldNotBePublicBusinessSurface` | Frame flushing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndDeferredActions` and `OrigoRuntime` expose no bypassable public flush | architecture/overview: single access path |
+| `ConsolePump_ShouldNotBePublicBusinessSurface` | Console processing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndConsoleAccess` and `OrigoConsole` expose no bypassable public pump | architecture/overview: single access path |
 | `IEntityLifecycle_ShouldBeInternal` | IEntityLifecycle is internal — business code must not trigger lifecycle hooks directly | Runtime: lifecycle orchestration |
 | `SndEntity_LifecycleMethods_ShouldBeInternal` | Concrete lifecycle methods like SndEntity.Process are internal, invoked only by framework orchestration | Runtime: lifecycle orchestration |
-| `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | Completes save→load workflow using only public interfaces | architecture-overview: test strategy |
+| `Consumer_UsingOnlyPublicInterfaces_CanPerformSaveLoadWorkflow` | Completes save→load workflow using only public interfaces | architecture/overview: test strategy |
 | `Consumer_AccessesAllRoleInterfaces_ThroughISndContext` | All role-interface capabilities accessible through ISndContext (including ISndFileAccess file read/write, ISndArchiveFileAccess in-archive files) | Snd Abstraction |
 | `SaveLoad_TriggeredThroughISndSaveOperations` | Save/Load triggered through ISndSaveOperations interface | persistence-flow |
 | `SessionLifecycle_ManagedThroughISessionManager` | Session lifecycle managed through ISessionManager | session-model |
@@ -75,7 +77,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 
 | Gap Description | Impact | Doc Basis |
 |----------------|--------|-----------|
-| Core public API should not expose internal type concrete names | API stability | architecture-overview: public whitelist |
+| Core public API should not expose internal type concrete names | API stability | architecture/overview: public whitelist |
 
 ---
 

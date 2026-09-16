@@ -19,7 +19,6 @@ namespace Origo.Core.Tests;
 ///     Tests for topology persistence integrity, edge cases, and
 ///     background session collision handling during foreground switch.
 /// </summary>
-[Collection("StrategyStateTests")]
 public class SaveAndSwitchForegroundTests
 {
     // ── Topology correctness ────────────────────────────────────────────

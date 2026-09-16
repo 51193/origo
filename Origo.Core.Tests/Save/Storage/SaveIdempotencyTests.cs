@@ -101,7 +101,7 @@ public class SaveIdempotencyTests
         var policy = new DefaultSavePathPolicy();
         var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root", policy);
 
-        SaveStorageFacade.WriteSavePayloadToCurrent(handle, payload);
+        WritePayloadWithPayloadSha(handle, payload);
 
         var shaRel = policy.GetPayloadShaFile(policy.GetCurrentDirectory());
         var shaAbs = fs.CombinePath("root", shaRel);
@@ -389,6 +389,13 @@ public class SaveIdempotencyTests
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
+
+    private static void WritePayloadWithPayloadSha(SaveFileHandle handle, SaveGamePayload payload)
+    {
+        SavePayloadWriter.WriteToCurrent(handle, payload);
+        SaveAtomicWriter.WritePayloadSha(handle, handle.PathPolicy.GetCurrentDirectory(),
+            SavePayloadWriter.ComputePayloadHash(payload));
+    }
 
     private static SaveGamePayload CreateMinimalPayload(string saveId, string activeLevelId)
     {

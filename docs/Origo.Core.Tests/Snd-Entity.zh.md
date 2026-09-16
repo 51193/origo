@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 11 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 实体 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
@@ -20,7 +20,7 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | `MemorySndEntityTests.cs` | SndEntity 的 SetData/GetData/TryGetData/数据隔离 |
 | `SndEntityAfterLoadTests.cs` | AfterLoad 钩子的触发顺序和错误传播 |
 | `SndEntityAndAutoInitializerTests.cs` | AutoInitializer 从 metadata 恢复策略和数据；SndEntity AddStrategy/RemoveStrategy 索引更新 |
-| `SndEntityLifecycleBatchTests.cs` | 批量生命周期编排：全部钩子阶段、跨实体查找、优先级、SndEntityFactory/Spawn、ProcessAll 帧处理 |
+| `SndEntityLifecycleBatchTests.cs` | 批量生命周期编排：全部钩子阶段、跨实体查找、偏序、SndEntityFactory/Spawn、ProcessAll 帧处理 |
 | `SndEntityOwningSessionTests.cs` | 实体 OwningSession 绑定与解除 |
 | `SndDataManagerFailureTests.cs` | SndDataManager.SetData 转换器抛异常时不残留字典条目（防泄漏进存档） |
 | `SndEntityRecoveryRollbackTests.cs` | 验证 RecoverForLifecycle 跨阶段回滚（active 阶段失败释放已获取的被动策略；node 阶段失败释放已创建节点且不释放未获取索引） |
@@ -118,7 +118,7 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | `BatchQuit_CrossEntity_FindByNameSucceedsDuringBeforeQuit` | BeforeQuit 期间 FindByName 仍可找到其他实体 | snd-entity-model: 批量生命周期 |
 | `BatchDead_BeforeDead_FiresBeforeAnyTeardown` | BeforeDead 在 RemoveEntity 前触发 | snd-entity-model: 批量生命周期 |
 | `BatchDead_CrossEntity_FindByNameSucceedsDuringBeforeDead` | BeforeDead 期间 FindByName 仍可找到其他实体 | snd-entity-model: 批量生命周期 |
-| `BatchLoad_StrategyPriorityWithinEntity_Preserved` | 同一实体多个策略按 Priority 排序（低优先在前） | snd-entity-model: 策略优先级 |
+| `BatchLoad_StrategyOrderingWithinEntity_Preserved` | 同一实体多个策略按 Before / After 偏序排序 | snd-entity-model: 策略偏序 |
 | `BatchLoad_SingleEntity_BehaviorCorrect` | 单实体批量恢复正确触发 AfterLoad | snd-entity-model: 批量生命周期 |
 | `Spawn_ActiveStrategyAvailableDuringAfterSpawn` | 单实体 Spawn 后 AfterSpawn 期间 ActiveStrategy 可用 | snd-entity-model: 批量生命周期 |
 | `Load_ActiveStrategyAvailableDuringAfterLoad` | 单实体 Load 后 AfterLoad 期间 ActiveStrategy 可用 | snd-entity-model: 批量生命周期 |
@@ -202,7 +202,7 @@ AutoInitializer 的策略/数据恢复、批量生命周期编排（AfterLoad/Af
 | `CrossRefStrategy` | SndEntityLifecycleBatchTests | 跨实体 FindByName 验证：在 AfterLoad/AfterSpawn/BeforeQuit/BeforeDead 中验证是否可找到指定名称的其他实体 |
 | `QueryActiveProxy` | SndEntityLifecycleBatchTests | 跨实体 InvokeStrategy 验证：验证 AfterLoad/AfterSpawn 期间可通过 ActiveStrategy 调用其他实体 |
 | `SimpleActiveStrategy` | SndEntityLifecycleBatchTests | Active 策略，Invoke 返回 `hello_from:{entity.Name}` 字符串 |
-| `SP50` / `SP100` | SndEntityLifecycleBatchTests | 优先级验证：Priority=50 和 Priority=100 两个策略共享事件收集器，验证低优先先执行 |
+| `SP50` / `SP100` | SndEntityLifecycleBatchTests | 偏序验证：两个策略用 Before 声明关系，共享事件收集器，验证声明的顺序 |
 | `FailingStrategy` | SndEntityLifecycleBatchTests | Always-throws：AfterLoad 始终抛出 InvalidOperationException，用于错误路径测试 |
 | `SubscribeStrategy` | SndEntityLifecycleBatchTests | 数据订阅测试：AfterLoad 中跨实体订阅数据变化并通过 AsyncLocal 记录通知事件 |
 | `ProcessRecordingStrategy` | SndEntityLifecycleBatchTests | 记录 Process 调用的 (entity.Name, delta) 元组 |

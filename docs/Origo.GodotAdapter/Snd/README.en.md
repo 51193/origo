@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 22 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 25 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Snd](../../Origo.Core/Snd/README.en.md)
@@ -17,7 +17,6 @@ The concrete implementation of the SND entity system in the Godot engine. Bridge
 | `GodotSndEntity.cs` | Godot entity: binds Core SndEntity to Godot Node lifecycle, delegates all ISndEntity calls |
 | `GodotPackedSceneNodeFactory.cs` | INodeFactory implementation: creates Godot Nodes via PackedScene.Instantiate |
 | `GodotNodeHandle.cs` | INodeHandle implementation: wraps Godot.Node, provides Free / SetVisible / UnsafeGetNode |
-| `SndEntityNodeExtensions.cs` | Adapter-layer convenience extensions: `GetNativeNode()` (extracts Godot Node from INodeHandle), `GetNodeFromSnd<T>()` (resolves via the SND node registry by logical name and casts). Physically located at project root `Origo.GodotAdapter/SndEntityNodeExtensions.cs` (not in Snd/ subdirectory), namespace belongs to `Origo.GodotAdapter` |
 | `SndEntityCollection.cs` | internal — pure C# entity collection: entity add/remove, batch recovery rollback, kill marking, frame processing orchestration; no Godot dependency, covered directly by unit tests |
 
 ## Module Details
@@ -53,7 +52,9 @@ A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
 
 ### GodotPackedSceneNodeFactory
 
+- **Constructor guard**: the constructor rejects a null parent so later attaches cannot target a null reference
 - **Create**: `ResourceLoader.Load<PackedScene>(resourceId)` → `Instantiate<Node>()` → `parent.AddChild(node)` → returns GodotNodeHandle
+- **Up-front node-name validation**: null or blank logical names are rejected before any resource load, then the name is checked with the engine-native `StringExtensions.ValidateNodeName`; if sanitization changes the name, `ArgumentException` is thrown so framework-side rules cannot drift from engine rules and requested names are never silently renamed
 - resourceId is resolved on the Core side (`SndWorld` passes the `SndMappings.ResolveSceneAlias` delegate when creating entities), so the factory always receives the final path
 - Loaded `PackedScene` instances are cached to avoid repeated disk I/O when the same resource is instantiated multiple times
 

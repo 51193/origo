@@ -3,6 +3,7 @@ using Origo.Core.Abstractions.StateMachine;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Snd.Strategy;
 using Xunit;
 using System.IO;
 
@@ -59,6 +60,15 @@ public class SndContextBootstrapTests
 
         var registered = ctx.Runtime.SndWorld.GetRegisteredStrategyIndices();
         Assert.Empty(registered);
+    }
+
+    [Fact]
+    public void Bootstrap_InvalidStrategyOrdering_ThrowsDuringSeal()
+    {
+        var ctx = CreateBootstrapContext(out _);
+        ctx.Runtime.SndWorld.RegisterStrategy(() => new BootstrapMissingTarget());
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.Bootstrap());
+        Assert.Contains("order.bootstrap_missing", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -236,6 +246,9 @@ public class SndContextBootstrapTests
         var ctx = CreateBootstrapContext(out _);
         Assert.Throws<InvalidOperationException>(() => ctx.Template.CloneTemplate("does_not_exist"));
     }
+
+    [StrategyIndex("order.bootstrap_a", Before = new[] { "order.bootstrap_missing" })]
+    private sealed class BootstrapMissingTarget : LifecycleStrategyBase { }
 
     // ── Helpers ────────────────────────────────────────────────────────
 

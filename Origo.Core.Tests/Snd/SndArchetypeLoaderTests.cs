@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.Lifecycle;
@@ -31,6 +32,19 @@ public class SndArchetypeLoaderTests
         Assert.Equal("1.5", attrs["speed"]);
         Assert.Equal("player", attrs["label"]);
         Assert.Equal("true", attrs["active"]);
+    }
+
+    [Fact]
+    public void TryLoad_DisposesReturnedSourceNode()
+    {
+        var fs = CreateFileSystem("""{"hp":"100"}""");
+
+        Assert.True(SndArchetypeLoader.TryLoad(fs, "archetypes/player.map", out var attrs));
+        Assert.Equal("100", attrs["hp"]);
+
+        var node = fs.LastReadNode;
+        Assert.NotNull(node);
+        Assert.Throws<ObjectDisposedException>(() => _ = node!.Kind);
     }
 
     [Fact]
@@ -129,12 +143,18 @@ public class SndArchetypeLoaderTests
     {
         private readonly string? _content = content;
 
+        public DataSourceNode? LastReadNode { get; private set; }
+
         public bool FileExists(string path) => _content is not null;
 
-        public DataSourceNode ReadFile(string path) =>
-            _content is not null
-                ? ParseJson(_content)
-                : throw new System.IO.FileNotFoundException();
+        public DataSourceNode ReadFile(string path)
+        {
+            if (_content is null)
+                throw new System.IO.FileNotFoundException();
+
+            LastReadNode = ParseJson(_content);
+            return LastReadNode;
+        }
 
         private static DataSourceNode ParseJson(string json)
         {

@@ -1,6 +1,6 @@
 <!-- docsync-pair: usage/state-machine -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 6 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # State Machine
 
 > [↑ Back to usage](README.en.md)
@@ -35,7 +35,7 @@ public interface IStateMachine
 ```csharp
 public abstract class StateMachineStrategyBase : BaseStrategy
 {
-    // Called after a successful Push at runtime
+    // Called during a runtime Push attempt; the Push is rolled back when this hook throws
     public virtual void OnPushRuntime(StateMachineStrategyContext context, IStateMachineContext ctx) { }
 
     // After load recovery — called for each layer from bottom to top
@@ -120,6 +120,10 @@ sm.TryPopRuntime(out var popped);  // popped == "settings"
 ```
 
 The two-phase separation ensures that hook-triggering during stack structure adjustment (which would cause incomplete state) is avoided, and a unified replay happens after the adjustment is complete.
+
+### Push Failure Rollback
+
+`Push` first places the value on top of the stack and then invokes `OnPushRuntime`; if the hook throws, the pushed value is removed, the stack returns to its pre-Push state, and the exception propagates unchanged. A failed Push therefore never leaves the stack changed while the business logic did not run.
 
 ## Serialization Format
 

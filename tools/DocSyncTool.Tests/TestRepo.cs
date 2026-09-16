@@ -38,7 +38,7 @@ internal sealed class TestRepo : IDisposable
     {
         return $"<!-- docsync-pair: {pairId} -->\n" +
                $"<!-- docsync-revision: {revision} -->\n" +
-               "<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->\n";
+               "<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->\n";
     }
 
     public void Write(string relativePath, string content)
@@ -57,6 +57,49 @@ internal sealed class TestRepo : IDisposable
     public string Full(string relativePath) => Path.Combine(Root, relativePath.Replace('/', Path.DirectorySeparatorChar));
 
     public Config LoadConfig() => Config.Load(Root);
+
+    public void InitGit()
+    {
+        RunGit("init");
+        RunGit("config", "user.email", "docsync-tests@example.com");
+        RunGit("config", "user.name", "DocSyncTool Tests");
+    }
+
+    public string CommitAll(string message)
+    {
+        RunGit("add", "-A");
+        RunGit("commit", "-m", message);
+        return HeadSha();
+    }
+
+    public string HeadSha() => RunGit("rev-parse", "HEAD").Trim();
+
+    public string RunGit(params string[] arguments)
+    {
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "git",
+            WorkingDirectory = Root,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        foreach (var argument in arguments)
+            startInfo.ArgumentList.Add(argument);
+
+        using var process = System.Diagnostics.Process.Start(startInfo)
+            ?? throw new InvalidOperationException("Failed to start git.");
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        if (!process.WaitForExit(30_000))
+            throw new TimeoutException("git did not exit within 30 seconds.");
+
+        if (process.ExitCode != 0)
+            throw new InvalidOperationException($"git {string.Join(' ', arguments)} failed: {stderr}\nstdout: {stdout}");
+
+        return stdout;
+    }
 
     public void Dispose()
     {

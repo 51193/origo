@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.Core.Tests/Random -->
-<!-- docsync-revision: 4 -->
-<!-- docsync-revision — 每次内容变更后自增此版本号。参见 AGENTS.md §1.6。 -->
+<!-- docsync-revision: 5 -->
+<!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 随机数 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
@@ -30,6 +30,7 @@ PersistentRandom（黑板承载的持久随机数生成器，含初始化/范围
 |---------|-----------|---------|
 | `SameSeed_ProducesSameSequence` | "same-seed" 两次生成相同序列 | Random |
 | `DifferentSeed_ProducesDifferentSequence` | "seed-a" 和 "seed-b" 序列不同 | Random |
+| `NextUInt64_MatchesCanonicalXorShift128PlusReferenceVectors` | "same-seed" 前两步输出与标准 XorShift128+ 参考向量一致 | Random |
 
 ## RandomNumberGeneratorExtendedTests 测试详情
 

@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter.Integration.Tests/README -->
-<!-- docsync-revision: 13 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 21 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter.Integration.Tests
 
 > [↑ Back to Origo.manual](../README.en.md)
@@ -36,6 +36,7 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | Test Class | File | Tests | Engine Dependency Covered |
 |-----------|------|-------|--------------------------|
 | GodotRuntimeSmokeTests | `Tests/GodotRuntimeSmokeTests.cs` | 5 | Godot runtime smoke (GD.Print, FileAccess/DirAccess static classes, Vector2 type, SceneTree) |
+| PrivateFieldNamingIntegrationTests | `Tests/PrivateFieldNamingIntegrationTests.cs` | 1 | Reflectively scans the integration test assembly itself and verifies private fields follow the repository `_camelCase` convention |
 | GodotFileSystemIntegrationTests | `Tests/GodotFileSystemIntegrationTests.cs` | 5 | `GodotFileSystem` (`res://`/`user://` read/write, directory creation, file enumeration, deletion) |
 | GodotFileOperationsIntegrationTests | `Tests/GodotFileOperationsIntegrationTests.cs` | 8 | `GodotFileOperations` (ReadAllText/WriteAllText/Copy/Delete guards and correctness; nested writes create parent directories) |
 | GodotDirectoryOperationsIntegrationTests | `Tests/GodotDirectoryOperationsIntegrationTests.cs` | 10 | `GodotDirectoryOperations` (Create/Exists/EnumerateFiles/Recursive/EnumerateDirectories/DeleteRecursive, hidden-file enumeration/deletion) |
@@ -44,8 +45,8 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | GodotSndEntityIntegrationTests | `Tests/GodotSndEntityIntegrationTests.cs` | 9 | `GodotSndEntity` (construction null guards, SetData/GetData/TryGetData, type safety, fail-fast after release) |
 | GodotSndManagerIntegrationTests | `Tests/GodotSndManagerIntegrationTests.cs` | 7 | `GodotSndManager` (BindRuntimeDeps double bind guard, BindContext order guard, null guards, ProcessAll empty list) |
 | GodotSndManagerCreationIntegrationTests | `Tests/GodotSndManagerCreationIntegrationTests.cs` | 5 | `GodotSndManager` (CreateEntity/RemoveEntity/BuildMetaList/RequestKillEntity/GetEntities) |
-| GodotPackedSceneNodeFactoryIntegrationTests | `Tests/GodotPackedSceneNodeFactoryIntegrationTests.cs` | 4 | `GodotPackedSceneNodeFactory` (valid/invalid scene loading, child node adding, cache reuse) |
-| OrigoAutoHostBootstrapIntegrationTests | `Tests/OrigoAutoHostBootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` full `_Ready()` startup (Runtime/SndManager/ConsoleChannels) |
+| GodotPackedSceneNodeFactoryIntegrationTests | `Tests/GodotPackedSceneNodeFactoryIntegrationTests.cs` | 6 | `GodotPackedSceneNodeFactory` (valid/invalid scene loading, child node adding, cache reuse, up-front rejection of blank and Godot-invalid node names) |
+| OrigoAutoHostBootstrapIntegrationTests | `Tests/OrigoAutoHostBootstrapIntegrationTests.cs` | 3 | `OrigoAutoHost` full `_Ready()` startup (Runtime/SndManager/ConsoleChannels, Runtime.Meta.Version aligned with the assembly informational version) |
 | AdapterCommandHandlerIntegrationTests | `Tests/AdapterCommandHandlerIntegrationTests.cs` | 5 | `TreeDebugCommandHandler`, `PressButtonCommandHandler`, `CameraViewCommandHandler` |
 | OrigoDefaultEntryBootstrapIntegrationTests | `Tests/OrigoDefaultEntryBootstrapIntegrationTests.cs` | 1 | `OrigoDefaultEntry` complete default property values |
 | BootstrapIntegrationTests | `Tests/BootstrapIntegrationTests.cs` | 2 | `OrigoAutoHost` / `OrigoDefaultEntry` property defaults and instantiation |
@@ -53,8 +54,10 @@ Integration tests use a custom lightweight runner rather than xUnit:
 | GodotAdapterTypedDataRegistrationIntegrationTests | `Tests/GodotAdapterTypedDataRegistrationIntegrationTests.cs` | 1 | GodotAdapter assembly load triggers the generated `[ModuleInitializer]` kind registration |
 | ObserverSaveReloadIntegrationTests | `Tests/ObserverSaveReloadIntegrationTests.cs` | 3 | Observer bindings restored across save/load; session destroy fires OnUnmounted |
 | UserDataCleanupIntegrationTests | `Tests/UserDataCleanupIntegrationTests.cs` | 5 | Pre-test user:// cleanup: leftover write markers / prefixed artifacts removed, non-test and Godot system content preserved, idempotent |
-| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 1 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side |
+| GodotSndManagerExitTreeIntegrationTests | `Tests/GodotSndManagerExitTreeIntegrationTests.cs` | 2 | `GodotSndManager._ExitTree` out-of-contract cleanup: removing the manager node directly leaves no strategy-pool reference leaks on the Core side, and strategy release still runs when `OnUnmounted` throws |
 | OrigoDefaultEntryBootstrapFailureTests | `Tests/OrigoDefaultEntryBootstrapFailureTests.cs` | 1 | `OrigoDefaultEntry` derived entry failure after base._Ready(): the next frame must fail fast instead of driving a half-initialized runtime |
+| OrigoDefaultEntryContextIntegrationTests | `Tests/OrigoDefaultEntryContextIntegrationTests.cs` | 1 | `OrigoDefaultEntry.Context` exposes the SndContext after successful startup and shares the same instance with `ConfigureSaveMetadataContributors` |
+| OrigoDefaultEntryStrategyRegistrationIntegrationTests | `Tests/OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs` | 1 | A derived entry overrides `ConfigureStrategies` to register a strategy manually before `Bootstrap` seals the registry |
 
 ## Running
 
@@ -94,6 +97,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   └── TestResult.cs                      # Result DTO
 ├── Tests/
 │   ├── GodotRuntimeSmokeTests.cs          # Runtime smoke tests
+│   ├── PrivateFieldNamingIntegrationTests.cs # Integration assembly private-field naming guard
 │   ├── GodotFileSystemIntegrationTests.cs # File system integration tests
 │   ├── GodotFileOperationsIntegrationTests.cs # File operation guard tests
 │   ├── GodotDirectoryOperationsIntegrationTests.cs # Directory operation tests
@@ -111,7 +115,9 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── OrigoDefaultEntryBootstrapIntegrationTests.cs # Default entry property tests
 │   ├── ObserverSaveReloadIntegrationTests.cs # Observer binding save/load recovery tests
 │   ├── UserDataCleanupIntegrationTests.cs # Test-process user:// cleanup tests
-│   └── OrigoDefaultEntryBootstrapFailureTests.cs # Derived entry bootstrap failure fail-fast test
+│   ├── OrigoDefaultEntryBootstrapFailureTests.cs # Derived entry bootstrap failure fail-fast test
+│   ├── OrigoDefaultEntryContextIntegrationTests.cs # Context exposure / shared-instance test
+│   └── OrigoDefaultEntryStrategyRegistrationIntegrationTests.cs # ConfigureStrategies manual-registration test
 ├── TestSupport/
 │   ├── StubConsoleOutput.cs
 │   ├── StubNodeFactory.cs

@@ -5,6 +5,8 @@
 ## 中文
 - [META](META.zh.md)
 - [README](README.zh.md)
+- [release-process](release-process.zh.md)
+- [architecture/](architecture/)
 - [benchmarks/](benchmarks/)
 - [Origo.ConsoleBridge/](Origo.ConsoleBridge/)
 - [Origo.ConsoleBridge.Tests/](Origo.ConsoleBridge.Tests/)
@@ -22,6 +24,8 @@
 ## English
 - [META](META.en.md)
 - [README](README.en.md)
+- [release-process](release-process.en.md)
+- [architecture/](architecture/)
 - [benchmarks/](benchmarks/)
 - [Origo.ConsoleBridge/](Origo.ConsoleBridge/)
 - [Origo.ConsoleBridge.Tests/](Origo.ConsoleBridge.Tests/)

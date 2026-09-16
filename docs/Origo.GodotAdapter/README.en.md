@@ -1,6 +1,6 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — bump me on every content change. See AGENTS.md §1.6 for rules. -->
+<!-- docsync-revision: 15 -->
+<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter
 
 > [↑ Back to Origo.manual](../README.en.md)
@@ -8,6 +8,13 @@
 ## Module Overview
 
 **Origo.GodotAdapter** is the Godot 4 adapter layer for the Origo framework. It bridges the platform-agnostic abstractions in the Core layer with Godot engine's concrete APIs, including the file system (via `FileAccess`/`DirAccess`), logging output (via `GD.Print`), node lifecycle (via `Node`/`PackedScene`), and engine type serialization (14 types including `Vector2`, `Transform3D`, etc.).
+
+## Root Files
+
+| File | Responsibility |
+|------|----------------|
+| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(startKind: 128, ...)]`: registers 14 Godot engine types in the adapter kind range (128–141) of TypedData |
+| `SndEntityNodeExtensions.cs` | `GetNativeNode()` / `GetNodeFromSnd<T>()` adapter convenience extensions in namespace `Origo.GodotAdapter` |
 
 ## Subsystem Overview
 
@@ -34,11 +41,12 @@ OrigoDefaultEntry._Ready()
   │       │    └── OrigoRuntime
   │       ├── ConsoleInput/Output
   │       └── OrigoRuntime
+  ├── ConfigureStrategies(Runtime.SndWorld)  // Manual strategy registration before Bootstrap freeze
   ├── RegisterConsoleCommandHandlers()       // Adapter commands
   ├── new SndContext(...)                    // Pass startup config
   ├── SndManager.BindContext(sndContext)
   └── sndContext.Bootstrap()                 // Core-internal sequence:
-        ├── Strategy discovery (reflection scan, skip Godot assemblies)
+        ├── Strategy discovery and ordering validation/registration freeze (reflection scan, skip Godot assemblies)
         ├── LoadSceneAliases / LoadTemplates
         └── RequestLoadMainMenuEntrySave
 ```
@@ -58,7 +66,7 @@ The adapter layer does not participate in any aspect of strategy lifecycle manag
 - **Does not flush the deferred pipeline**: The frame loop does not bypass Core to call the internal `FlushEndOfFrameDeferred` directly
 - **`OrigoAutoHost._Process` is the sole frame entry point**: Within it, Core's `ProcessAll` → `FlushEndOfFrameDeferred` → `Console.ProcessPending` are delegated in order; the adapter layer only schedules, never makes decisions
 
-All this orchestration is the unified responsibility of the Core layer's session lifecycle (`SessionManager` / `SessionRun`). For detailed separation principles, see [Architecture Overview](../usage/architecture-overview.en.md#adapter-layer-and-core-layer-separation-principles).
+All this orchestration is the unified responsibility of the Core layer's session lifecycle (`SessionManager` / `SessionRun`). For detailed separation principles, see [Architecture Overview](../architecture/overview.en.md#adapter-layer-and-core-layer-separation-principles).
 
 ### Bridge Pattern
 
@@ -76,6 +84,11 @@ Verified integration notes for embedding Origo into a Godot project:
 - **Command line runs do not rebuild C#**: `godot --path .` loads the previously built
   DLL. The editor rebuilds automatically; from the command line run `dotnet build` first
   (or use `dotnet build && godot --path .`).
+- **Avoid spaces in the project name**: Godot 4.7.2 may fail to load the C#
+  project assembly when `project.godot` `config/name` contains spaces
+  (`Failed to load project assembly`, followed by "associated class could not
+  be found" script errors). Use an assembly-safe name without spaces in
+  `config/name`; display the desired title in game UI instead.
 - **Full-screen UI swallows 3D clicks**: A Control covering the whole screen defaults to
   `mouse_filter = Stop`, blocking all mouse events so 3D interactions (e.g. board clicks)
   stop working. Set `MouseFilter = Ignore` on the UI root; keep child panels at Stop so

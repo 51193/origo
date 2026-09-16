@@ -30,16 +30,21 @@ public static class RandomNumberGenerator
     /// </summary>
     public static (ulong value, ulong nextS0, ulong nextS1) NextUInt64(ulong s0, ulong s1)
     {
-        var nextS1 = s0;
-        var working = s1;
+        // Canonical xorshift128+ transition:
+        //   x = s0; y = s1
+        //   newS0 = y
+        //   x ^= x << 23; x ^= x >> 17; x ^= y; x ^= y >> 26
+        //   newS1 = x; output = newS0 + newS1
+        var x = s0;
+        var y = s1;
+        var nextS0 = y;
 
-        working ^= working << 23;
-        working ^= working >> 17;
-        working ^= s0;
-        working ^= s0 >> 26;
+        x ^= x << 23;
+        x ^= x >> 17;
+        x ^= y;
+        x ^= y >> 26;
 
-        var nextS2 = working;
-        return (nextS1 + nextS2, nextS1, nextS2);
+        return (nextS0 + x, nextS0, x);
     }
 
     /// <summary>Advances the generator and produces a signed 64-bit value.</summary>
