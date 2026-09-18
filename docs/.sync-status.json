@@ -2254,20 +2254,20 @@
     "release-process": {
       "status": "synced",
       "revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 14,
+        "en": 14
       },
       "files": {
         "zh": "release-process.zh.md",
         "en": "release-process.en.md"
       },
       "content_hashes": {
-        "zh": "18A8C3A0140D6AAF27A94CFD24E7AE4158D03247BDA88F3DAA95B5C78309B958",
-        "en": "B3472BD0F879276FAF2B9560345C4C7B1098D7C0785D22E1AA8F75CF95E2A545"
+        "zh": "EE33E78CCB0355AD110F97D4E0DA12158EBED11893AF97B2B620F3997FAF66E8",
+        "en": "FA6D333E08A570AD762806CE1EF0D680442895723FE90232F48EC3FD2D132206"
       }
     },
     "tools/DocSyncTool.Tests/README": {
