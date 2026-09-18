@@ -7,10 +7,12 @@
 - [overview](overview.zh.md)
 - [README](README.zh.md)
 - [strategy-ordering](strategy-ordering.zh.md)
+- [agent-friendly/](agent-friendly/)
 
 ## English
 - [extension-directions](extension-directions.en.md)
 - [overview](overview.en.md)
 - [README](README.en.md)
 - [strategy-ordering](strategy-ordering.en.md)
+- [agent-friendly/](agent-friendly/)
 
