@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # File Access Tests
 
@@ -38,6 +38,8 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 | `ReadObject_DeserializesJsonToString` | Reads a JSON string and deserializes it as string via Converter | ISndFileAccess.ReadObject |
 | `WriteObject_SerializesTypedValueAndCanBeReadBack` | Writing an int and reading it back; value is consistent | ISndFileAccess.WriteObject |
 | `WriteObject_WithOverwrite_ReplacesExisting` | Strongly-typed writing supports overwrite semantics | ISndFileAccess.WriteObject |
+| `WriteObject_DisposesConverterNodeOnSuccess` | The DataSourceNode returned by the converter is disposed after a successful write; accessing `Kind` throws ObjectDisposedException | DataSourceNode ownership |
+| `WriteObject_DisposesConverterNodeWhenWriteThrows` | When the gateway throws because overwrite=false, the converter node is still released in the finally path | DataSourceNode ownership |
 | `ReadWriteObject_RoundTrip_PreservesBool` | bool value round-trip is preserved correctly | ISndFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesDouble` | double value round-trip preserves precision | ISndFileAccess.ReadObject/WriteObject |
 | `FileAccess_IsAccessibleThroughRoleInterface` | ISndFileAccess can be obtained and used via ISndContext cast | ISndContext |
@@ -66,7 +68,7 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 
 | Strategy Class | Defined In | Purpose |
 |----------------|-----------|---------|
-| None | — | This test file defines no helper strategies; pure interface behavior tests |
+| `NodeReturningConverter<T>` / `WriteProbe` | SndContextFileAccessTests.cs | Records the DataSourceNode returned by the converter and verifies deterministic release by WriteObject |
 
 ## Known Coverage Gaps
 

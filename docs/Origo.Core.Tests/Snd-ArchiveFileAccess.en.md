@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Archive File Access Tests
 
@@ -39,6 +39,8 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 | `ReadWriteObject_RoundTrip_PreservesBool` | bool value round-trip is preserved correctly | ISndArchiveFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesString` | string value round-trip is preserved correctly | ISndArchiveFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesDouble` | double value round-trip preserves precision | ISndArchiveFileAccess.ReadObject/WriteObject |
+| `WriteObject_DisposesConverterNodeOnSuccess` | The DataSourceNode returned by the converter is disposed after a successful write; accessing `Kind` throws ObjectDisposedException | DataSourceNode ownership |
+| `WriteObject_DisposesConverterNodeWhenWriteThrows` | When the gateway throws because overwrite=false, the converter node is still released in the finally path | DataSourceNode ownership |
 | `DeleteFile_RemovesExistingFile` | Deleting an existing file in `extra/`; after deletion the file no longer exists | ISndArchiveFileAccess.DeleteFile |
 | `FileExists_ReturnsFalseAfterDelete` | After deleting a file, FileExists returns false | ISndArchiveFileAccess.DeleteFile |
 | `DeleteFile_ThenRead_Throws` | Reading after deletion throws an exception | ISndArchiveFileAccess.DeleteFile |
@@ -75,7 +77,7 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 
 | Strategy Class | Defined In | Purpose |
 |----------------|-----------|---------|
-| None | — | This test file defines no helper strategies; pure interface behavior tests |
+| `NodeReturningConverter<T>` / `WriteProbe` | SndContextArchiveFileAccessTests.cs | Records the DataSourceNode returned by the converter and verifies deterministic release by WriteObject |
 
 ## Known Coverage Gaps
 

@@ -12,11 +12,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Save slot deletion** — `ISndSaveOperations.DeleteSave` and `ISaveStorageService.DeleteSave` remove an inactive save snapshot together with any interrupted-snapshot `.tmp`/`.bak` remnants; the active save, the continue target, and running or pending persistence workflows are rejected.
+- **Persistence console commands** — a Core `SndContext` registers `list_saves`, `save`, `load`, `delete_save`, and `switch_level` handlers on the runtime console. `save`/`load`/`switch_level` queue through the existing frame-driven `ISndSaveOperations` path; `list_saves` prints display metadata; `delete_save` completes synchronously after its safety guards pass.
+- **Persistence workflow observability** — `ISndDeferredActions.IsPersistenceIdle` reports whether any save/load/level-switch/bootstrap request is pending or executing, and `ISndLifecycleOperations.IsBootstrapCompleted` reports whether the bootstrap main-menu entry load mounted successfully.
+
 - **Weekly snapshot build workflow** — the Monday 02:30 UTC scheduled run publishes a `-nightly.YYYYMMDD` build only when the week that just ended ([previous Monday 00:00, current Monday 00:00) UTC) contains new commits; manual dispatch additionally covers the current partial week. Idle scheduled weeks publish nothing. The tag push reuses the existing release pipeline for packages and documentation snapshots.
 - **Local agent work buffer (`_origo_local/`)** — scans, reviews, and design sessions can record structured findings and handoff state in a git-ignored single-book buffer under `_origo_local/`; implementation sessions claim the book and may close it only after the full development loop (source, tests, `scripts/ci.sh`, post-commit commit lint, changelog, docs sync) is complete. The entry summary is in `AGENTS.md` and the full tracked protocol in `docs/META.*`; the repository root `.gitignore` keeps the buffer out of version control.
 - **`OrigoDefaultEntry.ConfigureStrategies` hook** — derived Godot entries can register strategies manually before `SndContext.Bootstrap` freezes the ordering registry, covering `AutoDiscoverStrategies = false` and strategies that auto-discovery cannot reach.
 
 ### Changed
+
+- **BREAKING: persistence contracts expose workflow state and slot deletion** — `ISndDeferredActions` adds `IsPersistenceIdle`, `ISndLifecycleOperations` adds `IsBootstrapCompleted`, `ISndSaveOperations` adds `DeleteSave`, and `ISaveStorageService` adds `DeleteSave`. External implementations of these public interfaces must provide the new members. The new state members are observation-only and do not add a flush/execute bypass.
 
 - **BREAKING: lifecycle strategies use `Before` / `After` ordering constraints** — `StrategyIndexAttribute.Priority` and `DefaultPriority` are removed. Startup registration validates all references and cycles, then freezes the complete graph. Entities project that order onto mounted strategies, retaining transitive relationships; unconstrained topological candidates use index Ordinal order. Process and batch lifecycle hooks follow the same direction.
 
@@ -31,6 +37,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Dependabot-authored commits are exempt from commit-message lint** — Dependabot supports only a commit-message prefix, not a custom message template, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem, and `scripts/lint-commits.sh` skips Dependabot-authored commits so dependency PRs pass CI as proposed; human-authored commits keep the full subject and body gate.
 
 ### Fixed
+
+- **`WriteObject` releases converter-created nodes deterministically** — `ISndFileAccess.WriteObject` and `ISndArchiveFileAccess.WriteObject` now dispose the `DataSourceNode` returned by the registered converter after the write completes, including when the gateway throws, instead of leaving the tree for GC.
 
 - **Duplicate strategy indices in entity metadata now fail recovery** — a duplicated lifecycle index mounted the same pooled instance twice, running its `Process` twice per frame; a duplicated active index overwrote the dictionary entry and leaked one pool reference. Entity and active recovery now reject duplicate indices before acquiring or releasing anything, matching the public mount contract and the strict save-read policy.
 

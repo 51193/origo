@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
@@ -140,6 +140,8 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SaveStorageFacade_SnapshotCurrentToSave_AndEnumerateSaveIds_Works` | WriteToCurrent → Snapshot → Enumerate full flow | ISaveStorageService |
 | `SaveStorageFacade_SnapshotCurrentToSave_UsesTempDirectoryThenRename` | Snapshot uses .tmp directory then rename, no residue | persistence-flow: Phase 2 |
 | `SnapshotCurrentToSave_OverwritingExistingSave_ReplacesContentAndLeavesNoBackup` | Overwriting existing save replaces content, no .bak/.tmp residue | ISaveStorageService |
+| `SaveStorageFacade_DeleteSave_RemovesSlotAndRemnants` | Deletes the real slot and cleans the matching `.tmp`/`.bak` remnants | ISaveStorageService.DeleteSave |
+| `SaveStorageFacade_DeleteSave_DoesNotTouchCurrentDirectory` | Deleting a slot leaves `current/` untouched | ISaveStorageService.DeleteSave |
 
 ### Error Path
 
@@ -160,6 +162,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `WriteSavePayloadToCurrentThenSnapshot_NullLogger_Throws` | null logger | ArgumentNullException |
 | `WriteSavePayloadToCurrentThenSnapshot_WhenSnapshotFails_LogsError_LeavesMarkerAndUpdatedCurrent` | Copy fails during snapshot phase | InvalidOperationException, current/ remains in written state, marker residue |
 | `SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure` | Snapshot Copy fails | .tmp directory cleaned up |
+| `SaveStorageFacade_DeleteSave_MissingSlot_Throws` | Neither the target slot nor any remnant exists | InvalidOperationException |
 
 ### Boundary Path
 

@@ -170,6 +170,55 @@ public class SaveStorageAndPayloadTests
         Assert.Throws<ArgumentNullException>(() => SaveStorageFacade.EnumerateSaveIds(null!));
 
     [Fact]
+    public void SaveStorageFacade_DeleteSave_RemovesSlotAndRemnants()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/save_slot/progress.json", "{}");
+        fs.SeedFile("root/save_slot.tmp/progress.json", "{}");
+        fs.SeedFile("root/save_slot.bak/progress.json", "{}");
+        Assert.True(fs.DirectoryExists("root/save_slot"));
+        Assert.True(fs.DirectoryExists("root/save_slot.tmp"));
+        Assert.True(fs.DirectoryExists("root/save_slot.bak"));
+
+        SaveStorageFacade.DeleteSave(handle, "slot");
+
+        Assert.False(fs.DirectoryExists("root/save_slot"));
+        Assert.False(fs.DirectoryExists("root/save_slot.tmp"));
+        Assert.False(fs.DirectoryExists("root/save_slot.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_DeleteSave_MissingSlot_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.DeleteSave(handle, "missing"));
+
+        Assert.Contains("missing", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SaveStorageFacade_DeleteSave_DoesNotTouchCurrentDirectory()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/current/progress.json", "{}");
+        fs.SeedFile("root/save_slot/progress.json", "{}");
+        Assert.True(fs.DirectoryExists("root/save_slot"));
+
+        SaveStorageFacade.DeleteSave(handle, "slot");
+
+        Assert.False(fs.DirectoryExists("root/save_slot"));
+        Assert.True(fs.Exists("root/current/progress.json"));
+    }
+
+    [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_WhitespaceSaveRoot_Throws()
     {
         var fs = new TestMemoryFileSystem();

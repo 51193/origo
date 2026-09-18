@@ -361,6 +361,8 @@ public class SessionDecouplingTests
 
         public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData() => _inner.EnumerateSavesWithMetaData();
 
+        public void DeleteSave(string saveId) => _inner.DeleteSave(saveId);
+
         public void WriteSavePayloadToCurrent(SaveGamePayload payload) => _inner.WriteSavePayloadToCurrent(payload);
 
         public void WriteSavePayloadToCurrentThenSnapshot(

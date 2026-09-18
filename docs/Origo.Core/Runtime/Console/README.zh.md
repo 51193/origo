@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Console
 
@@ -13,7 +13,7 @@ Origo 的运行时控制台命令系统。提供命令解析（位置参数 + �
 
 | 子模块 | 能力 | 详情 |
 |--------|------|------|
-| [CommandHandlers](CommandHandlers/README.zh.md) | 11 个内置命令处理器 | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy |
+| [CommandHandlers](CommandHandlers/README.zh.md) | 11 个基础命令处理器 + 5 个持久化命令处理器 | OrigoConsole 注册 help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy；SndContext 注册 list_saves / save / load / delete_save / switch_level |
 
 ## 本层核心文件
 

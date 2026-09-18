@@ -215,6 +215,32 @@ public class SndContextArchiveFileAccessTests
         Assert.Equal(3.14159, readBack);
     }
 
+    [Fact]
+    public void WriteObject_DisposesConverterNodeOnSuccess()
+    {
+        var ctx = CreateContext(out _, out _);
+        var probeNode = DataSourceNode.CreateObject();
+        ctx.Runtime.SndWorld.ConverterRegistry.Register(new NodeReturningConverter<WriteProbe>(probeNode));
+
+        AsFileAccess(ctx).WriteObject("probe.json", new WriteProbe());
+
+        Assert.Throws<ObjectDisposedException>(() => _ = probeNode.Kind);
+    }
+
+    [Fact]
+    public void WriteObject_DisposesConverterNodeWhenWriteThrows()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        fs.SeedFile("root/current/extra/probe.json", "{}");
+        var probeNode = DataSourceNode.CreateObject();
+        ctx.Runtime.SndWorld.ConverterRegistry.Register(new NodeReturningConverter<WriteProbe>(probeNode));
+
+        Assert.Throws<IOException>(() =>
+            AsFileAccess(ctx).WriteObject("probe.json", new WriteProbe(), overwrite: false));
+
+        Assert.Throws<ObjectDisposedException>(() => _ = probeNode.Kind);
+    }
+
     // ── Correct path: DeleteFile ──
 
     [Fact]
@@ -451,5 +477,14 @@ public class SndContextArchiveFileAccessTests
             ? Assert.Throws<ArgumentNullException>(() => AsFileAccess(ctx).DeleteFile(path!))
             : Assert.Throws<ArgumentException>(() => AsFileAccess(ctx).DeleteFile(path!));
         Assert.Equal("path", ex.ParamName);
+    }
+
+    private sealed class WriteProbe;
+
+    private sealed class NodeReturningConverter<T>(DataSourceNode node) : DataSourceConverter<T>
+    {
+        public override T Read(DataSourceNode source) => throw new NotSupportedException();
+
+        public override DataSourceNode Write(T value) => node;
     }
 }

@@ -103,6 +103,32 @@ internal static class SaveStorageFacade
         return list;
     }
 
+    public static void DeleteSave(SaveFileHandle handle, string saveId)
+    {
+        ArgumentNullException.ThrowIfNull(handle);
+        SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
+
+        var saveRel = handle.PathPolicy.GetSaveDirectory(saveId);
+        var realAbs = handle.GetAbsolutePath(saveRel);
+        var tempAbs = handle.GetAbsolutePath(saveRel + SaveTempDirectorySuffix);
+        var backupAbs = handle.GetAbsolutePath(saveRel + SaveBackupDirectorySuffix);
+
+        var hasReal = handle.MetaAccess.DirectoryExists(realAbs);
+        var hasTemp = handle.MetaAccess.DirectoryExists(tempAbs);
+        var hasBackup = handle.MetaAccess.DirectoryExists(backupAbs);
+        if (!hasReal && !hasTemp && !hasBackup)
+            throw new InvalidOperationException($"Save slot '{saveId}' does not exist.");
+
+        // Remove the visible slot first: if a later remnant cleanup fails,
+        // the backup cannot outlive a still-valid slot.
+        if (hasReal)
+            handle.MetaAccess.DeleteDirectory(realAbs);
+        if (hasTemp)
+            handle.MetaAccess.DeleteDirectory(tempAbs);
+        if (hasBackup)
+            handle.MetaAccess.DeleteDirectory(backupAbs);
+    }
+
     public static void WriteSavePayloadToCurrentThenSnapshot(
         SaveFileHandle handle,
         SaveGamePayload payload,

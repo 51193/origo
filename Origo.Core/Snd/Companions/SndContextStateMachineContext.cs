@@ -37,4 +37,7 @@ internal sealed class SndContextStateMachineContext(SndContext owner) : IStateMa
     public int GetPendingPersistenceRequestCount() =>
         System.Threading.Interlocked.CompareExchange(
             ref owner._pendingPersistenceRequests, 0, 0);
+
+    /// <inheritdoc/>
+    public bool IsPersistenceIdle => owner.Deferred.IsPersistenceIdle;
 }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 22 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Manual
 
@@ -16,7 +16,7 @@ The Origo framework follows these core design constraints; all module implementa
 |-----------|-------------|
 | **Platform-agnostic** | Origo.Core has zero engine dependencies. All game logic, persistence, and entity models use only `System.*` types |
 | **Adapter-layer isolation** | Engine integration is exclusively through `Origo.GodotAdapter` implementing Core abstraction interfaces. The adapter layer must not fire strategy hooks, manage strategy lifecycles, flush deferred pipelines, or hold Core orchestration state |
-| **Interface Segregation (ISP)** | `ISndContext` is split into 10 narrow-role companion interfaces; `ISessionRun` returns an abstract `IStateMachineContainer` rather than a concrete type |
+| **Interface Segregation (ISP)** | `ISndContext` exposes 10 companion properties (9 Snd role interfaces + `IStateMachineContext`); `ISessionRun` returns an abstract `IStateMachineContainer` rather than a concrete type |
 | **Unidirectional dependency** | Abstractions → Core implementations → Adapter; reverse dependencies are strictly forbidden |
 | **public whitelist** | Do not expose interfaces preemptively for "maybe useful in the future"; every public interface must have a clear cross-assembly consumer |
 | **Explicit failure first** | Throw exceptions rather than silent degradation when interface contracts are violated; save/load strictly validate integrity |

@@ -134,9 +134,13 @@ public class SavePayloadDisposalTests
 
         public DataSourceNode? LastWrittenProgressStateMachinesNode { get; private set; }
 
+        public string? LastDeletedSaveId { get; private set; }
+
         public IReadOnlyList<string> EnumerateSaveIds() => [];
 
         public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData() => [];
+
+        public void DeleteSave(string saveId) => LastDeletedSaveId = saveId;
 
         public void WriteSavePayloadToCurrent(SaveGamePayload payload) =>
             LastWrittenPayload = payload;

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化流程
 
@@ -194,6 +194,27 @@ var entries = ctx.Save.ListSavesWithMetaData();
 // entries[i].SaveId → "001"
 // entries[i].MetaData → { "play_time": "2h30m", "level": "town" }
 ```
+
+### 删除存档
+
+```csharp
+// 同步删除非活动槽位及其 .tmp/.bak 残留
+ctx.Save.DeleteSave("old_slot");
+```
+
+删除会拒绝活动存档、continue 目标，以及持久化请求正在执行或待执行的状态；不存在的槽位会显式抛出 `InvalidOperationException`。存储层实现见 `ISaveStorageService.DeleteSave`。
+
+### 观察持久化完成状态
+
+```csharp
+// 是否还有 save/load/continue/switch/bootstrap 入口加载请求在执行或待执行
+bool persistenceIdle = ctx.Deferred.IsPersistenceIdle;
+
+// Bootstrap() 入队的主菜单入口是否已成功挂载
+bool bootstrapped = ctx.Lifecycle.IsBootstrapCompleted;
+```
+
+这两个属性只提供观察语义，不提供等待、冲刷或执行入口；调用方仍在帧线程上通过 `IOrigoFrameDriver.DriveFrame` 推进。入口加载失败时 `DriveFrame` 按 fail-fast 抛异常，`IsBootstrapCompleted` 保持 false，而请求计数在异常路径上同样归零。
 
 ## meta.map 展示元数据
 

@@ -47,4 +47,7 @@ internal sealed class SessionStateMachineContext : IStateMachineContext
 
     /// <inheritdoc/>
     public int GetPendingPersistenceRequestCount() => _global.GetPendingPersistenceRequestCount();
+
+    /// <inheritdoc/>
+    public bool IsPersistenceIdle => _global.IsPersistenceIdle;
 }

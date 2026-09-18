@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # StateMachine (Abstractions)
 
@@ -40,6 +40,7 @@ Defines the string-stack state machine system. The state machine only stores str
 | `ProgressBlackboard` | Progress-level blackboard; null when no active progress (inherited from [ISndBlackboardAccess](../Snd/README.en.md)) |
 | `EnqueueBusinessDeferred(action)` | Enqueue a business logic deferred action (inherited from [ISndDeferredActions](../Snd/README.en.md)) |
 | `GetPendingPersistenceRequestCount()` | Pending persistence request count (inherited from [ISndDeferredActions](../Snd/README.en.md)) |
+| `IsPersistenceIdle` | Whether no persistence request is pending or executing (inherited from [ISndDeferredActions](../Snd/README.en.md)) |
 | `SessionBlackboard` | Session-level blackboard; null when no active session (own) |
 | `SceneAccess` | Current session SND read-only scene access (`ISndSceneReadAccess`: GetEntities / FindByName) |
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 文件访问 测试
 
@@ -38,6 +38,8 @@
 | `ReadObject_DeserializesJsonToString` | 读取 JSON 字符串并通过 Converter 反序列化为 string | ISndFileAccess.ReadObject |
 | `WriteObject_SerializesTypedValueAndCanBeReadBack` | 写入 int 后读回，值一致 | ISndFileAccess.WriteObject |
 | `WriteObject_WithOverwrite_ReplacesExisting` | 强类型写入支持 overwrite 语义 | ISndFileAccess.WriteObject |
+| `WriteObject_DisposesConverterNodeOnSuccess` | 写入成功后 converter 返回的 DataSourceNode 已释放，访问 `Kind` 抛 ObjectDisposedException | DataSourceNode 所有权 |
+| `WriteObject_DisposesConverterNodeWhenWriteThrows` | Gateway 因 overwrite=false 抛异常时，converter 节点仍在 finally 中释放 | DataSourceNode 所有权 |
 | `ReadWriteObject_RoundTrip_PreservesBool` | bool 值往返保持正确 | ISndFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesDouble` | double 值往返保持精度 | ISndFileAccess.ReadObject/WriteObject |
 | `FileAccess_IsAccessibleThroughRoleInterface` | ISndFileAccess 可通过 ISndContext cast 获取并使用 | ISndContext |
@@ -66,7 +68,7 @@
 
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
-| 无 | — | 本测试文件不定义辅助策略，纯接口行为测试 |
+| `NodeReturningConverter<T>` / `WriteProbe` | SndContextFileAccessTests.cs | 记录 converter 返回的 DataSourceNode，验证 WriteObject 确定性释放 |
 
 ## 已知覆盖缺口
 

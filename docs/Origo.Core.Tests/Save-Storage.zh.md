@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：存储 测试
 
@@ -140,6 +140,8 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SaveStorageFacade_SnapshotCurrentToSave_AndEnumerateSaveIds_Works` | WriteToCurrent → Snapshot → Enumerate 全流程 | ISaveStorageService |
 | `SaveStorageFacade_SnapshotCurrentToSave_UsesTempDirectoryThenRename` | 快照使用 .tmp 目录再 rename，无残留 | persistence-flow: 阶段2 |
 | `SnapshotCurrentToSave_OverwritingExistingSave_ReplacesContentAndLeavesNoBackup` | 覆盖已有存档替换内容，无 .bak/.tmp 残留 | ISaveStorageService |
+| `SaveStorageFacade_DeleteSave_RemovesSlotAndRemnants` | 删除正式槽并清理同一 id 的 `.tmp`/`.bak` 残留 | ISaveStorageService.DeleteSave |
+| `SaveStorageFacade_DeleteSave_DoesNotTouchCurrentDirectory` | 删除槽位不影响 `current/` | ISaveStorageService.DeleteSave |
 
 ### 错误路径
 
@@ -160,6 +162,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `WriteSavePayloadToCurrentThenSnapshot_NullLogger_Throws` | null logger | ArgumentNullException |
 | `WriteSavePayloadToCurrentThenSnapshot_WhenSnapshotFails_LogsError_LeavesMarkerAndUpdatedCurrent` | 快照阶段 Copy 失败 | InvalidOperationException，current/ 保持已写入状态，marker 残留 |
 | `SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure` | 快照 Copy 失败 | .tmp 目录被清理 |
+| `SaveStorageFacade_DeleteSave_MissingSlot_Throws` | 目标槽与残留均不存在 | InvalidOperationException |
 
 ### 边界路径
 

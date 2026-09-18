@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话模型
 
@@ -128,6 +128,7 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     ISndSceneReadAccess SceneAccess { get; }      // 当前会话场景
     void EnqueueBusinessDeferred(Action action);           // 继承 ISndDeferredActions
     int GetPendingPersistenceRequestCount();               // 继承 ISndDeferredActions
+    bool IsPersistenceIdle { get; }                        // 继承 ISndDeferredActions
 }
 ```
 

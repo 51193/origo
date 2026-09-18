@@ -211,6 +211,32 @@ public class SndContextFileAccessTests
     }
 
     [Fact]
+    public void WriteObject_DisposesConverterNodeOnSuccess()
+    {
+        var ctx = CreateContext(out _, out _);
+        var probeNode = DataSourceNode.CreateObject();
+        ctx.Runtime.SndWorld.ConverterRegistry.Register(new NodeReturningConverter<WriteProbe>(probeNode));
+
+        AsFileAccess(ctx).WriteObject("output/probe.json", new WriteProbe());
+
+        Assert.Throws<ObjectDisposedException>(() => _ = probeNode.Kind);
+    }
+
+    [Fact]
+    public void WriteObject_DisposesConverterNodeWhenWriteThrows()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        fs.SeedFile("output/probe.json", "{}");
+        var probeNode = DataSourceNode.CreateObject();
+        ctx.Runtime.SndWorld.ConverterRegistry.Register(new NodeReturningConverter<WriteProbe>(probeNode));
+
+        Assert.Throws<IOException>(() =>
+            AsFileAccess(ctx).WriteObject("output/probe.json", new WriteProbe(), overwrite: false));
+
+        Assert.Throws<ObjectDisposedException>(() => _ = probeNode.Kind);
+    }
+
+    [Fact]
     public void ReadWriteObject_RoundTrip_PreservesBool()
     {
         var ctx = CreateContext(out _, out _);
@@ -344,5 +370,14 @@ public class SndContextFileAccessTests
         Assert.True(fa.FileExists("data/sample.json"));
         var node = fa.ReadFile("data/sample.json");
         Assert.Equal(1, node["x"].As<int>());
+    }
+
+    private sealed class WriteProbe;
+
+    private sealed class NodeReturningConverter<T>(DataSourceNode node) : DataSourceConverter<T>
+    {
+        public override T Read(DataSourceNode source) => throw new NotSupportedException();
+
+        public override DataSourceNode Write(T value) => node;
     }
 }

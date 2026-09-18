@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/CommandHandlers/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # CommandHandlers
 
@@ -24,6 +24,11 @@
 | `GetEntityDataCommandHandler.cs` | `entity_get_data` | 按名称和键读取 SND 实体数据（值及类型） |
 | `SetEntityDataCommandHandler.cs` | `entity_set_data` | 设置 SND 实体数据（自动推断类型，保留已有键的类型） |
 | `InvokeStrategyCommandHandler.cs` | `invoke_strategy` | 按实体名调用主动策略，传入可选 JSON 输入并输出返回值 |
+| `ListSavesCommandHandler.cs` | `list_saves` | 列出存档槽及展示元数据 |
+| `SaveGameCommandHandler.cs` | `save` | 将指定槽位的保存请求入队，由系统延迟队列执行 |
+| `LoadGameCommandHandler.cs` | `load` | 校验槽位存在后，将加载请求入队 |
+| `DeleteSaveCommandHandler.cs` | `delete_save` | 删除非活动存档槽及其 `.tmp`/`.bak` 残留 |
+| `SwitchLevelCommandHandler.cs` | `switch_level` | 将前台关卡切换请求入队 |
 
 ## 命令详细
 
@@ -55,6 +60,29 @@ spawn name=<name> template=<template>
 invoke_strategy <entity> <strategy_index> [input]
 ```
 按实体名查找实体，调用 `ISndActiveStrategyAccess.InvokeStrategy` 执行主动策略，输出返回值。input 可选，支持 JSON 字符串，由策略自行解析。
+
+### list_saves
+
+```
+list_saves
+```
+列出全部存档槽；有展示元数据时按 `key=value` 追加到同一行，无存档时输出 `No saves found.`。
+
+### save / load / switch_level
+
+```
+save <saveId>
+load <saveId>
+switch_level <levelId>
+```
+`save`、`load`、`switch_level` 只将请求写入系统延迟队列，成功后输出 “queued”。请求的实际执行发生在下一帧 `IOrigoFrameDriver.DriveFrame` 的系统延迟队列阶段；`load` 在入队前校验槽位存在。
+
+### delete_save
+
+```
+delete_save <saveId>
+```
+同步删除非活动存档槽及其 `.tmp`/`.bak` 残留。活动存档、continue 目标、正在执行或待执行的持久化请求都会被拒绝并返回错误。
 
 ## 设计决策
 

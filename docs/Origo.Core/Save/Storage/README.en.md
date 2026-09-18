@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Storage
 
@@ -13,7 +13,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 
 | File | Responsibility |
 |------|---------------|
-| `ISaveStorageService.cs` | Save read/write service public interface (cross-assembly) |
+| `ISaveStorageService.cs` | Save read/write/delete service public interface (cross-assembly) |
 | `ISavePathPolicy.cs` | Save path policy interface (replaceable layout) |
 | `DefaultSaveStorageService.cs` | Default ISaveStorageService implementation, internally delegates to SaveFileHandle + SavePayloadWriter/Reader |
 | `DefaultSavePathPolicy.cs` | Default ISavePathPolicy implementation, delegates to SavePathLayout |
@@ -22,7 +22,7 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 | `SavePayloadWriter.cs` | Save write orchestration (two-phase write + marker management) |
 | `SavePayloadReader.cs` | Save read orchestration (strict reading + integrity validation) |
 | `SaveGamePayloadFactory.cs` | Constructs SaveGamePayload (business data aggregation) |
-| `SaveStorageFacade.cs` | Save I/O orchestration layer (internal static): EnumerateSaveIds / EnumerateSavesWithMetaData / read/write orchestration / snapshot copy. Pure orchestration logic; concrete file parsing/serialization delegated to SavePayloadReader / SavePayloadWriter; atomic write logic delegated to SaveAtomicWriter |
+| `SaveStorageFacade.cs` | Save I/O orchestration layer (internal static): EnumerateSaveIds / EnumerateSavesWithMetaData / read/write orchestration / slot and remnant deletion / snapshot copy. Pure orchestration logic; concrete file parsing/serialization delegated to SavePayloadReader / SavePayloadWriter; atomic write logic delegated to SaveAtomicWriter |
 | `SaveAtomicWriter.cs` | Atomic write helper (internal static): SHA-256 idempotent dedup, write-in-progress marker management, temp directory preparation, backup-replace snapshot swap. Called exclusively by SaveStorageFacade |
 
 ## File Layout
@@ -70,7 +70,20 @@ Complete implementation of the save storage layer. Responsible for file I/O (rea
 - **Write methods** (`WriteSavePayloadToCurrent*` / `WriteLevelPayloadOnlyToCurrent` / `WriteProgressOnlyToCurrent`) must fully consume the supplied node trees before returning; they must not retain references for later reads. The framework disposes nodes immediately after these write boundaries, so custom implementations must not access the nodes after returning either.
 - Internal framework load/mount paths dispose payloads as soon as they are no longer needed; public-interface caller ownership is never managed on their behalf by internal framework paths.
 
+## Deleting Save Slots
+
+`ISaveStorageService.DeleteSave(string saveId)` removes `save_{id}/` and also cleans the matching `save_{id}.tmp/` and `save_{id}.bak/` remnants. The method never touches `current/`.
+
+- The save ID is first validated as a standard token (ASCII letters, digits, `.`, `_`, `-`), matching the write/read path.
+- When none of the three directories exists, the method throws `InvalidOperationException` rather than silently succeeding.
+- The real slot is removed before `.tmp/.bak`, so a remnant-cleanup failure cannot leave a readable real slot whose backup was already deleted.
+- Active-save protection belongs to the `ISndSaveOperations` business layer; the storage layer deletes exactly the slot it is given.
+
 ## Design Decisions
+
+### Why slot deletion is implemented once in the storage layer
+
+Deletion must cover the real slot and the `.tmp/.bak` remnants left by atomic writes. If UI or business code enumerated first and deleted paths itself, it would duplicate path-policy logic and could mistake `save_X.tmp` for an independent slot, breaking the recovery semantics of the next write. A single `DeleteSave` performs token validation and remnant cleanup in the storage layer, leaving active-slot and workflow protection to the business layer.
 
 ### Why two-phase write
 
