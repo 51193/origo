@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea for Origo
+about: Suggest an idea or design change for Origo
 title: "feat: "
 labels: enhancement
 assignees: ""
@@ -8,16 +8,20 @@ assignees: ""
 
 ## Problem
 
-<!-- What problem are you trying to solve? Describe the use case. -->
+<!-- What problem or use case? Who is affected, and why does it matter? -->
 
 ## Proposed solution
 
-<!-- What would you like Origo to do? -->
+<!-- What should Origo do? Add scope and non-goals when helpful. -->
+
+## Acceptance criteria
+
+<!-- How will we know this is done? Include behavior tests, docs, compatibility, and migration when relevant. -->
 
 ## Alternatives considered
 
-<!-- What other approaches have you considered? Why weren't they sufficient? -->
+<!-- Optional. What other approaches did you consider, and why were they insufficient? -->
 
 ## Additional context
 
-<!-- Any other context, references, or sketches. -->
+<!-- Optional. Affected packages/areas, API or compatibility impact, dependencies, links, or sketches. -->
