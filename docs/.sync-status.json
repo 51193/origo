@@ -40,17 +40,39 @@
     "architecture/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "architecture/README.zh.md",
         "en": "architecture/README.en.md"
       },
       "content_hashes": {
-        "zh": "52E2CF1F6DCABBC3AA7956F0E77A30E5AA8248CF885D0D17A6375F114811E57A",
-        "en": "BE8B7D1CFF6B1FD19FCAEA3EDFD42705CFE4C54586541DF8C2FBEEEAC26825EF"
+        "zh": "E478B5D38AC5A6DE983A149E42EEE14A11DB1206E9B787D868122DCBB0BDFDE5",
+        "en": "0A6CA966D0DA96BF96A833A21B55CF9341D413E0018B020253305E23CB7446D8"
+      }
+    },
+    "architecture/shell-kernel-boundary": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "architecture/shell-kernel-boundary.zh.md",
+        "en": "architecture/shell-kernel-boundary.en.md"
+      },
+      "content_hashes": {
+        "zh": "876EA42AB8768E0D1CDAC6862557BB4CD7C889334730B91679661FD99333EF08",
+        "en": "D4F0C5ACC401B120DA41F84831455684C54C6E06B730C53E8B92765BFB397CD7"
       }
     },
     "architecture/strategy-ordering": {
