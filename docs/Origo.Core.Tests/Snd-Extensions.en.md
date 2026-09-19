@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Extensions Tests
 
@@ -14,7 +14,7 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 
 | File | Verification Focus |
 |------|-------------------|
-| `EnsureStrategyTests.cs` | EnsureStrategy first-time mount, idempotent skip, empty value override |
+| `EnsureStrategyTests.cs` | EnsureStrategy first-time mount, idempotent skip, empty value override, and real-runtime strategy-pool mount/execution |
 | `EntityStrategyExtensionsTests.cs` | EnsureReplaceableStrategy default/custom/empty override/idempotent/parameter validation |
 | `TryGetNumericExtensionsTests.cs` | TryGetNumeric cross-type reads (int/float/long/double), non-numeric returns false, GetNumeric fallback |
 | `ActiveStrategyExtensionsTests.cs` | InvokeStrategy generic overloads: with/without input serialization round-trip, null returns default |
@@ -29,6 +29,8 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `EnsureStrategy_DataKeyMissing_SetsDataAndReturnsTrue` | When the data key does not exist, mounts the strategy first, then sets the dataKey and returns true | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_DataKeyExistsWithValue_ReturnsFalse` | When the data key already has a non-empty value, skips, returns false, and the value is unchanged | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_DataKeyExistsButEmpty_StillSetsAndReturnsTrue` | When the data key exists but the value is an empty string, still overwrites and returns true | Snd README: ActiveStrategyExtensions |
+| `EnsureStrategy_RealRuntime_MountsAndRunsLifecycleStrategy` | In a real runtime with the strategy pool registered, the first EnsureStrategy actually mounts the LifecycleStrategy and fires AfterAdd; a second call does not mount again; Process runs after DriveFrame | Snd README: ActiveStrategyExtensions |
+| `EnsureReplaceableStrategy_RealRuntime_MountsDefaultStrategy` | In a real runtime with no configuration, EnsureReplaceableStrategy actually mounts defaultStrategyIndex and it executes | Snd README: EnsureReplaceableStrategy |
 
 ### Error Paths
 
@@ -118,15 +120,13 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `TestResult` | ActiveStrategyExtensionsTests.cs | Simple POCO with a Result property, used as the return type for generic InvokeStrategy deserialization |
 | `StubEntity` | EntityExtensionsTests.cs | ISndEntity stub with configurable OwningSession (init), used for IsSameEntityAs name+session dual check |
 | `StubSession` | EntityExtensionsTests.cs | ISessionRun stub with LevelId fixed to "test"; other members throw NotImplementedException |
+| `RealEnsureProbeStrategy` | EnsureStrategyTests.cs | LifecycleStrategyBase: writes entity Data markers in AfterAdd/Process to verify real EnsureStrategy mounting and execution |
 
 ## Known Coverage Gaps
 
 | Gap Description | Impact | Documentation Basis |
 |-----------------|--------|---------------------|
-| Actual strategy mount integration of EnsureReplaceableStrategy with AddStrategy | Current tests use StubSndEntity (does not store actual strategies); the linkage between EnsureReplaceableStrategy result and actual strategy Add is not verified | Snd README: EnsureReplaceableStrategy |
-| TryGetNumeric compatibility with decimal/byte/short and other numeric types | Only int/long/float/double are tested; other CLR numeric types not covered | Snd README: TryGetNumericExtensions |
 | InvokeStrategy generic serialization round-trip for complex nested types | Only simple anonymous types {Sx, Sz} → TestResult are tested; nested objects/arrays/enums not tested | Snd README: ActiveStrategyExtensions |
-| Integration tests for EnsureStrategy/EnsureReplaceableStrategy in a real runtime environment (with strategy pool registration) | Current tests only manipulate the data layer of DummySndEntity/StubSndEntity; actual strategy Add and execution is not verified | Snd README: ActiveStrategyExtensions |
 
 ---
 

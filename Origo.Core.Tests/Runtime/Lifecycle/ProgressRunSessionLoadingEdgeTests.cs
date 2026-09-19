@@ -52,6 +52,27 @@ public class ProgressRunSessionLoadingEdgeTests
     }
 
     [Fact]
+    public void LoadFromPayload_WhenLevelsIsNull_ThrowsInvalidOperationWithoutPartialSession()
+    {
+        var ctx = CreateContext();
+        var progressRun = TestFactory.CreateProgressRun("001", ctx.Runtime.Logger, ctx.MetaAccess, ctx.PathResolver, "root", ctx.Runtime, ctx, sharedDataSourceIo: ctx.DataSourceIo);
+
+        var payload = new SaveGamePayload
+        {
+            SaveId = "001",
+            ActiveLevelId = "default",
+            ProgressNode = TestFactory.NodeFromJson("{}"),
+            ProgressStateMachinesNode = TestFactory.NodeFromJson("{\"machines\":[]}"),
+            Levels = null!
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() => progressRun.LoadFromPayload(payload));
+        Assert.Contains("Levels", ex.Message, StringComparison.Ordinal);
+        Assert.Null(ctx.Runtime.SessionManager.ForegroundSession);
+        Assert.Empty(ctx.Runtime.SessionManager.Keys);
+    }
+
+    [Fact]
     public void LoadAndMountForeground_WhenSndSceneIsEmpty_ThrowsInvalidOperation()
     {
         var logger = new TestLogger();

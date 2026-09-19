@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
@@ -161,6 +161,8 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `DefaultSaveStorageService_ResolveLevelPayload_WhenWriteMarkerExists_Throws` | .write_in_progress exists during ResolveLevelPayload | InvalidOperationException |
 | `WriteSavePayloadToCurrentThenSnapshot_NullLogger_Throws` | null logger | ArgumentNullException |
 | `WriteSavePayloadToCurrentThenSnapshot_WhenSnapshotFails_LogsError_LeavesMarkerAndUpdatedCurrent` | Copy fails during snapshot phase | InvalidOperationException, current/ remains in written state, marker residue |
+| `SnapshotCurrentToSave_TempToFinalRenameFailsTwice_PreservesPreviousBackup` | Backup-replace temp→final rename fails twice | InvalidOperationException; previous snapshot remains in the real slot and a successful rollback leaves no `.bak` |
+| `SnapshotCurrentToSave_WhenRollbackRenameFails_PreservesBackupAndCanRecover` | Temp→final fails and the `.bak`→real-slot rollback also fails | InvalidOperationException (contains "previous snapshot could not be restored"); the previous snapshot remains only in `.bak`, `.tmp` remains; a later retry installs the new data and removes the backup |
 | `SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure` | Snapshot Copy fails | .tmp directory cleaned up |
 | `SaveStorageFacade_DeleteSave_MissingSlot_Throws` | Neither the target slot nor any remnant exists | InvalidOperationException |
 
@@ -368,6 +370,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 |---------------|-----------|---------|
 | `CustomSavePathPolicy` | SaveStorageContractTests.cs | Custom ISavePathPolicy, all methods generate prefixed test paths |
 | `FailOnCopyFileSystem` | SaveStorageAndPayloadTests.cs | Throws exception when Copy target matches substring, simulates snapshot copy failure |
+| `FailOnRenameFileSystem` | SaveStorageAndPayloadTests.cs | Throws on temp→final or `.bak`→real-slot rename, simulating backup-replace and rollback failure |
 | `ThrowingOnReadFileSystem` | SaveIdempotencyTests.cs | Throws exception when ReadAllText accesses specified path, simulates SHA file read failure |
 | `TestPrefixedPathPolicy` | SavePathPolicyContractTests.cs | Prefixed custom ISavePathPolicy, verifying policy injection through all storage methods |
 | `SceneContractStrategy` | SavePathPolicyContractTests.cs | State machine strategy, collects SceneHost entity names in OnPushRuntime |
@@ -378,7 +381,6 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 
 | Gap Description | Impact | Reference |
 |----------------|--------|-----------|
-| Atomicity of rename failure in Phase 2 | .tmp residue cleanup during snapshot | persistence-flow: Phase 2 description |
 | Queuing behavior of concurrent requests during SaveStorageFacade write | Concurrency safety | — |
 | Performance of snapshot with many level files (deep directory tree recursive copy) | I/O behavior under extreme scenarios | — |
 

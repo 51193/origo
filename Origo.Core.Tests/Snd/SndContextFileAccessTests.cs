@@ -211,6 +211,19 @@ public class SndContextFileAccessTests
     }
 
     [Fact]
+    public void ReadWriteObject_RoundTrip_PreservesCustomType()
+    {
+        var ctx = CreateContext(out _, out _);
+        ctx.Runtime.SndWorld.ConverterRegistry.Register(new CustomPayloadConverter());
+
+        AsFileAccess(ctx).WriteObject("output/custom.json", new CustomPayload("hero", 7));
+        var readBack = AsFileAccess(ctx).ReadObject<CustomPayload>("output/custom.json");
+
+        Assert.Equal("hero", readBack.Name);
+        Assert.Equal(7, readBack.Count);
+    }
+
+    [Fact]
     public void WriteObject_DisposesConverterNodeOnSuccess()
     {
         var ctx = CreateContext(out _, out _);
@@ -370,6 +383,19 @@ public class SndContextFileAccessTests
         Assert.True(fa.FileExists("data/sample.json"));
         var node = fa.ReadFile("data/sample.json");
         Assert.Equal(1, node["x"].As<int>());
+    }
+
+    private sealed record CustomPayload(string Name, int Count);
+
+    private sealed class CustomPayloadConverter : DataSourceConverter<CustomPayload>
+    {
+        public override CustomPayload Read(DataSourceNode source) =>
+            new(source["name"].AsString(), source["count"].As<int>());
+
+        public override DataSourceNode Write(CustomPayload value) =>
+            DataSourceNode.CreateObject()
+                .Add("name", DataSourceNode.CreateString(value.Name))
+                .Add("count", DataSourceNode.CreateNumber(value.Count));
     }
 
     private sealed class WriteProbe;

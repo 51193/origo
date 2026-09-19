@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Archive File Access Tests
 
@@ -9,7 +9,7 @@
 
 ## Behavior Under Test Overview
 
-Validates the full behavior of `ISndArchiveFileAccess` on `SndContext`: DataSourceNode file read/write round-trips (paths relative to the archive active directory's `extra/` subdirectory), strongly-typed object read/write round-trips, file existence checks, file deletion, overwrite semantics, Map format parsing, nested JSON parsing, error paths (non-existent files, path traversal, type mismatch, null nodes), and boundary paths (empty objects, Null nodes, Boolean values), as well as archive save/load round-trip persistence.
+Validates the full behavior of `ISndArchiveFileAccess` on `SndContext`: DataSourceNode file read/write round-trips (paths relative to the archive active directory's `extra/` subdirectory), strongly-typed object read/write round-trips (including custom types with a registered converter), file existence checks, file deletion, overwrite semantics, Map format parsing, nested JSON parsing, error paths (non-existent files, path traversal, type mismatch, null nodes), and boundary paths (empty objects, Null nodes, Boolean values), as well as archive save/load round-trip persistence.
 
 All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); no real disk operations are involved.
 
@@ -39,6 +39,7 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 | `ReadWriteObject_RoundTrip_PreservesBool` | bool value round-trip is preserved correctly | ISndArchiveFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesString` | string value round-trip is preserved correctly | ISndArchiveFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesDouble` | double value round-trip preserves precision | ISndArchiveFileAccess.ReadObject/WriteObject |
+| `ReadWriteObject_RoundTrip_PreservesCustomType` | After registering a custom type converter, a custom object round-trips through WriteObject → ReadObject | ISndArchiveFileAccess.ReadObject/WriteObject |
 | `WriteObject_DisposesConverterNodeOnSuccess` | The DataSourceNode returned by the converter is disposed after a successful write; accessing `Kind` throws ObjectDisposedException | DataSourceNode ownership |
 | `WriteObject_DisposesConverterNodeWhenWriteThrows` | When the gateway throws because overwrite=false, the converter node is still released in the finally path | DataSourceNode ownership |
 | `DeleteFile_RemovesExistingFile` | Deleting an existing file in `extra/`; after deletion the file no longer exists | ISndArchiveFileAccess.DeleteFile |
@@ -78,12 +79,12 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 | Strategy Class | Defined In | Purpose |
 |----------------|-----------|---------|
 | `NodeReturningConverter<T>` / `WriteProbe` | SndContextArchiveFileAccessTests.cs | Records the DataSourceNode returned by the converter and verifies deterministic release by WriteObject |
+| `CustomPayloadConverter` / `CustomPayload` | SndContextArchiveFileAccessTests.cs | Custom type converter that verifies ReadObject/WriteObject round-trips after custom converter registration |
 
 ## Known Coverage Gaps
 
 | Gap Description | Impact | Documentation Basis |
 |-----------------|--------|---------------------|
-| ReadObject/WriteObject round-trips for complex custom types | Currently only testing BCL primitives (int/string/bool/double); user-defined types not tested | ISndArchiveFileAccess |
 | Thread safety of concurrent reads/writes on many files | Multi-threaded scenarios not covered | — |
 | Cleanup behavior of `extra/` directory during Dispose/progress teardown | Lifecycle boundary cleanup not independently verified | ISndArchiveFileAccess |
 | Lazy-deferred memory behavior of ReadFile for very large files | Performance characteristics of large JSON files not covered | DataSourceNode |

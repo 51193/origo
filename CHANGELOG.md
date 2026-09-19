@@ -40,6 +40,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Malformed save payloads with a null `Levels` map fail fast** — `ProgressRun.LoadFromPayload` now validates the payload's level map before deserializing progress or mounting sessions. A custom `ISaveStorageService` implementation returning a payload with `Levels == null` receives an `InvalidOperationException` instead of a `NullReferenceException` after partial progress deserialization, and no partially mounted session is left behind.
+
 - **`WriteObject` releases converter-created nodes deterministically** — `ISndFileAccess.WriteObject` and `ISndArchiveFileAccess.WriteObject` now dispose the `DataSourceNode` returned by the registered converter after the write completes, including when the gateway throws, instead of leaving the tree for GC.
 
 - **Duplicate strategy indices in entity metadata now fail recovery** — a duplicated lifecycle index mounted the same pooled instance twice, running its `Process` twice per frame; a duplicated active index overwrote the dictionary entry and leaked one pool reference. Entity and active recovery now reject duplicate indices before acquiring or releasing anything, matching the public mount contract and the strict save-read policy.

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 类型序列化 测试
 
@@ -41,6 +41,7 @@
 | `TypeStringMapping_RegisterType_DuplicateSameType_NoThrow` | 重复注册同一映射不抛异常 | Serialization |
 | `TypeStringMapping_BclTypes_AllPreregistered` | Int32/String/Boolean/Single/Double/Int64/Int16/Byte/ArrayString 等可获取 | Serialization |
 | `TypeStringMapping_RegisterCustomType_RoundTrips` | 注册 Guid → 双向查询正确 | Serialization |
+| `TypeStringMapping_GenericTypes_RegisterDistinctStableNames` | 注册 `List<int>` 与 `List<string>` 后，类型名/类型双向映射互不覆盖且稳定 | Serialization |
 | `TypeStringMapping_ReadOnlyDictionaryTypes_Preregistered` | ReadOnlyDictionary / IReadOnlyDictionary 类型双向预注册 | Serialization |
 | `TypeStringMapping_RegisterManyCustomTypes_AllResolvable` | 连续注册 DateTime/Uri/Version/TimeSpan → 全部可双向查询 | Serialization |
 
@@ -101,9 +102,7 @@
 
 ## 已知覆盖缺口
 
-| 缺口描述 | 影响 | 文档依据 |
-|---------|------|---------|
-| 泛型类型的名称稳定性（如 `List<int>` vs `List<string>`） | 泛型类型的标识符策略 | Serialization |
+无——泛型类型名称稳定性已由 `TypeStringMapping_GenericTypes_RegisterDistinctStableNames` 覆盖。
 
 ---
 

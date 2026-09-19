@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 文件访问 测试
 
@@ -9,7 +9,7 @@
 
 ## 被测行为概览
 
-验证 `ISndFileAccess` 在 `SndContext` 上的全部行为：DataSourceNode 文件读写往返、强类型对象读写往返、文件存在检查、覆盖语义（overwrite）、Map 格式解析、嵌套 JSON 解析、错误路径（不存在文件、null 路径、无效 JSON）和边界路径（空对象、Null 节点、Boolean 值）。
+验证 `ISndFileAccess` 在 `SndContext` 上的全部行为：DataSourceNode 文件读写往返、强类型对象读写往返（含注册自定义转换器后的自定义类型）、文件存在检查、覆盖语义（overwrite）、Map 格式解析、嵌套 JSON 解析、错误路径（不存在文件、null 路径、无效 JSON）和边界路径（空对象、Null 节点、Boolean 值）。
 
 所有文件 I/O 使用共享的 `TestMemoryFileSystem`（内存实现），不涉及真实磁盘操作。
 
@@ -38,6 +38,7 @@
 | `ReadObject_DeserializesJsonToString` | 读取 JSON 字符串并通过 Converter 反序列化为 string | ISndFileAccess.ReadObject |
 | `WriteObject_SerializesTypedValueAndCanBeReadBack` | 写入 int 后读回，值一致 | ISndFileAccess.WriteObject |
 | `WriteObject_WithOverwrite_ReplacesExisting` | 强类型写入支持 overwrite 语义 | ISndFileAccess.WriteObject |
+| `ReadWriteObject_RoundTrip_PreservesCustomType` | 注册自定义类型转换器后，自定义对象经 WriteObject → ReadObject 完整往返 | ISndFileAccess.ReadObject/WriteObject |
 | `WriteObject_DisposesConverterNodeOnSuccess` | 写入成功后 converter 返回的 DataSourceNode 已释放，访问 `Kind` 抛 ObjectDisposedException | DataSourceNode 所有权 |
 | `WriteObject_DisposesConverterNodeWhenWriteThrows` | Gateway 因 overwrite=false 抛异常时，converter 节点仍在 finally 中释放 | DataSourceNode 所有权 |
 | `ReadWriteObject_RoundTrip_PreservesBool` | bool 值往返保持正确 | ISndFileAccess.ReadObject/WriteObject |
@@ -69,12 +70,12 @@
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
 | `NodeReturningConverter<T>` / `WriteProbe` | SndContextFileAccessTests.cs | 记录 converter 返回的 DataSourceNode，验证 WriteObject 确定性释放 |
+| `CustomPayloadConverter` / `CustomPayload` | SndContextFileAccessTests.cs | 自定义类型转换器，验证 ReadObject/WriteObject 在注册自定义转换器后的对象往返 |
 
 ## 已知覆盖缺口
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| ReadObject/WriteObject 对复杂自定义类型的往返 | 当前仅测试 BCL 原语（int/string/bool/double），未测试用户自定义类型 | ISndFileAccess |
 | 大量文件并发读写的线程安全性 | 多线程场景未覆盖 | — |
 | ReadFile 对大文件的延迟展开内存行为 | 大 JSON 文件的性能特征未覆盖 | DataSourceNode |
 

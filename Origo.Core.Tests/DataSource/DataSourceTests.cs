@@ -328,6 +328,22 @@ public class DataSourceTests
     }
 
     [Fact]
+    public void MapCodec_Encode_RejectsNestedObjectOrArrayChild()
+    {
+        // The format is flat string key/value pairs. A nested object or array
+        // has no representable line, so encoding must fail instead of writing
+        // a file the strict decoder cannot read back as the same tree.
+        var codec = TestFactory.CreateMapCodec();
+
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(
+            DataSourceNode.CreateObject().Add("nested",
+                DataSourceNode.CreateObject().Add("k", DataSourceNode.CreateString("v")))));
+        Assert.Throws<InvalidOperationException>(() => codec.Encode(
+            DataSourceNode.CreateObject().Add("items",
+                DataSourceNode.CreateArray().Add(DataSourceNode.CreateString("v")))));
+    }
+
+    [Fact]
     public void MapCodec_Encode_EmptyKey_Throws()
     {
         var codec = TestFactory.CreateMapCodec();
