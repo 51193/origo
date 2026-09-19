@@ -184,20 +184,53 @@
     "architecture/README": {
       "status": "synced",
       "revisions": {
+<<<<<<< HEAD
         "zh": 6,
         "en": 6
       },
       "previous_revisions": {
         "zh": 4,
         "en": 4
+=======
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
+        "zh": 1,
+        "en": 1
+>>>>>>> c84d279 (docs: add shell kernel boundary implementation proposal)
       },
       "files": {
         "zh": "architecture/README.zh.md",
         "en": "architecture/README.en.md"
       },
       "content_hashes": {
+<<<<<<< HEAD
         "zh": "9F0BEEAF8787AA7E34B11D3459196096A14FE40020EA4EE84F92BAD210C04C7B",
         "en": "D5617461BF0A5CD026F1C6FF2CB236DCE29C6FD3244956470E06765C528ED6C7"
+=======
+        "zh": "E478B5D38AC5A6DE983A149E42EEE14A11DB1206E9B787D868122DCBB0BDFDE5",
+        "en": "0A6CA966D0DA96BF96A833A21B55CF9341D413E0018B020253305E23CB7446D8"
+      }
+    },
+    "architecture/shell-kernel-boundary": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
+        "zh": "architecture/shell-kernel-boundary.zh.md",
+        "en": "architecture/shell-kernel-boundary.en.md"
+      },
+      "content_hashes": {
+        "zh": "876EA42AB8768E0D1CDAC6862557BB4CD7C889334730B91679661FD99333EF08",
+        "en": "D4F0C5ACC401B120DA41F84831455684C54C6E06B730C53E8B92765BFB397CD7"
+>>>>>>> c84d279 (docs: add shell kernel boundary implementation proposal)
       }
     },
     "architecture/strategy-ordering": {
