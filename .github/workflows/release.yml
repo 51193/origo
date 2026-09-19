@@ -4,9 +4,21 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing v* tag to release (e.g. v0.0.10-nightly.20260914)'
+        required: true
+        type: string
+      snapshot:
+        description: 'Snapshot build: publish the GitHub Release as a pre-release'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  # A dispatched run has no tag ref, so the input is the group key there.
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -15,6 +27,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          # A dispatched run is based on main; the gate must still test the tag.
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -60,10 +75,44 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Resolve release tag
+        id: resolve-tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          # 'push' carries the tag in the ref; 'workflow_dispatch' does not, so
+          # the tag arrives as an input instead. The weekly snapshot job starts
+          # this pipeline with 'gh workflow run release.yml -f tag=...' because
+          # a tag pushed with GITHUB_TOKEN does not fire the 'push: tags'
+          # trigger; its github.ref_name is then the dispatching branch.
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$REF" != "refs/heads/main" ]]; then
+              echo "ERROR: dispatch release.yml from refs/heads/main (got '${REF}')." >&2
+              exit 1
+            fi
+            TAG="$INPUT_TAG"
+          else
+            TAG="$REF_NAME"
+          fi
+          if [[ -z "$TAG" || "$TAG" != v* ]]; then
+            echo "ERROR: release tag '${TAG}' must be a v* tag." >&2
+            exit 1
+          fi
+          if ! git ls-remote --exit-code --refs origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "ERROR: tag '${TAG}' does not exist on origin." >&2
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Releasing tag ${TAG} (event: ${EVENT_NAME})."
+
       - name: Resolve current tag commit
         id: tag-commit
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
           set -euo pipefail
           # A previous run of this same workflow may already have moved the tag
@@ -84,7 +133,7 @@ jobs:
 
       - name: Sync version from tag
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
           set -euo pipefail
           # The release workflow builds from a tag checkout. Keep the package
@@ -148,7 +197,7 @@ jobs:
       - name: Commit synced version
         id: release-commit
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
           set -euo pipefail
           if git diff --quiet -- Directory.Build.props; then
@@ -168,8 +217,10 @@ jobs:
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Validate tag matches version
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          TAG_VERSION="${TAG#v}"
           PROPS_VERSION=$(grep -oP '<Version>\K[^<]+' Directory.Build.props | head -1)
           if [[ "$TAG_VERSION" != "$PROPS_VERSION" ]]; then
             echo "ERROR: version sync failed: tag 'v$TAG_VERSION' != Directory.Build.props version '$PROPS_VERSION'."
@@ -179,9 +230,10 @@ jobs:
 
       - name: Verify release metadata
         env:
-          TAG_VERSION: ${{ github.ref_name }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          # verify-release.sh reads TAG_VERSION from the environment.
+          export TAG_VERSION="${TAG#v}"
           bash scripts/verify-release.sh
 
       - name: DocSync validate
@@ -230,8 +282,9 @@ jobs:
         run: cp nuget.config.example ./artifacts/nuget.config
 
       - name: Package documentation snapshot
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
           DIRNAME="origo-docs-${VERSION}"
           mkdir -p "${DIRNAME}/docs"
@@ -245,7 +298,7 @@ jobs:
       - name: Write release commit back to main and tag
         if: steps.release-commit.outputs.changed == 'true'
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
           BASE_SHA: ${{ steps.tag-commit.outputs.base_sha }}
           BASE_COMMIT_SHA: ${{ steps.tag-commit.outputs.base_commit }}
           RELEASE_SHA: ${{ steps.release-commit.outputs.sha }}
@@ -283,3 +336,17 @@ jobs:
         with:
           files: ./artifacts/*
           generate_release_notes: true
+
+      - name: Mark snapshot release as pre-release
+        if: inputs.snapshot == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          # Only the automated snapshot path (the weekly job passes
+          # '-f snapshot=true') forces a pre-release, so an automatic snapshot
+          # never takes over as the repository's Latest release. The release step
+          # above is left exactly as it was for tags pushed or released by hand,
+          # so their state stays as chosen on GitHub.
+          gh release edit "${TAG}" --prerelease
+          echo "Marked ${TAG} as a pre-release."

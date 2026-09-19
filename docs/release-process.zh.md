@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 发布与 Changelog 流程
 
@@ -45,10 +45,25 @@
 ## 每周快照构建
 
 - 定时任务：每周一 **02:30 UTC**；窗口为**刚结束的一周**
-  `[上一个周一 00:00, 当前周一 00:00) UTC`。
-- 窗口内没有新提交时不发布；`workflow_dispatch` 可手动覆盖当前部分周。
+  `[上一个周一 00:00, 当前周一 00:00) UTC`。任务只允许从 `main` 运行，
+  且会忽略自己创建的版本 bump 提交，因此空闲窗口不发布任何内容。
+- `workflow_dispatch` 可手动覆盖当前部分周。
 - 快照 tag 形如 `v<base>-nightly.YYYYMMDD`，`<base>` 从
   `Directory.Build.props` 的 `<Version>` 推导。
+- 发布时先把 `<Version>` 提升为快照版本，并按该版本的数值部分推导
+  `AssemblyVersion` / `FileVersion`，三个版本戳一起提交到 `main`，给该提交
+  打 tag，再以 `gh workflow run release.yml -f tag=<tag>` 启动 Release
+  workflow。必须显式 dispatch：用 `GITHUB_TOKEN` 推送的 tag 不会触发 `push`
+  类型 workflow，而 `workflow_dispatch` 是官方规则的例外，因此无需申请 PAT
+  或 GitHub App。
+- base 版本取自当前 `<Version>` 的数值部分，因此改动 base
+  （`0.0.10-nightly.YYYYMMDD` → `0.0.11-nightly.YYYYMMDD` 或 `0.0.11`）会
+  同步带动快照 tag、NuGet 包版本与程序集元数据；发布流水线不再有版本戳
+  需要改写。
+- weekly 任务以 `-f snapshot=true` 请求快照发布，Release workflow 据此把
+  GitHub Release 创建为 **pre-release**，自动快照因此不会成为仓库的
+  Latest release；手动推送或创建的 tag 不会被强制指定状态，保持你在 GitHub
+  上选择的结果。
 - 快照 tag 复用正式发布流水线产出包与文档快照；`verify-release.sh`
   对带 `-` 的版本跳过正式版元数据校验。
 
@@ -79,7 +94,9 @@
 
 ## 发布流水线产物
 
-推送 `v*` tag 会触发 Release workflow：
+Release workflow 由推送的 `v*` tag 触发，或由 `workflow_dispatch` 配合
+`tag` 输入触发（每周快照走这条路径）。它先解析出目标 tag，下面的步骤
+都作用于该 tag：
 
 - 构建前先按 tag 自动改写 `Directory.Build.props`：去掉开头的 `v` 后写入
   `<Version>`，`AssemblyVersion` / `FileVersion` 取该版本的数值四段形式
@@ -99,7 +116,9 @@
   token 缺少权限，原子推送会失败并中止发布；
 - 打包 `Origo.Core`、`Origo.GodotAdapter`、`Origo.ConsoleBridge` 为 NuGet 包；
 - 生成包含 `docs/`、`AGENTS.md`、`CHANGELOG.md` 的文档快照压缩包；
-- 把包和文档快照附加到 GitHub Release。
+- 把包和文档快照附加到 GitHub Release；以快照方式启动（`snapshot` 输入，
+  每周快照会设置）时创建为 pre-release，手动推送的 tag 保持你在 GitHub 上
+  选择的状态。
 
 回写会快进 `main` 并移动既有 `v*` ref：已经获取过旧 tag 的本地仓库需要
 `git fetch --tags --force` 才能看到新的 release 提交。回写使用的 `GITHUB_TOKEN`

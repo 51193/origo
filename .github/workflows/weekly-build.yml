@@ -9,8 +9,15 @@ on:
     - cron: '30 2 * * 1'
   workflow_dispatch:
 
+concurrency:
+  # A manual dispatch must never race the scheduled run into a push conflict.
+  group: weekly-build
+  cancel-in-progress: false
+
 permissions:
   contents: write
+  # The release pipeline is started explicitly with 'gh workflow run'.
+  actions: write
 
 jobs:
   weekly-build:
@@ -25,6 +32,14 @@ jobs:
         id: check
         shell: bash
         run: |
+          # The step below commits to main, so only main may run this workflow:
+          # a manual dispatch from a feature branch would otherwise push that
+          # branch's history to main.
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "ERROR: weekly-build only runs on refs/heads/main (got '${GITHUB_REF:-unset}')." >&2
+            exit 1
+          fi
+
           # Scheduled runs evaluate exactly [previous Monday 00:00, current
           # Monday 00:00) so a commit in the first hours of Monday is picked
           # up by the following week's run instead of being published twice.
@@ -53,12 +68,26 @@ jobs:
             echo "Manual dispatch window includes commits up to now."
           fi
 
-          if [[ -z "$(git rev-list -1 "${REVISION_ARGS[@]}" HEAD)" ]]; then
+          # This workflow's own bump commit is created at ~02:30 UTC on Monday,
+          # i.e. inside the *following* week's window. Ignore those commits so an
+          # idle week really publishes nothing instead of re-triggering on itself.
+          IGNORE_ARGS=(--invert-grep --grep='^chore: bump version to .* for weekly build$')
+
+          if ! WINDOW_COMMITS="$(git rev-list "${REVISION_ARGS[@]}" "${IGNORE_ARGS[@]}" HEAD)"; then
+            echo "ERROR: git rev-list failed while evaluating the weekly window." >&2
+            exit 1
+          fi
+          if [[ -z "$WINDOW_COMMITS" ]]; then
             echo "No commits in the weekly window; nothing to publish."
             exit 0
           fi
+          echo "Commits in the weekly window: $(printf '%s\n' "$WINDOW_COMMITS" | wc -l)"
 
-          BASE_VERSION="$(grep -oP '<Version>\K[^<]+' Directory.Build.props | head -1 | sed -E 's/-nightly\.[0-9]{8}$//')"
+          # Reuse only the numeric base of the current stamp, so 0.0.11,
+          # 0.0.11-nightly, v0.0.11 and 0.0.11-nightly.YYYYMMDD all yield 0.0.11
+          # and a manual base bump (0.0.10 -> 0.0.11) moves the snapshot with it.
+          BASE_VERSION="$(grep -oP '<Version>\K[^<]+' Directory.Build.props | head -1 \
+              | tr -d '[:space:]' | sed -E 's/^[vV]//; s/[-+].*$//')"
           if ! [[ "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "ERROR: cannot derive base version from Directory.Build.props: '$BASE_VERSION'" >&2
             exit 1
@@ -68,8 +97,10 @@ jobs:
           NEW_VERSION="${BASE_VERSION}-nightly.${DATE}"
           TAG="v${NEW_VERSION}"
 
-          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null 2>&1; then
-            echo "Tag ${TAG} already exists; nothing to publish."
+          # Ask the remote, not the checkout: a tag created by a concurrent run
+          # is not in this clone yet, and pushing over it would fail the job.
+          if git ls-remote --exit-code --refs origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on origin; nothing to publish."
             exit 0
           fi
 
@@ -86,18 +117,40 @@ jobs:
           import sys
 
           version = sys.argv[1]
+
+          # AssemblyVersion/FileVersion are four numeric parts and cannot carry
+          # the -nightly suffix, so they follow the numeric base of the snapshot
+          # version. Keeping all three stamps in step means the release pipeline
+          # has nothing to rewrite and never has to move main or the tag.
+          numeric = re.split(r"[-+]", version, maxsplit=1)[0]
+          parts = numeric.split(".")
+          if not parts or not all(part.isdigit() for part in parts) or len(parts) > 4:
+              raise SystemExit(
+                  f"ERROR: snapshot version '{version}' has no usable numeric form."
+              )
+          assembly_version = ".".join((parts + ["0"] * 4)[:4])
+
           path = "Directory.Build.props"
           with open(path, encoding="utf-8") as handle:
               content = handle.read()
-          updated, count = re.subn(
-              r"(<Version>)[^<]+(</Version>)",
-              lambda match: f"{match.group(1)}{version}{match.group(2)}",
-              content,
-              count=1)
-          if count != 1:
-              raise SystemExit("Failed to locate a single <Version> element.")
+
+          for element, replacement in (
+              ("Version", version),
+              ("AssemblyVersion", assembly_version),
+              ("FileVersion", assembly_version),
+          ):
+              content, count = re.subn(
+                  rf"(<{element}>)[^<]+(</{element}>)",
+                  lambda match, value=replacement: f"{match.group(1)}{value}{match.group(2)}",
+                  content,
+              )
+              if count != 1:
+                  raise SystemExit(
+                      f"ERROR: expected exactly one <{element}> element in {path}, found {count}."
+                  )
+
           with open(path, "w", encoding="utf-8") as handle:
-              handle.write(updated)
+              handle.write(content)
           PY
 
           git config user.name "github-actions[bot]"
@@ -105,5 +158,25 @@ jobs:
           git add Directory.Build.props
           git commit -m "chore: bump version to ${{ steps.check.outputs.new_version }} for weekly build"
 
+          TAG="${{ steps.check.outputs.tag }}"
+          git tag -a "$TAG" -m "Weekly snapshot ${{ steps.check.outputs.new_version }}"
+
+          # main first: the release pipeline only writes its release commit back
+          # when the tag sits on the current main tip.
           git push origin HEAD:main
-          git push origin "refs/tags/${{ steps.check.outputs.tag }}"
+          git push origin "refs/tags/${TAG}"
+
+      - name: Dispatch the release pipeline for the snapshot tag
+        if: steps.check.outputs.new_version != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.check.outputs.tag }}
+        run: |
+          # A tag pushed with GITHUB_TOKEN does not start the Release workflow:
+          # GitHub suppresses runs caused by that token, so the 'push: tags'
+          # trigger never fires here. workflow_dispatch is the documented
+          # exception, so the pipeline is started explicitly instead of relying
+          # on a PAT (or GitHub App token) in repository secrets.
+          gh workflow run release.yml --ref main -f tag="${TAG}" -f snapshot=true
+          echo "Dispatched release.yml for ${TAG}."
