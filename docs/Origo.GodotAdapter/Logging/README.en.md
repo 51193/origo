@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Logging/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Logging
 

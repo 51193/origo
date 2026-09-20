@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console Commands
 

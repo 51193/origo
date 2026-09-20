@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Scene/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scene (Abstractions)
 

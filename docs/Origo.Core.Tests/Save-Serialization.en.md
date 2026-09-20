@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Serialization Tests
 

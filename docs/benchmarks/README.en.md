@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Performance Baselines
 

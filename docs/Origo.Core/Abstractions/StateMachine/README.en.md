@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # StateMachine (Abstractions)
 

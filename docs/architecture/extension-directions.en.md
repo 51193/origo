@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/extension-directions -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Extension Directions and Deferred Designs
 

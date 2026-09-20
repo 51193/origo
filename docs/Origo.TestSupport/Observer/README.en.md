@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Observer/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 
 # Observer
