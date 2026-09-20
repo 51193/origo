@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Contracts
 
@@ -17,17 +17,25 @@ against it.
 
 | Subsystem | Capability | Details |
 |-----------|------------|---------|
-| [Abstractions](Abstractions/README.en.md) | Platform-independent base abstractions | Logging, console input/output, file-system/path, node, and frame-driver contracts |
-| [Runtime](Runtime/README.en.md) | Runtime tooling extension contracts | Console handler, invocation model, and argument-validation base |
-| [DataSource](DataSource/README.en.md) | Data-source contracts | Tree data node, I/O gateway, file-meta contract, and converter bases |
-| [Snd](Snd/README.en.md) | SND data contracts | TypedData, metadata, and ISndContext |
+| [Abstractions](Abstractions/README.en.md) | Platform-independent base abstractions | Logging, console I/O, file-system/path, node, frame-driver, lifecycle, entity, scene, and state-machine contracts |
+| [Runtime](Runtime/README.en.md) | Runtime contracts and tooling | `IOrigoRuntime`/`ISndWorldAccess`, console handler/invocation model, and argument validation |
+| [Blackboard](Blackboard/README.en.md) | Shared blackboard implementation | In-memory `IBlackboard` implementation used by shell and kernel |
+| [Grid](Grid/README.en.md) | Grid value types | `GridPos` |
+| [Logging](Logging/README.en.md) | Shared logging implementation | `Logger<T>`, `LogMessageBuilder`, and `NullLogger` |
+| [Planning](Planning/README.en.md) | Planning strategy base | `PlanExecutionStrategyBase` |
+| [Serialization](Serialization/README.en.md) | Shared type mapping | `TypeStringMapping` |
+| [DataSource](DataSource/README.en.md) | Data-source contracts | Tree data node, I/O gateway, file-meta contract, converter bases, and registry |
+| [Snd](Snd/README.en.md) | SND data contracts | TypedData, metadata, ISndContext, strategy bases, and internal entity query contracts |
 | [Save](Save/README.en.md) | Save contracts | Display-meta contributors and save-slot entries |
+| [StateMachine](StateMachine/README.en.md) | State-machine contracts | Strategy base and per-operation context |
+| [Utility](Utility/README.en.md) | Shared pure utilities | `PathUtility` and internal value inference |
 
 ## Files at This Level
 
 | File | Responsibility |
 |------|----------------|
 | `OrigoMeta.cs` | Framework metadata: name, version, and default banner text |
+| `OrigoHostOptions.cs` | Stable configuration model for the Core shell host facade |
 | `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(...)]` home-host inline type registration: system primitives and string supported by TypedData |
 
 ## Architecture Constraints
@@ -39,13 +47,13 @@ against it.
 ## Dependency Direction
 
 ```
-Origo.Core.Contracts
+Origo.Core.Contracts ──► Origo.SourceGeneration (analyzer packaging)
         ▲
         │
 Origo.Core.Kernel
         ▲
-        │
-Origo.Core ──► Origo.SourceGeneration (analyzer)
+        │ runtime-only
+Origo.Core shell
         ▲
         │
 Origo.GodotAdapter

@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 28 -->
+<!-- docsync-revision: 30 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
@@ -59,9 +59,9 @@ Root (this file)
 
 | 模块 | 位置 | 说明 |
 |------|------|------|
-| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.zh.md) | 稳定消费者契约：日志、控制台、文件系统、路径、节点、帧驱动、data-source、元数据与工具扩展 |
-| **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.zh.md) | kernel 实现：vendor 噪声与延迟调度；runtime/SND/持久化当前仍在 Origo.Core |
-| **Origo.Core** | [README](Origo.Core/README.zh.md) | 平台无关核心：SND 实体系统、运行时、持久化、状态机 |
+| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.zh.md) | 稳定消费者契约、纯数据、策略基类、metadata、data-source 契约、日志抽象与共享纯工具 |
+| **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.zh.md) | kernel 实现：runtime/SND/持久化/data-source/console、调度、噪声与 internal kernel-shell port |
+| **Origo.Core** | [README](Origo.Core/README.zh.md) | 消费者 shell：OrigoHost facade、网格/随机工具与 SND 扩展辅助 |
 | **Origo.SourceGeneration** | [README](Origo.SourceGeneration/README.zh.md) | Roslyn 增量源码生成器：TypedData 多层内联存储 + 强类型访问器 |
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.zh.md) | Godot 4 适配层：文件系统、日志、序列化、启动 |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.zh.md) | TCP 远程控制台桥接（端口 9876） |
@@ -80,19 +80,19 @@ Root (this file)
 
 | 子系统 | 职责 |
 |--------|------|
-| [Abstractions](Origo.Core/Abstractions/README.zh.md) | Core 内部抽象接口（IBlackboard、ISndEntity、ISessionManager、IStateMachineContainer...） |
+| [Abstractions](Origo.Core.Kernel/Abstractions/README.zh.md) | Core 内部抽象接口（IBlackboard、ISndEntity、ISessionManager、IStateMachineContainer...） |
 | [Snd](Origo.Core/Snd/README.zh.md) | SND 实体系统（Strategy + Node + Data） |
-| [Runtime](Origo.Core/Runtime/README.zh.md) | 四层运行时生命周期 + 控制台 |
-| [Save](Origo.Core/Save/README.zh.md) | 持久化（两阶段写入 + 严格读取） |
-| [DataSource](Origo.Core/DataSource/README.zh.md) | 数据源抽象层（JSON/Map 编解码 + 类型转换） |
+| [Runtime](Origo.Core.Kernel/Runtime/README.zh.md) | 四层运行时生命周期 + 控制台 |
+| [Save](Origo.Core.Kernel/Save/README.zh.md) | 持久化（两阶段写入 + 严格读取） |
+| [DataSource](Origo.Core.Kernel/DataSource/README.zh.md) | 数据源抽象层（JSON/Map 编解码 + 类型转换） |
 | [Grid](Origo.Core/Grid/README.zh.md) | 网格坐标系、A* 寻路、坐标解析 |
-| [StateMachine](Origo.Core/StateMachine/README.zh.md) | 字符串栈状态机 |
-| [Planning](Origo.Core/Planning/README.zh.md) | 意图驱动计划执行 |
-| [Blackboard](Origo.Core/Blackboard/README.zh.md) | 内存黑板实现 |
+| [StateMachine](Origo.Core.Kernel/StateMachine/README.zh.md) | 字符串栈状态机 |
+| [Planning](Origo.Core.Contracts/Planning/README.zh.md) | 意图驱动计划执行 |
+| [Blackboard](Origo.Core.Contracts/Blackboard/README.zh.md) | 内存黑板实现 |
 | [Random](Origo.Core/Random/README.zh.md) | 随机数 + 噪声图 |
-| [Utility](Origo.Core/Utility/README.zh.md) | 通用工具：集合差异比较 |
-| [Serialization](Origo.Core/Serialization/README.zh.md) | 类型 ↔ 字符串映射 |
-| [Logging](Origo.Core/Logging/README.zh.md) | 日志构建器 + NullLogger |
+| [Utility](Origo.Core.Contracts/Utility/README.zh.md) | 通用工具：集合差异比较 |
+| [Serialization](Origo.Core.Contracts/Serialization/README.zh.md) | 类型 ↔ 字符串映射 |
+| [Logging](Origo.Core.Contracts/Logging/README.zh.md) | 日志构建器 + NullLogger |
 
 ## 快速导航
 

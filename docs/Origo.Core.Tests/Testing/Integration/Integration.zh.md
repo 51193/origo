@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 帧驱动游戏模拟集成测试
 
 > [↑ 回到 Origo.Core.Tests](../../README.zh.md)
 > [↔ 被测行为: architecture/overview](../../../architecture/overview.zh.md)
-> [↔ 被测模块: Origo.Core/Runtime](../../../Origo.Core/Runtime/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/Runtime](../../../Origo.Core.Kernel/Runtime/README.zh.md)
 
 ## 被测行为概览
 

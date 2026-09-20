@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Runtime/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Runtime (Abstractions)
 
@@ -13,6 +13,8 @@ Defines the frame-driven abstract interface. `IOrigoFrameDriver` is the frame bo
 | File | Responsibility |
 |------|------|
 | `IOrigoFrameDriver.cs` | External frame boundary: `DriveFrame(double delta)` |
+| `IOrigoRuntime.cs` | Stable host/runtime contract: metadata, logger, world, blackboards, console channels, and sessions |
+| `ISndWorldAccess.cs` | Stable SND world access: strategy registration, type mappings, metadata conversion, and data-source gateway |
 
 ## Interface Members
 

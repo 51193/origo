@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core.Contracts/Runtime/Console/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console (Contracts)
 
-> [↑ Back to Runtime](../README.en.md) · [↔ Implementation: Origo.Core/Runtime/Console](../../../Origo.Core/Runtime/Console/README.en.md)
+> [↑ Back to Runtime](../README.en.md) · [↔ Implementation: Origo.Core.Kernel/Runtime/Console](../../../Origo.Core.Kernel/Runtime/Console/README.en.md)
 
 ## Module Capability
 

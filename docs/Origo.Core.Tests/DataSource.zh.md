@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 数据源 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/DataSource](../Origo.Core/DataSource/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/DataSource](../Origo.Core.Kernel/DataSource/README.zh.md)
 > [↔ 被测行为: architecture/overview](../architecture/overview.zh.md)
 
 ## 被测行为概览

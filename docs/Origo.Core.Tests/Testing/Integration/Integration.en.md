@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Frame-Driven Game Simulation Integration Tests
 
 > [↑ Back to Origo.Core.Tests](../../README.en.md)
 > [↔ Behavior under test: architecture/overview](../../../architecture/overview.en.md)
-> [↔ Module under test: Origo.Core/Runtime](../../../Origo.Core/Runtime/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/Runtime](../../../Origo.Core.Kernel/Runtime/README.en.md)
 
 ## Behavior Under Test Overview
 

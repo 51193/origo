@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console System Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Runtime/Console](../Origo.Core/Runtime/Console/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/Runtime/Console](../Origo.Core.Kernel/Runtime/Console/README.en.md)
 > [↔ Behavior under test: usage/console-commands](../usage/console-commands.en.md)
 
 ## Behavior Overview

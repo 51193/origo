@@ -1,14 +1,14 @@
 <!-- docsync-pair: Origo.Core.Contracts/DataSource/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # DataSource
 
-> [↑ 回到 Origo.Core.Contracts](../README.zh.md) · [↔ 实现: Origo.Core/DataSource](../../Origo.Core/DataSource/README.zh.md)
+> [↑ 回到 Origo.Core.Contracts](../README.zh.md) · [↔ 实现: Origo.Core.Kernel/DataSource](../../Origo.Core.Kernel/DataSource/README.zh.md)
 
 ## 模块能力
 
 data-source 契约层：树形数据模型、I/O 网关契约、文件元数据契约与类型转换器基类。
-Codec、Factory、Registry 与具体 converter 实现位于 [Origo.Core/DataSource](../../Origo.Core/DataSource/README.zh.md)。
+Codec、Factory、Registry 与具体 converter 实现位于 [Origo.Core.Kernel/DataSource](../../Origo.Core.Kernel/DataSource/README.zh.md)。
 
 ## 包含文件
 
@@ -19,6 +19,7 @@ Codec、Factory、Registry 与具体 converter 实现位于 [Origo.Core/DataSour
 | `DataSourceConverter.cs` | 转换器基类：`DataSourceConverterBase` 与 `DataSourceConverter<T>` |
 | `IDataSourceIoGateway.cs` | I/O 网关契约：`ReadTree` / `WriteTree` |
 | `IFileMetaAccess.cs` | 文件元数据契约：存在性、枚举、目录、删除、复制、重命名 |
+| `DataSourceConverterRegistry.cs` | `DataSourceConverter<T>` 共享注册表，由 shell 工具与 kernel 服务使用 |
 
 ## 设计决策
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell/Kernel 稳定边界
 
@@ -72,7 +72,7 @@ Adapter 内部实现仍然不得进入消费者编译面：非 shell 的 Godot �
 `Origo.Core.Contracts` 与 shell 包共同提供以下稳定能力组：
 
 - host 与 runtime：`IOrigoRuntime`、`ISndWorldAccess`、`IOrigoFrameDriver`、
-  `OrigoMeta`；
+  `OrigoMeta`、`OrigoHost`、`OrigoHostOptions`；
 - context 与 session：`ISndContext`、`ISessionManager`、`ISessionRun`、
   `ISndSceneReadAccess`；
 - SND 实体与策略：`ISndEntity` 及各窄接口、生命周期/主动/观察者/状态机/计划策略
@@ -134,6 +134,7 @@ Godot 生成的嵌套 signal 类型属于生成公开面，自动纳入 API base
 Kernel 可以拥有仅供 shell 调用的内部 port，但必须满足：
 
 - port 位于 `Origo.Core.Kernel.Ports` 命名空间，并保持 internal；
+  首个 host 构造 port 是 `HostKernelPort`；
 - port 只通过 `InternalsVisibleTo` 暴露给 `Origo.Core` shell 与
   `Origo.GodotAdapter` shell；
 - port 调用既有编排入口，不得绕过校验、钩子、资源生命周期或状态转换；
@@ -167,9 +168,9 @@ shell API 在契约基线中记录 owner 与下一个 `0.y.0` 的移除条件。
 ### 阶段二：Core Kernel 与 Core Shell
 
 1. 建立 `Origo.Core.Kernel`，迁入运行时构造、SND 内部实现、存档、存储与 codec。
-2. 实现 `IOrigoRuntime`、`ISndWorldAccess` 与 shell host facade；具体
-   `OrigoRuntime`、`SndWorld`、`SndContext`、`SndContextParameters` 保持在 kernel。
-3. 建立 kernel-shell port 命名空间与契约测试。
+2. 实现 `IOrigoRuntime`、`ISndWorldAccess` 与 `OrigoHost` shell facade；
+   具体 `OrigoRuntime`、`SndWorld`、`SndContext`、`SndContextParameters` 保持在 kernel。
+3. 建立 `Origo.Core.Kernel.Ports` 命名空间与契约测试；host 构造 port 位于其中。
 4. `Origo.Core` shell 包以 Contracts 为编译面主体，kernel 只作为运行期依赖。
 5. 处理 `InternalsVisibleTo`、Source Generator 宿主程序集和 ORIGOSG007 诊断。
 
@@ -198,6 +199,17 @@ shell API 在契约基线中记录 owner 与下一个 `0.y.0` 的移除条件。
 4. 更新 `AGENTS.md`、`docs/META.*` 与发布流程，写入有界 shell 例外与打包要求。
 5. 在 Changelog 记录 0.1.0 边界设计及破坏性变更，按完整 CI、发布验证与 commit
    lint 闭环后发布 0.1.0。
+
+## 当前实现状态
+
+Core 的 contracts/kernel/shell 拆分已在特性分支实现：
+`Origo.Core.Contracts` 承载稳定消费者表面与共享纯工具，
+`Origo.Core.Kernel` 承载 runtime/SND/存档/data-source/console 实现及 internal
+`HostKernelPort`，`Origo.Core` 是带 `OrigoHost` 的 shell 包。
+`IOrigoRuntime` 与 `ISndWorldAccess` 是 Contracts 稳定接口，分类守卫验证
+kernel 实现类型不会泄漏进 Core shell 编译面。`Origo.ConsoleBridge` 已只引用
+Core shell 包且不携带 kernel 编译资产。Adapter 单 shell 打包（#39）、
+兼容门禁（#40/#41/#42）与发布（#43）仍属后续工作。
 
 ## 验证与门禁
 

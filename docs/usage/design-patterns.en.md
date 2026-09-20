@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Design Patterns
 
@@ -275,7 +275,7 @@ Design points:
 
 ### Scheduling Layer's PlanExecutionStrategyBase
 
-The framework provides [`PlanExecutionStrategyBase`](../Origo.Core/Planning/README.en.md) as the standard base class for the scheduling layer. It encapsulates the complete lifecycle of intent → plan → step → action:
+The framework provides [`PlanExecutionStrategyBase`](../Origo.Core.Contracts/Planning/README.en.md) as the standard base class for the scheduling layer. It encapsulates the complete lifecycle of intent → plan → step → action:
 
 - **Subscription wiring**: Auto-manages the RAII closed loop for `intent` and `action_status` data subscriptions
 - **Plan advancement**: Intent change restarts the plan; action completion/failure advances to the next step or terminates

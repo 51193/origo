@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -44,7 +44,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 存档槽位删除 | `ctx.Save.DeleteSave(saveId)` 删除非活动槽及 `.tmp`/`.bak` 残留，保护活动槽与待执行 workflow | [持久化流程](persistence-flow.zh.md) |
 | 持久化完成状态 | `ctx.Deferred.IsPersistenceIdle` 与 `ctx.Lifecycle.IsBootstrapCompleted` 提供帧驱动完成观察 | [持久化流程](persistence-flow.zh.md) |
 | meta.map 显示元数据 | 与业务数据分离的显示元数据系统，ISaveMetaContributor 插件式贡献者模式 | [持久化流程](persistence-flow.zh.md) |
-| 幂等去重 | SHA256 哈希比对，相同游戏状态跳过 I/O 写入 | [↔ Save/Storage](../Origo.Core/Save/Storage/README.zh.md) |
+| 幂等去重 | SHA256 哈希比对，相同游戏状态跳过 I/O 写入 | [↔ Save/Storage](../Origo.Core.Kernel/Save/Storage/README.zh.md) |
 
 ## 状态机
 
@@ -67,12 +67,12 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 
 | 能力 | 说明 | 文档入口 |
 |------|------|----------|
-| DataSource 抽象层 | 统一树数据模型 DataSourceNode（Map/Array/Text/Number/Bool/Null + Lazy），通过 IDataSourceIoGateway 作为 Core 层唯一文件入口 | [↔ DataSource](../Origo.Core/DataSource/README.zh.md) |
-| JSON + .map 编解码 | JsonDataSourceCodec（延迟展开）、MapDataSourceCodec（key:value 扁平结构） | [↔ DataSource/Codec](../Origo.Core/DataSource/Codec/README.zh.md) |
-| 延迟 JSON 展开 | 嵌套对象/数组仅在首次访问时解析，分摊大型存档的解析开销 | [↔ DataSource](../Origo.Core/DataSource/README.zh.md) |
-| 类型-字符串双向映射 | TypeStringMapping 保持 CLR 类型与稳定字符串标识的双向映射，避免 FullName 版本耦合 | [↔ Serialization](../Origo.Core/Serialization/README.zh.md) |
+| DataSource 抽象层 | 统一树数据模型 DataSourceNode（Map/Array/Text/Number/Bool/Null + Lazy），通过 IDataSourceIoGateway 作为 Core 层唯一文件入口 | [↔ DataSource](../Origo.Core.Kernel/DataSource/README.zh.md) |
+| JSON + .map 编解码 | JsonDataSourceCodec（延迟展开）、MapDataSourceCodec（key:value 扁平结构） | [↔ DataSource/Codec](../Origo.Core.Kernel/DataSource/Codec/README.zh.md) |
+| 延迟 JSON 展开 | 嵌套对象/数组仅在首次访问时解析，分摊大型存档的解析开销 | [↔ DataSource](../Origo.Core.Kernel/DataSource/README.zh.md) |
+| 类型-字符串双向映射 | TypeStringMapping 保持 CLR 类型与稳定字符串标识的双向映射，避免 FullName 版本耦合 | [↔ Serialization](../Origo.Core.Contracts/Serialization/README.zh.md) |
 | Godot 14 种类型序列化 | Vector2/3/4、Vector2I/3I、Quaternion、Color、Basis、Transform2D/3D、Rect2/2I、Aabb、Plane 完整 JSON 往返 | [↔ GodotAdapter/Serialization](../Origo.GodotAdapter/Serialization/README.zh.md) |
-| 转换器注册与继承回溯 | DataSourceConverterRegistry 在精确类型未注册时沿基类链和接口链回溯查找转换器 | [↔ DataSource/Converters](../Origo.Core/DataSource/Converters/README.zh.md) |
+| 转换器注册与继承回溯 | DataSourceConverterRegistry 在精确类型未注册时沿基类链和接口链回溯查找转换器 | [↔ DataSource/Converters](../Origo.Core.Kernel/DataSource/Converters/README.zh.md) |
 | 策略文件访问（ISndFileAccess） | 策略通过 ISndContext 读写 JSON/Map 文件，经 IDataSourceIoGateway 边界自动解析为 DataSourceNode 树或强类型对象 | [架构概览](../architecture/overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.zh.md) |
 | 存档内文件访问（ISndArchiveFileAccess） | 策略通过 ISndContext 在存档 extra/ 子目录中读写文件（含删除），文件随存档生命周期管理：写入后纳入 save snapshot，load 时自动恢复 | [架构概览](../architecture/overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.zh.md) |
 
@@ -103,9 +103,9 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | PersistentRandom | 黑板持久化随机状态：InitSeed → TryNextInt32/NextInt32/NextFloat，存档安全可恢复 | [↔ Random](../Origo.Core/Random/README.zh.md) |
 | 2D 噪声图生成 | OpenSimplex2 (70%) + Worley Cellular (30%) 混合噪声，基础 + 扩展重载（自定义 octaves/lacunarity/gain） | [↔ Random](../Origo.Core/Random/README.zh.md) |
 | 网格坐标系 | GridPos 类型、GridCoordinateSystem 单/双轴转换、A* 寻路、GridParser 坐标解析 | [↔ Grid](../Origo.Core/Grid/README.zh.md) |
-| 内存黑板 | IBlackboard 默认实现，SetValue/TryGet/SerializeAll/DeserializeAll，key 大小写敏感 | [↔ Blackboard](../Origo.Core/Blackboard/README.zh.md) |
+| 内存黑板 | IBlackboard 默认实现，SetValue/TryGet/SerializeAll/DeserializeAll，key 大小写敏感 | [↔ Blackboard](../Origo.Core.Contracts/Blackboard/README.zh.md) |
 | 延迟动作调度 | ConcurrentActionQueue 线程安全队列，快照-排干模式，支持执行中再次入队 | [↔ Scheduling](../Origo.Core.Kernel/Scheduling/README.zh.md) |
-| 结构化日志构建器 | LogMessageBuilder 流式 API（SetElapsedMs / AddContext / Build） | [↔ Logging](../Origo.Core/Logging/README.zh.md) |
+| 结构化日志构建器 | LogMessageBuilder 流式 API（SetElapsedMs / AddContext / Build） | [↔ Logging](../Origo.Core.Contracts/Logging/README.zh.md) |
 
 ## 框架设计属性
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
@@ -38,9 +38,9 @@ The stable boundary consists of:
 
 | Package | Role | Contents |
 |---------|------|----------|
-| `Origo.Core.Contracts` | Stable contracts | Public interfaces, pure data types, metadata, strategy base classes, data-source contracts, and logging abstractions |
+| `Origo.Core.Contracts` | Stable contracts | Public interfaces, pure data types, metadata, strategy base classes, data-source contracts, logging abstractions, and shared pure helpers required by both shell and kernel |
 | `Origo.Core.Kernel` | Implementation | Runtime construction, SND internals, save and storage, data-source codecs, console routing, and kernel-shell ports |
-| `Origo.Core` | Consumer shell | Host facade, wrapper types, and package entry point; its compilation surface is Contracts plus shell types |
+| `Origo.Core` | Consumer shell | `OrigoHost` facade, grid/random utilities, SND extension helpers, and package entry point; its compilation surface is Contracts plus shell types |
 | `Origo.GodotAdapter` | Godot shell | Godot `Node`-derived entries, adapter capability providers, and consumer extension points |
 | `Origo.ConsoleBridge` | Console bridge shell | TCP console bridge server and options |
 
@@ -90,7 +90,7 @@ kernel is evaluated through this document's package-topology section.
 capability groups:
 
 - host and runtime: `IOrigoRuntime`, `ISndWorldAccess`, `IOrigoFrameDriver`,
-  `OrigoMeta`;
+  `OrigoMeta`, `OrigoHost`, `OrigoHostOptions`;
 - context and sessions: `ISndContext`, `ISessionManager`, `ISessionRun`,
   `ISndSceneReadAccess`;
 - SND entities and strategies: `ISndEntity` and narrow interfaces, lifecycle,
@@ -162,7 +162,8 @@ source generator and are not maintained item by item in human documentation.
 
 Kernel may own internal ports called only by shell, subject to:
 
-- ports live in the `Origo.Core.Kernel.Ports` namespace and remain internal;
+- ports live in the `Origo.Core.Kernel.Ports` namespace and remain internal; the
+  initial host-construction port is `HostKernelPort`;
 - ports are exposed only to the `Origo.Core` and `Origo.GodotAdapter` shells
   through `InternalsVisibleTo`;
 - ports call existing orchestration entry points and do not bypass validation,
@@ -205,10 +206,11 @@ owner and a next `0.y.0` removal condition in the contract baseline.
 
 1. Create `Origo.Core.Kernel` and move runtime construction, SND internals,
    persistence, storage, and codecs into it.
-2. Implement `IOrigoRuntime`, `ISndWorldAccess`, and the shell host facade;
-   concrete `OrigoRuntime`, `SndWorld`, `SndContext`, and `SndContextParameters`
-   remain in kernel.
-3. Establish the kernel-shell port namespace and contract tests.
+2. Implement `IOrigoRuntime`, `ISndWorldAccess`, and the `OrigoHost` shell
+   facade; concrete `OrigoRuntime`, `SndWorld`, `SndContext`, and
+   `SndContextParameters` remain in kernel.
+3. Establish the `Origo.Core.Kernel.Ports` namespace and contract tests; the
+   host-construction port lives there.
 4. `Origo.Core` shell uses Contracts as its main compilation surface and takes
    kernel as a runtime-only dependency.
 5. Handle `InternalsVisibleTo`, Source Generator host assembly identity, and
@@ -248,6 +250,19 @@ owner and a next `0.y.0` removal condition in the contract baseline.
    shell exception and packaging requirements.
 5. Record the 0.1.0 boundary design and breaking changes in the Changelog, then
    publish 0.1.0 after the full CI, release verification, and commit-lint loop.
+
+## Current implementation status
+
+The Core contracts/kernel/shell split is implemented on the feature branch:
+`Origo.Core.Contracts` carries the stable consumer surface and shared pure
+helpers, `Origo.Core.Kernel` carries runtime/SND/save/data-source/console
+implementations plus the internal `HostKernelPort`, and `Origo.Core` is the
+shell package with `OrigoHost`. `IOrigoRuntime` and `ISndWorldAccess` are
+stable Contracts interfaces, and the classification guard verifies that no
+kernel implementation type leaks into the Core shell compile surface.
+`Origo.ConsoleBridge` already references the Core shell package without
+kernel compile assets. Adapter single-shell packaging (#39), compatibility
+gates (#40/#41/#42), and release (#43) remain follow-up work.
 
 ## Verification and gates
 

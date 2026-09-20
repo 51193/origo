@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Entity/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Entity (Abstractions)
 
-> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Entity](../../../Origo.Core/Snd/Entity/README.en.md)
+> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Entity](../../../Origo.Core.Kernel/Snd/Entity/README.en.md)
 
 ## Overview
 Defines the abstract interface system for SND entities following ISP. Five capabilities (data, nodes, passive strategies, active strategies, observer strategies) are split into independent interfaces, composed by `ISndEntity`. `IEntityLifecycle` is an `internal` interface defined separately for framework/adapter-layer shared implementation.
@@ -97,7 +97,7 @@ Composite interface with own members:
 
 Implementers: `SndEntity` (Core in-memory entity) and adapter-layer entities (such as `GodotSndEntity`, which bridges by delegating to an inner `SndEntity`).
 
-`ISndEntityRawSubscription` (`Origo.Core/Snd/Entity/`) provides the raw `TypedData`-level data subscription interface — `SubscribeDataRaw`, `UnsubscribeDataRaw`. It is used by the framework-internal `ObserverTopology` to wire observer strategies into a target entity's data changes and is not exposed to business strategy code.
+`ISndEntityRawSubscription` (`Origo.Core.Kernel/Snd/Entity/`) provides the raw `TypedData`-level data subscription interface — `SubscribeDataRaw`, `UnsubscribeDataRaw`. It is used by the framework-internal `ObserverTopology` to wire observer strategies into a target entity's data changes and is not exposed to business strategy code.
 
 ## Design Decisions
 

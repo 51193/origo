@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/affected-checks -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 受影响检查：缩短反馈回路而不缩小质量合同
 
@@ -45,7 +45,7 @@ bash scripts/check.sh affected --plan .artifacts/check-plan.json
 
 | 仓库实际路径示例 | 最小保守选择及理由 |
 |---|---|
-| `Origo.Core/Save/Storage/SavePayloadReader.cs` | Core.Tests 完整套件；Core 的反向依赖包含 ConsoleBridge、GodotAdapter 等，按图保留下游测试；读档恢复需真实 Godot 集成。初期可以保守选择所有 Core 消费者，测得安全证据后再缩小 |
+| `Origo.Core.Kernel/Save/Storage/SavePayloadReader.cs` | Core.Tests 完整套件；Core 的反向依赖包含 ConsoleBridge、GodotAdapter 等，按图保留下游测试；读档恢复需真实 Godot 集成。初期可以保守选择所有 Core 消费者，测得安全证据后再缩小 |
 | `Origo.SourceGeneration/TypedDataGenerator.HomeGeneration.cs` | SG.Tests，加 Core 与 Adapter 消费者编译/测试、TypedData 注册 headless 集成；生成代码没有手写文件 diff 也可能改变公开 API |
 | `Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs` | Adapter.Tests 与 Godot headless；该文件的原生调用在纯 .NET 覆盖率中被排除，必须验证真实 `_Ready`、后续帧与失败启动 |
 | `Origo.TestSupport/FileSystem/TestMemoryFileSystem.cs` | 由项目图选中所有引用 TestSupport 的套件，不能只跑文件系统测试 |

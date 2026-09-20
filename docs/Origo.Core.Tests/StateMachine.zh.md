@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 状态机 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/StateMachine](../Origo.Core/StateMachine/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/StateMachine](../Origo.Core.Kernel/StateMachine/README.zh.md)
 > [↔ 被测行为: usage/state-machine](../usage/state-machine.zh.md)
 
 ## 被测行为概览

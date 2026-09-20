@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 0.1.0 Shell API 分类
 
@@ -50,7 +50,7 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 
 ## 当前拆分检查点
 
-当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载 `OrigoMeta`、日志抽象、控制台 I/O 抽象、文件系统/路径契约、节点契约、帧驱动契约、控制台工具扩展契约、data-source 模型/I/O 契约、SND/会话/场景/状态机/存档元数据契约与 TypedData/metadata 模型；`Origo.Core.Kernel` 承载 FastNoiseLite（7 个导出）与 internal 调度实现。Assembly 为 `Origo.Core` 的行表示当前仍位于该程序集的类型。
+当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载稳定接口、纯数据、TypedData/metadata 模型、策略基类与 attribute、data-source 契约、控制台/日志抽象，以及 shell 与 kernel 共用的纯工具（黑板、日志实现、类型映射、converter registry、路径工具、网格坐标）。`Origo.Core.Kernel` 承载 runtime 构造、SND 内部、持久化/存储、data-source codec 与 factory、console 路由、FastNoiseLite、调度以及 internal `HostKernelPort`。`Origo.Core` 是 shell 包：`OrigoHost`、网格/随机工具与 SND 扩展辅助；公共签名只使用 Contracts 与 shell 类型。
 
 ## 兼容 API 的移除条件
 
@@ -115,11 +115,11 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+FractalType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+NoiseType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+RotationType3D</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Blackboard.Blackboard</code> | Origo.Core | Shell contract | Origo.Core | blackboard | 黑板/状态访问的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-SND |
+| <code>Origo.Core.Blackboard.Blackboard</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | blackboard | shell 辅助工具与 kernel 编排共用的 Contracts 黑板/状态实现，因此位于 Contracts 编译面。 | core-shell; R-SND |
 | <code>Origo.Core.DataSource.DataSourceConverter`1</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-DATA |
 | <code>Origo.Core.DataSource.DataSourceConverterBase</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-DATA |
-| <code>Origo.Core.DataSource.DataSourceConverterRegistry</code> | Origo.Core | Tooling extension | Origo.Core | data-tooling | 数据源工具扩展的具体工具扩展点，通过文档化 shell API 注册，而不是 kernel 后门。 | core-tooling; R-DATA |
-| <code>Origo.Core.DataSource.DataSourceFactory</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | data-kernel | 数据源构造的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.DataSource.DataSourceConverterRegistry</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源注册与类型名映射共用的 Contracts 工具类型，shell 工具与 kernel 服务都通过文档化消费者扩展路径使用。 | core-tooling; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceFactory</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | data-kernel | 数据源构造的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.DataSource.DataSourceNode</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-model | 数据源模型的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
 | <code>Origo.Core.DataSource.DataSourceNodeKind</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-model | 数据源模型的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
 | <code>Origo.Core.DataSource.IDataSourceIoGateway</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-io | 数据源 I/O 边界能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-DATA |
@@ -127,34 +127,34 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.Core.Grid.Astar</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | 网格工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Grid.GridCoordinateSystem</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | 网格工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Grid.GridParser</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | 网格工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
-| <code>Origo.Core.Grid.GridPos</code> | Origo.Core | Shell contract | Origo.Core.Contracts | grid-utility | 网格工具的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-UTIL |
-| <code>Origo.Core.Logging.Logger`1</code> | Origo.Core | Shell contract | Origo.Core | logging-shell | 日志实现的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-CONSOLE |
-| <code>Origo.Core.Logging.LogMessageBuilder</code> | Origo.Core | Shell contract | Origo.Core | logging-shell | 日志实现的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-CONSOLE |
-| <code>Origo.Core.Logging.NullLogger</code> | Origo.Core | Shell contract | Origo.Core | logging-shell | 日志实现的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-CONSOLE |
+| <code>Origo.Core.Grid.GridPos</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | grid-utility | 网格工具的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-UTIL |
+| <code>Origo.Core.Logging.Logger`1</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging-shell | shell 与 kernel 服务共用的 Contracts 日志实现，保持在消费者编译面且无需 kernel 编译资产。 | core-shell; R-CONSOLE |
+| <code>Origo.Core.Logging.LogMessageBuilder</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging-shell | shell 与 kernel 服务共用的 Contracts 日志实现，保持在消费者编译面且无需 kernel 编译资产。 | core-shell; R-CONSOLE |
+| <code>Origo.Core.Logging.NullLogger</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging-shell | shell 与 kernel 服务共用的 Contracts 日志实现，保持在消费者编译面且无需 kernel 编译资产。 | core-shell; R-CONSOLE |
 | <code>Origo.Core.OrigoMeta</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | host-runtime | 宿主/运行时的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-HOST |
-| <code>Origo.Core.Planning.PlanExecutionStrategyBase</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
+| <code>Origo.Core.Planning.PlanExecutionStrategyBase</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
 | <code>Origo.Core.Random.NoiseMapGenerator</code> | Origo.Core | Shell contract | Origo.Core | random-utility | 随机数工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Random.PersistentRandom</code> | Origo.Core | Shell contract | Origo.Core | random-utility | 随机数工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Random.RandomNumberGenerator</code> | Origo.Core | Shell contract | Origo.Core | random-utility | 随机数工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Runtime.Console.CommandInvocation</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-CONSOLE |
 | <code>Origo.Core.Runtime.Console.ConsoleCommandHandlerBase</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-CONSOLE |
 | <code>Origo.Core.Runtime.Console.IConsoleCommandHandler</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展契约；适配器与消费者工具实现它时无需接触 kernel 内部。 | core-tooling; R-CONSOLE |
-| <code>Origo.Core.Runtime.Console.ConsoleInputBuffer</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Runtime.Console.ConsoleOutputChannel</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Runtime.Console.OrigoConsole</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Runtime.OrigoRuntime</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | runtime-kernel | 运行时构造的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Save.LevelPayload</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Save.SaveGamePayload</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Save.PersistentBlackboard</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Save.Storage.ISavePathPolicy</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Save.Storage.ISaveStorageService</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Runtime.Console.ConsoleInputBuffer</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Runtime.Console.ConsoleOutputChannel</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Runtime.Console.OrigoConsole</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Runtime.OrigoRuntime</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | runtime-kernel | 运行时构造的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Save.LevelPayload</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Save.SaveGamePayload</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Save.PersistentBlackboard</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Save.Storage.ISavePathPolicy</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Save.Storage.ISaveStorageService</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | save-kernel | 存档/存储实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Save.Meta.ISaveMetaContributor</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | save | 存档操作能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-SAVE |
 | <code>Origo.Core.Save.Meta.SaveMetaBuildContext</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | save | 存档操作的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-SAVE |
 | <code>Origo.Core.Save.Meta.SaveMetaDataEntry</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | save | 存档操作的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-SAVE |
-| <code>Origo.Core.Serialization.TypeStringMapping</code> | Origo.Core | Tooling extension | Origo.Core | data-tooling | 数据源工具扩展的具体工具扩展点，通过文档化 shell API 注册，而不是 kernel 后门。 | core-tooling; R-DATA |
+| <code>Origo.Core.Serialization.TypeStringMapping</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源注册与类型名映射共用的 Contracts 工具类型，shell 工具与 kernel 服务都通过文档化消费者扩展路径使用。 | core-tooling; R-DATA |
 | <code>Origo.Core.Snd.ActiveStrategyExtensions</code> | Origo.Core | Shell contract | Origo.Core | strategy | 策略扩展模型的消费者扩展 API，编译进 shell，并只通过文档化的编排路径生效。 | core-shell; R-SND |
 | <code>Origo.Core.Snd.Archetype.SndArchetypeLoader</code> | Origo.Core | Shell contract | Origo.Core | snd-utility | SND 工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
-| <code>Origo.Core.Snd.Entity.SndEntity</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Snd.Entity.SndEntity</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Snd.EntityExtensions</code> | Origo.Core | Shell contract | Origo.Core | snd-entity | SND 实体/策略消费者 API的消费者扩展 API，编译进 shell，并只通过文档化的编排路径生效。 | core-shell; R-SND |
 | <code>Origo.Core.Snd.ISndContext</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | snd-context | SND 上下文门面能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-SND |
 | <code>Origo.Core.Snd.Metadata.DataMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
@@ -165,22 +165,22 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.Core.Snd.Metadata.StrategyMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
 | <code>Origo.Core.Snd.Metadata.StrategyMetaData+ObserverBinding</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
 | <code>Origo.Core.Snd.Metadata.TypedData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.Snd.SndContext</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Snd.SndContextParameters</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Snd.SndWorld</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Snd.Strategy.ActiveStrategyBase</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
-| <code>Origo.Core.Snd.Strategy.ActiveStrategyJsonBase`1</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
-| <code>Origo.Core.Snd.Strategy.ActiveStrategyResults</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定消费者辅助 API，属于 shell 编译面且不暴露 kernel 内部。 | core-shell; R-SND |
-| <code>Origo.Core.Snd.Strategy.BaseStrategy</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
+| <code>Origo.Core.Snd.SndContext</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Snd.SndContextParameters</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Snd.SndWorld</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Snd.Strategy.ActiveStrategyBase</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
+| <code>Origo.Core.Snd.Strategy.ActiveStrategyJsonBase`1</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
+| <code>Origo.Core.Snd.Strategy.ActiveStrategyResults</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定消费者辅助 API，属于 shell 编译面且不暴露 kernel 内部。 | core-shell; R-SND |
+| <code>Origo.Core.Snd.Strategy.BaseStrategy</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
 | <code>Origo.Core.Snd.Strategy.EntityStrategyExtensions</code> | Origo.Core | Shell contract | Origo.Core | strategy | 策略扩展模型的消费者扩展 API，编译进 shell，并只通过文档化的编排路径生效。 | core-shell; R-SND |
-| <code>Origo.Core.Snd.Strategy.LifecycleStrategyBase</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
-| <code>Origo.Core.Snd.Strategy.ObserveDataAttribute</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定声明特性；消费者策略与第一方适配器依赖其元数据契约。 | core-shell; R-SND |
-| <code>Origo.Core.Snd.Strategy.ObserverStrategyBase</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
-| <code>Origo.Core.Snd.Strategy.StrategyIndexAttribute</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定声明特性；消费者策略与第一方适配器依赖其元数据契约。 | core-shell; R-SND |
+| <code>Origo.Core.Snd.Strategy.LifecycleStrategyBase</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
+| <code>Origo.Core.Snd.Strategy.ObserveDataAttribute</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定声明特性；消费者策略与第一方适配器依赖其元数据契约。 | core-shell; R-SND |
+| <code>Origo.Core.Snd.Strategy.ObserverStrategyBase</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
+| <code>Origo.Core.Snd.Strategy.StrategyIndexAttribute</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | strategy | 策略扩展模型的稳定声明特性；消费者策略与第一方适配器依赖其元数据契约。 | core-shell; R-SND |
 | <code>Origo.Core.Snd.TryGetNumericExtensions</code> | Origo.Core | Shell contract | Origo.Core | snd-entity | SND 实体/策略消费者 API的消费者扩展 API，编译进 shell，并只通过文档化的编排路径生效。 | core-shell; R-SND |
-| <code>Origo.Core.StateMachine.StateMachineStrategyBase</code> | Origo.Core | Shell contract | Origo.Core.Contracts | state-machine | 状态机的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
-| <code>Origo.Core.StateMachine.StateMachineStrategyContext</code> | Origo.Core | Shell contract | Origo.Core.Contracts | state-machine | 状态机的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-SND |
-| <code>Origo.Core.Utility.PathUtility</code> | Origo.Core | Shell contract | Origo.Core | utility | 通用工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
+| <code>Origo.Core.StateMachine.StateMachineStrategyBase</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | state-machine | 状态机的稳定扩展基类；消费者派生实现，框架必须跨 kernel 保持钩子行为兼容。 | core-shell; R-SND |
+| <code>Origo.Core.StateMachine.StateMachineStrategyContext</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | state-machine | 状态机的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-SND |
+| <code>Origo.Core.Utility.PathUtility</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | utility | shell 与 kernel 共用的 Contracts 纯平台无关路径工具，保持在消费者编译面。 | core-shell; R-UTIL |
 | <code>Origo.GodotAdapter.Bootstrap.OrigoAutoHost</code> | Origo.GodotAdapter | Shell contract | Origo.GodotAdapter | godot-entry | Godot 入口的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | adapter-shell; R-GODOT-ENTRY |
 | <code>Origo.GodotAdapter.Bootstrap.OrigoDefaultEntry</code> | Origo.GodotAdapter | Shell contract | Origo.GodotAdapter | godot-entry | Godot 入口的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | adapter-shell; R-GODOT-ENTRY |
 | <code>Origo.GodotAdapter.Bootstrap.OrigoAutoHost+MethodName</code> | Origo.GodotAdapter | Shell contract | Origo.GodotAdapter | godot-entry | 已批准 shell Node 入口上的 Godot 生成公开嵌套 signal 类型；随宿主入口分类，属于生成的 shell 表面。 | adapter-shell; R-GODOT-ENTRY |
@@ -205,4 +205,8 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.GodotAdapter.Snd.GodotSndManager+SignalName</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | 内部适配器桥接类型上的 Godot 生成公开嵌套 signal 类型；宿主 internal 化后离开外部编译面。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.ConsoleBridge.ConsoleBridgeOptions</code> | Origo.ConsoleBridge | Shell contract | Origo.ConsoleBridge | bridge | 控制台桥接 shell的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | bridge-shell; R-BRIDGE |
 | <code>Origo.ConsoleBridge.ConsoleBridgeServer</code> | Origo.ConsoleBridge | Shell contract | Origo.ConsoleBridge | bridge | 控制台桥接 shell的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | bridge-shell; R-BRIDGE |
+| <code>Origo.Core.Abstractions.Runtime.IOrigoRuntime</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | host-runtime | 通过 Core shell host facade 暴露的稳定 runtime 契约；具体 runtime 仍是 kernel 实现。 | core-shell; R-HOST |
+| <code>Origo.Core.Abstractions.Runtime.ISndWorldAccess</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | host-runtime | shell 消费者使用的稳定策略、映射与数据源访问表面；具体 SND world 仍是 kernel 实现。 | core-shell; R-HOST |
+| <code>Origo.Core.OrigoHostOptions</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | host-runtime | Core shell host facade 的稳定配置模型；所有值类型均为 Contracts 类型。 | core-shell; R-HOST |
+| <code>Origo.Core.OrigoHost</code> | Origo.Core | Shell contract | Origo.Core | host-runtime | 面向消费者的 Core shell host facade；通过 internal kernel port 构造 kernel runtime 与 SND context，不暴露 kernel 编译资产。 | core-shell; R-HOST |
 <!-- shell-api-classification:end -->

@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 类型序列化 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Serialization](../Origo.Core/Serialization/README.zh.md)
+> [↔ 被测模块: Origo.Core.Contracts/Serialization](../Origo.Core.Contracts/Serialization/README.zh.md)
 
 ## 被测行为概览
 

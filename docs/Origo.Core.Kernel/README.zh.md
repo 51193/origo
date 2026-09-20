@@ -1,23 +1,30 @@
 <!-- docsync-pair: Origo.Core.Kernel/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Kernel
 
-> [↑ 回到 Origo.manual](../README.zh.md)
+> [↑ 回到 Origo Manual](../README.zh.md)
 
 ## 模块概述
 
-**Origo.Core.Kernel** 是 Origo 的 kernel 实现包：只引用稳定契约包
-`Origo.Core.Contracts`，承载不适合进入消费者编译面的实现。当前包含 vendor
-噪声实现与延迟调度实现；runtime 构造、SND 内部、持久化与 console 路由仍位于
-`Origo.Core`。
+**Origo.Core.Kernel** 是 Origo 的 kernel 实现包：只引用
+`Origo.Core.Contracts`，承载 runtime 构造、SND 内部、持久化/存储、
+data-source codec 与 factory、console 路由、vendor 噪声、延迟调度以及 internal
+`Origo.Core.Kernel.Ports`。kernel 编译资产不进入 Core shell 消费者编译面。
 
 ## 子系统一览
 
 | 子系统 | 能力 | 详情 |
 |--------|------|------|
-| [Addons](Addons/README.zh.md) | Vendor 第三方库 | FastNoiseLite 噪声实现 |
+| [Abstractions](Abstractions/README.zh.md) | internal 框架契约 | 实体生命周期、node host、scene host/access 与 session 绑定 |
+| [DataSource](DataSource/README.zh.md) | 数据源实现 | JSON/Map codec、factory、I/O gateway、converter 与路径/文件访问 |
+| [Runtime](Runtime/README.zh.md) | 运行时生命周期与控制台 | System/Progress/Session 四层、帧队列与 console 路由 |
+| [Save](Save/README.zh.md) | 持久化实现 | save coordinator、payload、严格读取、原子写入与存储布局 |
+| [Snd](Snd/README.zh.md) | SND 实现 | context/world、entity 聚合、scene host、策略池/管理器与 observer topology |
+| [StateMachine](StateMachine/README.zh.md) | 状态机实现 | 栈状态机与持久化模型 |
+| [Ports](Ports/README.zh.md) | kernel-shell port | internal host 构造 port，经 `InternalsVisibleTo` 提供给 shell 程序集 |
 | [Scheduling](Scheduling/README.zh.md) | 延迟调度实现 | `IScheduler` + `ActionScheduler` + `ConcurrentActionQueue` |
+| [Addons](Addons/README.zh.md) | Vendor 第三方库 | FastNoiseLite 噪声实现 |
 
 ## 本层文件
 
@@ -27,13 +34,12 @@
 
 - **只依赖 Contracts**：Kernel 不引用 `Origo.Core`、`Origo.GodotAdapter`、
   `Origo.ConsoleBridge` 或任何 Godot 程序集。
-- **不对消费者公开编译资产**：kernel 类型不进入 shell 消费者的编译面；
-  shell 只能通过 Contracts 或文档化的 kernel-shell port 使用其能力。
-- **Internal 桥接**：调度实现保持 internal，经 `InternalsVisibleTo` 使
-  `Origo.Core` 与测试程序集访问；当前 runtime 构造仍位于 `Origo.Core`。
-- **Package 依赖边界**：`Origo.Core` 对 Kernel 的 ProjectReference 使用
-  `PrivateAssets="compile"`，NuGet 依赖携带 runtime/build/native 资产但不携带
-  compile 资产。
+- **不对消费者公开编译资产**：kernel 类型不进入 Core shell 消费者编译面；
+  消费者使用 Contracts 与 Core shell facade。
+- **Internal port**：`Origo.Core.Kernel.Ports` 成员保持 internal，仅通过
+  `InternalsVisibleTo` 提供给 shell 程序集与测试。
+- **Package 依赖边界**：`Origo.Core` 对 Kernel 使用 `PrivateAssets="compile"`，
+  NuGet 依赖携带 runtime/build/native 资产但不携带 compile 资产。
 
 ## 依赖方向
 
@@ -41,11 +47,8 @@
 Origo.Core.Contracts
         ▲
         │
-Origo.Core.Kernel
-        ▲
-        │
-Origo.Core (shell / current host facade)
+Origo.Core.Kernel ◄── runtime-only ── Origo.Core shell
 ```
 
 ---
-[↑ 回到 Origo.manual](../README.zh.md)
+[↑ 回到 Origo Manual](../README.zh.md)

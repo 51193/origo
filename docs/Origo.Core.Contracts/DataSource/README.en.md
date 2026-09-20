@@ -1,15 +1,15 @@
 <!-- docsync-pair: Origo.Core.Contracts/DataSource/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # DataSource
 
-> [↑ Back to Origo.Core.Contracts](../README.en.md) · [↔ Implementation: Origo.Core/DataSource](../../Origo.Core/DataSource/README.en.md)
+> [↑ Back to Origo.Core.Contracts](../README.en.md) · [↔ Implementation: Origo.Core.Kernel/DataSource](../../Origo.Core.Kernel/DataSource/README.en.md)
 
 ## Module Capability
 
 Data-source contract layer: tree data model, I/O gateway contract, file-meta
 contract, and converter base classes. Codecs, the factory, the registry, and
-concrete converters live in [Origo.Core/DataSource](../../Origo.Core/DataSource/README.en.md).
+concrete converters live in [Origo.Core.Kernel/DataSource](../../Origo.Core.Kernel/DataSource/README.en.md).
 
 ## Included Files
 
@@ -20,6 +20,7 @@ concrete converters live in [Origo.Core/DataSource](../../Origo.Core/DataSource/
 | `DataSourceConverter.cs` | Converter bases: `DataSourceConverterBase` and `DataSourceConverter<T>` |
 | `IDataSourceIoGateway.cs` | I/O gateway contract: `ReadTree` / `WriteTree` |
 | `IFileMetaAccess.cs` | File-meta contract: existence, enumeration, directories, delete, copy, rename |
+| `DataSourceConverterRegistry.cs` | Shared registry for `DataSourceConverter<T>` instances, used by shell tooling and kernel services |
 
 ## Design Decisions
 

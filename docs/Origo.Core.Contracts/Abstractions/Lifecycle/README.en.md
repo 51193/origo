@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Lifecycle/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Lifecycle (Abstractions)
 
-> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Lifecycle](../../../Origo.Core/Runtime/Lifecycle/README.en.md)
+> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Lifecycle](../../../Origo.Core.Kernel/Runtime/Lifecycle/README.en.md)
 
 ## Overview
 Defines abstract interfaces for session management. `ISessionManager` and `ISessionRun` provide the strategy layer with session access capabilities decoupled from concrete implementations. These interfaces reside in the Abstractions layer, ensuring `ISndEntity` (which declares `OwningSession`) does not depend on the Runtime layer.

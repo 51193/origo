@@ -1,13 +1,13 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Scene/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Scene (Abstractions)
 
-> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Snd/Scene](../../../Origo.Core/Snd/Scene/README.zh.md)
+> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Snd/Scene](../../../Origo.Core.Kernel/Snd/Scene/README.zh.md)
 
 ## 概述
 
-定义 Core 层编排 SND 场景的抽象能力。本目录的 `ISndSceneReadAccess` 为 public 只读视图；`ISndSceneAccess`、`ISndSceneHost`、`IOwningSessionBindable` 均为 `internal`，仅供 Core 会话生命周期与持有 `InternalsVisibleTo` 的适配层实现。上下文绑定接口 `ISndContextAttachableSceneHost` 位于 [Snd/Scene](../../../Origo.Core/Snd/Scene/README.zh.md)。策略生命周期钩子由上层会话生命周期（`SndEntityFactory` / `SessionRun`）统一编排。
+定义 Core 层编排 SND 场景的抽象能力。本目录的 `ISndSceneReadAccess` 为 public 只读视图；`ISndSceneAccess`、`ISndSceneHost`、`IOwningSessionBindable` 均为 `internal`，仅供 Core 会话生命周期与持有 `InternalsVisibleTo` 的适配层实现。上下文绑定接口 `ISndContextAttachableSceneHost` 位于 [Snd/Scene](../../../Origo.Core.Kernel/Snd/Scene/README.zh.md)。策略生命周期钩子由上层会话生命周期（`SndEntityFactory` / `SessionRun`）统一编排。
 
 ## 包含文件
 
@@ -66,7 +66,7 @@
 - 批量操作可以在"全部创建/恢复"和"全部触发钩子"两个阶段之间进行
 - 钩子触发期间，所有实体已完全恢复到查找集合中，实现加载顺序无关的跨实体互操作
 
-参见 [IEntityLifecycle](../Entity/README.zh.md) 和 [Scene 实现](../../../Origo.Core/Snd/Scene/README.zh.md#策略生命周期钩子的编排归属)。
+参见 [IEntityLifecycle](../Entity/README.zh.md) 和 [Scene 实现](../../../Origo.Core.Kernel/Snd/Scene/README.zh.md#策略生命周期钩子的编排归属)。
 
 ### 为什么 CreateEntity 不做重名校验
 

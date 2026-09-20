@@ -1,12 +1,12 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Scene/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scene (Abstractions)
 
-> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Scene](../../../Origo.Core/Snd/Scene/README.en.md)
+> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Scene](../../../Origo.Core.Kernel/Snd/Scene/README.en.md)
 
 ## Overview
-Defines the Core layer's abstract capabilities for orchestrating SND scenes. `ISndSceneReadAccess` is the public read-only view; `ISndSceneAccess`, `ISndSceneHost`, and `IOwningSessionBindable` are `internal` — visible only to the Core session lifecycle and adapter assemblies granted `InternalsVisibleTo`. The context-binding interface `ISndContextAttachableSceneHost` lives in [Snd/Scene](../../../Origo.Core/Snd/Scene/README.en.md).
+Defines the Core layer's abstract capabilities for orchestrating SND scenes. `ISndSceneReadAccess` is the public read-only view; `ISndSceneAccess`, `ISndSceneHost`, and `IOwningSessionBindable` are `internal` — visible only to the Core session lifecycle and adapter assemblies granted `InternalsVisibleTo`. The context-binding interface `ISndContextAttachableSceneHost` lives in [Snd/Scene](../../../Origo.Core.Kernel/Snd/Scene/README.en.md).
 
 ## Included Files
 

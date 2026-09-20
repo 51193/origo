@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/StateMachine -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # State Machine Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/StateMachine](../Origo.Core/StateMachine/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/StateMachine](../Origo.Core.Kernel/StateMachine/README.en.md)
 > [↔ Behavior under test: usage/state-machine](../usage/state-machine.en.md)
 
 ## Behavior Overview

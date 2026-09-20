@@ -8,17 +8,20 @@
     "architecture/agent-friendly/affected-checks": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "architecture/agent-friendly/affected-checks.zh.md",
         "en": "architecture/agent-friendly/affected-checks.en.md"
       },
       "content_hashes": {
-        "zh": "D9FB12EBB978B3405AF2595A6CEA40C87AB079B2242B733FE73FB70A4A6AA35D",
-        "en": "305E30A257FB714A9B84D7C05935E8CD3A54EEFC38DD973926329F55FDA442C7"
+        "zh": "36A581F1F86B694A450F383448BB1F146B54068E60DB0F2E5E9E2BF7E626D5E9",
+        "en": "7372B72E6F1D9F60DFB2041077E0B32656ECF2732F22BEBDAFD4B7E4F145AB54"
       }
     },
     "architecture/agent-friendly/api-inventory": {
@@ -110,17 +113,20 @@
     "architecture/agent-friendly/root-instructions": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "architecture/agent-friendly/root-instructions.zh.md",
         "en": "architecture/agent-friendly/root-instructions.en.md"
       },
       "content_hashes": {
-        "zh": "2DAB750F64818EE0BE9473BA06ABC6611E62643B43308063538083603D4C53C5",
-        "en": "38CCD7132110D34E529E3C3A7BB26C9CAFEC4A685DA5830632192E168810C75E"
+        "zh": "971BAFCE16DF6C96C8246392E95473F29191BDD9A1AF1B9982D054A2CF26274A",
+        "en": "60EC313DFE6E972222DB67E446DA64BFCDC1EDE2C2636C24E0F380CF4A114EFD"
       }
     },
     "architecture/agent-friendly/skills": {
@@ -142,25 +148,6 @@
     "architecture/extension-directions": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
-      },
-      "previous_revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "architecture/extension-directions.zh.md",
-        "en": "architecture/extension-directions.en.md"
-      },
-      "content_hashes": {
-        "zh": "9BCC312234AFE6563555E1310B5707D6C0B2BF5F526119FDDC427F656BEB64A2",
-        "en": "166618647991BF2798413FE1154080621AA1CCB91B08CAEB0C4A4393E09540E6"
-      }
-    },
-    "architecture/overview": {
-      "status": "synced",
-      "revisions": {
         "zh": 5,
         "en": 5
       },
@@ -169,12 +156,31 @@
         "en": 4
       },
       "files": {
+        "zh": "architecture/extension-directions.zh.md",
+        "en": "architecture/extension-directions.en.md"
+      },
+      "content_hashes": {
+        "zh": "FC24C121C68E16592787846D63C6B5EB2B5F5B87F443BEA9703396119AB7BDFA",
+        "en": "E236880CB0BFA66287602EE23EEBAAD79613F606DE2CB6658EC11829A580D3EF"
+      }
+    },
+    "architecture/overview": {
+      "status": "synced",
+      "revisions": {
+        "zh": 6,
+        "en": 6
+      },
+      "previous_revisions": {
+        "zh": 5,
+        "en": 5
+      },
+      "files": {
         "zh": "architecture/overview.zh.md",
         "en": "architecture/overview.en.md"
       },
       "content_hashes": {
-        "zh": "B772F6150E8DABC10675BE4040793AA2C3B5989FEDB28B987436866EADD85CCC",
-        "en": "A3EA30BDC2E2DEFA4675AD388B5E77BF5E8279A482BB649D4B2255C23ACC6C41"
+        "zh": "CBD6C866CE05AEA85D5B5343E93B5D848B2579D49A67CB050FA8CB53E74D5EBA",
+        "en": "0D677DC49EE3DCFCC23B92565D41371443E52B2A9C169D2660E75225A0FA22C3"
       }
     },
     "architecture/README": {
@@ -199,39 +205,39 @@
     "architecture/shell-api-classification": {
       "status": "synced",
       "revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 13,
+        "en": 13
       },
       "previous_revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 12,
+        "en": 12
       },
       "files": {
         "zh": "architecture/shell-api-classification.zh.md",
         "en": "architecture/shell-api-classification.en.md"
       },
       "content_hashes": {
-        "zh": "17525C7A1EAC52629BA2DE51EA636F4526957B710EA28623DADD6E02BC32759D",
-        "en": "D742179062128B0048D03FAD064810E7EEA300A657D9E8B990EB7E57C12C0AF7"
+        "zh": "7F3AC2D8A0FA887F947A9FD5BBF9D4E9645E2EAA086D7CD5517DAEBE7768DB7B",
+        "en": "08847C0F55173470F661761E73150CB2499D14006F890C0071EBE243220B0A1C"
       }
     },
     "architecture/shell-kernel-boundary": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 5,
+        "en": 5
       },
       "previous_revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 4,
+        "en": 4
       },
       "files": {
         "zh": "architecture/shell-kernel-boundary.zh.md",
         "en": "architecture/shell-kernel-boundary.en.md"
       },
       "content_hashes": {
-        "zh": "66EF2C6631F94E90C6A81E4956003DF51CC2409BBBED00DCA0138C93FCB9FCDB",
-        "en": "AAE2842B0B06D048AF96BBE95C8B79B28CCABB3673A4207B42F26BBFBE4F4819"
+        "zh": "299CFB5708886C9B0FEF3CA330572C26E81751F1A42C91D3F48CA5BC9C72DB39",
+        "en": "7A25A02EF29DEBDF1EF4924CC36C2972B49ED833882CA6DE6987F307A1B3BA8B"
       }
     },
     "architecture/strategy-ordering": {
@@ -367,68 +373,77 @@
     "Origo.ConsoleBridge/README": {
       "status": "synced",
       "revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "previous_revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "files": {
         "zh": "Origo.ConsoleBridge/README.zh.md",
         "en": "Origo.ConsoleBridge/README.en.md"
       },
       "content_hashes": {
-        "zh": "80A253410100CC060908AD4A76288CFABE06B67E3444E7336063C97C53B1B2C7",
-        "en": "31CD2CB5F0DA33820D475BE3B16A01008A044BAB2F9318D508313DBBC3999A76"
+        "zh": "076937EEC8864CB9EBE64C781EC1FAB1566BF11A05DB980FF138A74D92C392A4",
+        "en": "A3FBC5CEBCE1D3A2F0A63E0F72AE17C05BF6CD7A14FF35BC280368EA3A335241"
       }
     },
     "Origo.Core.Contracts/Abstractions/Blackboard/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Blackboard/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Blackboard/README.en.md"
       },
       "content_hashes": {
-        "zh": "D8AECF11E55B60F428085F860C0F2A4B10EFBB80FAD7B696C4FE83A7D47300B0",
-        "en": "819D65A9BA10D9935F0CE33C8E8AAC2494CD20266B7D91231C46CD7D0E93AC95"
+        "zh": "1761507576BAAB24A1EE6FA603B8FF4DEB582E4507A933E4772A6D9896F8A32D",
+        "en": "944D86AE8C7D0261E3CBA8E372517FC358340FD11C68DA3A8664C8BF5F9993C6"
       }
     },
     "Origo.Core.Contracts/Abstractions/Console/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Console/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Console/README.en.md"
       },
       "content_hashes": {
-        "zh": "1F8AA96BFED44417E20C9345E89172203F74B025E5BD258B60786C05F698D8AD",
-        "en": "4D4F88455CCDFFB9989E63F09D0443BDB2E9C3128DBAD6389AF77D556B90FC38"
+        "zh": "6B53A8ADB324E5C8640CC4B77136AE71F487B974F62F875F2D11088F5D580F3C",
+        "en": "C8ED07FE11A4DCA613FA5E1A6F1578CE3CA10895B750DD807408C8785921D3FB"
       }
     },
     "Origo.Core.Contracts/Abstractions/Entity/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Entity/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Entity/README.en.md"
       },
       "content_hashes": {
-        "zh": "3D80822A3F95ABCFE20006DAEE5153ABFF4F7330FE2D97E5B78A4DBCC8A289BC",
-        "en": "616D27400EAD149D3303E21DA13D87C8EAF02BEA3E491794A1F6174E14F454E1"
+        "zh": "56CF7A08AE2688B7CF77B5CED2BEB7D328BB70624545B6A01935B23BAD71185C",
+        "en": "6029D3F5BD5C0E9712A4C88F6F447B6AF5E46D666EB3BAC6852881F0A2A294F8"
       }
     },
     "Origo.Core.Contracts/Abstractions/FileSystem/README": {
@@ -450,49 +465,58 @@
     "Origo.Core.Contracts/Abstractions/Lifecycle/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Lifecycle/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Lifecycle/README.en.md"
       },
       "content_hashes": {
-        "zh": "FD055CD76DBCF7BEC9D0852D65E0FA0FFA02F17439E8BF19E3FEB38646C3FA6B",
-        "en": "F09A9C6CB34A3337EF80897BCBB4228DBAD390A2A6BDFD1138BB4D6B5A8DFE39"
+        "zh": "082E4BDB1E18964EA8C78D7D8B0625B37044A976E3739046E1E4B7FD33081F12",
+        "en": "58F9F788216800114BAE8730D6BE7F844B04D43B5991F4EB05AE8A35D2AC055D"
       }
     },
     "Origo.Core.Contracts/Abstractions/Logging/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Logging/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Logging/README.en.md"
       },
       "content_hashes": {
-        "zh": "232A87780F6E8553E44140FBD9F5381FB2F52AB6364E37765F2258EAEC60B6B5",
-        "en": "C14D55D25CA98FD46EFF6E8EC97A6A0115D7A76BA6DF7B6ADC6E1C4B8FB5D193"
+        "zh": "FC6D22752E7F1C984787707AD04E6D616390058E676D62AF2880C848865F73B6",
+        "en": "A0B36397869E5AA2A361114F6C45315AAF68549E25D1495AB0DED25264E4A2B9"
       }
     },
     "Origo.Core.Contracts/Abstractions/Node/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Node/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Node/README.en.md"
       },
       "content_hashes": {
-        "zh": "3B5D0D2C1BE6E8F18233F5EFDDA98203E971171FC4D971360B325C23373FEA3F",
-        "en": "DA0E11E5F28E5B2AB5D63C6B830F7093D16C2D226EBCE82820129C913511D6C0"
+        "zh": "7CBA23F0A1A7D7453113CC5DE29647E95B573BC521C0D1D35292A01BC25134EF",
+        "en": "42CB102BA9D6BC7E9E99E632E0AE62D8702551D1C1C1A273DEF62A2341F07212"
       }
     },
     "Origo.Core.Contracts/Abstractions/README": {
@@ -517,33 +541,39 @@
     "Origo.Core.Contracts/Abstractions/Runtime/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Runtime/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Runtime/README.en.md"
       },
       "content_hashes": {
-        "zh": "9F23B5D5ABD4ABC7D51A8299339E797A02CF5EC3CE6AB3ABD544FAA0CE2F0FEA",
-        "en": "11103AB5A36192428A938F2AF510EE9FD83C49C4385FDAD51CA00073940C0B4C"
+        "zh": "C2C6010BECA17F40FA3E3A64FD4224B4A84231542FB946F5A0F36DDE798035D6",
+        "en": "2FBA700C545222FD2C71D88EB3D17EFD5C0716459D6DF30F5FE490EAF538A58F"
       }
     },
     "Origo.Core.Contracts/Abstractions/Scene/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Scene/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Scene/README.en.md"
       },
       "content_hashes": {
-        "zh": "937ECB4720EADABB5EF11C384A44AF449CF10FC47BB2F9C8F61C0F3881836B2D",
-        "en": "F68045CC2702476FA9129BFDC007D3BBB964195858E5C4575FECC0A7C8E2B789"
+        "zh": "800447D99797D381CBC5286A57F127723244482C4AAA5435DE2B512B35B72460",
+        "en": "068C5CDAC0A1C19DECACD8EF8AC49848099C5AE5EFE38692121257B7A8D22171"
       }
     },
     "Origo.Core.Contracts/Abstractions/Snd/README": {
@@ -565,20 +595,23 @@
     "Origo.Core.Contracts/Abstractions/StateMachine/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/StateMachine/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/StateMachine/README.en.md"
       },
       "content_hashes": {
-        "zh": "619A9DC569DBCAF2B36932A3CEAAA59E82368794FB6F069DEEA0C2221C85A3F3",
-        "en": "FB1249BDB0260B9888655A7A488195C8E8BA098B6D9FB122CA96F7C193B45FC9"
+        "zh": "4743F4ABB4073470F2328A8BC90A45FB522598DB9DCE1FA0FCB874C5277584C6",
+        "en": "DD8D1DDD643D3160F3D2D3AD658F11ABB39BB0CB4670D2092ECC1D2763463504"
       }
     },
-    "Origo.Core.Contracts/DataSource/README": {
+    "Origo.Core.Contracts/Blackboard/README": {
       "status": "synced",
       "revisions": {
         "zh": 1,
@@ -586,47 +619,117 @@
       },
       "previous_revisions": {},
       "files": {
+        "zh": "Origo.Core.Contracts/Blackboard/README.zh.md",
+        "en": "Origo.Core.Contracts/Blackboard/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "08A5462721B8B6AAB35A0BB565A56BEDA455B5BF5EC0E8EBE1EEA65A7B1F30CE",
+        "en": "F39ADD08BA15466F843A159479701C24D15B446A7C8F88B6FCAD1F30795C81BF"
+      }
+    },
+    "Origo.Core.Contracts/DataSource/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
         "zh": "Origo.Core.Contracts/DataSource/README.zh.md",
         "en": "Origo.Core.Contracts/DataSource/README.en.md"
       },
       "content_hashes": {
-        "zh": "7299C129C16E2F03CE1D99100796E9D2E5D82EF27A01BD7833FFAFE7C498BA6F",
-        "en": "BA2F9341B8D5C80AB5FFFF71EE81E70E22755BE21DDAC43F5E6D2916132AFC36"
+        "zh": "0AB6FD9EC9F1F05A63E9B6AE4084FC09985333323D398DE4C0F52901CA72A78D",
+        "en": "C05F85D11954535FFD51FA5611217F61F8DD7EE0C843E525304C7671B40D5FEE"
+      }
+    },
+    "Origo.Core.Contracts/Grid/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Contracts/Grid/README.zh.md",
+        "en": "Origo.Core.Contracts/Grid/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "721D14F80CDBFDB6B2A95A6E43619C549FEB02EA72E8EC4600FF9FAE6B869386",
+        "en": "C74CD4F5A1855835F235EE0A872A42D1482E50D9D52120333742C7A3FF1DBFCA"
+      }
+    },
+    "Origo.Core.Contracts/Logging/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Contracts/Logging/README.zh.md",
+        "en": "Origo.Core.Contracts/Logging/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "B894B888EF6EA86894A2F67B53A26C5309EF36A7DFCCA1D4EFEEF5118BDF5BE5",
+        "en": "D9E38808B41737847A642D38D3D6F6711D86C43C051E8FA8BA65ACD82ADADF40"
+      }
+    },
+    "Origo.Core.Contracts/Planning/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Contracts/Planning/README.zh.md",
+        "en": "Origo.Core.Contracts/Planning/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "17D27F3CC3A2D26F885D03D9A348884370898B973C7316045D1F7C47CD0B512D",
+        "en": "88C8465E7E29F2A6AEE59407B0595A675DCFC3BA0F149CC25B199F8FCC909F70"
       }
     },
     "Origo.Core.Contracts/README": {
       "status": "synced",
       "revisions": {
-        "zh": 6,
-        "en": 6
+        "zh": 9,
+        "en": 9
       },
       "previous_revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 8,
+        "en": 8
       },
       "files": {
         "zh": "Origo.Core.Contracts/README.zh.md",
         "en": "Origo.Core.Contracts/README.en.md"
       },
       "content_hashes": {
-        "zh": "6519306F2D496CD67C65CA577FDE8E587BDECCEC1728F141F207948C8DFB35A8",
-        "en": "75F20306CF3EAB6A6D1D44F9CEE62E1E3834F2565847570B61AE409E91BC4CB2"
+        "zh": "EE40C4F18CBB2A91042437BE72717554CD8A6CA8FE6BDE53ACA629922072FE85",
+        "en": "4B6B8F7486FD2EB994615D912C40CF73010B6191B61058D56A12C9339E9313BC"
       }
     },
     "Origo.Core.Contracts/Runtime/Console/README": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "Origo.Core.Contracts/Runtime/Console/README.zh.md",
         "en": "Origo.Core.Contracts/Runtime/Console/README.en.md"
       },
       "content_hashes": {
-        "zh": "9CD58AFD761DA87005A85C5BC409ED3A7B6F370D2FBB95631C4A45361165E741",
-        "en": "A908C722C978A131D5A287692B9381D33921EA450E4C0488262EB84B20F92FD7"
+        "zh": "3ABE48D9B06C4CD22CDEAE41E5637824A277DD21E2A532C1963F66CC54AD29EF",
+        "en": "8AF42DB7BFFE4EF35834078EAAECB21F97D1C82BE08AD800DB28C64BCE1B49C0"
       }
     },
     "Origo.Core.Contracts/Runtime/README": {
@@ -677,6 +780,38 @@
         "en": "E47061EB5B3F2858EFF671B776A907ACE909DD4936EE58E202BE13F5B164216F"
       }
     },
+    "Origo.Core.Contracts/Serialization/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Contracts/Serialization/README.zh.md",
+        "en": "Origo.Core.Contracts/Serialization/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "4D50EF93BB44F1471CC17A3D852BB97F6BFA83DA8B6AA04D49C83963ADC222FF",
+        "en": "04F9F7C68EF69EF4EA7F97D0BF2AD2651C53E66B6F8F4CB578D0C6ABE0946138"
+      }
+    },
+    "Origo.Core.Contracts/Snd/Entity/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Contracts/Snd/Entity/README.zh.md",
+        "en": "Origo.Core.Contracts/Snd/Entity/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "5AE594B41713D91B70077CF706B8EB0564B6CE4BD26E5C2355BB76C4B4183FB4",
+        "en": "700BE21E5286DA103DDF99F1880F6DD1F48DB202E1D2938E476C99EBC8A2C990"
+      }
+    },
     "Origo.Core.Contracts/Snd/Metadata/README": {
       "status": "synced",
       "revisions": {
@@ -712,6 +847,118 @@
         "en": "DC3883C487B05AB2BBBBD8501415882D56005E4542285DC66B77809B1B22E912"
       }
     },
+    "Origo.Core.Contracts/Snd/Strategy/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Contracts/Snd/Strategy/README.zh.md",
+        "en": "Origo.Core.Contracts/Snd/Strategy/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "79883A07BA04870C3A85677D27DFD3409A90167F1185DCF5A024873052F44D9A",
+        "en": "624588BBBE1002CB86BA58E011EE4633EBAED3DDE490D93609CCCA2B8C06CCCC"
+      }
+    },
+    "Origo.Core.Contracts/StateMachine/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Contracts/StateMachine/README.zh.md",
+        "en": "Origo.Core.Contracts/StateMachine/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "6817DA305A12918745FF4D4077B81FA3FCDF03FAED69F0B939BC2A5887F128C2",
+        "en": "DFB3302F2C608D389C0FF22410EC4F6F0B52D9321ACD469ECE8BBA11952C83B3"
+      }
+    },
+    "Origo.Core.Contracts/Utility/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Contracts/Utility/README.zh.md",
+        "en": "Origo.Core.Contracts/Utility/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "A049AFE124ECE4E493BCF904B82528B56E7325CB1F914CE2D2B8DF9E8ACB1726",
+        "en": "35CA699E50423D291ACC37236387039489947AAC9BA228A9FEE6D8F1DCC5596F"
+      }
+    },
+    "Origo.Core.Kernel/Abstractions/Entity/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Abstractions/Entity/README.zh.md",
+        "en": "Origo.Core.Kernel/Abstractions/Entity/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "F049DF07F852C09C275A161A13E330CE1C45C903424294AC5F16AE3101963AA0",
+        "en": "2C0F30844F198BC217FE0E7B7610B4CA607AF7B45E89B288963CCA6389006590"
+      }
+    },
+    "Origo.Core.Kernel/Abstractions/Node/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Abstractions/Node/README.zh.md",
+        "en": "Origo.Core.Kernel/Abstractions/Node/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "554C0196AAF4A6F9FFC371BFD7A363C5F87FC422DFE0F8DA6E1A7FBAECBCC6D0",
+        "en": "E4F3AA735B24F623694E154E8D4351EC58136E2D6382352098EEB04F81BF0377"
+      }
+    },
+    "Origo.Core.Kernel/Abstractions/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Abstractions/README.zh.md",
+        "en": "Origo.Core.Kernel/Abstractions/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "463939F19555713361B62780EE9E32C2F4C1FBA5B45B66F514DE113E8E4BEF93",
+        "en": "C0C8CB8F5C3735DCBE18F7D5BCB2BA695945459263AE0E261653C61D74499802"
+      }
+    },
+    "Origo.Core.Kernel/Abstractions/Scene/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Abstractions/Scene/README.zh.md",
+        "en": "Origo.Core.Kernel/Abstractions/Scene/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "D296A07C5C84EF4E96F59AA268674CE0C44B83E389A0E38BDBECBF9F9DF04BE4",
+        "en": "DF7B0844C0F12954494C9496D1B36FEDC2D522F226BD7A33571E278FD8698333"
+      }
+    },
     "Origo.Core.Kernel/Addons/FastNoiseLite/README": {
       "status": "synced",
       "revisions": {
@@ -744,7 +991,7 @@
         "en": "F1AAD52A70479A99A8B1D794DC4982BC6B4904E5196B559A84337372B22C13AC"
       }
     },
-    "Origo.Core.Kernel/README": {
+    "Origo.Core.Kernel/DataSource/Codec/README": {
       "status": "synced",
       "revisions": {
         "zh": 1,
@@ -752,12 +999,223 @@
       },
       "previous_revisions": {},
       "files": {
+        "zh": "Origo.Core.Kernel/DataSource/Codec/README.zh.md",
+        "en": "Origo.Core.Kernel/DataSource/Codec/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "76881AC89CDF3126D81BA744C114D0FA605DBEA3ABC3266EBD657FA7593992AF",
+        "en": "027E1C0949A819EA1DD42321690EC70CF2490D735ADF14AF76E6163069CBE92E"
+      }
+    },
+    "Origo.Core.Kernel/DataSource/Converters/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/DataSource/Converters/README.zh.md",
+        "en": "Origo.Core.Kernel/DataSource/Converters/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "E1D284226396BB2A7A705675268546111642B2CCC0397DEC36A813D46387AE22",
+        "en": "003AA48AB9DBD23577E3595D3E2418E44DA8E5366A30670CEEC001140778BC13"
+      }
+    },
+    "Origo.Core.Kernel/DataSource/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/DataSource/README.zh.md",
+        "en": "Origo.Core.Kernel/DataSource/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "B4545CAC1148A51B962F0835BC2A21FF8D601A080E752776136A813486424D08",
+        "en": "21C9CEC1ECDB21C5C9D056DD4069B0B5E1AEE1825184CDE622630B9DE07E3716"
+      }
+    },
+    "Origo.Core.Kernel/Ports/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Ports/README.zh.md",
+        "en": "Origo.Core.Kernel/Ports/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "FA10D71BF4632E02819FDB32394934DD32A911D85228BC6E7C48C8393A294F61",
+        "en": "66A0E5AABD5EF6565277867E40B5B594CE3B9141CC12671984C2E20C337E618B"
+      }
+    },
+    "Origo.Core.Kernel/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "files": {
         "zh": "Origo.Core.Kernel/README.zh.md",
         "en": "Origo.Core.Kernel/README.en.md"
       },
       "content_hashes": {
-        "zh": "7A068E13FDF038F66C873D60A6B99AF9DB16DF59C2E9ACDABDC32537394C659C",
-        "en": "BB496E128E270371369965E7D67377AC197A30FCE310080EA11E21C44F7E3896"
+        "zh": "AE0664E1ADCC9127C9E65A6003E4EF2A390FADFF2FB0236163BDA124F507BD49",
+        "en": "45AECBEA4CF89E72C267E3406FE406FAEB1C04F1E2ADD95B1243B5C979D28825"
+      }
+    },
+    "Origo.Core.Kernel/Runtime/Console/CommandHandlers/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Runtime/Console/CommandHandlers/README.zh.md",
+        "en": "Origo.Core.Kernel/Runtime/Console/CommandHandlers/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "411A5BBDD7B148B57326CD31A014DBD42038805FBF5629F0E6210E1AEC75436F",
+        "en": "A72E5C88C5269A6DB30E9DE37EC6C9AE45EF12AC85304225FE863A11FA838595"
+      }
+    },
+    "Origo.Core.Kernel/Runtime/Console/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Runtime/Console/README.zh.md",
+        "en": "Origo.Core.Kernel/Runtime/Console/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "0C63CBB97FB39F61D95426323E5C85B0189CD5A4862A2CB40C9CEC20362A409D",
+        "en": "90FCC5D7427F20B72470C6FC60406E3C4175B4B7D57CA51C1490EA06D8A4F2EF"
+      }
+    },
+    "Origo.Core.Kernel/Runtime/Lifecycle/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Runtime/Lifecycle/README.zh.md",
+        "en": "Origo.Core.Kernel/Runtime/Lifecycle/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "92D45830E70A1E839D99C82B4F068AB697F6FCD725699A7B0C348E5C17DD95BA",
+        "en": "B8FC9E0296FB6497DE5D77DC493819B5EDEE364554D91666B63674424C1A1683"
+      }
+    },
+    "Origo.Core.Kernel/Runtime/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Runtime/README.zh.md",
+        "en": "Origo.Core.Kernel/Runtime/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "18E53693476EACCA7637F39364E3B6EA23D32F522E54B9BFC4BFEB0A6FB800BC",
+        "en": "185CD91B7A6D0B2F7B8E89A14FF020DBC5238C8977DC6AC5929B74ED423723A2"
+      }
+    },
+    "Origo.Core.Kernel/Runtime/StateMachine/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Runtime/StateMachine/README.zh.md",
+        "en": "Origo.Core.Kernel/Runtime/StateMachine/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "90AEA98DBDD5FD57EF2B42B572EF2BCF0E0C9FFED8A676712EA5A71399EBFE8B",
+        "en": "D5E21ABEB054ACBA8A885D86C0EAB9441D55A1D92E38A6017C02D09580D5E9A9"
+      }
+    },
+    "Origo.Core.Kernel/Save/Meta/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Save/Meta/README.zh.md",
+        "en": "Origo.Core.Kernel/Save/Meta/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "F80064E980AD7C9E5E2DDEC7E6AA09E7121CF019EF95674F1AB4EDB4B012333B",
+        "en": "8AE660A8580189720236D279DAF5F0D1FC7C2319DAFADFF3DE34F72DBE05BED7"
+      }
+    },
+    "Origo.Core.Kernel/Save/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Save/README.zh.md",
+        "en": "Origo.Core.Kernel/Save/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "C310A9F1CD533E0AC194E35E6B78C4F0B91C7FF9F3A70A56B69492CE1A955828",
+        "en": "CAA0BCA40752D023E9714E6796A7186D3DF0DB33A2D47B9BADE73D51D7CBA549"
+      }
+    },
+    "Origo.Core.Kernel/Save/Serialization/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Save/Serialization/README.zh.md",
+        "en": "Origo.Core.Kernel/Save/Serialization/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "CB498507EC2049168671927D164CFC916B252A256A52EBFE7DF9E60D6FD27AB7",
+        "en": "E8DC77B97E519B1635D66EE8A824DD059D6BE5DF0A2B7B223021862836A292BA"
+      }
+    },
+    "Origo.Core.Kernel/Save/Storage/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Save/Storage/README.zh.md",
+        "en": "Origo.Core.Kernel/Save/Storage/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "A3633064D6517A9EADF251D2A7A3ABEBB8E64A6265656F7A83DE71C1995850B9",
+        "en": "4042C4BC40115BCADC20EC10E090B1DF576CA88145470B48587B4032DE630198"
       }
     },
     "Origo.Core.Kernel/Scheduling/README": {
@@ -777,6 +1235,102 @@
       "content_hashes": {
         "zh": "464CE4F979557BDE9B65987AD64977A9DDBE397DEF9CE97E7252E808CAB2752E",
         "en": "A3C4FBCE493BCB26E8DDBCED06E4BC297811188D1DB8540A00520FC39C735E24"
+      }
+    },
+    "Origo.Core.Kernel/Snd/Companions/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Snd/Companions/README.zh.md",
+        "en": "Origo.Core.Kernel/Snd/Companions/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "756BC057316359B527178623C49ACAB1742B13EFEE907E229F0EA3F249900A37",
+        "en": "032BEF57B5228617D97A5E900B5C4AC77190593632C36EC601661ECC5220C4E7"
+      }
+    },
+    "Origo.Core.Kernel/Snd/Entity/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Snd/Entity/README.zh.md",
+        "en": "Origo.Core.Kernel/Snd/Entity/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "6C1694F9820180D7BEAE458E138091BA76BB3EBB701AD0535BEFD864CACF9DF9",
+        "en": "30F7E8B8B8BE128B6D594E9D7253FAE2B5A941D2F291D90418BD26EFD6CB9FE4"
+      }
+    },
+    "Origo.Core.Kernel/Snd/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Snd/README.zh.md",
+        "en": "Origo.Core.Kernel/Snd/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "DEB7EC0ADE886F4EE4BB431DCA00B11A8D0A33E38AFA0A601DF1684305930390",
+        "en": "2F6B1D8DECC70B4A9A7481EF2966FEF6AD83EE191D652561B724A272816601BB"
+      }
+    },
+    "Origo.Core.Kernel/Snd/Scene/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Snd/Scene/README.zh.md",
+        "en": "Origo.Core.Kernel/Snd/Scene/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "81D1AB8374171098A3D2CB65F5822BDE14AD291B9C0292219AF00C524BE61409",
+        "en": "F1044D300C97577FD40848AB598545D1449ED3A49713A8F26EF53A94B9C3F35B"
+      }
+    },
+    "Origo.Core.Kernel/Snd/Strategy/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/Snd/Strategy/README.zh.md",
+        "en": "Origo.Core.Kernel/Snd/Strategy/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "C669E3B2A154FD4AD26534398C1FF8BCBC845DC8EBBE354141B1CB1B6DD32AB2",
+        "en": "BB56B3834CCBF11032256BB2579A35D2A9F05126C18BA3DD542A50E290BA24A4"
+      }
+    },
+    "Origo.Core.Kernel/StateMachine/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "Origo.Core.Kernel/StateMachine/README.zh.md",
+        "en": "Origo.Core.Kernel/StateMachine/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "6265155EAAF987206F37179808B33381E97F5CCD86BEE738201DFC934026F53C",
+        "en": "5BA77D2A8BC9A540456045C9460273A6C026B1052357389F5A40DAD425CF20D1"
       }
     },
     "Origo.Core.Tests/Abstractions": {
@@ -839,46 +1393,46 @@
     "Origo.Core.Tests/Blackboard": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.Core.Tests/Blackboard.zh.md",
         "en": "Origo.Core.Tests/Blackboard.en.md"
       },
       "content_hashes": {
-        "zh": "3D116F8CE10CE8C202CD9B3435AB88C70C4E0710F117710A02AF1C118FF5414B",
-        "en": "214F0F16157E80560336E508F6511ED5F72C59B82F9749A11C8ED6FCD2779D08"
+        "zh": "243046B706D4516C07F4183BF0590E7DCA815980BDED931546720192A219DF36",
+        "en": "F2047FDE06FAAD3B1EE31DE3475F913875309B35B884C91B87FF077310283061"
       }
     },
     "Origo.Core.Tests/Console": {
       "status": "synced",
       "revisions": {
-        "zh": 15,
-        "en": 15
+        "zh": 16,
+        "en": 16
       },
       "previous_revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "files": {
         "zh": "Origo.Core.Tests/Console.zh.md",
         "en": "Origo.Core.Tests/Console.en.md"
       },
       "content_hashes": {
-        "zh": "CC75667C1D98C2AFEA1780BAE28C1345DB991DD01CE7D97C9359D9C5B6301DF4",
-        "en": "74FA9E23CBF1F03A67FE283C39814A24C177F2B32470C2EB74E67D241B35A833"
+        "zh": "1EFE0035E484061A833CFAB456EE496093C7BAF96BFE9C63FC96803D5258152B",
+        "en": "B38F210E63CF5AB752BABB3A78503A05D82A1B5CB0CA9D44B11868F416EFAAAE"
       }
     },
     "Origo.Core.Tests/DataObserver": {
       "status": "synced",
       "revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "previous_revisions": {
         "zh": 1,
@@ -889,27 +1443,27 @@
         "en": "Origo.Core.Tests/DataObserver.en.md"
       },
       "content_hashes": {
-        "zh": "EE5A48B7608A729DA21712840B1685F4E2986128C2BD053B4D87AE959770FD96",
-        "en": "80B382C09DB3DDF2DB70052680E9EC802754436D135AF2C606EFDBD9640DD63D"
+        "zh": "BAAB1DA0F376AF0337E1E30BB77359EA39195357BA0BA5AD0AAA39EFAC163664",
+        "en": "E9BB95F3D86536659B38A01BA736D6B4BFEF1888EF5FA537E04EAE9227EC8009"
       }
     },
     "Origo.Core.Tests/DataSource": {
       "status": "synced",
       "revisions": {
-        "zh": 15,
-        "en": 15
+        "zh": 16,
+        "en": 16
       },
       "previous_revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "files": {
         "zh": "Origo.Core.Tests/DataSource.zh.md",
         "en": "Origo.Core.Tests/DataSource.en.md"
       },
       "content_hashes": {
-        "zh": "8052EB354FDCFCBF27CC0C6E77AF1D4978F61E376FC3B5A6F788A604834FD02C",
-        "en": "8B360BCED6A4537AC73B25C26F485279C50449E874B48F25C5F5E7B15CC903BB"
+        "zh": "E6C5E11DDE1BF5B3D214775E2CD19BD77A2CEFDFCB5B50EAF4DFC622A9DED6A4",
+        "en": "67CBB024EBB4DE8EA6863A99DB7F8D507C3B09F6EEE63CA8F67173E8C3E59FB7"
       }
     },
     "Origo.Core.Tests/Grid": {
@@ -934,8 +1488,8 @@
     "Origo.Core.Tests/Logging": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "previous_revisions": {
         "zh": 4,
@@ -946,8 +1500,8 @@
         "en": "Origo.Core.Tests/Logging.en.md"
       },
       "content_hashes": {
-        "zh": "0DB81AD3BF3048F691A52CFA5BAC18E0779DEED893834D265EC0D3F29B2DF01F",
-        "en": "3925FE6EDE0B3FD946E8FE84E4C7DEC5C089CE282D0243EC91A8C0CEE73BAAF8"
+        "zh": "9D8EA5C2D416B7AC3E40BF44940DFC70EA8F2A1006A640F378EC6E957115A630",
+        "en": "E9F185804A8EB5B1AB539298CC6B439FB5D677299409A9AF1D9E8CDDB8520A38"
       }
     },
     "Origo.Core.Tests/Meta": {
@@ -991,20 +1545,20 @@
     "Origo.Core.Tests/Planning": {
       "status": "synced",
       "revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "previous_revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "files": {
         "zh": "Origo.Core.Tests/Planning.zh.md",
         "en": "Origo.Core.Tests/Planning.en.md"
       },
       "content_hashes": {
-        "zh": "16F5981C8C48F83C5A122EE776B9B1964A95B8F767F47A64C367B97DC80FCEE1",
-        "en": "C57AE43097A4ABC1AA1084F1D4ED32ADEA8A187AA49EF9706E0D8A5B83D9F34D"
+        "zh": "07F8B7E2F074F059103AF2C5FD492AAAADB5F2389008F9C87C8349DF6FF9123B",
+        "en": "78987DACDE9D0C3992CBC77D364D57D4C5F9ECCCDD486F18F15BF743F2852F67"
       }
     },
     "Origo.Core.Tests/Random": {
@@ -1048,20 +1602,20 @@
     "Origo.Core.Tests/Runtime-Core": {
       "status": "synced",
       "revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 9,
+        "en": 9
       },
       "previous_revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 8,
+        "en": 8
       },
       "files": {
         "zh": "Origo.Core.Tests/Runtime-Core.zh.md",
         "en": "Origo.Core.Tests/Runtime-Core.en.md"
       },
       "content_hashes": {
-        "zh": "424401845BA88A87E5BC4C787F44E73F5750F7EF4AFBCC79E906F6E2614D6D5C",
-        "en": "55358F266E8A13914415DB6CFA694C52EC505F82E145CA9D499BAA4EFB24C861"
+        "zh": "6522F457822FD13C1233F29A61E1C041BED61601E2459CF4B8F49B7DFCA05A18",
+        "en": "DBE156AC3BFCA3A96B70CEAE0CFF78AE58A9D5F9F1F823B881A59FBC30423224"
       }
     },
     "Origo.Core.Tests/Save-Meta": {
@@ -1086,39 +1640,39 @@
     "Origo.Core.Tests/Save-Serialization": {
       "status": "synced",
       "revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "previous_revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "files": {
         "zh": "Origo.Core.Tests/Save-Serialization.zh.md",
         "en": "Origo.Core.Tests/Save-Serialization.en.md"
       },
       "content_hashes": {
-        "zh": "27211F096DA176522B10CEC699CCEA5B64D71F5D2EA9E07D960F2E30FBF0AA88",
-        "en": "FC129EA2F2119A8C536309736310C954CD13905BD04CFDC017D16AE2AB91810C"
+        "zh": "E5799A9C29B4BA21857D2B04949D6B779A7E7009128AD7C40448703D2DB4D39F",
+        "en": "F01F32E4B6149D57619BF2B64575D2D2C04B629A3710FAB041503C8BA26DDC78"
       }
     },
     "Origo.Core.Tests/Save-Storage": {
       "status": "synced",
       "revisions": {
-        "zh": 20,
-        "en": 20
+        "zh": 21,
+        "en": 21
       },
       "previous_revisions": {
-        "zh": 19,
-        "en": 19
+        "zh": 20,
+        "en": 20
       },
       "files": {
         "zh": "Origo.Core.Tests/Save-Storage.zh.md",
         "en": "Origo.Core.Tests/Save-Storage.en.md"
       },
       "content_hashes": {
-        "zh": "635C159ED38E8AFD623AD7DB2880D7A54A537914D62179157D71DA81547BBAEC",
-        "en": "0C1970EB049ECD3034E87B5E853409F5A1A82FFCCEB92774C45B05B7D1940924"
+        "zh": "1626D25729B22B4C80C9E5015228FB297CEE5C4E498386D468D22308D3D731D0",
+        "en": "D83CD4DEF6756F4D7B037B4250DF9A133E6C12FEA6A6FF520C92865CC76D30D2"
       }
     },
     "Origo.Core.Tests/Scheduling": {
@@ -1143,20 +1697,20 @@
     "Origo.Core.Tests/Session-Lifecycle": {
       "status": "synced",
       "revisions": {
-        "zh": 20,
-        "en": 20
+        "zh": 21,
+        "en": 21
       },
       "previous_revisions": {
-        "zh": 19,
-        "en": 19
+        "zh": 20,
+        "en": 20
       },
       "files": {
         "zh": "Origo.Core.Tests/Session-Lifecycle.zh.md",
         "en": "Origo.Core.Tests/Session-Lifecycle.en.md"
       },
       "content_hashes": {
-        "zh": "01085F7B8D6C973A66E710E54BBC4D597224F58144B8394F4EB0DC4624AD8BF6",
-        "en": "ACF4E86E0E4241011AE0FC7BA7A95FF5908F77EC92DB3B77826F8F9FA6A751DC"
+        "zh": "F765431F86164EA567179E73B3E0EF4FB0874A31EF9E54F668A865945B043621",
+        "en": "CDE008FF65999569FC988F3CF6596D3340538CF84C83A2C9FF6ED1FA22C82A3D"
       }
     },
     "Origo.Core.Tests/Snd-ArchiveFileAccess": {
@@ -1200,20 +1754,20 @@
     "Origo.Core.Tests/Snd-Entity": {
       "status": "synced",
       "revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "previous_revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "files": {
         "zh": "Origo.Core.Tests/Snd-Entity.zh.md",
         "en": "Origo.Core.Tests/Snd-Entity.en.md"
       },
       "content_hashes": {
-        "zh": "849DE580267D9806DD02AD66B7AB22D4C39274E4860A10D772CF0C3ACE55980F",
-        "en": "3B48330A8CF6A853FBE4EF5583D7D084EB00627DA36B54A72187F1F36E8418B2"
+        "zh": "50A60910311D0AB83E60DFEA83EA4659CB9B5871F0B716FA2D72C80E5FBCBB93",
+        "en": "43F6B749423A287DD028E3AA88D5BD9F438A9967F467D5404CEACC910EC023E4"
       }
     },
     "Origo.Core.Tests/Snd-Extensions": {
@@ -1276,20 +1830,20 @@
     "Origo.Core.Tests/Snd-Scene": {
       "status": "synced",
       "revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
-        "zh": 13,
-        "en": 13
+        "zh": 14,
+        "en": 14
       },
       "files": {
         "zh": "Origo.Core.Tests/Snd-Scene.zh.md",
         "en": "Origo.Core.Tests/Snd-Scene.en.md"
       },
       "content_hashes": {
-        "zh": "92505B933778A80B5312B669EEE607368C92BCA35E9E8F85995290DDCC2CAFA0",
-        "en": "936ACA1A37E45C796A384C3886EBB5AF2367932827F3862827DC03471F5607FF"
+        "zh": "EA4811E043C3F72B13496BDDE0C3CC3A0B2A0E4A412C31161B37CCAC0925063B",
+        "en": "65FD3BE85BF822010A1A8D11452B06CB2DC8D25F2BC1009CCFFFE6F34863A6CD"
       }
     },
     "Origo.Core.Tests/Snd-Strategy": {
@@ -1314,11 +1868,11 @@
     "Origo.Core.Tests/StateMachine": {
       "status": "synced",
       "revisions": {
-        "zh": 6,
-        "en": 6
+        "zh": 7,
+        "en": 7
       },
       "previous_revisions": {
-        "zh": 5,
+        "zh": 6,
         "en": 6
       },
       "files": {
@@ -1326,8 +1880,8 @@
         "en": "Origo.Core.Tests/StateMachine.en.md"
       },
       "content_hashes": {
-        "zh": "444657095018245C96893379DFAF8B6691C7E25A73B5C62D7AC53754A77AF050",
-        "en": "533BD2D59444608E890095DDF1570F98368CFC38626C1ADF02E201F672EBDCFF"
+        "zh": "DB56B41D33EF207A8EF6E3CCED6F4557AF091918FF682366F7464E87F68BEE5D",
+        "en": "F9DED22A4043D4D90491DE1821BC1EF473B80E6A3C8CA87A309CF37E9340AC7B"
       }
     },
     "Origo.Core.Tests/StrategyTestContext-FileAccess": {
@@ -1371,267 +1925,77 @@
     "Origo.Core.Tests/Testing/Integration/Integration": {
       "status": "synced",
       "revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "previous_revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "files": {
         "zh": "Origo.Core.Tests/Testing/Integration/Integration.zh.md",
         "en": "Origo.Core.Tests/Testing/Integration/Integration.en.md"
       },
       "content_hashes": {
-        "zh": "66798FEF3341F90BCE8F887BBFFAAF24DD77AB324656BE8CC66B6E08E2C3D89E",
-        "en": "AFF34158BF768C7E849D6608B091C1656F272D18AAC79CE18F9B11AE4E4AD4FB"
+        "zh": "2641385DE8180B4CDB46252C8F423D94FE528A5C78D9B04B9A4F8EABE9AD9234",
+        "en": "BFAEAC2C33E7E173D3051C835ECF9F0FB0B21138D3CEFE357EEC43C54B3F6B48"
       }
     },
     "Origo.Core.Tests/TypeStringMapping": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "previous_revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "Origo.Core.Tests/TypeStringMapping.zh.md",
         "en": "Origo.Core.Tests/TypeStringMapping.en.md"
       },
       "content_hashes": {
-        "zh": "BD6A2FCF3CFFB671C62DBB42B29856E9C7A0B919AD68A407B6D39B51A71D4CB4",
-        "en": "2B50C744440EC9BFE408F3029C53A80ACC5EB225700F7E7AE7A3A6D1CAE7E8FA"
+        "zh": "F5D4B5F57996DC85997DC2E26BDBA21CE91A2A08E3D051810938D38912F5D526",
+        "en": "1C9109DA27FABFF6FB91FF638651266760738C5291BDBD2C7E9EF4B39CDD14CF"
       }
     },
     "Origo.Core.Tests/Utility": {
       "status": "synced",
       "revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "previous_revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "files": {
         "zh": "Origo.Core.Tests/Utility.zh.md",
         "en": "Origo.Core.Tests/Utility.en.md"
       },
       "content_hashes": {
-        "zh": "DB5FDA5F1DC7AA7E435433DCCF88113D1B3F888D9D09F61FB98B94132392A3A3",
-        "en": "F914A0FBBC1664889C0DCAC4A31B33C6650ECCFFA5AD71AB068470F4A8C4809E"
-      }
-    },
-    "Origo.Core/Abstractions/Entity/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 16,
-        "en": 16
-      },
-      "previous_revisions": {
-        "zh": 15,
-        "en": 15
-      },
-      "files": {
-        "zh": "Origo.Core/Abstractions/Entity/README.zh.md",
-        "en": "Origo.Core/Abstractions/Entity/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "804697CBB168F001949B556204B2E92451441D3B0CF66B08F0DDD5638AFE0363",
-        "en": "1B134F05E02981DBB97E1A332D6A2662A61DBB011F13BC18D535B9784D71A555"
-      }
-    },
-    "Origo.Core/Abstractions/Node/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 3,
-        "en": 3
-      },
-      "previous_revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "Origo.Core/Abstractions/Node/README.zh.md",
-        "en": "Origo.Core/Abstractions/Node/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "554C0196AAF4A6F9FFC371BFD7A363C5F87FC422DFE0F8DA6E1A7FBAECBCC6D0",
-        "en": "E4F3AA735B24F623694E154E8D4351EC58136E2D6382352098EEB04F81BF0377"
-      }
-    },
-    "Origo.Core/Abstractions/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 11,
-        "en": 11
-      },
-      "previous_revisions": {
-        "zh": 10,
-        "en": 10
-      },
-      "files": {
-        "zh": "Origo.Core/Abstractions/README.zh.md",
-        "en": "Origo.Core/Abstractions/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "463939F19555713361B62780EE9E32C2F4C1FBA5B45B66F514DE113E8E4BEF93",
-        "en": "C0C8CB8F5C3735DCBE18F7D5BCB2BA695945459263AE0E261653C61D74499802"
-      }
-    },
-    "Origo.Core/Abstractions/Scene/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 6,
-        "en": 6
-      },
-      "previous_revisions": {
-        "zh": 5,
-        "en": 5
-      },
-      "files": {
-        "zh": "Origo.Core/Abstractions/Scene/README.zh.md",
-        "en": "Origo.Core/Abstractions/Scene/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "D296A07C5C84EF4E96F59AA268674CE0C44B83E389A0E38BDBECBF9F9DF04BE4",
-        "en": "DF7B0844C0F12954494C9496D1B36FEDC2D522F226BD7A33571E278FD8698333"
-      }
-    },
-    "Origo.Core/Blackboard/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 3,
-        "en": 3
-      },
-      "previous_revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "Origo.Core/Blackboard/README.zh.md",
-        "en": "Origo.Core/Blackboard/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "08A5462721B8B6AAB35A0BB565A56BEDA455B5BF5EC0E8EBE1EEA65A7B1F30CE",
-        "en": "F39ADD08BA15466F843A159479701C24D15B446A7C8F88B6FCAD1F30795C81BF"
-      }
-    },
-    "Origo.Core/DataSource/Codec/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 6,
-        "en": 6
-      },
-      "previous_revisions": {
-        "zh": 5,
-        "en": 5
-      },
-      "files": {
-        "zh": "Origo.Core/DataSource/Codec/README.zh.md",
-        "en": "Origo.Core/DataSource/Codec/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "76881AC89CDF3126D81BA744C114D0FA605DBEA3ABC3266EBD657FA7593992AF",
-        "en": "027E1C0949A819EA1DD42321690EC70CF2490D735ADF14AF76E6163069CBE92E"
-      }
-    },
-    "Origo.Core/DataSource/Converters/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 6,
-        "en": 6
-      },
-      "previous_revisions": {
-        "zh": 6,
-        "en": 6
-      },
-      "files": {
-        "zh": "Origo.Core/DataSource/Converters/README.zh.md",
-        "en": "Origo.Core/DataSource/Converters/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "E1D284226396BB2A7A705675268546111642B2CCC0397DEC36A813D46387AE22",
-        "en": "003AA48AB9DBD23577E3595D3E2418E44DA8E5366A30670CEEC001140778BC13"
-      }
-    },
-    "Origo.Core/DataSource/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 19,
-        "en": 19
-      },
-      "previous_revisions": {
-        "zh": 18,
-        "en": 18
-      },
-      "files": {
-        "zh": "Origo.Core/DataSource/README.zh.md",
-        "en": "Origo.Core/DataSource/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "B4545CAC1148A51B962F0835BC2A21FF8D601A080E752776136A813486424D08",
-        "en": "21C9CEC1ECDB21C5C9D056DD4069B0B5E1AEE1825184CDE622630B9DE07E3716"
+        "zh": "1D2F61555395FB73F86C66E4EB64ECE0B262AF13218B48292254AF11505260AA",
+        "en": "B8A061E6A01125AFFEDC45BEC84B77173CB8D805F8F7F5F05ED9EC957822543E"
       }
     },
     "Origo.Core/Grid/README": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "previous_revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "Origo.Core/Grid/README.zh.md",
         "en": "Origo.Core/Grid/README.en.md"
       },
       "content_hashes": {
-        "zh": "9C9838CB94F1E84986C88BD0B5DFB068ED550938D8471103C4AFCC8FD574EF52",
-        "en": "F9FD42A4EDE06F8FE1CDA9574DAE589E217A4E9BD0C2CF06F48A666FDC511A7B"
-      }
-    },
-    "Origo.Core/Logging/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 5,
-        "en": 5
-      },
-      "previous_revisions": {
-        "zh": 4,
-        "en": 4
-      },
-      "files": {
-        "zh": "Origo.Core/Logging/README.zh.md",
-        "en": "Origo.Core/Logging/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "B894B888EF6EA86894A2F67B53A26C5309EF36A7DFCCA1D4EFEEF5118BDF5BE5",
-        "en": "D9E38808B41737847A642D38D3D6F6711D86C43C051E8FA8BA65ACD82ADADF40"
-      }
-    },
-    "Origo.Core/Planning/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 7,
-        "en": 7
-      },
-      "previous_revisions": {
-        "zh": 7,
-        "en": 7
-      },
-      "files": {
-        "zh": "Origo.Core/Planning/README.zh.md",
-        "en": "Origo.Core/Planning/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "17D27F3CC3A2D26F885D03D9A348884370898B973C7316045D1F7C47CD0B512D",
-        "en": "88C8465E7E29F2A6AEE59407B0595A675DCFC3BA0F149CC25B199F8FCC909F70"
+        "zh": "BC7E195E23CBA2D6F399C35A09F1CAFD8F97494AE3B06FD4E1B559C3696A6D46",
+        "en": "0C233265ECC630E7B6344CE296650F2A166A64AF0922E3467380FB49BA8ABB78"
       }
     },
     "Origo.Core/Random/README": {
@@ -1656,210 +2020,20 @@
     "Origo.Core/README": {
       "status": "synced",
       "revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 11,
+        "en": 11
       },
       "previous_revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 10,
+        "en": 10
       },
       "files": {
         "zh": "Origo.Core/README.zh.md",
         "en": "Origo.Core/README.en.md"
       },
       "content_hashes": {
-        "zh": "0A70E8EADE1C2BA337A838D0225D720F7AF3FD2FA39EB82C8AC5FD25C646AD59",
-        "en": "23FC5438508B35A3040E0156B2C94F59E3BBB0E06B6E13EE68A6F6FAAB7798DA"
-      }
-    },
-    "Origo.Core/Runtime/Console/CommandHandlers/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 4,
-        "en": 4
-      },
-      "previous_revisions": {
-        "zh": 3,
-        "en": 3
-      },
-      "files": {
-        "zh": "Origo.Core/Runtime/Console/CommandHandlers/README.zh.md",
-        "en": "Origo.Core/Runtime/Console/CommandHandlers/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "411A5BBDD7B148B57326CD31A014DBD42038805FBF5629F0E6210E1AEC75436F",
-        "en": "A72E5C88C5269A6DB30E9DE37EC6C9AE45EF12AC85304225FE863A11FA838595"
-      }
-    },
-    "Origo.Core/Runtime/Console/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 8,
-        "en": 8
-      },
-      "previous_revisions": {
-        "zh": 7,
-        "en": 7
-      },
-      "files": {
-        "zh": "Origo.Core/Runtime/Console/README.zh.md",
-        "en": "Origo.Core/Runtime/Console/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "0C63CBB97FB39F61D95426323E5C85B0189CD5A4862A2CB40C9CEC20362A409D",
-        "en": "90FCC5D7427F20B72470C6FC60406E3C4175B4B7D57CA51C1490EA06D8A4F2EF"
-      }
-    },
-    "Origo.Core/Runtime/Lifecycle/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 21,
-        "en": 21
-      },
-      "previous_revisions": {
-        "zh": 20,
-        "en": 20
-      },
-      "files": {
-        "zh": "Origo.Core/Runtime/Lifecycle/README.zh.md",
-        "en": "Origo.Core/Runtime/Lifecycle/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "92D45830E70A1E839D99C82B4F068AB697F6FCD725699A7B0C348E5C17DD95BA",
-        "en": "B8FC9E0296FB6497DE5D77DC493819B5EDEE364554D91666B63674424C1A1683"
-      }
-    },
-    "Origo.Core/Runtime/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 6,
-        "en": 6
-      },
-      "previous_revisions": {
-        "zh": 5,
-        "en": 5
-      },
-      "files": {
-        "zh": "Origo.Core/Runtime/README.zh.md",
-        "en": "Origo.Core/Runtime/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "18E53693476EACCA7637F39364E3B6EA23D32F522E54B9BFC4BFEB0A6FB800BC",
-        "en": "185CD91B7A6D0B2F7B8E89A14FF020DBC5238C8977DC6AC5929B74ED423723A2"
-      }
-    },
-    "Origo.Core/Runtime/StateMachine/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "previous_revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.Core/Runtime/StateMachine/README.zh.md",
-        "en": "Origo.Core/Runtime/StateMachine/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "90AEA98DBDD5FD57EF2B42B572EF2BCF0E0C9FFED8A676712EA5A71399EBFE8B",
-        "en": "D5E21ABEB054ACBA8A885D86C0EAB9441D55A1D92E38A6017C02D09580D5E9A9"
-      }
-    },
-    "Origo.Core/Save/Meta/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 8,
-        "en": 8
-      },
-      "previous_revisions": {
-        "zh": 7,
-        "en": 7
-      },
-      "files": {
-        "zh": "Origo.Core/Save/Meta/README.zh.md",
-        "en": "Origo.Core/Save/Meta/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "F80064E980AD7C9E5E2DDEC7E6AA09E7121CF019EF95674F1AB4EDB4B012333B",
-        "en": "8AE660A8580189720236D279DAF5F0D1FC7C2319DAFADFF3DE34F72DBE05BED7"
-      }
-    },
-    "Origo.Core/Save/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 10,
-        "en": 10
-      },
-      "previous_revisions": {
-        "zh": 9,
-        "en": 9
-      },
-      "files": {
-        "zh": "Origo.Core/Save/README.zh.md",
-        "en": "Origo.Core/Save/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "C310A9F1CD533E0AC194E35E6B78C4F0B91C7FF9F3A70A56B69492CE1A955828",
-        "en": "CAA0BCA40752D023E9714E6796A7186D3DF0DB33A2D47B9BADE73D51D7CBA549"
-      }
-    },
-    "Origo.Core/Save/Serialization/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 5,
-        "en": 5
-      },
-      "previous_revisions": {
-        "zh": 5,
-        "en": 5
-      },
-      "files": {
-        "zh": "Origo.Core/Save/Serialization/README.zh.md",
-        "en": "Origo.Core/Save/Serialization/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "CB498507EC2049168671927D164CFC916B252A256A52EBFE7DF9E60D6FD27AB7",
-        "en": "E8DC77B97E519B1635D66EE8A824DD059D6BE5DF0A2B7B223021862836A292BA"
-      }
-    },
-    "Origo.Core/Save/Storage/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 12,
-        "en": 12
-      },
-      "previous_revisions": {
-        "zh": 11,
-        "en": 11
-      },
-      "files": {
-        "zh": "Origo.Core/Save/Storage/README.zh.md",
-        "en": "Origo.Core/Save/Storage/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "A3633064D6517A9EADF251D2A7A3ABEBB8E64A6265656F7A83DE71C1995850B9",
-        "en": "4042C4BC40115BCADC20EC10E090B1DF576CA88145470B48587B4032DE630198"
-      }
-    },
-    "Origo.Core/Serialization/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "previous_revisions": {
-        "zh": 1,
-        "en": 1
-      },
-      "files": {
-        "zh": "Origo.Core/Serialization/README.zh.md",
-        "en": "Origo.Core/Serialization/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "DA72D90F87E62B948EA002D676158334E119D4DE0E7DBC824E09A7DFCC997D7F",
-        "en": "F423A0214E00BD64230199E9A6316F97FCB9B42BD7F03AD01026F76367BB09DC"
+        "zh": "CEE66098D9D848E6AD7E961A0DFA43C052D84CA53658299733F02240C14E5EC0",
+        "en": "0D3F87F0D8BB74B6AAB2B56F486D546320B81FA51375A79B78E4256BCD298301"
       }
     },
     "Origo.Core/Snd/Archetype/README": {
@@ -1881,137 +2055,42 @@
         "en": "8184F62981004B381200267CAE9ACADFFA9F752D5658AB73314480C0BCDD932C"
       }
     },
-    "Origo.Core/Snd/Companions/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 4,
-        "en": 4
-      },
-      "previous_revisions": {
-        "zh": 3,
-        "en": 3
-      },
-      "files": {
-        "zh": "Origo.Core/Snd/Companions/README.zh.md",
-        "en": "Origo.Core/Snd/Companions/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "756BC057316359B527178623C49ACAB1742B13EFEE907E229F0EA3F249900A37",
-        "en": "032BEF57B5228617D97A5E900B5C4AC77190593632C36EC601661ECC5220C4E7"
-      }
-    },
-    "Origo.Core/Snd/Entity/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 15,
-        "en": 15
-      },
-      "previous_revisions": {
-        "zh": 14,
-        "en": 14
-      },
-      "files": {
-        "zh": "Origo.Core/Snd/Entity/README.zh.md",
-        "en": "Origo.Core/Snd/Entity/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "6C1694F9820180D7BEAE458E138091BA76BB3EBB701AD0535BEFD864CACF9DF9",
-        "en": "30F7E8B8B8BE128B6D594E9D7253FAE2B5A941D2F291D90418BD26EFD6CB9FE4"
-      }
-    },
     "Origo.Core/Snd/README": {
       "status": "synced",
       "revisions": {
-        "zh": 17,
-        "en": 17
+        "zh": 18,
+        "en": 18
       },
       "previous_revisions": {
-        "zh": 16,
-        "en": 16
+        "zh": 17,
+        "en": 17
       },
       "files": {
         "zh": "Origo.Core/Snd/README.zh.md",
         "en": "Origo.Core/Snd/README.en.md"
       },
       "content_hashes": {
-        "zh": "26E2677B615C8935435DC2283B152DA1244FF470806E36050327C023EBF2550D",
-        "en": "CF60F15E693D09B40E92FDC4B67B4E3B4EDFB88730F89947A8E6C83AD44D45EA"
-      }
-    },
-    "Origo.Core/Snd/Scene/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 15,
-        "en": 15
-      },
-      "previous_revisions": {
-        "zh": 14,
-        "en": 14
-      },
-      "files": {
-        "zh": "Origo.Core/Snd/Scene/README.zh.md",
-        "en": "Origo.Core/Snd/Scene/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "81D1AB8374171098A3D2CB65F5822BDE14AD291B9C0292219AF00C524BE61409",
-        "en": "F1044D300C97577FD40848AB598545D1449ED3A49713A8F26EF53A94B9C3F35B"
+        "zh": "AB31FCE0C84B60F948FE7A1BE198A079C6C9A5D2A2F60C848B2E23C585D77567",
+        "en": "22DC567CD323A8B4223F51848E7F27B2B95C428759138490129B6CE404C484C5"
       }
     },
     "Origo.Core/Snd/Strategy/README": {
       "status": "synced",
       "revisions": {
-        "zh": 27,
-        "en": 27
+        "zh": 28,
+        "en": 28
       },
       "previous_revisions": {
-        "zh": 26,
-        "en": 26
+        "zh": 27,
+        "en": 27
       },
       "files": {
         "zh": "Origo.Core/Snd/Strategy/README.zh.md",
         "en": "Origo.Core/Snd/Strategy/README.en.md"
       },
       "content_hashes": {
-        "zh": "B58AC654862D3A89F7BEF96DEE9FDBCF0CCAA6AEDBEBD7A14CD0DBF1C46A381E",
-        "en": "970F483756986E64C5EE416AC45FFB7A655B6EA51CEF7D3BDCA01C059FB9045E"
-      }
-    },
-    "Origo.Core/StateMachine/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "previous_revisions": {
-        "zh": 2,
-        "en": 2
-      },
-      "files": {
-        "zh": "Origo.Core/StateMachine/README.zh.md",
-        "en": "Origo.Core/StateMachine/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "6265155EAAF987206F37179808B33381E97F5CCD86BEE738201DFC934026F53C",
-        "en": "5BA77D2A8BC9A540456045C9460273A6C026B1052357389F5A40DAD425CF20D1"
-      }
-    },
-    "Origo.Core/Utility/README": {
-      "status": "synced",
-      "revisions": {
-        "zh": 8,
-        "en": 8
-      },
-      "previous_revisions": {
-        "zh": 8,
-        "en": 8
-      },
-      "files": {
-        "zh": "Origo.Core/Utility/README.zh.md",
-        "en": "Origo.Core/Utility/README.en.md"
-      },
-      "content_hashes": {
-        "zh": "A049AFE124ECE4E493BCF904B82528B56E7325CB1F914CE2D2B8DF9E8ACB1726",
-        "en": "35CA699E50423D291ACC37236387039489947AAC9BA228A9FEE6D8F1DCC5596F"
+        "zh": "5BCBAEDD7B11EBE6499F54882671C14C35ACDBEBBFE3D949B056BBBAEE0EE114",
+        "en": "FE6E3D823DCC5EC623A684921E58FD5558A6F94BD1C32BF05B55965E40761DE9"
       }
     },
     "Origo.GodotAdapter.Integration.Tests/README": {
@@ -2207,8 +2286,8 @@
     "Origo.GodotAdapter/Console/README": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
         "zh": 3,
@@ -2219,8 +2298,8 @@
         "en": "Origo.GodotAdapter/Console/README.en.md"
       },
       "content_hashes": {
-        "zh": "7BCCC5DE1E1F5D81524FB0BEB5C979A37080F4E23B80C5CA33ED95E2789C182E",
-        "en": "97850A810A81C588DAD6AF6D7CB97DB4C2F2C349013696D3C70CAF50A3D47BC8"
+        "zh": "243E4DDB36F7F7FA83437D18C04E1F67A6BED50E0DAC79DE50E9AEB384815035",
+        "en": "F7A3D12AB7D6F2BB7EAF881B52004419309621C9BDF6E68C5432C78D7B7E7ACD"
       }
     },
     "Origo.GodotAdapter/FileSystem/README": {
@@ -2283,20 +2362,20 @@
     "Origo.GodotAdapter/Serialization/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "previous_revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.GodotAdapter/Serialization/README.zh.md",
         "en": "Origo.GodotAdapter/Serialization/README.en.md"
       },
       "content_hashes": {
-        "zh": "1C978F1D4840D6E1862604DEE3F6A8BD4BF65EF047EB8BDCBBE58D12EC8D1053",
-        "en": "F0B080AAC0319A3745305EB5417C1404D9EC97127FB27F920C6420248172D062"
+        "zh": "EDB2642668303CF06F85B7332878E19565EB739C872BD505288FD1FEF52617DB",
+        "en": "022CDA49E1529B46014E7D1E15B08EE0E72CF566463BEE8EC536EBA00AE0FF31"
       }
     },
     "Origo.GodotAdapter/Snd/README": {
@@ -2584,20 +2663,20 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 28,
-        "en": 28
+        "zh": 30,
+        "en": 30
       },
       "previous_revisions": {
-        "zh": 27,
-        "en": 27
+        "zh": 29,
+        "en": 29
       },
       "files": {
         "zh": "README.zh.md",
         "en": "README.en.md"
       },
       "content_hashes": {
-        "zh": "598B2966E51E3F66EE85C3CF0389E269779B75AA11C6258180E82E06961AA837",
-        "en": "9724E72779E0B288673E42391D6DAE6834B4BFFFF00A96359D3A8F93F43DC2AD"
+        "zh": "23C92220C9710B726DA99883134CC94D26D54DBA48A48289B0CD34AC6F84C8E2",
+        "en": "E5EFE7D0D4BE43164C81B04EE5982EBF8122126A32C21BDBC3F1D2AF505FF4C0"
       }
     },
     "release-process": {
@@ -2660,20 +2739,20 @@
     "usage/capabilities": {
       "status": "synced",
       "revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 13,
+        "en": 13
       },
       "previous_revisions": {
-        "zh": 11,
-        "en": 11
+        "zh": 12,
+        "en": 12
       },
       "files": {
         "zh": "usage/capabilities.zh.md",
         "en": "usage/capabilities.en.md"
       },
       "content_hashes": {
-        "zh": "E0EEE9F70DBED88930F2E521E6C55964ACC69525CC083D9EF46204717EAE139D",
-        "en": "4FD9D6283512534B9617A16C02A4DE451B25C8F76B1CB39B714E8C9BA41F4BF2"
+        "zh": "BE14ADCCF7B682542BD0BDC32089FE7C9D2C53385FCEBFC80BB8336216C59BE3",
+        "en": "29F659A9CC0070606A6A4C0B33FC52C0ACAD73C0FD515A966D47C134D2AF1006"
       }
     },
     "usage/console-commands": {
@@ -2698,20 +2777,20 @@
     "usage/design-patterns": {
       "status": "synced",
       "revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "previous_revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 9,
+        "en": 9
       },
       "files": {
         "zh": "usage/design-patterns.zh.md",
         "en": "usage/design-patterns.en.md"
       },
       "content_hashes": {
-        "zh": "A2CF4865B46D14CEE3AD049122F7A48E0785A79711117A436E58B78C70A2AFF8",
-        "en": "D40E53259C5E42B04A44FA9F7E3345BC8588B9A56BC4CA4364A4FE4658545789"
+        "zh": "BCB15B9C76120B51683E4B76003DF57F2CE12CCA29A4AACC540CBA7AD86BF3E2",
+        "en": "A8FFC59031059957D1996F7E4F4814087E362B006D51B07981941D0E6E69CA18"
       }
     },
     "usage/persistence-flow": {
@@ -2755,20 +2834,20 @@
     "usage/README": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "usage/README.zh.md",
         "en": "usage/README.en.md"
       },
       "content_hashes": {
-        "zh": "41BF76CEA953B71B352901631835A51EA7E56C78218BBAE679D0BA97FF54465A",
-        "en": "0ABCAC6CE8CC5E527B7EC12E20E9183BE12E502251FA3C482978F3972B5B45E5"
+        "zh": "52F541608C8489BF4322F3663BEFD1DD0AD00E77585813B0CBC5FFFE11CDC530",
+        "en": "F831FF11115851574DBA4743F31253211DC2F90C2EC5336F0B04049B97A1C637"
       }
     },
     "usage/session-model": {
@@ -2831,20 +2910,20 @@
     "usage/strategy-lifecycle": {
       "status": "synced",
       "revisions": {
-        "zh": 6,
-        "en": 6
+        "zh": 7,
+        "en": 7
       },
       "previous_revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "files": {
         "zh": "usage/strategy-lifecycle.zh.md",
         "en": "usage/strategy-lifecycle.en.md"
       },
       "content_hashes": {
-        "zh": "052E6EC43FC1A51D4613BD73813C308E2C239E02A7C5ABEA21C0A5A257882CDF",
-        "en": "2FA62102F331B4F48E286E81BCFD1AFCA509A2CC2A7BFE6C3C77616320E5ACA4"
+        "zh": "2A387FFA5E36D4184F1820F6A490C357C163F6C26CD44A8CFFA2ABE952D6BDE2",
+        "en": "9D5313065DFDE9A02B44B168C324CF6707BD8AC9D6CB9EFEB1C61306C1C4D6E9"
       }
     },
     "usage/strategy-testing": {

@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Data Source Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/DataSource](../Origo.Core/DataSource/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/DataSource](../Origo.Core.Kernel/DataSource/README.en.md)
 > [↔ Behavior under test: architecture/overview](../architecture/overview.en.md)
 
 ## Behavior Overview

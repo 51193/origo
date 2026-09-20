@@ -13,7 +13,11 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Origo.Core"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter"/>
         <InternalsVisibleTo Include="Origo.Core.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Integration.Tests"/>
+        <InternalsVisibleTo Include="Origo.TestSupport"/>
     </ItemGroup>
 
     <ItemGroup>

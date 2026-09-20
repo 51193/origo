@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 使用文档
 
@@ -52,9 +52,9 @@ AI Agent:
 | 使用文档中的系统 | 对应的模块文档 |
 |-----------------|---------------|
 | SND 实体模型 | [Origo.Core/Snd/](../Origo.Core/Snd/README.zh.md) |
-| 状态机系统 | [Origo.Core/StateMachine/](../Origo.Core/StateMachine/README.zh.md) |
-| 持久化系统 | [Origo.Core/Save/](../Origo.Core/Save/README.zh.md) |
-| 控制台命令 | [Origo.Core/Runtime/Console/](../Origo.Core/Runtime/Console/README.zh.md) |
+| 状态机系统 | [Origo.Core.Kernel/StateMachine/](../Origo.Core.Kernel/StateMachine/README.zh.md) |
+| 持久化系统 | [Origo.Core.Kernel/Save/](../Origo.Core.Kernel/Save/README.zh.md) |
+| 控制台命令 | [Origo.Core.Kernel/Runtime/Console/](../Origo.Core.Kernel/Runtime/Console/README.zh.md) |
 | Godot 适配 | [Origo.GodotAdapter/](../Origo.GodotAdapter/README.zh.md) |
 
 ---

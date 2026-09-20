@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Lifecycle Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Runtime/Lifecycle](../Origo.Core/Runtime/Lifecycle/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/Runtime/Lifecycle](../Origo.Core.Kernel/Runtime/Lifecycle/README.en.md)
 > [↔ Behavior under test: usage/session-model](../usage/session-model.en.md)
 
 ## Behavior Overview

@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Lifecycle/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Lifecycle (Abstractions)
 
-> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Lifecycle](../../../Origo.Core/Runtime/Lifecycle/README.zh.md)
+> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Lifecycle](../../../Origo.Core.Kernel/Runtime/Lifecycle/README.zh.md)
 
 ## 概述
 

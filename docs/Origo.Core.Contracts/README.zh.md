@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Contracts
 
@@ -15,17 +15,25 @@ kernel 包共同引用这一契约层，消费者可以面向它编译。
 
 | 子系统 | 能力 | 详情 |
 |--------|------|------|
-| [Abstractions](Abstractions/README.zh.md) | 平台无关的基础抽象 | 日志、控制台输入输出、文件系统/路径、节点与帧驱动契约 |
-| [Runtime](Runtime/README.zh.md) | 运行时工具扩展契约 | 控制台命令处理器、调用模型与参数校验基类 |
-| [DataSource](DataSource/README.zh.md) | data-source 契约 | 树形数据节点、I/O 网关、文件元数据与转换器基类 |
-| [Snd](Snd/README.zh.md) | SND 数据契约 | TypedData、元数据与 ISndContext |
-| [Save](Save/README.zh.md) | 存档契约 | 展示元数据贡献者与存档槽条目 |
+| [Abstractions](Abstractions/README.zh.md) | 平台无关基础抽象 | 日志、控制台 I/O、文件系统/路径、节点、帧驱动、生命周期、实体、场景与状态机契约 |
+| [Runtime](Runtime/README.zh.md) | Runtime 契约与工具 | `IOrigoRuntime`/`ISndWorldAccess`、控制台 handler/调用模型与参数校验 |
+| [Blackboard](Blackboard/README.zh.md) | 共享黑板实现 | shell 与 kernel 共用的内存 `IBlackboard` 实现 |
+| [Grid](Grid/README.zh.md) | 网格值类型 | `GridPos` |
+| [Logging](Logging/README.zh.md) | 共享日志实现 | `Logger<T>`、`LogMessageBuilder` 与 `NullLogger` |
+| [Planning](Planning/README.zh.md) | 规划策略基类 | `PlanExecutionStrategyBase` |
+| [Serialization](Serialization/README.zh.md) | 共享类型映射 | `TypeStringMapping` |
+| [DataSource](DataSource/README.zh.md) | Data-source 契约 | 树数据节点、I/O gateway、文件元数据契约、转换器基类与 registry |
+| [Snd](Snd/README.zh.md) | SND 数据契约 | TypedData、metadata、ISndContext、策略基类与 internal 实体查询契约 |
+| [Save](Save/README.zh.md) | 存档契约 | 展示 metadata contributor 与 save-slot entry |
+| [StateMachine](StateMachine/README.zh.md) | 状态机契约 | 策略基类与单次操作 context |
+| [Utility](Utility/README.zh.md) | 共享纯工具 | `PathUtility` 与 internal 值推断 |
 
 ## 本层文件
 
 | 文件 | 职责 |
 |------|------|
 | `OrigoMeta.cs` | 框架元数据：名称、版本号、默认横幅文本 |
+| `OrigoHostOptions.cs` | Core shell host facade 的稳定配置模型 |
 | `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(...)]` Home 宿主内联类型注册：声明 TypedData 支持的系统基础类型与 string |
 
 ## 架构约束
@@ -38,13 +46,13 @@ kernel 包共同引用这一契约层，消费者可以面向它编译。
 ## 依赖方向
 
 ```
-Origo.Core.Contracts
+Origo.Core.Contracts ──► Origo.SourceGeneration (analyzer packaging)
         ▲
         │
 Origo.Core.Kernel
         ▲
-        │
-Origo.Core ──► Origo.SourceGeneration (analyzer)
+        │ runtime-only
+Origo.Core shell
         ▲
         │
 Origo.GodotAdapter

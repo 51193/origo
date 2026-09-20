@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 28 -->
+<!-- docsync-revision: 30 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Manual
 
@@ -59,9 +59,9 @@ Each directory's `README.md` contains:
 
 | Module | Location | Description |
 |--------|----------|-------------|
-| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.en.md) | Stable consumer contracts: logging, console, file system, paths, nodes, frame driver, data-source, metadata, and tooling extensions |
-| **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.en.md) | Kernel implementation: vendored noise and deferred scheduling; runtime/SND/persistence currently remain in Origo.Core |
-| **Origo.Core** | [README](Origo.Core/README.en.md) | Platform-agnostic core: SND entity system, runtime, persistence, state machines |
+| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.en.md) | Stable consumer contracts, pure data, strategy bases, metadata, data-source contracts, logging abstractions, and shared pure helpers |
+| **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.en.md) | Kernel implementation: runtime/SND/persistence/data-source/console, scheduling, noise, and internal kernel-shell ports |
+| **Origo.Core** | [README](Origo.Core/README.en.md) | Consumer shell: OrigoHost facade, grid/random utilities, and SND extension helpers |
 | **Origo.SourceGeneration** | [README](Origo.SourceGeneration/README.en.md) | Roslyn incremental source generator: TypedData multi-layer inline storage + strongly-typed accessors |
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.en.md) | Godot 4 adapter layer: file system, logging, serialization, bootstrap |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.en.md) | TCP remote console bridge (port 9876) |
@@ -80,19 +80,19 @@ Each directory's `README.md` contains:
 
 | Subsystem | Responsibility |
 |-----------|---------------|
-| [Abstractions](Origo.Core/Abstractions/README.en.md) | Core abstraction interfaces (IBlackboard, ISndEntity, ISessionManager, IStateMachineContainer...) |
+| [Abstractions](Origo.Core.Kernel/Abstractions/README.en.md) | Core abstraction interfaces (IBlackboard, ISndEntity, ISessionManager, IStateMachineContainer...) |
 | [Snd](Origo.Core/Snd/README.en.md) | SND entity system (Strategy + Node + Data) |
-| [Runtime](Origo.Core/Runtime/README.en.md) | Four-layer runtime lifecycle + console |
-| [Save](Origo.Core/Save/README.en.md) | Persistence (two-phase write + strict read) |
-| [DataSource](Origo.Core/DataSource/README.en.md) | Data source abstraction layer (JSON/Map codec + type conversion) |
+| [Runtime](Origo.Core.Kernel/Runtime/README.en.md) | Four-layer runtime lifecycle + console |
+| [Save](Origo.Core.Kernel/Save/README.en.md) | Persistence (two-phase write + strict read) |
+| [DataSource](Origo.Core.Kernel/DataSource/README.en.md) | Data source abstraction layer (JSON/Map codec + type conversion) |
 | [Grid](Origo.Core/Grid/README.en.md) | Grid coordinate system, A* pathfinding, coordinate parsing |
-| [StateMachine](Origo.Core/StateMachine/README.en.md) | String-stack state machine |
-| [Planning](Origo.Core/Planning/README.en.md) | Intent-driven plan execution |
-| [Blackboard](Origo.Core/Blackboard/README.en.md) | In-memory blackboard implementation |
+| [StateMachine](Origo.Core.Kernel/StateMachine/README.en.md) | String-stack state machine |
+| [Planning](Origo.Core.Contracts/Planning/README.en.md) | Intent-driven plan execution |
+| [Blackboard](Origo.Core.Contracts/Blackboard/README.en.md) | In-memory blackboard implementation |
 | [Random](Origo.Core/Random/README.en.md) | Random number + noise maps |
-| [Utility](Origo.Core/Utility/README.en.md) | General utilities: collection diff comparison |
-| [Serialization](Origo.Core/Serialization/README.en.md) | Type ↔ string mapping |
-| [Logging](Origo.Core/Logging/README.en.md) | Log builder + NullLogger |
+| [Utility](Origo.Core.Contracts/Utility/README.en.md) | General utilities: collection diff comparison |
+| [Serialization](Origo.Core.Contracts/Serialization/README.en.md) | Type ↔ string mapping |
+| [Logging](Origo.Core.Contracts/Logging/README.en.md) | Log builder + NullLogger |
 
 ## Quick Navigation
 

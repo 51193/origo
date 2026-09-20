@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Node/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Node (Abstractions)
 
@@ -11,7 +11,7 @@
 （可见性、释放），通过 `INodeFactory` 创建节点实例；两者都不暴露具体引擎节点类型。
 
 节点容器接口 `INodeHost` 是 Core 内部编排契约，保留在
-[Origo.Core/Abstractions/Node](../../../Origo.Core/Abstractions/Node/README.zh.md)。
+[Origo.Core.Kernel/Abstractions/Node](../../../Origo.Core.Kernel/Abstractions/Node/README.zh.md)。
 
 ## 包含文件
 

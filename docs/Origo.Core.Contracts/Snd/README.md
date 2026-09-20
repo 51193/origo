@@ -4,9 +4,13 @@
 
 ## 中文
 - [README](README.zh.md)
+- [Entity/](Entity/)
 - [Metadata/](Metadata/)
+- [Strategy/](Strategy/)
 
 ## English
 - [README](README.en.md)
+- [Entity/](Entity/)
 - [Metadata/](Metadata/)
+- [Strategy/](Strategy/)
 

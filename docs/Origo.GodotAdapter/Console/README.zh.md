@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Console
 
-> [↑ 回到 Origo.GodotAdapter](../README.zh.md) · [↔ Core: Runtime/Console](../../Origo.Core/Runtime/Console/README.zh.md)
+> [↑ 回到 Origo.GodotAdapter](../README.zh.md) · [↔ Core: Runtime/Console](../../Origo.Core.Kernel/Runtime/Console/README.zh.md)
 
 ## 概述
 

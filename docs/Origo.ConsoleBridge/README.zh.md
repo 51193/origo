@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.ConsoleBridge
 
-> [↑ 回到 Origo.manual](../README.zh.md) · [↔ Core: Runtime/Console](../Origo.Core/Runtime/Console/README.zh.md)
+> [↑ 回到 Origo.manual](../README.zh.md) · [↔ Core: Runtime/Console](../Origo.Core.Kernel/Runtime/Console/README.zh.md)
 
 ## 概述
 

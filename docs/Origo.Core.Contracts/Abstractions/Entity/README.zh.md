@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Entity/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Entity (Abstractions)
 
-> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Snd/Entity](../../../Origo.Core/Snd/Entity/README.zh.md)
+> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Snd/Entity](../../../Origo.Core.Kernel/Snd/Entity/README.zh.md)
 
 ## 概述
 
@@ -98,7 +98,7 @@
 
 实现者：`SndEntity`（Core 内存实体）、适配层实体（如 `GodotSndEntity`，桥接委托给内部 `SndEntity`）。
 
-`ISndEntityRawSubscription`（`Origo.Core/Snd/Entity/`）提供原始的 `TypedData` 级数据订阅接口——`SubscribeDataRaw`、`UnsubscribeDataRaw`。供框架内部的 `ObserverTopology` 将观察者策略接入目标实体的数据变更，不暴露给业务策略代码。
+`ISndEntityRawSubscription`（`Origo.Core.Kernel/Snd/Entity/`）提供原始的 `TypedData` 级数据订阅接口——`SubscribeDataRaw`、`UnsubscribeDataRaw`。供框架内部的 `ObserverTopology` 将观察者策略接入目标实体的数据变更，不暴露给业务策略代码。
 
 ## 设计决策
 

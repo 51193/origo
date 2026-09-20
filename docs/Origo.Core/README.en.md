@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core
 
@@ -7,62 +7,74 @@
 
 ## Module Overview
 
-**Origo.Core** is the platform-agnostic core of the Origo framework. It does not depend on any engine types (Godot, Unity, etc.) and uses only `System.*` and the .NET BCL. All game logic, save systems, entity models, and state machines are implemented in this layer, with differences injected through interfaces into the adapter layer.
+**Origo.Core** is the consumer shell package. It contains the platform-agnostic
+shell facade (`OrigoHost`), grid/random utilities, and SND
+extension helpers; runtime construction, SND internals, persistence, codecs,
+and console routing live in [Origo.Core.Kernel](../Origo.Core.Kernel/README.en.md).
+Stable contracts and shared pure helpers live in
+[Origo.Core.Contracts](../Origo.Core.Contracts/README.en.md).
 
 ## Subsystem Overview
 
 | Subsystem | Capability | Details |
-|-----------|-----------|---------|
-| [Contracts](../Origo.Core.Contracts/README.en.md) | Stable consumer contracts | Platform leaf contracts for logging, console, file system, and paths, shared by the implementation and adapters |
-| [Origo.Core.Kernel](../Origo.Core.Kernel/README.en.md) | Kernel implementation package | FastNoiseLite vendor noise and deferred scheduling; runtime/SND/persistence remain in this assembly |
-| [Abstractions](Abstractions/README.en.md) | Core abstraction interfaces | IBlackboard / ISndEntity / IStateMachine / INode* ... |
-| [Blackboard](Blackboard/README.en.md) | Default IBlackboard implementation | In-memory blackboard based on Dictionary + TypedData |
-| [DataSource](DataSource/README.en.md) | Data-source implementation layer | JSON/Map codecs, factory, registry, and concrete converters; leaf contracts live in Contracts |
-| [Grid](Grid/README.en.md) | Grid coordinate system utilities | GridCoordinateSystem: bidirectional grid ↔ world coordinate conversion |
-| [Logging](Logging/README.en.md) | Logging system | LogMessageBuilder (structured construction) + NullLogger (test silence) |
-| [Planning](Planning/README.en.md) | Behavior planning system | PlanExecutionStrategyBase: intent-driven plan execution + EnsureReplaceableStrategy extension |
-| [Random](Random/README.en.md) | Random number system | XorShift128+ PRNG + PersistentRandom + Simplex/Worley noise maps |
-| [Runtime](Runtime/README.en.md) | Runtime core | Four-layer lifecycle + console + state machine container + OrigoRuntime |
-| [Save](Save/README.en.md) | Persistence system | Two-phase write + strict read + path policy + meta.map |
-| [Serialization](Serialization/README.en.md) | Type mapping | TypeStringMapping (CLR types ↔ stable string identifiers) |
-| [Snd](Snd/README.en.md) | SND entity system | Strategy→Entity→Data→Scene Host→Numeric Recipe Loading — full stack |
-| [StateMachine](StateMachine/README.en.md) | String-stack state machine | StackStateMachine + strategy hooks + persistence model |
-| [Utility](Utility/README.en.md) | General utilities | Path normalization (PathUtility) and string-to-value inference (ValueInference) |
-
-> The TypedData source generator is a standalone project [Origo.SourceGeneration](../Origo.SourceGeneration/README.en.md), not part of Core.
->
-> Framework metadata and platform leaf contracts live in the stable contract package [Origo.Core.Contracts](../Origo.Core.Contracts/README.en.md).
+|-----------|------------|---------|
+| [Contracts](../Origo.Core.Contracts/README.en.md) | Stable contracts | Interfaces, pure data, strategy bases, metadata, and shared shell helpers |
+| [Kernel](../Origo.Core.Kernel/README.en.md) | Kernel implementation | Runtime, SND, save/storage, data source, console routing, and kernel ports |
+| [Grid](Grid/README.en.md) | Grid utilities | Grid coordinate conversion, A* pathfinding, and coordinate parsing; `GridPos` is a Contracts type |
+| [Random](Random/README.en.md) | Random utilities | XorShift128+ PRNG, persistent random, and noise map generation |
+| [Snd](Snd/README.en.md) | SND shell helpers | Active-strategy, entity-identity, numeric-read, and archetype extensions |
 
 ## This Layer's Files
 
 | File | Responsibility |
-|------|---------------|
+|------|----------------|
+| `OrigoHost.cs` | Consumer shell host facade; creates the kernel runtime/SND context through internal kernel ports and exposes stable interfaces |
 
-## Architectural Constraints
+## Core Shell Workflow
 
-- **No Godot references**: The Origo.Core `.csproj` and source code must not contain `Godot` or `GodotSharp` namespaces or assembly references
-- **I/O via Gateway**: All file read/write must go through `IDataSourceIoGateway`; direct `File.*` is forbidden
-- **Core testability**: Can core business logic run completely in unit tests without mocking anything other than the file system/clock?
+A consumer that references only the Core shell package can start a host and run
+a strategy without compiling against kernel implementation types:
+
+```csharp
+using Origo.Core;
+using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Logging;
+using Origo.Core.Logging;
+using Origo.Core.Snd;
+using Origo.Core.Snd.Strategy;
+
+var host = OrigoHost.Create(new OrigoHostOptions
+{
+    Meta = new OrigoMeta("MyGame", "1.0.0", OrigoMeta.DefaultBanner),
+    Logger = NullLogger.Instance,
+    AutoDiscoverStrategies = false,
+});
+
+host.Runtime.SndWorld.RegisterStrategy(() => new CounterStrategy());
+host.DriveFrame(1.0 / 60.0);
+```
+
+`host.Context` exposes the stable `ISndContext` capability facets; `host.Runtime`
+exposes `IOrigoRuntime` and `ISndWorldAccess`. Supply
+`OrigoHostOptions.FileSystem` and call `host.Bootstrap()` when the workflow
+needs entry-config or save files; strategy registration and frame driving work
+without file access.
+
+## Architecture Constraints
+
+- **No engine dependency**: Core references no Godot or adapter assembly.
+- **Stable compile surface**: public signatures use Contracts or Core shell types only; kernel compile assets never flow to consumers.
+- **Runtime-only kernel dependency**: `Origo.Core` references `Origo.Core.Kernel` with `PrivateAssets="compile"`.
+- **Single access path**: consumers start through `OrigoHost` and use Contracts interfaces; kernel ports stay internal.
 
 ## Dependency Direction
 
 ```
-Origo.Core.Contracts (stable contracts)
+Origo.Core.Contracts
         ▲
         │
-Origo.Core.Kernel (kernel implementation)
-        ▲
-        │
-Origo.Core (platform-agnostic implementation and current host facade)
-        ▲ implements interfaces
-Origo.GodotAdapter (engine adapter)
-        ▲ injects differences
-Origo.ConsoleBridge (standalone service)
+Origo.Core.Kernel ◄── runtime-only ── Origo.Core shell
 ```
-
-The adapter layer depends on Core's abstraction interfaces and injects concrete
-implementations; Core never depends on the adapter layer in reverse, and the
-contract layer depends on no implementation assembly.
 
 ---
 [↑ Back to Origo Manual](../README.en.md)

@@ -22,8 +22,11 @@ public class CoreArchitectureGuardrailTests
     [Fact]
     public void PrivateFields_FollowUnderscoreCamelCase()
     {
-        var violations = PrivateFieldNamingConvention.FindViolations(typeof(OrigoRuntime).Assembly);
+        var violations = PrivateFieldNamingConvention.FindViolations(typeof(OrigoHost).Assembly);
         Assert.Empty(violations);
+
+        var kernelViolations = PrivateFieldNamingConvention.FindViolations(typeof(OrigoRuntime).Assembly);
+        Assert.Empty(kernelViolations);
     }
 
     [Fact]
@@ -40,17 +43,24 @@ public class CoreArchitectureGuardrailTests
         // stub infrastructure. They must live in Origo.TestSupport, not in the
         // production Core assembly (AGENTS §1.2: framework code is written as
         // if tests do not exist).
-        var assembly = typeof(OrigoRuntime).Assembly;
-        Assert.Null(assembly.GetType("Origo.Core.Snd.Scene.StubSndSceneHost"));
-        Assert.Null(assembly.GetType("Origo.Core.Snd.Scene.StubSndEntity"));
-        Assert.Null(assembly.GetType("Origo.Core.Snd.LevelBuilder"));
+        var shellAssembly = typeof(OrigoHost).Assembly;
+        var kernelAssembly = typeof(OrigoRuntime).Assembly;
+        Assert.Null(shellAssembly.GetType("Origo.Core.Snd.Scene.StubSndSceneHost"));
+        Assert.Null(shellAssembly.GetType("Origo.Core.Snd.Scene.StubSndEntity"));
+        Assert.Null(shellAssembly.GetType("Origo.Core.Snd.LevelBuilder"));
+        Assert.Null(kernelAssembly.GetType("Origo.Core.Snd.Scene.StubSndSceneHost"));
+        Assert.Null(kernelAssembly.GetType("Origo.Core.Snd.Scene.StubSndEntity"));
+        Assert.Null(kernelAssembly.GetType("Origo.Core.Snd.LevelBuilder"));
     }
 
     [Fact]
     public void CoreAssembly_ShouldNotReferenceGodot()
     {
-        var refs = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();
-        Assert.DoesNotContain(refs,
+        var shellRefs = typeof(OrigoHost).Assembly.GetReferencedAssemblies();
+        var kernelRefs = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();
+        Assert.DoesNotContain(shellRefs,
+            r => r.Name != null && r.Name.StartsWith("Godot", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(kernelRefs,
             r => r.Name != null && r.Name.StartsWith("Godot", StringComparison.OrdinalIgnoreCase));
     }
 
@@ -477,7 +487,7 @@ public class CoreShellApiClassificationGuardTests
     [Fact]
     public void ShellApiClassification_CoversEveryCoreExport()
     {
-        var violations = ShellApiClassificationInventory.FindViolations(typeof(OrigoRuntime).Assembly);
+        var violations = ShellApiClassificationInventory.FindViolations(typeof(OrigoHost).Assembly);
         Assert.Empty(violations);
     }
 }
@@ -511,7 +521,7 @@ public class CoreContractsShellApiClassificationGuardTests
     [Fact]
     public void Core_ShouldReferenceContracts()
     {
-        var references = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();
+        var references = typeof(OrigoHost).Assembly.GetReferencedAssemblies();
         Assert.Contains(references, reference =>
             string.Equals(reference.Name, "Origo.Core.Contracts", StringComparison.Ordinal));
     }
@@ -557,9 +567,36 @@ public class CoreKernelShellApiClassificationGuardTests
     [Fact]
     public void Core_ShouldReferenceKernel()
     {
-        var references = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();
+        var references = typeof(OrigoHost).Assembly.GetReferencedAssemblies();
         Assert.Contains(references, reference =>
             string.Equals(reference.Name, "Origo.Core.Kernel", StringComparison.Ordinal));
+    }
+}
+
+public class HostContractsIdentityTests
+{
+    [Fact]
+    public void OrigoRuntimeAndSndWorld_ShouldLiveInKernelAssembly()
+    {
+        Assert.Equal("Origo.Core.Kernel",
+            typeof(Origo.Core.Runtime.OrigoRuntime).Assembly.GetName().Name);
+        Assert.Equal("Origo.Core.Kernel",
+            typeof(Origo.Core.Snd.SndWorld).Assembly.GetName().Name);
+        Assert.Equal("Origo.Core.Kernel",
+            typeof(Origo.Core.Snd.SndContext).Assembly.GetName().Name);
+        Assert.Equal("Origo.Core.Kernel",
+            typeof(Origo.Core.Snd.SndContextParameters).Assembly.GetName().Name);
+    }
+
+    [Fact]
+    public void RuntimeContracts_ShouldLiveInContractsAssembly()
+    {
+        Assert.Equal("Origo.Core.Contracts",
+            typeof(Origo.Core.Abstractions.Runtime.IOrigoRuntime).Assembly.GetName().Name);
+        Assert.Equal("Origo.Core.Contracts",
+            typeof(Origo.Core.Abstractions.Runtime.ISndWorldAccess).Assembly.GetName().Name);
+        Assert.Equal("Origo.Core.Contracts",
+            typeof(OrigoHostOptions).Assembly.GetName().Name);
     }
 }
 
@@ -585,6 +622,7 @@ public class TypedDataHomeIdentityTests
     [Fact]
     public void CoreAssembly_ShouldNotDeclareTypedData()
     {
+        Assert.Null(typeof(OrigoHost).Assembly.GetType("Origo.Core.Snd.Metadata.TypedData"));
         Assert.Null(typeof(OrigoRuntime).Assembly.GetType("Origo.Core.Snd.Metadata.TypedData"));
     }
 }

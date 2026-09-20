@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Node/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Node (Abstractions)
 
@@ -14,7 +14,7 @@ engine node types.
 
 The node container interface `INodeHost` is a Core-internal orchestration
 contract and remains in
-[Origo.Core/Abstractions/Node](../../../Origo.Core/Abstractions/Node/README.en.md).
+[Origo.Core.Kernel/Abstractions/Node](../../../Origo.Core.Kernel/Abstractions/Node/README.en.md).
 
 ## Included Files
 

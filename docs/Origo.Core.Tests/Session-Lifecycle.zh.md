@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话生命周期 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Runtime/Lifecycle](../Origo.Core/Runtime/Lifecycle/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/Runtime/Lifecycle](../Origo.Core.Kernel/Runtime/Lifecycle/README.zh.md)
 > [↔ 被测行为: usage/session-model](../usage/session-model.zh.md)
 
 ## 被测行为概览

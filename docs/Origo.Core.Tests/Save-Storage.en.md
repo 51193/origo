@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Save/Storage](../Origo.Core/Save/Storage/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/Save/Storage](../Origo.Core.Kernel/Save/Storage/README.en.md)
 > [↔ Behavior under test: usage/persistence-flow](../usage/persistence-flow.en.md)
 
 ## Behavior Overview

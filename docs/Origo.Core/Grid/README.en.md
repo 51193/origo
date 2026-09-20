@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Grid
 
@@ -7,13 +7,13 @@
 
 ## Overview
 
-Generic grid utility set. Provides grid coordinate types, bidirectional world coordinate conversion, A* pathfinding, coordinate parsing, and more. Usable by any square-grid-based game (e.g., tactical, roguelike, sandbox).
+Generic grid utility set. `GridPos` is the stable coordinate value type in `Origo.Core.Contracts`; this shell directory provides world-coordinate conversion, A* pathfinding, and coordinate parsing. Usable by any square-grid-based game (e.g., tactical, roguelike, sandbox).
 
 ## Included Files
 
 | File | Responsibility |
 |------|---------------|
-| `GridPos.cs` | `readonly record struct`, represents 2D integer grid coordinates |
+
 | `GridCoordinateSystem.cs` | Single-axis / dual-axis GridToWorld / WorldToGrid coordinate conversion |
 | `Astar.cs` | Generic A* pathfinding, accepts a `Func<GridPos, bool>` blocking detection delegate |
 | `GridParser.cs` | Coordinate string parsing (`"x,z"` format + `JsonElement`) |

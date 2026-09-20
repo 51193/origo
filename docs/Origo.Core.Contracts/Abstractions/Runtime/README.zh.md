@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Runtime/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Runtime (Abstractions)
 
@@ -14,6 +14,8 @@
 | 文件 | 职责 |
 |------|------|
 | `IOrigoFrameDriver.cs` | 对外暴露的帧边界接口：`DriveFrame(double delta)` |
+| `IOrigoRuntime.cs` | 稳定 host/runtime 契约：metadata、logger、world、blackboard、console channel 与 session |
+| `ISndWorldAccess.cs` | 稳定 SND world 访问：策略注册、类型映射、metadata 转换与 data-source gateway |
 
 ## 接口成员
 

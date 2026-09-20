@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Usage Documentation
 
@@ -52,9 +52,9 @@ The usage docs describe "how to use Origo"; the module docs describe "Origo's in
 | System in Usage Docs | Corresponding Module Docs |
 |---------------------|---------------------------|
 | SND entity model | [Origo.Core/Snd/](../Origo.Core/Snd/README.en.md) |
-| State machine system | [Origo.Core/StateMachine/](../Origo.Core/StateMachine/README.en.md) |
-| Persistence system | [Origo.Core/Save/](../Origo.Core/Save/README.en.md) |
-| Console commands | [Origo.Core/Runtime/Console/](../Origo.Core/Runtime/Console/README.en.md) |
+| State machine system | [Origo.Core.Kernel/StateMachine/](../Origo.Core.Kernel/StateMachine/README.en.md) |
+| Persistence system | [Origo.Core.Kernel/Save/](../Origo.Core.Kernel/Save/README.en.md) |
+| Console commands | [Origo.Core.Kernel/Runtime/Console/](../Origo.Core.Kernel/Runtime/Console/README.en.md) |
 | Godot adapter | [Origo.GodotAdapter/](../Origo.GodotAdapter/README.en.md) |
 
 ---

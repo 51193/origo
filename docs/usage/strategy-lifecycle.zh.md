@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 策略生命周期
 
@@ -258,7 +258,7 @@ public sealed class CharacterSchedulingStrategy : PlanExecutionStrategyBase
 }
 ```
 
-详见：[Planning 子系统文档](../Origo.Core/Planning/README.zh.md) 和 [设计模式 - 调度层](design-patterns.zh.md)。
+详见：[Planning 子系统文档](../Origo.Core.Contracts/Planning/README.zh.md) 和 [设计模式 - 调度层](design-patterns.zh.md)。
 
 ---
 

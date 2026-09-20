@@ -5,16 +5,10 @@
 ## 中文
 - [README](README.zh.md)
 - [Archetype/](Archetype/)
-- [Companions/](Companions/)
-- [Entity/](Entity/)
-- [Scene/](Scene/)
 - [Strategy/](Strategy/)
 
 ## English
 - [README](README.en.md)
 - [Archetype/](Archetype/)
-- [Companions/](Companions/)
-- [Entity/](Entity/)
-- [Scene/](Scene/)
 - [Strategy/](Strategy/)
 

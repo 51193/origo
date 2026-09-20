@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：存储 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Save/Storage](../Origo.Core/Save/Storage/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/Save/Storage](../Origo.Core.Kernel/Save/Storage/README.zh.md)
 > [↔ 被测行为: usage/persistence-flow](../usage/persistence-flow.zh.md)
 
 ## 被测行为概览

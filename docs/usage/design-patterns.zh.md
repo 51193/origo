@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 设计模式
 
@@ -275,7 +275,7 @@ internal static class MenuBuilder
 
 ### 调度层的 PlanExecutionStrategyBase
 
-框架提供 [`PlanExecutionStrategyBase`](../Origo.Core/Planning/README.zh.md) 作为调度层的标准基类。它封装了 intent → plan → step → action 的完整生命周期：
+框架提供 [`PlanExecutionStrategyBase`](../Origo.Core.Contracts/Planning/README.zh.md) 作为调度层的标准基类。它封装了 intent → plan → step → action 的完整生命周期：
 
 - **订阅 wiring**：自动管理 `intent` 和 `action_status` 的数据订阅 RAII 闭环
 - **计划推进**：intent 变更重启计划；action 完成/失败推进到下一步或终止
