@@ -6,6 +6,9 @@ labels: enhancement
 assignees: ""
 ---
 
+> For work that is deferred until a design decision or re-evaluation
+> signal, use the **Design-Gated Task** template instead.
+
 ## Problem
 
 <!-- What problem or use case? Who is affected, and why does it matter? -->
