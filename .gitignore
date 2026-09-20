@@ -55,5 +55,8 @@ _origo_local/
 /lessons/
 /reference/
 
-# Local GitHub issue working copies
-/.scratch/issues/
+# Matt Pocock agent configuration is tracked
+!/docs/agents/
+
+# Local scratch work
+/.scratch/
