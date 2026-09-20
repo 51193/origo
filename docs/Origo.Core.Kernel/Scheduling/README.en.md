@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Kernel/Scheduling/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scheduling
 
@@ -50,7 +50,7 @@ The scheduler is used only inside runtime construction. External code uses the s
 ### Why exceptions are rethrown rather than swallowed
 Actions in the deferred queue are part of the frame model. If one action fails, the system should crash rather than silently skip, so business logic does not keep running in an unknown corrupted state. Exception details are logged, then thrown.
 
-- **Entity frame processing stays serial (deferred direction)**: `ConcurrentActionQueue` thread safety only covers deferred-action enqueue/dequeue; in-entity lifecycle strategies are ordered by relative constraints, and frame processing as a whole still runs serially under the single-threaded model. Entity-level concurrency has been discussed as an alternative direction and is deferred because there is no performance bottleneck today. See [Extension Directions and Deferred Designs](../../architecture/extension-directions.en.md) for the full trade-off
+- **Entity frame processing stays serial (deferred direction)**: `ConcurrentActionQueue` thread safety only covers deferred-action enqueue/dequeue; in-entity lifecycle strategies are ordered by relative constraints, and frame processing as a whole still runs serially under the single-threaded model. Entity-level concurrency has been discussed as an alternative direction and is deferred because there is no performance bottleneck today. See [#45](https://github.com/51193/origo/issues/45) for the full trade-off
 
 ---
 [↑ Back to Origo.Core.Kernel](../README.en.md)
