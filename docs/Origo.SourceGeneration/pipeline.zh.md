@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # TypedData 编译期优化全链路解析
 
 > [↑ 回到 Origo.SourceGeneration](README.zh.md) ·
 > [↔ 基准数据](../benchmarks/baseline.zh.md) ·
-> [↔ TypedData 文档](../Origo.Core/Snd/Metadata/README.zh.md)
+> [↔ TypedData 文档](../Origo.Core.Contracts/Snd/Metadata/README.zh.md)
 
 ## 概述
 
@@ -144,7 +144,7 @@ byte (1B) + padding (7B) + long (8B) + object? (8B) = 24B
 框架在程序集级应用 `[assembly: SndInlineTypes(...)]`：
 
 ```csharp
-// Origo.Core 程序集 — StartKind 默认 1
+// Origo.Core.Contracts 程序集 — StartKind 默认 1
 [assembly: SndInlineTypes(
     typeof(byte), typeof(sbyte), typeof(short), typeof(ushort),
     typeof(int), typeof(uint), typeof(long), typeof(ulong),
@@ -168,7 +168,7 @@ Kind 分配规则：
 |----|-----------|----------|--------|
 | Core | 1 | 1–13 | 13 种 BCL 基础类型 |
 | GodotAdapter | 128 | 128–141 | 14 种 Godot 引擎类型 |
-| 预留（未来适配器） | 192 | 192–254 | —（需先将对应程序集加入 Origo.Core 的 `InternalsVisibleTo` 白名单） |
+| 预留（未来适配器） | 192 | 192–254 | —（需先将对应程序集加入 Origo.Core.Contracts 的 `InternalsVisibleTo` 白名单） |
 
 编译期校验（fail-fast）：
 
@@ -195,7 +195,7 @@ Source Generator 通过 Roslyn `IIncrementalGenerator` 管线在编译期被调�
 
 生成内容根据**当前进程序集是否为 TypedData 的宿主程序集**分为两套：
 
-#### Home 模式（Origo.Core）
+#### Home 模式（Origo.Core.Contracts）
 
 | 生成类别 | 产物 |
 |---------|------|
@@ -451,7 +451,7 @@ public static object? ToObject(TypedData td)
 
 #### 为什么需要双层架构
 
-Origo.Core 定义 `TypedData`，Origo.GodotAdapter 是另一个独立的 DLL，在 Core **编译完之后**才编译。单一的集中代码生成无法工作——生成 Core 时适配层的元数据还不存在。
+Origo.Core.Contracts 定义 `TypedData`，Origo.GodotAdapter 是另一个独立的 DLL，在 Contracts **编译完之后**才编译。单一的集中代码生成无法工作——生成 Core 时适配层的元数据还不存在。
 
 解法：让每层独立编译、独立生成自己的注册代码，通过 `ModuleInitializer` 在运行时组装。
 
@@ -459,7 +459,7 @@ Origo.Core 定义 `TypedData`，Origo.GodotAdapter 是另一个独立的 DLL，�
 
 ```
 程序启动
-  ├─ Origo.Core.dll 加载
+  ├─ Origo.Core.Contracts.dll 加载
   │    └─ ModuleInitializer 运行
   │         ├─ RegisterKind(1, typeof(byte))
   │         ├─ RegisterKind(5, typeof(int))
@@ -585,7 +585,7 @@ offset 16: _ref (8B)
 
 如果框架需要支持新类型（如 C# `nint`、未来 BCL 新增的 ≤8 字节值类型）：
 
-1. 在 `Origo.Core/AssemblyAttributes.cs` 的 `[SndInlineTypes]` 数组中追加 `typeof(...)`
+1. 在 `Origo.Core.Contracts/AssemblyAttributes.cs` 的 `[SndInlineTypes]` 数组中追加 `typeof(...)`
 2. 在 `TypedDataGenerator.cs` 的 `IsInlineCandidate` 和 `GenerateKindName` 中追加对应的 `SpecialType` 匹配
 3. 如果该类型有特殊的读/写逻辑（如 `float` 的 `BitConverter`），在 `TypedDataGenerator.cs` 的 `InlineTypeExprs`（`Pack` / `Unpack` / `FromObject`）中追加处理——该 helper 是所有位模式表达式的单一来源，Home 访问器、转换与工厂生成共用
 4. 运行 `bash scripts/test.sh` 通过全量测试 + 覆盖率门禁
@@ -593,7 +593,7 @@ offset 16: _ref (8B)
 
 ### 7.2 新增适配层类型（在新适配器程序集中注册）
 
-0. 前置条件：新适配器程序集必须位于 Origo.Core 的 `InternalsVisibleTo` 白名单中（当前仅 `Origo.GodotAdapter`）。否则生成器报告 `ORIGOSG007`，且不产出任何源码。
+0. 前置条件：新适配器程序集必须位于 Origo.Core.Contracts 的 `InternalsVisibleTo` 白名单中（当前仅 `Origo.GodotAdapter`）。否则生成器报告 `ORIGOSG007`，且不产出任何源码。
 1. 在新程序集中添加 `[assembly: SndInlineTypes(startKind: <未占用号段>, typeof(NewType), ...)]`
 2. 选择 Kind 号段：检查 `TypedDataGenerator.cs` 中 `KindValue` 的校验范围（1-254），确保不与其他适配器重叠
 3. Source Generator 会自动检测此程序集非 Home → 走 Adapter 模式 → 生成完整的扩展方法 + ModuleInitializer 注册链
@@ -610,7 +610,7 @@ offset 16: _ref (8B)
 | 文档 | 内容 |
 |------|------|
 | [Origo.SourceGeneration README](README.zh.md) | 双模式架构、生成内容清单、注册机制、设计决策 |
-| [TypedData 文档](../Origo.Core/Snd/Metadata/README.zh.md) | TypedData 结构体、访问方式、推荐用法 |
+| [TypedData 文档](../Origo.Core.Contracts/Snd/Metadata/README.zh.md) | TypedData 结构体、访问方式、推荐用法 |
 | [性能基线](../benchmarks/baseline.zh.md) | 全部基准数据、方法学、效度局限 |
 | [Origo.Core.Tests / Benchmarks](../Origo.Core.Tests/Benchmarks.zh.md) | 真实模拟基准说明 |
 

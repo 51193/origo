@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/api-inventory -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 机器 API 清单：从可编译事实导航到设计合同
 
@@ -13,7 +13,7 @@
 
 具体例子不能草率认定为缺陷：能力清单写“9 个窄角色”，架构总览写“10 个 companion”。窄接口文档已经明确 **9 个 Snd 角色 + `IStateMachineContext` = 10 个 companion 属性**；另有路径属性与 `Bootstrap`，因此也不能把“所有属性数”当 companion 数。风险是 Agent 只读取一句摘要后混淆统计口径，不是接口设计错了。一个机器清单可以准确列出属性，再由人工能力分类注明哪些属于 companion，避免重复手抄数字。见 [能力清单](../../usage/capabilities.zh.md)、[架构总览](../overview.zh.md) 和 [ISndContext 源码](../../../Origo.Core/Snd/ISndContext.cs)。
 
-另一个例子是 [TypedData](../../Origo.Core/Snd/Metadata/README.zh.md)：`TryGetInt32` 等公开访问器与转换 operator 由生成器产出。仅扫描仓库手写 `.cs` 的 public 关键字会遗漏这些方法；反之 [生成器文档](../../Origo.SourceGeneration/README.zh.md) 明确 Adapter 的 `TypedDataLayeredExtensions` 整个类为 internal，即便类内方法标为 public，也不能将其当游戏业务 API。必须判断**外部有效可访问性**。
+另一个例子是 [TypedData](../../Origo.Core.Contracts/Snd/Metadata/README.zh.md)：`TryGetInt32` 等公开访问器与转换 operator 由生成器产出。仅扫描仓库手写 `.cs` 的 public 关键字会遗漏这些方法；反之 [生成器文档](../../Origo.SourceGeneration/README.zh.md) 明确 Adapter 的 `TypedDataLayeredExtensions` 整个类为 internal，即便类内方法标为 public，也不能将其当游戏业务 API。必须判断**外部有效可访问性**。
 
 Agent Reference 的 `[Test]` 模板与仓库 xUnit 的 `[Fact]` 不同，但该文档面向游戏使用者，策略测试框架可配合不同断言框架；不能据此断言本仓库测试框架写错。真正该做的是给示例标注 consumer/maintainer 和 runner，并为对应组合建立可编译示例。机器库存解决签名事实，模板测试解决使用方式。
 

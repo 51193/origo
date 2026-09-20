@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Contracts
 
@@ -19,12 +19,14 @@ against it.
 |-----------|------------|---------|
 | [Abstractions](Abstractions/README.en.md) | Platform-independent base abstractions | Logging, console input/output, file-system/path, node, and frame-driver contracts |
 | [Runtime](Runtime/README.en.md) | Runtime tooling extension contracts | Console handler, invocation model, and argument-validation base |
+| [Snd](Snd/README.en.md) | SND data contracts | TypedData inline storage and entity metadata model |
 
 ## Files at This Level
 
 | File | Responsibility |
 |------|----------------|
 | `OrigoMeta.cs` | Framework metadata: name, version, and default banner text |
+| `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(...)]` home-host inline type registration: system primitives and string supported by TypedData |
 
 ## Architecture Constraints
 

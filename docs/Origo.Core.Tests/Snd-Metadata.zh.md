@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 元数据 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md)
+> [↔ 被测模块: Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md)
 > [↔ 被测行为: usage/snd-entity-model](../usage/snd-entity-model.zh.md)
 
 ## 被测行为概览

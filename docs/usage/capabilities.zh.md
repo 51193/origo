@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -20,7 +20,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 跨实体观察 | `MountObserverStrategy(target, observerIndex)` 支持自观察与跨实体观察；`OnMounted`/`OnUnmounted` 承载生命周期感知 | [SND 实体模型](snd-entity-model.zh.md) |
 | 主动策略 | 按索引外部调用 Invoke，与被动策略独立容器管理，O(1) 查找 | [策略测试](strategy-testing.zh.md) |
 | 泛型主动策略调用 | `InvokeStrategy<TInput, TOutput>` 扩展方法，类型安全消除 JSON 序列化样板 | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.zh.md) |
-| SndMetaFluentBuilder | 链式 API 构建实体元数据，消除 `??= new DataMetaData()` 样板 | [↔ Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md) |
+| SndMetaFluentBuilder | 链式 API 构建实体元数据，消除 `??= new DataMetaData()` 样板 | [↔ Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md) |
 | TryGetNumeric | 实体数据数值兼容读取，桥接 `SetData("k", 5)` (int) 与 `TryGetData<float>("k")` 的类型不匹配 | [↔ Snd](../Origo.Core/Snd/README.zh.md) |
 | 数值配方加载 | SndArchetypeLoader 从键值对文件加载 archetype 并推断类型写入实体 | [↔ Snd/Archetype](../Origo.Core/Snd/Archetype/README.zh.md) |
 | 惰性策略挂载 | EnsureStrategy 扩展方法，带幂等守卫的惰性策略层初始化 | [SND 实体模型](snd-entity-model.zh.md)、[↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.zh.md) |

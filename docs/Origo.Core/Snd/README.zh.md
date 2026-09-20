@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd
 
@@ -14,11 +14,12 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 | 子模块 | 能力 | 详情 |
 |--------|------|------|
 | [Entity](Entity/README.zh.md) | 运行时实体聚合根 | SndEntity + 数据/节点/被动策略/主动策略四个内部管理器 |
-| [Metadata](Metadata/README.zh.md) | 实体元数据模型 | TypedData / SndMetaData / NodeMetaData / StrategyMetaData / DataMetaData / SndMetaFluentBuilder |
 | [Scene](Scene/README.zh.md) | 场景宿主与 spawn 工厂 | SndEntityFactory + FullMemorySndSceneHost |
 | [Strategy](Strategy/README.zh.md) | 策略系统核心 | BaseStrategy → LifecycleStrategyBase \| ActiveStrategyBase \| ObserverStrategyBase。策略池、被动/主动/观察者三类管理器 + 泛型调用扩展 |
 | [Archetype](Archetype/README.zh.md) | 数值配方加载 | SndArchetypeLoader：键值对文件解析与类型推断 |
 | [Companions](Companions/README.zh.md) | SndContext 角色 companion 对象 | 8 个 internal companion 类位于 `Companions/` 子目录，2 个（FileAccess、ArchiveFileAccess）位于 Snd/ 根目录。共同实现 ISndBlackboardAccess / ISndSaveOperations 等接口，通过 ISndContext 的 companion 属性暴露 |
+
+> TypedData 与实体元数据模型位于 [Origo.Core.Contracts/Snd/Metadata](../../Origo.Core.Contracts/Snd/Metadata/README.zh.md)。
 
 ## 本层核心文件
 

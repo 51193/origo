@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Metadata Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md)
 > [↔ Behavior under test: usage/snd-entity-model](../usage/snd-entity-model.en.md)
 
 ## Behavior Under Test Overview

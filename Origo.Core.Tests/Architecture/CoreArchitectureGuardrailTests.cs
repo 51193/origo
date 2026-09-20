@@ -562,3 +562,19 @@ public class CoreKernelShellApiClassificationGuardTests
             string.Equals(reference.Name, "Origo.Core.Kernel", StringComparison.Ordinal));
     }
 }
+
+public class TypedDataHomeIdentityTests
+{
+    [Fact]
+    public void TypedData_ShouldLiveInContractsAssembly()
+    {
+        Assert.Equal("Origo.Core.Contracts",
+            typeof(Origo.Core.Snd.Metadata.TypedData).Assembly.GetName().Name);
+    }
+
+    [Fact]
+    public void CoreAssembly_ShouldNotDeclareTypedData()
+    {
+        Assert.Null(typeof(OrigoRuntime).Assembly.GetType("Origo.Core.Snd.Metadata.TypedData"));
+    }
+}

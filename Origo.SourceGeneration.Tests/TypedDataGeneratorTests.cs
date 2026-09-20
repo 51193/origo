@@ -14,7 +14,7 @@ public class TypedDataGeneratorTests
 {
     // Minimal scaffold providing the types the generator looks up by metadata name.
     // The IVT lets a separate adapter assembly access TypedData's internal members,
-    // mirroring Origo.Core's real [assembly: InternalsVisibleTo("Origo.GodotAdapter")].
+    // mirroring Origo.Core.Contracts's real [assembly: InternalsVisibleTo("Origo.GodotAdapter")].
     // Header (usings + assembly attributes) is kept separate from the type body so a
     // [assembly: SndInlineTypes(...)] attribute can be inserted before any type
     // declaration, as C# requires.

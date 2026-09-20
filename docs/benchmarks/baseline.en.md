@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Performance Baseline
 
@@ -166,7 +166,7 @@ Documents why the current state is as it is, what trade-offs were made, and dire
 
 - **[Evaluated Not Worthwhile, Do Not Attempt] Squeezing the `TypedData` struct to 16 bytes**: The current 24 bytes (`byte _kind` + `long _inlineBits` + `object? _ref`) is the lower bound of GC-safe design — `long` and managed reference slots cannot overlap (GC must independently scan references), and the `_kind` byte has no spare bits to tuck. Squeezing to 16 bytes would require sacrificing `long`/`double`'s full 64-bit inlining, or introducing extra branching/type lookups (most likely net negative), and would change the `internal` layout (depended on by generated code and tests via `InternalsVisibleTo`). The structural gap of value type single reads and DictLookup values, which fluctuate between 0.89x and 1.24x and are mostly close to parity, originates from this and is accepted.
 
-- **`.Data` (object?) boxing only occurs on cold paths**: `.Data` boxes value types through `ToObject`, serving cold paths where the type is unknown at compile time (serialization by `DataType`, console, `ToString`); these paths inherently require `object`. Framework-internal hot/warm paths (data change signal handling, load validation, etc.) uniformly use zero-boxing `TryGetXxx`. **The "heterogeneous `.Data` iteration" benchmark (about 7.2x, 37.49 MB) is a synthetic worst case and does not correspond to any real production hot path**; removing `.Data` would only move the same boxing inside and add complexity (zero downstream dependencies, ~60 test locations depend on its convenience access). Trade-offs and recommended usage are documented in [Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md).
+- **`.Data` (object?) boxing only occurs on cold paths**: `.Data` boxes value types through `ToObject`, serving cold paths where the type is unknown at compile time (serialization by `DataType`, console, `ToString`); these paths inherently require `object`. Framework-internal hot/warm paths (data change signal handling, load validation, etc.) uniformly use zero-boxing `TryGetXxx`. **The "heterogeneous `.Data` iteration" benchmark (about 7.2x, 37.49 MB) is a synthetic worst case and does not correspond to any real production hot path**; removing `.Data` would only move the same boxing inside and add complexity (zero downstream dependencies, ~60 test locations depend on its convenience access). Trade-offs and recommended usage are documented in [Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md).
 
 ## Validity Limitations
 

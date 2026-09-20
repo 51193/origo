@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell API classification for 0.1.0
 
@@ -52,10 +52,11 @@ The current inventory has no test-only exported types: test-only behavior alread
 
 Current package paths are visible in the Assembly column. `Origo.Core.Contracts`
 owns `OrigoMeta`, the logging abstractions, the console I/O abstractions, the
-file-system/path contracts, the node contracts, the frame-driver contract, and
-the console tooling contracts. `Origo.Core.Kernel` owns FastNoiseLite (seven
-exports) and the internal scheduling implementation. Rows with Assembly
-`Origo.Core` are types that currently remain in that assembly.
+file-system/path contracts, the node contracts, the frame-driver contract, the
+console tooling contracts, and the TypedData/metadata model. `Origo.Core.Kernel`
+owns FastNoiseLite (seven exports) and the internal scheduling implementation.
+Rows with Assembly `Origo.Core` are types that currently remain in that
+assembly.
 
 ## Retention conditions for compatible APIs
 
@@ -162,14 +163,14 @@ Each shell/tooling row carries an owner and one of these issue #37 retention con
 | <code>Origo.Core.Snd.Entity.SndEntity</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | Kernel implementation detail for SND implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Snd.EntityExtensions</code> | Origo.Core | Shell contract | Origo.Core | snd-entity | Consumer-facing extension API for SND entity/strategy consumer API; it is compiled into the shell and reaches behavior only through documented orchestration paths. | core-shell; R-SND |
 | <code>Origo.Core.Snd.ISndContext</code> | Origo.Core | Shell contract | Origo.Core.Contracts | snd-context | Stable consumer contract in the SND context facade capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
-| <code>Origo.Core.Snd.Metadata.DataMetaData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.NodeMetaData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.SndInlineTypesAttribute</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | metadata | Kernel implementation detail for metadata; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Snd.Metadata.SndMetaData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.SndMetaFluentBuilder</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.StrategyMetaData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.StrategyMetaData+ObserverBinding</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.TypedData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.DataMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.NodeMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.SndInlineTypesAttribute</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | metadata-tooling | Documented first-party adapter tooling contract for TypedData registration; generated adapter code enforces the friend-assembly boundary. | core-tooling; R-DATA |
+| <code>Origo.Core.Snd.Metadata.SndMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.SndMetaFluentBuilder</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.StrategyMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.StrategyMetaData+ObserverBinding</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.TypedData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | Stable pure data model for metadata; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
 | <code>Origo.Core.Snd.SndContext</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | Kernel implementation detail for SND implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Snd.SndContextParameters</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | Kernel implementation detail for SND implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Snd.SndWorld</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | Kernel implementation detail for SND implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |

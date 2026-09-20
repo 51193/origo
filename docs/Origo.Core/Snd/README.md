@@ -7,7 +7,6 @@
 - [Archetype/](Archetype/)
 - [Companions/](Companions/)
 - [Entity/](Entity/)
-- [Metadata/](Metadata/)
 - [Scene/](Scene/)
 - [Strategy/](Strategy/)
 
@@ -16,7 +15,6 @@
 - [Archetype/](Archetype/)
 - [Companions/](Companions/)
 - [Entity/](Entity/)
-- [Metadata/](Metadata/)
 - [Scene/](Scene/)
 - [Strategy/](Strategy/)
 

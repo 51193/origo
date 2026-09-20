@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 0.1.0 Shell API 分类
 
@@ -50,7 +50,7 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 
 ## 当前拆分检查点
 
-当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载 `OrigoMeta`、日志抽象、控制台 I/O 抽象、文件系统/路径契约、节点契约、帧驱动契约与控制台工具扩展契约；`Origo.Core.Kernel` 承载 FastNoiseLite（7 个导出）与 internal 调度实现。Assembly 为 `Origo.Core` 的行表示当前仍位于该程序集的类型。
+当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载 `OrigoMeta`、日志抽象、控制台 I/O 抽象、文件系统/路径契约、节点契约、帧驱动契约、控制台工具扩展契约与 TypedData/metadata 模型；`Origo.Core.Kernel` 承载 FastNoiseLite（7 个导出）与 internal 调度实现。Assembly 为 `Origo.Core` 的行表示当前仍位于该程序集的类型。
 
 ## 兼容 API 的移除条件
 
@@ -157,14 +157,14 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.Core.Snd.Entity.SndEntity</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Snd.EntityExtensions</code> | Origo.Core | Shell contract | Origo.Core | snd-entity | SND 实体/策略消费者 API的消费者扩展 API，编译进 shell，并只通过文档化的编排路径生效。 | core-shell; R-SND |
 | <code>Origo.Core.Snd.ISndContext</code> | Origo.Core | Shell contract | Origo.Core.Contracts | snd-context | SND 上下文门面能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-SND |
-| <code>Origo.Core.Snd.Metadata.DataMetaData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.NodeMetaData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.SndInlineTypesAttribute</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | metadata | 元数据的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Snd.Metadata.SndMetaData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.SndMetaFluentBuilder</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.StrategyMetaData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.StrategyMetaData+ObserverBinding</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.Snd.Metadata.TypedData</code> | Origo.Core | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.DataMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.NodeMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.SndInlineTypesAttribute</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | metadata-tooling | TypedData 注册的文档化第一方适配器工具契约；生成代码通过 friend 程序集白名单限制实际访问。 | core-tooling; R-DATA |
+| <code>Origo.Core.Snd.Metadata.SndMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.SndMetaFluentBuilder</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.StrategyMetaData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.StrategyMetaData+ObserverBinding</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.Snd.Metadata.TypedData</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | metadata | 元数据的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
 | <code>Origo.Core.Snd.SndContext</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Snd.SndContextParameters</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Snd.SndWorld</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | snd-kernel | SND 实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |

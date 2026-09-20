@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构总览
 
@@ -204,8 +204,11 @@ Godot._Process
 ## 项目结构
 
 ```
-Origo.Core.Contracts/ # 稳定消费者契约
-├── Abstractions/     # 日志/控制台/文件系统/路径叶级契约
+Origo.Core.Contracts/ # 稳定消费者契约与 Home 宿主
+├── Abstractions/     # 日志/控制台/文件系统/路径/节点/帧驱动契约
+├── Runtime/          # 控制台工具扩展契约
+├── Snd/Metadata/     # TypedData 与实体元数据模型
+├── AssemblyAttributes.cs # Home 内联类型注册
 └── OrigoMeta.cs      # 框架元数据
 
 Origo.Core.Kernel/    # Kernel 实现包
