@@ -209,15 +209,30 @@ Full details: `docs/release-process.zh.md` / `.en.md`. Pre-tag summary:
 
 ## 7. Document Index
 
-> Authoritative entry points only; detailed module indexes live in the docs hubs.
+- Manual: [zh](docs/README.zh.md), [en](docs/README.en.md), [hub](docs/README.md).
+- Rules: [META zh](docs/META.zh.md), [META en](docs/META.en.md);
+  [release zh](docs/release-process.zh.md),
+  [release en](docs/release-process.en.md).
+- Tests: [META-TEST zh](docs/Origo.Core.Tests/META-TEST.zh.md),
+  [en](docs/Origo.Core.Tests/META-TEST.en.md).
+- Modules: `docs/<mirror-root>/README.zh.md` / `.en.md`;
+  [usage zh](docs/usage/README.zh.md), [en](docs/usage/README.en.md).
+- Changes and tools: [CHANGELOG.md](CHANGELOG.md), `_origo_local/README.md`,
+  [.editorconfig](.editorconfig), [.github/dependabot.yml](.github/dependabot.yml),
+  [.github/workflows/](.github/workflows/), [DocSyncTool](tools/DocSyncTool/),
+  [ci.sh](scripts/ci.sh).
 
-| Entry | Path |
-|-------|------|
-| Manual index | [`README.zh.md`](docs/README.zh.md) / [`README.en.md`](docs/README.en.md) |
-| Generated docs hub | [`README.md`](docs/README.md) |
-| Docs rules | [`META.zh.md`](docs/META.zh.md) / [`META.en.md`](docs/META.en.md) |
-| Release rules | [`release-process.zh.md`](docs/release-process.zh.md) / [`release-process.en.md`](docs/release-process.en.md) |
-| Test-doc rules | [`META-TEST.zh.md`](docs/Origo.Core.Tests/META-TEST.zh.md) / [`.en.md`](docs/Origo.Core.Tests/META-TEST.en.md) |
-| Module manuals / usage | `docs/<mirror-root>/README.zh.md` / `.en.md`; [`usage/README.zh.md`](docs/usage/README.zh.md) / [`.en.md`](docs/usage/README.en.md) |
-| Changelog | [`CHANGELOG.md`](CHANGELOG.md) |
-| Buffer / tooling / CI | `_origo_local/README.md`; [`.editorconfig`](.editorconfig); [`.github/dependabot.yml`](.github/dependabot.yml); [`.github/workflows/`](.github/workflows/); [`tools/DocSyncTool/`](tools/DocSyncTool/); [`scripts/ci.sh`](scripts/ci.sh) |
+## Agent skills
+
+### Issue tracker
+
+GitHub `51193/origo` and local `.scratch/issues/`; see
+[issue-tracker.md](docs/agents/issue-tracker.md).
+
+### Triage labels
+
+Five default roles; see [triage-labels.md](docs/agents/triage-labels.md).
+
+### Domain docs
+
+Single-context bilingual manual; see [domain.md](docs/agents/domain.md).

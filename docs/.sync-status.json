@@ -5,6 +5,22 @@
     "en"
   ],
   "pairs": {
+    "agents/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "agents/README.zh.md",
+        "en": "agents/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "F341A53A142893C8A33D75FDD22524239E58DE65C3ACCF409776CBE7FBD09B3C",
+        "en": "9C9277BA72BA547BA488399058216315CA10DBBCFDD4DA883B3E3D797EF0431B"
+      }
+    },
     "architecture/agent-friendly/affected-checks": {
       "status": "synced",
       "revisions": {
@@ -241,20 +257,20 @@
     "META": {
       "status": "synced",
       "revisions": {
-        "zh": 25,
-        "en": 25
+        "zh": 26,
+        "en": 26
       },
       "previous_revisions": {
-        "zh": 24,
-        "en": 24
+        "zh": 25,
+        "en": 25
       },
       "files": {
         "zh": "META.zh.md",
         "en": "META.en.md"
       },
       "content_hashes": {
-        "zh": "B3B6A2FCAF2017285CC3116F80A57DAAEA27EC5B4975B09C918CEEF2575B606A",
-        "en": "6A1BA0E91A5635F9F2EA88361E816577F0203C0F71A25A270AA0456CCFF886C4"
+        "zh": "0C7D40339F6D48BA96761F9079C1A58F314E12C82EE6092338311175C7FAA764",
+        "en": "E23F9EC906ECA76B5529BC2B5B73D2187EB19D09ECE98440B5C1DC13DBF4AAD3"
       }
     },
     "Origo.ConsoleBridge.Tests/Architecture": {
@@ -2366,20 +2382,20 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 22,
-        "en": 22
+        "zh": 23,
+        "en": 23
       },
       "previous_revisions": {
-        "zh": 21,
-        "en": 21
+        "zh": 22,
+        "en": 22
       },
       "files": {
         "zh": "README.zh.md",
         "en": "README.en.md"
       },
       "content_hashes": {
-        "zh": "C7E5D28E44E98C258DEAC192422F462585F7B5354C368E921B6B5B8C94D19B81",
-        "en": "484E055AED758334ADDFA1B1715250DC01B0D9FBE2181988093A83B34B2DAEFB"
+        "zh": "9CDC9FA14E1D241A9A001190472C37D916DF88CEDC951E7AC97C8E733729FDF1",
+        "en": "20729E45907F6C973B14BF7F72E4AB3497EEB6B380220E54629D1DB4EBE26A54"
       }
     },
     "release-process": {

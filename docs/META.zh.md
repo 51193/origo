@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 25 -->
+<!-- docsync-revision: 26 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 手册维护元指令
 
@@ -47,7 +47,7 @@
 
 ### 双语文档机制（Bilingual Documentation Mechanism / DocSyncTool）
 
-`docs/` 使用**同基名 `.zh.md`/`.en.md` 成对**的方式组织多语言文档。常见基名是 `README`，也允许 `Integration.*`、`pipeline.*` 等其他基名；纯导航目录只包含自动生成的 `README.md` 中枢。
+`docs/` 使用**同基名 `.zh.md`/`.en.md` 成对**的方式组织多语言文档。常见基名是 `README`，也允许 `Integration.*`、`pipeline.*` 等其他基名；纯导航目录只包含自动生成的 `README.md` 中枢。`docs/agents/` 中的 `issue-tracker.md`、`triage-labels.md`、`domain.md` 是 Matt Pocock skills 固定路径的工具配置，不属于手册内容对；该目录的 `README.zh.md`/`README.en.md` 仍按本机制维护。配置变动时同步更新 README 对侧，保留手册入口与实际配置一致。
 
 | 文件 | 用途 |
 |------|------|
@@ -265,6 +265,7 @@ docs/                            # 文档根（位于 origo 仓库内）
 ├── .sync-status.json            # 自动生成：所有 pair 的同步状态
 ├── usage/                       # 系统使用文档（zh/en 成对）
 ├── architecture/                # 架构总览、决策记录与暂缓设计（zh/en 成对）
+├── agents/                      # Matt Pocock skills 配置 + 双语手册入口
 ├── benchmarks/                  # 性能基线（zh/en 成对 + baseline.json）
 ├── Origo.Core/                  # 镜像仓根 Origo.Core/ 的目录结构
 ├── Origo.Core.Tests/            # 测试能力文档（按能力分组，zh/en 成对）
@@ -279,7 +280,7 @@ docs/                            # 文档根（位于 origo 仓库内）
 └── tools/                       # 仓库工具测试文档（DocSyncTool.Tests）
 ```
 
-每个手工内容文件都有 `.zh.md` / `.en.md` 双语成对；每个目录的 `README.md` 导航中枢由 `generate` 自动生成。纯导航目录没有语言后缀内容文件。架构总览、架构决策记录与暂缓设计位于 `docs/architecture/`。
+每个手工手册内容文件都有 `.zh.md` / `.en.md` 双语成对；`docs/agents/` 的三个工具配置文件按上面的例外处理。每个目录的 `README.md` 导航中枢由 `generate` 自动生成。纯导航目录没有语言后缀内容文件。架构总览、架构决策记录与暂缓设计位于 `docs/architecture/`。
 
 > 顶层入口 [AGENTS.md](../AGENTS.md) 位于仓库根，自动注入每次会话，并链接到本文件。
 >
