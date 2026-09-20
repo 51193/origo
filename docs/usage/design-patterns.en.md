@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Design Patterns
 
@@ -177,7 +177,7 @@ Applicable scenarios:
 - Need to switch behavior at runtime (e.g., ground movement → flight movement)
 - Avoid baking implementation choices into templates
 
-> **Deferred direction**: The `*_impl` pattern solves per-entity implementation selection for lifecycle strategies; "multiple implementations per active index" (e.g. every entity responds to `hurt`, but with different implementations) has been discussed as interface-style dispatch. Today it can be covered by a single `hurt` strategy switching on entity fields. See [Extension Directions and Deferred Designs](../architecture/extension-directions.en.md) for the full trade-off.
+> **Deferred direction**: The `*_impl` pattern solves per-entity implementation selection for lifecycle strategies; "multiple implementations per active index" (e.g. every entity responds to `hurt`, but with different implementations) has been discussed as interface-style dispatch. Today it can be covered by a single `hurt` strategy switching on entity fields. See [#46](https://github.com/51193/origo/issues/46) for the full trade-off.
 
 ---
 
@@ -191,7 +191,7 @@ var path = target.InvokeStrategy<GridPos[], List<GridPos>>(
     "traversability.find_path", new[] { start, end });
 ```
 
-> **Deferred direction**: `InvokeStrategy` currently routes a globally unique index to a single implementation; if many entities share the same interaction verb, evaluate "contract name + per-entity implementation binding" dispatch with multiple implementations per index. Current workarounds are switching on entity fields inside one strategy or calling concrete indices directly. See [Extension Directions and Deferred Designs](../architecture/extension-directions.en.md) for the full trade-off.
+> **Deferred direction**: `InvokeStrategy` currently routes a globally unique index to a single implementation; if many entities share the same interaction verb, evaluate "contract name + per-entity implementation binding" dispatch with multiple implementations per index. Current workarounds are switching on entity fields inside one strategy or calling concrete indices directly. See [#46](https://github.com/51193/origo/issues/46) for the full trade-off.
 
 ### Observer Strategies: Async Data Change Notification
 
