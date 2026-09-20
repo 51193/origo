@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Design Patterns
 

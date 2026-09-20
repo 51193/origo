@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # FileSystem (Abstractions)
 

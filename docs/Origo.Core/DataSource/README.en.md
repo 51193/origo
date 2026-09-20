@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # DataSource
 

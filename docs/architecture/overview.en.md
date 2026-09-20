@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 

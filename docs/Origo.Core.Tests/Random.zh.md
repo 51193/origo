@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Random -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 随机数 测试
 

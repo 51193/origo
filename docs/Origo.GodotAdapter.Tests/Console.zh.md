@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Console -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 控制台 测试（适配层）
 

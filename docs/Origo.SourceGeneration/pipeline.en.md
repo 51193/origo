@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 

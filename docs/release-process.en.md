@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Release & Changelog Process
 

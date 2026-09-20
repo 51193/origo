@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Type Serialization Tests
 

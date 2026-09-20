@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.ConsoleBridge.Tests
 

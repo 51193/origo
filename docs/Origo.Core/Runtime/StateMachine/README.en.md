@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/StateMachine/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # StateMachine (Runtime)
 

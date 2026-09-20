@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Console/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console (Abstractions)
 
