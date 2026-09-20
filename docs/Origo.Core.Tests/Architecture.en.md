@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
@@ -55,6 +55,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `Core_ShouldReferenceKernel` | `Origo.Core` explicitly references `Origo.Core.Kernel` | architecture/shell-kernel-boundary |
 | `TypedData_ShouldLiveInContractsAssembly` | The TypedData type identity lives in `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
 | `CoreAssembly_ShouldNotDeclareTypedData` | The `Origo.Core` assembly no longer declares the TypedData type | architecture/shell-kernel-boundary |
+| `DataSourceNode_ShouldLiveInContractsAssembly` | The DataSourceNode type identity lives in `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
 | `Contracts_ShouldNotReferenceImplementationsOrGodot` | The contracts assembly references neither `Origo.Core`, adapter, nor ConsoleBridge assemblies, and references no Godot assembly | architecture/shell-kernel-boundary |
 | `Core_ShouldReferenceContracts` | The `Origo.Core` assembly explicitly references `Origo.Core.Contracts`, pinning the contract dependency direction | architecture/shell-kernel-boundary |
 

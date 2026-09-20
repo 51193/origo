@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core
 
@@ -17,7 +17,7 @@
 | [Origo.Core.Kernel](../Origo.Core.Kernel/README.en.md) | Kernel implementation package | FastNoiseLite vendor noise and deferred scheduling; runtime/SND/persistence remain in this assembly |
 | [Abstractions](Abstractions/README.en.md) | Core abstraction interfaces | IBlackboard / ISndEntity / IStateMachine / INode* ... |
 | [Blackboard](Blackboard/README.en.md) | Default IBlackboard implementation | In-memory blackboard based on Dictionary + TypedData |
-| [DataSource](DataSource/README.en.md) | Data source abstraction layer | DataSourceNode tree model + JSON/Map codec + type converter registration |
+| [DataSource](DataSource/README.en.md) | Data-source implementation layer | JSON/Map codecs, factory, registry, and concrete converters; leaf contracts live in Contracts |
 | [Grid](Grid/README.en.md) | Grid coordinate system utilities | GridCoordinateSystem: bidirectional grid ↔ world coordinate conversion |
 | [Logging](Logging/README.en.md) | Logging system | LogMessageBuilder (structured construction) + NullLogger (test silence) |
 | [Planning](Planning/README.en.md) | Behavior planning system | PlanExecutionStrategyBase: intent-driven plan execution + EnsureReplaceableStrategy extension |

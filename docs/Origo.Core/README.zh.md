@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core
 
@@ -17,7 +17,7 @@
 | [Origo.Core.Kernel](../Origo.Core.Kernel/README.zh.md) | Kernel 实现包 | FastNoiseLite vendor 噪声与延迟调度；runtime/SND/持久化当前仍在本层 |
 | [Abstractions](Abstractions/README.zh.md) | 核心抽象接口 | IBlackboard / ISndEntity / IStateMachine / INode* ... |
 | [Blackboard](Blackboard/README.zh.md) | IBlackboard 默认实现 | 基于 Dictionary + TypedData 的内存黑板 |
-| [DataSource](DataSource/README.zh.md) | 数据源抽象层 | DataSourceNode 树模型 + JSON/Map 编解码 + 类型转换器注册 |
+| [DataSource](DataSource/README.zh.md) | 数据源实现层 | JSON/Map codec、factory、registry 与具体 converter；叶契约位于 Contracts |
 | [Grid](Grid/README.zh.md) | 网格坐标系工具 | GridCoordinateSystem：网格 ↔ 世界坐标双向转换 |
 | [Logging](Logging/README.zh.md) | 日志系统 | LogMessageBuilder（结构化构建）+ NullLogger（测试静默）|
 | [Planning](Planning/README.zh.md) | 行为规划系统 | PlanExecutionStrategyBase：意图驱动计划执行 + EnsureReplaceableStrategy 扩展 |

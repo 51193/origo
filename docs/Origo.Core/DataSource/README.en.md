@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # DataSource
 
@@ -20,20 +20,17 @@ Origo's data source abstraction layer — the codec bridge between Core and exte
 
 | File | Responsibility |
 |------|---------------|
-| `DataSourceNode.cs` | Tree data node: Map/Array/Text/Number/Bool/Null + lazy expansion (Lazy) + `As<T>()` generic value accessor (supports 14 types: string/char/byte/sbyte/short/ushort/int/uint/long/ulong/float/double/decimal/bool) + Builder `Add` (**allowed on Map/Array nodes only** — calling it on a scalar node throws `InvalidOperationException` immediately; null children are rejected immediately) + `Keys`/`Elements` (**shape-strict**: accessing them on a non-Map/non-Array node throws `InvalidOperationException`, preventing wrong shapes from silently becoming empty collections; they return read-only views, never the mutable backing storage) + `ComputeSha256Hash()` — iterative post-order traversal to generate deterministic string representation then compute SHA-256 hash, used for save idempotent dedup. `Dispose()` also uses iterative traversal to prevent stack overflow on deeply nested trees |
-| `DataSourceNodeKind.cs` | Node type enum |
 | `DataSourceCodecKind.cs` | Codec format enum (Json / Map / RawString) |
 | `IDataSourceCodec.cs` | Codec interface: Decode/Encode |
-| `IDataSourceIoGateway.cs` | I/O gateway interface: only `ReadTree` / `WriteTree` two methods; reads/writes files after routing codecs by suffix (Core's sole content contact point with files). All file content I/O is routed through codecs; zero bypass. |
 | `DataSourceIoGateway.cs` | I/O gateway implementation: suffix → CodecKind mapping + read/write |
 | `DataSourceIoOptions.cs` | I/O routing config: suffix → codec mapping (indentation is controlled by `DataSourceFactory.BuildDefaultCodecs(bool)`) |
 | `DataSourceFactory.cs` | Factory: creates default Registry + IoGateway |
-| `DataSourceConverter.cs` | Converter base classes: non-generic `DataSourceConverterBase` (runtime dispatch in the registry) + generic `DataSourceConverter<T>` (`Read(DataSourceNode)` / `Write(T)`) |
 | `DataSourceConverterRegistry.cs` | Converter registry: look up Converter by Type + generic Read/Write. When an exact type is not registered, automatically backtracks along base class and interface chains. |
 | `KeyValueFileParser.cs` | key:value format parser (for .map files) |
-| `IFileMetaAccess.cs` | File metadata operation interface (public): FileExists / DirectoryExists / EnumerateFiles / EnumerateDirectories / CreateDirectory / Delete / DeleteDirectory / Copy / Rename; used alongside IDataSourceIoGateway — the Gateway handles content read/write (including codec routing), this interface handles file system structure operations |
 | `FileMetaAccess.cs` | Default IFileMetaAccess implementation (internal), delegates to IFileSystem |
 | `PathResolver.cs` | Default IPathResolver implementation (internal): CombinePath / GetParentDirectory, delegates to IFileSystem |
+
+> Data-source leaf contracts (DataSourceNode, DataSourceNodeKind, converter bases, IDataSourceIoGateway, IFileMetaAccess) live in [Origo.Core.Contracts/DataSource](../../Origo.Core.Contracts/DataSource/README.en.md).
 
 ## Data Flow
 

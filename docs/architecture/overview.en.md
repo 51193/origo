@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
@@ -207,6 +207,7 @@ The frame loop entry is in the adapter layer (Godot's `_Process` callback), but 
 Origo.Core.Contracts/ # Stable consumer contracts and home host
 ├── Abstractions/     # Logging/console/file-system/path/node/frame-driver contracts
 ├── Runtime/          # Console tooling extension contracts
+├── DataSource/       # Data node, I/O, file-meta, and converter contracts
 ├── Snd/Metadata/     # TypedData and entity metadata model
 ├── AssemblyAttributes.cs # Home inline-type registration
 └── OrigoMeta.cs      # Framework metadata

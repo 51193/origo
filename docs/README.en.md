@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 27 -->
+<!-- docsync-revision: 28 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Manual
 
@@ -59,7 +59,7 @@ Each directory's `README.md` contains:
 
 | Module | Location | Description |
 |--------|----------|-------------|
-| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.en.md) | Stable consumer contracts: logging, console, file system, paths, nodes, frame driver, metadata, and tooling extensions |
+| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.en.md) | Stable consumer contracts: logging, console, file system, paths, nodes, frame driver, data-source, metadata, and tooling extensions |
 | **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.en.md) | Kernel implementation: vendored noise and deferred scheduling; runtime/SND/persistence currently remain in Origo.Core |
 | **Origo.Core** | [README](Origo.Core/README.en.md) | Platform-agnostic core: SND entity system, runtime, persistence, state machines |
 | **Origo.SourceGeneration** | [README](Origo.SourceGeneration/README.en.md) | Roslyn incremental source generator: TypedData multi-layer inline storage + strongly-typed accessors |

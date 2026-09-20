@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构守卫 测试
 
@@ -55,6 +55,7 @@
 | `Core_ShouldReferenceKernel` | `Origo.Core` 显式引用 `Origo.Core.Kernel` | architecture/shell-kernel-boundary |
 | `TypedData_ShouldLiveInContractsAssembly` | TypedData 类型身份位于 `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
 | `CoreAssembly_ShouldNotDeclareTypedData` | `Origo.Core` 程序集不再声明 TypedData 类型 | architecture/shell-kernel-boundary |
+| `DataSourceNode_ShouldLiveInContractsAssembly` | DataSourceNode 类型身份位于 `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
 | `Contracts_ShouldNotReferenceImplementationsOrGodot` | 契约程序集不引用 `Origo.Core`/Adapter/ConsoleBridge，也不引用 Godot | architecture/shell-kernel-boundary |
 | `Core_ShouldReferenceContracts` | `Origo.Core` 程序集显式引用 `Origo.Core.Contracts`，钉住契约层依赖方向 | architecture/shell-kernel-boundary |
 

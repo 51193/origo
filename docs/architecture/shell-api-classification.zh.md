@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 0.1.0 Shell API 分类
 
@@ -50,7 +50,7 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 
 ## 当前拆分检查点
 
-当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载 `OrigoMeta`、日志抽象、控制台 I/O 抽象、文件系统/路径契约、节点契约、帧驱动契约、控制台工具扩展契约与 TypedData/metadata 模型；`Origo.Core.Kernel` 承载 FastNoiseLite（7 个导出）与 internal 调度实现。Assembly 为 `Origo.Core` 的行表示当前仍位于该程序集的类型。
+当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载 `OrigoMeta`、日志抽象、控制台 I/O 抽象、文件系统/路径契约、节点契约、帧驱动契约、控制台工具扩展契约、data-source 模型/I/O 契约与 TypedData/metadata 模型；`Origo.Core.Kernel` 承载 FastNoiseLite（7 个导出）与 internal 调度实现。Assembly 为 `Origo.Core` 的行表示当前仍位于该程序集的类型。
 
 ## 兼容 API 的移除条件
 
@@ -116,14 +116,14 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+NoiseType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+RotationType3D</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Blackboard.Blackboard</code> | Origo.Core | Shell contract | Origo.Core | blackboard | 黑板/状态访问的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-SND |
-| <code>Origo.Core.DataSource.DataSourceConverter`1</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-DATA |
-| <code>Origo.Core.DataSource.DataSourceConverterBase</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceConverter`1</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceConverterBase</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-DATA |
 | <code>Origo.Core.DataSource.DataSourceConverterRegistry</code> | Origo.Core | Tooling extension | Origo.Core | data-tooling | 数据源工具扩展的具体工具扩展点，通过文档化 shell API 注册，而不是 kernel 后门。 | core-tooling; R-DATA |
 | <code>Origo.Core.DataSource.DataSourceFactory</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | data-kernel | 数据源构造的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.DataSource.DataSourceNode</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-model | 数据源模型的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.DataSource.DataSourceNodeKind</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-model | 数据源模型的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
-| <code>Origo.Core.DataSource.IDataSourceIoGateway</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-io | 数据源 I/O 边界能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-DATA |
-| <code>Origo.Core.DataSource.IFileMetaAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-io | 数据源 I/O 边界能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceNode</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-model | 数据源模型的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceNodeKind</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-model | 数据源模型的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-DATA |
+| <code>Origo.Core.DataSource.IDataSourceIoGateway</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-io | 数据源 I/O 边界能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-DATA |
+| <code>Origo.Core.DataSource.IFileMetaAccess</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-io | 数据源 I/O 边界能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-DATA |
 | <code>Origo.Core.Grid.Astar</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | 网格工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Grid.GridCoordinateSystem</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | 网格工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Grid.GridParser</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | 网格工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |

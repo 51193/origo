@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell API classification for 0.1.0
 
@@ -53,7 +53,8 @@ The current inventory has no test-only exported types: test-only behavior alread
 Current package paths are visible in the Assembly column. `Origo.Core.Contracts`
 owns `OrigoMeta`, the logging abstractions, the console I/O abstractions, the
 file-system/path contracts, the node contracts, the frame-driver contract, the
-console tooling contracts, and the TypedData/metadata model. `Origo.Core.Kernel`
+console tooling contracts, the data-source model/I/O contracts, and the
+TypedData/metadata model. `Origo.Core.Kernel`
 owns FastNoiseLite (seven exports) and the internal scheduling implementation.
 Rows with Assembly `Origo.Core` are types that currently remain in that
 assembly.
@@ -122,14 +123,14 @@ Each shell/tooling row carries an owner and one of these issue #37 retention con
 | <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+NoiseType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+RotationType3D</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Blackboard.Blackboard</code> | Origo.Core | Shell contract | Origo.Core | blackboard | Concrete consumer shell implementation for blackboard/state access; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-SND |
-| <code>Origo.Core.DataSource.DataSourceConverter`1</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | data-tooling | Documented tooling extension base for data-source tooling; subclassing and validation semantics are part of the stable contract. | core-tooling; R-DATA |
-| <code>Origo.Core.DataSource.DataSourceConverterBase</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | data-tooling | Documented tooling extension base for data-source tooling; subclassing and validation semantics are part of the stable contract. | core-tooling; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceConverter`1</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | data-tooling | Documented tooling extension base for data-source tooling; subclassing and validation semantics are part of the stable contract. | core-tooling; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceConverterBase</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | data-tooling | Documented tooling extension base for data-source tooling; subclassing and validation semantics are part of the stable contract. | core-tooling; R-DATA |
 | <code>Origo.Core.DataSource.DataSourceConverterRegistry</code> | Origo.Core | Tooling extension | Origo.Core | data-tooling | Concrete tooling extension for data-source tooling; it is registered through a documented shell API rather than a kernel backdoor. | core-tooling; R-DATA |
 | <code>Origo.Core.DataSource.DataSourceFactory</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | data-kernel | Kernel implementation detail for data-source construction; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.DataSource.DataSourceNode</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-model | Stable pure data model for data-source model; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
-| <code>Origo.Core.DataSource.DataSourceNodeKind</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-model | Stable pure data model for data-source model; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
-| <code>Origo.Core.DataSource.IDataSourceIoGateway</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-io | Stable consumer contract in the data-source I/O boundary capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-DATA |
-| <code>Origo.Core.DataSource.IFileMetaAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-io | Stable consumer contract in the data-source I/O boundary capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceNode</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-model | Stable pure data model for data-source model; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.DataSource.DataSourceNodeKind</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-model | Stable pure data model for data-source model; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-DATA |
+| <code>Origo.Core.DataSource.IDataSourceIoGateway</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-io | Stable consumer contract in the data-source I/O boundary capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-DATA |
+| <code>Origo.Core.DataSource.IFileMetaAccess</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-io | Stable consumer contract in the data-source I/O boundary capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-DATA |
 | <code>Origo.Core.Grid.Astar</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | Concrete consumer shell implementation for grid utility; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-UTIL |
 | <code>Origo.Core.Grid.GridCoordinateSystem</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | Concrete consumer shell implementation for grid utility; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-UTIL |
 | <code>Origo.Core.Grid.GridParser</code> | Origo.Core | Shell contract | Origo.Core | grid-utility | Concrete consumer shell implementation for grid utility; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-UTIL |

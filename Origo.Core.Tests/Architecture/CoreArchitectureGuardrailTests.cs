@@ -563,6 +563,16 @@ public class CoreKernelShellApiClassificationGuardTests
     }
 }
 
+public class DataSourceContractsIdentityTests
+{
+    [Fact]
+    public void DataSourceNode_ShouldLiveInContractsAssembly()
+    {
+        Assert.Equal("Origo.Core.Contracts",
+            typeof(Origo.Core.DataSource.DataSourceNode).Assembly.GetName().Name);
+    }
+}
+
 public class TypedDataHomeIdentityTests
 {
     [Fact]

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/DataSource/README -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # DataSource
 
@@ -20,20 +20,17 @@ Origo 的数据源抽象层——Core 与外部格式（JSON、.map）之间的�
 
 | 文件 | 职责 |
 |------|------|
-| `DataSourceNode.cs` | 树形数据节点：Map/Array/Text/Number/Bool/Null + 延迟展开（Lazy）+ `As<T>()` 泛型值访问器（支持 string/char/byte/sbyte/short/ushort/int/uint/long/ulong/float/double/decimal/bool 14 种类型）+ Builder `Add`（**仅允许在 Map/Array 节点上调用**，scalar 节点调用立即抛 `InvalidOperationException`；`null` 子节点立即拒绝）+ `Keys`/`Elements`（**形状严格**：对非 Map/Array 节点访问立即抛 `InvalidOperationException`，防止错误形状被静默读成空集合；返回只读视图，内部可变存储不外泄）+ `ComputeSha256Hash()` — 迭代后序遍历生成确定性字符串表示后计算 SHA-256 哈希，用于存档幂等去重。`Dispose()` 同样使用迭代遍历防止深度嵌套树的栈溢出 |
-| `DataSourceNodeKind.cs` | 节点类型枚举 |
 | `DataSourceCodecKind.cs` | 编解码格式枚举（Json / Map / RawString） |
 | `IDataSourceCodec.cs` | 编解码器接口：Decode/Encode |
-| `IDataSourceIoGateway.cs` | I/O 网关接口：仅 `ReadTree` / `WriteTree` 两个方法，按后缀路由编解码器后读写文件（Core 与文件的唯一内容接触点），所有文件内容 I/O 均经 codec 路由，零旁路 |
 | `DataSourceIoGateway.cs` | I/O 网关实现：后缀 → CodecKind 映射 + 读写 |
 | `DataSourceIoOptions.cs` | I/O 路由配置：后缀 → Codec 映射（缩进选项在 `DataSourceFactory.BuildDefaultCodecs(bool)`） |
 | `DataSourceFactory.cs` | 工厂：创建默认 Registry + IoGateway |
-| `DataSourceConverter.cs` | 转换器基类：非泛型 `DataSourceConverterBase`（注册表运行时调度）+ 泛型 `DataSourceConverter<T>`（`Read(DataSourceNode)` / `Write(T)`） |
 | `DataSourceConverterRegistry.cs` | 转换器注册表：按 Type 查找 Converter + 泛型 Read/Write。当精确类型未注册时，自动沿基类链和接口链回退查找。 |
 | `KeyValueFileParser.cs` | key:value 格式解析器（用于 .map 文件） |
-| `IFileMetaAccess.cs` | 文件元数据操作接口（public）：FileExists / DirectoryExists / EnumerateFiles / EnumerateDirectories / CreateDirectory / Delete / DeleteDirectory / Copy / Rename，与 IDataSourceIoGateway 并行使用——前者负责内容读写（含 codec 路由），本接口负责文件系统结构操作 |
 | `FileMetaAccess.cs` | IFileMetaAccess 默认实现（internal），委托给 IFileSystem |
 | `PathResolver.cs` | IPathResolver 默认实现（internal）：CombinePath / GetParentDirectory，委托给 IFileSystem |
+
+> data-source 叶契约（DataSourceNode、DataSourceNodeKind、转换器基类、IDataSourceIoGateway、IFileMetaAccess）位于 [Origo.Core.Contracts/DataSource](../../Origo.Core.Contracts/DataSource/README.zh.md)。
 
 ## 数据流
 
