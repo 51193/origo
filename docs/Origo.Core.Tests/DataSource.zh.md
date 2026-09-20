@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 数据源 测试
 
@@ -158,6 +158,7 @@
 | `MapCodec_Encode_RejectsCommentKey` | key 以 `#` 开头 | InvalidOperationException（严格解码器会把整行当注释丢弃） |
 | `MapCodec_Encode_RejectsUntrimmedKeyOrValue` | key 或 value 首尾空白 | InvalidOperationException（严格解码器会 trim 两侧字段） |
 | `MapCodec_Encode_RejectsNonTextChild` | Number/Bool 子节点 | InvalidOperationException（`.map` 只承载字符串，否则解码后类型静默漂移） |
+| `MapCodec_Encode_RejectsNestedObjectOrArrayChild` | Object/Array 子节点 | InvalidOperationException（扁平 key:value 格式无法表示嵌套结构，须拒绝而不是写出自身解码器读不回的文件） |
 | `MapCodec_Encode_EmptyKey_Throws` | 空 key | InvalidOperationException |
 | `ArrayConverter_Read_NullNode_Throws` | 数组转换器读 Null 根节点 | InvalidOperationException（不得静默变成空数组） |
 | `ArrayConverter_Read_ScalarNode_Throws` | 数组转换器读标量根节点 | InvalidOperationException |
@@ -268,6 +269,7 @@
 | `KeyValueFileParser_Parse_LenientMode_LogsWarningOnInvalidLine` | 宽松模式遇无冒号行 | 不抛异常，结果为空且记录警告 |
 | `KeyValueFileParser_Parse_LenientMode_LogsWarningOnEmptyKey` | 宽松模式遇空键 | 不抛异常，结果为空且记录警告 |
 | `KeyValueFileParser_Parse_DuplicateKey_LogsWarning` | 重复键 | 后值覆盖前值并记录警告 |
+| `KeyValueFileParser_Parse_StrictMode_DuplicateKey_LastWinsAndWarns` | 严格模式遇重复键 | 后值覆盖前值并记录警告；重复键是结构有效输入，不抛异常 |
 
 ## 测试辅助策略
 
@@ -279,9 +281,6 @@
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| Lazy 节点的 `ComputeSha256Hash` 行为 | 未验证对未展开 Lazy 节点求哈希是否触发展开及结果稳定性 | DataSource |
-| Map 编解码的嵌套结构 | 仅覆盖扁平对象，嵌套对象/数组在 Map 格式下的行为未覆盖 | DataSource |
-| `KeyValueFileParser` 严格模式下的重复键行为 | 仅在宽松模式验证重复键覆盖+警告，严格模式分支未覆盖 | DataSource |
 | 转换器与节点的并发读写线程安全性 | 多线程场景未覆盖 | DataSource |
 | DataSourceNode 超深嵌套（远超 2000 层）的性能特征 | 极端嵌套深度的性能未量化 | DataSource |
 

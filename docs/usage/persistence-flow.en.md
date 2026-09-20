@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/persistence-flow -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence Flow
 
@@ -194,6 +194,27 @@ var entries = ctx.Save.ListSavesWithMetaData();
 // entries[i].SaveId → "001"
 // entries[i].MetaData → { "play_time": "2h30m", "level": "town" }
 ```
+
+### Deleting a Save
+
+```csharp
+// Synchronously delete an inactive slot and its .tmp/.bak remnants
+ctx.Save.DeleteSave("old_slot");
+```
+
+Deletion rejects the active save, the continue target, and any state where a persistence request is executing or pending; a missing slot throws `InvalidOperationException` explicitly. Storage-level behavior is provided by `ISaveStorageService.DeleteSave`.
+
+### Observing Persistence Completion
+
+```csharp
+// Whether a save/load/continue/switch/bootstrap-entry request is executing or pending
+bool persistenceIdle = ctx.Deferred.IsPersistenceIdle;
+
+// Whether the main-menu entry enqueued by Bootstrap() mounted successfully
+bool bootstrapped = ctx.Lifecycle.IsBootstrapCompleted;
+```
+
+These properties are observation-only; they provide no wait, flush, or execution entry point. Callers still advance the frame thread through `IOrigoFrameDriver.DriveFrame`. When an entry load fails, `DriveFrame` propagates the exception under fail-fast; `IsBootstrapCompleted` stays false while the request count still returns to zero on the exception path.
 
 ## meta.map Display Metadata
 

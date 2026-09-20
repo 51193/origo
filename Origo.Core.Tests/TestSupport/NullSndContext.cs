@@ -65,6 +65,8 @@ public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDefe
 
     public int GetPendingPersistenceRequestCount() => 0;
 
+    public bool IsPersistenceIdle => true;
+
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null) =>
         throw new InvalidOperationException("NullSndContext does not support templates.");
 
@@ -94,6 +96,9 @@ public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDefe
 
     public IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData() => [];
 
+    public void DeleteSave(string saveId) =>
+        throw new InvalidOperationException("NullSndContext does not support save deletion.");
+
     public void RequestLoadGame(string saveId) =>
         throw new InvalidOperationException("NullSndContext does not support load operations.");
 
@@ -109,6 +114,7 @@ public sealed class NullSndContext : ISndContext, ISndBlackboardAccess, ISndDefe
     public void RequestSwitchForegroundLevel(string newLevelId) =>
         throw new InvalidOperationException("NullSndContext does not support level switching.");
 
+    public bool IsBootstrapCompleted => false;
     public bool HasContinueData() => false;
 
     public bool RequestContinueGame() => false;

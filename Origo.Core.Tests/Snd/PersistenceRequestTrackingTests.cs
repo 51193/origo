@@ -118,4 +118,24 @@ public class PersistenceRequestTrackingTests
 
         Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
     }
+
+    [Fact]
+    public void IsPersistenceIdle_ReflectsPendingRequestTracking()
+    {
+        var fs = new TestMemoryFileSystem();
+        var ctx = CreateContext(fs);
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
+
+        ctx.Lifecycle.RequestLoadMainMenuEntrySave();
+        Assert.False(ctx.Deferred.IsPersistenceIdle);
+
+        ctx.FlushFrame();
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
+
+        ctx.Save.RequestSaveGame("idle_slot");
+        Assert.False(ctx.Deferred.IsPersistenceIdle);
+
+        ctx.FlushFrame();
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
+    }
 }

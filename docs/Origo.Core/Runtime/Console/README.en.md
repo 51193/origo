@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console
 
@@ -12,7 +12,7 @@ Origo's runtime console command system. Provides command parsing (positional + n
 
 | Sub-module | Capability | Details |
 |--------|------|------|
-| [CommandHandlers](CommandHandlers/README.en.md) | 11 built-in command handlers | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy |
+| [CommandHandlers](CommandHandlers/README.en.md) | 11 base command handlers + 5 persistence command handlers | OrigoConsole registers help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy; SndContext registers list_saves / save / load / delete_save / switch_level |
 
 ## Core Files
 

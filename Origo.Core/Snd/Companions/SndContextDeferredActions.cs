@@ -13,4 +13,8 @@ internal sealed class SndContextDeferredActions(SndContext owner) : ISndDeferred
     /// <inheritdoc/>
     public int GetPendingPersistenceRequestCount() =>
         Interlocked.CompareExchange(ref owner._pendingPersistenceRequests, 0, 0);
+
+    /// <inheritdoc/>
+    public bool IsPersistenceIdle =>
+        Interlocked.CompareExchange(ref owner._pendingPersistenceRequests, 0, 0) == 0;
 }

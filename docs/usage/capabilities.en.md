@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
@@ -41,6 +41,8 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | Two-phase write | Write `current/` first (with .write_in_progress marker), atomically copy to `save_{id}/` after validation | [Persistence Flow](persistence-flow.en.md) |
 | Strict read validation | .write_in_progress marker detection, level three-file integrity check, progress.json mandatory presence | [Persistence Flow](persistence-flow.en.md) |
 | Snapshot management | `ctx.Save.ListSaves()` / `ListSavesWithMetaData()`, supports save-selection UI | [Persistence Flow](persistence-flow.en.md) |
+| Save-slot deletion | `ctx.Save.DeleteSave(saveId)` deletes an inactive slot and its `.tmp`/`.bak` remnants while protecting the active slot and pending workflows | [Persistence Flow](persistence-flow.en.md) |
+| Persistence completion state | `ctx.Deferred.IsPersistenceIdle` and `ctx.Lifecycle.IsBootstrapCompleted` expose frame-driven completion observation | [Persistence Flow](persistence-flow.en.md) |
 | meta.map display metadata | Display metadata system separated from business data, ISaveMetaContributor pluggable contributor pattern | [Persistence Flow](persistence-flow.en.md) |
 | Idempotent deduplication | SHA256 hash comparison; same game state skips I/O write | [↔ Save/Storage](../Origo.Core/Save/Storage/README.en.md) |
 
@@ -56,7 +58,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 
 | Capability | Description | Doc Entry |
 |------------|-------------|-----------|
-| 11 built-in commands | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy | [Console Commands](console-commands.en.md) |
+| 16 built-in commands | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy / list_saves / save / load / delete_save / switch_level | [Console Commands](console-commands.en.md) |
 | Custom command registration | Core layer inherits ConsoleCommandHandlerBase; adapter layer inherits CommandHandlerBase | [Console Commands](console-commands.en.md) |
 | TCP remote console bridge | ConsoleBridgeServer listens on localhost:9876, single-connection mode, bidirectional I/O via pub-sub | [Console Commands](console-commands.en.md) |
 | Command type inference | bb_set / entity_set_data auto-infers int/float/bool/string types; existing keys preserve their original type | [Console Commands](console-commands.en.md) |
@@ -111,7 +113,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 |----------|-------------|-----------|
 | Platform-agnostic | Origo.Core depends only on System.\*, references no engine-specific code | [Architecture Overview](../architecture/overview.en.md) |
 | Adapter-layer isolation | Engine code only implements Core abstractions in Origo.GodotAdapter; adapter layer does not participate in strategy lifecycle management | [Architecture Overview](../architecture/overview.en.md) |
-| Interface Segregation (ISP) | ISndContext split into 9 narrow role interfaces; ISessionRun returns abstract IStateMachineContainer | [Architecture Overview](../architecture/overview.en.md) |
+| Interface Segregation (ISP) | ISndContext exposes 10 companion properties (9 Snd role interfaces + IStateMachineContext); ISessionRun returns abstract IStateMachineContainer | [Architecture Overview](../architecture/overview.en.md) |
 | Single-threaded frame model | One frame = one logical atomic boundary; deferred actions execute sequentially through queues. The host (e.g., Godot `_Process`) drives the frame via `IOrigoFrameDriver.DriveFrame(double delta)`; Core internal order: entity Process → business queue → Kill pending → system queue → console | [Architecture Overview](../architecture/overview.en.md) |
 
 ---

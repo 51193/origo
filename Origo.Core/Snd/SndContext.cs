@@ -11,6 +11,7 @@ using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Runtime;
+using Origo.Core.Runtime.Console.CommandHandlers;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Runtime.StateMachine;
 using Origo.Core.Save;
@@ -39,6 +40,7 @@ public sealed class SndContext : ISndContext
     internal readonly SystemRun _systemRun;
     internal readonly List<ISaveMetaContributor> _saveMetaContributors = [];
     private bool _bootstrapped;
+    private bool _bootstrapCompleted;
     private readonly SndContextParameters _parameters;
     internal int _pendingPersistenceRequests;
     internal ProgressRun? _progressRun;
@@ -99,6 +101,20 @@ public sealed class SndContext : ISndContext
         Save = new SndContextSaveOperations(this);
         Lifecycle = new SndContextLifecycleOperations(this);
         StateMachineContext = new SndContextStateMachineContext(this);
+
+        RegisterPersistenceCommandHandlers();
+    }
+
+    private void RegisterPersistenceCommandHandlers()
+    {
+        if (Runtime.Console is null)
+            return;
+
+        Runtime.Console.RegisterHandler(new ListSavesCommandHandler(Save));
+        Runtime.Console.RegisterHandler(new SaveGameCommandHandler(Save));
+        Runtime.Console.RegisterHandler(new LoadGameCommandHandler(Save));
+        Runtime.Console.RegisterHandler(new DeleteSaveCommandHandler(Save));
+        Runtime.Console.RegisterHandler(new SwitchLevelCommandHandler(Save));
     }
 
     /// <summary>
@@ -210,6 +226,12 @@ public sealed class SndContext : ISndContext
 
     /// <summary>Swap the active ProgressRun (used during lifecycle transitions).</summary>
     internal void SetProgressRun(ProgressRun? progressRun) => _progressRun = progressRun;
+
+    /// <summary>True while a lifecycle workflow (load/save/change-level) is executing.</summary>
+    internal bool IsWorkflowInProgress => _workflowInProgress;
+
+    /// <summary>True after the bootstrap entry-load workflow has mounted successfully.</summary>
+    internal bool IsBootstrapCompleted => _bootstrapCompleted;
 
     /// <summary>
     ///     Enter a lifecycle workflow guard. Ensures only one workflow
@@ -396,6 +418,9 @@ public sealed class SndContext : ISndContext
                     DataSourceIo,
                     Runtime.Logger);
             });
+
+            if (_bootstrapped)
+                _bootstrapCompleted = true;
         });
     }
 

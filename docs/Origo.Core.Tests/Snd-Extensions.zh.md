@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 扩展 测试
 
@@ -14,7 +14,7 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `EnsureStrategyTests.cs` | EnsureStrategy 首次挂载、幂等跳过、空值覆盖 |
+| `EnsureStrategyTests.cs` | EnsureStrategy 首次挂载、幂等跳过、空值覆盖，以及真实运行时的策略池挂载与执行 |
 | `EntityStrategyExtensionsTests.cs` | EnsureReplaceableStrategy 默认/自定义/空值覆盖/幂等方式/参数校验 |
 | `TryGetNumericExtensionsTests.cs` | TryGetNumeric 跨类型读取（int/float/long/double）、非数值返回 false、GetNumeric fallback |
 | `ActiveStrategyExtensionsTests.cs` | InvokeStrategy 泛型重载：带输入/无输入序列化往返、null 返回 default |
@@ -29,6 +29,8 @@
 | `EnsureStrategy_DataKeyMissing_SetsDataAndReturnsTrue` | 数据键不存在时先挂载策略、再设置 dataKey 并返回 true | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_DataKeyExistsWithValue_ReturnsFalse` | 数据键已有非空值时跳过，返回 false 且值不变 | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_DataKeyExistsButEmpty_StillSetsAndReturnsTrue` | 数据键存在但值为空字符串时仍覆盖并返回 true | Snd README: ActiveStrategyExtensions |
+| `EnsureStrategy_RealRuntime_MountsAndRunsLifecycleStrategy` | 真实运行时（策略池已注册）中首次 EnsureStrategy 实际挂载 LifecycleStrategy 并触发 AfterAdd；再次调用不再挂载；DriveFrame 后 Process 执行 | Snd README: ActiveStrategyExtensions |
+| `EnsureReplaceableStrategy_RealRuntime_MountsDefaultStrategy` | 真实运行时无配置时 EnsureReplaceableStrategy 实际挂载 defaultStrategyIndex 并执行 | Snd README: EnsureReplaceableStrategy |
 
 ### 错误路径
 
@@ -118,14 +120,13 @@
 | `TestResult` | ActiveStrategyExtensionsTests.cs | 含 Result 属性的简单 POCO，用于泛型 InvokeStrategy 的返回类型反序列化 |
 | `StubEntity` | EntityExtensionsTests.cs | ISndEntity 桩实现，OwningSession 可配置（init），用于 IsSameEntityAs 名称+会话双重校验 |
 | `StubSession` | EntityExtensionsTests.cs | ISessionRun 桩实现，LevelId 固定为 "test"，其余成员抛 NotImplementedException |
+| `RealEnsureProbeStrategy` | EnsureStrategyTests.cs | LifecycleStrategyBase：在 AfterAdd/Process 中写入实体 Data 标记，验证 EnsureStrategy 真实挂载与执行 |
 
 ## 已知覆盖缺口
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| EnsureReplaceableStrategy 的实际策略挂载与 AddStrategy 集成 | 当前测试用 StubSndEntity（不存储实际策略），未验证 EnsureReplaceableStrategy 结果与实际策略 Add 的联动 | Snd README: EnsureReplaceableStrategy |
 | InvokeStrategy 泛型对复杂嵌套类型的序列化往返 | 仅测试简单匿名类型 {Sx, Sz} → TestResult，未测试嵌套对象/数组/枚举 | Snd README: ActiveStrategyExtensions |
-| EnsureStrategy/EnsureReplaceableStrategy 在真实运行时环境（含策略池注册）的集成测试 | 当前测试仅操作 DummySndEntity/StubSndEntity 的数据层，未验证策略实际被 Add 和执行 | Snd README: ActiveStrategyExtensions |
 
 ---
 

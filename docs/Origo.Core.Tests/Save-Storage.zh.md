@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：存储 测试
 
@@ -140,6 +140,8 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SaveStorageFacade_SnapshotCurrentToSave_AndEnumerateSaveIds_Works` | WriteToCurrent → Snapshot → Enumerate 全流程 | ISaveStorageService |
 | `SaveStorageFacade_SnapshotCurrentToSave_UsesTempDirectoryThenRename` | 快照使用 .tmp 目录再 rename，无残留 | persistence-flow: 阶段2 |
 | `SnapshotCurrentToSave_OverwritingExistingSave_ReplacesContentAndLeavesNoBackup` | 覆盖已有存档替换内容，无 .bak/.tmp 残留 | ISaveStorageService |
+| `SaveStorageFacade_DeleteSave_RemovesSlotAndRemnants` | 删除正式槽并清理同一 id 的 `.tmp`/`.bak` 残留 | ISaveStorageService.DeleteSave |
+| `SaveStorageFacade_DeleteSave_DoesNotTouchCurrentDirectory` | 删除槽位不影响 `current/` | ISaveStorageService.DeleteSave |
 
 ### 错误路径
 
@@ -159,7 +161,10 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `DefaultSaveStorageService_ResolveLevelPayload_WhenWriteMarkerExists_Throws` | ResolveLevelPayload 时 .write_in_progress 存在 | InvalidOperationException |
 | `WriteSavePayloadToCurrentThenSnapshot_NullLogger_Throws` | null logger | ArgumentNullException |
 | `WriteSavePayloadToCurrentThenSnapshot_WhenSnapshotFails_LogsError_LeavesMarkerAndUpdatedCurrent` | 快照阶段 Copy 失败 | InvalidOperationException，current/ 保持已写入状态，marker 残留 |
+| `SnapshotCurrentToSave_TempToFinalRenameFailsTwice_PreservesPreviousBackup` | 备份-替换的 temp→final rename 连续失败两次 | InvalidOperationException；旧快照保留在正式槽，成功回滚不残留 `.bak` |
+| `SnapshotCurrentToSave_WhenRollbackRenameFails_PreservesBackupAndCanRecover` | temp→final 失败且 `.bak`→正式槽回滚也失败 | InvalidOperationException（含 "previous snapshot could not be restored"）；旧快照仅存于 `.bak`，`.tmp` 保留；恢复后再次快照成功安装新数据并清理备份 |
 | `SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure` | 快照 Copy 失败 | .tmp 目录被清理 |
+| `SaveStorageFacade_DeleteSave_MissingSlot_Throws` | 目标槽与残留均不存在 | InvalidOperationException |
 
 ### 边界路径
 
@@ -365,6 +370,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 |--------|---------|------|
 | `CustomSavePathPolicy` | SaveStorageContractTests.cs | 自定义 ISavePathPolicy，所有方法生成带前缀的测试路径 |
 | `FailOnCopyFileSystem` | SaveStorageAndPayloadTests.cs | 在 Copy 目标路径匹配子串时抛出异常，模拟快照复制失败 |
+| `FailOnRenameFileSystem` | SaveStorageAndPayloadTests.cs | 在 temp→final 或 `.bak`→正式槽 rename 时抛出异常，模拟备份-替换失败与回滚失败 |
 | `ThrowingOnReadFileSystem` | SaveIdempotencyTests.cs | 在 ReadAllText 访问指定路径时抛异常，模拟 SHA 文件读取失败 |
 | `TestPrefixedPathPolicy` | SavePathPolicyContractTests.cs | 带前缀的自定义 ISavePathPolicy，验证策略注入贯穿所有存储方法 |
 | `SceneContractStrategy` | SavePathPolicyContractTests.cs | 状态机策略，在 OnPushRuntime 中收集 SceneHost 实体名 |
@@ -375,7 +381,6 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| 阶段2中 rename 失败的原子性 | 快照过程的 .tmp 残留清理 | persistence-flow: 阶段2描述 |
 | SaveStorageFacade 写入时并发请求的排队行为 | 并发安全 | — |
 | 大量关卡文件快照的性能（深目录树递归复制） | 极端场景下的 I/O 表现 | — |
 

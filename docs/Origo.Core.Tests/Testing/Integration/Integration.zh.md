@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 帧驱动游戏模拟集成测试
 
@@ -149,6 +149,7 @@
 | `Observer_MultipleTargets_NotifiedIndependently` | 观察者同时观察多目标，各自独立通知 | snd-entity-model: 观察者 |
 | `Observer_FrameDriven_StrategyMountsObserverInProcess` | Lifecycle 策略在 AfterSpawn 中自动挂载观察者，帧循环后通知正常 | snd-entity-model: 观察者 |
 | `Observer_Bindings_RestoredAcrossSaveAndReload` | 观察者绑定存档重载后恢复，数据变更仍通知 | persistence-flow |
+| `Observer_CrossEntityReload_RestoresTargetDataAndSingleBinding` | 跨实体观察者存档重载后 target Data 恢复、绑定只恢复一次，随后数据变更产生单次 OnDataChanged | persistence-flow |
 | `Observer_OnMounted_FiresAgainAfterReload` | 重载恢复绑定后 OnMounted 再次触发 | persistence-flow |
 | `Observer_AfterLoadFiresBeforeObserverRecoveryOnReload` | 重载时所有实体的 AfterLoad 先执行，Observer 绑定随后恢复并触发 OnMounted | snd-entity-model: 观察者 |
 | `Observer_OnUnmountedFiresBeforeTargetBeforeDead` | 目标死亡时 Observer 先拆线触发 OnUnmounted，目标 BeforeDead 随后执行 | snd-entity-model: 观察者 |

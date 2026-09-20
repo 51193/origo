@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Lifecycle Tests
 
@@ -23,7 +23,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `ForegroundBackgroundContractTests.cs` | Complete behavioral consistency of foreground/background ISessionRun (blackboard/state machines/serialization/Dispose) |
 | `EmptySessionManagerTests.cs` | No-op behavior of EmptySessionManager |
 | `PlayStopPlayRoundTripTests.cs` | Round-trip consistency of multiple Play→Stop→Play cycles (identity/blackboard/Tick/Progress) |
-| `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun load error paths (topology format errors/file missing/background load failure) |
+| `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun load error paths (topology format errors/missing fields/background load failure) |
 | `ProgressRunLoadRollbackMaskingTests.cs` | Verifies that session cleanup after a background mount failure does not mask the original load exception when cleanup itself throws (BeforeQuit hook): cleanup failure is only logged as Warning and the original exception propagates unchanged |
 | `SessionRunLoadRollbackMaskingTests.cs` | Verifies that SessionRun load-failure rollback (`ResetAfterLoadFailure`) executes cleanup step by step; when the `OnUnmounted` hook throws, the remaining steps still execute (entities/blackboard cleared), the original exception is not masked, and cleanup failures are logged as Warning |
 | `SaveAndSwitchForegroundTests.cs` | Combined save + switch level operations, collision handling, deferred queue orchestration, old foreground auto-persist (incl. progress) |
@@ -200,6 +200,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 |-------------|----------------|-------------------|
 | `LoadFromPayload_WhenTopologyMalformed_ThrowsInvalidOperation` | Topology entry malformed (e.g. `bad_entry`) | InvalidOperationException (contains "Malformed session topology entry") |
 | `LoadFromPayload_WhenTopologyMissing_ThrowsInvalidOperation` | progress.json without topology field | InvalidOperationException |
+| `LoadFromPayload_WhenLevelsIsNull_ThrowsInvalidOperationWithoutPartialSession` | Payload.Levels is null (malformed payload) | InvalidOperationException (contains "Levels"); foreground is null and no sessions are mounted |
 | `LoadAndMountForeground_WhenSndSceneIsEmpty_ThrowsInvalidOperation` | snd_scene.json empty or whitespace | InvalidOperationException (contains "invalid snd_scene.json") |
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json syntax error | Exception |
 | `LoadFromPayload_WhenBackgroundLevelPayloadMissing_ThrowsInvalidOperation` | Topology references a background level but the payload is missing | InvalidOperationException (contains level name); no background keys |
@@ -370,7 +371,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `Parse_ExtraFields_ThrowsInvalidOperation` | levelId contains `=` separator (more than 3 fields) | InvalidOperationException (exactly key=levelId=syncProcess required) |
 | `Parse_SyncFieldParsing_FollowsBoolTryParseRules` | syncProcess field as TRUE/true/False/not_bool | Parsed following bool.TryParse rules; non-boolean throws InvalidOperationException |
 | `Join_EmptyEntries_ReturnsEmptyString` | Empty entry list | Returns empty string |
-| `Parse_IgnoreEmptyEntries` | Consecutive commas between entries (empty entries) | Empty entries ignored |
+| `Parse_EmptyEntries_ThrowInvalidOperation` | Consecutive commas between entries (empty entries) | InvalidOperationException (an empty entry is malformed topology data and must not be silently dropped) |
 
 ## TopologyInvariantTests Details
 
@@ -438,7 +439,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
-| `CreateBackgroundSession_Throws_WhenLevelIdInvalid` | null/empty/whitespace levelId | ArgumentException |
+| `CreateBackgroundSession_Throws_WhenLevelIdInvalid` | null/empty/whitespace levelId, or levelId containing `/`, `=`, `,`, spaces, or non-ASCII characters | ArgumentException |
+| `CreateBackgroundSession_Throws_WhenKeyInvalid` | Session key containing `,`, `=`, spaces, or non-ASCII characters | ArgumentException |
 | `CreateBackgroundSession_EmptyLevelId_Throws` | Empty levelId | ArgumentException |
 | `Dispose_ClearsEntities` | FindByName after Dispose | ObjectDisposedException |
 | `DisposedSession_ThrowsOnAllPublicMethods` | SessionBlackboard/StateMachines/FindByName/GetEntities after Dispose | ObjectDisposedException |
@@ -564,9 +566,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | Gap Description | Impact | Reference |
 |----------------|--------|-----------|
 | Performance boundaries with large number of background sessions (100+) | Extreme concurrent session count | — |
-| ProgressRun.LoadFromPayload handling of Payload.Levels being null | Defense against null Levels | session-model |
 | Race condition between session double Dispose, ForegroundSession and external references | External ISessionRun reference used after Dispose | — |
-| SessionTopologyCodec parsing of keys/levelIds containing commas | Special values with comma as separator | SessionTopologyCodec |
 
 ---
 

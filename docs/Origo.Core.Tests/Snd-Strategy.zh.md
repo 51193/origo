@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 策略 测试
 
@@ -314,13 +314,11 @@
 
 ## 已知覆盖缺口
 
-| 缺口描述 | 影响 | 文档依据 |
-|---------|------|---------|
-| Process 中 RequestKill 对同实体 ActiveStrategy 的影响 | 仅测试了 LifecycleStrategy 的 Kill 后剩余策略执行，未验证 ActiveStrategy 场景 | snd-entity-model |
-| ActiveStrategy 的 AfterSpawn/BeforeQuit/AfterLoad 生命周期行为 | ActiveStrategy 仅测试了 Invoke + 注册 + Spawn/Load 恢复，未覆盖其是否响应非 Invoke 生命周期钩子 | Strategy README: 策略继承体系 |
-| ObserverStrategy 的 BeforeDead/BeforeSave 钩子集成 | 观察者仅测试 Dead/Quit 释放路径，未验证 BeforeDead/BeforeSave 钩子中观察者的行为 | Strategy README: 策略生命周期钩子（顺序） |
-| 策略池在并发 Get/Release 下的线程安全性 | 当前所有测试为单线程，未覆盖多线程场景中引用计数和池化正确性 | Strategy README: SndStrategyPool |
-| 跨实体观察者的 Save/Recover 全链路（含 resolveTarget 通过 SessionManager.FindByName） | 仅测试了自观察的 Save/Recover，跨实体场景依赖 SessionManager 查找目标的路径未覆盖 | Strategy README: ObserverTopology |
+无——以下边界属于当前契约而非未覆盖缺口：
+
+- `ActiveStrategyBase` 与 `ObserverStrategyBase` 是和 `LifecycleStrategyBase` 并列的策略分支，刻意不参与帧更新与被动策略的 8 个生命周期钩子；ActiveStrategy 的 Invoke/恢复/释放路径由本文档覆盖，ObserverStrategy 的生命周期顺序由 [Integration.zh.md](Testing/Integration/Integration.zh.md) 覆盖。
+- `SndStrategyPool` 的引用计数只承诺单线程帧模型，并发访问不是当前契约。
+- 跨实体观察者的 Save/Recover 全链路（含目标缺失时的会话整体回滚）由 `ObserverTopologyIntegrationTests` 与 `SessionRunLoadRollbackMaskingTests` 覆盖。
 
 ---
 

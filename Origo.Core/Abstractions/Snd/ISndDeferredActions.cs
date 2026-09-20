@@ -15,4 +15,11 @@ public interface ISndDeferredActions
 
     /// <summary>Get the current count of pending persistence requests, useful for awaiting async save completion.</summary>
     int GetPendingPersistenceRequestCount();
+
+    /// <summary>
+    ///     True when no persistence request (save, load, level switch, or
+    ///     bootstrap entry load) is pending or executing. The frame thread owns
+    ///     all transitions; an off-thread read is a snapshot.
+    /// </summary>
+    bool IsPersistenceIdle { get; }
 }

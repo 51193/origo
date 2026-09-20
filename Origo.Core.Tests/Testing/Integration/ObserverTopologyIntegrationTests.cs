@@ -409,6 +409,50 @@ public class ObserverTopologyIntegrationTests
     }
 
     [Fact]
+    public void Observer_CrossEntityReload_RestoresTargetDataAndSingleBinding()
+    {
+        var events = new List<TestObserverEvent>();
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new TopologyObserverStrategy())
+            .Build();
+
+        EventCollector.Events = events;
+        try
+        {
+            var target = harness.SpawnEntity("target", []);
+            var observer = harness.SpawnEntity("observer", []);
+            target.SetData("hp", 50);
+            observer.MountObserverStrategy(target, "test.int.obs.topology");
+            events.Clear();
+
+            harness.SaveAndReload("obs_cross_entity_data");
+
+            var gameSession = harness.Context.Runtime.SessionManager.TryGet("game");
+            Assert.NotNull(gameSession);
+            var reloadedTarget = gameSession.FindByName("target");
+            Assert.NotNull(reloadedTarget);
+
+            var (found, hp) = reloadedTarget.TryGetData<int>("hp");
+            Assert.True(found);
+            Assert.Equal(50, hp);
+            Assert.Single(events,
+                e => e.EventType == "on_mounted" && e.TargetName == "target");
+
+            events.Clear();
+            reloadedTarget.SetData("hp", 75);
+
+            var changed = Assert.Single(events, e => e.EventType == "on_data_changed");
+            Assert.Equal("target", changed.TargetName);
+            Assert.NotNull(changed.NewValue);
+            Assert.Equal(75, changed.NewValue.Value.AsInt32());
+        }
+        finally
+        {
+            EventCollector.Events = null;
+        }
+    }
+
+    [Fact]
     public void Observer_OnMounted_FiresAgainAfterReload()
     {
         var events = new List<TestObserverEvent>();

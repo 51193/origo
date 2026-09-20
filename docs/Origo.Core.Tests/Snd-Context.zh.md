@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 上下文 测试
 
@@ -37,6 +37,8 @@ TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入�
 | `ListSaves_ReturnsEmptyWhenNoSaves` | 无存档时 ListSaves 返回空 | ISndSaveOperations |
 | `ListSaves_ReturnsSaveIds` | 有存档时 ListSaves 返回存档 ID | ISndSaveOperations |
 | `ListSavesWithMetaData_ReturnsEmptyWhenNoSaves` | 无存档时 ListSavesWithMetaData 返回空 | ISndSaveOperations |
+| `DeleteSave_RemovesInactiveSlot` | 删除非活动槽后 ListSaves 不再返回该槽，其他槽保留 | ISndSaveOperations.DeleteSave |
+| `DeleteSave_MainMenuProgressRun_DoesNotBlockMatchingRealSlot` | 主菜单 ProgressRun 的内部 SaveId 不等于活动存档；与其同名的真实槽仍可删除 | ISndSaveOperations.DeleteSave |
 | `RequestSaveGame_PersistsAndSetsActiveSaveSlot` | 保存后文件存在、ActiveSaveId 正确设置 | persistence-flow |
 | `RequestSaveGame_IncrementsThenDecrementsPendingCount` | 保存请求先增后减 pending 计数 | ISndDeferredActions |
 | `RequestSaveGameAuto_WithExplicitId_UsesIt` | RequestSaveGameAuto 使用传入 ID | ISndSaveOperations |
@@ -69,6 +71,9 @@ TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入�
 | `RequestLoadGame_ThrowsOnEmptyId` | 空 saveId | ArgumentException |
 | `RequestLoadGame_ThrowsOnNullId` | null saveId | ArgumentException |
 | `RequestSwitchForegroundLevel_ThrowsOnEmptyId` | 空 levelId | ArgumentException |
+| `DeleteSave_MissingSlot_Throws` | 删除不存在的槽位 | InvalidOperationException |
+| `DeleteSave_ActiveSave_Throws` | 删除 ActiveSaveId 指向的活动槽 | InvalidOperationException，槽位保留 |
+| `DeleteSave_PendingPersistenceRequest_Throws` | 有持久化请求待执行时删除其他槽 | InvalidOperationException |
 | `TrySubmitConsoleCommand_ReturnsFalseForEmptyCommand` | 空白命令 | 返回 false |
 | `TrySubmitConsoleCommand_ReturnsFalseWhenNoConsoleInput` | 无控制台输入源 | 返回 false |
 | `SubscribeConsoleOutput_ThrowsWhenNoChannel` | 无输出通道时订阅 | InvalidOperationException |
@@ -105,6 +110,7 @@ TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入�
 | `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel 入队后 pending 计数为 1，Flush 后归 0 | ISndDeferredActions |
 | `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | 前一个持久化请求失败、同批后续请求被 fail-fast 丢弃 | pending 计数归 0（被丢弃请求的清理回调释放计数） | ISndDeferredActions |
+| `IsPersistenceIdle_ReflectsPendingRequestTracking` | 初始/入口加载前/Flush 后/save 请求前后的空闲状态与 pending 计数一致 | ISndDeferredActions |
 
 ## SndTemplateResolverTests 测试详情
 
@@ -185,6 +191,7 @@ TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入�
 |---------|-----------|---------|
 | `Bootstrap_CompletesWithoutError` | 提供 entry.json 时 Bootstrap 完整执行无异常 | ISndContext.Bootstrap |
 | `Bootstrap_AfterCall_ForegroundSessionIsEstablished` | Bootstrap 后冲刷延迟队列，前台会话已挂载 | ISndContext.Bootstrap |
+| `Bootstrap_CompletionState_TransitionsAfterEntryLoad` | Bootstrap 后入口加载前 `IsBootstrapCompleted=false`、`IsPersistenceIdle=false`；Flush 后变为 true/true 且 pending 归 0 | ISndLifecycleOperations.IsBootstrapCompleted / ISndDeferredActions.IsPersistenceIdle |
 | `Bootstrap_WithConfigureConverters_CallbackIsInvoked` | ConfigureConverters 回调在策略发现前被调用 | ISndContext.Bootstrap |
 | `Bootstrap_AutoDiscoverDisabled_SkipsStrategyDiscovery` | AutoDiscoverStrategies=false 时跳过策略扫描 | SndContextParameters.AutoDiscoverStrategies |
 | `Bootstrap_WithTemplates_LoadsAndAllowsCloning` | 配置模板路径后可 CloneTemplate | SndWorld.LoadTemplates |
@@ -197,6 +204,7 @@ TestSupport `LevelBuilder` 关卡构建、Archetype 加载与属性解析、入�
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
 | `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | 缺少 entry.json | 冲刷延迟队列时抛出异常（fail-fast） |
+| `Bootstrap_EntryLoadFailure_LeavesCompletionFalseAndPersistenceIdle` | 入口加载失败 | 异常传播后 `IsBootstrapCompleted=false`，pending 归 0 且 `IsPersistenceIdle=true` |
 | `Bootstrap_Twice_Throws` | 重复调用 Bootstrap | InvalidOperationException |
 | `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | 场景宿主未绑定 context（topology 未绑定）时 Bootstrap | InvalidOperationException（消息含 "not bound to a context"） |
 | `Bootstrap_InvalidStrategyOrdering_ThrowsDuringSeal` | 已注册生命周期策略引用未注册的 Before 目标 | Bootstrap 在固定注册表时抛 InvalidOperationException（消息含缺失目标索引） |

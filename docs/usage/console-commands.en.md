@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console Commands
 
@@ -27,6 +27,11 @@ Origo's built-in console command system. Supports executing commands through the
 | `entity_get_data` | `<entity> <key>` | Read entity data value and type |
 | `entity_set_data` | `<entity> <key> <value>` | Set entity data (auto-infers type; preserves existing key's type) |
 | `invoke_strategy` | `<entity> <index> [input]` | Invoke entity's active strategy and display result |
+| `list_saves` | None | List save slots and display metadata |
+| `save` | `<saveId>` | Queue a save request for the named slot (executed in the end-of-frame system deferred queue) |
+| `load` | `<saveId>` | Queue a load request for an existing slot (executed in the end-of-frame system deferred queue) |
+| `delete_save` | `<saveId>` | Delete an inactive slot and its `.tmp`/`.bak` remnants |
+| `switch_level` | `<levelId>` | Queue a foreground-level switch request (executed in the end-of-frame system deferred queue) |
 | `tree_debug` | `<entity>` | Print the entity's Godot scene tree structure (adapter-layer command) |
 | `camera_view` | None | Show screen coordinates and depth of all visible entity nodes from the active camera's perspective (adapter-layer command) |
 
@@ -118,6 +123,30 @@ InvokeStrategy('traversability.is_passable') on 'TraversabilityManager' => true
 ```
 
 Invokes an active strategy (`ActiveStrategyBase`) on the specified entity. The first positional argument is the entity name, the second is the strategy index, and the optional third is a JSON input parameter. The result is output as a string. Outputs an error if the entity does not exist or the strategy is not of active type.
+
+### list_saves / save / load / delete_save / switch_level
+
+```
+> list_saves
+slot_001 name=Alice, level=town
+slot_002
+
+> save slot_003
+Save request queued for 'slot_003'.
+
+> load slot_001
+Load request queued for 'slot_001'.
+
+> delete_save slot_002
+Save 'slot_002' deleted.
+
+> switch_level town
+Level switch queued for 'town'.
+```
+
+`list_saves` prints one line per slot; display metadata is appended as `key=value`, or `No saves found.` when storage is empty.
+
+`save`, `load`, and `switch_level` only queue a request in the system deferred queue; execution happens during the same frame's `IOrigoFrameDriver.DriveFrame` system-queue phase. `load` verifies the slot exists before queueing. `delete_save` executes synchronously and rejects deletion of the active save, the continue target, or a slot while a persistence request is executing or pending.
 
 ### tree_debug (Adapter Layer)
 

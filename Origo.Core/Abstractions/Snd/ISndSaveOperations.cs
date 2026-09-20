@@ -19,6 +19,17 @@ public interface ISndSaveOperations
     /// </summary>
     IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData();
 
+    /// <summary>
+    ///     Deletes an inactive save slot. The active save slot, the continue
+    ///     target, and a running or pending persistence workflow are protected.
+    /// </summary>
+    /// <exception cref="System.ArgumentException">Thrown when <paramref name="saveId" /> is not a valid save ID token.</exception>
+    /// <exception cref="System.InvalidOperationException">
+    ///     Thrown when the slot is missing, is the active save, or a persistence
+    ///     workflow is running or pending.
+    /// </exception>
+    void DeleteSave(string saveId);
+
     /// <summary>Request to load a specific save.</summary>
     void RequestLoadGame(string saveId);
 

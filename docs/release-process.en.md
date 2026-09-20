@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Release & Changelog Process
 
@@ -51,11 +51,28 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## Weekly Snapshot Builds
 
 - The scheduled run is every Monday at **02:30 UTC** and covers the **week that
-  just ended**: `[previous Monday 00:00, current Monday 00:00) UTC`.
-- An idle window publishes nothing; `workflow_dispatch` can snapshot the current
-  partial week on demand.
+  just ended**: `[previous Monday 00:00, current Monday 00:00) UTC`. The run
+  only starts from `main`, and it ignores the version-bump commits it creates
+  itself, so an idle window publishes nothing.
+- `workflow_dispatch` can snapshot the current partial week on demand.
 - Snapshot tags look like `v<base>-nightly.YYYYMMDD`, where `<base>` is derived
   from `<Version>` in `Directory.Build.props`.
+- A publish bumps `<Version>` to the snapshot version, derives
+  `AssemblyVersion` / `FileVersion` from its numeric base, commits all three
+  stamps to `main`, tags that commit, and then starts the Release workflow with
+  `gh workflow run release.yml -f tag=<tag>`. The explicit dispatch is required
+  because a tag pushed with `GITHUB_TOKEN` does not trigger `push` workflows and
+  `workflow_dispatch` is the documented exception, so no personal access token
+  or GitHub App is needed.
+- The base version is the numeric part of the current `<Version>`, so bumping the
+  base (`0.0.10-nightly.YYYYMMDD` to `0.0.11-nightly.YYYYMMDD` or `0.0.11`) moves
+  the snapshot tag, the NuGet package version, and the assembly metadata
+  together; the release pipeline then finds no version stamp left to rewrite.
+- The weekly job asks for a snapshot release (`gh workflow run ... -f
+  snapshot=true`), which publishes the GitHub Release as a **pre-release**, so an
+  automatic snapshot never becomes the repository's Latest release. A tag pushed
+  or released by hand is never forced either way: its release state stays as
+  chosen on GitHub.
 - Snapshot tags reuse the formal release pipeline for packages and documentation
   snapshots; `verify-release.sh` skips formal metadata verification for versions
   containing `-`.
@@ -67,8 +84,12 @@ Complete these steps in order before tagging:
 1. Choose the new version `x.y.z` (no `-nightly` or similar suffix).
 2. Move `[Unreleased]` content into a `## [x.y.z] - YYYY-MM-DD` block and clear
    `[Unreleased]`.
-3. Update `<Version>` in `Directory.Build.props` to `x.y.z`; the tag is `vx.y.z`,
-   and the pipeline compares versions after stripping the `v` prefix.
+3. Update `<Version>` in `Directory.Build.props` to `x.y.z` and set
+   `AssemblyVersion` / `FileVersion` to `x.y.z.0`; the tag is `vx.y.z`. If the
+   tagged commit still carries a different stamp, the release pipeline creates
+   a release commit to correct it and, after tests and packing succeed, writes
+   it back to `main` and the tag; this requires the tag to be created on the
+   current `main` tip, and keeping the tagged commit correct remains preferred.
 4. Update the version text in `docs/README.zh.md` and `docs/README.en.md` to
    `x.y.z`.
 5. Move shipped rules from `Origo.SourceGeneration/AnalyzerReleases.Unshipped.md`
@@ -90,15 +111,28 @@ Complete these steps in order before tagging:
 
 ## Release Pipeline Artifacts
 
-Pushing a `v*` tag triggers the Release workflow:
+The Release workflow starts from a pushed `v*` tag or from `workflow_dispatch`
+with the `tag` input, which is how weekly snapshots start it. The tag is resolved
+first; every step below then applies to that tag:
 
-- Validate that the tag matches `<Version>` exactly after stripping only the leading `v`; a `-nightly` / `-alpha` suffix in the tag must already be present in `<Version>`;
-- Run `verify-release.sh`, the committed DocSync check, and the full test suite;
+- Before validation, rewrite `Directory.Build.props` from the tag: strip only the leading `v` for `<Version>`, and derive `AssemblyVersion` / `FileVersion` from its four-part numeric form (a `-nightly` / `-alpha` suffix stays only in `<Version>`). The tag is then validated against `<Version>` as before. If anything changed, the pipeline creates a `chore(release): sync version stamps to <tag>` commit, and DocSync, tests, benchmarks, and packing all run on that release commit;
+- Run `verify-release.sh`, the committed DocSync check, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, analyzer shipped block, and both `docs/README.*` version stamps) must still be present in the tagged commit;
+- Only after tests and packing succeed, a single `--atomic` push fast-forwards `main` to the release commit and moves the tag to it; the GitHub Release is created afterwards. Validation or packing failures therefore leave every ref untouched, and a successful release keeps `main`, tag, commit, and packages on one version. This write-back requires the tag to be created on the current `main` tip; if main has advanced, the tag is not there, or either ref moves during the run, the lease checks fail and abort the release. Reruns resolve the tag's current target first, so a tag already written back by this pipeline does not produce a duplicate release commit. Branch/tag protection rules or a token without permission make the atomic push fail and abort the release;
 - Pack `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` as NuGet
   packages;
 - Build a documentation snapshot archive containing `docs/`, `AGENTS.md`, and
   `CHANGELOG.md`;
-- Attach packages and the documentation snapshot to the GitHub Release.
+- Attach packages and the documentation snapshot to the GitHub Release, marked
+  as a pre-release when the run was started as a snapshot (the `snapshot` input,
+  which the weekly job sets); a tag pushed by hand keeps the release state chosen
+  on GitHub.
+
+Writing back fast-forwards `main` and moves an existing `v*` ref: local clones
+that already fetched the old tag need `git fetch --tags --force` to see the new
+release commit. The write-back uses `GITHUB_TOKEN`, which does not trigger another
+workflow run; every validation, test, benchmark, and pack step runs in the same
+run. If the process requires release tags to be immutable, push the release commit
+to `main` or a dedicated branch instead of moving the tag.
 
 Packages are not pushed to nuget.org as formal artifacts; consumers download them
 from the GitHub Release and configure a local package source as described in the

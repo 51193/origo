@@ -89,6 +89,19 @@ public class TypeStringMappingExtendedTests
     }
 
     [Fact]
+    public void TypeStringMapping_GenericTypes_RegisterDistinctStableNames()
+    {
+        var mapping = new TypeStringMapping();
+        mapping.RegisterType<List<int>>("ListInt32");
+        mapping.RegisterType<List<string>>("ListString");
+
+        Assert.Equal(typeof(List<int>), mapping.GetTypeByName("ListInt32"));
+        Assert.Equal(typeof(List<string>), mapping.GetTypeByName("ListString"));
+        Assert.Equal("ListInt32", mapping.GetNameByType(typeof(List<int>)));
+        Assert.Equal("ListString", mapping.GetNameByType(typeof(List<string>)));
+    }
+
+    [Fact]
     public void TypeStringMapping_ReadOnlyDictionaryTypes_Preregistered()
     {
         var mapping = new TypeStringMapping();

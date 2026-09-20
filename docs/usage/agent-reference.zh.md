@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Agent Reference
 
@@ -120,6 +120,7 @@ public interface ISndBlackboardAccess {
 public interface ISndDeferredActions {
     void EnqueueBusinessDeferred(Action action);
     int GetPendingPersistenceRequestCount();
+    bool IsPersistenceIdle { get; }
 }
 
 // 模板
@@ -147,6 +148,7 @@ public interface ISndStateMachineAccess {
 public interface ISndSaveOperations {
     IReadOnlyList<string> ListSaves();
     IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData();
+    void DeleteSave(string saveId);
     void RequestLoadGame(string saveId);
     void RequestSaveGame(string newSaveId);
     string RequestSaveGameAuto(string? newSaveId = null);
@@ -158,6 +160,7 @@ public interface ISndSaveOperations {
 
 // 生命周期入口
 public interface ISndLifecycleOperations {
+    bool IsBootstrapCompleted { get; }
     bool HasContinueData();
     bool RequestContinueGame();
     void RequestLoadInitialSave();
@@ -249,6 +252,7 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     // 继承自 ISndDeferredActions:
     //   void EnqueueBusinessDeferred(Action action);
     //   int GetPendingPersistenceRequestCount();
+    //   bool IsPersistenceIdle { get; }
 
     IBlackboard? SessionBlackboard { get; }
     ISndSceneReadAccess SceneAccess { get; }

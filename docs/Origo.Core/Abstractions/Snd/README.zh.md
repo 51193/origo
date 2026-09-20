@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd (Abstractions)
 
@@ -14,12 +14,12 @@ ISndContext 的角色接口拆分。9 个 Snd 角色接口 + `IStateMachineConte
 | 文件 | 职责 |
 |------|------|
 | `ISndBlackboardAccess.cs` | 系统级 + 流程级黑板访问（2 成员） |
-| `ISndDeferredActions.cs` | 延迟动作队列：入队 + 待持久化请求计数（2 成员） |
+| `ISndDeferredActions.cs` | 延迟动作队列：入队 + 待持久化请求计数 + 持久化空闲状态（3 成员） |
 | `ISndTemplateAccess.cs` | 模板加载/重载、按 key 深克隆、JSON 实体列表解析（含模板简写）（5 成员） |
 | `ISndConsoleAccess.cs` | 控制台命令提交/输出订阅（3 成员）。命令处理归 `IOrigoFrameDriver.DriveFrame` 所有，不暴露业务 pump |
 | `ISndStateMachineAccess.cs` | 流程级状态机容器访问（1 成员）。返回 `IStateMachineContainer?`（Abstractions 层接口），而非具体 `StateMachineContainer` |
-| `ISndSaveOperations.cs` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册（9 成员） |
-| `ISndLifecycleOperations.cs` | Continue/Initial/MainMenu 生命周期入口（4 成员） |
+| `ISndSaveOperations.cs` | 存档列表/读取/写入/删除 + 关卡切换 + continue 目标 + meta 贡献者注册（10 成员） |
+| `ISndLifecycleOperations.cs` | Bootstrap 完成状态 + Continue/Initial/MainMenu 生命周期入口（5 成员） |
 | `ISndFileAccess.cs` | 文件访问：结构化读写 + 强类型读写 + 存在检查（5 成员）。所有文件内容读写统一通过 `IDataSourceIoGateway` 边界，策略无需自行处理原始文本解析 |
 | `ISndArchiveFileAccess.cs` | 存档内文件访问：结构化读写 + 强类型读写 + 存在检查 + 删除（6 成员）。路径相对于存档活动目录的 extra/ 子目录，随存档生命周期 |
 
@@ -41,12 +41,12 @@ ISndContext 不继承任何角色接口，所有能力通过 10 个 companion �
 | Companion 属性 | 类型 | 职责 |
 |---------------|------|------|
 | `Blackboard` | `ISndBlackboardAccess` | 系统级 + 流程级黑板访问 |
-| `Deferred` | `ISndDeferredActions` | 延迟动作队列：入队 + 待持久化请求计数 |
+| `Deferred` | `ISndDeferredActions` | 延迟动作队列：入队 + 待持久化请求计数 + 持久化空闲状态 |
 | `Template` | `ISndTemplateAccess` | 模板加载/重载、克隆、实体列表解析 |
 | `ConsoleAccess` | `ISndConsoleAccess` | 控制台命令提交/输出订阅 |
 | `StateMachines` | `ISndStateMachineAccess` | 流程级状态机容器访问 |
-| `Save` | `ISndSaveOperations` | 存档列表/读/写 + 关卡切换 + continue 目标 + meta 贡献者注册 |
-| `Lifecycle` | `ISndLifecycleOperations` | Continue/Initial/MainMenu 生命周期入口 |
+| `Save` | `ISndSaveOperations` | 存档列表/读取/写入/删除 + 关卡切换 + continue 目标 + meta 贡献者注册 |
+| `Lifecycle` | `ISndLifecycleOperations` | Bootstrap 完成状态 + Continue/Initial/MainMenu 生命周期入口 |
 | `FileAccess` | `ISndFileAccess` | 静态资源文件访问（结构化读写 + 强类型读写 + 存在检查） |
 | `ArchiveFileAccess` | `ISndArchiveFileAccess` | 存档内文件访问（结构化读写 + 强类型读写 + 存在检查 + 删除） |
 | `StateMachineContext` | `IStateMachineContext` | 状态机上下文（黑板访问 + 延迟动作 + 会话/场景访问） |
@@ -63,6 +63,12 @@ IStateMachineContext : ISndBlackboardAccess + ISndDeferredActions
 ```
 
 ## 设计决策
+
+### 为什么持久化完成状态放在现有角色接口
+
+调用方在保存/加载编排中已经持有 `ctx.Deferred` 与 `ctx.Lifecycle`。把 `IsPersistenceIdle` 放在 `ISndDeferredActions`、把 `IsBootstrapCompleted` 放在 `ISndLifecycleOperations`，避免为观察状态再增加 companion，也不引入可绕过帧驱动的等待/冲刷入口。
+
+`IsPersistenceIdle` 覆盖全部通过 `EnqueueTrackedSystemDeferred` 跟踪的请求：bootstrap 入口加载、save、load、continue 与关卡切换；请求成功或失败后计数都会归零。`IsBootstrapCompleted` 只在 `Bootstrap()` 入队的主菜单入口成功挂载后变为 true；同步 bootstrap 失败或入口加载失败时保持 false，失败本身仍由帧驱动调用方以异常观察。
 
 ### 为什么拆分 ISndContext
 

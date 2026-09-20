@@ -40,6 +40,9 @@ internal sealed class DefaultSaveStorageService : ISaveStorageService
     public IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData() =>
         SaveStorageFacade.EnumerateSavesWithMetaData(_handle);
 
+    /// <inheritdoc/>
+    public void DeleteSave(string saveId) => SaveStorageFacade.DeleteSave(_handle, saveId);
+
     /// <summary>
     ///     Writes a payload to current/ without touching .payload.sha: this
     ///     is the load-recovery path, where the snapshot that follows is

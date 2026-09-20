@@ -35,7 +35,7 @@ internal sealed class SndContextFileAccess(
     /// <inheritdoc/>
     public void WriteObject<T>(string path, T value, bool overwrite)
     {
-        var node = converterRegistry.Write(value);
+        using var node = converterRegistry.Write(value);
         dataSourceIo.WriteTree(path, node, overwrite);
     }
 }

@@ -38,6 +38,23 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
         owner.StorageService.EnumerateSavesWithMetaData();
 
     /// <inheritdoc/>
+    public void DeleteSave(string saveId)
+    {
+        SavePathLayout.ValidateSaveId(saveId, nameof(saveId));
+
+        if (owner.IsWorkflowInProgress || owner._pendingPersistenceRequests != 0)
+            throw new InvalidOperationException(
+                $"Cannot delete save '{saveId}' while a persistence workflow is running or pending.");
+
+        var (found, activeSaveId) = owner._systemRun.SystemBlackboard.TryGet<string>(WellKnownKeys.ActiveSaveId);
+        if (found && string.Equals(activeSaveId, saveId, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                $"Cannot delete active save '{saveId}'.");
+
+        owner.StorageService.DeleteSave(saveId);
+    }
+
+    /// <inheritdoc/>
     public void RequestLoadGame(string saveId)
     {
         SavePathLayout.ValidateSaveId(saveId, nameof(saveId));

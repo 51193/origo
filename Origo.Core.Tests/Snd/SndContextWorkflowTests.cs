@@ -70,6 +70,80 @@ public class SndContextWorkflowTests
         Assert.Empty(saves);
     }
 
+    // ── DeleteSave ──
+
+    [Fact]
+    public void DeleteSave_RemovesInactiveSlot()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SeedSaveSnapshot(fs, "root", "slot_a", "default");
+        SeedSaveSnapshot(fs, "root", "slot_b", "default");
+        Assert.Contains("slot_a", ctx.Save.ListSaves());
+
+        ctx.Save.DeleteSave("slot_a");
+
+        Assert.DoesNotContain("slot_a", ctx.Save.ListSaves());
+        Assert.Contains("slot_b", ctx.Save.ListSaves());
+    }
+
+    [Fact]
+    public void DeleteSave_MainMenuProgressRun_DoesNotBlockMatchingRealSlot()
+    {
+        // The main-menu ProgressRun uses SndDefaults.InitialSaveId as its
+        // working id, but it has not loaded or created a real save slot. A
+        // real snapshot with the same id must therefore be deletable; only
+        // active SaveId / running / pending persistence requests protect.
+        var ctx = CreateContext(out var fs, out _);
+        SetupProgressRun(ctx, fs);
+        SeedSaveSnapshot(fs, "root", "000", "default");
+        Assert.Contains("000", ctx.Save.ListSaves());
+
+        var ex = Record.Exception(() => ctx.Save.DeleteSave("000"));
+
+        Assert.Null(ex);
+        Assert.DoesNotContain("000", ctx.Save.ListSaves());
+    }
+
+    [Fact]
+    public void DeleteSave_MissingSlot_Throws()
+    {
+        var ctx = CreateContext(out _, out _);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.Save.DeleteSave("missing"));
+
+        Assert.Contains("missing", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DeleteSave_ActiveSave_Throws()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SeedSaveSnapshot(fs, "root", "active_slot", "default");
+        ctx.Blackboard.SystemBlackboard.SetValue(WellKnownKeys.ActiveSaveId, "active_slot");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.Save.DeleteSave("active_slot"));
+
+        Assert.Contains("active", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("active_slot", ctx.Save.ListSaves());
+    }
+
+    [Fact]
+    public void DeleteSave_PendingPersistenceRequest_Throws()
+    {
+        var ctx = CreateContext(out var fs, out _);
+        SetupProgressRun(ctx, fs);
+        SeedSaveSnapshot(fs, "root", "other_slot", "default");
+        Assert.Contains("other_slot", ctx.Save.ListSaves());
+        ctx.Save.RequestSaveGame("pending_slot");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => ctx.Save.DeleteSave("other_slot"));
+
+        Assert.Contains("pending", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("other_slot", ctx.Save.ListSaves());
+
+        ctx.FlushFrame();
+    }
+
     // ── RequestSaveGame ──
 
     [Fact]

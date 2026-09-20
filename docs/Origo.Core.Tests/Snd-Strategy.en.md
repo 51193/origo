@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Strategy Tests
 
@@ -315,13 +315,11 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 
 ## Known Coverage Gaps
 
-| Gap Description | Impact | Documentation Basis |
-|-----------------|--------|---------------------|
-| Effect of RequestKill during Process on same-entity ActiveStrategy | Only tested LifecycleStrategy remaining execution after Kill; ActiveStrategy scenarios not verified | snd-entity-model |
-| ActiveStrategy's AfterSpawn/BeforeQuit/AfterLoad lifecycle behavior | ActiveStrategy only tested for Invoke + registration + Spawn/Load recovery; whether it responds to non-Invoke lifecycle hooks not covered | Strategy README: Strategy inheritance hierarchy |
-| ObserverStrategy BeforeDead/BeforeSave hook integration | Observer only tested Dead/Quit release paths; observer behavior during BeforeDead/BeforeSave hooks not verified | Strategy README: Strategy lifecycle hook order |
-| Thread safety of strategy pool under concurrent Get/Release | All current tests are single-threaded; multi-threaded scenario reference counting and pooling correctness not covered | Strategy README: SndStrategyPool |
-| Cross-entity observer Save/Recover full chain (with resolveTarget via SessionManager.FindByName) | Only tested self-observation Save/Recover; cross-entity scenarios relying on SessionManager target lookup not covered | Strategy README: ObserverTopology |
+None — the following boundaries are part of the current contract rather than uncovered gaps:
+
+- `ActiveStrategyBase` and `ObserverStrategyBase` are strategy branches parallel to `LifecycleStrategyBase`; they intentionally do not participate in frame updates or the passive strategy 8 lifecycle hooks. ActiveStrategy invocation/recovery/release is covered in this document, and ObserverStrategy lifecycle ordering is covered by [Integration.en.md](Testing/Integration/Integration.en.md).
+- `SndStrategyPool` reference counting only promises the single-threaded frame model; concurrent access is not part of the current contract.
+- The cross-entity observer Save/Recover full chain (including whole-session rollback when a target is missing) is covered by `ObserverTopologyIntegrationTests` and `SessionRunLoadRollbackMaskingTests`.
 
 ---
 

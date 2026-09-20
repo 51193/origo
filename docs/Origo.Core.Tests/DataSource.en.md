@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Data Source Tests
 
@@ -158,6 +158,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `MapCodec_Encode_RejectsCommentKey` | Key starts with `#` | InvalidOperationException (the strict decoder would treat the whole line as a comment and drop it) |
 | `MapCodec_Encode_RejectsUntrimmedKeyOrValue` | Key or value has leading/trailing whitespace | InvalidOperationException (the strict decoder trims both fields) |
 | `MapCodec_Encode_RejectsNonTextChild` | Number/Bool child | InvalidOperationException (`.map` only carries strings; decoding would silently drift the type) |
+| `MapCodec_Encode_RejectsNestedObjectOrArrayChild` | Object/Array child | InvalidOperationException (flat key:value format cannot represent nested structures; writing such a file would be unreadable by its own strict decoder) |
 | `MapCodec_Encode_EmptyKey_Throws` | Empty key | InvalidOperationException |
 | `ArrayConverter_Read_NullNode_Throws` | Array converter reads a Null root node | InvalidOperationException (must not silently become an empty array) |
 | `ArrayConverter_Read_ScalarNode_Throws` | Array converter reads a scalar root node | InvalidOperationException |
@@ -268,6 +269,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `KeyValueFileParser_Parse_LenientMode_LogsWarningOnInvalidLine` | Lenient mode encounters line without colon | Does not throw, returns empty and logs warning |
 | `KeyValueFileParser_Parse_LenientMode_LogsWarningOnEmptyKey` | Lenient mode encounters empty key | Does not throw, returns empty and logs warning |
 | `KeyValueFileParser_Parse_DuplicateKey_LogsWarning` | Duplicate key | Later value overwrites earlier, logs warning |
+| `KeyValueFileParser_Parse_StrictMode_DuplicateKey_LastWinsAndWarns` | Strict mode encounters a duplicate key | Later value overwrites earlier and a warning is logged; duplicate keys are structurally valid and do not throw |
 
 ## Test Helper Strategies
 
@@ -279,9 +281,6 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 
 | Gap Description | Impact | Reference |
 |----------------|--------|-----------|
-| `ComputeSha256Hash` behavior for Lazy nodes | Not verified whether hashing an unexpanded Lazy node triggers expansion, and result stability | DataSource |
-| Nested structures in Map codec | Only covers flat objects; behavior of nested objects/arrays in Map format not covered | DataSource |
-| `KeyValueFileParser` strict mode duplicate key behavior | Only verifies duplicate key overwrite + warning in lenient mode; strict mode branch not covered | DataSource |
 | Thread safety of concurrent converter/node read/write | Multi-threaded scenarios not covered | DataSource |
 | Performance characteristics of DataSourceNode at extreme nesting (far beyond 2000 levels) | Extreme nesting depth performance not quantified | DataSource |
 

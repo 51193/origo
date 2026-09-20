@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Context -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Context Tests
 
@@ -34,6 +34,8 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `ListSaves_ReturnsEmptyWhenNoSaves` | ListSaves returns empty when no saves exist | ISndSaveOperations |
 | `ListSaves_ReturnsSaveIds` | ListSaves returns save IDs when saves exist | ISndSaveOperations |
 | `ListSavesWithMetaData_ReturnsEmptyWhenNoSaves` | ListSavesWithMetaData returns empty when no saves exist | ISndSaveOperations |
+| `DeleteSave_RemovesInactiveSlot` | After deleting an inactive slot ListSaves no longer returns it while other slots remain | ISndSaveOperations.DeleteSave |
+| `DeleteSave_MainMenuProgressRun_DoesNotBlockMatchingRealSlot` | The main-menu ProgressRun uses an internal working SaveId that is not the active save; a real slot with the same id remains deletable | ISndSaveOperations.DeleteSave |
 | `RequestSaveGame_PersistsAndSetsActiveSaveSlot` | After save the file exists and ActiveSaveId is correctly set | persistence-flow |
 | `RequestSaveGame_IncrementsThenDecrementsPendingCount` | Save request increments then decrements pending count | ISndDeferredActions |
 | `RequestSaveGameAuto_WithExplicitId_UsesIt` | RequestSaveGameAuto uses the provided ID | ISndSaveOperations |
@@ -66,6 +68,9 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestLoadGame_ThrowsOnEmptyId` | Empty saveId | ArgumentException |
 | `RequestLoadGame_ThrowsOnNullId` | null saveId | ArgumentException |
 | `RequestSwitchForegroundLevel_ThrowsOnEmptyId` | Empty levelId | ArgumentException |
+| `DeleteSave_MissingSlot_Throws` | Deleting a missing slot | InvalidOperationException |
+| `DeleteSave_ActiveSave_Throws` | Deleting the active slot referenced by ActiveSaveId | InvalidOperationException, slot remains |
+| `DeleteSave_PendingPersistenceRequest_Throws` | Deleting a different slot while a persistence request is pending | InvalidOperationException |
 | `TrySubmitConsoleCommand_ReturnsFalseForEmptyCommand` | Blank command | Returns false |
 | `TrySubmitConsoleCommand_ReturnsFalseWhenNoConsoleInput` | No console input source | Returns false |
 | `SubscribeConsoleOutput_ThrowsWhenNoChannel` | Subscribing when no output channel exists | InvalidOperationException |
@@ -102,6 +107,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
 | `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | An earlier persistence request fails and a later request in the same batch is discarded by fail-fast | Pending count returns to 0 (discarded requests run their cleanup callbacks) | ISndDeferredActions |
+| `IsPersistenceIdle_ReflectsPendingRequestTracking` | Idle state matches the pending count initially, around entry loading, and before/after a save request | ISndDeferredActions |
 
 ## SndTemplateResolverTests Details
 
@@ -182,6 +188,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 |-------------|-----------------|-----------|
 | `Bootstrap_CompletesWithoutError` | Bootstrap executes fully without exception when entry.json is present | ISndContext.Bootstrap |
 | `Bootstrap_AfterCall_ForegroundSessionIsEstablished` | After Bootstrap + deferred flush, a foreground session is mounted | ISndContext.Bootstrap |
+| `Bootstrap_CompletionState_TransitionsAfterEntryLoad` | Before entry loading `IsBootstrapCompleted=false` and `IsPersistenceIdle=false`; after Flush both are true and pending returns to 0 | ISndLifecycleOperations.IsBootstrapCompleted / ISndDeferredActions.IsPersistenceIdle |
 | `Bootstrap_WithConfigureConverters_CallbackIsInvoked` | ConfigureConverters callback invoked before strategy discovery | ISndContext.Bootstrap |
 | `Bootstrap_AutoDiscoverDisabled_SkipsStrategyDiscovery` | AutoDiscoverStrategies=false skips the strategy scan | SndContextParameters.AutoDiscoverStrategies |
 | `Bootstrap_WithTemplates_LoadsAndAllowsCloning` | CloneTemplate works after configuring a template path | SndWorld.LoadTemplates |
@@ -194,6 +201,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Bootstrap_WithoutEntryJson_ThrowsOnFlush` | entry.json missing | Deferred flush throws (fail-fast) |
+| `Bootstrap_EntryLoadFailure_LeavesCompletionFalseAndPersistenceIdle` | Entry load fails | After the exception propagates, `IsBootstrapCompleted=false`, pending returns to 0, and `IsPersistenceIdle=true` |
 | `Bootstrap_Twice_Throws` | Calling Bootstrap twice | InvalidOperationException |
 | `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | Bootstrap when the scene host topology is not bound to a context | InvalidOperationException (message contains "not bound to a context") |
 | `Bootstrap_InvalidStrategyOrdering_ThrowsDuringSeal` | A registered lifecycle strategy references an unregistered Before target | Bootstrap throws InvalidOperationException while sealing (message contains the missing target index) |

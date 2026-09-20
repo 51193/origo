@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/README -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Runtime
 
@@ -14,7 +14,7 @@ Origo's runtime core. Manages the four-layer lifecycle from system-level to sess
 | Sub-Module | Capability | Details |
 |-----------|-----------|---------|
 | [Console](Console/README.en.md) | Console command system | Command parsing/routing + input queue + output channel |
-| [Console/CommandHandlers](Console/CommandHandlers/README.en.md) | Built-in commands | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy (11 total) |
+| [Console/CommandHandlers](Console/CommandHandlers/README.en.md) | Built-in commands | 11 base commands + 5 persistence commands: help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy / list_saves / save / load / delete_save / switch_level |
 | [Lifecycle](Lifecycle/README.en.md) | Four-layer runtime lifecycle | SystemRun → ProgressRun → SessionManager → SessionRun |
 | [StateMachine](StateMachine/README.en.md) | State machine container | `StateMachineContainer`: CreateOrGet / serialization / batch operations |
 

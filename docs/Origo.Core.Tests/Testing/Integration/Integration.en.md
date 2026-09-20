@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Frame-Driven Game Simulation Integration Tests
 
@@ -148,6 +148,7 @@ the four-layer runtime, with real `SndEntity` entities and strategies participat
 | `Observer_MultipleTargets_NotifiedIndependently` | An observer watching multiple targets is notified independently per target | snd-entity-model: Observer |
 | `Observer_FrameDriven_StrategyMountsObserverInProcess` | A Lifecycle strategy auto-mounts an observer in AfterSpawn; notifications work in the frame loop | snd-entity-model: Observer |
 | `Observer_Bindings_RestoredAcrossSaveAndReload` | Observer bindings are restored after save/reload; data changes still notify | persistence-flow |
+| `Observer_CrossEntityReload_RestoresTargetDataAndSingleBinding` | After reload, a cross-entity observer's target data is restored, the binding is recovered once, and a later data change produces exactly one OnDataChanged | persistence-flow |
 | `Observer_OnMounted_FiresAgainAfterReload` | OnMounted fires again after reload restores the binding | persistence-flow |
 | `Observer_AfterLoadFiresBeforeObserverRecoveryOnReload` | During reload, every entity's AfterLoad runs before Observer bindings recover and fire OnMounted | snd-entity-model: Observer |
 | `Observer_OnUnmountedFiresBeforeTargetBeforeDead` | When a target dies, Observer unwiring fires OnUnmounted before the target's BeforeDead runs | snd-entity-model: Observer |

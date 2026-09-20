@@ -53,7 +53,7 @@ internal sealed class SndContextArchiveFileAccess(
     public void WriteObject<T>(string relativePath, T value, bool overwrite)
     {
         RejectPathTraversal(relativePath);
-        var node = converterRegistry.Write(value);
+        using var node = converterRegistry.Write(value);
         dataSourceIo.WriteTree(ResolveExtraPath(relativePath), node, overwrite);
     }
 

@@ -170,6 +170,55 @@ public class SaveStorageAndPayloadTests
         Assert.Throws<ArgumentNullException>(() => SaveStorageFacade.EnumerateSaveIds(null!));
 
     [Fact]
+    public void SaveStorageFacade_DeleteSave_RemovesSlotAndRemnants()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/save_slot/progress.json", "{}");
+        fs.SeedFile("root/save_slot.tmp/progress.json", "{}");
+        fs.SeedFile("root/save_slot.bak/progress.json", "{}");
+        Assert.True(fs.DirectoryExists("root/save_slot"));
+        Assert.True(fs.DirectoryExists("root/save_slot.tmp"));
+        Assert.True(fs.DirectoryExists("root/save_slot.bak"));
+
+        SaveStorageFacade.DeleteSave(handle, "slot");
+
+        Assert.False(fs.DirectoryExists("root/save_slot"));
+        Assert.False(fs.DirectoryExists("root/save_slot.tmp"));
+        Assert.False(fs.DirectoryExists("root/save_slot.bak"));
+    }
+
+    [Fact]
+    public void SaveStorageFacade_DeleteSave_MissingSlot_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.DeleteSave(handle, "missing"));
+
+        Assert.Contains("missing", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SaveStorageFacade_DeleteSave_DoesNotTouchCurrentDirectory()
+    {
+        var fs = new TestMemoryFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+        fs.SeedFile("root/current/progress.json", "{}");
+        fs.SeedFile("root/save_slot/progress.json", "{}");
+        Assert.True(fs.DirectoryExists("root/save_slot"));
+
+        SaveStorageFacade.DeleteSave(handle, "slot");
+
+        Assert.False(fs.DirectoryExists("root/save_slot"));
+        Assert.True(fs.Exists("root/current/progress.json"));
+    }
+
+    [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_WhitespaceSaveRoot_Throws()
     {
         var fs = new TestMemoryFileSystem();
@@ -603,6 +652,43 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
+    public void SnapshotCurrentToSave_WhenRollbackRenameFails_PreservesBackupAndCanRecover()
+    {
+        var fs = new FailOnRenameFileSystem();
+        var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+
+        fs.SeedFile("root/current/progress.json", """{"v":"old"}""");
+        fs.SeedFile("root/current/progress_state_machines.json", """{"machines":[]}""");
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
+
+        fs.SeedFile("root/current/progress.json", """{"v":"new"}""");
+        fs.FailTempToFinalRename = true;
+        fs.FailBackupRollbackRename = true;
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
+        Assert.Contains("previous snapshot could not be restored", ex.Message, StringComparison.Ordinal);
+
+        // The old snapshot is preserved only in .bak; it must survive the
+        // rollback failure so a later retry can recover.
+        Assert.True(fs.DirectoryExists("root/save_001.bak"));
+        Assert.Equal("""{"v":"old"}""", fs.ReadAllText("root/save_001.bak/progress.json"));
+        Assert.False(fs.DirectoryExists("root/save_001"));
+        Assert.True(fs.DirectoryExists("root/save_001.tmp"));
+
+        // A retry after the filesystem recovers installs the new snapshot and
+        // removes the backup now that it is no longer the only known-good copy.
+        fs.FailTempToFinalRename = false;
+        fs.FailBackupRollbackRename = false;
+        SaveStorageFacade.SnapshotCurrentToSave(handle, "001");
+
+        Assert.Equal("""{"v":"new"}""", fs.ReadAllText("root/save_001/progress.json"));
+        Assert.False(fs.DirectoryExists("root/save_001.bak"));
+        Assert.False(fs.DirectoryExists("root/save_001.tmp"));
+    }
+
+    [Fact]
     public void SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure()
     {
         var fs = new FailOnCopyFileSystem("save_001.tmp");
@@ -635,6 +721,8 @@ public class SaveStorageAndPayloadTests
         private readonly TestMemoryFileSystem _inner = new();
 
         public bool FailTempToFinalRename { get; set; }
+
+        public bool FailBackupRollbackRename { get; set; }
 
         public bool Exists(string path) => _inner.Exists(path);
 
@@ -670,6 +758,10 @@ public class SaveStorageAndPayloadTests
                 && source.EndsWith("save_001.tmp", StringComparison.Ordinal)
                 && destination.EndsWith("save_001", StringComparison.Ordinal))
                 throw new InvalidOperationException($"Simulated rename failure for '{sourcePath}' -> '{destinationPath}'.");
+            if (FailBackupRollbackRename
+                && source.EndsWith("save_001.bak", StringComparison.Ordinal)
+                && destination.EndsWith("save_001", StringComparison.Ordinal))
+                throw new InvalidOperationException($"Simulated rollback rename failure for '{sourcePath}' -> '{destinationPath}'.");
 
             _inner.Rename(sourcePath, destinationPath);
         }

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 控制台系统 测试
 
@@ -11,7 +11,7 @@
 
 验证控制台命令系统的全链路：命令解析（位置参数/命名参数/混合模式）、命令路由（注册/分发/未找到/大小写不敏感/重复注册拒绝）、
 输入队列（轮询式出队、FIFO、裁剪、清空）、`IConsoleInputSource` 接口契约、输出通道（发布-订阅、异常传播、null 拒绝）、
-14 个内置命令处理（11 Core + 3 GodotAdapter）、类型推断（bb_set/entity_set_data）、控制台日志记录（级别/顺序/Tag/内容完整性）。
+19 个内置命令处理（16 Core + 3 GodotAdapter）、类型推断（bb_set/entity_set_data）、控制台日志记录（级别/顺序/Tag/内容完整性）。
 
 ## 测试文件清单
 
@@ -29,6 +29,7 @@
 | `InvokeStrategyCommandHandlerTests.cs` | invoke_strategy 命令 |
 | `SndCountCommandHandlerTests.cs` | snd_count 命令 |
 | `SpawnTemplateCommandHandlerTests.cs` | spawn 命令错误路径：混合参数格式、缺少 name 参数 |
+| `PersistenceCommandHandlerTests.cs` | list_saves/save/load/delete_save/switch_level 命令：列表、入队、帧末执行、删除与错误路径 |
 
 ## ConsoleCommandParserTests 测试详情
 
@@ -306,6 +307,32 @@
 |---------|-----------|---------|
 | `SpawnTemplateCommandHandler_MixNamedAndPositional_ReturnsError` | 位置参数和命名参数混用 | 返回 false + error 含 "mix" |
 | `SpawnTemplateCommandHandler_NamedMissingName_ReturnsError` | 命名参数缺 name | 返回 false + error 含 "name" |
+
+## PersistenceCommandHandlerTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `ListSavesCommand_ListsSlotAndDisplayMetadata` | list_saves 输出槽位与 `key=value` 展示元数据 | console-commands: list_saves |
+| `ListSavesCommand_NoSaves_ReportsEmpty` | 无存档时输出 `No saves found.` | console-commands: list_saves |
+| `ListSavesCommand_SlotWithoutMetadata_ListsIdOnly` | 无 meta.map 的槽位只输出 SaveId | console-commands: list_saves |
+| `SaveCommand_QueuesRequestAndPersistsOnFrame` | save 输出 queued，pending 计数增加；Flush 后快照落盘 | console-commands: save |
+| `LoadCommand_QueuesRequestAndLoadsOnFrame` | load 校验已有槽位后入队，Flush 后前台会话恢复 | console-commands: load |
+| `DeleteSaveCommand_RemovesInactiveSlot` | delete_save 同步删除非活动槽并输出确认 | console-commands: delete_save |
+| `SwitchLevelCommand_QueuesRequestAndSwitchesOnFrame` | switch_level 输出 queued，pending 增加；Flush 后前台关卡切换 | console-commands: switch_level |
+| `HelpCommand_ListsPersistenceCommands` | help 输出包含 5 个持久化命令 | console-commands: help |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `LoadCommand_MissingSlot_ReportsError` | load 目标槽不存在 | 输出含 `does not exist`，不入队 |
+| `LoadCommand_MalformedStoredId_ReportsError` | 存储枚举出非法 token 的槽位，load 校验失败 | 输出含 `not allowed`，pending 保持 0 |
+| `SaveCommand_InvalidSaveId_ReportsError` | save 的 saveId 含非法字符 | 输出错误且不入队，pending 保持 0 |
+| `DeleteSaveCommand_MissingSlot_ReportsError` | delete_save 目标槽不存在 | 输出含 `does not exist` |
+| `DeleteSaveCommand_InvalidSaveId_ReportsError` | delete_save 的 saveId 含非法字符 | 输出含 `not allowed`，不删除 |
+| `SwitchLevelCommand_InvalidLevelId_ReportsError` | switch_level 的 levelId 含非法字符 | 输出含 `not allowed`，pending 保持 0 |
 
 ## 测试辅助策略
 

@@ -70,6 +70,8 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
 
     public List<string> SaveRequests { get; } = [];
 
+    public List<string> DeleteRequests { get; } = [];
+
     public List<string> LoadRequests { get; } = [];
 
     public List<string> LevelSwitchRequests { get; } = [];
@@ -102,6 +104,8 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
     }
 
     public int GetPendingPersistenceRequestCount() => 0;
+
+    public bool IsPersistenceIdle => true;
 
     public SndMetaData CloneTemplate(string templateKey, string? overrideName = null)
     {
@@ -143,6 +147,8 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
 
     public IReadOnlyList<SaveMetaDataEntry> ListSavesWithMetaData() => [];
 
+    public void DeleteSave(string saveId) => DeleteRequests.Add(saveId);
+
     public void RequestLoadGame(string saveId) => LoadRequests.Add(saveId);
 
     public void RequestSaveGame(string newSaveId) => SaveRequests.Add(newSaveId);
@@ -160,6 +166,7 @@ internal sealed class StrategyTestContext : ISndContext, ISndBlackboardAccess, I
 
     public void RequestSwitchForegroundLevel(string newLevelId) => LevelSwitchRequests.Add(newLevelId);
 
+    public bool IsBootstrapCompleted => false;
     public bool HasContinueData() => false;
 
     public bool RequestContinueGame() => false;

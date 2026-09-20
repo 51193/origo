@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 控制台命令
 
@@ -27,6 +27,11 @@ Origo 内置的控制台命令系统。支持通过 Godot 控制台或 TCP 桥�
 | `entity_get_data` | `<entity> <key>` | 读取实体数据的值及类型 |
 | `entity_set_data` | `<entity> <key> <value>` | 设置实体数据（自动推断类型，保留已有键的类型） |
 | `invoke_strategy` | `<entity> <index> [input]` | 调用实体的主动策略并显示结果 |
+| `list_saves` | 无 | 列出存档槽及展示元数据 |
+| `save` | `<saveId>` | 请求保存到指定槽位（帧末系统延迟队列执行） |
+| `load` | `<saveId>` | 请求加载已存在的槽位（帧末系统延迟队列执行） |
+| `delete_save` | `<saveId>` | 删除非活动存档槽及 `.tmp`/`.bak` 残留 |
+| `switch_level` | `<levelId>` | 请求切换前台关卡（帧末系统延迟队列执行） |
 | `tree_debug` | `<entity>` | 打印实体的 Godot 场景树结构（适配层命令） |
 | `camera_view` | 无 | 显示活跃摄像头视角下所有可见实体节点的屏幕坐标和深度（适配层命令） |
 
@@ -118,6 +123,30 @@ InvokeStrategy('traversability.is_passable') on 'TraversabilityManager' => true
 ```
 
 对指定实体调用其主动策略（ActiveStrategyBase）。第一个位置参数为实体名称，第二个为策略索引，第三个可选为 JSON 输入参数。结果以字符串形式输出。若实体不存在或策略非主动类型，输出错误。
+
+### list_saves / save / load / delete_save / switch_level
+
+```
+> list_saves
+slot_001 name=Alice, level=town
+slot_002
+
+> save slot_003
+Save request queued for 'slot_003'.
+
+> load slot_001
+Load request queued for 'slot_001'.
+
+> delete_save slot_002
+Save 'slot_002' deleted.
+
+> switch_level town
+Level switch queued for 'town'.
+```
+
+`list_saves` 输出每个槽位一行，展示元数据按 `key=value` 追加；无存档时输出 `No saves found.`。
+
+`save`、`load`、`switch_level` 只负责把请求写入系统延迟队列，实际执行发生在同一帧的 `IOrigoFrameDriver.DriveFrame` 系统队列阶段。`load` 在入队前确认槽位存在；`delete_save` 同步执行，拒绝删除活动存档、continue 目标，或在持久化请求正在执行/待执行时执行删除。
 
 ### tree_debug（适配层）
 

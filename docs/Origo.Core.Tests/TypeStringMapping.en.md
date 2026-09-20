@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Type Serialization Tests
 
@@ -38,6 +38,7 @@ Validates TypeStringMapping's CLR type ↔ stable string identifier bidirectiona
 | `TypeStringMapping_RegisterType_DuplicateSameType_NoThrow` | Duplicate registration of the same mapping does not throw | Serialization |
 | `TypeStringMapping_BclTypes_AllPreregistered` | Int32/String/Boolean/Single/Double/Int64/Int16/Byte/ArrayString etc. are obtainable | Serialization |
 | `TypeStringMapping_RegisterCustomType_RoundTrips` | Register Guid → bidirectional lookup is correct | Serialization |
+| `TypeStringMapping_GenericTypes_RegisterDistinctStableNames` | Register `List<int>` and `List<string>`; their name/type mappings remain distinct and stable | Serialization |
 | `TypeStringMapping_ReadOnlyDictionaryTypes_Preregistered` | ReadOnlyDictionary / IReadOnlyDictionary types are bidirectionally pre-registered | Serialization |
 | `TypeStringMapping_RegisterManyCustomTypes_AllResolvable` | Register DateTime/Uri/Version/TimeSpan sequentially → all bidirectionally queryable | Serialization |
 
@@ -98,9 +99,7 @@ Validates TypeStringMapping's CLR type ↔ stable string identifier bidirectiona
 
 ## Known Coverage Gaps
 
-| Gap Description | Impact | Documentation Basis |
-|-----------------|--------|---------------------|
-| Name stability of generic types (e.g., `List<int>` vs `List<string>`) | Identifier strategy for generic types | Serialization |
+None — generic type name stability is covered by `TypeStringMapping_GenericTypes_RegisterDistinctStableNames`.
 
 ---
 
