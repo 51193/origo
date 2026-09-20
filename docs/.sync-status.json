@@ -5,6 +5,134 @@
     "en"
   ],
   "pairs": {
+    "architecture/agent-friendly/affected-checks": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "architecture/agent-friendly/affected-checks.zh.md",
+        "en": "architecture/agent-friendly/affected-checks.en.md"
+      },
+      "content_hashes": {
+        "zh": "D9FB12EBB978B3405AF2595A6CEA40C87AB079B2242B733FE73FB70A4A6AA35D",
+        "en": "305E30A257FB714A9B84D7C05935E8CD3A54EEFC38DD973926329F55FDA442C7"
+      }
+    },
+    "architecture/agent-friendly/api-inventory": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "architecture/agent-friendly/api-inventory.zh.md",
+        "en": "architecture/agent-friendly/api-inventory.en.md"
+      },
+      "content_hashes": {
+        "zh": "459C67A4CF9833E5C983229B528DE11062852EC71D3496D2948B252BE59D7E37",
+        "en": "4BDA6898A40F842396A789CE4ECC241AFD2E4CAE3BE4208D2FD1D5EC9C187128"
+      }
+    },
+    "architecture/agent-friendly/benchmarks": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "architecture/agent-friendly/benchmarks.zh.md",
+        "en": "architecture/agent-friendly/benchmarks.en.md"
+      },
+      "content_hashes": {
+        "zh": "7584789A45A6F1A2F85AF17F638BB37642B4A0002BE07EFC9CBCF0C66935554E",
+        "en": "8F475916948570B3B24938097E6B1190BD855FA8C10670C6233174FC059ED14A"
+      }
+    },
+    "architecture/agent-friendly/game-development": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "architecture/agent-friendly/game-development.zh.md",
+        "en": "architecture/agent-friendly/game-development.en.md"
+      },
+      "content_hashes": {
+        "zh": "06620358566A4645F59E2E968A9D01E014F3BEA105D4C125FE5918EF7231EF6E",
+        "en": "5AC5138E411BCB8E707E97609C22E7FC34CC5E5CA93B69D7D0CBD76FC279F8F2"
+      }
+    },
+    "architecture/agent-friendly/openai-harness": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "architecture/agent-friendly/openai-harness.zh.md",
+        "en": "architecture/agent-friendly/openai-harness.en.md"
+      },
+      "content_hashes": {
+        "zh": "6F33FE468ED1DD4565DBA745A800E66E4F483FB2856BA3A5020D47655C405F1B",
+        "en": "638CDBE430BC5A058568D0C67893C336909F37165C43560E14E2846AF67AACDD"
+      }
+    },
+    "architecture/agent-friendly/README": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "architecture/agent-friendly/README.zh.md",
+        "en": "architecture/agent-friendly/README.en.md"
+      },
+      "content_hashes": {
+        "zh": "81F661FAA5F49F1302BE016E5B9ED1F6812333C6384E31C51CFA71733C108A3F",
+        "en": "80EAEDEB3E48426823A4B6ED1C0F020EC19BCA553DAB8A1CC8A50F728017C01C"
+      }
+    },
+    "architecture/agent-friendly/root-instructions": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "architecture/agent-friendly/root-instructions.zh.md",
+        "en": "architecture/agent-friendly/root-instructions.en.md"
+      },
+      "content_hashes": {
+        "zh": "2DAB750F64818EE0BE9473BA06ABC6611E62643B43308063538083603D4C53C5",
+        "en": "38CCD7132110D34E529E3C3A7BB26C9CAFEC4A685DA5830632192E168810C75E"
+      }
+    },
+    "architecture/agent-friendly/skills": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "architecture/agent-friendly/skills.zh.md",
+        "en": "architecture/agent-friendly/skills.en.md"
+      },
+      "content_hashes": {
+        "zh": "EBFF032D61AA28447D4BE27289B883948FA0CAAF7243FBEF689D2AD0B90F8A95",
+        "en": "5A73E631C9ED7451E72E9CE59CAF2DA9F4D180B1566716A38CA32B1320342726"
+      }
+    },
     "architecture/extension-directions": {
       "status": "synced",
       "revisions": {
@@ -40,20 +168,20 @@
     "architecture/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "architecture/README.zh.md",
         "en": "architecture/README.en.md"
       },
       "content_hashes": {
-        "zh": "E478B5D38AC5A6DE983A149E42EEE14A11DB1206E9B787D868122DCBB0BDFDE5",
-        "en": "0A6CA966D0DA96BF96A833A21B55CF9341D413E0018B020253305E23CB7446D8"
+        "zh": "F3926BEE7DBF7A12B777C4D92A5D7EECECA97085009FB447A571953DB7BD144E",
+        "en": "989FF430F67F4E39DC009D729E540FCFBF17C3F400C9DF004BF74A51519979F8"
       }
     },
     "architecture/shell-kernel-boundary": {

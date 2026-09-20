@@ -8,6 +8,7 @@
 - [README](README.zh.md)
 - [shell-kernel-boundary](shell-kernel-boundary.zh.md)
 - [strategy-ordering](strategy-ordering.zh.md)
+- [agent-friendly/](agent-friendly/)
 
 ## English
 - [extension-directions](extension-directions.en.md)
@@ -15,4 +16,5 @@
 - [README](README.en.md)
 - [shell-kernel-boundary](shell-kernel-boundary.en.md)
 - [strategy-ordering](strategy-ordering.en.md)
+- [agent-friendly/](agent-friendly/)
 

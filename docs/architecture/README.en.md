@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture
 
@@ -14,7 +14,8 @@ Architecture overview, decision records, and deferred design directions for the 
 | [overview](overview.en.md) | Four-layer runtime, SND entity model, persistence, concurrency model, and Core/Adapter layering principles |
 | [strategy-ordering](strategy-ordering.en.md) | Decision, known boundaries, and evolution options for relative lifecycle strategy ordering |
 | [extension-directions](extension-directions.en.md) | Deferred reasons and re-evaluation signals for unified tree namespace, entity-level concurrency, and multiple ActiveStrategy implementations per index |
-| [shell-kernel-boundary](shell-kernel-boundary.en.md) | Candidate topology, public-surface classification, and implementation phases for the 0.1.0 stable shell/kernel boundary |
+| [agent-friendly](agent-friendly/README.en.md) | Agent-friendliness benchmarks, OpenAI engineering practices, four implementation investigations, and game-development product direction |
+| [shell-kernel-boundary](shell-kernel-boundary.en.md) | Decision, consumer compatibility commitments, and implementation plan for the 0.1.0 stable shell/kernel boundary |
 
 ---
 [↑ Back to Origo Manual](../README.en.md)
