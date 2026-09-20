@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Snd/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd
 
@@ -7,8 +7,8 @@
 
 ## 模块能力
 
-SND 数据契约层。当前包含 TypedData 内联存储/访问模型与实体元数据模型
-（SndMetaData、NodeMetaData、DataMetaData、StrategyMetaData、SndMetaFluentBuilder）。
+SND 契约层。包含 TypedData 内联存储/访问模型、实体元数据模型与
+`ISndContext` 统一业务门面接口。
 
 ## 子模块
 
@@ -18,7 +18,11 @@ SND 数据契约层。当前包含 TypedData 内联存储/访问模型与实体�
 
 ## 本层文件
 
-本目录仅包含子目录，无直接 `.cs` 文件。
+| 文件 | 职责 |
+|------|------|
+| `ISndContext.cs` | SND 统一业务门面接口：Bootstrap + 10 个 companion 属性 |
+
+本目录另包含 Metadata 子目录。
 
 ---
 [↑ 回到 Origo.Core.Contracts](../README.zh.md)

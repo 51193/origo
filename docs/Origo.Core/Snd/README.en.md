@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
@@ -25,7 +25,7 @@ The complete implementation of the SND (Strategy + Node + Data) entity system. T
 
 | File | Responsibility |
 |------|---------------|
-| `ISndContext.cs` | SND context unified facade interface: exposes all capabilities through 10 companion properties ([see Abstractions/Snd](../Abstractions/Snd/README.en.md)) |
+| `ISndContext.cs` | SND context unified facade interface: exposes all capabilities through 10 companion properties ([see Abstractions/Snd](../../Origo.Core.Contracts/Abstractions/Snd/README.en.md)) |
 | `SndContext.cs` | Default ISndContext implementation (global/progress-level). `Bootstrap()` method executes the complete startup flow: strategy discovery → ordering validation and registration freeze → alias/template loading → entry save loading. Provides `ISndFileAccess` through the companion `SndContextFileAccess` (file read/write delegated to `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`) |
 | `SndContextParameters.cs` | SndContext construction parameter object. Contains startup configuration properties such as `AutoDiscoverStrategies`, `DiscoverySkipPrefixes`, `SceneAliasMapPath`, `SndTemplateMapPath`, `InitialLevelId` |
 | `SndWorld.cs` | SND world: strategy pool + type mapping + converter registry + templates/aliases. `LoadSceneAliases` / `LoadTemplates` are `internal`, invoked by `SndContext.Bootstrap` or the `ISndTemplateAccess` companion (`ctx.Template.LoadTemplates` / `ctx.Template.LoadSceneAliases`) |

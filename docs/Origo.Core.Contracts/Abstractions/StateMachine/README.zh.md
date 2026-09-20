@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/StateMachine/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # StateMachine (Abstractions)
 
-> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: StateMachine](../../StateMachine/README.zh.md)
+> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: StateMachine](../../../Origo.Core/StateMachine/README.zh.md)
 
 ## 概述
 
@@ -49,7 +49,7 @@
 
 ### 为什么状态机只存储字符串而非状态对象
 
-将状态逻辑委托给 `StateMachineStrategyBase`（见 [StateMachine 实现](../../StateMachine/README.zh.md)），状态机本身只维护一个标识符栈。这保持了状态机的轻量和无状态特性，所有业务逻辑集中在策略中，便于测试和复用。
+将状态逻辑委托给 `StateMachineStrategyBase`（见 [StateMachine 实现](../../../Origo.Core/StateMachine/README.zh.md)），状态机本身只维护一个标识符栈。这保持了状态机的轻量和无状态特性，所有业务逻辑集中在策略中，便于测试和复用。
 
 ### 为什么分离 TryPopRuntime 和 TryPopOnQuit
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
@@ -73,8 +73,8 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | Type-string bidirectional mapping | TypeStringMapping maintains bidirectional mapping between CLR types and stable string identifiers, avoiding FullName version coupling | [↔ Serialization](../Origo.Core/Serialization/README.en.md) |
 | Godot 14 type serialization | Vector2/3/4, Vector2I/3I, Quaternion, Color, Basis, Transform2D/3D, Rect2/2I, Aabb, Plane — full JSON round-trip | [↔ GodotAdapter/Serialization](../Origo.GodotAdapter/Serialization/README.en.md) |
 | Converter registration & inheritance backtracking | DataSourceConverterRegistry backtracks along base class and interface chains when no exact type converter is registered | [↔ DataSource/Converters](../Origo.Core/DataSource/Converters/README.en.md) |
-| Strategy file access (ISndFileAccess) | Strategies read/write JSON/Map files via ISndContext, automatically parsed through the IDataSourceIoGateway boundary into DataSourceNode trees or strongly-typed objects | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.en.md) |
-| In-save file access (ISndArchiveFileAccess) | Strategies read/write files (including deletion) in the save's extra/ subdirectory via ISndContext; files follow save lifecycle: included in save snapshots after writes, auto-restored on load | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.en.md) |
+| Strategy file access (ISndFileAccess) | Strategies read/write JSON/Map files via ISndContext, automatically parsed through the IDataSourceIoGateway boundary into DataSourceNode trees or strongly-typed objects | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
+| In-save file access (ISndArchiveFileAccess) | Strategies read/write files (including deletion) in the save's extra/ subdirectory via ISndContext; files follow save lifecycle: included in save snapshots after writes, auto-restored on load | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
 
 ## Godot Adapter
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Snd/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
@@ -7,9 +7,9 @@
 
 ## Module Capability
 
-SND data-contract layer. It currently contains the TypedData inline-storage
-and access model plus the entity metadata model (`SndMetaData`,
-`NodeMetaData`, `DataMetaData`, `StrategyMetaData`, `SndMetaFluentBuilder`).
+SND contract layer. It contains the TypedData inline-storage/access model,
+the entity metadata model, and the `ISndContext` unified business facade
+interface.
 
 ## Sub-modules
 
@@ -19,7 +19,11 @@ and access model plus the entity metadata model (`SndMetaData`,
 
 ## Files at This Level
 
-This directory contains only sub-directories and no direct `.cs` files.
+| File | Responsibility |
+|------|----------------|
+| `ISndContext.cs` | Unified SND business facade: Bootstrap + 10 companion properties |
+
+This directory also contains the Metadata sub-directory.
 
 ---
 [↑ Back to Origo.Core.Contracts](../README.en.md)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd
 
@@ -25,7 +25,7 @@ SND（Strategy + Node + Data）实体系统的完整实现。这是 Origo 的核
 
 | 文件 | 职责 |
 |------|------|
-| `ISndContext.cs` | SND 上下文统一门面接口：通过 10 个 companion 属性暴露所有能力（[详见 Abstractions/Snd](../Abstractions/Snd/README.zh.md)） |
+| `ISndContext.cs` | SND 上下文统一门面接口：通过 10 个 companion 属性暴露所有能力（[详见 Abstractions/Snd](../../Origo.Core.Contracts/Abstractions/Snd/README.zh.md)） |
 | `SndContext.cs` | 默认 ISndContext 实现（全局/流程级）。`Bootstrap()` 方法执行完整启动流程：策略发现→排序校验与注册冻结→别名/模板加载→入口存档加载。经 companion 对象 `SndContextFileAccess` 提供 `ISndFileAccess`（文件读写委托 `SndWorld.DataSourceIo`/`MetaAccess`/`ConverterRegistry`） |
 | `SndContextParameters.cs` | SndContext 构造参数对象。含 `AutoDiscoverStrategies`、`DiscoverySkipPrefixes`、`SceneAliasMapPath`、`SndTemplateMapPath`、`InitialLevelId` 等启动配置属性 |
 | `SndWorld.cs` | SND 世界：策略池 + 类型映射 + 转换器注册表 + 模板/别名。`LoadSceneAliases` / `LoadTemplates` 为 `internal`，由 `SndContext.Bootstrap` 或 `ISndTemplateAccess` companion（`ctx.Template.LoadTemplates` / `ctx.Template.LoadSceneAliases`）调用 |

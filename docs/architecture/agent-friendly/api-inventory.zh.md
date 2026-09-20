@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/api-inventory -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 机器 API 清单：从可编译事实导航到设计合同
 
@@ -9,7 +9,7 @@
 
 ## 1. Origo 具体缺什么
 
-**观察**：[Agent Reference](../../usage/agent-reference.zh.md) 手写了 `ISndEntity`、各窄接口、`ISndContext`、会话和状态机的完整 C# 签名，方便游戏开发 Agent 快速查找；[Abstractions/Snd](../../Origo.Core/Abstractions/Snd/README.zh.md) 又维护成员数量、属性类型和职责。当前 DocSync 检查双语、revision、链接和镜像文件清单，没有把这些代码块交给编译器验证，也不校验描述与有效公开成员集合是否一致。见 [DocSync 测试能力](../../tools/DocSyncTool.Tests/README.zh.md) 与 [Validator 实现](../../../tools/DocSyncTool/Validator.cs)。
+**观察**：[Agent Reference](../../usage/agent-reference.zh.md) 手写了 `ISndEntity`、各窄接口、`ISndContext`、会话和状态机的完整 C# 签名，方便游戏开发 Agent 快速查找；[Abstractions/Snd](../../Origo.Core.Contracts/Abstractions/Snd/README.zh.md) 又维护成员数量、属性类型和职责。当前 DocSync 检查双语、revision、链接和镜像文件清单，没有把这些代码块交给编译器验证，也不校验描述与有效公开成员集合是否一致。见 [DocSync 测试能力](../../tools/DocSyncTool.Tests/README.zh.md) 与 [Validator 实现](../../../tools/DocSyncTool/Validator.cs)。
 
 具体例子不能草率认定为缺陷：能力清单写“9 个窄角色”，架构总览写“10 个 companion”。窄接口文档已经明确 **9 个 Snd 角色 + `IStateMachineContext` = 10 个 companion 属性**；另有路径属性与 `Bootstrap`，因此也不能把“所有属性数”当 companion 数。风险是 Agent 只读取一句摘要后混淆统计口径，不是接口设计错了。一个机器清单可以准确列出属性，再由人工能力分类注明哪些属于 companion，避免重复手抄数字。见 [能力清单](../../usage/capabilities.zh.md)、[架构总览](../overview.zh.md) 和 [ISndContext 源码](../../../Origo.Core/Snd/ISndContext.cs)。
 
@@ -55,7 +55,7 @@ Core、ConsoleBridge、GodotAdapter 应分程序集输出，并声明配置矩�
       "accessors": {"get": "public"},
       "origin": "source",
       "source": "Origo.Core/Snd/ISndContext.cs",
-      "documentation": "docs/Origo.Core/Abstractions/Snd/README.zh.md"
+      "documentation": "docs/Origo.Core.Contracts/Abstractions/Snd/README.zh.md"
     }
   ]
 }

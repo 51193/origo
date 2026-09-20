@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/StateMachine/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # StateMachine (Abstractions)
 
-> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: StateMachine](../../StateMachine/README.en.md)
+> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: StateMachine](../../../Origo.Core/StateMachine/README.en.md)
 
 ## Overview
 Defines the string-stack state machine system. The state machine only stores strings; Push/Pop semantics are by associated strategy hooks. Also defines `IStateMachineContext` and `IStateMachineContainer`.
@@ -47,7 +47,7 @@ Defines the string-stack state machine system. The state machine only stores str
 ## Design Decisions
 
 ### Why the state machine only stores strings rather than state objects
-State logic is delegated to `StateMachineStrategyBase` (see [StateMachine implementation](../../StateMachine/README.en.md)); the state machine itself only maintains a stack of identifiers. This keeps the state machine lightweight and stateless, concentrates all business logic in strategies, and makes testing and reuse easy.
+State logic is delegated to `StateMachineStrategyBase` (see [StateMachine implementation](../../../Origo.Core/StateMachine/README.en.md)); the state machine itself only maintains a stack of identifiers. This keeps the state machine lightweight and stateless, concentrates all business logic in strategies, and makes testing and reuse easy.
 
 ### Why separate TryPopRuntime and TryPopOnQuit
 The two pop paths trigger different strategy hook semantics. Runtime pop triggers `OnPopRuntime` (normal state transition); exit pop triggers `OnPopBeforeQuit` (cleanup when the state machine is destroyed). Merging them into one method would force callers to pass extra parameters to distinguish the semantics, increasing misuse risk.

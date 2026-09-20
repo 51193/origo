@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.Core.Tests/Blackboard -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 黑板 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
 > [↔ 被测模块: Origo.Core/Blackboard](../Origo.Core/Blackboard/README.zh.md)
-> [↔ 抽象: Origo.Core/Abstractions/Blackboard](../Origo.Core/Abstractions/Blackboard/README.zh.md)
+> [↔ 抽象: Origo.Core.Contracts/Abstractions/Blackboard](../Origo.Core.Contracts/Abstractions/Blackboard/README.zh.md)
 
 ## 被测行为概览
 

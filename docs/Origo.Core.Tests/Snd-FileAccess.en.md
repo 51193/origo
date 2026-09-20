@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # File Access Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.en.md)
 > [↔ Behavior under test: usage/agent-reference](../usage/agent-reference.en.md)
 
 ## Behavior Under Test Overview

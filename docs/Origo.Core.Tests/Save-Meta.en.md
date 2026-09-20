@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Meta -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Metadata Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Save/Meta](../Origo.Core/Save/Meta/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Save/Meta](../Origo.Core.Contracts/Save/Meta/README.en.md)
 > [↔ Behavior under test: usage/persistence-flow](../usage/persistence-flow.en.md)
 
 ## Behavior Overview

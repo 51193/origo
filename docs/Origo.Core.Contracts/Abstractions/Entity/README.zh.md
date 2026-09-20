@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Entity/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Entity (Abstractions)
 
-> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Snd/Entity](../../Snd/Entity/README.zh.md)
+> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Snd/Entity](../../../Origo.Core/Snd/Entity/README.zh.md)
 
 ## 概述
 
@@ -32,7 +32,7 @@
 | `TryGetData<T>(name, out value)` | 安全读取的 out 参数变体，支持 `if (TryGetData("hp", out var hp))` 惯用法，避免丢弃 found 标志 |
 | `GetData<T>(name)` | 强断言读取，数据缺失或类型不匹配时抛出 `InvalidOperationException`。适用于调用方已知数据必定存在的场景（fail-fast） |
 
-> 数据变更的观察不在此接口上。响应数据变更通过 `ObserverStrategyBase` 的 `OnDataChanged` 钩子实现，由 `ISndObserverStrategyAccess` 挂载。详见 [Snd/Strategy](../../Snd/Strategy/README.zh.md)。
+> 数据变更的观察不在此接口上。响应数据变更通过 `ObserverStrategyBase` 的 `OnDataChanged` 钩子实现，由 `ISndObserverStrategyAccess` 挂载。详见 [Snd/Strategy](../../../Origo.Core/Snd/Strategy/README.zh.md)。
 
 ### ISndNodeAccess
 
@@ -123,7 +123,7 @@
 
 ### 为什么 TryGetData 使用 found/value 元组
 
-参考 Blackboard 的[设计决策(../../../Origo.Core.Contracts/Abstractions/Blackboard/README.zh.md#设计决策)中的存储理由。
+参考 Blackboard 的[设计决策](../Blackboard/README.zh.md#设计决策)中的存储理由。
 
 ### 为什么观察者钩子签名包含 target 参数
 

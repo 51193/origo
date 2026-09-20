@@ -4,21 +4,13 @@
 
 ## 中文
 - [README](README.zh.md)
-- [Blackboard/](Blackboard/)
 - [Entity/](Entity/)
-- [Lifecycle/](Lifecycle/)
 - [Node/](Node/)
 - [Scene/](Scene/)
-- [Snd/](Snd/)
-- [StateMachine/](StateMachine/)
 
 ## English
 - [README](README.en.md)
-- [Blackboard/](Blackboard/)
 - [Entity/](Entity/)
-- [Lifecycle/](Lifecycle/)
 - [Node/](Node/)
 - [Scene/](Scene/)
-- [Snd/](Snd/)
-- [StateMachine/](StateMachine/)
 

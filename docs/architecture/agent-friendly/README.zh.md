@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Agent Friendly 调查报告
 
@@ -40,7 +40,7 @@ Agent Friendly 的价值应体现为更高的任务完成率、更少的人类�
 
 - [AGENTS.md](../../../AGENTS.md) 的单一入口、完整链路阅读与验证闭环是现有优势。守卫独立测得 223 行、16,364 字节；16 KiB 是 Origo 自定预算，剩余 20 字节不是模型上限，也不是友好度指标。
 - `scripts/test.sh` 测试整个 solution；`-m:1` 为 Windows xUnit v3 discovery race 而设。提效应从范围选择着手，不能未经核实移除串行约束。
-- [Snd 角色文档](../../Origo.Core/Abstractions/Snd/README.zh.md) 明确 9 个 Snd 角色加 `IStateMachineContext`，合计 10 个 companion。能力清单的简写易歧义，不能当作已确认的实现缺陷。
+- [Snd 角色文档](../../Origo.Core.Contracts/Abstractions/Snd/README.zh.md) 明确 9 个 Snd 角色加 `IStateMachineContext`，合计 10 个 companion。能力清单的简写易歧义，不能当作已确认的实现缺陷。
 - [TCP Bridge](../../Origo.ConsoleBridge/README.zh.md) 端口已可配置；单连接和 loopback 有明确理由。并行任务需隔离实例与状态，不应直接多客户端写入同一会话。
 - [Godot 控制台](../../Origo.GodotAdapter/Console/README.zh.md) 的 `press_button` 发射按钮信号，`camera_view` 输出投影信息；分别不能证明真实输入可达性和最终画面正确。
 - [真实 Godot 集成测试](../../Origo.GodotAdapter.Integration.Tests/README.zh.md) 已验证宿主契约，不能替代用户游戏的视觉、交互与玩法验收。

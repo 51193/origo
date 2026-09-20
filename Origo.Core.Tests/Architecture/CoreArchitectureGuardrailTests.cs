@@ -588,3 +588,20 @@ public class TypedDataHomeIdentityTests
         Assert.Null(typeof(OrigoRuntime).Assembly.GetType("Origo.Core.Snd.Metadata.TypedData"));
     }
 }
+
+public class SndContractsIdentityTests
+{
+    [Fact]
+    public void SndEntityContract_ShouldLiveInContractsAssembly()
+    {
+        Assert.Equal("Origo.Core.Contracts",
+            typeof(Origo.Core.Abstractions.Entity.ISndEntity).Assembly.GetName().Name);
+    }
+
+    [Fact]
+    public void SndContextContract_ShouldLiveInContractsAssembly()
+    {
+        Assert.Equal("Origo.Core.Contracts",
+            typeof(Origo.Core.Snd.ISndContext).Assembly.GetName().Name);
+    }
+}

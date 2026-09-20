@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Abstractions
 
@@ -13,15 +13,11 @@ The stable public abstraction layer of Origo.Core. All interfaces are defined in
 
 | Sub-Module | Capability | Details |
 |-----------|-----------|---------|
-| [Blackboard](Blackboard/README.en.md) | General key-value blackboard interface, preserves type info | `IBlackboard`: SetValue/Get + serialization |
-| [Entity](Entity/README.en.md) | SND entity's five capability interfaces + standalone lifecycle interface | `ISndEntity` = `ISndDataAccess` + `ISndNodeAccess` + `ISndStrategyAccess` + `ISndActiveStrategyAccess` + `ISndObserverStrategyAccess`; `IEntityLifecycle` is a standalone `internal` interface (for internal framework use) |
-| [Lifecycle](Lifecycle/README.en.md) | Session management abstraction interfaces | `ISessionManager` (session lifecycle) + `ISessionRun` (session runtime facade) |
+| [Entity](Entity/README.en.md) | Internal SND entity lifecycle contract | `IEntityLifecycle` (internal); public entity role interfaces live in Contracts |
 | [Node](Node/README.en.md) | Internal node container contract | `INodeHost` (internal); `INodeFactory` / `INodeHandle` live in Contracts |
-| [Scene](Scene/README.en.md) | SND scene access and host | public `ISndSceneReadAccess` (GetEntities/FindByName) + internal `ISndSceneAccess` / `ISndSceneHost` (orchestration) |
-| [Snd](Snd/README.en.md) | ISndContext 10 companion properties | IStateMachineContext also inherits some of them |
-| [StateMachine](StateMachine/README.en.md) | String-stack state machine system | `IStateMachine` + `IStateMachineContext` + `IStateMachineContainer` |
+| [Scene](Scene/README.en.md) | Internal SND scene orchestration contracts | `ISndSceneAccess` / `ISndSceneHost` / `IOwningSessionBindable` (internal); the read-only contract lives in Contracts |
 
-> Platform leaf contracts (logging, console input/output, file system, and paths)
+> Public entity, session, scene, state-machine, SND companion, and leaf contracts
 > live in the stable contract package
 > [Origo.Core.Contracts](../../Origo.Core.Contracts/Abstractions/README.en.md).
 

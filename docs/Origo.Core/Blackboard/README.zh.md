@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core/Blackboard/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Blackboard
 
-> [↑ 回到 Origo.Core](../README.zh.md) · [↔ 抽象: Abstractions/Blackboard](../Abstractions/Blackboard/README.zh.md) · [相关测试: Blackboard](../../Origo.Core.Tests/Blackboard.zh.md)
+> [↑ 回到 Origo.Core](../README.zh.md) · [↔ 抽象: Abstractions/Blackboard](../../Origo.Core.Contracts/Abstractions/Blackboard/README.zh.md) · [相关测试: Blackboard](../../Origo.Core.Tests/Blackboard.zh.md)
 
 ## 概述
 

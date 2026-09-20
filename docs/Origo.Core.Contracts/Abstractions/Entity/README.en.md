@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Abstractions/Entity/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Entity/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Entity (Abstractions)
 
-> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Entity](../../Snd/Entity/README.en.md)
+> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Entity](../../../Origo.Core/Snd/Entity/README.en.md)
 
 ## Overview
 Defines the abstract interface system for SND entities following ISP. Five capabilities (data, nodes, passive strategies, active strategies, observer strategies) are split into independent interfaces, composed by `ISndEntity`. `IEntityLifecycle` is an `internal` interface defined separately for framework/adapter-layer shared implementation.
@@ -31,7 +31,7 @@ Defines the abstract interface system for SND entities following ISP. Five capab
 | `TryGetData<T>(name, out value)` | Out-parameter variant of the safe read, supporting the `if (TryGetData("hp", out var hp))` idiom without discarding the found flag |
 | `GetData<T>(name)` | Strong-assertion read; throws `InvalidOperationException` if missing/type-mismatch. For callers that know the data must exist (fail-fast) |
 
-> Data change observation is not on this interface. Reacting to data changes goes through `ObserverStrategyBase.OnDataChanged`, mounted via `ISndObserverStrategyAccess`. See [Snd/Strategy](../../Snd/Strategy/README.en.md).
+> Data change observation is not on this interface. Reacting to data changes goes through `ObserverStrategyBase.OnDataChanged`, mounted via `ISndObserverStrategyAccess`. See [Snd/Strategy](../../../Origo.Core/Snd/Strategy/README.en.md).
 
 ### ISndNodeAccess
 
@@ -122,7 +122,7 @@ Lifecycle hook triggering is controlled by the framework layer. Putting `Recover
 
 ### Why TryGetData uses found/value tuple
 
-See Blackboard's [design decisions(../../../Origo.Core.Contracts/Abstractions/Blackboard/README.en.md#design-decisions) for the storage rationale.
+See Blackboard's [design decisions](../Blackboard/README.en.md#design-decisions) for the storage rationale.
 
 ### Why observer hook signatures include target parameter
 
