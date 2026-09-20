@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Model
 
@@ -128,6 +128,7 @@ public interface IStateMachineContext : ISndBlackboardAccess, ISndDeferredAction
     ISndSceneReadAccess SceneAccess { get; }      // Current session scene
     void EnqueueBusinessDeferred(Action action);           // Inherits ISndDeferredActions
     int GetPendingPersistenceRequestCount();               // Inherits ISndDeferredActions
+    bool IsPersistenceIdle { get; }                        // Inherits ISndDeferredActions
 }
 ```
 

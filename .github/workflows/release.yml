@@ -4,6 +4,22 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing v* tag to release (e.g. v0.0.10-nightly.20260914)'
+        required: true
+        type: string
+      snapshot:
+        description: 'Snapshot build: publish the GitHub Release as a pre-release'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  # A dispatched run has no tag ref, so the input is the group key there.
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   godot-integration-tests:
@@ -11,6 +27,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          # A dispatched run is based on main; the gate must still test the tag.
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -56,22 +75,165 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Validate tag matches version
+      - name: Resolve release tag
+        id: resolve-tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          set -euo pipefail
+          # 'push' carries the tag in the ref; 'workflow_dispatch' does not, so
+          # the tag arrives as an input instead. The weekly snapshot job starts
+          # this pipeline with 'gh workflow run release.yml -f tag=...' because
+          # a tag pushed with GITHUB_TOKEN does not fire the 'push: tags'
+          # trigger; its github.ref_name is then the dispatching branch.
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$REF" != "refs/heads/main" ]]; then
+              echo "ERROR: dispatch release.yml from refs/heads/main (got '${REF}')." >&2
+              exit 1
+            fi
+            TAG="$INPUT_TAG"
+          else
+            TAG="$REF_NAME"
+          fi
+          if [[ -z "$TAG" || "$TAG" != v* ]]; then
+            echo "ERROR: release tag '${TAG}' must be a v* tag." >&2
+            exit 1
+          fi
+          if ! git ls-remote --exit-code --refs origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "ERROR: tag '${TAG}' does not exist on origin." >&2
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Releasing tag ${TAG} (event: ${EVENT_NAME})."
+
+      - name: Resolve current tag commit
+        id: tag-commit
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # A previous run of this same workflow may already have moved the tag
+          # to a release commit (reruns/concurrency), so build the tag as it
+          # exists now instead of the event payload SHA.
+          git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          # The ref SHA is compared against the remote when moving the tag; the
+          # peeled commit is what the workflow builds. They differ for
+          # annotated tags.
+          TAG_REF_SHA="$(git rev-parse "refs/tags/${TAG}")"
+          TAG_COMMIT_SHA="$(git rev-parse "refs/tags/${TAG}^{commit}")"
+          if [[ "$TAG_COMMIT_SHA" != "$(git rev-parse HEAD)" ]]; then
+            echo "Tag ${TAG} points at ${TAG_COMMIT_SHA}; checking out that commit."
+            git checkout --force "$TAG_COMMIT_SHA"
+          fi
+          echo "base_sha=${TAG_REF_SHA}" >> "$GITHUB_OUTPUT"
+          echo "base_commit=${TAG_COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Sync version from tag
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # The release workflow builds from a tag checkout. Keep the package
+          # version authoritative to the tag: rewrite the version stamps in
+          # Directory.Build.props before any validation or build step runs.
+          TAG_VERSION="${TAG#v}"
+          if [[ -z "$TAG_VERSION" || "$TAG" == "$TAG_VERSION" ]]; then
+            echo "ERROR: release tag '$TAG' does not start with 'v'." >&2
+            exit 1
+          fi
+
+          python3 - "$TAG_VERSION" <<'PY'
+          import re
+          import sys
+
+          version = sys.argv[1]
+
+          # AssemblyVersion/FileVersion are always four numeric parts and
+          # cannot carry the prerelease suffix used by nightly tags.
+          numeric = re.split(r"[-+]", version, maxsplit=1)[0]
+          parts = numeric.split(".")
+          if not parts or not all(part.isdigit() for part in parts) or len(parts) > 4:
+              raise SystemExit(
+                  f"ERROR: tag version '{version}' does not start with a usable numeric version."
+              )
+          parts = (parts + ["0"] * 4)[:4]
+          assembly_version = ".".join(parts)
+
+          path = "Directory.Build.props"
+          with open(path, encoding="utf-8") as handle:
+              content = handle.read()
+
+          for element, replacement in (
+              ("Version", version),
+              ("AssemblyVersion", assembly_version),
+              ("FileVersion", assembly_version),
+          ):
+              content, count = re.subn(
+                  rf"(<{element}>)[^<]+(</{element}>)",
+                  lambda match, value=replacement: f"{match.group(1)}{value}{match.group(2)}",
+                  content,
+              )
+              if count != 1:
+                  raise SystemExit(
+                      f"ERROR: expected exactly one <{element}> element in {path}, found {count}."
+                  )
+
+          with open(path, "w", encoding="utf-8") as handle:
+              handle.write(content)
+
+          print(
+              f"Synced {path}: <Version>={version}, "
+              f"<AssemblyVersion>=<FileVersion>={assembly_version}"
+          )
+          PY
+
+          echo "::group::Version stamps after sync"
+          grep -nE '<(Version|AssemblyVersion|FileVersion)>' Directory.Build.props
+          echo "::endgroup::"
+
+      - name: Commit synced version
+        id: release-commit
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- Directory.Build.props; then
+            changed=false
+            echo "Directory.Build.props already matches ${TAG}; no release commit needed."
+          else
+            changed=true
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add Directory.Build.props
+            git commit -m "chore(release): sync version stamps to ${TAG}"
+            echo "::group::Release commit"
+            git show --stat --oneline HEAD
+            echo "::endgroup::"
+          fi
+          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tag matches version
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          TAG_VERSION="${TAG#v}"
           PROPS_VERSION=$(grep -oP '<Version>\K[^<]+' Directory.Build.props | head -1)
           if [[ "$TAG_VERSION" != "$PROPS_VERSION" ]]; then
-            echo "ERROR: Tag version 'v$TAG_VERSION' does not exactly match Directory.Build.props version '$PROPS_VERSION'."
-            echo "Update <Version> in Directory.Build.props (including the nightly suffix, if any) before tagging."
+            echo "ERROR: version sync failed: tag 'v$TAG_VERSION' != Directory.Build.props version '$PROPS_VERSION'."
             exit 1
           fi
           echo "Tag version v$TAG_VERSION matches Directory.Build.props version $PROPS_VERSION."
 
       - name: Verify release metadata
         env:
-          TAG_VERSION: ${{ github.ref_name }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          # verify-release.sh reads TAG_VERSION from the environment.
+          export TAG_VERSION="${TAG#v}"
           bash scripts/verify-release.sh
 
       - name: DocSync validate
@@ -120,8 +282,9 @@ jobs:
         run: cp nuget.config.example ./artifacts/nuget.config
 
       - name: Package documentation snapshot
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
           DIRNAME="origo-docs-${VERSION}"
           mkdir -p "${DIRNAME}/docs"
@@ -132,8 +295,58 @@ jobs:
           tar -czf "./artifacts/${DIRNAME}.tar.gz" "${DIRNAME}"
           zip -rq "./artifacts/${DIRNAME}.zip" "${DIRNAME}"
 
+      - name: Write release commit back to main and tag
+        if: steps.release-commit.outputs.changed == 'true'
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+          BASE_SHA: ${{ steps.tag-commit.outputs.base_sha }}
+          BASE_COMMIT_SHA: ${{ steps.tag-commit.outputs.base_commit }}
+          RELEASE_SHA: ${{ steps.release-commit.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --force origin "refs/heads/main:refs/remotes/origin/main"
+          REMOTE_MAIN_SHA="$(git rev-parse refs/remotes/origin/main)"
+          REMOTE_TAG_SHA="$(git ls-remote --refs origin "refs/tags/${TAG}" | cut -f1 | head -1)"
+
+          if [[ "$REMOTE_TAG_SHA" == "$RELEASE_SHA" && "$REMOTE_MAIN_SHA" == "$RELEASE_SHA" ]]; then
+            echo "main and tag ${TAG} already point at the release commit."
+            exit 0
+          fi
+          if [[ "$REMOTE_TAG_SHA" != "$BASE_SHA" ]]; then
+            echo "ERROR: tag ${TAG} moved from ${BASE_SHA} to ${REMOTE_TAG_SHA} during this run." >&2
+            exit 1
+          fi
+          if [[ "$REMOTE_MAIN_SHA" != "$BASE_COMMIT_SHA" ]]; then
+            echo "ERROR: main is at ${REMOTE_MAIN_SHA}, but ${TAG} was created on ${BASE_COMMIT_SHA}." >&2
+            echo "Automatic version write-back requires the tag to be created on the current main tip." >&2
+            exit 1
+          fi
+
+          # All checks, tests, and packages above ran on RELEASE_SHA. Only now
+          # fast-forward main and move the tag, atomically, so a failed release
+          # never rewrites repository refs.
+          git push --atomic \
+            --force-with-lease="refs/heads/main:${BASE_COMMIT_SHA}" \
+            --force-with-lease="refs/tags/${TAG}:${BASE_SHA}" \
+            origin "${RELEASE_SHA}:refs/heads/main" "${RELEASE_SHA}:refs/tags/${TAG}"
+          echo "main and tag ${TAG} now point at release commit ${RELEASE_SHA}."
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           files: ./artifacts/*
           generate_release_notes: true
+
+      - name: Mark snapshot release as pre-release
+        if: inputs.snapshot == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          # Only the automated snapshot path (the weekly job passes
+          # '-f snapshot=true') forces a pre-release, so an automatic snapshot
+          # never takes over as the repository's Latest release. The release step
+          # above is left exactly as it was for tags pushed or released by hand,
+          # so their state stays as chosen on GitHub.
+          gh release edit "${TAG}" --prerelease
+          echo "Marked ${TAG} as a pre-release."

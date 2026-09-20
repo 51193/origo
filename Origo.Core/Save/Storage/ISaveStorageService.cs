@@ -22,6 +22,21 @@ public interface ISaveStorageService
     /// <summary>Enumerates all save slots with their metadata.</summary>
     IReadOnlyList<SaveMetaDataEntry> EnumerateSavesWithMetaData();
 
+    /// <summary>
+    ///     Deletes a save slot together with any interrupted-snapshot
+    ///     <c>.tmp</c> and <c>.bak</c> remnants. The active <c>current/</c>
+    ///     directory is never touched.
+    /// </summary>
+    /// <remarks>
+    ///     Fails when neither the slot nor a remnant exists. Deletion is not
+    ///     transactional across multiple directories: the real slot is removed
+    ///     first, then leftovers, so an I/O failure cannot leave a valid slot
+    ///     whose backup was already deleted.
+    /// </remarks>
+    /// <exception cref="System.ArgumentException">Thrown when <paramref name="saveId" /> is not a valid save ID token.</exception>
+    /// <exception cref="System.InvalidOperationException">Thrown when no slot or remnant exists for <paramref name="saveId" />.</exception>
+    void DeleteSave(string saveId);
+
     /// <summary>Writes a save payload to the current/ directory.</summary>
     /// <remarks>
     ///     The implementation must fully consume the payload's

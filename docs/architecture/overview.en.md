@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
@@ -117,7 +117,7 @@ Origo uses a single-threaded frame loop model:
 - A single frame is treated as a logical atomic boundary
 - Cross-frame semantics fall into recoverable state (blackboard, state machines, entity Data)
 
-> **Deferred direction**: Stateless strategies provide a foundation for entity-level concurrency, but in-entity strategy ordering, cross-entity calls, observer notifications, and container mutation still require serial semantics. The candidate design is an "entity concurrency" flag + concurrency-mode data + a parallel batch followed by a serial batch; deferred because there is no performance bottleneck today. See [Extension Directions and Deferred Designs](extension-directions.en.md) for the full trade-off.
+> **Deferred direction**: Stateless strategies provide a foundation for entity-level concurrency, but in-entity strategy ordering, cross-entity calls, observer notifications, and container mutation still require serial semantics. The candidate design is an "entity concurrency" flag + concurrency-mode data + a parallel batch followed by a serial batch; deferred because there is no performance bottleneck today. See [#45](https://github.com/51193/origo/issues/45) for the full trade-off.
 
 ## I/O Boundary
 
@@ -136,7 +136,7 @@ Suffix routing, codec strategy, and I/O error semantics are centrally governed o
 
 `IDataSourceIoGateway` is the framework's hard I/O content boundary: **any module within the system (including strategies) should access file content through this boundary**. File metadata operations (existence checks, directory management, etc.) go through `IFileMetaAccess`, and path operations through `IPathResolver`. The file operations exposed to strategies via `ISndFileAccess` and `ISndArchiveFileAccess` delegate to the above three interfaces; strategies do not need to handle raw text parsing or platform path differences themselves.
 
-> **Deferred direction**: Mount the local file system, save directories, and network resources as `DataSourceNode` tree roots, replacing several file APIs with navigation such as `path -> to -> file -> entity -> health_point`. Synchronous tree reads are sufficient for local files today, but remote nodes would block the frame, so this is deferred. See [Extension Directions and Deferred Designs](extension-directions.en.md) for the full trade-off.
+> **Deferred direction**: Mount the local file system, save directories, and network resources as `DataSourceNode` tree roots, replacing several file APIs with navigation such as `path -> to -> file -> entity -> health_point`. Synchronous tree reads are sufficient for local files today, but remote nodes would block the frame, so this is deferred. See [#44](https://github.com/51193/origo/issues/44) for the full trade-off.
 
 ## Adapter Layer and Core Layer Separation Principles
 

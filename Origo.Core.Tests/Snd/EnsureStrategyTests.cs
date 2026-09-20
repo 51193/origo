@@ -4,12 +4,15 @@ using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Node;
 using Origo.Core.Snd;
+using Origo.Core.Snd.Strategy;
 using Xunit;
 
 namespace Origo.Core.Tests;
 
 public class EnsureStrategyTests
 {
+    private const string _realProbeIndex = "test.ensure.real_probe";
+
     [Fact]
     public void EnsureStrategy_DataKeyMissing_SetsDataAndReturnsTrue()
     {
@@ -61,6 +64,59 @@ public class EnsureStrategyTests
         Assert.Equal("AddStrategy boom", ex.Message);
         var (found, _) = entity.TryGetData<string>("character.path_impl");
         Assert.False(found);
+    }
+
+    [Fact]
+    public void EnsureStrategy_RealRuntime_MountsAndRunsLifecycleStrategy()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new RealEnsureProbeStrategy())
+            .Build();
+        var entity = harness.SpawnEntity("hero", []);
+
+        var mounted = entity.EnsureStrategy("character.path_impl", _realProbeIndex);
+
+        Assert.True(mounted);
+        Assert.Equal(_realProbeIndex, harness.GetEntityData<string>("hero", "character.path_impl"));
+        Assert.Equal(1, harness.GetEntityData<int>("hero", "ensure_probe.after_add_count"));
+
+        harness.DriveFrame();
+        Assert.True(harness.GetEntityData<bool>("hero", "ensure_probe.processed"));
+
+        var mountedAgain = entity.EnsureStrategy("character.path_impl", _realProbeIndex);
+        Assert.False(mountedAgain);
+        Assert.Equal(1, harness.GetEntityData<int>("hero", "ensure_probe.after_add_count"));
+    }
+
+    [Fact]
+    public void EnsureReplaceableStrategy_RealRuntime_MountsDefaultStrategy()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new RealEnsureProbeStrategy())
+            .Build();
+        var entity = harness.SpawnEntity("hero", []);
+
+        var mounted = entity.EnsureReplaceableStrategy("character.path_impl", _realProbeIndex);
+
+        Assert.True(mounted);
+        Assert.Equal(_realProbeIndex, harness.GetEntityData<string>("hero", "character.path_impl"));
+        Assert.Equal(1, harness.GetEntityData<int>("hero", "ensure_probe.after_add_count"));
+
+        harness.DriveFrame();
+        Assert.True(harness.GetEntityData<bool>("hero", "ensure_probe.processed"));
+    }
+
+    [StrategyIndex(_realProbeIndex)]
+    private sealed class RealEnsureProbeStrategy : LifecycleStrategyBase
+    {
+        public override void AfterAdd(ISndEntity entity, ISndContext ctx)
+        {
+            var (_, count) = entity.TryGetData<int>("ensure_probe.after_add_count");
+            entity.SetData("ensure_probe.after_add_count", count + 1);
+        }
+
+        public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
+            entity.SetData("ensure_probe.processed", true);
     }
 
     private sealed class ThrowingAddSndEntity(string entityName) : ISndEntity

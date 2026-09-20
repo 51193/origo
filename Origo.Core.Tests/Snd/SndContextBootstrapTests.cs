@@ -36,6 +36,39 @@ public class SndContextBootstrapTests
     }
 
     [Fact]
+    public void Bootstrap_CompletionState_TransitionsAfterEntryLoad()
+    {
+        var ctx = CreateBootstrapContext(out var fs);
+        fs.SeedFile("entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
+        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
+
+        ctx.Bootstrap();
+
+        Assert.False(ctx.Lifecycle.IsBootstrapCompleted);
+        Assert.False(ctx.Deferred.IsPersistenceIdle);
+        Assert.Equal(1, ctx.Deferred.GetPendingPersistenceRequestCount());
+
+        ctx.FlushFrame();
+
+        Assert.True(ctx.Lifecycle.IsBootstrapCompleted);
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+    }
+
+    [Fact]
+    public void Bootstrap_EntryLoadFailure_LeavesCompletionFalseAndPersistenceIdle()
+    {
+        var ctx = CreateBootstrapContext(out _);
+        ctx.Bootstrap();
+
+        Assert.Throws<FileNotFoundException>(() => ctx.FlushFrame());
+
+        Assert.False(ctx.Lifecycle.IsBootstrapCompleted);
+        Assert.True(ctx.Deferred.IsPersistenceIdle);
+        Assert.Equal(0, ctx.Deferred.GetPendingPersistenceRequestCount());
+    }
+
+    [Fact]
     public void Bootstrap_WithConfigureConverters_CallbackIsInvoked()
     {
         var invoked = false;

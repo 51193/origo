@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -41,6 +41,8 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 两阶段写入 | 先写 `current/`（带 .write_in_progress 标记），校验通过后原子复制到 `save_{id}/` | [持久化流程](persistence-flow.zh.md) |
 | 严格读取校验 | .write_in_progress 标记检测、关卡三件套完整性校验、progress.json 强制存在 | [持久化流程](persistence-flow.zh.md) |
 | 快照管理 | `ctx.Save.ListSaves()` / `ListSavesWithMetaData()`，支持保存选择 UI | [持久化流程](persistence-flow.zh.md) |
+| 存档槽位删除 | `ctx.Save.DeleteSave(saveId)` 删除非活动槽及 `.tmp`/`.bak` 残留，保护活动槽与待执行 workflow | [持久化流程](persistence-flow.zh.md) |
+| 持久化完成状态 | `ctx.Deferred.IsPersistenceIdle` 与 `ctx.Lifecycle.IsBootstrapCompleted` 提供帧驱动完成观察 | [持久化流程](persistence-flow.zh.md) |
 | meta.map 显示元数据 | 与业务数据分离的显示元数据系统，ISaveMetaContributor 插件式贡献者模式 | [持久化流程](persistence-flow.zh.md) |
 | 幂等去重 | SHA256 哈希比对，相同游戏状态跳过 I/O 写入 | [↔ Save/Storage](../Origo.Core/Save/Storage/README.zh.md) |
 
@@ -56,7 +58,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 
 | 能力 | 说明 | 文档入口 |
 |------|------|----------|
-| 11 个内置命令 | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy | [控制台命令](console-commands.zh.md) |
+| 16 个内置命令 | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy / list_saves / save / load / delete_save / switch_level | [控制台命令](console-commands.zh.md) |
 | 自定义命令注册 | Core 层继承 ConsoleCommandHandlerBase，适配层继承 CommandHandlerBase | [控制台命令](console-commands.zh.md) |
 | TCP 远程控制台桥接 | ConsoleBridgeServer 监听 localhost:9876，单连接模式，双向 I/O 经由 pub-sub | [控制台命令](console-commands.zh.md) |
 | 命令类型推断 | bb_set / entity_set_data 自动推断 int/float/bool/string 类型，已存在 key 保持原类型 | [控制台命令](console-commands.zh.md) |
@@ -111,7 +113,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 |------|------|----------|
 | 平台无关 | Origo.Core 仅依赖 System.\*，不引用任何引擎特定代码 | [架构概览](../architecture/overview.zh.md) |
 | 适配层隔离 | 引擎代码仅在 Origo.GodotAdapter 实现 Core 抽象，适配层不参与策略生命周期管理 | [架构概览](../architecture/overview.zh.md) |
-| 接口隔离（ISP） | ISndContext 拆分为 9 个窄角色接口，ISessionRun 返回抽象 IStateMachineContainer | [架构概览](../architecture/overview.zh.md) |
+| 接口隔离（ISP） | ISndContext 提供 10 个 companion 属性（9 个 Snd 窄角色接口 + IStateMachineContext），ISessionRun 返回抽象 IStateMachineContainer | [架构概览](../architecture/overview.zh.md) |
 | 单线程帧模型 | 一帧 = 一个逻辑原子边界，延迟动作通过队列顺序执行。宿主（如 Godot `_Process`）通过 `IOrigoFrameDriver.DriveFrame(double delta)` 驱动帧，Core 内部顺序：实体 Process → 业务队列 → Kill 待处理 → 系统队列 → 控制台 | [架构概览](../architecture/overview.zh.md) |
 
 ---

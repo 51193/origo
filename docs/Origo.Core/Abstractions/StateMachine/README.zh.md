@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # StateMachine (Abstractions)
 
@@ -41,6 +41,7 @@
 | `ProgressBlackboard` | 进度级黑板；无活动流程时为 null，继承自 [ISndBlackboardAccess](../Snd/README.zh.md) |
 | `EnqueueBusinessDeferred(action)` | 将业务逻辑延迟动作入队，继承自 [ISndDeferredActions](../Snd/README.zh.md) |
 | `GetPendingPersistenceRequestCount()` | 待持久化请求数，继承自 [ISndDeferredActions](../Snd/README.zh.md) |
+| `IsPersistenceIdle` | 是否没有待执行/执行中的持久化请求，继承自 [ISndDeferredActions](../Snd/README.zh.md) |
 | `SessionBlackboard` | 会话级黑板；无活动会话时为 null（自有） |
 | `SceneAccess` | 当前会话 SND 只读场景访问（`ISndSceneReadAccess`：GetEntities / FindByName） |
 

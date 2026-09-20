@@ -88,6 +88,19 @@ public class KeyValueFileParserTests
     }
 
     [Fact]
+    public void KeyValueFileParser_Parse_StrictMode_DuplicateKey_LastWinsAndWarns()
+    {
+        // Strict mode rejects malformed lines, but a duplicate key is
+        // structurally valid and follows the documented last-value-wins
+        // contract with an observable warning.
+        var logger = new TestLogger();
+        var result = KeyValueFileParser.Parse("key: v1\nkey: v2", "test", true, logger);
+
+        Assert.Equal("v2", result["key"]);
+        Assert.Contains(logger.Warnings, warning => warning.Contains("Duplicate key", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void KeyValueFileParser_Parse_ValueContainsColon_PreservesFullValue()
     {
         var logger = new TestLogger();

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Save/Storage/README -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 12 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Storage
 
@@ -13,7 +13,7 @@
 
 | 文件 | 职责 |
 |------|------|
-| `ISaveStorageService.cs` | 存档读写服务公开接口（跨程序集） |
+| `ISaveStorageService.cs` | 存档读写/删除服务公开接口（跨程序集） |
 | `ISavePathPolicy.cs` | 存档路径策略接口（可替换布局） |
 | `DefaultSaveStorageService.cs` | ISaveStorageService 默认实现，内部委托给 SaveFileHandle + SavePayloadWriter/Reader |
 | `DefaultSavePathPolicy.cs` | ISavePathPolicy 默认实现，委托给 SavePathLayout |
@@ -22,7 +22,7 @@
 | `SavePayloadWriter.cs` | 存档写入编排（两阶段写入 + marker 管理） |
 | `SavePayloadReader.cs` | 存档读取编排（严格读取 + 完整性校验） |
 | `SaveGamePayloadFactory.cs` | 构造 SaveGamePayload（业务数据聚合） |
-| `SaveStorageFacade.cs` | 存档 I/O 编排层（internal static）：EnumerateSaveIds / EnumerateSavesWithMetaData / 读写编排 / 快照复制。纯编排逻辑，具体文件解析/序列化委托给 SavePayloadReader / SavePayloadWriter，原子写入逻辑委托给 SaveAtomicWriter |
+| `SaveStorageFacade.cs` | 存档 I/O 编排层（internal static）：EnumerateSaveIds / EnumerateSavesWithMetaData / 读写编排 / 删除槽位与残留 / 快照复制。纯编排逻辑，具体文件解析/序列化委托给 SavePayloadReader / SavePayloadWriter，原子写入逻辑委托给 SaveAtomicWriter |
 | `SaveAtomicWriter.cs` | 原子写入辅助类（internal static）：SHA-256 幂等去重、write-in-progress marker 管理、临时目录准备、backup-replace 快照交换。仅供 SaveStorageFacade 调用 |
 
 ## 文件布局
@@ -70,7 +70,20 @@
 - **写入方法**（`WriteSavePayloadToCurrent*` / `WriteLevelPayloadOnlyToCurrent` / `WriteProgressOnlyToCurrent`）必须在本次调用返回前完整消费传入的节点树，不得保留引用延迟读取；框架在这些写入边界之后立即释放节点，因此自定义实现返回后也不得再访问节点。
 - 框架内部加载/挂载路径在 payload 不再使用后立即释放；公共接口的调用方所有权不会被框架内部路径代为管理。
 
+## 删除存档槽位
+
+`ISaveStorageService.DeleteSave(string saveId)` 删除 `save_{id}/`，并同时清理同一 id 的 `save_{id}.tmp/` 与 `save_{id}.bak/` 残留。`current/` 永不被该方法触碰。
+
+- save id 先经过标准 token 校验（ASCII 字母、数字、`.`、`_`、`-`），与写入/读取路径一致。
+- 三类目录都不存在时抛 `InvalidOperationException`，不静默成功。
+- 删除顺序为先正式槽、后 `.tmp/.bak`：即使残留清理失败，也不会留下已删除备份但仍可读取的正式槽。
+- 活动存档保护属于 `ISndSaveOperations` 业务层职责；存储层只执行显式传入的槽位删除。
+
 ## 设计决策
+
+### 为什么删除槽位由存储层统一实现
+
+删除必须覆盖正式槽与原子写留下的 `.tmp/.bak` 残留。如果由 UI/业务层先枚举再逐个删除，不仅会重复路径策略逻辑，还可能把 `save_X.tmp` 误当成独立槽位并破坏后续写入的恢复语义。统一的 `DeleteSave` 在存储层完成 token 校验和残留清理，业务层只负责活动槽位与 workflow 保护。
 
 ### 为什么两阶段写入
 

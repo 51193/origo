@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话生命周期 测试
 
@@ -23,7 +23,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `ForegroundBackgroundContractTests.cs` | 前后台 ISessionRun 行为完全一致（黑板/状态机/序列化/Dispose） |
 | `EmptySessionManagerTests.cs` | EmptySessionManager 的无操作行为 |
 | `PlayStopPlayRoundTripTests.cs` | 多次 Play→Stop→Play 的往返一致性（身份/黑板/Tick/Progress） |
-| `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun 加载错误路径（拓扑格式错误/文件缺失/后台加载失败） |
+| `ProgressRunSessionLoadingEdgeTests.cs` | ProgressRun 加载错误路径（拓扑格式错误/缺失字段/后台加载失败） |
 | `ProgressRunLoadRollbackMaskingTests.cs` | 验证后台挂载失败后的会话清理若自身抛异常（BeforeQuit 钩子）不得遮蔽原始加载异常：清理失败仅记 Warning，原异常原样传播 |
 | `SessionRunLoadRollbackMaskingTests.cs` | 验证 SessionRun 加载失败回滚（`ResetAfterLoadFailure`）逐步执行清理；`OnUnmounted` 钩子抛异常时其余步骤仍执行（实体/黑板清空），原始异常不被遮蔽，清理失败记 Warning |
 | `SaveAndSwitchForegroundTests.cs` | 保存+切换关卡的组合操作、碰撞处理、延迟队列编排、旧前台自动持久化（含 progress） |
@@ -201,6 +201,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 |---------|-----------|---------|
 | `LoadFromPayload_WhenTopologyMalformed_ThrowsInvalidOperation` | 拓扑条目格式错误（如 `bad_entry`） | InvalidOperationException（包含 "Malformed session topology entry"） |
 | `LoadFromPayload_WhenTopologyMissing_ThrowsInvalidOperation` | progress.json 无拓扑字段 | InvalidOperationException |
+| `LoadFromPayload_WhenLevelsIsNull_ThrowsInvalidOperationWithoutPartialSession` | Payload.Levels 为 null（畸形载荷） | InvalidOperationException（包含 "Levels"）；前台为 null、无任何已挂载会话 |
 | `LoadAndMountForeground_WhenSndSceneIsEmpty_ThrowsInvalidOperation` | snd_scene.json 为空或空白 | InvalidOperationException（包含 "invalid snd_scene.json"） |
 | `LoadAndMountForeground_WhenSessionStateMachineJsonIsMalformed_Throws` | session_state_machines.json 语法错误 | Exception |
 | `LoadFromPayload_WhenBackgroundLevelPayloadMissing_ThrowsInvalidOperation` | 拓扑引用后台关卡但 payload 缺失 | InvalidOperationException（包含关卡名）；不含后台 key |
@@ -369,6 +370,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 |---------|---------|---------|
 | `Parse_ExtraFields_ThrowsInvalidOperation` | levelId 中含 `=` 分隔符（字段数多于 3） | InvalidOperationException（必须恰好 key=levelId=syncProcess 三字段） |
 | `Parse_SyncFieldParsing_FollowsBoolTryParseRules` | syncProcess 字段为 TRUE/true/False/not_bool | 按 bool.TryParse 规则解析；非布尔值抛 InvalidOperationException |
+| `Join_EmptyEntries_ReturnsEmptyString` | 空条目列表 | 返回空字符串 |
+| `Parse_EmptyEntries_ThrowInvalidOperation` | 条目间有连续逗号（空条目） | InvalidOperationException（空条目是损坏拓扑，不得静默丢弃） |
 
 ## TopologyInvariantTests 测试详情
 
@@ -389,8 +392,6 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `EnsureActiveLevel_NullBlackboard_Throws` | 黑板为 null | ArgumentNullException |
 | `EnsureActiveLevel_EmptyExpectedLevelId_Throws` | 期望 levelId 为空字符串 | ArgumentException |
 | `EnsureActiveLevel_CorruptedTopology_Throws` | 拓扑为非法格式字符串 | InvalidOperationException |
-| `Join_EmptyEntries_ReturnsEmptyString` | 空条目列表 | 返回空字符串 |
-| `Parse_IgnoreEmptyEntries` | 条目间有连续逗号（空条目） | 空条目被忽略 |
 
 ## BackgroundSessionTests 测试详情
 
@@ -438,7 +439,8 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 
 | 测试方法 | 触发的错误 | 预期行为 |
 |---------|-----------|---------|
-| `CreateBackgroundSession_Throws_WhenLevelIdInvalid` | null/空/空白 levelId | ArgumentException |
+| `CreateBackgroundSession_Throws_WhenLevelIdInvalid` | null/空/空白 levelId 或含 `/`、`=`、`,`、空格、非 ASCII 字符的 levelId | ArgumentException |
+| `CreateBackgroundSession_Throws_WhenKeyInvalid` | 含 `,`、`=`、空格、非 ASCII 字符的会话 key | ArgumentException |
 | `CreateBackgroundSession_EmptyLevelId_Throws` | 空 levelId | ArgumentException |
 | `Dispose_ClearsEntities` | Dispose 后 FindByName | ObjectDisposedException |
 | `DisposedSession_ThrowsOnAllPublicMethods` | Dispose 后 SessionBlackboard/StateMachines/FindByName/GetEntities | ObjectDisposedException |
@@ -565,9 +567,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | 大量后台会话（100+）时的性能边界 | 极端并发会话数 | — |
-| ProgressRun.LoadFromPayload 对 Payload.Levels 为 null 的处理 | null Levels 的防御 | session-model |
 | 会话双层 Dispose 时 ForegroundSession 与外部引用的竞态 | 外部持有 ISessionRun 引用在 Dispose 后使用 | — |
-| SessionTopologyCodec 对含逗号的 key/levelId 的解析 | key 或 levelId 中的逗号作为分隔符的特殊值 | SessionTopologyCodec |
 
 ---
 

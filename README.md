@@ -61,7 +61,7 @@ public sealed class HealthStrategy : LifecycleStrategyBase
 
 ### Development tools
 
-- **TCP remote console** (port 9876): send commands and receive output over a network connection — designed for agent-driven development and automated testing. 11 built-in commands for entity inspection, data manipulation, and strategy invocation. Extensible with custom commands.
+- **TCP remote console** (port 9876): send commands and receive output over a network connection — designed for agent-driven development and automated testing. 16 built-in Core commands for entity inspection, data manipulation, strategy invocation, and save-slot lifecycle operations. Extensible with custom commands.
 
 ```bash
 nc localhost 9876

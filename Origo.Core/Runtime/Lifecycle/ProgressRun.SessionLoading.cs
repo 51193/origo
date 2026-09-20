@@ -37,6 +37,10 @@ internal sealed partial class ProgressRun
         internal void LoadFromPayload(SaveGamePayload payload)
         {
             ArgumentNullException.ThrowIfNull(payload);
+            if (payload.Levels is null)
+                throw new InvalidOperationException(
+                    "Save payload is missing required level data (Levels is null). " +
+                    "The save payload is malformed and cannot be loaded.");
 
             var saveContext = new SaveContext(
                 _owner.ProgressBlackboard, new Blackboard.Blackboard(), _owner._progressRuntime.SndWorld);

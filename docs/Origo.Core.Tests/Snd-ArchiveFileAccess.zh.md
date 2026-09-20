@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 存档文件访问 测试
 
@@ -9,7 +9,7 @@
 
 ## 被测行为概览
 
-验证 `ISndArchiveFileAccess` 在 `SndContext` 上的全部行为：DataSourceNode 文件读写往返（路径相对于存档活动目录的 `extra/` 子目录）、强类型对象读写往返、文件存在检查、删除文件、覆盖语义（overwrite）、Map 格式解析、嵌套 JSON 解析、错误路径（不存在文件、路径穿越、类型不匹配、null 节点）和边界路径（空对象、Null 节点、Boolean 值），以及存档 save/load 往返保持。
+验证 `ISndArchiveFileAccess` 在 `SndContext` 上的全部行为：DataSourceNode 文件读写往返（路径相对于存档活动目录的 `extra/` 子目录）、强类型对象读写往返（含注册自定义转换器后的自定义类型）、文件存在检查、删除文件、覆盖语义（overwrite）、Map 格式解析、嵌套 JSON 解析、错误路径（不存在文件、路径穿越、类型不匹配、null 节点）和边界路径（空对象、Null 节点、Boolean 值），以及存档 save/load 往返保持。
 
 所有文件 I/O 使用共享的 `TestMemoryFileSystem`（内存实现），不涉及真实磁盘操作。
 
@@ -39,6 +39,9 @@
 | `ReadWriteObject_RoundTrip_PreservesBool` | bool 值往返保持正确 | ISndArchiveFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesString` | string 值往返保持正确 | ISndArchiveFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesDouble` | double 值往返保持精度 | ISndArchiveFileAccess.ReadObject/WriteObject |
+| `ReadWriteObject_RoundTrip_PreservesCustomType` | 注册自定义类型转换器后，自定义对象经 WriteObject → ReadObject 完整往返 | ISndArchiveFileAccess.ReadObject/WriteObject |
+| `WriteObject_DisposesConverterNodeOnSuccess` | 写入成功后 converter 返回的 DataSourceNode 已释放，访问 `Kind` 抛 ObjectDisposedException | DataSourceNode 所有权 |
+| `WriteObject_DisposesConverterNodeWhenWriteThrows` | Gateway 因 overwrite=false 抛异常时，converter 节点仍在 finally 中释放 | DataSourceNode 所有权 |
 | `DeleteFile_RemovesExistingFile` | 删除 `extra/` 中已存在文件，删除后文件不存在 | ISndArchiveFileAccess.DeleteFile |
 | `FileExists_ReturnsFalseAfterDelete` | 删除文件后 FileExists 返回 false | ISndArchiveFileAccess.DeleteFile |
 | `DeleteFile_ThenRead_Throws` | 删除文件后读取抛出异常 | ISndArchiveFileAccess.DeleteFile |
@@ -75,13 +78,13 @@
 
 | 策略类 | 定义位置 | 用途 |
 |--------|---------|------|
-| 无 | — | 本测试文件不定义辅助策略，纯接口行为测试 |
+| `NodeReturningConverter<T>` / `WriteProbe` | SndContextArchiveFileAccessTests.cs | 记录 converter 返回的 DataSourceNode，验证 WriteObject 确定性释放 |
+| `CustomPayloadConverter` / `CustomPayload` | SndContextArchiveFileAccessTests.cs | 自定义类型转换器，验证 ReadObject/WriteObject 在注册自定义转换器后的对象往返 |
 
 ## 已知覆盖缺口
 
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
-| ReadObject/WriteObject 对复杂自定义类型的往返 | 当前仅测试 BCL 原语（int/string/bool/double），未测试用户自定义类型 | ISndArchiveFileAccess |
 | 大量文件并发读写的线程安全性 | 多线程场景未覆盖 | — |
 | `extra/` 目录在 Dispose/进度销毁时的清理行为 | 生命周期边界清理未独立验证 | ISndArchiveFileAccess |
 | ReadFile 对超大型文件的延迟展开内存行为 | 大 JSON 文件的性能特征未覆盖 | DataSourceNode |

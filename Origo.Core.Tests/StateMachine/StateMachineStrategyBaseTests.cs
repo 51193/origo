@@ -210,6 +210,7 @@ public class StateMachineStrategyBaseTests
             action();
         }
         public int GetPendingPersistenceRequestCount() => 0;
+        public bool IsPersistenceIdle => true;
     }
 }
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console System Tests
 
@@ -11,7 +11,7 @@
 
 Validates the full chain of the console command system: command parsing (positional/named/mixed arguments), command routing (register/dispatch/not found/case-insensitive/duplicate rejected),
 input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interface contract, output channel (publish-subscribe, exception propagation, null rejected),
-14 built-in command handlers (11 Core + 3 GodotAdapter), type inference (bb_set/entity_set_data), console logging (level/order/Tag/content integrity).
+19 built-in command handlers (16 Core + 3 GodotAdapter), type inference (bb_set/entity_set_data), console logging (level/order/Tag/content integrity).
 
 ## Test File List
 
@@ -29,6 +29,7 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 | `InvokeStrategyCommandHandlerTests.cs` | invoke_strategy command |
 | `SndCountCommandHandlerTests.cs` | snd_count command |
 | `SpawnTemplateCommandHandlerTests.cs` | spawn command error paths: mixed argument format, missing name parameter |
+| `PersistenceCommandHandlerTests.cs` | list_saves/save/load/delete_save/switch_level commands: listing, queueing, frame execution, deletion, and error paths |
 
 ## ConsoleCommandParserTests Details
 
@@ -306,6 +307,32 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 |-------------|----------------|-------------------|
 | `SpawnTemplateCommandHandler_MixNamedAndPositional_ReturnsError` | Mixed positional and named args | returns false + error containing "mix" |
 | `SpawnTemplateCommandHandler_NamedMissingName_ReturnsError` | Named args missing name | returns false + error containing "name" |
+
+## PersistenceCommandHandlerTests Details
+
+### Happy Paths
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|------------------|---------------------|
+| `ListSavesCommand_ListsSlotAndDisplayMetadata` | list_saves prints slots and `key=value` display metadata | console-commands: list_saves |
+| `ListSavesCommand_NoSaves_ReportsEmpty` | Prints `No saves found.` when storage is empty | console-commands: list_saves |
+| `ListSavesCommand_SlotWithoutMetadata_ListsIdOnly` | A slot without meta.map prints only its SaveId | console-commands: list_saves |
+| `SaveCommand_QueuesRequestAndPersistsOnFrame` | save prints queued and increases pending count; Flush writes the snapshot | console-commands: save |
+| `LoadCommand_QueuesRequestAndLoadsOnFrame` | load verifies an existing slot, queues, and restores the foreground session on Flush | console-commands: load |
+| `DeleteSaveCommand_RemovesInactiveSlot` | delete_save synchronously removes an inactive slot and prints confirmation | console-commands: delete_save |
+| `SwitchLevelCommand_QueuesRequestAndSwitchesOnFrame` | switch_level prints queued and increases pending; Flush switches the foreground level | console-commands: switch_level |
+| `HelpCommand_ListsPersistenceCommands` | help includes all five persistence commands | console-commands: help |
+
+### Error Paths
+
+| Test Method | Error Triggered | Expected Behavior |
+|-------------|----------------|-------------------|
+| `LoadCommand_MissingSlot_ReportsError` | load target slot does not exist | Outputs `does not exist` and does not queue |
+| `LoadCommand_MalformedStoredId_ReportsError` | Storage enumerates a slot with an invalid token; load validation fails | Outputs `not allowed`; pending remains 0 |
+| `SaveCommand_InvalidSaveId_ReportsError` | save saveId contains invalid characters | Prints an error, does not queue, pending remains 0 |
+| `DeleteSaveCommand_MissingSlot_ReportsError` | delete_save target slot does not exist | Outputs `does not exist` |
+| `DeleteSaveCommand_InvalidSaveId_ReportsError` | delete_save saveId contains invalid characters | Outputs `not allowed`; nothing is deleted |
+| `SwitchLevelCommand_InvalidLevelId_ReportsError` | switch_level levelId contains invalid characters | Outputs `not allowed`; pending remains 0 |
 
 ## Test Helper Strategies
 

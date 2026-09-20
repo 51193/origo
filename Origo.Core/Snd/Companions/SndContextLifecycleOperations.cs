@@ -8,6 +8,9 @@ namespace Origo.Core.Snd.Companions;
 internal sealed class SndContextLifecycleOperations(SndContext owner) : ISndLifecycleOperations
 {
     /// <inheritdoc/>
+    public bool IsBootstrapCompleted => owner.IsBootstrapCompleted;
+
+    /// <inheritdoc/>
     public bool HasContinueData() => TryGetExistingContinueSaveId(out _);
 
     /// <inheritdoc/>

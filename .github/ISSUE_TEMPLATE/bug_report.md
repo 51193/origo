@@ -22,12 +22,17 @@ assignees: ""
 
 <!-- What you expected to happen. -->
 
+## Actual behavior
+
+<!-- What actually happened? Include the first error or wrong result, not only the final symptom. -->
+
 ## Environment
 
 - **OS:** [e.g. Ubuntu 26.04, Windows 11, macOS 15]
 - **.NET SDK:** [e.g. `10.0.400` — run `dotnet --version`]
 - **Origo version:** [e.g. `0.0.9`]
+- **Affected package/area:** [e.g. Origo.Core / Origo.GodotAdapter / ConsoleBridge / docs / build]
 
 ## Additional context
 
-<!-- Any other context, logs, or screenshots. -->
+<!-- Logs or command output, screenshots, reproduction repository, or other context. -->

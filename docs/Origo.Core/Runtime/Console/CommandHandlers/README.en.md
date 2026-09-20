@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Runtime/Console/CommandHandlers/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # CommandHandlers
 
@@ -23,6 +23,11 @@ Concrete built-in console command handlers. All are `internal`, registered via `
 | `GetEntityDataCommandHandler.cs` | `entity_get_data` | Reads entity data (value + type) |
 | `SetEntityDataCommandHandler.cs` | `entity_set_data` | Sets entity data (preserves existing type) |
 | `InvokeStrategyCommandHandler.cs` | `invoke_strategy` | Invokes active strategy with optional JSON input |
+| `ListSavesCommandHandler.cs` | `list_saves` | Lists save slots and display metadata |
+| `SaveGameCommandHandler.cs` | `save` | Queues a save request for the named slot |
+| `LoadGameCommandHandler.cs` | `load` | Validates that the slot exists, then queues a load request |
+| `DeleteSaveCommandHandler.cs` | `delete_save` | Deletes an inactive slot and its `.tmp`/`.bak` remnants |
+| `SwitchLevelCommandHandler.cs` | `switch_level` | Queues a foreground-level switch request |
 
 ## Command Details
 
@@ -54,6 +59,29 @@ Spawns an entity from a template. Mixing positional and named arguments is not s
 invoke_strategy <entity> <strategy_index> [input]
 ```
 Finds the entity by name, invokes the active strategy via `ISndActiveStrategyAccess.InvokeStrategy`, and prints the return value. `input` is optional, supports a JSON string, and is parsed by the strategy itself.
+
+### list_saves
+
+```
+list_saves
+```
+Lists every save slot; display metadata is appended as `key=value` on the same line, or `No saves found.` when the storage is empty.
+
+### save / load / switch_level
+
+```
+save <saveId>
+load <saveId>
+switch_level <levelId>
+```
+`save`, `load`, and `switch_level` only queue a request in the system deferred queue and print `queued` on success. The request executes during the next `IOrigoFrameDriver.DriveFrame` system-deferred phase. `load` verifies that the slot exists before queueing.
+
+### delete_save
+
+```
+delete_save <saveId>
+```
+Synchronously deletes an inactive save slot and its `.tmp`/`.bak` remnants. The active save, the continue target, and running or pending persistence requests are rejected with an error.
 
 ## Design Decisions
 

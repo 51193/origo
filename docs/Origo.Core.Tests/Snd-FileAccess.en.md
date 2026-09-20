@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # File Access Tests
 
@@ -9,7 +9,7 @@
 
 ## Behavior Under Test Overview
 
-Validates the full behavior of `ISndFileAccess` on `SndContext`: DataSourceNode file read/write round-trips, strongly-typed object read/write round-trips, file existence checks, overwrite semantics, Map format parsing, nested JSON parsing, error paths (non-existent files, null paths, invalid JSON), and boundary paths (empty objects, Null nodes, Boolean values).
+Validates the full behavior of `ISndFileAccess` on `SndContext`: DataSourceNode file read/write round-trips, strongly-typed object read/write round-trips (including custom types with a registered converter), file existence checks, overwrite semantics, Map format parsing, nested JSON parsing, error paths (non-existent files, null paths, invalid JSON), and boundary paths (empty objects, Null nodes, Boolean values).
 
 All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); no real disk operations are involved.
 
@@ -38,6 +38,9 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 | `ReadObject_DeserializesJsonToString` | Reads a JSON string and deserializes it as string via Converter | ISndFileAccess.ReadObject |
 | `WriteObject_SerializesTypedValueAndCanBeReadBack` | Writing an int and reading it back; value is consistent | ISndFileAccess.WriteObject |
 | `WriteObject_WithOverwrite_ReplacesExisting` | Strongly-typed writing supports overwrite semantics | ISndFileAccess.WriteObject |
+| `ReadWriteObject_RoundTrip_PreservesCustomType` | After registering a custom type converter, a custom object round-trips through WriteObject → ReadObject | ISndFileAccess.ReadObject/WriteObject |
+| `WriteObject_DisposesConverterNodeOnSuccess` | The DataSourceNode returned by the converter is disposed after a successful write; accessing `Kind` throws ObjectDisposedException | DataSourceNode ownership |
+| `WriteObject_DisposesConverterNodeWhenWriteThrows` | When the gateway throws because overwrite=false, the converter node is still released in the finally path | DataSourceNode ownership |
 | `ReadWriteObject_RoundTrip_PreservesBool` | bool value round-trip is preserved correctly | ISndFileAccess.ReadObject/WriteObject |
 | `ReadWriteObject_RoundTrip_PreservesDouble` | double value round-trip preserves precision | ISndFileAccess.ReadObject/WriteObject |
 | `FileAccess_IsAccessibleThroughRoleInterface` | ISndFileAccess can be obtained and used via ISndContext cast | ISndContext |
@@ -66,13 +69,13 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 
 | Strategy Class | Defined In | Purpose |
 |----------------|-----------|---------|
-| None | — | This test file defines no helper strategies; pure interface behavior tests |
+| `NodeReturningConverter<T>` / `WriteProbe` | SndContextFileAccessTests.cs | Records the DataSourceNode returned by the converter and verifies deterministic release by WriteObject |
+| `CustomPayloadConverter` / `CustomPayload` | SndContextFileAccessTests.cs | Custom type converter that verifies ReadObject/WriteObject round-trips after custom converter registration |
 
 ## Known Coverage Gaps
 
 | Gap Description | Impact | Documentation Basis |
 |-----------------|--------|---------------------|
-| ReadObject/WriteObject round-trips for complex custom types | Currently only testing BCL primitives (int/string/bool/double); user-defined types not tested | ISndFileAccess |
 | Thread safety of concurrent reads/writes on many files | Multi-threaded scenarios not covered | — |
 | Lazy-deferred memory behavior of ReadFile for large files | Performance characteristics of large JSON files not covered | DataSourceNode |
 

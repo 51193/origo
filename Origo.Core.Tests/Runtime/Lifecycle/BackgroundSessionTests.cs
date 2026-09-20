@@ -36,6 +36,14 @@ public class BackgroundSessionTests
     public static TheoryData<string?> CreateBackgroundSession_InvalidLevelIds_Data { get; } =
         CreateBackgroundSessionInvalidLevelIds();
 
+    public static TheoryData<string> CreateBackgroundSession_InvalidKeys_Data { get; } =
+    [
+        "bg,one",
+        "bg=one",
+        "bg with space",
+        "中文会话"
+    ];
+
     // ── Creation & basic state ────────────────────────────────────────
 
     [Fact]
@@ -63,6 +71,15 @@ public class BackgroundSessionTests
     }
 
     // ── Shared ProgressBlackboard ─────────────────────────────────────
+
+    [Theory]
+    [MemberData(nameof(CreateBackgroundSession_InvalidKeys_Data))]
+    public void CreateBackgroundSession_Throws_WhenKeyInvalid(string key)
+    {
+        var (ctx, _) = CreateForegroundContext();
+        Assert.Throws<ArgumentException>(() =>
+            ctx.Runtime.SessionManager.CreateBackgroundSession(key, "valid_level"));
+    }
 
     [Fact]
     public void SharedProgressBlackboard_ForegroundWriteVisibleToBackground()

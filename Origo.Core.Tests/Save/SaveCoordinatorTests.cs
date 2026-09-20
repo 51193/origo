@@ -154,6 +154,7 @@ public class SaveCoordinatorTests
         public void EnqueueBusinessDeferred(Action action) { }
         public static void FlushDeferredActionsForCurrentFrame() { }
         public int GetPendingPersistenceRequestCount() => 0;
+        public bool IsPersistenceIdle => true;
     }
 
     private sealed class TestSceneAccess : Abstractions.Scene.ISndSceneAccess, Abstractions.Scene.ISndSceneReadAccess

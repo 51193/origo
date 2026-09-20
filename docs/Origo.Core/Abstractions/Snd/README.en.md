@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/Snd/README -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd (Abstractions)
 
@@ -13,12 +13,12 @@ Role interface decomposition of ISndContext. 9 Snd role interfaces + `IStateMach
 | File | Responsibility |
 |------|------|
 | `ISndBlackboardAccess.cs` | System + progress-level blackboard access (2 members) |
-| `ISndDeferredActions.cs` | Deferred action queue: enqueue + pending-persistence count (2 members) |
+| `ISndDeferredActions.cs` | Deferred action queue: enqueue + pending-persistence count + persistence-idle state (3 members) |
 | `ISndTemplateAccess.cs` | Template load/reload, deep clone by key, JSON entity-list resolution (including template shorthand) (5 members) |
 | `ISndConsoleAccess.cs` | Console command submit/process/output subscribe (4 members) |
 | `ISndStateMachineAccess.cs` | Progress-level state machine container (1 member). Returns `IStateMachineContainer?` |
-| `ISndSaveOperations.cs` | Save list/read/write + level switch + continue + meta contributor (9 members) |
-| `ISndLifecycleOperations.cs` | Continue/Initial/MainMenu entry points (4 members) |
+| `ISndSaveOperations.cs` | Save list/read/write/delete + level switch + continue + meta contributor (10 members) |
+| `ISndLifecycleOperations.cs` | Bootstrap completion state + Continue/Initial/MainMenu entry points (5 members) |
 | `ISndFileAccess.cs` | File access: structured + strongly-typed + exists (5 members). All via IDataSourceIoGateway boundary |
 | `ISndArchiveFileAccess.cs` | In-save file access: structured + strongly-typed + exists + delete (6 members) |
 
@@ -38,12 +38,12 @@ ISndContext does not inherit any role interfaces; all capabilities are accessed 
 | Companion Property | Type | Responsibility |
 |---------------|------|------|
 | `Blackboard` | `ISndBlackboardAccess` | System + progress blackboard |
-| `Deferred` | `ISndDeferredActions` | Deferred action queue |
+| `Deferred` | `ISndDeferredActions` | Deferred action queue: enqueue + pending-persistence count + persistence-idle state |
 | `Template` | `ISndTemplateAccess` | Template load/reload, cloning, entity-list resolution |
 | `ConsoleAccess` | `ISndConsoleAccess` | Console command submit/process/subscribe |
 | `StateMachines` | `ISndStateMachineAccess` | Progress-level state machine container |
-| `Save` | `ISndSaveOperations` | Save list/read/write + level switch + meta contributor |
-| `Lifecycle` | `ISndLifecycleOperations` | Continue/Initial/MainMenu |
+| `Save` | `ISndSaveOperations` | Save list/read/write/delete + level switch + meta contributor |
+| `Lifecycle` | `ISndLifecycleOperations` | Bootstrap completion state + Continue/Initial/MainMenu |
 | `FileAccess` | `ISndFileAccess` | Static resource file access |
 | `ArchiveFileAccess` | `ISndArchiveFileAccess` | In-save file access |
 | `StateMachineContext` | `IStateMachineContext` | State machine context |
@@ -58,6 +58,12 @@ IStateMachineContext : ISndBlackboardAccess + ISndDeferredActions
 ```
 
 ## Design Decisions
+
+### Why persistence completion state lives on the existing role interfaces
+
+Callers performing save/load orchestration already hold `ctx.Deferred` and `ctx.Lifecycle`. Placing `IsPersistenceIdle` on `ISndDeferredActions` and `IsBootstrapCompleted` on `ISndLifecycleOperations` avoids adding another companion purely for observation and exposes no waiting or flushing entry point that could bypass the frame driver.
+
+`IsPersistenceIdle` covers every request tracked by `EnqueueTrackedSystemDeferred`: bootstrap entry loading, save, load, continue, and level switch. The count returns to zero whether a request succeeds or fails. `IsBootstrapCompleted` becomes true only after the main-menu entry enqueued by `Bootstrap()` has mounted successfully. A synchronous bootstrap failure or entry-load failure leaves it false; the failure itself remains observable as the exception propagated by the frame driver.
 
 ### Why decompose ISndContext
 
