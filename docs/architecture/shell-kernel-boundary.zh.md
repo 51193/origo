@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell/Kernel 稳定边界
 
@@ -90,7 +90,9 @@ Adapter 内部实现仍然不得进入消费者编译面：非 shell 的 Godot �
 
 具体值类型与接口成员以 `Origo.Core.Contracts` 和 shell 程序集的公开面为准。每个
 public 类型和成员在契约冻结时都有明确归类：shell 契约、tooling 扩展、kernel 实现
-或测试专用。kernel 实现与测试专用类型不进入 shell 编译面。
+或测试专用。当前导出类型逐项见
+[shell-api-classification](shell-api-classification.zh.md)；kernel 实现与测试专用
+类型不进入 shell 编译面。
 
 ### TypedData 注册范围
 

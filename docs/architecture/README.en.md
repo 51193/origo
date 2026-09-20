@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture
 
@@ -16,6 +16,7 @@ Architecture overview, decision records, and deferred design directions for the 
 | [extension-directions](extension-directions.en.md) | Deferred reasons and re-evaluation signals for unified tree namespace, entity-level concurrency, and multiple ActiveStrategy implementations per index |
 | [agent-friendly](agent-friendly/README.en.md) | Agent-friendliness benchmarks, OpenAI engineering practices, four implementation investigations, and game-development product direction |
 | [shell-kernel-boundary](shell-kernel-boundary.en.md) | Decision, consumer compatibility commitments, and implementation plan for the 0.1.0 stable shell/kernel boundary |
+| [shell-api-classification](shell-api-classification.en.md) | Classification, package ownership, and removal conditions for every current export in the 0.1.0 shell/tooling/kernel split |
 
 ---
 [↑ Back to Origo Manual](../README.en.md)

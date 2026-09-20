@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
@@ -17,7 +17,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 
 | File | Verification Focus |
 |------|-------------------|
-| `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, consumers can complete full workflow through pure interfaces |
+| `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, shell API classification completeness, consumers can complete full workflow through pure interfaces |
 | `AutoInitializerGuardTests.cs` | Strategy statelessness validation: instance fields rejected, static fields allowed, missing StrategyIndex throws |
 
 ## CoreArchitectureGuardrailTests Test Details
@@ -47,6 +47,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `ISessionRun_ProvidesRuntimeAccess` | ISessionRun provides Blackboard/SceneHost/StateMachines access | session-model |
 | `SessionManager_ProvidesCreateAndDestroyOperations` | ISessionManager provides CreateBackgroundSession/DestroySession | session-model |
 | `ConsoleCommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | ConsoleCommandHandlerBase is public, external projects can derive custom command handlers | console-bridge |
+| `ShellApiClassification_CoversEveryCoreExport` | Every Core export appears exactly once in the bilingual classification table; a new export must update the classification first | architecture/shell-api-classification |
 
 ## AutoInitializerGuardTests Test Details
 

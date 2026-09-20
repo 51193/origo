@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构守卫 测试
 
@@ -16,7 +16,7 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `CoreArchitectureGuardrailTests.cs` | 分层隔离、接口组合、消费方可通过纯接口完成完整工作流 |
+| `CoreArchitectureGuardrailTests.cs` | 分层隔离、接口组合、shell API 分类完整性、消费方可通过纯接口完成完整工作流 |
 | `AutoInitializerGuardTests.cs` | 策略无状态校验：实例字段被拒绝、静态字段允许、缺少 StrategyIndex 抛异常 |
 
 ## CoreArchitectureGuardrailTests 测试详情
@@ -47,6 +47,7 @@
 | `ISessionRun_ProvidesRuntimeAccess` | ISessionRun 提供黑板/SceneHost/StateMachines 访问 | session-model |
 | `SessionManager_ProvidesCreateAndDestroyOperations` | ISessionManager 提供 CreateBackgroundSession/DestroySession | session-model |
 | `ConsoleCommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | ConsoleCommandHandlerBase 为 public，外部项目可派生自定义命令处理器 | console-bridge |
+| `ShellApiClassification_CoversEveryCoreExport` | Core 每个导出类型都在双语分类表中恰好出现一次；新增导出类型必须先补分类 | architecture/shell-api-classification |
 
 ## AutoInitializerGuardTests 测试详情
 

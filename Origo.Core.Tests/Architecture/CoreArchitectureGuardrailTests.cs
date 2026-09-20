@@ -471,3 +471,13 @@ public class CoreArchitectureGuardrailTests
             "hooks directly; framework and adapter projects reach it via InternalsVisibleTo.");
     }
 }
+
+public class CoreShellApiClassificationGuardTests
+{
+    [Fact]
+    public void ShellApiClassification_CoversEveryCoreExport()
+    {
+        var violations = ShellApiClassificationInventory.FindViolations(typeof(OrigoRuntime).Assembly);
+        Assert.Empty(violations);
+    }
+}

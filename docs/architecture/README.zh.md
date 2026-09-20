@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构文档
 
@@ -16,6 +16,7 @@ Origo 框架的架构总览、架构决策记录与暂缓设计方向。
 | [extension-directions](extension-directions.zh.md) | 统一树形命名空间、实体级并发、ActiveStrategy 同名多实现的暂缓原因与重新评估信号 |
 | [agent-friendly](agent-friendly/README.zh.md) | Agent 友好度基准、OpenAI 工程实践、四项改造调查与游戏开发产品方向 |
 | [shell-kernel-boundary](shell-kernel-boundary.zh.md) | 0.1.0 稳定 shell/kernel 边界的决策、消费者兼容承诺与实施计划 |
+| [shell-api-classification](shell-api-classification.zh.md) | 当前全部导出类型的 0.1.0 shell/tooling/kernel 分类、目标包与移除条件 |
 
 ---
 [↑ 回到 Origo 手册](../README.zh.md)

@@ -52,3 +52,13 @@ public class ConsoleBridgeArchitectureGuardrailTests
         }
     }
 }
+
+public class ConsoleBridgeShellApiClassificationGuardTests
+{
+    [Fact]
+    public void ShellApiClassification_CoversEveryConsoleBridgeExport()
+    {
+        var violations = ShellApiClassificationInventory.FindViolations(typeof(ConsoleBridgeServer).Assembly);
+        Assert.Empty(violations);
+    }
+}

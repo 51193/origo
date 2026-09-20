@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/Architecture -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Assembly Architecture Guardrail Tests
 
@@ -16,7 +16,7 @@ can be used independently in environments without a Godot runtime.
 
 | File | Verification Focus |
 |------|-------------------|
-| `Architecture/ConsoleBridgeArchitectureGuardrailTests.cs` | Assembly dependency direction and encapsulation integrity |
+| `Architecture/ConsoleBridgeArchitectureGuardrailTests.cs` | Assembly dependency direction, encapsulation integrity, and shell API classification completeness |
 
 ## Correct Paths
 
@@ -25,6 +25,7 @@ can be used independently in environments without a Godot runtime.
 | `ConsoleBridge_ShouldNotReferenceGodot` | Does not reference any assembly with a `Godot*` prefix | Origo.ConsoleBridge |
 | `ConsoleBridge_ShouldNotReferenceGodotAdapter` | Does not reference the `Origo.GodotAdapter` assembly | Origo.ConsoleBridge |
 | `ConsoleBridge_ShouldOnlyReferenceCore` | Only depends on `Origo.Core` + BCL (`System.*`/`Microsoft.*`/`netstandard`/`System.Runtime`), no unexpected assembly references | Origo.ConsoleBridge |
+| `ShellApiClassification_CoversEveryConsoleBridgeExport` | Every ConsoleBridge export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
 
 ## Known Coverage Gaps
 

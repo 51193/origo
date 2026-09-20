@@ -248,3 +248,13 @@ public class GodotSndManagerWritePathVisibilityTests
         Assert.NotNull(internalImpl);
     }
 }
+
+public class AdapterShellApiClassificationGuardTests
+{
+    [Fact]
+    public void ShellApiClassification_CoversEveryAdapterExport()
+    {
+        var violations = ShellApiClassificationInventory.FindViolations(typeof(GodotSndManager).Assembly);
+        Assert.Empty(violations);
+    }
+}

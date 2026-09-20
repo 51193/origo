@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/Architecture -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 程序集架构守卫 测试
 
@@ -15,7 +15,7 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `Architecture/ConsoleBridgeArchitectureGuardrailTests.cs` | 程序集依赖方向与封装完整性 |
+| `Architecture/ConsoleBridgeArchitectureGuardrailTests.cs` | 程序集依赖方向、封装完整性与 shell API 分类完整性 |
 
 ## 正确路径
 
@@ -24,6 +24,7 @@
 | `ConsoleBridge_ShouldNotReferenceGodot` | 不引用任何 `Godot*` 前缀的程序集 | Origo.ConsoleBridge |
 | `ConsoleBridge_ShouldNotReferenceGodotAdapter` | 不引用 `Origo.GodotAdapter` 程序集 | Origo.ConsoleBridge |
 | `ConsoleBridge_ShouldOnlyReferenceCore` | 仅依赖 `Origo.Core` + BCL（`System.*`/`Microsoft.*`/`netstandard`/`System.Runtime`），无其他非预期程序集引用 | Origo.ConsoleBridge |
+| `ShellApiClassification_CoversEveryConsoleBridgeExport` | ConsoleBridge 每个导出类型都在双语分类表中恰好出现一次 | architecture/shell-api-classification |
 
 ## 已知覆盖缺口
 

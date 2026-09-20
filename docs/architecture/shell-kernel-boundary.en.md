@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
@@ -110,8 +110,9 @@ capability groups:
 Concrete value types and interface members follow the public surface of
 `Origo.Core.Contracts` and the shell assemblies. Every public type and member is
 classified as a shell contract, tooling extension, kernel implementation, or
-test-only before the contract is frozen. Kernel implementation and test-only
-types do not enter the shell compilation surface.
+test-only before the contract is frozen. The current exports are listed in
+[shell-api-classification](shell-api-classification.en.md); kernel
+implementation and test-only types do not enter the shell compilation surface.
 
 ### TypedData registration scope
 
