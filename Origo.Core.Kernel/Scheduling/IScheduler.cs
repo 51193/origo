@@ -1,6 +1,6 @@
 using System;
 
-namespace Origo.Core.Abstractions.Runtime;
+namespace Origo.Core.Scheduling;
 
 /// <summary>
 ///     Abstract scheduling interface, driven by the host environment

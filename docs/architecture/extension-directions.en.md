@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/extension-directions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Extension Directions and Deferred Designs
 
@@ -146,7 +146,7 @@ Until the benefit materializes, the current capabilities can cover this:
 - Current architecture: [Architecture Overview](overview.en.md)
 - Strategy system implementation: [Strategy Module](../Origo.Core/Snd/Strategy/README.en.md)
 - Data source implementation: [DataSource Module](../Origo.Core/DataSource/README.en.md)
-- Scheduling implementation: [Scheduling Module](../Origo.Core/Scheduling/README.en.md)
+- Scheduling implementation: [Scheduling Module](../Origo.Core.Kernel/Scheduling/README.en.md)
 - Entity implementation: [Entity Module](../Origo.Core/Snd/Entity/README.en.md)
 - Common patterns: [Design Patterns](../usage/design-patterns.en.md)
 

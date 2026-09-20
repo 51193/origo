@@ -516,3 +516,49 @@ public class CoreContractsShellApiClassificationGuardTests
             string.Equals(reference.Name, "Origo.Core.Contracts", StringComparison.Ordinal));
     }
 }
+
+public class CoreKernelShellApiClassificationGuardTests
+{
+    [Fact]
+    public void ShellApiClassification_CoversEveryKernelExport()
+    {
+        var violations = ShellApiClassificationInventory.FindViolations(
+            typeof(Origo.Core.Addons.FastNoiseLite.FastNoiseLite).Assembly);
+        Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void Kernel_ShouldNotReferenceImplementationsOrGodot()
+    {
+        var references = typeof(Origo.Core.Addons.FastNoiseLite.FastNoiseLite).Assembly
+            .GetReferencedAssemblies();
+        var names = references
+            .Where(reference => reference.Name is not null)
+            .Select(reference => reference.Name!)
+            .ToArray();
+
+        Assert.DoesNotContain(names, name =>
+            string.Equals(name, "Origo.Core", StringComparison.Ordinal)
+            || string.Equals(name, "Origo.GodotAdapter", StringComparison.Ordinal)
+            || string.Equals(name, "Origo.ConsoleBridge", StringComparison.Ordinal));
+        Assert.DoesNotContain(names, name =>
+            name.StartsWith("Godot", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Kernel_ShouldReferenceContracts()
+    {
+        var references = typeof(Origo.Core.Addons.FastNoiseLite.FastNoiseLite).Assembly
+            .GetReferencedAssemblies();
+        Assert.Contains(references, reference =>
+            string.Equals(reference.Name, "Origo.Core.Contracts", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Core_ShouldReferenceKernel()
+    {
+        var references = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();
+        Assert.Contains(references, reference =>
+            string.Equals(reference.Name, "Origo.Core.Kernel", StringComparison.Ordinal));
+    }
+}

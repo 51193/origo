@@ -1,5 +1,5 @@
-<!-- docsync-pair: Origo.Core/Addons/FastNoiseLite/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Kernel/Addons/FastNoiseLite/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # FastNoiseLite
 
@@ -34,7 +34,7 @@ FastNoiseLite 为单文件实现，无任何外部依赖。vendor 方式避免�
 
 ### 为什么不修改源码
 
-保持上游可追踪性。如果未来上游有更新，直接替换文件即可。所有适配（如噪声图生成）在外层 `NoiseMapGenerator`（见 [Random](../../Random/README.zh.md)）中完成。
+保持上游可追踪性。如果未来上游有更新，直接替换文件即可。所有适配（如噪声图生成）在外层 `NoiseMapGenerator`（见 [Random](../../../Origo.Core/Random/README.zh.md)）中完成。
 
 ### 为什么使用 `float` 作为基础数值类型
 

@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Scheduling/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-pair: Origo.Core.Kernel/Scheduling/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Scheduling
 
-> [↑ 回到 Origo.Core](../README.zh.md) · [↔ 抽象: Abstractions/Runtime](../Abstractions/Runtime/README.zh.md)
+> [↑ 回到 Origo.Core.Kernel](../README.zh.md) · [↔ 帧驱动契约: Origo.Core/Abstractions/Runtime](../../Origo.Core/Abstractions/Runtime/README.zh.md)
 
 ## 概述
 
@@ -13,6 +13,7 @@
 
 | 文件 | 职责 |
 |------|------|
+| `IScheduler.cs` | internal 调度队列契约：Enqueue / Tick / Clear |
 | `ActionScheduler.cs` | `IScheduler` 的 internal 实现，包装 `ConcurrentActionQueue` |
 | `ConcurrentActionQueue.cs` | 线程安全的延迟执行队列，批次 drain，支持重入保护 |
 
@@ -38,9 +39,16 @@
 
 边取边执行（如 `while(Dequeue()) invoke()`）需要持续持锁，且执行期间无法入队新动作。快照式先把所有待执行动作 copy 出锁区，释放锁后逐个 invoke，既减少锁竞争，又允许动作内部入队新动作。
 
+### 为什么 IScheduler 是 Kernel internal
+
+`IScheduler` 是 kernel 内部的调度队列契约，唯一实现者是 `internal sealed
+ActionScheduler`。它不进入消费者编译面，只通过 `InternalsVisibleTo` 供
+`Origo.Core` 的 runtime 构造与测试程序集使用；外部代码通过上层 API
+（如 `SndContext.EnqueueBusinessDeferred`）间接使用调度能力。
+
 ### 为什么 ActionScheduler 是 internal
 
-调度器仅在 Runtime 层内部使用。外部代码通过上层 API（如 `SndContext` 的 `EnqueueBusinessDeferred`）间接使用调度能力，不直接与 `ActionScheduler` 交互。
+调度器仅在 runtime 构造内部使用。外部代码通过上层 API（如 `SndContext` 的 `EnqueueBusinessDeferred`）间接使用调度能力，不直接与 `ActionScheduler` 交互。
 
 ### 为什么异常时不吞掉而是重新抛出
 
@@ -49,4 +57,4 @@
 - **实体帧处理保持串行（暂缓方向）**：`ConcurrentActionQueue` 的线程安全只覆盖延迟动作的入队/出队；实体内生命周期策略按相对顺序约束排序，帧处理整体仍按单线程模型串行执行。实体级并发已作为备选方向讨论，因当前无性能瓶颈而暂缓。完整权衡见 [扩展方向与暂缓设计](../../architecture/extension-directions.zh.md)
 
 ---
-[↑ 回到 Origo.Core](../README.zh.md)
+[↑ 回到 Origo.Core.Kernel](../README.zh.md)

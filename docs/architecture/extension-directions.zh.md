@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/extension-directions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 扩展方向与暂缓设计
 
@@ -146,7 +146,7 @@ path -> to -> file -> entity -> health_point
 - 现状架构：[架构总览](overview.zh.md)
 - 策略系统实现：[Strategy 模块](../Origo.Core/Snd/Strategy/README.zh.md)
 - 数据源实现：[DataSource 模块](../Origo.Core/DataSource/README.zh.md)
-- 调度实现：[Scheduling 模块](../Origo.Core/Scheduling/README.zh.md)
+- 调度实现：[Scheduling 模块](../Origo.Core.Kernel/Scheduling/README.zh.md)
 - 实体实现：[Entity 模块](../Origo.Core/Snd/Entity/README.zh.md)
 - 常用模式：[设计模式](../usage/design-patterns.zh.md)
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core
 
@@ -14,8 +14,8 @@
 | 子系统 | 能力 | 详情 |
 |--------|------|------|
 | [Contracts](../Origo.Core.Contracts/README.zh.md) | 稳定消费者契约 | 日志、控制台、文件系统与路径等平台叶级契约；本实现层与适配层共同引用 |
-| [Abstractions](Abstractions/README.zh.md) | 核心抽象接口 | IBlackboard / ISndEntity / IStateMachine / INode* / IScheduler ... |
-| [Addons](Addons/README.zh.md) | Vendor 第三方库 | FastNoiseLite v1.1.1（噪声生成）|
+| [Origo.Core.Kernel](../Origo.Core.Kernel/README.zh.md) | Kernel 实现包 | FastNoiseLite vendor 噪声与延迟调度；runtime/SND/持久化当前仍在本层 |
+| [Abstractions](Abstractions/README.zh.md) | 核心抽象接口 | IBlackboard / ISndEntity / IStateMachine / INode* ... |
 | [Blackboard](Blackboard/README.zh.md) | IBlackboard 默认实现 | 基于 Dictionary + TypedData 的内存黑板 |
 | [DataSource](DataSource/README.zh.md) | 数据源抽象层 | DataSourceNode 树模型 + JSON/Map 编解码 + 类型转换器注册 |
 | [Grid](Grid/README.zh.md) | 网格坐标系工具 | GridCoordinateSystem：网格 ↔ 世界坐标双向转换 |
@@ -24,7 +24,6 @@
 | [Random](Random/README.zh.md) | 随机数系统 | XorShift128+ 伪随机数 + PersistentRandom + Simplex/Worley 噪声图 |
 | [Runtime](Runtime/README.zh.md) | 运行时核心 | 四层生命周期 + 控制台 + 状态机容器 + OrigoRuntime |
 | [Save](Save/README.zh.md) | 持久化系统 | 两阶段写入 + 严格读取 + 路径策略 + meta.map |
-| [Scheduling](Scheduling/README.zh.md) | 延迟调度 | ActionScheduler + 线程安全 ConcurrentActionQueue |
 | [Serialization](Serialization/README.zh.md) | 类型映射 | TypeStringMapping（CLR 类型 ↔ 稳定字符串标识）|
 | [Snd](Snd/README.zh.md) | SND 实体系统 | 策略→实体→数据→场景宿主→数值配方加载 完整堆栈 |
 | [StateMachine](StateMachine/README.zh.md) | 字符串栈状态机 | StackStateMachine + 策略钩子 + 持久化模型 |
@@ -52,7 +51,10 @@
 Origo.Core.Contracts (稳定契约)
         ▲
         │
-Origo.Core (平台无关实现)
+Origo.Core.Kernel (Kernel 实现)
+        ▲
+        │
+Origo.Core (平台无关实现与当前 host facade)
         ▲ 实现接口
 Origo.GodotAdapter (引擎适配)
         ▲ 注入差异

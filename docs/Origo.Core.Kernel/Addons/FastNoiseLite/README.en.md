@@ -1,5 +1,5 @@
-<!-- docsync-pair: Origo.Core/Addons/FastNoiseLite/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Kernel/Addons/FastNoiseLite/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # FastNoiseLite
 
@@ -34,7 +34,7 @@ FastNoiseLite is a single-file implementation with zero external dependencies. T
 
 ### Why not modify the source code
 
-Preserves upstream traceability. If upstream updates in the future, simply replace the file. All adaptation (e.g., noise map generation) is done in the outer-layer `NoiseMapGenerator` (see [Random](../../Random/README.en.md)).
+Preserves upstream traceability. If upstream updates in the future, simply replace the file. All adaptation (e.g., noise map generation) is done in the outer-layer `NoiseMapGenerator` (see [Random](../../../Origo.Core/Random/README.en.md)).
 
 ### Why use `float` as the base numeric type
 

@@ -31,6 +31,7 @@ public static class ShellApiClassificationInventory
     {
         "Origo.Core",
         "Origo.Core.Contracts",
+        "Origo.Core.Kernel",
         "Origo.GodotAdapter",
         "Origo.ConsoleBridge"
     };

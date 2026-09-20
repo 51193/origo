@@ -3,6 +3,7 @@
   "DocsRoot": "docs",
   "SourceMirrorRoots": [
     "Origo.Core.Contracts",
+    "Origo.Core.Kernel",
     "Origo.Core",
     "Origo.GodotAdapter",
     "Origo.ConsoleBridge",

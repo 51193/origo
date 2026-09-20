@@ -5,7 +5,6 @@
 ## 中文
 - [README](README.zh.md)
 - [Abstractions/](Abstractions/)
-- [Addons/](Addons/)
 - [Blackboard/](Blackboard/)
 - [DataSource/](DataSource/)
 - [Grid/](Grid/)
@@ -14,7 +13,6 @@
 - [Random/](Random/)
 - [Runtime/](Runtime/)
 - [Save/](Save/)
-- [Scheduling/](Scheduling/)
 - [Serialization/](Serialization/)
 - [Snd/](Snd/)
 - [StateMachine/](StateMachine/)
@@ -23,7 +21,6 @@
 ## English
 - [README](README.en.md)
 - [Abstractions/](Abstractions/)
-- [Addons/](Addons/)
 - [Blackboard/](Blackboard/)
 - [DataSource/](DataSource/)
 - [Grid/](Grid/)
@@ -32,7 +29,6 @@
 - [Random/](Random/)
 - [Runtime/](Runtime/)
 - [Save/](Save/)
-- [Scheduling/](Scheduling/)
 - [Serialization/](Serialization/)
 - [Snd/](Snd/)
 - [StateMachine/](StateMachine/)

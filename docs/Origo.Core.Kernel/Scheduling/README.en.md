@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Scheduling/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-pair: Origo.Core.Kernel/Scheduling/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scheduling
 
-> [↑ Back to Origo.Core](../README.en.md) · [↔ Abstractions: Runtime](../Abstractions/Runtime/README.en.md)
+> [↑ Back to Origo.Core.Kernel](../README.en.md) · [↔ Frame-driver contract: Origo.Core/Abstractions/Runtime](../../Origo.Core/Abstractions/Runtime/README.en.md)
 
 ## Overview
 Concrete implementation of the `IScheduler` interface. Provides a simple scheduler based on `ConcurrentActionQueue`, plus a thread-safe deferred execution queue. The host environment is responsible for calling `Tick` at the right time to execute queued actions.
@@ -12,6 +12,7 @@ Concrete implementation of the `IScheduler` interface. Provides a simple schedul
 
 | File | Responsibility |
 |------|------|
+| `IScheduler.cs` | Internal scheduling queue contract: Enqueue / Tick / Clear |
 | `ActionScheduler.cs` | Internal `IScheduler` implementation wrapping `ConcurrentActionQueue` |
 | `ConcurrentActionQueue.cs` | Thread-safe deferred execution queue with batch drain and reentrancy protection |
 
@@ -34,8 +35,17 @@ Core implementation using `List<Action>` + `lock`:
 ### Why snapshot-style drain rather than drain-while-executing
 Drain-while-executing (e.g. `while(Dequeue()) invoke()`) requires holding the lock continuously and cannot enqueue new actions during execution. Snapshot-style first copies all pending actions out of the lock region, releases the lock, then invokes them one by one — reducing lock contention while allowing actions to enqueue new actions internally.
 
+### Why IScheduler is kernel-internal
+
+`IScheduler` is the kernel-internal scheduling queue contract; its only
+implementation is `internal sealed ActionScheduler`. It does not enter the
+consumer compilation surface and is available only to the `Origo.Core`
+runtime construction and test assemblies through `InternalsVisibleTo`.
+External code uses scheduling through higher-level APIs such as
+`SndContext.EnqueueBusinessDeferred`.
+
 ### Why ActionScheduler is internal
-The scheduler is used only inside the Runtime layer. External code uses the scheduling capability indirectly through upper-level APIs (such as `SndContext`'s `EnqueueBusinessDeferred`) and does not interact with `ActionScheduler` directly.
+The scheduler is used only inside runtime construction. External code uses the scheduling capability indirectly through upper-level APIs (such as `SndContext`'s `EnqueueBusinessDeferred`) and does not interact with `ActionScheduler` directly.
 
 ### Why exceptions are rethrown rather than swallowed
 Actions in the deferred queue are part of the frame model. If one action fails, the system should crash rather than silently skip, so business logic does not keep running in an unknown corrupted state. Exception details are logged, then thrown.
@@ -43,4 +53,4 @@ Actions in the deferred queue are part of the frame model. If one action fails, 
 - **Entity frame processing stays serial (deferred direction)**: `ConcurrentActionQueue` thread safety only covers deferred-action enqueue/dequeue; in-entity lifecycle strategies are ordered by relative constraints, and frame processing as a whole still runs serially under the single-threaded model. Entity-level concurrency has been discussed as an alternative direction and is deferred because there is no performance bottleneck today. See [Extension Directions and Deferred Designs](../../architecture/extension-directions.en.md) for the full trade-off
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Kernel](../README.en.md)

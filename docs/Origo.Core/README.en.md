@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core
 
@@ -14,8 +14,8 @@
 | Subsystem | Capability | Details |
 |-----------|-----------|---------|
 | [Contracts](../Origo.Core.Contracts/README.en.md) | Stable consumer contracts | Platform leaf contracts for logging, console, file system, and paths, shared by the implementation and adapters |
-| [Abstractions](Abstractions/README.en.md) | Core abstraction interfaces | IBlackboard / ISndEntity / IStateMachine / INode* / IScheduler ... |
-| [Addons](Addons/README.en.md) | Vendor third-party libraries | FastNoiseLite v1.1.1 (noise generation) |
+| [Origo.Core.Kernel](../Origo.Core.Kernel/README.en.md) | Kernel implementation package | FastNoiseLite vendor noise and deferred scheduling; runtime/SND/persistence remain in this assembly |
+| [Abstractions](Abstractions/README.en.md) | Core abstraction interfaces | IBlackboard / ISndEntity / IStateMachine / INode* ... |
 | [Blackboard](Blackboard/README.en.md) | Default IBlackboard implementation | In-memory blackboard based on Dictionary + TypedData |
 | [DataSource](DataSource/README.en.md) | Data source abstraction layer | DataSourceNode tree model + JSON/Map codec + type converter registration |
 | [Grid](Grid/README.en.md) | Grid coordinate system utilities | GridCoordinateSystem: bidirectional grid ↔ world coordinate conversion |
@@ -24,7 +24,6 @@
 | [Random](Random/README.en.md) | Random number system | XorShift128+ PRNG + PersistentRandom + Simplex/Worley noise maps |
 | [Runtime](Runtime/README.en.md) | Runtime core | Four-layer lifecycle + console + state machine container + OrigoRuntime |
 | [Save](Save/README.en.md) | Persistence system | Two-phase write + strict read + path policy + meta.map |
-| [Scheduling](Scheduling/README.en.md) | Deferred scheduling | ActionScheduler + thread-safe ConcurrentActionQueue |
 | [Serialization](Serialization/README.en.md) | Type mapping | TypeStringMapping (CLR types ↔ stable string identifiers) |
 | [Snd](Snd/README.en.md) | SND entity system | Strategy→Entity→Data→Scene Host→Numeric Recipe Loading — full stack |
 | [StateMachine](StateMachine/README.en.md) | String-stack state machine | StackStateMachine + strategy hooks + persistence model |
@@ -52,7 +51,10 @@
 Origo.Core.Contracts (stable contracts)
         ▲
         │
-Origo.Core (platform-agnostic implementation)
+Origo.Core.Kernel (kernel implementation)
+        ▲
+        │
+Origo.Core (platform-agnostic implementation and current host facade)
         ▲ implements interfaces
 Origo.GodotAdapter (engine adapter)
         ▲ injects differences

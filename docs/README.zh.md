@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 24 -->
+<!-- docsync-revision: 26 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
@@ -60,6 +60,7 @@ Root (this file)
 | 模块 | 位置 | 说明 |
 |------|------|------|
 | **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.zh.md) | 稳定消费者契约：日志、控制台、文件系统、路径与元数据 |
+| **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.zh.md) | kernel 实现：vendor 噪声与延迟调度；runtime/SND/持久化当前仍在 Origo.Core |
 | **Origo.Core** | [README](Origo.Core/README.zh.md) | 平台无关核心：SND 实体系统、运行时、持久化、状态机 |
 | **Origo.SourceGeneration** | [README](Origo.SourceGeneration/README.zh.md) | Roslyn 增量源码生成器：TypedData 多层内联存储 + 强类型访问器 |
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.zh.md) | Godot 4 适配层：文件系统、日志、序列化、启动 |
@@ -87,13 +88,11 @@ Root (this file)
 | [Grid](Origo.Core/Grid/README.zh.md) | 网格坐标系、A* 寻路、坐标解析 |
 | [StateMachine](Origo.Core/StateMachine/README.zh.md) | 字符串栈状态机 |
 | [Planning](Origo.Core/Planning/README.zh.md) | 意图驱动计划执行 |
-| [Scheduling](Origo.Core/Scheduling/README.zh.md) | 延迟动作调度 |
 | [Blackboard](Origo.Core/Blackboard/README.zh.md) | 内存黑板实现 |
 | [Random](Origo.Core/Random/README.zh.md) | 随机数 + 噪声图 |
 | [Utility](Origo.Core/Utility/README.zh.md) | 通用工具：集合差异比较 |
 | [Serialization](Origo.Core/Serialization/README.zh.md) | 类型 ↔ 字符串映射 |
 | [Logging](Origo.Core/Logging/README.zh.md) | 日志构建器 + NullLogger |
-| [Addons](Origo.Core/Addons/README.zh.md) | FastNoiseLite 噪声库 |
 
 ## 快速导航
 

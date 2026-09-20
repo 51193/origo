@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell API classification for 0.1.0
 
@@ -20,7 +20,7 @@ dotnet test Origo.GodotAdapter.Tests --configuration Release -p:CollectCoverage=
 dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage=false --filter FullyQualifiedName~ShellApiClassification_CoversEveryConsoleBridgeExport
 ```
 
-The same guards run inside `scripts/test.sh`, so the full development loop revalidates the table. `Origo.Core.Tests` runs the guard against both `Origo.Core` and `Origo.Core.Contracts`, and it also verifies that the English and Chinese tables carry identical type metadata.
+The same guards run inside `scripts/test.sh`, so the full development loop revalidates the table. `Origo.Core.Tests` runs the guard against `Origo.Core`, `Origo.Core.Contracts`, and `Origo.Core.Kernel`, and it also verifies that the English and Chinese tables carry identical type metadata.
 
 ## Generated public members
 
@@ -50,11 +50,11 @@ The current inventory has no test-only exported types: test-only behavior alread
 
 ## Current split checkpoint
 
-The first #38 slice moves eight leaf contracts into `Origo.Core.Contracts`:
-`OrigoMeta`, the logging abstractions, the console I/O abstractions, and the
-file-system/path contracts. Their Assembly column is now
-`Origo.Core.Contracts`; the remaining rows still describe the pre-split
-`Origo.Core` assembly until the corresponding kernel/shell slices move them.
+Current package paths are visible in the Assembly column. `Origo.Core.Contracts`
+owns `OrigoMeta`, the logging abstractions, the console I/O abstractions, and the
+file-system/path contracts. `Origo.Core.Kernel` owns FastNoiseLite (seven exports)
+and the internal scheduling implementation. Rows with Assembly `Origo.Core` are
+types that currently remain in that assembly.
 
 ## Retention conditions for compatible APIs
 
@@ -112,13 +112,13 @@ Each shell/tooling row carries an owner and one of these issue #37 retention con
 | <code>Origo.Core.Abstractions.StateMachine.IStateMachine</code> | Origo.Core | Shell contract | Origo.Core.Contracts | state-machine | Stable consumer contract in the state machine capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.StateMachine.IStateMachineContainer</code> | Origo.Core | Shell contract | Origo.Core.Contracts | state-machine | Stable consumer contract in the state machine capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.StateMachine.IStateMachineContext</code> | Origo.Core | Shell contract | Origo.Core.Contracts | state-machine | Stable consumer contract in the state machine capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+CellularDistanceFunction</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+CellularReturnType</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+DomainWarpType</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+FractalType</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+NoiseType</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+RotationType3D</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+CellularDistanceFunction</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+CellularReturnType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+DomainWarpType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+FractalType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+NoiseType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+RotationType3D</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | Kernel implementation detail for noise implementation; consumers observe behavior through shell interfaces or kernel ports and must not compile against it in 0.1.x. | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Blackboard.Blackboard</code> | Origo.Core | Shell contract | Origo.Core | blackboard | Concrete consumer shell implementation for blackboard/state access; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-SND |
 | <code>Origo.Core.DataSource.DataSourceConverter`1</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | data-tooling | Documented tooling extension base for data-source tooling; subclassing and validation semantics are part of the stable contract. | core-tooling; R-DATA |
 | <code>Origo.Core.DataSource.DataSourceConverterBase</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | data-tooling | Documented tooling extension base for data-source tooling; subclassing and validation semantics are part of the stable contract. | core-tooling; R-DATA |

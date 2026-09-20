@@ -1,6 +1,5 @@
 using System;
 using Origo.Core.Abstractions.Logging;
-using Origo.Core.Abstractions.Runtime;
 
 namespace Origo.Core.Scheduling;
 

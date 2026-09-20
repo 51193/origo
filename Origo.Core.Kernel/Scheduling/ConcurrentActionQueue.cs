@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using Origo.Core.Abstractions.Logging;
-using Origo.Core.Logging;
 
 namespace Origo.Core.Scheduling;
 
@@ -117,7 +116,7 @@ internal class ConcurrentActionQueue
                 catch (Exception ex)
                 {
                     _logger.Log(LogLevel.Error, nameof(ConcurrentActionQueue),
-                        new LogMessageBuilder().Build($"Deferred action execution failed: {ex.Message}"));
+                        $"Deferred action execution failed: {ex.Message}");
                     var discardFailures = InvokeDiscardForRange(currentBatch, i + 1);
                     if (discardFailures.Count == 0)
                         throw;

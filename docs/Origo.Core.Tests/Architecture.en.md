@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
@@ -17,7 +17,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 
 | File | Verification Focus |
 |------|-------------------|
-| `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, shell API classification completeness, contract dependency direction, consumers can complete full workflow through pure interfaces |
+| `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, shell API classification completeness, Contracts/Kernel dependency direction, consumers can complete full workflow through pure interfaces |
 | `AutoInitializerGuardTests.cs` | Strategy statelessness validation: instance fields rejected, static fields allowed, missing StrategyIndex throws |
 
 ## CoreArchitectureGuardrailTests Test Details
@@ -49,6 +49,10 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `ConsoleCommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | ConsoleCommandHandlerBase is public, external projects can derive custom command handlers | console-bridge |
 | `ShellApiClassification_CoversEveryCoreExport` | Every Core export appears exactly once in the bilingual classification table; a new export must update the classification first | architecture/shell-api-classification |
 | `ShellApiClassification_CoversEveryContractsExport` | Every `Origo.Core.Contracts` export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryKernelExport` | Every `Origo.Core.Kernel` export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
+| `Kernel_ShouldNotReferenceImplementationsOrGodot` | Kernel references neither `Origo.Core`, adapter, nor ConsoleBridge assemblies, and references no Godot assembly | architecture/shell-kernel-boundary |
+| `Kernel_ShouldReferenceContracts` | Kernel explicitly references `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
+| `Core_ShouldReferenceKernel` | `Origo.Core` explicitly references `Origo.Core.Kernel` | architecture/shell-kernel-boundary |
 | `Contracts_ShouldNotReferenceImplementationsOrGodot` | The contracts assembly references neither `Origo.Core`, adapter, nor ConsoleBridge assemblies, and references no Godot assembly | architecture/shell-kernel-boundary |
 | `Core_ShouldReferenceContracts` | The `Origo.Core` assembly explicitly references `Origo.Core.Contracts`, pinning the contract dependency direction | architecture/shell-kernel-boundary |
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构守卫 测试
 
@@ -16,7 +16,7 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `CoreArchitectureGuardrailTests.cs` | 分层隔离、接口组合、shell API 分类完整性、契约层依赖方向、消费方可通过纯接口完成完整工作流 |
+| `CoreArchitectureGuardrailTests.cs` | 分层隔离、接口组合、shell API 分类完整性、Contracts/Kernel 依赖方向、消费方可通过纯接口完成完整工作流 |
 | `AutoInitializerGuardTests.cs` | 策略无状态校验：实例字段被拒绝、静态字段允许、缺少 StrategyIndex 抛异常 |
 
 ## CoreArchitectureGuardrailTests 测试详情
@@ -49,6 +49,10 @@
 | `ConsoleCommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | ConsoleCommandHandlerBase 为 public，外部项目可派生自定义命令处理器 | console-bridge |
 | `ShellApiClassification_CoversEveryCoreExport` | Core 每个导出类型都在双语分类表中恰好出现一次；新增导出类型必须先补分类 | architecture/shell-api-classification |
 | `ShellApiClassification_CoversEveryContractsExport` | `Origo.Core.Contracts` 每个导出类型都在双语分类表中恰好出现一次 | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryKernelExport` | `Origo.Core.Kernel` 每个导出类型都在双语分类表中恰好出现一次 | architecture/shell-api-classification |
+| `Kernel_ShouldNotReferenceImplementationsOrGodot` | Kernel 不引用 `Origo.Core`/Adapter/ConsoleBridge 或 Godot | architecture/shell-kernel-boundary |
+| `Kernel_ShouldReferenceContracts` | Kernel 显式引用 `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
+| `Core_ShouldReferenceKernel` | `Origo.Core` 显式引用 `Origo.Core.Kernel` | architecture/shell-kernel-boundary |
 | `Contracts_ShouldNotReferenceImplementationsOrGodot` | 契约程序集不引用 `Origo.Core`/Adapter/ConsoleBridge，也不引用 Godot | architecture/shell-kernel-boundary |
 | `Core_ShouldReferenceContracts` | `Origo.Core` 程序集显式引用 `Origo.Core.Contracts`，钉住契约层依赖方向 | architecture/shell-kernel-boundary |
 

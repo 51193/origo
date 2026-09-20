@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
@@ -204,9 +204,16 @@ The frame loop entry is in the adapter layer (Godot's `_Process` callback), but 
 ## Project Structure
 
 ```
-Origo.Core/           # Platform-agnostic core (209 .cs files)
-├── Abstractions/     # Public interfaces (Blackboard/Entity/StateMachine/...)
+Origo.Core.Contracts/ # Stable consumer contracts
+├── Abstractions/     # Logging/console/file-system/path leaf contracts
+└── OrigoMeta.cs      # Framework metadata
+
+Origo.Core.Kernel/    # Kernel implementation package
 ├── Addons/           # External algorithm library (FastNoiseLite)
+└── Scheduling/       # Deferred queues
+
+Origo.Core/           # Platform-agnostic core and current host facade
+├── Abstractions/     # Core interfaces (Blackboard/Entity/StateMachine/...)
 ├── Blackboard/       # Blackboard implementation
 ├── DataSource/       # JSON/Map codec + type conversion
 ├── Grid/             # Grid coordinate system + A* pathfinding
@@ -215,7 +222,6 @@ Origo.Core/           # Platform-agnostic core (209 .cs files)
 ├── Random/           # Random numbers + noise
 ├── Runtime/          # Runtime four-layer lifecycle + console
 ├── Save/             # Persistent storage
-├── Scheduling/       # Deferred queues
 ├── Serialization/    # Type ↔ string mapping
 ├── Snd/              # SND entity system (Strategy + Data + Node)
 ├── StateMachine/     # String-stack state machine

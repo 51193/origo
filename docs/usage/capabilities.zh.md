@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -104,7 +104,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 2D 噪声图生成 | OpenSimplex2 (70%) + Worley Cellular (30%) 混合噪声，基础 + 扩展重载（自定义 octaves/lacunarity/gain） | [↔ Random](../Origo.Core/Random/README.zh.md) |
 | 网格坐标系 | GridPos 类型、GridCoordinateSystem 单/双轴转换、A* 寻路、GridParser 坐标解析 | [↔ Grid](../Origo.Core/Grid/README.zh.md) |
 | 内存黑板 | IBlackboard 默认实现，SetValue/TryGet/SerializeAll/DeserializeAll，key 大小写敏感 | [↔ Blackboard](../Origo.Core/Blackboard/README.zh.md) |
-| 延迟动作调度 | ConcurrentActionQueue 线程安全队列，快照-排干模式，支持执行中再次入队 | [↔ Scheduling](../Origo.Core/Scheduling/README.zh.md) |
+| 延迟动作调度 | ConcurrentActionQueue 线程安全队列，快照-排干模式，支持执行中再次入队 | [↔ Scheduling](../Origo.Core.Kernel/Scheduling/README.zh.md) |
 | 结构化日志构建器 | LogMessageBuilder 流式 API（SetElapsedMs / AddContext / Build） | [↔ Logging](../Origo.Core/Logging/README.zh.md) |
 
 ## 框架设计属性

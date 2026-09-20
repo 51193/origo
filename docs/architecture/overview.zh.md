@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构总览
 
@@ -204,9 +204,16 @@ Godot._Process
 ## 项目结构
 
 ```
-Origo.Core/           # 平台无关核心（209 个 .cs 文件）
-├── Abstractions/     # 公共接口（Blackboard/Entity/StateMachine/...）
+Origo.Core.Contracts/ # 稳定消费者契约
+├── Abstractions/     # 日志/控制台/文件系统/路径叶级契约
+└── OrigoMeta.cs      # 框架元数据
+
+Origo.Core.Kernel/    # Kernel 实现包
 ├── Addons/           # 外部算法库（FastNoiseLite）
+└── Scheduling/       # 延迟队列
+
+Origo.Core/           # 平台无关核心与当前 host facade
+├── Abstractions/     # 核心接口（Blackboard/Entity/StateMachine/...）
 ├── Blackboard/       # 黑板实现
 ├── DataSource/       # JSON/Map 编解码 + 类型转换
 ├── Grid/             # 网格坐标系统 + A* 寻路
@@ -215,7 +222,6 @@ Origo.Core/           # 平台无关核心（209 个 .cs 文件）
 ├── Random/           # 随机数 + 噪声
 ├── Runtime/          # 运行时四层生命周期 + 控制台
 ├── Save/             # 持久化存储
-├── Scheduling/       # 延迟队列
 ├── Serialization/    # 类型 ↔ 字符串映射
 ├── Snd/              # SND 实体系统（策略 + 数据 + 节点）
 ├── StateMachine/     # 字符串栈状态机

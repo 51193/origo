@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core/Random/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Random
 
-> [↑ Back to Origo.Core](../README.en.md) · [↔ Addons: FastNoiseLite](../Addons/FastNoiseLite/README.en.md)
+> [↑ Back to Origo.Core](../README.en.md) · [↔ Addons: FastNoiseLite](../../Origo.Core.Kernel/Addons/FastNoiseLite/README.en.md)
 
 ## Overview
 Unified entry point for game random numbers. Two independent capabilities: XorShift128+ pseudo-random number generation and 2D noise map generation via FastNoiseLite. Both are reproducible given the same seed.

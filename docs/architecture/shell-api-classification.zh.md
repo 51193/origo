@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 0.1.0 Shell API 分类
 
@@ -20,7 +20,7 @@ dotnet test Origo.GodotAdapter.Tests --configuration Release -p:CollectCoverage=
 dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage=false --filter FullyQualifiedName~ShellApiClassification_CoversEveryConsoleBridgeExport
 ```
 
-这些守卫也在 `scripts/test.sh` 中执行，因此完整开发循环会重新校验本表。`Origo.Core.Tests` 同时校验 `Origo.Core` 与 `Origo.Core.Contracts` 的导出集，并校验中英文表携带完全一致的类型元数据。
+这些守卫也在 `scripts/test.sh` 中执行，因此完整开发循环会重新校验本表。`Origo.Core.Tests` 同时校验 `Origo.Core`、`Origo.Core.Contracts` 与 `Origo.Core.Kernel` 的导出集，并校验中英文表携带完全一致的类型元数据。
 
 ## 生成的公共成员
 
@@ -50,7 +50,7 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 
 ## 当前拆分检查点
 
-#38 的第一切片已把 8 个叶级契约迁入 `Origo.Core.Contracts`：`OrigoMeta`、日志抽象、控制台 I/O 抽象与文件系统/路径契约。它们的 Assembly 列现为 `Origo.Core.Contracts`；其余行仍描述拆分前的 `Origo.Core` 程序集，直到后续 kernel/shell 切片迁移对应类型。
+当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载 `OrigoMeta`、日志抽象、控制台 I/O 抽象与文件系统/路径契约；`Origo.Core.Kernel` 承载 FastNoiseLite（7 个导出）与 internal 调度实现。Assembly 为 `Origo.Core` 的行表示当前仍位于该程序集的类型。
 
 ## 兼容 API 的移除条件
 
@@ -108,13 +108,13 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.Core.Abstractions.StateMachine.IStateMachine</code> | Origo.Core | Shell contract | Origo.Core.Contracts | state-machine | 状态机能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.StateMachine.IStateMachineContainer</code> | Origo.Core | Shell contract | Origo.Core.Contracts | state-machine | 状态机能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.StateMachine.IStateMachineContext</code> | Origo.Core | Shell contract | Origo.Core.Contracts | state-machine | 状态机能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-SND |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+CellularDistanceFunction</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+CellularReturnType</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+DomainWarpType</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+FractalType</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+NoiseType</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+RotationType3D</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+CellularDistanceFunction</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+CellularReturnType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+DomainWarpType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+FractalType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+NoiseType</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
+| <code>Origo.Core.Addons.FastNoiseLite.FastNoiseLite+RotationType3D</code> | Origo.Core.Kernel | Kernel implementation | Origo.Core.Kernel | noise-kernel | 噪声实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Blackboard.Blackboard</code> | Origo.Core | Shell contract | Origo.Core | blackboard | 黑板/状态访问的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-SND |
 | <code>Origo.Core.DataSource.DataSourceConverter`1</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-DATA |
 | <code>Origo.Core.DataSource.DataSourceConverterBase</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | data-tooling | 数据源工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-DATA |

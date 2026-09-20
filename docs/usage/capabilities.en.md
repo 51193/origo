@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
@@ -104,7 +104,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | 2D noise map generation | OpenSimplex2 (70%) + Worley Cellular (30%) mixed noise, basic + extended overloads (custom octaves/lacunarity/gain) | [↔ Random](../Origo.Core/Random/README.en.md) |
 | Grid coordinate system | GridPos type, GridCoordinateSystem single/dual-axis conversion, A* pathfinding, GridParser coordinate parsing | [↔ Grid](../Origo.Core/Grid/README.en.md) |
 | In-memory blackboard | IBlackboard default implementation, SetValue/TryGet/SerializeAll/DeserializeAll, key case-sensitive | [↔ Blackboard](../Origo.Core/Blackboard/README.en.md) |
-| Deferred action scheduling | ConcurrentActionQueue thread-safe queue, snapshot-drain pattern, supports re-enqueue during execution | [↔ Scheduling](../Origo.Core/Scheduling/README.en.md) |
+| Deferred action scheduling | ConcurrentActionQueue thread-safe queue, snapshot-drain pattern, supports re-enqueue during execution | [↔ Scheduling](../Origo.Core.Kernel/Scheduling/README.en.md) |
 | Structured log builder | LogMessageBuilder fluent API (SetElapsedMs / AddContext / Build) | [↔ Logging](../Origo.Core/Logging/README.en.md) |
 
 ## Framework Design Properties

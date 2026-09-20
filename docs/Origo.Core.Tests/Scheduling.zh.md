@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Scheduling -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 调度 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Scheduling](../Origo.Core/Scheduling/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/Scheduling](../Origo.Core.Kernel/Scheduling/README.zh.md)
 
 ## 被测行为概览
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Contracts
 
@@ -35,6 +35,9 @@ against it.
 
 ```
 Origo.Core.Contracts
+        ▲
+        │
+Origo.Core.Kernel
         ▲
         │
 Origo.Core ──► Origo.SourceGeneration (analyzer)
