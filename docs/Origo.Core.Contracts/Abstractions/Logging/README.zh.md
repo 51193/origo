@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Abstractions/Logging/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Logging/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Logging (Abstractions)
 
-> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Logging](../../Logging/README.zh.md)
+> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Origo.Core/Logging](../../../Origo.Core/Logging/README.zh.md)
 
 ## 概述
 
@@ -49,7 +49,7 @@
 
 ### 为什么不提供格式化方法
 
-Format 和 interpolation 是调用方的关注点。Core 层的 `LogMessageBuilder`（见 [Logging 实现](../../Logging/README.zh.md)）已提供结构化消息构建能力，`ILogger` 保持接收纯字符串的最小接口。
+Format 和 interpolation 是调用方的关注点。Core 层的 `LogMessageBuilder`（见 [Logging 实现](../../../Origo.Core/Logging/README.zh.md)）已提供结构化消息构建能力，`ILogger` 保持接收纯字符串的最小接口。
 
 ---
 [↑ 回到 Abstractions](../README.zh.md)

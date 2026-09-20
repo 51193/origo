@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Abstractions/Console/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Console/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Console (Abstractions)
 
-> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Runtime/Console](../../Runtime/Console/README.zh.md)
+> [↑ 回到 Abstractions](../README.zh.md) · [↔ 实现: Origo.Core/Runtime/Console](../../../Origo.Core/Runtime/Console/README.zh.md)
 
 ## 概述
 

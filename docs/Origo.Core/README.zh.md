@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core
 
@@ -13,7 +13,8 @@
 
 | 子系统 | 能力 | 详情 |
 |--------|------|------|
-| [Abstractions](Abstractions/README.zh.md) | 11 组公共抽象接口 | IBlackboard / IFilesystem / ILogger / ISndEntity / IStateMachine ... |
+| [Contracts](../Origo.Core.Contracts/README.zh.md) | 稳定消费者契约 | 日志、控制台、文件系统与路径等平台叶级契约；本实现层与适配层共同引用 |
+| [Abstractions](Abstractions/README.zh.md) | 核心抽象接口 | IBlackboard / ISndEntity / IStateMachine / INode* / IScheduler ... |
 | [Addons](Addons/README.zh.md) | Vendor 第三方库 | FastNoiseLite v1.1.1（噪声生成）|
 | [Blackboard](Blackboard/README.zh.md) | IBlackboard 默认实现 | 基于 Dictionary + TypedData 的内存黑板 |
 | [DataSource](DataSource/README.zh.md) | 数据源抽象层 | DataSourceNode 树模型 + JSON/Map 编解码 + 类型转换器注册 |
@@ -30,12 +31,13 @@
 | [Utility](Utility/README.zh.md) | 通用工具 | 路径规范化（PathUtility）与字符串到类型值推断（ValueInference） |
 
 > TypedData 源码生成器是独立项目 [Origo.SourceGeneration](../Origo.SourceGeneration/README.zh.md)，不在 Core 内。
+>
+> 框架元数据与平台叶级契约位于稳定契约包 [Origo.Core.Contracts](../Origo.Core.Contracts/README.zh.md)。
 
 ## 本层文件
 
 | 文件 | 职责 |
 |------|------|
-| `OrigoMeta.cs` | 框架元数据：名称、版本号、默认横幅 |
 | `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(...)]` 宿主内联类型注册：声明 Core 支持的系统基础类型与 string |
 
 ## 架构约束
@@ -47,14 +49,18 @@
 ## 依赖方向
 
 ```
-Origo.Core (平台无关)
-    ↑ 实现接口
+Origo.Core.Contracts (稳定契约)
+        ▲
+        │
+Origo.Core (平台无关实现)
+        ▲ 实现接口
 Origo.GodotAdapter (引擎适配)
-    ↑ 注入差异
+        ▲ 注入差异
 Origo.ConsoleBridge (独立服务)
 ```
 
-适配层依赖 Core 的抽象接口并注入具体实现，Core 绝不反向依赖适配层。
+适配层依赖 Core 的抽象接口并注入具体实现，Core 绝不反向依赖适配层；
+稳定契约层不依赖任何实现程序集。
 
 ---
 [↑ 回到 Origo.manual](../README.zh.md)

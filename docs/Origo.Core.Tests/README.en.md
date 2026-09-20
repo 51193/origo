@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Tests
 
@@ -53,7 +53,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 
 | Capability | Document | Verification Focus |
 |-----------|----------|-------------------|
-| Architecture Guardrails | [Architecture.md](Architecture.en.md) | Layer isolation (Core does not reference Godot), interface composition (ISndContext pure composition), strategy statelessness validation, shell API classification completeness |
+| Architecture Guardrails | [Architecture.md](Architecture.en.md) | Layer isolation (Core does not reference Godot), contract dependency direction, interface composition (ISndContext pure composition), strategy statelessness validation, shell API classification completeness |
 | Test Doubles | [Abstractions.md](Abstractions.en.md) | TestMemoryFileSystem / NullLogger / TestMemoryFileSystemAdditional correctness |
 | Blackboard | [Blackboard.md](Blackboard.en.md) | Set/Get/TryGet/Clear/SerializeAll/DeserializeAll full lifecycle + key validation |
 | Data Observer | [DataObserver.md](DataObserver.en.md) | Subscribe/Unsubscribe/Notify/Multiple subscribers/Re-entrancy safety/Clear |

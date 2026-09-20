@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Tests
 
@@ -45,7 +45,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 
 | 能力 | 文档 | 验证重点 |
 |------|------|---------|
-| 架构守卫 | [Architecture.md](Architecture.zh.md) | 分层隔离（Core 不引用 Godot）、接口组合（ISndContext 纯组合）、策略无状态校验、shell API 分类完整性 |
+| 架构守卫 | [Architecture.md](Architecture.zh.md) | 分层隔离（Core 不引用 Godot）、契约层依赖方向、接口组合（ISndContext 纯组合）、策略无状态校验、shell API 分类完整性 |
 | 测试替身 | [Abstractions.md](Abstractions.zh.md) | TestMemoryFileSystem / NullLogger / TestMemoryFileSystemAdditional 的正确性 |
 | 黑板 | [Blackboard.md](Blackboard.zh.md) | Set/Get/TryGet/Clear/SerializeAll/DeserializeAll 全生命周期 + 键校验 |
 | 数据观察者 | [DataObserver.md](DataObserver.zh.md) | Subscribe/Unsubscribe/Notify/多订阅者/重入安全/Clear |

@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Abstractions/Console/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Console/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console (Abstractions)
 
-> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Runtime/Console](../../Runtime/Console/README.en.md)
+> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Origo.Core/Runtime/Console](../../../Origo.Core/Runtime/Console/README.en.md)
 
 ## Overview
 Defines the input/output abstraction between the Core layer and external console systems. Core does not directly depend on a concrete console implementation. The adapter layer dispatches commands via `Enqueue`, and Core consumes them per-frame via `TryDequeueCommand`.

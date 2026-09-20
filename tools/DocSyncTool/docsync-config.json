@@ -2,6 +2,7 @@
   "Languages": ["zh", "en"],
   "DocsRoot": "docs",
   "SourceMirrorRoots": [
+    "Origo.Core.Contracts",
     "Origo.Core",
     "Origo.GodotAdapter",
     "Origo.ConsoleBridge",

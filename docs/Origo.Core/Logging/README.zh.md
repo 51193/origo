@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core/Logging/README -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Logging
 
-> [↑ 回到 Origo.Core](../README.zh.md) · [↔ 抽象: Abstractions/Logging](../Abstractions/Logging/README.zh.md)
+> [↑ 回到 Origo.Core](../README.zh.md) · [↔ 抽象: Abstractions/Logging](../../Origo.Core.Contracts/Abstractions/Logging/README.zh.md)
 
 ## 概述
 

@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.GodotAdapter/FileSystem/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 9 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # FileSystem
 
-> [↑ 回到 Origo.GodotAdapter](../README.zh.md) · [↔ Core 抽象: Abstractions/FileSystem](../../Origo.Core/Abstractions/FileSystem/README.zh.md)
+> [↑ 回到 Origo.GodotAdapter](../README.zh.md) · [↔ Core 抽象: Abstractions/FileSystem](../../Origo.Core.Contracts/Abstractions/FileSystem/README.zh.md)
 
 ## 概述
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core
 
@@ -13,7 +13,8 @@
 
 | Subsystem | Capability | Details |
 |-----------|-----------|---------|
-| [Abstractions](Abstractions/README.en.md) | 11 groups of public abstraction interfaces | IBlackboard / IFilesystem / ILogger / ISndEntity / IStateMachine ... |
+| [Contracts](../Origo.Core.Contracts/README.en.md) | Stable consumer contracts | Platform leaf contracts for logging, console, file system, and paths, shared by the implementation and adapters |
+| [Abstractions](Abstractions/README.en.md) | Core abstraction interfaces | IBlackboard / ISndEntity / IStateMachine / INode* / IScheduler ... |
 | [Addons](Addons/README.en.md) | Vendor third-party libraries | FastNoiseLite v1.1.1 (noise generation) |
 | [Blackboard](Blackboard/README.en.md) | Default IBlackboard implementation | In-memory blackboard based on Dictionary + TypedData |
 | [DataSource](DataSource/README.en.md) | Data source abstraction layer | DataSourceNode tree model + JSON/Map codec + type converter registration |
@@ -30,12 +31,13 @@
 | [Utility](Utility/README.en.md) | General utilities | Path normalization (PathUtility) and string-to-value inference (ValueInference) |
 
 > The TypedData source generator is a standalone project [Origo.SourceGeneration](../Origo.SourceGeneration/README.en.md), not part of Core.
+>
+> Framework metadata and platform leaf contracts live in the stable contract package [Origo.Core.Contracts](../Origo.Core.Contracts/README.en.md).
 
 ## This Layer's Files
 
 | File | Responsibility |
 |------|---------------|
-| `OrigoMeta.cs` | Framework metadata: name, version number, default banner |
 | `AssemblyAttributes.cs` | `[assembly: SndInlineTypes(...)]` home inline-type registration declaring the system primitives and string supported by Core |
 
 ## Architectural Constraints
@@ -47,14 +49,19 @@
 ## Dependency Direction
 
 ```
-Origo.Core (platform-agnostic)
-    ↑ implements interfaces
+Origo.Core.Contracts (stable contracts)
+        ▲
+        │
+Origo.Core (platform-agnostic implementation)
+        ▲ implements interfaces
 Origo.GodotAdapter (engine adapter)
-    ↑ injects differences
+        ▲ injects differences
 Origo.ConsoleBridge (standalone service)
 ```
 
-The adapter layer depends on Core's abstraction interfaces and injects concrete implementations; Core never depends on the adapter layer in reverse.
+The adapter layer depends on Core's abstraction interfaces and injects concrete
+implementations; Core never depends on the adapter layer in reverse, and the
+contract layer depends on no implementation assembly.
 
 ---
 [↑ Back to Origo Manual](../README.en.md)

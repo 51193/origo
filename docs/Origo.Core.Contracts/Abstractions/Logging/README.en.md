@@ -1,9 +1,9 @@
-<!-- docsync-pair: Origo.Core/Abstractions/Logging/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Logging/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Logging (Abstractions)
 
-> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Logging](../../Logging/README.en.md)
+> [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Origo.Core/Logging](../../../Origo.Core/Logging/README.en.md)
 
 ## Overview
 Defines the engine-agnostic basic logging interface `ILogger` and the log level enumeration `LogLevel`. The Core layer only cares about message content and level, not the output destination.

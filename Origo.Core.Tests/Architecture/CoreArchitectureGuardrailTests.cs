@@ -481,3 +481,38 @@ public class CoreShellApiClassificationGuardTests
         Assert.Empty(violations);
     }
 }
+
+public class CoreContractsShellApiClassificationGuardTests
+{
+    [Fact]
+    public void ShellApiClassification_CoversEveryContractsExport()
+    {
+        var violations = ShellApiClassificationInventory.FindViolations(typeof(Origo.Core.OrigoMeta).Assembly);
+        Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void Contracts_ShouldNotReferenceImplementationsOrGodot()
+    {
+        var references = typeof(Origo.Core.OrigoMeta).Assembly.GetReferencedAssemblies();
+        var implementationReferences = references
+            .Where(reference => reference.Name is not null)
+            .Select(reference => reference.Name!)
+            .ToArray();
+
+        Assert.DoesNotContain(implementationReferences, name =>
+            string.Equals(name, "Origo.Core", StringComparison.Ordinal)
+            || string.Equals(name, "Origo.GodotAdapter", StringComparison.Ordinal)
+            || string.Equals(name, "Origo.ConsoleBridge", StringComparison.Ordinal));
+        Assert.DoesNotContain(implementationReferences, name =>
+            name.StartsWith("Godot", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Core_ShouldReferenceContracts()
+    {
+        var references = typeof(OrigoRuntime).Assembly.GetReferencedAssemblies();
+        Assert.Contains(references, reference =>
+            string.Equals(reference.Name, "Origo.Core.Contracts", StringComparison.Ordinal));
+    }
+}

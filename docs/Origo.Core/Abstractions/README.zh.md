@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Abstractions
 
@@ -14,16 +14,16 @@ Origo.Core 的稳定公共抽象层。所有接口在此层定义为平台无关
 | 子模块 | 能力 | 详情 |
 |--------|------|------|
 | [Blackboard](Blackboard/README.zh.md) | 通用键值黑板接口，保留类型信息 | `IBlackboard`：SetValue/Get + 序列化 |
-| [Console](Console/README.zh.md) | 控制台输入输出抽象 | `IConsoleInputSource`（轮询）+ `IConsoleOutputChannel`（发布-订阅）|
 | [Entity](Entity/README.zh.md) | SND 实体的五项能力接口 + 独立的生命周期接口 | `ISndEntity` = `ISndDataAccess` + `ISndNodeAccess` + `ISndStrategyAccess` + `ISndActiveStrategyAccess` + `ISndObserverStrategyAccess`；`IEntityLifecycle` 为独立 `internal` 接口（框架内部使用）|
-| [FileSystem](FileSystem/README.zh.md) | 平台无关文件系统抽象 | `IFileSystem`：13 个文件/目录操作，含路径拼接和父目录。策略不直接使用此接口，而是通过 `ISndFileAccess`（经 `IDataSourceIoGateway` 边界）|
 | [Lifecycle](Lifecycle/README.zh.md) | 会话管理抽象接口 | `ISessionManager`（会话生命周期）+ `ISessionRun`（会话运行时门面） |
-| [Logging](Logging/README.zh.md) | 引擎无关日志接口 | `ILogger` + `LogLevel` 枚举（Debug/Info/Warning/Error）|
 | [Node](Node/README.zh.md) | 抽象引擎节点操作 | `INodeFactory` + `INodeHandle` + `INodeHost`(internal) |
 | [Runtime](Runtime/README.zh.md) | 抽象帧驱动接口 | `IOrigoFrameDriver`：DriveFrame（公开帧驱动统一入口；OrigoRuntime 的 Enqueue/Flush/Reset 管线方法为 internal） |
 | [Scene](Scene/README.zh.md) | SND 场景访问与宿主 | public `ISndSceneReadAccess`（GetEntities/FindByName）+ internal `ISndSceneAccess` / `ISndSceneHost`（编排） |
 | [Snd](Snd/README.zh.md) | ISndContext 10 个伴生属性 | IStateMachineContext 也继承其中部分 |
 | [StateMachine](StateMachine/README.zh.md) | 字符串栈状态机体系 | `IStateMachine` + `IStateMachineContext` + `IStateMachineContainer` |
+
+> 平台叶级契约（日志、控制台输入输出、文件系统与路径）位于稳定契约包
+> [Origo.Core.Contracts](../../Origo.Core.Contracts/Abstractions/README.zh.md)。
 
 ## 接口层级
 

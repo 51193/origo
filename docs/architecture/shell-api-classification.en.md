@@ -1,13 +1,13 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell API classification for 0.1.0
 
 > [↑ Back to Architecture](README.en.md)
 
-This document is the issue #37 baseline for the stable 0.1.0 consumer surface. It classifies every exported type of `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` at source commit `7405cf5` so that the package split and API baseline work in #38 and #41 starts from a reviewed map rather than reflection guesswork.
+This document is the issue #37 baseline for the stable 0.1.0 consumer surface. The initial inventory was captured for every exported type of `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` at source commit `7405cf5`. Later #38 split commits update the Assembly and Package owner columns in place while keeping the classified type set complete, and #41 rebaselines the final shell member surface.
 
-The topology and compatibility policy remain defined by [shell-kernel-boundary](shell-kernel-boundary.en.md); this document only applies that decision to the current exports. A new exported type fails the architecture guard in each test project until it is added to both language tables with a classification, package owner, capability group, and rationale.
+The topology and compatibility policy remain defined by [shell-kernel-boundary](shell-kernel-boundary.en.md); this document only applies that decision to the current exports. A new exported type fails the architecture guard in each test project until it is added to both language tables with a classification, package owner, capability group, and rationale. Moved types fail until the same change updates the assembly column and the matching assembly guard.
 
 ## Reproduction
 
@@ -20,7 +20,7 @@ dotnet test Origo.GodotAdapter.Tests --configuration Release -p:CollectCoverage=
 dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage=false --filter FullyQualifiedName~ShellApiClassification_CoversEveryConsoleBridgeExport
 ```
 
-The same guards run inside `scripts/test.sh`, so the full development loop revalidates the table. The Core guard also verifies that the English and Chinese tables carry identical type metadata.
+The same guards run inside `scripts/test.sh`, so the full development loop revalidates the table. `Origo.Core.Tests` runs the guard against both `Origo.Core` and `Origo.Core.Contracts`, and it also verifies that the English and Chinese tables carry identical type metadata.
 
 ## Generated public members
 
@@ -48,6 +48,14 @@ The current inventory has no test-only exported types: test-only behavior alread
 - `Origo.ConsoleBridge` remains shell-only and depends on Core console/logging contracts.
 - Generated Godot signal nested types are listed explicitly because they are public exports. Member-level generated accessors (`TryGetXxx`, operators, nullability, diagnostics) are owned by the #41 Roslyn baseline; this table classifies their containing types.
 
+## Current split checkpoint
+
+The first #38 slice moves eight leaf contracts into `Origo.Core.Contracts`:
+`OrigoMeta`, the logging abstractions, the console I/O abstractions, and the
+file-system/path contracts. Their Assembly column is now
+`Origo.Core.Contracts`; the remaining rows still describe the pre-split
+`Origo.Core` assembly until the corresponding kernel/shell slices move them.
+
 ## Retention conditions for compatible APIs
 
 Each shell/tooling row carries an owner and one of these issue #37 retention conditions for the next `0.y.0` release.
@@ -73,21 +81,21 @@ Each shell/tooling row carries an owner and one of these issue #37 retention con
 | Type | Assembly | Classification | Package owner | Capability group | Rationale | Owner / removal condition |
 |------|------|------|------|------|------|------|
 | <code>Origo.Core.Abstractions.Blackboard.IBlackboard</code> | Origo.Core | Shell contract | Origo.Core.Contracts | blackboard | Stable consumer contract in the blackboard/state access capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
-| <code>Origo.Core.Abstractions.Console.IConsoleInputSource</code> | Origo.Core | Shell contract | Origo.Core.Contracts | console | Stable consumer contract in the console I/O abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-CONSOLE |
-| <code>Origo.Core.Abstractions.Console.IConsoleOutputChannel</code> | Origo.Core | Shell contract | Origo.Core.Contracts | console | Stable consumer contract in the console I/O abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-CONSOLE |
+| <code>Origo.Core.Abstractions.Console.IConsoleInputSource</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | console | Stable consumer contract in the console I/O abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-CONSOLE |
+| <code>Origo.Core.Abstractions.Console.IConsoleOutputChannel</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | console | Stable consumer contract in the console I/O abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-CONSOLE |
 | <code>Origo.Core.Abstractions.Entity.ISndActiveStrategyAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | snd-entity | Stable consumer contract in the SND entity/strategy consumer API capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.Entity.ISndDataAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | snd-entity | Stable consumer contract in the SND entity/strategy consumer API capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.Entity.ISndEntity</code> | Origo.Core | Shell contract | Origo.Core.Contracts | snd-entity | Stable consumer contract in the SND entity/strategy consumer API capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.Entity.ISndNodeAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | snd-entity | Stable consumer contract in the SND entity/strategy consumer API capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.Entity.ISndObserverStrategyAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | snd-entity | Stable consumer contract in the SND entity/strategy consumer API capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
 | <code>Origo.Core.Abstractions.Entity.ISndStrategyAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | snd-entity | Stable consumer contract in the SND entity/strategy consumer API capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-SND |
-| <code>Origo.Core.Abstractions.FileSystem.IFileSystem</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-io | Stable consumer contract in the data-source I/O boundary capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-DATA |
-| <code>Origo.Core.Abstractions.FileSystem.IPathResolver</code> | Origo.Core | Shell contract | Origo.Core.Contracts | data-io | Stable consumer contract in the data-source I/O boundary capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-DATA |
+| <code>Origo.Core.Abstractions.FileSystem.IFileSystem</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-io | Stable consumer contract in the data-source I/O boundary capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-DATA |
+| <code>Origo.Core.Abstractions.FileSystem.IPathResolver</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | data-io | Stable consumer contract in the data-source I/O boundary capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-DATA |
 | <code>Origo.Core.Abstractions.Lifecycle.ISessionManager</code> | Origo.Core | Shell contract | Origo.Core.Contracts | context-session | Stable consumer contract in the context/session access capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-HOST |
 | <code>Origo.Core.Abstractions.Lifecycle.ISessionRun</code> | Origo.Core | Shell contract | Origo.Core.Contracts | context-session | Stable consumer contract in the context/session access capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-HOST |
-| <code>Origo.Core.Abstractions.Logging.ILogger</code> | Origo.Core | Shell contract | Origo.Core.Contracts | logging | Stable consumer contract in the logging abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-CONSOLE |
-| <code>Origo.Core.Abstractions.Logging.ILogger`1</code> | Origo.Core | Shell contract | Origo.Core.Contracts | logging | Stable consumer contract in the logging abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-CONSOLE |
-| <code>Origo.Core.Abstractions.Logging.LogLevel</code> | Origo.Core | Shell contract | Origo.Core.Contracts | logging | Stable pure data model for logging abstraction; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-CONSOLE |
+| <code>Origo.Core.Abstractions.Logging.ILogger</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging | Stable consumer contract in the logging abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-CONSOLE |
+| <code>Origo.Core.Abstractions.Logging.ILogger`1</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging | Stable consumer contract in the logging abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-CONSOLE |
+| <code>Origo.Core.Abstractions.Logging.LogLevel</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging | Stable pure data model for logging abstraction; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-CONSOLE |
 | <code>Origo.Core.Abstractions.Node.INodeFactory</code> | Origo.Core | Shell contract | Origo.Core.Contracts | engine-node | Stable consumer contract in the engine node abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-HOST |
 | <code>Origo.Core.Abstractions.Node.INodeHandle</code> | Origo.Core | Shell contract | Origo.Core.Contracts | engine-node | Stable consumer contract in the engine node abstraction capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-HOST |
 | <code>Origo.Core.Abstractions.Runtime.IOrigoFrameDriver</code> | Origo.Core | Shell contract | Origo.Core.Contracts | host-runtime | Stable consumer contract in the host/runtime capability group; shell consumers compile against this abstraction while implementations remain in kernel or adapter packages. | core-shell; R-HOST |
@@ -127,7 +135,7 @@ Each shell/tooling row carries an owner and one of these issue #37 retention con
 | <code>Origo.Core.Logging.Logger`1</code> | Origo.Core | Shell contract | Origo.Core | logging-shell | Concrete consumer shell implementation for logging implementation; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-CONSOLE |
 | <code>Origo.Core.Logging.LogMessageBuilder</code> | Origo.Core | Shell contract | Origo.Core | logging-shell | Concrete consumer shell implementation for logging implementation; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-CONSOLE |
 | <code>Origo.Core.Logging.NullLogger</code> | Origo.Core | Shell contract | Origo.Core | logging-shell | Concrete consumer shell implementation for logging implementation; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-CONSOLE |
-| <code>Origo.Core.OrigoMeta</code> | Origo.Core | Shell contract | Origo.Core.Contracts | host-runtime | Stable pure data model for host/runtime; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-HOST |
+| <code>Origo.Core.OrigoMeta</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | host-runtime | Stable pure data model for host/runtime; it crosses consumer, generated-accessor, and save-format boundaries. | core-shell; R-HOST |
 | <code>Origo.Core.Planning.PlanExecutionStrategyBase</code> | Origo.Core | Shell contract | Origo.Core.Contracts | strategy | Stable extension base for strategy extension model; consumers derive from it and hook behavior must remain compatible across kernels. | core-shell; R-SND |
 | <code>Origo.Core.Random.NoiseMapGenerator</code> | Origo.Core | Shell contract | Origo.Core | random-utility | Concrete consumer shell implementation for random utility; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-UTIL |
 | <code>Origo.Core.Random.PersistentRandom</code> | Origo.Core | Shell contract | Origo.Core | random-utility | Concrete consumer shell implementation for random utility; it depends only on Contracts and remains usable without kernel compile assets. | core-shell; R-UTIL |

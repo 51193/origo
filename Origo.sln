@@ -26,6 +26,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocSyncTool.Tests", "tools\DocSyncTool.Tests\DocSyncTool.Tests.csproj", "{0D8868F7-B506-47A0-BB69-9051F0F31D16}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Origo.Core.Contracts", "Origo.Core.Contracts\Origo.Core.Contracts.csproj", "{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -180,6 +182,18 @@ Global
 		{0D8868F7-B506-47A0-BB69-9051F0F31D16}.Release|x64.Build.0 = Release|Any CPU
 		{0D8868F7-B506-47A0-BB69-9051F0F31D16}.Release|x86.ActiveCfg = Release|Any CPU
 		{0D8868F7-B506-47A0-BB69-9051F0F31D16}.Release|x86.Build.0 = Release|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Debug|x64.Build.0 = Debug|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Debug|x86.Build.0 = Debug|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Release|x64.ActiveCfg = Release|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Release|x64.Build.0 = Release|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Release|x86.ActiveCfg = Release|Any CPU
+		{0EDFCA65-078F-43D6-ACA6-081EFAF4B9AE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

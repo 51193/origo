@@ -30,6 +30,7 @@ public static class ShellApiClassificationInventory
     private static readonly HashSet<string> _allowedAssemblies = new(StringComparer.Ordinal)
     {
         "Origo.Core",
+        "Origo.Core.Contracts",
         "Origo.GodotAdapter",
         "Origo.ConsoleBridge"
     };
