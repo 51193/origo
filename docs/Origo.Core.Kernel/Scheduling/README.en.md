@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core.Kernel/Scheduling/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scheduling
 
-> [↑ Back to Origo.Core.Kernel](../README.en.md) · [↔ Frame-driver contract: Origo.Core/Abstractions/Runtime](../../Origo.Core/Abstractions/Runtime/README.en.md)
+> [↑ Back to Origo.Core.Kernel](../README.en.md) · [↔ Frame-driver contract: Origo.Core.Contracts/Abstractions/Runtime](../../Origo.Core.Contracts/Abstractions/Runtime/README.en.md)
 
 ## Overview
 Concrete implementation of the `IScheduler` interface. Provides a simple scheduler based on `ConcurrentActionQueue`, plus a thread-safe deferred execution queue. The host environment is responsible for calling `Tick` at the right time to execute queued actions.

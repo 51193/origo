@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Contracts
 
@@ -15,7 +15,8 @@ kernel 包共同引用这一契约层，消费者可以面向它编译。
 
 | 子系统 | 能力 | 详情 |
 |--------|------|------|
-| [Abstractions](Abstractions/README.zh.md) | 平台无关的基础抽象 | 日志、控制台输入输出、文件系统与路径运算契约 |
+| [Abstractions](Abstractions/README.zh.md) | 平台无关的基础抽象 | 日志、控制台输入输出、文件系统/路径、节点与帧驱动契约 |
+| [Runtime](Runtime/README.zh.md) | 运行时工具扩展契约 | 控制台命令处理器、调用模型与参数校验基类 |
 
 ## 本层文件
 

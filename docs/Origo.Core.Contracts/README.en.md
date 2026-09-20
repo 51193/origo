@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Contracts
 
@@ -17,7 +17,8 @@ against it.
 
 | Subsystem | Capability | Details |
 |-----------|------------|---------|
-| [Abstractions](Abstractions/README.en.md) | Platform-independent base abstractions | Logging, console input/output, file-system, and path contracts |
+| [Abstractions](Abstractions/README.en.md) | Platform-independent base abstractions | Logging, console input/output, file-system/path, node, and frame-driver contracts |
+| [Runtime](Runtime/README.en.md) | Runtime tooling extension contracts | Console handler, invocation model, and argument-validation base |
 
 ## Files at This Level
 

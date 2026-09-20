@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Abstractions
 
@@ -18,6 +18,8 @@ runtime implementation or concrete adapter.
 | [Console](Console/README.en.md) | Console input/output abstraction | `IConsoleInputSource` + `IConsoleOutputChannel` |
 | [FileSystem](FileSystem/README.en.md) | Platform file-system and path abstraction | `IFileSystem` + `IPathResolver` |
 | [Logging](Logging/README.en.md) | Engine-agnostic logging interfaces | `ILogger` + `ILogger<TCategory>` + `LogLevel` |
+| [Node](Node/README.en.md) | Engine node abstraction | `INodeFactory` + `INodeHandle` |
+| [Runtime](Runtime/README.en.md) | Frame-driver contract | `IOrigoFrameDriver` |
 
 ## Files at This Level
 

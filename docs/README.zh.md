@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 26 -->
+<!-- docsync-revision: 27 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
@@ -59,7 +59,7 @@ Root (this file)
 
 | 模块 | 位置 | 说明 |
 |------|------|------|
-| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.zh.md) | 稳定消费者契约：日志、控制台、文件系统、路径与元数据 |
+| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.zh.md) | 稳定消费者契约：日志、控制台、文件系统、路径、节点、帧驱动、元数据与工具扩展 |
 | **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.zh.md) | kernel 实现：vendor 噪声与延迟调度；runtime/SND/持久化当前仍在 Origo.Core |
 | **Origo.Core** | [README](Origo.Core/README.zh.md) | 平台无关核心：SND 实体系统、运行时、持久化、状态机 |
 | **Origo.SourceGeneration** | [README](Origo.SourceGeneration/README.zh.md) | Roslyn 增量源码生成器：TypedData 多层内联存储 + 强类型访问器 |

@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core.Kernel/Scheduling/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Scheduling
 
-> [↑ 回到 Origo.Core.Kernel](../README.zh.md) · [↔ 帧驱动契约: Origo.Core/Abstractions/Runtime](../../Origo.Core/Abstractions/Runtime/README.zh.md)
+> [↑ 回到 Origo.Core.Kernel](../README.zh.md) · [↔ 帧驱动契约: Origo.Core.Contracts/Abstractions/Runtime](../../Origo.Core.Contracts/Abstractions/Runtime/README.zh.md)
 
 ## 概述
 

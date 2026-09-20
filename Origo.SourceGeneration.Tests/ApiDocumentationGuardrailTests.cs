@@ -19,6 +19,8 @@ public class ApiDocumentationGuardrailTests
 {
     private static readonly string[] _productionRoots =
     [
+        "Origo.Core.Contracts",
+        "Origo.Core.Kernel",
         "Origo.Core",
         "Origo.GodotAdapter",
         "Origo.ConsoleBridge",

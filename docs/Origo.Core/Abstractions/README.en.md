@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Abstractions/README -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Abstractions
 
@@ -16,8 +16,7 @@ The stable public abstraction layer of Origo.Core. All interfaces are defined in
 | [Blackboard](Blackboard/README.en.md) | General key-value blackboard interface, preserves type info | `IBlackboard`: SetValue/Get + serialization |
 | [Entity](Entity/README.en.md) | SND entity's five capability interfaces + standalone lifecycle interface | `ISndEntity` = `ISndDataAccess` + `ISndNodeAccess` + `ISndStrategyAccess` + `ISndActiveStrategyAccess` + `ISndObserverStrategyAccess`; `IEntityLifecycle` is a standalone `internal` interface (for internal framework use) |
 | [Lifecycle](Lifecycle/README.en.md) | Session management abstraction interfaces | `ISessionManager` (session lifecycle) + `ISessionRun` (session runtime facade) |
-| [Node](Node/README.en.md) | Abstract engine node operations | `INodeFactory` + `INodeHandle` + `INodeHost` (internal) |
-| [Runtime](Runtime/README.en.md) | Abstract frame driver interface | `IOrigoFrameDriver`: DriveFrame (the public unified frame entry; OrigoRuntime Enqueue/Flush/Reset pipeline methods are internal) |
+| [Node](Node/README.en.md) | Internal node container contract | `INodeHost` (internal); `INodeFactory` / `INodeHandle` live in Contracts |
 | [Scene](Scene/README.en.md) | SND scene access and host | public `ISndSceneReadAccess` (GetEntities/FindByName) + internal `ISndSceneAccess` / `ISndSceneHost` (orchestration) |
 | [Snd](Snd/README.en.md) | ISndContext 10 companion properties | IStateMachineContext also inherits some of them |
 | [StateMachine](StateMachine/README.en.md) | String-stack state machine system | `IStateMachine` + `IStateMachineContext` + `IStateMachineContainer` |
@@ -29,7 +28,8 @@ The stable public abstraction layer of Origo.Core. All interfaces are defined in
 ## Interface Hierarchy
 
 ```
-IBlackboard  IConsole*  IFileSystem  ILogger  IOrigoFrameDriver  INode*
+IBlackboard  IConsole*  IFileSystem  ILogger  INode*  (Contracts)
+IOrigoFrameDriver (Contracts)  IScheduler (Kernel)
 
 ISessionManager  ISessionRun → IStateMachineContainer
 

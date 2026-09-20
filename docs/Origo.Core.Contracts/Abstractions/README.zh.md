@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Abstractions
 
@@ -17,6 +17,8 @@ Origo.Core.Contracts 的基础抽象层：定义平台实现方需要实现的�
 | [Console](Console/README.zh.md) | 控制台输入输出抽象 | `IConsoleInputSource` + `IConsoleOutputChannel` |
 | [FileSystem](FileSystem/README.zh.md) | 平台文件系统与路径抽象 | `IFileSystem` + `IPathResolver` |
 | [Logging](Logging/README.zh.md) | 引擎无关日志接口 | `ILogger` + `ILogger<TCategory>` + `LogLevel` |
+| [Node](Node/README.zh.md) | 引擎节点抽象 | `INodeFactory` + `INodeHandle` |
+| [Runtime](Runtime/README.zh.md) | 帧驱动契约 | `IOrigoFrameDriver` |
 
 ## 本层文件
 

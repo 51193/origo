@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 0.1.0 Shell API 分类
 
@@ -50,7 +50,7 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 
 ## 当前拆分检查点
 
-当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载 `OrigoMeta`、日志抽象、控制台 I/O 抽象与文件系统/路径契约；`Origo.Core.Kernel` 承载 FastNoiseLite（7 个导出）与 internal 调度实现。Assembly 为 `Origo.Core` 的行表示当前仍位于该程序集的类型。
+当前包路径由 Assembly 列表示：`Origo.Core.Contracts` 承载 `OrigoMeta`、日志抽象、控制台 I/O 抽象、文件系统/路径契约、节点契约、帧驱动契约与控制台工具扩展契约；`Origo.Core.Kernel` 承载 FastNoiseLite（7 个导出）与 internal 调度实现。Assembly 为 `Origo.Core` 的行表示当前仍位于该程序集的类型。
 
 ## 兼容 API 的移除条件
 
@@ -92,9 +92,9 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.Core.Abstractions.Logging.ILogger</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging | 日志抽象能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-CONSOLE |
 | <code>Origo.Core.Abstractions.Logging.ILogger`1</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging | 日志抽象能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-CONSOLE |
 | <code>Origo.Core.Abstractions.Logging.LogLevel</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | logging | 日志抽象的稳定纯数据模型，横跨消费者、生成访问器与存档格式边界。 | core-shell; R-CONSOLE |
-| <code>Origo.Core.Abstractions.Node.INodeFactory</code> | Origo.Core | Shell contract | Origo.Core.Contracts | engine-node | 引擎节点抽象能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-HOST |
-| <code>Origo.Core.Abstractions.Node.INodeHandle</code> | Origo.Core | Shell contract | Origo.Core.Contracts | engine-node | 引擎节点抽象能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-HOST |
-| <code>Origo.Core.Abstractions.Runtime.IOrigoFrameDriver</code> | Origo.Core | Shell contract | Origo.Core.Contracts | host-runtime | 宿主/运行时能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-HOST |
+| <code>Origo.Core.Abstractions.Node.INodeFactory</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | engine-node | 引擎节点抽象能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-HOST |
+| <code>Origo.Core.Abstractions.Node.INodeHandle</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | engine-node | 引擎节点抽象能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-HOST |
+| <code>Origo.Core.Abstractions.Runtime.IOrigoFrameDriver</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | host-runtime | 宿主/运行时能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-HOST |
 | <code>Origo.Core.Abstractions.Scene.ISndSceneReadAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | context-session | 上下文/会话访问能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-HOST |
 | <code>Origo.Core.Abstractions.Snd.ISndArchiveFileAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | file-access | 文件访问能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-SAVE |
 | <code>Origo.Core.Abstractions.Snd.ISndFileAccess</code> | Origo.Core | Shell contract | Origo.Core.Contracts | file-access | 文件访问能力组的稳定消费者契约；shell 消费者面向该抽象编译，具体实现留在 kernel 或适配器包中。 | core-shell; R-SAVE |
@@ -136,9 +136,9 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.Core.Random.NoiseMapGenerator</code> | Origo.Core | Shell contract | Origo.Core | random-utility | 随机数工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Random.PersistentRandom</code> | Origo.Core | Shell contract | Origo.Core | random-utility | 随机数工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
 | <code>Origo.Core.Random.RandomNumberGenerator</code> | Origo.Core | Shell contract | Origo.Core | random-utility | 随机数工具的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | core-shell; R-UTIL |
-| <code>Origo.Core.Runtime.Console.CommandInvocation</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-CONSOLE |
-| <code>Origo.Core.Runtime.Console.ConsoleCommandHandlerBase</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-CONSOLE |
-| <code>Origo.Core.Runtime.Console.IConsoleCommandHandler</code> | Origo.Core | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展契约；适配器与消费者工具实现它时无需接触 kernel 内部。 | core-tooling; R-CONSOLE |
+| <code>Origo.Core.Runtime.Console.CommandInvocation</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-CONSOLE |
+| <code>Origo.Core.Runtime.Console.ConsoleCommandHandlerBase</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展基类；派生方式与校验语义属于稳定契约。 | core-tooling; R-CONSOLE |
+| <code>Origo.Core.Runtime.Console.IConsoleCommandHandler</code> | Origo.Core.Contracts | Tooling extension | Origo.Core.Contracts | console-tooling | 控制台工具扩展的文档化工具扩展契约；适配器与消费者工具实现它时无需接触 kernel 内部。 | core-tooling; R-CONSOLE |
 | <code>Origo.Core.Runtime.Console.ConsoleInputBuffer</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Runtime.Console.ConsoleOutputChannel</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.Core.Runtime.Console.OrigoConsole</code> | Origo.Core | Kernel implementation | Origo.Core.Kernel | console-kernel | 控制台路由实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |

@@ -1,5 +1,5 @@
-<!-- docsync-pair: Origo.Core/Abstractions/Runtime/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Runtime/README -->
+<!-- docsync-revision: 1 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Runtime (Abstractions)
 
