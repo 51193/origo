@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 26 -->
+<!-- docsync-revision: 27 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Data Source Tests
 
@@ -192,6 +192,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `UsingStatement_DisposesAfterScope` | using scope exit | Access outside scope throws ObjectDisposedException |
 | `Dispose_DeeplyNestedTree_DoesNotStackOverflow` | 2000-level nested tree Dispose | No stack overflow |
 | `ComputeSha256Hash_DeeplyNestedTree_DoesNotStackOverflow` | 2000-level nested tree ComputeSha256Hash | No stack overflow, returns non-empty hash |
+| `DeeplyNestedTree_At10000Depth_BuildsHashesAndDisposes` | 10,000-level nested tree build, hash, and Dispose | Completes, returns a non-empty hash, and does not stack-overflow |
 
 ## DataSourceNodeSha256Tests Details
 
@@ -282,7 +283,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | Gap Description | Impact | Reference |
 |----------------|--------|-----------|
 | Thread safety of concurrent converter/node read/write | Multi-threaded scenarios not covered | DataSource |
-| Performance characteristics of DataSourceNode at extreme nesting (far beyond 2000 levels) | Extreme nesting depth performance not quantified | DataSource |
+| Throughput gate for DataSourceNode at extreme nesting | Behavior is bounded by a 10,000-level build/hash/Dispose test, but no cross-machine throughput gate is set | DataSource |
 
 ---
 

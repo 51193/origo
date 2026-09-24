@@ -504,6 +504,24 @@ public class DataSourceTests
         Assert.NotEmpty(hash);
     }
 
+    [Fact]
+    public void DeeplyNestedTree_At10000Depth_BuildsHashesAndDisposes()
+    {
+        const int depth = 10_000;
+        var leaf = DataSourceNode.CreateNumber(1);
+        for (var i = 0; i < depth; i++)
+        {
+            var parent = DataSourceNode.CreateObject();
+            parent.Add("child", leaf);
+            leaf = parent;
+        }
+
+        var hash = leaf.ComputeSha256Hash();
+        Assert.NotEmpty(hash);
+
+        leaf.Dispose();
+    }
+
     // ── 28. Generic Read<T> through the interface chain returns a T-compatible instance ──
 
     [Fact]
