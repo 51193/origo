@@ -46,3 +46,17 @@ artifacts/
 _origo_local/
 
 # Rider IDE
+*.cs.uid
+
+# Local learning workspace
+/MISSION.md
+/RESOURCES.md
+/assets/
+/lessons/
+/reference/
+
+# Matt Pocock agent configuration is tracked
+!/docs/agents/
+
+# Local scratch work
+/.scratch/

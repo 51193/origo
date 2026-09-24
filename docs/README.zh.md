@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 30 -->
+<!-- docsync-revision: 31 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
@@ -73,6 +73,7 @@ Root (this file)
 | **手册元指令** | [META.md](META.zh.md) | 本手册的编写与维护规范 |
 | **发布与 Changelog** | [release-process](release-process.zh.md) | 正式发布、每周快照与 Changelog 规则 |
 | **架构文档** | [README](architecture/README.zh.md) | 架构总览、架构决策记录与暂缓设计方向 |
+| **Agent skills 配置** | [README](agents/README.zh.md) | GitHub 与本地 Issue 管理、triage 标签和领域文档入口 |
 | **Agent 工作流** | [AGENTS.md](../AGENTS.md) | 强制开发循环（源码→测试→Changelog→文档→提交→提交后 CI → post-commit lint）、核心原则与文档总索引 |
 | **性能基线** | [benchmarks/baseline.md](benchmarks/baseline.zh.md) | TypedData 内联存储 + 框架子系统性能基线与设计权衡 |
 
