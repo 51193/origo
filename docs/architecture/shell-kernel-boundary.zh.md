@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell/Kernel 稳定边界
 
@@ -208,8 +208,10 @@ Core 的 contracts/kernel/shell 拆分已在特性分支实现：
 `HostKernelPort`，`Origo.Core` 是带 `OrigoHost` 的 shell 包。
 `IOrigoRuntime` 与 `ISndWorldAccess` 是 Contracts 稳定接口，分类守卫验证
 kernel 实现类型不会泄漏进 Core shell 编译面。`Origo.ConsoleBridge` 已只引用
-Core shell 包且不携带 kernel 编译资产。Adapter 单 shell 打包（#39）、
-兼容门禁（#40/#41/#42）与发布（#43）仍属后续工作。
+Core shell 包且不携带 kernel 编译资产。Adapter 保持单 shell 包：Godot `Node`
+入口是真实公开类型，bridge/manager 实现为 internal，启动经
+`AdapterHostKernelPort` 完成 runtime、observer topology 与 SND context 的构造和
+绑定。兼容门禁（#40/#41/#42）与发布（#43）仍属后续工作。
 
 ## 验证与门禁
 

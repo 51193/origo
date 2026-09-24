@@ -13,7 +13,7 @@ using Origo.Core.Snd.Strategy;
 namespace Origo.GodotAdapter.Snd;
 
 /// <summary>
-///     Godot engine adapter for <see cref="SndEntity" />. Wraps a Core
+///     Internal Godot engine adapter for <see cref="SndEntity" />. Wraps a Core
 ///     <see cref="SndEntity" /> inside a Godot <see cref="Node" /> so that
 ///     SND entities participate in the Godot scene tree.
 ///     <para>
@@ -25,8 +25,7 @@ namespace Origo.GodotAdapter.Snd;
 ///         by <see cref="SndEntityCollection{T}" />.
 ///     </para>
 /// </summary>
-[GlobalClass]
-public partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEntityRawSubscription, ISndEntityFacade
+internal partial class GodotSndEntity : Node, ISndEntity, IEntityLifecycle, ISndEntityRawSubscription, ISndEntityFacade
 {
     private readonly ISndContext _context;
     private readonly ILogger _logger;

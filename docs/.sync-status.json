@@ -221,39 +221,39 @@
     "architecture/shell-api-classification": {
       "status": "synced",
       "revisions": {
-        "zh": 13,
-        "en": 13
+        "zh": 14,
+        "en": 14
       },
       "previous_revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 13,
+        "en": 13
       },
       "files": {
         "zh": "architecture/shell-api-classification.zh.md",
         "en": "architecture/shell-api-classification.en.md"
       },
       "content_hashes": {
-        "zh": "7F3AC2D8A0FA887F947A9FD5BBF9D4E9645E2EAA086D7CD5517DAEBE7768DB7B",
-        "en": "08847C0F55173470F661761E73150CB2499D14006F890C0071EBE243220B0A1C"
+        "zh": "DE199978789B4D5C9A0DA906B3F490C9773F68E153CE8A3D9B0EC8912EA4289C",
+        "en": "56820413211D4F291B001C68E80952B0D0B12754C6C91C89522920524102B041"
       }
     },
     "architecture/shell-kernel-boundary": {
       "status": "synced",
       "revisions": {
-        "zh": 5,
-        "en": 5
+        "zh": 6,
+        "en": 6
       },
       "previous_revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "files": {
         "zh": "architecture/shell-kernel-boundary.zh.md",
         "en": "architecture/shell-kernel-boundary.en.md"
       },
       "content_hashes": {
-        "zh": "299CFB5708886C9B0FEF3CA330572C26E81751F1A42C91D3F48CA5BC9C72DB39",
-        "en": "7A25A02EF29DEBDF1EF4924CC36C2972B49ED833882CA6DE6987F307A1B3BA8B"
+        "zh": "CD2AFE8940D00D2CAE3798F1E169C74CDC6BDF6AE33124190AD25B3379BAA5C2",
+        "en": "9F6AB473949391C1E5F7CFED39386DE4916D3C44CDBEEE3A07A6BDF4BB94746C"
       }
     },
     "architecture/strategy-ordering": {
@@ -2362,20 +2362,20 @@
     "Origo.GodotAdapter/README": {
       "status": "synced",
       "revisions": {
-        "zh": 16,
-        "en": 16
+        "zh": 17,
+        "en": 17
       },
       "previous_revisions": {
-        "zh": 15,
-        "en": 15
+        "zh": 16,
+        "en": 16
       },
       "files": {
         "zh": "Origo.GodotAdapter/README.zh.md",
         "en": "Origo.GodotAdapter/README.en.md"
       },
       "content_hashes": {
-        "zh": "D8C9A492B5365AA1E0CA72CC2D9A42F8ADAC365CE3E9D5938B3D82DA3833ED71",
-        "en": "317A8F1AB1D3F7BC47D4BFBB121DE3BE4BCE39C32D5EB351F55C3A1BEE69F1B9"
+        "zh": "8B033AF63E0564C4E0C2094F77787156E011EB7AB646A3086EF6BC6C5AD03F77",
+        "en": "CE8523D867651E7A3BD06D3CE38AEC762EDD75578AAC59ADED562EBF0CC1F4EE"
       }
     },
     "Origo.GodotAdapter/Serialization/README": {
@@ -2400,20 +2400,20 @@
     "Origo.GodotAdapter/Snd/README": {
       "status": "synced",
       "revisions": {
-        "zh": 25,
-        "en": 25
+        "zh": 26,
+        "en": 26
       },
       "previous_revisions": {
-        "zh": 24,
-        "en": 24
+        "zh": 25,
+        "en": 25
       },
       "files": {
         "zh": "Origo.GodotAdapter/Snd/README.zh.md",
         "en": "Origo.GodotAdapter/Snd/README.en.md"
       },
       "content_hashes": {
-        "zh": "A1972B65DCDB45B61527114D99B807346C873365940AF04D41C4ECE3C777528D",
-        "en": "A7C88114240459916EE83AC8D39888F3AABCE18B2144031916A7FDBB050EEB42"
+        "zh": "2C35A1AAADC24FF333881FEBA8604FB52C559D684BED2C9ECD0E9147D81CE8CD",
+        "en": "3FE5680035119C6782C8A807075E968539E8A4CDB5B17496BF7ADF52F7123D4A"
       }
     },
     "Origo.SourceGeneration.Tests/Benchmarks": {

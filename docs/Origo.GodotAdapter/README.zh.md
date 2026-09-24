@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter
 
@@ -25,7 +25,7 @@
 | [FileSystem](FileSystem/README.zh.md) | Godot 文件系统 | IFileSystem 实现：FileAccess/DirAccess + res:// 和 user:// 支持 |
 | [Logging](Logging/README.zh.md) | Godot 日志 | ILogger 实现：委托注入 GD.Print/PushWarning/PushError |
 | [Serialization](Serialization/README.zh.md) | Godot 类型序列化 | 14 种 Godot 类型 → DataSourceNode 转换器 |
-| [Snd](Snd/README.zh.md) | Godot SND 实体 | ISndSceneHost 实现：GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
+| [Snd](Snd/README.zh.md) | Godot SND 实体 | ISndSceneHost 的 internal 实现：GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
 | — | TypedData 内联 | Source Generator 为 14 种 Godot 类型生成扩展方法与 Kind 注册 |
 
 ## 启动流程

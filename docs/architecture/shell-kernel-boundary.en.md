@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
@@ -261,8 +261,11 @@ shell package with `OrigoHost`. `IOrigoRuntime` and `ISndWorldAccess` are
 stable Contracts interfaces, and the classification guard verifies that no
 kernel implementation type leaks into the Core shell compile surface.
 `Origo.ConsoleBridge` already references the Core shell package without
-kernel compile assets. Adapter single-shell packaging (#39), compatibility
-gates (#40/#41/#42), and release (#43) remain follow-up work.
+kernel compile assets. The adapter remains one shell package: its Godot
+`Node` entries are real public types, its bridge/manager implementations are
+internal, and startup constructs and binds the runtime, observer topology,
+and SND context through `AdapterHostKernelPort`. Compatibility gates
+(#40/#41/#42) and release (#43) remain follow-up work.
 
 ## Verification and gates
 

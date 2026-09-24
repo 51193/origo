@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 25 -->
+<!-- docsync-revision: 26 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd
 
@@ -13,8 +13,8 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 
 | 文件 | 职责 |
 |------|------|
-| `GodotSndManager.cs` | Godot 场景宿主：管理 GodotSndEntity 集合，实现 ISndSceneHost。实体帧处理由 Core 的 `SessionManager.ProcessAllSessions` 经 `SceneHost.ProcessAll` 通过 `IOrigoFrameDriver.DriveFrame` 统一驱动 |
-| `GodotSndEntity.cs` | Godot 实体：将 Core SndEntity 绑定到 Godot Node 生命周期，委托所有 ISndEntity 调用 |
+| `GodotSndManager.cs` | internal — Godot 场景宿主：管理 GodotSndEntity 集合，实现 ISndSceneHost。实体帧处理由 Core 的 `SessionManager.ProcessAllSessions` 经 `SceneHost.ProcessAll` 通过 `IOrigoFrameDriver.DriveFrame` 统一驱动 |
+| `GodotSndEntity.cs` | internal — Godot 实体：将 Core SndEntity 绑定到 Godot Node 生命周期，委托所有 ISndEntity 调用 |
 | `SndEntityCollection.cs` | internal — 纯 C# 实体集合：实体增删、批量恢复回滚、击杀标记、帧处理编排，无 Godot 依赖，由测试直接覆盖 |
 | `GodotPackedSceneNodeFactory.cs` | INodeFactory 实现：通过 PackedScene.Instantiate 创建 Godot Node |
 | `GodotNodeHandle.cs` | INodeHandle 实现：包装 Godot.Node，提供 Free / SetVisible / UnsafeGetNode |
@@ -25,11 +25,11 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 
 ### GodotSndManager
 
-适配层的核心入口节点（`[GlobalClass]`），直接挂载在 Godot 场景树中：
+适配层内部的场景宿主节点（internal），由 `OrigoAutoHost` 挂载在 Godot 场景树中：
 
 - **实现 ISndSceneHost（internal）**：CreateEntity / RecoverFromMetaList / RemoveAllEntities（框架内部生命周期操作）/ RequestKillEntity / RemoveEntity / ProcessAll 均为**显式接口实现**，且 `ISndSceneHost` / `ISndSceneAccess` 本身为 `internal`——业务代码既不能在具体类型上调用，也无法通过接口强转绕过；公开读操作经 public `ISndSceneReadAccess`（`GetEntities` / `FindByName`）。`RemoveAllEntities()` 使用 `Free()`（即时释放）而非 `QueueFree()`，因 Core 保证在安全的生命周期时机调用。
 - **实现 ISndContextAttachableSceneHost（internal）**：`BindContext` 为**显式接口实现**且接口为 `internal`——上下文绑定是框架启动编排（`SessionRun` 构造 / Bootstrap 流程）驱动的写路径，业务代码无法在具体类型上重绑上下文
-- **启动编排封闭**：`BindRuntimeDependencies` 为 `internal`——运行时依赖绑定（World + Logger）同属框架启动编排（由 `OrigoAutoHost` 在 Bootstrap 流程中驱动），业务代码无法在具体类型上重绑运行时依赖
+- **启动编排封闭**：`BindRuntimeDependencies` 为 `internal`，并由 `AdapterHostKernelPort` 通过 `ISndSceneHostRuntimeBinder` 在 runtime 构造后调用；运行时依赖绑定（World + Logger）与 observer topology 创建同属框架启动编排，业务代码无法在具体类型上重绑
 - **实现 IObserverTopologyHost**（internal）：暴露本场景宿主专用的 `ObserverTopology`，供 Core 的观察者挂载/卸载编排使用
 - **实现 IOwningSessionBindable**（internal）：`SetOwningSession` 将会话绑定到宿主，供 Core 会话创建流程使用
 - **集合逻辑委托**：实体增删、批量恢复回滚、击杀标记、帧处理等编排逻辑集中在纯 C# 的 `SndEntityCollection<T>`（internal，无 Godot 依赖），由测试直接覆盖；GodotSndManager 仅桥接集合与 Godot 节点树（`AddChild`/`RemoveChild`/`Free` 经 `DetachAndFree` 回调注入）
@@ -41,9 +41,9 @@ SND 实体体系在 Godot 引擎中的具体实现。将 Core 的抽象 `ISndEnt
 
 ### GodotSndEntity
 
-Core `SndEntity` 的 Godot 包装器（`[GlobalClass]`）：
+Core `SndEntity` 的 internal Godot 包装器：
 
-> **`[GlobalClass]` 限制**：`GodotSndEntity` 的唯一构造函数是 internal（五参数依赖注入），无无参构造函数——因此它不能在编辑器中手动创建或从 `.tscn` 实例化。实体必须经 `GodotSndManager` 创建（`CreateEntity`），这是刻意设计：`GodotSndEntity` 的依赖（`SndWorld`、`ISndContext`、日志、观察者拓扑）只能由框架注入，`[GlobalClass]` 仅用于让 Godot 编辑器识别该类型（导出属性/类型注册）。
+> **内部类型限制**：`GodotSndEntity` 是 internal 且唯一构造函数为 internal（五参数依赖注入），无无参构造函数——因此它不能在编辑器中手动创建或从 `.tscn` 实例化，也不会作为编辑器脚本类型被发现。实体必须经 `GodotSndManager` 创建（`CreateEntity`），这是刻意设计：`GodotSndEntity` 的依赖（`SndWorld`、`ISndContext`、日志、观察者拓扑）只能由框架注入。
 
 - **延迟初始化**：`_entity` 在首次访问时通过 `SndWorld.CreateEntity` 创建
 - **Lifecycle 分离**：`DetachFromManager()` 设置 released 标志并置空 entity 引用；引擎级释放（`RemoveChild`/`Free`）由 GodotSndManager 的 `DetachAndFree` 回调执行（`SndEntityCollection` 的"引擎工作委托注入"契约）
@@ -106,7 +106,7 @@ Godot 场景树中如果存在同名节点，Godot 会自动在 Name 后追加 `
 
 #### 为什么不能提取基类或自动生成
 
-**C# 单继承是根本约束。** `GodotSndEntity` 必须继承 `Godot.Node`（`[GlobalClass]` 要求）才能挂载到 Godot 场景树。若在 Core 中提供抽象基类 `SndEntityBridge`，Godot 适配器无法同时继承基类和 `Node`。Unity 同理（必须继承 `MonoBehaviour`）。
+**C# 单继承是根本约束。** `GodotSndEntity` 必须继承 `Godot.Node` 才能挂载到 Godot 场景树。若在 Core 中提供抽象基类 `SndEntityBridge`，Godot 适配器无法同时继承基类和 `Node`。Unity 同理（必须继承 `MonoBehaviour`）。
 
 其他技术路线也缺乏投入产出比：
 

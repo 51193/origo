@@ -17,7 +17,7 @@ using Origo.GodotAdapter.Bootstrap;
 namespace Origo.GodotAdapter.Snd;
 
 /// <summary>
-///     Godot engine adapter scene host. Manages <see cref="GodotSndEntity" />
+///     Internal Godot engine adapter scene host. Manages <see cref="GodotSndEntity" />
 ///     instances in a Godot scene tree and implements
 ///     <see cref="ISndSceneHost" />, <see cref="ISndContextAttachableSceneHost" />,
 ///     <see cref="IObserverTopologyHost" />, and
@@ -25,8 +25,7 @@ namespace Origo.GodotAdapter.Snd;
 ///     delegated to <see cref="SndEntityCollection{T}" /> (pure C#); this
 ///     class only bridges it to the Godot node tree.
 /// </summary>
-[GlobalClass]
-public partial class GodotSndManager
+internal partial class GodotSndManager
     : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable,
         ISndSceneHostRuntimeBinder
 {

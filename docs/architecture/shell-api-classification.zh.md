@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 0.1.0 Shell API 分类
 
@@ -44,7 +44,7 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 - `Origo.Core.Contracts` 承载稳定接口、纯数据、元数据、策略基类、data source 契约和日志抽象。
 - `Origo.Core` 承载只依赖 Contracts 的具体消费者 shell 辅助与工具实现。
 - `Origo.Core.Kernel` 承载运行时构造、SND 内部、持久化、存储、codec 和控制台路由。
-- `Origo.GodotAdapter` 保持单一 shell 包；公开 Godot `Node` 入口保留真实 shell 类型，表中的 bridge/manager 类型属于 kernel implementation，在 #39 中 internal 化。
+- `Origo.GodotAdapter` 保持单一 shell 包；公开 Godot `Node` 入口保留真实 shell 类型，bridge/manager 实现类型为 internal，不进入消费者编译面。
 - `Origo.ConsoleBridge` 保持 shell-only，只依赖 Core 的控制台/日志契约。
 - Godot 生成的嵌套 signal 类型是公开导出，因此逐项列出。成员级生成访问器（`TryGetXxx`、operator、nullable、诊断）由 #41 的 Roslyn baseline 负责；本表分类其宿主类型。
 
@@ -195,14 +195,6 @@ dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage
 | <code>Origo.GodotAdapter.Logging.GodotLogger</code> | Origo.GodotAdapter | Shell contract | Origo.GodotAdapter | godot-shell | Godot shell 实现的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | adapter-shell; R-GODOT-SHELL |
 | <code>Origo.GodotAdapter.SndEntityNodeExtensions</code> | Origo.GodotAdapter | Shell contract | Origo.GodotAdapter | godot-shell | Godot shell 实现的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | adapter-shell; R-GODOT-SHELL |
 | <code>Origo.GodotAdapter.Snd.GodotPackedSceneNodeFactory</code> | Origo.GodotAdapter | Shell contract | Origo.GodotAdapter | godot-shell | Godot shell 实现的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | adapter-shell; R-GODOT-SHELL |
-| <code>Origo.GodotAdapter.Snd.GodotSndEntity</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | Godot 适配器桥接实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.GodotAdapter.Snd.GodotSndManager</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | Godot 适配器桥接实现的 kernel 实现细节；消费者通过 shell 接口或 kernel port 获得行为，0.1.x 不得直接编译依赖。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.GodotAdapter.Snd.GodotSndEntity+MethodName</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | 内部适配器桥接类型上的 Godot 生成公开嵌套 signal 类型；宿主 internal 化后离开外部编译面。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.GodotAdapter.Snd.GodotSndEntity+PropertyName</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | 内部适配器桥接类型上的 Godot 生成公开嵌套 signal 类型；宿主 internal 化后离开外部编译面。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.GodotAdapter.Snd.GodotSndEntity+SignalName</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | 内部适配器桥接类型上的 Godot 生成公开嵌套 signal 类型；宿主 internal 化后离开外部编译面。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.GodotAdapter.Snd.GodotSndManager+MethodName</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | 内部适配器桥接类型上的 Godot 生成公开嵌套 signal 类型；宿主 internal 化后离开外部编译面。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.GodotAdapter.Snd.GodotSndManager+PropertyName</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | 内部适配器桥接类型上的 Godot 生成公开嵌套 signal 类型；宿主 internal 化后离开外部编译面。 | n/a (no 0.1.x consumer compatibility promise) |
-| <code>Origo.GodotAdapter.Snd.GodotSndManager+SignalName</code> | Origo.GodotAdapter | Kernel implementation | Origo.GodotAdapter | godot-kernel | 内部适配器桥接类型上的 Godot 生成公开嵌套 signal 类型；宿主 internal 化后离开外部编译面。 | n/a (no 0.1.x consumer compatibility promise) |
 | <code>Origo.ConsoleBridge.ConsoleBridgeOptions</code> | Origo.ConsoleBridge | Shell contract | Origo.ConsoleBridge | bridge | 控制台桥接 shell的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | bridge-shell; R-BRIDGE |
 | <code>Origo.ConsoleBridge.ConsoleBridgeServer</code> | Origo.ConsoleBridge | Shell contract | Origo.ConsoleBridge | bridge | 控制台桥接 shell的消费者 shell 具体实现，只依赖 Contracts，在缺少 kernel 编译资产时仍可使用。 | bridge-shell; R-BRIDGE |
 | <code>Origo.Core.Abstractions.Runtime.IOrigoRuntime</code> | Origo.Core.Contracts | Shell contract | Origo.Core.Contracts | host-runtime | 通过 Core shell host facade 暴露的稳定 runtime 契约；具体 runtime 仍是 kernel 实现。 | core-shell; R-HOST |

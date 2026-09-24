@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter
 
@@ -25,7 +25,7 @@
 | [FileSystem](FileSystem/README.en.md) | Godot file system | IFileSystem implementation: FileAccess/DirAccess + res:// and user:// support |
 | [Logging](Logging/README.en.md) | Godot logging | ILogger implementation: delegate-injected GD.Print/PushWarning/PushError |
 | [Serialization](Serialization/README.en.md) | Godot type serialization | 14 Godot types → DataSourceNode converters |
-| [Snd](Snd/README.en.md) | Godot SND entities | ISndSceneHost implementation: GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
+| [Snd](Snd/README.en.md) | Godot SND entities | internal ISndSceneHost implementation: GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
 | — | TypedData inline | Source Generator generates extension methods and Kind registrations for 14 Godot types |
 
 ## Startup Flow
