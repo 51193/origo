@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Release & Changelog Process
 
@@ -95,8 +95,10 @@ Complete these steps in order before tagging:
 5. Move shipped rules from `Origo.SourceGeneration/AnalyzerReleases.Unshipped.md`
    to `AnalyzerReleases.Shipped.md` and add a `## Release x.y.z` block.
 6. Run `TAG_VERSION=x.y.z bash scripts/verify-release.sh` and confirm it passes.
-   The check requires: the matching CHANGELOG version block, an empty
-   `[Unreleased]`, the analyzer shipped block, no unshipped rules in
+   The check requires: `Directory.Build.props` `<Version>` equal to the target
+   version and `AssemblyVersion` / `FileVersion` equal to its four-part numeric
+   form, the matching CHANGELOG version block, an empty `[Unreleased]`, the
+   analyzer shipped block, no unshipped rules in
    `AnalyzerReleases.Unshipped.md`, and both `docs/README.*` files mentioning
    the version.
 7. Run `dotnet run --project tools/DocSyncTool -- generate`.

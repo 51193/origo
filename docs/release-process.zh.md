@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 20 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 发布与 Changelog 流程
 
@@ -82,8 +82,10 @@
 5. 把 `Origo.SourceGeneration/AnalyzerReleases.Unshipped.md` 中已发布的规则移入
    `AnalyzerReleases.Shipped.md`，并新增 `## Release x.y.z` 块。
 6. 运行 `TAG_VERSION=x.y.z bash scripts/verify-release.sh` 并确认通过。
-   该校验要求：CHANGELOG 有对应版本块、`[Unreleased]` 为空、analyzer shipped
-   块存在、`AnalyzerReleases.Unshipped.md` 中没有未发布规则、两个 `docs/README.*` 提到该版本。
+   该校验要求：`Directory.Build.props` 的 `<Version>` 等于目标版本且
+   `AssemblyVersion` / `FileVersion` 等于其四段数值形式、CHANGELOG 有对应版本块、
+   `[Unreleased]` 为空、analyzer shipped 块存在、
+   `AnalyzerReleases.Unshipped.md` 中没有未发布规则、两个 `docs/README.*` 提到该版本。
 7. 运行 `dotnet run --project tools/DocSyncTool -- generate`。
 8. 一次性提交 `CHANGELOG.md`、`Directory.Build.props`、analyzer release 文件、
    两个 `docs/README` 版本戳、所有 docs 内容、生成 hub 与 `.sync-status.json`。

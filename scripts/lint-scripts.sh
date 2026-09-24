@@ -89,4 +89,6 @@ else
     echo "WARNING: python3 is not installed; skipping workflow and agent-doc guards (bash -n still runs)."
 fi
 
+bash scripts/test-verify-release.sh
+
 echo "Script lint: OK"
