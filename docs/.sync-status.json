@@ -256,20 +256,20 @@
     "architecture/shell-kernel-boundary": {
       "status": "synced",
       "revisions": {
-        "zh": 8,
-        "en": 8
+        "zh": 10,
+        "en": 10
       },
       "previous_revisions": {
-        "zh": 7,
-        "en": 7
+        "zh": 9,
+        "en": 9
       },
       "files": {
         "zh": "architecture/shell-kernel-boundary.zh.md",
         "en": "architecture/shell-kernel-boundary.en.md"
       },
       "content_hashes": {
-        "zh": "FA7D244E3F8E88E6FD4369F30781C12D46A223FF508C8DE0D4DE284E84B1FFD9",
-        "en": "E688E460825304A63C256F3B792257A30B4F810299772337880AA98C04865E83"
+        "zh": "C643A01685DE32B40B7E886568FD20BECC55E5616660953DCD88B005A31E7BD0",
+        "en": "0368E015641A7841A9C3119BE7F9538A98D87311D9081CD2F110FED1B99D44D4"
       }
     },
     "architecture/strategy-ordering": {
@@ -2885,20 +2885,20 @@
     "usage/README": {
       "status": "synced",
       "revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 14,
+        "en": 14
       },
       "files": {
         "zh": "usage/README.zh.md",
         "en": "usage/README.en.md"
       },
       "content_hashes": {
-        "zh": "52F541608C8489BF4322F3663BEFD1DD0AD00E77585813B0CBC5FFFE11CDC530",
-        "en": "F831FF11115851574DBA4743F31253211DC2F90C2EC5336F0B04049B97A1C637"
+        "zh": "B6CE308AF77DF7D1E869D167A87D597962E551D113261E0FAEF214F9FBA55495",
+        "en": "99F7E1A30B4EB43BF7AED9C81ECBA7E1AE3A1B7174F444C6292A7567FCB2090F"
       }
     },
     "usage/session-model": {
@@ -2918,6 +2918,22 @@
       "content_hashes": {
         "zh": "34A862B786FB0E195AE73E626579CD9A37856E5A7ACD0D3CB932310B9E94710B",
         "en": "CBFF82CF6DF3ABBAE66505370CBE4A76D7A9DEB1469258FAEDA6EF878703D69C"
+      }
+    },
+    "usage/shell-package-consumer": {
+      "status": "synced",
+      "revisions": {
+        "zh": 1,
+        "en": 1
+      },
+      "previous_revisions": {},
+      "files": {
+        "zh": "usage/shell-package-consumer.zh.md",
+        "en": "usage/shell-package-consumer.en.md"
+      },
+      "content_hashes": {
+        "zh": "06E3CC7CC3D5D3DE4BB45B1CF55AC219EB42B8D26DBF586309BBE1C34F556235",
+        "en": "CBD4066E37B5EF10ED6FDA1B33DAE9EECCDFECCFE51578D257825C3CA7D36B2B"
       }
     },
     "usage/snd-entity-model": {

@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
@@ -277,8 +277,13 @@ the Contracts/Core/Adapter export surface, nullable annotations, and generated
 nested types; unapproved additions, removals, or signature changes fail in
 normal CI, `scripts/ci.sh`, and the Release workflow. Previous-package
 validation is explicitly skipped before the first formal release with the
-first-release behavior stated. Packaged consumption (#42) and release (#43)
-remain follow-up work.
+first-release behavior stated. Packaged consumption (#42) is in place:
+`scripts/package-consumer-smoke.sh` restores only the Core + Adapter NuGet
+packages in an isolated temporary directory, builds with warnings as errors,
+proves kernel compile-asset isolation with a CS0246 negative probe, verifies
+the analyzer asset and kernel runtime assembly, and starts `OrigoDefaultEntry`
+headlessly. It runs in the normal CI Godot job and local `scripts/ci.sh`.
+Release (#43) remains follow-up work.
 
 ## Verification and gates
 
@@ -287,7 +292,7 @@ remain follow-up work.
 | Compilation boundary | A fresh shell-only consumer compiles; referencing kernel types fails |
 | Behavior contracts | Lifecycle ordering, observer recovery, save/load, and fail-fast semantics remain unchanged |
 | Compatibility tests | Shell entry lifecycle/observer/fail-fast/session-state contracts and golden v1 save-format tests pass in the normal and release test runs |
-| Package integrity | No kernel compile-asset leakage; shell runtime and analyzer assets are complete |
+| Package integrity | No kernel compile-asset leakage; shell runtime and analyzer assets are complete; the `scripts/package-consumer-smoke.sh` local-feed restore, negative compile probe, and Godot headless startup pass |
 | Compatibility matrix | Old shell contracts pass contract tests on new kernels |
 | Godot | Headless and editor verification covers Node entry discovery, startup, save recovery, and exit cleanup |
 | API baseline | Unapproved shell API changes fail CI |

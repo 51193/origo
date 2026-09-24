@@ -145,3 +145,10 @@ jobs:
 
       - name: Godot headless integration tests
         run: bash scripts/godot-test.sh
+
+      # Packs the shell packages into a fresh local feed, restores the tracked
+      # consumer fixture through PackageReference only, builds with warnings as
+      # errors, rejects kernel compile-asset leakage, and starts the public
+      # OrigoDefaultEntry path headlessly.
+      - name: Shell-only package consumer smoke
+        run: bash scripts/package-consumer-smoke.sh

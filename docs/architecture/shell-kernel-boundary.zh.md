@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 8 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell/Kernel 稳定边界
 
@@ -218,8 +218,11 @@ golden 快照覆盖当前格式、旧档缺版本键与未来版本的原子拒�
 代码门禁（#41）已落地：`scripts/api-inventory.sh` 以 tracked Roslyn JSON baseline
 校验 Contracts/Core/Adapter shell 导出面、nullable 与生成嵌套类型，未批准的增删
 或签名变化在普通 CI、`scripts/ci.sh` 与 Release workflow 失败；previous-package
-validation 在首个正式版本前显式跳过并记录 first-release 行为。packaged
-consumption（#42）与发布（#43）仍属后续工作。
+validation 在首个正式版本前显式跳过并记录 first-release 行为。Packaged consumption
+（#42）已落地：`scripts/package-consumer-smoke.sh` 在仓库外临时目录只通过
+NuGet 包恢复 Core + Adapter，执行 warnings-as-errors 构建、CS0246 kernel 泄漏
+负向探测、analyzer 资产与 kernel runtime 校验，并以 `OrigoDefaultEntry` headless
+启动；普通 CI Godot job 与本地 `scripts/ci.sh` 均执行。发布（#43）仍属后续工作。
 
 ## 验证与门禁
 
@@ -228,7 +231,7 @@ consumption（#42）与发布（#43）仍属后续工作。
 | 编译边界 | fresh consumer 只引用 shell 包可编译；引用 kernel 类型失败 |
 | 行为契约 | 生命周期顺序、观察者恢复、存档读写和 fail-fast 语义保持不变 |
 | 兼容契约测试 | shell 入口的 lifecycle/observer/fail-fast/会话状态契约与 golden v1 存档格式测试在常规与发布测试中通过 |
-| 包完整性 | kernel 无 compile 资产泄漏；shell 运行期依赖与 analyzer 资产完整 |
+| 包完整性 | kernel 无 compile 资产泄漏；shell 运行期依赖与 analyzer 资产完整；`scripts/package-consumer-smoke.sh` 的本地 feed restore、负向编译与 Godot headless 启动通过 |
 | 兼容矩阵 | 旧 shell 契约在新 kernel 上通过 contract tests |
 | Godot | headless 与编辑器验证 Node 入口发现、启动、存档恢复与退出清理 |
 | API 基线 | 未批准的 shell API 变更使 CI 失败 |
