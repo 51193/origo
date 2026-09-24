@@ -152,6 +152,21 @@ if ! grep -q "CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK" <<<"$CONSOLE_STARTUP_OUTPUT"; 
 fi
 echo "$CONSOLE_STARTUP_OUTPUT" | grep "CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK"
 
+cp "$CONSOLE_CONSUMER_DIR/KernelLeakProbe.cs.template" "$CONSOLE_CONSUMER_DIR/KernelLeakProbe.cs"
+set +e
+CONSOLE_PROBE_OUTPUT=$(dotnet build "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
+    --no-restore --configuration Release -warnaserror \
+    -p:OrigoShellPackageVersion="$VERSION" 2>&1)
+CONSOLE_PROBE_EXIT=$?
+set -e
+if [[ $CONSOLE_PROBE_EXIT -eq 0 ]]; then
+    FAIL "ConsoleBridge kernel leak probe unexpectedly succeeded; kernel compile assets leaked through the shell package."
+fi
+if ! grep -q "CS0246" <<<"$CONSOLE_PROBE_OUTPUT"; then
+    echo "$CONSOLE_PROBE_OUTPUT" | tail -20
+    FAIL "ConsoleBridge kernel leak probe failed without the expected CS0246 diagnostic."
+fi
+
 cp "$PROBE_DIR/KernelLeakProbe.cs.template" "$PROBE_DIR/KernelLeakProbe.cs"
 set +e
 PROBE_OUTPUT=$(dotnet build "$PROBE_DIR/OrigoShellPackageConsumer.csproj" \

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell-only 包消费验证
 
@@ -48,7 +48,10 @@
 8. 运行 ConsoleBridge 消费者：它使用真实 `TcpClient` 连接 loopback，验证命令进入
    `IConsoleInputSource` 且 `IConsoleOutputChannel` 的输出回送到客户端，最后输出
    `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`。
-9. 使用 `scripts/download-godot.sh` 取得 Godot 4.7.2，headless 运行 Core/Adapter
+9. 复制 `tools/ConsoleBridgePackageConsumer/KernelLeakProbe.cs.template` 后重新构建
+   ConsoleBridge 消费者；必须因 `Origo.Core.Runtime.OrigoRuntime` 不可访问而失败
+   （CS0246），证明 kernel 编译资产也没有通过 ConsoleBridge 包泄漏。
+10. 使用 `scripts/download-godot.sh` 取得 Godot 4.7.2，headless 运行 Core/Adapter
    fixture；标准输出必须包含 `SHELL_CONSUMER_STARTUP_OK kernel=True foreground=True`，
    且进程退出码为 0。
 

@@ -2923,20 +2923,20 @@
     "usage/shell-package-consumer": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "usage/shell-package-consumer.zh.md",
         "en": "usage/shell-package-consumer.en.md"
       },
       "content_hashes": {
-        "zh": "75AF249E950A5B1253D248C794E2B44D49697D9E530DB58DED341B2ABFE1B59E",
-        "en": "7170A35F9CB503B5A779BFC8EA40F73884630257CDBDA67E3403A34A5A76D426"
+        "zh": "F0C01FA4973AD2CD7B4A1E7C45C716227BB5C412CC9DD3E0797FF17DD443DE59",
+        "en": "1E8C2D4CD10763B958584483906EDCE10F6D7ED510855BB43D8B60728751268D"
       }
     },
     "usage/snd-entity-model": {

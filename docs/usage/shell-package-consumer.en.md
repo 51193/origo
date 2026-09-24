@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell-Only Package Consumption Verification
 
@@ -31,7 +31,8 @@ The consumer fixture is not part of `Origo.sln` and contains no `ProjectReferenc
 6. Copies `KernelLeakProbe.cs.template` to `KernelLeakProbe.cs` and builds again; the build must fail with CS0246 because `Origo.Core.Runtime.OrigoRuntime` is unreachable from a shell-only consumer.
 7. Copies `tools/ConsoleBridgePackageConsumer` to a separate temporary directory, references only the `Origo.ConsoleBridge` package, and restores/builds it with `-warnaserror`; `project.assets.json` must resolve ConsoleBridge and its runtime dependencies, and the sources must contain no `<ProjectReference>`.
 8. Runs the ConsoleBridge consumer: it connects a real `TcpClient` over loopback, verifies that commands reach `IConsoleInputSource` and that `IConsoleOutputChannel` output arrives back at the client, and prints `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`.
-9. Uses `scripts/download-godot.sh` to obtain Godot 4.7.2 and runs the Core/Adapter fixture headlessly; standard output must contain `SHELL_CONSUMER_STARTUP_OK kernel=True foreground=True`, and the process must exit with code 0.
+9. Copies `tools/ConsoleBridgePackageConsumer/KernelLeakProbe.cs.template` and builds the ConsoleBridge consumer again; the build must fail with CS0246 because `Origo.Core.Runtime.OrigoRuntime` is unreachable, proving kernel compile assets do not leak through the ConsoleBridge package either.
+10. Uses `scripts/download-godot.sh` to obtain Godot 4.7.2 and runs the Core/Adapter fixture headlessly; standard output must contain `SHELL_CONSUMER_STARTUP_OK kernel=True foreground=True`, and the process must exit with code 0.
 
 ## Consumer Entry
 
