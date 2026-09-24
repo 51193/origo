@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell-Only Package Consumption Verification
 
@@ -24,7 +24,7 @@ The consumer fixture is not part of `Origo.sln` and contains no `ProjectReferenc
 `bash scripts/package-consumer-smoke.sh`:
 
 1. Packs `Origo.Core.Contracts`, `Origo.Core.Kernel`, `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` into a fresh temporary local feed.
-2. Checks that the `Origo.Core.Contracts` package contains the analyzer asset `analyzers/dotnet/cs/Origo.SourceGeneration.dll`; missing assets fail immediately.
+2. Checks that the `Origo.Core.Contracts` package contains the analyzer asset `analyzers/dotnet/cs/Origo.SourceGeneration.dll`; missing assets fail immediately. It then runs `scripts/validate-release-packages.sh` against the same temporary feed to verify the five package identities, versions, exact shell/kernel pairing, dependency direction, analyzer assets, and kernel isolation.
 3. Copies the Core/Adapter fixture to a temporary directory outside the repository, switches consumer restore/build to a run-owned temporary `NUGET_PACKAGES` cache, writes a `nuget.config` with only the local feed and NuGet.org, and runs `dotnet restore`.
 4. Verifies that `project.assets.json` resolves Core, Adapter, Contracts, and Kernel packages, and that the consumer sources contain no `<ProjectReference>`.
 5. Builds the Core/Adapter consumer with `-warnaserror`; the kernel runtime assembly must appear in the build output.
@@ -50,7 +50,7 @@ The consumer fixture is not part of `Origo.sln` and contains no `ProjectReferenc
 
 - The normal CI `godot-integration-tests` job runs this script after the Godot integration tests; local `scripts/ci.sh` runs it last as well.
 - Consumer restore/build uses a run-owned temporary NuGet package cache, and the script asserts that `project.assets.json` points at it; an ambient global package with the same Origo id/version cannot bypass the local feed and make the smoke validate stale artifacts.
-- A missing package or analyzer asset, a `ProjectReference` in either consumer, NuGet or compiler warnings, compilable kernel types, a missing kernel runtime assembly, a failed ConsoleBridge round-trip or missing `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`, or a failed Godot startup or missing `SHELL_CONSUMER_STARTUP_OK` all fail the job.
+- A missing package, a release package validator failure, a missing analyzer asset, a `ProjectReference` in either consumer, NuGet or compiler warnings, compilable kernel types, a missing kernel runtime assembly, a failed ConsoleBridge round-trip or missing `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`, or a failed Godot startup or missing `SHELL_CONSUMER_STARTUP_OK` all fail the job.
 - Fixture and script version pins are maintained by `scripts/package-consumer-smoke.sh` and `OrigoShellPackageConsumer.csproj`; a Godot SDK upgrade must update the adapter and consumer in the same change.
 
 ---

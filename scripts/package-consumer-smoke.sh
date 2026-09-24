@@ -74,6 +74,11 @@ ANALYZER_ASSET="analyzers/dotnet/cs/Origo.SourceGeneration.dll"
 unzip -l "$FEED/Origo.Core.Contracts.$VERSION.nupkg" | grep -Fq "$ANALYZER_ASSET" \
     || FAIL "Origo.Core.Contracts package is missing analyzer asset $ANALYZER_ASSET"
 
+# Exercise the release artifact validator against the same freshly packed
+# feed, so normal CI and local runs cover exact identities, shell/kernel
+# pairing, dependency direction, analyzer assets, and kernel isolation.
+bash scripts/validate-release-packages.sh "$FEED" "$VERSION"
+
 cp -R tools/ShellPackageConsumer/. "$CONSUMER_DIR/"
 cp -R tools/ShellPackageConsumer/. "$PROBE_DIR/"
 cp -R tools/ConsoleBridgePackageConsumer/. "$CONSOLE_CONSUMER_DIR/"

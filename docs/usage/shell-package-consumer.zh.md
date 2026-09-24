@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell-only 包消费验证
 
@@ -31,7 +31,9 @@
 1. 在临时本地 feed 中打包 `Origo.Core.Contracts`、`Origo.Core.Kernel`、
    `Origo.Core`、`Origo.GodotAdapter`、`Origo.ConsoleBridge` 五个包。
 2. 检查 `Origo.Core.Contracts` 包包含 analyzer 资产
-   `analyzers/dotnet/cs/Origo.SourceGeneration.dll`；缺失立即失败。
+   `analyzers/dotnet/cs/Origo.SourceGeneration.dll`；缺失立即失败。随后调用
+   `scripts/validate-release-packages.sh`，对同一临时 feed 校验五个包的身份、版本、
+   精确 shell/kernel 配对、依赖方向、analyzer 资产与 kernel 隔离。
 3. 把 Core/Adapter fixture 复制到仓库外的临时目录，为消费者 restore/build 切换
    到本次运行独占的临时 `NUGET_PACKAGES`，生成只含本地 feed 与 NuGet.org 的
    `nuget.config`，执行 `dotnet restore`。
@@ -77,8 +79,9 @@ shell API：
 - 消费者 restore/build 使用本次运行独占的临时 NuGet 包缓存；脚本断言
   `project.assets.json` 指向该缓存，宿主全局缓存中的同名同版本 Origo 包不能
   绕过本地 feed 让 smoke 验证旧制品。
-- 包缺失、analyzer 资产缺失、任一消费者出现 `ProjectReference`、NuGet/编译警告、
-  kernel 类型可编译、kernel runtime 未加载、ConsoleBridge 回环失败或缺少
+- 包缺失、release package validator 失败、analyzer 资产缺失、任一消费者出现
+  `ProjectReference`、NuGet/编译警告、kernel 类型可编译、kernel runtime 未加载、
+  ConsoleBridge 回环失败或缺少
   `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`、Godot 启动失败或缺少
   `SHELL_CONSUMER_STARTUP_OK` 都会使 job 失败。
 - fixture 与脚本的版本 pin 由 `scripts/package-consumer-smoke.sh` 与
