@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 扩展 测试
 
@@ -17,7 +17,7 @@
 | `EnsureStrategyTests.cs` | EnsureStrategy 首次挂载、幂等跳过、空值覆盖，以及真实运行时的策略池挂载与执行 |
 | `EntityStrategyExtensionsTests.cs` | EnsureReplaceableStrategy 默认/自定义/空值覆盖/幂等方式/参数校验 |
 | `TryGetNumericExtensionsTests.cs` | TryGetNumeric 跨类型读取（int/float/long/double）、非数值返回 false、GetNumeric fallback |
-| `ActiveStrategyExtensionsTests.cs` | InvokeStrategy 泛型重载：带输入/无输入序列化往返、null 返回 default |
+| `ActiveStrategyExtensionsTests.cs` | InvokeStrategy 泛型重载：带输入/无输入序列化往返、复杂嵌套对象/数组/枚举/nullable 往返、null 返回 default |
 | `EntityExtensionsTests.cs` | IsSameEntityAs 实体身份比较：同引用/同包装、名称+会话双重校验、未绑定退化比较、null 参数校验 |
 
 ## EnsureStrategyTests 测试详情
@@ -89,6 +89,7 @@
 | `InvokeStrategy_GenericWithInput_SerializesAndDeserializes` | InvokeStrategy<TInput,TOutput> 将 input 序列化后调用策略，返回结果反序列化为强类型 | Snd README: ActiveStrategyExtensions |
 | `InvokeStrategy_GenericNoInput_CallsWithoutInput` | InvokeStrategy<TOutput> 无 input 重载仍正确调用策略 | Snd README: ActiveStrategyExtensions |
 | `InvokeStrategy_NullResult_ReturnsDefault` | 策略 Invoke 返回 null 时，泛型方法返回 default(TOutput) | Snd README: ActiveStrategyExtensions |
+| `InvokeStrategy_GenericWithComplexNestedPayload_RoundTrips` | input/output 含嵌套对象、列表、字典、枚举与 nullable 属性，完整 JSON 序列化往返后结构与值一致 | Snd README: ActiveStrategyExtensions |
 
 ## EntityExtensionsTests 测试详情
 
@@ -118,15 +119,14 @@
 | `StubActiveStrategyEntity` | ActiveStrategyExtensionsTests.cs | ISndEntity 的 stub 实现，通过 Func<object?, object?> 注入 InvokeStrategy 行为，其他成员抛 NotImplementedException |
 | `TestNumericEntity` | TryGetNumericExtensionsTests.cs | ISndDataAccess 的测试实现，内部 Dictionary<string, TypedData> 存储，TryGetData 通过 TypedDataObjectConverter 转换 |
 | `TestResult` | ActiveStrategyExtensionsTests.cs | 含 Result 属性的简单 POCO，用于泛型 InvokeStrategy 的返回类型反序列化 |
+| `ComplexInput` / `ComplexResult` / `ComplexItem` / `ComplexItemKind` | ActiveStrategyExtensionsTests.cs | 复杂嵌套 payload 模型：列表、字典、枚举与 nullable 属性，验证泛型 InvokeStrategy 的完整序列化往返 |
 | `StubEntity` | EntityExtensionsTests.cs | ISndEntity 桩实现，OwningSession 可配置（init），用于 IsSameEntityAs 名称+会话双重校验 |
 | `StubSession` | EntityExtensionsTests.cs | ISessionRun 桩实现，LevelId 固定为 "test"，其余成员抛 NotImplementedException |
 | `RealEnsureProbeStrategy` | EnsureStrategyTests.cs | LifecycleStrategyBase：在 AfterAdd/Process 中写入实体 Data 标记，验证 EnsureStrategy 真实挂载与执行 |
 
 ## 已知覆盖缺口
 
-| 缺口描述 | 影响 | 文档依据 |
-|---------|------|---------|
-| InvokeStrategy 泛型对复杂嵌套类型的序列化往返 | 仅测试简单匿名类型 {Sx, Sz} → TestResult，未测试嵌套对象/数组/枚举 | Snd README: ActiveStrategyExtensions |
+当前无已知覆盖缺口。
 
 ---
 

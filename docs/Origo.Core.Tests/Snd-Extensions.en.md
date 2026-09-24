@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Extensions Tests
 
@@ -17,7 +17,7 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `EnsureStrategyTests.cs` | EnsureStrategy first-time mount, idempotent skip, empty value override, and real-runtime strategy-pool mount/execution |
 | `EntityStrategyExtensionsTests.cs` | EnsureReplaceableStrategy default/custom/empty override/idempotent/parameter validation |
 | `TryGetNumericExtensionsTests.cs` | TryGetNumeric cross-type reads (int/float/long/double), non-numeric returns false, GetNumeric fallback |
-| `ActiveStrategyExtensionsTests.cs` | InvokeStrategy generic overloads: with/without input serialization round-trip, null returns default |
+| `ActiveStrategyExtensionsTests.cs` | InvokeStrategy generic overloads: with/without input serialization round-trip, complex nested objects/arrays/enums/nullable round-trip, null returns default |
 | `EntityExtensionsTests.cs` | IsSameEntityAs entity identity comparison: same reference/wrapper, name+session dual check, unbound degenerate comparison, null argument validation |
 
 ## EnsureStrategyTests Details
@@ -89,6 +89,7 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `InvokeStrategy_GenericWithInput_SerializesAndDeserializes` | InvokeStrategy<TInput,TOutput> serializes input, invokes strategy, deserializes result as strong type | Snd README: ActiveStrategyExtensions |
 | `InvokeStrategy_GenericNoInput_CallsWithoutInput` | InvokeStrategy<TOutput> no-input overload still correctly invokes the strategy | Snd README: ActiveStrategyExtensions |
 | `InvokeStrategy_NullResult_ReturnsDefault` | When strategy Invoke returns null, the generic method returns default(TOutput) | Snd README: ActiveStrategyExtensions |
+| `InvokeStrategy_GenericWithComplexNestedPayload_RoundTrips` | Input/output containing nested objects, lists, dictionaries, enums, and a nullable property survive the full JSON round-trip with unchanged structure and values | Snd README: ActiveStrategyExtensions |
 
 ## EntityExtensionsTests Details
 
@@ -118,15 +119,14 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `StubActiveStrategyEntity` | ActiveStrategyExtensionsTests.cs | ISndEntity stub implementation, injecting InvokeStrategy behavior via Func<object?, object?>, other members throw NotImplementedException |
 | `TestNumericEntity` | TryGetNumericExtensionsTests.cs | ISndDataAccess test implementation with internal Dictionary<string, TypedData> storage; TryGetData converts via TypedDataObjectConverter |
 | `TestResult` | ActiveStrategyExtensionsTests.cs | Simple POCO with a Result property, used as the return type for generic InvokeStrategy deserialization |
+| `ComplexInput` / `ComplexResult` / `ComplexItem` / `ComplexItemKind` | ActiveStrategyExtensionsTests.cs | Complex nested payload model with lists, dictionaries, enums, and a nullable property, used to verify the full generic InvokeStrategy serialization round-trip |
 | `StubEntity` | EntityExtensionsTests.cs | ISndEntity stub with configurable OwningSession (init), used for IsSameEntityAs name+session dual check |
 | `StubSession` | EntityExtensionsTests.cs | ISessionRun stub with LevelId fixed to "test"; other members throw NotImplementedException |
 | `RealEnsureProbeStrategy` | EnsureStrategyTests.cs | LifecycleStrategyBase: writes entity Data markers in AfterAdd/Process to verify real EnsureStrategy mounting and execution |
 
 ## Known Coverage Gaps
 
-| Gap Description | Impact | Documentation Basis |
-|-----------------|--------|---------------------|
-| InvokeStrategy generic serialization round-trip for complex nested types | Only simple anonymous types {Sx, Sz} → TestResult are tested; nested objects/arrays/enums not tested | Snd README: ActiveStrategyExtensions |
+No known coverage gaps.
 
 ---
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
@@ -40,6 +41,83 @@ public class ActiveStrategyExtensionsTests
             "test.null", new { });
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    public void InvokeStrategy_GenericWithComplexNestedPayload_RoundTrips()
+    {
+        string? serializedInput = null;
+        var entity = new StubActiveStrategyEntity(input =>
+        {
+            serializedInput = (string?)input;
+            return new ComplexResult
+            {
+                Name = "boss",
+                Stats = new Dictionary<string, int> { ["hp"] = 120, ["armor"] = 7 },
+                Items =
+                [
+                    new ComplexItem { Id = 1, Kind = ComplexItemKind.Weapon },
+                    new ComplexItem { Id = 2, Kind = ComplexItemKind.Armor },
+                ],
+                Kind = ComplexItemKind.Armor,
+                Optional = null,
+            };
+        });
+
+        var result = entity.InvokeStrategy<ComplexInput, ComplexResult>("test.complex", new ComplexInput
+        {
+            Name = "hero",
+            Stats = new Dictionary<string, int> { ["level"] = 3 },
+            Items = [new ComplexItem { Id = 9, Kind = ComplexItemKind.Weapon }],
+            Kind = ComplexItemKind.Weapon,
+            Optional = "kept",
+        });
+
+        Assert.NotNull(serializedInput);
+        using var document = JsonDocument.Parse(serializedInput);
+        var root = document.RootElement;
+        Assert.Equal("hero", root.GetProperty("Name").GetString());
+        Assert.Equal(3, root.GetProperty("Stats").GetProperty("level").GetInt32());
+        Assert.Equal((int)ComplexItemKind.Weapon, root.GetProperty("Kind").GetInt32());
+        Assert.Equal(9, root.GetProperty("Items")[0].GetProperty("Id").GetInt32());
+
+        Assert.NotNull(result);
+        Assert.Equal("boss", result.Name);
+        Assert.Equal(120, result.Stats["hp"]);
+        Assert.Equal(ComplexItemKind.Armor, result.Kind);
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(ComplexItemKind.Armor, result.Items[1].Kind);
+        Assert.Null(result.Optional);
+    }
+
+    private enum ComplexItemKind
+    {
+        Weapon,
+        Armor,
+    }
+
+    private sealed class ComplexItem
+    {
+        public int Id { get; set; }
+        public ComplexItemKind Kind { get; set; }
+    }
+
+    private sealed class ComplexInput
+    {
+        public string Name { get; set; } = string.Empty;
+        public Dictionary<string, int> Stats { get; set; } = [];
+        public List<ComplexItem> Items { get; set; } = [];
+        public ComplexItemKind Kind { get; set; }
+        public string? Optional { get; set; }
+    }
+
+    private sealed class ComplexResult
+    {
+        public string Name { get; set; } = string.Empty;
+        public Dictionary<string, int> Stats { get; set; } = [];
+        public List<ComplexItem> Items { get; set; } = [];
+        public ComplexItemKind Kind { get; set; }
+        public string? Optional { get; set; }
     }
 
     private sealed class TestResult

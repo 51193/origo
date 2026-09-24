@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 27 -->
+<!-- docsync-revision: 28 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Tests
 
@@ -77,7 +77,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | SND Scene | [Snd-Scene.md](Snd-Scene.en.md) | MemorySndSceneHost and FullMemorySndSceneHost Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity, NullNodeFactory |
 | SND Strategy | [Snd-Strategy.md](Snd-Strategy.en.md) | Strategy partial ordering, pool reference counting/recycling, entity strategy lifecycle hooks, observer strategies, active strategy Invoke, strategy pool Get/Release and Process scaling performance measurement |
 | SND Context | [Snd-Context.md](Snd-Context.en.md) | SndContext save/load/continue workflow, LevelBuilder, template resolution, Archetype loading |
-| SND Extensions | [Snd-Extensions.md](Snd-Extensions.en.md) | EnsureStrategy lazy strategy attachment (idempotent), TryGetNumeric cross-numeric type read, InvokeStrategy generic invocation |
+| SND Extensions | [Snd-Extensions.md](Snd-Extensions.en.md) | EnsureStrategy lazy strategy attachment (idempotent), TryGetNumeric cross-numeric type read, InvokeStrategy generic invocation with complex nested payload serialization |
 | File Access | [Snd-FileAccess.md](Snd-FileAccess.en.md) | ISndFileAccess DataSourceNode read/write round-trip on SndContext, strongly-typed round-trip, overwrite semantics, error/boundary paths |
 | StrategyTestContext File Access | [StrategyTestContext-FileAccess.md](StrategyTestContext-FileAccess.en.md) | ISndFileAccess in-memory file system behavior on StrategyTestContext, DataSourceNode and strongly-typed round-trips |
 | Archive File Access | [Snd-ArchiveFileAccess.md](Snd-ArchiveFileAccess.en.md) | ISndArchiveFileAccess extra/ subdirectory file operations on SndContext, DeleteFile, path traversal protection, save/load round-trips |
