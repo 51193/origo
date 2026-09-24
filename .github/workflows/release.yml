@@ -360,11 +360,16 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          # A workflow_dispatch run has github.ref_name=main, so use the tag
+          # resolved for this run instead of the action's default ref name.
+          tag_name: ${{ steps.resolve-tag.outputs.tag }}
           files: ./artifacts/*
           generate_release_notes: true
 
       - name: Mark snapshot release as pre-release
-        if: inputs.snapshot == 'true'
+        # A boolean workflow input is a Boolean in the inputs context;
+        # comparing it with the string 'true' is always false.
+        if: ${{ inputs.snapshot }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.resolve-tag.outputs.tag }}

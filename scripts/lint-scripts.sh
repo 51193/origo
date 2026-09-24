@@ -76,12 +76,17 @@ else
 fi
 
 if command -v python3 >/dev/null 2>&1; then
+    if python3 -c "import yaml" >/dev/null 2>&1; then
+        python3 scripts/validate-release-workflow.py
+    else
+        echo "WARNING: PyYAML is not installed; skipping release-workflow guard."
+    fi
     python3 scripts/validate-agent-docs.py
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
-    echo "ERROR: python3 is required to run scripts/validate-agent-docs.py." >&2
+    echo "ERROR: python3 is required to run the release-workflow and agent-doc guards." >&2
     exit 1
 else
-    echo "WARNING: python3 is not installed; skipping agent-doc guard (bash -n still runs)."
+    echo "WARNING: python3 is not installed; skipping workflow and agent-doc guards (bash -n still runs)."
 fi
 
 echo "Script lint: OK"
