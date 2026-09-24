@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-baseline -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell API Baseline and Gate
 
@@ -9,15 +9,15 @@ This document defines the 0.1.0 shell API baseline gate: a tracked Roslyn invent
 
 ## Scope
 
-- The inventory covers the exported surface of the `Origo.Core.Contracts`, `Origo.Core`, and `Origo.GodotAdapter` shell assemblies.
+- The inventory covers the exported surface of the `Origo.Core.Contracts`, `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` shell assemblies.
 - Exported types, public/protected members, signatures, nullable annotations, default values, generic constraints, public Source Generator members, and generated nested Godot signal types all enter the baseline.
-- `Origo.Core.Kernel` is the kernel implementation package and stays out of the baseline; the tool fails explicitly when an exported signature references a kernel assembly type. `Origo.ConsoleBridge` shell-only dependency and packaged consumption are covered by #42.
+- `Origo.Core.Kernel` is the kernel implementation package and stays out of the baseline; the tool fails explicitly when an exported signature references a kernel assembly type. `Origo.ConsoleBridge` is also part of the member-level baseline; its shell-only dependency and packaged consumption are additionally covered by #42.
 
 ## Gate Execution
 
 `scripts/api-inventory.sh`:
 
-1. Builds the three shell projects in Release; the repository-wide warnings-as-errors setting stops the gate before inventory generation on any compiler or Source Generator diagnostic error.
+1. Builds the four shell projects in Release; the repository-wide warnings-as-errors setting stops the gate before inventory generation on any compiler or Source Generator diagnostic error.
 2. Runs the `tools/ApiInventoryTool` Roslyn metadata inventory.
 3. In `verify` mode, compares each API line with `tools/ApiInventoryTool/shell-api-baseline.json`; any addition, removal, or signature change exits non-zero with the diff and the regeneration command.
 4. `generate` mode is for approved changes: it rewrites the baseline JSON, which must be reviewed and committed with the implementation.

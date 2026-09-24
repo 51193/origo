@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
@@ -273,8 +273,8 @@ in-repository `origo.format_version=1` golden snapshot covers the current
 format, a legacy save without the version key, and atomic rejection of a
 future format. The shell API and generated-code gate (#41) is also in
 place: `scripts/api-inventory.sh` verifies a tracked Roslyn JSON baseline of
-the Contracts/Core/Adapter export surface, nullable annotations, and generated
-nested types; unapproved additions, removals, or signature changes fail in
+the Contracts/Core/Adapter/ConsoleBridge export surface, nullable annotations,
+and generated nested types; unapproved additions, removals, or signature changes fail in
 normal CI, `scripts/ci.sh`, and the Release workflow. Previous-package
 validation is explicitly skipped before the first formal release with the
 first-release behavior stated. Packaged consumption (#42) is in place:

@@ -221,17 +221,20 @@
     "architecture/shell-api-baseline": {
       "status": "synced",
       "revisions": {
+        "zh": 2,
+        "en": 2
+      },
+      "previous_revisions": {
         "zh": 1,
         "en": 1
       },
-      "previous_revisions": {},
       "files": {
         "zh": "architecture/shell-api-baseline.zh.md",
         "en": "architecture/shell-api-baseline.en.md"
       },
       "content_hashes": {
-        "zh": "57F0C1831A894995B6855B9142E561CDEF2B85B449E100D3F0250A1698AFA19F",
-        "en": "1D32A54F1E4E7A919E41A58DDE7713CE288D0802D6955AD5FD0F40DE9B445866"
+        "zh": "DF2B8B5DF85CB3DD6D3A85B87A570F05FCC9DECEBE340E8C5880A877A2BD153A",
+        "en": "98BD5E6830A2649B35FBBA21506E18D37A5ADA3B7D43FE4A3A95031A4644731D"
       }
     },
     "architecture/shell-api-classification": {
@@ -256,20 +259,20 @@
     "architecture/shell-kernel-boundary": {
       "status": "synced",
       "revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "previous_revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "files": {
         "zh": "architecture/shell-kernel-boundary.zh.md",
         "en": "architecture/shell-kernel-boundary.en.md"
       },
       "content_hashes": {
-        "zh": "C643A01685DE32B40B7E886568FD20BECC55E5616660953DCD88B005A31E7BD0",
-        "en": "0368E015641A7841A9C3119BE7F9538A98D87311D9081CD2F110FED1B99D44D4"
+        "zh": "73679522304A6ED17BCF8D73D41DF907522762873B7515E31987E3207733489A",
+        "en": "9856791921218243617C1CAC18837F876A3E512C3BBF6D15F375CA0B23F87EC9"
       }
     },
     "architecture/strategy-ordering": {

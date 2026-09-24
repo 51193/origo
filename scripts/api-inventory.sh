@@ -25,6 +25,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 dotnet build Origo.Core.Contracts/Origo.Core.Contracts.csproj --configuration Release
 dotnet build Origo.Core/Origo.Core.csproj --configuration Release
 dotnet build Origo.GodotAdapter/Origo.GodotAdapter.csproj --configuration Release
+dotnet build Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --configuration Release
 
 target_dir() {
   dotnet msbuild "$1" -getProperty:TargetDir -p:Configuration=Release -nologo | tr -d '\r'
@@ -33,16 +34,19 @@ target_dir() {
 CONTRACTS_DIR="$(target_dir Origo.Core.Contracts/Origo.Core.Contracts.csproj)"
 CORE_DIR="$(target_dir Origo.Core/Origo.Core.csproj)"
 ADAPTER_DIR="$(target_dir Origo.GodotAdapter/Origo.GodotAdapter.csproj)"
+BRIDGE_DIR="$(target_dir Origo.ConsoleBridge/Origo.ConsoleBridge.csproj)"
 
 ASSEMBLY_ARGS=(
   --assembly "Origo.Core.Contracts=${CONTRACTS_DIR}Origo.Core.Contracts.dll"
   --assembly "Origo.Core=${CORE_DIR}Origo.Core.dll"
   --assembly "Origo.GodotAdapter=${ADAPTER_DIR}Origo.GodotAdapter.dll"
+  --assembly "Origo.ConsoleBridge=${BRIDGE_DIR}Origo.ConsoleBridge.dll"
 )
 REFERENCE_ARGS=(
   --reference-dir "$CONTRACTS_DIR"
   --reference-dir "$CORE_DIR"
   --reference-dir "$ADAPTER_DIR"
+  --reference-dir "$BRIDGE_DIR"
 )
 
 if [[ "$MODE" == "generate" ]]; then

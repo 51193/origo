@@ -19,8 +19,10 @@ public class BaselineContentTests
         Assert.True(File.Exists(baselinePath), $"Baseline not found: {baselinePath}");
 
         var document = InventoryJson.Deserialize(File.ReadAllText(baselinePath));
+        Assert.Equal(4, document.Assemblies.Count);
         var contracts = Assert.Single(document.Assemblies, a => a.Name == "Origo.Core.Contracts");
         var adapter = Assert.Single(document.Assemblies, a => a.Name == "Origo.GodotAdapter");
+        var bridge = Assert.Single(document.Assemblies, a => a.Name == "Origo.ConsoleBridge");
 
         // Source Generator output: nullable generated accessor on TypedData.
         Assert.Contains(contracts.Api, line => line.Contains("TryGetString(out string? value)", StringComparison.Ordinal));
@@ -32,6 +34,15 @@ public class BaselineContentTests
             line.StartsWith("T:public Class Origo.GodotAdapter.Bootstrap.OrigoAutoHost.PropertyName", StringComparison.Ordinal));
         Assert.Contains(adapter.Api, line =>
             line.StartsWith("T:public Class Origo.GodotAdapter.Bootstrap.OrigoAutoHost.SignalName", StringComparison.Ordinal));
+
+        // ConsoleBridge is a shell package: its public server/options surface
+        // must stay in the reviewed baseline as well.
+        Assert.Contains(bridge.Api, line =>
+            line.StartsWith("T:public Class Origo.ConsoleBridge.ConsoleBridgeServer", StringComparison.Ordinal));
+        Assert.Contains(bridge.Api, line =>
+            line.Contains("ConsoleBridgeServer(Origo.Core.Abstractions.Console.IConsoleInputSource input", StringComparison.Ordinal));
+        Assert.Contains(bridge.Api, line =>
+            line.StartsWith("P:Origo.ConsoleBridge.ConsoleBridgeOptions.public int Port", StringComparison.Ordinal));
 
         foreach (var assembly in document.Assemblies)
         {

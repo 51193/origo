@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-baseline -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell API 基线与门禁
 
@@ -11,19 +11,19 @@ Release 构建产出确定性 JSON，任何未批准的 shell API 增删或签�
 
 ## 范围
 
-- inventory 覆盖 `Origo.Core.Contracts`、`Origo.Core` 与 `Origo.GodotAdapter`
-  三个 shell 程序集的导出面。
+- inventory 覆盖 `Origo.Core.Contracts`、`Origo.Core`、`Origo.GodotAdapter` 与
+  `Origo.ConsoleBridge` 四个 shell 程序集的导出面。
 - 导出类型、public/protected 成员、签名、nullable 注解、默认值、泛型约束、
   Source Generator 生成的公开成员与 Godot 生成的嵌套 signal 类型都进入基线。
 - `Origo.Core.Kernel` 是 kernel 实现包，不进入基线；工具发现导出签名引用
-  kernel 程序集类型时显式失败。`Origo.ConsoleBridge` 的 shell-only 依赖与包
-  消费由 #42 的门禁覆盖。
+  kernel 程序集类型时显式失败。`Origo.ConsoleBridge` 也进入成员级基线；其
+  shell-only 依赖与包消费另由 #42 的门禁覆盖。
 
 ## 门禁执行
 
 `scripts/api-inventory.sh`：
 
-1. 以 Release 配置构建三个 shell 项目；仓库全局的 warnings-as-errors 设置
+1. 以 Release 配置构建四个 shell 项目；仓库全局的 warnings-as-errors 设置
    使编译器或 Source Generator 诊断错误在生成 inventory 前终止。
 2. 运行 `tools/ApiInventoryTool` 的 Roslyn metadata inventory。
 3. `verify` 模式逐 API 行与 `tools/ApiInventoryTool/shell-api-baseline.json`

@@ -2,6 +2,22 @@
   "schemaVersion": 1,
   "assemblies": [
     {
+      "name": "Origo.ConsoleBridge",
+      "api": [
+        "F:Origo.ConsoleBridge.ConsoleBridgeOptions.public const int DefaultOutputSendTimeoutMs = 100",
+        "F:Origo.ConsoleBridge.ConsoleBridgeOptions.public const int DefaultPort = 9876",
+        "M:Origo.ConsoleBridge.ConsoleBridgeOptions.public ConsoleBridgeOptions()",
+        "M:Origo.ConsoleBridge.ConsoleBridgeServer.public ConsoleBridgeServer(Origo.Core.Abstractions.Console.IConsoleInputSource input, Origo.Core.Abstractions.Console.IConsoleOutputChannel output, Origo.ConsoleBridge.ConsoleBridgeOptions? options = null, Origo.Core.Abstractions.Logging.ILogger? logger = null)",
+        "M:Origo.ConsoleBridge.ConsoleBridgeServer.public void Dispose()",
+        "M:Origo.ConsoleBridge.ConsoleBridgeServer.public void Start()",
+        "P:Origo.ConsoleBridge.ConsoleBridgeOptions.public int OutputSendTimeoutMs get:public set:public",
+        "P:Origo.ConsoleBridge.ConsoleBridgeOptions.public int Port get:public set:public",
+        "P:Origo.ConsoleBridge.ConsoleBridgeServer.public int ActualPort get:public",
+        "T:public Class Origo.ConsoleBridge.ConsoleBridgeOptions : ",
+        "T:public Class Origo.ConsoleBridge.ConsoleBridgeServer : System.IDisposable"
+      ]
+    },
+    {
       "name": "Origo.Core",
       "api": [
         "M:Origo.Core.Grid.Astar.public static System.Collections.Generic.List\u003COrigo.Core.Grid.GridPos?\u003E? FindPath(Origo.Core.Grid.GridPos start, Origo.Core.Grid.GridPos end, int gridSize, System.Func\u003COrigo.Core.Grid.GridPos, bool\u003E isBlocked)",

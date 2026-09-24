@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell/Kernel 稳定边界
 
@@ -216,7 +216,7 @@ Core shell 包且不携带 kernel 编译资产。Adapter 保持单 shell 包：G
 binder、context binder 与 file system 的显式失败；仓库内 `origo.format_version=1`
 golden 快照覆盖当前格式、旧档缺版本键与未来版本的原子拒绝。Shell API 与生成
 代码门禁（#41）已落地：`scripts/api-inventory.sh` 以 tracked Roslyn JSON baseline
-校验 Contracts/Core/Adapter shell 导出面、nullable 与生成嵌套类型，未批准的增删
+校验 Contracts/Core/Adapter/ConsoleBridge shell 导出面、nullable 与生成嵌套类型，未批准的增删
 或签名变化在普通 CI、`scripts/ci.sh` 与 Release workflow 失败；previous-package
 validation 在首个正式版本前显式跳过并记录 first-release 行为。Packaged consumption
 （#42）已落地：`scripts/package-consumer-smoke.sh` 在仓库外临时目录只通过
