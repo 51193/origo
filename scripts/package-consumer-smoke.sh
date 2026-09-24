@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Shell-only package consumer smoke test.
 #
-# Packs the four Origo shell/kernel packages into a fresh local feed, copies
-# the tracked fixture to an isolated temporary directory with no repository
-# project references, restores it through package restore only against an
+# Packs the five Origo shell/kernel packages into a fresh local feed, copies
+# the tracked fixtures to isolated temporary directories with no repository
+# project references, restores them through package restore only against an
 # isolated NuGet package cache, builds with warnings as errors, proves kernel
-# compile assets are inaccessible with a negative probe, and starts the
-# consumer headlessly through the public OrigoDefaultEntry path.
+# compile assets are inaccessible with a negative probe, runs the public
+# ConsoleBridge path, and starts the Godot consumer headlessly through the
+# public OrigoDefaultEntry path.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -44,13 +45,14 @@ WORK=$(mktemp -d "${TMPDIR:-/tmp}/origo-package-consumer.XXXXXX")
 FEED="$WORK/feed"
 CONSUMER_DIR="$WORK/consumer"
 PROBE_DIR="$WORK/kernel-probe"
+CONSOLE_CONSUMER_DIR="$WORK/console-consumer"
 ISOLATED_PACKAGES="$WORK/packages"
 cleanup() {
     rm -rf "$WORK"
 }
 trap cleanup EXIT
 
-mkdir -p "$FEED" "$CONSUMER_DIR" "$PROBE_DIR" "$ISOLATED_PACKAGES"
+mkdir -p "$FEED" "$CONSUMER_DIR" "$PROBE_DIR" "$CONSOLE_CONSUMER_DIR" "$ISOLATED_PACKAGES"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " Shell-only package consumer smoke"
@@ -62,8 +64,9 @@ dotnet pack Origo.Core.Contracts/Origo.Core.Contracts.csproj --configuration Rel
 dotnet pack Origo.Core.Kernel/Origo.Core.Kernel.csproj --configuration Release --output "$FEED" >/dev/null
 dotnet pack Origo.Core/Origo.Core.csproj --configuration Release --output "$FEED" >/dev/null
 dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --configuration Release --output "$FEED" >/dev/null
+dotnet pack Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --configuration Release --output "$FEED" >/dev/null
 
-for package in Origo.Core.Contracts Origo.Core.Kernel Origo.Core Origo.GodotAdapter; do
+for package in Origo.Core.Contracts Origo.Core.Kernel Origo.Core Origo.GodotAdapter Origo.ConsoleBridge; do
     [[ -f "$FEED/$package.$VERSION.nupkg" ]] || FAIL "missing package: $package.$VERSION.nupkg"
 done
 
@@ -73,6 +76,7 @@ unzip -l "$FEED/Origo.Core.Contracts.$VERSION.nupkg" | grep -Fq "$ANALYZER_ASSET
 
 cp -R tools/ShellPackageConsumer/. "$CONSUMER_DIR/"
 cp -R tools/ShellPackageConsumer/. "$PROBE_DIR/"
+cp -R tools/ConsoleBridgePackageConsumer/. "$CONSOLE_CONSUMER_DIR/"
 
 cat > "$CONSUMER_DIR/nuget.config" <<NUGET_CONFIG
 <?xml version="1.0" encoding="utf-8"?>
@@ -85,9 +89,12 @@ cat > "$CONSUMER_DIR/nuget.config" <<NUGET_CONFIG
 </configuration>
 NUGET_CONFIG
 cp "$CONSUMER_DIR/nuget.config" "$PROBE_DIR/nuget.config"
+cp "$CONSUMER_DIR/nuget.config" "$CONSOLE_CONSUMER_DIR/nuget.config"
 
 grep -q "<ProjectReference" "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
     && FAIL "consumer fixture must not contain a ProjectReference."
+grep -q "<ProjectReference" "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
+    && FAIL "ConsoleBridge consumer fixture must not contain a ProjectReference."
 
 # The local feed must be the only source of Origo packages. An ambient global
 # package cache can contain the same package id/version from an earlier build,
@@ -113,6 +120,37 @@ dotnet build "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
 
 find "$CONSUMER_DIR/.godot" -type f -name "Origo.Core.Kernel.dll" | grep -q . \
     || FAIL "kernel runtime assembly was not provided by package restore."
+
+dotnet restore "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
+    -p:OrigoShellPackageVersion="$VERSION" >/dev/null
+
+CONSOLE_ASSETS=$(find "$CONSOLE_CONSUMER_DIR" -path "*/obj/project.assets.json" | head -1)
+[[ -n "$CONSOLE_ASSETS" ]] || FAIL "ConsoleBridge consumer restore did not produce project.assets.json."
+grep -Fq "$NUGET_PACKAGES" "$CONSOLE_ASSETS" \
+    || FAIL "ConsoleBridge consumer restore did not use the isolated NuGet package cache."
+for package in Origo.ConsoleBridge Origo.Core Origo.Core.Contracts Origo.Core.Kernel; do
+    grep -q "\"$package/" "$CONSOLE_ASSETS" \
+        || FAIL "ConsoleBridge consumer restore did not resolve $package."
+done
+
+dotnet build "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
+    --no-restore --configuration Release -warnaserror \
+    -p:OrigoShellPackageVersion="$VERSION" >/dev/null
+set +e
+CONSOLE_STARTUP_OUTPUT=$(dotnet run \
+    --project "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
+    --configuration Release --no-build --no-restore 2>&1)
+CONSOLE_EXIT=$?
+set -e
+if [[ $CONSOLE_EXIT -ne 0 ]]; then
+    echo "$CONSOLE_STARTUP_OUTPUT" | tail -30
+    FAIL "ConsoleBridge consumer exited with $CONSOLE_EXIT."
+fi
+if ! grep -q "CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK" <<<"$CONSOLE_STARTUP_OUTPUT"; then
+    echo "$CONSOLE_STARTUP_OUTPUT" | tail -30
+    FAIL "ConsoleBridge consumer startup did not print CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK."
+fi
+echo "$CONSOLE_STARTUP_OUTPUT" | grep "CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK"
 
 cp "$PROBE_DIR/KernelLeakProbe.cs.template" "$PROBE_DIR/KernelLeakProbe.cs"
 set +e

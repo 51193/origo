@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Usage Documentation
 
@@ -22,7 +22,7 @@ Documentation for Origo framework users (game developers, AI agents). Organized 
 | [strategy-testing](strategy-testing.en.md) | Test authors | StrategyTestScenario usage guide |
 | [capabilities](capabilities.en.md) | All users | Complete framework capability checklist, indexed by functional domain — quickly understand what Origo can do |
 | [agent-reference](agent-reference.en.md) | AI agents | Complete runtime reference: interface signatures, lifecycle timeline, strategy writing templates |
-| [shell-package-consumer](shell-package-consumer.en.md) | Release/integration maintainers | Shell-only package consumer fixture: local-feed restore, warnings-as-errors build, kernel-leak negative probe, and Godot headless startup |
+| [shell-package-consumer](shell-package-consumer.en.md) | Release/integration maintainers | Shell-only package consumer fixture: local-feed restore, warnings-as-errors build, kernel-leak negative probe, ConsoleBridge loopback round-trip, and Godot headless startup |
 
 ## Recommended Reading Paths
 

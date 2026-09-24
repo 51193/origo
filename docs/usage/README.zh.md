@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 使用文档
 
@@ -22,7 +22,7 @@ Origo 框架的使用方（游戏开发者、AI Agent）文档。按照使用场
 | [strategy-testing](strategy-testing.zh.md) | 测试编写者 | StrategyTestScenario 使用指南 |
 | [capabilities](capabilities.zh.md) | 所有用户 | 框架完整能力清单，按功能域索引，快速了解 Origo 能做什么 |
 | [agent-reference](agent-reference.zh.md) | AI Agent | 完整运行时参考：接口签名、生命周期时间线、策略编写模板 |
-| [shell-package-consumer](shell-package-consumer.zh.md) | 发布/集成维护者 | shell-only 包消费 fixture：本地 feed restore、warning-as-error 构建、kernel 泄漏负向探测与 Godot headless 启动 |
+| [shell-package-consumer](shell-package-consumer.zh.md) | 发布/集成维护者 | shell-only 包消费 fixture：本地 feed restore、warning-as-error 构建、kernel 泄漏负向探测、ConsoleBridge loopback 回环与 Godot headless 启动 |
 
 ## 推荐阅读路径
 

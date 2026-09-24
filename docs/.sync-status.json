@@ -2885,20 +2885,20 @@
     "usage/README": {
       "status": "synced",
       "revisions": {
-        "zh": 15,
-        "en": 15
+        "zh": 16,
+        "en": 16
       },
       "previous_revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "files": {
         "zh": "usage/README.zh.md",
         "en": "usage/README.en.md"
       },
       "content_hashes": {
-        "zh": "B6CE308AF77DF7D1E869D167A87D597962E551D113261E0FAEF214F9FBA55495",
-        "en": "99F7E1A30B4EB43BF7AED9C81ECBA7E1AE3A1B7174F444C6292A7567FCB2090F"
+        "zh": "A1EAD4A2401A9437EFEA22E01A0AB8D6119C1D857688E937F3AC3212658FFA14",
+        "en": "E010080FCBA5179CCBABE888DEFF8A0E8CB41792CAF22456A06D60FC30FE5BBB"
       }
     },
     "usage/session-model": {
@@ -2923,20 +2923,20 @@
     "usage/shell-package-consumer": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "previous_revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "usage/shell-package-consumer.zh.md",
         "en": "usage/shell-package-consumer.en.md"
       },
       "content_hashes": {
-        "zh": "0EC4442D38B47B43B88778A213F2B6BCAAF8F49910185C83F59FF5F8254E3B2A",
-        "en": "31542188873918327E98AECB126E145B732C3C123CB7620B1CBD2960DBE43E81"
+        "zh": "75AF249E950A5B1253D248C794E2B44D49697D9E530DB58DED341B2ABFE1B59E",
+        "en": "7170A35F9CB503B5A779BFC8EA40F73884630257CDBDA67E3403A34A5A76D426"
       }
     },
     "usage/snd-entity-model": {
