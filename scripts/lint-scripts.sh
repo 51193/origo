@@ -82,8 +82,9 @@ if command -v python3 >/dev/null 2>&1; then
         echo "WARNING: PyYAML is not installed; skipping release-workflow guard."
     fi
     python3 scripts/validate-agent-docs.py
+    python3 scripts/test-validate-release-packages.py
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
-    echo "ERROR: python3 is required to run the release-workflow and agent-doc guards." >&2
+    echo "ERROR: python3 is required to run the release-workflow, release-package, and agent-doc guards." >&2
     exit 1
 else
     echo "WARNING: python3 is not installed; skipping workflow and agent-doc guards (bash -n still runs)."
