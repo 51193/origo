@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 发布与 Changelog 流程
 
@@ -88,7 +88,9 @@
 8. 一次性提交 `CHANGELOG.md`、`Directory.Build.props`、analyzer release 文件、
    两个 `docs/README` 版本戳、所有 docs 内容、生成 hub 与 `.sync-status.json`。
 9. 在该提交上运行完整 `bash scripts/ci.sh`，确认 lint-scripts、format、doc-sync、
-   test、benchmark、Godot integration 全部通过；失败则 amend 后重跑。
+   API baseline、test、benchmark、Godot integration、package consumer smoke
+   全部通过；发布流水线随后还会运行 `scripts/validate-release-packages.sh`
+   校验制品集合；失败则 amend 后重跑。
 10. 在该提交上运行 `bash scripts/lint-commits.sh`；失败则修正并 amend。
 11. 在已验证的提交上创建并推送 tag `vx.y.z`。
 
@@ -114,7 +116,14 @@ Release workflow 由推送的 `v*` tag 触发，或由 `workflow_dispatch` 配�
   main / tag，lease 检查会失败并中止发布。重跑会先解析 tag 当前指向，已由本流程
   回写过的 tag 不会重复生成 release 提交。若仓库启用了 branch/tag protection 或
   token 缺少权限，原子推送会失败并中止发布；
-- 打包 `Origo.Core`、`Origo.GodotAdapter`、`Origo.ConsoleBridge` 为 NuGet 包；
+- 运行全部兼容门禁：`scripts/api-inventory.sh`（shell API baseline）、
+  `scripts/test.sh`（行为与存档契约）、benchmark、Godot headless integration，
+  以及 `scripts/package-consumer-smoke.sh`（shell-only restore/负向编译/启动）；
+- 打包 `Origo.Core.Contracts`、`Origo.Core.Kernel`、`Origo.Core`、
+  `Origo.GodotAdapter`、`Origo.ConsoleBridge` 为 NuGet 包；
+- 运行 `scripts/validate-release-packages.sh` 校验五个包的 identity、版本与
+  精确 shell/kernel 配对、依赖方向、analyzer 资产与 kernel 隔离；任何缺失、
+  非预期包或不匹配版本都会中止发布；
 - 生成包含 `docs/`、`AGENTS.md`、`CHANGELOG.md` 的文档快照压缩包；
 - 把包和文档快照附加到 GitHub Release；以快照方式启动（`snapshot` 输入，
   每周快照会设置）时创建为 pre-release，手动推送的 tag 保持你在 GitHub 上

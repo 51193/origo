@@ -93,9 +93,11 @@ nc localhost 9876
 ```
 
 ```xml
-<!-- Use the exact version of the .nupkg files downloaded from the release. -->
-<PackageReference Include="Origo.Core" Version="0.0.9" />
-<PackageReference Include="Origo.GodotAdapter" Version="0.0.9" />
+<!-- Reference only the shell packages and use the exact version downloaded
+     from the release. Origo.Core.Contracts and Origo.Core.Kernel, and the
+     Godot runtime assets, restore as dependencies of these shell packages. -->
+<PackageReference Include="Origo.Core" Version="x.y.z" />
+<PackageReference Include="Origo.GodotAdapter" Version="x.y.z" />
 ```
 
 ### 2. Create folder structure

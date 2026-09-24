@@ -329,20 +329,20 @@
     "META": {
       "status": "synced",
       "revisions": {
-        "zh": 26,
-        "en": 26
+        "zh": 27,
+        "en": 27
       },
       "previous_revisions": {
-        "zh": 25,
-        "en": 25
+        "zh": 26,
+        "en": 26
       },
       "files": {
         "zh": "META.zh.md",
         "en": "META.en.md"
       },
       "content_hashes": {
-        "zh": "0C7D40339F6D48BA96761F9079C1A58F314E12C82EE6092338311175C7FAA764",
-        "en": "E23F9EC906ECA76B5529BC2B5B73D2187EB19D09ECE98440B5C1DC13DBF4AAD3"
+        "zh": "1E5219C6196F8E9138DB0B51EB6A682EF08983FD1A5A047A4BABD7599E5D9746",
+        "en": "DAA748327E82C14F63914B14C9434417CB940999C0798B955E0D315C2B10776F"
       }
     },
     "Origo.ConsoleBridge.Tests/Architecture": {
@@ -2733,20 +2733,20 @@
     "release-process": {
       "status": "synced",
       "revisions": {
-        "zh": 19,
-        "en": 19
+        "zh": 20,
+        "en": 20
       },
       "previous_revisions": {
-        "zh": 18,
-        "en": 18
+        "zh": 19,
+        "en": 19
       },
       "files": {
         "zh": "release-process.zh.md",
         "en": "release-process.en.md"
       },
       "content_hashes": {
-        "zh": "85FC449542D28F5143283B8F8D6523F0632706C5EE2D29B171D1C599AD769B03",
-        "en": "CB2BDDB4FBAF5C88183A996EDD563DEA897F2013A16F4A8051A75D17BBE0DC95"
+        "zh": "FD6B24913AA1DE54939BABBA7C9B6A69496C8EE4608D3DE51B00393BB1355ED6",
+        "en": "8712014760E2F35E0F0EE2DE295E5792C6B29DC25B659053B398DAD4D98C9B06"
       }
     },
     "tools/DocSyncTool.Tests/README": {

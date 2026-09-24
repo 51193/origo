@@ -35,7 +35,7 @@ Read docs first, then follow the chain into source; README rationale is required
 
 ### 1.2 Early Development — No Backward-Compatibility Burden
 
-This project is in early development and does not promise API stability.
+This project is in early development and does not promise API stability, except the bounded 0.1.x shell contract in `docs/architecture/shell-kernel-boundary.*`; kernel packages keep this rule.
 
 - **Forbidden**: compatibility shims, deprecation layers, dual-track APIs, migration shells, evolution traces, dead code, and markers such as `since v0.x`, `legacy`, or `new`.
 - Make a clean breaking change and bring code plus docs to the current correct state. Record breaking changes in `CHANGELOG.md` under `[Unreleased]` per §4, prefixed with `BREAKING:`.
@@ -95,10 +95,9 @@ in `docs/META.zh.md` / `.en.md` §Bilingual Documentation Mechanism.
 
 ### 1.9 Dependency Updates — Version-Coupled Packages Move as One
 
-- Dependabot PRs must pass as proposed. Version-coupled families are grouped in `.github/dependabot.yml`; never bump one member alone. Groups/ignores/rationale live there.
+- Dependabot PRs must pass as proposed. Version-coupled families are grouped in `.github/dependabot.yml`; never bump one member alone.
 - `xunit.v3` / `xunit.v3.extensibility.core` move together; major updates wait for the coordinated xUnit v4 migration (packages, tests, `scripts/test.sh`).
-- `Microsoft.CodeAnalysis.*` is coupled to `global.json`'s Roslyn compiler; bump it with the matching SDK update.
-- Apply the same rule to future version-coupled families.
+- `Microsoft.CodeAnalysis.*` is coupled to `global.json`'s Roslyn; bump it with the matching SDK.
 
 ### 1.10 Environment Bootstrap — Install the Required SDK, Never Downgrade the Request
 

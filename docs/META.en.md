@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 26 -->
+<!-- docsync-revision: 27 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -10,6 +10,10 @@
 ## Documentation Positioning
 
 `docs/` is the Origo framework's documentation mirror, maintained alongside the source code in the same repository. The goal is: **read the root → find the target directory → continue reading → recursively descend, without having to read source code from scratch.**
+
+## Bounded Shell Compatibility Exception
+
+`Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` are 0.1.x shell packages that promise source/behavior compatibility; kernel packages such as `Origo.Core.Contracts` and `Origo.Core.Kernel`, and nightly builds, make no consumer compatibility promise. The exception covers only shell contracts, kernel-shell ports, and compatibility tests; it never relaxes fail-fast, single-access-path, or architectural isolation rules. See [shell-kernel-boundary](architecture/shell-kernel-boundary.en.md) for the design and [shell-api-baseline](architecture/shell-api-baseline.en.md) plus [release-process](release-process.en.md) for the gates.
 
 ## Writing Principles
 

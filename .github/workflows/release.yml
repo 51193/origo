@@ -254,6 +254,12 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Build.props', 'Directory.Packages.props', 'global.json') }}
           restore-keys: nuget-${{ runner.os }}-
 
+      - name: Cache Godot binary
+        uses: actions/cache@v6
+        with:
+          path: .godot_binary
+          key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
+
       - name: Restore
         run: dotnet restore Origo.sln
 
@@ -272,6 +278,18 @@ jobs:
       - name: Benchmarks — TypedData + subsystem baselines
         run: bash scripts/benchmark.sh
 
+      # Packaged consumer startup is a release gate: packs a fresh local feed,
+      # restores only shell packages, runs the CS0246 negative probe, and starts
+      # OrigoDefaultEntry headlessly.
+      - name: Shell-only package consumer smoke
+        run: bash scripts/package-consumer-smoke.sh
+
+      - name: Pack Origo.Core.Contracts
+        run: dotnet pack Origo.Core.Contracts/Origo.Core.Contracts.csproj --no-build --configuration Release --output ./artifacts
+
+      - name: Pack Origo.Core.Kernel
+        run: dotnet pack Origo.Core.Kernel/Origo.Core.Kernel.csproj --no-build --configuration Release --output ./artifacts
+
       - name: Pack Origo.Core
         run: dotnet pack Origo.Core/Origo.Core.csproj --no-build --configuration Release --output ./artifacts
 
@@ -280,6 +298,11 @@ jobs:
 
       - name: Pack Origo.ConsoleBridge
         run: dotnet pack Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --no-build --configuration Release --output ./artifacts
+
+      - name: Validate release package set
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: bash scripts/validate-release-packages.sh ./artifacts "${TAG#v}"
 
       - name: Copy NuGet config to artifacts
         run: cp nuget.config.example ./artifacts/nuget.config
