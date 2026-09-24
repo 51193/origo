@@ -1,25 +1,23 @@
 using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Godot;
 using Origo.Core;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Runtime;
-using Origo.Core.Blackboard;
 using Origo.Core.DataSource;
+using Origo.Core.Kernel.Ports;
 using Origo.Core.Logging;
 using Origo.Core.Runtime;
 using Origo.Core.Runtime.Console;
-using Origo.Core.Save;
-using Origo.Core.Serialization;
+using Origo.Core.Snd;
 using Origo.GodotAdapter.FileSystem;
 using Origo.GodotAdapter.Logging;
 using Origo.GodotAdapter.Serialization;
 using Origo.GodotAdapter.Snd;
-using Origo.GodotAdapter;
 
 namespace Origo.GodotAdapter.Bootstrap;
 
@@ -31,12 +29,13 @@ public partial class OrigoAutoHost : Node
 {
     private const string _logTag = nameof(OrigoAutoHost);
     private bool _readyFailed;
+    private AdapterRuntimeBundle? _runtimeBundle;
 
     /// <summary>Root directory for the system blackboard save file.</summary>
     [Export] public string SystemBlackboardSaveRoot { get; set; } = "user://origo_saves";
 
     /// <summary>The Godot scene host created and wired during <see cref="_Ready" />.</summary>
-    public GodotSndManager SndManager { get; private set; } = null!;
+    internal GodotSndManager SndManager { get; private set; } = null!;
 
     /// <summary>
     ///     Console command input queue; the UI delivers submitted lines via <see cref="IConsoleInputSource.Enqueue" />.
@@ -64,8 +63,12 @@ public partial class OrigoAutoHost : Node
     /// </summary>
     protected IDataSourceIoGateway SharedDataSourceIo { get; private set; } = null!;
 
-    /// <summary>The Origo runtime created during <see cref="_Ready" />.</summary>
-    public OrigoRuntime Runtime { get; private set; } = null!;
+    /// <summary>The stable Origo runtime surface created during <see cref="_Ready" />.</summary>
+    public IOrigoRuntime Runtime { get; private set; } = null!;
+
+    /// <summary>Kernel services backing <see cref="Runtime" />, scoped to the derived entry bootstrap.</summary>
+    private protected AdapterRuntimeBundle RuntimeBundle => _runtimeBundle
+        ?? throw new InvalidOperationException("The adapter runtime bundle is unavailable before _Ready completes.");
 
     /// <summary>
     ///     Marks the bootstrap as failed so <see cref="_Process" /> fails fast
@@ -111,10 +114,11 @@ public partial class OrigoAutoHost : Node
             throw new InvalidOperationException(
                 "OrigoAutoHost bootstrap failed in _Ready; frame driving is disabled. " +
                 "Fix the bootstrap error before running the scene.");
-        ((IOrigoFrameDriver)Runtime).DriveFrame(delta);
+        Runtime.DriveFrame(delta);
     }
 
-    [MemberNotNull(nameof(SndManager), nameof(SharedMetaAccess), nameof(SharedPathResolver), nameof(SharedDataSourceIo))]
+    [MemberNotNull(nameof(SndManager), nameof(SharedMetaAccess), nameof(SharedPathResolver),
+        nameof(SharedDataSourceIo), nameof(ConsoleInput), nameof(ConsoleOutputChannel))]
     private OrigoRuntime CreateRuntime()
     {
         var createWatch = Stopwatch.StartNew();
@@ -123,68 +127,55 @@ public partial class OrigoAutoHost : Node
             new LogMessageBuilder().Build("CreateRuntime begin."));
 
         var fileSystem = new GodotFileSystem();
-        SharedDataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fileSystem, logger: logger);
-        SharedMetaAccess = DataSourceFactory.CreateFileMetaAccess(fileSystem);
-        SharedPathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
+        var systemBlackboardPath = fileSystem.CombinePath(SystemBlackboardSaveRoot, "system.json");
 
-        var sndManager = CreateAndSetupSndManager(out var sharedTypeMapping,
-            out var converterRegistry, out var persistentBb,
-            out var consoleInput, out var consoleOutputChannel);
-
-        var runtime = new OrigoRuntime(
-            ResolveOrigoMeta(),
-            logger,
-            sndManager,
-            sharedTypeMapping,
-            converterRegistry,
-            SharedDataSourceIo,
-            persistentBb,
-            consoleInput,
-            consoleOutputChannel
-        );
-        sndManager.BindRuntimeDependencies(runtime.SndWorld, runtime.Logger);
-
-        ConsoleInput = consoleInput;
-        ConsoleOutputChannel = consoleOutputChannel;
-
-        var systemBbPath = SharedPathResolver.CombinePath(SystemBlackboardSaveRoot, "system.json");
-        createWatch.Stop();
-        logger.Log(LogLevel.Info, _logTag,
-            new LogMessageBuilder()
-                .SetElapsedMs(createWatch.Elapsed.TotalMilliseconds)
-                .AddContext("filePath", systemBbPath)
-                .Build("CreateRuntime completed."));
-        return runtime;
-    }
-
-    [MemberNotNull(nameof(SndManager))]
-    private GodotSndManager CreateAndSetupSndManager(
-        out TypeStringMapping sharedTypeMapping,
-        out DataSourceConverterRegistry converterRegistry,
-        out PersistentBlackboard persistentBb,
-        out IConsoleInputSource consoleInput,
-        out ConsoleOutputChannel consoleOutputChannel)
-    {
         var sndManager = new GodotSndManager();
         AddChild(sndManager);
         SndManager = sndManager;
 
-        var systemBbPath = SharedPathResolver.CombinePath(SystemBlackboardSaveRoot, "system.json");
-        sharedTypeMapping = new TypeStringMapping();
-        GodotJsonConverterRegistry.RegisterTypeMappings(sharedTypeMapping);
+        var options = new OrigoHostOptions
+        {
+            Meta = ResolveOrigoMeta(),
+            Logger = logger,
+            FileSystem = fileSystem,
+        };
 
-        converterRegistry = DataSourceFactory.CreateDefaultRegistry(sharedTypeMapping);
-        GodotJsonConverterRegistry.RegisterDataSourceConverters(converterRegistry);
+        var bundle = AdapterHostKernelPort.CreateRuntime(
+            options,
+            sndManager,
+            systemBlackboardPath,
+            static (typeMapping, converterRegistry) =>
+            {
+                GodotJsonConverterRegistry.RegisterTypeMappings(typeMapping);
+                GodotJsonConverterRegistry.RegisterDataSourceConverters(converterRegistry);
+            });
 
-        persistentBb = new PersistentBlackboard(SharedMetaAccess, SharedPathResolver, systemBbPath, SharedDataSourceIo, converterRegistry,
-            new Blackboard());
-        persistentBb.LoadFromDisk();
+        _runtimeBundle = bundle;
+        SharedDataSourceIo = bundle.DataSourceIo;
+        SharedMetaAccess = bundle.MetaAccess;
+        SharedPathResolver = bundle.PathResolver;
+        ConsoleInput = bundle.ConsoleInput;
+        ConsoleOutputChannel = bundle.ConsoleOutputChannel;
 
-        consoleInput = new ConsoleInputBuffer();
-        consoleOutputChannel = new ConsoleOutputChannel();
-
-        return sndManager;
+        createWatch.Stop();
+        logger.Log(LogLevel.Info, _logTag,
+            new LogMessageBuilder()
+                .SetElapsedMs(createWatch.Elapsed.TotalMilliseconds)
+                .AddContext("filePath", systemBlackboardPath)
+                .Build("CreateRuntime completed."));
+        return bundle.Runtime;
     }
+
+    /// <summary>
+    ///     Creates the SND context for a derived entry through the adapter kernel
+    ///     port, which binds the context to the Godot scene host.
+    /// </summary>
+    private protected ISndContext CreateSndContext(AdapterContextOptions options) =>
+        AdapterHostKernelPort.CreateContext(RuntimeBundle, options);
+
+    /// <summary>Registers one adapter console handler through the adapter kernel port.</summary>
+    private protected void RegisterConsoleCommandHandler(IConsoleCommandHandler handler) =>
+        AdapterHostKernelPort.RegisterConsoleHandler(Runtime, handler);
 
     private static GodotLogger CreateBootstrapLogger()
     {

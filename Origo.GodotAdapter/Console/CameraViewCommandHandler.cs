@@ -2,14 +2,14 @@ using System.Globalization;
 using System.Text;
 using Godot;
 using Origo.Core.Abstractions.Console;
-using Origo.Core.Runtime;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.GodotAdapter.Snd;
 
 namespace Origo.GodotAdapter.Console;
 
 /// <summary><c>camera_view</c> — show screen-space coordinates and depth of visible entity nodes.</summary>
-internal sealed class CameraViewCommandHandler(OrigoRuntime runtime) : CommandHandlerBase(runtime)
+internal sealed class CameraViewCommandHandler(IOrigoRuntime runtime) : CommandHandlerBase(runtime)
 {
     public override string Name => "camera_view";
 

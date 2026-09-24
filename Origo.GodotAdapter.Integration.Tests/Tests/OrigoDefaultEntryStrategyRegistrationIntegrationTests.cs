@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Strategy;
 using Origo.GodotAdapter.Bootstrap;
@@ -67,7 +68,7 @@ public partial class OrigoDefaultEntryStrategyRegistrationIntegrationTests : IDe
             base._Ready();
         }
 
-        protected override void ConfigureStrategies(SndWorld world)
+        protected override void ConfigureStrategies(ISndWorldAccess world)
         {
             HookCalled = true;
             world.RegisterStrategy(() => new ProbeStrategy());

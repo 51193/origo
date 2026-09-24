@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter
 
@@ -33,15 +33,13 @@
 ```
 OrigoDefaultEntry._Ready()
   ├── base._Ready()                          // OrigoAutoHost
-  │   └── CreateRuntime()
-  │       ├── GodotFileSystem
-  │       ├── GodotSndManager
-  │       ├── GodotJsonConverterRegistry 注册
-  │       └── OrigoRuntime
-  ├── ConfigureStrategies(Runtime.SndWorld)  // 手动策略注册（Bootstrap 冻结前）
-  ├── RegisterConsoleCommandHandlers()       // 适配层命令
-  ├── new SndContext(...)                    // 传入启动配置
-  ├── SndManager.BindContext(sndContext)
+  │   └── AdapterHostKernelPort.CreateRuntime(...)
+  │       ├── GodotFileSystem + GodotJsonConverterRegistry 注册
+  │       ├── kernel runtime/IO/blackboard/console 构造
+  │       └── ISndSceneHostRuntimeBinder 绑定 world/logger 与 observer topology
+  ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess；Bootstrap 冻结前
+  ├── 通过 port 注册适配层命令
+  ├── AdapterHostKernelPort.CreateContext(...)  // 传入启动配置并绑定场景宿主
   └── sndContext.Bootstrap()                 // Core 内部按序执行：
         ├── 策略发现与排序校验/注册冻结 (reflection scan, skip Godot assemblies)
         ├── LoadSceneAliases / LoadTemplates
