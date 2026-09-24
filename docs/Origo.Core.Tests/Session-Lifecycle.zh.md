@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 31 -->
+<!-- docsync-revision: 32 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 会话生命周期 测试
 
@@ -93,6 +93,7 @@ SessionManager 完整 API（创建/查找/销毁/枚举/ProcessAll/KillPending�
 | `SessionRun_ExplicitPersistLevelState_TriggersBeforeSave` | 通过 RequestSaveGame 触发 BeforeSave | session-model |
 | `ProgressRun_Dispose_DoesNotCallPersistProgress` | ProgressRun.Dispose 不调用 PersistProgress | session-model |
 | `ProgressRun_Dispose_DeletesCurrentDirectory` | ProgressRun.Dispose 删除 current/ | session-model |
+| `ProgressRun_Dispose_DeletesCurrentExtraFile` | ProgressRun.Dispose 删除 current/extra/ 下由 ISndArchiveFileAccess 写入的文件与目录 | session-model: Dispose 不持久化 |
 | `SessionRun_AfterDispose_SaveDoesNotPersistSessionData` | Dispose 后保存不包含已释放会话的数据 | 文件不存在 |
 | `SessionRun_AfterDispose_SaveExcludesDisposedSession` | Dispose 后 RequestSaveGame 排除已释放会话 | 文件不存在 |
 | `ExplicitSave_ThenDispose_ThenContinue_LoadsSavedState` | 显式保存→Dispose→Continue 往返恢复实体与黑板 | session-model: 持久化 |

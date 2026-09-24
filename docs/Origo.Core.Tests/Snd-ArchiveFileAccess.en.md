@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Archive File Access Tests
 
@@ -86,7 +86,6 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 | Gap Description | Impact | Documentation Basis |
 |-----------------|--------|---------------------|
 | Thread safety of concurrent reads/writes on many files | Multi-threaded scenarios not covered | — |
-| Cleanup behavior of `extra/` directory during Dispose/progress teardown | Lifecycle boundary cleanup not independently verified | ISndArchiveFileAccess |
 | Lazy-deferred memory behavior of ReadFile for very large files | Performance characteristics of large JSON files not covered | DataSourceNode |
 
 ---

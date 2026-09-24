@@ -36,6 +36,22 @@ public class TypedDataIntegrationTests
     }
 
     [Fact]
+    public void Entity_SetData_GetData_RoundTrip_UnregisteredReferenceType()
+    {
+        var runtime = TestFactory.CreateRuntime();
+        var session = TestFactory.BootstrapForegroundSession(runtime);
+        var entity = session.Spawn(new SndMetaData { Name = "unregistered_ref" });
+        var value = new UnregisteredReference(42);
+
+        entity.SetData("payload", value);
+
+        Assert.Same(value, entity.GetData<UnregisteredReference>("payload"));
+        var (found, extracted) = entity.TryGetData<UnregisteredReference>("payload");
+        Assert.True(found);
+        Assert.Same(value, extracted);
+    }
+
+    [Fact]
     public void Entity_TryGetData_WrongType_ReturnsFalse()
     {
         var entity = new StubSndEntity("test");
@@ -83,6 +99,11 @@ public class TypedDataIntegrationTests
         Assert.Equal(50, calls[0].newValue.AsInt32());
         Assert.Equal(50, calls[1].oldValue.AsInt32());
         Assert.Equal(0, calls[1].newValue.AsInt32());
+    }
+
+    private sealed class UnregisteredReference(int id)
+    {
+        public int Id { get; } = id;
     }
 
     [Fact]

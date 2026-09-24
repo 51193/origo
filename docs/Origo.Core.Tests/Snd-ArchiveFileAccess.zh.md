@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-ArchiveFileAccess -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 存档文件访问 测试
 
@@ -86,7 +86,6 @@
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | 大量文件并发读写的线程安全性 | 多线程场景未覆盖 | — |
-| `extra/` 目录在 Dispose/进度销毁时的清理行为 | 生命周期边界清理未独立验证 | ISndArchiveFileAccess |
 | ReadFile 对超大型文件的延迟展开内存行为 | 大 JSON 文件的性能特征未覆盖 | DataSourceNode |
 
 ---

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Session-Lifecycle -->
-<!-- docsync-revision: 31 -->
+<!-- docsync-revision: 32 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Lifecycle Tests
 
@@ -93,6 +93,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SessionRun_ExplicitPersistLevelState_TriggersBeforeSave` | Triggers BeforeSave via RequestSaveGame | session-model |
 | `ProgressRun_Dispose_DoesNotCallPersistProgress` | ProgressRun.Dispose does not call PersistProgress | session-model |
 | `ProgressRun_Dispose_DeletesCurrentDirectory` | ProgressRun.Dispose deletes current/ | session-model |
+| `ProgressRun_Dispose_DeletesCurrentExtraFile` | ProgressRun.Dispose removes files and the directory written through ISndArchiveFileAccess under current/extra/ | session-model: Dispose does not persist |
 | `SessionRun_AfterDispose_SaveDoesNotPersistSessionData` | Save after Dispose does not include disposed session data | File does not exist |
 | `SessionRun_AfterDispose_SaveExcludesDisposedSession` | RequestSaveGame after Dispose excludes disposed session | File does not exist |
 | `ExplicitSave_ThenDispose_ThenContinue_LoadsSavedState` | Explicit save→Dispose→Continue round-trip restores entities and blackboard | session-model: Persistence |
