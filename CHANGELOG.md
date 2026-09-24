@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`DocSyncTool generate` stays idempotent across merge commits** — when a merged doc pair matched one parent, `git log --follow` omitted the merge commit, so the revision planner counted the other parent's older blob as a fresh change and advanced revisions on every run. Path history now anchors on the current HEAD commit, so post-merge generate stabilizes on the merged content instead of creating an auto-commit loop.
 - **Malformed save payloads with a null `Levels` map fail fast** — `ProgressRun.LoadFromPayload` now validates the payload's level map before deserializing progress or mounting sessions. A custom `ISaveStorageService` implementation returning a payload with `Levels == null` receives an `InvalidOperationException` instead of a `NullReferenceException` after partial progress deserialization, and no partially mounted session is left behind.
 
 - **`WriteObject` releases converter-created nodes deterministically** — `ISndFileAccess.WriteObject` and `ISndArchiveFileAccess.WriteObject` now dispose the `DataSourceNode` returned by the registered converter after the write completes, including when the gateway throws, instead of leaving the tree for GC.

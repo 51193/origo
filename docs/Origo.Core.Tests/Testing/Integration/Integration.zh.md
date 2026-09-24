@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 帧驱动游戏模拟集成测试
 

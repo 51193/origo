@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 
 # Origo.TestSupport

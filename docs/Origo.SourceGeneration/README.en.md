@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.SourceGeneration
 

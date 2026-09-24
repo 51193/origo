@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests (Adapter Layer)
 

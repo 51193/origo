@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Console
 

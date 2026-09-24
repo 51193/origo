@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 18 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Utility Tests
 

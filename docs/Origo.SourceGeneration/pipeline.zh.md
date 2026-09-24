@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # TypedData 编译期优化全链路解析
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：序列化 测试
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 19 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 

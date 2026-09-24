@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Logging -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Logging Tests
 

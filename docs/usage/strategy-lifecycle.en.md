@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy Lifecycle
 

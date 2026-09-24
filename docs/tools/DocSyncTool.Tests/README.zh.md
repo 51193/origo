@@ -1,5 +1,5 @@
 <!-- docsync-pair: tools/DocSyncTool.Tests/README -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # DocSyncTool 测试
 
@@ -12,7 +12,7 @@
 | 被测单元 | 覆盖能力 |
 |----------|----------|
 | `Validator` | 双语 pair 的 revision 一致性、缺语言文件、跨语言/裸 `.md`/断链、缺失元数据头与 revision 提醒注释、pair 声明与路径不符、非法 revision 值；代码块/行内代码与外部 URL 链接豁免；源码目录 → 文档目录的结构镜像与文件清单检查（含 SourceDocOverrides 例外映射） |
-| `Generator` | 每目录 `README.md` 导航中枢生成、幂等性（无变化不重写）、`.sync-status.json` 状态判定（`synced` / `zh-ahead` / `missing-en`）、子目录递归、无文档目录跳过、无元数据文件的默认派生，以及基于 git 历史的 `docsync-revision` 自动规划（多 commit push、翻译追赶、仅元数据 commit、未提交本地修改） |
+| `Generator` | 每目录 `README.md` 导航中枢生成、幂等性（无变化不重写）、`.sync-status.json` 状态判定（`synced` / `zh-ahead` / `missing-en`）、子目录递归、无文档目录跳过、无元数据文件的默认派生，以及基于 git 历史的 `docsync-revision` 自动规划（多 commit push、翻译追赶、仅元数据 commit、未提交本地修改、合并/分叉路径历史的幂等规划） |
 | `Config` | 配置解析（键大小写不敏感）、语言代码校验（空白/斜杠/反斜杠拒绝）、缺配置/非法 JSON 的失败行为 |
 | `DocFile` | 语言后缀提取与 pair id 派生 |
 | `Program` | 命令分发与退出码、未知命令 usage、仓库根查找失败 FATAL（进程工作目录敏感的测试在串行集合中运行） |

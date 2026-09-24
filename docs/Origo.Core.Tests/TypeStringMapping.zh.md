@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
-<!-- docsync-revision: 12 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 类型序列化 测试
 
