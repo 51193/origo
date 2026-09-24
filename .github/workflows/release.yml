@@ -248,6 +248,14 @@ jobs:
             exit 1
           fi
 
+      - name: Install script lint dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck python3-yaml
+
+      - name: Lint scripts and workflows
+        run: bash scripts/lint-scripts.sh
+
       - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages

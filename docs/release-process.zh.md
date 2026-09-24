@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 发布与 Changelog 流程
 
@@ -108,7 +108,7 @@ Release workflow 由推送的 `v*` tag 触发，或由 `workflow_dispatch` 配�
   `<Version>` 完全一致。若产生了改动，流水线会创建一次
   `chore(release): sync version stamps to <tag>` 提交，之后的 DocSync、测试、
   基准和打包全部在这个 release 提交上执行；
-- 运行 `verify-release.sh`、DocSync 生成文件检查和完整测试。自动改写只覆盖版本戳，
+- 运行 `verify-release.sh`、`scripts/lint-scripts.sh`、DocSync 生成文件检查和完整测试。自动改写只覆盖版本戳，
   正式版本所需的 CHANGELOG 版本块、空的 `[Unreleased]`、analyzer shipped 块和
   两个 `docs/README.*` 版本戳仍须在 tag 提交中准备好；
 - 测试与打包全部成功后，流水线用一次 `--atomic` 推送同时把 `main` 快进到该
@@ -118,7 +118,8 @@ Release workflow 由推送的 `v*` tag 触发，或由 `workflow_dispatch` 配�
   main / tag，lease 检查会失败并中止发布。重跑会先解析 tag 当前指向，已由本流程
   回写过的 tag 不会重复生成 release 提交。若仓库启用了 branch/tag protection 或
   token 缺少权限，原子推送会失败并中止发布；
-- 运行全部兼容门禁：`scripts/api-inventory.sh`（shell API baseline）、
+- 运行全部兼容门禁：`scripts/lint-scripts.sh`（脚本、workflow 与元指令守卫）、
+  `scripts/api-inventory.sh`（shell API baseline）、
   `scripts/test.sh`（行为与存档契约）、benchmark、Godot headless integration，
   以及 `scripts/package-consumer-smoke.sh`（shell-only restore/负向编译/启动）；
 - 打包 `Origo.Core.Contracts`、`Origo.Core.Kernel`、`Origo.Core`、

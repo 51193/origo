@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Release & Changelog Process
 
@@ -120,9 +120,10 @@ with the `tag` input, which is how weekly snapshots start it. The tag is resolve
 first; every step below then applies to that tag:
 
 - Before validation, rewrite `Directory.Build.props` from the tag: strip only the leading `v` for `<Version>`, and derive `AssemblyVersion` / `FileVersion` from its four-part numeric form (a `-nightly` / `-alpha` suffix stays only in `<Version>`). The tag is then validated against `<Version>` as before. If anything changed, the pipeline creates a `chore(release): sync version stamps to <tag>` commit, and DocSync, tests, benchmarks, and packing all run on that release commit;
-- Run `verify-release.sh`, the committed DocSync check, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, analyzer shipped block, and both `docs/README.*` version stamps) must still be present in the tagged commit;
+- Run `verify-release.sh`, `scripts/lint-scripts.sh`, the committed DocSync check, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, analyzer shipped block, and both `docs/README.*` version stamps) must still be present in the tagged commit;
 - Only after tests and packing succeed, a single `--atomic` push fast-forwards `main` to the release commit and moves the tag to it; the GitHub Release is created afterwards. Validation or packing failures therefore leave every ref untouched, and a successful release keeps `main`, tag, commit, and packages on one version. This write-back requires the tag to be created on the current `main` tip; if main has advanced, the tag is not there, or either ref moves during the run, the lease checks fail and abort the release. Reruns resolve the tag's current target first, so a tag already written back by this pipeline does not produce a duplicate release commit. Branch/tag protection rules or a token without permission make the atomic push fail and abort the release;
-- Run all compatibility gates: `scripts/api-inventory.sh` (shell API baseline),
+- Run all compatibility gates: `scripts/lint-scripts.sh` (script, workflow, and instruction guards),
+  `scripts/api-inventory.sh` (shell API baseline),
   `scripts/test.sh` (behavior and save contracts), benchmarks, Godot headless
   integration, and `scripts/package-consumer-smoke.sh` (shell-only restore,
   negative compile probe, and startup);

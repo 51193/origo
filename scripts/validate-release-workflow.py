@@ -80,6 +80,28 @@ def main() -> int:
                     "for a workflow_dispatch run."
                 )
 
+    release_job = (workflow.get("jobs") or {}).get("release")
+    release_steps = release_job.get("steps") if isinstance(release_job, dict) else None
+    if not isinstance(release_steps, list):
+        errors.append("release workflow must define release job steps.")
+    else:
+        run_commands = [
+            str(step.get("run") or "")
+            for step in release_steps
+            if isinstance(step, dict)
+        ]
+        if not any("bash scripts/lint-scripts.sh" in command for command in run_commands):
+            errors.append(
+                "release job must run bash scripts/lint-scripts.sh so the tag "\
+                "pipeline enforces script, workflow, and instruction guards."
+            )
+        for dependency in ("shellcheck", "python3-yaml"):
+            if not any(dependency in command for command in run_commands):
+                errors.append(
+                    f"release job must install script-lint dependency "\
+                    f"'{dependency}' before running scripts/lint-scripts.sh."
+                )
+
     dispatch = event_mapping(workflow).get("workflow_dispatch")
     inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None
     if isinstance(inputs, dict):
