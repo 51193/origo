@@ -3,10 +3,10 @@
 #
 # Packs the four Origo shell/kernel packages into a fresh local feed, copies
 # the tracked fixture to an isolated temporary directory with no repository
-# project references, restores it through package restore only, builds with
-# warnings as errors, proves kernel compile assets are inaccessible with a
-# negative probe, and starts the consumer headlessly through the public
-# OrigoDefaultEntry path.
+# project references, restores it through package restore only against an
+# isolated NuGet package cache, builds with warnings as errors, proves kernel
+# compile assets are inaccessible with a negative probe, and starts the
+# consumer headlessly through the public OrigoDefaultEntry path.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -44,12 +44,13 @@ WORK=$(mktemp -d "${TMPDIR:-/tmp}/origo-package-consumer.XXXXXX")
 FEED="$WORK/feed"
 CONSUMER_DIR="$WORK/consumer"
 PROBE_DIR="$WORK/kernel-probe"
+ISOLATED_PACKAGES="$WORK/packages"
 cleanup() {
     rm -rf "$WORK"
 }
 trap cleanup EXIT
 
-mkdir -p "$FEED" "$CONSUMER_DIR" "$PROBE_DIR"
+mkdir -p "$FEED" "$CONSUMER_DIR" "$PROBE_DIR" "$ISOLATED_PACKAGES"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " Shell-only package consumer smoke"
@@ -88,11 +89,20 @@ cp "$CONSUMER_DIR/nuget.config" "$PROBE_DIR/nuget.config"
 grep -q "<ProjectReference" "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
     && FAIL "consumer fixture must not contain a ProjectReference."
 
+# The local feed must be the only source of Origo packages. An ambient global
+# package cache can contain the same package id/version from an earlier build,
+# which would silently satisfy restore and make this smoke validate stale
+# artifacts (or fail when the stale entry misses newer assets). Restore and
+# build the consumer from an isolated package cache owned by this run.
+export NUGET_PACKAGES="$ISOLATED_PACKAGES"
+
 dotnet restore "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
     -p:OrigoShellPackageVersion="$VERSION" >/dev/null
 
 ASSETS=$(find "$CONSUMER_DIR" -path "*/obj/project.assets.json" | head -1)
 [[ -n "$ASSETS" ]] || FAIL "package restore did not produce project.assets.json."
+grep -Fq "$NUGET_PACKAGES" "$ASSETS" \
+    || FAIL "package restore did not use the isolated NuGet package cache."
 for package in Origo.Core Origo.GodotAdapter Origo.Core.Contracts Origo.Core.Kernel; do
     grep -q "\"$package/" "$ASSETS" || FAIL "package restore did not resolve $package."
 done

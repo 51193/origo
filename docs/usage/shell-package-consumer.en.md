@@ -1,11 +1,11 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell-Only Package Consumption Verification
 
 > [↑ Back to usage](README.en.md) · [↔ GodotAdapter Bootstrap](../Origo.GodotAdapter/Bootstrap/README.en.md) · [↔ shell/kernel boundary](../architecture/shell-kernel-boundary.en.md)
 
-`scripts/package-consumer-smoke.sh` verifies in an isolated temporary directory that a fresh consumer restores only the `Origo.Core` and `Origo.GodotAdapter` NuGet packages — with no Origo project reference or test helper — compiles, and starts through a real Godot `Node` entry.
+`scripts/package-consumer-smoke.sh` verifies in an isolated temporary directory and a run-owned temporary NuGet package cache that a fresh consumer restores only the `Origo.Core` and `Origo.GodotAdapter` NuGet packages — with no Origo project reference or test helper — compiles, and starts through a real Godot `Node` entry.
 
 ## Version Pins
 
@@ -24,7 +24,7 @@ The consumer fixture is not part of `Origo.sln` and contains no `ProjectReferenc
 
 1. Packs `Origo.Core.Contracts`, `Origo.Core.Kernel`, `Origo.Core`, and `Origo.GodotAdapter` into a fresh temporary local feed.
 2. Checks that the `Origo.Core.Contracts` package contains the analyzer asset `analyzers/dotnet/cs/Origo.SourceGeneration.dll`; missing assets fail immediately.
-3. Copies the fixture to a temporary directory outside the repository, writes a `nuget.config` with only the local feed and NuGet.org, and runs `dotnet restore`.
+3. Copies the fixture to a temporary directory outside the repository, switches consumer restore/build to a run-owned temporary `NUGET_PACKAGES` cache, writes a `nuget.config` with only the local feed and NuGet.org, and runs `dotnet restore`.
 4. Verifies that `project.assets.json` resolves Core, Adapter, Contracts, and Kernel packages, and that the consumer sources contain no `<ProjectReference>`.
 5. Builds the consumer with `-warnaserror`; the kernel runtime assembly must appear in the build output.
 6. Copies `KernelLeakProbe.cs.template` to `KernelLeakProbe.cs` and builds again; the build must fail with CS0246 because `Origo.Core.Runtime.OrigoRuntime` is unreachable from a shell-only consumer.
@@ -43,6 +43,7 @@ The consumer fixture is not part of `Origo.sln` and contains no `ProjectReferenc
 ## CI and Failure Semantics
 
 - The normal CI `godot-integration-tests` job runs this script after the Godot integration tests; local `scripts/ci.sh` runs it last as well.
+- Consumer restore/build uses a run-owned temporary NuGet package cache, and the script asserts that `project.assets.json` points at it; an ambient global package with the same Origo id/version cannot bypass the local feed and make the smoke validate stale artifacts.
 - A missing package or analyzer asset, a consumer `ProjectReference`, NuGet or compiler warnings, compilable kernel types, a missing kernel runtime assembly, a failed Godot startup, or a missing startup marker all fail the job.
 - Fixture and script version pins are maintained by `scripts/package-consumer-smoke.sh` and `OrigoShellPackageConsumer.csproj`; a Godot SDK upgrade must update the adapter and consumer in the same change.
 

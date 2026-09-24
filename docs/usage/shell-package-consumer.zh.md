@@ -1,13 +1,14 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell-only 包消费验证
 
 > [↑ 回到 usage](README.zh.md) · [↔ GodotAdapter Bootstrap](../Origo.GodotAdapter/Bootstrap/README.zh.md) · [↔ shell/kernel 边界](../architecture/shell-kernel-boundary.zh.md)
 
-`scripts/package-consumer-smoke.sh` 在隔离的临时目录中验证：全新消费者只通过
-NuGet 包恢复 `Origo.Core` 与 `Origo.GodotAdapter`，不引用任何 Origo 项目或测试
-辅助，能够编译并以真实 Godot `Node` 入口启动。
+`scripts/package-consumer-smoke.sh` 在隔离的临时目录与本次运行独占的临时 NuGet
+包缓存中验证：全新消费者只通过 NuGet 包恢复 `Origo.Core` 与
+`Origo.GodotAdapter`，不引用任何 Origo 项目或测试辅助，能够编译并以真实 Godot
+`Node` 入口启动。
 
 ## 固定版本
 
@@ -29,7 +30,8 @@ NuGet 包恢复 `Origo.Core` 与 `Origo.GodotAdapter`，不引用任何 Origo �
    `Origo.Core`、`Origo.GodotAdapter` 四个包。
 2. 检查 `Origo.Core.Contracts` 包包含 analyzer 资产
    `analyzers/dotnet/cs/Origo.SourceGeneration.dll`；缺失立即失败。
-3. 把 fixture 复制到仓库外的临时目录，生成只含本地 feed 与 NuGet.org 的
+3. 把 fixture 复制到仓库外的临时目录，为消费者 restore/build 切换到本次运行
+   独占的临时 `NUGET_PACKAGES`，生成只含本地 feed 与 NuGet.org 的
    `nuget.config`，执行 `dotnet restore`。
 4. 校验 `project.assets.json` 同时解析出 Core、Adapter、Contracts、Kernel 包，
    且源码中没有 `<ProjectReference>`。
@@ -55,6 +57,9 @@ shell API：
 
 - 普通 CI 的 `godot-integration-tests` job 在 Godot integration 测试之后运行该
   脚本；本地 `scripts/ci.sh` 同样在最后执行。
+- 消费者 restore/build 使用本次运行独占的临时 NuGet 包缓存；脚本断言
+  `project.assets.json` 指向该缓存，宿主全局缓存中的同名同版本 Origo 包不能
+  绕过本地 feed 让 smoke 验证旧制品。
 - 包缺失、analyzer 资产缺失、消费者出现 `ProjectReference`、NuGet/编译警告、
   kernel 类型可编译、kernel runtime 未加载、Godot 启动失败或缺少启动标记都会
   使 job 失败。
