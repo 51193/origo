@@ -263,6 +263,9 @@ jobs:
       - name: Build
         run: dotnet build Origo.sln --no-restore --configuration Release
 
+      - name: Shell API baseline gate
+        run: bash scripts/api-inventory.sh
+
       - name: CI — build, tests, line coverage gates (>= 90%)
         run: bash scripts/test.sh
 

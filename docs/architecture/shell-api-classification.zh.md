@@ -1,11 +1,11 @@
 <!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 0.1.0 Shell API 分类
 
 > [↑ 回到 architecture](README.zh.md)
 
-本文是 issue #37 的 0.1.0 稳定消费者表面基线：初始清单在源提交 `7405cf5` 上完整记录 `Origo.Core`、`Origo.GodotAdapter`、`Origo.ConsoleBridge` 的全部导出类型。后续 #38 拆分提交在原位更新 Assembly 与目标包列，同时保持已分类类型集合完整；#41 再对最终 shell 成员面重新建基线。
+本文是 issue #37 的 0.1.0 稳定消费者表面分类清单：初始清单在源提交 `7405cf5` 上完整记录 `Origo.Core`、`Origo.GodotAdapter`、`Origo.ConsoleBridge` 的全部导出类型。后续 #38 拆分提交在原位更新 Assembly 与目标包列；#41 的成员级 Roslyn JSON baseline 与门禁见 [shell-api-baseline](shell-api-baseline.zh.md)。
 
 拓扑与兼容策略仍以 [shell-kernel-boundary](shell-kernel-boundary.zh.md) 为准；本文只把该决策应用到当前导出面。任何新增导出类型都会在三个测试项目各自的架构守卫中失败，直到它同时进入中英文分类表并补齐分类、目标包、能力组和理由。迁移类型若未在同一变更中更新程序集列与对应程序集守卫，也会失败。
 

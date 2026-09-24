@@ -4,9 +4,10 @@
 #   0. scripts/lint-scripts.sh — shell + workflow lint
 #   1. scripts/format.sh   — dotnet format verification
 #   2. scripts/doc-sync.sh — doc sync validate + generation
-#   3. scripts/test.sh     — build + test + Coverlet line coverage gates
-#   4. scripts/benchmark.sh— performance benchmarks ([Category=Benchmark])
-#   5. scripts/godot-test.sh — Godot headless integration tests (downloads Godot)
+#   3. scripts/api-inventory.sh — shell API baseline gate (Roslyn inventory)
+#   4. scripts/test.sh     — build + test + Coverlet line coverage gates
+#   5. scripts/benchmark.sh— performance benchmarks ([Category=Benchmark])
+#   6. scripts/godot-test.sh — Godot headless integration tests (downloads Godot)
 #
 # Each step is a standalone script mapped 1:1 to a CI step. Run this master
 # script for a complete local reproduction of the single-platform gate set;
@@ -30,6 +31,8 @@ if [[ -n $(git status --porcelain -- docs/) ]]; then
   git status --short -- docs/ >&2
   exit 1
 fi
+
+bash scripts/api-inventory.sh
 
 bash scripts/test.sh
 bash scripts/benchmark.sh

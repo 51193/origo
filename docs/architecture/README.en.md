@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/README -->
-<!-- docsync-revision: 7 -->
+<!-- docsync-revision: 8 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture
 
@@ -17,6 +17,7 @@ Architecture overview, decision records, and deferred design directions for the 
 | [agent-friendly](agent-friendly/README.en.md) | Agent-friendliness benchmarks, OpenAI engineering practices, four implementation investigations, and game-development product direction |
 | [shell-kernel-boundary](shell-kernel-boundary.en.md) | Decision, consumer compatibility commitments, and implementation plan for the 0.1.0 stable shell/kernel boundary |
 | [shell-api-classification](shell-api-classification.en.md) | Classification, package ownership, and removal conditions for every current export in the 0.1.0 shell/tooling/kernel split |
+| [shell-api-baseline](shell-api-baseline.en.md) | Roslyn JSON baseline, CI/release gate, approval flow, and previous-package validation behavior for the shell API |
 
 ---
 [↑ Back to Origo Manual](../README.en.md)
