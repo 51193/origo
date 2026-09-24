@@ -41,6 +41,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="Save/Golden/**/*" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>
         <ProjectReference Include="..\Origo.Core.Kernel\Origo.Core.Kernel.csproj"/>
         <ProjectReference Include="..\Origo.TestSupport\Origo.TestSupport.csproj"/>

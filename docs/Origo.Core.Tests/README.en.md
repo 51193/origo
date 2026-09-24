@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 26 -->
+<!-- docsync-revision: 27 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Tests
 
@@ -66,6 +66,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | Scheduling | [Scheduling.md](Scheduling.en.md) | ConcurrentActionQueue enqueue/drain/concurrency safety/recursive depth protection |
 | Console | [Console.md](Console.en.md) | Command parser/router/input queue/output channel, 19 built-in command handlers (16 Core + 3 GodotAdapter), type inference |
 | Runtime Core | [Runtime-Core.md](Runtime-Core.en.md) | OrigoRuntime construction, console injection, deferred frame action execution |
+| Shell Compatibility | [Compatibility.md](Compatibility.en.md) | Lifecycle ordering, observer recovery, fail-fast, and session transitions through the public OrigoHost entry; kernel port binding/validation is not bypassed; golden v1 save loading is in Save-Storage |
 | Session Lifecycle | [Session-Lifecycle.md](Session-Lifecycle.en.md) | Session creation/destruction/switching, Dispose semantics, foreground/background protocol consistency, topology encoding/decoding |
 | Persistence: Storage | [Save-Storage.md](Save-Storage.en.md) | Two-phase write, write_in_progress marker contract, level three-piece set integrity, path strategy, snapshot read/write, idempotent dedup |
 | Persistence: Serialization | [Save-Serialization.md](Save-Serialization.en.md) | BlackboardSerializer, SndSceneSerializer, SaveContext orchestration |

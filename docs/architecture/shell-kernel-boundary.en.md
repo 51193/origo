@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
@@ -264,8 +264,15 @@ kernel implementation type leaks into the Core shell compile surface.
 kernel compile assets. The adapter remains one shell package: its Godot
 `Node` entries are real public types, its bridge/manager implementations are
 internal, and startup constructs and binds the runtime, observer topology,
-and SND context through `AdapterHostKernelPort`. Compatibility gates
-(#40/#41/#42) and release (#43) remain follow-up work.
+and SND context through `AdapterHostKernelPort`. The shell compatibility
+contract tests (#40) now drive lifecycle ordering, observer recovery,
+fail-fast validation, and background-session transitions through the public
+`OrigoHost` entry; `AdapterHostKernelPort` covers explicit failure when the
+runtime binder, context binder, or file system is missing; and the
+in-repository `origo.format_version=1` golden snapshot covers the current
+format, a legacy save without the version key, and atomic rejection of a
+future format. API and generated-code gates (#41), packaged consumption
+(#42), and release (#43) remain follow-up work.
 
 ## Verification and gates
 
@@ -273,6 +280,7 @@ and SND context through `AdapterHostKernelPort`. Compatibility gates
 |--------------|----------------|
 | Compilation boundary | A fresh shell-only consumer compiles; referencing kernel types fails |
 | Behavior contracts | Lifecycle ordering, observer recovery, save/load, and fail-fast semantics remain unchanged |
+| Compatibility tests | Shell entry lifecycle/observer/fail-fast/session-state contracts and golden v1 save-format tests pass in the normal and release test runs |
 | Package integrity | No kernel compile-asset leakage; shell runtime and analyzer assets are complete |
 | Compatibility matrix | Old shell contracts pass contract tests on new kernels |
 | Godot | Headless and editor verification covers Node entry discovery, startup, save recovery, and exit cleanup |

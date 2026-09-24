@@ -176,6 +176,39 @@ public class AdapterHostKernelPortTests
         Assert.Contains("ISndSceneHostRuntimeBinder", exception.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void AdapterHostKernelPort_ShouldRejectSceneHostWithoutContextBinder()
+    {
+        var options = new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+            FileSystem = new MemoryFileSystem(),
+        };
+        var sceneHost = new RuntimeBindOnlySceneHost();
+        var bundle = AdapterHostKernelPort.CreateRuntime(options, sceneHost, "saves/system.json");
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            AdapterHostKernelPort.CreateContext(
+                bundle,
+                new AdapterContextOptions("saves", "initial saves", "entry.json")));
+
+        Assert.Contains("ISndContextAttachableSceneHost", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AdapterHostKernelPort_ShouldRejectMissingFileSystem()
+    {
+        var options = new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            AdapterHostKernelPort.CreateRuntime(options, new AdapterSceneHostProbe(), "saves/system.json"));
+
+        Assert.Contains("FileSystem", exception.Message, StringComparison.Ordinal);
+    }
+
     private sealed class AdapterSceneHostProbe
         : ISndSceneHost, ISndSceneHostRuntimeBinder, ISndContextAttachableSceneHost
     {
@@ -195,6 +228,43 @@ public class AdapterHostKernelPortTests
             ArgumentNullException.ThrowIfNull(context);
             BoundContext = context;
             ContextBound = true;
+        }
+
+        public IReadOnlyCollection<ISndEntity> GetEntities() => [];
+
+        public ISndEntity? FindByName(string name) => null;
+
+        public IReadOnlyList<SndMetaData> BuildMetaList() => [];
+
+        public void RecoverFromMetaList(IEnumerable<SndMetaData> metaList)
+        {
+        }
+
+        public void RemoveAllEntities()
+        {
+        }
+
+        public void ProcessAll(double delta)
+        {
+        }
+
+        public void RemoveEntity(string name)
+        {
+        }
+
+        public void RequestKillEntity(string name)
+        {
+        }
+
+        public ISndEntity CreateEntity(SndMetaData metaData) => throw new NotSupportedException();
+    }
+
+    private sealed class RuntimeBindOnlySceneHost : ISndSceneHost, ISndSceneHostRuntimeBinder
+    {
+        public void BindRuntimeDependencies(SndWorld world, ILogger logger)
+        {
+            ArgumentNullException.ThrowIfNull(world);
+            ArgumentNullException.ThrowIfNull(logger);
         }
 
         public IReadOnlyCollection<ISndEntity> GetEntities() => [];

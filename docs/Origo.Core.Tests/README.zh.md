@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 26 -->
+<!-- docsync-revision: 27 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Tests
 
@@ -58,6 +58,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 调度 | [Scheduling.md](Scheduling.zh.md) | ConcurrentActionQueue 入队/排空/并发安全/递归深度保护 |
 | 控制台 | [Console.md](Console.zh.md) | 命令解析器/路由器/输入队列/输出通道、19 个内置命令处理（16 Core + 3 GodotAdapter）、类型推断 |
 | 运行时核心 | [Runtime-Core.md](Runtime-Core.zh.md) | OrigoRuntime 构造、控制台注入、帧延迟动作执行 |
+| Shell 兼容契约 | [Compatibility.md](Compatibility.zh.md) | OrigoHost 公开入口的生命周期顺序、观察者恢复、fail-fast、会话状态转换；kernel port 绑定/校验不被绕过；golden v1 存档加载见 Save-Storage |
 | 会话生命周期 | [Session-Lifecycle.md](Session-Lifecycle.zh.md) | 会话创建/销毁/切换、Dispose 语义、前后台协议一致、拓扑编解码 |
 | 持久化：存储 | [Save-Storage.md](Save-Storage.zh.md) | 两阶段写入、write_in_progress marker 契约、关卡三件套完整性、路径策略、快照读写、幂等去重 |
 | 持久化：序列化 | [Save-Serialization.md](Save-Serialization.zh.md) | BlackboardSerializer、SndSceneSerializer、SaveContext 编排 |

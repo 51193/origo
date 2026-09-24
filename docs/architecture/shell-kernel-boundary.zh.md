@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell/Kernel 稳定边界
 
@@ -211,7 +211,11 @@ kernel 实现类型不会泄漏进 Core shell 编译面。`Origo.ConsoleBridge` 
 Core shell 包且不携带 kernel 编译资产。Adapter 保持单 shell 包：Godot `Node`
 入口是真实公开类型，bridge/manager 实现为 internal，启动经
 `AdapterHostKernelPort` 完成 runtime、observer topology 与 SND context 的构造和
-绑定。兼容门禁（#40/#41/#42）与发布（#43）仍属后续工作。
+绑定。兼容契约测试（#40）已落地：`OrigoHost` 公开入口驱动生命周期顺序、观察者
+恢复、fail-fast 与后台会话状态转换；`AdapterHostKernelPort` 覆盖缺失 runtime
+binder、context binder 与 file system 的显式失败；仓库内 `origo.format_version=1`
+golden 快照覆盖当前格式、旧档缺版本键与未来版本的原子拒绝。API 与生成代码门禁
+（#41）、packaged consumption（#42）与发布（#43）仍属后续工作。
 
 ## 验证与门禁
 
@@ -219,6 +223,7 @@ Core shell 包且不携带 kernel 编译资产。Adapter 保持单 shell 包：G
 |------|----------|
 | 编译边界 | fresh consumer 只引用 shell 包可编译；引用 kernel 类型失败 |
 | 行为契约 | 生命周期顺序、观察者恢复、存档读写和 fail-fast 语义保持不变 |
+| 兼容契约测试 | shell 入口的 lifecycle/observer/fail-fast/会话状态契约与 golden v1 存档格式测试在常规与发布测试中通过 |
 | 包完整性 | kernel 无 compile 资产泄漏；shell 运行期依赖与 analyzer 资产完整 |
 | 兼容矩阵 | 旧 shell 契约在新 kernel 上通过 contract tests |
 | Godot | headless 与编辑器验证 Node 入口发现、启动、存档恢复与退出清理 |

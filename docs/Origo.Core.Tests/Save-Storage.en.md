@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 31 -->
+<!-- docsync-revision: 32 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
@@ -12,7 +12,8 @@
 Validates the storage layer contract of the Origo persistence system: "strict reads, explicit failures, two-phase writes."
 Covers `.write_in_progress` marker, level three-file-set integrity, missing `progress.json`,
 snapshot creation/read round-trip, path policy customization, idempotent deduplication, Payload model defaults,
-WellKnownKeys constants, SaveFileHandle path resolution, and traversal protection.
+WellKnownKeys constants, SaveFileHandle path resolution and traversal protection, and the
+format-compatibility promise of the in-repository golden v1 save loaded through the shell entry.
 
 ## Test File List
 
@@ -30,6 +31,7 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | `SaveIdValidationTests.cs` | Save id validation: `RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` reject invalid ids (path separators / out-of-range chars), accept valid ids |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
 | `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden, public save-metadata listing |
+| `SaveFormatGoldenTests.cs` | Golden v1 snapshot (`Save/Golden/v1/save_goldenv1/`): current-format load through `OrigoHost`, missing-version legacy save, and future-version rejection without a partial mount |
 | `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |
 | `StaleLevelDirectoryCleanupTests.cs` | Verifies that after a full save `current/` is consistent with the payload's level set — level directories of destroyed background sessions are cleaned up, not leaked into subsequent snapshots |
 
@@ -111,6 +113,21 @@ WellKnownKeys constants, SaveFileHandle path resolution, and traversal protectio
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
 | `Load_AcceptsMissingFormatVersionKey` | Old save meta.map without version key | Treated as version 1, loads normally |
+
+## SaveFormatGoldenTests Details
+
+### Happy Path
+
+| Test Method | Behavior Verified | Documentation Source |
+|-------------|-------------------|----------------------|
+| `GoldenV1Save_LoadsThroughShellHostAndPreservesState` | The in-repository v1 golden snapshot loads through the public `OrigoHost.RequestLoadGame` path; entity data, session blackboard, and `meta.map` display metadata match, while `origo.*` reserved keys stay hidden | persistence-flow: meta.map / strict read |
+| `GoldenV1SaveWithoutFormatVersion_LoadsAsInitialFormat` | The golden snapshot without `origo.format_version` still loads as initial format version 1 | persistence-flow: strict read |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|-----------------|-------------------|
+| `GoldenFutureFormatVersion_IsRejectedWithoutPartialMount` | The golden snapshot carries future format version 2 | `InvalidOperationException` (newer version unsupported) and no partially mounted `hero` entity remains |
 
 ## SaveSnapshotMarkerTests Details
 
