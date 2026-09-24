@@ -2758,20 +2758,20 @@
     "usage/capabilities": {
       "status": "synced",
       "revisions": {
-        "zh": 23,
-        "en": 23
+        "zh": 24,
+        "en": 24
       },
       "previous_revisions": {
-        "zh": 21,
-        "en": 21
+        "zh": 23,
+        "en": 23
       },
       "files": {
         "zh": "usage/capabilities.zh.md",
         "en": "usage/capabilities.en.md"
       },
       "content_hashes": {
-        "zh": "BE14ADCCF7B682542BD0BDC32089FE7C9D2C53385FCEBFC80BB8336216C59BE3",
-        "en": "29F659A9CC0070606A6A4C0B33FC52C0ACAD73C0FD515A966D47C134D2AF1006"
+        "zh": "56B177E1725341C22399826A12E3E8572DB5B6DACE73A450CE37639F7BDDB27F",
+        "en": "8237B111AA34586D555A9B8DEB73BA216510619B3F55A956016E72D01D8DCCCC"
       }
     },
     "usage/console-commands": {

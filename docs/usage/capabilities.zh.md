@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 23 -->
+<!-- docsync-revision: 24 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -83,7 +83,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | res:// + user:// 文件系统 | GodotFileSystem 实现 IFileSystem，支持虚拟路径和路径穿越防护 | [↔ GodotAdapter/FileSystem](../Origo.GodotAdapter/FileSystem/README.zh.md) |
 | 日志代理 | GodotLogger 通过委托注入 GD.Print / PushWarning / PushError，无内部格式化 | [↔ GodotAdapter/Logging](../Origo.GodotAdapter/Logging/README.zh.md) |
 | PackedScene 节点实例化 | GodotPackedSceneNodeFactory 从资源路径加载场景并实例化为 GodotNodeHandle | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.zh.md) |
-| GodotEntity + StableName | GodotSndEntity 桥接 ISndEntity 与 Godot Node 生命周期，独立 StableName 避免 Godot 自动重命名干扰 | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.zh.md) |
+| GodotEntity + StableName | internal GodotSndEntity 桥接 ISndEntity 与 Godot Node 生命周期，独立 StableName 避免 Godot 自动重命名干扰 | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.zh.md) |
 | 场景别名解析 | 通过 SndMappings 将逻辑别名解析为 res:// 资源路径 | [↔ GodotAdapter/Bootstrap](../Origo.GodotAdapter/Bootstrap/README.zh.md) |
 | 适配层控制台命令 | press_button（模拟按钮点击）、tree_debug（打印实体节点树）、camera_view（显示活跃摄像头视角下可见实体节点的屏幕坐标和深度） | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.zh.md) |
 

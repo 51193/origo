@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 23 -->
+<!-- docsync-revision: 24 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
@@ -83,7 +83,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | res:// + user:// file system | GodotFileSystem implements IFileSystem, supporting virtual paths and path traversal protection | [↔ GodotAdapter/FileSystem](../Origo.GodotAdapter/FileSystem/README.en.md) |
 | Log proxy | GodotLogger injects GD.Print / PushWarning / PushError via delegates, no internal formatting | [↔ GodotAdapter/Logging](../Origo.GodotAdapter/Logging/README.en.md) |
 | PackedScene node instantiation | GodotPackedSceneNodeFactory loads scenes from resource paths and instantiates them as GodotNodeHandle | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
-| GodotEntity + StableName | GodotSndEntity bridges ISndEntity with the Godot Node lifecycle; independent StableName avoids Godot auto-rename interference | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
+| GodotEntity + StableName | internal GodotSndEntity bridges ISndEntity with the Godot Node lifecycle; independent StableName avoids Godot auto-rename interference | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
 | Scene alias resolution | Resolves logical aliases to res:// resource paths via SndMappings | [↔ GodotAdapter/Bootstrap](../Origo.GodotAdapter/Bootstrap/README.en.md) |
 | Adapter-layer console commands | press_button (simulate button click), tree_debug (print entity node tree), camera_view (show screen coordinates and depth of entity nodes visible through the active Camera3D) | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.en.md) |
 
