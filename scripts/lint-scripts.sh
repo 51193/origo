@@ -92,5 +92,6 @@ fi
 
 bash scripts/test-verify-release.sh
 bash scripts/test-find-previous-api-baseline.sh
+bash scripts/test-package-consumer-smoke-lib.sh
 
 echo "Script lint: OK"

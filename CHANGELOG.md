@@ -60,6 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Shell package consumer smoke is pipefail-safe and macOS path-safe** — `scripts/package-consumer-smoke.sh` now queries the Contracts analyzer entry directly instead of piping `unzip` into `grep -q`, resolves the run-owned NuGet cache to its physical path before comparing it with `project.assets.json`, and replaces its remaining early-exit `find`/`grep` and `echo`/`grep` pipelines with pipe-free checks. The macOS `/var` temp-path alias no longer turns a valid isolated restore into a failure, and a matching analyzer entry can no longer be reported missing through SIGPIPE. `scripts/test-package-consumer-smoke-lib.sh` runs from `scripts/lint-scripts.sh` to pin the archive query, physical-path resolution, and first-file lookup behavior.
+
 - **Release API baseline comparison excludes the release being validated** — `scripts/find-previous-api-baseline.sh` now skips the release tag passed through `ORIGO_CURRENT_RELEASE_TAG` by the Release workflow, so a version-sync commit created after the tag cannot make the current release its own previous baseline. The helper fixture and release-workflow guard cover the case.
 
 - **Core shell host preserves continue state across restarts** — `OrigoHost` with a supplied `FileSystem` now persists the system blackboard at `<SaveRootPath>/system.json` and reloads it during host construction. Recreating a Core host over the same save root keeps the active/continue save target, so `HasContinueData()` and `RequestContinueGame()` behave consistently with the Godot adapter host.

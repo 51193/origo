@@ -27,6 +27,7 @@ if [[ ! -w "$GODOT_DATA_DIR" || ! -w "$GODOT_CONFIG_DIR" || ! -w "$GODOT_CACHE_D
 fi
 
 source "$ROOT/scripts/dotnet-env.sh"
+source "$ROOT/scripts/package-consumer-smoke-lib.sh"
 
 FAIL() {
     echo "ERROR: $*" >&2
@@ -71,7 +72,7 @@ for package in Origo.Core.Contracts Origo.Core.Kernel Origo.Core Origo.GodotAdap
 done
 
 ANALYZER_ASSET="analyzers/dotnet/cs/Origo.SourceGeneration.dll"
-unzip -l "$FEED/Origo.Core.Contracts.$VERSION.nupkg" | grep -Fq "$ANALYZER_ASSET" \
+package_contains_zip_entry "$FEED/Origo.Core.Contracts.$VERSION.nupkg" "$ANALYZER_ASSET" \
     || FAIL "Origo.Core.Contracts package is missing analyzer asset $ANALYZER_ASSET"
 
 # Exercise the release artifact validator against the same freshly packed
@@ -105,13 +106,17 @@ grep -q "<ProjectReference" "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageCons
 # package cache can contain the same package id/version from an earlier build,
 # which would silently satisfy restore and make this smoke validate stale
 # artifacts (or fail when the stale entry misses newer assets). Restore and
-# build the consumer from an isolated package cache owned by this run.
+# build the consumer from an isolated package cache owned by this run. NuGet
+# records the physical path in project.assets.json on macOS, where TMPDIR is
+# reached through the /var symlink, so resolve the cache path before exporting.
+ISOLATED_PACKAGES=$(canonicalize_directory "$ISOLATED_PACKAGES") \
+    || FAIL "could not resolve the isolated NuGet package cache path."
 export NUGET_PACKAGES="$ISOLATED_PACKAGES"
 
 dotnet restore "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
     -p:OrigoShellPackageVersion="$VERSION" >/dev/null
 
-ASSETS=$(find "$CONSUMER_DIR" -path "*/obj/project.assets.json" | head -1)
+ASSETS=$(find_first_file "$CONSUMER_DIR" -path "*/obj/project.assets.json")
 [[ -n "$ASSETS" ]] || FAIL "package restore did not produce project.assets.json."
 grep -Fq "$NUGET_PACKAGES" "$ASSETS" \
     || FAIL "package restore did not use the isolated NuGet package cache."
@@ -123,13 +128,13 @@ dotnet build "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
     --no-restore -warnaserror \
     -p:OrigoShellPackageVersion="$VERSION" >/dev/null
 
-find "$CONSUMER_DIR/.godot" -type f -name "Origo.Core.Kernel.dll" | grep -q . \
+[[ -n "$(find_first_file "$CONSUMER_DIR/.godot" -type f -name "Origo.Core.Kernel.dll")" ]] \
     || FAIL "kernel runtime assembly was not provided by package restore."
 
 dotnet restore "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
     -p:OrigoShellPackageVersion="$VERSION" >/dev/null
 
-CONSOLE_ASSETS=$(find "$CONSOLE_CONSUMER_DIR" -path "*/obj/project.assets.json" | head -1)
+CONSOLE_ASSETS=$(find_first_file "$CONSOLE_CONSUMER_DIR" -path "*/obj/project.assets.json")
 [[ -n "$CONSOLE_ASSETS" ]] || FAIL "ConsoleBridge consumer restore did not produce project.assets.json."
 grep -Fq "$NUGET_PACKAGES" "$CONSOLE_ASSETS" \
     || FAIL "ConsoleBridge consumer restore did not use the isolated NuGet package cache."
@@ -147,7 +152,7 @@ fi
 dotnet build "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
     --no-restore --configuration Release -warnaserror \
     -p:OrigoShellPackageVersion="$VERSION" >/dev/null
-if find "$CONSOLE_CONSUMER_DIR" -type f \( -name "Origo.Core.dll" -o -name "Origo.Core.Kernel.dll" \) | grep -q .; then
+if [[ -n "$(find_first_file "$CONSOLE_CONSUMER_DIR" -type f \( -name "Origo.Core.dll" -o -name "Origo.Core.Kernel.dll" \))" ]]; then
     FAIL "ConsoleBridge consumer build unexpectedly received Core shell or Kernel runtime assemblies."
 fi
 set +e
@@ -191,8 +196,8 @@ set -e
 if [[ $PROBE_EXIT -eq 0 ]]; then
     FAIL "negative compile probe unexpectedly succeeded; kernel compile assets leaked."
 fi
-echo "$PROBE_OUTPUT" | grep -q "CS0246" \
-    || { echo "$PROBE_OUTPUT" | tail -20; FAIL "negative probe failed without the expected CS0246 diagnostic."; }
+grep -q "CS0246" <<<"$PROBE_OUTPUT" \
+    || { tail -20 <<<"$PROBE_OUTPUT"; FAIL "negative probe failed without the expected CS0246 diagnostic."; }
 
 GODOT_BIN=$(bash scripts/download-godot.sh)
 echo "Using Godot binary: $GODOT_BIN"
