@@ -2720,20 +2720,20 @@
     "README": {
       "status": "synced",
       "revisions": {
-        "zh": 31,
-        "en": 31
+        "zh": 32,
+        "en": 32
       },
       "previous_revisions": {
-        "zh": 30,
-        "en": 30
+        "zh": 31,
+        "en": 31
       },
       "files": {
         "zh": "README.zh.md",
         "en": "README.en.md"
       },
       "content_hashes": {
-        "zh": "CC2AC851DE038348BF7B712D37E6BD16EC89E756261D89DBE1765D793B58B479",
-        "en": "3792B213BD6622685EADB858AA398C4FE47713AB1E639589452D3B83F19E7834"
+        "zh": "74DCD8F4CDBA56C71A77E87529D169D7ACB03A0CCE0E09237B80F5240A3D69B7",
+        "en": "ED7A77FC2A42C6FB31A64E808DABA7072F196E7B7568F5CE80153BE674BD8CEB"
       }
     },
     "release-process": {

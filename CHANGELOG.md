@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-26
+
 ### Added
 
 - **Shell-only package consumer smoke** — `scripts/package-consumer-smoke.sh` packs the shell/kernel packages into a fresh local feed, restores the tracked `Origo.Core` + `Origo.GodotAdapter` consumer fixture without project references, builds with warnings as errors, rejects kernel compile-asset leakage with a CS0246 negative probe, verifies the Contracts analyzer asset and kernel runtime assembly, and starts `OrigoDefaultEntry` headlessly. The smoke runs in the normal CI Godot job and local `scripts/ci.sh`; version pins and the launch flow are documented in `docs/usage/shell-package-consumer.*`.

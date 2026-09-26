@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 31 -->
+<!-- docsync-revision: 32 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
@@ -118,7 +118,7 @@ Root (this file)
 
 ## 版本
 
-当前 Origo 框架版本：**0.0.10-nightly**（开发中，nightly 附带日期后缀，见 `Directory.Build.props`）。文档与源代码同仓维护，版本天然同步（文档不跟踪 nightly 日期后缀）。代码目录结构变更时，应同步更新本手册的目录镜像和索引。
+当前 Origo 框架版本：**0.1.0**。文档与源代码同仓维护，版本天然同步。代码目录结构变更时，应同步更新本手册的目录镜像和索引。
 
 - 框架源码与文档：本仓库 [origo](https://github.com/51193/origo)（文档位于 `docs/`）
 - 示例项目：[origo.demo](https://github.com/51193/origo.demo)
