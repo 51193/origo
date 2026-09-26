@@ -38,7 +38,7 @@ public class BaselineContentTests
         // ConsoleBridge is a shell package: its public server/options surface
         // must stay in the reviewed baseline as well.
         Assert.Contains(bridge.Api, line =>
-            line.StartsWith("T:public Class Origo.ConsoleBridge.ConsoleBridgeServer", StringComparison.Ordinal));
+            line.StartsWith("T:public sealed Class Origo.ConsoleBridge.ConsoleBridgeServer", StringComparison.Ordinal));
         Assert.Contains(bridge.Api, line =>
             line.Contains("ConsoleBridgeServer(Origo.Core.Abstractions.Console.IConsoleInputSource input", StringComparison.Ordinal));
         Assert.Contains(bridge.Api, line =>

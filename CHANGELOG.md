@@ -54,6 +54,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Shell API baseline records modifiers, init accessors, extension `this`, and real enum/struct kinds** — `ApiInventoryTool` now resolves `System.Runtime` so SDK-built shell assemblies no longer report enums/structs as `Class`; it records C# type modifiers, `init` versus `set` accessors, extension-method `this` parameters, and recurses array/pointer elements, indexer parameters, and method generic constraints when rejecting kernel references. The tracked `shell-api-baseline.json` was regenerated to the corrected shape.
+
 - **Dispatched release runs create the GitHub Release for the resolved tag** — `workflow_dispatch` runs execute from `main`, where `github.ref_name` is the branch, not the requested tag; the release action now receives the workflow's resolved tag explicitly instead of failing after all packages were built. The snapshot pre-release condition now tests its Boolean input directly instead of comparing it with the string `'true'`, so weekly snapshots are marked as pre-releases. `scripts/lint-scripts.sh` runs `scripts/validate-release-workflow.py` to keep both invariants in local and CI lint.
 
 - **Shell-only package consumer smoke uses an isolated NuGet cache** — the smoke restored through the ambient global packages folder, so an Origo package with the same id/version from an earlier build could satisfy restore and make the run validate stale artifacts or fail against the fresh local feed. Consumer restore/build now uses a temporary `NUGET_PACKAGES` directory owned by the script, asserts that `project.assets.json` points at it, and removes it with the temporary work directory; `docs/usage/shell-package-consumer.*` records the isolation.

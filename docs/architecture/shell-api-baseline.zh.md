@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-baseline -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell API 基线与门禁
 
@@ -13,8 +13,9 @@ Release 构建产出确定性 JSON，任何未批准的 shell API 增删或签�
 
 - inventory 覆盖 `Origo.Core.Contracts`、`Origo.Core`、`Origo.GodotAdapter` 与
   `Origo.ConsoleBridge` 四个 shell 程序集的导出面。
-- 导出类型、public/protected 成员、签名、nullable 注解、默认值、泛型约束、
-  Source Generator 生成的公开成员与 Godot 生成的嵌套 signal 类型都进入基线。
+- 导出类型（含 `static`/`sealed`/`abstract`/`readonly`/`ref` 等 C# 类型修饰符与 enum/struct kind）、
+  public/protected 成员、签名、nullable 注解、默认值、泛型约束、`init`/`set` accessor、
+  扩展方法 `this` 参数、Source Generator 生成的公开成员与 Godot 生成的嵌套 signal 类型都进入基线。
 - `Origo.Core.Kernel` 是 kernel 实现包，不进入基线；工具发现导出签名引用
   kernel 程序集类型时显式失败。`Origo.ConsoleBridge` 也进入成员级基线；其
   shell-only 依赖与包消费另由 #42 的门禁覆盖。
@@ -54,7 +55,8 @@ Release 构建产出确定性 JSON，任何未批准的 shell API 增删或签�
 - 构建失败或 Source Generator 诊断错误：脚本在 inventory 生成前退出，不产生
   半份基线。
 - 程序集缺失、引用目录缺失、引用无法解析、导出签名引用 kernel 类型：工具输出
-  明确错误并非零退出，不写 `generate` 输出。
+  明确错误并非零退出，不写 `generate` 输出。kernel 引用检查递归覆盖泛型类型实参、
+  数组/指针/函数指针元素、indexer 参数与方法泛型约束。
 - 基线文件缺失：`verify` 明确失败并提示先在同一 reviewed change 中生成基线。
 - 确定性：JSON 按程序集名与 API 行 ordinal 排序，规范化 LF，重复运行字节一致；
   `ApiInventoryTool.Tests` 覆盖确定性、增删检测、previous-package 规则、kernel

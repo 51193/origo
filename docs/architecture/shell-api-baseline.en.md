@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-baseline -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell API Baseline and Gate
 
@@ -10,7 +10,7 @@ This document defines the 0.1.0 shell API baseline gate: a tracked Roslyn invent
 ## Scope
 
 - The inventory covers the exported surface of the `Origo.Core.Contracts`, `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` shell assemblies.
-- Exported types, public/protected members, signatures, nullable annotations, default values, generic constraints, public Source Generator members, and generated nested Godot signal types all enter the baseline.
+- Exported types (including C# type modifiers such as `static`/`sealed`/`abstract`/`readonly`/`ref` and enum/struct kinds), public/protected members, signatures, nullable annotations, default values, generic constraints, `init`/`set` accessors, extension-method `this` parameters, public Source Generator members, and generated nested Godot signal types all enter the baseline.
 - `Origo.Core.Kernel` is the kernel implementation package and stays out of the baseline; the tool fails explicitly when an exported signature references a kernel assembly type. `Origo.ConsoleBridge` is also part of the member-level baseline; its shell-only dependency and packaged consumption are additionally covered by #42.
 
 ## Gate Execution
@@ -39,7 +39,7 @@ There is no previous stable shell package before the first 0.1.0 release, so pre
 ## Failure Semantics
 
 - Build failure or Source Generator diagnostic error: the script exits before inventory generation and never leaves a partial baseline.
-- Missing assembly, missing reference directory, unresolved reference, or an exported signature referencing a kernel type: the tool reports an explicit error and exits non-zero without writing `generate` output.
+- Missing assembly, missing reference directory, unresolved reference, or an exported signature referencing a kernel type: the tool reports an explicit error and exits non-zero without writing `generate` output. Kernel-reference checks recurse through generic type arguments, array/pointer/function-pointer elements, indexer parameters, and method generic constraints.
 - Missing baseline file: `verify` fails explicitly and instructs the developer to generate the baseline in the same reviewed change.
 - Determinism: JSON is ordered by assembly name and ordinal API lines with normalized LF line endings, so repeated runs are byte-identical. `ApiInventoryTool.Tests` covers determinism, addition/removal detection, previous-package rules, kernel-reference rejection, and command-line failure paths.
 

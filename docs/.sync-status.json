@@ -221,20 +221,20 @@
     "architecture/shell-api-baseline": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "previous_revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "architecture/shell-api-baseline.zh.md",
         "en": "architecture/shell-api-baseline.en.md"
       },
       "content_hashes": {
-        "zh": "DF2B8B5DF85CB3DD6D3A85B87A570F05FCC9DECEBE340E8C5880A877A2BD153A",
-        "en": "98BD5E6830A2649B35FBBA21506E18D37A5ADA3B7D43FE4A3A95031A4644731D"
+        "zh": "9C324529D1F861930B6F4367772830A073A79871374CF1BAA51D4645D4956267",
+        "en": "CE8B6D1FD52258CB96F351FDFBA8765C31B601A32ADA4758466735AA3362E90B"
       }
     },
     "architecture/shell-api-classification": {

@@ -46,7 +46,8 @@ internal static class InventoryBuilder
         parameterOptions: SymbolDisplayParameterOptions.IncludeName
             | SymbolDisplayParameterOptions.IncludeType
             | SymbolDisplayParameterOptions.IncludeDefaultValue
-            | SymbolDisplayParameterOptions.IncludeParamsRefOut,
+            | SymbolDisplayParameterOptions.IncludeParamsRefOut
+            | SymbolDisplayParameterOptions.IncludeExtensionThis,
         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
             | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
             | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
@@ -95,10 +96,20 @@ internal static class InventoryBuilder
         if (errors.Count > 0)
             return new InventoryBuildResult(null, errors);
 
+        var runtimeDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)
+            ?? throw new InvalidOperationException("Could not locate the .NET runtime directory.");
+        var systemRuntimePath = Path.Combine(runtimeDirectory, "System.Runtime.dll");
+        if (!File.Exists(systemRuntimePath))
+        {
+            errors.Add($"runtime reference was not found: '{systemRuntimePath}'.");
+            return new InventoryBuildResult(null, errors);
+        }
+
         var runtimeReferences = new[]
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(System.Collections.Generic.List<>).Assembly.Location),
+            MetadataReference.CreateFromFile(systemRuntimePath),
         };
         var references = runtimeReferences
             .Concat(referencePaths
@@ -177,7 +188,9 @@ internal static class InventoryBuilder
         }
 
         var kind = GetTypeKind(type);
-        var line = $"T:{GetAccessibility(type.DeclaredAccessibility)} {kind} {type.ToDisplayString(_typeFormat)}";
+        var modifiers = GetTypeModifiers(type);
+        var modifierPrefix = modifiers.Count == 0 ? string.Empty : string.Join(" ", modifiers) + " ";
+        var line = $"T:{GetAccessibility(type.DeclaredAccessibility)} {modifierPrefix}{kind} {type.ToDisplayString(_typeFormat)}";
         if (GetBaseTypeLine(type) is { } baseLine)
             line += $" : {baseLine}";
         foreach (var constraint in GetTypeParameterConstraints(type))
@@ -272,7 +285,10 @@ internal static class InventoryBuilder
         if (property.GetMethod is not null && IsShellAccessibility(property.GetMethod.DeclaredAccessibility))
             yield return $"get:{GetAccessibility(property.GetMethod.DeclaredAccessibility)}";
         if (property.SetMethod is not null && IsShellAccessibility(property.SetMethod.DeclaredAccessibility))
-            yield return $"set:{GetAccessibility(property.SetMethod.DeclaredAccessibility)}";
+        {
+            var setter = property.SetMethod.IsInitOnly ? "init" : "set";
+            yield return $"{setter}:{GetAccessibility(property.SetMethod.DeclaredAccessibility)}";
+        }
     }
 
     private static string GetBaseTypeLine(INamedTypeSymbol type)
@@ -347,6 +363,22 @@ internal static class InventoryBuilder
                 return true;
             }
 
+            if (type is IArrayTypeSymbol array
+                && FindForbiddenInTypes([array.ElementType], forbidden, visited, out forbiddenReference))
+                return true;
+
+            if (type is IPointerTypeSymbol pointer
+                && FindForbiddenInTypes([pointer.PointedAtType], forbidden, visited, out forbiddenReference))
+                return true;
+
+            if (type is IFunctionPointerTypeSymbol functionPointer
+                && FindForbiddenInTypes(
+                    GetReferencedTypes(functionPointer.Signature),
+                    forbidden,
+                    visited,
+                    out forbiddenReference))
+                return true;
+
             if (type is INamedTypeSymbol named
                 && FindForbiddenInTypes(named.TypeArguments.Cast<ITypeSymbol?>(), forbidden, visited, out forbiddenReference))
                 return true;
@@ -376,9 +408,14 @@ internal static class InventoryBuilder
                     yield return parameter.Type;
                 foreach (var argument in method.TypeArguments)
                     yield return argument;
+                foreach (var parameter in method.TypeParameters)
+                    foreach (var constraint in parameter.ConstraintTypes)
+                        yield return constraint;
                 break;
             case IPropertySymbol property:
                 yield return property.Type;
+                foreach (var parameter in property.Parameters)
+                    yield return parameter.Type;
                 break;
             case IFieldSymbol field:
                 yield return field.Type;
@@ -387,6 +424,32 @@ internal static class InventoryBuilder
                 yield return @event.Type;
                 break;
         }
+    }
+
+    private static List<string> GetTypeModifiers(INamedTypeSymbol type)
+    {
+        var modifiers = new List<string>();
+        if (type.IsStatic)
+        {
+            modifiers.Add("static");
+        }
+        else
+        {
+            if (type.TypeKind == TypeKind.Class && type.IsAbstract)
+                modifiers.Add("abstract");
+            if (type.TypeKind == TypeKind.Class && type.IsSealed)
+                modifiers.Add("sealed");
+        }
+
+        if (type.TypeKind == TypeKind.Struct)
+        {
+            if (type.IsReadOnly)
+                modifiers.Add("readonly");
+            if (type.IsRefLikeType)
+                modifiers.Add("ref");
+        }
+
+        return modifiers;
     }
 
     private static string GetTypeKind(INamedTypeSymbol type) =>

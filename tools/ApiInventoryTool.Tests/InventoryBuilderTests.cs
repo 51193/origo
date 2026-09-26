@@ -275,4 +275,132 @@ public class InventoryBuilderTests
             TestAssemblyEmitter.TryDelete(directory);
         }
     }
+    [Fact]
+    public void Build_ResolvesTypeKindsWhenTheAssemblyReferencesSystemRuntime()
+    {
+        var directory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var runtimeDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+            var systemRuntimePath = Path.Combine(runtimeDirectory, "System.Runtime.dll");
+            Assert.True(File.Exists(systemRuntimePath), $"System.Runtime.dll not found at '{systemRuntimePath}'.");
+
+            var path = TestAssemblyEmitter.Emit(directory, "Sample.RuntimeFacade",
+                """
+                namespace Sample
+                {
+                    public enum Color { Red }
+                    public readonly struct Point { }
+                    public readonly record struct Pair(int X, int Y);
+                }
+                """,
+                systemRuntimePath);
+
+            var result = InventoryBuilder.Build(
+                [new AssemblyInput("Sample.RuntimeFacade", path)],
+                [directory],
+                []);
+
+            Assert.True(result.Succeeded, string.Join('\n', result.Errors));
+            var api = result.Document!.Assemblies.Single().Api;
+            Assert.Contains(api, line => line.StartsWith("T:public Enum Sample.Color", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("T:public readonly Struct Sample.Point", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("T:public readonly Struct Sample.Pair", StringComparison.Ordinal));
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(directory);
+        }
+    }
+
+    [Fact]
+    public void Build_RecordsTypeModifiersInitAccessorsAndExtensionThis()
+    {
+        var directory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var path = TestAssemblyEmitter.Emit(directory, "Sample.Modifiers",
+                """
+                namespace Sample
+                {
+                    public static class Helpers
+                    {
+                        public static int Read(this Point point) => point.X;
+                    }
+
+                    public abstract class AbstractBase { }
+                    public sealed class SealedType { }
+                    public readonly struct ReadOnlyPoint { }
+                    public struct Point
+                    {
+                        public int X { get; init; }
+                        public int Y { get; set; }
+                    }
+                }
+                """);
+
+            var result = InventoryBuilder.Build(
+                [new AssemblyInput("Sample.Modifiers", path)],
+                [directory],
+                []);
+
+            Assert.True(result.Succeeded, string.Join('\n', result.Errors));
+            var api = result.Document!.Assemblies.Single().Api;
+            Assert.Contains(api, line => line.StartsWith("T:public static Class Sample.Helpers", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("T:public abstract Class Sample.AbstractBase", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("T:public sealed Class Sample.SealedType", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("T:public readonly Struct Sample.ReadOnlyPoint", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("T:public Struct Sample.Point", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.Contains("public static int Read(this Sample.Point point)", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("P:Sample.Point.public int X", StringComparison.Ordinal)
+                && line.Contains("init:public", StringComparison.Ordinal));
+            Assert.Contains(api, line => line.StartsWith("P:Sample.Point.public int Y", StringComparison.Ordinal)
+                && line.Contains("set:public", StringComparison.Ordinal));
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(directory);
+        }
+    }
+
+    [Fact]
+    public void Build_ReportsForbiddenArrayIndexerAndMethodConstraintReferences()
+    {
+        var directory = TestAssemblyEmitter.CreateDirectory();
+        try
+        {
+            var kernel = TestAssemblyEmitter.Emit(directory, "Origo.Core.Kernel",
+                "namespace Kernel { public class Hidden { } }");
+            var shell = TestAssemblyEmitter.Emit(directory, "Origo.Shell",
+                """
+                namespace Shell
+                {
+                    public class Visible
+                    {
+                        public Kernel.Hidden[] ArrayMethod() => null!;
+                        public Kernel.Hidden[] ArrayProperty { get; set; } = null!;
+                        public string this[Kernel.Hidden key] => "";
+                        public void Generic<T>() where T : Kernel.Hidden { }
+                    }
+                }
+                """,
+                kernel);
+
+            var result = InventoryBuilder.Build(
+                [new AssemblyInput("Origo.Shell", shell)],
+                [directory],
+                ["Origo.Core.Kernel"]);
+
+            Assert.False(result.Succeeded);
+            Assert.Contains(result.Errors, error => error.Contains("ArrayMethod", StringComparison.Ordinal));
+            Assert.Contains(result.Errors, error => error.Contains("ArrayProperty", StringComparison.Ordinal));
+            Assert.Contains(result.Errors, error => error.Contains("this[", StringComparison.Ordinal));
+            Assert.Contains(result.Errors, error => error.Contains("Generic", StringComparison.Ordinal));
+        }
+        finally
+        {
+            TestAssemblyEmitter.TryDelete(directory);
+        }
+    }
+
 }
