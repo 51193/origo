@@ -36,4 +36,8 @@
         <ProjectReference Include="..\Origo.TestSupport\Origo.TestSupport.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\Origo.Core.Kernel\Origo.Core.Kernel.csproj" PrivateAssets="all"/>
+    </ItemGroup>
+
 </Project>

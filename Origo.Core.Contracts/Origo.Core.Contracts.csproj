@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Origo Core Contracts — stable, engine-agnostic consumer contracts shared by Origo shell and kernel packages.</Description>
+        <PackageTags>origo;contracts;shell;kernel;abstractions;metadata;dotnet</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RootNamespace>Origo.Core</RootNamespace>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Origo.Core"/>
+        <InternalsVisibleTo Include="Origo.Core.Kernel"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter"/>
+        <InternalsVisibleTo Include="Origo.Core.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Integration.Tests"/>
+        <InternalsVisibleTo Include="Origo.SourceGeneration.Tests"/>
+        <InternalsVisibleTo Include="Origo.TestSupport"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Origo.SourceGeneration\Origo.SourceGeneration.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <Target Name="IncludeSourceGeneratorInPackage" BeforeTargets="_GetPackageFiles">
+        <ItemGroup>
+            <_PackageFiles Include="..\Origo.SourceGeneration\bin\$(Configuration)\netstandard2.0\Origo.SourceGeneration.dll">
+                <PackagePath>analyzers/dotnet/cs</PackagePath>
+            </_PackageFiles>
+            <!-- Runtime dependency of the generator (official HashCode polyfill);
+                 analyzers are loaded by file reference, so the dependency must
+                 ship next to the generator dll. -->
+            <_PackageFiles Include="..\Origo.SourceGeneration\bin\$(Configuration)\netstandard2.0\Microsoft.Bcl.HashCode.dll">
+                <PackagePath>analyzers/dotnet/cs</PackagePath>
+            </_PackageFiles>
+        </ItemGroup>
+    </Target>
+
+</Project>

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using Xunit;
 
 namespace DocSyncTool.Tests;
@@ -251,5 +252,48 @@ public class GitRevisionTests
         RunGenerator(repo);
         Assert.Equal(afterFirstRun, repo.Read("docs/.sync-status.json"));
         AssertRevision(repo, "docs/README.zh.md", 2);
+    }
+
+    [Fact]
+    public void Generate_MergeCommitWithDivergentPathHistory_RemainsIdempotent()
+    {
+        using var repo = CreateGeneratedGitRepo();
+        var mainBranch = repo.RunGit("rev-parse", "--abbrev-ref", "HEAD").Trim();
+
+        repo.RunGit("checkout", "-b", "feature");
+        RewritePairForMergeScenario(repo, "feature");
+        repo.CommitAll("docs: feature body");
+
+        // The main-side commit must sort after the feature commit in git log
+        // date order; --follow then reports the divergent main blob between
+        // the merge result and the revision anchor, which is the shape of a
+        // real upstream merge.
+        Thread.Sleep(1100);
+
+        repo.RunGit("checkout", mainBranch);
+        RewritePairForMergeScenario(repo, "main");
+        repo.CommitAll("docs: main body");
+
+        repo.RunGit("merge", "--no-ff", "-X", "theirs", "feature", "-m", "chore: merge feature");
+
+        RunGenerator(repo);
+        var afterFirstRun = repo.Read("docs/.sync-status.json");
+        RunGenerator(repo);
+
+        Assert.Equal(afterFirstRun, repo.Read("docs/.sync-status.json"));
+        Assert.Equal(0, ConsoleOutputCapture.Run(() => Validator.Run(repo.LoadConfig())).Result);
+    }
+
+    private static void RewritePairForMergeScenario(TestRepo repo, string marker)
+    {
+        foreach (var language in new[] { "zh", "en" })
+        {
+            var path = $"docs/README.{language}.md";
+            repo.Write(
+                path,
+                repo.Read(path).Replace(
+                    $"# README {language}",
+                    $"# README {language}\n\n{marker} body\n"));
+        }
     }
 }

@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 25 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Scene Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Snd/Scene](../Origo.Core/Snd/Scene/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/Snd/Scene](../Origo.Core.Kernel/Snd/Scene/README.en.md)
 > [↔ Behavior under test: usage/snd-entity-model](../usage/snd-entity-model.en.md)
 
 ## Behavior Under Test Overview

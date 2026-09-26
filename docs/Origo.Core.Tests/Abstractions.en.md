@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.Core.Tests/Abstractions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Double Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Abstractions/FileSystem](../Origo.Core/Abstractions/FileSystem/README.en.md)
-> [↔ Module under test: Origo.Core/Abstractions/Logging](../Origo.Core/Abstractions/Logging/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Abstractions/FileSystem](../Origo.Core.Contracts/Abstractions/FileSystem/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Abstractions/Logging](../Origo.Core.Contracts/Abstractions/Logging/README.en.md)
 
 ## Behavior Under Test Overview
 

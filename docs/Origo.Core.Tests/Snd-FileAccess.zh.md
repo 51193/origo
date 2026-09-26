@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 文件访问 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.zh.md)
+> [↔ 被测模块: Origo.Core.Contracts/Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.zh.md)
 > [↔ 被测行为: usage/agent-reference](../usage/agent-reference.zh.md)
 
 ## 被测行为概览

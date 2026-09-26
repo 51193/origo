@@ -1,19 +1,19 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console
 
-> [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Runtime/Console](../../Origo.Core/Runtime/Console/README.en.md)
+> [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Runtime/Console](../../Origo.Core.Kernel/Runtime/Console/README.en.md)
 
 ## Overview
 
-Console command extensions for the Godot adapter layer. An adapter-layer command handler base class (providing an `OrigoRuntime` reference), plus three Godot-specific commands — `press_button` to simulate Button clicks, `tree_debug` to print entity node trees, and `camera_view` to output camera coordinate information.
+Console command extensions for the Godot adapter layer. An adapter-layer command handler base class (providing stable runtime access through `IOrigoRuntime`), plus three Godot-specific commands — `press_button` to simulate Button clicks, `tree_debug` to print entity node trees, and `camera_view` to output camera coordinate information.
 
 ## Files
 
 | File | Responsibility |
 |------|------|
-| `CommandHandlerBase.cs` | Adapter-layer command handler base class, holds `OrigoRuntime` reference, validates argument count |
+| `CommandHandlerBase.cs` | Adapter-layer command handler base class, holds an `IOrigoRuntime` reference, validates argument count |
 | `PressButtonCommandHandler.cs` | Godot-specific command: finds and emits Button.Pressed signal by entity + path |
 | `TreeDebugCommandHandler.cs` | Godot-specific command: prints the complete Godot node tree of an entity (including dynamically created child nodes) |
 | `CameraViewCommandHandler.cs` | Godot-specific command: displays screen coordinates and depth of all entity nodes from the active camera's perspective |
@@ -23,7 +23,7 @@ Console command extensions for the Godot adapter layer. An adapter-layer command
 
 ### CommandHandlerBase
 
-Inherits from Core's `ConsoleCommandHandlerBase` (argument-count validation and error messaging come from the base class) and additionally holds an `OrigoRuntime` reference directly, simplifying command implementation on the Godot side.
+Inherits from Core's `ConsoleCommandHandlerBase` (argument-count validation and error messaging come from the base class) and additionally holds an `IOrigoRuntime` reference directly, simplifying command implementation on the Godot side. Custom commands register through `IOrigoRuntime.RegisterConsoleCommandHandler`.
 
 ### PressButtonCommandHandler
 
@@ -70,7 +70,7 @@ Flow:
 
 ### Why the adapter layer needs its own CommandHandlerBase
 
-Core's `ConsoleCommandHandlerBase` requires subclasses to hold a reference to `OrigoRuntime`. The adapter layer base class provides a consistent `Runtime` property access pattern, avoiding repeated injection boilerplate in every Godot command handler.
+Core `ConsoleCommandHandlerBase` and adapter commands both need stable runtime access for sessions, entities, and the world. The adapter layer base class provides a consistent `Runtime` property access pattern, avoiding repeated injection boilerplate in every Godot command handler, and registration goes through `IOrigoRuntime.RegisterConsoleCommandHandler`.
 
 ### Why PressButton needs Godot entity type checking
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 27 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 手册维护元指令
 
@@ -10,6 +10,10 @@
 ## 手册定位
 
 `docs/` 是 Origo 框架的文档镜像，随源代码同仓维护。目标是：**阅读根目录 → 找到目标文件夹 → 进入继续阅读 → 递归下降，避免从源代码从头读起**。
+
+## Shell 兼容例外（有界）
+
+`Origo.Core`、`Origo.GodotAdapter`、`Origo.ConsoleBridge` 是 0.1.x shell 包，承诺 source/behavior 兼容；`Origo.Core.Contracts`、`Origo.Core.Kernel` 等 kernel 包与 nightly 构建不做消费者兼容承诺。该例外只覆盖 shell 契约、kernel-shell port 与兼容测试，不放宽 fail-fast、单一访问路径或架构隔离；实现细节见 [shell-kernel-boundary](architecture/shell-kernel-boundary.zh.md)，API/包门禁见 [shell-api-baseline](architecture/shell-api-baseline.zh.md) 与 [release-process](release-process.zh.md)。
 
 ## 编写原则
 

@@ -33,22 +33,31 @@ public class ConsoleBridgeArchitectureGuardrailTests
     }
 
     [Fact]
-    public void ConsoleBridge_ShouldOnlyReferenceCore()
+    public void ConsoleBridge_ShouldOnlyReferenceContracts()
     {
         var asm = typeof(ConsoleBridgeServer).Assembly;
         var refs = asm.GetReferencedAssemblies();
         var allowedPrefixes = new[]
         {
-            "Origo.Core",
+            "Origo.Core.Contracts",
             "System.",
             "Microsoft.",
-            "netstandard",
-            "System.Runtime"
+            "netstandard"
         };
         foreach (var r in refs)
         {
             Assert.True(allowedPrefixes.Any(p => r.Name!.StartsWith(p, StringComparison.Ordinal)),
                 $"Unexpected assembly reference: {r.Name}");
         }
+    }
+}
+
+public class ConsoleBridgeShellApiClassificationGuardTests
+{
+    [Fact]
+    public void ShellApiClassification_CoversEveryConsoleBridgeExport()
+    {
+        var violations = ShellApiClassificationInventory.FindViolations(typeof(ConsoleBridgeServer).Assembly);
+        Assert.Empty(violations);
     }
 }

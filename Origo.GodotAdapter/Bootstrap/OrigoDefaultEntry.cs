@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.DataSource;
 using Origo.Core.Snd;
 
@@ -48,8 +49,8 @@ public partial class OrigoDefaultEntry : OrigoAutoHost
     ///     register strategies manually, for example when <see cref="AutoDiscoverStrategies" />
     ///     is disabled or when a strategy type cannot be discovered automatically.
     /// </summary>
-    /// <param name="world">The world whose strategy pool is still open for registration.</param>
-    protected virtual void ConfigureStrategies(SndWorld world)
+    /// <param name="world">The world whose strategy registry is still open for registration.</param>
+    protected virtual void ConfigureStrategies(ISndWorldAccess world)
     {
         ArgumentNullException.ThrowIfNull(world);
     }

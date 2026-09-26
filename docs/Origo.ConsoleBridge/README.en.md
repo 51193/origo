@@ -1,13 +1,13 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.ConsoleBridge
 
-> [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Runtime/Console](../Origo.Core/Runtime/Console/README.en.md)
+> [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Console abstractions](../Origo.Core.Contracts/Abstractions/Console/README.en.md)
 
 ## Overview
 
-A TCP remote console bridge server. Allows connecting via telnet/nc (default port 9876) to remotely execute Origo console commands and receive output. Single-connection mode: only one client connection is allowed at a time.
+A TCP remote console bridge server. Allows connecting via telnet/nc (default port 9876) to remotely execute Origo console commands and receive output. Single-connection mode: only one client connection is allowed at a time. The package compiles against `Origo.Core.Contracts` only and couples to `IConsoleInputSource` / `IConsoleOutputChannel`; it does not reference Core shell, Kernel, Godot, or Adapter packages.
 
 ## Files
 

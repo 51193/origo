@@ -1,0 +1,22 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+
+    <!--
+      Fresh-package consumer fixture. It must never contain a ProjectReference
+      to the Origo repository; the package-consumer smoke script restores it
+      from a local feed built by scripts/package-consumer-smoke.sh.
+      OrigoShellPackageVersion is supplied on the restore/build command line.
+    -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+        <Nullable>enable</Nullable>
+        <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Origo.Core" Version="$(OrigoShellPackageVersion)"/>
+        <PackageReference Include="Origo.GodotAdapter" Version="$(OrigoShellPackageVersion)"/>
+    </ItemGroup>
+
+</Project>

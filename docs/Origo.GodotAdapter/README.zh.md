@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.GodotAdapter
 
@@ -25,7 +25,7 @@
 | [FileSystem](FileSystem/README.zh.md) | Godot 文件系统 | IFileSystem 实现：FileAccess/DirAccess + res:// 和 user:// 支持 |
 | [Logging](Logging/README.zh.md) | Godot 日志 | ILogger 实现：委托注入 GD.Print/PushWarning/PushError |
 | [Serialization](Serialization/README.zh.md) | Godot 类型序列化 | 14 种 Godot 类型 → DataSourceNode 转换器 |
-| [Snd](Snd/README.zh.md) | Godot SND 实体 | ISndSceneHost 实现：GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
+| [Snd](Snd/README.zh.md) | Godot SND 实体 | ISndSceneHost 的 internal 实现：GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
 | — | TypedData 内联 | Source Generator 为 14 种 Godot 类型生成扩展方法与 Kind 注册 |
 
 ## 启动流程
@@ -33,15 +33,13 @@
 ```
 OrigoDefaultEntry._Ready()
   ├── base._Ready()                          // OrigoAutoHost
-  │   └── CreateRuntime()
-  │       ├── GodotFileSystem
-  │       ├── GodotSndManager
-  │       ├── GodotJsonConverterRegistry 注册
-  │       └── OrigoRuntime
-  ├── ConfigureStrategies(Runtime.SndWorld)  // 手动策略注册（Bootstrap 冻结前）
-  ├── RegisterConsoleCommandHandlers()       // 适配层命令
-  ├── new SndContext(...)                    // 传入启动配置
-  ├── SndManager.BindContext(sndContext)
+  │   └── AdapterHostKernelPort.CreateRuntime(...)
+  │       ├── GodotFileSystem + GodotJsonConverterRegistry 注册
+  │       ├── kernel runtime/IO/blackboard/console 构造
+  │       └── ISndSceneHostRuntimeBinder 绑定 world/logger 与 observer topology
+  ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess；Bootstrap 冻结前
+  ├── 通过 IOrigoRuntime 注册适配层命令
+  ├── AdapterHostKernelPort.CreateContext(...)  // 传入启动配置并绑定场景宿主
   └── sndContext.Bootstrap()                 // Core 内部按序执行：
         ├── 策略发现与排序校验/注册冻结 (reflection scan, skip Godot assemblies)
         ├── LoadSceneAliases / LoadTemplates

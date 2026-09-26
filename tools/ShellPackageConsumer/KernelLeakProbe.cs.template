@@ -1,0 +1,11 @@
+// Negative compile probe: copied into the consumer project by the smoke
+// script. This must fail with CS0246 because kernel compile assets must not
+// flow into a shell-only consumer.
+using Origo.Core.Runtime;
+
+namespace ShellPackageConsumer;
+
+internal static class KernelLeakProbe
+{
+    public static OrigoRuntime? Runtime;
+}

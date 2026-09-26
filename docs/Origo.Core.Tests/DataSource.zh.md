@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 27 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 数据源 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/DataSource](../Origo.Core/DataSource/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/DataSource](../Origo.Core.Kernel/DataSource/README.zh.md)
 > [↔ 被测行为: architecture/overview](../architecture/overview.zh.md)
 
 ## 被测行为概览
@@ -192,6 +192,7 @@
 | `UsingStatement_DisposesAfterScope` | using 作用域退出 | 作用域外访问抛 ObjectDisposedException |
 | `Dispose_DeeplyNestedTree_DoesNotStackOverflow` | 2000 层嵌套树 Dispose | 不发生栈溢出 |
 | `ComputeSha256Hash_DeeplyNestedTree_DoesNotStackOverflow` | 2000 层嵌套树 ComputeSha256Hash | 不发生栈溢出，返回非空哈希 |
+| `DeeplyNestedTree_At10000Depth_BuildsHashesAndDisposes` | 10000 层嵌套树构建、哈希、Dispose | 行为完成、返回非空哈希、不发生栈溢出 |
 
 ## DataSourceNodeSha256Tests 测试详情
 
@@ -282,7 +283,7 @@
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | 转换器与节点的并发读写线程安全性 | 多线程场景未覆盖 | DataSource |
-| DataSourceNode 超深嵌套（远超 2000 层）的性能特征 | 极端嵌套深度的性能未量化 | DataSource |
+| DataSourceNode 超深嵌套的吞吐量门禁 | 行为已由 10000 层构建/哈希/Dispose 测试界定，但未设置跨机器吞吐量门禁 | DataSource |
 
 ---
 

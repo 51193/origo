@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Origo Core Kernel — runtime construction, SND internals, persistence, storage, codecs, console routing, and kernel-shell ports.</Description>
+        <PackageTags>origo;kernel;runtime;snd;persistence;dotnet</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RootNamespace>Origo.Core</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Origo.Core.Contracts\Origo.Core.Contracts.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Origo.Core"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter"/>
+        <InternalsVisibleTo Include="Origo.Core.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Tests"/>
+        <InternalsVisibleTo Include="Origo.GodotAdapter.Integration.Tests"/>
+        <InternalsVisibleTo Include="Origo.TestSupport"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+</Project>

@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 33 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：存储 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Save/Storage](../Origo.Core/Save/Storage/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/Save/Storage](../Origo.Core.Kernel/Save/Storage/README.zh.md)
 > [↔ 被测行为: usage/persistence-flow](../usage/persistence-flow.zh.md)
 
 ## 被测行为概览
@@ -12,7 +12,8 @@
 验证 Origo 持久化系统的存储层契约："严格读取、显式失败、两阶段写入"。
 覆盖 `.write_in_progress` marker、关卡三件套完整性、`progress.json` 缺失、
 快照创建/读取往返、路径策略自定义、幂等去重、Payload 模型默认值、
-WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
+WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护，以及经 shell 入口加载
+仓库内 golden v1 存档的格式兼容承诺。
 
 ## 测试文件清单
 
@@ -28,6 +29,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 | `SavePayloadDisposalTests.cs` | 内部边界确定性释放：load/mount、save/snapshot、switch foreground 后 payload 节点树与 progress 快照节点被 Dispose |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ 侧信道文件：快照→current 复制往返、目录结构保留、缺失/空目录容错、参数校验 |
 | `SaveFormatVersionTests.cs` | 存档格式版本：meta.map 写入 origo.format_version、新版本拒绝加载、缺版本键兼容、保留键隐藏、公开存档元数据列表 |
+| `SaveFormatGoldenTests.cs` | golden v1 快照（`Save/Golden/v1/save_goldenv1/`）：经 `OrigoHost` 加载当前格式、缺少版本键的存档、未来版本拒绝且不产生部分挂载 |
 | `SaveSnapshotMarkerTests.cs` | 快照完整性：快照目录无 .write_in_progress 残留 |
 | `StaleLevelDirectoryCleanupTests.cs` | 验证完整保存后 `current/` 与 payload 关卡集合一致——销毁后台会话后其关卡目录被清理，不泄漏进后续快照 |
 | `WellKnownKeysTests.cs` | 常量：ActiveSaveId、SessionTopology 键名正确性 |
@@ -110,7 +112,22 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护。
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
-| `Load_AcceptsMissingFormatVersionKey` | 旧存档 meta.map 无版本键 | 视为版本 1 正常加载 |
+| `Load_AcceptsMissingFormatVersionKey` | meta.map 无版本键的存档 | 视为版本 1 正常加载 |
+
+## SaveFormatGoldenTests 测试详情
+
+### 正确路径
+
+| 测试方法 | 验证的行为 | 文档出处 |
+|---------|-----------|---------|
+| `GoldenV1Save_LoadsThroughShellHostAndPreservesState` | 仓库内 v1 golden 快照经 `OrigoHost` 的公开 `RequestLoadGame` 加载后，实体数据、会话黑板与 `meta.map` 展示元数据保持一致，`origo.*` 保留键仍被隐藏 | persistence-flow: meta.map / 严格读取 |
+| `GoldenV1SaveWithoutFormatVersion_LoadsAsInitialFormat` | golden 快照删除 `origo.format_version` 后仍按初始格式版本 1 加载 | persistence-flow: 严格读取 |
+
+### 错误路径
+
+| 测试方法 | 触发的错误 | 预期行为 |
+|---------|-----------|---------|
+| `GoldenFutureFormatVersion_IsRejectedWithoutPartialMount` | golden 快照的 `origo.format_version` 改为未来版本 2 | `InvalidOperationException`（提示新版本不支持），且不留下部分加载的 `hero` 实体 |
 
 ## SaveSnapshotMarkerTests 测试详情
 

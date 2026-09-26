@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 28 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter.Tests
 
@@ -40,7 +40,7 @@ runtime behavior (real file system, Node lifecycle, bootstrap orchestration).
 
 | Capability | Document | Files | Tests | Verification Focus |
 |------------|----------|-------|-------|--------------------|
-| Architecture Guardrails | [Architecture.md](Architecture.en.md) | 1 | 8 | SndContext public role interface completeness, session creation/destruction, CommandHandlerBase public visibility, GodotSndEntity internal lifecycle guard, GodotSndManager write-path sealing, private `_camelCase` field naming |
+| Architecture Guardrails | [Architecture.md](Architecture.en.md) | 1 | 9 | SndContext public role interface completeness, session creation/destruction, CommandHandlerBase public visibility, GodotSndEntity internal lifecycle guard, GodotSndManager write-path sealing, private `_camelCase` field naming, shell API classification completeness |
 | SND Entities | [Snd.md](Snd.en.md) | 4 | 27 | SndEntityCollection full capability with batch recovery rollback, assembly-load-triggered kind registration, node extension contracts, GodotPackedSceneNodeFactory constructor guard |
 | Console | [Console.md](Console.en.md) | 5 | 28 | press_button / camera_view / tree_debug commands, CommandHandlerBase argument validation and guards, ProjectionHelper world→screen projection |
 | File System | [FileSystem.md](FileSystem.en.md) | 1 | 3 | GodotFileSystem res:// / user:// path handling (delegated to PathUtility) |

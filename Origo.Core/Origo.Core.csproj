@@ -4,7 +4,6 @@
         <Description>Origo Core — a lightweight, platform-agnostic C# game framework using the SND (Strategy-Node-Data) model.</Description>
         <PackageTags>game;framework;csharp;snd;entity;strategy;dotnet;origo</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 
     <ItemGroup>
@@ -29,23 +28,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Origo.SourceGeneration\Origo.SourceGeneration.csproj"
-                          OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\Origo.Core.Contracts\Origo.Core.Contracts.csproj"/>
+        <ProjectReference Include="..\Origo.Core.Kernel\Origo.Core.Kernel.csproj" PrivateAssets="compile"/>
     </ItemGroup>
-
-    <Target Name="IncludeSourceGeneratorInPackage" BeforeTargets="_GetPackageFiles">
-        <ItemGroup>
-            <_PackageFiles Include="..\Origo.SourceGeneration\bin\$(Configuration)\netstandard2.0\Origo.SourceGeneration.dll">
-                <PackagePath>analyzers/dotnet/cs</PackagePath>
-            </_PackageFiles>
-            <!-- Runtime dependency of the generator (official HashCode polyfill);
-                 analyzers are loaded by file reference, so the dependency must
-                 ship next to the generator dll. -->
-            <_PackageFiles Include="..\Origo.SourceGeneration\bin\$(Configuration)\netstandard2.0\Microsoft.Bcl.HashCode.dll">
-                <PackagePath>analyzers/dotnet/cs</PackagePath>
-            </_PackageFiles>
-        </ItemGroup>
-    </Target>
 
 </Project>

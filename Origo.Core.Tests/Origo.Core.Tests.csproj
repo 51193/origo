@@ -15,7 +15,7 @@
         <!-- Coverlet: enforce Origo.Core line coverage in CI and local test runs for this project. -->
         <CollectCoverage>true</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-        <Include>[Origo.Core]*</Include>
+        <Include>[Origo.Core]*,[Origo.Core.Contracts]*,[Origo.Core.Kernel]*</Include>
         <!-- Reflection-heavy bootstrap: excluded from line % gate; covered indirectly via LoadAndSpawnFromFile / guard tests. -->
         <ExcludeByFile>**/Runtime/OrigoAutoInitializer.cs,**/Addons/FastNoiseLite/FastNoiseLite.cs,**/*.g.cs</ExcludeByFile>
         <!-- CompilerGeneratedAttribute is intentionally NOT excluded: it would
@@ -41,7 +41,12 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="Save/Golden/**/*" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Origo.Core\Origo.Core.csproj"/>
+        <ProjectReference Include="..\Origo.Core.Kernel\Origo.Core.Kernel.csproj"/>
         <ProjectReference Include="..\Origo.TestSupport\Origo.TestSupport.csproj"/>
     </ItemGroup>
 

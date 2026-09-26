@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/root-instructions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Root Instructions and Task Routing Research
 
@@ -47,7 +47,7 @@ General Changelog categories and BREAKING decisions should be routed separately 
 
 ## A concrete route
 
-Task: “Fix `entity_set_data` writing to an existing float key.” Start with [Console](../../Origo.Core/Runtime/Console/README.en.md), its CommandHandlers documentation, and [command semantics](../../usage/console-commands.en.md). Continue to data-type and converter collaborators, the real command queue/frame driver, relevant tests, and history. Changing a numeric parser alone can miss the contract to preserve an existing value's type.
+Task: “Fix `entity_set_data` writing to an existing float key.” Start with [Console](../../Origo.Core.Kernel/Runtime/Console/README.en.md), its CommandHandlers documentation, and [command semantics](../../usage/console-commands.en.md). Continue to data-type and converter collaborators, the real command queue/frame driver, relevant tests, and history. Changing a numeric parser alone can miss the contract to preserve an existing value's type.
 
 Root instructions should expose this chain. A command-testing skill should reproduce through the real queue and frame entry. Formal release operations do not help this diagnosis, while public API changes, Changelog alignment, and final CI can still apply. Affected checks shorten iteration without replacing completion gates.
 

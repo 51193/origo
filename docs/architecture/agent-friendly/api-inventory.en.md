@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/api-inventory -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Machine API inventory: navigate from compilable facts to design contracts
 
@@ -9,11 +9,11 @@ Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This
 
 ## 1. What Origo specifically lacks
 
-**Observation:** [Agent Reference](../../usage/agent-reference.en.md) manually reproduces complete C# signatures for `ISndEntity`, narrow interfaces, `ISndContext`, sessions, and state machines to help game-development agents. [Abstractions/Snd](../../Origo.Core/Abstractions/Snd/README.en.md) separately maintains member counts, property types, and responsibilities. DocSync validates language pairs, revisions, links, and mirror file lists, but does not compile these code blocks or compare descriptions with the effective public member set. See [DocSync test capabilities](../../tools/DocSyncTool.Tests/README.en.md) and [Validator implementation](../../../tools/DocSyncTool/Validator.cs).
+**Observation:** [Agent Reference](../../usage/agent-reference.en.md) manually reproduces complete C# signatures for `ISndEntity`, narrow interfaces, `ISndContext`, sessions, and state machines to help game-development agents. [Abstractions/Snd](../../Origo.Core.Contracts/Abstractions/Snd/README.en.md) separately maintains member counts, property types, and responsibilities. DocSync validates language pairs, revisions, links, and mirror file lists, but does not compile these code blocks or compare descriptions with the effective public member set. See [DocSync test capabilities](../../tools/DocSyncTool.Tests/README.en.md) and [Validator implementation](../../../tools/DocSyncTool/Validator.cs).
 
 A concrete example must not be mislabeled a defect: the capability list mentions nine narrow roles while the architecture overview mentions ten companions. The narrow-interface documentation explicitly defines **nine Snd roles plus `IStateMachineContext`, giving ten companion properties**. Path properties and `Bootstrap` also exist, so counting every property is not the companion count. An agent reading one summary may confuse the categories; that does not establish an interface-design error. A machine inventory can list exact properties while a human capability classification identifies companions, avoiding repeatedly copied counts. See [Capabilities](../../usage/capabilities.en.md), [Architecture overview](../overview.en.md), and [ISndContext source](../../../Origo.Core/Snd/ISndContext.cs).
 
-Another example is [TypedData](../../Origo.Core/Snd/Metadata/README.en.md): public accessors such as `TryGetInt32` and conversion operators are generator outputs. Searching handwritten `.cs` files for `public` misses them. Conversely, [generator documentation](../../Origo.SourceGeneration/README.en.md) states that Adapter's entire `TypedDataLayeredExtensions` class is internal; public methods inside it are not game-facing public API. The tool must determine **effective external accessibility**.
+Another example is [TypedData](../../Origo.Core.Contracts/Snd/Metadata/README.en.md): public accessors such as `TryGetInt32` and conversion operators are generator outputs. Searching handwritten `.cs` files for `public` misses them. Conversely, [generator documentation](../../Origo.SourceGeneration/README.en.md) states that Adapter's entire `TypedDataLayeredExtensions` class is internal; public methods inside it are not game-facing public API. The tool must determine **effective external accessibility**.
 
 Agent Reference uses `[Test]` templates while this repository uses xUnit `[Fact]`. The reference targets game developers, and the strategy test framework can work with different assertion frameworks; this alone does not prove a repository testing error. Examples should identify consumer/maintainer audiences and runners, with compilable checks for the corresponding combinations. Inventories establish signatures; example tests establish usage.
 
@@ -55,7 +55,7 @@ The following JSON is a proposed excerpt illustrating a contract, not actual too
       "accessors": {"get": "public"},
       "origin": "source",
       "source": "Origo.Core/Snd/ISndContext.cs",
-      "documentation": "docs/Origo.Core/Abstractions/Snd/README.en.md"
+      "documentation": "docs/Origo.Core.Contracts/Abstractions/Snd/README.en.md"
     }
   ]
 }

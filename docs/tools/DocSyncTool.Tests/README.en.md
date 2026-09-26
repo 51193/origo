@@ -1,5 +1,5 @@
 <!-- docsync-pair: tools/DocSyncTool.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # DocSyncTool Tests
 
@@ -15,7 +15,7 @@ temporary repo scaffolds.
 | Unit under test | Covered behavior |
 |-----------------|------------------|
 | `Validator` | Bilingual pair revision consistency, missing language files, cross-language / bare `.md` / broken links, missing metadata headers and managed-revision reminder comments, pair id mismatching the file path, invalid revision values; code blocks / inline code and external URL links are exempt; source-directory → doc-directory structural mirror and file-list checks (including SourceDocOverrides exception mappings) |
-| `Generator` | Per-directory `README.md` navigation hub generation, idempotency (no rewrite when unchanged), `.sync-status.json` status determination (`synced` / `zh-ahead` / `missing-en`), recursive subdirectory hubs, skipping doc-less directories, derived defaults for files without metadata, and git-derived `docsync-revision` planning (multi-commit pushes, translation catch-up, metadata-only commits, uncommitted local edits) |
+| `Generator` | Per-directory `README.md` navigation hub generation, idempotency (no rewrite when unchanged), `.sync-status.json` status determination (`synced` / `zh-ahead` / `missing-en`), recursive subdirectory hubs, skipping doc-less directories, derived defaults for files without metadata, and git-derived `docsync-revision` planning (multi-commit pushes, translation catch-up, metadata-only commits, uncommitted local edits, and idempotent planning across merge/divergent path history) |
 | `Config` | Config parsing (case-insensitive keys), language code validation (rejects whitespace / slashes / backslashes), missing config file and invalid JSON failure modes |
 | `DocFile` | Language suffix extraction and pair id derivation |
 | `Program` | Command dispatch and exit codes, unknown-command usage, FATAL when no repo root is found (CWD-sensitive tests run in a serialized collection) |

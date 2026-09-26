@@ -20,9 +20,34 @@ if "-" in version:
     print(f"Release metadata verification SKIPPED for snapshot version {version}.")
     sys.exit(0)
 
+numeric = version.split("+", 1)[0]
+parts = numeric.split(".")
+if not parts or not all(part.isdigit() for part in parts) or len(parts) > 4:
+    print(
+        f"ERROR: TAG_VERSION must start with a numeric x.y.z version; got '{version}'.",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+assembly_version = ".".join((parts + ["0"] * 4)[:4])
+
 failures = []
 
 changelog = open("CHANGELOG.md", encoding="utf-8").read()
+props = open("Directory.Build.props", encoding="utf-8").read()
+
+def read_property(name):
+    match = re.search(rf"<{name}>([^<]+)</{name}>", props)
+    return match.group(1).strip() if match else None
+
+if read_property("Version") != version:
+    failures.append(
+        f"Directory.Build.props <Version> is '{read_property('Version')}', expected '{version}'")
+for element in ("AssemblyVersion", "FileVersion"):
+    actual = read_property(element)
+    if actual != assembly_version:
+        failures.append(
+            f"Directory.Build.props <{element}> is '{actual}', expected '{assembly_version}'")
+
 version_heading = f"## [{version}] - "
 if version_heading not in changelog:
     failures.append(f"CHANGELOG.md has no version block heading '{version_heading.strip()}'")

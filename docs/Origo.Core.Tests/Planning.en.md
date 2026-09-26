@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Planning Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Planning](../Origo.Core/Planning/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Planning](../Origo.Core.Contracts/Planning/README.en.md)
 
 ## Behavior Overview
 

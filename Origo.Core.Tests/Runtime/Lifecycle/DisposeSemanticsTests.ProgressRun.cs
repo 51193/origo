@@ -1,4 +1,5 @@
 using System;
+using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
 using Origo.Core.Snd;
 using Xunit;
@@ -50,6 +51,26 @@ public class DisposeSemanticsTestsProgressRun
         progressRun.Dispose();
 
         Assert.False(fs.Exists("root/current/progress.json"));
+    }
+
+    [Fact]
+    public void ProgressRun_Dispose_DeletesCurrentExtraFile()
+    {
+        var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
+        var progressRun = ctx.EnsureProgressRun();
+
+        ctx.ArchiveFileAccess.WriteFile(
+            "lifecycle-cleanup.json",
+            DataSourceNode.CreateObject().Add("state", DataSourceNode.CreateString("persisted")));
+        Assert.True(fs.Exists("root/current/extra/lifecycle-cleanup.json"),
+            "The archive write must land in the current extra/ directory before disposal.");
+
+        progressRun.Dispose();
+
+        Assert.False(fs.Exists("root/current/extra/lifecycle-cleanup.json"),
+            "ProgressRun disposal must remove extra/ files written to current/.");
+        Assert.False(fs.DirectoryExists("root/current/extra"),
+            "ProgressRun disposal must remove the current extra/ directory.");
     }
 
     [Fact]

@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.SourceGeneration
 
-> [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md)
+> [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md)
 
 ## Overview
 
@@ -30,8 +30,8 @@ The Source Generator detects at compile time whether the current assembly is the
 
 | Mode | Applicable Assembly | Generated Content |
 |------|-----------|---------|
-| **Home** | Origo.Core | `partial struct TypedData`'s KindMap, AsXxx/TryGetXxx methods, explicit operators; `TypedDataTypeMap`, `TypedDataObjectConverter`, `TypedDataFactory<T>`; `[ModuleInitializer]` KindTypeMap registration |
-| **Adapter** | Origo.GodotAdapter (currently the only supported adapter layer) | Extension methods (`AsXxx` / `TryGetXxx`); `[ModuleInitializer]` KindTypeMap + KindResolver + FromObject/ToObject conversion bridges. The adapter assembly must be in Origo.Core's `InternalsVisibleTo` whitelist; otherwise ORIGOSG007 is reported and no code is generated |
+| **Home** | Origo.Core.Contracts | `partial struct TypedData`'s KindMap, AsXxx/TryGetXxx methods, explicit operators; `TypedDataTypeMap`, `TypedDataObjectConverter`, `TypedDataFactory<T>`; `[ModuleInitializer]` KindTypeMap registration |
+| **Adapter** | Origo.GodotAdapter (currently the only supported adapter layer) | Extension methods (`AsXxx` / `TryGetXxx`); `[ModuleInitializer]` KindTypeMap + KindResolver + FromObject/ToObject conversion bridges. The adapter assembly must be in Origo.Core.Contracts's `InternalsVisibleTo` whitelist; otherwise ORIGOSG007 is reported and no code is generated |
 
 ### Home Mode Generated Content
 
@@ -62,7 +62,7 @@ Kind values are `byte`s, with each layer's starting value controlled by `SndInli
 |----|-----------|----------|--------|
 | Core | 1 (default) | 1–13 | 13 BCL primitive types |
 | GodotAdapter | 128 | 128–141 | 14 Godot engine types |
-| Reserved (future adapters) | 192 | 192–254 | — (requires adding the assembly to Origo.Core's `InternalsVisibleTo` whitelist first) |
+| Reserved (future adapters) | 192 | 192–254 | — (requires adding the assembly to Origo.Core.Contracts's `InternalsVisibleTo` whitelist first) |
 | Fallback | — | `TypedData.UnregisteredKind` | Fallback for unregistered types |
 
 ### Type Inlining Strategy
@@ -71,7 +71,7 @@ There are only two storage paths: system primitive value types in the home assem
 
 | Type | Storage | Notes |
 |------|---------|------|
-| System primitive value types declared in the home (Origo.Core) assembly (`byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`char`) | Inlined in `_inlineBits : long` field | Zero heap allocation, zero boxing; inlining limited to home assembly |
+| System primitive value types declared in the home (Origo.Core.Contracts) assembly (`byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`char`) | Inlined in `_inlineBits : long` field | Zero heap allocation, zero boxing; inlining limited to home assembly |
 | Reference types (`string`) | Stored in `_ref : object?` field | Built-in KindMap fallback |
 | Adapter-registered types (non-system value types) | Stored in `_ref : object?` field | Non-system value type size cannot be reliably determined at compile time, fall back to `_ref` |
 | Unregistered types | `_ref : object?` fallback | Kind=`TypedData.UnregisteredKind`, restored through `TypedDataObjectConverter.FromObject` during deserialization |
@@ -86,13 +86,13 @@ Diagnostic messages carry the corresponding `SndInlineTypesAttribute` syntax loc
 
 | Diagnostic ID | Severity | Trigger Condition |
 |---------|---------|---------|
-| `ORIGOSG001` | Error | A system primitive type is registered in a non-home (adapter layer) assembly's `SndInlineTypes` group. Inlined primitive types are exclusive to Origo.Core; adapter layers may only register reference types or non-system value types (going through `_ref`). |
+| `ORIGOSG001` | Error | A system primitive type is registered in a non-home (adapter layer) assembly's `SndInlineTypes` group. Inlined primitive types are exclusive to Origo.Core.Contracts; adapter layers may only register reference types or non-system value types (going through `_ref`). |
 | `ORIGOSG002` | Error | An uninlinable and unsupported value type (such as `decimal` or a custom struct) is registered in the home assembly. The home assembly only permits registering supported system primitive types and reference types. |
 | `ORIGOSG003` | Error | A registered type's Kind value (`startKind` + position within group) falls outside the `byte` valid range `[1, 254]`. This includes cases where a Kind overflow wraps around to an already-occupied value, silently conflicting with another type. |
 | `ORIGOSG004` | Error | Multiple `SndInlineTypes` groups have overlapping `startKind` ranges, causing the same Kind byte to be assigned to multiple different types. Each inlined type must map to a unique Kind. |
 | `ORIGOSG005` | Error | Multiple registered types produce the same generated identifier (KindName): same-named types from different namespaces, generic instantiations whose names collapse to one identifier, and the same type registered more than once with different kind values (re-registering the same type with the same kind is idempotent and silently deduplicated, matching the runtime `RegisterKind` semantics). The reserved identifiers `Null` and the Home inline kind names are rejected too — `KindMap` always emits the sentinel `Null = 0` (and value types would also collide with the handwritten `IsNull` property), so a type named `Null` reports ORIGOSG005 and is dropped; an adapter-layer **custom type whose sanitized name equals a Home inline kind name** (e.g. the user's own `Int32`) would generate a public extension method that consumers bind to instead of the Home instance accessor (silent semantic divergence), also ORIGOSG005. Generated accessor identifiers derive from the type name; any identifier collision would emit uncompilable duplicate members or divergent semantics. |
 | `ORIGOSG006` | Error | A registered type's sanitized KindName **is not a valid C# identifier** (e.g. pointer types, whose `Name` contains `*` and sanitizes to `Int32*`), so the generated accessor identifiers could not compile; such registrations report ORIGOSG006 and are dropped. |
-| `ORIGOSG007` | Error | A non-home assembly declares `SndInlineTypes` adapter registrations but is not in Origo.Core's `InternalsVisibleTo` whitelist. Adapter-mode generated code needs `TypedData._kind/_ref` and the internal registration APIs; only Origo.GodotAdapter is currently whitelisted. The generator reports ORIGOSG007 and emits no source instead of a wall of CS0122/CS0117 errors. |
+| `ORIGOSG007` | Error | A non-home assembly declares `SndInlineTypes` adapter registrations but is not in Origo.Core.Contracts's `InternalsVisibleTo` whitelist. Adapter-mode generated code needs `TypedData._kind/_ref` and the internal registration APIs; only Origo.GodotAdapter is currently whitelisted. The generator reports ORIGOSG007 and emits no source instead of a wall of CS0122/CS0117 errors. |
 
 ## Registration Mechanism
 

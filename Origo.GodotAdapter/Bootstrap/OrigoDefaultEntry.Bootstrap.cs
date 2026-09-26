@@ -1,7 +1,6 @@
 using System;
-using Origo.Core.Runtime;
+using Origo.Core.Kernel.Ports;
 using Origo.Core.Snd;
-using Origo.Core.Snd.Scene;
 using Origo.GodotAdapter.Console;
 
 namespace Origo.GodotAdapter.Bootstrap;
@@ -15,8 +14,9 @@ namespace Origo.GodotAdapter.Bootstrap;
 public partial class OrigoDefaultEntry
 {
     /// <summary>
-    ///     Godot lifecycle entry: creates the <see cref="SndContext" />, binds it to the
-    ///     manager, then delegates the full startup flow to <see cref="SndContext.Bootstrap" />.
+    ///     Godot lifecycle entry: creates the <see cref="ISndContext" /> through the adapter
+    ///     kernel port, binds it to the manager, then delegates the full startup flow to
+    ///     <see cref="ISndContext.Bootstrap" />.
     /// </summary>
     public override void _Ready()
     {
@@ -28,28 +28,21 @@ public partial class OrigoDefaultEntry
 
             RegisterConsoleCommandHandlers();
 
-            var sndContext = new SndContext(new SndContextParameters(
-                Runtime,
-                SharedDataSourceIo,
-                SharedMetaAccess,
-                SharedPathResolver,
+            var context = CreateSndContext(new AdapterContextOptions(
                 SaveRootPath,
                 InitialSaveRootPath,
-                ConfigPath)
-            {
-                AutoDiscoverStrategies = AutoDiscoverStrategies,
-                DiscoverySkipPrefixes = AutoDiscoverStrategies ? _godotSkipPrefixes : null,
-                SceneAliasMapPath = SceneAliasMapPath,
-                SndTemplateMapPath = SndTemplateMapPath,
-                ConfigureConverters = RegisterCustomConverters,
-            });
+                ConfigPath,
+                AutoDiscoverStrategies,
+                AutoDiscoverStrategies ? _godotSkipPrefixes : null,
+                SceneAliasMapPath,
+                SndTemplateMapPath,
+                RegisterCustomConverters));
 
-            Context = sndContext;
-            ((ISndContextAttachableSceneHost)SndManager).BindContext(sndContext);
-            ConfigureSaveMetadataContributors(sndContext);
+            Context = context;
+            ConfigureSaveMetadataContributors(context);
 
             // Delegate to Core to execute the complete startup flow: strategy discovery → alias/template loading → entry save
-            sndContext.Bootstrap();
+            context.Bootstrap();
         }
         catch
         {
@@ -60,12 +53,8 @@ public partial class OrigoDefaultEntry
 
     private void RegisterConsoleCommandHandlers()
     {
-        if (Runtime.Console is null)
-            throw new InvalidOperationException(
-                "Runtime.Console is not available. Ensure OrigoRuntime is fully initialized before calling Bootstrap.");
-
-        Runtime.Console.RegisterHandler(new PressButtonCommandHandler(Runtime));
-        Runtime.Console.RegisterHandler(new TreeDebugCommandHandler(Runtime));
-        Runtime.Console.RegisterHandler(new CameraViewCommandHandler(Runtime));
+        RegisterConsoleCommandHandler(new PressButtonCommandHandler(Runtime));
+        RegisterConsoleCommandHandler(new TreeDebugCommandHandler(Runtime));
+        RegisterConsoleCommandHandler(new CameraViewCommandHandler(Runtime));
     }
 }

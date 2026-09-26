@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Benchmarks -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Performance Benchmarks
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md) · [↔ SG Pure Micro-Benchmarks: Origo.SourceGeneration.Tests](../Origo.SourceGeneration.Tests/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md) · [↔ SG Pure Micro-Benchmarks: Origo.SourceGeneration.Tests](../Origo.SourceGeneration.Tests/README.en.md)
 
 ## Behavior Under Test Overview
 
@@ -128,7 +128,7 @@ table format "Method / Iterations / Time / Throughput / Allocation" with dual-ch
 |----------------|--------|-----------|
 | Does not cover real-world throughput of GodotAdapter registered types (`Vector2`/`Vector3`, etc.) | Adapter-layer multi-layer dispatch performance not verified in this suite | Covered separately by `GodotTypedDataPerformanceTests` in [Origo.GodotAdapter.Tests/Serialization](../Origo.GodotAdapter.Tests/Serialization.en.md) |
 | Does not cover concurrent/multi-threaded read/write | Contention and visibility under multi-threading not tested | Framework uses single-threaded frame model (see [manual root README — Design Principles](../README.en.md)) |
-| Does not cover Kind-dispatch alternative iteration paths | Only tests the `ToObject` (object-ification) iteration path | [Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md) Kind dispatch |
+| Does not cover Kind-dispatch alternative iteration paths | Only tests the `ToObject` (object-ification) iteration path | [Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md) Kind dispatch |
 | Absolute throughput/ratio/allocation not asserted (only prints + single-benchmark time cap) | Performance degradations cannot be auto-captured, require manual baseline comparison | [benchmarks/baseline.md](../benchmarks/baseline.en.md) |
 
 ## Design Decisions
@@ -179,7 +179,7 @@ projects reach them via `InternalsVisibleTo`). The heterogeneous-iteration bench
 the "compile-time-unknown-type object-ification" cold path through internal
 `TypedDataObjectConverter.ToObject` — the real call shape of serialization, console, and
 `ToString` cold paths; hot/warm paths (data-change signal handling, load validation) use the
-zero-allocation `TryGetXxx` accessors (see [Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md)).
+zero-allocation `TryGetXxx` accessors (see [Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md)).
 needing to expose Core internal members to the test project, keeping the benchmark's calling shape
 consistent with real downstream consumers.
 

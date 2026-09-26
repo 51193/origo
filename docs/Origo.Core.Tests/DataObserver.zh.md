@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/DataObserver -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 数据观察者 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Snd/Entity](../Origo.Core/Snd/Entity/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/Snd/Entity](../Origo.Core.Kernel/Snd/Entity/README.zh.md)
 > [↔ 被测行为: usage/snd-entity-model](../usage/snd-entity-model.zh.md)
 
 ## 被测行为概览

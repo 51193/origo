@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 30 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
@@ -17,7 +17,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 
 | File | Verification Focus |
 |------|-------------------|
-| `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, consumers can complete full workflow through pure interfaces |
+| `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, shell API classification completeness, Contracts/Kernel dependency direction, consumers can complete full workflow through pure interfaces |
 | `AutoInitializerGuardTests.cs` | Strategy statelessness validation: instance fields rejected, static fields allowed, missing StrategyIndex throws |
 
 ## CoreArchitectureGuardrailTests Test Details
@@ -36,6 +36,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |
 | `SndContext_CompanionProperties_ShareConsistentState` | Companion properties share the same blackboard instances (SystemBlackboard/ProgressBlackboard) | Snd Abstraction: ISndContext composition |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext inherits ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
+| `ShellRuntimeSurfaces_ShouldExposeSingleBlackboardAndMetaListPaths` | The system blackboard is exposed only through `ISndContext.Blackboard`; metadata-list resolution only through `ISndTemplateAccess` | architecture/overview: single access path |
 | `DeferredFlush_ShouldNotBePublicBusinessSurface` | Frame flushing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndDeferredActions` and `OrigoRuntime` expose no bypassable public flush | architecture/overview: single access path |
 | `ConsolePump_ShouldNotBePublicBusinessSurface` | Console processing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndConsoleAccess` and `OrigoConsole` expose no bypassable public pump | architecture/overview: single access path |
 | `IEntityLifecycle_ShouldBeInternal` | IEntityLifecycle is internal — business code must not trigger lifecycle hooks directly | Runtime: lifecycle orchestration |
@@ -47,6 +48,17 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `ISessionRun_ProvidesRuntimeAccess` | ISessionRun provides Blackboard/SceneHost/StateMachines access | session-model |
 | `SessionManager_ProvidesCreateAndDestroyOperations` | ISessionManager provides CreateBackgroundSession/DestroySession | session-model |
 | `ConsoleCommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | ConsoleCommandHandlerBase is public, external projects can derive custom command handlers | console-bridge |
+| `ShellApiClassification_CoversEveryCoreExport` | Every Core export appears exactly once in the bilingual classification table; a new export must update the classification first | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryContractsExport` | Every `Origo.Core.Contracts` export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryKernelExport` | Every `Origo.Core.Kernel` export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
+| `Kernel_ShouldNotReferenceImplementationsOrGodot` | Kernel references neither `Origo.Core`, adapter, nor ConsoleBridge assemblies, and references no Godot assembly | architecture/shell-kernel-boundary |
+| `Kernel_ShouldReferenceContracts` | Kernel explicitly references `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
+| `Core_ShouldReferenceKernel` | `Origo.Core` explicitly references `Origo.Core.Kernel` | architecture/shell-kernel-boundary |
+| `TypedData_ShouldLiveInContractsAssembly` | The TypedData type identity lives in `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
+| `CoreAssembly_ShouldNotDeclareTypedData` | The `Origo.Core` assembly no longer declares the TypedData type | architecture/shell-kernel-boundary |
+| `DataSourceNode_ShouldLiveInContractsAssembly` | The DataSourceNode type identity lives in `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
+| `Contracts_ShouldNotReferenceImplementationsOrGodot` | The contracts assembly references neither `Origo.Core`, adapter, nor ConsoleBridge assemblies, and references no Godot assembly | architecture/shell-kernel-boundary |
+| `Core_ShouldReferenceContracts` | The `Origo.Core` assembly explicitly references `Origo.Core.Contracts`, pinning the contract dependency direction | architecture/shell-kernel-boundary |
 
 ## AutoInitializerGuardTests Test Details
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Agent Reference
 
@@ -280,7 +280,7 @@ OrigoAutoHost._Ready()
 ├── 4. Register TypeStringMapping + Converters (BCL + Godot types)
 ├── 5. Create PersistentBlackboard → LoadFromDisk
 ├── 6. Create ConsoleInputBuffer + ConsoleOutputChannel
-├── 7. Create OrigoRuntime
+├── 7. Create IOrigoRuntime (kernel OrigoRuntime implementation)
 │   ├── SndWorld (strategy pool + converter registry)
 │   ├── SystemRun (holds SystemBlackboard)
 │   └── OrigoConsole (command routing)
@@ -288,7 +288,7 @@ OrigoAutoHost._Ready()
 ├── 8. BindRuntimeDependencies (World + Logger to SndManager)
 │
 └── OrigoDefaultEntry._Ready() [override]
-    ├── 9. Register adapter-layer command handlers (press_button, tree_debug, camera_view)
+    ├── 9. Register adapter-layer command handlers through IOrigoRuntime.RegisterConsoleCommandHandler (press_button, tree_debug, camera_view)
     ├── 10. Create SndContext (inject Runtime + FileSystem + saveRoot + config)
     ├── 11. SndManager.BindContext(context)
     ├── 12. ConfigureSaveMetadataContributors(context)

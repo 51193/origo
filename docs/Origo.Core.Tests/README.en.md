@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 28 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Tests
 
@@ -53,7 +53,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 
 | Capability | Document | Verification Focus |
 |-----------|----------|-------------------|
-| Architecture Guardrails | [Architecture.md](Architecture.en.md) | Layer isolation (Core does not reference Godot), interface composition (ISndContext pure composition), strategy statelessness validation |
+| Architecture Guardrails | [Architecture.md](Architecture.en.md) | Layer isolation (Core does not reference Godot), Contracts/Kernel dependency direction, interface composition (ISndContext pure composition), strategy statelessness validation, shell API classification completeness |
 | Test Doubles | [Abstractions.md](Abstractions.en.md) | TestMemoryFileSystem / NullLogger / TestMemoryFileSystemAdditional correctness |
 | Blackboard | [Blackboard.md](Blackboard.en.md) | Set/Get/TryGet/Clear/SerializeAll/DeserializeAll full lifecycle + key validation |
 | Data Observer | [DataObserver.md](DataObserver.en.md) | Subscribe/Unsubscribe/Notify/Multiple subscribers/Re-entrancy safety/Clear |
@@ -66,6 +66,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | Scheduling | [Scheduling.md](Scheduling.en.md) | ConcurrentActionQueue enqueue/drain/concurrency safety/recursive depth protection |
 | Console | [Console.md](Console.en.md) | Command parser/router/input queue/output channel, 19 built-in command handlers (16 Core + 3 GodotAdapter), type inference |
 | Runtime Core | [Runtime-Core.md](Runtime-Core.en.md) | OrigoRuntime construction, console injection, deferred frame action execution |
+| Shell Compatibility | [Compatibility.md](Compatibility.en.md) | Lifecycle ordering, observer recovery, fail-fast, and session transitions through the public OrigoHost entry; kernel port binding/validation is not bypassed; golden v1 save loading is in Save-Storage |
 | Session Lifecycle | [Session-Lifecycle.md](Session-Lifecycle.en.md) | Session creation/destruction/switching, Dispose semantics, foreground/background protocol consistency, topology encoding/decoding |
 | Persistence: Storage | [Save-Storage.md](Save-Storage.en.md) | Two-phase write, write_in_progress marker contract, level three-piece set integrity, path strategy, snapshot read/write, idempotent dedup |
 | Persistence: Serialization | [Save-Serialization.md](Save-Serialization.en.md) | BlackboardSerializer, SndSceneSerializer, SaveContext orchestration |
@@ -76,7 +77,7 @@ Tests are grouped by **capability under test**, each document corresponding to a
 | SND Scene | [Snd-Scene.md](Snd-Scene.en.md) | MemorySndSceneHost and FullMemorySndSceneHost Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity, NullNodeFactory |
 | SND Strategy | [Snd-Strategy.md](Snd-Strategy.en.md) | Strategy partial ordering, pool reference counting/recycling, entity strategy lifecycle hooks, observer strategies, active strategy Invoke, strategy pool Get/Release and Process scaling performance measurement |
 | SND Context | [Snd-Context.md](Snd-Context.en.md) | SndContext save/load/continue workflow, LevelBuilder, template resolution, Archetype loading |
-| SND Extensions | [Snd-Extensions.md](Snd-Extensions.en.md) | EnsureStrategy lazy strategy attachment (idempotent), TryGetNumeric cross-numeric type read, InvokeStrategy generic invocation |
+| SND Extensions | [Snd-Extensions.md](Snd-Extensions.en.md) | EnsureStrategy lazy strategy attachment (idempotent), TryGetNumeric cross-numeric type read, InvokeStrategy generic invocation with complex nested payload serialization |
 | File Access | [Snd-FileAccess.md](Snd-FileAccess.en.md) | ISndFileAccess DataSourceNode read/write round-trip on SndContext, strongly-typed round-trip, overwrite semantics, error/boundary paths |
 | StrategyTestContext File Access | [StrategyTestContext-FileAccess.md](StrategyTestContext-FileAccess.en.md) | ISndFileAccess in-memory file system behavior on StrategyTestContext, DataSourceNode and strongly-typed round-trips |
 | Archive File Access | [Snd-ArchiveFileAccess.md](Snd-ArchiveFileAccess.en.md) | ISndArchiveFileAccess extra/ subdirectory file operations on SndContext, DeleteFile, path traversal protection, save/load round-trips |

@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.Core.Tests/Blackboard -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Blackboard Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Blackboard](../Origo.Core/Blackboard/README.en.md)
-> [↔ Abstraction: Origo.Core/Abstractions/Blackboard](../Origo.Core/Abstractions/Blackboard/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Blackboard](../Origo.Core.Contracts/Blackboard/README.en.md)
+> [↔ Abstraction: Origo.Core.Contracts/Abstractions/Blackboard](../Origo.Core.Contracts/Abstractions/Blackboard/README.en.md)
 
 ## Behavior Under Test Overview
 

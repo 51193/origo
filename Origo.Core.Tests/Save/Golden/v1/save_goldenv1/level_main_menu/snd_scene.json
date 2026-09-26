@@ -1,0 +1,29 @@
+[
+  {
+    "name": "hero",
+    "node": {
+      "pairs": {}
+    },
+    "strategy": {
+      "lifecycle_indices": [],
+      "active_indices": [],
+      "observer_indices": []
+    },
+    "data": {
+      "pairs": {
+        "hp": {
+          "type": "Int32",
+          "data": 100
+        },
+        "name": {
+          "type": "String",
+          "data": "Ada"
+        },
+        "mana": {
+          "type": "Int32",
+          "data": 30
+        }
+      }
+    }
+  }
+]

@@ -14,6 +14,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Origo.GodotAdapter\Origo.GodotAdapter.csproj" />
+        <ProjectReference Include="..\Origo.Core.Kernel\Origo.Core.Kernel.csproj" PrivateAssets="all"/>
         <ProjectReference Include="..\Origo.Core\Origo.Core.csproj" />
     </ItemGroup>
 

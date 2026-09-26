@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Metadata Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md)
 > [↔ Behavior under test: usage/snd-entity-model](../usage/snd-entity-model.en.md)
 
 ## Behavior Under Test Overview
@@ -182,6 +182,7 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | Test Method | Behavior Verified | Documentation Source |
 |-------------|------------------|---------------------|
 | `Entity_SetData_GetData_RoundTrip_AllRegisteredTypes` | Entity SetData/GetData round-trip supports all registered types | snd-entity-model: TypedData |
+| `Entity_SetData_GetData_RoundTrip_UnregisteredReferenceType` | Entity SetData/GetData round-trips an unregistered reference type without losing instance identity | snd-entity-model: TypedData |
 | `Entity_TryGetData_Found_ReturnsTrue` | TryGetData returns true and value when key is found | snd-entity-model: TypedData |
 | `Entity_SetData_DifferentTypes_SameKey` | Setting different types on the same key sequentially; later value overwrites the previous | snd-entity-model: TypedData |
 | `Direct_Observer_Subscribe_And_Notify` | DataObserverManager subscription and notification: oldValue/newValue correctly passed | snd-entity-model: TypedData |
@@ -205,7 +206,6 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | Gap Description | Impact | Documentation Basis |
 |-----------------|--------|---------------------|
 | SndMetaData performance with very large numbers of strategy indices | Deep copy performance at extreme data volumes | — |
-| TypedData non-registered reference type round-trips in entity SetData/GetData | Currently only testing registered type round-trips | snd-entity-model: TypedData |
 
 ---
 

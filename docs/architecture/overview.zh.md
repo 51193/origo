@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构总览
 
@@ -204,22 +204,39 @@ Godot._Process
 ## 项目结构
 
 ```
-Origo.Core/           # 平台无关核心（209 个 .cs 文件）
-├── Abstractions/     # 公共接口（Blackboard/Entity/StateMachine/...）
+Origo.Core.Contracts/ # 稳定消费者契约与共享纯工具
+├── Abstractions/     # 日志/控制台/文件/节点/runtime host/lifecycle/scene/snd/状态机接口
+├── Blackboard/       # 共享内存黑板实现
+├── DataSource/       # 数据节点/I/O/文件元数据/转换器/registry 契约
+├── Grid/             # GridPos 值类型
+├── Logging/          # Logger<T>、LogMessageBuilder、NullLogger
+├── Planning/         # PlanExecutionStrategyBase
+├── Runtime/          # 控制台 handler/调用模型与参数校验契约
+├── Save/Meta/        # 存档元数据契约
+├── Serialization/    # TypeStringMapping
+├── Snd/              # TypedData/metadata、ISndContext、策略基类、internal 实体查询
+├── StateMachine/     # 状态机策略基类/context
+├── Utility/          # PathUtility 与 internal 值推断
+├── AssemblyAttributes.cs # Home 内联类型注册
+├── OrigoHostOptions.cs   # shell host 配置
+└── OrigoMeta.cs      # 框架元数据
+
+Origo.Core.Kernel/    # Kernel 实现包（Core 的 runtime-only 依赖）
+├── Abstractions/     # internal 实体/节点/场景契约
 ├── Addons/           # 外部算法库（FastNoiseLite）
-├── Blackboard/       # 黑板实现
-├── DataSource/       # JSON/Map 编解码 + 类型转换
-├── Grid/             # 网格坐标系统 + A* 寻路
-├── Logging/          # 日志实现
-├── Planning/         # 规划/行为策略扩展
-├── Random/           # 随机数 + 噪声
-├── Runtime/          # 运行时四层生命周期 + 控制台
-├── Save/             # 持久化存储
+├── DataSource/       # JSON/Map codec、factory、converter 与 I/O
+├── Ports/            # internal kernel-shell host 构造 port
+├── Runtime/          # 生命周期、控制台路由与帧调度
+├── Save/             # 持久化、payload、原子写入与存储
 ├── Scheduling/       # 延迟队列
-├── Serialization/    # 类型 ↔ 字符串映射
-├── Snd/              # SND 实体系统（策略 + 数据 + 节点）
-├── StateMachine/     # 字符串栈状态机
-└── Utility/          # 工具类（Diff/Path）
+├── Snd/              # context/world/entity/scene/strategy 实现
+└── StateMachine/     # 栈状态机与持久化模型
+
+Origo.Core/           # 消费者 shell 包
+├── Grid/             # 网格坐标系统 + A* 寻路
+├── Random/           # 随机数 + 噪声
+├── Snd/              # SND shell 扩展与 archetype loader
+└── OrigoHost.cs      # 基于 internal kernel port 的 host facade
 
 Origo.SourceGeneration/  # Roslyn 源码生成器（5 个 .cs 文件）
 └── TypedDataGenerator*.cs  # Home/Adapter 双模式代码生成（1 主文件 + 4 partial）

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console Commands
 
@@ -182,7 +182,7 @@ No arguments required. Automatically discovers the active `Camera3D` and iterate
 
 ## Adding Custom Commands
 
-> **Built-in vs. Custom:** All built-in command handlers are `internal sealed class` and are registered internally by `OrigoConsole`. User-defined commands must be declared as `public sealed class`, inherit `ConsoleCommandHandlerBase`, and be registered via `runtime.Console.RegisterHandler()`.
+> **Built-in vs. Custom:** All built-in command handlers are `internal sealed class` and are registered internally by `OrigoConsole`. User-defined commands must be declared as `public sealed class`, inherit `ConsoleCommandHandlerBase`, and be registered through the stable `IOrigoRuntime.RegisterConsoleCommandHandler(...)` entry point; Core and adapter hosts share this path. The host must inject both console input and output channels, otherwise registration fails explicitly.
 
 ### Core-Layer Commands
 
@@ -191,9 +191,6 @@ Inherit `ConsoleCommandHandlerBase` (`public abstract` class; external projects 
 ```csharp
 public sealed class MyCommandHandler : ConsoleCommandHandlerBase
 {
-    private readonly OrigoRuntime _runtime;
-    public MyCommandHandler(OrigoRuntime runtime) { _runtime = runtime; }
-
     public override string Name => "my_command";
     public override string HelpText => "my_command <arg> — description";
     public override int MinPositionalArgs => 1;
@@ -212,7 +209,7 @@ public sealed class MyCommandHandler : ConsoleCommandHandlerBase
 }
 ```
 
-Registration: `runtime.Console.RegisterHandler(new MyCommandHandler(runtime));`
+Registration: `runtime.RegisterConsoleCommandHandler(new MyCommandHandler());`
 
 ### Adapter-Layer Commands
 
@@ -221,7 +218,7 @@ Inherit `Origo.GodotAdapter.Console.CommandHandlerBase` (`public` class):
 ```csharp
 public sealed class MyGodotCommand : CommandHandlerBase
 {
-    public MyGodotCommand(OrigoRuntime runtime) : base(runtime) { }
+    public MyGodotCommand(IOrigoRuntime runtime) : base(runtime) { }
     public override string Name => "my_godot_cmd";
     public override string HelpText => "my_godot_cmd — does something";
     public override int MinPositionalArgs => 0;
@@ -237,6 +234,14 @@ public sealed class MyGodotCommand : CommandHandlerBase
         error = null;
         return true;
     }
+}
+
+// In a derived entry, call base._Ready() first so Runtime exists, then
+// register the custom command; no frame has been processed yet.
+public override void _Ready()
+{
+    base._Ready();
+    Runtime.RegisterConsoleCommandHandler(new MyGodotCommand(Runtime));
 }
 ```
 

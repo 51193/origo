@@ -1,0 +1,10 @@
+{
+  "score": {
+    "type": "Int32",
+    "data": 42
+  },
+  "mode": {
+    "type": "String",
+    "data": "golden"
+  }
+}

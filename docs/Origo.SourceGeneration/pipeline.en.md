@@ -1,11 +1,11 @@
 <!-- docsync-pair: Origo.SourceGeneration/pipeline -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 20 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # TypedData Compile-Time Optimization: Full Pipeline Analysis
 
 > [↑ Back to Origo.SourceGeneration](README.en.md) ·
 > [↔ Baseline Data](../benchmarks/baseline.en.md) ·
-> [↔ TypedData Documentation](../Origo.Core/Snd/Metadata/README.en.md)
+> [↔ TypedData Documentation](../Origo.Core.Contracts/Snd/Metadata/README.en.md)
 
 ## Overview
 
@@ -144,7 +144,7 @@ Could it be squeezed to 16 bytes? That would require sacrificing `long`/`double`
 The framework applies `[assembly: SndInlineTypes(...)]` at the assembly level:
 
 ```csharp
-// Origo.Core assembly — StartKind defaults to 1
+// Origo.Core.Contracts assembly — StartKind defaults to 1
 [assembly: SndInlineTypes(
     typeof(byte), typeof(sbyte), typeof(short), typeof(ushort),
     typeof(int), typeof(uint), typeof(long), typeof(ulong),
@@ -168,7 +168,7 @@ Kind allocation rules:
 |----|-----------|----------|--------|
 | Core | 1 | 1–13 | 13 BCL primitive types |
 | GodotAdapter | 128 | 128–141 | 14 Godot engine types |
-| Reserved (future adapters) | 192 | 192–254 | — (requires adding the assembly to Origo.Core's `InternalsVisibleTo` whitelist first) |
+| Reserved (future adapters) | 192 | 192–254 | — (requires adding the assembly to Origo.Core.Contracts's `InternalsVisibleTo` whitelist first) |
 
 Compile-time validation (fail-fast):
 
@@ -195,7 +195,7 @@ The Source Generator is invoked at compile time through the Roslyn `IIncremental
 
 The generated content falls into two sets based on **whether the current compilation assembly is the home assembly for TypedData**:
 
-#### Home Mode (Origo.Core)
+#### Home Mode (Origo.Core.Contracts)
 
 | Category | Output |
 |---------|------|
@@ -451,7 +451,7 @@ This is the inherent cost of the type-erased path. **But it is not a real hot pa
 
 #### Why a Two-Layer Architecture Is Needed
 
-Origo.Core defines `TypedData`; Origo.GodotAdapter is a separate, independent DLL compiled **after** Core. A single centralized code generation cannot work — when Core is being generated, adapter layer metadata does not yet exist.
+Origo.Core.Contracts defines `TypedData`; Origo.GodotAdapter is a separate, independent DLL compiled **after** Contracts. A single centralized code generation cannot work — when Core is being generated, adapter layer metadata does not yet exist.
 
 Solution: Let each layer compile and generate independently, assembling via `ModuleInitializer` at runtime.
 
@@ -459,7 +459,7 @@ Solution: Let each layer compile and generate independently, assembling via `Mod
 
 ```
 Program start
-  ├─ Origo.Core.dll loaded
+  ├─ Origo.Core.Contracts.dll loaded
   │    └─ ModuleInitializer runs
   │         ├─ RegisterKind(1, typeof(byte))
   │         ├─ RegisterKind(5, typeof(int))
@@ -585,7 +585,7 @@ Thus the minimum safe layout is: `byte (1B) + padding (7B) + long (8B) + referen
 
 If the framework needs to support a new type (e.g., C# `nint`, a future BCL ≤8-byte value type):
 
-1. Append `typeof(...)` to the `[SndInlineTypes]` array in `Origo.Core/AssemblyAttributes.cs`
+1. Append `typeof(...)` to the `[SndInlineTypes]` array in `Origo.Core.Contracts/AssemblyAttributes.cs`
 2. Add the corresponding `SpecialType` match in `TypedDataGenerator.cs`'s `IsInlineCandidate` and `GenerateKindName`
 3. If the type has special read/write logic (e.g., `float`'s `BitConverter`), add handling in the `InlineTypeExprs` helper in `TypedDataGenerator.cs` (`Pack` / `Unpack` / `FromObject`) — the single source for all bit-pattern expressions, shared by the home accessor, conversion, and factory generation
 4. Run `bash scripts/test.sh` to pass full test suite + coverage gate
@@ -593,7 +593,7 @@ If the framework needs to support a new type (e.g., C# `nint`, a future BCL ≤8
 
 ### 7.2 Adding Adapter Layer Types (Register in a New Adapter Assembly)
 
-0. Precondition: the new adapter assembly must be in Origo.Core's `InternalsVisibleTo` whitelist (currently only `Origo.GodotAdapter`). Otherwise the generator reports `ORIGOSG007` and emits no source.
+0. Precondition: the new adapter assembly must be in Origo.Core.Contracts's `InternalsVisibleTo` whitelist (currently only `Origo.GodotAdapter`). Otherwise the generator reports `ORIGOSG007` and emits no source.
 1. Add `[assembly: SndInlineTypes(startKind: <unoccupied range>, typeof(NewType), ...)]` to the new assembly
 2. Choose Kind range: check the validation range in `TypedDataGenerator.cs`'s `KindValue` (1-254), ensure no overlap with other adapters
 3. Source Generator will auto-detect this assembly is not Home → use Adapter mode → generate complete extension methods + ModuleInitializer registration chain
@@ -610,7 +610,7 @@ Append `static readonly DiagnosticDescriptor` in the field area of `TypedDataGen
 | Document | Content |
 |------|------|
 | [Origo.SourceGeneration README](README.en.md) | Dual-mode architecture, generated content catalog, registration mechanism, design decisions |
-| [TypedData documentation](../Origo.Core/Snd/Metadata/README.en.md) | TypedData struct, access patterns, recommended usage |
+| [TypedData documentation](../Origo.Core.Contracts/Snd/Metadata/README.en.md) | TypedData struct, access patterns, recommended usage |
 | [Performance baseline](../benchmarks/baseline.en.md) | All benchmark data, methodology, validity limitations |
 | [Origo.Core.Tests / Benchmarks](../Origo.Core.Tests/Benchmarks.en.md) | Real-world simulation benchmark notes |
 

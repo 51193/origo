@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/TypeStringMapping -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Type Serialization Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Serialization](../Origo.Core/Serialization/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Serialization](../Origo.Core.Contracts/Serialization/README.en.md)
 
 ## Behavior Under Test Overview
 

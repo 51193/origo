@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/root-instructions -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 根指令精简与任务路由研究
 
@@ -47,7 +47,7 @@ Changelog的一般分类和BREAKING判断与正式发布操作要分开路由；
 
 ## 一个路由实例
 
-任务：“修正 `entity_set_data` 命令对已有float键的写入行为”。起点应为 [Console](../../Origo.Core/Runtime/Console/README.zh.md)、其CommandHandlers文档和 [命令语义](../../usage/console-commands.zh.md)，然后读数据类型与转换器协作者、真实命令队列/帧驱动、相关测试和历史。不能只改数字解析函数而忽略保留已有类型的契约。
+任务：“修正 `entity_set_data` 命令对已有float键的写入行为”。起点应为 [Console](../../Origo.Core.Kernel/Runtime/Console/README.zh.md)、其CommandHandlers文档和 [命令语义](../../usage/console-commands.zh.md)，然后读数据类型与转换器协作者、真实命令队列/帧驱动、相关测试和历史。不能只改数字解析函数而忽略保留已有类型的契约。
 
 根入口应告诉Agent如何找到这条链；路线中的命令测试skill应提示经真实队列和帧入口复现。完整正式发布清单不帮助这项诊断；公共API变化、Changelog和最终CI却仍可能适用。受影响检查只缩短迭代，不代替完成门禁。
 

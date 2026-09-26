@@ -1,6 +1,6 @@
 using Godot;
 using Origo.Core.Abstractions.Console;
-using Origo.Core.Runtime;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.GodotAdapter.Snd;
 using Origo.GodotAdapter;
@@ -8,7 +8,7 @@ using Origo.GodotAdapter;
 namespace Origo.GodotAdapter.Console;
 
 /// <summary><c>press_button &lt;entity&gt; &lt;path&gt;</c> — simulate pressing a Button node under an entity.</summary>
-internal sealed class PressButtonCommandHandler(OrigoRuntime runtime) : CommandHandlerBase(runtime)
+internal sealed class PressButtonCommandHandler(IOrigoRuntime runtime) : CommandHandlerBase(runtime)
 {
     public override string Name => "press_button";
 

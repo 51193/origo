@@ -16,6 +16,7 @@ using Origo.Core.Runtime;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
+using Origo.GodotAdapter.Bootstrap;
 using Origo.GodotAdapter.Snd;
 using Xunit;
 
@@ -246,5 +247,58 @@ public class GodotSndManagerWritePathVisibilityTests
         var internalImpl = typeof(GodotSndManager).GetMethod("BindRuntimeDependencies",
             BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.NotNull(internalImpl);
+    }
+}
+
+public class AdapterShellApiClassificationGuardTests
+{
+    [Fact]
+    public void ShellApiClassification_CoversEveryAdapterExport()
+    {
+        var violations = ShellApiClassificationInventory.FindViolations(typeof(GodotSndManager).Assembly);
+        Assert.Empty(violations);
+    }
+}
+
+public class AdapterShellPublicSignatureTests
+{
+    [Fact]
+    public void AdapterShellPublicSignatures_ShouldNotExposeKernelTypes()
+    {
+        var exported = typeof(OrigoAutoHost).Assembly.GetExportedTypes();
+        foreach (var type in exported)
+        {
+            AssertNotKernel(type);
+            foreach (var member in type.GetMembers(
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
+            {
+                switch (member)
+                {
+                    case PropertyInfo property:
+                        AssertNotKernel(property.PropertyType);
+                        break;
+                    case MethodInfo method:
+                        AssertNotKernel(method.ReturnType);
+                        foreach (var parameter in method.GetParameters())
+                            AssertNotKernel(parameter.ParameterType);
+                        break;
+                    case FieldInfo field:
+                        AssertNotKernel(field.FieldType);
+                        break;
+                }
+            }
+        }
+    }
+
+    private static void AssertNotKernel(Type type)
+    {
+        var current = type;
+        while (current.HasElementType)
+            current = current.GetElementType()!;
+
+        var assemblyName = current.Assembly.GetName().Name;
+        Assert.False(
+            string.Equals(assemblyName, "Origo.Core.Kernel", StringComparison.Ordinal),
+            $"Kernel type '{current.FullName}' leaked into the Adapter shell public signature.");
     }
 }

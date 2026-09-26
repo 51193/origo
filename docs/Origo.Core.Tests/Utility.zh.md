@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Utility 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Utility](../Origo.Core/Utility/README.zh.md)
+> [↔ 被测模块: Origo.Core.Contracts/Utility](../Origo.Core.Contracts/Utility/README.zh.md)
 
 ## 验证能力
 

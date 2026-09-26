@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Benchmarks -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 性能基准 (Benchmarks)
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md) · [↔ SG 纯净微基准: Origo.SourceGeneration.Tests](../Origo.SourceGeneration.Tests/README.zh.md)
+> [↔ 被测模块: Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md) · [↔ SG 纯净微基准: Origo.SourceGeneration.Tests](../Origo.SourceGeneration.Tests/README.zh.md)
 
 ## 被测行为概览
 
@@ -115,7 +115,7 @@
 |---------|------|---------|
 | 不覆盖 GodotAdapter 注册类型（`Vector2`/`Vector3` 等）的真实场景吞吐 | 适配层多层分派性能不在本套件验证 | 由 [Origo.GodotAdapter.Tests/Serialization](../Origo.GodotAdapter.Tests/Serialization.zh.md) 的 `GodotTypedDataPerformanceTests` 单独覆盖 |
 | 不覆盖并发/多线程读写 | 多线程下的争用与可见性未测 | 框架采用单线程帧模型（见 [手册根 README — 设计原则](../README.zh.md)） |
-| 不覆盖按 Kind 直接分派的异构迭代替代路径 | 仅测 `ToObject`（`object` 化）这一条迭代路径 | [Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md) 的 Kind 分派 |
+| 不覆盖按 Kind 直接分派的异构迭代替代路径 | 仅测 `ToObject`（`object` 化）这一条迭代路径 | [Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md) 的 Kind 分派 |
 | 绝对吞吐/倍率/分配均不作断言（仅打印 + 单基准时间上限） | 性能退化无法自动捕获，需人工对照基线 | [benchmarks/baseline.md](../benchmarks/baseline.zh.md) |
 
 ## 设计决策
@@ -140,7 +140,7 @@
 
 ### 为什么基准与真实消费者一致：经 `TypedDataObjectConverter` 的 object 化路径
 
-`TypedData` 的全部 `AsXxx` 访问器与对象转换器均为 `internal`（测试项目经 `InternalsVisibleTo` 访问）。异构迭代基准经 internal `TypedDataObjectConverter.ToObject` 度量"编译期未知类型的 object 化"冷路径——这是序列化、控制台、`ToString` 等冷路径的真实调用形态；热/温路径（数据变更信号处理、加载校验）使用零装箱的 `TryGetXxx`，见 [Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md)。
+`TypedData` 的全部 `AsXxx` 访问器与对象转换器均为 `internal`（测试项目经 `InternalsVisibleTo` 访问）。异构迭代基准经 internal `TypedDataObjectConverter.ToObject` 度量"编译期未知类型的 object 化"冷路径——这是序列化、控制台、`ToString` 等冷路径的真实调用形态；热/温路径（数据变更信号处理、加载校验）使用零装箱的 `TryGetXxx`，见 [Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md)。
 
 ---
 

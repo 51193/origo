@@ -1,0 +1,8 @@
+; Fresh shell-package consumer smoke fixture.
+config_version=5
+
+[application]
+
+config/name="OrigoShellPackageConsumer"
+config/features=PackedStringArray("4.7", "Dotnet")
+run/main_scene="res://ConsumerMain.tscn"

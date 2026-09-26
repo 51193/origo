@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Utility -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Utility Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Utility](../Origo.Core/Utility/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Utility](../Origo.Core.Contracts/Utility/README.en.md)
 
 ## Verified Capabilities
 

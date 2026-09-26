@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Agent Friendly Investigation
 
@@ -40,7 +40,7 @@ Game developers should not execute Origo's complete maintenance workflow. Their 
 
 - [AGENTS.md](../../../AGENTS.md) supplies one authoritative entry, collaboration reading, and completion gates. Its guard independently measured 223 lines and 16,364 bytes. Origo owns the 16 KiB budget; the remaining 20 bytes are neither a model limit nor a friendliness metric.
 - `scripts/test.sh` tests the whole solution. Its `-m:1` addresses a Windows xUnit v3 discovery race. Improve scope selection rather than remove serialization without verification.
-- [Snd role documentation](../../Origo.Core/Abstractions/Snd/README.en.md) explicitly defines nine Snd roles plus `IStateMachineContext`, giving ten companions. Capability shorthand can confuse readers; it is not an established implementation defect.
+- [Snd role documentation](../../Origo.Core.Contracts/Abstractions/Snd/README.en.md) explicitly defines nine Snd roles plus `IStateMachineContext`, giving ten companions. Capability shorthand can confuse readers; it is not an established implementation defect.
 - [TCP Bridge](../../Origo.ConsoleBridge/README.en.md) has configurable ports, with documented reasons for one client and loopback binding. Parallel tasks need isolated instances/state, not concurrent writes to one session.
 - [Godot console](../../Origo.GodotAdapter/Console/README.en.md) `press_button` emits a button signal; `camera_view` reports projections. Neither establishes real input reachability or correct final rendering.
 - [Real Godot integration tests](../../Origo.GodotAdapter.Integration.Tests/README.en.md) validate host contracts, not consumer games' visual, interaction, or gameplay acceptance.

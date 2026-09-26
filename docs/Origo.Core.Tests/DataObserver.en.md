@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/DataObserver -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Data Observer Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Snd/Entity](../Origo.Core/Snd/Entity/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/Snd/Entity](../Origo.Core.Kernel/Snd/Entity/README.en.md)
 > [↔ Behavior under test: usage/snd-entity-model](../usage/snd-entity-model.en.md)
 
 ## Behavior Overview
