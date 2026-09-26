@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Compatibility -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell 兼容契约 测试
 
@@ -29,6 +29,7 @@
 |---------|-----------|---------|
 | `ShellEntry_LifecycleOrdering_IsPreservedThroughSaveLoad` | 通过 `OrigoHost` Spawn/DriveFrame/Save/Load/Kill：AfterSpawn → Process → BeforeSave → AfterLoad → BeforeDead 顺序保持，加载后实体数据与钩子行为一致 | [shell-kernel-boundary](../architecture/shell-kernel-boundary.zh.md) |
 | `ShellEntry_ObserverRecovery_IsPreservedThroughSaveLoad` | observer 显式挂载后 OnMounted/OnDataChanged 生效；保存并加载后持久化的 observer binding 恢复挂载，后续数据变更继续通知 | [shell-kernel-boundary](../architecture/shell-kernel-boundary.zh.md) |
+| `ShellEntry_SystemBlackboardPersistence_IsPreservedAcrossHostRestart` | 同一个文件系统中保存并重建 `OrigoHost` 后，`<SaveRootPath>/system.json` 恢复 active/continue 状态，`HasContinueData()` 仍为 true | [Origo.Core](../Origo.Core/README.zh.md) |
 | `ShellEntry_SessionStateTransitions_ArePreserved` | 后台会话通过 `ISessionManager` 创建、Spawn、销毁；销毁时 BeforeQuit 触发且会话从 Keys 移除 | [session-model](../usage/session-model.zh.md) |
 
 ### 错误路径

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Compatibility -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell Compatibility Contract Tests
 
@@ -29,6 +29,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 |-------------|-------------------|----------------------|
 | `ShellEntry_LifecycleOrdering_IsPreservedThroughSaveLoad` | Via `OrigoHost` Spawn/DriveFrame/Save/Load/Kill: AfterSpawn → Process → BeforeSave → AfterLoad → BeforeDead ordering holds, and entity data/hook behavior match after reload | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
 | `ShellEntry_ObserverRecovery_IsPreservedThroughSaveLoad` | An explicitly mounted observer receives OnMounted/OnDataChanged; after save and load the persisted observer binding is recovered, and later data changes keep notifying | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
+| `ShellEntry_SystemBlackboardPersistence_IsPreservedAcrossHostRestart` | Saving and recreating `OrigoHost` over the same file system restores active/continue state from `<SaveRootPath>/system.json`, so `HasContinueData()` remains true | [Origo.Core](../Origo.Core/README.en.md) |
 | `ShellEntry_SessionStateTransitions_ArePreserved` | A background session is created, spawns an entity, and is destroyed through `ISessionManager`; BeforeQuit fires and the key leaves Keys | [session-model](../usage/session-model.en.md) |
 
 ### Error Path

@@ -1,10 +1,12 @@
 #pragma warning disable IDE0130 // Intentional: kernel ports are required to live in the Origo.Core.Kernel.Ports namespace.
 using System;
+using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Runtime;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
 using Origo.Core.Runtime;
+using Origo.Core.Save;
 using Origo.Core.Serialization;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Scene;
@@ -60,6 +62,25 @@ internal sealed class CoreHostKernelPort : IHostKernelPort
         var pathResolver = DataSourceFactory.CreatePathResolver(fileSystem);
         var sceneHost = new FullMemorySndSceneHost(options.Logger);
 
+        IBlackboard systemBlackboard;
+        if (options.FileSystem is not null)
+        {
+            var systemBlackboardPath = pathResolver.CombinePath(options.SaveRootPath, "system.json");
+            var persistentBlackboard = new PersistentBlackboard(
+                metaAccess,
+                pathResolver,
+                systemBlackboardPath,
+                dataSourceIo,
+                converterRegistry,
+                new Origo.Core.Blackboard.Blackboard());
+            persistentBlackboard.LoadFromDisk();
+            systemBlackboard = persistentBlackboard;
+        }
+        else
+        {
+            systemBlackboard = new Origo.Core.Blackboard.Blackboard();
+        }
+
         var runtime = new OrigoRuntime(
             options.Meta,
             options.Logger,
@@ -67,7 +88,7 @@ internal sealed class CoreHostKernelPort : IHostKernelPort
             typeMapping,
             converterRegistry,
             dataSourceIo,
-            new Blackboard.Blackboard(),
+            systemBlackboard,
             options.ConsoleInput,
             options.ConsoleOutputChannel);
         sceneHost.BindWorld(runtime.SndWorld);

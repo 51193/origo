@@ -54,6 +54,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Core shell host preserves continue state across restarts** — `OrigoHost` with a supplied `FileSystem` now persists the system blackboard at `<SaveRootPath>/system.json` and reloads it during host construction. Recreating a Core host over the same save root keeps the active/continue save target, so `HasContinueData()` and `RequestContinueGame()` behave consistently with the Godot adapter host.
+
 - **Shell API baseline records modifiers, init accessors, extension `this`, and real enum/struct kinds** — `ApiInventoryTool` now resolves `System.Runtime` so SDK-built shell assemblies no longer report enums/structs as `Class`; it records C# type modifiers, `init` versus `set` accessors, extension-method `this` parameters, and recurses array/pointer elements, indexer parameters, and method generic constraints when rejecting kernel references. The tracked `shell-api-baseline.json` was regenerated to the corrected shape.
 
 - **Dispatched release runs create the GitHub Release for the resolved tag** — `workflow_dispatch` runs execute from `main`, where `github.ref_name` is the branch, not the requested tag; the release action now receives the workflow's resolved tag explicitly instead of failing after all packages were built. The snapshot pre-release condition now tests its Boolean input directly instead of comparing it with the string `'true'`, so weekly snapshots are marked as pre-releases. `scripts/lint-scripts.sh` runs `scripts/validate-release-workflow.py` to keep both invariants in local and CI lint.

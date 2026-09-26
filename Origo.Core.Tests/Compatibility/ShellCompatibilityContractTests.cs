@@ -31,8 +31,8 @@ public class ShellCompatibilityContractTests
         });
         fileSystem.WriteAllText("entry.json",
             """{ "levels": { "main_menu": { "snd_scene": "res://levels/main_menu.json" } }, "main_menu_level": "main_menu" }""",
-            overwrite: false);
-        fileSystem.WriteAllText("res://levels/main_menu.json", "[]", overwrite: false);
+            overwrite: true);
+        fileSystem.WriteAllText("res://levels/main_menu.json", "[]", overwrite: true);
         return host;
     }
 
@@ -137,6 +137,27 @@ public class ShellCompatibilityContractTests
         {
             ObserverProbeStrategy.Events = null;
         }
+    }
+
+    [Fact]
+    public void ShellEntry_SystemBlackboardPersistence_IsPreservedAcrossHostRestart()
+    {
+        var fileSystem = new MemoryFileSystem();
+        var host = CreateHost(fileSystem);
+        host.Bootstrap();
+        host.DriveFrame(0.016);
+        host.Context.Save.RequestSaveGame("continue_slot");
+        host.DriveFrame(0.016);
+
+        Assert.True(host.Context.Lifecycle.HasContinueData(), "the first host must persist a continue target");
+        Assert.True(fileSystem.Exists("root/system.json"), "the system blackboard must be written under the save root");
+
+        var restarted = CreateHost(fileSystem);
+        restarted.Bootstrap();
+        restarted.DriveFrame(0.016);
+
+        Assert.True(restarted.Context.Lifecycle.HasContinueData(),
+            "the continue target must survive Core host recreation through the persisted system blackboard");
     }
 
     [Fact]

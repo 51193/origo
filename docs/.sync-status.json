@@ -1077,20 +1077,20 @@
     "Origo.Core.Kernel/Ports/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "previous_revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.Core.Kernel/Ports/README.zh.md",
         "en": "Origo.Core.Kernel/Ports/README.en.md"
       },
       "content_hashes": {
-        "zh": "ADF17167580D64707CB184D11C18F50D71F6698794A7E90988E412AA332BE979",
-        "en": "9E04782CC46714DF11CCB25A07BD1B16C10F1721455A0662345F6B0678F612B4"
+        "zh": "43A978F0D48D52BF6B274C1FEEB4DBC7E591FBFCD69CDE0AEF12A3DEFEC65DFC",
+        "en": "0A88B084EA6C724807BCD9645B610D2D9DAE94E0DB129FF45B9FD993A4D3CEE7"
       }
     },
     "Origo.Core.Kernel/README": {
@@ -1450,20 +1450,20 @@
     "Origo.Core.Tests/Compatibility": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "Origo.Core.Tests/Compatibility.zh.md",
         "en": "Origo.Core.Tests/Compatibility.en.md"
       },
       "content_hashes": {
-        "zh": "2122D241521694BC86F561B038EDDB235D7EB6D0EDF66F21C868E04DC49598F7",
-        "en": "B0DCEBC3FDE4B46154786059E523A0AB62F6ED43A2A9ABBEC1D18418BB101D3E"
+        "zh": "4C6DD91DD197515D1A6241D7CB50B3E4F9F37C655CD498D35403C20C6A073BD1",
+        "en": "69707DF882A12AA8561F5804C93E15130A05FB42D93AF6A3E02D78451864A274"
       }
     },
     "Origo.Core.Tests/Console": {
@@ -2077,20 +2077,20 @@
     "Origo.Core/README": {
       "status": "synced",
       "revisions": {
-        "zh": 21,
-        "en": 21
+        "zh": 22,
+        "en": 22
       },
       "previous_revisions": {
-        "zh": 19,
-        "en": 19
+        "zh": 21,
+        "en": 21
       },
       "files": {
         "zh": "Origo.Core/README.zh.md",
         "en": "Origo.Core/README.en.md"
       },
       "content_hashes": {
-        "zh": "CEE66098D9D848E6AD7E961A0DFA43C052D84CA53658299733F02240C14E5EC0",
-        "en": "0D3F87F0D8BB74B6AAB2B56F486D546320B81FA51375A79B78E4256BCD298301"
+        "zh": "0DD55AF625B28607076947F9C87A52B0B9F2AAE69B6F326CC467F6445243BB0E",
+        "en": "B45971862853F4A70021821A7233919A7C2DB3221A2763AA8D3828BF856B9DC7"
       }
     },
     "Origo.Core/Snd/Archetype/README": {

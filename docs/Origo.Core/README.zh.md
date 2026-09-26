@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core
 
@@ -55,8 +55,9 @@ host.DriveFrame(1.0 / 60.0);
 
 `host.Context` 暴露稳定的 `ISndContext` 能力面；`host.Runtime` 暴露
 `IOrigoRuntime` 与 `ISndWorldAccess`。工作流需要 entry 配置或存档文件时，传入
-`OrigoHostOptions.FileSystem` 并调用 `host.Bootstrap()`；策略注册与帧驱动无需
-文件访问。
+`OrigoHostOptions.FileSystem` 并调用 `host.Bootstrap()`；Core host 会通过
+`<SaveRootPath>/system.json` 持久化 system blackboard（active/continue save 等），
+重建 host 后 continue 与生命周期状态仍然可用。策略注册与帧驱动无需文件访问。
 
 ## 架构约束
 

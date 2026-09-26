@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/README -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core
 
@@ -57,8 +57,10 @@ host.DriveFrame(1.0 / 60.0);
 `host.Context` exposes the stable `ISndContext` capability facets; `host.Runtime`
 exposes `IOrigoRuntime` and `ISndWorldAccess`. Supply
 `OrigoHostOptions.FileSystem` and call `host.Bootstrap()` when the workflow
-needs entry-config or save files; strategy registration and frame driving work
-without file access.
+needs entry-config or save files. The Core host persists its system blackboard
+at `<SaveRootPath>/system.json` (active/continue save state), so continue and
+lifecycle state survive host recreation. Strategy registration and frame
+driving work without file access.
 
 ## Architecture Constraints
 
