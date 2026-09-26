@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 26 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
@@ -13,8 +13,8 @@ The concrete implementation of the SND entity system in the Godot engine. Bridge
 
 | File | Responsibility |
 |------|------|
-| `GodotSndManager.cs` | Godot scene host: manages GodotSndEntity collection, implements ISndSceneHost. Entity frame processing is driven uniformly by Core's `SessionManager.ProcessAllSessions` via `SceneHost.ProcessAll` through `IOrigoFrameDriver.DriveFrame` |
-| `GodotSndEntity.cs` | Godot entity: binds Core SndEntity to Godot Node lifecycle, delegates all ISndEntity calls |
+| `GodotSndManager.cs` | internal — Godot scene host: manages the GodotSndEntity collection, implements ISndSceneHost. Entity frame processing is driven uniformly by Core's `SessionManager.ProcessAllSessions` via `SceneHost.ProcessAll` through `IOrigoFrameDriver.DriveFrame` |
+| `GodotSndEntity.cs` | internal — Godot entity: binds Core SndEntity to Godot Node lifecycle, delegates all ISndEntity calls |
 | `GodotPackedSceneNodeFactory.cs` | INodeFactory implementation: creates Godot Nodes via PackedScene.Instantiate |
 | `GodotNodeHandle.cs` | INodeHandle implementation: wraps Godot.Node, provides Free / SetVisible / UnsafeGetNode |
 | `SndEntityCollection.cs` | internal — pure C# entity collection: entity add/remove, batch recovery rollback, kill marking, frame processing orchestration; no Godot dependency, covered directly by unit tests |
@@ -23,11 +23,11 @@ The concrete implementation of the SND entity system in the Godot engine. Bridge
 
 ### GodotSndManager
 
-The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in the Godot scene tree:
+The adapter layer's internal scene-host node, mounted in the Godot scene tree by `OrigoAutoHost`:
 
 - **Implements ISndSceneHost (internal)**: CreateEntity / RecoverFromMetaList / RemoveAllEntities (framework-internal lifecycle operation) / RequestKillEntity / RemoveEntity / ProcessAll are **explicit interface implementations**, and `ISndSceneHost` / `ISndSceneAccess` are `internal` — business code can neither call them on the concrete type nor cast through the interfaces to bypass orchestration. Public reads go through the public `ISndSceneReadAccess` (`GetEntities` / `FindByName`). `RemoveAllEntities()` uses `Free()` (immediate release) rather than `QueueFree()`, since Core guarantees it is called at a safe lifecycle point.
 - **Implements ISndContextAttachableSceneHost (internal)**: `BindContext` is an **explicit interface implementation** and the interface is `internal` — context binding is a framework-orchestrated startup write path (driven by `SessionRun` construction / the bootstrap flow); business code cannot rebind the context on the concrete type
-- **Startup wiring sealed**: `BindRuntimeDependencies` is `internal` — runtime dependency binding (World + Logger) is also framework-orchestrated startup wiring (driven by `OrigoAutoHost` in the bootstrap flow); business code cannot rebind runtime dependencies on the concrete type
+- **Startup wiring sealed**: `BindRuntimeDependencies` is `internal` and is invoked by `AdapterHostKernelPort` through `ISndSceneHostRuntimeBinder` after runtime construction; runtime dependency binding (World + Logger) and observer-topology creation are framework-orchestrated startup wiring, and business code cannot rebind them on the concrete type
 - **Implements IObserverTopologyHost** (internal): Exposes the per-scene-host `ObserverTopology` for Core observer mount/unmount orchestration
 - **Implements IOwningSessionBindable** (internal): `SetOwningSession` binds a session to the host for the Core session-creation flow
 - **Collection logic delegated**: entity add/remove, batch recovery rollback, kill marking, and frame processing orchestration live in pure C# `SndEntityCollection<T>` (internal, no Godot dependency) and are covered by unit tests directly; GodotSndManager only bridges the collection to the Godot node tree (`AddChild` / `RemoveChild` / `Free` injected via the `DetachAndFree` callback)
@@ -39,9 +39,9 @@ The adapter layer's core entry point node (`[GlobalClass]`), mounted directly in
 
 ### GodotSndEntity
 
-A Godot wrapper for Core `SndEntity` (`[GlobalClass]`):
+An internal Godot wrapper for Core `SndEntity`:
 
-> **`[GlobalClass]` limitation**: `GodotSndEntity`'s only constructor is internal (five-parameter dependency injection) and there is no parameterless constructor — it cannot be created manually in the editor or instantiated from a `.tscn`. Entities must be created via `GodotSndManager` (`CreateEntity`). This is deliberate: `GodotSndEntity`'s dependencies (`SndWorld`, `ISndContext`, logger, observer topology) can only be injected by the framework; `[GlobalClass]` only makes the type recognizable to the Godot editor (exported properties / type registration).
+> **Internal type limitation**: `GodotSndEntity` is internal with an internal-only five-parameter constructor and no parameterless constructor — it cannot be created manually in the editor, instantiated from a `.tscn`, or discovered as an editor script type. Entities must be created via `GodotSndManager` (`CreateEntity`). This is deliberate: `GodotSndEntity`'s dependencies (`SndWorld`, `ISndContext`, logger, observer topology) can only be injected by the framework.
 
 - **Lazy initialization**: `_entity` is created on first access via `SndWorld.CreateEntity`
 - **Lifecycle separation**: `DetachFromManager()` sets the released flag and nulls the entity reference; engine-level release (`RemoveChild`/`Free`) is performed by the GodotSndManager `DetachAndFree` callback (the `SndEntityCollection` "engine work delegated via callback" contract)
@@ -104,7 +104,7 @@ The code in `GodotSndEntity` (~238 lines) can be broken down into three categori
 
 #### Why it cannot be extracted to a base class or auto-generated
 
-**C# single inheritance is the fundamental constraint.** `GodotSndEntity` must inherit `Godot.Node` (`[GlobalClass]` requirement) to be mounted in the Godot scene tree. If Core provided an abstract base class `SndEntityBridge`, the Godot adapter could not simultaneously inherit both the base class and `Node`. The same applies to Unity (must inherit `MonoBehaviour`).
+**C# single inheritance is the fundamental constraint.** `GodotSndEntity` must inherit `Godot.Node` to be mounted in the Godot scene tree. If Core provided an abstract base class `SndEntityBridge`, the Godot adapter could not simultaneously inherit both the base class and `Node`. The same applies to Unity (must inherit `MonoBehaviour`).
 
 Other technical approaches also lack sufficient ROI:
 

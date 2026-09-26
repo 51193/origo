@@ -110,6 +110,9 @@ internal sealed class GitRepository
     ///     Returns the commits that touched <paramref name="repoRelativePath" />,
     ///     newest first. <c>--follow</c> makes the history survive renames, and
     ///     <c>--name-status</c> supplies the path as it existed at each commit.
+    ///     The current HEAD commit is prepended when it still contains the path,
+    ///     because merge commits that are TREESAME for the path are omitted by
+    ///     <c>--follow</c>.
     /// </summary>
     public List<PathHistoryEntry> GetPathHistory(string repoRelativePath)
     {
@@ -123,50 +126,69 @@ internal sealed class GitRepository
             repoRelativePath);
 
         var entries = new List<PathHistoryEntry>();
-        if (string.IsNullOrWhiteSpace(output))
-            return entries;
-
-        PathHistoryEntry? current = null;
-        foreach (var rawLine in output.Split('\n'))
+        if (!string.IsNullOrWhiteSpace(output))
         {
-            var line = rawLine.TrimEnd('\r');
-            if (line.Length == 0)
-                continue;
-
-            var tab = line.IndexOf('\t');
-            if (tab > 0 && IsFullHexSha(line[..tab])
-                && long.TryParse(line[(tab + 1)..], out var timestamp))
+            PathHistoryEntry? current = null;
+            foreach (var rawLine in output.Split('\n'))
             {
-                current = new PathHistoryEntry(line[..tab], timestamp, null);
-                entries.Add(current);
-                continue;
-            }
+                var line = rawLine.TrimEnd('\r');
+                if (line.Length == 0)
+                    continue;
 
-            if (current is null)
-                continue;
+                var tab = line.IndexOf('\t');
+                if (tab > 0 && IsFullHexSha(line[..tab])
+                    && long.TryParse(line[(tab + 1)..], out var timestamp))
+                {
+                    current = new PathHistoryEntry(line[..tab], timestamp, null);
+                    entries.Add(current);
+                    continue;
+                }
 
-            var parts = line.Split('\t');
-            var status = parts[0].Trim();
-            if (status.StartsWith('D'))
-            {
-                // The file no longer exists at this commit; there is no blob
-                // to hash. A later re-add appears as a separate A entry.
-                continue;
-            }
+                if (current is null)
+                    continue;
 
-            if (status.StartsWith('R') || status.StartsWith('C'))
-            {
-                if (parts.Length >= 3)
-                    current.BeforePath = parts[1];
-                current.AfterPath = parts[^1];
-            }
-            else if (status.StartsWith('M') || status.StartsWith('A'))
-            {
-                current.AfterPath = parts[^1];
+                var parts = line.Split('\t');
+                var status = parts[0].Trim();
+                if (status.StartsWith('D'))
+                {
+                    // The file no longer exists at this commit; there is no
+                    // blob to hash. A later re-add is a separate A entry.
+                    continue;
+                }
+
+                if (status.StartsWith('R') || status.StartsWith('C'))
+                {
+                    if (parts.Length >= 3)
+                        current.BeforePath = parts[1];
+                    current.AfterPath = parts[^1];
+                }
+                else if (status.StartsWith('M') || status.StartsWith('A'))
+                {
+                    current.AfterPath = parts[^1];
+                }
             }
         }
 
+        // A merge commit whose path content matches one parent is TREESAME for
+        // that path and is omitted by --follow. Recording HEAD explicitly keeps
+        // the revision anchor on the current content, so generate stays
+        // idempotent instead of counting the same side-branch blob again.
+        if ((entries.Count == 0 || entries[0].Sha != HeadSha)
+            && PathExistsAtHead(repoRelativePath))
+        {
+            entries.Insert(0, new PathHistoryEntry(HeadSha, GetCommitTimestamp(HeadSha), repoRelativePath));
+        }
+
         return entries;
+    }
+
+    private bool PathExistsAtHead(string repoRelativePath) =>
+        Run(RepoRoot, "cat-file", "-e", $"{HeadSha}:{repoRelativePath}") is not null;
+
+    private long GetCommitTimestamp(string sha)
+    {
+        var output = Run(RepoRoot, "show", "-s", "--format=%ct", sha);
+        return long.TryParse(output?.Trim(), out var timestamp) ? timestamp : 0;
     }
 
     /// <summary>

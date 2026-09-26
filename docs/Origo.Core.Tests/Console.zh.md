@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 26 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 控制台系统 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Runtime/Console](../Origo.Core/Runtime/Console/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/Runtime/Console](../Origo.Core.Kernel/Runtime/Console/README.zh.md)
 > [↔ 被测行为: usage/console-commands](../usage/console-commands.zh.md)
 
 ## 被测行为概览

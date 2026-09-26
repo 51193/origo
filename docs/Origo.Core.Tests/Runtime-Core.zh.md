@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 19 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 运行时核心 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Runtime](../Origo.Core/Runtime/README.zh.md)
+> [↔ 被测模块: Origo.Core.Kernel/Runtime](../Origo.Core.Kernel/Runtime/README.zh.md)
 > [↔ 被测行为: architecture/overview](../architecture/overview.zh.md)
 
 ## 被测行为概览

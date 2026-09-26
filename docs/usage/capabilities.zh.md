@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 25 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -20,7 +20,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 跨实体观察 | `MountObserverStrategy(target, observerIndex)` 支持自观察与跨实体观察；`OnMounted`/`OnUnmounted` 承载生命周期感知 | [SND 实体模型](snd-entity-model.zh.md) |
 | 主动策略 | 按索引外部调用 Invoke，与被动策略独立容器管理，O(1) 查找 | [策略测试](strategy-testing.zh.md) |
 | 泛型主动策略调用 | `InvokeStrategy<TInput, TOutput>` 扩展方法，类型安全消除 JSON 序列化样板 | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.zh.md) |
-| SndMetaFluentBuilder | 链式 API 构建实体元数据，消除 `??= new DataMetaData()` 样板 | [↔ Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md) |
+| SndMetaFluentBuilder | 链式 API 构建实体元数据，消除 `??= new DataMetaData()` 样板 | [↔ Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md) |
 | TryGetNumeric | 实体数据数值兼容读取，桥接 `SetData("k", 5)` (int) 与 `TryGetData<float>("k")` 的类型不匹配 | [↔ Snd](../Origo.Core/Snd/README.zh.md) |
 | 数值配方加载 | SndArchetypeLoader 从键值对文件加载 archetype 并推断类型写入实体 | [↔ Snd/Archetype](../Origo.Core/Snd/Archetype/README.zh.md) |
 | 惰性策略挂载 | EnsureStrategy 扩展方法，带幂等守卫的惰性策略层初始化 | [SND 实体模型](snd-entity-model.zh.md)、[↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.zh.md) |
@@ -44,7 +44,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 存档槽位删除 | `ctx.Save.DeleteSave(saveId)` 删除非活动槽及 `.tmp`/`.bak` 残留，保护活动槽与待执行 workflow | [持久化流程](persistence-flow.zh.md) |
 | 持久化完成状态 | `ctx.Deferred.IsPersistenceIdle` 与 `ctx.Lifecycle.IsBootstrapCompleted` 提供帧驱动完成观察 | [持久化流程](persistence-flow.zh.md) |
 | meta.map 显示元数据 | 与业务数据分离的显示元数据系统，ISaveMetaContributor 插件式贡献者模式 | [持久化流程](persistence-flow.zh.md) |
-| 幂等去重 | SHA256 哈希比对，相同游戏状态跳过 I/O 写入 | [↔ Save/Storage](../Origo.Core/Save/Storage/README.zh.md) |
+| 幂等去重 | SHA256 哈希比对，相同游戏状态跳过 I/O 写入 | [↔ Save/Storage](../Origo.Core.Kernel/Save/Storage/README.zh.md) |
 
 ## 状态机
 
@@ -59,7 +59,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 能力 | 说明 | 文档入口 |
 |------|------|----------|
 | 16 个内置命令 | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy / list_saves / save / load / delete_save / switch_level | [控制台命令](console-commands.zh.md) |
-| 自定义命令注册 | Core 层继承 ConsoleCommandHandlerBase，适配层继承 CommandHandlerBase | [控制台命令](console-commands.zh.md) |
+| 自定义命令注册 | Core 层继承 ConsoleCommandHandlerBase，适配层继承 CommandHandlerBase，并通过 `IOrigoRuntime.RegisterConsoleCommandHandler` 注册 | [控制台命令](console-commands.zh.md) |
 | TCP 远程控制台桥接 | ConsoleBridgeServer 监听 localhost:9876，单连接模式，双向 I/O 经由 pub-sub | [控制台命令](console-commands.zh.md) |
 | 命令类型推断 | bb_set / entity_set_data 自动推断 int/float/bool/string 类型，已存在 key 保持原类型 | [控制台命令](console-commands.zh.md) |
 
@@ -67,14 +67,14 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 
 | 能力 | 说明 | 文档入口 |
 |------|------|----------|
-| DataSource 抽象层 | 统一树数据模型 DataSourceNode（Map/Array/Text/Number/Bool/Null + Lazy），通过 IDataSourceIoGateway 作为 Core 层唯一文件入口 | [↔ DataSource](../Origo.Core/DataSource/README.zh.md) |
-| JSON + .map 编解码 | JsonDataSourceCodec（延迟展开）、MapDataSourceCodec（key:value 扁平结构） | [↔ DataSource/Codec](../Origo.Core/DataSource/Codec/README.zh.md) |
-| 延迟 JSON 展开 | 嵌套对象/数组仅在首次访问时解析，分摊大型存档的解析开销 | [↔ DataSource](../Origo.Core/DataSource/README.zh.md) |
-| 类型-字符串双向映射 | TypeStringMapping 保持 CLR 类型与稳定字符串标识的双向映射，避免 FullName 版本耦合 | [↔ Serialization](../Origo.Core/Serialization/README.zh.md) |
+| DataSource 抽象层 | 统一树数据模型 DataSourceNode（Map/Array/Text/Number/Bool/Null + Lazy），通过 IDataSourceIoGateway 作为 Core 层唯一文件入口 | [↔ DataSource](../Origo.Core.Kernel/DataSource/README.zh.md) |
+| JSON + .map 编解码 | JsonDataSourceCodec（延迟展开）、MapDataSourceCodec（key:value 扁平结构） | [↔ DataSource/Codec](../Origo.Core.Kernel/DataSource/Codec/README.zh.md) |
+| 延迟 JSON 展开 | 嵌套对象/数组仅在首次访问时解析，分摊大型存档的解析开销 | [↔ DataSource](../Origo.Core.Kernel/DataSource/README.zh.md) |
+| 类型-字符串双向映射 | TypeStringMapping 保持 CLR 类型与稳定字符串标识的双向映射，避免 FullName 版本耦合 | [↔ Serialization](../Origo.Core.Contracts/Serialization/README.zh.md) |
 | Godot 14 种类型序列化 | Vector2/3/4、Vector2I/3I、Quaternion、Color、Basis、Transform2D/3D、Rect2/2I、Aabb、Plane 完整 JSON 往返 | [↔ GodotAdapter/Serialization](../Origo.GodotAdapter/Serialization/README.zh.md) |
-| 转换器注册与继承回溯 | DataSourceConverterRegistry 在精确类型未注册时沿基类链和接口链回溯查找转换器 | [↔ DataSource/Converters](../Origo.Core/DataSource/Converters/README.zh.md) |
-| 策略文件访问（ISndFileAccess） | 策略通过 ISndContext 读写 JSON/Map 文件，经 IDataSourceIoGateway 边界自动解析为 DataSourceNode 树或强类型对象 | [架构概览](../architecture/overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.zh.md) |
-| 存档内文件访问（ISndArchiveFileAccess） | 策略通过 ISndContext 在存档 extra/ 子目录中读写文件（含删除），文件随存档生命周期管理：写入后纳入 save snapshot，load 时自动恢复 | [架构概览](../architecture/overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.zh.md) |
+| 转换器注册与继承回溯 | DataSourceConverterRegistry 在精确类型未注册时沿基类链和接口链回溯查找转换器 | [↔ DataSource/Converters](../Origo.Core.Kernel/DataSource/Converters/README.zh.md) |
+| 策略文件访问（ISndFileAccess） | 策略通过 ISndContext 读写 JSON/Map 文件，经 IDataSourceIoGateway 边界自动解析为 DataSourceNode 树或强类型对象 | [架构概览](../architecture/overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.zh.md) |
+| 存档内文件访问（ISndArchiveFileAccess） | 策略通过 ISndContext 在存档 extra/ 子目录中读写文件（含删除），文件随存档生命周期管理：写入后纳入 save snapshot，load 时自动恢复 | [架构概览](../architecture/overview.zh.md)、[↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.zh.md) |
 
 ## Godot 适配器
 
@@ -83,7 +83,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | res:// + user:// 文件系统 | GodotFileSystem 实现 IFileSystem，支持虚拟路径和路径穿越防护 | [↔ GodotAdapter/FileSystem](../Origo.GodotAdapter/FileSystem/README.zh.md) |
 | 日志代理 | GodotLogger 通过委托注入 GD.Print / PushWarning / PushError，无内部格式化 | [↔ GodotAdapter/Logging](../Origo.GodotAdapter/Logging/README.zh.md) |
 | PackedScene 节点实例化 | GodotPackedSceneNodeFactory 从资源路径加载场景并实例化为 GodotNodeHandle | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.zh.md) |
-| GodotEntity + StableName | GodotSndEntity 桥接 ISndEntity 与 Godot Node 生命周期，独立 StableName 避免 Godot 自动重命名干扰 | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.zh.md) |
+| GodotEntity + StableName | internal GodotSndEntity 桥接 ISndEntity 与 Godot Node 生命周期，独立 StableName 避免 Godot 自动重命名干扰 | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.zh.md) |
 | 场景别名解析 | 通过 SndMappings 将逻辑别名解析为 res:// 资源路径 | [↔ GodotAdapter/Bootstrap](../Origo.GodotAdapter/Bootstrap/README.zh.md) |
 | 适配层控制台命令 | press_button（模拟按钮点击）、tree_debug（打印实体节点树）、camera_view（显示活跃摄像头视角下可见实体节点的屏幕坐标和深度） | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.zh.md) |
 
@@ -103,9 +103,9 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | PersistentRandom | 黑板持久化随机状态：InitSeed → TryNextInt32/NextInt32/NextFloat，存档安全可恢复 | [↔ Random](../Origo.Core/Random/README.zh.md) |
 | 2D 噪声图生成 | OpenSimplex2 (70%) + Worley Cellular (30%) 混合噪声，基础 + 扩展重载（自定义 octaves/lacunarity/gain） | [↔ Random](../Origo.Core/Random/README.zh.md) |
 | 网格坐标系 | GridPos 类型、GridCoordinateSystem 单/双轴转换、A* 寻路、GridParser 坐标解析 | [↔ Grid](../Origo.Core/Grid/README.zh.md) |
-| 内存黑板 | IBlackboard 默认实现，SetValue/TryGet/SerializeAll/DeserializeAll，key 大小写敏感 | [↔ Blackboard](../Origo.Core/Blackboard/README.zh.md) |
-| 延迟动作调度 | ConcurrentActionQueue 线程安全队列，快照-排干模式，支持执行中再次入队 | [↔ Scheduling](../Origo.Core/Scheduling/README.zh.md) |
-| 结构化日志构建器 | LogMessageBuilder 流式 API（SetElapsedMs / AddContext / Build） | [↔ Logging](../Origo.Core/Logging/README.zh.md) |
+| 内存黑板 | IBlackboard 默认实现，SetValue/TryGet/SerializeAll/DeserializeAll，key 大小写敏感 | [↔ Blackboard](../Origo.Core.Contracts/Blackboard/README.zh.md) |
+| 延迟动作调度 | ConcurrentActionQueue 线程安全队列，快照-排干模式，支持执行中再次入队 | [↔ Scheduling](../Origo.Core.Kernel/Scheduling/README.zh.md) |
+| 结构化日志构建器 | LogMessageBuilder 流式 API（SetElapsedMs / AddContext / Build） | [↔ Logging](../Origo.Core.Contracts/Logging/README.zh.md) |
 
 ## 框架设计属性
 

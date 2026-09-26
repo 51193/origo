@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Logging;
-using Origo.Core.Runtime.Console;
 
 namespace Origo.ConsoleBridge;
 

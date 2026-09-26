@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter
 
@@ -25,7 +25,7 @@
 | [FileSystem](FileSystem/README.en.md) | Godot file system | IFileSystem implementation: FileAccess/DirAccess + res:// and user:// support |
 | [Logging](Logging/README.en.md) | Godot logging | ILogger implementation: delegate-injected GD.Print/PushWarning/PushError |
 | [Serialization](Serialization/README.en.md) | Godot type serialization | 14 Godot types → DataSourceNode converters |
-| [Snd](Snd/README.en.md) | Godot SND entities | ISndSceneHost implementation: GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
+| [Snd](Snd/README.en.md) | Godot SND entities | internal ISndSceneHost implementation: GodotSndManager + GodotSndEntity + PackedSceneNodeFactory |
 | — | TypedData inline | Source Generator generates extension methods and Kind registrations for 14 Godot types |
 
 ## Startup Flow
@@ -33,18 +33,13 @@
 ```
 OrigoDefaultEntry._Ready()
   ├── base._Ready()                          // OrigoAutoHost
-  │   └── CreateRuntime()
-  │       ├── GodotFileSystem
-  │       ├── CreateAndSetupSndManager()
-  │       │    ├── GodotSndManager
-  │       │    ├── GodotJsonConverterRegistry registrations
-  │       │    └── OrigoRuntime
-  │       ├── ConsoleInput/Output
-  │       └── OrigoRuntime
-  ├── ConfigureStrategies(Runtime.SndWorld)  // Manual strategy registration before Bootstrap freeze
-  ├── RegisterConsoleCommandHandlers()       // Adapter commands
-  ├── new SndContext(...)                    // Pass startup config
-  ├── SndManager.BindContext(sndContext)
+  │   └── AdapterHostKernelPort.CreateRuntime(...)
+  │       ├── GodotFileSystem + GodotJsonConverterRegistry registrations
+  │       ├── kernel runtime/IO/blackboard/console construction
+  │       └── ISndSceneHostRuntimeBinder binds world/logger + observer topology
+  ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess; before Bootstrap freeze
+  ├── register adapter handlers through IOrigoRuntime
+  ├── AdapterHostKernelPort.CreateContext(...)  // pass startup config and bind scene host
   └── sndContext.Bootstrap()                 // Core-internal sequence:
         ├── Strategy discovery and ordering validation/registration freeze (reflection scan, skip Godot assemblies)
         ├── LoadSceneAliases / LoadTemplates

@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Usage Documentation
 
@@ -22,6 +22,7 @@ Documentation for Origo framework users (game developers, AI agents). Organized 
 | [strategy-testing](strategy-testing.en.md) | Test authors | StrategyTestScenario usage guide |
 | [capabilities](capabilities.en.md) | All users | Complete framework capability checklist, indexed by functional domain — quickly understand what Origo can do |
 | [agent-reference](agent-reference.en.md) | AI agents | Complete runtime reference: interface signatures, lifecycle timeline, strategy writing templates |
+| [shell-package-consumer](shell-package-consumer.en.md) | Release/integration maintainers | Shell-only package consumer fixture: local-feed restore, warnings-as-errors build, kernel-leak negative probe, ConsoleBridge loopback round-trip, and Godot headless startup |
 
 ## Recommended Reading Paths
 
@@ -52,9 +53,9 @@ The usage docs describe "how to use Origo"; the module docs describe "Origo's in
 | System in Usage Docs | Corresponding Module Docs |
 |---------------------|---------------------------|
 | SND entity model | [Origo.Core/Snd/](../Origo.Core/Snd/README.en.md) |
-| State machine system | [Origo.Core/StateMachine/](../Origo.Core/StateMachine/README.en.md) |
-| Persistence system | [Origo.Core/Save/](../Origo.Core/Save/README.en.md) |
-| Console commands | [Origo.Core/Runtime/Console/](../Origo.Core/Runtime/Console/README.en.md) |
+| State machine system | [Origo.Core.Kernel/StateMachine/](../Origo.Core.Kernel/StateMachine/README.en.md) |
+| Persistence system | [Origo.Core.Kernel/Save/](../Origo.Core.Kernel/Save/README.en.md) |
+| Console commands | [Origo.Core.Kernel/Runtime/Console/](../Origo.Core.Kernel/Runtime/Console/README.en.md) |
 | Godot adapter | [Origo.GodotAdapter/](../Origo.GodotAdapter/README.en.md) |
 
 ---

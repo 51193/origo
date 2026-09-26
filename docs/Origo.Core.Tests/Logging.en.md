@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Logging -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Logging Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Logging](../Origo.Core/Logging/README.en.md)
+> [↔ Module under test: Origo.Core.Contracts/Logging](../Origo.Core.Contracts/Logging/README.en.md)
 
 ## Behavior Overview
 

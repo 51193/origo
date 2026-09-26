@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构守卫 测试（适配层）
 
@@ -18,7 +18,7 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `AdapterArchitectureGuardrailTests.cs` | SndContext 公共接口完整性（含 ISndFileAccess/ISndArchiveFileAccess）、后台会话创建/销毁/数据读写；`CommandHandlerBase` 公共可见性守卫 |
+| `AdapterArchitectureGuardrailTests.cs` | SndContext 公共接口完整性（含 ISndFileAccess/ISndArchiveFileAccess）、后台会话创建/销毁/数据读写、shell API 分类完整性；`CommandHandlerBase` 公共可见性守卫 |
 
 ## AdapterArchitectureGuardrailTests 测试详情
 
@@ -34,6 +34,7 @@
 | `GodotSndEntity_GetNodeFromSnd_ShouldRemainPublic` | `SndEntityNodeExtensions.GetNodeFromSnd<T>()` 保持 public，外部项目可访问 Godot 节点 | Origo.GodotAdapter/Snd |
 | `GodotSndManager_BindContext_ShouldNotBePublic` | 反射断言 `GodotSndManager.BindContext` 无 public 具体类型路径（仅为 `ISndContextAttachableSceneHost` 显式接口实现），防止业务代码绕过框架重新绑定 context | Origo.GodotAdapter/Snd |
 | `GodotSndManager_BindRuntimeDependencies_ShouldNotBePublic` | 反射断言 `BindRuntimeDependencies` 仅 internal（由引导流程 `OrigoAutoHost` 与 InternalsVisibleTo 测试项目驱动），防止业务代码绕过框架重绑 world/logger | Origo.GodotAdapter/Snd |
+| `ShellApiClassification_CoversEveryAdapterExport` | GodotAdapter 每个导出类型（含 Godot 生成 signal 嵌套类型）都在双语分类表中恰好出现一次 | architecture/shell-api-classification |
 
 ## 测试辅助策略
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
@@ -204,22 +204,39 @@ The frame loop entry is in the adapter layer (Godot's `_Process` callback), but 
 ## Project Structure
 
 ```
-Origo.Core/           # Platform-agnostic core (209 .cs files)
-├── Abstractions/     # Public interfaces (Blackboard/Entity/StateMachine/...)
+Origo.Core.Contracts/ # Stable consumer contracts and shared pure helpers
+├── Abstractions/     # Interfaces for logging/console/files/node/runtime host/lifecycle/scene/snd/state machine
+├── Blackboard/       # Shared in-memory blackboard implementation
+├── DataSource/       # Data node, I/O, file-meta, converter, and registry contracts
+├── Grid/             # GridPos value type
+├── Logging/          # Logger<T>, LogMessageBuilder, NullLogger
+├── Planning/         # PlanExecutionStrategyBase
+├── Runtime/          # Console handler/invocation model and argument-validation contracts
+├── Save/Meta/        # Save-meta contracts
+├── Serialization/    # TypeStringMapping
+├── Snd/              # TypedData/metadata, ISndContext, strategy bases, internal entity queries
+├── StateMachine/     # State-machine strategy base/context
+├── Utility/          # PathUtility and internal value inference
+├── AssemblyAttributes.cs # Home inline-type registration
+├── OrigoHostOptions.cs   # Shell host configuration
+└── OrigoMeta.cs      # Framework metadata
+
+Origo.Core.Kernel/    # Kernel implementation package (runtime-only dependency of Core)
+├── Abstractions/     # Internal entity/node/scene contracts
 ├── Addons/           # External algorithm library (FastNoiseLite)
-├── Blackboard/       # Blackboard implementation
-├── DataSource/       # JSON/Map codec + type conversion
-├── Grid/             # Grid coordinate system + A* pathfinding
-├── Logging/          # Logging implementation
-├── Planning/         # Planning/behavior strategy extensions
-├── Random/           # Random numbers + noise
-├── Runtime/          # Runtime four-layer lifecycle + console
-├── Save/             # Persistent storage
+├── DataSource/       # JSON/Map codec, factory, converters, and I/O
+├── Ports/            # Internal kernel-shell host construction port
+├── Runtime/          # Lifecycle, console routing, and frame scheduling
+├── Save/             # Persistence, payloads, atomic writes, and storage
 ├── Scheduling/       # Deferred queues
-├── Serialization/    # Type ↔ string mapping
-├── Snd/              # SND entity system (Strategy + Data + Node)
-├── StateMachine/     # String-stack state machine
-└── Utility/          # Utility classes (Diff/Path)
+├── Snd/              # Context/world/entity/scene/strategy implementation
+└── StateMachine/     # Stack state machine and persistence models
+
+Origo.Core/           # Consumer shell package
+├── Grid/             # Grid coordinate system + A* pathfinding
+├── Random/           # Random numbers + noise
+├── Snd/              # SND shell extensions and archetype loader
+└── OrigoHost.cs      # Host facade over internal kernel ports
 
 Origo.SourceGeneration/  # Roslyn source generator (5 .cs files)
 └── TypedDataGenerator*.cs  # Home/Adapter dual-mode code generation (1 main file + 4 partial)

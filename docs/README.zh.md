@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 32 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo Manual
 
@@ -17,7 +17,7 @@ Origo 框架遵循以下核心设计约束，所有模块实现和接口设计�
 | **平台无关** | Origo.Core 零引擎依赖，所有游戏逻辑、持久化、实体模型仅使用 `System.*` 类型 |
 | **适配层隔离** | 引擎集成仅通过 `Origo.GodotAdapter` 实现 Core 抽象接口，适配层不得触发策略钩子、管理策略生命周期、冲刷延迟管线、持有 Core 编排状态 |
 | **接口隔离（ISP）** | `ISndContext` 提供 10 个 companion 属性（9 个 Snd 窄角色接口 + `IStateMachineContext`），`ISessionRun` 返回抽象 `IStateMachineContainer` 而非具体类型 |
-| **依赖方向单向** | Abstractions → Core 实现 → Adapter，反向依赖严格禁止 |
+| **依赖方向单向** | Contracts → Core 实现 → Adapter，反向依赖严格禁止 |
 | **public 白名单** | 不为"可能未来有用"提前公开接口；每个 public 接口必须有明确的跨程序集消费者 |
 | **显式失败优先** | 接口契约被违反时抛异常而非静默降级；存档/读档严格校验完整性 |
 | **策略一等公民** | 游戏由策略驱动，`ISndContext` 作为上帝对象向策略暴露全部能力，不限制策略可访问的框架功能 |
@@ -59,7 +59,9 @@ Root (this file)
 
 | 模块 | 位置 | 说明 |
 |------|------|------|
-| **Origo.Core** | [README](Origo.Core/README.zh.md) | 平台无关核心：SND 实体系统、运行时、持久化、状态机 |
+| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.zh.md) | 稳定消费者契约、纯数据、策略基类、metadata、data-source 契约、日志抽象与共享纯工具 |
+| **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.zh.md) | kernel 实现：runtime/SND/持久化/data-source/console、调度、噪声与 internal kernel-shell port |
+| **Origo.Core** | [README](Origo.Core/README.zh.md) | 消费者 shell：OrigoHost facade、网格/随机工具与 SND 扩展辅助 |
 | **Origo.SourceGeneration** | [README](Origo.SourceGeneration/README.zh.md) | Roslyn 增量源码生成器：TypedData 多层内联存储 + 强类型访问器 |
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.zh.md) | Godot 4 适配层：文件系统、日志、序列化、启动 |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.zh.md) | TCP 远程控制台桥接（端口 9876） |
@@ -79,21 +81,19 @@ Root (this file)
 
 | 子系统 | 职责 |
 |--------|------|
-| [Abstractions](Origo.Core/Abstractions/README.zh.md) | 11 组公共接口（IBlackboard、IFileSystem、ISndEntity、ISessionManager、IStateMachineContainer...） |
+| [Abstractions](Origo.Core.Kernel/Abstractions/README.zh.md) | Core 内部抽象接口（IBlackboard、ISndEntity、ISessionManager、IStateMachineContainer...） |
 | [Snd](Origo.Core/Snd/README.zh.md) | SND 实体系统（Strategy + Node + Data） |
-| [Runtime](Origo.Core/Runtime/README.zh.md) | 四层运行时生命周期 + 控制台 |
-| [Save](Origo.Core/Save/README.zh.md) | 持久化（两阶段写入 + 严格读取） |
-| [DataSource](Origo.Core/DataSource/README.zh.md) | 数据源抽象层（JSON/Map 编解码 + 类型转换） |
+| [Runtime](Origo.Core.Kernel/Runtime/README.zh.md) | 四层运行时生命周期 + 控制台 |
+| [Save](Origo.Core.Kernel/Save/README.zh.md) | 持久化（两阶段写入 + 严格读取） |
+| [DataSource](Origo.Core.Kernel/DataSource/README.zh.md) | 数据源抽象层（JSON/Map 编解码 + 类型转换） |
 | [Grid](Origo.Core/Grid/README.zh.md) | 网格坐标系、A* 寻路、坐标解析 |
-| [StateMachine](Origo.Core/StateMachine/README.zh.md) | 字符串栈状态机 |
-| [Planning](Origo.Core/Planning/README.zh.md) | 意图驱动计划执行 |
-| [Scheduling](Origo.Core/Scheduling/README.zh.md) | 延迟动作调度 |
-| [Blackboard](Origo.Core/Blackboard/README.zh.md) | 内存黑板实现 |
+| [StateMachine](Origo.Core.Kernel/StateMachine/README.zh.md) | 字符串栈状态机 |
+| [Planning](Origo.Core.Contracts/Planning/README.zh.md) | 意图驱动计划执行 |
+| [Blackboard](Origo.Core.Contracts/Blackboard/README.zh.md) | 内存黑板实现 |
 | [Random](Origo.Core/Random/README.zh.md) | 随机数 + 噪声图 |
-| [Utility](Origo.Core/Utility/README.zh.md) | 通用工具：集合差异比较 |
-| [Serialization](Origo.Core/Serialization/README.zh.md) | 类型 ↔ 字符串映射 |
-| [Logging](Origo.Core/Logging/README.zh.md) | 日志构建器 + NullLogger |
-| [Addons](Origo.Core/Addons/README.zh.md) | FastNoiseLite 噪声库 |
+| [Utility](Origo.Core.Contracts/Utility/README.zh.md) | 通用工具：集合差异比较 |
+| [Serialization](Origo.Core.Contracts/Serialization/README.zh.md) | 类型 ↔ 字符串映射 |
+| [Logging](Origo.Core.Contracts/Logging/README.zh.md) | 日志构建器 + NullLogger |
 
 ## 快速导航
 
@@ -118,7 +118,7 @@ Root (this file)
 
 ## 版本
 
-当前 Origo 框架版本：**0.0.10-nightly**（开发中，nightly 附带日期后缀，见 `Directory.Build.props`）。文档与源代码同仓维护，版本天然同步（文档不跟踪 nightly 日期后缀）。代码目录结构变更时，应同步更新本手册的目录镜像和索引。
+当前 Origo 框架版本：**0.1.0**。文档与源代码同仓维护，版本天然同步。代码目录结构变更时，应同步更新本手册的目录镜像和索引。
 
 - 框架源码与文档：本仓库 [origo](https://github.com/51193/origo)（文档位于 `docs/`）
 - 示例项目：[origo.demo](https://github.com/51193/origo.demo)

@@ -384,7 +384,7 @@ public sealed partial class TypedDataGenerator : IIncrementalGenerator
     ///     public extension method that shadows the Home accessor semantics
     ///     for consumers (extension methods are only considered when no
     ///     applicable instance member exists, so a public <c>AsInt32</c>
-    ///     extension would silently win for consumer code while Origo.Core's
+    ///     extension would silently win for consumer code while the home assembly's
     ///     internal calls still bind to the instance member): such
     ///     registrations are rejected — unless the registered type *is* the
     ///     BCL type the name belongs to (e.g. registering <c>string</c> under

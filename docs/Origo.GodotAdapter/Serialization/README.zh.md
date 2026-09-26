@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.GodotAdapter/Serialization/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Serialization
 
-> [↑ 回到 Origo.GodotAdapter](../README.zh.md) · [↔ Core: Serialization](../../Origo.Core/Serialization/README.zh.md)
+> [↑ 回到 Origo.GodotAdapter](../README.zh.md) · [↔ Core: Serialization](../../Origo.Core.Contracts/Serialization/README.zh.md)
 
 ## 概述
 

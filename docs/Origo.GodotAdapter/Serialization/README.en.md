@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.GodotAdapter/Serialization/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Serialization
 
-> [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Serialization](../../Origo.Core/Serialization/README.en.md)
+> [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Serialization](../../Origo.Core.Contracts/Serialization/README.en.md)
 
 ## Overview
 

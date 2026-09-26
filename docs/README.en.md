@@ -1,5 +1,5 @@
 <!-- docsync-pair: README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 32 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Manual
 
@@ -17,7 +17,7 @@ The Origo framework follows these core design constraints; all module implementa
 | **Platform-agnostic** | Origo.Core has zero engine dependencies. All game logic, persistence, and entity models use only `System.*` types |
 | **Adapter-layer isolation** | Engine integration is exclusively through `Origo.GodotAdapter` implementing Core abstraction interfaces. The adapter layer must not fire strategy hooks, manage strategy lifecycles, flush deferred pipelines, or hold Core orchestration state |
 | **Interface Segregation (ISP)** | `ISndContext` exposes 10 companion properties (9 Snd role interfaces + `IStateMachineContext`); `ISessionRun` returns an abstract `IStateMachineContainer` rather than a concrete type |
-| **Unidirectional dependency** | Abstractions → Core implementations → Adapter; reverse dependencies are strictly forbidden |
+| **Unidirectional dependency** | Contracts → Core implementations → Adapter; reverse dependencies are strictly forbidden |
 | **public whitelist** | Do not expose interfaces preemptively for "maybe useful in the future"; every public interface must have a clear cross-assembly consumer |
 | **Explicit failure first** | Throw exceptions rather than silent degradation when interface contracts are violated; save/load strictly validate integrity |
 | **Strategy as first-class citizen** | Game logic is strategy-driven; `ISndContext` acts as a god object exposing all capabilities to strategies without restricting what framework features a strategy can access |
@@ -59,7 +59,9 @@ Each directory's `README.md` contains:
 
 | Module | Location | Description |
 |--------|----------|-------------|
-| **Origo.Core** | [README](Origo.Core/README.en.md) | Platform-agnostic core: SND entity system, runtime, persistence, state machines |
+| **Origo.Core.Contracts** | [README](Origo.Core.Contracts/README.en.md) | Stable consumer contracts, pure data, strategy bases, metadata, data-source contracts, logging abstractions, and shared pure helpers |
+| **Origo.Core.Kernel** | [README](Origo.Core.Kernel/README.en.md) | Kernel implementation: runtime/SND/persistence/data-source/console, scheduling, noise, and internal kernel-shell ports |
+| **Origo.Core** | [README](Origo.Core/README.en.md) | Consumer shell: OrigoHost facade, grid/random utilities, and SND extension helpers |
 | **Origo.SourceGeneration** | [README](Origo.SourceGeneration/README.en.md) | Roslyn incremental source generator: TypedData multi-layer inline storage + strongly-typed accessors |
 | **Origo.GodotAdapter** | [README](Origo.GodotAdapter/README.en.md) | Godot 4 adapter layer: file system, logging, serialization, bootstrap |
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.en.md) | TCP remote console bridge (port 9876) |
@@ -79,21 +81,19 @@ Each directory's `README.md` contains:
 
 | Subsystem | Responsibility |
 |-----------|---------------|
-| [Abstractions](Origo.Core/Abstractions/README.en.md) | 11 groups of public interfaces (IBlackboard, IFileSystem, ISndEntity, ISessionManager, IStateMachineContainer...) |
+| [Abstractions](Origo.Core.Kernel/Abstractions/README.en.md) | Core abstraction interfaces (IBlackboard, ISndEntity, ISessionManager, IStateMachineContainer...) |
 | [Snd](Origo.Core/Snd/README.en.md) | SND entity system (Strategy + Node + Data) |
-| [Runtime](Origo.Core/Runtime/README.en.md) | Four-layer runtime lifecycle + console |
-| [Save](Origo.Core/Save/README.en.md) | Persistence (two-phase write + strict read) |
-| [DataSource](Origo.Core/DataSource/README.en.md) | Data source abstraction layer (JSON/Map codec + type conversion) |
+| [Runtime](Origo.Core.Kernel/Runtime/README.en.md) | Four-layer runtime lifecycle + console |
+| [Save](Origo.Core.Kernel/Save/README.en.md) | Persistence (two-phase write + strict read) |
+| [DataSource](Origo.Core.Kernel/DataSource/README.en.md) | Data source abstraction layer (JSON/Map codec + type conversion) |
 | [Grid](Origo.Core/Grid/README.en.md) | Grid coordinate system, A* pathfinding, coordinate parsing |
-| [StateMachine](Origo.Core/StateMachine/README.en.md) | String-stack state machine |
-| [Planning](Origo.Core/Planning/README.en.md) | Intent-driven plan execution |
-| [Scheduling](Origo.Core/Scheduling/README.en.md) | Deferred action scheduling |
-| [Blackboard](Origo.Core/Blackboard/README.en.md) | In-memory blackboard implementation |
+| [StateMachine](Origo.Core.Kernel/StateMachine/README.en.md) | String-stack state machine |
+| [Planning](Origo.Core.Contracts/Planning/README.en.md) | Intent-driven plan execution |
+| [Blackboard](Origo.Core.Contracts/Blackboard/README.en.md) | In-memory blackboard implementation |
 | [Random](Origo.Core/Random/README.en.md) | Random number + noise maps |
-| [Utility](Origo.Core/Utility/README.en.md) | General utilities: collection diff comparison |
-| [Serialization](Origo.Core/Serialization/README.en.md) | Type ↔ string mapping |
-| [Logging](Origo.Core/Logging/README.en.md) | Log builder + NullLogger |
-| [Addons](Origo.Core/Addons/README.en.md) | FastNoiseLite noise library |
+| [Utility](Origo.Core.Contracts/Utility/README.en.md) | General utilities: collection diff comparison |
+| [Serialization](Origo.Core.Contracts/Serialization/README.en.md) | Type ↔ string mapping |
+| [Logging](Origo.Core.Contracts/Logging/README.en.md) | Log builder + NullLogger |
 
 ## Quick Navigation
 
@@ -118,7 +118,7 @@ Each directory's `README.md` contains:
 
 ## Version
 
-Current Origo framework version: **0.0.10-nightly** (in development; nightly carries a date suffix, see `Directory.Build.props`). Documentation is co-located with source code in the same repository; versions are naturally synchronized (the docs do not track the nightly date suffix). When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
+Current Origo framework version: **0.1.0**. Documentation is co-located with source code in the same repository; versions are naturally synchronized. When code directory structure changes, the manual's directory mirror and indexes should be updated accordingly.
 
 - Framework source and docs: this repository [origo](https://github.com/51193/origo) (docs under `docs/`)
 - Example project: [origo.demo](https://github.com/51193/origo.demo)

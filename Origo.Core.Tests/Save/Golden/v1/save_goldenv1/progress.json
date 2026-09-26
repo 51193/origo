@@ -1,0 +1,6 @@
+{
+  "origo.session_topology": {
+    "type": "String",
+    "data": "__foreground__=main_menu=false"
+  }
+}

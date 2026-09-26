@@ -9,6 +9,7 @@ using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
+using Origo.Core.Kernel.Ports;
 using Origo.Core.Logging;
 using Origo.Core.Snd.Strategy;
 using Origo.GodotAdapter.Bootstrap;
@@ -16,7 +17,7 @@ using Origo.GodotAdapter.Bootstrap;
 namespace Origo.GodotAdapter.Snd;
 
 /// <summary>
-///     Godot engine adapter scene host. Manages <see cref="GodotSndEntity" />
+///     Internal Godot engine adapter scene host. Manages <see cref="GodotSndEntity" />
 ///     instances in a Godot scene tree and implements
 ///     <see cref="ISndSceneHost" />, <see cref="ISndContextAttachableSceneHost" />,
 ///     <see cref="IObserverTopologyHost" />, and
@@ -24,9 +25,9 @@ namespace Origo.GodotAdapter.Snd;
 ///     delegated to <see cref="SndEntityCollection{T}" /> (pure C#); this
 ///     class only bridges it to the Godot node tree.
 /// </summary>
-[GlobalClass]
-public partial class GodotSndManager
-    : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable
+internal partial class GodotSndManager
+    : Node, ISndSceneHost, ISndContextAttachableSceneHost, IObserverTopologyHost, IOwningSessionBindable,
+        ISndSceneHostRuntimeBinder
 {
     private readonly SndEntityCollection<GodotSndEntity> _collection;
     private ObserverTopology? _observerTopology;
@@ -138,6 +139,9 @@ public partial class GodotSndManager
     /// <exception cref="InvalidOperationException">
     ///     Thrown when runtime dependencies are already bound.
     /// </exception>
+    void ISndSceneHostRuntimeBinder.BindRuntimeDependencies(SndWorld world, ILogger logger) =>
+        BindRuntimeDependencies(world, logger);
+
     [MemberNotNull(nameof(SharedWorld), nameof(SharedLogger))]
     internal void BindRuntimeDependencies(SndWorld world, ILogger logger)
     {

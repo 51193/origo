@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Grid
 
@@ -7,13 +7,13 @@
 
 ## 概述
 
-通用网格工具集。提供网格坐标类型、世界坐标双向转换、A* 寻路、坐标解析等能力。任何基于方形网格的游戏（如战棋、Roguelike、沙盒）都可使用。
+通用网格工具集。`GridPos` 是 `Origo.Core.Contracts` 中的稳定坐标值类型；本 shell 目录提供世界坐标转换、A* 寻路与坐标解析。任何基于方形网格的游戏（如战棋、Roguelike、沙盒）都可使用。
 
 ## 包含文件
 
 | 文件 | 职责 |
 |------|------|
-| `GridPos.cs` | `readonly record struct`，表示 2D 整数网格坐标 |
+
 | `GridCoordinateSystem.cs` | 单轴/双轴 GridToWorld / WorldToGrid 坐标转换 |
 | `Astar.cs` | 通用 A* 寻路，接受 `Func<GridPos, bool>` 阻塞检测委托 |
 | `GridParser.cs` | 坐标字符串解析（`"x,z"` 格式 + `JsonElement`） |

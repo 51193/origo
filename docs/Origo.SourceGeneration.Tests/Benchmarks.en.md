@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.SourceGeneration.Tests/Benchmarks -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # TypedData Generated Product Performance Benchmarks
 

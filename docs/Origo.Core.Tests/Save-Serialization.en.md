@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Serialization -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 21 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Serialization Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/Save/Serialization](../Origo.Core/Save/Serialization/README.en.md)
+> [↔ Module under test: Origo.Core.Kernel/Save/Serialization](../Origo.Core.Kernel/Save/Serialization/README.en.md)
 > [↔ Behavior under test: usage/persistence-flow](../usage/persistence-flow.en.md)
 
 ## Behavior Overview

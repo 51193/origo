@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/state-machine -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # State Machine
 

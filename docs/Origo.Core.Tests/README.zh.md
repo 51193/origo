@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 28 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Tests
 
@@ -45,7 +45,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 
 | 能力 | 文档 | 验证重点 |
 |------|------|---------|
-| 架构守卫 | [Architecture.md](Architecture.zh.md) | 分层隔离（Core 不引用 Godot）、接口组合（ISndContext 纯组合）、策略无状态校验 |
+| 架构守卫 | [Architecture.md](Architecture.zh.md) | 分层隔离（Core 不引用 Godot）、Contracts/Kernel 依赖方向、接口组合（ISndContext 纯组合）、策略无状态校验、shell API 分类完整性 |
 | 测试替身 | [Abstractions.md](Abstractions.zh.md) | TestMemoryFileSystem / NullLogger / TestMemoryFileSystemAdditional 的正确性 |
 | 黑板 | [Blackboard.md](Blackboard.zh.md) | Set/Get/TryGet/Clear/SerializeAll/DeserializeAll 全生命周期 + 键校验 |
 | 数据观察者 | [DataObserver.md](DataObserver.zh.md) | Subscribe/Unsubscribe/Notify/多订阅者/重入安全/Clear |
@@ -58,6 +58,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | 调度 | [Scheduling.md](Scheduling.zh.md) | ConcurrentActionQueue 入队/排空/并发安全/递归深度保护 |
 | 控制台 | [Console.md](Console.zh.md) | 命令解析器/路由器/输入队列/输出通道、19 个内置命令处理（16 Core + 3 GodotAdapter）、类型推断 |
 | 运行时核心 | [Runtime-Core.md](Runtime-Core.zh.md) | OrigoRuntime 构造、控制台注入、帧延迟动作执行 |
+| Shell 兼容契约 | [Compatibility.md](Compatibility.zh.md) | OrigoHost 公开入口的生命周期顺序、观察者恢复、fail-fast、会话状态转换；kernel port 绑定/校验不被绕过；golden v1 存档加载见 Save-Storage |
 | 会话生命周期 | [Session-Lifecycle.md](Session-Lifecycle.zh.md) | 会话创建/销毁/切换、Dispose 语义、前后台协议一致、拓扑编解码 |
 | 持久化：存储 | [Save-Storage.md](Save-Storage.zh.md) | 两阶段写入、write_in_progress marker 契约、关卡三件套完整性、路径策略、快照读写、幂等去重 |
 | 持久化：序列化 | [Save-Serialization.md](Save-Serialization.zh.md) | BlackboardSerializer、SndSceneSerializer、SaveContext 编排 |
@@ -68,7 +69,7 @@ Origo.Core 的测试遵循"**面向行为、面向文档契约**"原则：
 | SND 场景 | [Snd-Scene.md](Snd-Scene.zh.md) | MemorySndSceneHost 与 FullMemorySndSceneHost 的 Spawn/FindByName/LoadFromMetaList/ClearAll/CreateEntity/RemoveEntity/RequestKillEntity、NullNodeFactory |
 | SND 策略 | [Snd-Strategy.md](Snd-Strategy.zh.md) | 策略偏序排序、池引用计数/回收、实体策略生命周期钩子、观察者策略、主动策略 Invoke、策略池 Get/Release 与 Process 缩放性能测量 |
 | SND 上下文 | [Snd-Context.md](Snd-Context.zh.md) | SndContext save/load/continue 工作流、LevelBuilder、模板解析、Archetype 加载 |
-| SND 扩展 | [Snd-Extensions.md](Snd-Extensions.zh.md) | EnsureStrategy 惰性策略挂载（幂等）、TryGetNumeric 跨数值类型读取、InvokeStrategy 泛型调用 |
+| SND 扩展 | [Snd-Extensions.md](Snd-Extensions.zh.md) | EnsureStrategy 惰性策略挂载（幂等）、TryGetNumeric 跨数值类型读取、InvokeStrategy 泛型调用与复杂嵌套 payload 序列化往返 |
 | 文件访问 | [Snd-FileAccess.md](Snd-FileAccess.zh.md) | ISndFileAccess 在 SndContext 上的 DataSourceNode 读写往返、强类型往返、overwrite 语义、错误/边界路径 |
 | 策略测试上下文文件访问 | [StrategyTestContext-FileAccess.md](StrategyTestContext-FileAccess.zh.md) | ISndFileAccess 在 StrategyTestContext 上的内存文件系统行为、DataSourceNode 和强类型往返 |
 | 存档文件访问 | [Snd-ArchiveFileAccess.md](Snd-ArchiveFileAccess.zh.md) | ISndArchiveFileAccess 在 SndContext 上的 extra/ 子目录文件操作、DeleteFile、路径穿越防护、save/load 往返 |

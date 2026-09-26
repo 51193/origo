@@ -1,10 +1,10 @@
 <!-- docsync-pair: Origo.Core.Tests/Snd-Metadata -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # SND 元数据 测试
 
 > [↑ 回到 Origo.Core.Tests](README.zh.md)
-> [↔ 被测模块: Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md)
+> [↔ 被测模块: Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md)
 > [↔ 被测行为: usage/snd-entity-model](../usage/snd-entity-model.zh.md)
 
 ## 被测行为概览
@@ -182,6 +182,7 @@
 | 测试方法 | 验证的行为 | 文档出处 |
 |---------|-----------|---------|
 | `Entity_SetData_GetData_RoundTrip_AllRegisteredTypes` | 实体 SetData/GetData 往返支持全部已注册类型 | snd-entity-model: TypedData |
+| `Entity_SetData_GetData_RoundTrip_UnregisteredReferenceType` | 实体 SetData/GetData 对未注册引用类型保持同一实例往返 | snd-entity-model: TypedData |
 | `Entity_TryGetData_Found_ReturnsTrue` | TryGetData 找到键返回 true 和值 | snd-entity-model: TypedData |
 | `Entity_SetData_DifferentTypes_SameKey` | 同一键先后设置不同类型，后设置值覆盖前值 | snd-entity-model: TypedData |
 | `Direct_Observer_Subscribe_And_Notify` | DataObserverManager 订阅和通知：oldValue/newValue 正确传递 | snd-entity-model: TypedData |
@@ -205,7 +206,6 @@
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | SndMetaData 非常大量策略索引时的性能 | 极端数据量下的深拷贝性能 | — |
-| TypedData 非注册引用类型在实体 SetData/GetData 中的往返 | 当前仅测试已注册类型的往返 | snd-entity-model: TypedData |
 
 ---
 

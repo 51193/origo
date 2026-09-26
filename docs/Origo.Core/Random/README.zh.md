@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.Core/Random/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Random
 
-> [↑ 回到 Origo.Core](../README.zh.md) · [↔ Addons: FastNoiseLite](../Addons/FastNoiseLite/README.zh.md)
+> [↑ 回到 Origo.Core](../README.zh.md) · [↔ Addons: FastNoiseLite](../../Origo.Core.Kernel/Addons/FastNoiseLite/README.zh.md)
 
 ## 概述
 

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.TestSupport/Architecture/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Architecture
 
@@ -14,6 +14,7 @@
 | 文件 | 职责 |
 |------|------|
 | `PrivateFieldNamingConvention.cs` | 反射校验生产程序集私有字段遵循 `_camelCase` 命名 |
+| `ShellApiClassificationInventory.cs` | 解析双语 shell API 分类表，并校验程序集导出类型逐项已分类 |
 | `Metadata/TypedDataTestSupport.cs` | internal 测试复位助手：清空 TypedData kind 注册表并重放 Home 注册；生产代码无测试钩子 |
 | `Runtime/SndContextTestFrameDriver.cs` | internal 测试侧帧冲刷扩展：仅排干运行时延迟队列，不处理实体、不泵控制台；生产代码无测试钩子 |
 

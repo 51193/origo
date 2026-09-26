@@ -1,9 +1,9 @@
 <!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.SourceGeneration
 
-> [↑ 回到 Origo.manual](../README.zh.md) · [↔ Core: Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md)
+> [↑ 回到 Origo.manual](../README.zh.md) · [↔ Core: Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md)
 
 ## 概述
 
@@ -30,8 +30,8 @@ Source Generator 在编译时检测当前程序集是否为 TypedData 的"宿主
 
 | 模式 | 适用程序集 | 生成内容 |
 |------|-----------|---------|
-| **Home** | Origo.Core | `partial struct TypedData` 的 KindMap、AsXxx/TryGetXxx 方法、explicit operators；`TypedDataTypeMap`、`TypedDataObjectConverter`、`TypedDataFactory<T>`；`[ModuleInitializer]` 注册 KindTypeMap |
-| **Adapter** | Origo.GodotAdapter（当前唯一受支持的适配层） | 扩展方法（`AsXxx` / `TryGetXxx`）；`[ModuleInitializer]` 注册 KindTypeMap + KindResolver + FromObject/ToObject 转换桥接。适配器程序集必须位于 Origo.Core 的 `InternalsVisibleTo` 白名单中，否则报告 `ORIGOSG007` 且不生成代码 |
+| **Home** | Origo.Core.Contracts | `partial struct TypedData` 的 KindMap、AsXxx/TryGetXxx 方法、explicit operators；`TypedDataTypeMap`、`TypedDataObjectConverter`、`TypedDataFactory<T>`；`[ModuleInitializer]` 注册 KindTypeMap |
+| **Adapter** | Origo.GodotAdapter（当前唯一受支持的适配层） | 扩展方法（`AsXxx` / `TryGetXxx`）；`[ModuleInitializer]` 注册 KindTypeMap + KindResolver + FromObject/ToObject 转换桥接。适配器程序集必须位于 Origo.Core.Contracts 的 `InternalsVisibleTo` 白名单中，否则报告 `ORIGOSG007` 且不生成代码 |
 
 ### Home 模式生成内容
 
@@ -62,7 +62,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 |----|-----------|----------|--------|
 | Core | 1（默认） | 1–13 | 13 种 BCL 基础类型 |
 | GodotAdapter | 128 | 128–141 | 14 种 Godot 引擎类型 |
-| 预留（未来适配器） | 192 | 192–254 | —（需先将对应程序集加入 Origo.Core 的 `InternalsVisibleTo` 白名单） |
+| 预留（未来适配器） | 192 | 192–254 | —（需先将对应程序集加入 Origo.Core.Contracts 的 `InternalsVisibleTo` 白名单） |
 | Fallback | — | `TypedData.UnregisteredKind` | 未注册类型兜底 |
 
 ### 类型内联策略
@@ -71,7 +71,7 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 | 类型 | 存储方式 | 说明 |
 |------|---------|------|
-| 宿主（Origo.Core）程序集声明的系统基础值类型（`byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`char`） | `_inlineBits : long` 字段内联 | 零堆分配，零装箱；内联仅限宿主程序集 |
+| 宿主（Origo.Core.Contracts）程序集声明的系统基础值类型（`byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`char`） | `_inlineBits : long` 字段内联 | 零堆分配，零装箱；内联仅限宿主程序集 |
 | 引用类型（`string`） | `_ref : object?` 字段存储 | 内置 KindMap 兜底 |
 | 适配器注册类型（非系统值类型） | `_ref : object?` 字段存储 | 非系统值类型体积不可在编译期确定，走 `_ref` 兜底 |
 | 未注册类型 | `_ref : object?` 兜底 | Kind=`TypedData.UnregisteredKind`，反序列化经 `TypedDataObjectConverter.FromObject` 恢复 |
@@ -86,13 +86,13 @@ Kind 值是一个 `byte`，由 `SndInlineTypesAttribute` 的 `StartKind` 参数�
 
 | 诊断 ID | 严重级别 | 触发条件 |
 |---------|---------|---------|
-| `ORIGOSG001` | Error | 系统基础类型在非宿主（适配层）程序集的 `SndInlineTypes` 组中注册。内联基础类型由 Origo.Core 独占，适配层只能注册引用类型或非系统值类型（走 `_ref`）。 |
+| `ORIGOSG001` | Error | 系统基础类型在非宿主（适配层）程序集的 `SndInlineTypes` 组中注册。内联基础类型由 Origo.Core.Contracts 独占，适配层只能注册引用类型或非系统值类型（走 `_ref`）。 |
 | `ORIGOSG002` | Error | 宿主程序集中注册了无法内联且不受支持的值类型（如 `decimal` 或自定义结构体）。宿主程序集仅允许注册受支持的系统基础类型与引用类型。 |
 | `ORIGOSG003` | Error | 注册类型的 Kind 值（`startKind` + 组内位置）落在 `byte` 有效范围 `[1, 254]` 之外。包含 Kind 越界后会回绕到某个已占用值、从而与其它类型静默冲突的情形。 |
 | `ORIGOSG004` | Error | 多个 `SndInlineTypes` 组的 `startKind` 区间重叠，导致同一个 Kind 字节被分配给多个不同类型。每个内联类型必须映射到唯一的 Kind。 |
 | `ORIGOSG005` | Error | 多个注册类型产生相同的生成标识符（KindName）：不同命名空间的同名类型、泛型实例化后名称折叠为同一标识符的类型、以及同一类型以不同 Kind 值重复注册。同一类型以相同 Kind 重复注册属幂等操作，被静默去重（与运行时 `RegisterKind` 的幂等语义一致）。**保留标识符 `Null` 与宿主内联 Kind 名也被拒绝**——`KindMap` 恒输出哨兵常量 `Null = 0`（值类型还会与手写 `IsNull` 属性冲突），注册名为 `Null` 的类型同样报 ORIGOSG005 并剔除；适配层注册的**自定义类型其名称清洗后与宿主内联 Kind 名相同**（如用户自己的 `Int32`）会生成与宿主访问器同名的公共扩展方法，消费者侧将静默绑定到扩展方法而 Core 内部绑定到实例方法（语义分歧），同样报 ORIGOSG005。生成访问器标识符派生自类型名，任何标识符冲突都会产出不可编译的重复成员或语义分歧。 |
 | `ORIGOSG006` | Error | 注册类型的清洗后 KindName **不是合法的 C# 标识符**（如指针类型，其 `Name` 含 `*`，清洗后为 `Int32*`），生成访问器标识符无法编译；此类注册报 ORIGOSG006 并剔除。 |
-| `ORIGOSG007` | Error | 非宿主程序集声明了 `SndInlineTypes` 适配层注册，但该程序集不在 Origo.Core 的 `InternalsVisibleTo` 白名单中。适配器模式生成代码需要访问 `TypedData._kind/_ref` 与 internal 注册 API；当前仅 `Origo.GodotAdapter` 在白名单内。生成器报告 ORIGOSG007 且不产出源码，避免一屏 CS0122/CS0117。 |
+| `ORIGOSG007` | Error | 非宿主程序集声明了 `SndInlineTypes` 适配层注册，但该程序集不在 Origo.Core.Contracts 的 `InternalsVisibleTo` 白名单中。适配器模式生成代码需要访问 `TypedData._kind/_ref` 与 internal 注册 API；当前仅 `Origo.GodotAdapter` 在白名单内。生成器报告 ORIGOSG007 且不产出源码，避免一屏 CS0122/CS0117。 |
 
 ## 注册机制
 

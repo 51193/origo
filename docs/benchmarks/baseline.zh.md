@@ -1,5 +1,5 @@
 <!-- docsync-pair: benchmarks/baseline -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo 性能基线
 
@@ -149,7 +149,7 @@ bash scripts/benchmark.sh
 
 - **【已评估不划算，勿尝试】把 `TypedData` 结构体压到 16 字节**：当前 24 字节（`byte _kind` + `long _inlineBits` + `object? _ref`）是 GC 安全设计的下限——`long` 与托管引用槽不能重叠（GC 需独立扫描引用），`_kind` 字节无空闲位可塞。压到 16 字节须牺牲 `long`/`double` 的满 64 位内联，或引入额外分支/类型查找（多半负收益），且改动 `internal` 布局（被生成代码与测试经 `InternalsVisibleTo` 依赖）。值类型单读与 DictLookup 在 0.89x–1.24x 之间波动、多数接近持平的结构性差距即源于此，已接受。
 
-- **`ToObject`（object?）的装箱只落在冷路径**：internal `TypedDataObjectConverter.ToObject` 对值类型装箱，服务于编译期无法得知类型的冷路径（按 `DataType` 的序列化、控制台、`ToString`），这些路径固有需要 `object`。框架内热/温路径（数据变更信号处理、加载校验等）一律用零装箱的 `TryGetXxx`。**「异构 `ToObject` 迭代」基准（约 7.2x、37.49 MB）是合成最坏情况，不对应任何真实生产热路径**；测试项目经 `InternalsVisibleTo` 访问该 internal 转换器以度量此冷路径。取舍与推荐用法见 [Origo.Core/Snd/Metadata](../Origo.Core/Snd/Metadata/README.zh.md)。
+- **`ToObject`（object?）的装箱只落在冷路径**：internal `TypedDataObjectConverter.ToObject` 对值类型装箱，服务于编译期无法得知类型的冷路径（按 `DataType` 的序列化、控制台、`ToString`），这些路径固有需要 `object`。框架内热/温路径（数据变更信号处理、加载校验等）一律用零装箱的 `TryGetXxx`。**「异构 `ToObject` 迭代」基准（约 7.2x、37.49 MB）是合成最坏情况，不对应任何真实生产热路径**；测试项目经 `InternalsVisibleTo` 访问该 internal 转换器以度量此冷路径。取舍与推荐用法见 [Origo.Core.Contracts/Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.zh.md)。
 
 ## 效度局限
 

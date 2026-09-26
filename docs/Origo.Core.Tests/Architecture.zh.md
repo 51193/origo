@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 30 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构守卫 测试
 
@@ -16,7 +16,7 @@
 
 | 文件 | 验证侧重点 |
 |------|-----------|
-| `CoreArchitectureGuardrailTests.cs` | 分层隔离、接口组合、消费方可通过纯接口完成完整工作流 |
+| `CoreArchitectureGuardrailTests.cs` | 分层隔离、接口组合、shell API 分类完整性、Contracts/Kernel 依赖方向、消费方可通过纯接口完成完整工作流 |
 | `AutoInitializerGuardTests.cs` | 策略无状态校验：实例字段被拒绝、静态字段允许、缺少 StrategyIndex 抛异常 |
 
 ## CoreArchitectureGuardrailTests 测试详情
@@ -35,6 +35,7 @@
 | `SndContext_ShouldNotImplementRoleInterfaces` | SndContext 具体类型不实现任何角色接口（纯组合对象） | Snd Abstraction: ISndContext 组合 |
 | `SndContext_CompanionProperties_ShareConsistentState` | 各 companion 属性共享同一黑板实例（SystemBlackboard/ProgressBlackboard） | Snd Abstraction: ISndContext 组合 |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext 继承 ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
+| `ShellRuntimeSurfaces_ShouldExposeSingleBlackboardAndMetaListPaths` | system blackboard 仅经 `ISndContext.Blackboard` 暴露；metadata 列表解析仅经 `ISndTemplateAccess` 暴露 | architecture/overview: 单一访问路径 |
 | `DeferredFlush_ShouldNotBePublicBusinessSurface` | 帧冲刷仅经 `IOrigoFrameDriver.DriveFrame`；`ISndDeferredActions` 与 `OrigoRuntime` 不暴露可绕过的 public flush | architecture/overview: 单一访问路径 |
 | `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture/overview: 单一访问路径 |
 | `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture/overview: 单一访问路径 |
@@ -47,6 +48,17 @@
 | `ISessionRun_ProvidesRuntimeAccess` | ISessionRun 提供黑板/SceneHost/StateMachines 访问 | session-model |
 | `SessionManager_ProvidesCreateAndDestroyOperations` | ISessionManager 提供 CreateBackgroundSession/DestroySession | session-model |
 | `ConsoleCommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | ConsoleCommandHandlerBase 为 public，外部项目可派生自定义命令处理器 | console-bridge |
+| `ShellApiClassification_CoversEveryCoreExport` | Core 每个导出类型都在双语分类表中恰好出现一次；新增导出类型必须先补分类 | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryContractsExport` | `Origo.Core.Contracts` 每个导出类型都在双语分类表中恰好出现一次 | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryKernelExport` | `Origo.Core.Kernel` 每个导出类型都在双语分类表中恰好出现一次 | architecture/shell-api-classification |
+| `Kernel_ShouldNotReferenceImplementationsOrGodot` | Kernel 不引用 `Origo.Core`/Adapter/ConsoleBridge 或 Godot | architecture/shell-kernel-boundary |
+| `Kernel_ShouldReferenceContracts` | Kernel 显式引用 `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
+| `Core_ShouldReferenceKernel` | `Origo.Core` 显式引用 `Origo.Core.Kernel` | architecture/shell-kernel-boundary |
+| `TypedData_ShouldLiveInContractsAssembly` | TypedData 类型身份位于 `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
+| `CoreAssembly_ShouldNotDeclareTypedData` | `Origo.Core` 程序集不再声明 TypedData 类型 | architecture/shell-kernel-boundary |
+| `DataSourceNode_ShouldLiveInContractsAssembly` | DataSourceNode 类型身份位于 `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
+| `Contracts_ShouldNotReferenceImplementationsOrGodot` | 契约程序集不引用 `Origo.Core`/Adapter/ConsoleBridge，也不引用 Godot | architecture/shell-kernel-boundary |
+| `Core_ShouldReferenceContracts` | `Origo.Core` 程序集显式引用 `Origo.Core.Contracts`，钉住契约层依赖方向 | architecture/shell-kernel-boundary |
 
 ## AutoInitializerGuardTests 测试详情
 

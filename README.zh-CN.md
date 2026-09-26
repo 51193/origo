@@ -93,9 +93,10 @@ nc localhost 9876
 ```
 
 ```xml
-<!-- 版本号需与下载的 .nupkg 文件版本一致。 -->
-<PackageReference Include="Origo.Core" Version="0.0.9" />
-<PackageReference Include="Origo.GodotAdapter" Version="0.0.9" />
+<!-- 只引用 shell 包，版本号需与下载的 .nupkg 文件版本一致。
+     Origo.Core.Contracts、Origo.Core.Kernel 与 Godot 运行期资产由这些 shell 包依赖恢复。 -->
+<PackageReference Include="Origo.Core" Version="x.y.z" />
+<PackageReference Include="Origo.GodotAdapter" Version="x.y.z" />
 ```
 
 ### 2. 创建目录结构

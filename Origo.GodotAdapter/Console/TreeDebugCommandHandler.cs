@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using Godot;
 using Origo.Core.Abstractions.Console;
-using Origo.Core.Runtime;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Runtime.Console;
 using Origo.GodotAdapter.Snd;
 using Origo.GodotAdapter;
@@ -10,7 +10,7 @@ using Origo.GodotAdapter;
 namespace Origo.GodotAdapter.Console;
 
 /// <summary><c>tree_debug &lt;entity&gt;</c> — print the full Godot node tree of an entity.</summary>
-internal sealed class TreeDebugCommandHandler(OrigoRuntime runtime) : CommandHandlerBase(runtime)
+internal sealed class TreeDebugCommandHandler(IOrigoRuntime runtime) : CommandHandlerBase(runtime)
 {
     public override string Name => "tree_debug";
 

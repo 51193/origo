@@ -26,7 +26,7 @@ public sealed class IntegrationTestHarness : IDisposable
     public IDataSourceIoGateway DataSourceIo { get; }
     public IFileMetaAccess MetaAccess { get; }
     public IPathResolver PathResolver { get; }
-    public GodotSndManager SndManager { get; }
+    internal GodotSndManager SndManager { get; }
     public Blackboard SystemBlackboard { get; }
     public ILogger Logger { get; }
     public OrigoRuntime Runtime { get; }

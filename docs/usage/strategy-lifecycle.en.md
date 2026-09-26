@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy Lifecycle
 
@@ -258,7 +258,7 @@ public sealed class CharacterSchedulingStrategy : PlanExecutionStrategyBase
 }
 ```
 
-See: [Planning Subsystem Documentation](../Origo.Core/Planning/README.en.md) and [Design Patterns - Scheduling Layer](design-patterns.en.md).
+See: [Planning Subsystem Documentation](../Origo.Core.Contracts/Planning/README.en.md) and [Design Patterns - Scheduling Layer](design-patterns.en.md).
 
 ---
 

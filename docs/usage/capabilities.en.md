@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 25 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
@@ -20,7 +20,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | Cross-entity observation | `MountObserverStrategy(target, observerIndex)` supports self-observation and cross-entity observation; `OnMounted`/`OnUnmounted` carries lifecycle awareness | [SND Entity Model](snd-entity-model.en.md) |
 | Active strategies | Externally invoked by index via Invoke; independently managed container separate from passive strategies; O(1) lookup | [Strategy Testing](strategy-testing.en.md) |
 | Generic active strategy invocation | `InvokeStrategy<TInput, TOutput>` extension methods; type-safe, eliminating JSON serialization boilerplate | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.en.md) |
-| SndMetaFluentBuilder | Fluent API for building entity metadata, eliminating `??= new DataMetaData()` boilerplate | [↔ Snd/Metadata](../Origo.Core/Snd/Metadata/README.en.md) |
+| SndMetaFluentBuilder | Fluent API for building entity metadata, eliminating `??= new DataMetaData()` boilerplate | [↔ Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md) |
 | TryGetNumeric | Compatible numeric reads from entity data, bridging the type mismatch between `SetData("k", 5)` (int) and `TryGetData<float>("k")` | [↔ Snd](../Origo.Core/Snd/README.en.md) |
 | Numeric recipe loading | SndArchetypeLoader loads archetypes from key-value pair files and infers types to write into entities | [↔ Snd/Archetype](../Origo.Core/Snd/Archetype/README.en.md) |
 | Lazy strategy attachment | EnsureStrategy extension methods, lazy strategy layer initialization with idempotent guard | [SND Entity Model](snd-entity-model.en.md), [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.en.md) |
@@ -44,7 +44,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | Save-slot deletion | `ctx.Save.DeleteSave(saveId)` deletes an inactive slot and its `.tmp`/`.bak` remnants while protecting the active slot and pending workflows | [Persistence Flow](persistence-flow.en.md) |
 | Persistence completion state | `ctx.Deferred.IsPersistenceIdle` and `ctx.Lifecycle.IsBootstrapCompleted` expose frame-driven completion observation | [Persistence Flow](persistence-flow.en.md) |
 | meta.map display metadata | Display metadata system separated from business data, ISaveMetaContributor pluggable contributor pattern | [Persistence Flow](persistence-flow.en.md) |
-| Idempotent deduplication | SHA256 hash comparison; same game state skips I/O write | [↔ Save/Storage](../Origo.Core/Save/Storage/README.en.md) |
+| Idempotent deduplication | SHA256 hash comparison; same game state skips I/O write | [↔ Save/Storage](../Origo.Core.Kernel/Save/Storage/README.en.md) |
 
 ## State Machine
 
@@ -59,7 +59,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | Capability | Description | Doc Entry |
 |------------|-------------|-----------|
 | 16 built-in commands | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy / list_saves / save / load / delete_save / switch_level | [Console Commands](console-commands.en.md) |
-| Custom command registration | Core layer inherits ConsoleCommandHandlerBase; adapter layer inherits CommandHandlerBase | [Console Commands](console-commands.en.md) |
+| Custom command registration | Core layer inherits ConsoleCommandHandlerBase; adapter layer inherits CommandHandlerBase; both register through `IOrigoRuntime.RegisterConsoleCommandHandler` | [Console Commands](console-commands.en.md) |
 | TCP remote console bridge | ConsoleBridgeServer listens on localhost:9876, single-connection mode, bidirectional I/O via pub-sub | [Console Commands](console-commands.en.md) |
 | Command type inference | bb_set / entity_set_data auto-infers int/float/bool/string types; existing keys preserve their original type | [Console Commands](console-commands.en.md) |
 
@@ -67,14 +67,14 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 
 | Capability | Description | Doc Entry |
 |------------|-------------|-----------|
-| DataSource abstraction layer | Unified tree data model DataSourceNode (Map/Array/Text/Number/Bool/Null + Lazy), with IDataSourceIoGateway as Core layer's sole file entry point | [↔ DataSource](../Origo.Core/DataSource/README.en.md) |
-| JSON + .map codec | JsonDataSourceCodec (lazy expansion), MapDataSourceCodec (key:value flat structure) | [↔ DataSource/Codec](../Origo.Core/DataSource/Codec/README.en.md) |
-| Lazy JSON expansion | Nested objects/arrays are parsed only on first access, amortizing large save parsing costs | [↔ DataSource](../Origo.Core/DataSource/README.en.md) |
-| Type-string bidirectional mapping | TypeStringMapping maintains bidirectional mapping between CLR types and stable string identifiers, avoiding FullName version coupling | [↔ Serialization](../Origo.Core/Serialization/README.en.md) |
+| DataSource abstraction layer | Unified tree data model DataSourceNode (Map/Array/Text/Number/Bool/Null + Lazy), with IDataSourceIoGateway as Core layer's sole file entry point | [↔ DataSource](../Origo.Core.Kernel/DataSource/README.en.md) |
+| JSON + .map codec | JsonDataSourceCodec (lazy expansion), MapDataSourceCodec (key:value flat structure) | [↔ DataSource/Codec](../Origo.Core.Kernel/DataSource/Codec/README.en.md) |
+| Lazy JSON expansion | Nested objects/arrays are parsed only on first access, amortizing large save parsing costs | [↔ DataSource](../Origo.Core.Kernel/DataSource/README.en.md) |
+| Type-string bidirectional mapping | TypeStringMapping maintains bidirectional mapping between CLR types and stable string identifiers, avoiding FullName version coupling | [↔ Serialization](../Origo.Core.Contracts/Serialization/README.en.md) |
 | Godot 14 type serialization | Vector2/3/4, Vector2I/3I, Quaternion, Color, Basis, Transform2D/3D, Rect2/2I, Aabb, Plane — full JSON round-trip | [↔ GodotAdapter/Serialization](../Origo.GodotAdapter/Serialization/README.en.md) |
-| Converter registration & inheritance backtracking | DataSourceConverterRegistry backtracks along base class and interface chains when no exact type converter is registered | [↔ DataSource/Converters](../Origo.Core/DataSource/Converters/README.en.md) |
-| Strategy file access (ISndFileAccess) | Strategies read/write JSON/Map files via ISndContext, automatically parsed through the IDataSourceIoGateway boundary into DataSourceNode trees or strongly-typed objects | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.en.md) |
-| In-save file access (ISndArchiveFileAccess) | Strategies read/write files (including deletion) in the save's extra/ subdirectory via ISndContext; files follow save lifecycle: included in save snapshots after writes, auto-restored on load | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core/Abstractions/Snd/README.en.md) |
+| Converter registration & inheritance backtracking | DataSourceConverterRegistry backtracks along base class and interface chains when no exact type converter is registered | [↔ DataSource/Converters](../Origo.Core.Kernel/DataSource/Converters/README.en.md) |
+| Strategy file access (ISndFileAccess) | Strategies read/write JSON/Map files via ISndContext, automatically parsed through the IDataSourceIoGateway boundary into DataSourceNode trees or strongly-typed objects | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
+| In-save file access (ISndArchiveFileAccess) | Strategies read/write files (including deletion) in the save's extra/ subdirectory via ISndContext; files follow save lifecycle: included in save snapshots after writes, auto-restored on load | [Architecture Overview](../architecture/overview.en.md), [↔ Abstractions/Snd](../Origo.Core.Contracts/Abstractions/Snd/README.en.md) |
 
 ## Godot Adapter
 
@@ -83,7 +83,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | res:// + user:// file system | GodotFileSystem implements IFileSystem, supporting virtual paths and path traversal protection | [↔ GodotAdapter/FileSystem](../Origo.GodotAdapter/FileSystem/README.en.md) |
 | Log proxy | GodotLogger injects GD.Print / PushWarning / PushError via delegates, no internal formatting | [↔ GodotAdapter/Logging](../Origo.GodotAdapter/Logging/README.en.md) |
 | PackedScene node instantiation | GodotPackedSceneNodeFactory loads scenes from resource paths and instantiates them as GodotNodeHandle | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
-| GodotEntity + StableName | GodotSndEntity bridges ISndEntity with the Godot Node lifecycle; independent StableName avoids Godot auto-rename interference | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
+| GodotEntity + StableName | internal GodotSndEntity bridges ISndEntity with the Godot Node lifecycle; independent StableName avoids Godot auto-rename interference | [↔ GodotAdapter/Snd](../Origo.GodotAdapter/Snd/README.en.md) |
 | Scene alias resolution | Resolves logical aliases to res:// resource paths via SndMappings | [↔ GodotAdapter/Bootstrap](../Origo.GodotAdapter/Bootstrap/README.en.md) |
 | Adapter-layer console commands | press_button (simulate button click), tree_debug (print entity node tree), camera_view (show screen coordinates and depth of entity nodes visible through the active Camera3D) | [↔ GodotAdapter/Console](../Origo.GodotAdapter/Console/README.en.md) |
 
@@ -103,9 +103,9 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | PersistentRandom | Blackboard-persisted random state: InitSeed → TryNextInt32/NextInt32/NextFloat, save-safe and recoverable | [↔ Random](../Origo.Core/Random/README.en.md) |
 | 2D noise map generation | OpenSimplex2 (70%) + Worley Cellular (30%) mixed noise, basic + extended overloads (custom octaves/lacunarity/gain) | [↔ Random](../Origo.Core/Random/README.en.md) |
 | Grid coordinate system | GridPos type, GridCoordinateSystem single/dual-axis conversion, A* pathfinding, GridParser coordinate parsing | [↔ Grid](../Origo.Core/Grid/README.en.md) |
-| In-memory blackboard | IBlackboard default implementation, SetValue/TryGet/SerializeAll/DeserializeAll, key case-sensitive | [↔ Blackboard](../Origo.Core/Blackboard/README.en.md) |
-| Deferred action scheduling | ConcurrentActionQueue thread-safe queue, snapshot-drain pattern, supports re-enqueue during execution | [↔ Scheduling](../Origo.Core/Scheduling/README.en.md) |
-| Structured log builder | LogMessageBuilder fluent API (SetElapsedMs / AddContext / Build) | [↔ Logging](../Origo.Core/Logging/README.en.md) |
+| In-memory blackboard | IBlackboard default implementation, SetValue/TryGet/SerializeAll/DeserializeAll, key case-sensitive | [↔ Blackboard](../Origo.Core.Contracts/Blackboard/README.en.md) |
+| Deferred action scheduling | ConcurrentActionQueue thread-safe queue, snapshot-drain pattern, supports re-enqueue during execution | [↔ Scheduling](../Origo.Core.Kernel/Scheduling/README.en.md) |
+| Structured log builder | LogMessageBuilder fluent API (SetElapsedMs / AddContext / Build) | [↔ Logging](../Origo.Core.Contracts/Logging/README.en.md) |
 
 ## Framework Design Properties
 

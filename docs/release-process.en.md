@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Release & Changelog Process
 
@@ -95,8 +95,10 @@ Complete these steps in order before tagging:
 5. Move shipped rules from `Origo.SourceGeneration/AnalyzerReleases.Unshipped.md`
    to `AnalyzerReleases.Shipped.md` and add a `## Release x.y.z` block.
 6. Run `TAG_VERSION=x.y.z bash scripts/verify-release.sh` and confirm it passes.
-   The check requires: the matching CHANGELOG version block, an empty
-   `[Unreleased]`, the analyzer shipped block, no unshipped rules in
+   The check requires: `Directory.Build.props` `<Version>` equal to the target
+   version and `AssemblyVersion` / `FileVersion` equal to its four-part numeric
+   form, the matching CHANGELOG version block, an empty `[Unreleased]`, the
+   analyzer shipped block, no unshipped rules in
    `AnalyzerReleases.Unshipped.md`, and both `docs/README.*` files mentioning
    the version.
 7. Run `dotnet run --project tools/DocSyncTool -- generate`.
@@ -104,7 +106,9 @@ Complete these steps in order before tagging:
    both `docs/README` version stamps, all docs content, generated hubs, and
    `.sync-status.json` together.
 9. Run the full `bash scripts/ci.sh` on that commit and confirm lint-scripts,
-   format, doc-sync, test, benchmark, and Godot integration all pass. Amend and
+   format, doc-sync, the API baseline gate, tests, benchmarks, Godot integration,
+   and the package consumer smoke all pass. The release workflow then runs
+   `scripts/validate-release-packages.sh` to validate the artifact set. Amend and
    rerun if it fails.
 10. Run `bash scripts/lint-commits.sh` on that commit; fix and amend if it fails.
 11. Create and push tag `vx.y.z` on the verified commit.
@@ -116,10 +120,19 @@ with the `tag` input, which is how weekly snapshots start it. The tag is resolve
 first; every step below then applies to that tag:
 
 - Before validation, rewrite `Directory.Build.props` from the tag: strip only the leading `v` for `<Version>`, and derive `AssemblyVersion` / `FileVersion` from its four-part numeric form (a `-nightly` / `-alpha` suffix stays only in `<Version>`). The tag is then validated against `<Version>` as before. If anything changed, the pipeline creates a `chore(release): sync version stamps to <tag>` commit, and DocSync, tests, benchmarks, and packing all run on that release commit;
-- Run `verify-release.sh`, the committed DocSync check, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, analyzer shipped block, and both `docs/README.*` version stamps) must still be present in the tagged commit;
+- Run `verify-release.sh`, `scripts/lint-scripts.sh`, the committed DocSync check, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, analyzer shipped block, and both `docs/README.*` version stamps) must still be present in the tagged commit;
 - Only after tests and packing succeed, a single `--atomic` push fast-forwards `main` to the release commit and moves the tag to it; the GitHub Release is created afterwards. Validation or packing failures therefore leave every ref untouched, and a successful release keeps `main`, tag, commit, and packages on one version. This write-back requires the tag to be created on the current `main` tip; if main has advanced, the tag is not there, or either ref moves during the run, the lease checks fail and abort the release. Reruns resolve the tag's current target first, so a tag already written back by this pipeline does not produce a duplicate release commit. Branch/tag protection rules or a token without permission make the atomic push fail and abort the release;
-- Pack `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge` as NuGet
-  packages;
+- Run all compatibility gates: `scripts/lint-scripts.sh` (script, workflow, and instruction guards),
+  `scripts/api-inventory.sh` (shell API baseline; auto-extracts the previous formal tag's baseline when no explicit previous baseline is set, allowing compatible additions while rejecting removals/signature changes),
+  `scripts/test.sh` (behavior and save contracts), benchmarks, Godot headless
+  integration, and `scripts/package-consumer-smoke.sh` (shell-only restore,
+  negative compile probe, and startup);
+- Pack `Origo.Core.Contracts`, `Origo.Core.Kernel`, `Origo.Core`,
+  `Origo.GodotAdapter`, and `Origo.ConsoleBridge` as NuGet packages;
+- Run `scripts/validate-release-packages.sh` to validate the five package
+  identities and versions, exact shell/kernel pairing, dependency direction,
+  analyzer assets, and kernel isolation; any missing, unexpected, or mismatched
+  package aborts the release;
 - Build a documentation snapshot archive containing `docs/`, `AGENTS.md`, and
   `CHANGELOG.md`;
 - Attach packages and the documentation snapshot to the GitHub Release, marked

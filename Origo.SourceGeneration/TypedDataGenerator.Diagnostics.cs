@@ -8,7 +8,7 @@ public sealed partial class TypedDataGenerator
         id: "ORIGOSG001",
         title: "System primitive registered outside the TypedData home assembly",
         messageFormat:
-        "'{0}' is a system primitive and can only be registered as an inline TypedData type in the Origo.Core (home) assembly. "
+        "'{0}' is a system primitive and can only be registered as an inline TypedData type in the Origo.Core.Contracts (home) assembly. "
         + "Adapter assemblies may register only reference types or non-system value types, which are stored through the _ref slot.",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
@@ -18,7 +18,7 @@ public sealed partial class TypedDataGenerator
         id: "ORIGOSG002",
         title: "Unsupported value type in the TypedData home assembly",
         messageFormat:
-        "'{0}' is a value type that cannot be stored inline and is not supported in the Origo.Core (home) assembly. "
+        "'{0}' is a value type that cannot be stored inline and is not supported in the Origo.Core.Contracts (home) assembly. "
         + "Only the supported system primitives may be registered as home inline types.",
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
@@ -76,9 +76,9 @@ public sealed partial class TypedDataGenerator
         title: "TypedData adapter assembly requires friend access",
         messageFormat:
         "Assembly '{0}' declares SndInlineTypes adapter registrations but is not a friend "
-        + "assembly of Origo.Core. Adapter-mode generated code reads TypedData internals "
+        + "assembly of Origo.Core.Contracts. Adapter-mode generated code reads TypedData internals "
         + "(_kind/_ref) and calls internal registration APIs, which are accessible only to "
-        + "assemblies in Origo.Core's InternalsVisibleTo whitelist (currently only "
+        + "assemblies in Origo.Core.Contracts's InternalsVisibleTo whitelist (currently only "
         + "Origo.GodotAdapter). Contact the Origo maintainer before registering adapter "
         + "inline types from this assembly.",
         category: "Origo.SourceGeneration",
