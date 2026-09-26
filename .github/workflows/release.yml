@@ -278,6 +278,8 @@ jobs:
         run: dotnet build Origo.sln --no-restore --configuration Release
 
       - name: Shell API baseline gate
+        env:
+          ORIGO_CURRENT_RELEASE_TAG: ${{ steps.resolve-tag.outputs.tag }}
         run: bash scripts/api-inventory.sh
 
       - name: CI — build, tests, line coverage gates (>= 90%)

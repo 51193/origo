@@ -60,6 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Release API baseline comparison excludes the release being validated** — `scripts/find-previous-api-baseline.sh` now skips the release tag passed through `ORIGO_CURRENT_RELEASE_TAG` by the Release workflow, so a version-sync commit created after the tag cannot make the current release its own previous baseline. The helper fixture and release-workflow guard cover the case.
+
 - **Core shell host preserves continue state across restarts** — `OrigoHost` with a supplied `FileSystem` now persists the system blackboard at `<SaveRootPath>/system.json` and reloads it during host construction. Recreating a Core host over the same save root keeps the active/continue save target, so `HasContinueData()` and `RequestContinueGame()` behave consistently with the Godot adapter host.
 
 - **Shell API baseline records modifiers, init accessors, extension `this`, and real enum/struct kinds** — `ApiInventoryTool` now resolves `System.Runtime` so SDK-built shell assemblies no longer report enums/structs as `Class`; it records C# type modifiers, `init` versus `set` accessors, extension-method `this` parameters, and recurses array/pointer elements, indexer parameters, and method generic constraints when rejecting kernel references. The tracked `shell-api-baseline.json` was regenerated to the corrected shape.

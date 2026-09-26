@@ -74,4 +74,23 @@ commit_all "$repo_three" "main advances"
 output="$(cd "$repo_three" && bash "$ROOT/scripts/find-previous-api-baseline.sh")"
 [[ -z "$output" ]] || FAIL "expected unrelated or baseline-free tags to be ignored."
 
+# Case 4: excluding the current release tag still works when a release
+# workflow creates a version-sync commit after the tag.
+repo_four="$FIXTURE/version-sync"
+new_repo "$repo_four"
+mkdir -p "$repo_four/tools/ApiInventoryTool"
+printf 'first-baseline\n' > "$repo_four/tools/ApiInventoryTool/shell-api-baseline.json"
+commit_all "$repo_four" "release 0.1.0"
+git -C "$repo_four" tag v0.1.0
+printf 'second-baseline\n' > "$repo_four/tools/ApiInventoryTool/shell-api-baseline.json"
+commit_all "$repo_four" "release 0.2.0"
+git -C "$repo_four" tag v0.2.0
+printf 'version sync\n' > "$repo_four/Directory.Build.props"
+commit_all "$repo_four" "sync version stamps"
+
+output="$(cd "$repo_four" && ORIGO_CURRENT_RELEASE_TAG=v0.2.0 bash "$ROOT/scripts/find-previous-api-baseline.sh")"
+[[ -n "$output" ]] || FAIL "expected a previous baseline when the current release tag is explicitly excluded."
+[[ "$(cat "$output")" == "first-baseline" ]] || FAIL "version-sync commit fallback compared against the current release tag."
+rm -f "$output"
+
 echo "Previous shell API baseline helper: OK"

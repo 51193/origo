@@ -102,6 +102,35 @@ def main() -> int:
                     f"'{dependency}' before running scripts/lint-scripts.sh."
                 )
 
+        api_step = next(
+            (
+                step
+                for step in release_steps
+                if isinstance(step, dict)
+                and "bash scripts/api-inventory.sh" in str(step.get("run") or "")
+            ),
+            None,
+        )
+        if api_step is None:
+            errors.append(
+                "release job must run bash scripts/api-inventory.sh so the tag "
+                "pipeline enforces the shell API baseline."
+            )
+        else:
+            api_env = api_step.get("env")
+            current_release_tag = (
+                api_env.get("ORIGO_CURRENT_RELEASE_TAG")
+                if isinstance(api_env, dict)
+                else None
+            )
+            if current_release_tag != RESOLVED_TAG:
+                errors.append(
+                    "release job must set ORIGO_CURRENT_RELEASE_TAG to "
+                    f"{RESOLVED_TAG} on the shell API baseline step so a "
+                    "version-sync commit does not make the current release "
+                    "tag its own previous baseline."
+                )
+
     dispatch = event_mapping(workflow).get("workflow_dispatch")
     inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None
     if isinstance(inputs, dict):

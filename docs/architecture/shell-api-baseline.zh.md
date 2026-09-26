@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-api-baseline -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell API 基线与门禁
 
@@ -47,8 +47,8 @@ Release 构建产出确定性 JSON，任何未批准的 shell API 增删或签�
 首次 0.1.0 发布前没有上一稳定 shell 包，因此 previous-package validation
 显式跳过并输出说明。之后 `scripts/api-inventory.sh` 在未设置
 `ORIGO_PREVIOUS_API_BASELINE` 时会通过 git tag 自动提取 HEAD 可达的、排除当前
-提交所在 tag 的最新正式 release 树的 `shell-api-baseline.json`；显式环境变量
-优先。previous-package compare 要求移除或签名变化失败，允许向后兼容的新增
+提交所在 tag 以及 `ORIGO_CURRENT_RELEASE_TAG` 指定的当前 release tag 的最新正式
+release 树的 `shell-api-baseline.json`；显式环境变量优先。previous-package compare 要求移除或签名变化失败，允许向后兼容的新增
 API：0.1.x 允许兼容新增，行为破坏与移除进入 0.2.0。0.1.x 只承诺
 source/behavior 兼容，不承诺 binary 兼容。
 
