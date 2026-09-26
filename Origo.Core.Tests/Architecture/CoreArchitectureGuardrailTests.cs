@@ -656,4 +656,3 @@ public class ShellRuntimeSurfaceConvergenceTests
         Assert.NotNull(typeof(ISndTemplateAccess).GetMethod("ResolveMetaListFromJsonArray"));
     }
 }
-
