@@ -123,6 +123,20 @@ public sealed class OrigoRuntime : IOrigoRuntime
     /// </summary>
     public OrigoConsole? Console { get; }
 
+    /// <summary>Registers a console command handler through the stable runtime contract.</summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handler" /> is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the runtime was created without both console channels.
+    /// </exception>
+    public void RegisterConsoleCommandHandler(IConsoleCommandHandler handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        var console = Console
+            ?? throw new InvalidOperationException(
+                "Console command registration requires both console input and output channels to be supplied before the runtime is created.");
+        console.RegisterHandler(handler);
+    }
+
     /// <summary>
     ///     Enqueues a business-logic deferred action to be executed on the next
     ///     <see cref="FlushEndOfFrameDeferred" />.

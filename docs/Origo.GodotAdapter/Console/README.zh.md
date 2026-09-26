@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 14 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Console
 
@@ -7,13 +7,13 @@
 
 ## 概述
 
-Godot 适配层的控制台命令扩展。一个适配层的命令处理器基类（提供 `OrigoRuntime` 引用），以及三个 Godot 特有的命令——`press_button` 模拟 Button 点击，`tree_debug` 打印实体节点树，`camera_view` 输出摄像机坐标信息。
+Godot 适配层的控制台命令扩展。一个适配层的命令处理器基类（通过稳定 `IOrigoRuntime` 提供 runtime 访问），以及三个 Godot 特有的命令——`press_button` 模拟 Button 点击，`tree_debug` 打印实体节点树，`camera_view` 输出摄像机坐标信息。
 
 ## 包含文件
 
 | 文件 | 职责 |
 |------|------|
-| `CommandHandlerBase.cs` | 适配层命令处理器基类，持有 `OrigoRuntime` 引用，校验参数数量 |
+| `CommandHandlerBase.cs` | 适配层命令处理器基类，持有 `IOrigoRuntime` 引用，校验参数数量 |
 | `PressButtonCommandHandler.cs` | Godot 特有命令：按 entity + path 查找并发射 Button.Pressed 信号 |
 | `TreeDebugCommandHandler.cs` | Godot 特有命令：打印实体的完整 Godot 节点树（含动态创建的子节点） |
 | `CameraViewCommandHandler.cs` | Godot 特有命令：显示活跃摄像头视角下所有实体节点的屏幕坐标和深度 |
@@ -23,7 +23,7 @@ Godot 适配层的控制台命令扩展。一个适配层的命令处理器基�
 
 ### CommandHandlerBase
 
-继承自 Core 的 `ConsoleCommandHandlerBase`（参数数量校验与错误消息由基类提供），在此之上直接持有 `OrigoRuntime` 引用，简化 Godot 侧的命令实现。
+继承自 Core 的 `ConsoleCommandHandlerBase`（参数数量校验与错误消息由基类提供），在此之上直接持有 `IOrigoRuntime` 引用，简化 Godot 侧的命令实现。自定义命令通过 `IOrigoRuntime.RegisterConsoleCommandHandler` 注册。
 
 ### PressButtonCommandHandler
 
@@ -70,7 +70,7 @@ camera_view
 
 ### 为什么适配层还需要自己的 CommandHandlerBase
 
-Core 的 `ConsoleCommandHandlerBase` 要求子类持有对 `OrigoRuntime` 的引用。适配层基类提供一致的 `Runtime` 属性访问方式，避免每个 Godot 命令处理器重复相同的注入模式。
+Core 的 `ConsoleCommandHandlerBase` 与适配层命令都需要通过稳定 runtime 能力访问会话、实体与 world。适配层基类提供一致的 `Runtime` 属性访问方式，避免每个 Godot 命令处理器重复相同的注入模式；注册统一走 `IOrigoRuntime.RegisterConsoleCommandHandler`。
 
 ### 为什么 PressButton 需要 Godot 实体类型检查
 

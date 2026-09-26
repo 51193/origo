@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Bootstrap
 
@@ -15,7 +15,7 @@ Startup and orchestration for the Godot adapter layer. Creates the complete runt
 |------|------|
 | `OrigoAutoHost.cs` | Godot Node; prepares GodotFileSystem, type mappings, and the scene host, then calls `AdapterHostKernelPort` to create the runtime, system blackboard, console channels, and observer topology. The public `Runtime` surface is `IOrigoRuntime`; `_Process` delegates to `IOrigoFrameDriver.DriveFrame(delta)` |
 | `OrigoDefaultEntry.cs` | Inherits OrigoAutoHost, holds startup configuration properties (`AutoDiscoverStrategies`, `_godotSkipPrefixes` (`private static readonly` field), `SceneAliasMapPath`, etc.), exposes `Context` to presentation code, and provides protected startup hooks such as `ConfigureStrategies` |
-| `OrigoDefaultEntry.Bootstrap.cs` | Partial class, `_Ready` implementation: ConfigureStrategies(`ISndWorldAccess`) → register command handlers through the port → create and bind SndContext through `AdapterHostKernelPort.CreateContext` → call `Bootstrap()`. Any step failure marks the bootstrap failed (`MarkBootstrapFailed`) so the next frame fails fast |
+| `OrigoDefaultEntry.Bootstrap.cs` | Partial class, `_Ready` implementation: ConfigureStrategies(`ISndWorldAccess`) → register command handlers through `IOrigoRuntime.RegisterConsoleCommandHandler` → create and bind SndContext through `AdapterHostKernelPort.CreateContext` → call `Bootstrap()`. Any step failure marks the bootstrap failed (`MarkBootstrapFailed`) so the next frame fails fast |
 
 ## Startup Flow
 
@@ -30,7 +30,7 @@ OrigoDefaultEntry._Ready()
             ├── kernel creates OrigoRuntime
             └── ISndSceneHostRuntimeBinder.BindRuntimeDependencies(...)  // binds world/logger + observer topology
   ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess; manual registration before Bootstrap freeze
-  ├── RegisterConsoleCommandHandlers()       // adapter handlers registered through the port
+  ├── RegisterConsoleCommandHandlers()       // adapter handlers registered through IOrigoRuntime
   ├── AdapterHostKernelPort.CreateContext(...)  // pass startup config
   ├── Context = sndContext                   // exposed to presentation/game code
   └── sndContext.Bootstrap()                 // Core-internal orchestration:

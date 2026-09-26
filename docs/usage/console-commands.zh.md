@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 控制台命令
 
@@ -182,7 +182,7 @@ main_ui / MainMenu [UI] screen=(100, 50)
 
 ## 添加自定义命令
 
-> **内置 vs 自定义：** 所有内置命令处理器均为 `internal sealed class`，通过 `OrigoConsole` 内部注册。用户自定义命令必须声明为 `public sealed class` 并继承 `ConsoleCommandHandlerBase`，通过 `runtime.Console.RegisterHandler()` 注册。
+> **内置 vs 自定义：** 所有内置命令处理器均为 `internal sealed class`，通过 `OrigoConsole` 内部注册。用户自定义命令必须声明为 `public sealed class` 并继承 `ConsoleCommandHandlerBase`，通过稳定入口 `IOrigoRuntime.RegisterConsoleCommandHandler(...)` 注册；Core host 与 Adapter host 共用这一入口。host 必须注入 console input/output，否则注册显式失败。
 
 ### Core 层命令
 
@@ -191,9 +191,6 @@ main_ui / MainMenu [UI] screen=(100, 50)
 ```csharp
 public sealed class MyCommandHandler : ConsoleCommandHandlerBase
 {
-    private readonly OrigoRuntime _runtime;
-    public MyCommandHandler(OrigoRuntime runtime) { _runtime = runtime; }
-
     public override string Name => "my_command";
     public override string HelpText => "my_command <arg> — 说明";
     public override int MinPositionalArgs => 1;
@@ -212,7 +209,7 @@ public sealed class MyCommandHandler : ConsoleCommandHandlerBase
 }
 ```
 
-注册：`runtime.Console.RegisterHandler(new MyCommandHandler(runtime));`
+注册：`runtime.RegisterConsoleCommandHandler(new MyCommandHandler());`
 
 ### 适配层命令
 
@@ -221,7 +218,7 @@ public sealed class MyCommandHandler : ConsoleCommandHandlerBase
 ```csharp
 public sealed class MyGodotCommand : CommandHandlerBase
 {
-    public MyGodotCommand(OrigoRuntime runtime) : base(runtime) { }
+    public MyGodotCommand(IOrigoRuntime runtime) : base(runtime) { }
     public override string Name => "my_godot_cmd";
     public override string HelpText => "my_godot_cmd — does something";
     public override int MinPositionalArgs => 0;
@@ -237,6 +234,14 @@ public sealed class MyGodotCommand : CommandHandlerBase
         error = null;
         return true;
     }
+}
+
+// 在派生入口中，先完成 base._Ready() 创建 Runtime，再注册自定义命令；
+// 此时首帧尚未处理，注册仍然及时。
+public override void _Ready()
+{
+    base._Ready();
+    Runtime.RegisterConsoleCommandHandler(new MyGodotCommand(Runtime));
 }
 ```
 

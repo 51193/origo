@@ -5,7 +5,6 @@ using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.FileSystem;
 using Origo.Core.Abstractions.Logging;
-using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Blackboard;
 using Origo.Core.DataSource;
@@ -136,27 +135,6 @@ internal static class AdapterHostKernelPort
 
         attachableSceneHost.BindContext(context);
         return context;
-    }
-
-    /// <summary>
-    ///     Registers one adapter console handler through the runtime's console
-    ///     router instead of casting the stable runtime surface to a kernel type.
-    /// </summary>
-    internal static void RegisterConsoleHandler(IOrigoRuntime runtime, IConsoleCommandHandler handler)
-    {
-        ArgumentNullException.ThrowIfNull(runtime);
-        ArgumentNullException.ThrowIfNull(handler);
-
-        if (runtime is not OrigoRuntime kernelRuntime)
-        {
-            throw new InvalidOperationException(
-                $"Runtime '{runtime.GetType().FullName}' is not the kernel runtime created by {nameof(AdapterHostKernelPort)}.");
-        }
-
-        var console = kernelRuntime.Console
-            ?? throw new InvalidOperationException(
-                "The adapter runtime has no console: both console input and output channels must be supplied.");
-        console.RegisterHandler(handler);
     }
 }
 

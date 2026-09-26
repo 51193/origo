@@ -576,20 +576,20 @@
     "Origo.Core.Contracts/Abstractions/Runtime/README": {
       "status": "synced",
       "revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "previous_revisions": {
-        "zh": 1,
-        "en": 1
+        "zh": 2,
+        "en": 2
       },
       "files": {
         "zh": "Origo.Core.Contracts/Abstractions/Runtime/README.zh.md",
         "en": "Origo.Core.Contracts/Abstractions/Runtime/README.en.md"
       },
       "content_hashes": {
-        "zh": "C2C6010BECA17F40FA3E3A64FD4224B4A84231542FB946F5A0F36DDE798035D6",
-        "en": "2FBA700C545222FD2C71D88EB3D17EFD5C0716459D6DF30F5FE490EAF538A58F"
+        "zh": "2EAA62FED511C5F3D23D283872A704A7645000E937EDD45213CC700A426D106A",
+        "en": "E61467EBE59151B7046DED93968E9FF1754220F2993FE092A95D26265533CACC"
       }
     },
     "Origo.Core.Contracts/Abstractions/Scene/README": {
@@ -1450,20 +1450,20 @@
     "Origo.Core.Tests/Compatibility": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "previous_revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "files": {
         "zh": "Origo.Core.Tests/Compatibility.zh.md",
         "en": "Origo.Core.Tests/Compatibility.en.md"
       },
       "content_hashes": {
-        "zh": "4C6DD91DD197515D1A6241D7CB50B3E4F9F37C655CD498D35403C20C6A073BD1",
-        "en": "69707DF882A12AA8561F5804C93E15130A05FB42D93AF6A3E02D78451864A274"
+        "zh": "C5C99EF86D5C137AF71D35F76439121805A44ECC46060D7680498801CA93F466",
+        "en": "DE412251AA60D0CCD2BB364D12E147094FE87338442886D6CC3095975E3F83A1"
       }
     },
     "Origo.Core.Tests/Console": {
@@ -2324,39 +2324,39 @@
     "Origo.GodotAdapter/Bootstrap/README": {
       "status": "synced",
       "revisions": {
-        "zh": 10,
-        "en": 10
+        "zh": 11,
+        "en": 11
       },
       "previous_revisions": {
-        "zh": 9,
-        "en": 9
+        "zh": 10,
+        "en": 10
       },
       "files": {
         "zh": "Origo.GodotAdapter/Bootstrap/README.zh.md",
         "en": "Origo.GodotAdapter/Bootstrap/README.en.md"
       },
       "content_hashes": {
-        "zh": "CF0EC89D8BFCCB82AB57BAA18813D0F2BFE5657EC2DA177107ECEFDF9D87D2A9",
-        "en": "120A2EE384BBC0B2C84E28182550BB69E5E1E7D3670666ACE16AA8CAD1FFD21C"
+        "zh": "51E294AF2B586E9FCFEBA0757F0D8AE0E137D8F4D574765C33029F4F0D1A1320",
+        "en": "2EF0A907353801E906437F6C1A219FB80AEC8B42BAF380425F44ECD5423A1481"
       }
     },
     "Origo.GodotAdapter/Console/README": {
       "status": "synced",
       "revisions": {
-        "zh": 14,
-        "en": 14
+        "zh": 15,
+        "en": 15
       },
       "previous_revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 14,
+        "en": 14
       },
       "files": {
         "zh": "Origo.GodotAdapter/Console/README.zh.md",
         "en": "Origo.GodotAdapter/Console/README.en.md"
       },
       "content_hashes": {
-        "zh": "243E4DDB36F7F7FA83437D18C04E1F67A6BED50E0DAC79DE50E9AEB384815035",
-        "en": "F7A3D12AB7D6F2BB7EAF881B52004419309621C9BDF6E68C5432C78D7B7E7ACD"
+        "zh": "D30D31A40726D3C992FF1DBC250B457EE4150098BFC7EB540CA0BB63D721EC54",
+        "en": "CE2B87FAA5036DFF821729A42A2FE74D23A7329E716AF28C8E799D5845B69014"
       }
     },
     "Origo.GodotAdapter/FileSystem/README": {
@@ -2400,20 +2400,20 @@
     "Origo.GodotAdapter/README": {
       "status": "synced",
       "revisions": {
-        "zh": 17,
-        "en": 17
+        "zh": 18,
+        "en": 18
       },
       "previous_revisions": {
-        "zh": 16,
-        "en": 16
+        "zh": 18,
+        "en": 17
       },
       "files": {
         "zh": "Origo.GodotAdapter/README.zh.md",
         "en": "Origo.GodotAdapter/README.en.md"
       },
       "content_hashes": {
-        "zh": "8B033AF63E0564C4E0C2094F77787156E011EB7AB646A3086EF6BC6C5AD03F77",
-        "en": "CE8523D867651E7A3BD06D3CE38AEC762EDD75578AAC59ADED562EBF0CC1F4EE"
+        "zh": "A6074DA17EC3C91A53887F5B31A4BECEBCC8A7B492B9DED25418B5AB68421F02",
+        "en": "76D4F5813DDB2CA85CD0B42E1C3012CFE8CAEFB512ED7BD0BE25E5325EC0F4BA"
       }
     },
     "Origo.GodotAdapter/Serialization/README": {
@@ -2796,39 +2796,39 @@
     "usage/capabilities": {
       "status": "synced",
       "revisions": {
-        "zh": 24,
-        "en": 24
+        "zh": 25,
+        "en": 25
       },
       "previous_revisions": {
-        "zh": 23,
-        "en": 23
+        "zh": 24,
+        "en": 24
       },
       "files": {
         "zh": "usage/capabilities.zh.md",
         "en": "usage/capabilities.en.md"
       },
       "content_hashes": {
-        "zh": "56B177E1725341C22399826A12E3E8572DB5B6DACE73A450CE37639F7BDDB27F",
-        "en": "8237B111AA34586D555A9B8DEB73BA216510619B3F55A956016E72D01D8DCCCC"
+        "zh": "BA41E4C74BCC17759B7B2C595C4872F24A6803DA50559C73CB98D0EC11C2D7B4",
+        "en": "3F65DA20CE2D9B0FE22FB45FAC4FD8B30BBDA32EE1A710FB720579613A617743"
       }
     },
     "usage/console-commands": {
       "status": "synced",
       "revisions": {
-        "zh": 4,
-        "en": 4
+        "zh": 5,
+        "en": 5
       },
       "previous_revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "files": {
         "zh": "usage/console-commands.zh.md",
         "en": "usage/console-commands.en.md"
       },
       "content_hashes": {
-        "zh": "C20B846DDB69AFFF466E7FDC828A073C0E11C58CF9A8AC4C688AB7CFBA70943C",
-        "en": "08F2D3E1C9FCF4EC9CA06A3088336BB1387B44C133C96F5536FA13D9F70EEE72"
+        "zh": "C3357A0928CF78A964BD5729DAA0BCF61D250614409513326BE036511BD1B561",
+        "en": "9AFB3DE162A8C420F54613B5C107D654AC7007F95F760392897749CD1D3CE49F"
       }
     },
     "usage/design-patterns": {

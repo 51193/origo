@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 24 -->
+<!-- docsync-revision: 25 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 能力清单
 
@@ -59,7 +59,7 @@ Origo 框架的全部能力，按功能域组织。每个条目包含能力说�
 | 能力 | 说明 | 文档入口 |
 |------|------|----------|
 | 16 个内置命令 | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy / list_saves / save / load / delete_save / switch_level | [控制台命令](console-commands.zh.md) |
-| 自定义命令注册 | Core 层继承 ConsoleCommandHandlerBase，适配层继承 CommandHandlerBase | [控制台命令](console-commands.zh.md) |
+| 自定义命令注册 | Core 层继承 ConsoleCommandHandlerBase，适配层继承 CommandHandlerBase，并通过 `IOrigoRuntime.RegisterConsoleCommandHandler` 注册 | [控制台命令](console-commands.zh.md) |
 | TCP 远程控制台桥接 | ConsoleBridgeServer 监听 localhost:9876，单连接模式，双向 I/O 经由 pub-sub | [控制台命令](console-commands.zh.md) |
 | 命令类型推断 | bb_set / entity_set_data 自动推断 int/float/bool/string 类型，已存在 key 保持原类型 | [控制台命令](console-commands.zh.md) |
 

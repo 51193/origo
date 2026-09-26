@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 24 -->
+<!-- docsync-revision: 25 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
@@ -59,7 +59,7 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 | Capability | Description | Doc Entry |
 |------------|-------------|-----------|
 | 16 built-in commands | help / bb_get / bb_set / bb_keys / spawn / find_entity / kill_all / snd_count / entity_get_data / entity_set_data / invoke_strategy / list_saves / save / load / delete_save / switch_level | [Console Commands](console-commands.en.md) |
-| Custom command registration | Core layer inherits ConsoleCommandHandlerBase; adapter layer inherits CommandHandlerBase | [Console Commands](console-commands.en.md) |
+| Custom command registration | Core layer inherits ConsoleCommandHandlerBase; adapter layer inherits CommandHandlerBase; both register through `IOrigoRuntime.RegisterConsoleCommandHandler` | [Console Commands](console-commands.en.md) |
 | TCP remote console bridge | ConsoleBridgeServer listens on localhost:9876, single-connection mode, bidirectional I/O via pub-sub | [Console Commands](console-commands.en.md) |
 | Command type inference | bb_set / entity_set_data auto-infers int/float/bool/string types; existing keys preserve their original type | [Console Commands](console-commands.en.md) |
 

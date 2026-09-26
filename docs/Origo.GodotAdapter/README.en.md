@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 17 -->
+<!-- docsync-revision: 18 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter
 
@@ -38,7 +38,7 @@ OrigoDefaultEntry._Ready()
   │       ├── kernel runtime/IO/blackboard/console construction
   │       └── ISndSceneHostRuntimeBinder binds world/logger + observer topology
   ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess; before Bootstrap freeze
-  ├── register adapter handlers through the port
+  ├── register adapter handlers through IOrigoRuntime
   ├── AdapterHostKernelPort.CreateContext(...)  // pass startup config and bind scene host
   └── sndContext.Bootstrap()                 // Core-internal sequence:
         ├── Strategy discovery and ordering validation/registration freeze (reflection scan, skip Godot assemblies)

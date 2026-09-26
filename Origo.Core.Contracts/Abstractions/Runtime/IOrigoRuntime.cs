@@ -2,6 +2,7 @@ using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
+using Origo.Core.Runtime.Console;
 
 namespace Origo.Core.Abstractions.Runtime;
 
@@ -31,4 +32,16 @@ public interface IOrigoRuntime : IOrigoFrameDriver
 
     /// <summary>The current session manager.</summary>
     ISessionManager SessionManager { get; }
+
+    /// <summary>
+    ///     Registers a console command handler with the runtime console router.
+    ///     Both console input and output channels must be supplied when the host
+    ///     is created; otherwise registration fails fast instead of silently
+    ///     dropping the handler.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handler" /> is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the host was created without both console channels.
+    /// </exception>
+    void RegisterConsoleCommandHandler(IConsoleCommandHandler handler);
 }

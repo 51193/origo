@@ -173,9 +173,9 @@ public partial class OrigoAutoHost : Node
     private protected ISndContext CreateSndContext(AdapterContextOptions options) =>
         AdapterHostKernelPort.CreateContext(RuntimeBundle, options);
 
-    /// <summary>Registers one adapter console handler through the adapter kernel port.</summary>
+    /// <summary>Registers one adapter console handler through the stable runtime contract.</summary>
     private protected void RegisterConsoleCommandHandler(IConsoleCommandHandler handler) =>
-        AdapterHostKernelPort.RegisterConsoleHandler(Runtime, handler);
+        Runtime.RegisterConsoleCommandHandler(handler);
 
     private static GodotLogger CreateBootstrapLogger()
     {

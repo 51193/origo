@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Compatibility -->
-<!-- docsync-revision: 4 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell 兼容契约 测试
 
@@ -46,6 +46,7 @@
 |---------|-----------|---------|
 | `HostKernelPort_ShouldBeInternal_AndLiveInKernelPortsNamespace` | `HostKernelPort` 及端口契约保持 internal，且不进入导出面 | [Ports](../Origo.Core.Kernel/Ports/README.zh.md) |
 | `OrigoHost_ShouldCreateStableRuntimeAndRunBackgroundWorkflow` | `OrigoHost` 构造稳定 runtime/context，并驱动帧、策略注册和会话工作流 | [Ports](../Origo.Core.Kernel/Ports/README.zh.md) |
+| `OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime` | 注入 console 通道后，经 `IOrigoRuntime.RegisterConsoleCommandHandler` 注册自定义命令并在 `DriveFrame` 中收到输出 | [console-commands](../usage/console-commands.zh.md) |
 | `AdapterHostKernelPort_ShouldBuildRuntimeAndBindSceneHost` | port 创建 runtime、默认 console 通道，先绑定 runtime/observer topology，再创建并绑定 SND context | [Ports](../Origo.Core.Kernel/Ports/README.zh.md) |
 
 ### 错误路径
@@ -55,6 +56,7 @@
 | `AdapterHostKernelPort_ShouldRejectSceneHostWithoutRuntimeBinder` | scene host 未实现 `ISndSceneHostRuntimeBinder` | `InvalidOperationException`，不跳过 observer topology 绑定 |
 | `AdapterHostKernelPort_ShouldRejectSceneHostWithoutContextBinder` | scene host 未实现 `ISndContextAttachableSceneHost` | `InvalidOperationException`，不跳过 context 绑定 |
 | `AdapterHostKernelPort_ShouldRejectMissingFileSystem` | `OrigoHostOptions.FileSystem` 为空 | `InvalidOperationException`，不退回静默空文件系统 |
+| `OrigoHost_ShouldFailFastWhenRegisteringConsoleHandlerWithoutConsoleChannels` | host 未注入任一 console 通道时注册自定义命令、handler 为 null | `InvalidOperationException` / `ArgumentNullException`，不静默丢弃 handler |
 
 ## 测试辅助策略
 

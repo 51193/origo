@@ -141,6 +141,7 @@
         "M:Origo.Core.Abstractions.Node.INodeHandle.void Free()",
         "M:Origo.Core.Abstractions.Node.INodeHandle.void SetVisible(bool visible)",
         "M:Origo.Core.Abstractions.Runtime.IOrigoFrameDriver.void DriveFrame(double delta)",
+        "M:Origo.Core.Abstractions.Runtime.IOrigoRuntime.void RegisterConsoleCommandHandler(Origo.Core.Runtime.Console.IConsoleCommandHandler handler)",
         "M:Origo.Core.Abstractions.Runtime.ISndWorldAccess.Origo.Core.DataSource.DataSourceNode WriteMetaListNode(System.Collections.Generic.IEnumerable\u003COrigo.Core.Snd.Metadata.SndMetaData\u003E metaDataList)",
         "M:Origo.Core.Abstractions.Runtime.ISndWorldAccess.Origo.Core.DataSource.DataSourceNode WriteMetaNode(Origo.Core.Snd.Metadata.SndMetaData meta)",
         "M:Origo.Core.Abstractions.Runtime.ISndWorldAccess.Origo.Core.Snd.Metadata.SndMetaData CloneMetaData(Origo.Core.Snd.Metadata.SndMetaData meta)",

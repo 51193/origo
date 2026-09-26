@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Origo.Core;
+using Origo.Core.Abstractions.Console;
 using Origo.TestSupport;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Kernel.Ports;
+using Origo.Core.Runtime.Console;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Scene;
@@ -67,6 +69,45 @@ public class OrigoHostTests
     }
 
     [Fact]
+    public void OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime()
+    {
+        var input = new ConsoleInputBuffer();
+        var output = new ConsoleOutputChannel();
+        var host = OrigoHost.Create(new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+            ConsoleInput = input,
+            ConsoleOutputChannel = output,
+            AutoDiscoverStrategies = false,
+        });
+
+        host.Runtime.RegisterConsoleCommandHandler(new HostProbeCommandHandler());
+
+        var outputLines = new List<string>();
+        var subscription = output.Subscribe(outputLines.Add);
+        input.Enqueue("host_probe value");
+        host.DriveFrame(0.016);
+        output.Unsubscribe(subscription);
+
+        Assert.Contains("host_probe:value", outputLines);
+    }
+
+    [Fact]
+    public void OrigoHost_ShouldFailFastWhenRegisteringConsoleHandlerWithoutConsoleChannels()
+    {
+        var host = OrigoHost.Create(new OrigoHostOptions
+        {
+            Meta = new OrigoMeta("Tests", "1.0.0", "test"),
+            AutoDiscoverStrategies = false,
+        });
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            host.Runtime.RegisterConsoleCommandHandler(new HostProbeCommandHandler()));
+        Assert.Contains("console", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Throws<ArgumentNullException>(() => host.Runtime.RegisterConsoleCommandHandler(null!));
+    }
+
+    [Fact]
     public void CoreShellPublicSignatures_ShouldNotExposeKernelTypes()
     {
         var exported = typeof(OrigoHost).Assembly.GetExportedTypes();
@@ -103,6 +144,24 @@ public class OrigoHostTests
         Assert.False(
             string.Equals(assemblyName, "Origo.Core.Kernel", StringComparison.Ordinal),
             $"Kernel type '{current.FullName}' leaked into the Core shell public signature.");
+    }
+
+    private sealed class HostProbeCommandHandler : ConsoleCommandHandlerBase
+    {
+        public override string Name => "host_probe";
+        public override string HelpText => "host_probe <value>";
+        public override int MinPositionalArgs => 1;
+        public override int MaxPositionalArgs => 1;
+
+        protected override bool ExecuteCore(
+            CommandInvocation invocation,
+            IConsoleOutputChannel output,
+            out string? error)
+        {
+            output.Publish($"host_probe:{invocation.PositionalArgs[0]}");
+            error = null;
+            return true;
+        }
     }
 
     [StrategyIndex(Index)]
