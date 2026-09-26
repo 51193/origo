@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/README -->
-<!-- docsync-revision: 15 -->
+<!-- docsync-revision: 16 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.ConsoleBridge.Tests
 
@@ -20,7 +20,7 @@ Origo.ConsoleBridge 的测试验证 TCP 远程控制台桥接服务器的完整�
 | 能力 | 文档 | 验证重点 |
 |------|------|---------|
 | 桥接服务器 | [ConsoleBridgeServer.md](ConsoleBridgeServer.zh.md) | 生命周期/输入/输出/连接管理/线程安全/Agent 工作流 |
-| 架构守卫 | [Architecture.md](Architecture.zh.md) | 程序集依赖方向（不依赖 Godot/GodotAdapter）、私有字段 `_camelCase` 命名、shell API 分类完整性 |
+| 架构守卫 | [Architecture.md](Architecture.zh.md) | 程序集依赖方向（仅依赖 Contracts，不依赖 Godot/GodotAdapter）、私有字段 `_camelCase` 命名、shell API 分类完整性 |
 
 ---
 

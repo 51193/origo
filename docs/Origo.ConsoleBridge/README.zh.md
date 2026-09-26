@@ -1,13 +1,13 @@
 <!-- docsync-pair: Origo.ConsoleBridge/README -->
-<!-- docsync-revision: 21 -->
+<!-- docsync-revision: 22 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.ConsoleBridge
 
-> [↑ 回到 Origo.manual](../README.zh.md) · [↔ Core: Runtime/Console](../Origo.Core.Kernel/Runtime/Console/README.zh.md)
+> [↑ 回到 Origo.manual](../README.zh.md) · [↔ Core: Console 抽象](../Origo.Core.Contracts/Abstractions/Console/README.zh.md)
 
 ## 概述
 
-TCP 远程控制台桥接服务器。允许通过 telnet/nc 连接（默认端口 9876），远程执行 Origo 控制台命令并接收输出。单连接模式：同时只允许一个客户端连接。
+TCP 远程控制台桥接服务器。允许通过 telnet/nc 连接（默认端口 9876），远程执行 Origo 控制台命令并接收输出。单连接模式：同时只允许一个客户端连接。包只编译依赖 `Origo.Core.Contracts`，耦合 `IConsoleInputSource` / `IConsoleOutputChannel`；不引用 Core shell、Kernel、Godot 或 Adapter 包。
 
 ## 包含文件
 

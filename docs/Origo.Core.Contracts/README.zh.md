@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Contracts
 
@@ -48,8 +48,9 @@ kernel 包共同引用这一契约层，消费者可以面向它编译。
 ```
 Origo.Core.Contracts ──► Origo.SourceGeneration (analyzer packaging)
         ▲
-        │
-Origo.Core.Kernel
+        ├──────────────────────┐
+        │                      │
+Origo.Core.Kernel      Origo.ConsoleBridge shell
         ▲
         │ runtime-only
 Origo.Core shell
@@ -58,7 +59,7 @@ Origo.Core shell
 Origo.GodotAdapter
 ```
 
-适配层和实现层依赖契约层；契约层绝不反向依赖任何实现。
+适配层、控制台桥接和实现层依赖契约层；契约层绝不反向依赖任何实现。
 
 ---
 [↑ 回到 Origo.manual](../README.zh.md)

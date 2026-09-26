@@ -70,7 +70,7 @@ if "Origo.GodotAdapter.Kernel" in packages:
     failures.append("Origo.GodotAdapter.Kernel must not exist; Adapter is one shell package.")
 
 pairing = {
-    "Origo.ConsoleBridge": {"Origo.Core": version},
+    "Origo.ConsoleBridge": {"Origo.Core.Contracts": version},
     "Origo.Core": {"Origo.Core.Contracts": version, "Origo.Core.Kernel": version},
     "Origo.Core.Kernel": {"Origo.Core.Contracts": version},
     "Origo.GodotAdapter": {"Origo.Core": version, "GodotSharp": "4.7.2"},
@@ -87,15 +87,28 @@ for package_id, requirements in pairing.items():
                 f"{package_id}: dependency {dependency_id} version "
                 f"{deps[dependency_id]['version']} != {required_version}")
 
+expected_origo_dependencies = {
+    "Origo.Core.Contracts": set(),
+    "Origo.Core.Kernel": {"Origo.Core.Contracts"},
+    "Origo.Core": {"Origo.Core.Contracts", "Origo.Core.Kernel"},
+    "Origo.GodotAdapter": {"Origo.Core"},
+    "Origo.ConsoleBridge": {"Origo.Core.Contracts"},
+}
+for package_id, expected_deps in expected_origo_dependencies.items():
+    if package_id not in packages:
+        continue
+    actual_deps = {dep for dep in packages[package_id][2] if dep.startswith("Origo.")}
+    if actual_deps != expected_deps:
+        failures.append(
+            f"{package_id}: Origo dependency set {sorted(actual_deps)} "
+            f"!= expected {sorted(expected_deps)}")
+
 if "Origo.Core.Contracts" in packages:
-    deps = packages["Origo.Core.Contracts"][2]
-    if any(dep.startswith("Origo.") for dep in deps):
-        failures.append(f"Origo.Core.Contracts must not depend on Origo packages: {sorted(deps)}")
     with zipfile.ZipFile(packages["Origo.Core.Contracts"][0]) as package:
         if not any(name == "analyzers/dotnet/cs/Origo.SourceGeneration.dll" for name in package.namelist()):
             failures.append("Origo.Core.Contracts is missing analyzers/dotnet/cs/Origo.SourceGeneration.dll")
 
-for shell_package in ("Origo.Core", "Origo.GodotAdapter"):
+for shell_package in ("Origo.Core", "Origo.GodotAdapter", "Origo.ConsoleBridge"):
     if shell_package not in packages:
         continue
     with zipfile.ZipFile(packages[shell_package][0]) as package:

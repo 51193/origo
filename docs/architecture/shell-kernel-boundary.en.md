@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
@@ -62,8 +62,8 @@ The `Origo.Core` shell dependency on `Origo.Core.Kernel` supplies runtime assets
 only. Restoring `Origo.Core` does not give consumers kernel compile assets.
 `Origo.GodotAdapter` may use Core kernel's private compilation surface and call
 its internal ports, but its public signatures use only Contracts and shell
-types. `Origo.ConsoleBridge` references stable Core Contracts and shell
-interfaces only.
+types. `Origo.ConsoleBridge` references `Origo.Core.Contracts` directly and
+pulls no Core shell or kernel runtime assets.
 
 ### Adapter remains a single shell package
 
@@ -141,15 +141,15 @@ Custom storage and path policies are designed separately in a later version.
   save/load semantics, persistence completion signals, and fail-fast errors
   remain unchanged.
 - **Persistence compatibility**: save format is identified by
-  `origo.format_version`; reading old saves, reading current saves, and
-  corrupted-data failure semantics are explicitly tested.
+  `origo.format_version`; format-version-1 reads, reads without the version
+  key, and corrupted-data failure semantics are explicitly tested.
 - **Generated-code compatibility**: `TryGetXxx`, nullable annotations, Kind
   allocation, and ORIGOSG diagnostics remain stable.
 - **SDK pairing**: 0.1.x supports .NET 10 and Godot.NET.Sdk 4.7.2; a wider range
   is opened after later verification.
 
 0.1.x does not promise binary compatibility: consumers recompile after updating
-shell packages. New consumer APIs, behavior breaks, and old API removals target
+shell packages. New consumer APIs, behavior breaks, and API removals target
 0.2.0. Kernel packages make no consumer compatibility promise, but kernel-shell
 port contracts are governed by this document. Shell and kernel use exact version
 pairing within 0.1.x so restore cannot silently combine untested versions.
@@ -185,8 +185,8 @@ rule of no compatibility burden. The exception covers shell contracts, port
 contracts, and compatibility tests only. It does not relax single access paths,
 fail-fast behavior, or architectural isolation.
 
-Source and documentation describe current state and do not use `legacy`,
-`since`, or `old` evolution markers. Every compatible shell API records an
+Source and documentation describe current state and do not use
+version-evolution markers. Every compatible shell API records an
 owner and a next `0.y.0` removal condition in the contract baseline.
 
 ## Implementation plan
@@ -230,8 +230,8 @@ owner and a next `0.y.0` removal condition in the contract baseline.
 
 ### Phase four: ConsoleBridge and package validation
 
-1. `Origo.ConsoleBridge` remains shell-only and references stable Core Contracts
-   and shell interfaces.
+1. `Origo.ConsoleBridge` remains shell-only and references
+   `Origo.Core.Contracts` directly.
 2. Extension capabilities continue through `IConsoleInputSource`,
    `IConsoleOutputChannel`, and `IConsoleCommandHandler`; the bridge package
    does not add a second command path.
@@ -243,7 +243,7 @@ owner and a next `0.y.0` removal condition in the contract baseline.
 
 1. API diff fails when a shell public member is added, removed, or changed
    unless the baseline is updated in the same change.
-2. Run the old-shell-contract against new-kernel contract-test matrix.
+2. Run the stable-shell contract test matrix against current kernel builds.
 3. Run save-format golden tests, failure-semantics tests, and generated-code and
    diagnostic snapshots.
 4. Update `AGENTS.md`, `docs/META.*`, and the release process with the bounded
@@ -260,8 +260,9 @@ implementations plus the internal `HostKernelPort`, and `Origo.Core` is the
 shell package with `OrigoHost`. `IOrigoRuntime` and `ISndWorldAccess` are
 stable Contracts interfaces, and the classification guard verifies that no
 kernel implementation type leaks into the Core shell compile surface.
-`Origo.ConsoleBridge` already references the Core shell package without
-kernel compile assets. The adapter remains one shell package: its Godot
+`Origo.ConsoleBridge` references `Origo.Core.Contracts` directly, so a
+bridge-only consumer receives no Core shell or kernel runtime assets. The
+adapter remains one shell package: its Godot
 `Node` entries are real public types, its bridge/manager implementations are
 internal, and startup constructs and binds the runtime, observer topology,
 and SND context through `AdapterHostKernelPort`. The shell compatibility
@@ -270,7 +271,7 @@ fail-fast validation, and background-session transitions through the public
 `OrigoHost` entry; `AdapterHostKernelPort` covers explicit failure when the
 runtime binder, context binder, or file system is missing; and the
 in-repository `origo.format_version=1` golden snapshot covers the current
-format, a legacy save without the version key, and atomic rejection of a
+format, a save without the version key, and atomic rejection of a
 future format. The shell API and generated-code gate (#41) is also in
 place: `scripts/api-inventory.sh` verifies a tracked Roslyn JSON baseline of
 the Contracts/Core/Adapter/ConsoleBridge export surface, nullable annotations,
@@ -293,10 +294,10 @@ Release (#43) remains follow-up work.
 | Behavior contracts | Lifecycle ordering, observer recovery, save/load, and fail-fast semantics remain unchanged |
 | Compatibility tests | Shell entry lifecycle/observer/fail-fast/session-state contracts and golden v1 save-format tests pass in the normal and release test runs |
 | Package integrity | No kernel compile-asset leakage; shell runtime and analyzer assets are complete; the `scripts/package-consumer-smoke.sh` local-feed restore, negative compile probe, and Godot headless startup pass |
-| Compatibility matrix | Old shell contracts pass contract tests on new kernels |
+| Compatibility matrix | Stable shell contracts pass contract tests on current kernels |
 | Godot | Headless and editor verification covers Node entry discovery, startup, save recovery, and exit cleanup |
 | API baseline | Unapproved shell API changes fail CI |
-| Save format | `origo.format_version`, old/current save reads, and corruption failures pass golden tests |
+| Save format | `origo.format_version`, version-key-present/version-key-missing reads, and corruption failures pass golden tests |
 
 ## Risks and mitigations
 

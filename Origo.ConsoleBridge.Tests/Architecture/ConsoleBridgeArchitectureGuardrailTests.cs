@@ -33,17 +33,16 @@ public class ConsoleBridgeArchitectureGuardrailTests
     }
 
     [Fact]
-    public void ConsoleBridge_ShouldOnlyReferenceCore()
+    public void ConsoleBridge_ShouldOnlyReferenceContracts()
     {
         var asm = typeof(ConsoleBridgeServer).Assembly;
         var refs = asm.GetReferencedAssemblies();
         var allowedPrefixes = new[]
         {
-            "Origo.Core",
+            "Origo.Core.Contracts",
             "System.",
             "Microsoft.",
-            "netstandard",
-            "System.Runtime"
+            "netstandard"
         };
         foreach (var r in refs)
         {

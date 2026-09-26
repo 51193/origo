@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 9 -->
+<!-- docsync-revision: 10 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Contracts
 
@@ -49,8 +49,9 @@ against it.
 ```
 Origo.Core.Contracts ──► Origo.SourceGeneration (analyzer packaging)
         ▲
-        │
-Origo.Core.Kernel
+        ├──────────────────────┐
+        │                      │
+Origo.Core.Kernel      Origo.ConsoleBridge shell
         ▲
         │ runtime-only
 Origo.Core shell
@@ -59,8 +60,8 @@ Origo.Core shell
 Origo.GodotAdapter
 ```
 
-Adapters and implementations depend on the contract layer; the contract layer
-never depends on an implementation.
+Adapters, the console bridge, and implementations depend on the contract
+layer; the contract layer never depends on an implementation.
 
 ---
 [↑ Back to Origo Manual](../README.en.md)

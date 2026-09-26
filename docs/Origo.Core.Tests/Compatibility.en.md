@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Compatibility -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell Compatibility Contract Tests
 
@@ -12,7 +12,7 @@
 
 These tests verify that the lifecycle ordering, observer recovery, fail-fast validation, and session state transitions visible to shell consumers remain stable as the kernel evolves, and that kernel-shell ports call the existing orchestration paths instead of bypassing validation or binding.
 
-They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISessionRun`, `ISndWorldAccess`); apart from test infrastructure (in-memory file system, event collectors), they do not depend on `Origo.Core.Kernel` types. Golden save-format fixtures and old/future-version failure semantics are documented in [Save-Storage.md](Save-Storage.en.md).
+They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISessionRun`, `ISndWorldAccess`); apart from test infrastructure (in-memory file system, event collectors), they do not depend on `Origo.Core.Kernel` types. Golden save-format fixtures and missing-version/future-version failure semantics are documented in [Save-Storage.md](Save-Storage.en.md).
 
 ## Test Files
 
@@ -68,7 +68,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | Gap | Impact | Documentation Source |
 |-----|--------|----------------------|
 | The same compatibility scenario does not yet run in a standalone packaged consumer (`PackageReference`) | Package restore and startup paths are covered by issue #42 | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
-| No cross-release "old shell package × new kernel package" binary matrix yet | 0.1.0 promises source/behavior compatibility only; a binary matrix needs released artifacts as input | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
+| No cross-release shell-package × kernel-package binary matrix yet | 0.1.0 promises source/behavior compatibility only; a binary matrix needs released artifacts as input | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
 | Adapter Godot `Node` entry headless behavior is not duplicated here | Covered separately by the Godot integration tests | [Origo.GodotAdapter.Integration.Tests](../Origo.GodotAdapter.Integration.Tests/README.en.md) |
 
 ## Design Decisions

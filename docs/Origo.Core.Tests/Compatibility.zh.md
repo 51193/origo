@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Compatibility -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell 兼容契约 测试
 
@@ -12,7 +12,7 @@
 
 验证 shell 消费者看到的生命周期顺序、观察者恢复、fail-fast 校验和会话状态转换在 kernel 版本演进时保持不变，并验证 kernel-shell port 只调用既有编排路径、不通过旁路绕过校验与绑定。
 
-测试通过 `OrigoHost` 和 `ISndContext` / `ISessionRun` / `ISndWorldAccess` 等稳定 Contracts 入口驱动；除测试基础设施（内存文件系统、事件收集辅助）外，不依赖 `Origo.Core.Kernel` 类型。golden 存档格式与旧档/未来版本失败语义记录在 [Save-Storage.md](Save-Storage.zh.md)。
+测试通过 `OrigoHost` 和 `ISndContext` / `ISessionRun` / `ISndWorldAccess` 等稳定 Contracts 入口驱动；除测试基础设施（内存文件系统、事件收集辅助）外，不依赖 `Origo.Core.Kernel` 类型。golden 存档格式与缺少版本键的存档/未来版本失败语义记录在 [Save-Storage.md](Save-Storage.zh.md)。
 
 ## 测试文件清单
 
@@ -68,7 +68,7 @@
 | 缺口描述 | 影响 | 文档依据 |
 |---------|------|---------|
 | 尚未在独立 packaged consumer（`PackageReference`）中运行同一兼容场景 | 包恢复与启动路径由 issue #42 覆盖 | [shell-kernel-boundary](../architecture/shell-kernel-boundary.zh.md) |
-| 尚未建立跨发布版本的“旧 shell 包 × 新 kernel 包”二进制矩阵 | 0.1.0 只有 source/behavior 承诺，二进制矩阵在正式发布后才有输入 | [shell-kernel-boundary](../architecture/shell-kernel-boundary.zh.md) |
+| 尚未建立跨发布版本的 shell 包 × kernel 包二进制矩阵 | 0.1.0 只有 source/behavior 承诺，二进制矩阵在正式发布后才有输入 | [shell-kernel-boundary](../architecture/shell-kernel-boundary.zh.md) |
 | Adapter Godot `Node` 入口的 headless 行为不在本套件重复覆盖 | 由 Godot 集成测试单独验证 | [Origo.GodotAdapter.Integration.Tests](../Origo.GodotAdapter.Integration.Tests/README.zh.md) |
 
 ## 设计决策

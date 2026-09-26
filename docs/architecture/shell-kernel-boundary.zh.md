@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 11 -->
+<!-- docsync-revision: 13 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell/Kernel 稳定边界
 
@@ -51,7 +51,8 @@ Origo.ConsoleBridge shell ──► Origo.Core.Contracts
 `Origo.Core` shell 对 `Origo.Core.Kernel` 的依赖只提供运行期资产；消费者对
 `Origo.Core` 的 restore 不会获得 kernel 的编译资产。`Origo.GodotAdapter` 可以参考
 Core kernel 的私有编译面并调用其内部 port，但它的公开签名只使用 Contracts 与
-shell 类型。`Origo.ConsoleBridge` 只引用 Core Contracts 与 shell 稳定接口。
+shell 类型。`Origo.ConsoleBridge` 直接引用 `Origo.Core.Contracts`，不会拉入
+Core shell 或 kernel runtime 资产。
 
 ### Adapter 不拆分 kernel
 
@@ -115,8 +116,8 @@ shell 只提供存档操作与展示元数据：`ISndSaveOperations`、
 - **源兼容**：消费者重新编译后可以继续使用稳定 shell API；
 - **行为兼容**：生命周期顺序、观察者绑定恢复、存档/读档语义、持久化完成信号和
   fail-fast 错误行为保持不变；
-- **持久化兼容**：存档格式通过 `origo.format_version` 识别；旧档读取、新档读取和
-  损坏数据的失败语义显式测试；
+- **持久化兼容**：存档格式通过 `origo.format_version` 识别；含版本键的存档读取、
+  缺少版本键的存档读取和损坏数据的失败语义显式测试；
 - **生成代码兼容**：`TryGetXxx`、nullable 标注、Kind 号段和 ORIGOSG 诊断保持稳定；
 - **SDK 配对**：0.1.x 支持 .NET 10 与 Godot.NET.Sdk 4.7.2；更宽范围在后续版本
   经过验证后开放。
@@ -152,7 +153,7 @@ Adapter 对 Core kernel 的初始化、scene host 绑定、观察者拓扑和生
 早期开发的无兼容负担规则。例外范围只覆盖 shell 契约、port 契约和兼容测试，不放宽
 单一访问路径、fail-fast 或架构隔离要求。
 
-源码与文档保持当前态描述，不使用 `legacy`、`since`、`old` 等演进标记。每个兼容
+源码与文档保持当前态描述，不使用版本演进标记。每个兼容
 shell API 在契约基线中记录 owner 与下一个 `0.y.0` 的移除条件。
 
 ## 实施计划
@@ -185,7 +186,7 @@ shell API 在契约基线中记录 owner 与下一个 `0.y.0` 的移除条件。
 
 ### 阶段四：ConsoleBridge 与包验证
 
-1. `Origo.ConsoleBridge` 保持 shell-only，只引用 Contracts 与 Core shell 稳定接口。
+1. `Origo.ConsoleBridge` 保持 shell-only，只引用 `Origo.Core.Contracts`。
 2. 扩展能力继续由 `IConsoleInputSource`、`IConsoleOutputChannel` 与
    `IConsoleCommandHandler` 承载，桥接包不新增第二套命令路径。
 3. 验证每个 shell 包的 `ref`/`lib`/analyzer 资产、运行期依赖和 kernel 隔离。
@@ -194,7 +195,7 @@ shell API 在契约基线中记录 owner 与下一个 `0.y.0` 的移除条件。
 ### 阶段五：兼容门禁与发布
 
 1. API diff 在新增、删除或修改 shell 公开成员时失败，直到 baseline 在同一变更中更新。
-2. 运行旧 shell 契约与新 kernel 实现的 contract 测试矩阵。
+2. 运行稳定 shell 契约与当前 kernel 实现的 contract 测试矩阵。
 3. 运行存档格式 golden tests、失败语义测试和生成代码/诊断快照。
 4. 更新 `AGENTS.md`、`docs/META.*` 与发布流程，写入有界 shell 例外与打包要求。
 5. 在 Changelog 记录 0.1.0 边界设计及破坏性变更，按完整 CI、发布验证与 commit
@@ -207,14 +208,15 @@ Core 的 contracts/kernel/shell 拆分已在特性分支实现：
 `Origo.Core.Kernel` 承载 runtime/SND/存档/data-source/console 实现及 internal
 `HostKernelPort`，`Origo.Core` 是带 `OrigoHost` 的 shell 包。
 `IOrigoRuntime` 与 `ISndWorldAccess` 是 Contracts 稳定接口，分类守卫验证
-kernel 实现类型不会泄漏进 Core shell 编译面。`Origo.ConsoleBridge` 已只引用
-Core shell 包且不携带 kernel 编译资产。Adapter 保持单 shell 包：Godot `Node`
+kernel 实现类型不会泄漏进 Core shell 编译面。`Origo.ConsoleBridge` 直接引用
+`Origo.Core.Contracts`，桥接消费者不会获得 Core shell 或 kernel runtime 资产。
+Adapter 保持单 shell 包：Godot `Node`
 入口是真实公开类型，bridge/manager 实现为 internal，启动经
 `AdapterHostKernelPort` 完成 runtime、observer topology 与 SND context 的构造和
 绑定。兼容契约测试（#40）已落地：`OrigoHost` 公开入口驱动生命周期顺序、观察者
 恢复、fail-fast 与后台会话状态转换；`AdapterHostKernelPort` 覆盖缺失 runtime
 binder、context binder 与 file system 的显式失败；仓库内 `origo.format_version=1`
-golden 快照覆盖当前格式、旧档缺版本键与未来版本的原子拒绝。Shell API 与生成
+golden 快照覆盖当前格式、缺少版本键的存档与未来版本的原子拒绝。Shell API 与生成
 代码门禁（#41）已落地：`scripts/api-inventory.sh` 以 tracked Roslyn JSON baseline
 校验 Contracts/Core/Adapter/ConsoleBridge shell 导出面、nullable 与生成嵌套类型，未批准的增删
 或签名变化在普通 CI、`scripts/ci.sh` 与 Release workflow 失败；previous-package
@@ -232,10 +234,10 @@ NuGet 包恢复 Core + Adapter，执行 warnings-as-errors 构建、CS0246 kerne
 | 行为契约 | 生命周期顺序、观察者恢复、存档读写和 fail-fast 语义保持不变 |
 | 兼容契约测试 | shell 入口的 lifecycle/observer/fail-fast/会话状态契约与 golden v1 存档格式测试在常规与发布测试中通过 |
 | 包完整性 | kernel 无 compile 资产泄漏；shell 运行期依赖与 analyzer 资产完整；`scripts/package-consumer-smoke.sh` 的本地 feed restore、负向编译与 Godot headless 启动通过 |
-| 兼容矩阵 | 旧 shell 契约在新 kernel 上通过 contract tests |
+| 兼容矩阵 | 稳定 shell 契约在当前 kernel 上通过 contract tests |
 | Godot | headless 与编辑器验证 Node 入口发现、启动、存档恢复与退出清理 |
 | API 基线 | 未批准的 shell API 变更使 CI 失败 |
-| 存档格式 | `origo.format_version`、旧档/新档读取和损坏失败语义通过 golden tests |
+| 存档格式 | `origo.format_version`、含/缺版本键的存档读取和损坏失败语义通过 golden tests |
 
 ## 风险与缓解
 

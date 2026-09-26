@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 32 -->
+<!-- docsync-revision: 33 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 持久化：存储 测试
 
@@ -29,7 +29,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护，以及经 sh
 | `SavePayloadDisposalTests.cs` | 内部边界确定性释放：load/mount、save/snapshot、switch foreground 后 payload 节点树与 progress 快照节点被 Dispose |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ 侧信道文件：快照→current 复制往返、目录结构保留、缺失/空目录容错、参数校验 |
 | `SaveFormatVersionTests.cs` | 存档格式版本：meta.map 写入 origo.format_version、新版本拒绝加载、缺版本键兼容、保留键隐藏、公开存档元数据列表 |
-| `SaveFormatGoldenTests.cs` | golden v1 快照（`Save/Golden/v1/save_goldenv1/`）：经 `OrigoHost` 加载当前格式、缺版本键旧档、未来版本拒绝且不产生部分挂载 |
+| `SaveFormatGoldenTests.cs` | golden v1 快照（`Save/Golden/v1/save_goldenv1/`）：经 `OrigoHost` 加载当前格式、缺少版本键的存档、未来版本拒绝且不产生部分挂载 |
 | `SaveSnapshotMarkerTests.cs` | 快照完整性：快照目录无 .write_in_progress 残留 |
 | `StaleLevelDirectoryCleanupTests.cs` | 验证完整保存后 `current/` 与 payload 关卡集合一致——销毁后台会话后其关卡目录被清理，不泄漏进后续快照 |
 | `WellKnownKeysTests.cs` | 常量：ActiveSaveId、SessionTopology 键名正确性 |
@@ -112,7 +112,7 @@ WellKnownKeys 常量、SaveFileHandle 路径解析与遍历保护，以及经 sh
 
 | 测试方法 | 边界条件 | 预期行为 |
 |---------|---------|---------|
-| `Load_AcceptsMissingFormatVersionKey` | 旧存档 meta.map 无版本键 | 视为版本 1 正常加载 |
+| `Load_AcceptsMissingFormatVersionKey` | meta.map 无版本键的存档 | 视为版本 1 正常加载 |
 
 ## SaveFormatGoldenTests 测试详情
 

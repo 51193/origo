@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.ConsoleBridge.Tests/Architecture -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 15 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Assembly Architecture Guardrail Tests
 
@@ -8,9 +8,11 @@
 
 ## Behavior Under Test Overview
 
-Uses reflection to verify that the ConsoleBridge assembly does not depend on
-the Godot engine or Origo.GodotAdapter, ensuring the TCP remote console bridge
-can be used independently in environments without a Godot runtime.
+Uses reflection to verify that the ConsoleBridge assembly depends only on
+`Origo.Core.Contracts` and BCL assemblies, and does not depend on the Core
+shell, Kernel, Godot engine, or Origo.GodotAdapter, ensuring the TCP remote
+console bridge can be used independently in environments without a Godot
+runtime.
 
 ## Test Files
 
@@ -24,7 +26,7 @@ can be used independently in environments without a Godot runtime.
 |------------|-------------------|---------------|
 | `ConsoleBridge_ShouldNotReferenceGodot` | Does not reference any assembly with a `Godot*` prefix | Origo.ConsoleBridge |
 | `ConsoleBridge_ShouldNotReferenceGodotAdapter` | Does not reference the `Origo.GodotAdapter` assembly | Origo.ConsoleBridge |
-| `ConsoleBridge_ShouldOnlyReferenceCore` | Only depends on `Origo.Core` + BCL (`System.*`/`Microsoft.*`/`netstandard`/`System.Runtime`), no unexpected assembly references | Origo.ConsoleBridge |
+| `ConsoleBridge_ShouldOnlyReferenceContracts` | Only depends on `Origo.Core.Contracts` + BCL (`System.*`/`Microsoft.*`/`netstandard`), no unexpected assembly references | Origo.ConsoleBridge |
 | `ShellApiClassification_CoversEveryConsoleBridgeExport` | Every ConsoleBridge export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
 
 ## Known Coverage Gaps

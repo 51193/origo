@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/agent-friendly/affected-checks -->
-<!-- docsync-revision: 2 -->
+<!-- docsync-revision: 3 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Affected checks: shorten feedback without weakening the quality contract
 
@@ -45,7 +45,7 @@ Unknown paths, unevaluable projects, missing contracts, empty test selections, g
 
 | Actual repository path example | Minimum conservative selection and rationale |
 |---|---|
-| `Origo.Core.Kernel/Save/Storage/SavePayloadReader.cs` | Complete Core.Tests suite; retain downstream tests from Core's reverse dependencies, including ConsoleBridge and GodotAdapter; real Godot restoration requires integration coverage. Initially selecting all Core consumers is acceptable; narrow only after evidence |
+| `Origo.Core.Kernel/Save/Storage/SavePayloadReader.cs` | Complete Core.Tests suite; retain downstream tests from Core's reverse dependencies, including GodotAdapter; ConsoleBridge depends only on Contracts and is not a downstream Core/Kernel consumer. Real Godot restoration requires integration coverage. Initially selecting all Core consumers is acceptable; narrow only after evidence |
 | `Origo.SourceGeneration/TypedDataGenerator.HomeGeneration.cs` | SG.Tests, compilation/tests for Core and Adapter consumers, and headless TypedData registration; generated API can change without a handwritten output diff |
 | `Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs` | Adapter.Tests plus Godot headless; native calls in this file are excluded from pure .NET coverage and require real `_Ready`, subsequent frames, and failed-startup validation |
 | `Origo.TestSupport/FileSystem/TestMemoryFileSystem.cs` | Every TestSupport-referencing suite selected from the graph, rather than only filesystem tests |

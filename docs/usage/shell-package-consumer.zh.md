@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 5 -->
+<!-- docsync-revision: 6 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell-only 包消费验证
 
@@ -45,8 +45,10 @@
    `Origo.Core.Runtime.OrigoRuntime` 不可访问而失败（CS0246）。
 7. 把 `tools/ConsoleBridgePackageConsumer` 复制到独立临时目录，只通过
    `PackageReference` 引用 `Origo.ConsoleBridge`，以 `-warnaserror` 完成
-   restore/build；`project.assets.json` 必须解析出 ConsoleBridge 及其运行时依赖，
-   且源码中没有 `<ProjectReference>`。
+   restore/build；`project.assets.json` 必须解析出 `Origo.ConsoleBridge` 与
+   `Origo.Core.Contracts`，不得解析出 `Origo.Core` 或 `Origo.Core.Kernel`，
+   且源码中没有 `<ProjectReference>`；构建输出不得包含 Core shell 或 kernel
+   runtime 程序集。
 8. 运行 ConsoleBridge 消费者：它使用真实 `TcpClient` 连接 loopback，验证命令进入
    `IConsoleInputSource` 且 `IConsoleOutputChannel` 的输出回送到客户端，最后输出
    `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`。
@@ -80,8 +82,9 @@ shell API：
   `project.assets.json` 指向该缓存，宿主全局缓存中的同名同版本 Origo 包不能
   绕过本地 feed 让 smoke 验证旧制品。
 - 包缺失、release package validator 失败、analyzer 资产缺失、任一消费者出现
-  `ProjectReference`、NuGet/编译警告、kernel 类型可编译、kernel runtime 未加载、
-  ConsoleBridge 回环失败或缺少
+  `ProjectReference`、NuGet/编译警告、kernel 类型可编译、Core/Adapter 消费者的
+  kernel runtime 未加载、ConsoleBridge 消费者意外解析出 Core/Kernel 或构建输出
+  含 Core shell/kernel runtime 程序集、ConsoleBridge 回环失败或缺少
   `CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK`、Godot 启动失败或缺少
   `SHELL_CONSUMER_STARTUP_OK` 都会使 job 失败。
 - fixture 与脚本的版本 pin 由 `scripts/package-consumer-smoke.sh` 与

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 32 -->
+<!-- docsync-revision: 33 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
@@ -31,7 +31,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SaveIdValidationTests.cs` | Save id validation: `RequestSaveGame`/`RequestLoadGame`/`SetContinueTarget` reject invalid ids (path separators / out-of-range chars), accept valid ids |
 | `SaveExtraFilesRoundTripTests.cs` | extra/ side-channel files: snapshot-to-current copy round-trip, structure preservation, missing/empty dir tolerance, argument validation |
 | `SaveFormatVersionTests.cs` | Save format version: origo.format_version written to meta.map, newer versions rejected on load, missing version key tolerated, reserved keys hidden, public save-metadata listing |
-| `SaveFormatGoldenTests.cs` | Golden v1 snapshot (`Save/Golden/v1/save_goldenv1/`): current-format load through `OrigoHost`, missing-version legacy save, and future-version rejection without a partial mount |
+| `SaveFormatGoldenTests.cs` | Golden v1 snapshot (`Save/Golden/v1/save_goldenv1/`): current-format load through `OrigoHost`, save missing the format-version key, and future-version rejection without a partial mount |
 | `SaveSnapshotMarkerTests.cs` | Snapshot integrity: no .write_in_progress residue in snapshot directory |
 | `StaleLevelDirectoryCleanupTests.cs` | Verifies that after a full save `current/` is consistent with the payload's level set — level directories of destroyed background sessions are cleaned up, not leaked into subsequent snapshots |
 

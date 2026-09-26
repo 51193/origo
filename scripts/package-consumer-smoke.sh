@@ -133,14 +133,23 @@ CONSOLE_ASSETS=$(find "$CONSOLE_CONSUMER_DIR" -path "*/obj/project.assets.json" 
 [[ -n "$CONSOLE_ASSETS" ]] || FAIL "ConsoleBridge consumer restore did not produce project.assets.json."
 grep -Fq "$NUGET_PACKAGES" "$CONSOLE_ASSETS" \
     || FAIL "ConsoleBridge consumer restore did not use the isolated NuGet package cache."
-for package in Origo.ConsoleBridge Origo.Core Origo.Core.Contracts Origo.Core.Kernel; do
-    grep -q "\"$package/" "$CONSOLE_ASSETS" \
+for package in Origo.ConsoleBridge Origo.Core.Contracts; do
+    grep -Fq "\"$package/" "$CONSOLE_ASSETS" \
         || FAIL "ConsoleBridge consumer restore did not resolve $package."
 done
+if grep -Fq '"Origo.Core/' "$CONSOLE_ASSETS"; then
+    FAIL "ConsoleBridge consumer unexpectedly resolved Origo.Core."
+fi
+if grep -Fq '"Origo.Core.Kernel/' "$CONSOLE_ASSETS"; then
+    FAIL "ConsoleBridge consumer unexpectedly resolved Origo.Core.Kernel."
+fi
 
 dotnet build "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
     --no-restore --configuration Release -warnaserror \
     -p:OrigoShellPackageVersion="$VERSION" >/dev/null
+if find "$CONSOLE_CONSUMER_DIR" -type f \( -name "Origo.Core.dll" -o -name "Origo.Core.Kernel.dll" \) | grep -q .; then
+    FAIL "ConsoleBridge consumer build unexpectedly received Core shell or Kernel runtime assemblies."
+fi
 set +e
 CONSOLE_STARTUP_OUTPUT=$(dotnet run \
     --project "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \

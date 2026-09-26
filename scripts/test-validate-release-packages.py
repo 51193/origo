@@ -98,7 +98,7 @@ def write_valid_packages(directory: Path) -> None:
     write_package(
         directory,
         "Origo.ConsoleBridge",
-        dependencies=(("Origo.Core", VERSION),),
+        dependencies=(("Origo.Core.Contracts", VERSION),),
     )
 
 
@@ -152,6 +152,19 @@ def main() -> int:
                     write_package(case, "Origo.Core.Kernel", dependencies=(
                         ("Origo.Core.Contracts", "9.9.9"),
                     )),
+                ),
+            ),
+            (
+                "ConsoleBridge dependency direction",
+                "Origo.ConsoleBridge: Origo dependency set ['Origo.Core'] "
+                "!= expected ['Origo.Core.Contracts']",
+                lambda case: (
+                    (case / f"Origo.ConsoleBridge.{VERSION}.nupkg").unlink(),
+                    write_package(
+                        case,
+                        "Origo.ConsoleBridge",
+                        dependencies=(("Origo.Core", VERSION),),
+                    ),
                 ),
             ),
             (
