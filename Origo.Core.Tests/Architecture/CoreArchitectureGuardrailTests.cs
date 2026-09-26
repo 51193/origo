@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Origo.Core.Abstractions.Entity;
+using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Abstractions.Scene;
 using Origo.Core.Abstractions.Snd;
 using Origo.Core.Abstractions.StateMachine;
@@ -643,3 +644,16 @@ public class SndContractsIdentityTests
             typeof(Origo.Core.Snd.ISndContext).Assembly.GetName().Name);
     }
 }
+
+public class ShellRuntimeSurfaceConvergenceTests
+{
+    [Fact]
+    public void ShellRuntimeSurfaces_ShouldExposeSingleBlackboardAndMetaListPaths()
+    {
+        Assert.Null(typeof(IOrigoRuntime).GetProperty("SystemBlackboard"));
+        Assert.Null(typeof(ISndWorldAccess).GetMethod("ResolveMetaListFromJsonArray"));
+        Assert.NotNull(typeof(ISndContext).GetProperty("Blackboard"));
+        Assert.NotNull(typeof(ISndTemplateAccess).GetMethod("ResolveMetaListFromJsonArray"));
+    }
+}
+

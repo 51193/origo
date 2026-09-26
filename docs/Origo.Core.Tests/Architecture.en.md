@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 29 -->
+<!-- docsync-revision: 30 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
@@ -36,6 +36,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `SndContext_ShouldNotImplementRoleInterfaces` | The SndContext concrete type implements no role interfaces (pure composition object) | Snd Abstraction: ISndContext composition |
 | `SndContext_CompanionProperties_ShareConsistentState` | Companion properties share the same blackboard instances (SystemBlackboard/ProgressBlackboard) | Snd Abstraction: ISndContext composition |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext inherits ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
+| `ShellRuntimeSurfaces_ShouldExposeSingleBlackboardAndMetaListPaths` | The system blackboard is exposed only through `ISndContext.Blackboard`; metadata-list resolution only through `ISndTemplateAccess` | architecture/overview: single access path |
 | `DeferredFlush_ShouldNotBePublicBusinessSurface` | Frame flushing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndDeferredActions` and `OrigoRuntime` expose no bypassable public flush | architecture/overview: single access path |
 | `ConsolePump_ShouldNotBePublicBusinessSurface` | Console processing goes only through `IOrigoFrameDriver.DriveFrame`; `ISndConsoleAccess` and `OrigoConsole` expose no bypassable public pump | architecture/overview: single access path |
 | `IEntityLifecycle_ShouldBeInternal` | IEntityLifecycle is internal — business code must not trigger lifecycle hooks directly | Runtime: lifecycle orchestration |

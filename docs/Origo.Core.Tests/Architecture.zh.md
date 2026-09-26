@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 29 -->
+<!-- docsync-revision: 30 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构守卫 测试
 
@@ -35,6 +35,7 @@
 | `SndContext_ShouldNotImplementRoleInterfaces` | SndContext 具体类型不实现任何角色接口（纯组合对象） | Snd Abstraction: ISndContext 组合 |
 | `SndContext_CompanionProperties_ShareConsistentState` | 各 companion 属性共享同一黑板实例（SystemBlackboard/ProgressBlackboard） | Snd Abstraction: ISndContext 组合 |
 | `IStateMachineContext_ShouldInheritSharedRoleInterfaces` | IStateMachineContext 继承 ISndBlackboardAccess + ISndDeferredActions | StateMachine Abstraction |
+| `ShellRuntimeSurfaces_ShouldExposeSingleBlackboardAndMetaListPaths` | system blackboard 仅经 `ISndContext.Blackboard` 暴露；metadata 列表解析仅经 `ISndTemplateAccess` 暴露 | architecture/overview: 单一访问路径 |
 | `DeferredFlush_ShouldNotBePublicBusinessSurface` | 帧冲刷仅经 `IOrigoFrameDriver.DriveFrame`；`ISndDeferredActions` 与 `OrigoRuntime` 不暴露可绕过的 public flush | architecture/overview: 单一访问路径 |
 | `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture/overview: 单一访问路径 |
 | `ConsolePump_ShouldNotBePublicBusinessSurface` | 控制台命令处理仅经 `IOrigoFrameDriver.DriveFrame`；`ISndConsoleAccess` 与 `OrigoConsole` 不暴露可绕过的 public pump | architecture/overview: 单一访问路径 |

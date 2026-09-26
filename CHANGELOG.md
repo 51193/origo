@@ -30,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **BREAKING: duplicate shell runtime paths are removed** — `IOrigoRuntime` no longer exposes `SystemBlackboard`; use `ISndContext.Blackboard.SystemBlackboard`. `ISndWorldAccess` no longer exposes `ResolveMetaListFromJsonArray`; use `ISndContext.Template.ResolveMetaListFromJsonArray`. The kernel runtime keeps the single underlying implementation for both capabilities.
+
 - **Previous shell API validation is automatic and additive in 0.1.x** — `scripts/api-inventory.sh` now auto-extracts the newest formal release tag's `shell-api-baseline.json` when `ORIGO_PREVIOUS_API_BASELINE` is not set, excluding the tag on the current commit. The previous-package compare allows backward-compatible additions while rejecting removals and signature changes; behavior breaks and removals remain targeted at 0.2.0.
 
 - **Shell API baseline gate covers `Origo.ConsoleBridge`** — the tracked Roslyn inventory now includes the ConsoleBridge shell assembly, so public additions, removals, and signature changes on `ConsoleBridgeServer` or `ConsoleBridgeOptions` fail CI until the baseline is reviewed and updated in the same change. `Origo.ConsoleBridge` package consumption and loopback behavior remain covered by the package-consumer smoke.

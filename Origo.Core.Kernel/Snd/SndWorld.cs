@@ -142,7 +142,7 @@ public sealed class SndWorld : ISndWorldAccess
     ///     Resolves a JSON array node into a list of entity metadata, applying
     ///     template resolution and type conversion.
     /// </summary>
-    public IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root)
+    internal IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root)
     {
         ArgumentNullException.ThrowIfNull(root);
         return Mappings.ResolveMetaListFromJsonArray(root, ConverterRegistry);

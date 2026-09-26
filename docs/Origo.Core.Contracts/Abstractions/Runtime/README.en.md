@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Runtime/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Runtime (Abstractions)
 
@@ -31,7 +31,6 @@ Defines the frame-driven and stable host/runtime abstractions. `IOrigoFrameDrive
 | `Meta` | Framework metadata |
 | `Logger` | Runtime logger |
 | `SndWorld` | Stable SND world access surface |
-| `SystemBlackboard` | System-level blackboard spanning the application run |
 | `ConsoleInput` | Console input queue; null when the host did not inject one |
 | `ConsoleOutputChannel` | Console output channel; null when the host did not inject one |
 | `SessionManager` | Current session manager |
@@ -52,9 +51,23 @@ Defines the frame-driven and stable host/runtime abstractions. `IOrigoFrameDrive
 | `ReadMetaNode(node)` / `ReadMetaListNode(node)` | Reads one entity or a metadata list |
 | `WriteMetaNode(meta)` / `WriteMetaListNode(metaDataList)` | Writes one entity or a metadata list |
 | `ReadTypedDataMap(node)` | Reads a typed-data map |
-| `ResolveMetaListFromJsonArray(root)` | Resolves a JSON array node into a metadata list |
 
 ## Design Decisions
+
+### Why the system blackboard has one shell access path
+
+`IOrigoRuntime` does not duplicate the system blackboard; the public entry is
+`ISndContext.Blackboard.SystemBlackboard` (and its `IStateMachineContext` view).
+The kernel runtime keeps the same instance internally, so state changes,
+persistence, and lifecycle side effects are implemented once and every view
+observes the same state.
+
+### Why metadata-list resolution lives only on `ISndTemplateAccess`
+
+`ISndWorldAccess` does not duplicate `ResolveMetaListFromJsonArray`; template and
+entity-list resolution stay on `ISndContext.Template`. The kernel `SndWorld`
+implementation remains the single underlying implementation rather than a
+second public entry point.
 
 ### Why console-handler registration lives on `IOrigoRuntime`
 

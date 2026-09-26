@@ -52,7 +52,4 @@ public interface ISndWorldAccess
 
     /// <summary>Reads a typed-data map from a data-source node.</summary>
     IReadOnlyDictionary<string, TypedData> ReadTypedDataMap(DataSourceNode node);
-
-    /// <summary>Resolves a JSON-array scene node into entity metadata.</summary>
-    IReadOnlyList<SndMetaData> ResolveMetaListFromJsonArray(DataSourceNode root);
 }

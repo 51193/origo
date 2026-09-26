@@ -1,4 +1,3 @@
-using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Lifecycle;
 using Origo.Core.Abstractions.Logging;
@@ -20,9 +19,6 @@ public interface IOrigoRuntime : IOrigoFrameDriver
 
     /// <summary>Stable SND world access surface managed by this runtime.</summary>
     ISndWorldAccess SndWorld { get; }
-
-    /// <summary>System-level blackboard whose lifetime spans the whole application run.</summary>
-    IBlackboard SystemBlackboard { get; }
 
     /// <summary>Console input queue, or <c>null</c> when the host did not inject one.</summary>
     IConsoleInputSource? ConsoleInput { get; }

@@ -103,7 +103,7 @@ public sealed class OrigoRuntime : IOrigoRuntime
     ///     Stores global state (e.g., continue slot ID, active save ID).
     ///     Points to the same instance as SndContext.Blackboard.SystemBlackboard.
     /// </summary>
-    public IBlackboard SystemBlackboard { get; }
+    internal IBlackboard SystemBlackboard { get; }
 
     /// <summary>
     ///     Console input queue. Null if not injected at startup. Thread-safe.

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Runtime/README -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 4 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Runtime (Abstractions)
 
@@ -32,7 +32,6 @@
 | `Meta` | 框架元数据 |
 | `Logger` | 运行时日志服务 |
 | `SndWorld` | 稳定 SND world 访问面 |
-| `SystemBlackboard` | 系统级黑板，生命周期覆盖整个运行期 |
 | `ConsoleInput` | 控制台输入队列；host 未注入时为 null |
 | `ConsoleOutputChannel` | 控制台输出通道；host 未注入时为 null |
 | `SessionManager` | 当前 session manager |
@@ -53,9 +52,21 @@
 | `ReadMetaNode(node)` / `ReadMetaListNode(node)` | 读取单实体或 metadata 列表 |
 | `WriteMetaNode(meta)` / `WriteMetaListNode(metaDataList)` | 写入单实体或 metadata 列表 |
 | `ReadTypedDataMap(node)` | 读取 typed-data map |
-| `ResolveMetaListFromJsonArray(root)` | 将 JSON array 节点解析为 metadata 列表 |
 
 ## 设计决策
+
+### 为什么 system blackboard 只有一条 shell 访问路径
+
+`IOrigoRuntime` 不重复暴露 system blackboard；公开入口统一为
+`ISndContext.Blackboard.SystemBlackboard`（以及其 `IStateMachineContext`
+视图）。kernel 运行时内部保留同一实例，因此状态变更、持久化和生命周期副作用只实现
+一次，任何视图都会看到同一份状态。
+
+### 为什么 metadata 列表解析只在 `ISndTemplateAccess`
+
+`ISndWorldAccess` 不重复暴露 `ResolveMetaListFromJsonArray`；模板与实体列表解析统一
+由 `ISndContext.Template` 承载。kernel 内的 `SndWorld` 实现保持为同一路径的底层
+实现，不形成第二条公开入口。
 
 ### 为什么 console handler 注册在 `IOrigoRuntime` 上
 
