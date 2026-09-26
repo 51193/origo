@@ -8,6 +8,13 @@ cd "$ROOT"
 CSPROJ="$ROOT/Origo.GodotAdapter/Origo.GodotAdapter.csproj"
 GODOT_CACHE_DIR="$ROOT/.godot_binary"
 
+resolve_godot_binary() {
+    local dir="$1"
+    find "$dir" -maxdepth 5 -type f -perm /111 -name "Godot*" \
+        ! -name "*.json" ! -name "*.xml" ! -name "*.dll" ! -name "*.pdb" ! -name "*.zip" \
+        | head -1
+}
+
 # Parse Godot.NET.Sdk version from csproj, e.g. "4.7.2".
 # sed -E is used instead of grep -P because macOS ships BSD grep without PCRE.
 VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' "$CSPROJ" | head -1)
@@ -53,7 +60,7 @@ DOWNLOAD_URL="https://github.com/godotengine/godot-builds/releases/download/${VE
 EXTRACT_DIR="${GODOT_CACHE_DIR}/${VERSION}"
 
 if [[ -d "$EXTRACT_DIR" ]]; then
-    GODOT_BIN=$(find "$EXTRACT_DIR" -maxdepth 5 -type f -name "Godot*" ! -name "*.pdb" ! -name "*.xml" ! -name "*.dll" ! -name "*.zip" | head -1)
+    GODOT_BIN=$(resolve_godot_binary "$EXTRACT_DIR")
     if [[ -n "$GODOT_BIN" ]] && [[ -x "$GODOT_BIN" ]]; then
         echo "Godot binary cached: $GODOT_BIN" >&2
         echo "$GODOT_BIN"
@@ -78,13 +85,18 @@ fi
 echo "Extracting..." >&2
 unzip -qo "$EXTRACT_DIR/$ARCHIVE" -d "$EXTRACT_DIR"
 
-GODOT_BIN=$(find "$EXTRACT_DIR" -maxdepth 5 -type f -name "Godot*" ! -name "*.pdb" ! -name "*.xml" ! -name "*.dll" ! -name "*.zip" | head -1)
+GODOT_BIN=$(resolve_godot_binary "$EXTRACT_DIR")
 if [[ -z "$GODOT_BIN" ]]; then
-    echo "ERROR: Could not find Godot binary in extracted files." >&2
+    echo "ERROR: Could not find executable Godot binary in extracted files." >&2
     ls -la "$EXTRACT_DIR" >&2
     exit 1
 fi
 
 chmod +x "$GODOT_BIN"
+if [[ ! -x "$GODOT_BIN" ]]; then
+    echo "ERROR: Resolved Godot path is not executable: $GODOT_BIN" >&2
+    exit 1
+fi
+
 echo "Godot binary ready: $GODOT_BIN" >&2
 echo "$GODOT_BIN"
