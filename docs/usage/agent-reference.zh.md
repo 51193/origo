@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 22 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Agent Reference
 
@@ -280,7 +280,7 @@ OrigoAutoHost._Ready()
 ├── 4. 注册 TypeStringMapping + Converters (BCL + Godot types)
 ├── 5. 创建 PersistentBlackboard → LoadFromDisk
 ├── 6. 创建 ConsoleInputBuffer + ConsoleOutputChannel
-├── 7. 创建 OrigoRuntime
+├── 7. 创建 IOrigoRuntime（kernel OrigoRuntime 实现）
 │   ├── SndWorld (策略池 + 转换器注册表)
 │   ├── SystemRun (持有 SystemBlackboard)
 │   └── OrigoConsole (命令路由)
@@ -288,7 +288,7 @@ OrigoAutoHost._Ready()
 ├── 8. BindRuntimeDependencies (World + Logger to SndManager)
 │
 └── OrigoDefaultEntry._Ready() [覆写]
-    ├── 9. 注册适配层命令处理器 (press_button, tree_debug, camera_view)
+    ├── 9. 通过 IOrigoRuntime.RegisterConsoleCommandHandler 注册适配层命令处理器 (press_button, tree_debug, camera_view)
     ├── 10. 创建 SndContext (注入 Runtime + FileSystem + saveRoot + config)
     ├── 11. SndManager.BindContext(context)
     ├── 12. ConfigureSaveMetadataContributors(context)

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Snd/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd (Abstractions)
 
@@ -80,7 +80,7 @@ Strategy hooks (`LifecycleStrategyBase`'s 8 virtual methods) retain `ISndContext
 Eliminates naming conflicts between role interfaces (e.g., multiple `Clear()`) and provides clearer call semantics (`ctx.Save.RequestLoadGame(...)`).
 
 ### Why SessionManager is not on ISndContext
-Strategies access it through `entity.OwningSession.SessionManager` — safer than global context lookup by key.
+Strategies access it through `entity.OwningSession.SessionManager` — safer than global context lookup by key. Global access remains available through `IOrigoRuntime.SessionManager`, so the context facade does not duplicate it.
 
 ### Why ISndContext does not provide session and entity-destruction members
 

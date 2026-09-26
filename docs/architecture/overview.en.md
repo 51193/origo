@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
@@ -205,13 +205,13 @@ The frame loop entry is in the adapter layer (Godot's `_Process` callback), but 
 
 ```
 Origo.Core.Contracts/ # Stable consumer contracts and shared pure helpers
-├── Abstractions/     # Interfaces for logging/console/files/node/runtime/lifecycle/scene/snd/state machine
+├── Abstractions/     # Interfaces for logging/console/files/node/runtime host/lifecycle/scene/snd/state machine
 ├── Blackboard/       # Shared in-memory blackboard implementation
 ├── DataSource/       # Data node, I/O, file-meta, converter, and registry contracts
 ├── Grid/             # GridPos value type
 ├── Logging/          # Logger<T>, LogMessageBuilder, NullLogger
 ├── Planning/         # PlanExecutionStrategyBase
-├── Runtime/          # IOrigoRuntime/ISndWorldAccess and console tooling contracts
+├── Runtime/          # Console handler/invocation model and argument-validation contracts
 ├── Save/Meta/        # Save-meta contracts
 ├── Serialization/    # TypeStringMapping
 ├── Snd/              # TypedData/metadata, ISndContext, strategy bases, internal entity queries

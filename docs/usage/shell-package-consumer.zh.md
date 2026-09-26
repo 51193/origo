@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell-only 包消费验证
 
@@ -15,7 +15,7 @@
 
 | 项 | 值 | 权威来源 |
 |----|----|----------|
-| 包版本 | 当前仓库版本（如 `0.0.10-nightly.YYYYMMDD`） | `Directory.Build.props` 的 `<Version>` |
+| 包版本 | 当前仓库版本（如 `0.1.0`） | `Directory.Build.props` 的 `<Version>` |
 | .NET | `net10.0` | `global.json` 的 SDK |
 | Godot.NET.Sdk | `4.7.2` | `Origo.GodotAdapter.csproj`；消费者 fixture 必须一致，脚本会对比 |
 | 包引用 | `Origo.Core` + `Origo.GodotAdapter` | `tools/ShellPackageConsumer/OrigoShellPackageConsumer.csproj` |

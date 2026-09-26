@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/Abstractions/Snd/README -->
-<!-- docsync-revision: 1 -->
+<!-- docsync-revision: 2 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Snd (Abstractions)
 
@@ -23,7 +23,7 @@ ISndContext 的角色接口拆分。9 个 Snd 角色接口 + `IStateMachineConte
 | `ISndFileAccess.cs` | 文件访问：结构化读写 + 强类型读写 + 存在检查（5 成员）。所有文件内容读写统一通过 `IDataSourceIoGateway` 边界，策略无需自行处理原始文本解析 |
 | `ISndArchiveFileAccess.cs` | 存档内文件访问：结构化读写 + 强类型读写 + 存在检查 + 删除（6 成员）。路径相对于存档活动目录的 extra/ 子目录，随存档生命周期 |
 
-> `CurrentSession`、`IsFrontSession`、`SessionManager`、`RequestKillAll`/`RequestKillEntity` 不在 `ISndContext` 上。`IsFrontSession` 在 `ISessionRun` 上（经 `entity.OwningSession.IsFrontSession` 访问）。`SessionManager` 可通过 `entity.OwningSession.SessionManager` 或 `OrigoRuntime.SessionManager`（public）访问。实体销毁经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行。
+> `CurrentSession`、`IsFrontSession`、`SessionManager`、`RequestKillAll`/`RequestKillEntity` 不在 `ISndContext` 上。`IsFrontSession` 在 `ISessionRun` 上（经 `entity.OwningSession.IsFrontSession` 访问）。`SessionManager` 可通过 `entity.OwningSession.SessionManager` 或 `IOrigoRuntime.SessionManager` 访问。实体销毁经 `entity.OwningSession.RequestKillEntity(name)` 或 `ISessionRun.RequestKillEntity(name)` 执行。
 
 ## ISndContext Companion 属性
 

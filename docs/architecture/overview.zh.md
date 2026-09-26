@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 16 -->
+<!-- docsync-revision: 17 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 架构总览
 
@@ -205,13 +205,13 @@ Godot._Process
 
 ```
 Origo.Core.Contracts/ # 稳定消费者契约与共享纯工具
-├── Abstractions/     # 日志/控制台/文件/节点/runtime/lifecycle/scene/snd/状态机接口
+├── Abstractions/     # 日志/控制台/文件/节点/runtime host/lifecycle/scene/snd/状态机接口
 ├── Blackboard/       # 共享内存黑板实现
 ├── DataSource/       # 数据节点/I/O/文件元数据/转换器/registry 契约
 ├── Grid/             # GridPos 值类型
 ├── Logging/          # Logger<T>、LogMessageBuilder、NullLogger
 ├── Planning/         # PlanExecutionStrategyBase
-├── Runtime/          # IOrigoRuntime/ISndWorldAccess 与控制台工具契约
+├── Runtime/          # 控制台 handler/调用模型与参数校验契约
 ├── Save/Meta/        # 存档元数据契约
 ├── Serialization/    # TypeStringMapping
 ├── Snd/              # TypedData/metadata、ISndContext、策略基类、internal 实体查询

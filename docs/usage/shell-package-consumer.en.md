@@ -1,5 +1,5 @@
 <!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 6 -->
+<!-- docsync-revision: 7 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell-Only Package Consumption Verification
 
@@ -11,7 +11,7 @@
 
 | Item | Value | Authority |
 |------|-------|-----------|
-| Package version | Current repository version (for example `0.0.10-nightly.YYYYMMDD`) | `<Version>` in `Directory.Build.props` |
+| Package version | Current repository version (for example `0.1.0`) | `<Version>` in `Directory.Build.props` |
 | .NET | `net10.0` | SDK pinned by `global.json` |
 | Godot.NET.Sdk | `4.7.2` | `Origo.GodotAdapter.csproj`; the consumer fixture must match and the script compares both |
 | Package references | `Origo.Core` + `Origo.GodotAdapter` | `tools/ShellPackageConsumer/OrigoShellPackageConsumer.csproj` |

@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Contracts
 
@@ -17,8 +17,8 @@ against it.
 
 | Subsystem | Capability | Details |
 |-----------|------------|---------|
-| [Abstractions](Abstractions/README.en.md) | Platform-independent base abstractions | Logging, console I/O, file-system/path, node, frame-driver, lifecycle, entity, scene, and state-machine contracts |
-| [Runtime](Runtime/README.en.md) | Runtime contracts and tooling | `IOrigoRuntime`/`ISndWorldAccess`, console handler/invocation model, and argument validation |
+| [Abstractions](Abstractions/README.en.md) | Platform-independent base abstractions | Logging, console I/O, file-system/path, node, frame-driver, runtime host, lifecycle, entity, scene, and state-machine contracts |
+| [Runtime](Runtime/README.en.md) | Console tooling contracts | `IConsoleCommandHandler`, `CommandInvocation`, and the argument-validation base class |
 | [Blackboard](Blackboard/README.en.md) | Shared blackboard implementation | In-memory `IBlackboard` implementation used by shell and kernel |
 | [Grid](Grid/README.en.md) | Grid value types | `GridPos` |
 | [Logging](Logging/README.en.md) | Shared logging implementation | `Logger<T>`, `LogMessageBuilder`, and `NullLogger` |

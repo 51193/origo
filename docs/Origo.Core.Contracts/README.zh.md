@@ -1,5 +1,5 @@
 <!-- docsync-pair: Origo.Core.Contracts/README -->
-<!-- docsync-revision: 10 -->
+<!-- docsync-revision: 11 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Origo.Core.Contracts
 
@@ -15,8 +15,8 @@ kernel 包共同引用这一契约层，消费者可以面向它编译。
 
 | 子系统 | 能力 | 详情 |
 |--------|------|------|
-| [Abstractions](Abstractions/README.zh.md) | 平台无关基础抽象 | 日志、控制台 I/O、文件系统/路径、节点、帧驱动、生命周期、实体、场景与状态机契约 |
-| [Runtime](Runtime/README.zh.md) | Runtime 契约与工具 | `IOrigoRuntime`/`ISndWorldAccess`、控制台 handler/调用模型与参数校验 |
+| [Abstractions](Abstractions/README.zh.md) | 平台无关基础抽象 | 日志、控制台 I/O、文件系统/路径、节点、帧驱动、runtime host、生命周期、实体、场景与状态机契约 |
+| [Runtime](Runtime/README.zh.md) | 控制台工具契约 | `IConsoleCommandHandler`、`CommandInvocation` 与参数校验基类 |
 | [Blackboard](Blackboard/README.zh.md) | 共享黑板实现 | shell 与 kernel 共用的内存 `IBlackboard` 实现 |
 | [Grid](Grid/README.zh.md) | 网格值类型 | `GridPos` |
 | [Logging](Logging/README.zh.md) | 共享日志实现 | `Logger<T>`、`LogMessageBuilder` 与 `NullLogger` |
