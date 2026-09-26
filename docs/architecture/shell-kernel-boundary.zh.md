@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # Shell/Kernel 稳定边界
 
@@ -122,10 +122,11 @@ shell 只提供存档操作与展示元数据：`ISndSaveOperations`、
 - **SDK 配对**：0.1.x 支持 .NET 10 与 Godot.NET.Sdk 4.7.2；更宽范围在后续版本
   经过验证后开放。
 
-0.1.x 不承诺二进制兼容：消费者升级 shell 包后重新编译。新增消费者 API、行为破坏
-和旧 API 移除进入 0.2.0。kernel 包不承诺消费者兼容，但 kernel-shell port 的调用
-契约由本手册约束。shell 与 kernel 在 0.1.x 内使用精确版本配对，避免 restore 静默
-组合未测试版本。
+0.1.x 不承诺二进制兼容：消费者升级 shell 包后重新编译。行为破坏与旧 API 移除进入
+0.2.0；0.1.x 允许向后兼容的新增消费者 API，新增必须通过 API baseline 审查并保持
+source/behavior compatibility。kernel 包不承诺消费者兼容，但 kernel-shell port 的
+调用契约由本手册约束。shell 与 kernel 在 0.1.x 内使用精确版本配对，避免 restore
+静默组合未测试版本。
 
 Godot 生成的嵌套 signal 类型属于生成公开面，自动纳入 API baseline；它们由 Godot
 源生成器产出，不在人工文档中逐项维护。

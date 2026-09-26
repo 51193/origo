@@ -221,20 +221,20 @@
     "architecture/shell-api-baseline": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 4,
+        "en": 4
       },
       "previous_revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "architecture/shell-api-baseline.zh.md",
         "en": "architecture/shell-api-baseline.en.md"
       },
       "content_hashes": {
-        "zh": "9C324529D1F861930B6F4367772830A073A79871374CF1BAA51D4645D4956267",
-        "en": "CE8B6D1FD52258CB96F351FDFBA8765C31B601A32ADA4758466735AA3362E90B"
+        "zh": "CEFA4139395C0EB5028A157D95C3D34010748A422BCC9789200397263B4E5BE9",
+        "en": "E8F8E2EAAB7A1F913E55F9E45C7435F76B74AD9FB60D34C234A133478351E46E"
       }
     },
     "architecture/shell-api-classification": {
@@ -259,20 +259,20 @@
     "architecture/shell-kernel-boundary": {
       "status": "synced",
       "revisions": {
-        "zh": 13,
-        "en": 13
+        "zh": 14,
+        "en": 14
       },
       "previous_revisions": {
-        "zh": 12,
-        "en": 12
+        "zh": 13,
+        "en": 13
       },
       "files": {
         "zh": "architecture/shell-kernel-boundary.zh.md",
         "en": "architecture/shell-kernel-boundary.en.md"
       },
       "content_hashes": {
-        "zh": "190DB7A55266BAA82DBB571A2E77C2ED9502317ECDCE83C5E0779E6219E1FA60",
-        "en": "3D4776320F88263972CDEDA5C17D47BB791FCFFE04141FF70AC9F277958D8CA2"
+        "zh": "59480D1086D7857FFE83CD0A1F485384A7A1058FC4E6F1BD1AEE1368DB20B1BE",
+        "en": "540DFF42A5AE5241219C829EC6E93DACB2E804A4FDF4370B45750A4968FD7618"
       }
     },
     "architecture/strategy-ordering": {
@@ -2742,20 +2742,20 @@
     "release-process": {
       "status": "synced",
       "revisions": {
-        "zh": 22,
-        "en": 22
+        "zh": 23,
+        "en": 23
       },
       "previous_revisions": {
-        "zh": 21,
-        "en": 21
+        "zh": 22,
+        "en": 22
       },
       "files": {
         "zh": "release-process.zh.md",
         "en": "release-process.en.md"
       },
       "content_hashes": {
-        "zh": "83042A254E149E69E92F9BB55634378763D12D1E4F0A06380980C65FB441AD3A",
-        "en": "677D7694C2990BDB6EEEB7BFA10FA55E800693C681AF992FF675278275D610D5"
+        "zh": "84FC18C2983F61D5CED33F54BCD3B7C868B65A867A458271FADDBEE513D3022F",
+        "en": "7A2E304738D948FB63F5AFE641F5A293FFB5C170E9A928CF7A0E1D64C05F0EB4"
       }
     },
     "tools/DocSyncTool.Tests/README": {

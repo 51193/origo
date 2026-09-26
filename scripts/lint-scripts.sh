@@ -91,5 +91,6 @@ else
 fi
 
 bash scripts/test-verify-release.sh
+bash scripts/test-find-previous-api-baseline.sh
 
 echo "Script lint: OK"

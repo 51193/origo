@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 22 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 发布与 Changelog 流程
 
@@ -119,7 +119,8 @@ Release workflow 由推送的 `v*` tag 触发，或由 `workflow_dispatch` 配�
   回写过的 tag 不会重复生成 release 提交。若仓库启用了 branch/tag protection 或
   token 缺少权限，原子推送会失败并中止发布；
 - 运行全部兼容门禁：`scripts/lint-scripts.sh`（脚本、workflow 与元指令守卫）、
-  `scripts/api-inventory.sh`（shell API baseline）、
+  `scripts/api-inventory.sh`（shell API baseline；未显式设置 previous baseline 时
+  自动提取上一个正式 tag 的 baseline，允许兼容新增、拒绝移除/签名变化）、
   `scripts/test.sh`（行为与存档契约）、benchmark、Godot headless integration，
   以及 `scripts/package-consumer-smoke.sh`（shell-only restore/负向编译/启动）；
 - 打包 `Origo.Core.Contracts`、`Origo.Core.Kernel`、`Origo.Core`、

@@ -7,9 +7,11 @@
 # 2. Runs the tracked Roslyn inventory over the real Release assemblies and
 #    either verifies it against the committed JSON baseline or regenerates the
 #    baseline for an approved API change.
-# 3. Runs previous-package validation when ORIGO_PREVIOUS_API_BASELINE points
-#    at the previous stable shell baseline; the first 0.1.0 release has no
-#    previous package, so that comparison is explicitly skipped with a message.
+# 3. Runs previous-package validation. An explicit
+#    ORIGO_PREVIOUS_API_BASELINE overrides auto-detection; otherwise the newest
+#    formal release tag reachable from HEAD (excluding the current commit) is
+#    used when it contains the tracked baseline. Releases before the baseline
+#    tool exists skip this comparison with an explicit message.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -57,24 +59,43 @@ else
     "${ASSEMBLY_ARGS[@]}" "${REFERENCE_ARGS[@]}" --baseline "$BASELINE"
 fi
 
+CURRENT=""
+AUTO_PREVIOUS=""
+cleanup() {
+  if [[ -n "$CURRENT" ]]; then
+    rm -f "$CURRENT"
+  fi
+  if [[ -n "$AUTO_PREVIOUS" ]]; then
+    rm -f "$AUTO_PREVIOUS"
+  fi
+}
+trap cleanup EXIT
+
 PREVIOUS="${ORIGO_PREVIOUS_API_BASELINE:-}"
+if [[ -z "$PREVIOUS" ]]; then
+  PREVIOUS="$(bash scripts/find-previous-api-baseline.sh)"
+  AUTO_PREVIOUS="$PREVIOUS"
+fi
+
 if [[ -n "$PREVIOUS" ]]; then
   if [[ ! -f "$PREVIOUS" ]]; then
-    echo "ERROR: ORIGO_PREVIOUS_API_BASELINE does not exist: $PREVIOUS" >&2
+    echo "ERROR: previous shell API baseline does not exist: $PREVIOUS" >&2
     exit 1
   fi
+  SOURCE_KIND="auto-detected"
+  if [[ -n "${ORIGO_PREVIOUS_API_BASELINE:-}" ]]; then
+    SOURCE_KIND="explicit"
+  fi
+  echo ""
+  echo "Previous-package validation: using ${SOURCE_KIND} shell API baseline."
   CURRENT="$(mktemp)"
-  trap 'rm -f "$CURRENT"' EXIT
   dotnet run --project tools/ApiInventoryTool -- generate \
     "${ASSEMBLY_ARGS[@]}" "${REFERENCE_ARGS[@]}" --output "$CURRENT"
   dotnet run --project tools/ApiInventoryTool -- compare --previous "$PREVIOUS" --current "$CURRENT"
 else
   echo ""
-  echo "Previous-package validation: no previous stable shell package baseline"
-  echo "is configured. 0.1.0 is the first release, so this gate is explicitly"
-  echo "not applicable yet; set ORIGO_PREVIOUS_API_BASELINE to the released"
-  echo "shell-api-baseline.json to enable removal/signature validation."
+  echo "Previous-package validation: no previous formal release shell API baseline"
+  echo "was found (releases before the baseline tool was introduced skip this"
+  echo "gate). Set ORIGO_PREVIOUS_API_BASELINE to override auto-detection."
 fi
-
-echo ""
 echo "Shell API inventory: OK"

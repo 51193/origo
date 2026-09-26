@@ -30,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Previous shell API validation is automatic and additive in 0.1.x** — `scripts/api-inventory.sh` now auto-extracts the newest formal release tag's `shell-api-baseline.json` when `ORIGO_PREVIOUS_API_BASELINE` is not set, excluding the tag on the current commit. The previous-package compare allows backward-compatible additions while rejecting removals and signature changes; behavior breaks and removals remain targeted at 0.2.0.
+
 - **Shell API baseline gate covers `Origo.ConsoleBridge`** — the tracked Roslyn inventory now includes the ConsoleBridge shell assembly, so public additions, removals, and signature changes on `ConsoleBridgeServer` or `ConsoleBridgeOptions` fail CI until the baseline is reviewed and updated in the same change. `Origo.ConsoleBridge` package consumption and loopback behavior remain covered by the package-consumer smoke.
 
 - **Release pipeline ships the five-package shell/kernel set with compatibility gates** — the Release workflow now packs `Origo.Core.Contracts`, `Origo.Core.Kernel`, `Origo.Core`, `Origo.GodotAdapter`, and `Origo.ConsoleBridge`, runs script/workflow lint, the shell API baseline, behavior/save contract suite, benchmarks, Godot integration, and shell-only package consumer smoke, then validates exact versions, shell/kernel pairing, dependency direction, analyzer assets, and kernel isolation with `scripts/validate-release-packages.sh`. `AGENTS.md`, `docs/META.*`, `docs/release-process.*`, and the root installation guidance record the bounded 0.1.x shell exception and the artifact set.

@@ -1,5 +1,5 @@
 <!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 13 -->
+<!-- docsync-revision: 14 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
@@ -149,10 +149,12 @@ Custom storage and path policies are designed separately in a later version.
   is opened after later verification.
 
 0.1.x does not promise binary compatibility: consumers recompile after updating
-shell packages. New consumer APIs, behavior breaks, and API removals target
-0.2.0. Kernel packages make no consumer compatibility promise, but kernel-shell
-port contracts are governed by this document. Shell and kernel use exact version
-pairing within 0.1.x so restore cannot silently combine untested versions.
+shell packages. Behavior breaks and API removals target 0.2.0; backward-compatible
+additions to the consumer API are allowed within 0.1.x, but must pass API
+baseline review and preserve source/behavior compatibility. Kernel packages make
+no consumer compatibility promise, but kernel-shell port contracts are governed
+by this document. Shell and kernel use exact version pairing within 0.1.x so
+restore cannot silently combine untested versions.
 
 Godot-generated nested signal types are generated public surface and are
 included automatically in the API baseline; they are produced by the Godot

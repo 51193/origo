@@ -1,5 +1,5 @@
 <!-- docsync-pair: release-process -->
-<!-- docsync-revision: 22 -->
+<!-- docsync-revision: 23 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Release & Changelog Process
 
@@ -123,7 +123,7 @@ first; every step below then applies to that tag:
 - Run `verify-release.sh`, `scripts/lint-scripts.sh`, the committed DocSync check, and the full test suite. The automatic rewrite covers only the version stamps; the formal metadata (CHANGELOG version block, empty `[Unreleased]`, analyzer shipped block, and both `docs/README.*` version stamps) must still be present in the tagged commit;
 - Only after tests and packing succeed, a single `--atomic` push fast-forwards `main` to the release commit and moves the tag to it; the GitHub Release is created afterwards. Validation or packing failures therefore leave every ref untouched, and a successful release keeps `main`, tag, commit, and packages on one version. This write-back requires the tag to be created on the current `main` tip; if main has advanced, the tag is not there, or either ref moves during the run, the lease checks fail and abort the release. Reruns resolve the tag's current target first, so a tag already written back by this pipeline does not produce a duplicate release commit. Branch/tag protection rules or a token without permission make the atomic push fail and abort the release;
 - Run all compatibility gates: `scripts/lint-scripts.sh` (script, workflow, and instruction guards),
-  `scripts/api-inventory.sh` (shell API baseline),
+  `scripts/api-inventory.sh` (shell API baseline; auto-extracts the previous formal tag's baseline when no explicit previous baseline is set, allowing compatible additions while rejecting removals/signature changes),
   `scripts/test.sh` (behavior and save contracts), benchmarks, Godot headless
   integration, and `scripts/package-consumer-smoke.sh` (shell-only restore,
   negative compile probe, and startup);
