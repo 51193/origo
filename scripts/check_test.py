@@ -45,10 +45,10 @@ class PlannerTests(unittest.TestCase):
                 MODULE.fingerprint = original_fingerprint
             self.assertTrue(plan["requiresFull"])
 
-    def test_docs_do_not_select_a_special_gate(self):
+    def test_docs_require_full_without_doc_gate(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            projects = {}
+            projects = {"A.Tests/A.Tests.csproj": root / "A.Tests.csproj"}
             original_project_files = MODULE.project_files
             original_evaluated = MODULE.evaluated_references
             original_fingerprint = MODULE.fingerprint
@@ -56,27 +56,37 @@ class PlannerTests(unittest.TestCase):
                 MODULE.project_files = lambda _root: projects
                 MODULE.evaluated_references = lambda _root, _projects: {name: set() for name in projects}
                 MODULE.fingerprint = lambda *_args: "test"
-                plan = MODULE.classify(root, [MODULE.Change("M", "docs/README.en.md")], "base")
+                plan = MODULE.classify(root, [MODULE.Change("M", "docs/META.en.md")], "base")
             finally:
                 MODULE.project_files = original_project_files
                 MODULE.evaluated_references = original_evaluated
                 MODULE.fingerprint = original_fingerprint
+            self.assertTrue(plan["requiresFull"])
             self.assertEqual(plan["additionalGates"], [])
             self.assertEqual(plan["selectedProjects"], [])
+            self.assertNotIn("docs gate", " ".join(plan["reasons"]))
 
     def test_integration_project_is_run_by_godot_gate_not_vstest(self):
         self.assertFalse(MODULE.test_project("Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj"))
 
-    def test_core_contracts_and_kernel_source_changes_select_no_doc_gate(self):
+    def test_core_contracts_and_kernel_source_changes_select_consumer_tests(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            projects = {}
+            contracts = "Origo.Core.Contracts/Origo.Core.Contracts.csproj"
+            kernel = "Origo.Core.Kernel/Origo.Core.Kernel.csproj"
+            core_tests = "Origo.Core.Tests/Origo.Core.Tests.csproj"
+            projects = {
+                contracts: root / "contracts.csproj",
+                kernel: root / "kernel.csproj",
+                core_tests: root / "core.tests.csproj",
+            }
+            graph = {contracts: set(), kernel: set(), core_tests: {contracts, kernel}}
             original_project_files = MODULE.project_files
             original_evaluated = MODULE.evaluated_references
             original_fingerprint = MODULE.fingerprint
             try:
                 MODULE.project_files = lambda _root: projects
-                MODULE.evaluated_references = lambda _root, _projects: {name: set() for name in projects}
+                MODULE.evaluated_references = lambda _root, _projects: graph
                 MODULE.fingerprint = lambda *_args: "test"
                 plan = MODULE.classify(
                     root,
@@ -90,7 +100,9 @@ class PlannerTests(unittest.TestCase):
                 MODULE.project_files = original_project_files
                 MODULE.evaluated_references = original_evaluated
                 MODULE.fingerprint = original_fingerprint
-            self.assertEqual(plan["additionalGates"], [])
+            self.assertNotIn("docs gate", plan["additionalGates"])
+            self.assertFalse(any(project.startswith("tools/") for project in plan["selectedProjects"]))
+            self.assertIn(core_tests, plan["selectedProjects"])
 
     def test_empty_plan_requires_full(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -124,7 +136,7 @@ class PlannerTests(unittest.TestCase):
                 {"baseCommit": "base", "worktreeFingerprint": "old"}, current
             )
 
-    def test_contracts_select_doc_sync_godot_and_full(self):
+    def test_contracts_select_godot_and_full(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             projects = {

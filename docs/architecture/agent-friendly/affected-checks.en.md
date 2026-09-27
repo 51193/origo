@@ -6,7 +6,7 @@ Investigation date: 2026-09-18; implementation checked: 2026-09-27. This report 
 
 ## 1. Current behavior and concrete costs
 
-**Observation:** [test.sh](../../../scripts/test.sh) restores and builds all of `Origo.sln` in Release, then executes non-Benchmark tests. [ci.sh](../../../scripts/ci.sh) runs script lint, formatting, tests, benchmarks, and Godot integration in order. Individual scripts already provide partial entry points during development; `scripts/check.sh` provides a consistent planner answering which projects and supporting facilities a change must check.
+**Observation:** [test.sh](../../../scripts/test.sh) restores and builds all of `Origo.sln` in Release, then executes non-Benchmark tests. [ci.sh](../../../scripts/ci.sh) runs script lint, formatting, tests, benchmarks, and Godot integration in order. Individual scripts already provide partial entry points during development; the missing facility is a consistent planner answering which projects and supporting facilities a change must check.
 
 `-m:1` has a documented purpose: parallel test processes on Windows can trigger an xUnit v3 assembly-info child-process exit race. **Removing serialization is not an appropriate Agent Friendly optimization.** Reduce unrelated projects first while preserving the safe execution policy. Core and Adapter also have different coverage exclusions. Godot native calls are tested by a separate headless runner, so passing xUnit does not establish passing engine behavior. See [Core tests](../../Origo.Core.Tests/README.en.md) and [Godot integration tests](../../Origo.GodotAdapter.Integration.Tests/README.en.md).
 
@@ -39,7 +39,7 @@ bash scripts/check.sh full
 
 First collect the Git baseline-to-HEAD diff, staged and unstaged changes, and untracked files, including renames and deletions. Record a baseline and working-tree fingerprint; changed fingerprints require replanning before execution. Second calculate reverse dependency closure from the **MSBuild-evaluated project graph**, preserving generator edges such as `OutputItemType="Analyzer"` and `ReferenceOutputAssembly="false"`, rather than inspecting only ordinary DLL references. MSBuild's static graph establishes project build dependencies, but does not describe every runtime reflection, resource-path, or behavioral-test impact. [MSBuild static graph](https://github.com/dotnet/msbuild/blob/main/documentation/specs/static-graph.md)
 
-Third add version-controlled impact contracts. Shared changes to `Directory.Build.props`, `Directory.Packages.props`, `global.json`, the solution, `.editorconfig`, or primary CI scripts require full checks. Documentation changes require link and content review. Godot scenes, resources, `project.godot`, and engine bridges affect headless tests. Shared TestSupport changes affect every referencing test project. Generator changes affect generator tests, Core, GodotAdapter, and their consumers.
+Third add version-controlled impact contracts. Shared changes to `Directory.Build.props`, `Directory.Packages.props`, `global.json`, the solution, `.editorconfig`, or primary CI scripts require full checks. Godot scenes, resources, `project.godot`, and engine bridges affect headless tests. Shared TestSupport changes affect every referencing test project. Generator changes affect generator tests, Core, GodotAdapter, and their consumers. Documentation changes are not attributable to a test project: review links and content manually, then run the explicit `full` gate.
 
 Unknown paths, unevaluable projects, missing contracts, empty test selections, generator diagnostics, and configuration mismatches must fail with an explanation. The planner may report `requiresFull: true`, followed by an explicit full invocation from the user or prescribed command. It must not silently select no checks after a parsing failure. A directory named `Save` is insufficient evidence for a test boundary; manual contracts require historical-change replay.
 
@@ -49,7 +49,7 @@ Unknown paths, unevaluable projects, missing contracts, empty test selections, g
 | `Origo.SourceGeneration/TypedDataGenerator.HomeGeneration.cs` | SourceGeneration.Tests, Core.Tests, Adapter.Tests, and headless TypedData registration; generated API can change without a handwritten output diff |
 | `Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs` | Adapter.Tests plus Godot headless; native calls in this file are excluded from pure .NET coverage and require real `_Ready`, subsequent frames, and failed-startup validation |
 | `Origo.TestSupport/FileSystem/TestMemoryFileSystem.cs` | Every TestSupport-referencing suite selected from the graph, rather than only filesystem tests |
-| English module documentation | Link and content review; add compilable-example checks if implemented, because valid links do not establish correct code |
+| English module documentation | Manual link and content review followed by the explicit `full` gate; add compilable-example checks if implemented, because valid links do not establish correct code |
 
 A conservative, broad project set is a reasonable initial cost. Consider module-level suite labels only when project size warrants it. Avoid manually maintaining hundreds of test names as a second dependency system.
 
@@ -75,9 +75,18 @@ This excerpt illustrates the actual planner contract; each run also records the 
 }
 ```
 
-stdout carries JSON; stderr carries diagnostics. Failures identify the path, rule, and next action. `requiresFull: false` means the affected plan can execute; `finalGateRequired: true` makes the eventual full gate unconditional. The shell must not execute arbitrary command text from natural language or unvalidated JSON.
+stdout carries JSON; stderr carries diagnostics. Failures identify the path, rule, and next action. `requiresFull: false` means the affected plan can execute; `finalGateRequired: true` makes the eventual full gate unconditional. The shell never executes arbitrary command text from natural language or unvalidated JSON.
 
-## 5. How to detect omitted checks
+## 5. Evidence and how to detect omitted checks
+
+The planner's fixed samples are executable in `scripts/check_test.py`: C#
+additions/deletions, generator changes and their Core/Adapter consumers, Godot
+adapter changes, documentation full-gate behavior, stale fingerprints,
+Benchmark exclusion, and empty-plan full-gate rejection. Test execution reports both `executed-tests` and
+`elapsed-seconds` on stderr; JSON remains on stdout, so a caller can record
+scope, reasons, counts, and timings without parsing human diagnostics. The
+repository's final evidence remains `bash scripts/check.sh full`, which runs
+the unchanged CI pipeline and commit lint.
 
 Build historical samples with genuine regressions involving persistence, deferred queues, observer restoration, generated Kind registration, Godot startup, TestSupport, and global build configuration. Fix each baseline and patch, run affected and full, and compare **failure sets**, not merely zero exit codes. Deliberately break upstream interfaces, remove generator output, modify `.tscn` files, and change shared properties to establish that relevant downstream checks are selected. Cover renames/deletions, untracked files, zero matching tests, and stale plans too.
 
@@ -87,4 +96,4 @@ This facility primarily helps Origo maintainers. Game developers also need local
 
 ## 6. Recommended order and limits
 
-The implementation provides read-only `plan`, project-level `affected`, and explicit-filter `quick` feedback; `full` still calls the existing `ci.sh` and commit lint. Human documentation continues to describe cross-module designs and test behavior; the planner routes execution evidence. See [Machine API inventory](api-inventory.en.md) for API and generator facts.
+The implementation provides read-only `plan`, project-level `affected`, and explicit-filter `quick` feedback; `full` still calls the existing `ci.sh` and commit-message lint. Human documentation continues to describe cross-module designs and test behavior; the planner routes execution evidence. See [Machine API inventory](api-inventory.en.md) for API and generator facts.

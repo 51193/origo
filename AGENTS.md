@@ -103,8 +103,8 @@ collaboration contracts.
 ### 1.10 Environment Bootstrap — Install the Required SDK, Never Downgrade the Request
 
 - `global.json` is authoritative; never downgrade or edit it to match an already-installed SDK.
-- Run `bash scripts/install-dotnet.sh` to install the exact SDK (default `$HOME/.dotnet`, repository-local `.dotnet/` fallback). Scripts source `scripts/dotnet-env.sh`; use `./dotnet` in local mode; never substitute per-session env exports.
 - Branches use `<type>/<creator>/<MMDD>/<purpose>`; validate with `scripts/work-identity.sh`.
+- Run `bash scripts/install-dotnet.sh` to install the exact SDK (default `$HOME/.dotnet`, repository-local `.dotnet/` fallback). Scripts source `scripts/dotnet-env.sh`; use `./dotnet` only in local mode. Do not substitute per-session `PATH`/`DOTNET_ROOT`/`NUGET_PACKAGES` exports.
 - Godot binaries are separate: `scripts/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`. Full rules: `docs/META.en.md` §Environment Bootstrap.
 
 ### 1.11 Local Agent Work Buffer — `_origo_local/` (Untracked, Producer/Consumer)
@@ -132,14 +132,14 @@ chapters belong to one work item. Full tracked protocol:
 5. **Documentation** — update the relevant English manual entries.
 6. **Commit** — source, tests, Changelog, and documentation together.
 7. **Post-commit full CI** — run `bash scripts/ci.sh` (lint-scripts → format → test → benchmark → Godot). Fix/amend, then rerun.
-8. **Post-commit message lint** — run `bash scripts/lint-commits.sh`; a pre-commit run cannot inspect the new commit.
+8. **Commit lint** — run `bash scripts/lint-commits.sh`; the local pre-push hook repeats it. Remote CI does not enforce commit lint.
 
 State any inapplicable step in the commit message. **Partial
 completion is forbidden.** If closing an `_origo_local` book, apply §1.11
 after steps 1–8.
 
 - `lint-commits.sh` prefers `origin/main`; when unavailable it falls back to `HEAD~1` and reports it. Explicit ranges: `bash scripts/lint-commits.sh <base> <head>`.
-- Enable hooks with `git config core.hooksPath .githooks`; CI adds the OS matrix.
+- Enable hooks with `git config core.hooksPath .githooks`; the pre-push hook runs commit lint locally. CI adds the OS matrix, not commit lint.
 
 ## 3. Test Requirements
 

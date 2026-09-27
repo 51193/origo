@@ -170,9 +170,11 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 ## Development
 
 ```bash
-bash scripts/ci.sh        # Local full pipeline (lint-scripts + format + test + benchmarks + Godot)
-bash scripts/test.sh      # Build + test + coverage gates (dev iteration)
-bash scripts/format.sh    # Format check only
+bash scripts/check.sh quick     # Focused local check (explicit project and filter)
+bash scripts/check.sh affected  # Local checks selected from the evaluated project graph
+bash scripts/test.sh            # Full build + test + coverage gates before commit
+bash scripts/ci.sh              # Full local pipeline; the final gate (lint-scripts + format + test + benchmarks + Godot)
+bash scripts/format.sh          # Format check only
 ```
 
 | Module | Description |

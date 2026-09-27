@@ -214,6 +214,13 @@ def classify(root: Path, changes: list[Change], base: str) -> dict:
         if normalized in FULL_PATHS or normalized.startswith((".github/", "scripts/")):
             requires_full = True
             reasons.append(f"{normalized} changes the repository-wide contract")
+        if normalized.startswith(DOC_PREFIXES):
+            requires_full = True
+            reasons.append(
+                f"{normalized} changes documentation; review links/content manually "
+                "and run the explicit full gate"
+            )
+            continue
         if normalized.startswith("Origo.SourceGeneration/"):
             additional.add("godot")
             generator_test_suffixes = (

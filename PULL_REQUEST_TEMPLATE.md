@@ -20,9 +20,9 @@
 
 ## Checklist
 
-- [ ] `bash scripts/test.sh` passes during iteration
+- [ ] `bash scripts/check.sh quick` or `affected` used for iteration, and `bash scripts/test.sh` passes before commit
 - [ ] `bash scripts/ci.sh` passes after the final commit (lint-scripts + format + build/test + coverage + benchmarks + Godot integration)
-- [ ] Post-commit `bash scripts/lint-commits.sh` passes
+- [ ] Post-commit `bash scripts/lint-commits.sh` passes (the local pre-push hook also enforces it; remote CI does not enforce commit lint)
 - [ ] New public API has corresponding behavior tests
 - [ ] Bug fix has regression test (red → green)
 - [ ] English documentation updated where interface lists, design decisions, or usage docs changed

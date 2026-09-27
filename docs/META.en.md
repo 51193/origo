@@ -73,13 +73,13 @@ the documented design.
 8. **Release or Changelog rule change** → update [release-process.en.md](release-process.en.md)
 9. **AGENTS.md meta-instruction changes** → [AGENTS.md](../AGENTS.md) is authoritative on conflict; synchronize the affected sections of this document in the same change. Do not hard-code AGENTS section numbers; when a rule is owned by this document, keep the full rule here rather than a summary that can go stale.
 
-### Situations NOT Requiring Sync
+### Situations NOT Requiring Documentation Update
 
-- Pure internal implementation detail changes (not affecting public API or design intent) — no design prose update, but item 2 still requires the mirror README file list
-- Code refactoring (not changing module responsibilities or interfaces) — file additions/renames/deletions still follow item 2
-- Performance optimizations (not changing external behavioral semantics) — file structure changes still follow item 2
+- Pure internal implementation detail changes (not affecting public API or design intent) — no design prose update required
+- Code refactoring (not changing module responsibilities or interfaces) — update the relevant module entry when files are added, renamed, or deleted
+- Performance optimizations (not changing external behavioral semantics) — no documentation update required unless documented behavior or design intent changes
 
-### Sync Checklist
+### Documentation Checklist
 
 After a code PR is merged, check:
 - [ ] Is the affected module entry accurate?
@@ -91,7 +91,7 @@ After a code PR is merged, check:
 
 ## Git Commit Message Format
 
-All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. PR commit messages are enforced by `scripts/lint-commits.sh` and `.github/workflows/commit-lint.yml`: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. Dependabot-authored commits are the only exemption: Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same PR remain fully checked.
+All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. Each clone must enable the repository hooks once with `git config core.hooksPath .githooks`; the local `.githooks/pre-push` hook invokes `scripts/lint-commits.sh` before Git uploads objects and checks every branch range being pushed: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. This gate runs locally and is not duplicated by GitHub Actions. Dependabot-authored commits are the only exemption: Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same branch remain fully checked.
 
 ### Basic Format
 
@@ -183,6 +183,25 @@ chore: bump Origo to 0.0.7-nightly.20260608
 - ❌ Using internal codenames or priority markers (e.g., `P0`, `P1`, `Phase 1`, etc.) — commit messages are intended for readers without prior context and should directly describe the change content, not internal development classifications
 - ❌ Preserving intermediate development commit messages during squash merge (rewrite a feature-oriented message instead)
 
+## Branch and Worktree Naming
+
+Human- or agent-created work branches use `<type>/<creator>/<MMDD>/<purpose>`;
+manual sibling worktrees use `<repo>--<type>--<creator>--<MMDD>--<purpose>`.
+Creator and purpose are lowercase; creation identity/date remain stable after
+handoff, and meaningless numeric suffixes are forbidden. `main`, `master`,
+`dependabot/**`, and tags are exempt; `codex/**` and `deepseek/**` are not.
+Use `bash scripts/work-identity.sh validate` or `new`; creator resolution is
+explicit `--creator`, local `origo.githubUser`, then authenticated `gh api user`.
+
+## Layered Test Checks
+
+Use `bash scripts/check.sh plan`, `quick`, `affected`, or `full`; quick requires
+an explicit project/filter and does not measure coverage, affected uses the
+evaluated project graph and impact contracts, and full remains the final CI
+gate. Unknown or empty selections stop and require `full`. Documentation changes
+are not attributable to a test project; review links/content manually and then
+run the explicit `full` gate.
+
 ## Directory Structure Conventions
 
 ```
@@ -203,7 +222,7 @@ docs/                            # Documentation root (inside the origo reposito
 ├── Origo.ConsoleBridge.Tests/   # ConsoleBridge test capability docs
 ├── Origo.SourceGeneration/      # Mirrors the repo root Origo.SourceGeneration/
 ├── Origo.SourceGeneration.Tests/ # Source generator test capability docs
-├── Origo.TestSupport/           # Test support library docs
+└── Origo.TestSupport/           # Test support library docs
 ```
 
 Every manual content file is hand-authored in English. The three `docs/agents/`
@@ -214,23 +233,6 @@ records, and deferred designs live in `docs/architecture/`.
 >
 > Manual entries are linked from the English top-level index and from their
 > parent module entries.
-
-## Branch and Worktree Naming
-
-Human- or agent-created work branches use `<type>/<creator>/<MMDD>/<purpose>`;
-manual sibling worktrees use `<repo>--<type>--<creator>--<MMDD>--<purpose>`.
-Creator and purpose are lowercase; creation identity/date remain stable after
-handoff, and meaningless numeric suffixes are forbidden. `main`, `master`,
-`dependabot/**`, and tags are exempt; `codex/**` and `deepseek/**` are not.
-Use `bash scripts/work-identity.sh validate` or `new`; creator resolution is
-explicit `--creator`, local `origo.githubUser`, then authenticated `gh api user`.
-
-## Layered Test Checks
-
-Use `bash scripts/check.sh plan`, `quick`, `affected`, or `full`; quick requires
-an explicit project/filter and does not measure coverage, affected uses the
-evaluated project graph and impact contracts, and full remains the final CI
-gate. Unknown or empty selections stop and require `full`.
 
 ## Environment Bootstrap
 
