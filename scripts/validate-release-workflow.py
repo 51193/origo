@@ -28,6 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 RELEASE_ACTION = "softprops/action-gh-release"
 RESOLVED_TAG = "${{ steps.resolve-tag.outputs.tag }}"
+RESOLVED_TAG_REF = f"refs/tags/{RESOLVED_TAG}"
 
 
 def fail(message: str) -> None:
@@ -95,6 +96,22 @@ def main() -> int:
                 "release job must run bash scripts/lint-scripts.sh so the tag "\
                 "pipeline enforces script, workflow, and instruction guards."
             )
+        else:
+            lint_step = next(
+                (
+                    step
+                    for step in release_steps
+                    if isinstance(step, dict)
+                    and "bash scripts/lint-scripts.sh" in str(step.get("run") or "")
+                ),
+                None,
+            )
+            lint_env = lint_step.get("env") if isinstance(lint_step, dict) else None
+            if not isinstance(lint_env, dict) or lint_env.get("ORIGO_BRANCH_NAME") != RESOLVED_TAG_REF:
+                errors.append(
+                    "release job must pass ORIGO_BRANCH_NAME as "
+                    f"{RESOLVED_TAG_REF} when linting a detached release checkout."
+                )
         for dependency in ("shellcheck", "python3-yaml"):
             if not any(dependency in command for command in run_commands):
                 errors.append(

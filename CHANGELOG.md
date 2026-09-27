@@ -10,6 +10,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Layered development checks and work identity validation** — branch/worktree names identify the work type, creator, creation date, and purpose; `scripts/check.sh` provides explicit `plan`, `quick`, `affected`, and `full` levels without weakening the final full CI gate.
+
+### Changed
+
+- **Commit-message lint runs before local pushes** — the tracked `.githooks/pre-push` hook checks every pushed branch range with `scripts/lint-commits.sh` after one-time `core.hooksPath` setup, and the redundant GitHub Actions commit-lint workflow is removed so invalid messages fail before upload instead of after remote CI starts.
+
+### Fixed
+
+- **Godot package consumer smoke on macOS** — cached `.app` binaries are discovered below the bundle root, the headless test preserves the caller's NuGet cache when redirecting `HOME`, and temporary consumer projects are restored and built from their own directory so generated C# script paths remain valid `res://` paths.
+
 ### Removed
 
 - **BREAKING: DocSyncTool and its synchronization contract** — removed the

@@ -204,7 +204,6 @@ docs/                            # Documentation root (inside the origo reposito
 ├── Origo.SourceGeneration/      # Mirrors the repo root Origo.SourceGeneration/
 ├── Origo.SourceGeneration.Tests/ # Source generator test capability docs
 ├── Origo.TestSupport/           # Test support library docs
-└── tools/                       # Repository tool documentation
 ```
 
 Every manual content file is hand-authored in English. The three `docs/agents/`
@@ -215,6 +214,23 @@ records, and deferred designs live in `docs/architecture/`.
 >
 > Manual entries are linked from the English top-level index and from their
 > parent module entries.
+
+## Branch and Worktree Naming
+
+Human- or agent-created work branches use `<type>/<creator>/<MMDD>/<purpose>`;
+manual sibling worktrees use `<repo>--<type>--<creator>--<MMDD>--<purpose>`.
+Creator and purpose are lowercase; creation identity/date remain stable after
+handoff, and meaningless numeric suffixes are forbidden. `main`, `master`,
+`dependabot/**`, and tags are exempt; `codex/**` and `deepseek/**` are not.
+Use `bash scripts/work-identity.sh validate` or `new`; creator resolution is
+explicit `--creator`, local `origo.githubUser`, then authenticated `gh api user`.
+
+## Layered Test Checks
+
+Use `bash scripts/check.sh plan`, `quick`, `affected`, or `full`; quick requires
+an explicit project/filter and does not measure coverage, affected uses the
+evaluated project graph and impact contracts, and full remains the final CI
+gate. Unknown or empty selections stop and require `full`.
 
 ## Environment Bootstrap
 

@@ -9,6 +9,8 @@ on:
 jobs:
   lint-scripts:
     runs-on: ubuntu-latest
+    env:
+      ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v7
 

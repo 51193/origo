@@ -5,7 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-for script in scripts/*.sh dotnet; do
+SHELL_FILES=(scripts/*.sh dotnet .githooks/*)
+
+for script in "${SHELL_FILES[@]}"; do
     bash -n "$script"
 done
 
@@ -17,7 +19,7 @@ if ! command -v shellcheck >/dev/null 2>&1; then
     fi
     echo "WARNING: shellcheck is not installed; skipping shellcheck (bash -n still runs)."
 else
-    shellcheck --severity=warning scripts/*.sh dotnet
+    shellcheck --severity=warning "${SHELL_FILES[@]}"
 fi
 
 # benchmark.sh previously embedded Python in heredocs. Any extracted or new
@@ -76,11 +78,18 @@ else
 fi
 
 if command -v python3 >/dev/null 2>&1; then
+    if [[ -n "${ORIGO_BRANCH_NAME:-}" ]]; then
+        bash scripts/work-identity.sh validate --branch "$ORIGO_BRANCH_NAME"
+    else
+        bash scripts/work-identity.sh validate
+    fi
     if python3 -c "import yaml" >/dev/null 2>&1; then
         python3 scripts/validate-release-workflow.py
     else
         echo "WARNING: PyYAML is not installed; skipping release-workflow guard."
     fi
+    PYTHONDONTWRITEBYTECODE=1 python3 scripts/work_identity_test.py
+    PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_test.py
     python3 scripts/validate-agent-docs.py
     python3 scripts/test-validate-release-packages.py
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
@@ -93,5 +102,6 @@ fi
 bash scripts/test-verify-release.sh
 bash scripts/test-find-previous-api-baseline.sh
 bash scripts/test-package-consumer-smoke-lib.sh
+bash scripts/test-pre-push-hook.sh
 
 echo "Script lint: OK"
