@@ -170,7 +170,7 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 ## Development
 
 ```bash
-bash scripts/check.sh quick     # Focused local check (explicit project and filter)
+bash scripts/check.sh quick --project Origo.Core.Tests/Origo.Core.Tests.csproj --filter 'FullyQualifiedName~Save'
 bash scripts/check.sh affected  # Local checks selected from the evaluated project graph
 bash scripts/test.sh            # Full build + test + coverage gates before commit
 bash scripts/ci.sh              # Full local pipeline; the final gate (lint-scripts + format + test + benchmarks + Godot)
