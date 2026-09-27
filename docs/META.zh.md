@@ -258,6 +258,15 @@ chore: bump Origo to 0.0.7-nightly.20260608
 - ❌ 使用内部代号或优先级标记（如 `P0`、`P1`、`Phase 1` 等）——提交消息面向的是无前置知识的读者，应直接描述变更内容而非开发过程中的内部分类名称
 - ❌ Squash merge 时保留中间开发的阶段性提交消息（应重新撰写面向功能的消息）
 
+## 分支与 Worktree 命名
+
+人工或 Agent 分支使用 `<type>/<creator>/<MMDD>/<purpose>`；人工同级
+Worktree 使用 `<repo>--<type>--<creator>--<MMDD>--<purpose>`。creator 和
+purpose 必须小写，交接后创建者与日期不变，禁止无语义数字后缀。`main`、
+`master`、`dependabot/**` 与 tag 豁免，`codex/**`、`deepseek/**` 不豁免。
+使用 `bash scripts/work-identity.sh validate` 或 `new`；创建者按显式
+`--creator`、本地 `origo.githubUser`、已认证 `gh api user` 顺序解析。
+
 ## 目录结构约定
 
 ```

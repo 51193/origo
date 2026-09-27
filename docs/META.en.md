@@ -262,6 +262,16 @@ chore: bump Origo to 0.0.7-nightly.20260608
 - ❌ Using internal codenames or priority markers (e.g., `P0`, `P1`, `Phase 1`, etc.) — commit messages are intended for readers without prior context and should directly describe the change content, not internal development classifications
 - ❌ Preserving intermediate development commit messages during squash merge (rewrite a feature-oriented message instead)
 
+## Branch and Worktree Naming
+
+Human- or agent-created work branches use `<type>/<creator>/<MMDD>/<purpose>`;
+manual sibling worktrees use `<repo>--<type>--<creator>--<MMDD>--<purpose>`.
+Creator and purpose are lowercase; creation identity/date remain stable after
+handoff, and meaningless numeric suffixes are forbidden. `main`, `master`,
+`dependabot/**`, and tags are exempt; `codex/**` and `deepseek/**` are not.
+Use `bash scripts/work-identity.sh validate` or `new`; creator resolution is
+explicit `--creator`, local `origo.githubUser`, then authenticated `gh api user`.
+
 ## Directory Structure Conventions
 
 ```

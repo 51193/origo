@@ -83,6 +83,7 @@ if command -v python3 >/dev/null 2>&1; then
     else
         echo "WARNING: PyYAML is not installed; skipping release-workflow guard."
     fi
+    PYTHONDONTWRITEBYTECODE=1 python3 scripts/work_identity_test.py
     python3 scripts/validate-agent-docs.py
     python3 scripts/test-validate-release-packages.py
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
