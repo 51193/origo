@@ -19,7 +19,7 @@ runtime implementation or concrete adapter.
 | [Lifecycle](Lifecycle/README.en.md) | Session lifecycle contracts | `ISessionManager` + `ISessionRun` |
 | [Logging](Logging/README.en.md) | Engine-agnostic logging interfaces | `ILogger` + `ILogger<TCategory>` + `LogLevel` |
 | [Node](Node/README.en.md) | Engine node abstraction | `INodeFactory` + `INodeHandle` |
-| [Runtime](Runtime/README.en.md) | Frame-driver contract | `IOrigoFrameDriver` |
+| [Runtime](Runtime/README.en.md) | Runtime host and frame-driver contracts | `IOrigoFrameDriver` + `IOrigoRuntime` + `ISndWorldAccess` |
 | [Scene](Scene/README.en.md) | Read-only scene-access contract | `ISndSceneReadAccess` |
 | [Snd](Snd/README.en.md) | SND companion contracts | Nine `ISnd*` role interfaces |
 | [StateMachine](StateMachine/README.en.md) | State-machine contracts | `IStateMachine` + `IStateMachineContainer` + `IStateMachineContext` |

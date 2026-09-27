@@ -252,7 +252,7 @@ owner and a next `0.y.0` removal condition in the contract baseline.
 
 ## Current implementation status
 
-The Core contracts/kernel/shell split is implemented on the feature branch:
+The Core contracts/kernel/shell split is implemented in the repository:
 `Origo.Core.Contracts` carries the stable consumer surface and shared pure
 helpers, `Origo.Core.Kernel` carries runtime/SND/save/data-source/console
 implementations plus the internal `HostKernelPort`, and `Origo.Core` is the

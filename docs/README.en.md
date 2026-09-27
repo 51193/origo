@@ -64,7 +64,7 @@ Each module directory's English entry contains:
 | **Origo.ConsoleBridge** | [README](Origo.ConsoleBridge/README.en.md) | TCP remote console bridge (port 9876) |
 | **Usage Docs** | [README](usage/README.en.md) | Usage guide from quick start to deep reference |
 | **Tests: Core** | [README](Origo.Core.Tests/README.en.md) | Behavioral test documentation for Core layer's 32 capabilities |
-| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer 7 capability documents + 22 integration test classes (96 tests) |
+| **Tests: GodotAdapter** | [README](Origo.GodotAdapter.Tests/README.en.md) | Adapter layer unit-test capability documents and engine-independent behavior |
 | **Tests: ConsoleBridge** | [README](Origo.ConsoleBridge.Tests/README.en.md) | TCP bridge server behavioral test documentation |
 | **Tests: SourceGeneration** | [README](Origo.SourceGeneration.Tests/README.en.md) | TypedData source generator driver behavioral test documentation |
 | **Tests: Godot integration** | [README](Origo.GodotAdapter.Integration.Tests/README.en.md) | Godot headless integration test documentation |
@@ -74,7 +74,7 @@ Each module directory's English entry contains:
 | **Architecture** | [README](architecture/README.en.md) | Architecture overview, decision records, and deferred design directions |
 | **Agent skills configuration** | [README](agents/README.en.md) | GitHub and local issue management, triage labels, and domain-documentation routing |
 | **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory loop (source → tests → Changelog → docs → commit → post-commit CI → commit lint), core principles, and document master index |
-| **Performance Baselines** | [benchmarks/baseline.md](benchmarks/baseline.en.md) | TypedData inline storage + framework subsystem performance baseline and design trade-offs |
+| **Performance Baselines** | [README](benchmarks/README.en.md) | TypedData inline storage + framework subsystem performance baseline and design trade-offs |
 
 ## Origo.Core Subsystems
 
