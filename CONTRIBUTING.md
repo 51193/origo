@@ -20,12 +20,12 @@ Every change must follow this cycle (see the Development Loop section in `AGENTS
 
 1. Develop the source change.
 2. Extend or adapt tests (red-first, real-path regression for bug fixes — see `docs/Origo.Core.Tests/META-TEST.en.md`).
-3. Iterate with `bash scripts/test.sh`; fix and retest until green.
+3. Iterate with `bash scripts/check.sh quick` or `bash scripts/check.sh affected`; before commit run `bash scripts/test.sh` and fix until green.
 4. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing.
 5. Update the English documentation when behavior, interfaces, or design intent changes.
 6. Commit source, tests, Changelog, and documentation together.
 7. After the commit, run `bash scripts/ci.sh` (lint-scripts + format + build/test + coverage gates + benchmarks + Godot integration); amend and rerun if it fails.
-8. After the commit, run `bash scripts/lint-commits.sh`.
+8. After the commit, run `bash scripts/lint-commits.sh`; the local pre-push hook repeats it and remote CI does not enforce commit lint.
 
 ## Dependency updates
 
