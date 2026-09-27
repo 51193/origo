@@ -20,10 +20,10 @@ Before reading or modifying source, read in full:
    root README (live status/index) and every numbered chapter relevant to the
    task. Full protocol: `docs/META.zh.md` / `.en.md` §Local Agent Work Buffer.
 
-`docs/` mirrors source in `.zh.md`/`.en.md` pairs. Some directories contain
-non-README language pairs; navigation-only directories contain only the
-generated `README.md` hub. Never edit generated hubs or `docs/.sync-status.json`.
-Read docs first, then follow the chain into source; README rationale is required context.
+`docs/` mirrors source in `.zh.md`/`.en.md` pairs. Navigation-only directories
+contain generated `README.md` hubs. Never edit generated hubs or
+`docs/.sync-status.json`.
+Read docs first, then source; README rationale is required context.
 
 ## 1. Core Principles
 
@@ -77,7 +77,7 @@ in `docs/META.zh.md` / `.en.md` §Bilingual Documentation Mechanism.
 - Never edit `docsync-revision`, generated `README.md` hubs, or `docs/.sync-status.json`.
 - After any docs content change run `dotnet run --project tools/DocSyncTool -- generate`, then commit all rewritten docs, hubs, and `.sync-status.json`.
 - Links inside the docs mirror stay in the same language; cross-language and bare `.md` links inside the mirror are forbidden. Links to root files outside the mirror (e.g. `../AGENTS.md`) are allowed.
-- CI runs `generate` + `validate`; local `scripts/doc-sync.sh` mirrors it. Validate checks pairs/revisions, same-language links, target/anchor/reference existence, and source-mirror file lists (§5).
+- Local `scripts/doc-sync.sh` runs `generate` + `validate`; GitHub CI does not run DocSync. Validate checks pairs/revisions, same-language links, target/anchor/reference existence, and source-mirror file lists (§5).
 
 ### 1.7 Source Code Comments — English Only, IntelliSense-Ready
 
@@ -102,7 +102,8 @@ in `docs/META.zh.md` / `.en.md` §Bilingual Documentation Mechanism.
 ### 1.10 Environment Bootstrap — Install the Required SDK, Never Downgrade the Request
 
 - `global.json` is authoritative; never downgrade or edit it to match an already-installed SDK.
-- Run `bash scripts/install-dotnet.sh` to install the exact SDK (default `$HOME/.dotnet`, repository-local `.dotnet/` fallback). Scripts source `scripts/dotnet-env.sh`; use `./dotnet` only in local mode. Do not substitute per-session `PATH`/`DOTNET_ROOT`/`NUGET_PACKAGES` exports.
+- Run `bash scripts/install-dotnet.sh` to install the exact SDK (default `$HOME/.dotnet`, repository-local `.dotnet/` fallback). Scripts source `scripts/dotnet-env.sh`; use `./dotnet` in local mode; never substitute per-session env exports.
+- Branches use `<type>/<creator>/<MMDD>/<purpose>`; validate with `scripts/work-identity.sh`.
 - Godot binaries are separate: `scripts/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`. Full rules: `docs/META.zh.md` / `.en.md` §Environment Bootstrap.
 
 ### 1.11 Local Agent Work Buffer — `_origo_local/` (Untracked, Producer/Consumer)
@@ -121,23 +122,22 @@ chapters belong to one work item. Full tracked protocol:
 
 ## 2. Development Loop (Mandatory Order)
 
-> Every change closes these steps in order; do not rearrange or skip.
+> Every change closes these steps in order.
 
 1. **Develop source** — satisfy §0/§1; read target history and collaborators first (§1.8/§1.3).
 2. **Extend/adapt tests** — behavior tests for new public API; red-first real-path regression for bug fixes (§3); sync behavior-change tests.
-3. **Iterate with tests** — run `bash scripts/test.sh` (restore → build → test + coverage); fix and re-test until green.
+3. **Iterate with tests** — use `bash scripts/check.sh quick` or `bash scripts/check.sh affected`; before commit run `bash scripts/test.sh` (full coverage).
 4. **Changelog alignment** — update `CHANGELOG.md` `[Unreleased]` per §4.
 5. **Docs sync** — update `docs/` per §5; after any content change run `dotnet run --project tools/DocSyncTool -- generate`.
 6. **Commit** — source, tests, Changelog, docs content, generated hubs, and `.sync-status.json` together.
 7. **Post-commit full CI** — run `bash scripts/ci.sh` (lint-scripts → format → doc-sync → test → benchmark → Godot; verifies generated docs are committed). Fix/amend, then rerun.
 8. **Commit lint** — run `bash scripts/lint-commits.sh`; pre-push repeats it.
 
-State any inapplicable step in the commit message. **Partial
-completion is forbidden.** If closing an `_origo_local` book, apply §1.11
-after steps 1–8.
+**Partial completion is forbidden.** If closing an `_origo_local` book, apply
+§1.11 after steps 1–8.
 
 - `lint-commits.sh` prefers `origin/main`; when unavailable it falls back to `HEAD~1` and reports it. Explicit ranges: `bash scripts/lint-commits.sh <base> <head>`.
-- Enable hooks with `git config core.hooksPath .githooks`; they block invalid pushes. CI adds the OS matrix, not commit lint.
+- Enable hooks with `git config core.hooksPath .githooks`; CI adds the OS matrix.
 
 ## 3. Test Requirements
 

@@ -24,7 +24,7 @@ dotnet run --project tools/DocSyncTool -- validate
 echo "::endgroup::"
 
 echo ""
-echo "Local run: the committed-files check runs in CI (ci.yml), which"
-echo "auto-commits generated files on push and fails PRs with stale docs."
+echo "Local run: generated navigation and status files must be committed"
+echo "before pushing. GitHub CI does not run DocSync."
 echo "Run 'git status' to confirm the generated files are committed."
 echo "DocSync: OK"

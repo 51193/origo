@@ -1,11 +1,11 @@
 <!-- docsync-pair: architecture/agent-friendly/affected-checks -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Affected checks: shorten feedback without weakening the quality contract
 
 > [↑ Back to the Agent Friendly investigation](README.en.md)
 
-Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This report separates observations, inferences, and proposals. The `check.sh` commands, planner, and JSON contract below are not implemented and do not change the complete workflow in [AGENTS.md](../../../AGENTS.md).
+Investigation date: 2026-09-18; implementation checked: 2026-09-27. This report separates observations, implementation contracts, and remaining risks. `scripts/check.sh`, its planner, and the JSON evidence are implemented without weakening the complete workflow in [AGENTS.md](../../../AGENTS.md).
 
 ## 1. Current behavior and concrete costs
 
@@ -25,14 +25,17 @@ Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This
 
 Projects enable `CollectCoverage` by default. A filtered `quick` run must **explicitly disable coverage collection for that local run** and report `coverage: not-measured`. It must not lower thresholds, present subset coverage as project coverage, or present quick success as CI success. `affected` runs complete non-Benchmark suites of selected projects, preserving their ≥90% line coverage gates and exclusions rather than merging unrelated subsets. Microsoft's VSTest documentation supports project selection and `--filter`; it also warns that zero matching tests can return success by default. Therefore zero executed tests must be an explicit failure gate. [dotnet test with VSTest](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test-vstest)
 
-Proposed usage:
+Actual usage:
 
 ```bash
-# Proposed commands; this script does not currently exist
-bash scripts/check.sh plan --base <commit> --worktree --json
-bash scripts/check.sh quick --plan .artifacts/check-plan.json --test <regression>
-bash scripts/check.sh affected --plan .artifacts/check-plan.json
-# The actual final entry point remains post-commit bash scripts/ci.sh
+# Read-only plan; by default the base is origin/main...HEAD's merge-base
+bash scripts/check.sh plan --base <commit> --output /tmp/check-plan.json
+# Real local path; project and filter are explicit
+bash scripts/check.sh quick --project Origo.Core.Tests/Origo.Core.Tests.csproj --filter 'FullyQualifiedName~Save'
+# Complete suites selected by impact contracts; stale/full plans stop
+bash scripts/check.sh affected --base <commit>
+# Final gate: complete ci.sh plus commit-message lint
+bash scripts/check.sh full
 ```
 
 ## 3. Selection: project graph plus explicit impact contracts
@@ -46,7 +49,7 @@ Unknown paths, unevaluable projects, missing contracts, empty test selections, g
 | Actual repository path example | Minimum conservative selection and rationale |
 |---|---|
 | `Origo.Core.Kernel/Save/Storage/SavePayloadReader.cs` | Complete Core.Tests suite; retain downstream tests from Core's reverse dependencies, including GodotAdapter; ConsoleBridge depends only on Contracts and is not a downstream Core/Kernel consumer. Real Godot restoration requires integration coverage. Initially selecting all Core consumers is acceptable; narrow only after evidence |
-| `Origo.SourceGeneration/TypedDataGenerator.HomeGeneration.cs` | SG.Tests, compilation/tests for Core and Adapter consumers, and headless TypedData registration; generated API can change without a handwritten output diff |
+| `Origo.SourceGeneration/TypedDataGenerator.HomeGeneration.cs` | SourceGeneration.Tests, Core.Tests, Adapter.Tests, and headless TypedData registration; generated API can change without a handwritten output diff |
 | `Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs` | Adapter.Tests plus Godot headless; native calls in this file are excluded from pure .NET coverage and require real `_Ready`, subsequent frames, and failed-startup validation |
 | `Origo.TestSupport/FileSystem/TestMemoryFileSystem.cs` | Every TestSupport-referencing suite selected from the graph, rather than only filesystem tests |
 | `tools/DocSyncTool/Validator.cs` | DocSyncTool.Tests and repository DocSync generate/validate; commit and full checks remain required |
@@ -56,7 +59,7 @@ A conservative, broad project set is a reasonable initial cost. Consider module-
 
 ## 4. Reviewable machine output
 
-This excerpt illustrates a proposed planner contract, not an actual execution result:
+This excerpt illustrates the actual planner contract; each run also records the current fingerprint:
 
 ```json
 {
@@ -65,20 +68,29 @@ This excerpt illustrates a proposed planner contract, not an actual execution re
   "worktreeFingerprint": "<content-hash>",
   "configuration": "Release",
   "changedPaths": ["Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs"],
-  "selectedProjects": ["Origo.GodotAdapter.Tests"],
-  "additionalGates": ["godot-headless", "doc-sync"],
+  "selectedProjects": ["Origo.GodotAdapter.Tests/Origo.GodotAdapter.Tests.csproj"],
+  "additionalGates": ["godot"],
   "reasons": [
-    {"gate": "godot-headless", "rule": "engine-bound-bootstrap"}
+    "Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs changes the Godot contract"
   ],
-  "coverage": "project-suite-with-existing-thresholds",
+  "coverage": "existing-project-gates",
   "requiresFull": false,
   "finalGateRequired": true
 }
 ```
 
-The complete contract also needs SDK/Godot versions, TFM, graph and contract hashes, command argument arrays, execution/pass counts, exit codes, durations, and artifact paths. stdout carries JSON; stderr carries diagnostics. Failures identify the path, rule, and next action. `requiresFull: false` means the affected plan can execute; `finalGateRequired: true` makes the eventual full gate unconditional. The shell must not execute arbitrary command text from natural language or unvalidated JSON.
+stdout carries JSON; stderr carries diagnostics. Failures identify the path, rule, and next action. `requiresFull: false` means the affected plan can execute; `finalGateRequired: true` makes the eventual full gate unconditional. The shell never executes arbitrary command text from natural language or unvalidated JSON.
 
-## 5. How to detect omitted checks
+## 5. Evidence and how to detect omitted checks
+
+The planner's fixed samples are executable in `scripts/check_test.py`: mirrored
+C# additions/deletions, generator changes and their Core/Adapter consumers,
+Godot adapter changes, stale fingerprints, Benchmark exclusion, and empty-plan
+full-gate rejection. Test execution reports both `executed-tests` and
+`elapsed-seconds` on stderr; JSON remains on stdout, so a caller can record
+scope, reasons, counts, and timings without parsing human diagnostics. The
+repository's final evidence remains `bash scripts/check.sh full`, which runs
+the unchanged CI pipeline and commit lint.
 
 Build historical samples with genuine regressions involving persistence, deferred queues, observer restoration, generated Kind registration, Godot startup, TestSupport, and global build configuration. Fix each baseline and patch, run affected and full, and compare **failure sets**, not merely zero exit codes. Deliberately break upstream interfaces, remove generator output, modify `.tscn` files, and change shared properties to establish that relevant downstream checks are selected. Cover renames/deletions, untracked files, zero matching tests, and stale plans too.
 
@@ -88,4 +100,4 @@ This facility primarily helps Origo maintainers. Game developers also need local
 
 ## 6. Recommended order and limits
 
-Start with a read-only `plan` and explanations, then project-level affected execution, and only then module-level filtering. Before implementation, synchronize AGENTS/META iteration rules to authorize quick/affected while preserving final full checks. This investigation does not replace the currently mandatory `test.sh`. Human documentation continues to describe cross-module designs and test behavior; the planner routes execution evidence. See [Machine API inventory](api-inventory.en.md) for API and generator facts.
+The implementation provides read-only `plan`, project-level `affected`, and explicit-filter `quick` feedback; `full` still calls the existing `ci.sh` and commit-message lint. Human documentation continues to describe cross-module designs and test behavior; the planner routes execution evidence. See [Machine API inventory](api-inventory.en.md) for API and generator facts.
