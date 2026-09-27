@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Godot package consumer smoke on macOS** — cached `.app` binaries are discovered below the bundle root, the headless test preserves the caller's NuGet cache when redirecting `HOME`, and temporary consumer projects are restored and built from their own directory so generated C# script paths remain valid `res://` paths.
+
 ## [0.1.0] - 2026-09-26
 
 ### Added

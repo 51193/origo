@@ -12,6 +12,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# Keep the caller's NuGet package cache when HOME is redirected for Godot.
+HOST_NUGET_PACKAGES="${NUGET_PACKAGES:-${HOME:-}/.nuget/packages}"
+
 # Godot writes logs/caches under the XDG user directories. In containers and
 # restricted sandboxes those directories are often read-only; redirect them to
 # a repository-local (git-ignored) home before any dotnet or Godot process runs.
@@ -24,6 +27,10 @@ if [[ ! -w "$GODOT_DATA_DIR" || ! -w "$GODOT_CONFIG_DIR" || ! -w "$GODOT_CACHE_D
     export XDG_DATA_HOME="$ROOT/.godot-home/.local/share"
     export XDG_CONFIG_HOME="$ROOT/.godot-home/.config"
     export XDG_CACHE_HOME="$ROOT/.godot-home/.cache"
+fi
+
+if [[ -z "${NUGET_PACKAGES:-}" && -d "$HOST_NUGET_PACKAGES" ]]; then
+    export NUGET_PACKAGES="$HOST_NUGET_PACKAGES"
 fi
 
 source "$ROOT/scripts/dotnet-env.sh"
@@ -113,8 +120,8 @@ ISOLATED_PACKAGES=$(canonicalize_directory "$ISOLATED_PACKAGES") \
     || FAIL "could not resolve the isolated NuGet package cache path."
 export NUGET_PACKAGES="$ISOLATED_PACKAGES"
 
-dotnet restore "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
-    -p:OrigoShellPackageVersion="$VERSION" >/dev/null
+(cd "$CONSUMER_DIR" && dotnet restore OrigoShellPackageConsumer.csproj \
+    -p:OrigoShellPackageVersion="$VERSION" >/dev/null)
 
 ASSETS=$(find_first_file "$CONSUMER_DIR" -path "*/obj/project.assets.json")
 [[ -n "$ASSETS" ]] || FAIL "package restore did not produce project.assets.json."
@@ -124,15 +131,15 @@ for package in Origo.Core Origo.GodotAdapter Origo.Core.Contracts Origo.Core.Ker
     grep -q "\"$package/" "$ASSETS" || FAIL "package restore did not resolve $package."
 done
 
-dotnet build "$CONSUMER_DIR/OrigoShellPackageConsumer.csproj" \
+(cd "$CONSUMER_DIR" && dotnet build OrigoShellPackageConsumer.csproj \
     --no-restore -warnaserror \
-    -p:OrigoShellPackageVersion="$VERSION" >/dev/null
+    -p:OrigoShellPackageVersion="$VERSION" >/dev/null)
 
 [[ -n "$(find_first_file "$CONSUMER_DIR/.godot" -type f -name "Origo.Core.Kernel.dll")" ]] \
     || FAIL "kernel runtime assembly was not provided by package restore."
 
-dotnet restore "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
-    -p:OrigoShellPackageVersion="$VERSION" >/dev/null
+(cd "$CONSOLE_CONSUMER_DIR" && dotnet restore OrigoConsoleBridgePackageConsumer.csproj \
+    -p:OrigoShellPackageVersion="$VERSION" >/dev/null)
 
 CONSOLE_ASSETS=$(find_first_file "$CONSOLE_CONSUMER_DIR" -path "*/obj/project.assets.json")
 [[ -n "$CONSOLE_ASSETS" ]] || FAIL "ConsoleBridge consumer restore did not produce project.assets.json."
@@ -149,15 +156,15 @@ if grep -Fq '"Origo.Core.Kernel/' "$CONSOLE_ASSETS"; then
     FAIL "ConsoleBridge consumer unexpectedly resolved Origo.Core.Kernel."
 fi
 
-dotnet build "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
+(cd "$CONSOLE_CONSUMER_DIR" && dotnet build OrigoConsoleBridgePackageConsumer.csproj \
     --no-restore --configuration Release -warnaserror \
-    -p:OrigoShellPackageVersion="$VERSION" >/dev/null
+    -p:OrigoShellPackageVersion="$VERSION" >/dev/null)
 if [[ -n "$(find_first_file "$CONSOLE_CONSUMER_DIR" -type f \( -name "Origo.Core.dll" -o -name "Origo.Core.Kernel.dll" \))" ]]; then
     FAIL "ConsoleBridge consumer build unexpectedly received Core shell or Kernel runtime assemblies."
 fi
 set +e
-CONSOLE_STARTUP_OUTPUT=$(dotnet run \
-    --project "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
+CONSOLE_STARTUP_OUTPUT=$(cd "$CONSOLE_CONSUMER_DIR" && dotnet run \
+    --project OrigoConsoleBridgePackageConsumer.csproj \
     --configuration Release --no-build --no-restore 2>&1)
 CONSOLE_EXIT=$?
 set -e
@@ -173,7 +180,7 @@ echo "$CONSOLE_STARTUP_OUTPUT" | grep "CONSOLE_BRIDGE_PACKAGE_CONSUMER_OK"
 
 cp "$CONSOLE_CONSUMER_DIR/KernelLeakProbe.cs.template" "$CONSOLE_CONSUMER_DIR/KernelLeakProbe.cs"
 set +e
-CONSOLE_PROBE_OUTPUT=$(dotnet build "$CONSOLE_CONSUMER_DIR/OrigoConsoleBridgePackageConsumer.csproj" \
+CONSOLE_PROBE_OUTPUT=$(cd "$CONSOLE_CONSUMER_DIR" && dotnet build OrigoConsoleBridgePackageConsumer.csproj \
     --no-restore --configuration Release -warnaserror \
     -p:OrigoShellPackageVersion="$VERSION" 2>&1)
 CONSOLE_PROBE_EXIT=$?
@@ -188,7 +195,7 @@ fi
 
 cp "$PROBE_DIR/KernelLeakProbe.cs.template" "$PROBE_DIR/KernelLeakProbe.cs"
 set +e
-PROBE_OUTPUT=$(dotnet build "$PROBE_DIR/OrigoShellPackageConsumer.csproj" \
+PROBE_OUTPUT=$(cd "$PROBE_DIR" && dotnet build OrigoShellPackageConsumer.csproj \
     -warnaserror \
     -p:OrigoShellPackageVersion="$VERSION" 2>&1)
 PROBE_EXIT=$?
