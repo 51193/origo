@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Runtime/Console/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console
 
 > [↑ Back to Runtime](../README.en.md) · [↔ Tooling contracts: Origo.Core.Contracts/Runtime/Console](../../../Origo.Core.Contracts/Runtime/Console/README.en.md)

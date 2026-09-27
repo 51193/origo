@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/StrategyTestScenario -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy Test Framework Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

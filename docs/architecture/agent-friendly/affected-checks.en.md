@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/agent-friendly/affected-checks -->
-<!-- docsync-revision: 3 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Affected checks: shorten feedback without weakening the quality contract
 
 > [↑ Back to the Agent Friendly investigation](README.en.md)
@@ -9,7 +6,7 @@ Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This
 
 ## 1. Current behavior and concrete costs
 
-**Observation:** [test.sh](../../../scripts/test.sh) restores and builds all of `Origo.sln` in Release, then executes non-Benchmark tests. [ci.sh](../../../scripts/ci.sh) runs script lint, formatting, DocSync, tests, benchmarks, and Godot integration in order. It checks that `docs/` is committed after DocSync, making it a post-commit gate. Individual scripts already provide partial entry points during development; the missing facility is a consistent planner answering which projects and supporting facilities a change must check.
+**Observation:** [test.sh](../../../scripts/test.sh) restores and builds all of `Origo.sln` in Release, then executes non-Benchmark tests. [ci.sh](../../../scripts/ci.sh) runs script lint, formatting, tests, benchmarks, and Godot integration in order. Individual scripts already provide partial entry points during development; the missing facility is a consistent planner answering which projects and supporting facilities a change must check.
 
 `-m:1` has a documented purpose: parallel test processes on Windows can trigger an xUnit v3 assembly-info child-process exit race. **Removing serialization is not an appropriate Agent Friendly optimization.** Reduce unrelated projects first while preserving the safe execution policy. Core and Adapter also have different coverage exclusions. Godot native calls are tested by a separate headless runner, so passing xUnit does not establish passing engine behavior. See [Core tests](../../Origo.Core.Tests/README.en.md) and [Godot integration tests](../../Origo.GodotAdapter.Integration.Tests/README.en.md).
 
@@ -20,7 +17,7 @@ Investigation date: 2026-09-18; repository observation baseline: `cdba5e4`. This
 | Proposed mode | Contents | What a successful result establishes |
 |---|---|---|
 | `quick` | Required formatting, target-project compilation, and a specified real-path regression; verify actual test execution count | Local feedback on the current hypothesis, without project coverage or complete-chain proof |
-| `affected` | Complete non-Benchmark suites for affected projects with their existing coverage gates, plus relevant DocSync, generator, or Godot checks | The scope selected by explicit dependency contracts passes; selection can still miss impacts |
+| `affected` | Complete non-Benchmark suites for affected projects with their existing coverage gates, plus relevant generator or Godot checks | The scope selected by explicit dependency contracts passes; selection can still miss impacts |
 | `full` | Current post-commit `ci.sh`, followed by commit-message lint; the CI OS matrix retains its role | The repository's required final completion gates pass |
 
 Projects enable `CollectCoverage` by default. A filtered `quick` run must **explicitly disable coverage collection for that local run** and report `coverage: not-measured`. It must not lower thresholds, present subset coverage as project coverage, or present quick success as CI success. `affected` runs complete non-Benchmark suites of selected projects, preserving their ≥90% line coverage gates and exclusions rather than merging unrelated subsets. Microsoft's VSTest documentation supports project selection and `--filter`; it also warns that zero matching tests can return success by default. Therefore zero executed tests must be an explicit failure gate. [dotnet test with VSTest](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test-vstest)
@@ -39,7 +36,7 @@ bash scripts/check.sh affected --plan .artifacts/check-plan.json
 
 First collect the Git baseline-to-HEAD diff, staged and unstaged changes, and untracked files, including renames and deletions. Record a baseline and working-tree fingerprint; changed fingerprints require replanning before execution. Second calculate reverse dependency closure from the **MSBuild-evaluated project graph**, preserving generator edges such as `OutputItemType="Analyzer"` and `ReferenceOutputAssembly="false"`, rather than inspecting only ordinary DLL references. MSBuild's static graph establishes project build dependencies, but does not describe every runtime reflection, resource-path, or behavioral-test impact. [MSBuild static graph](https://github.com/dotnet/msbuild/blob/main/documentation/specs/static-graph.md)
 
-Third add version-controlled impact contracts. Shared changes to `Directory.Build.props`, `Directory.Packages.props`, `global.json`, the solution, `.editorconfig`, or primary CI scripts require full checks. DocSync configuration or implementation affects tool tests and documentation validation. Godot scenes, resources, `project.godot`, and engine bridges affect headless tests. Shared TestSupport changes affect every referencing test project. Generator changes affect generator tests, Core, GodotAdapter, and their consumers. Adding, deleting, or renaming `.cs` files triggers mirror file-list checks, including internal implementation files.
+Third add version-controlled impact contracts. Shared changes to `Directory.Build.props`, `Directory.Packages.props`, `global.json`, the solution, `.editorconfig`, or primary CI scripts require full checks. Documentation changes require link and content review. Godot scenes, resources, `project.godot`, and engine bridges affect headless tests. Shared TestSupport changes affect every referencing test project. Generator changes affect generator tests, Core, GodotAdapter, and their consumers.
 
 Unknown paths, unevaluable projects, missing contracts, empty test selections, generator diagnostics, and configuration mismatches must fail with an explanation. The planner may report `requiresFull: true`, followed by an explicit full invocation from the user or prescribed command. It must not silently select no checks after a parsing failure. A directory named `Save` is insufficient evidence for a test boundary; manual contracts require historical-change replay.
 
@@ -49,8 +46,7 @@ Unknown paths, unevaluable projects, missing contracts, empty test selections, g
 | `Origo.SourceGeneration/TypedDataGenerator.HomeGeneration.cs` | SG.Tests, compilation/tests for Core and Adapter consumers, and headless TypedData registration; generated API can change without a handwritten output diff |
 | `Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs` | Adapter.Tests plus Godot headless; native calls in this file are excluded from pure .NET coverage and require real `_Ready`, subsequent frames, and failed-startup validation |
 | `Origo.TestSupport/FileSystem/TestMemoryFileSystem.cs` | Every TestSupport-referencing suite selected from the graph, rather than only filesystem tests |
-| `tools/DocSyncTool/Validator.cs` | DocSyncTool.Tests and repository DocSync generate/validate; commit and full checks remain required |
-| Only `docs/usage/agent-reference.*.md` | DocSync generate/validate; add compilable-example checks if implemented, because valid links do not establish correct code |
+| English module documentation | Link and content review; add compilable-example checks if implemented, because valid links do not establish correct code |
 
 A conservative, broad project set is a reasonable initial cost. Consider module-level suite labels only when project size warrants it. Avoid manually maintaining hundreds of test names as a second dependency system.
 
@@ -66,7 +62,7 @@ This excerpt illustrates a proposed planner contract, not an actual execution re
   "configuration": "Release",
   "changedPaths": ["Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs"],
   "selectedProjects": ["Origo.GodotAdapter.Tests"],
-  "additionalGates": ["godot-headless", "doc-sync"],
+  "additionalGates": ["godot-headless"],
   "reasons": [
     {"gate": "godot-headless", "rule": "engine-bound-bootstrap"}
   ],

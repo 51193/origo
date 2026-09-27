@@ -47,7 +47,7 @@ assignees: ""
 ## Acceptance criteria
 
 - [ ] Behavior or API result is observable and tested through a real path.
-- [ ] Bilingual documentation and DocSync are updated, or the exemption is stated.
+- [ ] English documentation is updated, or the exemption is stated.
 - [ ] `CHANGELOG.md` is updated when the change is user-visible.
 - [ ] `scripts/test.sh`, post-commit `scripts/ci.sh`, and
       `scripts/lint-commits.sh` pass when the task is implemented.

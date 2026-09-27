@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Console -->
-<!-- docsync-revision: 26 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console System Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/strategy-lifecycle -->
-<!-- docsync-revision: 17 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy Lifecycle
 
 > [↑ Back to usage](README.en.md)

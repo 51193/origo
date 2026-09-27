@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/strategy-testing -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy Testing
 
 > [↑ Back to usage](README.en.md)

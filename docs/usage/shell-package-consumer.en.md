@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/shell-package-consumer -->
-<!-- docsync-revision: 7 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell-Only Package Consumption Verification
 
 > [↑ Back to usage](README.en.md) · [↔ GodotAdapter Bootstrap](../Origo.GodotAdapter/Bootstrap/README.en.md) · [↔ shell/kernel boundary](../architecture/shell-kernel-boundary.en.md)

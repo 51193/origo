@@ -67,7 +67,7 @@ rules = [line for line in unshipped.splitlines() if line.strip().startswith("| O
 if rules:
     failures.append("AnalyzerReleases.Unshipped.md still contains unshipped rules")
 
-for path in ("docs/README.zh.md", "docs/README.en.md"):
+for path in ("docs/README.en.md",):
     text = open(path, encoding="utf-8").read()
     if version not in text:
         failures.append(f"{path} does not mention version {version}")

@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/StateMachine/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # StateMachine (Contracts)
 
 > [↑ Back to Origo.Core.Contracts](../README.en.md)

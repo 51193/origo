@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/DataSource/Codec/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Codec
 
 > [↑ Back to DataSource](../README.en.md)

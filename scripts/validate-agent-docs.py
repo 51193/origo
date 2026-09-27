@@ -5,8 +5,8 @@ Checks the root AGENTS.md, which is injected every session, for:
 - size budget (keeps the every-turn context short);
 - mandatory section anchors and hard-gate commands;
 - existence of every local Markdown link target;
-- known forbidden patterns (for example the historical wrong docsync-pair example);
-- the tracked docs/META authority sections and their anti-drift rules.
+- known forbidden patterns;
+- the tracked English docs/META authority sections and their anti-drift rules.
 
 Run from scripts/lint-scripts.sh so CI fails when the guard rails drift.
 """
@@ -27,56 +27,34 @@ REQUIRED_SNIPPETS = (
     "bash scripts/test.sh",
     "bash scripts/ci.sh",
     "bash scripts/lint-commits.sh",
-    "DocSyncTool -- generate",
     "BREAKING:",
     "_origo_local/",
-    "mirror README file list",
-    "mirrored source directory",
+    "English documentation",
     "§Local Agent Work Buffer",
     "single-book mode",
     "root README",
     "numbered chapter",
-    "docs/release-process.zh.md",
+    "docs/release-process.en.md",
 )
 FORBIDDEN_PATTERNS = (
-    re.compile(r"docsync-pair:\s*docs/"),
     re.compile(r"Before committing.{0,80}scripts/ci\.sh"),
     re.compile(r"relevant `inbox` / `in-progress` / `blocked` item"),
 )
-META_FILES = (
-    ("en", ROOT / "docs/META.en.md"),
-    ("zh", ROOT / "docs/META.zh.md"),
-)
+META_FILES = (("en", ROOT / "docs/META.en.md"),)
 META_REQUIRED_SNIPPETS = {
     "en": (
         "Environment Bootstrap",
         "Local Agent Work Buffer",
         "single-book work buffer",
-        "Navigation-only directories",
-        "<name>.zh.md",
+        "English documentation",
         "Test capability/method",
         "related tests",
         "relevant git history",
         "unverified",
     ),
-    "zh": (
-        "环境引导",
-        "本地 Agent 工作缓冲",
-        "单册工作缓冲",
-        "纯导航目录",
-        "<name>.zh.md",
-        "测试能力/方法",
-        "相关测试",
-        "相关 git 历史",
-        "未验证",
-    ),
 }
 META_FORBIDDEN_PATTERNS = (
     re.compile(r"AGENTS\.md\s*§"),
-    re.compile(r"Every directory contains"),
-    re.compile(r"Content directories contain the language pair below"),
-    re.compile(r"每个目录下[：:]"),
-    re.compile(r"内容目录包含下面的语言对"),
 )
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
 EXTERNAL_PREFIXES = ("http://", "https://", "mailto:")
@@ -88,7 +66,7 @@ def fail(message: str) -> None:
 
 def main() -> int:
     if not AGENTS.is_file():
-        fail("AGENTS.md is missing; it is the repository marker for DocSyncTool and the agent entry point.")
+        fail("AGENTS.md is missing; it is the repository marker and agent entry point.")
         return 1
 
     text = AGENTS.read_text(encoding="utf-8")
@@ -115,7 +93,7 @@ def main() -> int:
 
     for language, meta_path in META_FILES:
         if not meta_path.is_file():
-            errors.append(f"{meta_path.relative_to(ROOT)} is missing; META is the tracked authority for environment, DocSync, and buffer rules.")
+            errors.append(f"{meta_path.relative_to(ROOT)} is missing; META is the tracked authority for environment and buffer rules.")
             continue
 
         meta_text = meta_path.read_text(encoding="utf-8")

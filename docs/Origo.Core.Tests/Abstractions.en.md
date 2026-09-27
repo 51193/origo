@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Abstractions -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Double Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

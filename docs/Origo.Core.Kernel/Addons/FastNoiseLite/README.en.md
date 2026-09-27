@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Addons/FastNoiseLite/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # FastNoiseLite
 
 > [↑ Back to Addons](../README.en.md)

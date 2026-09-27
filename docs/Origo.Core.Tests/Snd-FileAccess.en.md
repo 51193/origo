@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Snd-FileAccess -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # File Access Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

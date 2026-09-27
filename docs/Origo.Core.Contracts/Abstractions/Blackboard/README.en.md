@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Blackboard/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Blackboard (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Blackboard](../../../Origo.Core.Contracts/Blackboard/README.en.md)

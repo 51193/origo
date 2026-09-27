@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 28 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd (Shell Helpers)
 
 > [↑ Back to Origo.Core](../README.en.md)

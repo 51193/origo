@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Snd/Scene/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scene
 
 > [↑ Back to Snd](../README.en.md)

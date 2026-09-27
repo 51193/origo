@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/agent-friendly/skills -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # On-Demand Skills: Triggers, Contracts, Script Boundaries, and Acceptance
 
 > [↑ Back to the research index](README.en.md)
@@ -20,7 +17,7 @@ Investigation date: 2026-09-18; baseline: `cdba5e4`. This report proposes candid
 | `origo-game-strategy` | “Implement health, damage, and death; test recovery” | Explain SND only; update engine release version only | Strategy/Data/template changes, contract chain, behavior and recovery evidence |
 | `origo-game-debug` | “Locate failed clicks or movement and verify runtime results” | Fix a docs link; static review only | Build/seed/environment identity, reproduction, before/after state, GUI applicability |
 | `origo-engine-regression` | A defined Core/Adapter bug needing real-path red-to-green | Speculative redesign of an unknown contract; read-only evaluation | Symptom, real path, original failing evidence, unchanged passing test, sibling paths |
-| `origo-docsync` | Change mirrored API/file/design or usage docs | Search only; internal implementation without structural/design changes | Bilingual authority updates, generate/validate results, generated-file list |
+| `documentation` | Change API/file/design or usage docs | Search only; internal implementation without structural/design changes | English authority updates and link checks |
 | `origo-release` | Explicit formal release preparation/execution | Every source task; general Changelog editing | Version/metadata alignment and existing complete release evidence |
 
 Descriptions should lead with task verbs and objects, adding exclusions that prevent likely confusion. “Use for all Origo work” attracts unrelated tasks; “use formal release whenever Save is mentioned” is too broad. Multiple skills can serve one task, but steps and gates must refer to a unique authority rather than conflicting completion definitions.
@@ -41,7 +38,7 @@ For `origo-game-debug`, inputs identify reproduction, build, seed/initial state,
 |---|---|
 | Determine whether evidence establishes a defect, design, or unknown; choose collaborators and real paths | Parse SDK, versions, paths, project dependencies, and test selection |
 | Choose a no-node harness, complete Core host, or GUI scenario | Build, execute tests, collect exit states and artifacts |
-| Interpret gameplay acceptance and failure meaning | DocSync generation/validation, formatting, commit lint |
+| Interpret gameplay acceptance and failure meaning | Documentation review, formatting, commit lint |
 | Expand reading according to failures | Collect frame/seed/save/build identities and validate command arguments |
 
 Skills call existing authoritative scripts rather than duplicating bootstrap, build, test, or generation logic. Stable execution needs explicit inputs, nonzero failure status, and machine-readable results; skills supply interpretation and decisions. A skill is neither a test harness nor a tool-permission grant.

@@ -10,6 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- **BREAKING: DocSyncTool and its synchronization contract** — removed the
+  obsolete documentation generator, validator, revision metadata, generated
+  navigation hubs, bilingual Chinese content, CI/release gates, and dedicated
+  tests. Documentation is now maintained as English Markdown alongside the
+  source tree.
+
 ## [0.1.0] - 2026-09-26
 
 ### Added

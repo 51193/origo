@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.SourceGeneration/README -->
-<!-- docsync-revision: 23 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.SourceGeneration
 
 > [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md)

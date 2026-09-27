@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Console/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Origo.Core.Kernel/Runtime/Console](../../../Origo.Core.Kernel/Runtime/Console/README.en.md)

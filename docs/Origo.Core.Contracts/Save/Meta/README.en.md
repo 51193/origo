@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Save/Meta/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Meta
 
 > [↑ Back to Save](../README.en.md)

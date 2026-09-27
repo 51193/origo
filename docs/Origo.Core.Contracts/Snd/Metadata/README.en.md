@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Snd/Metadata/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Metadata
 
 > [↑ Back to Snd](../README.en.md)

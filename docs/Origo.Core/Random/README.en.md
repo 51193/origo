@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core/Random/README -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Random
 
 > [↑ Back to Origo.Core](../README.en.md) · [↔ Addons: FastNoiseLite](../../Origo.Core.Kernel/Addons/FastNoiseLite/README.en.md)

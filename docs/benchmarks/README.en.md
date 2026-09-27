@@ -1,6 +1,3 @@
-<!-- docsync-pair: benchmarks/README -->
-<!-- docsync-revision: 3 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Performance Baselines
 
 > [↑ Back to Origo manual](../README.en.md)
@@ -13,8 +10,8 @@ Performance baseline data and design trade-off analysis for the Origo framework,
 
 | File | Description |
 |------|------|
-| `baseline.en.md` / `baseline.zh.md` | Performance baseline data and design trade-off analysis for Origo framework subsystems |
-| `README.md` | Performance benchmark document overview (this file) |
+| `baseline.en.md` | Performance baseline data and design trade-off analysis for Origo framework subsystems |
+| `README.en.md` | Performance benchmark document overview (this file) |
 
 ## Benchmark Test Files
 

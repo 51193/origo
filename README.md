@@ -1,7 +1,5 @@
 # Origo
 
-[简体中文](README.zh-CN.md)
-
 **Origo** is a lightweight, platform-agnostic C# game framework.  
 Write your game logic as strategies — Origo handles entity lifecycle, persistence, and runtime orchestration.  
 Engine integration is isolated behind an adapter layer (official Godot 4 adapter included).
@@ -151,11 +149,11 @@ public sealed class PlayerMoveStrategy : LifecycleStrategyBase
 
 ## Documentation
 
-Full documentation lives in this repository under **[`docs/`](docs/README.md)** — a bottom-up structural mirror of the source tree.
+Full documentation lives in this repository under **[`docs/`](docs/README.en.md)** — a bottom-up structural mirror of the source tree.
 
 Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 
-> Documentation is available in Chinese and English — browse [`docs/`](docs/README.md) in either language.
+> Documentation is maintained in English — browse [`docs/`](docs/README.en.md).
 
 | I want to... | Go to |
 |---|---|
@@ -172,7 +170,7 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 ## Development
 
 ```bash
-bash scripts/ci.sh        # Local full pipeline (lint-scripts + format + doc-sync + test + benchmarks + Godot)
+bash scripts/ci.sh        # Local full pipeline (lint-scripts + format + test + benchmarks + Godot)
 bash scripts/test.sh      # Build + test + coverage gates (dev iteration)
 bash scripts/format.sh    # Format check only
 ```

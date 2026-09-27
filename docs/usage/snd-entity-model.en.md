@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/snd-entity-model -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Entity Model
 
 > [↑ Back to usage](README.en.md)

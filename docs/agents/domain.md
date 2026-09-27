@@ -1,17 +1,17 @@
 # Domain Docs
 
-Origo is a single-context repository. Its bilingual manual is the
+Origo is a single-context repository. Its English manual is the
 domain documentation. `AGENTS.md` is the mandatory entry point and
 takes precedence over this skill configuration.
 
 ## Before exploring code or writing a ticket
 
-1. Read `AGENTS.md`, `docs/META.zh.md` or `.en.md`, and
-   `docs/release-process.zh.md` or `.en.md` as required there.
-2. Start at `docs/README.zh.md` or `.en.md` and follow the relevant
+1. Read `AGENTS.md`, `docs/META.en.md`, and `docs/release-process.en.md` as
+   required there.
+2. Start at `docs/README.en.md` and follow the relevant
    module README chain, including upstream, downstream, and related
    facilities.
-3. Read `docs/architecture/overview.zh.md` or `.en.md` for the system
+3. Read `docs/architecture/overview.en.md` for the system
    model, plus relevant decisions under `docs/architecture/`.
 4. Use `docs/usage/` for consumer behavior and the matching module
    and test documents for implementation and verification.
@@ -19,11 +19,11 @@ takes precedence over this skill configuration.
 ## Recording domain language and decisions
 
 Use terminology from the closest module and architecture documents.
-When a term is settled, update its relevant bilingual pair in `docs/`;
+When a term is settled, update its relevant English manual entry in `docs/`;
 put framework-wide model terms in the architecture overview. Record
-durable architectural decisions under `docs/architecture/` as
-`.zh.md`/`.en.md` pairs and link them from that directory's README pair.
-Apply the DocSync and full development loop in `AGENTS.md`.
+durable architectural decisions under `docs/architecture/` as English
+entries and link them from the relevant module entry. Apply the full
+development loop in `AGENTS.md`.
 
 Origo intentionally uses neither root `CONTEXT.md` nor `docs/adr/`:
 they would duplicate the current manual and architecture location.

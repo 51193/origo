@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Scheduling/README -->
-<!-- docsync-revision: 4 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scheduling
 
 > [↑ Back to Origo.Core.Kernel](../README.en.md) · [↔ Frame-driver contract: Origo.Core.Contracts/Abstractions/Runtime](../../Origo.Core.Contracts/Abstractions/Runtime/README.en.md)

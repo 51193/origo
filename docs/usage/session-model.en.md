@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/session-model -->
-<!-- docsync-revision: 10 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Session Model
 
 > [↑ Back to usage](README.en.md)

@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.TestSupport/Architecture/README -->
-<!-- docsync-revision: 13 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture
 
 > [↑ Back to Origo.TestSupport](../README.en.md)
@@ -14,7 +11,7 @@ Architecture guardrail helpers for the test suites.
 | File | Responsibility |
 |------|----------------|
 | `PrivateFieldNamingConvention.cs` | Reflectively verifies production private fields follow `_camelCase` naming |
-| `ShellApiClassificationInventory.cs` | Parses the bilingual shell API classification table and verifies every exported assembly type is classified |
+| `ShellApiClassificationInventory.cs` | Parses the English shell API classification table and verifies every exported assembly type is classified |
 | `Metadata/TypedDataTestSupport.cs` | Internal test reset helper: clears the TypedData kind registry and replays Home registration; production code has no test hook |
 | `Runtime/SndContextTestFrameDriver.cs` | Internal test-side frame-flush extension: drains the runtime deferred queue only, without processing entities or pumping the console; production code has no test hook |
 

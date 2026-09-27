@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Snd-Entity -->
-<!-- docsync-revision: 22 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Entity Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

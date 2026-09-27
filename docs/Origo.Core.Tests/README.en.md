@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/README -->
-<!-- docsync-revision: 28 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.Core.Tests
 
 > [↑ Back to Origo.manual](../README.en.md)

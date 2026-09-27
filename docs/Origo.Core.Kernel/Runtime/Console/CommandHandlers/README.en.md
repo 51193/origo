@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Runtime/Console/CommandHandlers/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # CommandHandlers
 
 > [↑ Back to Console](../README.en.md) · [↔ Usage: console-commands](../../../../usage/console-commands.en.md)

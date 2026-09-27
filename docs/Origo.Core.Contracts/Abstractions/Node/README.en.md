@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Node/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Node (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: GodotAdapter/Snd](../../../Origo.GodotAdapter/Snd/README.en.md)

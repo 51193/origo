@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/agent-friendly/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo Agent Friendly Investigation
 
 > [↑ Back to Architecture](../README.en.md)
@@ -34,7 +31,7 @@ Read product value and benchmarks first, then the OpenAI comparison. Select engi
 | Framework maintenance | Save pipeline changes, ordering regressions, generator extensions | Real-path regression, collaboration contracts, complete CI | Instructions, skills, affected checks directly improve maintenance |
 | Building games | Pickups, damage, save restoration, playable loops | Startup, real input, rendering, state assertions, human gameplay judgment | Consumer routing, strategy templates, API inventory help directly; framework CI acceleration is less direct |
 
-Game developers should not execute Origo's complete maintenance workflow. Their entry covers package versions, strategies/data, host startup, and their game's tests/runtime tools. Maintenance retains history, collaboration reading, DocSync, release, and architecture gates.
+Game developers should not execute Origo's complete maintenance workflow. Their entry covers package versions, strategies/data, host startup, and their game's tests/runtime tools. Maintenance retains history, collaboration reading, release, and architecture gates.
 
 ## Verified facts and corrections
 
@@ -68,7 +65,7 @@ The long-term direction is an agent-operable game system: specifications to stra
 
 This work does not implement runners, skills, selectors, generators, or runtime services. Proposed commands are not existing CLIs. It changes no public interface or released version. Later implementation needs its own complete AGENTS loop.
 
-Behavior/API test extensions and feature Changelog entries are inapplicable to research-only documentation. Bilingual synchronization, navigation, generated artifacts, post-commit CI, and message lint remain applicable. Recheck licensing/reproducibility against each report's source versions.
+Behavior/API test extensions and feature Changelog entries are inapplicable to research-only documentation. English documentation accuracy, post-commit CI, and message lint remain applicable. Recheck licensing/reproducibility against each report's source versions.
 
 ---
 [↑ Back to Architecture](../README.en.md)

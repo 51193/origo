@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Save/Serialization/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Serialization (Save)
 
 > [↑ Back to Save](../README.en.md)

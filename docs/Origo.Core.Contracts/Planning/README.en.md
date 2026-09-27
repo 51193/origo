@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Planning/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Planning
 
 > [↑ Back to Origo.Core](../README.en.md)

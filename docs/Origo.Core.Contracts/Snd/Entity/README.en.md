@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Snd/Entity/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Entity (Contracts)
 
 > [↑ Back to Snd Contracts](../README.en.md)

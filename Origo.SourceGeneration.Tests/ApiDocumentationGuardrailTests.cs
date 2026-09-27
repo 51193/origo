@@ -25,8 +25,7 @@ public class ApiDocumentationGuardrailTests
         "Origo.GodotAdapter",
         "Origo.ConsoleBridge",
         "Origo.SourceGeneration",
-        "Origo.TestSupport",
-        "tools/DocSyncTool"
+        "Origo.TestSupport"
     ];
 
     [Fact]

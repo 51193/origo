@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/StrategyTestContext-FileAccess -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy Test Context File Access Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

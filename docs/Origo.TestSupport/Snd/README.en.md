@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.TestSupport/Snd/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
 > [↑ Back to TestSupport](../README.en.md)

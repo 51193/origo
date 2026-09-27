@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.SourceGeneration.Tests/README -->
-<!-- docsync-revision: 13 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.SourceGeneration.Tests
 
 > [↑ Back to Origo.manual](../README.en.md) · [↔ Module Under Test: Origo.SourceGeneration](../Origo.SourceGeneration/README.en.md)

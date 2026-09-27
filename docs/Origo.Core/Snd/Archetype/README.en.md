@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core/Snd/Archetype/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Archetype
 
 > [↑ Back to Snd](../README.en.md)

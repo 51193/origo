@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/capabilities -->
-<!-- docsync-revision: 25 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Capabilities
 
 > [↑ Back to Usage Documentation](README.en.md)

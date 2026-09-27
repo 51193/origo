@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Abstractions/FileSystem/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # FileSystem (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: GodotAdapter/FileSystem](../../../Origo.GodotAdapter/FileSystem/README.en.md)

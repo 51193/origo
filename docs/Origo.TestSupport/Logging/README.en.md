@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.TestSupport/Logging/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 
 # Logging
 

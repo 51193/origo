@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/console-commands -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console Commands
 
 > [↑ Back to usage](README.en.md)

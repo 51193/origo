@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Planning -->
-<!-- docsync-revision: 22 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Planning Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

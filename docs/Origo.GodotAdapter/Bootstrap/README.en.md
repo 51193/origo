@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.GodotAdapter/Bootstrap/README -->
-<!-- docsync-revision: 11 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Bootstrap
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md)

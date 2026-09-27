@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Meta -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Framework Meta Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

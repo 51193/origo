@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.ConsoleBridge.Tests/ConsoleBridgeServer -->
-<!-- docsync-revision: 11 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console Bridge Server Tests
 
 > [↑ Back to Origo.ConsoleBridge.Tests](README.en.md)

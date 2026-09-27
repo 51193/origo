@@ -1,10 +1,7 @@
-<!-- docsync-pair: Origo.Core.Tests/Architecture -->
-<!-- docsync-revision: 30 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
-> [↔ Module under test: Origo.Core/README.md](../Origo.Core/README.en.md)
+> [↔ Module under test: Origo.Core/README.en.md](../Origo.Core/README.en.md)
 > [↔ Behavior under test: architecture/overview](../architecture/overview.en.md)
 
 ## Behavior Under Test Overview
@@ -48,9 +45,9 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `ISessionRun_ProvidesRuntimeAccess` | ISessionRun provides Blackboard/SceneHost/StateMachines access | session-model |
 | `SessionManager_ProvidesCreateAndDestroyOperations` | ISessionManager provides CreateBackgroundSession/DestroySession | session-model |
 | `ConsoleCommandHandlerBase_ShouldBePublic_SoExternalProjectsCanExtendIt` | ConsoleCommandHandlerBase is public, external projects can derive custom command handlers | console-bridge |
-| `ShellApiClassification_CoversEveryCoreExport` | Every Core export appears exactly once in the bilingual classification table; a new export must update the classification first | architecture/shell-api-classification |
-| `ShellApiClassification_CoversEveryContractsExport` | Every `Origo.Core.Contracts` export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
-| `ShellApiClassification_CoversEveryKernelExport` | Every `Origo.Core.Kernel` export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryCoreExport` | Every Core export appears exactly once in the English classification table; a new export must update the classification first | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryContractsExport` | Every `Origo.Core.Contracts` export appears exactly once in the English classification table | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryKernelExport` | Every `Origo.Core.Kernel` export appears exactly once in the English classification table | architecture/shell-api-classification |
 | `Kernel_ShouldNotReferenceImplementationsOrGodot` | Kernel references neither `Origo.Core`, adapter, nor ConsoleBridge assemblies, and references no Godot assembly | architecture/shell-kernel-boundary |
 | `Kernel_ShouldReferenceContracts` | Kernel explicitly references `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
 | `Core_ShouldReferenceKernel` | `Origo.Core` explicitly references `Origo.Core.Kernel` | architecture/shell-kernel-boundary |

@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.ConsoleBridge.Tests/README -->
-<!-- docsync-revision: 16 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.ConsoleBridge.Tests
 
 > [↑ Back to Origo.manual](../README.en.md)

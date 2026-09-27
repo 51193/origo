@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.TestSupport/Strategies/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 
 # Strategies
 

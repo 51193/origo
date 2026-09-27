@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/META-TEST -->
-<!-- docsync-revision: 19 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Test Documentation Maintenance Meta-Instructions
 
 > [↑ Back to Origo Manual](../README.en.md)
@@ -26,9 +23,9 @@ without reading through source code.
    listed in tables within the capability document
 2. **Capability document level**: Summarizes all test files for that capability + test method tables +
    support strategies + coverage gaps + design decisions
-3. **Module root**: Test project README (`Origo.Core.Tests/README.md`) — lists all capability document
+3. **Module root**: Test project README (`Origo.Core.Tests/README.en.md`) — lists all capability document
    indexes, test support facilities, test strategy overview
-4. **Top level**: Test navigation entry in `docs/README.md`
+4. **Top level**: Test navigation entry in `docs/README.en.md`
 
 ### Linking Conventions
 
@@ -44,7 +41,7 @@ without reading through source code.
 |-------|---------|
 | Capability document | Behavior under test overview (citing usage/ or module documentation) → Test file list → File-specific test details (happy/error/boundary tables) → Support strategy list → Known coverage gaps → Design decisions |
 | Module README | Test strategy overview → Test support facility description → All capability document indexes (including file and test counts) |
-| Top-level navigation | Test navigation entry (path from `docs/README.md`) |
+| Top-level navigation | Test navigation entry (path from `docs/README.en.md`) |
 
 ### Test Detail Table Conventions
 
@@ -52,7 +49,7 @@ without reading through source code.
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
-| `MethodName` | Concise description (one sentence) | `usage/xxx.md` or `Abstractions/README.md` |
+| `MethodName` | Concise description (one sentence) | `usage/xxx.md` or `Abstractions/README.en.md` |
 
 **Error path table**:
 

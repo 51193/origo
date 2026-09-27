@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/shell-kernel-boundary -->
-<!-- docsync-revision: 14 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Stable Shell/Kernel Boundary
 
 > [↑ Back to architecture](README.en.md)

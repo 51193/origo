@@ -20,9 +20,9 @@ Every change must follow this cycle (see the Development Loop section in `AGENTS
 2. Extend or adapt tests (red-first, real-path regression for bug fixes — see `docs/Origo.Core.Tests/META-TEST.en.md`).
 3. Iterate with `bash scripts/test.sh`; fix and retest until green.
 4. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing.
-5. Sync `docs/` (including mirror README file lists for any `.cs` file under `SourceMirrorRoots`) and run `dotnet run --project tools/DocSyncTool -- generate`.
-6. Commit source, tests, Changelog, docs content, generated hubs, and `.sync-status.json`.
-7. After the commit, run `bash scripts/ci.sh` (lint-scripts + format + doc-sync + build/test + coverage gates + benchmarks + Godot integration); amend and rerun if it fails.
+5. Update the English documentation when behavior, interfaces, or design intent changes.
+6. Commit source, tests, Changelog, and documentation together.
+7. After the commit, run `bash scripts/ci.sh` (lint-scripts + format + build/test + coverage gates + benchmarks + Godot integration); amend and rerun if it fails.
 8. After the commit, run `bash scripts/lint-commits.sh`.
 
 ## Dependency updates
