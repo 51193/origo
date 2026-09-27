@@ -130,14 +130,14 @@ chapters belong to one work item. Full tracked protocol:
 5. **Docs sync** — update `docs/` per §5; after any content change run `dotnet run --project tools/DocSyncTool -- generate`.
 6. **Commit** — source, tests, Changelog, docs content, generated hubs, and `.sync-status.json` together.
 7. **Post-commit full CI** — run `bash scripts/ci.sh` (lint-scripts → format → doc-sync → test → benchmark → Godot; verifies generated docs are committed). Fix/amend, then rerun.
-8. **Post-commit message lint** — run `bash scripts/lint-commits.sh`; a pre-commit run cannot inspect the new commit.
+8. **Commit lint** — run `bash scripts/lint-commits.sh`; pre-push repeats it.
 
 State any inapplicable step in the commit message. **Partial
 completion is forbidden.** If closing an `_origo_local` book, apply §1.11
 after steps 1–8.
 
 - `lint-commits.sh` prefers `origin/main`; when unavailable it falls back to `HEAD~1` and reports it. Explicit ranges: `bash scripts/lint-commits.sh <base> <head>`.
-- `ci.sh` is single-platform; CI adds OS matrix + `commit-lint`.
+- Enable hooks with `git config core.hooksPath .githooks`; they block invalid pushes. CI adds the OS matrix, not commit lint.
 
 ## 3. Test Requirements
 
