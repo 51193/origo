@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 28 -->
+<!-- docsync-revision: 27 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -170,7 +170,7 @@ After a code PR is merged, check:
 
 ## Git Commit Message Format
 
-All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. Each clone must enable the repository hooks once with `git config core.hooksPath .githooks`; the local `.githooks/pre-push` hook invokes `scripts/lint-commits.sh` before Git uploads objects and checks every branch range being pushed: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. This gate runs locally and is not duplicated by GitHub Actions. Dependabot-authored commits are the only exemption: Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same branch remain fully checked.
+All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. PR commit messages are enforced by `scripts/lint-commits.sh` and `.github/workflows/commit-lint.yml`: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. Dependabot-authored commits are the only exemption: Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same PR remain fully checked.
 
 ### Basic Format
 

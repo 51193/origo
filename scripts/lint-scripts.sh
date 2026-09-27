@@ -5,9 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-SHELL_FILES=(scripts/*.sh dotnet .githooks/*)
-
-for script in "${SHELL_FILES[@]}"; do
+for script in scripts/*.sh dotnet; do
     bash -n "$script"
 done
 
@@ -19,7 +17,7 @@ if ! command -v shellcheck >/dev/null 2>&1; then
     fi
     echo "WARNING: shellcheck is not installed; skipping shellcheck (bash -n still runs)."
 else
-    shellcheck --severity=warning "${SHELL_FILES[@]}"
+    shellcheck --severity=warning scripts/*.sh dotnet
 fi
 
 # benchmark.sh previously embedded Python in heredocs. Any extracted or new
@@ -95,6 +93,5 @@ fi
 bash scripts/test-verify-release.sh
 bash scripts/test-find-previous-api-baseline.sh
 bash scripts/test-package-consumer-smoke-lib.sh
-bash scripts/test-pre-push-hook.sh
 
 echo "Script lint: OK"

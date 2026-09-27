@@ -7,9 +7,7 @@ process.
 
 - Read the development workflow in [`AGENTS.md`](AGENTS.md) — it is the
   authoritative entry point for all code changes.
-- Enable the repository hooks once per clone with
-  `git config core.hooksPath .githooks`.
-- Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). The local pre-push hook runs `scripts/lint-commits.sh` before Git uploads branch commits (type, 72-character subject limit, no trailing period, body lines no longer than 72 characters). Dependabot-authored commits are skipped because Dependabot generates their message and supports only a prefix; `.github/dependabot.yml` sets that prefix to `chore(deps)` for every ecosystem.
+- Read the commit message convention in [`docs/META.en.md`](docs/META.en.md#git-commit-message-format). PR commit messages are linted by `scripts/lint-commits.sh` in the `commit-lint` workflow (type, 72-character subject limit, no trailing period, body lines no longer than 72 characters). Dependabot-authored commits are skipped because Dependabot generates their message and supports only a prefix; `.github/dependabot.yml` sets that prefix to `chore(deps)` for every ecosystem.
 - Read [`docs/release-process.en.md`](docs/release-process.en.md) before touching `CHANGELOG.md` or cutting a release.
 - Use the [pull request template](PULL_REQUEST_TEMPLATE.md) when opening a PR.
 - Read the [code of conduct](CODE_OF_CONDUCT.md).

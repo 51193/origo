@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Conventional Commits gate for local branch pushes: conventional type,
+# Conventional Commits gate for pull requests: conventional type,
 # 72-character subject limit, no trailing period, and body lines no longer
 # than 72 characters (docs/META commit message rules). Dependabot-authored
 # commits are skipped because Dependabot generates their message and supports
