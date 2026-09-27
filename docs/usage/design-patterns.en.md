@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/design-patterns -->
-<!-- docsync-revision: 20 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Design Patterns
 
 > [↑ Back to usage](README.en.md)

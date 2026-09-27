@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/README -->
-<!-- docsync-revision: 8 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture
 
 > [↑ Back to Origo Manual](../README.en.md)

@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Random -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Random Number Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

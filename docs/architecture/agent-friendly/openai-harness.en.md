@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/agent-friendly/openai-harness -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # OpenAI Harness Engineering and Concrete Gaps in Origo
 
 > [↑ Back to the research index](README.en.md)
@@ -23,7 +20,7 @@ Three layers have separate roles: root instructions provide persistent constrain
 
 | Concern | Local fact | Gap and implication |
 |---|---|---|
-| Root entry | Root `AGENTS.md` requires complete META, release-process, and module-chain reading; it includes the release checklist, DocSync table, dependency families, and buffer procedure | Routing and specialized procedures overlap; changing a console message still loads formal release operations |
+| Root entry | Root `AGENTS.md` requires complete META, release-process, and module-chain reading; it includes the release checklist, dependency families, and buffer procedure | Routing and specialized procedures overlap; changing a console message still loads formal release operations |
 | Knowledge navigation | The [usage index](../../usage/README.en.md) routes by reader; its Agent path points to the complete agent-reference | Reader routing exists, but task routing for strategy writing, click diagnosis, and persistence repair is missing |
 | Collaboration contracts | [Architecture overview](../overview.en.md) defines Core/Adapter, I/O, and frame boundaries; [architecture tests](../../Origo.Core.Tests/Architecture.en.md) check access paths and engine isolation | This is a strength; these boundaries belong in the mandatory map, rather than becoming targets for removal |
 | Runtime state | [ConsoleBridge](../../Origo.ConsoleBridge/README.en.md) offers local single-client TCP; [commands](../../usage/console-commands.en.md) support queries, invocation, and interaction | Agent control already has a foundation, but text commands and shared logs do not directly correlate each request with its result |

@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/agent-friendly/game-development -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # An Agent-Oriented Game-Development Product Direction
 
 > [↑ Back to the agent-friendliness study](README.en.md)

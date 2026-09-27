@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Snd/Strategy/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy (Contracts)
 
 > [↑ Back to Snd Contracts](../README.en.md)

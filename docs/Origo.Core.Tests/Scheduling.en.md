@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Scheduling -->
-<!-- docsync-revision: 20 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scheduling Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

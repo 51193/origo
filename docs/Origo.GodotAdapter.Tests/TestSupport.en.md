@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.GodotAdapter.Tests/TestSupport -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # TestSupport
 
 > [↑ Back to Origo.GodotAdapter.Tests](README.en.md)

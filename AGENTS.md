@@ -12,18 +12,16 @@
 Before reading or modifying source, read in full:
 
 1. **This file**.
-2. **`docs/META.zh.md`** (or `.en.md`) — writing, commits, DocSync, buffer.
-3. **`docs/release-process.zh.md`** (or `.en.md`) — release and Changelog rules.
-4. **Module docs** for the change plus upstream/downstream/related facilities
-   (§1.3): the `docs/<mirror-path>/` language pair (usually `README.*`).
+2. **`docs/META.en.md`** — English documentation, commits, and buffer rules.
+3. **`docs/release-process.en.md`** — release and Changelog rules.
+4. **English module docs** for the change plus upstream/downstream/related
+   facilities (§1.3): the `docs/<mirror-path>/` manual entry.
 5. **`_origo_local/README.md` when present** — single-book buffer; read the
    root README (live status/index) and every numbered chapter relevant to the
-   task. Full protocol: `docs/META.zh.md` / `.en.md` §Local Agent Work Buffer.
+   task. Full protocol: `docs/META.en.md` §Local Agent Work Buffer.
 
-`docs/` mirrors source in `.zh.md`/`.en.md` pairs. Navigation-only directories
-contain generated `README.md` hubs. Never edit generated hubs or
-`docs/.sync-status.json`.
-Read docs first, then source; README rationale is required context.
+`docs/` contains the English manual and module rationale. Read docs first, then
+follow the chain into source; manual rationale is required context.
 
 ## 1. Core Principles
 
@@ -66,24 +64,27 @@ collaboration contracts.
 
 - All C# must pass `dotnet format --verify-no-changes --severity info`; `scripts/format.sh` runs analyzer dead-code checks. Format is the first gate on C# code.
 - `.editorconfig` defines whitespace, `var`, and analyzer severities. Private-field `_camelCase` naming is enforced by architecture tests in each test project.
-- Test projects use flat namespaces (`Origo.Core.Tests`, not nested); IDE0130 is suppressed for test paths. See `docs/Origo.Core.Tests/META-TEST.*`.
+- Test projects use flat namespaces (`Origo.Core.Tests`, not nested); IDE0130 is suppressed for test paths. See `docs/Origo.Core.Tests/META-TEST.en.md`.
 - Do not disable `.editorconfig` rules to bypass the gate.
 
-### 1.6 Bilingual Documentation — Co-located Side-by-Side
+### 1.6 English Documentation — Co-located with Source
 
-`docs/` mirrors source in `.zh.md`/`.en.md` pairs. Full DocSync mechanics are
-in `docs/META.zh.md` / `.en.md` §Bilingual Documentation Mechanism.
+`docs/` is maintained as an English manual alongside the source tree.
 
-- Never edit `docsync-revision`, generated `README.md` hubs, or `docs/.sync-status.json`.
-- After any docs content change run `dotnet run --project tools/DocSyncTool -- generate`, then commit all rewritten docs, hubs, and `.sync-status.json`.
-- Links inside the docs mirror stay in the same language; cross-language and bare `.md` links inside the mirror are forbidden. Links to root files outside the mirror (e.g. `../AGENTS.md`) are allowed.
-- Local `scripts/doc-sync.sh` runs `generate` + `validate`; GitHub CI does not run DocSync. Validate checks pairs/revisions, same-language links, target/anchor/reference existence, and source-mirror file lists (§5).
+- Update the relevant manual entry when an interface, design decision, usage
+  contract, or module structure changes.
+- Keep links pointed at existing English manual entries and root files.
+- Documentation is reviewed and tested through the normal format, test, and CI
+  gates; no generated documentation artifacts are required.
 
 ### 1.7 Source Code Comments — English Only, IntelliSense-Ready
 
 - Every `public`/`protected` type/member has an English `<summary>`; `<inheritdoc />` is accepted for implementations/overrides whose base declaration carries the contract.
 - `internal` classes implementing public interfaces should have English comments for role and non-trivial contracts (constructor preconditions, disposal, thread safety).
-- Chinese XML comments on public API are defects and must be translated; non-public comments should trend English. Tests and vendored upstream source (currently `Origo.Core/Addons/FastNoiseLite/FastNoiseLite.cs`, rationale in its README) are exempt.
+- Non-English XML comments on public API are defects and must be translated;
+  non-public comments should trend English. Tests and vendored upstream source
+  (currently `Origo.Core/Addons/FastNoiseLite/FastNoiseLite.cs`, rationale in
+  its manual entry) are exempt.
 - DocFX/Sandcastle-style API generation is forbidden; `docs/` is the reference.
 
 ### 1.8 Git History Awareness — File History Informs Changes
@@ -104,7 +105,7 @@ in `docs/META.zh.md` / `.en.md` §Bilingual Documentation Mechanism.
 - `global.json` is authoritative; never downgrade or edit it to match an already-installed SDK.
 - Run `bash scripts/install-dotnet.sh` to install the exact SDK (default `$HOME/.dotnet`, repository-local `.dotnet/` fallback). Scripts source `scripts/dotnet-env.sh`; use `./dotnet` in local mode; never substitute per-session env exports.
 - Branches use `<type>/<creator>/<MMDD>/<purpose>`; validate with `scripts/work-identity.sh`.
-- Godot binaries are separate: `scripts/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`. Full rules: `docs/META.zh.md` / `.en.md` §Environment Bootstrap.
+- Godot binaries are separate: `scripts/download-godot.sh` reads `Godot.NET.Sdk` from `Origo.GodotAdapter/Origo.GodotAdapter.csproj` and caches under `.godot_binary/`. Full rules: `docs/META.en.md` §Environment Bootstrap.
 
 ### 1.11 Local Agent Work Buffer — `_origo_local/` (Untracked, Producer/Consumer)
 
@@ -113,7 +114,7 @@ in `docs/META.zh.md` / `.en.md` §Bilingual Documentation Mechanism.
 `_origo_local/` is git-ignored and must never be committed or staged. It uses
 **single-book mode**: root `README.md` is the live index/status holder; numbered
 chapters belong to one work item. Full tracked protocol:
-`docs/META.zh.md` / `.en.md` §Local Agent Work Buffer.
+`docs/META.en.md` §Local Agent Work Buffer.
 
 - **Producer**: create/update the book's root status (`inbox`/`in-progress`/`blocked`/`done`/`superseded`), owner/date/baseline commit, evidence, full §1.3 chain context, scope/acceptance criteria, commands run.
 - **Consumer**: claim only after re-reading and revalidating context; set the root `in-progress`. Never delete or rewrite another agent's `in-progress` work.
@@ -122,19 +123,20 @@ chapters belong to one work item. Full tracked protocol:
 
 ## 2. Development Loop (Mandatory Order)
 
-> Every change closes these steps in order.
+> Every change closes these steps in order; do not rearrange or skip.
 
 1. **Develop source** — satisfy §0/§1; read target history and collaborators first (§1.8/§1.3).
 2. **Extend/adapt tests** — behavior tests for new public API; red-first real-path regression for bug fixes (§3); sync behavior-change tests.
 3. **Iterate with tests** — use `bash scripts/check.sh quick` or `bash scripts/check.sh affected`; before commit run `bash scripts/test.sh` (full coverage).
 4. **Changelog alignment** — update `CHANGELOG.md` `[Unreleased]` per §4.
-5. **Docs sync** — update `docs/` per §5; after any content change run `dotnet run --project tools/DocSyncTool -- generate`.
-6. **Commit** — source, tests, Changelog, docs content, generated hubs, and `.sync-status.json` together.
-7. **Post-commit full CI** — run `bash scripts/ci.sh` (lint-scripts → format → doc-sync → test → benchmark → Godot; verifies generated docs are committed). Fix/amend, then rerun.
-8. **Commit lint** — run `bash scripts/lint-commits.sh`; pre-push repeats it.
+5. **Documentation** — update the relevant English manual entries.
+6. **Commit** — source, tests, Changelog, and documentation together.
+7. **Post-commit full CI** — run `bash scripts/ci.sh` (lint-scripts → format → test → benchmark → Godot). Fix/amend, then rerun.
+8. **Post-commit message lint** — run `bash scripts/lint-commits.sh`; a pre-commit run cannot inspect the new commit.
 
-**Partial completion is forbidden.** If closing an `_origo_local` book, apply
-§1.11 after steps 1–8.
+State any inapplicable step in the commit message. **Partial
+completion is forbidden.** If closing an `_origo_local` book, apply §1.11
+after steps 1–8.
 
 - `lint-commits.sh` prefers `origin/main`; when unavailable it falls back to `HEAD~1` and reports it. Explicit ranges: `bash scripts/lint-commits.sh <base> <head>`.
 - Enable hooks with `git config core.hooksPath .githooks`; CI adds the OS matrix.
@@ -154,71 +156,66 @@ queue, or a faithful same-contract stand-in); confirm it fails on unmodified
 code for the bug's own symptom; fix the source and confirm the same test passes
 unchanged; check sibling paths. A test that passes through a different code
 path is a blind spot, not a regression test. Details:
-`docs/Origo.Core.Tests/META-TEST.zh.md` / `.en.md`.
+`docs/Origo.Core.Tests/META-TEST.en.md`.
 
-- Test projects: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`, `Origo.GodotAdapter.Integration.Tests` (Godot headless through `scripts/godot-test.sh`), and `tools/DocSyncTool.Tests`; `Origo.TestSupport` is a support library.
+- Test projects: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`, and `Origo.GodotAdapter.Integration.Tests` (Godot headless through `scripts/godot-test.sh`); `Origo.TestSupport` is a support library.
 - Coverlet enforces ≥90% line coverage for measured xUnit projects in `scripts/test.sh`; the Godot integration runner is separate and outside that gate.
 - Use `test.sh` during iteration; run `ci.sh` after commit per §2.
 
 ## 4. Changelog Conventions
 
 Full rules (categories, baselines, snapshots, writing) are in
-`docs/release-process.zh.md` / `.en.md`.
+`docs/release-process.en.md`.
 
 - Record user-facing significant changes under `[Unreleased]` in `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`.
 - Breaking changes use no separate category: classify under `Changed` / `Removed` and prefix with `BREAKING:`.
 - Baseline = last formal release tag; nightly/alpha/preview are not versions/baselines. Do not record intra-version churn; record only the final state.
 - §1.3 applies: do not mis-record deliberate cross-module designs as `Fixed`.
 
-## 5. Docs Sync Rules
+## 5. Documentation Rules
 
-`docs/` mirrors source. Sync is required for:
+`docs/` documents the source. Update it when:
 
 | Source change | Docs action |
 |---------------|-------------|
-| Directory add/delete/rename | Mirror under `docs/`. |
-| Any `.cs` add/rename/delete under `SourceMirrorRoots` | Update the mirror README file list in both languages. |
-| Public interface/method add/delete/rename | Update the leaf README interface list. |
+| Directory add/delete/rename | Update the relevant English module entry. |
+| Any `.cs` add/rename/delete | Update the relevant file list when it is part of the documented module surface. |
+| Public interface/method add/delete/rename | Update the relevant interface list. |
 | Design decision change | Update the design-decisions section. |
 | Config key/command change | Update the relevant README / `docs/usage/`. |
 | Inter-module dependency change | Update module README links. |
 | Test capability/method change | Update the corresponding test capability docs. |
 
-"Internal implementation only" removes design/interface prose updates, **not**
-mirror README file-list updates: `DocSyncTool validate` requires every `.cs` file
-in each mirrored source directory to be listed in that directory's bilingual READMEs.
+Internal implementation changes do not require prose updates unless they alter
+documented design intent. Keep interface lists, links, design decisions, and
+usage/test guidance accurate.
 
-- After any docs change run `DocSyncTool generate` and commit generated files (§1.6).
-- Checklist: directory mirrored, file/interface lists accurate, intermediate indexes complete, links valid, design decisions current, usage/test docs cover new scenarios.
-- `validate` checks pairs/revisions, same-language links, targets/anchors/references, source-mirror directories/file lists, and heading parity warnings.
-- Full rules: `docs/META.zh.md` / `.en.md` §Sync Rules.
+- Checklist: relevant module entry updated, links valid, design decisions
+  current, usage/test docs cover new scenarios.
+- Full rules: `docs/META.en.md`.
 
 ## 6. Release Process
 
-Full details: `docs/release-process.zh.md` / `.en.md`. Pre-tag summary:
+Full details: `docs/release-process.en.md`. Pre-tag summary:
 
 1. Choose formal `x.y.z`; move `[Unreleased]` to `## [x.y.z] - YYYY-MM-DD` and clear it.
 2. Set `<Version>` in `Directory.Build.props` to `x.y.z` (tag is `vx.y.z`).
-3. Update the version text in `docs/README.zh.md` / `.en.md`.
+3. Update the version text in `docs/README.en.md`.
 4. Move analyzer rules to `AnalyzerReleases.Shipped.md` with `## Release x.y.z`; leave no unshipped rules in `AnalyzerReleases.Unshipped.md`.
 5. Run `TAG_VERSION=x.y.z bash scripts/verify-release.sh` (Changelog block, empty `[Unreleased]`, analyzer tracking, docs version stamps).
-6. Run `DocSyncTool generate` and commit all release changes together: metadata, docs content, generated hubs, and `.sync-status.json`.
+6. Commit all release metadata and documentation changes together.
 7. Run `bash scripts/ci.sh` and `bash scripts/lint-commits.sh` on that commit; amend and rerun if either fails.
 8. Tag `vx.y.z` on the verified commit and push it. Release workflow runs tests, packs the three libraries, and attaches packages plus the docs snapshot to GitHub Release; packages are not pushed to nuget.org.
 
 ## 7. Document Index
 
-- Manual: [zh](docs/README.zh.md), [en](docs/README.en.md), [hub](docs/README.md).
-- Rules: [META zh](docs/META.zh.md), [META en](docs/META.en.md);
-  [release zh](docs/release-process.zh.md),
-  [release en](docs/release-process.en.md).
-- Tests: [META-TEST zh](docs/Origo.Core.Tests/META-TEST.zh.md),
-  [en](docs/Origo.Core.Tests/META-TEST.en.md).
-- Modules: `docs/<mirror-root>/README.zh.md` / `.en.md`;
-  [usage zh](docs/usage/README.zh.md), [en](docs/usage/README.en.md).
+- Manual: [English](docs/README.en.md).
+- Rules: [META](docs/META.en.md), [release process](docs/release-process.en.md).
+- Tests: [META-TEST](docs/Origo.Core.Tests/META-TEST.en.md).
+- Modules: English entries under `docs/<module>/` and [usage](docs/usage/README.en.md).
 - Changes and tools: [CHANGELOG.md](CHANGELOG.md), `_origo_local/README.md`,
   [.editorconfig](.editorconfig), [.github/dependabot.yml](.github/dependabot.yml),
-  [.github/workflows/](.github/workflows/), [DocSyncTool](tools/DocSyncTool/),
+  [.github/workflows/](.github/workflows/),
   [ci.sh](scripts/ci.sh).
 
 ## Agent skills
@@ -234,4 +231,4 @@ Five default roles; see [triage-labels.md](docs/agents/triage-labels.md).
 
 ### Domain docs
 
-Single-context bilingual manual; see [domain.md](docs/agents/domain.md).
+Single-context English manual; see [domain.md](docs/agents/domain.md).

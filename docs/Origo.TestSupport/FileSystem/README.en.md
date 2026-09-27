@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.TestSupport/FileSystem/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 
 # FileSystem
 

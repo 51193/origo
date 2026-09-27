@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Abstractions/StateMachine/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # StateMachine (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: StateMachine](../../../Origo.Core.Kernel/StateMachine/README.en.md)

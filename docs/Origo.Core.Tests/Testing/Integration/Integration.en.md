@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Testing/Integration/Integration -->
-<!-- docsync-revision: 21 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Frame-Driven Game Simulation Integration Tests
 
 > [↑ Back to Origo.Core.Tests](../../README.en.md)

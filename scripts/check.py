@@ -40,17 +40,6 @@ FULL_PATHS = {
 }
 DOC_PREFIXES = ("docs/",)
 GODOT_MARKERS = (".godot/", "project.godot", ".tscn", ".tres", ".gd")
-SOURCE_MIRROR_ROOTS = (
-    "Origo.Core.Contracts/",
-    "Origo.Core.Kernel/",
-    "Origo.Core/",
-    "Origo.GodotAdapter/",
-    "Origo.ConsoleBridge/",
-    "Origo.SourceGeneration/",
-    "Origo.TestSupport/",
-)
-
-
 @dataclass(frozen=True)
 class Change:
     status: str
@@ -225,9 +214,6 @@ def classify(root: Path, changes: list[Change], base: str) -> dict:
         if normalized in FULL_PATHS or normalized.startswith((".github/", "scripts/")):
             requires_full = True
             reasons.append(f"{normalized} changes the repository-wide contract")
-        if normalized.startswith(DOC_PREFIXES) or normalized.startswith("tools/DocSyncTool/"):
-            selected.add("tools/DocSyncTool.Tests/DocSyncTool.Tests.csproj")
-            additional.add("doc-sync")
         if normalized.startswith("Origo.SourceGeneration/"):
             additional.add("godot")
             generator_test_suffixes = (
@@ -251,16 +237,6 @@ def classify(root: Path, changes: list[Change], base: str) -> dict:
             selected.update(reverse_test_closure(graph, {owner}))
         elif not normalized.startswith(("scripts/", "docs/", ".github/", ".scratch/")):
             unknown.append(normalized)
-
-    for change in changes:
-        normalized = change.path.replace("\\", "/")
-        if (
-            normalized.endswith(".cs")
-            and normalized.startswith(SOURCE_MIRROR_ROOTS)
-            and change.status[:1] in {"A", "C", "D", "R", "?"}
-        ):
-            additional.add("doc-sync")
-            reasons.append(f"{normalized} changes a mirrored C# file list")
 
     if unknown:
         requires_full = True
@@ -399,8 +375,6 @@ def main(argv: list[str] | None = None) -> int:
         raise RuntimeError("affected found no test projects; run scripts/check.sh full explicitly")
     for project in plan["selectedProjects"]:
         run_test_project(root, project, "Category!=Benchmark", coverage=True)
-    if "doc-sync" in plan["additionalGates"]:
-        run_command(root, ["bash", "scripts/doc-sync.sh"])
     if "godot" in plan["additionalGates"]:
         run_command(root, ["bash", "scripts/godot-test.sh"])
     return 0

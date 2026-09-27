@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Compatibility -->
-<!-- docsync-revision: 5 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell Compatibility Contract Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

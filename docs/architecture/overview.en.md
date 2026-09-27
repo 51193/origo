@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/overview -->
-<!-- docsync-revision: 17 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Overview
 
 > [↑ Back to Architecture](README.en.md)

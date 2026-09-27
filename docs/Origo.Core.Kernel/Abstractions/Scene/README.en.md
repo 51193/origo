@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Abstractions/Scene/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Scene (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Scene](../../Snd/Scene/README.en.md)

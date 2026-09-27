@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Runtime/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Runtime
 
 > [↑ Back to Origo.Core](../README.en.md)

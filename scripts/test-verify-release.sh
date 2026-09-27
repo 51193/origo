@@ -61,7 +61,6 @@ SHIPPED_EOF
     cat > "$FIXTURE/Origo.SourceGeneration/AnalyzerReleases.Unshipped.md" <<'UNSHIPPED_EOF'
 ; no unshipped rules
 UNSHIPPED_EOF
-    printf 'version 0.1.0\n' > "$FIXTURE/docs/README.zh.md"
     printf 'version 0.1.0\n' > "$FIXTURE/docs/README.en.md"
 }
 
@@ -109,8 +108,8 @@ printf '| ORIGOSG999 | Test | Error | fixture |\n' >> "$FIXTURE/Origo.SourceGene
 expect_failure "unshipped analyzer rule" "AnalyzerReleases.Unshipped.md still contains unshipped rules"
 
 write_valid_fixture
-printf 'version 9.9.9\n' > "$FIXTURE/docs/README.zh.md"
-expect_failure "docs version stamp" "docs/README.zh.md does not mention version 0.1.0"
+printf 'version 9.9.9\n' > "$FIXTURE/docs/README.en.md"
+expect_failure "docs version stamp" "docs/README.en.md does not mention version 0.1.0"
 
 write_valid_fixture
 SNAPSHOT_OUTPUT="$(TAG_VERSION=0.1.0-nightly.20260924 bash "$FIXTURE/scripts/verify-release.sh")"

@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core/Grid/README -->
-<!-- docsync-revision: 16 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Grid
 
 > [↑ Back to Origo.Core](../README.en.md)

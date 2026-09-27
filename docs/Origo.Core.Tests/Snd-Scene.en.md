@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Snd-Scene -->
-<!-- docsync-revision: 25 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Scene Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

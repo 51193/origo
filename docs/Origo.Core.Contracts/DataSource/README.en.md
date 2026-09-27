@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/DataSource/README -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # DataSource
 
 > [↑ Back to Origo.Core.Contracts](../README.en.md) · [↔ Implementation: Origo.Core.Kernel/DataSource](../../Origo.Core.Kernel/DataSource/README.en.md)

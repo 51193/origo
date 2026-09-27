@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/agent-reference -->
-<!-- docsync-revision: 23 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Agent Reference
 
 > [↑ Back to usage](README.en.md)

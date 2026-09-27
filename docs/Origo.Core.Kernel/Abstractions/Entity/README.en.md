@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Abstractions/Entity/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Entity (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Entity](../../Snd/Entity/README.en.md)

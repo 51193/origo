@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.ConsoleBridge.Tests/Architecture -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Assembly Architecture Guardrail Tests
 
 > [↑ Back to Origo.ConsoleBridge.Tests](README.en.md)
@@ -27,7 +24,7 @@ runtime.
 | `ConsoleBridge_ShouldNotReferenceGodot` | Does not reference any assembly with a `Godot*` prefix | Origo.ConsoleBridge |
 | `ConsoleBridge_ShouldNotReferenceGodotAdapter` | Does not reference the `Origo.GodotAdapter` assembly | Origo.ConsoleBridge |
 | `ConsoleBridge_ShouldOnlyReferenceContracts` | Only depends on `Origo.Core.Contracts` + BCL (`System.*`/`Microsoft.*`/`netstandard`), no unexpected assembly references | Origo.ConsoleBridge |
-| `ShellApiClassification_CoversEveryConsoleBridgeExport` | Every ConsoleBridge export appears exactly once in the bilingual classification table | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryConsoleBridgeExport` | Every ConsoleBridge export appears exactly once in the English classification table | architecture/shell-api-classification |
 
 ## Known Coverage Gaps
 

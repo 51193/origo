@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Snd-Strategy -->
-<!-- docsync-revision: 17 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Strategy Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

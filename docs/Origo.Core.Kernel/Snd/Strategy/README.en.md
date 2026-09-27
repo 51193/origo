@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Snd/Strategy/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Strategy (Kernel)
 
 > [↑ Back to Snd Kernel](../README.en.md)

@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/agent-friendly/benchmarks -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Evidence and an Experimental Protocol for Agent Friendliness
 
 > [↑ Back to the agent-friendliness study](README.en.md)

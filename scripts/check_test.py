@@ -17,8 +17,8 @@ SPEC.loader.exec_module(MODULE)
 
 class PlannerTests(unittest.TestCase):
     def test_parse_name_status_keeps_both_rename_paths(self):
-        changes = MODULE.parse_name_status("R100\tdocs/old.zh.md\tdocs/new.zh.md\n")
-        self.assertEqual([change.path for change in changes], ["docs/old.zh.md", "docs/new.zh.md"])
+        changes = MODULE.parse_name_status("R100\tdocs/old.en.md\tdocs/new.en.md\n")
+        self.assertEqual([change.path for change in changes], ["docs/old.en.md", "docs/new.en.md"])
 
     def test_reverse_test_closure_uses_evaluated_edges(self):
         graph = {"a": set(), "b.Tests.csproj": {"a"}, "c.Tests.csproj": {"b.Tests.csproj"}, "d": set()}
@@ -45,10 +45,10 @@ class PlannerTests(unittest.TestCase):
                 MODULE.fingerprint = original_fingerprint
             self.assertTrue(plan["requiresFull"])
 
-    def test_docs_select_doc_sync_gate(self):
+    def test_docs_do_not_select_a_special_gate(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            projects = {"tools/DocSyncTool.Tests/DocSyncTool.Tests.csproj": root / "x.csproj"}
+            projects = {}
             original_project_files = MODULE.project_files
             original_evaluated = MODULE.evaluated_references
             original_fingerprint = MODULE.fingerprint
@@ -56,21 +56,21 @@ class PlannerTests(unittest.TestCase):
                 MODULE.project_files = lambda _root: projects
                 MODULE.evaluated_references = lambda _root, _projects: {name: set() for name in projects}
                 MODULE.fingerprint = lambda *_args: "test"
-                plan = MODULE.classify(root, [MODULE.Change("M", "docs/META.zh.md")], "base")
+                plan = MODULE.classify(root, [MODULE.Change("M", "docs/README.en.md")], "base")
             finally:
                 MODULE.project_files = original_project_files
                 MODULE.evaluated_references = original_evaluated
                 MODULE.fingerprint = original_fingerprint
-            self.assertEqual(plan["additionalGates"], ["doc-sync"])
-            self.assertEqual(plan["selectedProjects"], ["tools/DocSyncTool.Tests/DocSyncTool.Tests.csproj"])
+            self.assertEqual(plan["additionalGates"], [])
+            self.assertEqual(plan["selectedProjects"], [])
 
     def test_integration_project_is_run_by_godot_gate_not_vstest(self):
         self.assertFalse(MODULE.test_project("Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj"))
 
-    def test_core_contracts_and_kernel_source_changes_select_doc_sync(self):
+    def test_core_contracts_and_kernel_source_changes_select_no_doc_gate(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            projects = {"tools/DocSyncTool.Tests/DocSyncTool.Tests.csproj": root / "doc.csproj"}
+            projects = {}
             original_project_files = MODULE.project_files
             original_evaluated = MODULE.evaluated_references
             original_fingerprint = MODULE.fingerprint
@@ -90,7 +90,7 @@ class PlannerTests(unittest.TestCase):
                 MODULE.project_files = original_project_files
                 MODULE.evaluated_references = original_evaluated
                 MODULE.fingerprint = original_fingerprint
-            self.assertEqual(plan["additionalGates"], ["doc-sync"])
+            self.assertEqual(plan["additionalGates"], [])
 
     def test_empty_plan_requires_full(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -156,7 +156,7 @@ class PlannerTests(unittest.TestCase):
                 MODULE.evaluated_references = original_evaluated
                 MODULE.fingerprint = original_fingerprint
             self.assertTrue(plan["requiresFull"])
-            self.assertEqual(plan["additionalGates"], ["doc-sync", "godot"])
+            self.assertEqual(plan["additionalGates"], ["godot"])
             self.assertIn("Origo.SourceGeneration.Tests/Origo.SourceGeneration.Tests.csproj", plan["selectedProjects"])
             self.assertIn("Origo.Core.Tests/Origo.Core.Tests.csproj", plan["selectedProjects"])
             self.assertIn("Origo.GodotAdapter.Tests/Origo.GodotAdapter.Tests.csproj", plan["selectedProjects"])

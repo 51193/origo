@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.GodotAdapter.Tests/Console -->
-<!-- docsync-revision: 4 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console Tests (Adapter Layer)
 
 > [↑ Back to Origo.GodotAdapter.Tests](README.en.md)

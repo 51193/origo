@@ -59,13 +59,9 @@ public static class ShellApiClassificationInventory
         var repositoryRoot = FindRepositoryRoot();
         var englishEntries = ParseTable(Path.Combine(
             repositoryRoot, "docs", "architecture", "shell-api-classification.en.md"));
-        var chineseEntries = ParseTable(Path.Combine(
-            repositoryRoot, "docs", "architecture", "shell-api-classification.zh.md"));
 
         var violations = new List<string>();
         ValidateRows(englishEntries, "en", violations);
-        ValidateRows(chineseEntries, "zh", violations);
-        CompareLanguageTables(englishEntries, chineseEntries, violations);
 
         var assemblyName = assembly.GetName().Name
             ?? throw new InvalidOperationException($"Assembly '{assembly.FullName}' has no simple name.");
@@ -92,7 +88,7 @@ public static class ShellApiClassificationInventory
     {
         if (!File.Exists(path))
             throw new FileNotFoundException(
-                "The shell API classification table is missing. Add both language files before updating the classification inventory.",
+                "The English shell API classification table is missing. Update the tracked classification inventory before changing exported APIs.",
                 path);
 
         var lines = File.ReadAllLines(path);
@@ -206,30 +202,6 @@ public static class ShellApiClassificationInventory
                         $"{language}: compatible API '{entry.Type}' must reference a concrete removal condition.");
                 }
             }
-        }
-    }
-
-    private static void CompareLanguageTables(
-        IReadOnlyList<ShellApiClassificationEntry> englishEntries,
-        IReadOnlyList<ShellApiClassificationEntry> chineseEntries,
-        List<string> violations)
-    {
-        static string[] Keys(IEnumerable<ShellApiClassificationEntry> entries) =>
-            [.. entries.Select(entry =>
-                    $"{entry.Assembly}|{entry.Type}|{entry.Classification}|{entry.PackageOwner}|" +
-                    $"{entry.CapabilityGroup}|{entry.OwnerRemovalCondition}")
-                .OrderBy(key => key, StringComparer.Ordinal)];
-
-        var englishKeys = Keys(englishEntries);
-        var chineseKeys = Keys(chineseEntries);
-        if (!englishKeys.SequenceEqual(chineseKeys, StringComparer.Ordinal))
-        {
-            var missingInChinese = englishKeys.Except(chineseKeys, StringComparer.Ordinal);
-            var missingInEnglish = chineseKeys.Except(englishKeys, StringComparer.Ordinal);
-            violations.Add(
-                "Bilingual classification tables do not carry the same type metadata. " +
-                $"Missing in zh: [{string.Join(", ", missingInChinese)}]; " +
-                $"missing in en: [{string.Join(", ", missingInEnglish)}].");
         }
     }
 

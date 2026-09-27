@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Ports/README -->
-<!-- docsync-revision: 3 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Ports
 
 > [↑ Back to Origo.Core.Kernel](../README.en.md)

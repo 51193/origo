@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/quick-start -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Quick Start
 
 > [↑ Back to usage](README.en.md)

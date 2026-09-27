@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/DataSource -->
-<!-- docsync-revision: 27 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Data Source Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

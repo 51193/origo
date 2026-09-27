@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Abstractions/Runtime/README -->
-<!-- docsync-revision: 4 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Runtime (Abstractions)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Origo.Core.Kernel/Scheduling](../../../Origo.Core.Kernel/Scheduling/README.en.md)

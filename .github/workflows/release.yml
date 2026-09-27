@@ -65,9 +65,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Release validation runs scripts/doc-sync.sh, whose git-derived
-          # revision planner needs the complete history available at a tag
-          # checkout.
           fetch-depth: 0
 
       - name: Setup .NET
@@ -235,18 +232,6 @@ jobs:
           # verify-release.sh reads TAG_VERSION from the environment.
           export TAG_VERSION="${TAG#v}"
           bash scripts/verify-release.sh
-
-      - name: DocSync validate
-        run: bash scripts/doc-sync.sh
-
-      - name: Check generated doc files are committed
-        run: |
-          if ! git diff --quiet -- docs/; then
-            echo "ERROR: generated doc files are out of date for this tag."
-            echo "Run 'dotnet run --project tools/DocSyncTool -- generate' and commit before tagging."
-            git status --short -- docs/
-            exit 1
-          fi
 
       - name: Install script lint dependencies
         run: |

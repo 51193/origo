@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Blackboard -->
-<!-- docsync-revision: 14 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Blackboard Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

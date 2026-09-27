@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/DataObserver -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Data Observer Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/agent-friendly/root-instructions -->
-<!-- docsync-revision: 2 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Root Instructions and Task Routing Research
 
 > [↑ Back to the research index](README.en.md)
@@ -22,26 +19,26 @@ Global constraints must retain clear, actionable meaning:
 - Fail-fast and strict integrity; authoritative references for strategy state, lifecycle, and Core/Adapter boundaries.
 - One access path; do not assemble lower-level operations that bypass hooks, validation, or resource lifecycle. Confirm the design of suspected backdoors.
 - Clean breaking changes in early development; no compatibility shells or test-convenience interfaces.
-- Bilingual DocSync, no hand-edited generated artifacts, English public XML comments, and no DocFX/Sandcastle.
+- English documentation, no generated documentation artifacts, English public XML comments, and no DocFX/Sandcastle.
 - Authoritative `global.json` and correct bootstrap; no SDK downgrade or temporary environment replacement.
 - Completion definition: ordered tests, Changelog alignment, docs synchronization, commit, post-commit full CI and message lint; buffer unfinished work.
 
-Full dependency-family rationale, release metadata checklists, DocSync procedures, internal test-access exceptions, and buffer producer/consumer fields can live in authoritative documents or task skills. The root retains triggers and mandatory gates. This preserves constraints while making required reading explicit.
+Full dependency-family rationale, release metadata checklists, internal test-access exceptions, and buffer producer/consumer fields can live in authoritative documents or task skills. The root retains triggers and mandatory gates. This preserves constraints while making required reading explicit.
 
 ## Proposed routing matrix
 
 | Task trigger | Starting material | Required chain expansion | Verification evidence |
 |---|---|---|---|
 | Read-only research/evaluation | Architecture and relevant task documentation | Contracts supporting conclusions; source when needed | Sources, baseline, facts/inferences/unknowns; no artificial production-test changes |
-| Documentation edit | Complete META authority; relevant module | Referenced usage, interface, and test documents | Bilingual content, generate/validate, and existing completion loop; no behaviorless tests |
+| Documentation edit | Complete META authority; relevant module | Referenced usage, interface, and test documents | English documentation accuracy and the normal completion loop; no behaviorless tests |
 | Core defect | Target module; META; testing rules | Inputs, consumers, sibling paths, file history | Real-path red-to-green regression and sibling coverage; iteration and final gates |
-| Public API/file structure change | Target and related modules; API consumers | Public whitelist, interface boundaries, mirror inventory | Behavior tests, BREAKING decision, interface/file lists, DocSync |
+| Public API/file structure change | Target and related modules; API consumers | Public whitelist, interface boundaries, module inventory | Behavior tests, BREAKING decision, interface/file lists, documentation |
 | Godot runtime/input issue | Adapter, host, Console, integration-test documentation | Core frame boundary, nodes, real input consumption | Current build; headless versus GUI applicability; state and visual evidence |
 | Dependency update | Bootstrap and Dependabot rationale | Version coupling, generator/SDK/test runner | Coupled-family update and full gates; no isolated family member bump |
-| Formal release | Complete release-process authority | Version, analyzer tracking, workflows, docs | verify-release, generated artifacts, post-commit CI/lint, tag sequence |
+| Formal release | Complete release-process authority | Version, analyzer tracking, workflows, docs | verify-release, release metadata, post-commit CI/lint, tag sequence |
 | Unfinished discovery/task recovery | Complete META buffer protocol; buffer root and relevant chapters | Baseline revalidation, facilities, history/commands | Ownership, status, failure, next action, final commit |
 
-This is a proposal, not a waiver. Current full-reading and completion rules still apply. In particular, current AGENTS §0 requires full release-process reading. Routing it only to release tasks requires coordinated edits to AGENTS, both META languages, release-process, and the instruction guard. A skill cannot override them.
+This is a proposal, not a waiver. Current full-reading and completion rules still apply. In particular, current AGENTS §0 requires full release-process reading. Routing it only to release tasks requires coordinated edits to AGENTS, the English META, release-process, and the instruction guard. A skill cannot override them.
 
 General Changelog categories and BREAKING decisions should be routed separately from formal release operations; ordinary source changes can still require Changelog rules. META cannot simply become optional either: docs writes, builds, and buffer operations each have required authoritative sections. Keep its complete authority and route precisely to sections instead of duplicating drifting summaries.
 

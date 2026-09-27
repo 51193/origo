@@ -5,7 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# Keep the caller's NuGet package cache when HOME is redirected for Godot.
+# Keep using the caller's NuGet package cache when the headless Godot run
+# redirects HOME below. Otherwise dotnet-env.sh sees the redirected HOME and
+# creates an empty repository-local cache, so Godot.NET.Sdk cannot be resolved
+# in offline/local runs even though the package is already installed.
 HOST_NUGET_PACKAGES="${NUGET_PACKAGES:-${HOME:-}/.nuget/packages}"
 
 # Godot writes logs/caches under the XDG user directories. In containers and

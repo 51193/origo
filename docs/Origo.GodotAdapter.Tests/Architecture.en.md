@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.GodotAdapter.Tests/Architecture -->
-<!-- docsync-revision: 17 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Architecture Guardrail Tests (Adapter Layer)
 
 > [↑ Back to Origo.GodotAdapter.Tests](README.en.md)
@@ -36,7 +33,7 @@ and guards the public visibility of the adapter-layer `CommandHandlerBase`, allo
 | `GodotSndEntity_GetNodeFromSnd_ShouldRemainPublic` | `SndEntityNodeExtensions.GetNodeFromSnd<T>()` stays public so external projects can reach Godot nodes | Origo.GodotAdapter/Snd |
 | `GodotSndManager_BindContext_ShouldNotBePublic` | Reflection asserts `GodotSndManager.BindContext` has no public concrete-type path (only the explicit `ISndContextAttachableSceneHost` implementation), preventing business code from rebinding the context behind the framework's back | Origo.GodotAdapter/Snd |
 | `GodotSndManager_BindRuntimeDependencies_ShouldNotBePublic` | Reflection asserts `BindRuntimeDependencies` is internal only (driven by the bootstrap flow `OrigoAutoHost` and InternalsVisibleTo test projects), preventing business code from rebinding world/logger behind the framework's back | Origo.GodotAdapter/Snd |
-| `ShellApiClassification_CoversEveryAdapterExport` | Every GodotAdapter export, including Godot-generated signal nested types, appears exactly once in the bilingual classification table | architecture/shell-api-classification |
+| `ShellApiClassification_CoversEveryAdapterExport` | Every GodotAdapter export, including Godot-generated signal nested types, appears exactly once in the English classification table | architecture/shell-api-classification |
 
 ## Test Support Strategy
 

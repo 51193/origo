@@ -1,6 +1,3 @@
-<!-- docsync-pair: META -->
-<!-- docsync-revision: 31 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
 > [↑ Back to Origo Manual](README.en.md)
@@ -49,107 +46,31 @@
 - **Uncertain design decisions must be escalated to the maintainer; do not fabricate**
 - **No evolution markers**: documentation is a snapshot of the current state. Do not use markers such as "new", "legacy", "deprecated", "since v0.x" that track the version evolution history of code/interfaces. Any description of an interface/method/decision should directly state its current responsibilities and rationale, without implying whether it "previously did not exist" or "may be removed in the future."
 
-### Bilingual Documentation Mechanism (DocSyncTool)
+### English Documentation Mechanism
 
-`docs/` organizes multilingual documentation as **same-basename `.zh.md`/`.en.md` pairs**. The common case is a `README` pair; other basenames (for example `Integration.*`, `pipeline.*`) are valid too. Navigation-only directories contain only the generated `README.md` hub. The `docs/agents/issue-tracker.md`, `triage-labels.md`, and `domain.md` files are tool configuration at fixed paths for Matt Pocock's skills, outside the manual's content pairs. The directory's `README.zh.md`/`README.en.md` remains governed by this mechanism. When configuration changes, synchronize that README pair so the manual entry stays accurate.
+`docs/` is a hand-maintained English manual co-located with the source tree.
+English documentation is the single maintained language for this manual.
+Each module entry explains its responsibility, public surface, design decisions,
+and relevant usage or test guidance. There are no generated navigation hubs,
+language-pair metadata headers, revision files, or synchronization commands.
 
-| File | Purpose |
-|------|---------|
-| `README.md` | **Auto-generated** navigation hub (lists all language pairs and subdirectories). **Do not edit manually.** |
-| `<name>.zh.md` | Chinese content file; `<name>` is commonly `README` |
-| `<name>.en.md` | English content file; `<name>` is commonly `README` |
+When source structure, public interfaces, configuration, or design intent
+changes, update the affected English entries and their links in the same
+change. Internal implementation changes need no prose update unless they alter
+the documented design.
 
-Two files with the same base name but different language suffixes form a **sync pair**. Sync status is tracked through metadata headers at the top of each content file:
+## Documentation Rules
 
-```markdown
-<!-- docsync-pair: Origo.Core/Snd/README -->
-<!-- docsync-revision: 8 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
-```
+### Situations Requiring Documentation Update
 
-| Field | Meaning |
-|-------|---------|
-| `docsync-pair` | Globally unique pair identifier (file path minus language suffix). Automatically derived; must be identical across languages. |
-| `docsync-revision` | Monotonic integer, **computed by DocSyncTool from git history**. **Two files of a pair are in sync when their revisions are equal.** Do not edit it by hand. |
-
-**Revision rules** (computed automatically by `generate`, verified by `validate`):
-
-| Git change | Computed revision |
-|-----------|-------------------|
-| New file / new pair | Starts at `1`. A new translation added to an existing pair catches up to the peer revision. |
-| One language of a pair changed | The leading side advances by one generation; a change to the stale side catches up to the peer (translation catch-up). |
-| Both languages changed in the same commit | Both advance together by one generation. |
-| Metadata-only / pure-rename commits | No revision change. |
-| Multiple content commits in one push | Every content commit is counted; the final CI checkout does not collapse them. |
-
-The planner hashes each file with the DocSync metadata block removed, finds
-the last generated content state in that file's git history, and replays the
-content-changing commits since then. CI fetches the complete history
-(`fetch-depth: 0`) because GitHub only runs CI for the final commit of a
-multi-commit push.
-
-**After any doc content change**, you must run:
-
-```bash
-dotnet run --project tools/DocSyncTool -- generate
-```
-
-This rewrites the revision headers and produces two kinds of derived files
-(commit them together):
-
-1. **`README.md`** navigation hubs in every directory — auto-generated index listing all docs by language
-2. **`docs/.sync-status.json`** — machine-readable snapshot of every pair's revision state, including content hashes used as the idempotent planning anchor
-
-**DocSyncTool cheat-sheet** (run from repo root):
-
-| Command | What it does |
-|---------|-------------|
-| `dotnet run --project tools/DocSyncTool -- generate` | Auto-compute `docsync-revision` from git history, regenerate all `README.md` nav hubs + `.sync-status.json`. Idempotent and always succeeds. |
-| `dotnet run --project tools/DocSyncTool -- validate` | Read-only check: matching and monotonic pair revisions (floored by the previous revisions recorded by `generate`), same-language links inside the mirror, no cross-language/bare `.md` links, existing file/directory/anchor targets, complete reference-style definitions, and every `.cs` file in each mirrored source directory listed in that directory's bilingual READMEs. Heading-structure differences are warning-only. Exit code 1 on failure. |
-
-**Link discipline** (enforced as ERROR by `validate` inside the docs mirror):
-
-- Chinese docs (`.zh.md`) link only to `.zh.md` targets
-- English docs (`.en.md`) link only to `.en.md` targets
-- **Cross-language links are forbidden**
-- Bare `.md` links without a language suffix are forbidden inside the mirror; links that leave the mirror for root files (for example `../AGENTS.md` or `../CHANGELOG.md`) are allowed
-
-The tool configuration (languages, docs root, source-mirror roots, and source→doc overrides) lives in `tools/DocSyncTool/docsync-config.json`:
-
-```json
-{
-  "Languages": ["zh", "en"],
-  "DocsRoot": "docs",
-  "SourceMirrorRoots": [
-    "Origo.Core",
-    "Origo.GodotAdapter",
-    "Origo.ConsoleBridge",
-    "Origo.SourceGeneration",
-    "Origo.TestSupport"
-  ],
-  "SourceDocOverrides": {
-    "Origo.TestSupport/Metadata": "docs/Origo.TestSupport/Architecture",
-    "Origo.TestSupport/Runtime": "docs/Origo.TestSupport/Architecture"
-  }
-}
-```
-
-**Local enforcement**: `scripts/doc-sync.sh` (called by `scripts/ci.sh`) runs
-`generate` then `validate`. GitHub CI does not run DocSync; generated files must
-be refreshed locally before commit.
-
-## Sync Rules
-
-### Situations Requiring Sync Update
-
-1. **Add/delete/rename source code directory** → mirror the same operation in `docs/`
-2. **Add/rename/delete any `.cs` file under `SourceMirrorRoots`** → update that directory's mirror README file list in both languages (internal files included; `validate` enforces this). Test-project/tool `.cs` changes follow item 7 instead.
+1. **Add/delete/rename source code directory** → update the affected English module entry in `docs/`
+2. **Add/rename/delete any documented `.cs` file** → update the relevant English file list or module entry
 3. **Add public interface/method** → update the interface list in the corresponding leaf README
 4. **Design decision change** → update the design decisions section
 5. **New config key/command** → update relevant README and usage docs
 6. **Inter-module dependency change** → update module README links
 7. **Test capability/method change** → update the corresponding `docs/Origo.*.Tests/` capability docs
-8. **Release or Changelog rule change** → update [release-process.en.md](release-process.en.md) (Chinese peer: `release-process.zh.md`)
+8. **Release or Changelog rule change** → update [release-process.en.md](release-process.en.md)
 9. **AGENTS.md meta-instruction changes** → [AGENTS.md](../AGENTS.md) is authoritative on conflict; synchronize the affected sections of this document in the same change. Do not hard-code AGENTS section numbers; when a rule is owned by this document, keep the full rule here rather than a summary that can go stale.
 
 ### Situations NOT Requiring Sync
@@ -161,18 +82,16 @@ be refreshed locally before commit.
 ### Sync Checklist
 
 After a code PR is merged, check:
-- [ ] Is the directory structure mirrored (add/delete/rename)?
-- [ ] Are leaf README interface/file lists accurate?
-- [ ] Are intermediate README sub-module indexes complete?
+- [ ] Is the affected module entry accurate?
+- [ ] Are interface/file lists accurate where documented?
 - [ ] Are all links valid (no 404)?
 - [ ] Does the design decisions section reflect current design intent?
 - [ ] Do `docs/usage/` and test capability docs cover new scenarios/capabilities?
-- [ ] Are all added/renamed/deleted `.cs` files listed in both mirror READMEs (internal files included)?
-- [ ] If release or Changelog rules changed, were `release-process.zh/en.md` updated?
+- [ ] If release or Changelog rules changed, was `release-process.en.md` updated?
 
 ## Git Commit Message Format
 
-All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. Each clone must enable the repository hooks once with `git config core.hooksPath .githooks`; the local `.githooks/pre-push` hook invokes `scripts/lint-commits.sh` before Git uploads objects and checks every branch range being pushed: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. This gate runs locally and is not duplicated by GitHub Actions. Dependabot-authored commits are the only exemption: Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same branch remain fully checked.
+All commits must follow the Conventional Commits specification to keep repository history readable and machine-parseable. PR commit messages are enforced by `scripts/lint-commits.sh` and `.github/workflows/commit-lint.yml`: type, 72-character subject limit, no trailing period, and body lines no longer than 72 characters. Dependabot-authored commits are the only exemption: Dependabot can configure a commit-message prefix but does not support custom message templates, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem so generated subjects remain Conventional Commits, and `scripts/lint-commits.sh` skips Dependabot-authored commits; human-authored commits in the same PR remain fully checked.
 
 ### Basic Format
 
@@ -264,6 +183,38 @@ chore: bump Origo to 0.0.7-nightly.20260608
 - ❌ Using internal codenames or priority markers (e.g., `P0`, `P1`, `Phase 1`, etc.) — commit messages are intended for readers without prior context and should directly describe the change content, not internal development classifications
 - ❌ Preserving intermediate development commit messages during squash merge (rewrite a feature-oriented message instead)
 
+## Directory Structure Conventions
+
+```
+docs/                            # Documentation root (inside the origo repository)
+├── README.en.md                # Top-level English index
+├── META.en.md                  # Maintenance meta-instructions
+├── release-process.en.md       # Formal releases and Changelog rules
+├── usage/                      # System usage documentation
+├── architecture/               # Architecture overview, decisions, and deferred designs
+├── agents/                     # Matt Pocock skills configuration and manual entry
+├── benchmarks/                 # Performance baselines and baseline.json
+├── Origo.Core/                  # Mirrors the repo root Origo.Core/ directory structure
+├── Origo.Core.Tests/            # Test capability docs grouped by capability
+├── Origo.GodotAdapter/          # Mirrors the repo root Origo.GodotAdapter/
+├── Origo.GodotAdapter.Tests/    # GodotAdapter test capability docs
+├── Origo.GodotAdapter.Integration.Tests/ # Godot headless integration test docs
+├── Origo.ConsoleBridge/         # Mirrors the repo root Origo.ConsoleBridge/
+├── Origo.ConsoleBridge.Tests/   # ConsoleBridge test capability docs
+├── Origo.SourceGeneration/      # Mirrors the repo root Origo.SourceGeneration/
+├── Origo.SourceGeneration.Tests/ # Source generator test capability docs
+├── Origo.TestSupport/           # Test support library docs
+```
+
+Every manual content file is hand-authored in English. The three `docs/agents/`
+tool configuration files remain at fixed paths. Architecture overviews, decision
+records, and deferred designs live in `docs/architecture/`.
+
+> Top-level entry point [AGENTS.md](../AGENTS.md) lives at the repo root, is auto-injected into every session, and links to this file.
+>
+> Manual entries are linked from the English top-level index and from their
+> parent module entries.
+
 ## Branch and Worktree Naming
 
 Human- or agent-created work branches use `<type>/<creator>/<MMDD>/<purpose>`;
@@ -280,38 +231,6 @@ Use `bash scripts/check.sh plan`, `quick`, `affected`, or `full`; quick requires
 an explicit project/filter and does not measure coverage, affected uses the
 evaluated project graph and impact contracts, and full remains the final CI
 gate. Unknown or empty selections stop and require `full`.
-
-## Directory Structure Conventions
-
-```
-docs/                            # Documentation root (inside the origo repository)
-├── README.md                    # Auto-generated: bilingual navigation hub
-├── README.zh.md / README.en.md  # Top-level indexes (hand-authored, bilingual pair)
-├── META.zh.md / META.en.md      # These maintenance meta-instructions (bilingual pair)
-├── release-process.zh/.en.md    # Formal releases, weekly snapshots, Changelog rules (bilingual pair)
-├── .sync-status.json            # Auto-generated: sync status for all pairs
-├── usage/                       # System usage documentation (zh/en pairs)
-├── architecture/                # Architecture overview, decisions, and deferred designs (bilingual pairs)
-├── agents/                      # Matt Pocock skills configuration + bilingual manual entry
-├── benchmarks/                  # Performance baselines (zh/en pairs + baseline.json)
-├── Origo.Core/                  # Mirrors the repo root Origo.Core/ directory structure
-├── Origo.Core.Tests/            # Test capability docs (grouped by capability, zh/en pairs)
-├── Origo.GodotAdapter/          # Mirrors the repo root Origo.GodotAdapter/
-├── Origo.GodotAdapter.Tests/    # GodotAdapter test capability docs
-├── Origo.GodotAdapter.Integration.Tests/ # Godot headless integration test docs
-├── Origo.ConsoleBridge/         # Mirrors the repo root Origo.ConsoleBridge/
-├── Origo.ConsoleBridge.Tests/   # ConsoleBridge test capability docs
-├── Origo.SourceGeneration/      # Mirrors the repo root Origo.SourceGeneration/
-├── Origo.SourceGeneration.Tests/ # Source generator test capability docs
-├── Origo.TestSupport/           # Test support library docs
-└── tools/                       # Repository tool test docs (DocSyncTool.Tests)
-```
-
-Every hand-authored manual content file has paired `.zh.md` / `.en.md` versions; the three `docs/agents/` tool configuration files follow the exception above. Every directory `README.md` navigation hub is auto-generated by `generate`. Navigation-only directories have no language-suffixed pair files. Architecture overviews, decision records, and deferred designs live in `docs/architecture/`.
-
-> Top-level entry point [AGENTS.md](../AGENTS.md) lives at the repo root, is auto-injected into every session, and links to this file.
->
-> Every `.zh.md` content file has a corresponding `.en.md` file alongside it, and the `README.md` navigation hub automatically lists entries for both languages.
 
 ## Environment Bootstrap
 
@@ -369,11 +288,16 @@ when the buffer is present.
 
 ## Manual Version
 
-Documentation is synchronized with the `<Version>` in the repository's `Directory.Build.props` — since docs and source code are co-located in the same repo, versioning is naturally consistent. A formal release must also update the version text in `docs/README.zh.md` / `docs/README.en.md` as described in [release-process.en.md](release-process.en.md); `scripts/verify-release.sh` checks that both files mention the release version.
+Documentation is maintained with the source in the repository. A formal
+release must also update the version text in `docs/README.en.md` as described
+in [release-process.en.md](release-process.en.md); `scripts/verify-release.sh`
+checks that file for the release version.
 
 ## Generation
 
-The **content files** (`.zh.md` / `.en.md`) of this manual are hand-written after analyzing source code. The **navigation hubs** (`README.md`) and **sync status file** (`.sync-status.json`) are auto-generated by `DocSyncTool generate` and must not be edited manually. Quality depends on correct understanding of the source code and the maintainer's design knowledge. If discrepancies are found, report to the manual maintainer.
+The manual files are hand-written after analyzing source code. Quality depends
+on correct understanding of the source code and the maintainer's design
+knowledge. If discrepancies are found, report to the manual maintainer.
 
 ---
 [↑ Back to Origo Manual](README.en.md)

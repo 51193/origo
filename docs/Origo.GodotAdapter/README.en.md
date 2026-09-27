@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.GodotAdapter/README -->
-<!-- docsync-revision: 18 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Origo.GodotAdapter
 
 > [↑ Back to Origo.manual](../README.en.md)

@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Runtime/StateMachine/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # StateMachine (Runtime)
 
 > [↑ Back to Runtime](../README.en.md) · [↔ Implementation: StateMachine](../../StateMachine/README.en.md)

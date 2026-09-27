@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Save/Storage/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Storage
 
 > [↑ Back to Save](../README.en.md)

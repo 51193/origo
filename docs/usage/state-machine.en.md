@@ -1,6 +1,3 @@
-<!-- docsync-pair: usage/state-machine -->
-<!-- docsync-revision: 6 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # State Machine
 
 > [↑ Back to usage](README.en.md)

@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Save/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Save
 
 > [↑ Back to Origo.Core.Contracts](../README.en.md)

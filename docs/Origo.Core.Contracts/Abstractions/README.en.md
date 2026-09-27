@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Contracts/Abstractions/README -->
-<!-- docsync-revision: 3 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Abstractions
 
 > [↑ Back to Origo.Core.Contracts](../README.en.md)

@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.GodotAdapter.Tests/FileSystem -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # File System Tests (Adapter Layer)
 
 > [↑ Back to Origo.GodotAdapter.Tests](README.en.md)

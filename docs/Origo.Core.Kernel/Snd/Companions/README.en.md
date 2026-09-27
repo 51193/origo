@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Snd/Companions/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Companions
 
 > [↑ Back to Snd](../README.en.md)

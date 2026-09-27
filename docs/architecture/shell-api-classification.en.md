@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/shell-api-classification -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Shell API classification for 0.1.0
 
 > [↑ Back to Architecture](README.en.md)
@@ -20,7 +17,7 @@ dotnet test Origo.GodotAdapter.Tests --configuration Release -p:CollectCoverage=
 dotnet test Origo.ConsoleBridge.Tests --configuration Release -p:CollectCoverage=false --filter FullyQualifiedName~ShellApiClassification_CoversEveryConsoleBridgeExport
 ```
 
-The same guards run inside `scripts/test.sh`, so the full development loop revalidates the table. `Origo.Core.Tests` runs the guard against `Origo.Core`, `Origo.Core.Contracts`, and `Origo.Core.Kernel`, and it also verifies that the English and Chinese tables carry identical type metadata.
+The same guards run inside `scripts/test.sh`, so the full development loop revalidates the table. `Origo.Core.Tests` runs the guard against `Origo.Core`, `Origo.Core.Contracts`, and `Origo.Core.Kernel`; the inventory is maintained in the English table.
 
 ## Generated public members
 

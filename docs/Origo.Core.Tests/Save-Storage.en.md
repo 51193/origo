@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Save-Storage -->
-<!-- docsync-revision: 33 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Persistence: Storage Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

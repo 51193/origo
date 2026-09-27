@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.GodotAdapter/Snd/README -->
-<!-- docsync-revision: 26 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Snd
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Snd](../../Origo.Core/Snd/README.en.md)

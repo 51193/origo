@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Runtime-Core -->
-<!-- docsync-revision: 19 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Runtime Core Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)

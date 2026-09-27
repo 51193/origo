@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.GodotAdapter/Console/README -->
-<!-- docsync-revision: 15 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Console
 
 > [↑ Back to Origo.GodotAdapter](../README.en.md) · [↔ Core: Runtime/Console](../../Origo.Core.Kernel/Runtime/Console/README.en.md)

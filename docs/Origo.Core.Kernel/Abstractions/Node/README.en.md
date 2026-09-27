@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Kernel/Abstractions/Node/README -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Node (Core Internal Host)
 
 > [↑ Back to Abstractions](../README.en.md) · [↔ Consumer contracts: Origo.Core.Contracts/Node](../../../Origo.Core.Contracts/Abstractions/Node/README.en.md)

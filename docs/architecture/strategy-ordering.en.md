@@ -1,6 +1,3 @@
-<!-- docsync-pair: architecture/strategy-ordering -->
-<!-- docsync-revision: 1 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Lifecycle strategy ordering constraints
 
 > [↑ Back to Architecture](README.en.md)

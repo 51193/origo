@@ -1,6 +1,3 @@
-<!-- docsync-pair: Origo.Core.Tests/Snd-Extensions -->
-<!-- docsync-revision: 8 -->
-<!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # SND Extensions Tests
 
 > [↑ Back to Origo.Core.Tests](README.en.md)
