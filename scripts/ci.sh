@@ -12,8 +12,9 @@
 #
 # Each step is a standalone script mapped 1:1 to a CI step. Run this master
 # script for a complete local reproduction of the single-platform gate set;
-# GitHub Actions additionally runs the OS matrix and the separate commit-lint
-# workflow. For fast dev iteration, run an individual step script directly.
+# GitHub Actions additionally runs the OS matrix. Commit-message lint runs
+# locally through .githooks/pre-push. For fast dev iteration, run an individual
+# step script directly.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
