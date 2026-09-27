@@ -77,7 +77,7 @@ in `docs/META.zh.md` / `.en.md` §Bilingual Documentation Mechanism.
 - Never edit `docsync-revision`, generated `README.md` hubs, or `docs/.sync-status.json`.
 - After any docs content change run `dotnet run --project tools/DocSyncTool -- generate`, then commit all rewritten docs, hubs, and `.sync-status.json`.
 - Links inside the docs mirror stay in the same language; cross-language and bare `.md` links inside the mirror are forbidden. Links to root files outside the mirror (e.g. `../AGENTS.md`) are allowed.
-- CI runs `generate` + `validate`; local `scripts/doc-sync.sh` mirrors it. Validate checks pairs/revisions, same-language links, target/anchor/reference existence, and source-mirror file lists (§5).
+- Local `scripts/doc-sync.sh` runs `generate` + `validate`; GitHub CI does not run DocSync. Validate checks pairs/revisions, same-language links, target/anchor/reference existence, and source-mirror file lists (§5).
 
 ### 1.7 Source Code Comments — English Only, IntelliSense-Ready
 
@@ -126,7 +126,7 @@ chapters belong to one work item. Full tracked protocol:
 
 1. **Develop source** — satisfy §0/§1; read target history and collaborators first (§1.8/§1.3).
 2. **Extend/adapt tests** — behavior tests for new public API; red-first real-path regression for bug fixes (§3); sync behavior-change tests.
-3. **Iterate with tests** — run `bash scripts/test.sh` (restore → build → test + coverage); fix and re-test until green.
+3. **Iterate with tests** — use `bash scripts/check.sh quick` or `bash scripts/check.sh affected`; before commit run `bash scripts/test.sh` (full coverage).
 4. **Changelog alignment** — update `CHANGELOG.md` `[Unreleased]` per §4.
 5. **Docs sync** — update `docs/` per §5; after any content change run `dotnet run --project tools/DocSyncTool -- generate`.
 6. **Commit** — source, tests, Changelog, docs content, generated hubs, and `.sync-status.json` together.

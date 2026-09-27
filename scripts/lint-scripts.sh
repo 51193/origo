@@ -78,12 +78,18 @@ else
 fi
 
 if command -v python3 >/dev/null 2>&1; then
+    if [[ -n "${ORIGO_BRANCH_NAME:-}" ]]; then
+        bash scripts/work-identity.sh validate --branch "$ORIGO_BRANCH_NAME"
+    else
+        bash scripts/work-identity.sh validate
+    fi
     if python3 -c "import yaml" >/dev/null 2>&1; then
         python3 scripts/validate-release-workflow.py
     else
         echo "WARNING: PyYAML is not installed; skipping release-workflow guard."
     fi
     PYTHONDONTWRITEBYTECODE=1 python3 scripts/work_identity_test.py
+    PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_test.py
     python3 scripts/validate-agent-docs.py
     python3 scripts/test-validate-release-packages.py
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then

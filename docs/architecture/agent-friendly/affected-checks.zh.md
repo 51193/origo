@@ -1,11 +1,12 @@
 <!-- docsync-pair: architecture/agent-friendly/affected-checks -->
-<!-- docsync-revision: 3 -->
+<!-- docsync-revision: 5 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 受影响检查：缩短反馈回路而不缩小质量合同
 
 > [↑ 回到 Agent Friendly 调查](README.zh.md)
 
-调查日期：2026-09-18；仓库观察基线：`cdba5e4`。本文区分现状、推断和拟议设计；下面的 `check.sh`、规划器与 JSON 合同均未实现，也不改变当前 [AGENTS.md](../../../AGENTS.md) 的完整开发循环。
+调查日期：2026-09-18；实现核对：2026-09-27。本文区分现状、实现合同和剩余风险；
+`scripts/check.sh`、规划器与 JSON 证据已实现，且不削弱 [AGENTS.md](../../../AGENTS.md) 的完整开发循环。
 
 ## 1. 现状与具体成本
 
@@ -25,14 +26,17 @@
 
 项目默认 `CollectCoverage=true`。过滤测试的 `quick` 必须**显式关闭该次局部运行的覆盖率收集**并在结果标记 `coverage: not-measured`，不能降阈值、把子集覆盖率包装成项目覆盖率，或让 quick 成功冒充 CI 成功。`affected` 使用所选项目整套非 Benchmark 测试，保留原有 ≥90% 行覆盖率合同和排除项，不拼接不同测试子集的数据。Microsoft 的 VSTest 文档确认支持项目选择与 `--filter`，同时指出零匹配默认也可能返回成功；因此“测试数量为零即失败”必须是显式门禁。[dotnet test with VSTest](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test-vstest)
 
-拟议用法：
+实际用法：
 
 ```bash
-# 拟议命令，仓库当前没有此脚本
-bash scripts/check.sh plan --base <commit> --worktree --json
-bash scripts/check.sh quick --plan .artifacts/check-plan.json --test <regression>
-bash scripts/check.sh affected --plan .artifacts/check-plan.json
-# 当前最终入口依然是提交后的 bash scripts/ci.sh
+# 只读规划；默认基线是 origin/main 与 HEAD 的 merge-base
+bash scripts/check.sh plan --base <commit> --output /tmp/check-plan.json
+# 局部真实路径；项目和过滤条件必须显式给出
+bash scripts/check.sh quick --project Origo.Core.Tests/Origo.Core.Tests.csproj --filter 'FullyQualifiedName~Save'
+# 受影响项目完整套件；requiresFull 或指纹变化会停止
+bash scripts/check.sh affected --base <commit>
+# 最终门禁：完整 ci.sh 加提交消息 lint
+bash scripts/check.sh full
 ```
 
 ## 3. 如何选择：项目图加显式影响合同
@@ -46,7 +50,7 @@ bash scripts/check.sh affected --plan .artifacts/check-plan.json
 | 仓库实际路径示例 | 最小保守选择及理由 |
 |---|---|
 | `Origo.Core.Kernel/Save/Storage/SavePayloadReader.cs` | Core.Tests 完整套件；Core 的反向依赖包含 GodotAdapter 等，按图保留下游测试，ConsoleBridge 只依赖 Contracts、不是 Core/Kernel 的下游消费者；读档恢复需真实 Godot 集成。初期可以保守选择所有 Core 消费者，测得安全证据后再缩小 |
-| `Origo.SourceGeneration/TypedDataGenerator.HomeGeneration.cs` | SG.Tests，加 Core 与 Adapter 消费者编译/测试、TypedData 注册 headless 集成；生成代码没有手写文件 diff 也可能改变公开 API |
+| `Origo.SourceGeneration/TypedDataGenerator.HomeGeneration.cs` | SourceGeneration.Tests、Core.Tests、Adapter.Tests，以及 TypedData 注册 headless 集成；生成代码没有手写文件 diff 也可能改变公开 API |
 | `Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs` | Adapter.Tests 与 Godot headless；该文件的原生调用在纯 .NET 覆盖率中被排除，必须验证真实 `_Ready`、后续帧与失败启动 |
 | `Origo.TestSupport/FileSystem/TestMemoryFileSystem.cs` | 由项目图选中所有引用 TestSupport 的套件，不能只跑文件系统测试 |
 | `tools/DocSyncTool/Validator.cs` | DocSyncTool.Tests、仓库 DocSync generate/validate；最终仍需提交并过 full |
@@ -56,7 +60,7 @@ bash scripts/check.sh affected --plan .artifacts/check-plan.json
 
 ## 4. 可审查的机器输出
 
-以下是拟议规划合同的节选，不是实际运行结果：
+以下是实际规划合同的节选；每次运行还会写入当前改动指纹：
 
 ```json
 {
@@ -65,20 +69,24 @@ bash scripts/check.sh affected --plan .artifacts/check-plan.json
   "worktreeFingerprint": "<content-hash>",
   "configuration": "Release",
   "changedPaths": ["Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs"],
-  "selectedProjects": ["Origo.GodotAdapter.Tests"],
-  "additionalGates": ["godot-headless", "doc-sync"],
+  "selectedProjects": ["Origo.GodotAdapter.Tests/Origo.GodotAdapter.Tests.csproj"],
+  "additionalGates": ["godot"],
   "reasons": [
-    {"gate": "godot-headless", "rule": "engine-bound-bootstrap"}
+    "Origo.GodotAdapter/Bootstrap/OrigoDefaultEntry.Bootstrap.cs changes the Godot contract"
   ],
-  "coverage": "project-suite-with-existing-thresholds",
+  "coverage": "existing-project-gates",
   "requiresFull": false,
   "finalGateRequired": true
 }
 ```
 
-实际完整合同还需记录 SDK/Godot 版本、TFM、图与合同哈希、命令参数数组、执行次数/通过数、退出码、耗时和产物路径。stdout 给机器 JSON，stderr 给诊断；失败应带改动路径、规则和下一动作。显示 `requiresFull: false` 仅说明 affected 规划可执行，`finalGateRequired: true` 明确最终 full 永远需要。shell 不应直接执行来自自然语言或未验证 JSON 的任意命令文本。
+stdout 给机器 JSON，stderr 给诊断；失败应带改动路径、规则和下一动作。显示
+`requiresFull: false` 仅说明 affected 规划可执行，`finalGateRequired: true` 明确最终
+full 永远需要。shell 不执行来自自然语言或未经验证 JSON 的任意命令文本。
 
-## 5. 如何证明选择器没有漏选
+## 5. 证据与如何发现遗漏的检查
+
+固定样本已编码在 `scripts/check_test.py` 中，可执行覆盖镜像 C# 文件增删、生成器及其 Core/Adapter 消费方、Godot Adapter、过期指纹、Benchmark 排除和空计划要求 full。测试执行会在 stderr 报告 `executed-tests` 与 `elapsed-seconds`；stdout 保持纯 JSON，因此调用方可以记录范围、原因、数量和耗时而不必解析人类诊断输出。最终证据仍由 `bash scripts/check.sh full` 提供，它执行未改变的完整 CI 与提交 lint。
 
 建立包含真实回归的历史样本：存档读写、延迟队列、观察者恢复、生成器 Kind 注册、Godot 启动、TestSupport 与全局构建配置。每个样本固定基线与补丁，同时运行 affected 和 full，比较**失败集合**，而非只比较两者是否退出 0。故意破坏上游接口、移除生成输出、修改 `.tscn`、改共享属性，验证相关下游检查必被选中；rename/delete、未跟踪文件、空匹配测试和失效规划也要覆盖。
 
@@ -88,4 +96,6 @@ bash scripts/check.sh affected --plan .artifacts/check-plan.json
 
 ## 6. 建议顺序与边界
 
-先做只读 `plan` 与解释输出；再接项目级 affected；最后才尝试模块级过滤。实施前同步修改 AGENTS/META 的迭代步骤，让 quick/affected 有明确授权而 final full 不变；本文是研究，不能自行替代当前强制 `test.sh`。人工文档继续记录跨模块设计与测试行为，选择器只负责执行证据路由。API 与生成器事实来源参见 [机器 API 清单](api-inventory.zh.md)。
+当前实现按只读 `plan`、项目级 `affected`、显式过滤 `quick` 的顺序提供反馈；
+`full` 仍调用既有 `ci.sh` 并执行提交消息 lint。人工文档继续记录跨模块设计与测试行为，
+选择器只负责执行证据路由。API 与生成器事实来源参见 [机器 API 清单](api-inventory.zh.md)。

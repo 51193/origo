@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 28 -->
+<!-- docsync-revision: 31 -->
 <!-- docsync-revision — 由 DocSyncTool 根据 git 历史自动管理；请勿手改。 -->
 # 手册维护元指令
 
@@ -132,7 +132,9 @@ dotnet run --project tools/DocSyncTool -- generate
 }
 ```
 
-**CI 强制执行**：`scripts/doc-sync.sh`（由 `scripts/ci.sh` 调用）会运行 `generate` 然后 `validate`。`push` 到 main 时，CI 自动提交过时的生成文件；`pull_request` 时，检查到生成文件过时则失败并提示本地运行 `generate`。Validation 失败始终阻断构建。
+**本地强制执行**：`scripts/doc-sync.sh`（由 `scripts/ci.sh` 调用）会运行
+`generate` 然后 `validate`。GitHub CI 不再运行 DocSync；提交前必须在本地
+刷新生成文件。
 
 ## 同步规则（Sync Rules）
 
@@ -266,6 +268,12 @@ purpose 必须小写，交接后创建者与日期不变，禁止无语义数字
 `master`、`dependabot/**` 与 tag 豁免，`codex/**`、`deepseek/**` 不豁免。
 使用 `bash scripts/work-identity.sh validate` 或 `new`；创建者按显式
 `--creator`、本地 `origo.githubUser`、已认证 `gh api user` 顺序解析。
+
+## 分层测试检查
+
+使用 `bash scripts/check.sh plan`、`quick`、`affected` 或 `full`；quick 必须
+显式指定项目和过滤条件且不测覆盖率，affected 按项目图与影响合同选择，
+full 仍是最终 CI 门禁。未知或空选择必须停止并要求运行 `full`。
 
 ## 目录结构约定
 

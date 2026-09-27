@@ -36,7 +36,9 @@ class WorkIdentityError(ValueError):
 
 
 def normalize_creator(value: str) -> str:
-    creator = value.strip().lower()
+    creator = value.strip()
+    if creator != creator.lower():
+        raise WorkIdentityError("creator must be lowercase")
     if not CREATOR_PATTERN.fullmatch(creator):
         raise WorkIdentityError(
             "creator must be a lowercase GitHub login using 1-39 letters, digits, or hyphens"
@@ -45,7 +47,9 @@ def normalize_creator(value: str) -> str:
 
 
 def normalize_purpose(value: str, issue_number: str | None = None) -> str:
-    purpose = value.strip().lower()
+    purpose = value.strip()
+    if purpose != purpose.lower():
+        raise WorkIdentityError("purpose must be lowercase kebab-case")
     if issue_number is not None:
         if not issue_number.isdigit() or int(issue_number) <= 0:
             raise WorkIdentityError("issue number must be a positive integer")
@@ -145,6 +149,19 @@ def _repository_root(repository: Path) -> Path:
     return Path(_run(["git", "-C", str(repository), "rev-parse", "--show-toplevel"])).resolve()
 
 
+def _main_checkout_root(repository: Path) -> Path:
+    """Return the checkout containing main/master when invoked from a worktree."""
+    root = _repository_root(repository)
+    listing = _run(["git", "-C", str(root), "worktree", "list", "--porcelain"])
+    for block in listing.strip().split("\n\n") if listing.strip() else []:
+        lines = block.splitlines()
+        path_line = next((line for line in lines if line.startswith("worktree ")), None)
+        is_main = any(line in {"branch refs/heads/main", "branch refs/heads/master"} for line in lines)
+        if path_line and is_main:
+            return Path(path_line.removeprefix("worktree ")).resolve()
+    return root
+
+
 def _current_branch(repository: Path) -> str | None:
     result = subprocess.run(
         ["git", "-C", str(repository), "symbolic-ref", "--quiet", "--short", "HEAD"],
@@ -182,7 +199,7 @@ def command_validate(branch: str | None, repository: Path) -> int:
 def _build_from_args(args: argparse.Namespace, repository: Path) -> tuple[str, str]:
     creator = resolve_creator(args.creator, repository)
     month_day = args.date or dt.datetime.now().astimezone().strftime("%m%d")
-    repository_name = _repository_root(repository).name.lower()
+    repository_name = _main_checkout_root(repository).name.lower()
     return build_names(
         work_type=args.type,
         creator=creator,
@@ -207,7 +224,8 @@ def command_name(args: argparse.Namespace, repository: Path) -> int:
 def command_new(args: argparse.Namespace, repository: Path) -> int:
     branch, worktree_name = _build_from_args(args, repository)
     root = _repository_root(repository)
-    worktree_root = Path(args.worktree_root).expanduser().resolve() if args.worktree_root else root.parent
+    checkout_root = _main_checkout_root(repository)
+    worktree_root = Path(args.worktree_root).expanduser().resolve() if args.worktree_root else checkout_root.parent
     worktree_root.mkdir(parents=True, exist_ok=True)
     worktree_path = worktree_root / worktree_name
     if worktree_path.exists():

@@ -1,5 +1,5 @@
 <!-- docsync-pair: META -->
-<!-- docsync-revision: 28 -->
+<!-- docsync-revision: 31 -->
 <!-- docsync-revision — managed automatically by DocSyncTool; DO NOT EDIT. -->
 # Documentation Maintenance Meta-Instructions
 
@@ -134,7 +134,9 @@ The tool configuration (languages, docs root, source-mirror roots, and source→
 }
 ```
 
-**CI enforcement**: `scripts/doc-sync.sh` (called by `scripts/ci.sh`) runs `generate` then `validate`. On `push` to main, CI auto-commits stale generated files; on `pull_request`, stale generated files cause failure with instructions to run `generate` locally. Validation failure always blocks the build.
+**Local enforcement**: `scripts/doc-sync.sh` (called by `scripts/ci.sh`) runs
+`generate` then `validate`. GitHub CI does not run DocSync; generated files must
+be refreshed locally before commit.
 
 ## Sync Rules
 
@@ -271,6 +273,13 @@ handoff, and meaningless numeric suffixes are forbidden. `main`, `master`,
 `dependabot/**`, and tags are exempt; `codex/**` and `deepseek/**` are not.
 Use `bash scripts/work-identity.sh validate` or `new`; creator resolution is
 explicit `--creator`, local `origo.githubUser`, then authenticated `gh api user`.
+
+## Layered Test Checks
+
+Use `bash scripts/check.sh plan`, `quick`, `affected`, or `full`; quick requires
+an explicit project/filter and does not measure coverage, affected uses the
+evaluated project graph and impact contracts, and full remains the final CI
+gate. Unknown or empty selections stop and require `full`.
 
 ## Directory Structure Conventions
 

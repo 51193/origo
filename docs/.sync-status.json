@@ -24,20 +24,20 @@
     "architecture/agent-friendly/affected-checks": {
       "status": "synced",
       "revisions": {
-        "zh": 3,
-        "en": 3
+        "zh": 5,
+        "en": 5
       },
       "previous_revisions": {
-        "zh": 2,
-        "en": 2
+        "zh": 3,
+        "en": 3
       },
       "files": {
         "zh": "architecture/agent-friendly/affected-checks.zh.md",
         "en": "architecture/agent-friendly/affected-checks.en.md"
       },
       "content_hashes": {
-        "zh": "BB6D5CDA4921727129D16A889BD9F01FCA54A79443C74E15D24B89C8A7AFF14C",
-        "en": "63DC783C1F94186AB8B17065A98B2EA6D965232CC0DF4F84E1E85A342C1D3C7D"
+        "zh": "AF23AE3474535AA4071BBA645211FA8EC36B3945F718455C605C3210A0E3C7AF",
+        "en": "8BF505AAA253349448B28CE5C8A268004E90FA0332167342AED4F7BD5DB2C6BF"
       }
     },
     "architecture/agent-friendly/api-inventory": {
@@ -332,20 +332,20 @@
     "META": {
       "status": "synced",
       "revisions": {
-        "zh": 28,
-        "en": 28
+        "zh": 31,
+        "en": 31
       },
       "previous_revisions": {
-        "zh": 27,
-        "en": 27
+        "zh": 30,
+        "en": 30
       },
       "files": {
         "zh": "META.zh.md",
         "en": "META.en.md"
       },
       "content_hashes": {
-        "zh": "7DA9EF686FC1241391C8D042246B727E307B14C5BAE25637ED4CB4C12A568773",
-        "en": "E06D922E16BAFFCC6C408E1F70C7779581D26F6F7FDBC7129E100E38094F5810"
+        "zh": "CF3BE2799053342867FAD77D02023B305D9800BBDF3AB51A38FA51AEA4561DAB",
+        "en": "6FB5CC71313BE2B7EE6EA5106AF380C7885EDA6AD3A498089DB727D305AC15AF"
       }
     },
     "Origo.ConsoleBridge.Tests/Architecture": {

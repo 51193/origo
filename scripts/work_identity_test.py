@@ -47,25 +47,35 @@ class WorkIdentityTests(unittest.TestCase):
         self.assertFalse(valid)
         self.assertIn("type", message)
 
-    def test_creator_normalization_is_lowercase_and_validated(self) -> None:
-        self.assertEqual(work_identity.normalize_creator("RouVen-crp"), "rouven-crp")
+    def test_creator_must_be_lowercase_and_validated(self) -> None:
+        with self.assertRaises(work_identity.WorkIdentityError):
+            work_identity.normalize_creator("RouVen-crp")
         with self.assertRaises(ValueError):
             work_identity.normalize_creator("not a github login")
 
     def test_branch_and_worktree_names_are_derived_consistently(self) -> None:
         branch, worktree = work_identity.build_names(
             work_type="feat",
-            creator="RouVen-crp",
+            creator="rouven-crp",
             month_day="0927",
-            purpose="Layered-Checks",
+            purpose="layered-checks",
             issue_number="43",
             repository_name="origo",
         )
         self.assertEqual(branch, "feat/rouven-crp/0927/43-layered-checks")
         self.assertEqual(worktree, "origo--feat--rouven-crp--0927--43-layered-checks")
 
+    def test_branch_validation_rejects_uppercase_creator_and_purpose(self) -> None:
+        for name in (
+            "feat/RouVen-crp/0927/layered-checks",
+            "feat/rouven-crp/0927/Layered-Checks",
+        ):
+            valid, _ = work_identity.validate_branch_name(name)
+            self.assertFalse(valid)
+
     def test_creator_resolution_prefers_explicit_argument(self) -> None:
-        self.assertEqual(work_identity.resolve_creator("RouVen-crp", Path("/does/not/exist")), "rouven-crp")
+        with self.assertRaises(work_identity.WorkIdentityError):
+            work_identity.resolve_creator("RouVen-crp", Path("/does/not/exist"))
 
     def test_validate_command_reports_invalid_branch(self) -> None:
         result = subprocess.run(
@@ -112,7 +122,7 @@ class WorkIdentityTests(unittest.TestCase):
                     "--type",
                     "feat",
                     "--creator",
-                    "RouVen-crp",
+                    "rouven-crp",
                     "--purpose",
                     "layered-checks",
                     "--date",
@@ -132,6 +142,56 @@ class WorkIdentityTests(unittest.TestCase):
                 ["git", "-C", str(expected), "branch", "--show-current"], text=True
             ).strip()
             self.assertEqual(branch, "feat/rouven-crp/0927/layered-checks")
+
+    def test_default_worktree_root_uses_main_checkout_from_managed_worktree(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            repository.mkdir()
+            subprocess.run(["git", "init", "-q", "-b", "main", str(repository)], check=True)
+            (repository / "README.md").write_text("fixture\n", encoding="utf-8")
+            subprocess.run(["git", "-C", str(repository), "add", "README.md"], check=True)
+            subprocess.run(
+                [
+                    "git", "-C", str(repository), "-c", "user.name=Fixture",
+                    "-c", "user.email=fixture@example.invalid", "commit", "-q", "-m", "fixture",
+                ],
+                check=True,
+            )
+            managed = Path(directory) / "managed"
+            subprocess.run(
+                ["git", "-C", str(repository), "worktree", "add", "-q", "-b", "feat/fixture/0927/check", str(managed)],
+                check=True,
+            )
+            self.assertEqual(work_identity._main_checkout_root(managed), repository.resolve())
+            result = subprocess.run(
+                [
+                    "bash",
+                    str(ROOT / "scripts/work-identity.sh"),
+                    "name",
+                    "--repository",
+                    str(managed),
+                    "--type",
+                    "feat",
+                    "--creator",
+                    "rouven-crp",
+                    "--purpose",
+                    "layered-checks",
+                    "--date",
+                    "0927",
+                    "--format",
+                    "worktree",
+                ],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                result.stdout.strip(),
+                "repo--feat--rouven-crp--0927--layered-checks",
+            )
+            subprocess.run(["git", "-C", str(repository), "worktree", "remove", str(managed)], check=True)
 
 
 if __name__ == "__main__":
