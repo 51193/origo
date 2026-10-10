@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard the release workflow's dispatch-safe tag and Boolean-input contract.
+"""Guard the release and weekly-snapshot workflow contracts.
 
 `workflow_dispatch` runs from `main`, so `github.ref_name` is the branch name
 rather than the requested release tag. The workflow resolves the real tag into
@@ -12,6 +12,13 @@ the `inputs` context. GitHub performs loose equality by coercing mismatched
 types to numbers, so `inputs.<name> == 'true'` is false; Boolean inputs must be
 tested directly.
 
+A weekly snapshot must be publishable without writing to `main`: the snapshot
+commit already carries the version stamps of the tag it publishes, so the
+release pipeline finds nothing to rewrite and never creates a release commit.
+Branch rules that require a pull request therefore cannot block a snapshot. If
+the snapshot workflow ever pushes a branch again, or the write-back loses its
+condition, every weekly run starts failing against those rules instead.
+
 Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
 build before these invariants fail CI.
 """
@@ -19,6 +26,7 @@ build before these invariants fail CI.
 from __future__ import annotations
 
 import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -26,9 +34,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
+WEEKLY_WORKFLOW = ROOT / ".github" / "workflows" / "weekly-build.yml"
 RELEASE_ACTION = "softprops/action-gh-release"
 RESOLVED_TAG = "${{ steps.resolve-tag.outputs.tag }}"
 RESOLVED_TAG_REF = f"refs/tags/{RESOLVED_TAG}"
+WRITE_BACK_CONDITION = "changed == 'true'"
 
 
 def fail(message: str) -> None:
@@ -167,17 +177,173 @@ def main() -> int:
                     "test the Boolean input directly."
                 )
 
+    check_weekly_snapshot(errors)
+    check_release_writeback_is_conditional(workflow, errors)
+
     if errors:
         print(
-            f"Release-workflow guard FAILED ({WORKFLOW.relative_to(ROOT)}):",
+            "Release and weekly-snapshot workflow guard FAILED:",
             file=sys.stderr,
         )
         for error in errors:
             print(f"  - {error}", file=sys.stderr)
         return 1
 
-    print("Release-workflow guard: OK")
+    print("Release/weekly-workflow guard: OK")
     return 0
+
+
+SUBSTITUTION = re.compile(r"\bre\.subn?\(|\.replace\(|\bsubn?\(")
+BUMP_TARGET = re.compile(r"""["']Directory\.Build\.props["']""")
+WRITE_OP = re.compile(r"""open\([^)]*["'][wa]|write_text\(|\.write\(""")
+COMMENT = re.compile(r"(?:^|\s)#[^\n]*", re.M)
+
+
+def strip_comments(script: str) -> str:
+    """Drop shell/Python comments so only executable text is inspected."""
+    return COMMENT.sub("", script)
+
+
+def push_destinations(command: str) -> list[str]:
+    """Return the refspec arguments of a `git push` command line.
+
+    The first non-option argument names the remote; every argument after it is a
+    refspec whose source and destination must both name a tag.
+    """
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return [command]
+    arguments = [token for token in tokens[2:] if not token.startswith("-")]
+    return arguments[1:] if arguments else []
+
+
+def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
+    """A snapshot must publish only its tag, and that tag must be self-contained.
+
+    The snapshot commit carries the version stamps of the tag it publishes, so
+    the release pipeline has nothing to rewrite and never pushes `main`. Every
+    refspec of every `git push` in this workflow must therefore name a tag on
+    both its source and its destination.
+
+    The stamp rewriting is checked on the executable text of the single step
+    that rewrites `Directory.Build.props`: comments are stripped first, that
+    step has to perform a substitution, and all three element names have to
+    appear in it as quoted literals. Naming the stamps anywhere else in the
+    workflow does not make the tagged commit match its tag.
+    """
+    workflow_path = path or WEEKLY_WORKFLOW
+    if not workflow_path.is_file():
+        errors.append(f"weekly snapshot workflow is missing: {workflow_path}")
+        return
+
+    try:
+        relative = workflow_path.relative_to(ROOT)
+    except ValueError:
+        relative = workflow_path
+
+    text = workflow_path.read_text(encoding="utf-8")
+
+    for index, line in enumerate(text.splitlines(), 1):
+        command = line.strip()
+        if not command.startswith("git push"):
+            continue
+        destinations = push_destinations(command)
+        if not destinations:
+            errors.append(
+                f"{relative}:{index} runs a `git push` without an explicit tag "
+                f"refspec ({command!r}); a snapshot must publish only its tag."
+            )
+            continue
+        for refspec in destinations:
+            if any(not part.startswith("refs/tags/") for part in refspec.split(":")):
+                errors.append(
+                    f"{relative}:{index} pushes {refspec!r}, which is not a "
+                    f"tag-only refspec ({command!r}); every source and "
+                    "destination must name refs/tags/ so a snapshot never has "
+                    "to bypass branch rules."
+                )
+
+    try:
+        workflow = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        errors.append(f"{relative} is not valid YAML: {exc}")
+        return
+
+    scripts = [
+        strip_comments(str(step.get("run") or ""))
+        for job in (workflow.get("jobs") or {}).values()
+        if isinstance(job, dict)
+        for step in job.get("steps") or []
+        if isinstance(step, dict)
+    ]
+
+    bump_scripts = [
+        script
+        for script in scripts
+        if BUMP_TARGET.search(script) and WRITE_OP.search(script)
+    ]
+    if len(bump_scripts) != 1:
+        errors.append(
+            f"{relative} must rewrite Directory.Build.props in exactly one "
+            f"step script; found {len(bump_scripts)}. The version stamps have "
+            "to be written, not merely named."
+        )
+    for script in bump_scripts:
+        if not SUBSTITUTION.search(script):
+            errors.append(
+                f"{relative} writes Directory.Build.props without substituting "
+                "the version elements, so the tagged commit would not match "
+                "its tag."
+            )
+        for stamp in ("Version", "AssemblyVersion", "FileVersion"):
+            if not re.search(rf"""["']{stamp}["']""", script):
+                errors.append(
+                    f"{relative} must replace the {stamp} element inside the "
+                    "step that rewrites Directory.Build.props, so the tagged "
+                    "commit already matches its tag and the release pipeline "
+                    "has nothing to write back."
+                )
+
+    dispatch_scripts = [
+        script for script in scripts if "gh workflow run release.yml" in script
+    ]
+    if len(dispatch_scripts) != 1:
+        errors.append(
+            f"{relative} must dispatch release.yml from exactly one step "
+            f"script; found {len(dispatch_scripts)}. A tag pushed with "
+            "GITHUB_TOKEN does not trigger the push workflow, so the dispatch "
+            "has to be executed."
+        )
+    for script in dispatch_scripts:
+        for argument in ("-f tag=", "-f snapshot=true"):
+            if argument not in script:
+                errors.append(
+                    f"{relative} must dispatch release.yml with {argument!r} in "
+                    "the step that runs it."
+                )
+
+
+def check_release_writeback_is_conditional(workflow: dict, errors: list[str]) -> None:
+    """The release write-back may only run when the version stamps changed."""
+    release_job = (workflow.get("jobs") or {}).get("release")
+    steps = release_job.get("steps") if isinstance(release_job, dict) else None
+    if not isinstance(steps, list):
+        return
+
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        command = str(step.get("run") or "")
+        if "git push" not in command or "refs/heads/main" not in command:
+            continue
+        condition = str(step.get("if") or "")
+        if WRITE_BACK_CONDITION not in condition:
+            errors.append(
+                "the release write-back step must stay guarded by "
+                f"{WRITE_BACK_CONDITION!r}, so a snapshot whose tag already "
+                "carries the version stamps never pushes main."
+            )
 
 
 if __name__ == "__main__":
