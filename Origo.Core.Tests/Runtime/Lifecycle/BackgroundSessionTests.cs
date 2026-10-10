@@ -290,7 +290,11 @@ public class BackgroundSessionTests
         using var bg = (SessionRun)ctx.Runtime.SessionManager.CreateBackgroundSession("bg", "bg", true);
         bg.Spawn(CreateMetaWithIndices("npc", _processStrategyIndex));
 
-        ctx.Runtime.SessionManager.ProcessAllSessions(0.016, false);
+        // Drive the scene host's own tick contract directly: ProcessAll is the
+        // host method under test (META-TEST scene-host self-contract), reached
+        // through the session's host instead of the manager's session loop.
+        var host = ((SessionRun)bg).SceneHost;
+        host.ProcessAll(0.016);
 
         Assert.Equal(1, processCount);
     }

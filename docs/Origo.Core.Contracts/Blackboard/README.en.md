@@ -1,6 +1,6 @@
 # Blackboard
 
-> [↑ Back to Origo.Core](../README.en.md) · [↔ Abstractions: Blackboard](../../Origo.Core.Contracts/Abstractions/Blackboard/README.en.md) · [Related Tests: Blackboard](../../Origo.Core.Tests/Blackboard.en.md)
+> [↑ Back to Origo.Core.Contracts](../README.en.md) · [↔ Abstractions: Blackboard](../../Origo.Core.Contracts/Abstractions/Blackboard/README.en.md) · [Related Tests: Blackboard](../../Origo.Core.Tests/Blackboard.en.md)
 
 ## Overview
 
@@ -38,4 +38,4 @@ Key names are constants hardcoded in code (e.g., `"core.player.health"`), with n
 Save recovery has "restore from a known state" semantics, not "incremental update." Residual keys would pollute a new session with old save data; replacement semantics are safer.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Contracts](../README.en.md)

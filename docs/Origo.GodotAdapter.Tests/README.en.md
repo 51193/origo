@@ -1,6 +1,6 @@
 # Origo.GodotAdapter.Tests
 
-> [↑ Back to Origo.manual](../README.en.md)
+> [↑ Back to Origo Manual](../README.en.md)
 
 ## Test Strategy Overview
 
@@ -47,4 +47,4 @@ runtime behavior (real file system, Node lifecycle, bootstrap orchestration).
 
 ---
 
-[↑ Back to Origo.manual](../README.en.md)
+[↑ Back to Origo Manual](../README.en.md)

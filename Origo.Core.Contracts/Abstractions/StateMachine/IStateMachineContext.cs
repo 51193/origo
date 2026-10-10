@@ -13,7 +13,7 @@ namespace Origo.Core.Abstractions.StateMachine;
 ///         <list type="bullet">
 ///             <item>
 ///                 <description>
-///                     <see cref="Origo.Core.Snd.SndContext" /> provides the global / progress-level default
+///                     <c>SndContext</c> provides the global / progress-level default
 ///                     implementation, where <see cref="SessionBlackboard" /> and
 ///                     <see cref="SceneAccess" /> point to the foreground session.
 ///                     This implementation is only used as the context entry for progress-level

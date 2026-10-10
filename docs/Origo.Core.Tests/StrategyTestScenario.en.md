@@ -100,7 +100,7 @@ Ensures that the framework's Harness correctly simulates EntityStrategy's Proces
 | `Invoke_StrategyReturnsNull_IsNull` | Strategy returns null | Invoke returns null |
 | `TryGetEntityData_WithMissingKey_ReturnsFalse` | TryGetEntityData for non-existent key | found=false |
 | `WithEntityName_EmptyOrWhitespace_ResetsToDefault` | WithEntityName("  ") whitespace name | Entity name falls back to __test_entity__ |
-| `Entity_AfterBuild_StartswithCleanData` | After Build without WithData, entity has no data | TryGetEntityData returns false for non-existent key |
+| `Entity_AfterBuild_StartswithCleanData` | After Build without WithData, the first Invoke creates the strategy-owned key | key absent before Invoke, 1 after |
 
 ## Test Helper Strategies
 

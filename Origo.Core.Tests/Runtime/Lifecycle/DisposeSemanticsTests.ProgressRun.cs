@@ -128,13 +128,24 @@ public class DisposeSemanticsTestsProgressRun
     [Fact]
     public void ProgressRun_Dispose_SafeEvenWhenNoCurrentDirectory()
     {
-        var (ctx, _) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
+        var (ctx, fs) = DisposeSemanticsTestInfrastructure.CreateForegroundContext();
 
         var progressRun = ctx.EnsureProgressRun();
-        progressRun.Dispose();
+        ctx.Save.RequestSaveGame("temp");
+        ctx.FlushFrame();
+        Assert.True(fs.DirectoryExists("root/current"),
+            "The save must create current/ before the scenario removes it.");
+
+        // Scenario under test: current/ is already gone when Dispose runs
+        // (removed outside the run), so directory teardown must tolerate the
+        // missing path instead of failing the whole disposal.
+        fs.DeleteDirectory("root/current");
+        Assert.False(fs.DirectoryExists("root/current"));
 
         var ex = Record.Exception(() => progressRun.Dispose());
+
         Assert.Null(ex);
+        Assert.False(fs.DirectoryExists("root/current"));
     }
 
     [Fact]

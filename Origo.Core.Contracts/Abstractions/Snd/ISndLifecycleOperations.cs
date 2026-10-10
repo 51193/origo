@@ -8,7 +8,7 @@ public interface ISndLifecycleOperations
 {
     /// <summary>
     ///     True once the deferred main-menu entry load enqueued by
-    ///     <see cref="Origo.Core.Snd.SndContext.Bootstrap" /> has completed.
+    ///     <c>SndContext.Bootstrap</c> has completed.
     ///     A failed or never-started bootstrap leaves this false.
     /// </summary>
     bool IsBootstrapCompleted { get; }

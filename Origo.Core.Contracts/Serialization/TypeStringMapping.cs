@@ -6,7 +6,7 @@ namespace Origo.Core.Serialization;
 
 /// <summary>
 ///     Assigns stable string identifiers to common types for use in JSON.
-///     Mounted as an instance on <see cref="Snd.SndWorld" />, with lifecycle managed by the runtime.
+///     Mounted as an instance on <c>SndWorld</c>, with lifecycle managed by the runtime.
 ///     Engine adapter layers can register additional types at startup via <see cref="RegisterType{T}" />.
 /// </summary>
 public sealed class TypeStringMapping

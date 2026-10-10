@@ -1,6 +1,6 @@
 # Save
 
-> [↑ Back to Origo.Core](../README.en.md)
+> [↑ Back to Origo.Core.Kernel](../README.en.md)
 > [↔ Related Tests: Save-Storage](../../Origo.Core.Tests/Save-Storage.en.md) · [Save-Serialization](../../Origo.Core.Tests/Save-Serialization.en.md) · [Save-Meta](../../Origo.Core.Tests/Save-Meta.en.md)
 
 ## Module Capability
@@ -11,7 +11,7 @@ Origo's persistence system. Responsible for the complete save lifecycle: payload
 
 | Sub-Module | Capability | Details |
 |-----------|-----------|---------|
-| [Meta](Meta/README.en.md) | Display metadata construction and merging | ISaveMetaContributor + SaveMetaMerger + meta.map codec |
+| [Meta](Meta/README.en.md) | Display-metadata merge implementation | Delegate contributor adapter + registration-order merger; contributor contracts live in Contracts |
 | [Serialization](Serialization/README.en.md) | Save serialization orchestration | BlackboardSerializer + SndSceneSerializer + SaveContext |
 | [Storage](Storage/README.en.md) | Storage layer complete implementation | Two-phase write, strict read, path layout, snapshot management |
 
@@ -75,4 +75,4 @@ DefaultSaveStorageService.WriteSavePayloadToCurrentThenSnapshot(...)
 Every `DataSourceNode` tree in a `SaveGamePayload` / `LevelPayload` is owned by its caller and must be disposed when no longer needed. The framework uses `SavePayloadDisposal` at internal load/mount and write/snapshot boundaries to release temporary payloads promptly (including nodes created only to persist progress) instead of relying on GC. Payloads obtained through public `ISaveStorageService` read methods are caller-owned; write methods must fully consume the node trees during the call, so callers may dispose them immediately after the method returns.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Kernel](../README.en.md)

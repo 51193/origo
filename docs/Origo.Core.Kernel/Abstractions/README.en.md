@@ -1,6 +1,6 @@
 # Abstractions
 
-> [↑ Back to Origo.Core](../README.en.md)
+> [↑ Back to Origo.Core.Kernel](../README.en.md)
 
 ## Module Capability
 
@@ -55,4 +55,4 @@ IStateMachine ⟷ IStateMachineContext ⟷ IStateMachineContainer
 This directory contains only sub-directories; there are no direct `.cs` files.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Kernel](../README.en.md)

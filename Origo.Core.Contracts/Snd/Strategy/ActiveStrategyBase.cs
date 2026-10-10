@@ -8,7 +8,7 @@ namespace Origo.Core.Snd.Strategy;
 ///     (<see cref="Invoke" />) and does not participate in frame updates or lifecycle hooks.
 ///     <para>
 ///         Strategy instances are stateless, shared, and pooled, managed centrally by
-///         <see cref="SndStrategyPool" />. Invoked on entities via
+///         <c>SndStrategyPool</c>. Invoked on entities via
 ///         <see cref="ISndActiveStrategyAccess.InvokeStrategy" />.
 ///     </para>
 /// </summary>

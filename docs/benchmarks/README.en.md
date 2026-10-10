@@ -11,6 +11,7 @@ Performance baseline data and design trade-off analysis for the Origo framework,
 | File | Description |
 |------|------|
 | `baseline.en.md` | Performance baseline data and design trade-off analysis for Origo framework subsystems |
+| `baseline.json` | Machine-readable benchmark baseline (schema version, baseline machine id, per-metric throughput and allocation), captured and compared by `scripts/benchmark.sh` |
 | `README.en.md` | Performance benchmark document overview (this file) |
 
 ## Benchmark Test Files

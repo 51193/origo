@@ -10,17 +10,17 @@ All capabilities of the Origo framework, organized by functional domain. Each en
 |------------|-------------|-----------|
 | SND entity model | Strategy (behavior), Node (presentation), Data (state) — ternary decoupled model | [SND Entity Model](snd-entity-model.en.md) |
 | 8 lifecycle hooks | AfterSpawn / AfterLoad / AfterAdd / Process / BeforeRemove / BeforeSave / BeforeQuit / BeforeDead | [SND Entity Model](snd-entity-model.en.md) |
-| Stateless strategy pool | Strategy instances are shared and reused; registration validates statelessness via reflection; ref-counted management | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.en.md) |
+| Stateless strategy pool | Strategy instances are shared and reused; registration validates statelessness via reflection; ref-counted management | [↔ Snd/Strategy](../Origo.Core.Kernel/Snd/Strategy/README.en.md) |
 | Strategy partial ordering | Before / After complete registry projection; Process and batch hooks follow the same order, candidates use Ordinal | [SND Entity Model](snd-entity-model.en.md) |
 | TypedData type preservation | Read-only partial struct inline storage; Source Generator generates typed conversions; JSON round-trip preserves precision | [SND Entity Model](snd-entity-model.en.md) |
 | Data observers | Observer strategies (`ObserverStrategyBase` + `[ObserveData]` attribute) respond to entity data changes; mount/unmount via `MountObserverStrategy`/`UnmountObserverStrategy`; bindings persist with saves, auto-restore on load, auto-cleanup on entity death | [SND Entity Model](snd-entity-model.en.md) |
 | Cross-entity observation | `MountObserverStrategy(target, observerIndex)` supports self-observation and cross-entity observation; `OnMounted`/`OnUnmounted` carries lifecycle awareness | [SND Entity Model](snd-entity-model.en.md) |
 | Active strategies | Externally invoked by index via Invoke; independently managed container separate from passive strategies; O(1) lookup | [Strategy Testing](strategy-testing.en.md) |
-| Generic active strategy invocation | `InvokeStrategy<TInput, TOutput>` extension methods; type-safe, eliminating JSON serialization boilerplate | [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.en.md) |
+| Generic active strategy invocation | `InvokeStrategy<TInput, TOutput>` extension methods; type-safe, eliminating JSON serialization boilerplate | [↔ Snd](../Origo.Core/Snd/README.en.md) |
 | SndMetaFluentBuilder | Fluent API for building entity metadata, eliminating `??= new DataMetaData()` boilerplate | [↔ Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md) |
 | TryGetNumeric | Compatible numeric reads from entity data, bridging the type mismatch between `SetData("k", 5)` (int) and `TryGetData<float>("k")` | [↔ Snd](../Origo.Core/Snd/README.en.md) |
 | Numeric recipe loading | SndArchetypeLoader loads archetypes from key-value pair files and infers types to write into entities | [↔ Snd/Archetype](../Origo.Core/Snd/Archetype/README.en.md) |
-| Lazy strategy attachment | EnsureStrategy extension methods, lazy strategy layer initialization with idempotent guard | [SND Entity Model](snd-entity-model.en.md), [↔ Snd/Strategy](../Origo.Core/Snd/Strategy/README.en.md) |
+| Lazy strategy attachment | EnsureStrategy extension methods, lazy strategy layer initialization with idempotent guard | [SND Entity Model](snd-entity-model.en.md), [↔ Snd](../Origo.Core/Snd/README.en.md) |
 
 ## Session Management
 

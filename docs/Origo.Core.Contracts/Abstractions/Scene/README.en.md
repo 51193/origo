@@ -3,16 +3,13 @@
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Scene](../../../Origo.Core.Kernel/Snd/Scene/README.en.md)
 
 ## Overview
-Defines the Core layer's abstract capabilities for orchestrating SND scenes. `ISndSceneReadAccess` is the public read-only view; `ISndSceneAccess`, `ISndSceneHost`, and `IOwningSessionBindable` are `internal` — visible only to the Core session lifecycle and adapter assemblies granted `InternalsVisibleTo`. The context-binding interface `ISndContextAttachableSceneHost` lives in [Snd/Scene](../../../Origo.Core.Kernel/Snd/Scene/README.en.md).
+Defines the public read-only scene contract. `ISndSceneReadAccess` is the read-only view used by state-machine hooks and save-meta contributors; the internal orchestration interfaces `ISndSceneAccess`, `ISndSceneHost`, and `IOwningSessionBindable` live in [Origo.Core.Kernel/Abstractions/Scene](../../../Origo.Core.Kernel/Abstractions/Scene/README.en.md). The context-binding interface `ISndContextAttachableSceneHost` lives in [Snd/Scene](../../../Origo.Core.Kernel/Snd/Scene/README.en.md).
 
 ## Included Files
 
 | File | Responsibility |
 |------|------|
 | `ISndSceneReadAccess.cs` | Public read-only scene access: `GetEntities` / `FindByName`; state-machine hooks and save-meta contributors query scenes through this |
-| `ISndSceneAccess.cs` | Internal scene serialization access: BuildMetaList / RecoverFromMetaList (no hooks) |
-| `ISndSceneHost.cs` | Internal scene host (inherits ISndSceneAccess + ISndSceneReadAccess): entity container management |
-| `IOwningSessionBindable.cs` | Internal owning-session binding for auto-binding entities |
 
 ## Interface Details
 

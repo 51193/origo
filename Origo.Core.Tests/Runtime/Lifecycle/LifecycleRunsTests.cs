@@ -330,10 +330,10 @@ public class LifecycleRunsTests
         Assert.Throws<InvalidOperationException>(() => progressRun.LoadFromPayload(payload));
     }
 
-    // ── Mount key tracking tests ──────────────────────────────────
+    // ── Session key index tests ───────────────────────────────────
 
     [Fact]
-    public void SessionRun_MountKey_IsNull_WhenNotMounted()
+    public void SessionManager_Contains_TracksBackgroundSessionUntilDestroy()
     {
         var logger = new TestLogger();
         var host = new TestSndSceneHost();
@@ -346,29 +346,9 @@ public class LifecycleRunsTests
         var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
         sndContext.SetProgressRun(progressRun);
 
+        // META-TEST prohibited use #4: the mount key is observed through the
+        // manager's public key index, never through SessionRun.MountKey.
         _ = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
-        Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
-
-        sndContext.Runtime.SessionManager.DestroySession("bg1");
-        Assert.False(sndContext.Runtime.SessionManager.Contains("bg1"));
-    }
-
-    [Fact]
-    public void SessionRun_MountKey_SetOnMount_ClearedOnUnmount()
-    {
-        var logger = new TestLogger();
-        var host = new TestSndSceneHost();
-        var fs = new TestMemoryFileSystem();
-        var dataSourceIo = DataSourceFactory.CreateDefaultIoGateway(fs);
-        var metaAccess = DataSourceFactory.CreateFileMetaAccess(fs);
-        var pathResolver = DataSourceFactory.CreatePathResolver(fs);
-        var runtime = TestFactory.CreateRuntime(logger, host, new TypeStringMapping(), new Blackboard.Blackboard(), dataSourceIo);
-        var sndContext = new SndContext(new SndContextParameters(runtime, dataSourceIo, metaAccess, pathResolver, "root", "initial", "entry.json"));
-        var progressRun = TestFactory.CreateProgressRun("001", logger, metaAccess, pathResolver, "root", runtime, sndContext, sharedDataSourceIo: dataSourceIo);
-        sndContext.SetProgressRun(progressRun);
-
-        _ = sndContext.Runtime.SessionManager.CreateBackgroundSession("bg1", "bg1");
-
         Assert.True(sndContext.Runtime.SessionManager.Contains("bg1"));
 
         sndContext.Runtime.SessionManager.DestroySession("bg1");

@@ -10,7 +10,7 @@ namespace Origo.Core.Snd.Strategy;
 ///     <para>
 ///         <b>
 ///             Important: Strategy instances are shared and reused across multiple callers
-///             via <see cref="SndStrategyPool" />. Concrete strategy implementations must
+///             via <c>SndStrategyPool</c>. Concrete strategy implementations must
 ///             remain stateless — declaring instance fields or properties to store runtime
 ///             data is forbidden. Mutable state on the entity side must be stored in the
 ///             entity's Data (via <see cref="ISndDataAccess.SetData{T}" /> / <see cref="ISndDataAccess.GetData{T}" />).

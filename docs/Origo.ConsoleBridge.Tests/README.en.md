@@ -1,6 +1,6 @@
 # Origo.ConsoleBridge.Tests
 
-> [↑ Back to Origo.manual](../README.en.md)
+> [↑ Back to Origo Manual](../README.en.md)
 > [↔ Module under test: Origo.ConsoleBridge](../Origo.ConsoleBridge/README.en.md)
 
 ## Test Strategy Overview
@@ -22,4 +22,4 @@ server works in a real network environment.
 
 ---
 
-[↑ Back to Origo.manual](../README.en.md)
+[↑ Back to Origo Manual](../README.en.md)

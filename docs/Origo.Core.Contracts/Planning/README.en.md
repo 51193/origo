@@ -1,6 +1,6 @@
 # Planning
 
-> [↑ Back to Origo.Core](../README.en.md)
+> [↑ Back to Origo.Core.Contracts](../README.en.md)
 
 The Planning subsystem provides intent-driven entity-level plan execution infrastructure.
 
@@ -115,4 +115,4 @@ entity.EnsureReplaceableStrategy("character.path_impl", "character.pathfind.asta
 
 ---
 
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Contracts](../README.en.md)

@@ -17,4 +17,4 @@ Collection of vendor (source-imported) third-party libraries. Currently contains
 This directory contains only sub-directories; there are no direct `.cs` files.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Kernel](../README.en.md)

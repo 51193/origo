@@ -1,6 +1,6 @@
 # Serialization
 
-> [↑ Back to Origo.Core](../README.en.md) · [↔ DataSource: Converters](../../Origo.Core.Kernel/DataSource/Converters/README.en.md)
+> [↑ Back to Origo.Core.Contracts](../README.en.md) · [↔ DataSource: Converters](../../Origo.Core.Kernel/DataSource/Converters/README.en.md)
 
 ## Overview
 Type-to-string mapping infrastructure. During JSON serialization, `TypedData` needs precise CLR type info for correct deserialization. `TypeStringMapping` maintains bidirectional type ↔ stable string identifier mapping, avoiding full type names in JSON.
@@ -35,4 +35,4 @@ Names like `"Int32"` suffice for disambiguation. Simplification reduces JSON sto
 Type mapping is the backbone of serialization. Unknown type name means format error or incompatibility — fail fast.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Contracts](../README.en.md)

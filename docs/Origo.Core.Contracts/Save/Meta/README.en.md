@@ -3,55 +3,57 @@
 > [↑ Back to Save](../README.en.md)
 
 ## Overview
-Save display metadata (meta.map) building and merging system. Display metadata is separated from business data, used only for save selection UI. Collected via a pluggable contributor pattern.
+Display-metadata contracts for `meta.map` — the save-selection metadata separated from business data: the contributor contract, the read-only build context handed to contributors, the read-only blackboard adapter, and the save-slot entry model. The merge implementation and the delegate adapter live in [Origo.Core.Kernel/Save/Meta](../../../Origo.Core.Kernel/Save/Meta/README.en.md).
 
 ## Included Files
 
 | File | Responsibility |
 |------|------|
-| `ISaveMetaContributor.cs` | Metadata contributor interface |
-| `DelegateSaveMetaContributor.cs` | Delegate-adapted contributor |
-| `SaveMetaBuildContext.cs` | Read-only build context |
-| `ReadOnlyBlackboard.cs` | Read-only blackboard adapter: reads pass through, every mutation throws `InvalidOperationException` |
-| `SaveMetaDataEntry.cs` | Save slot entry model |
-| `SaveMetaMerger.cs` | Merge logic: merges contributor outputs in registration order |
+| `ISaveMetaContributor.cs` | Contributor contract: `Contribute(in SaveMetaBuildContext)` returns this contributor's own key-value dictionary for display metadata |
+| `SaveMetaBuildContext.cs` | Read-only `readonly struct` context of one save operation: `SaveId`, `CurrentLevelId`, read-only `Progress`/`Session` blackboards, and `SceneAccess` |
+| `ReadOnlyBlackboard.cs` | `internal` read-only `IBlackboard` adapter: reads pass through, every mutation throws `InvalidOperationException` |
+| `SaveMetaDataEntry.cs` | Save-slot entry model: `SaveId` plus the display metadata dictionary read from that slot's `meta.map` for save listing |
 
 ## Module Details
 
 ### Metadata Contribution Flow
 1. Register contributors via `ISndSaveOperations.RegisterSaveMetaContributor()`
-2. Create `SaveMetaBuildContext` at save time (saveId, levelId, blackboards, read-only `ISndSceneReadAccess`); the Progress/Session blackboards are wrapped in read-only adapters, so `SetValue`/`Clear`/`DeserializeAll` throw `InvalidOperationException` immediately
-3. `SaveMetaMerger.Merge()` calls each contributor in order; later overwrites earlier for same keys
-4. Persist: the merged dictionary is converted to a JSON DataSourceNode tree via `BuildStringMapNode()` and written to `meta.map` by `SavePayloadWriter`
+2. Create `SaveMetaBuildContext` at save time (SaveId, CurrentLevelId, blackboards, read-only `ISndSceneReadAccess`); the Progress/Session blackboards are wrapped in `ReadOnlyBlackboard`, so `SetValue`/`Clear`/`DeserializeAll` throw `InvalidOperationException` immediately
+3. The framework merger combines the contributor dictionaries in registration order; later contributors overwrite earlier ones for same-name keys
+4. Persist: the merged dictionary is converted to a JSON DataSourceNode tree and written to `meta.map`
 
 ### ISaveMetaContributor
 ```csharp
 IReadOnlyDictionary<string, string> Contribute(in SaveMetaBuildContext context);
 ```
 
-Contributors return independent dictionaries. `SaveMetaMerger` merges in registration order. Returning a null dictionary, a blank key, or a null value throws `InvalidOperationException` with contributor-type context instead of silently dropping entries.
+Contributors return independent dictionaries and must not mutate the context beyond reading it. Returning a null dictionary, a blank key, or a null value throws `InvalidOperationException` with contributor-type context instead of silently dropping entries.
 
-### SaveMetaMerger
+### SaveMetaBuildContext
 
-Static utility class. Merge logic: iterate contributors → contribute in registration order, later same-name keys overwrite earlier ones → return null when no keys are present. A contributor output that violates the interface contract (null dictionary, blank key, or null value) throws `InvalidOperationException` immediately, so invalid metadata fails the save instead of degrading silently.
+`readonly struct` carrying `SaveId`, `CurrentLevelId`, the read-only `Progress` and `Session` blackboards, and the read-only `ISndSceneReadAccess` for scene queries. The `in` parameter avoids copying on the save call tree.
+
+### SaveMetaDataEntry
+
+Carries the slot ID and the display metadata read from that slot's `meta.map`, as produced for save listing through `ISndSaveOperations.ListSavesWithMetaData()`.
 
 ## Design Decisions
 
 ### Why display metadata is separated from business data
 Business data (progress.json) contains complete state, potentially MB-scale. Display metadata is KB-scale, enabling fast save listing without full parse.
 
-### Why contributors overwrite by registration order
-Different contributors may have different perspectives on the same key. Ordered overwrite provides predictable priority.
-
-### Why invalid contributor output must fail the save
-
-The contributor interface promises mergeable key-value pairs; silently skipping a null dictionary, blank key, or null value would disguise an implementation bug as "no metadata" and make the offending contributor impossible to identify. Saves are a strict-validation path, so `SaveMetaMerger` throws with contributor-type context and preserves fail-fast semantics.
-
 ### Why contributors return independent dictionaries
 Prevents contributors from calling `Clear()` or `Remove()` on a shared mutable target. Isolation via `IReadOnlyDictionary`.
 
+### Why invalid contributor output must fail the save
+
+The contributor interface promises mergeable key-value pairs; silently skipping a null dictionary, blank key, or null value would disguise an implementation bug as "no metadata" and make the offending contributor impossible to identify. Saves are a strict-validation path, so the merger throws with contributor-type context and preserves fail-fast semantics.
+
 ### Why SaveMetaBuildContext is a readonly struct
 Avoids heap allocation on the save call tree. `readonly` prevents side-effect leakage. `in` parameter for ref passing.
+
+### Why the context blackboards are read-only adapters
+Contributors only produce display metadata, so the context wraps the progress/session blackboards in `ReadOnlyBlackboard`; a mutation attempt fails immediately instead of silently changing saved game state.
 
 ---
 [↑ Back to Save](../README.en.md)

@@ -447,11 +447,17 @@ public class ActiveStrategyTestScenarioTests
     public void Entity_AfterBuild_StartswithCleanData()
     {
         var harness = StrategyTestScenario
-            .ForActive<SimpleAnswerStrategy>(_simpleStrategyIndex)
+            .ForActive<DataWritingStrategy>(_dataWriteStrategyIndex)
             .Build();
 
-        var (found, _) = harness.TryGetEntityData<int>("nonexistent");
-        Assert.False(found);
+        // The built entity starts without strategy data; the first write must
+        // create the key, proving the clean start instead of a missing read.
+        var (foundBefore, _) = harness.TryGetEntityData<int>("invoke_count");
+        Assert.False(foundBefore);
+
+        harness.Invoke();
+
+        Assert.Equal(1, harness.GetEntityData<int>("invoke_count"));
     }
 
     // ── Integration: W3-like food key generation ────────────────────────

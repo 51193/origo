@@ -1,6 +1,6 @@
 # Origo.ConsoleBridge
 
-> [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Console abstractions](../Origo.Core.Contracts/Abstractions/Console/README.en.md)
+> [↑ Back to Origo Manual](../README.en.md) · [↔ Core: Console abstractions](../Origo.Core.Contracts/Abstractions/Console/README.en.md)
 
 ## Overview
 
@@ -89,4 +89,4 @@ The output path keeps synchronous `StreamWriter.WriteLine` to avoid changing the
 When no client is connected, console output is buffered in an in-memory queue (max 1000 lines). When the limit is exceeded, the oldest lines are dropped, and a warning message (`[ConsoleBridge] Warning: N output line(s) were dropped due to buffer overflow.`) is prepended to the output stream when the client next connects, ensuring data loss is observable.
 
 ---
-[↑ Back to Origo.manual](../README.en.md)
+[↑ Back to Origo Manual](../README.en.md)

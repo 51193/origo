@@ -35,8 +35,8 @@ public interface IOrigoRuntime : IOrigoFrameDriver
     ///     is created; otherwise registration fails fast instead of silently
     ///     dropping the handler.
     /// </summary>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handler" /> is null.</exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="handler" /> is null.</exception>
+    /// <exception cref="System.InvalidOperationException">
     ///     Thrown when the host was created without both console channels.
     /// </exception>
     void RegisterConsoleCommandHandler(IConsoleCommandHandler handler);

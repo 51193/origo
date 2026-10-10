@@ -1,6 +1,6 @@
 # Origo Performance Baseline
 
-> [↑ Back to Origo.manual](../README.en.md)
+> [↑ Back to Origo Manual](../README.en.md)
 
 > A snapshot of the performance status of Origo framework subsystems, serving as the authoritative reference for future performance optimization.
 > Values are tightly coupled to the runtime environment and runtime version; cross-machine comparison is not meaningful. Before-and-after optimization comparisons must be retested **in the same environment with the same runtime**.
@@ -309,4 +309,4 @@ Documents why the current state is as it is, what trade-offs were made, and dire
 | EntitySim 500 entities × 60 frames | 150,000 | 13.12 ms | 11.44 Mops/s | 10.07 MB |
 
 ---
-[↑ Back to Origo.manual](../README.en.md)
+[↑ Back to Origo Manual](../README.en.md)

@@ -49,7 +49,7 @@ public interface IStateMachine
     /// <summary>
     ///     Restore stack contents from a save without triggering any strategy hooks.
     ///     Internal: reserved for the framework's deserialization path
-    ///     (<see cref="Origo.Core.Runtime.StateMachine.StateMachineContainer" />);
+    ///     (<c>StateMachineContainer</c>);
     ///     business code must use <see cref="Push" /> to modify the stack.
     /// </summary>
     internal void RestoreStackWithoutHooks(IReadOnlyList<string> stackBottomToTop);

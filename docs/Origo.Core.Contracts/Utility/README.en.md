@@ -1,6 +1,6 @@
 # Utility
 
-> [↑ Back to Origo.Core](../README.en.md)
+> [↑ Back to Origo.Core.Contracts](../README.en.md)
 
 ## Overview
 General-purpose pure-function helpers: path normalization (`PathUtility`, consumed by adapter layers such as `GodotDirectoryOperations`), and string-to-typed inference (`ValueInference`, shared by the Archetype loader and console type inference).
@@ -18,4 +18,4 @@ General-purpose pure-function helpers: path normalization (`PathUtility`, consum
 Stateless pure functions. Zero-cost calls, no DI or interface abstraction needed.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Contracts](../README.en.md)

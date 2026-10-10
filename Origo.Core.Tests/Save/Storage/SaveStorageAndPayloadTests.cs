@@ -219,11 +219,18 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
-    public void SaveStorageFacade_SnapshotCurrentToSave_WhitespaceSaveRoot_Throws()
+    public void SaveStorageFacade_SnapshotCurrentToSave_MissingCurrentDirectory_Throws()
     {
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        Assert.Throws<ArgumentException>(() => new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "  "));
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => SaveStorageFacade.SnapshotCurrentToSave(handle, "001"));
+
+        Assert.Contains("current/", ex.Message, StringComparison.Ordinal);
+        // The fail-fast guard must fire before any snapshot write.
+        Assert.False(fs.DirectoryExists("root/save_001"));
     }
 
     [Fact]
@@ -236,11 +243,16 @@ public class SaveStorageAndPayloadTests
     }
 
     [Fact]
-    public void SaveStorageFacade_ReadSavePayloadFromSnapshot_WhitespaceSaveRoot_Throws()
+    public void SaveStorageFacade_ReadSavePayloadFromSnapshot_WhitespaceSaveId_Throws()
     {
         var fs = new TestMemoryFileSystem();
         var (metaAccess, dataSourceIo, pathResolver) = CreateGateways(fs);
-        Assert.Throws<ArgumentException>(() => new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, " "));
+        var handle = new SaveFileHandle(metaAccess, dataSourceIo, pathResolver, "root");
+
+        var ex = Assert.Throws<ArgumentException>(
+            () => SaveStorageFacade.ReadSavePayloadFromSnapshot(handle, "  ", "default"));
+
+        Assert.Equal("saveId", ex.ParamName);
     }
 
     [Fact]

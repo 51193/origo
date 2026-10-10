@@ -1,6 +1,6 @@
 # Origo.GodotAdapter
 
-> [↑ Back to Origo.manual](../README.en.md)
+> [↑ Back to Origo Manual](../README.en.md)
 
 ## Module Overview
 
@@ -118,4 +118,4 @@ Origo.GodotAdapter references the `Origo.SourceGeneration` source generator and 
 See [Origo.SourceGeneration documentation](../Origo.SourceGeneration/README.en.md) for details.
 
 ---
-[↑ Back to Origo.manual](../README.en.md)
+[↑ Back to Origo Manual](../README.en.md)

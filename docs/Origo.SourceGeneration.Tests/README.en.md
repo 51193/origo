@@ -1,6 +1,6 @@
 # Origo.SourceGeneration.Tests
 
-> [↑ Back to Origo.manual](../README.en.md) · [↔ Module Under Test: Origo.SourceGeneration](../Origo.SourceGeneration/README.en.md)
+> [↑ Back to Origo Manual](../README.en.md) · [↔ Module Under Test: Origo.SourceGeneration](../Origo.SourceGeneration/README.en.md)
 
 ## Overview
 
@@ -122,4 +122,4 @@ Benchmarks are marked `[Trait("Category","Benchmark")]`, excluded from `test.sh`
 
 ---
 
-> [↑ Back to Origo.manual](../README.en.md)
+> [↑ Back to Origo Manual](../README.en.md)

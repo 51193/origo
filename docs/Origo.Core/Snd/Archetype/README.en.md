@@ -21,7 +21,7 @@ Numeric recipe file loading and application utilities. Parses flat key-value Arc
 ## Implementation Details
 
 ### SndArchetypeLoader
-- **TryLoad(ISndFileAccess fileAccess, string path)**: Reads .map via framework file abstraction, returns `Dictionary<string, string>`. Returns false if the file is missing, the format is incorrect, or the map is empty (no attribute keys).
+- **TryLoad(ISndFileAccess fileAccess, string path, out Dictionary<string, string> attributes)**: Reads .map via framework file abstraction and fills `attributes`. Returns false if the file is missing, the format is incorrect, or the map is empty (no attribute keys).
 - **ApplyAttributes(ISndEntity entity, Dictionary<string, string> attributes)**: Parses each value in order: int → long → float → bool → string.
 
 Type inference rules:
