@@ -1,6 +1,6 @@
 # DataSource
 
-> [↑ Back to Origo.Core](../README.en.md)
+> [↑ Back to Origo.Core.Kernel](../README.en.md)
 
 ## Module Capability
 
@@ -22,7 +22,6 @@ Origo's data source abstraction layer — the codec bridge between Core and exte
 | `DataSourceIoGateway.cs` | I/O gateway implementation: suffix → CodecKind mapping + read/write |
 | `DataSourceIoOptions.cs` | I/O routing config: suffix → codec mapping (indentation is controlled by `DataSourceFactory.BuildDefaultCodecs(bool)`) |
 | `DataSourceFactory.cs` | Factory: creates default Registry + IoGateway |
-| `DataSourceConverterRegistry.cs` | Converter registry: look up Converter by Type + generic Read/Write. When an exact type is not registered, automatically backtracks along base class and interface chains. |
 | `KeyValueFileParser.cs` | key:value format parser (for .map files) |
 | `FileMetaAccess.cs` | Default IFileMetaAccess implementation (internal), delegates to IFileSystem |
 | `PathResolver.cs` | Default IPathResolver implementation (internal): CombinePath / GetParentDirectory, delegates to IFileSystem |
@@ -61,4 +60,4 @@ CLR objects (TypedData / SndMetaData / etc.)
 - **Alternative direction: unified tree namespace (deferred)**: `DataSourceNode` already has the two foundations — tree shape and pluggable codecs. It could be promoted into a unified root mounting the local file system, save directories, and network resources, replacing several file APIs with path navigation such as `path -> to -> file -> entity -> health_point`; restricted subtrees would express access scopes structurally. The current synchronous read model is sufficient for local files, but remote nodes would block the frame, and the content/metadata boundary plus live-tree write-back semantics would need redefinition — hence deferred. See [#44](https://github.com/51193/origo/issues/44) for the full trade-off and re-evaluation signals
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Kernel](../README.en.md)

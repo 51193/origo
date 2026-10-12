@@ -468,25 +468,33 @@ public void Core_ContainsNoGodotReferences()
 ```csharp
 public interface INodeFactory
 {
-    INodeHandle Create(ISndEntity parentEntity, string resourceId, string nodeName);
+    INodeHandle Create(string logicalName, string resourceId);
 }
 ```
+
+`Create` instantiates the engine resource identified by `resourceId` and attaches it to the host under `logicalName`.
 
 ### IConsoleInputSource / IConsoleOutputChannel (Console I/O)
 
 ```csharp
 public interface IConsoleInputSource
 {
-    bool TryDequeue(out string? command);
+    bool TryDequeueCommand([NotNullWhen(true)] out string? line);
+    void Enqueue(string line);
+    void Clear();
 }
 
 public interface IConsoleOutputChannel
 {
-    void Publish(string message);
+    long Subscribe(Action<string> listener);
+    bool Unsubscribe(long subscriptionId);
+    void Publish(string line);
 }
 ```
 
-Created by `OrigoAutoHost` for use by `ConsoleBridgeServer` and custom command handlers.
+The adapter layer submits commands via `Enqueue`; Core consumes them per-frame via `TryDequeueCommand`, and `Clear` drops every pending command. `IConsoleOutputChannel` is a publish channel with no local history: `Subscribe` registers a listener and returns its subscription id, `Unsubscribe` cancels an id (false when it does not exist), and `Publish` sends a line to every subscriber.
+
+The Godot adapter host creates the input source and exposes it through `OrigoAutoHost.ConsoleInput`; `ConsoleBridgeServer` and custom command handlers consume it.
 
 ---
 

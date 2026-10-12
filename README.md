@@ -179,7 +179,9 @@ bash scripts/format.sh          # Format check only
 
 | Module | Description |
 |---|---|
-| `Origo.Core` | Platform-agnostic core: SND entities, runtime, persistence, state machines |
+| `Origo.Core.Contracts` | Stable, engine-agnostic consumer contracts: public interfaces, pure data, metadata, strategy bases, data-source contracts, logging abstractions, and shared pure helpers |
+| `Origo.Core.Kernel` | Kernel implementation: runtime construction, SND internals, persistence and storage, data-source codec/factory, console routing, and kernel-shell ports |
+| `Origo.Core` | Consumer shell: grid and random utilities, SND extension helpers, archetype loader, and the `OrigoHost` facade |
 | `Origo.SourceGeneration` | Roslyn incremental source generator for TypedData |
 | `Origo.ConsoleBridge` | TCP remote console bridge |
 | `Origo.GodotAdapter` | Godot 4 adapter: file system, logging, serialization, bootstrap |

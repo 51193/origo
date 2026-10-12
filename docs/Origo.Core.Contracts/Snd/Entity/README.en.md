@@ -8,8 +8,8 @@ Internal entity capability contracts shared by public strategy/planning base cla
 
 | File | Responsibility |
 |------|----------------|
-| `ISndEntityRawSubscription.cs` | See source documentation and API comments. |
-| `ISndEntityStrategyQuery.cs` | See source documentation and API comments. |
+| `ISndEntityRawSubscription.cs` | `internal` raw `TypedData`-level subscription surface (`SubscribeDataRaw` / `UnsubscribeDataRaw`) used by the kernel `ObserverTopology` to wire observer strategies into target data changes |
+| `ISndEntityStrategyQuery.cs` | `internal` query surface adding `HasStrategyMounted(index)`, letting strategy base classes detect an already-mounted strategy without depending on the concrete entity implementation |
 
 ---
 [↑ Back to Snd Contracts](../README.en.md)

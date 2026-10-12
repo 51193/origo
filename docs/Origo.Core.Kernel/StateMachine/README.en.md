@@ -1,18 +1,16 @@
 # StateMachine
 
-> [↑ Back to Origo.Core](../README.en.md) · [↔ Related Tests: StateMachine](../../Origo.Core.Tests/StateMachine.en.md)
+> [↑ Back to Origo.Core.Kernel](../README.en.md) · [↔ Related Tests: StateMachine](../../Origo.Core.Tests/StateMachine.en.md)
 
 ## Overview
 
-The complete implementation of the `IStateMachine` interface. Provides a string-stack state machine (`StackStateMachine`), state machine strategy base class (`StateMachineStrategyBase`), strategy context struct, and persistence model. The state machine itself only stores a stack of string identifiers; specific behavior is defined by associated Push/Pop strategies.
+The complete implementation of the `IStateMachine` interface: the string-stack state machine (`StackStateMachine`) and its persistence model. The state machine itself only stores a stack of string identifiers; specific behavior is defined by associated Push/Pop strategies. The strategy base class `StateMachineStrategyBase` and the context struct `StateMachineStrategyContext` live in [Origo.Core.Contracts/StateMachine](../../Origo.Core.Contracts/StateMachine/README.en.md).
 
 ## Included Files
 
 | File | Responsibility |
-|------|---------------|
+|------|------|
 | `StackStateMachine.cs` | String-stack state machine complete implementation, supporting Push/Pop/Peek/persistence |
-| `StateMachineStrategyBase.cs` | State machine strategy base class (OnPushRuntime / OnPopRuntime etc. hooks) |
-| `StateMachineStrategyContext.cs` | Single callback stack context struct (BeforeTop / AfterTop) |
 | `StateMachinePersistenceModels.cs` | Persistence model: StateMachineContainerPayload |
 
 ## Implementation Details
@@ -60,4 +58,4 @@ Save recovery requires two phases: (1) restore stack content without hooks (prev
 Strategies may need to perceive state transition direction (e.g., performing initialization when switching from "menu" to "gameplay"). Simply informing of the current stack value is insufficient; "where from, where to" transition information is needed.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Kernel](../README.en.md)

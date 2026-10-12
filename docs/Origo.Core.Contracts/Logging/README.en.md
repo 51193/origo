@@ -1,6 +1,6 @@
 # Logging
 
-> [↑ Back to Origo.Core](../README.en.md) · [↔ Abstractions: Logging](../../Origo.Core.Contracts/Abstractions/Logging/README.en.md)
+> [↑ Back to Origo.Core.Contracts](../README.en.md) · [↔ Abstractions: Logging](../../Origo.Core.Contracts/Abstractions/Logging/README.en.md)
 
 ## Overview
 
@@ -51,4 +51,4 @@ The prefix/suffix distinction does not provide semantic clarity in practice. A u
 > **Consumption note**: the `Logger<T>` generic wrapper has no production consumer inside the Core repository (test-only usage) — it is provided as a public extension point for downstream code (strategy libraries, adapters, or game code) for typed logging.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Contracts](../README.en.md)

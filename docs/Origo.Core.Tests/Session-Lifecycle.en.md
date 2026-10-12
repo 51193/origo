@@ -15,7 +15,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 
 | File | Verification Focus |
 |------|-------------------|
-| `LifecycleRunsTests.cs` | SessionRun/ProgressRun lifecycle, MountKey, LoadFromPayload, SwitchForeground, logging |
+| `LifecycleRunsTests.cs` | SessionRun/ProgressRun lifecycle, session key index, LoadFromPayload, SwitchForeground, logging |
 | `DisposeSemanticsTests.SessionRun.cs` / `DisposeSemanticsTests.ProgressRun.cs` / `DisposeSemanticsTests.RoundTrip.cs` (3 partial files + `DisposeSemanticsTestInfrastructure.cs`) | Dispose does not trigger BeforeSave, triggers BeforeQuit, idempotent, Save-then-Dispose-then-Continue round-trip, exception safety |
 | `ForegroundBackgroundContractTests.cs` | Complete behavioral consistency of foreground/background ISessionRun (blackboard/state machines/serialization/Dispose) |
 | `EmptySessionManagerTests.cs` | No-op behavior of EmptySessionManager |
@@ -71,8 +71,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
-| `SessionRun_MountKey_IsNull_WhenNotMounted` | Create background then destroy, Contains returns false | Unmounted |
-| `SessionRun_MountKey_SetOnMount_ClearedOnUnmount` | Create background then Contains is true, false after destroy | ISessionManager correctly manages mounts |
+| `SessionManager_Contains_TracksBackgroundSessionUntilDestroy` | Create background then Contains is true, false after destroy | ISessionManager key index tracks the mount |
 | `SessionRun_Dispose_AutoUnmountsFromManager` | Auto-unmount from Manager on Dispose | Contains returns false |
 | `SessionManager_Clear_EmptiesAllSessions` | Destroy sessions one by one, Keys empty | All cleared |
 | `ResolveLevelPayload_ReturnsNull_WhenNoData` | Returns null when no save data exists | Returns null |
@@ -125,7 +124,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `ProgressRun_AfterDispose_ForegroundSession_IsNull` | ForegroundSession is null after Dispose | Returns null |
 | `ProgressRun_AfterDispose_SessionManagerKeys_IsEmpty` | Keys empty after Dispose | Empty collection |
 | `ProgressRun_AfterDispose_ProgressBlackboard_IsCleared` | ProgressBlackboard cleared after Dispose | TryGet returns false |
-| `ProgressRun_Dispose_SafeEvenWhenNoCurrentDirectory` | Safe when current/ does not exist | Does not throw |
+| `ProgressRun_Dispose_SafeEvenWhenNoCurrentDirectory` | current/ removed outside the run before Dispose | Does not throw |
 | `ProgressRun_Dispose_StateMachineContainerClear_DoesNotThrow` | StateMachineContainer Clear does not throw | Does not throw |
 | `SessionRun_Dispose_BeforeQuit_CanAccessSceneHost` | Session resources still accessible during BeforeQuit | Does not throw ObjectDisposedException |
 | `SessionRun_Dispose_BeforeQuitThrows_EntitiesStillRemoved` | Entities still removed after BeforeQuit throws | Exception propagates but entities cleaned up |
@@ -409,7 +408,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SpawnMany_AddsAll` | All multiple created entities exist | ISndSceneHost |
 | `DeadByName_RemovesEntity_FiresBeforeDead` | RemoveEntity removes entity and triggers BeforeDead | ISndSceneHost |
 | `Dispose_RemovesDirectHostEntities_FiresBeforeQuit` | Dispose triggers BeforeQuit and clears host entities | ISessionRun |
-| `ProcessAll_FiresProcessOnEntities` | ProcessAllSessions triggers Process strategy | ISessionManager |
+| `ProcessAll_FiresProcessOnEntities` | Scene host ProcessAll triggers the Process strategy | ISndSceneHost |
 | `SerializeMetaList_ReturnsAllEntities` | BuildMetaList returns all entity metadata | ISndSceneHost |
 | `PersistLevelState_WritesPayloadToFileSystem` | Level files exist after Save | session-model |
 | `FullWorkflow_CreatePopulateTickSave` | Complete workflow: create→populate entities→Process→set blackboard→Save→verify files | session-model |

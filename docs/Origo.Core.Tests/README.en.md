@@ -1,6 +1,6 @@
 # Origo.Core.Tests
 
-> [↑ Back to Origo.manual](../README.en.md)
+> [↑ Back to Origo Manual](../README.en.md)
 > [↔ Test Documentation Meta-Instructions](META-TEST.en.md)
 
 ## Test Strategy Overview
@@ -86,4 +86,4 @@ Tests are grouped by **capability under test**, each document corresponding to a
 
 ---
 
-[↑ Back to Origo.manual](../README.en.md)
+[↑ Back to Origo Manual](../README.en.md)

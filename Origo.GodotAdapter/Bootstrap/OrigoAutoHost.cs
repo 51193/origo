@@ -22,7 +22,10 @@ using Origo.GodotAdapter.Snd;
 namespace Origo.GodotAdapter.Bootstrap;
 
 /// <summary>
-///     The sole startup entry point node for self-built Runtime and SndManager.
+///     Godot startup node that builds the Origo runtime and its Godot scene host,
+///     drives the frame pipeline from the scene tree, and exposes the resulting
+///     runtime and console channels. <see cref="OrigoDefaultEntry" /> derives from
+///     this type and runs the standard bootstrap flow.
 /// </summary>
 [GlobalClass]
 public partial class OrigoAutoHost : Node

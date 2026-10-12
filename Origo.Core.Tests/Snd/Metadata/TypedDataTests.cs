@@ -97,8 +97,12 @@ public class TypedDataTests
     [Fact]
     public void WithBoxedInt_KeepsRuntimeType()
     {
-        var td = (TypedData)42;
+        // T = object forces the int through the boxed factory fallback: no
+        // kind is registered for object, so DataType must be recovered from
+        // the boxed value's runtime type.
+        var td = TypedDataFactory<object>.Create(42);
         Assert.Equal(typeof(int), td.DataType);
+        Assert.IsType<int>(TypedDataObjectConverter.ToObject(td));
         Assert.Equal(42, TypedDataObjectConverter.ToObject(td));
     }
 

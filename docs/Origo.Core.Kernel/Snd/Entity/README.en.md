@@ -18,7 +18,8 @@ Strategy lifecycle hooks are triggered via phased methods exposed by the `IEntit
 | `SndDataManager.cs` | `internal` — Entity data dictionary management + observer change notification |
 | `SndNodeManager.cs` | `internal` — Entity node management: from metadata recovery to node creation/lookup/release |
 | `DataObserverManager.cs` | `internal` — Generic data observer subscription/notification infrastructure (key → callback list) |
-| `ISndEntityRawSubscription.cs` | `internal` raw data subscription interface (`SubscribeDataRaw` / `UnsubscribeDataRaw`). Used by `ObserverTopology` in internal pipelines to directly operate on the target entity's `SndDataManager`, wiring observer strategies into data changes |
+
+> The `internal` raw data subscription interface `ISndEntityRawSubscription` (`SubscribeDataRaw` / `UnsubscribeDataRaw`) lives in [Origo.Core.Contracts/Snd/Entity](../../../Origo.Core.Contracts/Snd/Entity/README.en.md). `ObserverTopology` uses it in internal pipelines to operate directly on the target entity's `SndDataManager`, wiring observer strategies into data changes.
 
 > The `TryGetNumeric` / `GetNumeric` extension methods (in the `Origo.Core.Snd` namespace) bridge the type mismatch between `SetData("k", 5)` (int) and `TryGetData<float>("k")` (float). Reads are attempted in float → int → remaining integer types (byte/sbyte/short/ushort/char/uint/ulong) → long → double order; see [Snd/README](../README.en.md).
 

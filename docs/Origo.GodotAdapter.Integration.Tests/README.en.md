@@ -1,6 +1,6 @@
 # Origo.GodotAdapter.Integration.Tests
 
-> [↑ Back to Origo.manual](../README.en.md)
+> [↑ Back to Origo Manual](../README.en.md)
 
 ## Overview
 
@@ -140,4 +140,4 @@ Origo.GodotAdapter.Integration.Tests/
 
 ---
 
-[↑ Back to Origo.manual](../README.en.md)
+[↑ Back to Origo Manual](../README.en.md)

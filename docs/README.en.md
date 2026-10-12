@@ -2,7 +2,7 @@
 
 The complete documentation manual for the Origo framework. Uses a **bottom-up** structure — aggregating upward from source code directories level by level, ensuring any question can reach its target via multi-level directory indexing without reading source code from scratch.
 
-> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Update English docs → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ post-commit `scripts/lint-commits.sh`.
+> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Documentation → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ post-commit `scripts/lint-commits.sh`.
 > Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full guidelines and document master index at repo root [AGENTS.md](../AGENTS.md).
 
 ## Design Principles
@@ -14,7 +14,7 @@ The Origo framework follows these core design constraints; all module implementa
 | **Platform-agnostic** | Origo.Core has zero engine dependencies. All game logic, persistence, and entity models use only `System.*` types |
 | **Adapter-layer isolation** | Engine integration is exclusively through `Origo.GodotAdapter` implementing Core abstraction interfaces. The adapter layer must not fire strategy hooks, manage strategy lifecycles, flush deferred pipelines, or hold Core orchestration state |
 | **Interface Segregation (ISP)** | `ISndContext` exposes 10 companion properties (9 Snd role interfaces + `IStateMachineContext`); `ISessionRun` returns an abstract `IStateMachineContainer` rather than a concrete type |
-| **Unidirectional dependency** | Contracts → Core implementations → Adapter; reverse dependencies are strictly forbidden |
+| **Unidirectional dependency** | `Origo.GodotAdapter` → `Origo.Core` → `Origo.Core.Kernel` → `Origo.Core.Contracts`, with `Origo.ConsoleBridge` → `Origo.Core.Contracts`; reverse dependencies are strictly forbidden |
 | **public whitelist** | Do not expose interfaces preemptively for "maybe useful in the future"; every public interface must have a clear cross-assembly consumer |
 | **Explicit failure first** | Throw exceptions rather than silent degradation when interface contracts are violated; save/load strictly validate integrity |
 | **Strategy as first-class citizen** | Game logic is strategy-driven; `ISndContext` acts as a god object exposing all capabilities to strategies without restricting what framework features a strategy can access |
@@ -80,7 +80,7 @@ Each module directory's English entry contains:
 
 | Subsystem | Responsibility |
 |-----------|---------------|
-| [Abstractions](Origo.Core.Kernel/Abstractions/README.en.md) | Core abstraction interfaces (IBlackboard, ISndEntity, ISessionManager, IStateMachineContainer...) |
+| [Abstractions](Origo.Core.Contracts/Abstractions/README.en.md) | Stable consumer contract interfaces (IBlackboard, ISndEntity, ISessionManager, IStateMachineContainer...) |
 | [Snd](Origo.Core/Snd/README.en.md) | SND entity system (Strategy + Node + Data) |
 | [Runtime](Origo.Core.Kernel/Runtime/README.en.md) | Four-layer runtime lifecycle + console |
 | [Save](Origo.Core.Kernel/Save/README.en.md) | Persistence (two-phase write + strict read) |

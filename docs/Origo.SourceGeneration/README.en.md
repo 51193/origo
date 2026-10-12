@@ -1,6 +1,6 @@
 # Origo.SourceGeneration
 
-> [↑ Back to Origo.manual](../README.en.md) · [↔ Core: Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md)
+> [↑ Back to Origo Manual](../README.en.md) · [↔ Core: Snd/Metadata](../Origo.Core.Contracts/Snd/Metadata/README.en.md)
 
 ## Overview
 
@@ -154,4 +154,4 @@ Kind is a `byte`; at runtime `TypedData.RegisterKind` throws `InvalidOperationEx
 
 ---
 
-[↑ Back to Origo.manual](../README.en.md)
+[↑ Back to Origo Manual](../README.en.md)

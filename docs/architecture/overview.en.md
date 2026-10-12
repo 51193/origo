@@ -9,7 +9,7 @@ The Origo framework follows these core design constraints:
 - **Platform-agnostic**: Core has zero engine dependencies; all I/O goes through `IDataSourceIoGateway` + `IFileMetaAccess` + `IPathResolver` (with `IFileSystem` as an adapter/host-provided implementation detail)
 - **Adapter-layer isolation**: The adapter layer only provides capability encapsulation and bridging; it must not fire strategy hooks or manage strategy lifecycles
 - **Interface Segregation (ISP)**: `ISndContext` exposes capabilities through 10 companion properties; `ISessionRun` returns an abstract `IStateMachineContainer`
-- **Unidirectional dependency**: Adapter → Core → Abstractions; reverse is strictly forbidden
+- **Unidirectional dependency**: `Origo.GodotAdapter` → `Origo.Core` → `Origo.Core.Kernel` → `Origo.Core.Contracts`, with `Origo.ConsoleBridge` → `Origo.Core.Contracts`; reverse is strictly forbidden
 - **public whitelist**: Every public interface must have a clear cross-assembly consumer
 - **Strategy as first-class citizen**: Strategies can access all 30+ members of `ISndContext` without restricting framework capabilities
 - **Single-threaded frame model**: One frame = one logical atomic boundary
@@ -17,10 +17,7 @@ The Origo framework follows these core design constraints:
 
 ## Project Design
 
-Origo is a **lightweight, platform-agnostic C# game framework** using the SND (Strategy + Node + Data) entity model. The project consists of two layers:
-
-- **Origo.Core**: Platform-agnostic core — all game logic, persistence, and entity models live here
-- **Origo.GodotAdapter**: Godot 4 adapter layer — bridges Core's abstraction interfaces with the Godot engine API
+Origo is a **lightweight, platform-agnostic C# game framework** using the SND (Strategy + Node + Data) entity model. It ships as the packages `Origo.Core.Contracts` (stable consumer contracts), `Origo.Core.Kernel` (kernel implementation), `Origo.Core` (consumer shell), `Origo.GodotAdapter` (Godot 4 adapter layer), and `Origo.ConsoleBridge` (TCP remote console bridge); [Project Structure](#project-structure) lists their directories.
 
 ## Four-Layer Runtime
 

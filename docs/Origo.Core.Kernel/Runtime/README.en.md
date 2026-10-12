@@ -1,6 +1,6 @@
 # Runtime
 
-> [↑ Back to Origo.Core](../README.en.md)
+> [↑ Back to Origo.Core.Kernel](../README.en.md)
 
 ## Module Capability
 
@@ -63,4 +63,4 @@ SystemRuntime → SystemRun
 Capabilities flow one-way downward; lower layers must not depend on upper layers in reverse.
 
 ---
-[↑ Back to Origo.Core](../README.en.md)
+[↑ Back to Origo.Core.Kernel](../README.en.md)

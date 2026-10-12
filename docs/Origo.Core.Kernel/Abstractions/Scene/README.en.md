@@ -9,10 +9,11 @@ Defines the Core layer's abstract capabilities for orchestrating SND scenes. `IS
 
 | File | Responsibility |
 |------|------|
-| `ISndSceneReadAccess.cs` | Public read-only scene access: `GetEntities` / `FindByName`; state-machine hooks and save-meta contributors query scenes through this |
 | `ISndSceneAccess.cs` | Internal scene serialization access: BuildMetaList / RecoverFromMetaList (no hooks) |
 | `ISndSceneHost.cs` | Internal scene host (inherits ISndSceneAccess + ISndSceneReadAccess): entity container management |
 | `IOwningSessionBindable.cs` | Internal owning-session binding for auto-binding entities |
+
+> `ISndSceneReadAccess` (the public read-only scene contract) lives in [Origo.Core.Contracts/Abstractions/Scene](../../../Origo.Core.Contracts/Abstractions/Scene/README.en.md).
 
 ## Interface Details
 

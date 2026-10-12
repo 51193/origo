@@ -162,9 +162,9 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SaveStorageFacade_EnumerateSaveIds_NullFileSystem_Throws` | null IFileSystem | ArgumentNullException |
-| `SaveStorageFacade_SnapshotCurrentToSave_WhitespaceSaveRoot_Throws` | Whitespace storage root path | ArgumentException |
+| `SaveStorageFacade_SnapshotCurrentToSave_MissingCurrentDirectory_Throws` | current/ directory missing | InvalidOperationException, no save directory written |
 | `SaveStorageFacade_SnapshotCurrentToSave_WhitespaceNewSaveId_Throws` | Whitespace save ID | ArgumentException |
-| `SaveStorageFacade_ReadSavePayloadFromSnapshot_WhitespaceSaveRoot_Throws` | Whitespace storage root path | ArgumentException |
+| `SaveStorageFacade_ReadSavePayloadFromSnapshot_WhitespaceSaveId_Throws` | Whitespace save ID | ArgumentException |
 | `SaveStorageFacade_ReadCurrent_MissingProgressStateMachines_Throws` | progress_state_machines.json missing | InvalidOperationException |
 | `SaveStorageFacade_ReadCurrent_MissingSessionStateMachines_Throws` | session_state_machines.json missing | InvalidOperationException |
 | `WriteToCurrent_WhenActiveLevelMissing_ThrowsWithoutWritingCurrent` | LevelPayload for ActiveLevelId missing | InvalidOperationException, no residue in current/ |
