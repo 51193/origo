@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Negative fixtures for the weekly-snapshot workflow guard.
+"""Negative fixtures for the release/weekly workflow guard.
 
 `scripts/validate-release-workflow.py` has to reject a snapshot workflow that
-would push a branch, and one that only names the version stamps without
-rewriting them. Every case below mutates the tracked workflow in exactly one
-way, asserts the mutation applied, and then asserts the guard reports that
-specific problem — so the guard cannot silently stop enforcing it.
+would push a branch anywhere in a step script, one that only names the version
+stamps without rewriting them, and a release write-back that lost its
+condition. Every case below mutates the tracked workflow in exactly one way,
+asserts the mutation applied, and then asserts the guard reports that specific
+problem — so the guard cannot silently stop enforcing it.
 
 Run from `scripts/lint-scripts.sh` alongside the other script self-tests.
 """
@@ -18,14 +19,20 @@ import re
 import tempfile
 import unittest
 
+import yaml
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 GUARD_PATH = ROOT / "scripts" / "validate-release-workflow.py"
 WORKFLOW_PATH = ROOT / ".github" / "workflows" / "weekly-build.yml"
+RELEASE_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "release.yml"
 
 PUSH_LINE = 'git push origin "refs/tags/${TAG}"'
 REPLACEMENT_LOOP = re.compile(r"for element, replacement in \(\n(?:.*\n)*?\s*\):")
 DISPATCH_STEP = "      - name: Dispatch the release pipeline for the snapshot tag"
 STAMPS = ("Version", "AssemblyVersion", "FileVersion")
+WRITE_BACK_IF = "if: steps.release-commit.outputs.changed == 'true'"
+MAIN_REFSPEC = 'origin "${RELEASE_SHA}:refs/heads/main"'
+MAIN_SHORTHAND = 'origin "${RELEASE_SHA}:main"'
 
 
 def load_guard():
@@ -40,17 +47,13 @@ def load_guard():
 GUARD = load_guard()
 
 
-class WeeklySnapshotGuardTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
+class GuardFixtureCase(unittest.TestCase):
+    """Shared mutation helpers; subclasses supply the workflow under test."""
 
-    def errors_for(self, text: str) -> list[str]:
-        with tempfile.TemporaryDirectory() as directory:
-            path = pathlib.Path(directory) / "weekly-build.yml"
-            path.write_text(text, encoding="utf-8")
-            errors: list[str] = []
-            GUARD.check_weekly_snapshot(errors, path)
-            return errors
+    workflow_path: pathlib.Path
+
+    def setUp(self) -> None:
+        self.workflow = self.workflow_path.read_text(encoding="utf-8")
 
     def mutate(self, old: str, new: str) -> str:
         self.assertIn(old, self.workflow, f"fixture anchor is gone: {old!r}")
@@ -63,6 +66,18 @@ class WeeklySnapshotGuardTests(unittest.TestCase):
             any(fragment in error for error in errors),
             f"guard did not report {fragment!r}; got {errors}",
         )
+
+
+class WeeklySnapshotGuardTests(GuardFixtureCase):
+    workflow_path = WORKFLOW_PATH
+
+    def errors_for(self, text: str) -> list[str]:
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "weekly-build.yml"
+            path.write_text(text, encoding="utf-8")
+            errors: list[str] = []
+            GUARD.check_weekly_snapshot(errors, path)
+            return errors
 
     def test_tracked_workflow_is_accepted(self) -> None:
         self.assertEqual([], self.errors_for(self.workflow))
@@ -82,6 +97,65 @@ class WeeklySnapshotGuardTests(unittest.TestCase):
     def test_push_without_an_explicit_refspec_is_rejected(self) -> None:
         errors = self.errors_for(self.mutate(PUSH_LINE, "git push origin"))
         self.assert_reports(errors, "without an explicit tag refspec")
+
+    def test_branch_push_after_a_separator_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'git fetch --tags && git push origin "refs/heads/main"')
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_branch_push_behind_a_command_wrapper_is_rejected(self) -> None:
+        mutated = self.mutate(
+            DISPATCH_STEP,
+            "      - name: wrapped\n"
+            '        run: bash -c "git push origin refs/heads/main"\n\n'
+            f"{DISPATCH_STEP}",
+        )
+        self.assert_reports(self.errors_for(mutated), "refs/heads/main")
+
+    def test_branch_push_with_a_path_option_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'git -C . push origin "refs/heads/main"')
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_branch_push_with_a_git_dir_option_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'git --git-dir /tmp/x push origin "refs/heads/main"')
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_branch_push_inside_a_subshell_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, '(git push origin "refs/heads/main")')
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_branch_push_inside_a_loop_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE, 'for r in refs/heads/main; do git push origin "$r"; done'
+            )
+        )
+        self.assert_reports(errors, "not a tag-only refspec")
+
+    def test_bare_branch_destination_is_rejected(self) -> None:
+        errors = self.errors_for(self.mutate(PUSH_LINE, "git push origin main"))
+        self.assert_reports(errors, "not a tag-only refspec")
+
+    def test_tag_only_pushes_are_accepted(self) -> None:
+        for replacement in (
+            'git -C . push origin "refs/tags/${TAG}"',
+            'git push origin "refs/tags/${TAG}" "refs/tags/${TAG}-2"',
+        ):
+            with self.subTest(replacement=replacement):
+                self.assertEqual([], self.errors_for(self.mutate(PUSH_LINE, replacement)))
+
+    def test_commented_out_branch_push_is_accepted(self) -> None:
+        mutated = self.mutate(
+            PUSH_LINE, f"{PUSH_LINE}\n          # git push origin refs/heads/main"
+        )
+        self.assertEqual([], self.errors_for(mutated))
 
     def test_stamps_named_only_in_a_comment_are_rejected(self) -> None:
         mutated = REPLACEMENT_LOOP.sub(
@@ -111,6 +185,49 @@ class WeeklySnapshotGuardTests(unittest.TestCase):
     def test_bump_step_without_a_substitution_is_rejected(self) -> None:
         errors = self.errors_for(self.mutate("re.subn(", "noop("))
         self.assert_reports(errors, "without substituting")
+
+
+class ReleaseWritebackGuardTests(GuardFixtureCase):
+    workflow_path = RELEASE_WORKFLOW_PATH
+
+    def errors_for(self, text: str) -> list[str]:
+        errors: list[str] = []
+        GUARD.check_release_writeback_is_conditional(yaml.safe_load(text), errors)
+        return errors
+
+    def test_tracked_release_workflow_is_accepted(self) -> None:
+        self.assertEqual([], self.errors_for(self.workflow))
+
+    def test_writeback_without_its_condition_is_rejected(self) -> None:
+        errors = self.errors_for(self.mutate(WRITE_BACK_IF, "if: always()"))
+        self.assert_reports(errors, GUARD.WRITE_BACK_CONDITION)
+
+    def test_writeback_with_a_main_shorthand_and_no_condition_is_rejected(self) -> None:
+        mutated = self.mutate(WRITE_BACK_IF, "if: always()")
+        self.assertIn(MAIN_REFSPEC, mutated, f"fixture anchor is gone: {MAIN_REFSPEC!r}")
+        mutated = mutated.replace(MAIN_REFSPEC, MAIN_SHORTHAND, 1)
+        self.assertNotEqual(self.workflow, mutated, "shorthand fixture did not apply")
+        self.assert_reports(self.errors_for(mutated), GUARD.WRITE_BACK_CONDITION)
+
+    def test_guard_accepts_a_tag_only_push_without_a_condition(self) -> None:
+        text = (
+            "jobs:\n"
+            "  release:\n"
+            "    steps:\n"
+            "      - name: tag only\n"
+            '        run: git push origin "refs/tags/${TAG}"\n'
+        )
+        self.assertEqual([], self.errors_for(text))
+
+    def test_guard_rejects_a_branch_push_moved_to_another_step(self) -> None:
+        text = (
+            "jobs:\n"
+            "  release:\n"
+            "    steps:\n"
+            "      - name: push main\n"
+            '        run: git fetch origin && git push origin "HEAD:refs/heads/main"\n'
+        )
+        self.assert_reports(self.errors_for(text), GUARD.WRITE_BACK_CONDITION)
 
 
 if __name__ == "__main__":

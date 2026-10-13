@@ -28,6 +28,7 @@ from __future__ import annotations
 import re
 import shlex
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 import yaml
@@ -197,6 +198,9 @@ SUBSTITUTION = re.compile(r"\bre\.subn?\(|\.replace\(|\bsubn?\(")
 BUMP_TARGET = re.compile(r"""["']Directory\.Build\.props["']""")
 WRITE_OP = re.compile(r"""open\([^)]*["'][wa]|write_text\(|\.write\(""")
 COMMENT = re.compile(r"(?:^|\s)#[^\n]*", re.M)
+SHELL_SEPARATOR = re.compile(r"&&|\|\||[;\n|&]")
+GROUPING = "(){}"
+EMBEDDED_COMMAND = re.compile(r"\bgit\b[^\n]*\bpush\b")
 
 
 def strip_comments(script: str) -> str:
@@ -204,27 +208,90 @@ def strip_comments(script: str) -> str:
     return COMMENT.sub("", script)
 
 
-def push_destinations(command: str) -> list[str]:
-    """Return the refspec arguments of a `git push` command line.
+def _bare(token: str) -> str:
+    """Return a token without shell grouping characters around it."""
+    return token.strip(GROUPING)
 
-    The first non-option argument names the remote; every argument after it is a
-    refspec whose source and destination must both name a tag.
+
+def _iter_fragment_pushes(fragment: str, depth: int = 0) -> Iterator[list[str]]:
+    """Yield the argument list of every `git push` in one shell fragment.
+
+    The argument list holds the tokens after `push` with options removed, so its
+    first element names the remote and the remaining elements are refspecs. An
+    option that consumes a separate value (`git -C <path> push`, `git --git-dir
+    <path> push`, `git -c <name=value> push`) is stepped over before `push` is
+    matched, and shell grouping around the command (`(git push ...)`) is
+    ignored. A quoted argument that itself contains a command (`bash -c "git
+    push ..."`) is scanned recursively, so a push cannot hide inside a wrapper.
     """
     try:
-        tokens = shlex.split(command)
+        tokens = shlex.split(fragment)
     except ValueError:
-        return [command]
-    arguments = [token for token in tokens[2:] if not token.startswith("-")]
-    return arguments[1:] if arguments else []
+        tokens = fragment.split()
+
+    index = 0
+    while index < len(tokens):
+        if _bare(tokens[index]) != "git":
+            index += 1
+            continue
+        cursor = index + 1
+        while cursor < len(tokens) and tokens[cursor].startswith("-"):
+            takes_value = (
+                cursor + 1 < len(tokens)
+                and not tokens[cursor + 1].startswith("-")
+                and _bare(tokens[cursor + 1]) != "push"
+            )
+            cursor += 2 if takes_value else 1
+        if cursor < len(tokens) and _bare(tokens[cursor]) == "push":
+            yield [token for token in tokens[cursor + 1:] if not token.startswith("-")]
+            index = cursor + 1
+        else:
+            index += 1
+
+    if depth >= 2:
+        return
+    for token in tokens:
+        if token == fragment or " " not in token or not EMBEDDED_COMMAND.search(token):
+            continue
+        yield from _iter_fragment_pushes(token, depth + 1)
+
+
+def push_arguments(script: str) -> Iterator[list[str]]:
+    """Yield the argument list of every `git push` in a step script.
+
+    The script is split on shell separators first, so a branch push is found
+    wherever it sits: after `&&`, behind a `bash -c` wrapper, inside a loop
+    body, or on its own line.
+    """
+    for fragment in SHELL_SEPARATOR.split(script):
+        yield from _iter_fragment_pushes(fragment)
+
+
+def unsafe_push_reasons(arguments: list[str]) -> list[str]:
+    """Describe why a push is unsafe for a tag-only snapshot publish.
+
+    An empty result means the push publishes only tags: the first argument is
+    the remote, and every refspec after it must name `refs/tags/` on both its
+    source and its destination.
+    """
+    if len(arguments) < 2:
+        return ["runs a `git push` without an explicit tag refspec"]
+    return [
+        f"pushes {refspec!r}, which is not a tag-only refspec"
+        for refspec in arguments[1:]
+        if any(not part.startswith("refs/tags/") for part in refspec.split(":"))
+    ]
 
 
 def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
     """A snapshot must publish only its tag, and that tag must be self-contained.
 
     The snapshot commit carries the version stamps of the tag it publishes, so
-    the release pipeline has nothing to rewrite and never pushes `main`. Every
-    refspec of every `git push` in this workflow must therefore name a tag on
-    both its source and its destination.
+    the release pipeline has nothing to rewrite and never pushes `main`. No
+    step of this workflow may therefore push anything but tags: every `git
+    push` is located in the executable text of every step, wherever it sits in
+    the shell (compound command, wrapper, loop, or its own line), and each of
+    its refspecs must name `refs/tags/` on both source and destination.
 
     The stamp rewriting is checked on the executable text of the single step
     that rewrites `Directory.Build.props`: comments are stripped first, that
@@ -244,39 +311,33 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
 
     text = workflow_path.read_text(encoding="utf-8")
 
-    for index, line in enumerate(text.splitlines(), 1):
-        command = line.strip()
-        if not command.startswith("git push"):
-            continue
-        destinations = push_destinations(command)
-        if not destinations:
-            errors.append(
-                f"{relative}:{index} runs a `git push` without an explicit tag "
-                f"refspec ({command!r}); a snapshot must publish only its tag."
-            )
-            continue
-        for refspec in destinations:
-            if any(not part.startswith("refs/tags/") for part in refspec.split(":")):
-                errors.append(
-                    f"{relative}:{index} pushes {refspec!r}, which is not a "
-                    f"tag-only refspec ({command!r}); every source and "
-                    "destination must name refs/tags/ so a snapshot never has "
-                    "to bypass branch rules."
-                )
-
     try:
         workflow = yaml.safe_load(text)
     except yaml.YAMLError as exc:
         errors.append(f"{relative} is not valid YAML: {exc}")
         return
 
-    scripts = [
-        strip_comments(str(step.get("run") or ""))
+    steps = [
+        (
+            str(step.get("name") or f"job step {index}"),
+            strip_comments(str(step.get("run") or "")),
+        )
         for job in (workflow.get("jobs") or {}).values()
         if isinstance(job, dict)
-        for step in job.get("steps") or []
+        for index, step in enumerate(job.get("steps") or [])
         if isinstance(step, dict)
     ]
+
+    for name, script in steps:
+        for arguments in push_arguments(script):
+            for reason in unsafe_push_reasons(arguments):
+                errors.append(
+                    f"{relative} step {name!r} {reason}; every push in this "
+                    "workflow must name refs/tags/ on both its source and its "
+                    "destination so a snapshot never has to bypass branch rules."
+                )
+
+    scripts = [script for _, script in steps]
 
     bump_scripts = [
         script
@@ -325,22 +386,32 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
 
 
 def check_release_writeback_is_conditional(workflow: dict, errors: list[str]) -> None:
-    """The release write-back may only run when the version stamps changed."""
+    """The release write-back may only run when the version stamps changed.
+
+    The write-back is the only place the release pipeline writes `main`, and it
+    may only run for a release whose tag did not already carry the version
+    stamps. Every release step that pushes anything other than tags must
+    therefore stay behind the write-back condition. The step is identified by
+    the push it performs rather than by a refspec spelling, so the check keeps
+    working when the destination is written as `:main`, when a new option is
+    added, or when the push moves to another step.
+    """
     release_job = (workflow.get("jobs") or {}).get("release")
     steps = release_job.get("steps") if isinstance(release_job, dict) else None
     if not isinstance(steps, list):
         return
 
-    for step in steps:
+    for index, step in enumerate(steps):
         if not isinstance(step, dict):
             continue
-        command = str(step.get("run") or "")
-        if "git push" not in command or "refs/heads/main" not in command:
+        script = strip_comments(str(step.get("run") or ""))
+        if not any(unsafe_push_reasons(arguments) for arguments in push_arguments(script)):
             continue
         condition = str(step.get("if") or "")
         if WRITE_BACK_CONDITION not in condition:
             errors.append(
-                "the release write-back step must stay guarded by "
+                f"release step {index} ({str(step.get('name') or 'unnamed')!r}) "
+                "pushes a branch and must stay guarded by "
                 f"{WRITE_BACK_CONDITION!r}, so a snapshot whose tag already "
                 "carries the version stamps never pushes main."
             )
