@@ -108,21 +108,12 @@ internal static class AdapterHostKernelPort
         ArgumentNullException.ThrowIfNull(bundle);
         ArgumentNullException.ThrowIfNull(options);
 
-        var context = new SndContext(new SndContextParameters(
+        var context = new SndContext(HostContextParameters.Create(
             bundle.Runtime,
             bundle.DataSourceIo,
             bundle.MetaAccess,
             bundle.PathResolver,
-            options.SaveRootPath,
-            options.InitialSaveRootPath,
-            options.EntryConfigPath)
-        {
-            AutoDiscoverStrategies = options.AutoDiscoverStrategies,
-            DiscoverySkipPrefixes = options.DiscoverySkipPrefixes,
-            SceneAliasMapPath = options.SceneAliasMapPath,
-            SndTemplateMapPath = options.SndTemplateMapPath,
-            ConfigureConverters = options.ConfigureConverters,
-        });
+            options));
 
         if (bundle.SceneHost is not ISndContextAttachableSceneHost attachableSceneHost)
         {

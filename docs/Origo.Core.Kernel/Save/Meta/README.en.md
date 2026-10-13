@@ -22,7 +22,7 @@ Display-metadata merge implementation for `meta.map`: the delegate adapter and t
 
 ### SaveMetaMerger
 
-Static utility class. Merge logic: iterate contributors → contribute in registration order, later same-name keys overwrite earlier ones → return null when no keys are present. A contributor output that violates the interface contract (null dictionary, blank key, or null value) throws `InvalidOperationException` immediately, so invalid metadata fails the save instead of degrading silently.
+Static utility class. Merge logic: iterate contributors → contribute in registration order, later same-name keys overwrite earlier ones → return null when no keys are present. `SaveMetaMerger` throws `InvalidOperationException` immediately on invalid contributor output; the rationale is owned by the contributor contract in [Why invalid contributor output must fail the save](../../../Origo.Core.Contracts/Save/Meta/README.en.md#why-invalid-contributor-output-must-fail-the-save).
 
 ### DelegateSaveMetaContributor
 
@@ -32,10 +32,6 @@ Adapts a delegate to the contributor contract so a caller can register a metadat
 
 ### Why contributors overwrite by registration order
 Different contributors may have different perspectives on the same key. Ordered overwrite provides predictable priority.
-
-### Why invalid contributor output must fail the save
-
-The contributor interface promises mergeable key-value pairs; silently skipping a null dictionary, blank key, or null value would disguise an implementation bug as "no metadata" and make the offending contributor impossible to identify. Saves are a strict-validation path, so `SaveMetaMerger` throws with contributor-type context and preserves fail-fast semantics.
 
 ### Why a delegate adapter exists
 

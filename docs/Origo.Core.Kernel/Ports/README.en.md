@@ -17,6 +17,7 @@ Internal kernel-shell port namespace. Ports construct and bind runtime/context o
 |------|----------------|
 | `HostKernelPort.cs` | `internal` port the Core shell facade calls to create the runtime and SND context; also defines `IHostKernelPort` and the `OrigoHostBundle` result record |
 | `AdapterHostKernelPort.cs` | `internal` port the Godot adapter shell calls to create its runtime over an `ISndSceneHost` and bind the per-scene observer topology; also defines `ISndSceneHostRuntimeBinder`, `AdapterRuntimeBundle`, and `AdapterContextOptions` |
+| `HostContextParameters.cs` | `internal` factory both ports share to project their option records onto one `SndContextParameters`, so a context option is wired once and the adapter host path cannot drift from the Core host path |
 
 ---
 [↑ Back to Origo.Core.Kernel](../README.en.md)

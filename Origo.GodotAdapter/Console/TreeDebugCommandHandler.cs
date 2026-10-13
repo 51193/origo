@@ -4,7 +4,6 @@ using Godot;
 using Origo.Core.Abstractions.Console;
 using Origo.Core.Abstractions.Runtime;
 using Origo.Core.Runtime.Console;
-using Origo.GodotAdapter.Snd;
 using Origo.GodotAdapter;
 
 namespace Origo.GodotAdapter.Console;
@@ -25,18 +24,8 @@ internal sealed class TreeDebugCommandHandler(IOrigoRuntime runtime) : CommandHa
     {
         var entityName = invocation.PositionalArgs[0].Trim();
 
-        var entity = Runtime.SessionManager.ForegroundSession?.FindByName(entityName);
-        if (entity is null)
-        {
-            errorMessage = $"Entity '{entityName}' not found.";
+        if (!TryResolveGodotEntity(entityName, out var godotEntity, out errorMessage))
             return false;
-        }
-
-        if (entity is not GodotSndEntity godotEntity)
-        {
-            errorMessage = $"Entity '{entityName}' is not a Godot entity.";
-            return false;
-        }
 
         var sb = new StringBuilder();
         sb.AppendLine(CultureInfo.InvariantCulture, $"Node tree of entity '{entityName}':");

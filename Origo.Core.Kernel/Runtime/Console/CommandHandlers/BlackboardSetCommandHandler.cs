@@ -1,6 +1,7 @@
 using System;
 using Origo.Core.Abstractions.Blackboard;
 using Origo.Core.Abstractions.Console;
+using Origo.Core.Utility;
 
 namespace Origo.Core.Runtime.Console.CommandHandlers;
 
@@ -45,7 +46,7 @@ internal sealed class BlackboardSetCommandHandler : ConsoleCommandHandlerBase
             return false;
         }
 
-        ConsoleCommandHelper.SetBlackboardWithTypeInference(bb, key, raw);
+        ValueInference.SetBlackboard(bb, key, raw);
 
         outputChannel.Publish($"[{layer}] {key} = {raw}");
         errorMessage = null;

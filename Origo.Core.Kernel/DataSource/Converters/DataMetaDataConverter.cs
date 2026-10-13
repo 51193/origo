@@ -15,34 +15,13 @@ internal sealed class DataMetaDataConverter : DataSourceConverter<DataMetaData>
 
     public override DataMetaData Read(DataSourceNode node)
     {
-        if (node.Kind != DataSourceNodeKind.Map)
-            throw new InvalidOperationException(
-                $"Data metadata must be a JSON object, but found {node.Kind}. " +
-                "The save data is corrupt and cannot be recovered.");
+        MetaDataPairsCodec.ValidateMetaNode(node, "Data metadata");
 
         var meta = new DataMetaData();
-
-        if (node.TryGetValue("pairs", out var pairsNode) && pairsNode is not null && !pairsNode.IsNull)
-        {
-            if (pairsNode.Kind != DataSourceNodeKind.Map)
-                throw new InvalidOperationException(
-                    $"Data metadata 'pairs' must be a JSON object, but found {pairsNode.Kind}. " +
-                    "The save data is corrupt and cannot be recovered.");
-
-            foreach (var key in pairsNode.Keys)
-                meta.Pairs[key] = _typedDataConverter.Read(pairsNode[key]);
-        }
-
+        MetaDataPairsCodec.ReadPairs(node, "Data metadata", meta.Pairs, _typedDataConverter.Read);
         return meta;
     }
 
-    public override DataSourceNode Write(DataMetaData value)
-    {
-        var pairs = DataSourceNode.CreateObject();
-        foreach (var kvp in value.Pairs)
-            pairs.Add(kvp.Key, _typedDataConverter.Write(kvp.Value));
-
-        return DataSourceNode.CreateObject()
-            .Add("pairs", pairs);
-    }
+    public override DataSourceNode Write(DataMetaData value) =>
+        MetaDataPairsCodec.WritePairs(value.Pairs, _typedDataConverter.Write);
 }
