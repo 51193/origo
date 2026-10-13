@@ -27,21 +27,39 @@
 
 ## Startup Flow
 
+`OrigoDefaultEntry._Ready()` (or a derived entry that calls `base._Ready()` first) runs the complete Godot adapter startup:
+
 ```
 OrigoDefaultEntry._Ready()
   ├── base._Ready()                          // OrigoAutoHost
-  │   └── AdapterHostKernelPort.CreateRuntime(...)
-  │       ├── GodotFileSystem + GodotJsonConverterRegistry registrations
-  │       ├── kernel runtime/IO/blackboard/console construction
-  │       └── ISndSceneHostRuntimeBinder binds world/logger + observer topology
-  ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess; before Bootstrap freeze
-  ├── register adapter handlers through IOrigoRuntime
-  ├── AdapterHostKernelPort.CreateContext(...)  // pass startup config and bind scene host
+  │   └── CreateRuntime()
+  │       ├── GodotFileSystem + GodotSndManager (added as a child node)
+  │       ├── AdapterHostKernelPort.CreateRuntime(options, sndManager, systemBlackboardPath, configureRegistry)
+  │       │   ├── TypeStringMapping + default converter registry + GodotJsonConverterRegistry registrations
+  │       │   ├── IDataSourceIoGateway / IFileMetaAccess / IPathResolver
+  │       │   ├── PersistentBlackboard → LoadFromDisk()
+  │       │   ├── ConsoleInputBuffer / ConsoleOutputChannel (or host-injected channels)
+  │       │   ├── OrigoRuntime (creates SndWorld, deferred schedulers, OrigoConsole)
+  │       │   └── ISndSceneHostRuntimeBinder.BindRuntimeDependencies(world, logger)  // binds world/logger + observer topology
+  │       └── exposes Runtime, ConsoleInput, ConsoleOutputChannel on the host node
+  ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess; manual registration before the freeze
+  ├── register adapter handlers through IOrigoRuntime  // press_button, tree_debug, camera_view
+  ├── AdapterHostKernelPort.CreateContext(...)  // creates SndContext + ISndContextAttachableSceneHost.BindContext(context)
+  ├── Context = sndContext                   // same instance passed to ConfigureSaveMetadataContributors
   └── sndContext.Bootstrap()                 // Core-internal sequence:
-        ├── Strategy discovery and ordering validation/registration freeze (reflection scan, skip Godot assemblies)
+        ├── scene-host readiness check (observer topology bound to a context)
+        ├── ConfigureConverters hook
+        ├── strategy discovery (reflection scan; Godot/GodotSharp prefixes skipped when auto-discovery is on)
+        ├── ordering validation + registration freeze (SndStrategyPool.SealRegistration)
         ├── LoadSceneAliases / LoadTemplates
-        └── RequestLoadMainMenuEntrySave
+        └── RequestLoadMainMenuEntrySave (deferred; executed when the frame driver flushes)
 ```
+
+Any failure after `base._Ready()` marks the bootstrap failed (`MarkBootstrapFailed`), so the next `_Process` throws instead of driving a partially initialized runtime.
+
+The Core host path differs: `OrigoHost.Create(options)` builds the runtime and context through the kernel host port over a `FullMemorySndSceneHost`, binds the world and its observer topology with `FullMemorySndSceneHost.BindWorld` (no `ISndSceneHostRuntimeBinder` stage and no Godot scene host), uses an in-memory system blackboard unless `OrigoHostOptions.FileSystem` is supplied, and the consumer calls `OrigoHost.Bootstrap()` / `OrigoHost.DriveFrame(delta)` itself; there is no `ConfigureStrategies` hook or adapter console-handler registration on that path, so strategies are registered on `Runtime.SndWorld` before `Bootstrap()`.
+
+Design rationale for these steps is owned by [Bootstrap](Bootstrap/README.en.md).
 
 ## Architectural Constraints
 

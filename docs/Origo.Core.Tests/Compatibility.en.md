@@ -45,6 +45,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `OrigoHost_ShouldCreateStableRuntimeAndRunBackgroundWorkflow` | `OrigoHost` constructs a stable runtime/context and drives frames, strategy registration, and a session workflow | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime` | With injected console channels, a custom command registered through `IOrigoRuntime.RegisterConsoleCommandHandler` produces output during `DriveFrame` | [console-commands](../usage/console-commands.en.md) |
 | `AdapterHostKernelPort_ShouldBuildRuntimeAndBindSceneHost` | The port creates the runtime and default console channels, binds runtime/observer topology first, then creates and binds the SND context | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
+| `CoreShellPublicSignatures_ShouldNotExposeKernelTypes` | Every exported type of the Core shell assembly and its public members (properties, method returns/parameters, fields) avoid kernel types | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
 
 ### Error Path
 

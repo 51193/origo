@@ -170,6 +170,8 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SetData_ConverterThrows_LeavesNoDictionaryEntry` | Object converter for a custom kind throws | InvalidOperationException; the failed SetData leaves no entry (SerializeMeta is empty, TryGetData returns false) |
+| `SetData_WhenObserverThrows_ValueStillCommittedAndRemainingObserversSkipped` | An observer callback throws during SetData | InvalidOperationException propagates; remaining observers skipped, but the value stays committed and readable via TryGetData |
+| `TryGetData_BlankName_Throws` | Blank data key passed to TryGetData / GetRequiredData | ArgumentException |
 
 ## SndEntityRecoveryRollbackTests Details
 
@@ -187,6 +189,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SetSceneAliasResolver_Null_ThrowsArgumentNullException` | SetSceneAliasResolver with null | ArgumentNullException (fail-fast) |
+| `Release_WhenOneNodeFreeThrows_StillReleasesOthersAndRethrows` | One node's Free throws during Release | InvalidOperationException propagates; every node is still released and the node collection is emptied |
 
 ## Test Helper Strategies
 

@@ -80,10 +80,17 @@ PersistentBlackboard disk read/write.
 
 ## SaveCoordinatorTests Details
 
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `BuildSessionTopology_SameSessionSet_IsIndependentOfBackgroundCreationOrder` | Topology for the same session set is identical regardless of background creation order (deterministic serialized entry order) | SaveCoordinator |
+
 ### Error Path
 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
+| `Constructor_NullParam_Throws` | Any constructor dependency is null (sessionManager/blackboard/stateMachines/progressRuntime) | ArgumentNullException |
 | `SaveContext_Constructor_ThrowsOnNullArgs` | null progress / null session / null sndWorld argument | ArgumentNullException |
 | `PersistProgress_WithoutForegroundSession_Throws` | PersistProgress called without foreground Session | InvalidOperationException (message contains "foreground") |
 

@@ -28,6 +28,7 @@
 |---------|-----------|---------|
 | `Home_Primitives_GeneratesExpectedMembers_AndCompiles` | Home mode registers system primitive types, generates `KindMap`/`TryGetInt32`/`AsInt32`/`explicit operator`/`TypedDataFactory<T>`/`TypedDataHomeKindRegistration` + `[ModuleInitializer]`, merged compilation zero errors | Origo.SourceGeneration |
 | `Home_PublicGeneratedMembers_EmitDocCommentsBeforeAttributes` | Generated public members emit XML doc comments before `[MethodImpl]` so CS1591 recognizes them | Origo.SourceGeneration |
+| `Home_GeneratedPublicMembers_CarryXmlSummaries` | Generated `TryGet*` accessors, conversion operators and string reader carry the expected XML `<summary>` text | Origo.SourceGeneration |
 | `Home_StringStoredViaRefSlot` | `string` accessed via `_ref` slot (`AsString() => (string?)_ref`, `case 13: return td._ref`) | Origo.SourceGeneration |
 | `Adapter_ValueAndRefTypes_UseRefSlot_AndCompiles` | Adapter layer non-system value types and reference types uniformly go through `_ref`, generating `TypedDataLayeredExtensions`, `RegisterKind`, Converter/TypeMap branches, merged compilation zero errors | Origo.SourceGeneration |
 | `Generation_IsDeterministic` | Same input run twice produces completely identical source text; Home and Adapter outputs use LF line endings on every host | Origo.SourceGeneration |
@@ -41,6 +42,7 @@
 | `Incremental_AddTypeToExistingAttribute_OutputChanges` | Adding a type to an existing attribute, output gains corresponding type member (`Single`) | Origo.SourceGeneration |
 | `Adapter_NamedStartKindArgument_IsExtracted` | Named-argument form `startKind: 128` extracts equivalently to positional (StubVec3=128, StubRef=129 registered), no diagnostics, zero compile errors | Origo.SourceGeneration |
 | `Adapter_ReferenceOnlyTypes_HaveNoInlineHelpers` | Adapter mode with only reference types (StubRefA/B) does not emit `ReadBitsAs`/`BitsFrom`/`_inlineBits` inline machinery, only `AsStubRefA/B` and `RegisterKind(128/129)` | Origo.SourceGeneration |
+| `Adapter_BCLTypeItself_WithReservedKindName_IsAllowed` | Registering BCL `string` itself at kind 128 emits `AsString` with no diagnostics or compile errors | Origo.SourceGeneration |
 | `Attribute_DefaultStartKind_StartsAtOne` | Without `StartKind`, numbering starts at 1 (Int32=1, String=2, matching `RegisterKind`) | Origo.SourceGeneration |
 | `Attribute_NoTypes_ProducesNoOutput` | Only `StartKind` (128) specified with no type arguments | Produces no sources, no diagnostics, no compile errors |
 | `Attribute_NullArrayElement_SkippedWithoutCrash` | Type arguments contain a null element | Null element skipped without crash, int/string generated normally (Int32=1, String=2) |
@@ -54,6 +56,7 @@
 |---------|-----------|---------|
 | `Home_UnsupportedValueType_ReportsORIGOSG002_ButStillGeneratesValidTypes` | Home group registers uninlinable value type (`decimal`) | Reports `ORIGOSG002` (Error), excludes only the unsupported type, `int` still generated normally with merged compilation zero errors |
 | `Adapter_SystemPrimitive_ReportsORIGOSG001` | Adapter group registers system primitive type (`int`) | Reports `ORIGOSG001` (Error), excludes the primitive, does not produce inline accessors for it |
+| `Adapter_WithoutFriendAccess_ReportsORIGOSG007_AndEmitsNoSources` | Adapter assembly not listed in `Origo.Core.Contracts` `InternalsVisibleTo` | Reports `ORIGOSG007` (Error) and emits no generated sources, zero compile errors |
 | `KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero` | `StartKind` offset causes Kind to exceed byte range (256/257, 257 wraps to 1 causing collision) | Reports `ORIGOSG003` (Error), excludes out-of-range types, in-range type (`Byte=255`) still generated |
 | `OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes` | Two groups assign same Kind 1 to different types (`int`/`long`) | Reports `ORIGOSG004` (Error), excludes the two colliding types |
 | `HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected` | Same compilation has both Home attribute (system primitive types) and Adapter attribute (non-system value types) | Home mode takes effect, system types generated normally, non-system value types report `ORIGOSG002` (Error) |
@@ -63,6 +66,8 @@
 | `SameTypeRegisteredToDifferentKinds_ReportORIGOSG005` | The same type registered under two different Kinds (1 and 5) | Reports `ORIGOSG005` (Error), drops the type |
 | `TypeNamedNull_ReservedKindMapSentinel_ReportORIGOSG005_AndDropType` | Registered type named 'Null' collides with the KindMap reserved sentinel | Reports `ORIGOSG005` (Error), drops the type (prevents CS0102 duplicate members), zero compile errors |
 | `ValueTypeNamedNull_InHomeMode_ReportORIGOSG002_AndDropType` | Home mode registers non-system value type `A.Null` (struct) | Reports `ORIGOSG002` (Error), drops the type (does not generate members colliding with the handwritten `IsNull`), zero compile errors |
+| `PointerType_ReportsDiagnostic_InsteadOfEmittingInvalidIdentifier` | Adapter group registers pointer type `int*` (sanitized name is an invalid identifier) | Reports `ORIGOSG006` (Error), drops the registration instead of emitting uncompilable accessor identifiers, zero compile errors |
+| `AdapterType_KindNameCollidesWithHomeReservedKind_ReportORIGOSG005` | Adapter type named like a Home inline kind (`A.Int32`) | Reports `ORIGOSG005` (Error), drops the registration, emits no `AsInt32`, zero compile errors |
 
 ### Edge Paths
 
@@ -73,6 +78,14 @@
 | `Home_OnlyReferenceTypes_NoInlineMethods` | Only registers reference types (`string`) | Generates `KindMap`/`AsString`, but does not produce `explicit operator`/`_inlineBits` inline mechanisms |
 | `Home_DoesNotEmitSilentStubHelpers` | Home mode generation (regression guard) | Never generates `BitsFrom`/`ReadBitsAs`/`Pack`/`return default;` silent stub helpers |
 | `Adapter_DoesNotEmitInlineHelpers` | Adapter mode generation (regression guard) | Does not produce `ReadBitsAs`/`BitsFrom`/`_inlineBits` |
+
+## ApiDocumentationGuardrailTests Test Details
+
+### Happy Paths
+
+| Test Method | Verified Behavior | Doc Source |
+|---------|-----------|---------|
+| `PublicApi_EveryDeclaration_HasSummaryOrInheritDoc` | Scans public/protected declarations across production roots; every one carries `<summary>` or `<inheritdoc />` (vendored FastNoiseLite exempt) | AGENTS.md: source comment rule |
 
 ## Benchmarks/TypedDataGeneratedBenchmarkTests Test Details
 

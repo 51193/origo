@@ -74,35 +74,9 @@ Strategy + Node + Data
 
 ## Persistence
 
-### File Layout
+Persistence is orchestrated in the Core layer and split by phase ownership: save requests enter through `ISndSaveOperations` and are deferred to the progress layer, where `ProgressRun` (through its `SaveCoordinator`) builds the `SaveGamePayload` from the progress blackboard, the per-level scene/session payloads, and the merged display metadata; the save storage service (`ISaveStorageService`, default `DefaultSaveStorageService` over `SaveStorageFacade` and `SaveAtomicWriter`) owns the write itself — phase 1 writes the active `current/` workspace under a `.write_in_progress` marker, phase 2 snapshots it atomically into `save_{id}/` — together with strict read validation; and load recovery is owned by the session lifecycle (`ProgressRun.SessionLoading`), which consumes the payload the storage layer reads back. Every read fails fast on a partial or interrupted save instead of degrading to a half-initialized state.
 
-```
-{saveRoot}/
-├── current/                          # Active save (temporary)
-│   ├── .write_in_progress
-│   ├── progress.json
-│   ├── progress_state_machines.json
-│   ├── meta.map
-│   ├── extra/                     # Strategy archive files (follow save lifecycle)
-│   └── level_{id}/
-│       ├── snd_scene.json
-│       ├── session.json
-│       └── session_state_machines.json
-└── save_{id}/                        # Snapshot save (persistent)
-    ├── extra/                     # Strategy archive files (follow save lifecycle)
-    └── ... (same as above)
-```
-
-### Two-Phase Write
-
-1. Write to `current/` (create marker → write all files → delete marker)
-2. Snapshot `current/` → `save_{id}/` (atomic rename via temp directory)
-
-### Strict Read
-
-- All three level files missing → treated as no save exists
-- Partial presence → treated as corruption, throw exception
-- `.write_in_progress` present under `current/` → throw exception (interrupted write)
+The directory layout, phase steps, strict-read rules, and JSON formats are documented once in [Persistence Flow](../usage/persistence-flow.en.md).
 
 ## Concurrency Model
 

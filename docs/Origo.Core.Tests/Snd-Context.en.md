@@ -103,7 +103,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestLoadInitialSave_IsTrackedUntilFlushed` | RequestLoadInitialSave queues and the pending count is 1 (tracking semantics only) | ISndDeferredActions |
 | `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
-| `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | An earlier persistence request fails and a later request in the same batch is discarded by fail-fast | Pending count returns to 0 (discarded requests run their cleanup callbacks) | ISndDeferredActions |
+| `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | An earlier persistence request fails and a later request in the same batch is discarded by fail-fast; the count returns to 0 and the discarded request runs its cleanup callbacks | ISndDeferredActions |
 | `IsPersistenceIdle_ReflectsPendingRequestTracking` | Idle state matches the pending count initially, around entry loading, and before/after a save request | ISndDeferredActions |
 
 ## SndTemplateResolverTests Details
@@ -201,6 +201,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `Bootstrap_EntryLoadFailure_LeavesCompletionFalseAndPersistenceIdle` | Entry load fails | After the exception propagates, `IsBootstrapCompleted=false`, pending returns to 0, and `IsPersistenceIdle=true` |
 | `Bootstrap_Twice_Throws` | Calling Bootstrap twice | InvalidOperationException |
 | `Bootstrap_WhenSceneHostTopologyUnbound_Throws` | Bootstrap when the scene host topology is not bound to a context | InvalidOperationException (message contains "not bound to a context") |
+| `Bootstrap_AfterUnboundHostFailure_CannotBeRetried` | First Bootstrap attempt fails (host not bound) and the context is then bound | The single-use guard is already committed: retry throws InvalidOperationException (message contains "already been executed") |
 | `Bootstrap_InvalidStrategyOrdering_ThrowsDuringSeal` | A registered lifecycle strategy references an unregistered Before target | Bootstrap throws InvalidOperationException while sealing (message contains the missing target index) |
 | `CloneTemplate_NullKey_ThrowsArgumentException` | CloneTemplate with null key | ArgumentException |
 | `CloneTemplate_WhitespaceKey_ThrowsArgumentException` | CloneTemplate with whitespace key | ArgumentException |

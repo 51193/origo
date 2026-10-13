@@ -58,6 +58,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `OutputChannel_ConcurrentPublish_AllDelivered` | 10-thread concurrent publish, all delivered | ConsoleBridge |
 | `PendingOutput_WithinLimit_AllDeliveredOnConnect` | 500 pending output lines published with no client connected are all delivered in order after connection | ConsoleBridge |
 | `PendingOutput_BufferOverflow_DropsOldestLines` | Pending buffer exceeds the limit (1000+1 lines): overflow notice line plus the retained newest lines are received, the oldest line is dropped | ConsoleBridge |
+| `OutputToNonReadingClient_DoesNotBlockPublish` | 200,000 publishes to a client that never reads complete without blocking the caller (send timeout detaches it) | ConsoleBridge: send-timeout detach |
 
 ### Connection Management
 
@@ -74,6 +75,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `DeadNonReadingClient_IsClosed_NextClientConnectsAndReplaysBacklog` | After the connection-time backlog flush fails on the send timeout, the dead connection is closed (single-connection slot released); the next client can connect and receives the buffered replay (verified through the platform-independent server detach log + the next connection being serviced) | ConsoleBridge: send-timeout detach |
 | `DeadClientAfterEstablishedConnection_IsClosed_NextClientConnectsAndReplaysBacklog` | After the connection is established (flush succeeded), the client stops reading and a later output write fails (OnConsoleOutput send timeout) — the dead connection is closed and the slot released; the next client can connect and receives the buffered replay (verifies a failed output write closes the dead connection and releases the slot) | ConsoleBridge: send-timeout detach |
 | `BacklogReplayToSlowClient_AbortsAtBudget_RemainingLinesReplayOnNextConnection` | A slow but continuously reading client makes replay block per line but stay below the send timeout: replay aborts at the time budget (log contains "time budget"), remaining lines replay in full on the next connection (no duplicates) | ConsoleBridge: replay time budget |
+| `BacklogReplayToNonReadingClient_DetachesConnectionAndKeepsBacklog` | Non-reading client: stalled replay detaches on send timeout (logged "flush failed"); remaining backlog stays queued | ConsoleBridge: send-timeout detach |
 
 ### Thread Safety
 
@@ -104,6 +106,8 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `Constructor_NullOutput_Throws` | null output | ArgumentNullException |
 | `Constructor_DefaultOptions_HasExpectedPort` | Default options | ActualPort > 0 |
 | `Constructor_CustomPort_StoredInOptions` | Port=9876 | ActualPort=9876 |
+| `Options_OutputSendTimeoutMs_DefaultsAndCustom` | Default options / `OutputSendTimeoutMs = 250` | Default equals `DefaultOutputSendTimeoutMs`; custom value stored |
+| `Start_NonPositiveOutputSendTimeout_Throws` | `OutputSendTimeoutMs = 0` (SendTimeout treats zero as infinite) | `Start()` throws `ArgumentOutOfRangeException` |
 
 ## ConsoleBridgeServerErrorPathTests Test Details
 

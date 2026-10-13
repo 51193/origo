@@ -64,6 +64,8 @@ and noise map generator (OpenSimplex2 + Worley blend).
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `GenerateSimplexWorleyBlendMap_InvalidSize_Throws` | size=0 or size=-4 | ArgumentOutOfRangeException, ParamName="size" |
+| `ExtendedOverload_InvalidParameters_Throw` | octaves=0, lacunarity=1.0, gain=0, frequency=0, or worleyFrequencyMultiplier=0 | ArgumentOutOfRangeException, ParamName matches the offending parameter |
+| `ExtendedOverload_NonFiniteFloatParameters_Throw` | frequency, lacunarity, gain, or worleyFrequencyMultiplier is NaN/Infinity | ArgumentOutOfRangeException |
 
 ## PersistentRandomTests Details
 

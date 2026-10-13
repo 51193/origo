@@ -30,6 +30,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `CreateArray_ReturnsArrayNode` | CreateArray returns Array node, Count=0 | DataSource |
 | `CreateString_ReturnsStringNode` | CreateString("hello") → Text node, AsString()="hello" | DataSource |
 | `CreateNumber_IntOverloads_ReturnNumberNode` | int/long/float/double/string overloads all return Number nodes | DataSource |
+| `CreateNumber_ValidJsonNumberLiteral_IsAccepted` | Valid JSON number literals (`"0"`, `"-42"`, `"3.14"`, `"1e999"`) are accepted as Number nodes | DataSource |
 | `CreateBoolean_ReturnsBooleanNode` | true/false → Bool node, AsBool() correct | DataSource |
 | `CreateNull_ReturnsNullNode` | CreateNull returns Null node, IsNull=true | DataSource |
 | `AsString_OnStringNode_ReturnsValue` | String node AsString returns original value | DataSource |
@@ -45,6 +46,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `ArrayNode_IndexerByIndex_ReturnsChild` | arr[0]/arr[1] indexer returns child nodes | DataSource |
 | `ArrayNode_Count_ReflectsElements` | Count reflects element count | DataSource |
 | `ArrayNode_Elements_EnumeratesAll` | Elements enumerates all elements | DataSource |
+| `DataSourceNode_Keys_DoesNotExposeMutableBackingList` | Keys returns a read-only view, not the mutable backing List | DataSource |
+| `DataSourceNode_Elements_DoesNotExposeMutableBackingList` | Elements returns a read-only view, not the mutable backing List | DataSource |
 | `ObjectNode_Add_ReturnsSameNodeForChaining` | Object Add returns self for chaining | DataSource |
 | `ArrayNode_Add_ReturnsSameNodeForChaining` | Array Add returns self for chaining | DataSource |
 | `CreateLazy_DoesNotCallExpanderUntilAccessed` | Lazy node does not call expander until accessed | DataSource |
@@ -121,6 +124,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `ConverterRegistry_TypeHierarchyFallback_FindsInterfaceConverterForConcreteType` | ReadOnlyDictionary concrete type falls back to IReadOnlyDictionary interface converter | DataSource |
 | `ConverterRegistry_TypeHierarchyFallback_ExactTypeMatchStillWorks` | Exact type match still takes priority | DataSource |
 | `ReadOnlyDictionary_BlackboardRoundTrip_SurvivesSerialization` | ReadOnlyDictionary values restored after blackboard serialize/deserialize | DataSource |
+| `ConverterRegistry_GenericRead_ConcreteTypeThroughInterfaceChain` | Generic read of ReadOnlyDictionary resolves through the interface-chain converter and returns both entries | DataSource |
+| `ReadOnlyDictionary_BlackboardRoundTrip_PreservesConcreteTypeAndResaves` | Blackboard round-trip keeps the ReadOnlyDictionary value and a resave does not drift the stored type | DataSource |
 
 ### Error Path
 
@@ -129,10 +134,13 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `AsInt_OnNonNumericString_Throws` | CreateString("hello") → `As<int>()` | FormatException |
 | `CreateString_Null_Throws` | CreateString(null) | ArgumentNullException (Null nodes are CreateNull's responsibility; null must not drift into an empty Text node) |
 | `CreateNumber_NullString_Throws` | CreateNumber(string) with null | ArgumentNullException |
+| `CreateNumber_NonJsonNumberLiteral_Throws` | Non-JSON literal (empty, `"abc"`, `"1e"`, `"0x10"`, `" 42"`, `"NaN"`, `"Infinity"`) | ArgumentException (literal is written via WriteRawValue, so invalid JSON must be rejected here) |
+| `CreateNumber_NonFiniteFloatingPoint_Throws` | float/double NaN or ±Infinity | ArgumentOutOfRangeException |
 | `Add_NullChild_Throws` | Map/Array Add with a null child | ArgumentNullException (deferring the error to encode time becomes an NRE or empty data) |
 | `ObjectNode_IndexerByKey_ThrowsOnMissingKey` | obj["missing"] | KeyNotFoundException |
 | `Registry_Get_ThrowsForUnregisteredType` | Get<DateTime>() unregistered | InvalidOperationException |
 | `Registry_RuntimeRead_ThrowsForUnregisteredType` | Read(typeof(DateTime), …) unregistered | InvalidOperationException |
+| `ConverterRegistry_GenericRead_IncompatibleRequest_FailsFastWithClearError` | Generic read of a type whose interface-chain converter cannot produce it | InvalidOperationException (message names the requested type, not an opaque InvalidCastException) |
 | `TypedDataConverter_NullDataForRegisteredValueType_Throws` | data field null for registered value kind (int) | InvalidOperationException (contains "value type") |
 | `StateMachineContainerPayloadConverter_EntryMissingKey_Throws` | Machine entry missing key field | InvalidOperationException (contains "key") |
 | `StateMachineContainerPayloadConverter_EntryMissingPushIndex_Throws` | Machine entry missing pushIndex field | InvalidOperationException (contains "pushIndex") |
@@ -140,13 +148,17 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | Machine entry key is null | InvalidOperationException |
 | `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | Machine entry key is null | InvalidOperationException |
 | `StateMachineContainerPayloadConverter_StackNotArray_Throws` | Machine entry stack is an object instead of an array | InvalidOperationException (contains "array"; must not silently become an empty stack) |
+| `StateMachineContainerPayloadConverter_StackNullElement_Throws` | Machine entry stack contains a null element | InvalidOperationException (contains "null"; must not silently become an empty string) |
 | `StrategyMetaDataConverter_LifecycleIndicesNotArray_Throws` | lifecycle_indices is an object instead of an array | InvalidOperationException (contains "array") |
 | `StrategyMetaDataConverter_ObserverIndicesNotArray_Throws` | observer_indices is an object instead of an array | InvalidOperationException (contains "array") |
 | `StrategyMetaDataConverter_BlankObserverTarget_Throws` | observer_indices entry target is empty | InvalidOperationException (contains "target"; binding must not be silently dropped) |
 | `StrategyMetaDataConverter_Write_BlankObserverTarget_Throws` | Observer binding target is empty during write | InvalidOperationException (contains "target"; binding must not be silently dropped) |
+| `StrategyMetaDataConverter_Read_NullIndexElement_Throws` | lifecycle_indices contains a null element | InvalidOperationException (contains "null"; must not silently become an empty index) |
 | `NodeMetaDataConverter_PairsNotMap_Throws` | node.pairs is an array instead of an object | InvalidOperationException (contains "object") |
+| `NodeMetaDataConverter_Read_NullPairValue_Throws` | node.pairs contains a null value | InvalidOperationException (contains "null"; must not silently become an empty resource path) |
 | `DataMetaDataConverter_PairsNotMap_Throws` | data.pairs is an array instead of an object | InvalidOperationException (contains "object") |
 | `StringDictionaryConverter_Read_NonMap_Throws` | String dictionary root node is an array | InvalidOperationException (contains "object") |
+| `StringDictionaryConverter_Read_NullValue_Throws` | String dictionary map value is null | InvalidOperationException (contains "null"; consistent with Read<string> rejecting null nodes) |
 | `BlackboardDataConverter_Read_NonMap_Throws` | Blackboard dictionary root node is an array | InvalidOperationException (contains "object") |
 | `SndMetaDataConverter_Read_NonMap_Throws` | SndMetaData root node is an array | InvalidOperationException (contains "object") |
 | `SndMetaDataListConverter_Read_NonArray_Throws` | SndMetaData list root node is an object | InvalidOperationException (contains "array") |
@@ -160,6 +172,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `ArrayConverter_Read_NullNode_Throws` | Array converter reads a Null root node | InvalidOperationException (must not silently become an empty array) |
 | `ArrayConverter_Read_ScalarNode_Throws` | Array converter reads a scalar root node | InvalidOperationException |
 | `ArrayConverter_Read_ObjectNode_Throws` | Array converter reads an object root node | InvalidOperationException |
+| `StringArrayConverter_Read_NullElement_Throws` | String array contains a null element | InvalidOperationException (contains "null"; must not silently become an empty string) |
 | `DataSourceNode_Keys_OnNonMap_Throws` | Keys accessed on a non-Map node | InvalidOperationException (wrong shape must not silently become an empty key set) |
 | `DataSourceNode_CountAndElements_OnNonArray_Throw` | Count/Elements accessed on a non-Array node | InvalidOperationException |
 | `LazyNode_WhenExpanderThrows_NodeStaysLazy_AndCanRetrySuccessfully` | First expansion throws InvalidOperationException | After first access throws, node stays Lazy, second access succeeds (callCount=2) |
@@ -249,6 +262,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `LoadFromPayload_WhenObserverIndicesEntryIsNotAnObject_Throws` | `observer_indices` array contains a non-object element (corrupted save; the write side only ever produces object elements) | `LoadFromPayload` throws `InvalidOperationException` (message contains "observer_indices"), does not silently drop corrupted bindings |
+| `LoadFromPayload_WhenObserverBindingHasMultipleTargets_Throws` | `observer_indices` binding object has multiple target keys (corrupted save; the writer emits exactly one) | `LoadFromPayload` throws `InvalidOperationException` (message contains "observer_indices"), extra bindings are not silently dropped |
+| `LoadFromPayload_WhenObserverBindingIsEmptyObject_Throws` | `observer_indices` binding object is empty (corrupted save) | `LoadFromPayload` throws `InvalidOperationException` (message contains "observer_indices"), binding is not silently skipped |
 
 ### Error Path
 

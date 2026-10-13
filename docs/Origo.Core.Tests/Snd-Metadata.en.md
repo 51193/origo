@@ -170,6 +170,11 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | `AddObserverBinding_BlankTargetOrIndex_Throws` | Blank target / blank observer index / empty observer list | ArgumentException |
 | `AddObserverBinding_NullIndices_Throws` | Null observerIndices | ArgumentNullException |
 | `AddObserverBinding_DuplicateIndex_Throws` | Duplicate observer index for the same target | ArgumentException |
+| `SetNode_WhitespaceKey_Throws` | Whitespace-only logical node key | ArgumentException |
+| `SetNode_NullValue_Throws` | null node resource id | ArgumentNullException |
+| `SetNode_WhitespaceValue_Throws` | Whitespace-only node resource id | ArgumentException |
+| `SetString_NullValue_Throws` | null string data value | ArgumentNullException |
+| `SetBytes_NullValue_Throws` | null byte array data value | ArgumentNullException |
 
 ## TypedDataIntegrationTests Details
 

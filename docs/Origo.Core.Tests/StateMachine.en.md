@@ -108,6 +108,7 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `StateMachineContainer_DeserializeWithoutHooks_SwapsAtomically` | Hook-free deserialization atomically replaces old state | state-machine |
 | `StateMachineContainer_CreateOrGet_IdempotentForSameKeyAndIndices` | Same key + same indices CreateOrGet returns same instance | state-machine |
 | `StateMachineContainer_FlushAllAfterLoad_NotifiesPushStrategy` | FlushAllAfterLoad replays afterload in push order | state-machine |
+| `StateMachineContainer_Remove_MountedKey_DisposesAndRemoves` | Remove releases the mounted machine and drops the key so TryGet returns false | state-machine |
 
 ### Error Path
 
@@ -119,6 +120,7 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `StateMachineContainer_DeserializeFromNode_ArrayRoot_Throws` | Structurally wrong payload (array root) deserialization | InvalidOperationException (fail-fast instead of silently clearing machines) |
 | `StateMachineContainer_DeserializeFromNode_MissingMachinesKey_Throws` | Payload missing the machines key | InvalidOperationException |
 | `StateMachineContainer_Clear_ReleasesAllMachines_WhenOneDisposeThrows` | One machine release throws | Exception propagates, but remaining machines are released and the container clears |
+| `StateMachineContainer_Remove_UnknownKey_Throws` | Remove with an unknown key | InvalidOperationException (message contains the key name) |
 
 ## SessionAndAdapter Details
 

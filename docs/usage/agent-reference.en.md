@@ -268,34 +268,31 @@ public interface IStateMachineContainer
 
 ## Initialization Timeline
 
+Startup belongs to the host entry node; a consumer subclasses `OrigoDefaultEntry` (or `OrigoAutoHost`) and only interacts with the hooks below:
+
+```csharp
+public partial class MyEntry : OrigoDefaultEntry
+{
+    // Runs after the runtime exists and before Bootstrap() freezes strategy registration.
+    protected override void ConfigureStrategies(ISndWorldAccess world)
+        => world.RegisterStrategy(() => new MyStrategy());
+
+    protected override void ConfigureSaveMetadataContributors(ISndContext context) { /* meta.map contributors */ }
+
+    public override void _Ready()
+    {
+        // Export overrides must be assigned before base._Ready(); Godot re-applies scene defaults first.
+        ConfigPath = "res://origo/entry/entry.json";
+        base._Ready();   // creates runtime + scene host + ISndContext, then calls SndContext.Bootstrap()
+    }
+}
 ```
-OrigoAutoHost._Ready()
-│
-├── 1. Create IFileSystem (GodotFileSystem)
-├── 2. Create ILogger (GodotLogger)
-├── 3. Create GodotSndManager
-├── 4. Register TypeStringMapping + Converters (BCL + Godot types)
-├── 5. Create PersistentBlackboard → LoadFromDisk
-├── 6. Create ConsoleInputBuffer + ConsoleOutputChannel
-├── 7. Create IOrigoRuntime (kernel OrigoRuntime implementation)
-│   ├── SndWorld (strategy pool + converter registry)
-│   ├── SystemRun (holds SystemBlackboard)
-│   └── OrigoConsole (command routing)
-│
-├── 8. BindRuntimeDependencies (World + Logger to SndManager)
-│
-└── OrigoDefaultEntry._Ready() [override]
-    ├── 9. Register adapter-layer command handlers through IOrigoRuntime.RegisterConsoleCommandHandler (press_button, tree_debug, camera_view)
-    ├── 10. Create SndContext (inject Runtime + FileSystem + saveRoot + config)
-    ├── 11. SndManager.BindContext(context)
-    ├── 12. ConfigureSaveMetadataContributors(context)
-    └── 13. SndContext.Bootstrap()
-          ├── 13a. ConfigureConverters
-          ├── 13b. OrigoAutoInitializer.DiscoverAndRegisterStrategies (reflection scan)
-          ├── 13c. SndStrategyPool.SealRegistration (validate Before/After and freeze the registry)
-          ├── 13d. LoadSceneAliases + LoadTemplates
-          └── 13e. RequestLoadMainMenuEntrySave (enqueues a system-deferred action; executed at frame end through IOrigoFrameDriver.DriveFrame)
-```
+
+- What the consumer must do: supply the entry configuration (`ConfigPath`, `SaveRootPath`, `InitialSaveRootPath`, alias/template map paths) and make sure every strategy is registered before bootstrap — through `AutoDiscoverStrategies`, `ConfigureStrategies`, or `ISndWorldAccess.RegisterStrategy`; `ConfigureSaveMetadataContributors` and `RegisterCustomConverters` cover display metadata and custom converters.
+- What the consumer observes after `base._Ready()` returns: `Runtime`, `Context`, `ConsoleInput`, and `ConsoleOutputChannel` are available on the node, strategy registration is sealed, the configured scene aliases and templates are loaded, and the main-menu entry load is enqueued as a deferred action that executes when `IOrigoFrameDriver.DriveFrame(delta)` flushes the frame.
+- `_Process` drives `Runtime.DriveFrame(delta)`. A failure inside `_Ready` and any frame driven after a failed bootstrap throw instead of running a partially initialized runtime.
+
+The internal adapter sequence (kernel port stages, scene-host binding, and the differing Core host path) is owned by [Origo.GodotAdapter → Startup Flow](../Origo.GodotAdapter/README.en.md#startup-flow).
 
 ## Complete Strategy Example
 
@@ -325,21 +322,9 @@ public sealed class SimpleHealthStrategy : LifecycleStrategyBase
         entity.SetData("hp", hp - 1);
     }
 }
-
-// Observer strategy: respond to hp data changes
-[StrategyIndex("example.hp_watcher")]
-[ObserveData("hp")]
-public sealed class HpWatcherStrategy : ObserverStrategyBase
-{
-    public override void OnDataChanged(ISndEntity entity, ISndContext ctx,
-        ISndEntity target, string dataKey,
-        TypedData oldValue, TypedData newValue)
-    {
-        if (newValue.TryGetInt32(out var hp) && hp <= 0)
-            ctx.Save.RequestSaveGame("entity_died");
-    }
-}
 ```
+
+The observer strategy mounted above (`example.hp_watcher`) follows the pattern owned by the [SND Entity Model data-observation example](snd-entity-model.en.md#data-observation): an `ObserverStrategyBase` marked `[ObserveData("hp")]` whose `OnDataChanged` requests a save when hp reaches zero.
 
 ## File Access Example
 

@@ -56,6 +56,11 @@ as stateless via reflection at registration (rejects instance fields and writabl
 | `DataSourceNode_ShouldLiveInContractsAssembly` | The DataSourceNode type identity lives in `Origo.Core.Contracts` | architecture/shell-kernel-boundary |
 | `Contracts_ShouldNotReferenceImplementationsOrGodot` | The contracts assembly references neither `Origo.Core`, adapter, nor ConsoleBridge assemblies, and references no Godot assembly | architecture/shell-kernel-boundary |
 | `Core_ShouldReferenceContracts` | The `Origo.Core` assembly explicitly references `Origo.Core.Contracts`, pinning the contract dependency direction | architecture/shell-kernel-boundary |
+| `BootstrapUtilitiesAndMappingLoaders_AreInternal` | `OrigoAutoInitializer` is internal and `SndWorld.LoadSceneAliases`/`LoadTemplates` expose no public methods | architecture/overview: single access path |
+| `OrigoRuntimeAndSndWorld_ShouldLiveInKernelAssembly` | OrigoRuntime/SndWorld/SndContext/SndContextParameters all live in the `Origo.Core.Kernel` assembly | architecture/shell-kernel-boundary |
+| `RuntimeContracts_ShouldLiveInContractsAssembly` | IOrigoRuntime/ISndWorldAccess/OrigoHostOptions all live in the `Origo.Core.Contracts` assembly | architecture/shell-kernel-boundary |
+| `SndEntityContract_ShouldLiveInContractsAssembly` | The `ISndEntity` contract identity lives in the `Origo.Core.Contracts` assembly | architecture/shell-kernel-boundary |
+| `SndContextContract_ShouldLiveInContractsAssembly` | The `ISndContext` contract identity lives in the `Origo.Core.Contracts` assembly | architecture/shell-kernel-boundary |
 
 ## AutoInitializerGuardTests Test Details
 

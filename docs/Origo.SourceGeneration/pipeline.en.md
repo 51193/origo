@@ -138,26 +138,7 @@ Could it be squeezed to 16 bytes? That would require sacrificing `long`/`double`
 
 ### 4.1 Registration Phase: Declaring Type Sets
 
-The framework applies `[assembly: SndInlineTypes(...)]` at the assembly level:
-
-```csharp
-// Origo.Core.Contracts assembly — StartKind defaults to 1
-[assembly: SndInlineTypes(
-    typeof(byte), typeof(sbyte), typeof(short), typeof(ushort),
-    typeof(int), typeof(uint), typeof(long), typeof(ulong),
-    typeof(float), typeof(double), typeof(bool), typeof(char),
-    typeof(string)
-)]
-
-// Origo.GodotAdapter assembly — StartKind = 128
-[assembly: SndInlineTypes(startKind: 128,
-    typeof(Vector2), typeof(Vector2I), typeof(Vector3),
-    typeof(Vector3I), typeof(Vector4), typeof(Quaternion),
-    typeof(Basis), typeof(Transform2D), typeof(Transform3D),
-    typeof(Color), typeof(Rect2), typeof(Rect2I),
-    typeof(Aabb), typeof(Plane)
-)]
-```
+The framework applies `[assembly: SndInlineTypes(...)]` at the assembly level; the complete Core and adapter registration lists are held in [Origo.SourceGeneration README](README.en.md#registration-mechanism).
 
 Kind allocation rules and the complete `ORIGOSG001`–`ORIGOSG007` diagnostic table
 live in [README.en.md](README.en.md#kind-value-segmentation) and
