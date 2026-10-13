@@ -99,11 +99,10 @@ Complete these steps in order before tagging:
    the version.
 7. Commit `CHANGELOG.md`, `Directory.Build.props`, the analyzer release files,
    `docs/README.en.md`, and all other documentation changes together.
-8. Run the full `bash scripts/ci.sh` on that commit and confirm lint-scripts,
-   format, the API baseline gate, tests, benchmarks, Godot integration,
-   and the package consumer smoke all pass. The release workflow then runs
-   `scripts/validate-release-packages.sh` to validate the artifact set. Amend and
-   rerun if it fails.
+8. Run the full `bash scripts/ci.sh` on that commit and confirm every
+   compatibility gate listed under Release Pipeline Artifacts below passes. The
+   release workflow then runs `scripts/validate-release-packages.sh` to validate
+   the artifact set. Amend and rerun if it fails.
 9. Run `bash scripts/lint-commits.sh` on that commit; fix and amend if it fails.
 10. Create and push tag `vx.y.z` on the verified commit.
 

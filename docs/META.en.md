@@ -2,7 +2,7 @@
 
 > [↑ Back to Origo Manual](README.en.md)
 
-> **⚠️ Mandatory Development Loop: Every change must close the loop in order — ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Documentation → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ commit lint (also enforced by the local pre-push hook). Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full rules in [AGENTS.md](../AGENTS.md).**
+> **⚠️ Mandatory Development Loop: Every change must close the loop in order — ① Develop source → ② Extend/adapt tests → ③ Iterate with tests (execute, fix, re-run until all pass) → ④ Changelog → ⑤ Documentation → ⑥ Commit → ⑦ post-commit `scripts/ci.sh` → ⑧ commit lint (also enforced by the local pre-push hook). Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full rules in [AGENTS.md](../AGENTS.md).**
 
 ## Documentation Positioning
 

@@ -2,7 +2,7 @@
 
 The complete documentation manual for the Origo framework. Uses a **bottom-up** structure — aggregating upward from source code directories level by level, ensuring any question can reach its target via multi-level directory indexing without reading source code from scratch.
 
-> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Documentation → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ post-commit `scripts/lint-commits.sh`.
+> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Iterate with tests (execute, fix, re-run until all pass) → ④ Changelog → ⑤ Documentation → ⑥ Commit → ⑦ post-commit `scripts/ci.sh` → ⑧ post-commit `scripts/lint-commits.sh`.
 > Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full guidelines and document master index at repo root [AGENTS.md](../AGENTS.md).
 
 ## Design Principles
