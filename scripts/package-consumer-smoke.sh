@@ -41,12 +41,13 @@ FAIL() {
     exit 1
 }
 
-command -v unzip >/dev/null 2>&1 || FAIL "unzip is required to verify package assets."
-
 VERSION=$(dotnet msbuild Origo.GodotAdapter/Origo.GodotAdapter.csproj -getProperty:Version -nologo | tr -d '\r' | tail -1)
 [[ -n "$VERSION" ]] || FAIL "could not resolve the repository package version."
-SDK_VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' Origo.GodotAdapter/Origo.GodotAdapter.csproj | head -1)
-CONSUMER_SDK_VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' tools/ShellPackageConsumer/OrigoShellPackageConsumer.csproj | head -1)
+# Pin parsing lives in download-godot.sh so the adapter authority, the
+# integration-test pin, and this consumer pin cannot be parsed by divergent
+# rules; the mismatch assertion below keeps its own message.
+SDK_VERSION=$(bash scripts/download-godot.sh --print-version)
+CONSUMER_SDK_VERSION=$(bash scripts/download-godot.sh --print-version "$ROOT/tools/ShellPackageConsumer/OrigoShellPackageConsumer.csproj")
 [[ "$SDK_VERSION" == "$CONSUMER_SDK_VERSION" ]] || FAIL "Godot.NET.Sdk pin mismatch: adapter=$SDK_VERSION consumer=$CONSUMER_SDK_VERSION"
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/origo-package-consumer.XXXXXX")
@@ -74,17 +75,12 @@ dotnet pack Origo.Core/Origo.Core.csproj --configuration Release --output "$FEED
 dotnet pack Origo.GodotAdapter/Origo.GodotAdapter.csproj --configuration Release --output "$FEED" >/dev/null
 dotnet pack Origo.ConsoleBridge/Origo.ConsoleBridge.csproj --configuration Release --output "$FEED" >/dev/null
 
-for package in Origo.Core.Contracts Origo.Core.Kernel Origo.Core Origo.GodotAdapter Origo.ConsoleBridge; do
-    [[ -f "$FEED/$package.$VERSION.nupkg" ]] || FAIL "missing package: $package.$VERSION.nupkg"
-done
-
-ANALYZER_ASSET="analyzers/dotnet/cs/Origo.SourceGeneration.dll"
-package_contains_zip_entry "$FEED/Origo.Core.Contracts.$VERSION.nupkg" "$ANALYZER_ASSET" \
-    || FAIL "Origo.Core.Contracts package is missing analyzer asset $ANALYZER_ASSET"
-
 # Exercise the release artifact validator against the same freshly packed
 # feed, so normal CI and local runs cover exact identities, shell/kernel
-# pairing, dependency direction, analyzer assets, and kernel isolation.
+# pairing, dependency direction, analyzer assets, and kernel isolation. The
+# validator is the only place the required five-package set and the analyzer
+# asset are asserted; the smoke does not repeat them, so those checks cannot
+# drift between the two scripts.
 bash scripts/validate-release-packages.sh "$FEED" "$VERSION"
 
 cp -R tools/ShellPackageConsumer/. "$CONSUMER_DIR/"

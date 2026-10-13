@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Download the Godot mono binary matching the Godot.NET.Sdk version
 # pinned in Origo.GodotAdapter.csproj.
+# `--print-version [<csproj>]` prints a pinned version and exits without
+# downloading, so callers do not repeat the csproj parse (see below).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -8,18 +10,41 @@ cd "$ROOT"
 CSPROJ="$ROOT/Origo.GodotAdapter/Origo.GodotAdapter.csproj"
 GODOT_CACHE_DIR="$ROOT/.godot_binary"
 
-# Parse Godot.NET.Sdk version from csproj, e.g. "4.7.2".
+# Print the Godot.NET.Sdk version pinned in a csproj, e.g. "4.7.2".
+# This is the only pin parser in the repository: the integration-test and
+# package-consumer projects ask this script for the adapter (authority) version
+# through --print-version instead of repeating the sed, so the pins cannot be
+# parsed by divergent rules. Both failure messages and the exit status are kept
+# for the download path and --print-version callers alike.
 # sed -E is used instead of grep -P because macOS ships BSD grep without PCRE.
-VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' "$CSPROJ" | head -1)
-if [[ -z "$VERSION" ]]; then
-    echo "ERROR: Could not parse Godot.NET.Sdk version from $CSPROJ" >&2
-    exit 1
+godot_sdk_version() {
+    local csproj="$1"
+    local version
+    # An unreadable csproj must abort with sed's own status and message, as the
+    # previous top-level parse did; inside a function the shell's errexit no
+    # longer applies to this assignment, so fail fast explicitly.
+    version=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' "$csproj" | head -1) || exit $?
+    if [[ -z "$version" ]]; then
+        echo "ERROR: Could not parse Godot.NET.Sdk version from $csproj" >&2
+        exit 1
+    fi
+    if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "ERROR: Parsed version '$version' does not match expected N.N.N format." >&2
+        exit 1
+    fi
+    echo "$version"
+}
+
+# --print-version reports a pin and exits before any platform detection or
+# download. Without an argument it prints the adapter pin; with a project path
+# it prints that project's pin, which callers compare against the adapter pin
+# to keep their own mismatch assertions.
+if [[ "${1:-}" == "--print-version" ]]; then
+    godot_sdk_version "${2:-$CSPROJ}"
+    exit 0
 fi
 
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "ERROR: Parsed version '$VERSION' does not match expected N.N.N format." >&2
-    exit 1
-fi
+VERSION=$(godot_sdk_version "$CSPROJ")
 
 echo "Godot.NET.Sdk version: $VERSION" >&2
 

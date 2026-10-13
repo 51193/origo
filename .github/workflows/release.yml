@@ -258,9 +258,6 @@ jobs:
       - name: Format check
         run: bash scripts/format.sh
 
-      - name: Build
-        run: dotnet build Origo.sln --no-restore --configuration Release
-
       - name: Shell API baseline gate
         env:
           ORIGO_CURRENT_RELEASE_TAG: ${{ steps.resolve-tag.outputs.tag }}

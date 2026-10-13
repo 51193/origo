@@ -66,6 +66,18 @@ run_benchmark() {
     -p:CollectCoverage=false 2>&1 | tee -a "$RUN_LOG" || RUN_EXIT_CODE=$?
 }
 
+# Write the collected metrics as the baseline document. The first capture and
+# --update-baseline share this writer so the baseline schema (schema version,
+# machine id, sorted keys) cannot drift between the two paths.
+write_baseline() {
+  python3 - "$CURRENT_JSON" "$BASELINE" "$MACHINE_ID" <<'EOF'
+import json, sys
+metrics = json.load(open(sys.argv[1]))
+doc = {"schema_version": 1, "machine_id": sys.argv[3], "metrics": metrics}
+json.dump(doc, open(sys.argv[2], 'w'), indent=2, sort_keys=True)
+EOF
+}
+
 run_benchmark \
   "SourceGeneration micro-benchmarks — TypedData inline vs boxing (value + reference types)" \
   "Origo.SourceGeneration.Tests/Origo.SourceGeneration.Tests.csproj"
@@ -111,12 +123,7 @@ if [[ ! -f "$BASELINE" ]]; then
   fi
   echo ""
   echo "No baseline found ($BASELINE). Capturing current run as the baseline."
-  python3 - "$CURRENT_JSON" "$BASELINE" "$MACHINE_ID" <<'EOF'
-import json, sys
-metrics = json.load(open(sys.argv[1]))
-doc = {"schema_version": 1, "machine_id": sys.argv[3], "metrics": metrics}
-json.dump(doc, open(sys.argv[2], 'w'), indent=2, sort_keys=True)
-EOF
+  write_baseline
   echo "Baseline written with $(python3 -c "import json,sys; print(len(json.load(open('$CURRENT_JSON'))))") metric(s) on machine '$MACHINE_ID'."
   echo "NOTE: verify docs/benchmarks/baseline.json reflects a representative machine,"
   echo "      and commit it together with benchmark-related changes."
@@ -131,12 +138,7 @@ if [[ "$UPDATE_BASELINE" == "1" ]]; then
     rm -f "$RUN_LOG" "$CURRENT_JSON"
     exit $RUN_EXIT_CODE
   fi
-  python3 - "$CURRENT_JSON" "$BASELINE" "$MACHINE_ID" <<'EOF'
-import json, sys
-metrics = json.load(open(sys.argv[1]))
-doc = {"schema_version": 1, "machine_id": sys.argv[3], "metrics": metrics}
-json.dump(doc, open(sys.argv[2], 'w'), indent=2, sort_keys=True)
-EOF
+  write_baseline
   echo "Baseline updated with $(python3 -c "import json,sys; print(len(json.load(open('$CURRENT_JSON'))))") metric(s) on machine '$MACHINE_ID'."
   rm -f "$RUN_LOG" "$CURRENT_JSON"
   exit $RUN_EXIT_CODE

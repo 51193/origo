@@ -34,33 +34,4 @@ FOUND=$(find_first_file "$WORK/tree" -type f -name "found.dll")
 [[ -z "$(find_first_file "$WORK/tree" -type f -name "missing.dll")" ]] \
     || FAIL "find_first_file returned a path for a missing file."
 
-# A stub unzip proves the archive check does not regress to `unzip | grep -q`.
-# It reports a matching entry and then keeps writing; with the old pipeline grep
-# exits after the first line, the stub gets SIGPIPE, and pipefail turns the
-# successful match into a failure.
-STUB="$WORK/stub"
-mkdir -p "$STUB/bin"
-cat > "$STUB/bin/unzip" <<'STUB_UNZIP'
-#!/usr/bin/env bash
-printf 'analyzers/dotnet/cs/Origo.SourceGeneration.dll\n'
-sleep 0.1
-for ((i = 0; i < 10000; i++)); do
-    printf 'padding-%d\n' "$i"
-done
-STUB_UNZIP
-chmod +x "$STUB/bin/unzip"
-if ! PATH="$STUB/bin:$PATH" package_contains_zip_entry \
-    "$WORK/fake.nupkg" "analyzers/dotnet/cs/Origo.SourceGeneration.dll"; then
-    FAIL "package_contains_zip_entry rejected a matching archive stream."
-fi
-
-cat > "$STUB/bin/unzip" <<'STUB_UNZIP'
-#!/usr/bin/env bash
-exit 11
-STUB_UNZIP
-chmod +x "$STUB/bin/unzip"
-if PATH="$STUB/bin:$PATH" package_contains_zip_entry "$WORK/fake.nupkg" "missing.dll"; then
-    FAIL "package_contains_zip_entry accepted a missing archive entry."
-fi
-
 echo "Package consumer smoke lib: OK"

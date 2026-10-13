@@ -33,12 +33,11 @@ fi
 source "$ROOT/scripts/dotnet-env.sh"
 
 # Godot.NET.Sdk is a version-coupled pair across the adapter and the
-# integration-test project. download-godot.sh reads the adapter version as
-# the authority; fail here if the integration project ever drifts.
-# sed -E is portable to macOS; grep -oP requires GNU grep and would break
-# the documented local-CI reproduction on Darwin.
-ADAPTER_SDK_VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' "$ROOT/Origo.GodotAdapter/Origo.GodotAdapter.csproj" | head -1)
-INTEGRATION_SDK_VERSION=$(sed -nE 's#.*Godot\.NET\.Sdk/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' "$ROOT/Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj" | head -1)
+# integration-test project. download-godot.sh owns the parse (and its error
+# messages); fail here if the integration project ever drifts from the adapter
+# authority.
+ADAPTER_SDK_VERSION=$(bash scripts/download-godot.sh --print-version)
+INTEGRATION_SDK_VERSION=$(bash scripts/download-godot.sh --print-version "$ROOT/Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj")
 if [[ "$ADAPTER_SDK_VERSION" != "$INTEGRATION_SDK_VERSION" ]]; then
     echo "ERROR: Godot.NET.Sdk version mismatch:" >&2
     echo "  adapter:        $ADAPTER_SDK_VERSION" >&2
