@@ -159,24 +159,13 @@ The framework applies `[assembly: SndInlineTypes(...)]` at the assembly level:
 )]
 ```
 
-Kind allocation rules:
-
-| Layer | StartKind | Kind Range | Type Count |
-|----|-----------|----------|--------|
-| Core | 1 | 1–13 | 13 BCL primitive types |
-| GodotAdapter | 128 | 128–141 | 14 Godot engine types |
-| Reserved (future adapters) | 192 | 192–254 | — (requires adding the assembly to Origo.Core.Contracts's `InternalsVisibleTo` whitelist first) |
-
-Compile-time validation (fail-fast):
-
-| Diagnostic ID | Trigger Condition |
-|---------|---------|
-| `ORIGOSG001` | System primitive type registered in a non-home (adapter) assembly |
-| `ORIGOSG002` | Home assembly registers an uninlinable value type (e.g., `decimal`) |
-| `ORIGOSG003` | Kind out of range (not in `[1, 254]`) |
-| `ORIGOSG004` | Kind range overlap, multiple types mapped to the same Kind |
-| `ORIGOSG005` | Generated identifier (KindName) collisions: same-named types from different namespaces, collapsing generic instantiations, or the same type registered more than once with different kind values (same-kind re-registration is idempotent and silently deduplicated) |
-| `ORIGOSG006` | Sanitized KindName is not a valid C# identifier (e.g. pointer type names containing `*`) |
+Kind allocation rules and the complete `ORIGOSG001`–`ORIGOSG007` diagnostic table
+live in [README.en.md](README.en.md#kind-value-segmentation) and
+[README.en.md](README.en.md#type-validation-and-diagnostics); they are maintained
+once there. The invariants this page relies on: each layer's starting Kind comes
+from `SndInlineTypesAttribute.StartKind`, the home assembly owns the BCL primitive
+range, adapter layers take their own ranges, and every registration is validated
+at compile time.
 
 These diagnostics are reported as Errors at compile time, causing build failure. Issues like Kind conflicts or out-of-range values **never reach runtime**.
 
@@ -215,7 +204,7 @@ The generated content falls into two sets based on **whether the current compila
 
 #### Source Generator Code Location
 
-The generator source lives under `Origo.SourceGeneration/` as 5 partial files (~1085 lines total): `TypedDataGenerator.cs` (pipeline and input extraction), `TypedDataGenerator.HomeGeneration.cs` (home-assembly generation), `TypedDataGenerator.AdapterGeneration.cs` (adapter generation), `TypedDataGenerator.FactoryGeneration.cs` (`TypedDataFactory<T>` branch generation), and `TypedDataGenerator.Diagnostics.cs` (diagnostic definitions). The core `GenerateTypedDataFactory` (`TypedDataGenerator.FactoryGeneration.cs`) iterates all registered types and generates `typeof(T) == typeof(...)`-style branches one by one.
+The generator source lives under `Origo.SourceGeneration/` as 5 partial files (~1280 lines total): `TypedDataGenerator.cs` (pipeline and input extraction), `TypedDataGenerator.HomeGeneration.cs` (home-assembly generation), `TypedDataGenerator.AdapterGeneration.cs` (adapter generation), `TypedDataGenerator.FactoryGeneration.cs` (`TypedDataFactory<T>` branch generation), and `TypedDataGenerator.Diagnostics.cs` (diagnostic definitions). The core `GenerateTypedDataFactory` (`TypedDataGenerator.FactoryGeneration.cs`) iterates all registered types and generates `typeof(T) == typeof(...)`-style branches one by one.
 
 ---
 

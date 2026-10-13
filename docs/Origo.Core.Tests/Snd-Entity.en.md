@@ -125,7 +125,6 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `ProcessAll_DeltaPropagatesToStrategy` | ProcessAll's delta parameter is correctly passed to strategy Process | snd-entity-model: Frame processing |
 | `ProcessAll_ProcessAddsStrategy_NewStrategyNotExecutedThisFrame` | Strategy added via AddStrategy during Process is not executed this frame | snd-entity-model: Frame processing |
 | `ProcessAll_ProcessRemovesStrategy_RemainingStrategiesStillExecuted` | After RemoveStrategy during Process, subsequent strategies still execute normally | snd-entity-model: Frame processing |
-| `SndEntityFactory_Spawn_CreatesEntityAndFiresAfterSpawn` | Spawn creates entity and fires AfterSpawn hook | SndEntityFactory |
 | `SndEntityFactory_SpawnMany_BatchCreatesAllThenFiresHooks` | SpawnMany creates all then fires hooks one by one | SndEntityFactory |
 | `SndEntityFactory_SpawnMany_EntitiesVisibleDuringAfterSpawn` | During SpawnMany AfterSpawn, cross-entity FindByName is visible | SndEntityFactory |
 | `FullMemorySndSceneHost_RemoveEntity_ClearsCollectionOnly` | RemoveEntity only removes from collection; duplicate Remove throws | ISndSceneHost |

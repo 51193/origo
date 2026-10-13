@@ -48,7 +48,7 @@ dotnet_diagnostic.CA1062.severity = error
 # Intentional design — see docs/Origo.Core.Tests/META-TEST.en.md
 # (and the recorded Integration.Tests Runner/TestSupport deviation there).
 # CA1062 (validate public parameters): suppressed — parameters are supplied by the framework.
-[{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.GodotAdapter.Integration.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests,Origo.TestSupport}/**/*.cs]
+[{Origo.Core.Tests,Origo.GodotAdapter.Tests,Origo.GodotAdapter.Integration.Tests,Origo.ConsoleBridge.Tests,Origo.SourceGeneration.Tests,Origo.TestSupport,tools/ApiInventoryTool.Tests}/**/*.cs]
 dotnet_diagnostic.IDE0130.severity = none
 dotnet_diagnostic.CA1062.severity = none
 
