@@ -12,10 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
-- **`Origo.sln` x64/x86 solution platforms** — the solution declares only the
-  Any CPU configurations; no script, workflow, or project selected those
-  platforms, and `dotnet build Origo.sln -p:Platform=x64` now fails with
-  MSB4126 instead of resolving to Any CPU.
+- **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
+  only the Any CPU configurations; no script, workflow, or project selected
+  those platforms. Build with `dotnet build Origo.sln` and drop
+  `-p:Platform=x64` / `-p:Platform=x86`, which now fail with MSB4126 instead of
+  resolving to Any CPU.
 
 ## [0.1.0] - 2026-10-10
 
@@ -172,7 +173,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   recovery.
 - **`DataSourceNode.CreateNumber` validates number literals at construction** — the string overload now accepts only valid JSON number literals and rejects malformed literals (`"abc"`, `" 42"`, `"NaN"`, ...) with `ArgumentException`; the `float`/`double` overloads reject NaN and infinity with `ArgumentOutOfRangeException`. Invalid values previously reached the JSON writer (or produced non-portable JSON) instead of failing at the API boundary.
 - **PR commit lint enforces the 72-character body-line rule** — `scripts/lint-commits.sh` now rejects commit body lines longer than 72 characters, matching `docs/META` instead of enforcing only the subject rules.
-- **Manual capability-count and example corrections** — capability counts in the top-level manual now match the actual Core (32) and GodotAdapter (7) test-doc indexes; `agent-reference` includes the `TryGetData<T>(string, out T?)` overload; manual examples use language-suffixed paths; TestSupport documents the test-side frame-flush driver; the active-strategy JSON error protocol is explicit.
+- **Documentation drift corrections** — capability counts in the top-level manual now match the actual Core (32) and GodotAdapter (7) test-doc indexes; `agent-reference` includes the `TryGetData<T>(string, out T?)` overload; manual examples use language-suffixed paths; TestSupport documents the test-side frame-flush driver; the active-strategy JSON error protocol is explicit.
 - **DocSyncTool derives `docsync-revision` from git history** — `generate` now plans revision headers automatically from content-changing commits since the last generated snapshot, catches stale translations up to the peer revision, and records content hashes in `.sync-status.json` as an idempotent planning anchor. Doc authors no longer bump revision numbers by hand; CI fetches full history so multi-commit pushes are counted commit-by-commit even though GitHub Actions runs only the final commit.
 - **BREAKING: `OrigoAutoInitializer` and `SndWorld.LoadSceneAliases` / `LoadTemplates` are now `internal`** — strategy auto-discovery, JSON-array spawning, and alias/template map loading are reachable only through the `ISndContext.Bootstrap` orchestration (and its `SndContextParameters`); game-side strategy registration remains available through `SndWorld.RegisterStrategy`.
 - **BREAKING: `ISndTemplateAccess` now exposes the complete template-entity path** — in addition to `CloneTemplate`, it provides `ResolveMetaListFromJsonArray`, `LoadMetaListFromFile` (JSON array files with `templateKey`/`sndName` shorthand), and runtime `LoadTemplates` / `LoadSceneAliases` map reloads. External implementations of `ISndTemplateAccess` must implement the new members; business code no longer needs `OrigoAutoInitializer.LoadAndSpawnFromFile` or raw `SndWorld` access to load/spawn template entities.
@@ -211,7 +212,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **BREAKING: `IStateMachineContainer.Remove` throws for unknown keys** — removing a state machine that is not in the container now throws `InvalidOperationException` instead of silently succeeding (consistent with the strategy managers' remove contracts).
 - **`TestSndSceneHost.RecoverFromMetaList` now matches the production scene-host contract** — it appends to the existing scene instead of clearing it first (per `ISndSceneAccess`'s "does not automatically clear" contract; callers handle cleanup), removing a test-blind-spot divergence.
 - **Grid/Random/`Logger<T>` consumption notes** — the READMEs now state that these framework capabilities have no in-repo production consumer and are provided for game-side use.
-- **Usage and module README API-alignment corrections** — usage and module READMEs were aligned with the real API: the nonexistent `AddPrefix`/`AddSuffix` log-builder methods, the outdated `TryGetNumeric` fallback order (three places), the snapshot-phase description that claimed `save_{id}/` is deleted (actual behavior is backup-replace), the A* claim that the start cell is blocking-checked (standard A* semantics documented instead), and the misleading "atomic" wording of `PersistentRandom.TryNextInt32`.
+- **Documentation drift corrections** — usage and module READMEs were aligned with the real API: the nonexistent `AddPrefix`/`AddSuffix` log-builder methods, the outdated `TryGetNumeric` fallback order (three places), the snapshot-phase description that claimed `save_{id}/` is deleted (actual behavior is backup-replace), the A* claim that the start cell is blocking-checked (standard A* semantics documented instead), and the misleading "atomic" wording of `PersistentRandom.TryNextInt32`.
 - **`DataSourceConverterRegistry.Read<T>` / `Read(Type, ...)` validate the returned instance** — a converter resolved through the base/interface chain must return a value assignable to the requested type: incompatible requests now throw a clear `InvalidOperationException` (naming the converter and the requested type) instead of an opaque `InvalidCastException` or a silently drifted value type. `StringDictionaryConverter` now returns `ReadOnlyDictionary<string,string>`, so a `ReadOnlyDictionary` stored in a blackboard survives save/load round-trips (including re-saves) without drifting to `Dictionary`.
 - **`TryGetNumeric` covers all integer types** — reading entity data as `float` now also tries
   `byte`/`sbyte`/`short`/`ushort`/`char`/`uint`/`ulong` (previously only `float`/`int`/`long`/

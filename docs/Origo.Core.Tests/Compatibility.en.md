@@ -17,6 +17,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 |------|-------|
 | `Compatibility/ShellCompatibilityContractTests.cs` | `OrigoHost` shell entry: lifecycle hook ordering, observer binding recovery, post-Bootstrap fail-fast, background-session create/destroy transitions |
 | `Hosting/OrigoHostTests.cs` | Stable `OrigoHost`/`HostKernelPort` runtime construction and background workflow; `AdapterHostKernelPort` runtime/observer/context binding order; explicit failure when the runtime binder, context binder, or file system is missing |
+| `Hosting/HostContextParametersTests.cs` | Shared `HostContextParameters` factory: every context parameter comes from its own `OrigoHostOptions` or `AdapterContextOptions` member, and null options fail fast with the parameter name |
 
 ## ShellCompatibilityContractTests Details
 
@@ -35,7 +36,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 |-------------|-----------------|-------------------|
 | `ShellEntry_FailFastValidation_IsPreservedAfterBootstrap` | Strategy registration after Bootstrap freeze, invalid save ID, null entity metadata | `InvalidOperationException` / `ArgumentException` / `ArgumentNullException` respectively; no silent degradation |
 
-## Hosting/OrigoHostTests and AdapterHostKernelPortTests Details
+## Hosting/OrigoHostTests, AdapterHostKernelPortTests, and HostContextParametersTests Details
 
 ### Happy Path
 
@@ -46,7 +47,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime` | With injected console channels, a custom command registered through `IOrigoRuntime.RegisterConsoleCommandHandler` produces output during `DriveFrame` | [console-commands](../usage/console-commands.en.md) |
 | `AdapterHostKernelPort_ShouldBuildRuntimeAndBindSceneHost` | The port creates the runtime and default console channels, binds runtime/observer topology first, then creates and binds the SND context | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `CoreShellPublicSignatures_ShouldNotExposeKernelTypes` | Every exported type of the Core shell assembly and its public members (properties, method returns/parameters, fields) avoid kernel types | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
-| `Create_ForOrigoHostOptions_MapsEveryContextParameter` | The shared context-parameters factory maps every `OrigoHostOptions` member onto its own `SndContextParameters` value (distinct sentinels, so a transposed argument fails) and copies the infrastructure references unchanged | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
+| `Create_ForOrigoHostOptions_MapsEveryContextParameter` | The shared context-parameters factory takes every context parameter from its own `OrigoHostOptions` member (distinct sentinels, so a transposed argument fails) and copies the infrastructure references unchanged | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `Create_ForAdapterContextOptions_MapsEveryContextParameter` | The same projection for `AdapterContextOptions`, so the adapter host path cannot drift from the Core host path | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 
 ### Error Path

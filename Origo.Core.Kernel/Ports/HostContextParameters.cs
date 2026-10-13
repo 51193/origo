@@ -105,3 +105,5 @@ internal static class HostContextParameters
             ConfigureConverters = configureConverters,
         };
 }
+
+#pragma warning restore IDE0130

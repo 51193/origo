@@ -311,7 +311,7 @@ public sealed class SimpleHealthStrategy : LifecycleStrategyBase
         entity.SetData("max_hp", 100);
 
         // Mount a self-observation strategy (bindings persist with the entity, auto-restore on load, no manual reconnect/unsubscribe needed)
-        entity.MountObserverStrategy(entity.Name, "example.hp_watcher");
+        entity.MountObserverStrategy(entity.Name, "my_game.hp_watcher");
     }
 
     public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -324,7 +324,7 @@ public sealed class SimpleHealthStrategy : LifecycleStrategyBase
 }
 ```
 
-The `mount_observer` call above uses an observer strategy (`my_game.hp_watcher`) whose implementation follows the pattern owned by the [SND Entity Model data-observation example](snd-entity-model.en.md#data-observation): an `ObserverStrategyBase` marked `[ObserveData("hp")]` whose `OnDataChanged` requests a save when hp reaches zero.
+The `MountObserverStrategy` call above mounts `my_game.hp_watcher`, the observer strategy the [SND Entity Model data-observation example](snd-entity-model.en.md#data-observation) defines: an `ObserverStrategyBase` marked `[ObserveData("hp")]` whose `OnDataChanged` requests a save when hp reaches zero.
 
 ## File Access Example
 
