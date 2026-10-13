@@ -31,6 +31,10 @@ coverage.cobertura.xml
 coverage.xml
 TestResults/
 
+# Python bytecode caches written by scripts/*.py and the script self-tests
+__pycache__/
+*.pyc
+
 # OS
 .DS_Store
 Thumbs.db

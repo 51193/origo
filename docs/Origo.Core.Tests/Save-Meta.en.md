@@ -40,7 +40,7 @@ contributor registration, fail-fast on invalid contributor output, and the full 
 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
-| `SaveMetaBuildContext_StoresAllProperties` | SaveId/CurrentLevelId/Progress/Session/SceneAccess all correctly stored | ISaveMetaContributor |
+| `SaveMetaBuildContext_ExposesReadOnlyBlackboardViews` | SaveId/CurrentLevelId/SceneAccess are stored as passed; Progress/Session expose read-only blackboard views whose writes and deserialization throw | ISaveMetaContributor |
 
 ### Error Path
 

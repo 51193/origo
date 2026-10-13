@@ -426,7 +426,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `BuildSavePayload_IncludesSyncProcessInBackgroundLevelIds` | syncProcess flag correct in Payload | session-model |
 | `SaveAndLoad_RoundTrips_SyncProcessFlag` | syncProcess flag correctly restored after round-trip | session-model |
 | `SaveAndLoad_FromDisk_RestoresBackgroundSessions` | Write to disk→read snapshot→load→background restored | session-model |
-| `ReadFromCurrent_IncludesAllLevelDirectories` | ReadFromCurrent includes all level directories (including backgrounds) | ISaveStorageService |
+| `ReadFromSnapshot_IncludesAllLevelDirectories` | Snapshot read returns every level directory, including background sessions | ISaveStorageService |
 | `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | Full save triggers BeforeSave hooks on foreground entities (verifies BeforeSave hooks fire before serialization) | session-model |
 | `FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins` | When a BeforeSave hook overwrites SessionTopology, the framework-computed value wins and is persisted | session-model: Session Topology |
 | `FullSave_BeforeSaveHookWrites_ArePersistedIntoForegroundSceneData` | Data written by BeforeSave hooks lands in foreground snd_scene.json | session-model |
