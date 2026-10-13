@@ -14,7 +14,7 @@ without reading through source code.
 
 - Test documents are grouped by **capability under test**, one document describes tests for one capability
 - If one source directory contains multiple independent capabilities, split into multiple documents
-  (e.g., `Save/` split into `Save-Storage.md`, `Save-Serialization.md`, `Save-Meta.md`)
+  (e.g., `Save/` split into `Save-Storage.en.md`, `Save-Serialization.en.md`, `Save-Meta.en.md`)
 - If multiple test files together verify the same capability, merge into one document with sections
 
 ### Bottom-Up

@@ -4,7 +4,7 @@
 
 ## Facts and objective
 
-Investigation date: 2026-09-18; baseline: `cdba5e4`. This proposal does not change current rules. Independent file reading and `python scripts/validate-agent-docs.py` both confirm 223 lines and 16364 bytes in root `AGENTS.md`. The guard specifies `MAX_LINES = 300` and `MAX_BYTES = 16 * 1024`, leaving 20 bytes. It also requires 11 fixed subsection headings and particular commands and keywords; text-only compression remains constrained by that structure.
+Investigation date: 2026-09-18; baseline: `cdba5e4`. This proposal does not change current rules. Independent file reading and `python scripts/validate-agent-docs.py` both confirm 223 lines and 16364 bytes in root `AGENTS.md` at that baseline. The guard specifies `MAX_LINES = 300` and `MAX_BYTES = 16 * 1024`, leaving 20 bytes. It also requires 11 fixed subsection headings and particular commands and keywords; text-only compression remains constrained by that structure.
 
 This is not a 16 KiB Codex platform limit. [Official AGENTS documentation](https://developers.openai.com/codex/guides/agents-md/) describes instructions combined from repository root to the current working directory, with a default 32 KiB project-instruction budget. Nested instructions are not discovered simply because a file in that directory is being edited. Starting at the repository root does not guarantee a nested instruction file is active.
 

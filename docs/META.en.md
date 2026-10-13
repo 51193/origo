@@ -214,6 +214,8 @@ docs/                            # Documentation root (inside the origo reposito
 ├── agents/                     # Matt Pocock skills configuration and manual entry
 ├── benchmarks/                 # Performance baselines and baseline.json
 ├── Origo.Core/                  # Mirrors the repo root Origo.Core/ directory structure
+├── Origo.Core.Contracts/        # Mirrors the repo root Origo.Core.Contracts/ directory structure
+├── Origo.Core.Kernel/           # Mirrors the repo root Origo.Core.Kernel/ directory structure
 ├── Origo.Core.Tests/            # Test capability docs grouped by capability
 ├── Origo.GodotAdapter/          # Mirrors the repo root Origo.GodotAdapter/
 ├── Origo.GodotAdapter.Tests/    # GodotAdapter test capability docs
