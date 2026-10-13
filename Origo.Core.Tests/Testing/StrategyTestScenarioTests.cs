@@ -41,7 +41,7 @@ public class StrategyTestScenarioTests
     public void Build_CallsAfterSpawn()
     {
         var harness = StrategyTestScenario
-            .For<AfterSpawnInitStrategy>("test.after_spawn_init")
+            .For<AfterSpawnInitStrategy>(TestStrategyIndices.AfterSpawnInit)
             .Build();
 
         Assert.Equal(200, harness.GetEntityData<int>("max_hp"));
@@ -79,7 +79,7 @@ public class StrategyTestScenarioTests
     public void SystemBlackboardConfig_IsAccessible()
     {
         var harness = StrategyTestScenario
-            .For<BlackboardReaderStrategy>("test.bb_reader")
+            .For<BlackboardReaderStrategy>(TestStrategyIndices.BlackboardReader)
             .WithSystemConfig("game.difficulty", "hard")
             .Build();
 
@@ -118,13 +118,13 @@ public class StrategyTestScenarioTests
     public void EntityName_DefaultsAndCanBeOverridden()
     {
         var defaultHarness = StrategyTestScenario
-            .For<NopStrategy>("test.nop")
+            .For<NopStrategy>(TestStrategyIndices.Noop)
             .Build();
 
         Assert.Equal("__test_entity__", defaultHarness.Entity.Name);
 
         var namedHarness = StrategyTestScenario
-            .For<NopStrategy>("test.nop")
+            .For<NopStrategy>(TestStrategyIndices.Noop)
             .WithEntityName("MyPlayer")
             .Build();
 
@@ -161,7 +161,7 @@ public class StrategyTestScenarioTests
     public void TriggerLifecycleHooks_ExecuteStrategyHooks()
     {
         var harness = StrategyTestScenario
-            .For<LifecycleRecordingStrategy>("test.lifecycle")
+            .For<LifecycleRecordingStrategy>(TestStrategyIndices.Lifecycle)
             .Build();
 
         harness.TriggerAfterLoad();
@@ -201,7 +201,7 @@ public class StrategyTestScenarioTests
     public void MultipleFrames_AccumulateCorrectly()
     {
         var harness = StrategyTestScenario
-            .For<FrameCounterStrategy>("test.frame_counter")
+            .For<FrameCounterStrategy>(TestStrategyIndices.FrameCounter)
             .Build();
 
         harness.RunFrames(100);
@@ -220,7 +220,7 @@ public class StrategyTestScenarioTests
     public void TryGetEntityData_ReturnsFalseForMissingKey()
     {
         var harness = StrategyTestScenario
-            .For<NopStrategy>("test.nop")
+            .For<NopStrategy>(TestStrategyIndices.Noop)
             .Build();
 
         var (found, value) = harness.TryGetEntityData<int>("missing");
@@ -233,7 +233,7 @@ public class StrategyTestScenarioTests
     public void TryGetEntityData_ReturnsTrueForExistingKey()
     {
         var harness = StrategyTestScenario
-            .For<AfterSpawnInitStrategy>("test.after_spawn_init")
+            .For<AfterSpawnInitStrategy>(TestStrategyIndices.AfterSpawnInit)
             .Build();
 
         var (found, value) = harness.TryGetEntityData<int>("max_hp");
@@ -246,7 +246,7 @@ public class StrategyTestScenarioTests
     public void TryGetEntityData_ReturnsFalseForTypeMismatch()
     {
         var harness = StrategyTestScenario
-            .For<AfterSpawnInitStrategy>("test.after_spawn_init")
+            .For<AfterSpawnInitStrategy>(TestStrategyIndices.AfterSpawnInit)
             .Build();
 
         var (found, _) = harness.TryGetEntityData<string>("max_hp");
@@ -258,7 +258,7 @@ public class StrategyTestScenarioTests
     public void WithEntityName_EmptyString_UsesDefault()
     {
         var harness = StrategyTestScenario
-            .For<NopStrategy>("test.nop")
+            .For<NopStrategy>(TestStrategyIndices.Noop)
             .WithEntityName("  ")
             .Build();
 
@@ -270,7 +270,7 @@ public class StrategyTestScenarioTests
     {
         Assert.Throws<ArgumentNullException>(() =>
             StrategyTestScenario
-                .For<NopStrategy>("test.nop")
+                .For<NopStrategy>(TestStrategyIndices.Noop)
                 .WithTemplate("key", null!));
     }
 
@@ -296,7 +296,7 @@ public class StrategyTestScenarioTests
             ctx.Deferred.EnqueueBusinessDeferred(() => entity.SetData("deferred_flag", 42));
     }
 
-    [StrategyIndex("test.after_spawn_init")]
+    [StrategyIndex(TestStrategyIndices.AfterSpawnInit)]
     private sealed class AfterSpawnInitStrategy : LifecycleStrategyBase
     {
         public override void AfterSpawn(ISndEntity entity, ISndContext ctx) => entity.SetData("max_hp", 200);
@@ -370,7 +370,7 @@ public class StrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex("test.lifecycle")]
+    [StrategyIndex(TestStrategyIndices.Lifecycle)]
     private sealed class LifecycleRecordingStrategy : LifecycleStrategyBase
     {
         public override void AfterLoad(ISndEntity entity, ISndContext ctx)
@@ -416,7 +416,7 @@ public class StrategyTestScenarioTests
         }
     }
 
-    [StrategyIndex("test.nop")]
+    [StrategyIndex(TestStrategyIndices.Noop)]
     private sealed class NopStrategy : LifecycleStrategyBase
     {
     }

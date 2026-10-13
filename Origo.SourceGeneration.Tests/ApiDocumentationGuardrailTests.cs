@@ -11,7 +11,8 @@ using Xunit;
 namespace Origo.SourceGeneration.Tests;
 
 /// <summary>
-///     CI-enforceable guard for AGENTS §1.7: every public/protected API
+///     CI-enforceable guard for the AGENTS.md comment rule: every
+///     public/protected API
 ///     declaration in production source carries either a summary XML doc
 ///     comment or the standard C# <c>&lt;inheritdoc /&gt;</c> element.
 /// </summary>

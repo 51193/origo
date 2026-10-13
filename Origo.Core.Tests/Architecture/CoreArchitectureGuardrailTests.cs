@@ -42,8 +42,8 @@ public class CoreArchitectureGuardrailTests
     {
         // StubSndSceneHost / StubSndEntity / LevelBuilder are test and offline
         // stub infrastructure. They must live in Origo.TestSupport, not in the
-        // production Core assembly (AGENTS §1.2: framework code is written as
-        // if tests do not exist).
+        // production Core assembly (AGENTS.md, early-development rule: framework
+        // code is written as if tests do not exist).
         var shellAssembly = typeof(OrigoHost).Assembly;
         var kernelAssembly = typeof(OrigoRuntime).Assembly;
         Assert.Null(shellAssembly.GetType("Origo.Core.Snd.Scene.StubSndSceneHost"));

@@ -38,7 +38,7 @@ Full dependency-family rationale, release metadata checklists, internal test-acc
 | Formal release | Complete release-process authority | Version, analyzer tracking, workflows, docs | verify-release, release metadata, post-commit CI/lint, tag sequence |
 | Unfinished discovery/task recovery | Complete META buffer protocol; buffer root and relevant chapters | Baseline revalidation, facilities, history/commands | Ownership, status, failure, next action, final commit |
 
-This is a proposal, not a waiver. Current full-reading and completion rules still apply. In particular, current AGENTS §0 requires full release-process reading. Routing it only to release tasks requires coordinated edits to AGENTS, the English META, release-process, and the instruction guard. A skill cannot override them.
+This is a proposal, not a waiver. Current full-reading and completion rules still apply. In particular, the current AGENTS.md pre-work gate requires full release-process reading. Routing it only to release tasks requires coordinated edits to AGENTS, the English META, release-process, and the instruction guard. A skill cannot override them.
 
 General Changelog categories and BREAKING decisions should be routed separately from formal release operations; ordinary source changes can still require Changelog rules. META cannot simply become optional either: docs writes, builds, and buffer operations each have required authoritative sections. Keep its complete authority and route precisely to sections instead of duplicating drifting summaries.
 

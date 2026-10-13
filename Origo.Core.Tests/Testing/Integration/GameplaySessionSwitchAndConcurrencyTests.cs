@@ -22,7 +22,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
         var bgSession = harness.CreateBackgroundSession("bg1", "bg_level");
         bgSession.SessionBlackboard.SetValue("background_key", "bg_value");
 
-        harness.SpawnEntity("marker", ["test.bb_marker"]);
+        harness.SpawnEntity("marker", [TestStrategyIndices.BlackboardMarker]);
 
         harness.DriveFrame();
 
@@ -49,8 +49,8 @@ public class GameplaySessionSwitchAndConcurrencyTests
         KillableTestStrategy.Events = events;
         try
         {
-            var entity1 = harness.SpawnEntity("target_a", ["test.killable"]);
-            var entity2 = harness.SpawnEntity("target_b", ["test.killable"]);
+            var entity1 = harness.SpawnEntity("target_a", [TestStrategyIndices.Killable]);
+            var entity2 = harness.SpawnEntity("target_b", [TestStrategyIndices.Killable]);
 
             harness.RequestKillEntity("target_a");
             harness.RequestKillEntity("target_b");
@@ -74,7 +74,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
             .WithStrategy(() => new FrameCounterStrategy())
             .Build();
 
-        var first = harness.SpawnEntity("player", ["test.frame_counter"]);
+        var first = harness.SpawnEntity("player", [TestStrategyIndices.FrameCounter]);
         first.SetData("hp", 100);
         harness.RunFrames(3);
 
@@ -82,7 +82,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
         harness.DriveFrame();
         Assert.Null(harness.FindEntity("player"));
 
-        var second = harness.SpawnEntity("player", ["test.frame_counter"]);
+        var second = harness.SpawnEntity("player", [TestStrategyIndices.FrameCounter]);
         harness.RunFrames(2);
 
         var count = harness.GetEntityData<int>("player", "count");
@@ -102,14 +102,14 @@ public class GameplaySessionSwitchAndConcurrencyTests
         var bg1 = harness.CreateBackgroundSession("bg1", "bg_level_1");
         var bg2 = harness.CreateBackgroundSession("bg2", "bg_level_2");
 
-        var entity1 = harness.SpawnEntity("player", ["test.frame_counter"]);
+        var entity1 = harness.SpawnEntity("player", [TestStrategyIndices.FrameCounter]);
         entity1.SetData("count", 0);
 
         var s1e1 = new SndMetaData
         {
             Name = "npc1",
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["test.frame_counter"] },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TestStrategyIndices.FrameCounter] },
             DataMetaData = new DataMetaData()
         };
         var bg1Entity = bg1.Spawn(s1e1);
@@ -119,7 +119,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
         {
             Name = "npc2",
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["test.frame_counter"] },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TestStrategyIndices.FrameCounter] },
             DataMetaData = new DataMetaData()
         };
         var bg2Entity = bg2.Spawn(s2e1);
@@ -148,14 +148,14 @@ public class GameplaySessionSwitchAndConcurrencyTests
         {
             Name = "peer",
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["test.frame_counter"] },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TestStrategyIndices.FrameCounter] },
             DataMetaData = new DataMetaData()
         };
         var peer = bgSession.Spawn(bgEntity);
         peer.SetData("peer_value", 999);
         harness.RunFrames(2);
 
-        var fgEntity = harness.SpawnEntity("seeker", ["test.frame_counter"]);
+        var fgEntity = harness.SpawnEntity("seeker", [TestStrategyIndices.FrameCounter]);
         harness.DriveFrame();
 
         var foundSession = harness.TryGetSession("bg_peer");
@@ -179,7 +179,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
             .WithStrategy(() => new FrameCounterStrategy())
             .Build();
 
-        var fgEntity = harness.SpawnEntity("fg_player", ["test.frame_counter"]);
+        var fgEntity = harness.SpawnEntity("fg_player", [TestStrategyIndices.FrameCounter]);
         harness.RunFrames(3);
 
         var bgSession = harness.CreateBackgroundSession("bg_independent", "indep_level");
@@ -187,7 +187,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
         {
             Name = "bg_npc",
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["test.frame_counter"] },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TestStrategyIndices.FrameCounter] },
             DataMetaData = new DataMetaData()
         };
         var bgNpc = bgSession.Spawn(bgMeta);
@@ -223,14 +223,14 @@ public class GameplaySessionSwitchAndConcurrencyTests
             .WithStrategy(() => new FrameCounterStrategy())
             .Build();
 
-        harness.SpawnEntity("fg_player", ["test.frame_counter"]);
+        harness.SpawnEntity("fg_player", [TestStrategyIndices.FrameCounter]);
 
         var bgSession = harness.CreateBackgroundSession("bg_victims", "victim_level");
         var bgMeta = new SndMetaData
         {
             Name = "bg_target",
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["test.killable"] },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TestStrategyIndices.Killable] },
             DataMetaData = new DataMetaData()
         };
         bgSession.Spawn(bgMeta);
@@ -268,7 +268,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
         {
             Name = "npc_a",
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["test.frame_counter"] },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TestStrategyIndices.FrameCounter] },
             DataMetaData = new DataMetaData()
         };
         bg1.Spawn(e1);
@@ -277,7 +277,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
         {
             Name = "npc_b",
             NodeMetaData = new NodeMetaData(),
-            StrategyMetaData = new StrategyMetaData { LifecycleIndices = ["test.frame_counter"] },
+            StrategyMetaData = new StrategyMetaData { LifecycleIndices = [TestStrategyIndices.FrameCounter] },
             DataMetaData = new DataMetaData()
         };
         bg2.Spawn(e2);
@@ -320,7 +320,7 @@ public class GameplaySessionSwitchAndConcurrencyTests
             .WithStrategy(() => new KillableTestStrategy())
             .Build();
 
-        harness.SpawnEntity("victim", ["test.killable"]);
+        harness.SpawnEntity("victim", [TestStrategyIndices.Killable]);
         harness.RequestKillEntity("victim");
         harness.DriveFrame();
 
@@ -330,10 +330,10 @@ public class GameplaySessionSwitchAndConcurrencyTests
             () => harness.RequestKillEntity("victim"));
     }
 
-    [StrategyIndex("test.bb_marker")]
+    [StrategyIndex(TestStrategyIndices.BlackboardMarker)]
     private sealed class BlackboardMarkerStrategy : SharedNoopLifecycleStrategy { }
 
-    [StrategyIndex("test.killable")]
+    [StrategyIndex(TestStrategyIndices.Killable)]
     private sealed class KillableTestStrategy : SharedKillProbeStrategy { }
 
     [StrategyIndex(TestStrategyIndices.FrameCounter)]

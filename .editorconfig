@@ -11,9 +11,10 @@ insert_final_newline = true
 # C# naming conventions
 # Info severity: dotnet format --severity info (the CI gate) only reports
 # rules at info level or above, so naming/style rules below info would never
-# be enforced. AGENTS.md §1.5 declares these rules CI-enforced. Note: naming
-# rules are fix-only in dotnet format and are not reported by
-# --verify-no-changes; the style rules below are enforced by the gate.
+# be enforced. AGENTS.md ("Consistent Code Format — Local Equals CI")
+# declares these rules CI-enforced. Note: naming rules are fix-only in
+# dotnet format and are not reported by --verify-no-changes; the style rules
+# below are enforced by the gate.
 dotnet_naming_rule.private_fields_should_be_camel_case.severity = info
 dotnet_naming_rule.private_fields_should_be_camel_case.symbols = private_fields
 dotnet_naming_rule.private_fields_should_be_camel_case.style = camel_case_underscore

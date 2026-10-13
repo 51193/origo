@@ -19,7 +19,7 @@ namespace Origo.Core.Tests;
 
 public class SndEntityAndAutoInitializerTests
 {
-    private const string _lifecycleStrategyIndex = "test.lifecycle";
+    private const string _lifecycleStrategyIndex = TestStrategyIndices.Lifecycle;
 
     [Fact]
     public void SndEntity_GetNodeNamesAndGetNode_ReturnExpectedHandles()

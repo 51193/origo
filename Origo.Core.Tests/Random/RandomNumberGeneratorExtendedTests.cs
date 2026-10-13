@@ -29,20 +29,23 @@ public class RandomNumberGeneratorExtendedTests
     }
 
     [Fact]
-    public void RandomNumberGenerator_NextInt32_ReturnsValue()
+    public void RandomNumberGenerator_NextInt32_AdvancesState()
     {
         var (s0, s1) = RandomNumberGenerator.CreateStateFromSeed("seed");
-        var (val, _, _) = RandomNumberGenerator.NextInt32(s0, s1);
-        // Just verifying it returns without throwing; value is deterministic
-        Assert.IsType<int>(val);
+
+        var (_, nextS0, nextS1) = RandomNumberGenerator.NextInt32(s0, s1);
+
+        Assert.NotEqual((s0, s1), (nextS0, nextS1));
     }
 
     [Fact]
-    public void RandomNumberGenerator_NextInt64_ReturnsValue()
+    public void RandomNumberGenerator_NextInt64_AdvancesState()
     {
         var (s0, s1) = RandomNumberGenerator.CreateStateFromSeed("seed");
-        var (val, _, _) = RandomNumberGenerator.NextInt64(s0, s1);
-        Assert.IsType<long>(val);
+
+        var (_, nextS0, nextS1) = RandomNumberGenerator.NextInt64(s0, s1);
+
+        Assert.NotEqual((s0, s1), (nextS0, nextS1));
     }
 
     [Fact]

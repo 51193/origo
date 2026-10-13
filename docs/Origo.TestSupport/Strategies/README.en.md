@@ -12,7 +12,7 @@ Shared test strategy base classes and strategy index constants for all test proj
 | File | Responsibility |
 |------|---------------|
 | `SharedTestStrategies.cs` | Shared test strategy base classes: `SharedFrameCounterStrategy` (increments count data each frame), `SharedEchoActiveStrategy` (active strategy echoing its input), `SharedKillProbeStrategy` (records BeforeDead events), `SharedNoopLifecycleStrategy` (no-op lifecycle strategy), `SharedNoopStateMachineStrategy` (no-op state machine strategy). |
-| `TestStrategyIndices.cs` | Static constant collection of all test strategy indices (`test.frame_counter`, `test.bb_reader`, `test.bb_writer`, etc.) with automatic duplicate detection. |
+| `TestStrategyIndices.cs` | Static constant collection of all test strategy indices (`test.frame_counter`, `test.bb_reader`, `test.bb_writer`, etc.) with automatic duplicate detection; test files reference these constants instead of repeating the index literals. |
 
 ## Design Decisions
 

@@ -19,43 +19,18 @@ Origo supports a model with both **foreground sessions** and **background sessio
 
 ## Interfaces
 
-### ISessionRun
+Both session types are expressed through the same two contracts; the full
+member lists live in the `ISessionManager / ISessionRun` section of
+[agent-reference](agent-reference.en.md).
 
-```csharp
-public interface ISessionRun
-{
-    IBlackboard SessionBlackboard { get; }
-    string LevelId { get; }
-    bool IsFrontSession { get; }
-    IStateMachineContainer GetSessionStateMachines();
-    ISessionManager SessionManager { get; }    // Cross-session entry
-
-    // ── Entity operations (session scope) ──
-    ISndEntity? FindByName(string name);
-    IReadOnlyCollection<ISndEntity> GetEntities();
-    ISndEntity Spawn(SndMetaData meta);
-    void SpawnMany(params SndMetaData[] metaList);
-    void RequestKillEntity(string entityName);
-}
-```
-
-### ISessionManager
-
-```csharp
-public interface ISessionManager
-{
-    const string ForegroundKey = "__foreground__";
-    bool CanCreateSessions { get; }
-    ISessionRun? ForegroundSession { get; }
-    IReadOnlyCollection<string> Keys { get; }
-    ISessionRun? TryGet(string key);
-    bool Contains(string key);
-    ISessionRun CreateBackgroundSession(string key, string levelId, bool syncProcess = false);
-    void DestroySession(string key);
-    void ProcessAllSessions(double delta, bool includeForeground = false);
-    void KillPendingAllSessions();
-}
-```
+- `ISessionRun` — one mounted session: its session blackboard, level id, and
+  front/background flag; its session-scoped state machines; its
+  `ISessionManager` for cross-session access; and the entity operations scoped
+  to that session (`FindByName`, `GetEntities`, `Spawn`, `SpawnMany`,
+  `RequestKillEntity`).
+- `ISessionManager` — the session container: foreground access, background
+  session creation and destruction by key, `ProcessAllSessions` for background
+  iteration, and `KillPendingAllSessions` for frame-end draining.
 
 ## Creating Background Sessions
 

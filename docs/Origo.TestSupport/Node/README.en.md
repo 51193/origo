@@ -12,7 +12,7 @@ Test doubles for SND node abstractions: `INodeHandle` and `INodeFactory`, with i
 | File | Responsibility |
 |------|---------------|
 | `TestNodeHandle.cs` | Implements `INodeHandle`. Exposes `FreeCount`, `IsVisible` state tracking, and `Name`. |
-| `TestNodeFactory.cs` | Implements `INodeFactory`. Accepts an optional `IEnumerable<string>` of resource IDs to simulate creation failures. Records all created `TestNodeHandle` instances (`CreatedHandles`) and a list of creation request records (`Requests`); creation failures are simulated via the constructor-injected resource ID list. |
+| `TestNodeFactory.cs` | Implements `INodeFactory`. Accepts an optional `IEnumerable<string>` of resource IDs to simulate creation failures. Records all successfully created `TestNodeHandle` instances (`CreatedHandles`) in creation order. |
 
 ## Design Decisions
 
