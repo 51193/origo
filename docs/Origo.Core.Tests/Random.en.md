@@ -105,7 +105,6 @@ and noise map generator (OpenSimplex2 + Worley blend).
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
 | `CreateStateFromSeed_SameSeed_ProducesSameState` | Same seed creates same (s0, s1) state | Random |
-| `DifferentSeed_ProducesDifferentSequence` | Different seed produces different sequence | Random |
 | `SameState_ProducesSameSequence` | Same initial state twice produces same sequence | Random |
 | `ReturnedState_CanContinueSequence` | State returned by NextUInt64 can continue the sequence | Random |
 | `NextInt32AndNextInt64_StayConsistentWithNextUInt64Step` | NextInt32/NextInt64 stepping consistent with NextUInt64, type conversion correct | Random |

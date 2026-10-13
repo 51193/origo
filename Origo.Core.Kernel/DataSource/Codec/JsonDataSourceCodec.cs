@@ -126,38 +126,7 @@ internal sealed class JsonDataSourceCodec(bool writeIndented = true) : IDataSour
 
     private static void WriteProperty(Utf8JsonWriter writer, string key, DataSourceNode node)
     {
-        switch (node.Kind)
-        {
-            case DataSourceNodeKind.Map:
-                writer.WriteStartObject(key);
-                foreach (var childKey in node.Keys)
-                    WriteProperty(writer, childKey, node[childKey]);
-                writer.WriteEndObject();
-                break;
-
-            case DataSourceNodeKind.Array:
-                writer.WriteStartArray(key);
-                foreach (var element in node.Elements)
-                    WriteNode(writer, element);
-                writer.WriteEndArray();
-                break;
-
-            case DataSourceNodeKind.Text:
-                writer.WriteString(key, node.AsString());
-                break;
-
-            case DataSourceNodeKind.Number:
-                writer.WritePropertyName(key);
-                writer.WriteRawValue(node.AsString());
-                break;
-
-            case DataSourceNodeKind.Bool:
-                writer.WriteBoolean(key, node.As<bool>());
-                break;
-
-            case DataSourceNodeKind.Null:
-                writer.WriteNull(key);
-                break;
-        }
+        writer.WritePropertyName(key);
+        WriteNode(writer, node);
     }
 }

@@ -95,8 +95,6 @@ internal static class AdapterHostKernelPort
             dataSourceIo,
             metaAccess,
             pathResolver,
-            typeMapping,
-            converterRegistry,
             consoleInput,
             consoleOutputChannel);
     }
@@ -155,8 +153,6 @@ internal sealed record AdapterRuntimeBundle(
     IDataSourceIoGateway DataSourceIo,
     IFileMetaAccess MetaAccess,
     IPathResolver PathResolver,
-    TypeStringMapping TypeMapping,
-    DataSourceConverterRegistry ConverterRegistry,
     IConsoleInputSource ConsoleInput,
     IConsoleOutputChannel ConsoleOutputChannel);
 
