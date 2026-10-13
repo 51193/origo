@@ -66,7 +66,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `LoadAndMountForeground_WithEmptyLevelId_Throws` | Empty or whitespace levelId | ArgumentException |
 | `SwitchForeground_WithEmptyLevelId_Throws` | Empty or whitespace levelId | ArgumentException |
 | `BuildSavePayload_WithoutTopologySet_Throws` | Topology in ProgressBlackboard is empty string | InvalidOperationException |
-| `SessionRun_LoadFromPayload_NullNodes_FailFast` | Default-constructed LevelPayload (payload nodes all null) | InvalidOperationException (message contains "null"), level not loaded |
+| `SessionRun_LoadFromPayload_NullNodes_FailFast` | Default-constructed LevelPayload (payload nodes all null) | InvalidOperationException (message contains "null") |
 
 ### Boundary Path
 

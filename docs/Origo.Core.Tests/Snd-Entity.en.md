@@ -171,7 +171,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 |-------------|----------------|-------------------|
 | `SetData_ConverterThrows_LeavesNoDictionaryEntry` | Object converter for a custom kind throws | InvalidOperationException; the failed SetData leaves no entry (SerializeMeta is empty, TryGetData returns false) |
 | `SetData_WhenObserverThrows_ValueStillCommittedAndRemainingObserversSkipped` | An observer callback throws during SetData | InvalidOperationException propagates; remaining observers skipped, but the value stays committed and readable via TryGetData |
-| `TryGetData_BlankName_Throws` | Blank data key passed to TryGetData / GetRequiredData | ArgumentException |
+| `TryGetData_BlankName_Throws` | Empty data key passed to TryGetData / GetRequiredData | ArgumentException |
 
 ## SndEntityRecoveryRollbackTests Details
 

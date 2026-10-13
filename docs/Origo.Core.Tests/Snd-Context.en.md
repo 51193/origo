@@ -103,7 +103,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestLoadInitialSave_IsTrackedUntilFlushed` | RequestLoadInitialSave queues and the pending count is 1 (tracking semantics only) | ISndDeferredActions |
 | `RequestLoadMainMenuEntrySave_IsTrackedUntilFlushed` | RequestLoadMainMenuEntrySave queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
 | `RequestSwitchForegroundLevel_IsTrackedUntilFlushed` | RequestSwitchForegroundLevel queues and the pending count is 1, returning to 0 after Flush | ISndDeferredActions |
-| `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | An earlier persistence request fails and a later request in the same batch is discarded by fail-fast; the count returns to 0 and the discarded request runs its cleanup callbacks | ISndDeferredActions |
+| `FailedTrackedRequest_DiscardingLaterTrackedRequest_ReturnsPendingCountToZero` | An earlier persistence request fails and a later request in the same batch is discarded by fail-fast; the pending count returns to 0 | ISndDeferredActions |
 | `IsPersistenceIdle_ReflectsPendingRequestTracking` | Idle state matches the pending count initially, around entry loading, and before/after a save request | ISndDeferredActions |
 
 ## SndTemplateResolverTests Details

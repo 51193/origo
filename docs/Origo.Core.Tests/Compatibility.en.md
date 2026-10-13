@@ -46,6 +46,8 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `OrigoHost_ShouldRegisterCustomConsoleHandlerThroughStableRuntime` | With injected console channels, a custom command registered through `IOrigoRuntime.RegisterConsoleCommandHandler` produces output during `DriveFrame` | [console-commands](../usage/console-commands.en.md) |
 | `AdapterHostKernelPort_ShouldBuildRuntimeAndBindSceneHost` | The port creates the runtime and default console channels, binds runtime/observer topology first, then creates and binds the SND context | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 | `CoreShellPublicSignatures_ShouldNotExposeKernelTypes` | Every exported type of the Core shell assembly and its public members (properties, method returns/parameters, fields) avoid kernel types | [shell-kernel-boundary](../architecture/shell-kernel-boundary.en.md) |
+| `Create_ForOrigoHostOptions_MapsEveryContextParameter` | The shared context-parameters factory maps every `OrigoHostOptions` member onto its own `SndContextParameters` value (distinct sentinels, so a transposed argument fails) and copies the infrastructure references unchanged | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
+| `Create_ForAdapterContextOptions_MapsEveryContextParameter` | The same projection for `AdapterContextOptions`, so the adapter host path cannot drift from the Core host path | [Ports](../Origo.Core.Kernel/Ports/README.en.md) |
 
 ### Error Path
 
@@ -55,6 +57,7 @@ They drive the stable Contracts entry surface (`OrigoHost`, `ISndContext`, `ISes
 | `AdapterHostKernelPort_ShouldRejectSceneHostWithoutContextBinder` | Scene host does not implement `ISndContextAttachableSceneHost` | `InvalidOperationException`; context binding is not skipped |
 | `AdapterHostKernelPort_ShouldRejectMissingFileSystem` | `OrigoHostOptions.FileSystem` is null | `InvalidOperationException`; no silent fallback to an empty file system |
 | `OrigoHost_ShouldFailFastWhenRegisteringConsoleHandlerWithoutConsoleChannels` | Registering a custom command without either console channel, or with a null handler | `InvalidOperationException` / `ArgumentNullException`; handler is never silently dropped |
+| `Create_WithoutOptions_Throws` | Either option record is null at the shared context-parameters factory | `ArgumentNullException` for `OrigoHostOptions` and `AdapterContextOptions` alike |
 
 ## Test Support Strategies
 

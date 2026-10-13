@@ -51,13 +51,8 @@ artifacts/
 # Local agent work buffer (untracked by design; see AGENTS.md, local agent work buffer)
 _origo_local/
 
-# A "local learning workspace" ignore block (/MISSION.md, /RESOURCES.md,
-# /assets/, /lessons/, /reference/) was unused template residue: no script,
-# document, or tracked file references those paths, and /assets/ would silently
-# untrack a future root assets directory. The patterns are intentionally gone.
-
-# Matt Pocock agent configuration under docs/agents/ is tracked normally
-# (see docs/agents/README.en.md); no re-include rule is needed.
+# docs/agents/ is tracked; root content directories such as assets/ have no
+# ignore rule.
 
 # Local scratch work
 /.scratch/

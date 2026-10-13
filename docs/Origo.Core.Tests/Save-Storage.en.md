@@ -125,8 +125,8 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `RequestSaveGame_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, space, or out-of-range char | ArgumentException |
-| `RequestLoadGame_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, space, or out-of-range char | ArgumentException |
-| `SetContinueTarget_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, space, or out-of-range char | ArgumentException |
+| `RequestLoadGame_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, or space | ArgumentException |
+| `SetContinueTarget_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, or space | ArgumentException |
 
 ## SaveFormatGoldenTests Details
 

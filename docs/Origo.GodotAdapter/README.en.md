@@ -39,7 +39,7 @@ OrigoDefaultEntry._Ready()
   │       │   ├── IDataSourceIoGateway / IFileMetaAccess / IPathResolver
   │       │   ├── PersistentBlackboard → LoadFromDisk()
   │       │   ├── ConsoleInputBuffer / ConsoleOutputChannel (or host-injected channels)
-  │       │   ├── OrigoRuntime (creates SndWorld, deferred schedulers, OrigoConsole)
+  │       │   ├── OrigoRuntime (creates SndWorld, deferred schedulers, OrigoConsole; SndContext adds SystemRuntime/SystemRun over it)
   │       │   └── ISndSceneHostRuntimeBinder.BindRuntimeDependencies(world, logger)  // binds world/logger + observer topology
   │       └── exposes Runtime, ConsoleInput, ConsoleOutputChannel on the host node
   ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess; manual registration before the freeze
@@ -56,7 +56,7 @@ OrigoDefaultEntry._Ready()
         └── RequestLoadMainMenuEntrySave (deferred; executed when the frame driver flushes)
 ```
 
-Any failure after `base._Ready()` marks the bootstrap failed (`MarkBootstrapFailed`), so the next `_Process` throws instead of driving a partially initialized runtime.
+Any failure during `_Ready()` — including the `base._Ready()` call — marks the bootstrap failed (`MarkBootstrapFailed`), so the next `_Process` throws instead of driving a partially initialized runtime.
 
 The Core host path differs: `OrigoHost.Create(options)` builds the runtime and context through the kernel host port over a `FullMemorySndSceneHost`, binds the world and its observer topology with `FullMemorySndSceneHost.BindWorld` (no `ISndSceneHostRuntimeBinder` stage and no Godot scene host), uses an in-memory system blackboard unless `OrigoHostOptions.FileSystem` is supplied, and the consumer calls `OrigoHost.Bootstrap()` / `OrigoHost.DriveFrame(delta)` itself; there is no `ConfigureStrategies` hook or adapter console-handler registration on that path, so strategies are registered on `Runtime.SndWorld` before `Bootstrap()`.
 

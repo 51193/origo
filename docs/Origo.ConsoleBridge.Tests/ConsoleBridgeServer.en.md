@@ -75,7 +75,7 @@ Verifies the complete TCP bridge behavior of ConsoleBridgeServer. All tests use 
 | `DeadNonReadingClient_IsClosed_NextClientConnectsAndReplaysBacklog` | After the connection-time backlog flush fails on the send timeout, the dead connection is closed (single-connection slot released); the next client can connect and receives the buffered replay (verified through the platform-independent server detach log + the next connection being serviced) | ConsoleBridge: send-timeout detach |
 | `DeadClientAfterEstablishedConnection_IsClosed_NextClientConnectsAndReplaysBacklog` | After the connection is established (flush succeeded), the client stops reading and a later output write fails (OnConsoleOutput send timeout) — the dead connection is closed and the slot released; the next client can connect and receives the buffered replay (verifies a failed output write closes the dead connection and releases the slot) | ConsoleBridge: send-timeout detach |
 | `BacklogReplayToSlowClient_AbortsAtBudget_RemainingLinesReplayOnNextConnection` | A slow but continuously reading client makes replay block per line but stay below the send timeout: replay aborts at the time budget (log contains "time budget"), remaining lines replay in full on the next connection (no duplicates) | ConsoleBridge: replay time budget |
-| `BacklogReplayToNonReadingClient_DetachesConnectionAndKeepsBacklog` | Non-reading client: stalled replay detaches on send timeout (logged "flush failed"); remaining backlog stays queued | ConsoleBridge: send-timeout detach |
+| `BacklogReplayToNonReadingClient_DetachesConnectionAndKeepsBacklog` | Non-reading client: stalled replay detaches on send timeout (logged "flush failed") | ConsoleBridge: send-timeout detach |
 
 ### Thread Safety
 

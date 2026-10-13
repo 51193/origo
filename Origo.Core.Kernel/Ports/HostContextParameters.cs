@@ -16,8 +16,10 @@ namespace Origo.Core.Kernel.Ports;
 ///     path cannot silently drift from the Core path.
 /// </summary>
 /// <remarks>
-///     Removal condition: remove when both shells can build the context from a
-///     shared options contract instead of two option records.
+///     The two shells keep separate option records on purpose: the adapter
+///     record carries Godot-specific startup configuration. This factory is the
+///     single point where either record becomes the context values the kernel
+///     consumes.
 /// </remarks>
 internal static class HostContextParameters
 {

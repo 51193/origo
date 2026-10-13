@@ -108,7 +108,7 @@ StateMachineStrategyBase default hook semantics, StateMachineStrategyContext sna
 | `StateMachineContainer_DeserializeWithoutHooks_SwapsAtomically` | Hook-free deserialization atomically replaces old state | state-machine |
 | `StateMachineContainer_CreateOrGet_IdempotentForSameKeyAndIndices` | Same key + same indices CreateOrGet returns same instance | state-machine |
 | `StateMachineContainer_FlushAllAfterLoad_NotifiesPushStrategy` | FlushAllAfterLoad replays afterload in push order | state-machine |
-| `StateMachineContainer_Remove_MountedKey_DisposesAndRemoves` | Remove releases the mounted machine and drops the key so TryGet returns false | state-machine |
+| `StateMachineContainer_Remove_MountedKey_DisposesAndRemoves` | Remove drops the mounted key so a later TryGet returns false | state-machine |
 
 ### Error Path
 
