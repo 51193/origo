@@ -18,7 +18,7 @@
 | `PrivateFieldNamingTests.cs` | Architecture guardrail: production assembly private fields follow `_camelCase` naming |
 | `ApiDocumentationGuardrailTests.cs` | Architecture guardrail: public/protected API declarations in production source must carry `<summary>` or `<inheritdoc />` (vendored FastNoiseLite exempt) |
 | `Benchmarks/TypedDataGeneratedBenchmarkTests.cs` | Generated artifact performance benchmarks: write/read/mixed dispatch for multiple value types + `string`, generated inline `TypedData` vs unoptimized boxing; fixed pool + large iterations + multi-round min noise reduction, relaxed thresholds + comparison tables, and per-side measured allocation (`GC.GetAllocatedBytesForCurrentThread`, placed in separate `NoInlining` methods to avoid polluting timing) |
-| `TestSupport/PerfReporter.cs` | Performance comparison table output (writes to both console and xUnit test output) |
+| `Origo.TestSupport/Reporting/PerfReporter.cs` | Performance comparison table output (writes to both console and xUnit test output) |
 
 ## TypedDataGeneratorTests Test Details
 

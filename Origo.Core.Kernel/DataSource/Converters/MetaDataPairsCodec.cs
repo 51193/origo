@@ -36,9 +36,8 @@ internal static class MetaDataPairsCodec
     /// <remarks>
     ///     The dictionary is taken concretely, not through
     ///     <see cref="IDictionary{TKey,TValue}" />: the metadata contracts expose
-    ///     <see cref="Dictionary{TKey,TValue}" />, and iterating the concrete type
-    ///     keeps the struct enumerator and the direct indexer, exactly like the
-    ///     per-converter loops this helper replaced.
+    ///     <see cref="Dictionary{TKey,TValue}" />, so enumeration and indexing
+    ///     stay allocation-free for the type they actually hand over.
     /// </remarks>
     public static void ReadPairs<TValue>(
         DataSourceNode node,
