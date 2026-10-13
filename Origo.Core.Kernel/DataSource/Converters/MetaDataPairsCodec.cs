@@ -33,10 +33,17 @@ internal static class MetaDataPairsCodec
     /// <param name="pairs">Dictionary filled with the converted pairs.</param>
     /// <param name="readValue">Converter for one pair value.</param>
     /// <exception cref="InvalidOperationException">Thrown when <c>pairs</c> is present but not a map.</exception>
+    /// <remarks>
+    ///     The dictionary is taken concretely, not through
+    ///     <see cref="IDictionary{TKey,TValue}" />: the metadata contracts expose
+    ///     <see cref="Dictionary{TKey,TValue}" />, and iterating the concrete type
+    ///     keeps the struct enumerator and the direct indexer, exactly like the
+    ///     per-converter loops this helper replaced.
+    /// </remarks>
     public static void ReadPairs<TValue>(
         DataSourceNode node,
         string label,
-        IDictionary<string, TValue> pairs,
+        Dictionary<string, TValue> pairs,
         Func<DataSourceNode, TValue> readValue)
     {
         if (!node.TryGetValue(_pairsKey, out var pairsNode) || pairsNode is null || pairsNode.IsNull)
@@ -56,8 +63,12 @@ internal static class MetaDataPairsCodec
     /// <param name="pairs">Pairs to convert.</param>
     /// <param name="writeValue">Converter for one pair value.</param>
     /// <returns>A map node with a single <c>pairs</c> member.</returns>
+    /// <remarks>
+    ///     As in <see cref="ReadPairs{TValue}" />, the concrete dictionary type is
+    ///     taken so the write path does not box the enumerator per serialization.
+    /// </remarks>
     public static DataSourceNode WritePairs<TValue>(
-        IEnumerable<KeyValuePair<string, TValue>> pairs,
+        Dictionary<string, TValue> pairs,
         Func<TValue, DataSourceNode> writeValue)
     {
         var pairsNode = DataSourceNode.CreateObject();

@@ -324,7 +324,7 @@ public sealed class SimpleHealthStrategy : LifecycleStrategyBase
 }
 ```
 
-The observer strategy mounted above (`example.hp_watcher`) follows the pattern owned by the [SND Entity Model data-observation example](snd-entity-model.en.md#data-observation): an `ObserverStrategyBase` marked `[ObserveData("hp")]` whose `OnDataChanged` requests a save when hp reaches zero.
+The `mount_observer` call above uses an observer strategy (`my_game.hp_watcher`) whose implementation follows the pattern owned by the [SND Entity Model data-observation example](snd-entity-model.en.md#data-observation): an `ObserverStrategyBase` marked `[ObserveData("hp")]` whose `OnDataChanged` requests a save when hp reaches zero.
 
 ## File Access Example
 

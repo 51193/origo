@@ -34,6 +34,13 @@ and guards the public visibility of the adapter-layer `CommandHandlerBase`, allo
 | `GodotSndManager_BindContext_ShouldNotBePublic` | Reflection asserts `GodotSndManager.BindContext` has no public concrete-type path (only the explicit `ISndContextAttachableSceneHost` implementation), preventing business code from rebinding the context behind the framework's back | Origo.GodotAdapter/Snd |
 | `GodotSndManager_BindRuntimeDependencies_ShouldNotBePublic` | Reflection asserts `BindRuntimeDependencies` is internal only (driven by the bootstrap flow `OrigoAutoHost` and InternalsVisibleTo test projects), preventing business code from rebinding world/logger behind the framework's back | Origo.GodotAdapter/Snd |
 | `ShellApiClassification_CoversEveryAdapterExport` | Every GodotAdapter export, including Godot-generated signal nested types, appears exactly once in the English classification table | architecture/shell-api-classification |
+
+## AdapterShellPublicSignatureTests Test Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Doc Reference |
+|-------------|-------------------|---------------|
 | `AdapterShellPublicSignatures_ShouldNotExposeKernelTypes` | No exported Adapter type, property, method return/parameter, or field exposes an `Origo.Core.Kernel` type | architecture/shell-kernel-boundary |
 
 ## Test Support Strategy

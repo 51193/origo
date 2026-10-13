@@ -45,7 +45,8 @@ OrigoDefaultEntry._Ready()
   ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess; manual registration before the freeze
   ├── register adapter handlers through IOrigoRuntime  // press_button, tree_debug, camera_view
   ├── AdapterHostKernelPort.CreateContext(...)  // creates SndContext + ISndContextAttachableSceneHost.BindContext(context)
-  ├── Context = sndContext                   // same instance passed to ConfigureSaveMetadataContributors
+  ├── Context = sndContext                   // exposed to presentation/game code
+  ├── ConfigureSaveMetadataContributors(context)  // hook for extra save metadata contributors
   └── sndContext.Bootstrap()                 // Core-internal sequence:
         ├── scene-host readiness check (observer topology bound to a context)
         ├── ConfigureConverters hook

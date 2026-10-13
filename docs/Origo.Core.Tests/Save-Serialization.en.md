@@ -91,7 +91,6 @@ PersistentBlackboard disk read/write.
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Constructor_NullParam_Throws` | Any constructor dependency is null (sessionManager/blackboard/stateMachines/progressRuntime) | ArgumentNullException |
-| `SaveContext_Constructor_ThrowsOnNullArgs` | null progress / null session / null sndWorld argument | ArgumentNullException |
 | `PersistProgress_WithoutForegroundSession_Throws` | PersistProgress called without foreground Session | InvalidOperationException (message contains "foreground") |
 
 ## PersistentBlackboardTests Details

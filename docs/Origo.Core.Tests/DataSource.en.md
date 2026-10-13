@@ -146,7 +146,6 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `StateMachineContainerPayloadConverter_EntryMissingPushIndex_Throws` | Machine entry missing pushIndex field | InvalidOperationException (contains "pushIndex") |
 | `StateMachineContainerPayloadConverter_EntryMissingPopIndex_Throws` | Machine entry missing popIndex field | InvalidOperationException (contains "popIndex") |
 | `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | Machine entry key is null | InvalidOperationException |
-| `StateMachineContainerPayloadConverter_EntryNullOrNonStringKey_Throws` | Machine entry key is null | InvalidOperationException |
 | `StateMachineContainerPayloadConverter_StackNotArray_Throws` | Machine entry stack is an object instead of an array | InvalidOperationException (contains "array"; must not silently become an empty stack) |
 | `StateMachineContainerPayloadConverter_StackNullElement_Throws` | Machine entry stack contains a null element | InvalidOperationException (contains "null"; must not silently become an empty string) |
 | `StrategyMetaDataConverter_LifecycleIndicesNotArray_Throws` | lifecycle_indices is an object instead of an array | InvalidOperationException (contains "array") |

@@ -201,6 +201,18 @@ def main() -> int:
                 ),
             ),
             (
+                "GodotSharp version mismatch",
+                f"Origo.GodotAdapter: dependency GodotSharp version 0.0.1 != {GODOT_SDK_VERSION}",
+                lambda case: (
+                    (case / f"Origo.GodotAdapter.{VERSION}.nupkg").unlink(),
+                    write_package(
+                        case,
+                        "Origo.GodotAdapter",
+                        dependencies=(("Origo.Core", VERSION), ("GodotSharp", "0.0.1")),
+                    ),
+                ),
+            ),
+            (
                 "unexpected package",
                 "unexpected package in release artifact set: Origo.Extra",
                 lambda case: write_package(case, "Origo.Extra"),
