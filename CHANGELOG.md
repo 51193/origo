@@ -10,6 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- **`Origo.sln` x64/x86 solution platforms** — the solution declares only the
+  Any CPU configurations; no script, workflow, or project selected those
+  platforms, and `dotnet build Origo.sln -p:Platform=x64` now fails with
+  MSB4126 instead of resolving to Any CPU.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added
