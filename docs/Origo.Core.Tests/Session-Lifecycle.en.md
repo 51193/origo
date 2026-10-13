@@ -315,7 +315,6 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `Contains_ForegroundKey_TrueWhenSessionActive` | Contains(ForegroundKey) true when foreground exists | ISessionManager |
 | `Keys_IncludesForegroundAndBackground` | Keys includes both foreground and background keys | ISessionManager |
 | `ProcessAllSessions_OnlyProcessesSyncedSessions` | ProcessAllSessions only processes sessions with syncProcess=true | ISessionManager |
-| `SessionTopology_WellKnownKey_Exists` | WellKnownKeys.SessionTopology constant exists | Constant definition |
 | `SwitchForeground_AutoHandlesBackgroundSessionCollision` | SwitchForeground auto-handles background levelId collision | ISessionManager |
 | `CreateForegroundSession_DifferentLevelId_Succeeds` | Background with different levelId can be created then switch foreground | ISessionManager |
 | `AppendBackgroundPayloads_DifferentLevelIds_IncludesBothInPayload` | Payload includes foreground and background with different levelIds | ISessionManager |
