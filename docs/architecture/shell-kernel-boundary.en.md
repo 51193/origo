@@ -281,8 +281,10 @@ first-release behavior stated. Packaged consumption (#42) is in place:
 `scripts/package-consumer-smoke.sh` restores only the Core + Adapter NuGet
 packages in an isolated temporary directory, builds with warnings as errors,
 proves kernel compile-asset isolation with a CS0246 negative probe, verifies
-the analyzer asset and kernel runtime assembly, and starts `OrigoDefaultEntry`
-headlessly. It runs in the normal CI Godot job and local `scripts/ci.sh`.
+the kernel runtime assembly, and starts `OrigoDefaultEntry` headlessly; the
+five-package set, analyzer asset, and Godot SDK pin of the packed feed are
+asserted by `scripts/validate-release-packages.sh`, which the smoke runs
+against the same feed. It runs in the normal CI Godot job and local `scripts/ci.sh`.
 Release (#43) remains follow-up work.
 
 ## Verification and gates
@@ -292,7 +294,7 @@ Release (#43) remains follow-up work.
 | Compilation boundary | A fresh shell-only consumer compiles; referencing kernel types fails |
 | Behavior contracts | Lifecycle ordering, observer recovery, save/load, and fail-fast semantics remain unchanged |
 | Compatibility tests | Shell entry lifecycle/observer/fail-fast/session-state contracts and golden v1 save-format tests pass in the normal and release test runs |
-| Package integrity | No kernel compile-asset leakage; shell runtime and analyzer assets are complete; the `scripts/package-consumer-smoke.sh` local-feed restore, negative compile probe, and Godot headless startup pass |
+| Package integrity | No kernel compile-asset leakage; shell runtime and analyzer assets are complete; `scripts/validate-release-packages.sh` asserts the five-package set and the analyzer asset on the smoke's local feed, and the smoke's restore, negative compile probe, and Godot headless startup pass |
 | Compatibility matrix | Stable shell contracts pass contract tests on current kernels |
 | Godot | Headless and editor verification covers Node entry discovery, startup, save recovery, and exit cleanup |
 | API baseline | Unapproved shell API changes fail CI |

@@ -53,6 +53,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `CreateLazy_DoesNotCallExpanderUntilAccessed` | Lazy node does not call expander until accessed | DataSource |
 | `CreateLazy_ExpandsOnlyOnce` | Lazy node expands only once across multiple accesses | DataSource |
 | `JsonCodec_RoundTrip_ComplexTree` | Complex tree with string/number/boolean/null/array/nested object JSON round-trip | DataSource |
+| `JsonCodec_Encode_CoversEveryDataSourceNodeKind` | Every declared `DataSourceNodeKind` member is written and read back as that kind (the assertion fails if a member is added without updating the JSON writer) | DataSource |
 | `JsonCodec_RoundTrip_TopLevelArray` | Top-level array JSON round-trip, element order preserved | DataSource |
 | `JsonCodec_Decode_NestedObjectsAreLazy` | Decoded nested objects are lazy, accessing inner keys evaluates correctly | DataSource |
 | `JsonCodec_Decode_PrimitivesAreNotLazy` | Decoded primitives are the corresponding Kind directly, not lazy | DataSource |

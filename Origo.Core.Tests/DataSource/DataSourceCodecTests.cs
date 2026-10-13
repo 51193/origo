@@ -149,4 +149,33 @@ public class DataSourceCodecTests
         Assert.Contains("keep: yes", encoded);
         Assert.DoesNotContain("drop", encoded);
     }
+
+    [Fact]
+    public void JsonCodec_Encode_CoversEveryDataSourceNodeKind()
+    {
+        var codec = TestFactory.CreateJsonCodec();
+
+        var nodes = new (DataSourceNodeKind Kind, DataSourceNode Node)[]
+        {
+            (DataSourceNodeKind.Map, DataSourceNode.CreateObject().Add("k", DataSourceNode.CreateString("v"))),
+            (DataSourceNodeKind.Array, DataSourceNode.CreateArray().Add(DataSourceNode.CreateString("v"))),
+            (DataSourceNodeKind.Text, DataSourceNode.CreateString("v")),
+            (DataSourceNodeKind.Number, DataSourceNode.CreateNumber("42")),
+            (DataSourceNodeKind.Bool, DataSourceNode.CreateBoolean(true)),
+            (DataSourceNodeKind.Null, DataSourceNode.CreateNull()),
+        };
+
+        // The JSON writer switches on the kind without a fallback arm, so a
+        // declared kind that no case handles would emit an incomplete value.
+        // Every declared member must appear here; adding one without updating
+        // the writer fails this assertion.
+        Assert.Equal(Enum.GetValues<DataSourceNodeKind>().Length, nodes.Length);
+
+        foreach (var (kind, node) in nodes)
+        {
+            Assert.Equal(kind, node.Kind);
+            var decoded = codec.Decode(codec.Encode(DataSourceNode.CreateObject().Add("value", node)));
+            Assert.Equal(kind, decoded["value"].Kind);
+        }
+    }
 }

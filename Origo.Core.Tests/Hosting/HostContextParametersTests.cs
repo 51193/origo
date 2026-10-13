@@ -90,10 +90,12 @@ public class HostContextParametersTests
     {
         var (runtime, dataSourceIo, metaAccess, pathResolver) = CreateInfrastructure();
 
-        Assert.Throws<ArgumentNullException>(() =>
+        var missingHostOptions = Assert.Throws<ArgumentNullException>(() =>
             HostContextParameters.Create(runtime, dataSourceIo, metaAccess, pathResolver, (OrigoHostOptions)null!));
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.Equal("options", missingHostOptions.ParamName);
+        var missingAdapterOptions = Assert.Throws<ArgumentNullException>(() =>
             HostContextParameters.Create(runtime, dataSourceIo, metaAccess, pathResolver, (AdapterContextOptions)null!));
+        Assert.Equal("options", missingAdapterOptions.ParamName);
     }
 
     private static (OrigoRuntime Runtime, IDataSourceIoGateway DataSourceIo, IFileMetaAccess MetaAccess,

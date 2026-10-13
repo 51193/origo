@@ -123,9 +123,10 @@ first; every step below then applies to that tag:
 - Pack `Origo.Core.Contracts`, `Origo.Core.Kernel`, `Origo.Core`,
   `Origo.GodotAdapter`, and `Origo.ConsoleBridge` as NuGet packages;
 - Run `scripts/validate-release-packages.sh` to validate the five package
-  identities and versions, exact shell/kernel pairing, dependency direction,
-  analyzer assets, and kernel isolation; any missing, unexpected, or mismatched
-  package aborts the release;
+  identities and versions, exact shell/kernel pairing, dependency direction
+  (including the adapter's `GodotSharp` dependency matching the repository's
+  Godot.NET.Sdk pin), analyzer assets, and kernel isolation; any missing,
+  unexpected, or mismatched package aborts the release;
 - Build a documentation snapshot archive containing `docs/`, `AGENTS.md`, and
   `CHANGELOG.md`;
 - Attach packages and the documentation snapshot to the GitHub Release, marked
