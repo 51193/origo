@@ -150,6 +150,7 @@ public class DataSourceCodecTests
         Assert.DoesNotContain("drop", encoded);
     }
 
+    /// <summary>Verifies that JSON encoding and decoding cover every declared data-source node kind.</summary>
     [Fact]
     public void JsonCodec_Encode_CoversEveryDataSourceNodeKind()
     {

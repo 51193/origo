@@ -18,6 +18,7 @@ namespace Origo.Core.Tests;
 /// </summary>
 public class HostContextParametersTests
 {
+    /// <summary>Verifies that the Core host options map to the matching context parameters.</summary>
     [Fact]
     public void Create_ForOrigoHostOptions_MapsEveryContextParameter()
     {
@@ -53,6 +54,7 @@ public class HostContextParametersTests
         Assert.Same(configureConverters, parameters.ConfigureConverters);
     }
 
+    /// <summary>Verifies that the adapter host options map to the matching context parameters.</summary>
     [Fact]
     public void Create_ForAdapterContextOptions_MapsEveryContextParameter()
     {
@@ -85,6 +87,7 @@ public class HostContextParametersTests
         Assert.Same(configureConverters, parameters.ConfigureConverters);
     }
 
+    /// <summary>Verifies that both host option overloads reject null options.</summary>
     [Fact]
     public void Create_WithoutOptions_Throws()
     {

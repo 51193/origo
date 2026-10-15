@@ -180,6 +180,12 @@ but must observe the following whitelist principle:
     (e.g. `MemorySndSceneHostTests`); only the host-acquisition path differs. Precedent:
     `BackgroundSessionTests.FullMemorySndSceneHost_LoadFromMetaList_ClearsAndLoads`.
 
+11. **Core/adapter host option projection contract**: `HostContextParametersTests` may call the internal
+    projection factory directly to verify that both shell option records map every distinct input to the
+    matching `SndContextParameters` value. The factory is the only shared Core-to-kernel projection point;
+    no public host interface exposes the complete parameter set, and exercising the full startup paths
+    would couple this isolated mapping contract to unrelated file, discovery, and bootstrap behavior.
+
 **Recorded namespace deviation**: `Origo.GodotAdapter.Integration.Tests` uses
 `Origo.GodotAdapter.Integration.Tests.Runner` / `.TestSupport` sub-namespaces for its `Runner/`
 (lightweight test runner, `[GlobalClass]` Godot node) and `TestSupport/` (integration test fixtures)
