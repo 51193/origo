@@ -39,7 +39,7 @@ WEEKLY_WORKFLOW = ROOT / ".github" / "workflows" / "weekly-build.yml"
 RELEASE_ACTION = "softprops/action-gh-release"
 RESOLVED_TAG = "${{ steps.resolve-tag.outputs.tag }}"
 RESOLVED_TAG_REF = f"refs/tags/{RESOLVED_TAG}"
-WRITE_BACK_CONDITION = "changed == 'true'"
+WRITE_BACK_CONDITION = "steps.release-commit.outputs.changed == 'true'"
 
 
 def fail(message: str) -> None:
@@ -197,10 +197,21 @@ def main() -> int:
 SUBSTITUTION = re.compile(r"\bre\.subn?\(|\.replace\(|\bsubn?\(")
 BUMP_TARGET = re.compile(r"""["']Directory\.Build\.props["']""")
 WRITE_OP = re.compile(r"""open\([^)]*["'][wa]|write_text\(|\.write\(""")
+STAMP_MAPPINGS = re.compile(
+    r'for element, replacement in \(\s*\("Version", version\),\s*'
+    r'\("AssemblyVersion", assembly_version\),\s*'
+    r'\("FileVersion", assembly_version\),\s*\)',
+    re.S,
+)
+MATCHING_XML_SUBSTITUTION = re.compile(
+    r"""re\.subn\(\s*rf["']\(<\{element\}>\)\[\^<\]\+\(</\{element\}>\)["']"""
+)
 COMMENT = re.compile(r"(?:^|\s)#[^\n]*", re.M)
 SHELL_SEPARATOR = re.compile(r"&&|\|\||[;\n|&]")
 GROUPING = "(){}"
 EMBEDDED_COMMAND = re.compile(r"\bgit\b[^\n]*\bpush\b")
+GIT_PUSH = re.compile(r"\bgit\s+push\b")
+GIT_PUSH_CANDIDATE = re.compile(r"\bgit\b.*\bpush\b", re.S)
 
 
 def strip_comments(script: str) -> str:
@@ -224,10 +235,17 @@ def _iter_fragment_pushes(fragment: str, depth: int = 0) -> Iterator[list[str]]:
     ignored. A quoted argument that itself contains a command (`bash -c "git
     push ..."`) is scanned recursively, so a push cannot hide inside a wrapper.
     """
+    # Most fragments are not push commands; don't ask shlex to interpret the
+    # unrelated Python/heredoc and expression syntax used elsewhere in a step.
+    # Candidate fragments are still parsed strictly, so malformed push syntax
+    # cannot fall back to whitespace tokenization.
+    if not GIT_PUSH_CANDIDATE.search(fragment):
+        return
+
     try:
         tokens = shlex.split(fragment)
-    except ValueError:
-        tokens = fragment.split()
+    except ValueError as exc:
+        raise ValueError(f"malformed shell fragment: {exc}") from exc
 
     index = 0
     while index < len(tokens):
@@ -263,8 +281,50 @@ def push_arguments(script: str) -> Iterator[list[str]]:
     wherever it sits: after `&&`, behind a `bash -c` wrapper, inside a loop
     body, or on its own line.
     """
-    for fragment in SHELL_SEPARATOR.split(script):
+    normalized_script = re.sub(r"\\\r?\n", " ", script)
+    for fragment in SHELL_SEPARATOR.split(normalized_script):
         yield from _iter_fragment_pushes(fragment)
+
+
+def contains_push_in_command_substitution(script: str) -> bool:
+    """Return true when a push occurs in `$()` or backtick command syntax.
+
+    The workflow guard deliberately fails closed on these constructs instead
+    of trying to infer their evaluated shell command and refspecs.
+    """
+    depth = 0
+    backtick = False
+    single_quoted = False
+    double_quoted = False
+    index = 0
+    while index < len(script):
+        if not double_quoted and script[index] == "'":
+            single_quoted = not single_quoted
+            index += 1
+            continue
+        if not single_quoted and script[index] == '"':
+            double_quoted = not double_quoted
+            index += 1
+            continue
+        if single_quoted:
+            index += 1
+            continue
+        if script[index] == "`":
+            backtick = not backtick
+            index += 1
+            continue
+        if not backtick and script.startswith("$(", index):
+            depth += 1
+            index += 2
+            continue
+        if depth and script[index] == "(":
+            depth += 1
+        elif depth and script[index] == ")":
+            depth -= 1
+        if (depth or backtick) and GIT_PUSH.match(script, index):
+            return True
+        index += 1
+    return False
 
 
 def unsafe_push_reasons(arguments: list[str]) -> list[str]:
@@ -329,7 +389,21 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
     ]
 
     for name, script in steps:
-        for arguments in push_arguments(script):
+        if contains_push_in_command_substitution(script):
+            errors.append(
+                f"{relative} step {name!r} contains a git push inside command "
+                "substitution; the guard refuses to infer its evaluated "
+                "refspecs. Put the push in a directly validated shell command."
+            )
+        try:
+            pushes = list(push_arguments(script))
+        except ValueError as exc:
+            errors.append(
+                f"{relative} step {name!r} contains malformed shell; refusing "
+                f"to validate git pushes ({exc})."
+            )
+            continue
+        for arguments in pushes:
             for reason in unsafe_push_reasons(arguments):
                 errors.append(
                     f"{relative} step {name!r} {reason}; every push in this "
@@ -357,14 +431,16 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
                 "the version elements, so the tagged commit would not match "
                 "its tag."
             )
-        for stamp in ("Version", "AssemblyVersion", "FileVersion"):
-            if not re.search(rf"""["']{stamp}["']""", script):
-                errors.append(
-                    f"{relative} must replace the {stamp} element inside the "
-                    "step that rewrites Directory.Build.props, so the tagged "
-                    "commit already matches its tag and the release pipeline "
-                    "has nothing to write back."
-                )
+        if (
+            not STAMP_MAPPINGS.search(script)
+            or not MATCHING_XML_SUBSTITUTION.search(script)
+            or "if count != 1:" not in script
+        ):
+            errors.append(
+                f"{relative} must substitute Version, AssemblyVersion, and "
+                "FileVersion into their matching XML elements and require one "
+                "match for each, so the tagged commit already matches its tag."
+            )
 
     dispatch_scripts = [
         script for script in scripts if "gh workflow run release.yml" in script
@@ -408,12 +484,15 @@ def check_release_writeback_is_conditional(workflow: dict, errors: list[str]) ->
         if not any(unsafe_push_reasons(arguments) for arguments in push_arguments(script)):
             continue
         condition = str(step.get("if") or "")
-        if WRITE_BACK_CONDITION not in condition:
+        normalized_condition = condition.strip()
+        if normalized_condition.startswith("${{") and normalized_condition.endswith("}}"):
+            normalized_condition = normalized_condition[3:-2].strip()
+        if normalized_condition != WRITE_BACK_CONDITION:
             errors.append(
                 f"release step {index} ({str(step.get('name') or 'unnamed')!r}) "
-                "pushes a branch and must stay guarded by "
-                f"{WRITE_BACK_CONDITION!r}, so a snapshot whose tag already "
-                "carries the version stamps never pushes main."
+                "pushes a branch and its condition must be exactly "
+                f"{WRITE_BACK_CONDITION!r}, so no other expression can make "
+                "the version write-back unconditional."
             )
 
 

@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Weekly snapshot workflow guard fails closed on unsafe shell changes** — branch pushes hidden in command substitutions, malformed push syntax, stamp names without matching XML substitutions, and weakened release write-back conditions are rejected by the tracked workflow validator.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added
@@ -24,7 +28,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Persistence console commands** — a Core `SndContext` registers `list_saves`, `save`, `load`, `delete_save`, and `switch_level` handlers on the runtime console. `save`/`load`/`switch_level` queue through the existing frame-driven `ISndSaveOperations` path; `list_saves` prints display metadata; `delete_save` completes synchronously after its safety guards pass.
 - **Persistence workflow observability** — `ISndDeferredActions.IsPersistenceIdle` reports whether any save/load/level-switch/bootstrap request is pending or executing, and `ISndLifecycleOperations.IsBootstrapCompleted` reports whether the bootstrap main-menu entry load mounted successfully.
 
-- **Weekly snapshot build workflow** — the Monday 02:30 UTC scheduled run publishes a `-nightly.YYYYMMDD` build only when the week that just ended ([previous Monday 00:00, current Monday 00:00) UTC) contains new commits, ignoring its own version-bump commits so idle weeks publish nothing; manual dispatch additionally covers the current partial week, and only `main` can run it. A publish derives the base version from `<Version>` (so `0.0.10` to `0.0.11` moves tag, package version, and assembly metadata together), bumps `<Version>` plus `AssemblyVersion` / `FileVersion` to that base, commits all three stamps, tags that commit as `v<base>-nightly.YYYYMMDD`, and pushes only that tag, so a snapshot never writes to `main` and branch rules that require a pull request cannot block it; it then starts the Release workflow explicitly with `gh workflow run release.yml -f tag=<tag>`: a tag pushed with `GITHUB_TOKEN` does not fire the `push` trigger and `workflow_dispatch` is the documented exception, so the formal pipeline is reused without storing a personal access token. Automatic snapshots are published as pre-releases (the weekly job asks for one), so a snapshot never takes over as the repository's Latest release, while a hand-pushed tag keeps the release state chosen on GitHub.
 - **Local agent work buffer (`_origo_local/`)** — scans, reviews, and design sessions can record structured findings and handoff state in a git-ignored single-book buffer under `_origo_local/`; implementation sessions claim the book and may close it only after the full development loop (source, tests, `scripts/ci.sh`, post-commit commit lint, changelog, docs sync) is complete. The entry summary is in `AGENTS.md` and the full tracked protocol in `docs/META.*`; the repository root `.gitignore` keeps the buffer out of version control.
 - **`OrigoDefaultEntry.ConfigureStrategies` hook** — derived Godot entries can register strategies manually before `SndContext.Bootstrap` freezes the ordering registry, covering `AutoDiscoverStrategies = false` and strategies that auto-discovery cannot reach.
 - **Layered development checks and work identity validation** — branch/worktree names identify the work type, creator, creation date, and purpose; `scripts/check.sh` provides explicit `plan`, `quick`, `affected`, and `full` levels without weakening the final full CI gate.

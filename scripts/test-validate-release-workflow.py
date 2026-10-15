@@ -27,6 +27,7 @@ WORKFLOW_PATH = ROOT / ".github" / "workflows" / "weekly-build.yml"
 RELEASE_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "release.yml"
 
 PUSH_LINE = 'git push origin "refs/tags/${TAG}"'
+XML_REPLACEMENT = 'rf"(<{element}>)[^<]+(</{element}>)"'
 REPLACEMENT_LOOP = re.compile(r"for element, replacement in \(\n(?:.*\n)*?\s*\):")
 DISPATCH_STEP = "      - name: Dispatch the release pipeline for the snapshot tag"
 STAMPS = ("Version", "AssemblyVersion", "FileVersion")
@@ -113,6 +114,18 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
         )
         self.assert_reports(self.errors_for(mutated), "refs/heads/main")
 
+    def test_branch_push_inside_command_substitution_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "result=$(git push origin refs/heads/main)")
+        )
+        self.assert_reports(errors, "command substitution")
+
+    def test_malformed_shell_is_rejected_without_fallback_parsing(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'git push origin "refs/tags/${TAG}')
+        )
+        self.assert_reports(errors, "malformed shell")
+
     def test_branch_push_with_a_path_option_is_rejected(self) -> None:
         errors = self.errors_for(
             self.mutate(PUSH_LINE, 'git -C . push origin "refs/heads/main"')
@@ -186,6 +199,15 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
         errors = self.errors_for(self.mutate("re.subn(", "noop("))
         self.assert_reports(errors, "without substituting")
 
+    def test_wrong_xml_closing_element_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                XML_REPLACEMENT,
+                'rf"(<{element}>)[^<]+(</Wrong{element}>)"',
+            )
+        )
+        self.assert_reports(errors, "matching XML element")
+
 
 class ReleaseWritebackGuardTests(GuardFixtureCase):
     workflow_path = RELEASE_WORKFLOW_PATH
@@ -201,6 +223,13 @@ class ReleaseWritebackGuardTests(GuardFixtureCase):
     def test_writeback_without_its_condition_is_rejected(self) -> None:
         errors = self.errors_for(self.mutate(WRITE_BACK_IF, "if: always()"))
         self.assert_reports(errors, GUARD.WRITE_BACK_CONDITION)
+
+    def test_writeback_condition_cannot_be_weakened_by_boolean_or(self) -> None:
+        mutated = self.mutate(
+            WRITE_BACK_IF,
+            "if: always() || steps.release-commit.outputs.changed == 'true'",
+        )
+        self.assert_reports(self.errors_for(mutated), "condition must be exactly")
 
     def test_writeback_with_a_main_shorthand_and_no_condition_is_rejected(self) -> None:
         mutated = self.mutate(WRITE_BACK_IF, "if: always()")
