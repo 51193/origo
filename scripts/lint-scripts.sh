@@ -85,6 +85,9 @@ if command -v python3 >/dev/null 2>&1; then
     fi
     if python3 -c "import yaml" >/dev/null 2>&1; then
         python3 scripts/validate-release-workflow.py
+        # Negative fixtures: the guard above must still reject a snapshot
+        # workflow that pushes a branch or only names the version stamps.
+        PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-validate-release-workflow.py
     else
         echo "WARNING: PyYAML is not installed; skipping release-workflow guard."
     fi

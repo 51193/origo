@@ -56,11 +56,15 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   from `<Version>` in `Directory.Build.props`.
 - A publish bumps `<Version>` to the snapshot version, derives
   `AssemblyVersion` / `FileVersion` from its numeric base, commits all three
-  stamps to `main`, tags that commit, and then starts the Release workflow with
-  `gh workflow run release.yml -f tag=<tag>`. The explicit dispatch is required
-  because a tag pushed with `GITHUB_TOKEN` does not trigger `push` workflows and
-  `workflow_dispatch` is the documented exception, so no personal access token
-  or GitHub App is needed.
+  stamps, tags that commit, and pushes **only the tag**; it then starts the
+  Release workflow with `gh workflow run release.yml -f tag=<tag>`. The tagged
+  commit already carries the snapshot version stamps, so the release pipeline
+  finds nothing to rewrite and never creates a release commit. A snapshot
+  therefore never writes to `main`, branch rules that require a pull request
+  cannot block one, and `main` keeps its own `<Version>`. The explicit dispatch
+  is required because a tag pushed with `GITHUB_TOKEN` does not trigger `push`
+  workflows and `workflow_dispatch` is the documented exception, so no personal
+  access token or GitHub App is needed.
 - The base version is the numeric part of the current `<Version>`, so bumping the
   base (`0.0.10-nightly.YYYYMMDD` to `0.0.11-nightly.YYYYMMDD` or `0.0.11`) moves
   the snapshot tag, the NuGet package version, and the assembly metadata
