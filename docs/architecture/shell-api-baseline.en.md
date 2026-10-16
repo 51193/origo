@@ -55,7 +55,7 @@ There is no previous stable shell package before the first 0.1.0 release, so pre
 
 | Test Method | Verified Behavior |
 |-------------|-------------------|
-| `TrackedBaseline_ContainsGeneratedSurfaceAndExcludesKernel` | The tracked baseline parses into four shell assemblies, carries the generated Contracts accessor, the adapter's generated nested signal types, and the ConsoleBridge server surface, and no API line in any assembly references `Origo.Core.Kernel`. |
+| `TrackedBaseline_ContainsGeneratedSurfaceAndExcludesKernel` | The tracked baseline parses into four shell assemblies, carries the generated Contracts accessor, the adapter's generated nested `MethodName` / `PropertyName` / `SignalName` types, and the ConsoleBridge server surface, and no API line in any assembly references `Origo.Core.Kernel`. |
 
 ### InventoryBuilderTests
 
