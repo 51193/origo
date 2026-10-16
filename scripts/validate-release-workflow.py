@@ -24,20 +24,21 @@ shell quoting rules so a `#` inside a string or a parameter expansion never
 hides code, `[[ ... ]]` tests are not mistaken for commands, a command whose
 name is a variable or an expansion is rejected instead of skipped, so are a
 command whose own program can execute its arguments (`eval`, `sed`, `awk`,
-`perl`, `xargs`), text piped into a shell, a shell alias, and code a step runs
-from another file (a relative, absolute, or quoted path, a `make` target, a
-shell `-c` payload, or a path held in a variable). The version-stamp checks
-require the substitution to write back what it substituted, through the loop's
-own bindings, and to fail on a missing element. Limits that remain: a push
-moved into a third-party action (`uses:`), into inline code that spawns `git`,
-or into a repository script the release workflow runs by design is outside the
-inspected shell text; a refspec needs a literal `refs/tags/` prefix rather than
-a variable, because a variable could name a branch; and a rewrite that hoists
-the XML pattern or extracts the substitution into a helper has to extend this
-guard.
+`perl`, `xargs`), text piped into a shell, a shell fed from a file or a process
+substitution, a shell or git alias, a ref written through the GitHub API, a
+dispatch of another workflow, a local action or reusable workflow, and code a
+step runs from another file (a relative, absolute, or quoted path, a `make`
+target, a shell `-c` payload, or a path held in a variable). The version-stamp
+checks require the substitution to write back what it substituted, through the
+loop's own bindings, and to fail on a missing element. Limits that remain: a
+push moved into a non-local third-party action (`uses:`) or into inline code
+that spawns `git` is outside the inspected shell text; the release workflow runs
+repository scripts by design, so a push inside one of those scripts is only
+caught when the write-back condition is bypassed; a refspec needs a literal
+`refs/tags/` prefix rather than a variable, because a variable could name a
+branch; and a rewrite that hoists the XML pattern or extracts the substitution
+into a helper has to extend this guard.
 
-Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
-build before these invariants fail CI.
 """
 
 from __future__ import annotations
@@ -302,6 +303,23 @@ DELEGATED_VARIABLE = re.compile(
 )
 # Text piped into a shell is executed, so the guard cannot read what runs.
 PIPES_TO_SHELL = re.compile(r"\|\s*(?:bash|sh|zsh|dash)\b")
+# A shell fed from a file or a process substitution runs commands from outside.
+SHELL_READS_FILE = re.compile(
+    r"""(?:^|[\s;&|(){}])(?:bash|sh|zsh|dash|source|\.)[ \t]*(?:<[ \t]*[^\s<]|<\(|<<<)"""
+)
+# A shell whose `-c` text comes from a variable runs text the guard cannot read.
+SHELL_VARIABLE_PAYLOAD = re.compile(
+    r"""(?:^|[\s;&|(){}])(?:bash|sh|zsh|dash)[ \t]+-c[ \t]+["']?\$"""
+)
+# Git aliases make a later git command name unresolvable.
+GIT_ALIAS = re.compile(r"\bgit\b[^\n]*\balias\.[\w-]+\s*=")
+GIT_CONFIG_ALIAS = re.compile(r"\bgit[ \t]+config[ \t]+alias\.")
+# Writing a ref through the API bypasses the push checks.
+GH_REF_WRITE = re.compile(r"\bgh[ \t]+api\b[^\n]*refs/heads/")
+# Dispatching another workflow runs code this guard does not validate.
+GH_OTHER_WORKFLOW = re.compile(
+    r"\bgh[ \t]+workflow[ \t]+run[ \t]+(?!release\.yml)[\w.-]+"
+)
 # Aliases make a later command name unresolvable.
 ALIAS_DEFINITION = re.compile(r"(?:^|[\s;&|(){}])alias[ \t]")
 # Keywords and assignments that may precede the command word of a fragment.
@@ -626,15 +644,18 @@ def unanalyzable_push_reason(fragment: str) -> str | None:
     if command == "git":
         cursor = 1
         while cursor < len(tokens) and tokens[cursor].startswith("-"):
-            cursor += 1
-        if cursor < len(tokens) and _bare(tokens[cursor]) != "push":
-            unresolved = tokens[cursor]
-            if ("$" in unresolved or "`" in unresolved) and _mentions_push(
-                tokens, cursor
-            ):
+            takes_value = (
+                cursor + 1 < len(tokens)
+                and not tokens[cursor + 1].startswith("-")
+                and _bare(tokens[cursor + 1]) != "push"
+            )
+            cursor += 2 if takes_value else 1
+        if cursor < len(tokens):
+            subcommand = tokens[cursor]
+            if "$" in subcommand or "`" in subcommand:
                 return (
-                    f"passes {unresolved!r} before `push`, so the pushed refspecs "
-                    "are unknown"
+                    f"runs `git {subcommand}`, a subcommand the guard cannot "
+                    "resolve"
                 )
     return None
 
@@ -677,6 +698,78 @@ def unresolved_command_reasons(script: str) -> Iterator[str]:
         reason = unresolved_command_reason(fragment)
         if reason:
             yield reason
+
+
+def expansion_git_subcommand_reason(script: str) -> str | None:
+    """Describe a git command whose subcommand comes from an expansion.
+
+    `git "$SUB" origin main` runs whatever the variable holds, so the guard
+    cannot tell whether it pushes; the fragment is rejected even when it never
+    spells out `push`.
+    """
+    for fragment in normalized_fragments(script):
+        if not re.search(r"\bgit\b", fragment):
+            continue
+        try:
+            tokens = shlex.split(fragment)
+        except ValueError as exc:
+            raise ValueError(f"malformed shell fragment: {exc}") from exc
+        if _command_word(tokens) != "git":
+            continue
+        cursor = 1
+        while cursor < len(tokens) and tokens[cursor].startswith("-"):
+            takes_value = (
+                cursor + 1 < len(tokens)
+                and not tokens[cursor + 1].startswith("-")
+                and _bare(tokens[cursor + 1]) != "push"
+            )
+            cursor += 2 if takes_value else 1
+        if cursor < len(tokens) and ("$" in tokens[cursor] or "`" in tokens[cursor]):
+            return (
+                f"runs `git {tokens[cursor]}`, a subcommand the guard cannot "
+                "resolve"
+            )
+    return None
+
+
+def unreadable_code_reasons(script: str) -> list[str]:
+    """Describe step text that runs code outside this workflow.
+
+    A shell fed from a pipe, a file, or a process substitution, a shell whose
+    `-c` text is a variable, a shell alias, a git alias, and a ref written
+    through the GitHub API all execute or perform something the fragment and
+    push checks never see, so the step is rejected instead of skipped.
+    """
+    reasons = []
+    if PIPES_TO_SHELL.search(script):
+        reasons.append(
+            "pipes text into a shell, which executes command text the guard "
+            "cannot read"
+        )
+    if SHELL_READS_FILE.search(script):
+        reasons.append(
+            "feeds a file or a process substitution to a shell, so the commands "
+            "it runs are outside this workflow"
+        )
+    if SHELL_VARIABLE_PAYLOAD.search(script):
+        reasons.append(
+            "runs a shell whose `-c` text comes from a variable, which the guard "
+            "cannot read"
+        )
+    if GIT_ALIAS.search(script) or GIT_CONFIG_ALIAS.search(script):
+        reasons.append("defines a git alias, which the guard cannot follow")
+    if GH_REF_WRITE.search(script):
+        reasons.append(
+            "writes a ref through the GitHub API, which bypasses the push checks"
+        )
+    if GH_OTHER_WORKFLOW.search(script):
+        reasons.append(
+            "starts a workflow the guard does not validate; only release.yml "
+            "may be dispatched"
+        )
+    if ALIAS_DEFINITION.search(script):
+        reasons.append("defines a shell alias, which the guard cannot follow")
+    return reasons
 
 
 def contains_push_in_command_substitution(script: str) -> bool:
@@ -903,7 +996,10 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
             pushes = list(push_arguments(script))
             unresolved = list(unanalyzable_push_reasons(script))
             unresolved.extend(unresolved_command_reasons(script))
-            unresolved.extend(unseeable_push_reasons(script))
+            unresolved.extend(unreadable_code_reasons(script))
+            git_expansion = expansion_git_subcommand_reason(script)
+            if git_expansion:
+                unresolved.append(git_expansion)
         except ValueError as exc:
             errors.append(
                 f"{relative} step {name!r} contains malformed shell; refusing "
@@ -924,6 +1020,20 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
                 )
 
     check_stamp_rewrite(errors, relative, steps)
+
+    for job in (workflow.get("jobs") or {}).values():
+        if not isinstance(job, dict):
+            continue
+        for index, step in enumerate(job.get("steps") or []):
+            if not isinstance(step, dict):
+                continue
+            action = str(step.get("uses") or "")
+            if action.startswith("./"):
+                errors.append(
+                    f"{relative} step {index} runs the local action or reusable "
+                    f"workflow {action!r}; code this guard does not inspect "
+                    "cannot be validated, so keep the publish steps here."
+                )
 
     scripts = [script for _, script in steps]
 
@@ -976,6 +1086,9 @@ def check_release_writeback_is_conditional(workflow: dict, errors: list[str]) ->
                 unresolved = list(unanalyzable_push_reasons(script))
                 unresolved.extend(unresolved_command_reasons(script))
                 unresolved.extend(unseeable_push_reasons(script))
+                git_expansion = expansion_git_subcommand_reason(script)
+                if git_expansion:
+                    unresolved.append(git_expansion)
             except ValueError as exc:
                 errors.append(
                     f"release workflow job {job_name!r} step {name!r} contains "
