@@ -10,6 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Weekly snapshot build workflow** — the Monday 02:30 UTC scheduled run
+  publishes a `-nightly.YYYYMMDD` pre-release for the week that just ended
+  when that window contains new commits, and a manual dispatch also covers
+  the current partial week. A publish writes `<Version>`,
+  `AssemblyVersion`, and `FileVersion` to the snapshot version, tags that
+  commit, and pushes only the tag: the tagged commit already carries those
+  stamps, so the release pipeline finds nothing to rewrite and a snapshot
+  never writes to `main`, which keeps branch rules that require a pull
+  request from blocking it. The job then starts `release.yml` explicitly,
+  because a tag pushed with `GITHUB_TOKEN` does not trigger `push`
+  workflows.
+
 ### Removed
 
 - **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
