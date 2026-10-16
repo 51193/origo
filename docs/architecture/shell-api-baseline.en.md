@@ -55,18 +55,18 @@ There is no previous stable shell package before the first 0.1.0 release, so pre
 
 | Test Method | Verified Behavior |
 |-------------|-------------------|
-| `TrackedBaseline_ContainsGeneratedSurfaceAndExcludesKernel` | The tracked baseline parses into the four shell assemblies, carries generated Contracts members and adapter signatures, and contains no kernel assembly. |
+| `TrackedBaseline_ContainsGeneratedSurfaceAndExcludesKernel` | The tracked baseline parses into four shell assemblies, carries the generated Contracts accessor, the adapter's generated nested signal types, and the ConsoleBridge server surface, and no API line in any assembly references `Origo.Core.Kernel`. |
 
 ### InventoryBuilderTests
 
 | Test Method | Verified Behavior |
 |-------------|-------------------|
-| `Build_IsDeterministicAndSorted` | Two equivalent assemblies emitted in different declaration order produce byte-identical JSON and the same ordered API lines. |
+| `Build_IsDeterministicAndSorted` | The same assembly compiled with its declarations in the opposite order serializes to byte-identical JSON and the same ordered API lines. |
 | `Verify_ReportsAddedRemovedAndChangedApi` | Verify mode reports removed-or-changed API lines and added API lines separately. |
 | `ComparePrevious_AllowsAdditionsAndRejectsRemovals` | Previous-package comparison accepts additions and rejects a removal. |
 | `Build_RejectsMissingAssemblyExplicitly` | A missing assembly path fails the build with a "was not found" error. |
 | `Build_RejectsForbiddenKernelReference` | A shell signature exposing an `Origo.Core.Kernel` type fails with "exposes kernel type". |
-| `Build_CollectsShellMemberKindsAndConstraints` | Enum, delegate, struct, and record kinds, generic constraints (`where T : class, new()`), nested types, and struct fields all enter the inventory. |
+| `Build_CollectsShellMemberKindsAndConstraints` | Enum, delegate, struct, and record kinds, generic constraints (`where T : class, new()`), nested types, a struct property, an event, a static field, and a protected member all enter the inventory. |
 | `Build_ReportsForbiddenMemberKinds` | Kernel references in methods, properties, fields, and events are each reported. |
 | `Build_ReportsEmptyNameAndMissingReferenceDirectory` | An empty assembly name, a missing reference directory, and a mismatched assembly name each fail explicitly. |
 | `Build_ResolvesTypeKindsWhenTheAssemblyReferencesSystemRuntime` | With `System.Runtime` available, enum and readonly-struct kinds resolve instead of falling back to a reference type. |
