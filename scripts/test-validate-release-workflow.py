@@ -496,6 +496,63 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
         )
         self.assert_reports(errors, "subcommand the guard cannot resolve")
 
+    def test_git_config_with_flags_alias_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE, "git config --global alias.p 'push origin main'; git p"
+            )
+        )
+        self.assert_reports(errors, "git alias")
+
+    def test_quoted_other_workflow_dispatch_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate("gh workflow run release.yml", "gh workflow run 'publish-main.yml'")
+        )
+        self.assert_reports(errors, "only release.yml")
+
+    def test_gh_api_write_with_continuation_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE,
+                "gh api -X POST \\\n            repos/o/r/git/refs "
+                "-f ref=refs/heads/main",
+            )
+        )
+        self.assert_reports(errors, "GitHub API")
+
+    def test_gh_api_read_is_accepted(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE,
+                "MAIN=$(gh api repos/o/r/git/refs/heads/main --jq .object.sha); "
+                'git push origin "refs/tags/${TAG}"',
+            )
+        )
+        self.assertEqual([], errors)
+
+    def test_git_transport_command_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "git send-pack origin refs/heads/main")
+        )
+        self.assert_reports(errors, "transport command")
+
+    def test_find_exec_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "find . -name 'publish.sh' -exec bash {} \\;")
+        )
+        self.assert_reports(errors, "through find")
+
+    def test_action_configured_to_write_a_ref_is_rejected(self) -> None:
+        mutated = self.mutate(
+            DISPATCH_STEP,
+            "      - name: script\n"
+            "        uses: actions/github-script@v7\n"
+            "        with:\n"
+            "          script: await exec.exec('git push origin refs/heads/main')\n\n"
+            f"{DISPATCH_STEP}",
+        )
+        self.assert_reports(self.errors_for(mutated), "to move or push a ref")
+
     def test_renamed_accumulator_is_accepted(self) -> None:
         mutated = self.mutate("content, count = re.subn(", "content, matches = re.subn(")
         mutated = mutated.replace("if count != 1:", "if matches != 1:", 1)

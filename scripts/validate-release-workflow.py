@@ -25,9 +25,10 @@ hides code, `[[ ... ]]` tests are not mistaken for commands, a command whose
 name is a variable or an expansion is rejected instead of skipped, so are a
 command whose own program can execute its arguments (`eval`, `sed`, `awk`,
 `perl`, `xargs`), text piped into a shell, a shell fed from a file or a process
-substitution, a shell or git alias, a ref written through the GitHub API, a
-dispatch of another workflow, a local action or reusable workflow, and code a
-step runs from another file (a relative, absolute, or quoted path, a `make`
+substitution, a shell or git alias, a ref written through the GitHub API, a git transport
+command other than push, a program run through find or an explicit makefile, a
+dispatch of another workflow, a local action or reusable workflow or an action
+configured to move a ref, and code a step runs from another file (a relative, absolute, or quoted path, a `make`
 target, a shell `-c` payload, or a path held in a variable). The version-stamp
 checks require the substitution to write back what it substituted, through the
 loop's own bindings, and to fail on a missing element. Limits that remain: a
@@ -313,13 +314,23 @@ SHELL_VARIABLE_PAYLOAD = re.compile(
 )
 # Git aliases make a later git command name unresolvable.
 GIT_ALIAS = re.compile(r"\bgit\b[^\n]*\balias\.[\w-]+\s*=")
-GIT_CONFIG_ALIAS = re.compile(r"\bgit[ \t]+config[ \t]+alias\.")
-# Writing a ref through the API bypasses the push checks.
-GH_REF_WRITE = re.compile(r"\bgh[ \t]+api\b[^\n]*refs/heads/")
+GIT_CONFIG_ALIAS = re.compile(r"\bgit[ \t]+config\b[^\n]*\balias\.[\w-]+")
+# Writing a ref through the API bypasses the push checks. A read of the same
+# endpoint is not a write, so the call needs a write verb or field.
+GH_API = re.compile(r"\bgh[ \t]+api\b[^\n]*")
+GH_API_WRITE = re.compile(
+    r"(?:-X|--method)[ \t]*[\"']?(?:POST|PATCH|PUT|DELETE)|(?:-f|--field|--input)[ \t]"
+)
+GH_REF_TARGET = re.compile(r"refs/heads/|pulls/\d+/merge")
 # Dispatching another workflow runs code this guard does not validate.
 GH_OTHER_WORKFLOW = re.compile(
-    r"\bgh[ \t]+workflow[ \t]+run[ \t]+(?!release\.yml)[\w.-]+"
+    r"\bgh[ \t]+workflow[ \t]+run[ \t]+[\"']?(?!release\.yml)[\w.-]+"
 )
+# Transport commands other than `push` can publish a branch as well.
+GIT_TRANSPORT = re.compile(r"\bgit[ \t]+send-pack\b")
+# A find or a make that runs a program is code the guard cannot read.
+FIND_DELEGATION = re.compile(r"\bfind\b[^\n]*-exec[^\n]*\b(?:bash|sh|python3?)\b")
+MAKE_FILE = re.compile(r"\bmake[ \t]+-f[ \t]")
 # Aliases make a later command name unresolvable.
 ALIAS_DEFINITION = re.compile(r"(?:^|[\s;&|(){}])alias[ \t]")
 # Keywords and assignments that may precede the command word of a fragment.
@@ -369,13 +380,14 @@ def unseeable_push_reasons(script: str) -> list[str]:
     """
     if not GIT_PUSH_CANDIDATE.search(script):
         return []
+    normalized = re.sub(r"\\\r?\n", " ", script)
     reasons = []
-    if PIPES_TO_SHELL.search(script):
+    if PIPES_TO_SHELL.search(normalized):
         reasons.append(
             "pipes text into a shell, which executes command text the guard "
             "cannot read"
         )
-    if ALIAS_DEFINITION.search(script):
+    if ALIAS_DEFINITION.search(normalized):
         reasons.append(
             "defines a shell alias while mentioning git and push, and the guard "
             "cannot follow aliases"
@@ -740,29 +752,46 @@ def unreadable_code_reasons(script: str) -> list[str]:
     through the GitHub API all execute or perform something the fragment and
     push checks never see, so the step is rejected instead of skipped.
     """
+    normalized = re.sub(r"\\\r?\n", " ", script)
     reasons = []
-    if PIPES_TO_SHELL.search(script):
+    if PIPES_TO_SHELL.search(normalized):
         reasons.append(
             "pipes text into a shell, which executes command text the guard "
             "cannot read"
         )
-    if SHELL_READS_FILE.search(script):
+    if SHELL_READS_FILE.search(normalized):
         reasons.append(
             "feeds a file or a process substitution to a shell, so the commands "
             "it runs are outside this workflow"
         )
-    if SHELL_VARIABLE_PAYLOAD.search(script):
+    if SHELL_VARIABLE_PAYLOAD.search(normalized):
         reasons.append(
             "runs a shell whose `-c` text comes from a variable, which the guard "
             "cannot read"
         )
-    if GIT_ALIAS.search(script) or GIT_CONFIG_ALIAS.search(script):
+    if GIT_ALIAS.search(normalized) or GIT_CONFIG_ALIAS.search(normalized):
         reasons.append("defines a git alias, which the guard cannot follow")
-    if GH_REF_WRITE.search(script):
+    for line in normalized.splitlines():
+        if (
+            GH_API.search(line)
+            and GH_API_WRITE.search(line)
+            and GH_REF_TARGET.search(line)
+        ):
+            reasons.append(
+                "writes a ref through the GitHub API, which bypasses the push checks"
+            )
+            break
+    if GIT_TRANSPORT.search(normalized) and "refs/heads/" in normalized:
         reasons.append(
-            "writes a ref through the GitHub API, which bypasses the push checks"
+            "runs a git transport command other than push, which the push checks "
+            "do not cover"
         )
-    if GH_OTHER_WORKFLOW.search(script):
+    if FIND_DELEGATION.search(normalized) or MAKE_FILE.search(normalized):
+        reasons.append(
+            "runs a program through find or an explicit makefile, which the guard "
+            "cannot read"
+        )
+    if GH_OTHER_WORKFLOW.search(normalized):
         reasons.append(
             "starts a workflow the guard does not validate; only release.yml "
             "may be dispatched"
@@ -1034,6 +1063,17 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
                     f"workflow {action!r}; code this guard does not inspect "
                     "cannot be validated, so keep the publish steps here."
                 )
+                continue
+            if action:
+                with_section = step.get("with")
+                configured = " ".join(
+                    str(value) for value in (with_section or {}).values()
+                ) if isinstance(with_section, dict) else ""
+                if GIT_PUSH_CANDIDATE.search(configured) or "refs/heads/" in configured:
+                    errors.append(
+                        f"{relative} step {index} configures the action {action!r} "
+                        "to move or push a ref, which this guard does not inspect."
+                    )
 
     scripts = [script for _, script in steps]
 
