@@ -208,6 +208,96 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
         )
         self.assert_reports(errors, "matching XML element")
 
+    def test_quoted_hash_does_not_hide_a_branch_push(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'echo "push #1"; git push origin refs/heads/main')
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_quoted_hash_does_not_hide_a_command_substitution(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'echo "note # $(git push origin refs/heads/main)"')
+        )
+        self.assert_reports(errors, "command substitution")
+
+    def test_expansion_between_git_and_push_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "git${IFS}push origin refs/heads/main")
+        )
+        self.assert_reports(errors, "cannot resolve")
+
+    def test_push_assigned_to_a_variable_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'CMD="git push origin refs/heads/main"; $CMD')
+        )
+        self.assert_reports(errors, "assigns a `git push` command")
+
+    def test_variable_command_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "g=git; p=push; $g $p origin refs/heads/main")
+        )
+        self.assert_reports(errors, "cannot resolve")
+
+    def test_delegated_script_is_rejected(self) -> None:
+        errors = self.errors_for(self.mutate(PUSH_LINE, "bash .github/publish-main.sh"))
+        self.assert_reports(errors, "cannot be validated")
+
+    def test_branch_capable_push_option_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'git push --all origin "refs/tags/${TAG}"')
+        )
+        self.assert_reports(errors, "can publish branches")
+
+    def test_substitution_result_must_be_written_back(self) -> None:
+        errors = self.errors_for(
+            self.mutate("content, count = re.subn(", "discard, count = re.subn(")
+        )
+        self.assert_reports(errors, "writes a different value")
+
+    def test_fixed_replacement_value_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                "lambda match, value=replacement:",
+                'lambda match, value="0.0.0":',
+            )
+        )
+        self.assert_reports(errors, "replacement binding")
+
+    def test_missing_match_count_check_is_rejected(self) -> None:
+        errors = self.errors_for(self.mutate("if count != 1:", "if False:"))
+        self.assert_reports(errors, "exactly one match")
+
+    def test_prose_mention_of_git_push_is_accepted(self) -> None:
+        mutated = self.mutate(
+            DISPATCH_STEP,
+            "      - name: prose\n"
+            "        run: echo no git push was needed\n\n"
+            f"{DISPATCH_STEP}",
+        )
+        self.assertEqual([], self.errors_for(mutated))
+
+    def test_forced_tag_refspec_is_accepted(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE, 'git push origin "+refs/tags/${TAG}:refs/tags/${TAG}"'
+            )
+        )
+        self.assertEqual([], errors)
+
+    def test_step_quoting_the_props_file_without_stamping_is_accepted(self) -> None:
+        mutated = self.mutate(
+            DISPATCH_STEP,
+            "      - name: notes\n"
+            "        run: python3 -c \"open('NOTES.md', 'w').write("
+            "'Directory.Build.props')\"\n\n"
+            f"{DISPATCH_STEP}",
+        )
+        self.assertEqual([], self.errors_for(mutated))
+
+    def test_parenthesized_match_count_check_is_accepted(self) -> None:
+        errors = self.errors_for(self.mutate("if count != 1:", "if (count != 1):"))
+        self.assertEqual([], errors)
+
 
 class ReleaseWritebackGuardTests(GuardFixtureCase):
     workflow_path = RELEASE_WORKFLOW_PATH
@@ -257,6 +347,32 @@ class ReleaseWritebackGuardTests(GuardFixtureCase):
             '        run: git fetch origin && git push origin "HEAD:refs/heads/main"\n'
         )
         self.assert_reports(self.errors_for(text), GUARD.WRITE_BACK_CONDITION)
+
+    def test_branch_push_in_a_new_job_is_rejected(self) -> None:
+        text = self.workflow + (
+            "\n  publish-main:\n"
+            "    runs-on: ubuntu-latest\n"
+            "    steps:\n"
+            "      - name: push main\n"
+            '        run: git push origin "HEAD:refs/heads/main"\n'
+        )
+        self.assert_reports(self.errors_for(text), "only the release job")
+
+    def test_writeback_condition_cannot_be_bypassed_by_an_expansion(self) -> None:
+        mutated = self.mutate(WRITE_BACK_IF, "if: always()")
+        mutated = mutated.replace("git push --atomic", "git${IFS}push --atomic", 1)
+        self.assertNotEqual(self.workflow, mutated, "expansion fixture did not apply")
+        self.assert_reports(self.errors_for(mutated), GUARD.WRITE_BACK_CONDITION)
+
+    def test_malformed_shell_reports_a_guard_error(self) -> None:
+        mutated = self.mutate("git push --atomic", 'git push origin "unclosed')
+        self.assert_reports(self.errors_for(mutated), "malformed shell")
+
+    def test_release_sync_step_must_write_what_it_substitutes(self) -> None:
+        mutated = self.mutate("content, count = re.subn(", "discard, count = re.subn(")
+        errors: list[str] = []
+        GUARD.check_release_stamp_sync(yaml.safe_load(mutated), errors)
+        self.assert_reports(errors, "writes a different value")
 
 
 if __name__ == "__main__":

@@ -19,6 +19,16 @@ Branch rules that require a pull request therefore cannot block a snapshot. If
 the snapshot workflow ever pushes a branch again, or the write-back loses its
 condition, every weekly run starts failing against those rules instead.
 
+The guard fails closed on text it cannot resolve: comments are stripped with
+shell quoting rules so a `#` inside a string never hides code, a command whose
+name is a variable or an expansion is rejected instead of skipped, a step that
+runs another file cannot hide a push, and the version-stamp checks require the
+substitution to feed the value that is written back with the loop's replacement
+binding. Two limits remain: a push moved into a third-party action (`uses:`)
+or into inline code that itself spawns `git` is outside the inspected shell
+text, and a refspec must be written out as `refs/tags/...` rather than through
+a variable, because a variable could name a branch.
+
 Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
 build before these invariants fail CI.
 """
@@ -180,6 +190,7 @@ def main() -> int:
 
     check_weekly_snapshot(errors)
     check_release_writeback_is_conditional(workflow, errors)
+    check_release_stamp_sync(workflow, errors)
 
     if errors:
         print(
@@ -206,22 +217,107 @@ STAMP_MAPPINGS = re.compile(
 MATCHING_XML_SUBSTITUTION = re.compile(
     r"""re\.subn\(\s*rf["']\(<\{element\}>\)\[\^<\]\+\(</\{element\}>\)["']"""
 )
-COMMENT = re.compile(r"(?:^|\s)#[^\n]*", re.M)
+STAMP_ASSIGNMENT = re.compile(r"(\w+)\s*,\s*count\s*=\s*re\.subn\(")
+STAMP_REPLACEMENT_BINDING = re.compile(r"re\.subn\(.{0,400}?replacement", re.S)
+STAMP_COUNT_CHECK = re.compile(r"\bcount\s*(?:!=|==|<=|>=|<|>)\s*\d")
 SHELL_SEPARATOR = re.compile(r"&&|\|\||[;\n|&]")
 GROUPING = "(){}"
 EMBEDDED_COMMAND = re.compile(r"\bgit\b[^\n]*\bpush\b")
 GIT_PUSH = re.compile(r"\bgit\s+push\b")
 GIT_PUSH_CANDIDATE = re.compile(r"\bgit\b.*\bpush\b", re.S)
+PUSH_WORD = re.compile(r"\bpush\b")
+ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+# Commands that never execute their arguments, so a `git push` among their
+# arguments is text rather than a command.
+NON_EXECUTING_COMMANDS = frozenset(
+    {"echo", "printf", "true", "false", ":", "cat", "grep", "sed", "awk", "ls", "test", "["}
+)
+# Shell keywords and separators that keep a command position open.
+SHELL_KEYWORDS = frozenset(
+    {
+        "if", "then", "elif", "else", "fi", "do", "done", "while", "until",
+        "for", "case", "esac", "in", "!", "time", "&&", "||", ";", "|", "&",
+        "{", "}", "(", ")",
+    }
+)
+# Push options that can publish branches regardless of the refspecs given.
+UNSAFE_PUSH_OPTIONS = frozenset({"--all", "--mirror", "--branches"})
+# A step that runs another file moves the push out of the validated text.
+DELEGATED_SCRIPT = re.compile(
+    r"(?:^|[\s;&|(){}])(?:bash|sh|zsh|dash|source|python3?|\.)\s+(?!-)([\w./-]+\.(?:sh|py))"
+)
+# Keywords and assignments that may precede the command word of a fragment.
+LEADING_COMMAND_PREFIX = re.compile(
+    r"(?:[A-Za-z_][A-Za-z0-9_]*=\S*|if|then|elif|else|do|done|while|until|for"
+    r"|case|esac|in|!|time)\s+"
+)
+# A command whose name is a variable or an expansion cannot be resolved.
+VARIABLE_COMMAND = re.compile(r"(?:\$\{?[A-Za-z_][A-Za-z0-9_]*\}?|\$\(|`)\S*")
 
 
 def strip_comments(script: str) -> str:
-    """Drop shell/Python comments so only executable text is inspected."""
-    return COMMENT.sub("", script)
+    """Drop shell comments while keeping quoted text and code intact.
+
+    A `#` starts a comment only at the start of a shell word and outside
+    quotes, so a `#` inside a string (or a `$(...)` command inside double
+    quotes) is preserved for the checks below. Removing those characters would
+    delete executable text and let a push pass unvalidated.
+    """
+    body: list[str] = []
+    quote: str | None = None
+    index = 0
+    length = len(script)
+    while index < length:
+        char = script[index]
+        if quote is not None:
+            body.append(char)
+            if char == "\\" and quote == '"' and index + 1 < length:
+                index += 1
+                body.append(script[index])
+            elif char == quote:
+                quote = None
+            index += 1
+            continue
+        if char in ("'", '"'):
+            quote = char
+            body.append(char)
+            index += 1
+            continue
+        if char == "\\" and index + 1 < length:
+            body.append(char)
+            index += 1
+            body.append(script[index])
+            index += 1
+            continue
+        if char == "#":
+            previous = body[-1] if body else "\n"
+            if previous in " \t\n;|&(){}":
+                while index < length and script[index] != "\n":
+                    index += 1
+                continue
+        body.append(char)
+        index += 1
+    return "".join(body)
 
 
 def _bare(token: str) -> str:
     """Return a token without shell grouping characters around it."""
     return token.strip(GROUPING)
+
+
+def _command_word(tokens: list[str]) -> str | None:
+    """Return the first word of a fragment that is not a keyword or assignment."""
+    for token in tokens:
+        bare = _bare(token)
+        if not bare or ASSIGNMENT.match(bare) or bare in SHELL_KEYWORDS:
+            continue
+        return bare
+    return None
+
+
+def _mentions_push(tokens: list[str], start: int) -> bool:
+    """Return true when a later token is exactly the `push` subcommand."""
+    return any(_bare(token) == "push" for token in tokens[start:])
 
 
 def _iter_fragment_pushes(fragment: str, depth: int = 0) -> Iterator[list[str]]:
@@ -247,6 +343,11 @@ def _iter_fragment_pushes(fragment: str, depth: int = 0) -> Iterator[list[str]]:
     except ValueError as exc:
         raise ValueError(f"malformed shell fragment: {exc}") from exc
 
+    # `echo`/`printf`/... never execute their arguments, so a `git push` in
+    # their argument text is prose, not a command.
+    if _command_word(tokens) in NON_EXECUTING_COMMANDS:
+        return
+
     index = 0
     while index < len(tokens):
         if _bare(tokens[index]) != "git":
@@ -261,7 +362,7 @@ def _iter_fragment_pushes(fragment: str, depth: int = 0) -> Iterator[list[str]]:
             )
             cursor += 2 if takes_value else 1
         if cursor < len(tokens) and _bare(tokens[cursor]) == "push":
-            yield [token for token in tokens[cursor + 1:] if not token.startswith("-")]
+            yield list(tokens[cursor + 1:])
             index = cursor + 1
         else:
             index += 1
@@ -284,6 +385,101 @@ def push_arguments(script: str) -> Iterator[list[str]]:
     normalized_script = re.sub(r"\\\r?\n", " ", script)
     for fragment in SHELL_SEPARATOR.split(normalized_script):
         yield from _iter_fragment_pushes(fragment)
+
+
+def unanalyzable_push_reason(fragment: str) -> str | None:
+    """Describe push-like text the guard refuses to resolve into a command.
+
+    The guard fails closed: a fragment that mentions `git` and `push` but is
+    not the literal `git push` command (a variable command name, an expansion
+    between the two words, a push assigned to a variable, or an argument the
+    parser cannot resolve) is rejected instead of being skipped, because the
+    evaluated command could publish a branch.
+    """
+    if not GIT_PUSH_CANDIDATE.search(fragment):
+        return None
+
+    tokens = shlex.split(fragment)
+    command = _command_word(tokens)
+    mentions_push = PUSH_WORD.search(fragment) is not None
+    if command is None:
+        if ASSIGNMENT.match(fragment.strip()) and mentions_push:
+            return (
+                "assigns a `git push` command to a shell variable, so the guard "
+                "cannot see where it runs"
+            )
+        return None
+    if command in NON_EXECUTING_COMMANDS:
+        return None
+    if command != "git" and mentions_push and (
+        "git" in command or command.startswith("$") or "`" in command
+    ):
+        return (
+            f"runs {command!r}, which the guard cannot resolve into the literal "
+            "`git push` command"
+        )
+    if command == "git":
+        cursor = 1
+        while cursor < len(tokens) and tokens[cursor].startswith("-"):
+            cursor += 1
+        if cursor < len(tokens) and _bare(tokens[cursor]) != "push":
+            unresolved = tokens[cursor]
+            if ("$" in unresolved or "`" in unresolved) and _mentions_push(
+                tokens, cursor
+            ):
+                return (
+                    f"passes {unresolved!r} before `push`, so the pushed refspecs "
+                    "are unknown"
+                )
+    return None
+
+
+def unanalyzable_push_reasons(script: str) -> Iterator[str]:
+    """Yield one reason per fragment whose push text cannot be validated."""
+    normalized_script = re.sub(r"\\\r?\n", " ", script)
+    for fragment in SHELL_SEPARATOR.split(normalized_script):
+        reason = unanalyzable_push_reason(fragment)
+        if reason:
+            yield reason
+
+
+def unresolved_command_reason(fragment: str) -> str | None:
+    """Describe a command whose name is a variable or an expansion.
+
+    Such a command can run anything, including `git push`, so the guard
+    refuses to skip it even when the fragment never spells out `git push`.
+    The text is inspected without tokenizing it, so unrelated Python or quoted
+    content in other fragments cannot turn into a parse failure.
+    """
+    text = fragment.strip()
+    while True:
+        prefix = LEADING_COMMAND_PREFIX.match(text)
+        if not prefix:
+            break
+        text = text[prefix.end() :]
+    match = VARIABLE_COMMAND.match(text)
+    if not match:
+        return None
+    word = match.group(0)
+    return (
+        f"runs {word!r}, a command built from a variable or expansion "
+        "the guard cannot resolve"
+    )
+
+
+def unresolved_command_reasons(script: str) -> Iterator[str]:
+    """Yield one reason per fragment whose command name cannot be resolved."""
+    normalized_script = re.sub(r"\\\r?\n", " ", script)
+    for fragment in SHELL_SEPARATOR.split(normalized_script):
+        reason = unresolved_command_reason(fragment)
+        if reason:
+            yield reason
+
+
+def delegated_script(script: str) -> str | None:
+    """Return the file a step runs, when it moves execution out of the workflow."""
+    match = DELEGATED_SCRIPT.search(script)
+    return match.group(1) if match else None
 
 
 def contains_push_in_command_substitution(script: str) -> bool:
@@ -330,17 +526,99 @@ def contains_push_in_command_substitution(script: str) -> bool:
 def unsafe_push_reasons(arguments: list[str]) -> list[str]:
     """Describe why a push is unsafe for a tag-only snapshot publish.
 
-    An empty result means the push publishes only tags: the first argument is
-    the remote, and every refspec after it must name `refs/tags/` on both its
-    source and its destination.
+    An empty result means the push publishes only tags: options are inspected
+    first (`--all`, `--mirror`, and `--branches` can publish branches on their
+    own), then the first positional argument must name the remote and every
+    refspec after it must name `refs/tags/` on both its source and its
+    destination. A leading `+` marks a forced update and keeps the refspec a
+    tag-only one.
     """
-    if len(arguments) < 2:
-        return ["runs a `git push` without an explicit tag refspec"]
-    return [
-        f"pushes {refspec!r}, which is not a tag-only refspec"
-        for refspec in arguments[1:]
-        if any(not part.startswith("refs/tags/") for part in refspec.split(":"))
+    reasons = [
+        f"passes {option!r}, which can publish branches"
+        for option in arguments
+        if option in UNSAFE_PUSH_OPTIONS
     ]
+    positional = [token for token in arguments if not token.startswith("-")]
+    if len(positional) < 2:
+        reasons.append("runs a `git push` without an explicit tag refspec")
+        return reasons
+    for refspec in positional[1:]:
+        cleaned = refspec[1:] if refspec.startswith("+") else refspec
+        if any(not part.startswith("refs/tags/") for part in cleaned.split(":")):
+            reasons.append(f"pushes {refspec!r}, which is not a tag-only refspec")
+    return reasons
+
+
+def check_stamp_rewrite(
+    errors: list[str], relative: object, steps: list[tuple[str, str]]
+) -> None:
+    """Require one step that really substitutes the three version elements.
+
+    The step is identified by what it writes, not by what it mentions: it must
+    name `Directory.Build.props` and open a file for writing, and the step that
+    also carries the replacement loop wins over a step that merely quotes the
+    file name. The checks then prove the substitution feeds the value written
+    back, uses the loop's replacement binding, and requires one match per
+    element, so a rewrite that keeps those words but stops stamping the file
+    cannot pass.
+    """
+    candidates = [
+        script
+        for _, script in steps
+        if BUMP_TARGET.search(script) and WRITE_OP.search(script)
+    ]
+    stamping = [script for script in candidates if STAMP_MAPPINGS.search(script)]
+    if stamping:
+        candidates = stamping
+    if len(candidates) != 1:
+        errors.append(
+            f"{relative} must rewrite Directory.Build.props in exactly one "
+            f"step script; found {len(candidates)}. The version stamps have "
+            "to be written, not merely named."
+        )
+        return
+
+    script = candidates[0]
+    if not SUBSTITUTION.search(script):
+        errors.append(
+            f"{relative} writes Directory.Build.props without substituting "
+            "the version elements, so the tagged commit would not match its tag."
+        )
+        return
+    if not STAMP_MAPPINGS.search(script) or not MATCHING_XML_SUBSTITUTION.search(
+        script
+    ):
+        errors.append(
+            f"{relative} must substitute Version, AssemblyVersion, and "
+            "FileVersion into their matching XML elements, so the tagged "
+            "commit already matches its tag."
+        )
+        return
+
+    assignment = STAMP_ASSIGNMENT.search(script)
+    if assignment is None:
+        errors.append(
+            f"{relative} must assign the substitution result (`value, count = "
+            "re.subn(...)`) so the rewritten content is the value written back."
+        )
+        return
+    target = assignment.group(1)
+    if not re.search(rf"(?:\.write|write_text)\(\s*{re.escape(target)}\s*\)", script):
+        errors.append(
+            f"{relative} substitutes into {target!r} but writes a different "
+            "value to Directory.Build.props, so the tagged commit would keep "
+            "its old version stamps."
+        )
+    if not STAMP_REPLACEMENT_BINDING.search(script):
+        errors.append(
+            f"{relative} must substitute the loop's replacement binding into "
+            "Version, AssemblyVersion, and FileVersion, not a fixed value."
+        )
+    if not STAMP_COUNT_CHECK.search(script):
+        errors.append(
+            f"{relative} must require exactly one match for each version "
+            "element, so a missing element cannot pass silently."
+        )
 
 
 def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
@@ -395,14 +673,28 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
                 "substitution; the guard refuses to infer its evaluated "
                 "refspecs. Put the push in a directly validated shell command."
             )
+        delegated = delegated_script(script)
+        if delegated:
+            errors.append(
+                f"{relative} step {name!r} runs {delegated!r}; a push inside "
+                "another file cannot be validated, so keep every push in the "
+                "workflow itself."
+            )
         try:
             pushes = list(push_arguments(script))
+            unresolved = list(unanalyzable_push_reasons(script))
+            unresolved.extend(unresolved_command_reasons(script))
         except ValueError as exc:
             errors.append(
                 f"{relative} step {name!r} contains malformed shell; refusing "
                 f"to validate git pushes ({exc})."
             )
             continue
+        for reason in unresolved:
+            errors.append(
+                f"{relative} step {name!r} {reason}; the guard rejects push-like "
+                "text it cannot resolve so no branch push can hide from it."
+            )
         for arguments in pushes:
             for reason in unsafe_push_reasons(arguments):
                 errors.append(
@@ -411,36 +703,9 @@ def check_weekly_snapshot(errors: list[str], path: Path | None = None) -> None:
                     "destination so a snapshot never has to bypass branch rules."
                 )
 
-    scripts = [script for _, script in steps]
+    check_stamp_rewrite(errors, relative, steps)
 
-    bump_scripts = [
-        script
-        for script in scripts
-        if BUMP_TARGET.search(script) and WRITE_OP.search(script)
-    ]
-    if len(bump_scripts) != 1:
-        errors.append(
-            f"{relative} must rewrite Directory.Build.props in exactly one "
-            f"step script; found {len(bump_scripts)}. The version stamps have "
-            "to be written, not merely named."
-        )
-    for script in bump_scripts:
-        if not SUBSTITUTION.search(script):
-            errors.append(
-                f"{relative} writes Directory.Build.props without substituting "
-                "the version elements, so the tagged commit would not match "
-                "its tag."
-            )
-        if (
-            not STAMP_MAPPINGS.search(script)
-            or not MATCHING_XML_SUBSTITUTION.search(script)
-            or "if count != 1:" not in script
-        ):
-            errors.append(
-                f"{relative} must substitute Version, AssemblyVersion, and "
-                "FileVersion into their matching XML elements and require one "
-                "match for each, so the tagged commit already matches its tag."
-            )
+    scripts = [script for _, script in steps]
 
     dispatch_scripts = [
         script for script in scripts if "gh workflow run release.yml" in script
@@ -470,30 +735,76 @@ def check_release_writeback_is_conditional(workflow: dict, errors: list[str]) ->
     therefore stay behind the write-back condition. The step is identified by
     the push it performs rather than by a refspec spelling, so the check keeps
     working when the destination is written as `:main`, when a new option is
-    added, or when the push moves to another step.
+    added, or when the push moves to another step. Every job is inspected, so a
+    new job cannot publish a branch outside the release job's condition, and
+    push-like text the parser cannot resolve is treated as a branch push
+    instead of being skipped.
     """
-    release_job = (workflow.get("jobs") or {}).get("release")
-    steps = release_job.get("steps") if isinstance(release_job, dict) else None
-    if not isinstance(steps, list):
-        return
+    for job_name, job in (workflow.get("jobs") or {}).items():
+        if not isinstance(job, dict):
+            continue
+        steps = job.get("steps")
+        if not isinstance(steps, list):
+            continue
+        for index, step in enumerate(steps):
+            if not isinstance(step, dict):
+                continue
+            name = str(step.get("name") or f"step {index}")
+            script = strip_comments(str(step.get("run") or ""))
+            try:
+                pushes = list(push_arguments(script))
+                unresolved = list(unanalyzable_push_reasons(script))
+            except ValueError as exc:
+                errors.append(
+                    f"release workflow job {job_name!r} step {name!r} contains "
+                    f"malformed shell; refusing to validate its git pushes ({exc})."
+                )
+                continue
+            branch_push = any(unsafe_push_reasons(arguments) for arguments in pushes)
+            if not branch_push and not unresolved:
+                continue
+            if job_name != "release":
+                errors.append(
+                    f"release workflow job {job_name!r} step {name!r} pushes a "
+                    "branch; only the release job may write a branch, and only "
+                    f"behind {WRITE_BACK_CONDITION!r}."
+                )
+                continue
+            condition = str(step.get("if") or "")
+            normalized_condition = condition.strip()
+            if normalized_condition.startswith("${{") and normalized_condition.endswith(
+                "}}"
+            ):
+                normalized_condition = normalized_condition[3:-2].strip()
+            if normalized_condition != WRITE_BACK_CONDITION:
+                errors.append(
+                    f"release step {index} ({name!r}) pushes a branch and its "
+                    "condition must be exactly "
+                    f"{WRITE_BACK_CONDITION!r}, so no other expression can make "
+                    "the version write-back unconditional."
+                )
 
-    for index, step in enumerate(steps):
-        if not isinstance(step, dict):
-            continue
-        script = strip_comments(str(step.get("run") or ""))
-        if not any(unsafe_push_reasons(arguments) for arguments in push_arguments(script)):
-            continue
-        condition = str(step.get("if") or "")
-        normalized_condition = condition.strip()
-        if normalized_condition.startswith("${{") and normalized_condition.endswith("}}"):
-            normalized_condition = normalized_condition[3:-2].strip()
-        if normalized_condition != WRITE_BACK_CONDITION:
-            errors.append(
-                f"release step {index} ({str(step.get('name') or 'unnamed')!r}) "
-                "pushes a branch and its condition must be exactly "
-                f"{WRITE_BACK_CONDITION!r}, so no other expression can make "
-                "the version write-back unconditional."
-            )
+
+def check_release_stamp_sync(workflow: dict, errors: list[str]) -> None:
+    """The release job must stamp the tag's version the same provable way.
+
+    `release.yml` rewrites `Directory.Build.props` from the tag before
+    validation, and the weekly snapshot relies on that rewrite finding nothing
+    to change. A rewrite that stops stamping the file would make the release
+    commit and the `main` write-back necessary again, so the same substitution
+    proof applies to this workflow.
+    """
+    steps = [
+        (
+            str(step.get("name") or f"job step {index}"),
+            strip_comments(str(step.get("run") or "")),
+        )
+        for job in (workflow.get("jobs") or {}).values()
+        if isinstance(job, dict)
+        for index, step in enumerate(job.get("steps") or [])
+        if isinstance(step, dict)
+    ]
+    check_stamp_rewrite(errors, WORKFLOW.relative_to(ROOT), steps)
 
 
 if __name__ == "__main__":
