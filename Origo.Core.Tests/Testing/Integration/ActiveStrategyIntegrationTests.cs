@@ -18,9 +18,9 @@ public class ActiveStrategyIntegrationTests
             .Build();
 
         var entity = harness.SpawnEntity("actor", []);
-        entity.AddActiveStrategy("test.int.active.echo");
+        entity.AddActiveStrategy(TestStrategyIndices.EchoActive);
 
-        var result = entity.InvokeStrategy("test.int.active.echo", 21);
+        var result = entity.InvokeStrategy(TestStrategyIndices.EchoActive, 21);
         Assert.Equal(42, result);
     }
 
@@ -33,7 +33,7 @@ public class ActiveStrategyIntegrationTests
             .Build();
 
         var entity = harness.SpawnEntity("actor", ["test.int.active.self_invoke"]);
-        entity.AddActiveStrategy("test.int.active.echo");
+        entity.AddActiveStrategy(TestStrategyIndices.EchoActive);
 
         harness.DriveFrame();
 
@@ -50,7 +50,7 @@ public class ActiveStrategyIntegrationTests
             .Build();
 
         var target = harness.SpawnEntity("target", []);
-        target.AddActiveStrategy("test.int.active.echo");
+        target.AddActiveStrategy(TestStrategyIndices.EchoActive);
 
         var caller = harness.SpawnEntity("caller", ["test.int.active.peer_invoke"]);
 
@@ -68,9 +68,9 @@ public class ActiveStrategyIntegrationTests
             .Build();
 
         var entity = harness.SpawnEntity("actor", []);
-        entity.AddActiveStrategy("test.int.active.echo");
+        entity.AddActiveStrategy(TestStrategyIndices.EchoActive);
 
-        var result = entity.InvokeStrategy("test.int.active.echo", 5);
+        var result = entity.InvokeStrategy(TestStrategyIndices.EchoActive, 5);
         Assert.Equal(10, result);
 
         harness.SaveAndReload("active_save");
@@ -81,7 +81,7 @@ public class ActiveStrategyIntegrationTests
         var loadedEntity = gameSession.FindByName("actor");
         Assert.NotNull(loadedEntity);
 
-        var afterLoadResult = loadedEntity.InvokeStrategy("test.int.active.echo", 7);
+        var afterLoadResult = loadedEntity.InvokeStrategy(TestStrategyIndices.EchoActive, 7);
         Assert.Equal(14, afterLoadResult);
     }
 
@@ -93,7 +93,7 @@ public class ActiveStrategyIntegrationTests
             .Build();
 
         var entity = harness.SpawnEntity("actor", []);
-        entity.AddActiveStrategy("test.int.active.echo");
+        entity.AddActiveStrategy(TestStrategyIndices.EchoActive);
         entity.SetData("counter", 1);
 
         harness.SaveAndReload("active_load_save");
@@ -104,7 +104,7 @@ public class ActiveStrategyIntegrationTests
         var loadedEntity = gameSession.FindByName("actor");
         Assert.NotNull(loadedEntity);
 
-        var result = loadedEntity.InvokeStrategy("test.int.active.echo", 3);
+        var result = loadedEntity.InvokeStrategy(TestStrategyIndices.EchoActive, 3);
         Assert.Equal(6, result);
 
         var counter = loadedEntity.GetData<int>("counter");
@@ -120,14 +120,14 @@ public class ActiveStrategyIntegrationTests
             .Build();
 
         var entity = harness.SpawnEntity("hybrid", ["test.int.active.frame_counter"]);
-        entity.AddActiveStrategy("test.int.active.echo");
+        entity.AddActiveStrategy(TestStrategyIndices.EchoActive);
 
         harness.RunFrames(3);
 
         var count = harness.GetEntityData<int>("hybrid", "count");
         Assert.Equal(3, count);
 
-        var result = entity.InvokeStrategy("test.int.active.echo", count);
+        var result = entity.InvokeStrategy(TestStrategyIndices.EchoActive, count);
         Assert.Equal(6, result);
     }
 
@@ -141,22 +141,22 @@ public class ActiveStrategyIntegrationTests
         var entity = harness.SpawnEntity("actor", []);
 
         Assert.Throws<InvalidOperationException>(
-            () => entity.InvokeStrategy("test.int.active.echo", 1));
+            () => entity.InvokeStrategy(TestStrategyIndices.EchoActive, 1));
 
-        entity.AddActiveStrategy("test.int.active.echo");
+        entity.AddActiveStrategy(TestStrategyIndices.EchoActive);
 
-        var result = entity.InvokeStrategy("test.int.active.echo", 2);
+        var result = entity.InvokeStrategy(TestStrategyIndices.EchoActive, 2);
         Assert.Equal(4, result);
 
         harness.DriveFrame();
-        result = entity.InvokeStrategy("test.int.active.echo", 3);
+        result = entity.InvokeStrategy(TestStrategyIndices.EchoActive, 3);
         Assert.Equal(6, result);
 
-        entity.RemoveActiveStrategy("test.int.active.echo");
+        entity.RemoveActiveStrategy(TestStrategyIndices.EchoActive);
         harness.DriveFrame();
 
         Assert.Throws<InvalidOperationException>(
-            () => entity.InvokeStrategy("test.int.active.echo", 4));
+            () => entity.InvokeStrategy(TestStrategyIndices.EchoActive, 4));
     }
 
     [Fact]
@@ -167,16 +167,16 @@ public class ActiveStrategyIntegrationTests
             .Build();
 
         var entity = harness.SpawnEntity("actor", []);
-        entity.AddActiveStrategy("test.int.active.echo");
+        entity.AddActiveStrategy(TestStrategyIndices.EchoActive);
 
-        var result = entity.InvokeStrategy("test.int.active.echo", 7);
+        var result = entity.InvokeStrategy(TestStrategyIndices.EchoActive, 7);
         Assert.Equal(14, result);
 
         harness.RequestKillEntity("actor");
         harness.DriveFrame();
 
         Assert.Throws<InvalidOperationException>(
-            () => entity.InvokeStrategy("test.int.active.echo", 7));
+            () => entity.InvokeStrategy(TestStrategyIndices.EchoActive, 7));
     }
 
     [Fact]
@@ -187,15 +187,15 @@ public class ActiveStrategyIntegrationTests
             .Build();
 
         var entity = harness.SpawnEntity("actor", []);
-        entity.AddActiveStrategy("test.int.active.echo");
+        entity.AddActiveStrategy(TestStrategyIndices.EchoActive);
 
         Assert.Throws<InvalidOperationException>(
-            () => entity.AddActiveStrategy("test.int.active.echo"));
+            () => entity.AddActiveStrategy(TestStrategyIndices.EchoActive));
     }
 
     // ── test strategies ──────────────────────────────────────────────
 
-    [StrategyIndex("test.int.active.echo")]
+    [StrategyIndex(TestStrategyIndices.EchoActive)]
     private sealed class EchoActiveStrategy : SharedEchoActiveStrategy { }
 
     [StrategyIndex("test.int.active.self_invoke")]
@@ -203,7 +203,7 @@ public class ActiveStrategyIntegrationTests
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
         {
-            var result = entity.InvokeStrategy("test.int.active.echo", 5);
+            var result = entity.InvokeStrategy(TestStrategyIndices.EchoActive, 5);
             entity.SetData("invoke_result", result);
         }
     }
@@ -216,7 +216,7 @@ public class ActiveStrategyIntegrationTests
             var peer = entity.OwningSession.FindByName("target");
             if (peer is not null)
             {
-                var result = peer.InvokeStrategy("test.int.active.echo", 7);
+                var result = peer.InvokeStrategy(TestStrategyIndices.EchoActive, 7);
                 entity.SetData("peer_result", result);
             }
         }

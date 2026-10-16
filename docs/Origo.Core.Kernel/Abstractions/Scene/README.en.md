@@ -13,16 +13,9 @@ Defines the Core layer's abstract capabilities for orchestrating SND scenes. `IS
 | `ISndSceneHost.cs` | Internal scene host (inherits ISndSceneAccess + ISndSceneReadAccess): entity container management |
 | `IOwningSessionBindable.cs` | Internal owning-session binding for auto-binding entities |
 
-> `ISndSceneReadAccess` (the public read-only scene contract) lives in [Origo.Core.Contracts/Abstractions/Scene](../../../Origo.Core.Contracts/Abstractions/Scene/README.en.md).
-
 ## Interface Details
 
-### ISndSceneReadAccess (public)
-
-| Member | Description |
-|------|------|
-| `GetEntities()` | Snapshot of all currently alive entities |
-| `FindByName(name)` | Look up an entity by stable name; null when not found |
+> `ISndSceneReadAccess` (the public read-only scene contract) lives in [Origo.Core.Contracts/Abstractions/Scene](../../../Origo.Core.Contracts/Abstractions/Scene/README.en.md).
 
 ### ISndSceneAccess (internal)
 
@@ -51,17 +44,7 @@ Defines the Core layer's abstract capabilities for orchestrating SND scenes. `IS
 
 ## Design Decisions
 
-### Why separate read-only access from orchestration interfaces
-State-machine contexts and save-meta contributors only need to query entities (`GetEntities` / `FindByName`); they must not touch create/recover/remove orchestration. Separating the public `ISndSceneReadAccess` from the internal `ISndSceneAccess` / `ISndSceneHost` prevents business code from casting `GodotSndManager` to bypass hook orchestration, while save and session systems keep full internal access.
-
-### Why scene host does not trigger strategy hooks
-All hook orchestration is handled by the session lifecycle (`SndEntityFactory` / `SessionRun`), keeping adapter layer out of strategy lifecycle management and enabling batch operations between create/recover and hook trigger phases.
-
-### Why CreateEntity performs no duplicate-name check
-`CreateEntity` keeps minimal semantics and does not enforce name uniqueness at the host-interface level; uniqueness is enforced centrally by the orchestration layers (`SndEntityFactory` and `SndSceneSerializer`) before the host is called. Hosts may assume names are unique within the scene.
-
-### Why kill is split into RequestKillEntity (mark) and RemoveEntity (disassemble)
-`RequestKillEntity` immediately marks the entity as pending kill (`IsPendingKill = true`) without physically removing it. This lets subsequent same-frame operations judge the entity's liveness via `IsPendingKill`, avoiding duplicate operations on a deferred kill. Physical destruction happens at end of frame via `SessionRun.KillPending()` (invoked per session by `SessionManager.KillPendingAllSessions()`, after the business queue and before the system queue): observer bindings are torn down bidirectionally first, then `BeforeDead` hooks fire in batch, strategies are released, and finally each entity is removed via `RemoveEntity`.
+The design decisions for the scene abstractions live in [Origo.Core.Contracts/Abstractions/Scene](../../../Origo.Core.Contracts/Abstractions/Scene/README.en.md#design-decisions).
 
 ---
 [↑ Back to Abstractions](../README.en.md)

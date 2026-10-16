@@ -66,6 +66,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `LoadAndMountForeground_WithEmptyLevelId_Throws` | Empty or whitespace levelId | ArgumentException |
 | `SwitchForeground_WithEmptyLevelId_Throws` | Empty or whitespace levelId | ArgumentException |
 | `BuildSavePayload_WithoutTopologySet_Throws` | Topology in ProgressBlackboard is empty string | InvalidOperationException |
+| `SessionRun_LoadFromPayload_NullNodes_FailFast` | Default-constructed LevelPayload (payload nodes all null) | InvalidOperationException (message contains "null") |
 
 ### Boundary Path
 
@@ -113,6 +114,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `ProgressRun_Dispose_PopHookThrows_ProgressStateStillReleasedAndFlagCommitted` | Quit pop hook throws | Exception propagates, but progress blackboard cleared, state machines released, disposed flag committed (second dispose idempotent) |
 | `ProgressRun_Dispose_SessionTearDownThrows_ProgressStateStillReleased` | Subscriber throws during session teardown | Exception propagates, but progress state still released and dispose state committed (second dispose no-op) |
 | `ProgressRun_Dispose_SessionTearDownThrows_CurrentDirectoryStillDeleted` | Subscriber throws during session teardown | Exception propagates, but current/ is still deleted (each cleanup step runs independently) |
+| `SessionRun_Dispose_EntityQuitHookThrows_LaterEntitiesStillReleased` | An entity's BeforeQuit hook throws during Dispose | Exception propagates, but the remaining entities' strategies are still released (LogPoolLeaks finds no leak) |
 
 ### Boundary Path
 
@@ -315,9 +317,10 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `Contains_ForegroundKey_TrueWhenSessionActive` | Contains(ForegroundKey) true when foreground exists | ISessionManager |
 | `Keys_IncludesForegroundAndBackground` | Keys includes both foreground and background keys | ISessionManager |
 | `ProcessAllSessions_OnlyProcessesSyncedSessions` | ProcessAllSessions only processes sessions with syncProcess=true | ISessionManager |
-| `SessionTopology_WellKnownKey_Exists` | WellKnownKeys.SessionTopology constant exists | Constant definition |
 | `SwitchForeground_AutoHandlesBackgroundSessionCollision` | SwitchForeground auto-handles background levelId collision | ISessionManager |
 | `CreateForegroundSession_DifferentLevelId_Succeeds` | Background with different levelId can be created then switch foreground | ISessionManager |
+| `CreateForegroundSession_SameLevelId_ReplacesExistingForeground` | Creating a foreground session with the same levelId replaces the existing foreground and disposes it | ISessionManager |
+| `CreateForegroundSession_DifferentLevelId_ReplacesExistingForeground` | Creating a foreground session with a different levelId replaces the existing foreground and disposes it | ISessionManager |
 | `AppendBackgroundPayloads_DifferentLevelIds_IncludesBothInPayload` | Payload includes foreground and background with different levelIds | ISessionManager |
 | `SessionRun_Spawn_CreatesEntity` | ISessionRun.Spawn creates entity | ISessionRun |
 | `SessionRun_SpawnMany_CreatesMultipleEntities` | ISessionRun.SpawnMany creates multiple entities | ISessionRun |
@@ -333,6 +336,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `CreateBackgroundSession_DuplicateLevelIdWithAnotherBackground_Throws` | Background levelId conflicts with another background | InvalidOperationException |
 | `AppendBackgroundPayloads_LevelIdCollisionBetweenForegroundAndBackground_Throws` | Background levelId conflicts with foreground | InvalidOperationException |
 | `CreateBackgroundSession_DuplicateLevelId_ClearErrorMessage` | levelId conflict | InvalidOperationException (contains key/levelId/owner/Destroy suggestion) |
+| `CreateBackgroundSession_ReservedForegroundKey_Throws` | CreateBackgroundSession with the reserved foreground key | InvalidOperationException; nothing mounted under the reserved key |
+| `CreateForegroundSession_LevelConflictWithBackground_PreservesExistingForeground` | CreateForegroundSession with a levelId already held by a background session | InvalidOperationException (contains "already manages this level"); existing foreground and its entities preserved |
 
 ### Boundary Path
 
@@ -426,7 +431,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `BuildSavePayload_IncludesSyncProcessInBackgroundLevelIds` | syncProcess flag correct in Payload | session-model |
 | `SaveAndLoad_RoundTrips_SyncProcessFlag` | syncProcess flag correctly restored after round-trip | session-model |
 | `SaveAndLoad_FromDisk_RestoresBackgroundSessions` | Write to disk→read snapshot→load→background restored | session-model |
-| `ReadFromCurrent_IncludesAllLevelDirectories` | ReadFromCurrent includes all level directories (including backgrounds) | ISaveStorageService |
+| `ReadFromSnapshot_IncludesAllLevelDirectories` | Snapshot read returns every level directory, including background sessions | ISaveStorageService |
 | `FullSave_FiresBeforeSaveHooks_OnForegroundEntities` | Full save triggers BeforeSave hooks on foreground entities (verifies BeforeSave hooks fire before serialization) | session-model |
 | `FullSave_BeforeSaveHookOverwritesSessionTopology_FrameworkValueWins` | When a BeforeSave hook overwrites SessionTopology, the framework-computed value wins and is persisted | session-model: Session Topology |
 | `FullSave_BeforeSaveHookWrites_ArePersistedIntoForegroundSceneData` | Data written by BeforeSave hooks lands in foreground snd_scene.json | session-model |
@@ -441,6 +446,8 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `CreateBackgroundSession_EmptyLevelId_Throws` | Empty levelId | ArgumentException |
 | `Dispose_ClearsEntities` | FindByName after Dispose | ObjectDisposedException |
 | `DisposedSession_ThrowsOnAllPublicMethods` | SessionBlackboard/StateMachines/FindByName/GetEntities after Dispose | ObjectDisposedException |
+| `FullSave_BeforeSaveHookCreatesBackgroundSession_Throws` | A BeforeSave hook creates a background session during a full save | InvalidOperationException (contains "BeforeSave hooks"); no save file written, no background session mounted |
+| `FullSave_BeforeSaveHookDestroysForegroundSession_Throws` | A BeforeSave hook destroys the foreground session during a full save | InvalidOperationException (contains "BeforeSave hooks"); no save file written, foreground still mounted |
 
 ### Boundary Path
 

@@ -61,6 +61,7 @@ Validates basic OrigoRuntime construction and console injection, flushing of end
 | `Spawn_DuplicateEntityName_Throws` | Spawning an entity with a duplicate name in the session | InvalidOperationException (contains "already exists"), and only the first entity remains |
 | `StubSndSceneHost_RequestKillEntity_AlreadyPending_Throws` | Duplicate RequestKillEntity on already IsPendingKill entity | InvalidOperationException |
 | `StubSndSceneHost_DeadByName_MissingEntity_Throws` | RemoveEntity for non-existent entity | InvalidOperationException |
+| `KillPendingEntities_BeforeDeadHookFailure_RemovesAllPendingEntitiesAndPropagates` | Throwing BeforeDead hook during the kill sweep with two pending entities | InvalidOperationException (hook message) after the sweep; both entities removed |
 
 ### Boundary Path
 

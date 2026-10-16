@@ -17,7 +17,7 @@ public class GameplayIntegrationTests
             .WithStrategy(() => new FrameCounterStrategy())
             .Build();
 
-        var entity = harness.SpawnEntity("counter", ["test.frame_counter"]);
+        var entity = harness.SpawnEntity("counter", [TestStrategyIndices.FrameCounter]);
 
         harness.RunFrames(10);
 
@@ -35,7 +35,7 @@ public class GameplayIntegrationTests
             .WithStrategy(() => new FrameCounterStrategy())
             .Build();
 
-        harness.SpawnEntity("counter", ["test.frame_counter"]);
+        harness.SpawnEntity("counter", [TestStrategyIndices.FrameCounter]);
 
         harness.RunFrames(frameCount);
 
@@ -53,7 +53,7 @@ public class GameplayIntegrationTests
         var peer = harness.SpawnEntity("peer", []);
         peer.SetData("peer_value", 42);
 
-        var lookupEntity = harness.SpawnEntity("lookup", ["test.peer_lookup"]);
+        var lookupEntity = harness.SpawnEntity("lookup", [TestStrategyIndices.PeerLookup]);
 
         harness.DriveFrame();
 
@@ -69,8 +69,8 @@ public class GameplayIntegrationTests
             .WithStrategy(() => new BbReaderStrategy())
             .Build();
 
-        harness.SpawnEntity("writer", ["test.bb_writer"]);
-        harness.SpawnEntity("reader", ["test.bb_reader"]);
+        harness.SpawnEntity("writer", [TestStrategyIndices.BlackboardWriter]);
+        harness.SpawnEntity("reader", [TestStrategyIndices.BlackboardReader]);
 
         harness.DriveFrame();
 
@@ -86,7 +86,7 @@ public class GameplayIntegrationTests
             .WithStrategy(() => new DeferredProbeStrategy())
             .Build();
 
-        var entity = harness.SpawnEntity("deferred_probe", ["test.deferred_probe"]);
+        var entity = harness.SpawnEntity("deferred_probe", [TestStrategyIndices.DeferredProbe]);
 
         harness.DriveFrame();
 
@@ -102,7 +102,7 @@ public class GameplayIntegrationTests
             .WithStrategy(() => new FrameCounterStrategy())
             .Build();
 
-        var entity = harness.SpawnEntity("player", ["test.frame_counter"]);
+        var entity = harness.SpawnEntity("player", [TestStrategyIndices.FrameCounter]);
         entity.SetData("hp", 80);
         harness.RunFrames(5);
 
@@ -130,7 +130,7 @@ public class GameplayIntegrationTests
         KillProbeIntegrationStrategy.Events = events;
         try
         {
-            var entity = harness.SpawnEntity("victim", ["test.kill_probe_int"]);
+            var entity = harness.SpawnEntity("victim", [TestStrategyIndices.KillProbeInt]);
 
             harness.GameSession.RequestKillEntity("victim");
             Assert.True(entity.IsPendingKill);
@@ -153,7 +153,7 @@ public class GameplayIntegrationTests
             .WithStrategy(() => new ConsoleCommandStrategy())
             .Build();
 
-        harness.SpawnEntity("logger", ["test.console_cmd"]);
+        harness.SpawnEntity("logger", [TestStrategyIndices.ConsoleCmd]);
 
         harness.DriveFrame();
 
@@ -167,7 +167,7 @@ public class GameplayIntegrationTests
             .WithStrategy(() => new FrameCounterStrategy())
             .Build();
 
-        var entity = harness.SpawnEntity("player", ["test.frame_counter"]);
+        var entity = harness.SpawnEntity("player", [TestStrategyIndices.FrameCounter]);
         entity.SetData("hp", 100);
         harness.RunFrames(3);
         harness.SessionBlackboard.SetValue("game_flag", "surviving");
@@ -199,7 +199,7 @@ public class GameplayIntegrationTests
             var target = harness.SpawnEntity("target", []);
             var observer = harness.SpawnEntity("observer", []);
 
-            observer.MountObserverStrategy(target, "test.hp_observer_int");
+            observer.MountObserverStrategy(target, TestStrategyIndices.HpObserverInt);
 
             harness.SetEntityData("target", "hp", 50);
 
@@ -216,7 +216,7 @@ public class GameplayIntegrationTests
     [StrategyIndex(TestStrategyIndices.FrameCounter)]
     private sealed class FrameCounterStrategy : SharedFrameCounterStrategy { }
 
-    [StrategyIndex("test.peer_lookup")]
+    [StrategyIndex(TestStrategyIndices.PeerLookup)]
     private sealed class PeerLookupStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx)
@@ -231,7 +231,7 @@ public class GameplayIntegrationTests
         }
     }
 
-    [StrategyIndex("test.bb_writer")]
+    [StrategyIndex(TestStrategyIndices.BlackboardWriter)]
     private sealed class BbWriterStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
@@ -249,24 +249,24 @@ public class GameplayIntegrationTests
         }
     }
 
-    [StrategyIndex("test.deferred_probe")]
+    [StrategyIndex(TestStrategyIndices.DeferredProbe)]
     private sealed class DeferredProbeStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
             ctx.Deferred.EnqueueBusinessDeferred(() => entity.SetData("deferred_ran", true));
     }
 
-    [StrategyIndex("test.kill_probe_int")]
+    [StrategyIndex(TestStrategyIndices.KillProbeInt)]
     private sealed class KillProbeIntegrationStrategy : SharedKillProbeStrategy { }
 
-    [StrategyIndex("test.console_cmd")]
+    [StrategyIndex(TestStrategyIndices.ConsoleCmd)]
     private sealed class ConsoleCommandStrategy : LifecycleStrategyBase
     {
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) =>
             ctx.ConsoleAccess.TrySubmitConsoleCommand("snd_count");
     }
 
-    [StrategyIndex("test.hp_observer_int")]
+    [StrategyIndex(TestStrategyIndices.HpObserverInt)]
     [ObserveData("hp")]
     private sealed class HpObserverIntegrationStrategy : SharedDataChangeObserverStrategy { }
 }

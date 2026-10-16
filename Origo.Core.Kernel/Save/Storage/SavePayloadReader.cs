@@ -218,7 +218,7 @@ internal static class SavePayloadReader
     ///     e.g. the format version) so exposed <c>CustomMeta</c> only carries
     ///     user meta.
     /// </summary>
-    private static IReadOnlyDictionary<string, string>? StripFrameworkMetaKeys(
+    internal static IReadOnlyDictionary<string, string>? StripFrameworkMetaKeys(
         IReadOnlyDictionary<string, string>? customMeta)
     {
         if (customMeta is null

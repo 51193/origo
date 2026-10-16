@@ -14,7 +14,7 @@ and noise map generator (OpenSimplex2 + Worley blend).
 | File | Verification Focus |
 |------|-------------------|
 | `RandomNumberGeneratorTests.cs` | Seed determinism (same seed→same sequence, different seed→different sequence) |
-| `RandomNumberGeneratorExtendedTests.cs` | Extended edge cases: NextInt32/NextInt64 return types, uniqueness of large batches, consistent output from same state |
+| `RandomNumberGeneratorExtendedTests.cs` | Extended edge cases: NextInt32/NextInt64 state advancement, uniqueness of large batches, consistent output from same state |
 | `NoiseMapGeneratorTests.cs` | Noise map generation correctness: size/range/seed determinism/parameter differences/invalid size |
 | `PersistentRandomTests.cs` | Persistent random number generator: blackboard init, state storage, sequence determinism, range constraints, uninitialized guard |
 | `RandomAndStateMachineTests.Random.cs` | RNG state consistency: NextInt32/NextInt64 stepping consistent with NextUInt64, state chain continuity |
@@ -37,8 +37,8 @@ and noise map generator (OpenSimplex2 + Worley blend).
 |-------------|-----------------|-----------|
 | `RandomNumberGenerator_SameSeed_ProducesSameSequence` | Same seed produces same sequence | Random |
 | `RandomNumberGenerator_DifferentSeed_ProducesDifferentSequence` | Different seed produces different sequence | Random |
-| `RandomNumberGenerator_NextInt32_ReturnsValue` | NextInt32 returns int value, does not throw | Random |
-| `RandomNumberGenerator_NextInt64_ReturnsValue` | NextInt64 returns long value, does not throw | Random |
+| `RandomNumberGenerator_NextInt32_AdvancesState` | NextInt32 advances the (s0, s1) state instead of returning it unchanged | Random |
+| `RandomNumberGenerator_NextInt64_AdvancesState` | NextInt64 advances the (s0, s1) state instead of returning it unchanged | Random |
 | `RandomNumberGenerator_Sequence_IsNotConstant` | Unique values out of 100 consecutive > 90 | Random |
 
 ### Boundary Path
@@ -64,6 +64,8 @@ and noise map generator (OpenSimplex2 + Worley blend).
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `GenerateSimplexWorleyBlendMap_InvalidSize_Throws` | size=0 or size=-4 | ArgumentOutOfRangeException, ParamName="size" |
+| `ExtendedOverload_InvalidParameters_Throw` | octaves=0, lacunarity=1.0, gain=0, frequency=0, or worleyFrequencyMultiplier=0 | ArgumentOutOfRangeException, ParamName matches the offending parameter |
+| `ExtendedOverload_NonFiniteFloatParameters_Throw` | A non-finite value for frequency, lacunarity, gain, or worleyFrequencyMultiplier | ArgumentOutOfRangeException |
 
 ## PersistentRandomTests Details
 
@@ -105,7 +107,6 @@ and noise map generator (OpenSimplex2 + Worley blend).
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
 | `CreateStateFromSeed_SameSeed_ProducesSameState` | Same seed creates same (s0, s1) state | Random |
-| `DifferentSeed_ProducesDifferentSequence` | Different seed produces different sequence | Random |
 | `SameState_ProducesSameSequence` | Same initial state twice produces same sequence | Random |
 | `ReturnedState_CanContinueSequence` | State returned by NextUInt64 can continue the sequence | Random |
 | `NextInt32AndNextInt64_StayConsistentWithNextUInt64Step` | NextInt32/NextInt64 stepping consistent with NextUInt64, type conversion correct | Random |

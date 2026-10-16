@@ -58,6 +58,8 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `CreateEntity_BeforeBindContext_ThrowsInvalidOperation` | BindContext not yet called | InvalidOperationException, message contains "ISndContext" |
 | `RemoveEntity_NonexistentName_ThrowsInvalidOperation` | Non-existent entity name | InvalidOperationException, message contains entity name |
 | `RequestKillEntity_DoubleRequest_ThrowsInvalidOperation` | Duplicate RequestKillEntity call | InvalidOperationException, message contains "already pending kill" |
+| `CreateEntity_EmptyName_Throws` | Empty entity name in metadata | ArgumentException (paramName="metaData") |
+| `CreateEntity_WhitespaceName_Throws` | Whitespace-only entity name in metadata | ArgumentException |
 
 ## NullNodeFactoryTests Details
 
@@ -79,6 +81,7 @@ SndEntityFactory spawn orchestration and ProcessAll frame processing are covered
 | `Spawn_AfterSpawnHookThrows_WhenRollbackStepAlsoThrows_PropagatesOriginalAndCompletesRollback` | AfterSpawn throws and `TeardownObserverBindings` (OnUnmounted hook) also throws during rollback | Original AfterSpawn exception propagates; `ReleaseStrategiesOnly`/`TeardownOnly`/`RemoveEntity` all still execute; host removal is best-effort |
 | `Spawn_DuplicateName_ThrowsBeforeCreating` | Host already contains an entity with the same name | InvalidOperationException (contains "already exists"), and no second entity is created |
 | `SpawnMany_DuplicateNameInBatch_ThrowsBeforeStagingAnyEntity` | Duplicate name inside the same batch | InvalidOperationException, and no entity in the batch is created |
+| `SpawnMany_CreateEntityThrows_RollsBackAlreadyStagedEntities` | CreateEntity fails mid-batch for the second entity (unregistered strategy index) | InvalidOperationException; already-staged entities removed from the host, acquired strategy references returned |
 
 ## Test Helper Strategies
 

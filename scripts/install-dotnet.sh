@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Install the exact .NET SDK version required by global.json.
 #
-# Policy (AGENTS.md §1.10): never lower the requested version to match an
-# already-installed SDK. Prefer the user default install root ($HOME/.dotnet,
-# dotnet-install's default) so no per-session PATH export is needed on a
-# normally configured machine. When the default root is not writable, fall
-# back to the repository-local .dotnet/ and use the repository root ./dotnet
-# wrapper instead.
+# Policy (AGENTS.md, Environment Bootstrap): never lower the requested
+# version to match an already-installed SDK. Prefer the user default
+# install root ($HOME/.dotnet, dotnet-install's default) so no per-session
+# PATH export is needed on a normally configured machine. When the default
+# root is not writable, fall back to the repository-local .dotnet/ and use
+# the repository root ./dotnet wrapper instead.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

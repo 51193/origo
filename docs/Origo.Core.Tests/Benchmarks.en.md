@@ -34,8 +34,14 @@ and [Godot adapter benchmarks](../Origo.GodotAdapter.Tests/Serialization.en.md) 
 | `Benchmarks/ConcurrentActionQueueBenchmarkTests.cs` | ConcurrentActionQueue Enqueue+ExecuteAll scaling, Enqueue throughput |
 | `Benchmarks/RandomGeneratorBenchmarkTests.cs` | XorShift128+ NextUInt64/NextInt64/NextInt32 throughput |
 | `Snd/Strategy/SndStrategyPerformanceTests.cs` | Strategy pool Get/Release round-trip, Process frame handling scaling, TriggerAll allocation |
-| `Origo.TestSupport/Reporting/PerfReporter.cs` | Performance comparison table outputter (`Report`, `Compare`, `CompareTable`, `ReportTable`), writes to both console and xUnit test output; duplicate `BENCH` metric keys within one process throw `InvalidOperationException` |
+| `Origo.TestSupport/Reporting/PerfReporter.cs` | Performance comparison table outputter (`Report`, `CompareTable`, `ReportTable`), writes to both console and xUnit test output; duplicate `BENCH` metric keys within one process throw `InvalidOperationException` |
 | `TestSupport/PerfReporterMetricKeyUniquenessTests.cs` | Pins the PerfReporter metric-key uniqueness guard: duplicate keys must fail immediately |
+
+### PerfReporterMetricKeyUniquenessTests
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-------------------|-----------|
+| `EmitMetric_DuplicateKey_Throws` | Emitting the same `BENCH` metric key twice in one process throws `InvalidOperationException` instead of silently overwriting the baseline entry | `Origo.TestSupport/Reporting/PerfReporter.cs` |
 
 ## Benchmark Methods
 

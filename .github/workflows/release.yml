@@ -255,14 +255,8 @@ jobs:
           path: .godot_binary
           key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
 
-      - name: Restore
-        run: dotnet restore Origo.sln
-
       - name: Format check
         run: bash scripts/format.sh
-
-      - name: Build
-        run: dotnet build Origo.sln --no-restore --configuration Release
 
       - name: Shell API baseline gate
         env:

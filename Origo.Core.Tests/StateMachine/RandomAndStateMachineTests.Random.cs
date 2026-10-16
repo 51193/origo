@@ -17,15 +17,6 @@ public partial class RandomAndStateMachineTests
     }
 
     [Fact]
-    public void DifferentSeed_ProducesDifferentSequence()
-    {
-        var left = ProduceSequence(RandomNumberGenerator.CreateStateFromSeed("seed-a"), 8);
-        var right = ProduceSequence(RandomNumberGenerator.CreateStateFromSeed("seed-b"), 8);
-
-        Assert.NotEqual(left, right);
-    }
-
-    [Fact]
     public void SameState_ProducesSameSequence()
     {
         var initial = RandomNumberGenerator.CreateStateFromSeed("same-seed");

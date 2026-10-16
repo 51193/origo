@@ -227,14 +227,6 @@ public class TypedDataGeneratedTests
     }
 
     [Fact]
-    public void FromObject_NullValue_PreservesType()
-    {
-        var td = new TypedData(TypedData.KindMap.String, 0, null);
-        Assert.Equal(typeof(string), td.DataType);
-        Assert.Null(TypedDataObjectConverter.ToObject(td));
-    }
-
-    [Fact]
     public void TryExtract_StringKindWithNullValue_ReturnsFoundTrueAndNull()
     {
         // A null-string entry is a legal state (reference kinds store through

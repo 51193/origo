@@ -39,6 +39,13 @@ explicit interface implementation compatibility with manual tags, null inner gua
 | `AddContext_NullValue_Preserved` | null value | Preserved as `key=` (empty value, not skipped) |
 | `AddContext_WhitespaceKey_Skipped` | Whitespace key | Skipped |
 
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `SetElapsedMs_NaN_Throws` | `SetElapsedMs(double.NaN)` | `ArgumentOutOfRangeException` (fail-fast) |
+| `SetElapsedMs_Negative_Throws` | `SetElapsedMs(-1.0)` | `ArgumentOutOfRangeException` (fail-fast) |
+
 ## Known Coverage Gaps
 
 None — this module consists of a single simple utility class with complete test coverage.

@@ -12,8 +12,9 @@ Collection of registered `DataSourceConverter<T>` implementations. All converter
 | `PrimitiveConverters.cs` | 14 primitive type converters (string, byte, int, float, bool, etc.) |
 | `ArrayConverters.cs` | 14 primitive array converters (byte[], int[], float[], etc.) |
 | `BlackboardDataConverter.cs` | Blackboard ↔ DataSourceNode |
-| `DataMetaDataConverter.cs` | DataMetaData ↔ DataSourceNode |
-| `NodeMetaDataConverter.cs` | NodeMetaData ↔ DataSourceNode |
+| `DataMetaDataConverter.cs` | DataMetaData ↔ DataSourceNode (uses `MetaDataPairsCodec`) |
+| `NodeMetaDataConverter.cs` | NodeMetaData ↔ DataSourceNode (uses `MetaDataPairsCodec`) |
+| `MetaDataPairsCodec.cs` | Shared `pairs` envelope and strict map validation for the two metadata converters |
 | `SndMetaDataConverter.cs` | SndMetaData ↔ DataSourceNode |
 | `SndMetaDataListConverter.cs` | SndMetaData list ↔ DataSourceNode |
 | `StrategyMetaDataConverter.cs` | StrategyMetaData ↔ DataSourceNode |

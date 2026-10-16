@@ -317,6 +317,12 @@ public partial class IntegrationTestRunner : Node
         node.Free();
     }
 
+    /// <summary>
+    ///     Fails when <paramref name="condition" /> is false. A test that only
+    ///     needs to prove a call did not throw may pass <c>true</c>: the
+    ///     preceding statements already fail the test when they throw, and the
+    ///     message documents the behavior that was exercised.
+    /// </summary>
     public static void Assert(bool condition, string message)
     {
         if (!condition)

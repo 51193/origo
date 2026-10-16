@@ -17,6 +17,9 @@ obj/
 _ReSharper.Caches/
 riderModule.iml
 
+# Visual Studio
+.vs/
+
 # Godot
 .godot/
 
@@ -28,8 +31,11 @@ publish/
 
 # Coverlet (local / CI artifact)
 coverage.cobertura.xml
-coverage.xml
 TestResults/
+
+# Python bytecode caches written by scripts/*.py and the script self-tests
+__pycache__/
+*.pyc
 
 # OS
 .DS_Store
@@ -42,21 +48,11 @@ Thumbs.db
 
 artifacts/
 
-# Local agent work buffer (untracked by design; see AGENTS.md §1.11)
+# Local agent work buffer (untracked by design; see AGENTS.md, local agent work buffer)
 _origo_local/
 
-# Rider IDE
-*.cs.uid
-
-# Local learning workspace
-/MISSION.md
-/RESOURCES.md
-/assets/
-/lessons/
-/reference/
-
-# Matt Pocock agent configuration is tracked
-!/docs/agents/
+# docs/agents/ is tracked; root content directories such as assets/ have no
+# ignore rule.
 
 # Local scratch work
 /.scratch/

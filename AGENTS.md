@@ -63,7 +63,7 @@ collaboration contracts.
 ### 1.5 Consistent Code Format — Local Equals CI
 
 - All C# must pass `dotnet format --verify-no-changes --severity info`; `scripts/format.sh` runs analyzer dead-code checks. Format is the first gate on C# code.
-- `.editorconfig` defines whitespace, `var`, and analyzer severities. Private-field `_camelCase` naming is enforced by architecture tests in each test project.
+- `.editorconfig` defines whitespace, `var`, and analyzer severities. Private-field `_camelCase` naming is enforced by architecture tests in `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, `Origo.ConsoleBridge.Tests`, and `Origo.SourceGeneration.Tests`.
 - Test projects use flat namespaces (`Origo.Core.Tests`, not nested); IDE0130 is suppressed for test paths. See `docs/Origo.Core.Tests/META-TEST.en.md`.
 - Do not disable `.editorconfig` rules to bypass the gate.
 
@@ -83,7 +83,7 @@ collaboration contracts.
 - `internal` classes implementing public interfaces should have English comments for role and non-trivial contracts (constructor preconditions, disposal, thread safety).
 - Non-English XML comments on public API are defects and must be translated;
   non-public comments should trend English. Tests and vendored upstream source
-  (currently `Origo.Core/Addons/FastNoiseLite/FastNoiseLite.cs`, rationale in
+  (currently `Origo.Core.Kernel/Addons/FastNoiseLite/FastNoiseLite.cs`, rationale in
   its manual entry) are exempt.
 - DocFX/Sandcastle-style API generation is forbidden; `docs/` is the reference.
 
@@ -131,7 +131,7 @@ chapters belong to one work item. Full tracked protocol:
 4. **Changelog alignment** — update `CHANGELOG.md` `[Unreleased]` per §4.
 5. **Documentation** — update the relevant English manual entries.
 6. **Commit** — source, tests, Changelog, and documentation together.
-7. **Post-commit full CI** — run `bash scripts/ci.sh` (lint-scripts → format → test → benchmark → Godot). Fix/amend, then rerun.
+7. **Post-commit full CI** — run `bash scripts/ci.sh` (lint-scripts → format → API baseline → test → benchmark → Godot → package consumer smoke). Fix/amend, then rerun.
 8. **Commit lint** — run `bash scripts/lint-commits.sh`; the local pre-push hook repeats it. Remote CI does not enforce commit lint.
 
 State any inapplicable step in the commit message. **Partial
@@ -158,7 +158,7 @@ unchanged; check sibling paths. A test that passes through a different code
 path is a blind spot, not a regression test. Details:
 `docs/Origo.Core.Tests/META-TEST.en.md`.
 
-- Test projects: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`, and `Origo.GodotAdapter.Integration.Tests` (Godot headless through `scripts/godot-test.sh`); `Origo.TestSupport` is a support library.
+- Test projects: `Origo.Core.Tests`, `Origo.GodotAdapter.Tests`, `Origo.ConsoleBridge.Tests`, `Origo.SourceGeneration.Tests`, `tools/ApiInventoryTool.Tests`, and `Origo.GodotAdapter.Integration.Tests` (Godot headless through `scripts/godot-test.sh`); `Origo.TestSupport` is a support library.
 - Coverlet enforces ≥90% line coverage for measured xUnit projects in `scripts/test.sh`; the Godot integration runner is separate and outside that gate.
 - Use `test.sh` during iteration; run `ci.sh` after commit per §2.
 
@@ -199,13 +199,13 @@ usage/test guidance accurate.
 Full details: `docs/release-process.en.md`. Pre-tag summary:
 
 1. Choose formal `x.y.z`; move `[Unreleased]` to `## [x.y.z] - YYYY-MM-DD` and clear it.
-2. Set `<Version>` in `Directory.Build.props` to `x.y.z` (tag is `vx.y.z`).
+2. Set `<Version>` in `Directory.Build.props` to `x.y.z` and `AssemblyVersion` / `FileVersion` to `x.y.z.0` (tag is `vx.y.z`).
 3. Update the version text in `docs/README.en.md`.
 4. Move analyzer rules to `AnalyzerReleases.Shipped.md` with `## Release x.y.z`; leave no unshipped rules in `AnalyzerReleases.Unshipped.md`.
-5. Run `TAG_VERSION=x.y.z bash scripts/verify-release.sh` (Changelog block, empty `[Unreleased]`, analyzer tracking, docs version stamps).
+5. Run `TAG_VERSION=x.y.z bash scripts/verify-release.sh` (Changelog block, empty `[Unreleased]`, `Directory.Build.props` version stamps, analyzer tracking, docs version stamps).
 6. Commit all release metadata and documentation changes together.
 7. Run `bash scripts/ci.sh` and `bash scripts/lint-commits.sh` on that commit; amend and rerun if either fails.
-8. Tag `vx.y.z` on the verified commit and push it. Release workflow runs tests, packs the three libraries, and attaches packages plus the docs snapshot to GitHub Release; packages are not pushed to nuget.org.
+8. Tag `vx.y.z` on the verified commit and push it. Release workflow runs tests, packs the five shell/kernel packages, and attaches packages plus the docs snapshot to GitHub Release; packages are not pushed to nuget.org.
 
 ## 7. Document Index
 

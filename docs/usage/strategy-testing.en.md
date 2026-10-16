@@ -11,7 +11,7 @@
 
 Used for testing passive strategies that inherit from `LifecycleStrategyBase` (with Process and lifecycle hooks).
 
-### Three-Phase Pattern
+Each scenario runs in three phases: configure, simulate, and inspect.
 
 ### Phase 1: Configure
 

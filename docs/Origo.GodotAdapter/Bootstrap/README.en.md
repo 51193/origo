@@ -16,29 +16,12 @@ Startup and orchestration for the Godot adapter layer. Creates the complete runt
 
 ## Startup Flow
 
-```
-OrigoDefaultEntry._Ready()
-  └── base._Ready()                          // OrigoAutoHost
-       └── AdapterHostKernelPort.CreateRuntime(...)
-            ├── GodotFileSystem + GodotJsonConverterRegistry callback
-            ├── kernel creates TypeStringMapping/Registry/IO/Meta/Path
-            ├── PersistentBlackboard(...) → LoadFromDisk()
-            ├── ConsoleInputBuffer / ConsoleOutputChannel (options may inject custom channels)
-            ├── kernel creates OrigoRuntime
-            └── ISndSceneHostRuntimeBinder.BindRuntimeDependencies(...)  // binds world/logger + observer topology
-  ├── ConfigureStrategies(Runtime.SndWorld)  // ISndWorldAccess; manual registration before Bootstrap freeze
-  ├── RegisterConsoleCommandHandlers()       // adapter handlers registered through IOrigoRuntime
-  ├── AdapterHostKernelPort.CreateContext(...)  // pass startup config
-  ├── Context = sndContext                   // exposed to presentation/game code
-  └── sndContext.Bootstrap()                 // Core-internal orchestration:
-
-SndContext.Bootstrap() internal sequence:
-  1. Strategy discovery       (OrigoAutoInitializer.DiscoverAndRegisterStrategies)
-  2. Ordering validation and registration freeze (SndStrategyPool.SealRegistration)
-  3. Scene alias loading      (SndWorld.LoadSceneAliases)
-  4. SND template loading     (SndWorld.LoadTemplates)
-  5. Entry save loading       (RequestLoadMainMenuEntrySave)
-```
+The ordered startup sequence — runtime creation through `AdapterHostKernelPort`,
+`ConfigureStrategies`, handler registration, context creation, and the internal
+`SndContext.Bootstrap()` steps — is owned by
+[Origo.GodotAdapter Startup Flow](../README.en.md#startup-flow), which also
+records the failure semantics and how the Core host path differs. This page
+keeps the per-file responsibilities above and the design decisions below.
 
 ## Design Decisions
 

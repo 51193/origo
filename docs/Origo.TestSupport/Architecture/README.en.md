@@ -23,7 +23,7 @@ The private-field naming rule in `.editorconfig` is fix-only in `dotnet format -
 
 ### Why TypedData reset lives in the test assembly
 
-The global kind registry is process-wide static state that tests must reset between cases; however AGENTS §1.2 forbids production code from exposing test-convenience hooks. `Origo.TestSupport` uses `InternalsVisibleTo` to reach the internal registry and centralizes the reset, so production `TypedData` has no test-only API.
+The global kind registry is process-wide static state that tests must reset between cases; however the AGENTS.md early-development rule forbids production code from exposing test-convenience hooks. `Origo.TestSupport` uses `InternalsVisibleTo` to reach the internal registry and centralizes the reset, so production `TypedData` has no test-only API.
 
 ### Why test frame flushing goes through TestSupport instead of a production API
 

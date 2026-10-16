@@ -12,6 +12,13 @@ namespace Origo.Core.Utility;
 ///     raw input identically: int is preferred over long, and long over
 ///     float, so integers beyond int range never degrade to float precision.
 /// </summary>
+/// <remarks>
+///     <see cref="SetData" /> and <see cref="SetBlackboard" /> keep separate
+///     dispatch bodies on purpose. Each case has to call <c>SetData</c> /
+///     <c>SetValue</c> with the concrete inferred type, because the store
+///     records that type as the value's kind; funnelling both through one
+///     <c>object</c>-typed helper would store every value as <c>object</c>.
+/// </remarks>
 internal static class ValueInference
 {
     /// <summary>

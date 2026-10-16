@@ -104,12 +104,29 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
 | `Load_RejectsSaveWithNewerFormatVersion` | Save format version newer than current (99) | InvalidOperationException (load rejected) |
+| `Load_RejectsCorruptFormatVersionValue` | meta.map carries an unparseable `origo.format_version` value | InvalidOperationException on flush (corrupt value is not treated as the missing-key default) |
 
 ### Boundary Path
 
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
 | `Load_AcceptsMissingFormatVersionKey` | Old save meta.map without version key | Treated as version 1, loads normally |
+
+## SaveIdValidationTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `RequestSaveGame_ValidSaveId_Succeeds` | Valid save ids (`slot_001`, `a.b-c`, `SaveSlot1`) are accepted and the slot is enumerable after the flush | ISndSaveOperations.RequestSaveGame |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `RequestSaveGame_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, space, or out-of-range char | ArgumentException |
+| `RequestLoadGame_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, or space | ArgumentException |
+| `SetContinueTarget_InvalidSaveId_Throws` | Save id with a path separator, traversal segment, or space | ArgumentException |
 
 ## SaveFormatGoldenTests Details
 
@@ -179,6 +196,7 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 | `SnapshotCurrentToSave_WhenRollbackRenameFails_PreservesBackupAndCanRecover` | Temp→final fails and the `.bak`→real-slot rollback also fails | InvalidOperationException (contains "previous snapshot could not be restored"); the previous snapshot remains only in `.bak`, `.tmp` remains; a later retry installs the new data and removes the backup |
 | `SaveStorageFacade_SnapshotCurrentToSave_CleansUpTempOnFailure` | Snapshot Copy fails | .tmp directory cleaned up |
 | `SaveStorageFacade_DeleteSave_MissingSlot_Throws` | Neither the target slot nor any remnant exists | InvalidOperationException |
+| `SaveStorageFacade_WriteLevelPayloadOnly_NullStateMachines_NoFilesWritten` | LevelPayload with null SessionStateMachinesNode | InvalidOperationException, no level files written |
 
 ### Boundary Path
 
@@ -186,6 +204,9 @@ format-compatibility promise of the in-repository golden v1 save loaded through 
 |-------------|-------------------|-------------------|
 | `SaveStorageFacade_ReadProgressNodeFromSnapshot_Missing_ReturnsNull` | Snapshot directory does not exist | Returns null |
 | `SavePayloadReader_TryReadLevelPayloadFromCurrent_AllFilesAbsent_ReturnsNull` | All level files missing | Returns null |
+| `SaveStorageFacade_WriteSavePayloadToCurrentThenSnapshot_WhenMarkerLeft_DoesNotIdempotentSkip` | Leftover write-in-progress marker with a matching snapshot hash (interrupted snapshot) | Retry rewrites and clears the marker, completing the snapshot |
+| `SaveStorageFacade_EnumerateSaveIds_SuffixNamedSlotWithoutRealSlot_IsEnumerated` | User-chosen id ending in `.tmp` without a real slot, alongside a real slot's `.tmp` remnant | The id `foo.tmp` is enumerated; the `bar.tmp` remnant is not |
+| `SaveStorageFacade_EnumerateSaveIds_SuffixOnlyId_DoesNotThrow` | Id equal to the `.tmp` suffix alone (`save_.tmp`) | Does not throw; `.tmp` is enumerated |
 
 ## SaveIdempotencyTests Details
 

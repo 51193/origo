@@ -30,6 +30,12 @@ safety of self-unsubscribing within notifications (re-entrancy safety), and Clea
 | `MultipleNotify_SameKey_AllTriggerCallback` | Consecutive notifications all trigger | snd-entity-model |
 | `Unsubscribe_DifferentCallback_SameKey_OnlyTargetRemoved` | Only the target callback is removed, others unaffected | snd-entity-model |
 
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `Notify_WhenCallbackThrows_AbortsRemainingCallbacksAndPropagates` | A subscribed callback throws on notification | Exception propagates; remaining callbacks for the key are not invoked (fail-fast) |
+
 ### Boundary Path
 
 | Test Method | Boundary Condition | Expected Behavior |

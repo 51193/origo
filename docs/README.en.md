@@ -2,7 +2,7 @@
 
 The complete documentation manual for the Origo framework. Uses a **bottom-up** structure — aggregating upward from source code directories level by level, ensuring any question can reach its target via multi-level directory indexing without reading source code from scratch.
 
-> **Development Loop (mandatory order)**: ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Documentation → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ post-commit `scripts/lint-commits.sh`.
+> **Development Loop (mandatory order)**: every change must follow the mandatory ordered loop owned by [AGENTS.md — Development Loop](../AGENTS.md#2-development-loop-mandatory-order); do not skip or rearrange its steps.
 > Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full guidelines and document master index at repo root [AGENTS.md](../AGENTS.md).
 
 ## Design Principles
@@ -73,7 +73,7 @@ Each module directory's English entry contains:
 | **Release & Changelog** | [release-process](release-process.en.md) | Formal releases, weekly snapshots, and Changelog rules |
 | **Architecture** | [README](architecture/README.en.md) | Architecture overview, decision records, and deferred design directions |
 | **Agent skills configuration** | [README](agents/README.en.md) | GitHub and local issue management, triage labels, and domain-documentation routing |
-| **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory loop (source → tests → Changelog → docs → commit → post-commit CI → commit lint), core principles, and document master index |
+| **Agent Workflow** | [AGENTS.md](../AGENTS.md) | Mandatory development loop, core principles, and document master index |
 | **Performance Baselines** | [README](benchmarks/README.en.md) | TypedData inline storage + framework subsystem performance baseline and design trade-offs |
 
 ## Origo.Core Subsystems

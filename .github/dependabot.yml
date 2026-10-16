@@ -13,9 +13,6 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     groups:
-      roslyn:
-        patterns:
-          - "Microsoft.CodeAnalysis.*"
       # xunit.v3 3.x pins transitive dependencies with exact (=) versions,
       # so xunit.v3 and xunit.v3.extensibility.core must be proposed in a
       # single PR. Bumping only one of them causes NU1608 restore errors in

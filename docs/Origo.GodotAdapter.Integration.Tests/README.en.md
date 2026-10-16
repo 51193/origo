@@ -103,6 +103,7 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── GodotSndEntityIntegrationTests.cs # SND Entity tests
 │   ├── GodotSndManagerIntegrationTests.cs # SND Manager tests
 │   ├── GodotSndManagerCreationIntegrationTests.cs # Entity create/remove tests
+│   ├── GodotSndManagerExitTreeIntegrationTests.cs # Manager _ExitTree teardown-fallback tests
 │   ├── GodotPackedSceneNodeFactoryIntegrationTests.cs # PackedScene loading tests
 │   ├── OrigoAutoHostBootstrapIntegrationTests.cs # Full startup tests
 │   ├── AdapterCommandHandlerIntegrationTests.cs # Command handler tests
@@ -120,7 +121,12 @@ Origo.GodotAdapter.Integration.Tests/
 │   ├── StubNodeFactory.cs
 │   └── IntegrationTestHarness.cs
 └── TestScenes/
-    └── minimal.tscn                       # Minimal root scene
+    ├── minimal.tscn                       # Minimal root scene (project main scene)
+    ├── empty_scene.json                   # Empty scene payload referenced by test_entry_levels.json
+    ├── test_entry_levels.json             # Entry-level fixture for OrigoDefaultEntry context tests
+    ├── empty_scene_aliases.map            # Empty scene-alias map for OrigoDefaultEntry tests
+    ├── empty_templates.map                # Empty template map for entry and mapping tests
+    └── test_empty_node.tscn               # Packed-scene loading fixture
 ```
 
 ## Version Management

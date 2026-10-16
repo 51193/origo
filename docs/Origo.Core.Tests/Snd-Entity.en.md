@@ -125,7 +125,6 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `ProcessAll_DeltaPropagatesToStrategy` | ProcessAll's delta parameter is correctly passed to strategy Process | snd-entity-model: Frame processing |
 | `ProcessAll_ProcessAddsStrategy_NewStrategyNotExecutedThisFrame` | Strategy added via AddStrategy during Process is not executed this frame | snd-entity-model: Frame processing |
 | `ProcessAll_ProcessRemovesStrategy_RemainingStrategiesStillExecuted` | After RemoveStrategy during Process, subsequent strategies still execute normally | snd-entity-model: Frame processing |
-| `SndEntityFactory_Spawn_CreatesEntityAndFiresAfterSpawn` | Spawn creates entity and fires AfterSpawn hook | SndEntityFactory |
 | `SndEntityFactory_SpawnMany_BatchCreatesAllThenFiresHooks` | SpawnMany creates all then fires hooks one by one | SndEntityFactory |
 | `SndEntityFactory_SpawnMany_EntitiesVisibleDuringAfterSpawn` | During SpawnMany AfterSpawn, cross-entity FindByName is visible | SndEntityFactory |
 | `FullMemorySndSceneHost_RemoveEntity_ClearsCollectionOnly` | RemoveEntity only removes from collection; duplicate Remove throws | ISndSceneHost |
@@ -171,6 +170,8 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SetData_ConverterThrows_LeavesNoDictionaryEntry` | Object converter for a custom kind throws | InvalidOperationException; the failed SetData leaves no entry (SerializeMeta is empty, TryGetData returns false) |
+| `SetData_WhenObserverThrows_ValueStillCommittedAndRemainingObserversSkipped` | An observer callback throws during SetData | InvalidOperationException propagates; remaining observers skipped, but the value stays committed and readable via TryGetData |
+| `TryGetData_BlankName_Throws` | Empty data key passed to TryGetData / GetRequiredData | ArgumentException |
 
 ## SndEntityRecoveryRollbackTests Details
 
@@ -188,6 +189,7 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
 | `SetSceneAliasResolver_Null_ThrowsArgumentNullException` | SetSceneAliasResolver with null | ArgumentNullException (fail-fast) |
+| `Release_WhenOneNodeFreeThrows_StillReleasesOthersAndRethrows` | One node's Free throws during Release | InvalidOperationException propagates; every node is still released and the node collection is emptied |
 
 ## Test Helper Strategies
 

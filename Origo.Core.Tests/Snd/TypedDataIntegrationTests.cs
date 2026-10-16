@@ -63,17 +63,6 @@ public class TypedDataIntegrationTests
     }
 
     [Fact]
-    public void Entity_TryGetData_Found_ReturnsTrue()
-    {
-        var entity = new StubSndEntity("test");
-        entity.SetData("score", 999);
-
-        var (found, value) = entity.TryGetData<int>("score");
-        Assert.True(found);
-        Assert.Equal(999, value);
-    }
-
-    [Fact]
     public void Entity_SetData_DifferentTypes_SameKey()
     {
         var entity = new StubSndEntity("test");
