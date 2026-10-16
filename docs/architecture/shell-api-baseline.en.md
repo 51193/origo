@@ -38,7 +38,47 @@ There is no previous stable shell package before the first 0.1.0 release, so pre
 - Build failure or Source Generator diagnostic error: the script exits before inventory generation and never leaves a partial baseline.
 - Missing assembly, missing reference directory, unresolved reference, or an exported signature referencing a kernel type: the tool reports an explicit error and exits non-zero without writing `generate` output. Kernel-reference checks recurse through generic type arguments, array/pointer/function-pointer elements, indexer parameters, and method generic constraints.
 - Missing baseline file: `verify` fails explicitly and instructs the developer to generate the baseline in the same reviewed change.
-- Determinism: JSON is ordered by assembly name and ordinal API lines with normalized LF line endings, so repeated runs are byte-identical. `ApiInventoryTool.Tests` covers determinism, addition/removal detection, previous-package rules, kernel-reference rejection, and command-line failure paths.
+- Determinism: JSON is ordered by assembly name and ordinal API lines with normalized LF line endings, so repeated runs are byte-identical. `ApiInventoryTool.Tests` covers determinism, addition/removal detection, previous-package rules, kernel-reference rejection, and command-line failure paths; the per-method breakdown is under [Test Capability](#test-capability) below.
+
+## Test Capability
+
+`tools/ApiInventoryTool.Tests` verifies the tool end to end (xUnit, 14 test methods):
+
+| Test File | Verification Focus |
+|-----------|-------------------|
+| `BaselineContentTests.cs` | Contents and limits of the tracked `shell-api-baseline.json` |
+| `InventoryBuilderTests.cs` | Inventory building, kernel-reference rejection, and the verify/compare rules |
+| `ProgramTests.cs` | Command-line validation and the exit codes of generate, verify, and compare |
+| `TestAssemblyEmitter.cs` | Helper that compiles throwaway assemblies with Roslyn for the cases above |
+
+### BaselineContentTests
+
+| Test Method | Verified Behavior |
+|-------------|-------------------|
+| `TrackedBaseline_ContainsGeneratedSurfaceAndExcludesKernel` | The tracked baseline parses into four shell assemblies, carries the generated Contracts accessor, the adapter's generated nested `MethodName` / `PropertyName` / `SignalName` types, and the ConsoleBridge server surface, and no API line in any assembly references `Origo.Core.Kernel`. |
+
+### InventoryBuilderTests
+
+| Test Method | Verified Behavior |
+|-------------|-------------------|
+| `Build_IsDeterministicAndSorted` | The same assembly compiled with its declarations in the opposite order serializes to byte-identical JSON and the same ordered API lines. |
+| `Verify_ReportsAddedRemovedAndChangedApi` | Verify mode reports removed-or-changed API lines and added API lines separately. |
+| `ComparePrevious_AllowsAdditionsAndRejectsRemovals` | Previous-package comparison accepts additions and rejects a removal. |
+| `Build_RejectsMissingAssemblyExplicitly` | A missing assembly path fails the build with a "was not found" error. |
+| `Build_RejectsForbiddenKernelReference` | A shell signature exposing an `Origo.Core.Kernel` type fails with "exposes kernel type". |
+| `Build_CollectsShellMemberKindsAndConstraints` | Enum, delegate, struct, and record kinds, generic constraints (`where T : class, new()`), nested types, a struct property, an event, a static field, and a protected member all enter the inventory. |
+| `Build_ReportsForbiddenMemberKinds` | Kernel references in methods, properties, fields, and events are each reported. |
+| `Build_ReportsEmptyNameAndMissingReferenceDirectory` | An empty assembly name, a missing reference directory, and a mismatched assembly name each fail explicitly. |
+| `Build_ResolvesTypeKindsWhenTheAssemblyReferencesSystemRuntime` | With `System.Runtime` available, enum and readonly-struct kinds resolve instead of falling back to a reference type. |
+| `Build_RecordsTypeModifiersInitAccessorsAndExtensionThis` | `static`, `abstract`, `sealed`, and `readonly` type modifiers, `init` accessors, and extension `this` parameters are recorded. |
+| `Build_ReportsForbiddenArrayIndexerAndMethodConstraintReferences` | Kernel references reached through array elements, indexers, and method generic constraints are reported. |
+
+### ProgramTests
+
+| Test Method | Verified Behavior |
+|-------------|-------------------|
+| `GenerateVerifyAndCompare_ReturnExpectedExitCodes` | Generate writes the baseline with exit 0, verify prints `baseline: OK` with exit 0, a clean compare prints `validation: OK` with exit 0, and a mismatch exits 1. |
+| `CommandLineValidation_ReturnsFailureForBadInput` | No arguments, an unknown command, a missing `--assembly`, a malformed `--assembly`, and a missing assembly file each exit 1, while `--help` exits 0. |
 
 ## Design Decisions
 
