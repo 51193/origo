@@ -347,6 +347,92 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
         errors = self.errors_for(self.mutate(PUSH_LINE, "make publish-main"))
         self.assert_reports(errors, "cannot be validated")
 
+    def test_awk_program_executing_a_push_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE, "awk 'BEGIN{system(\"git push origin refs/heads/main\")}'"
+            )
+        )
+        self.assert_reports(errors, "can execute")
+
+    def test_pipe_to_shell_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "echo git push origin refs/heads/main | bash")
+        )
+        self.assert_reports(errors, "pipes text into a shell")
+
+    def test_shell_running_a_script_payload_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "bash -c './scripts/push-main.sh'")
+        )
+        self.assert_reports(errors, "cannot be validated")
+
+    def test_shell_running_a_variable_path_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'S=./scripts/push-main.sh; bash "$S"')
+        )
+        self.assert_reports(errors, "named by a variable")
+
+    def test_alias_definition_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE,
+                "shopt -s expand_aliases; "
+                "alias p='git push origin refs/heads/main'; p",
+            )
+        )
+        self.assert_reports(errors, "cannot follow aliases")
+
+    def test_quoted_brackets_do_not_hide_a_push(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE, 'echo "[["; git push origin refs/heads/main; echo "]]"'
+            )
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_test_expression_does_not_hide_a_push(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE,
+                'if [[ -z "$X" || "$Y" == v* ]]; then '
+                "git push origin refs/heads/main; fi",
+            )
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_absolute_path_argument_is_accepted(self) -> None:
+        for replacement in (
+            'sed -n "1p" /tmp/list.txt; git push origin "refs/tags/${TAG}"',
+            'echo hi > /dev/null; git push origin "refs/tags/${TAG}"',
+            'cat /etc/os-release; git push origin "refs/tags/${TAG}"',
+        ):
+            with self.subTest(replacement=replacement):
+                self.assertEqual(
+                    [], self.errors_for(self.mutate(PUSH_LINE, replacement))
+                )
+
+    def test_quoted_separator_is_accepted(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE, 'echo "left | $TAG"; git push origin "refs/tags/${TAG}"'
+            )
+        )
+        self.assertEqual([], errors)
+
+    def test_zero_exit_match_check_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                "if count != 1:\n"
+                "                  raise SystemExit(\n"
+                '                      f"ERROR: expected exactly one <{element}> element'
+                ' in {path}, found {count}."\n'
+                "                  )",
+                "if count != 1:\n                  sys.exit(0)",
+            )
+        )
+        self.assert_reports(errors, "followed by a raise")
+
     def test_match_check_without_a_raise_is_rejected(self) -> None:
         errors = self.errors_for(
             self.mutate(
@@ -496,6 +582,16 @@ class ReleaseWritebackGuardTests(GuardFixtureCase):
             "    steps:\n"
             "      - name: push main\n"
             '        run: GIT=git; "$GIT" push origin HEAD:main\n'
+        )
+        self.assert_reports(self.errors_for(text), "only the release job")
+
+    def test_pipe_to_shell_in_a_new_job_is_rejected(self) -> None:
+        text = self.workflow + (
+            "\n  publish-main:\n"
+            "    runs-on: ubuntu-latest\n"
+            "    steps:\n"
+            "      - name: push main\n"
+            "        run: echo git push origin HEAD:main | bash\n"
         )
         self.assert_reports(self.errors_for(text), "only the release job")
 
