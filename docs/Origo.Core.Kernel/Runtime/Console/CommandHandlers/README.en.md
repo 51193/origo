@@ -37,10 +37,7 @@ Reads the key value from the given blackboard layer. Currently only `layer=syste
 
 ### bb_set
 
-```
-bb_set <layer> <key> <value>
-```
-Writes a value to the blackboard. Value type is auto-inferred: integer → Int32, float → Single, "true"/"false" → Boolean, otherwise → String.
+Syntax and type-inference rules: [Usage: Console Commands — bb_set](../../../../usage/console-commands.en.md#bb_set).
 
 ### spawn
 
@@ -59,19 +56,11 @@ Finds the entity by name, invokes the active strategy via `ISndActiveStrategyAcc
 
 ### list_saves
 
-```
-list_saves
-```
-Lists every save slot; display metadata is appended as `key=value` on the same line, or `No saves found.` when the storage is empty.
+Syntax and output format: [Usage: Console Commands — list_saves](../../../../usage/console-commands.en.md#list_saves--save--load--delete_save--switch_level).
 
 ### save / load / switch_level
 
-```
-save <saveId>
-load <saveId>
-switch_level <levelId>
-```
-`save`, `load`, and `switch_level` only queue a request in the system deferred queue and print `queued` on success. The request executes during the next `IOrigoFrameDriver.DriveFrame` system-deferred phase. `load` verifies that the slot exists before queueing.
+Deferred-queue semantics and syntax: [Usage: Console Commands — save / load / switch_level](../../../../usage/console-commands.en.md#list_saves--save--load--delete_save--switch_level).
 
 ### delete_save
 

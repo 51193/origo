@@ -11,7 +11,7 @@ Performance benchmark reporting utilities. Provides unified tabular output metho
 
 | File | Responsibility |
 |------|---------------|
-| `PerfReporter.cs` | Performance reporter wrapping `TextWriter` and `ITestOutputHelper`. Provides `CompareTable` (multi-type comparison table), `ReportTable` (single-method report table), and `newline()` separator methods; duplicate `BENCH` metric keys within one test process throw `InvalidOperationException` |
+| `PerfReporter.cs` | Performance reporter wrapping `TextWriter` and `ITestOutputHelper`. Provides `Report`, `CompareTable` (multi-type comparison table), and `ReportTable` (single-method report table); duplicate `BENCH` metric keys within one test process throw `InvalidOperationException` |
 
 ## Design Decisions
 

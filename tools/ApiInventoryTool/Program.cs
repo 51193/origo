@@ -127,9 +127,6 @@ internal static class Program
                 case "--reference-dir":
                     options.ReferenceDirectories.Add(RequireValue(args, ref i, argument));
                     break;
-                case "--forbid-assembly":
-                    options.ForbiddenAssemblies.Add(RequireValue(args, ref i, argument));
-                    break;
                 case "--baseline":
                     options.BaselinePath = RequireValue(args, ref i, argument);
                     break;

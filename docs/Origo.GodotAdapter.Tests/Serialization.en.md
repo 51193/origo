@@ -125,11 +125,11 @@ Parametrically exercises every generated accessor (`As*`/`TryGet*`), the kind ma
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
-| `WriteThroughput_Registered_Outperforms_Unregistered` | Registered Kind(130) vs unregistered Kind(255) write throughput comparison; asserts both sides extract equivalent values | GodotAdapter Snd |
-| `ReadThroughput_TryGetVector3_Outperforms_IsT` | `TryGetVector3` (Kind) vs `ToObject is Vector3` read, results match and print comparison | GodotAdapter Snd |
-| `ObjectConverter_ToObject_GodotSwitch_Outperforms_Data` | ToObject switch dispatch vs Data property path comparison; asserts return value is correct Vector3 | GodotAdapter Snd |
+| `WriteThroughput_RegisteredFactory_Outperforms_UnregisteredFallback` | `TypedDataFactory<Vector3>.Create` vs unregistered-kind constructor write throughput; asserts the registered side reads back its Vector3 and the unregistered side does not | GodotAdapter Snd |
+| `ReadThroughput_TryGetVector3_Outperforms_ToObjectTypeCheck` | `TryGetVector3` vs `ToObject(td) is Vector3` read throughput; asserts both sides sum to the same value | GodotAdapter Snd |
+| `ObjectConverter_ToObject_RegisteredVector3_ReportsThroughput` | `TypedDataObjectConverter.ToObject` throughput for a registered Vector3; asserts the converted value is that Vector3 | GodotAdapter Snd |
 | `ObjectConverter_FromObject_GodotSwitch_Outperforms_Fallback` | FromObject Kind-switch(137) vs unregistered fallback(255) comparison; asserts both sides extract equivalent Color values | GodotAdapter Snd |
-| `Factory_CreateExtract_Vector3_RegisteredVsUnregistered` | `TypedDataFactory<Vector3>` Create+Extract Kind-based path throughput; asserts round-trip correct | GodotAdapter Snd |
+| `Factory_CreateExtract_Vector3_ReportsThroughput` | `TypedDataFactory<Vector3>` Create+Extract throughput; asserts round-trip correctness | GodotAdapter Snd |
 | `MixedEntitySimulation_GodotTypes` | 500 entities × 60 frames mixed simulation throughput and allocation; asserts entity 0 position / alive data intact | GodotAdapter Snd |
 
 ## Test Support Strategy

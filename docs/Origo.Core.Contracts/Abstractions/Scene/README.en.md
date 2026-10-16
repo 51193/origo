@@ -20,30 +20,7 @@ Defines the public read-only scene contract. `ISndSceneReadAccess` is the read-o
 | `GetEntities()` | Snapshot of all currently alive entities |
 | `FindByName(name)` | Look up an entity by stable name; null when not found |
 
-### ISndSceneAccess (internal)
-
-| Member | Description |
-|------|------|
-| `BuildMetaList()` | Collect entity metadata (no BeforeSave) |
-| `RecoverFromMetaList(metaList)` | Recover entities from metadata (no AfterLoad) |
-
-### ISndSceneHost : ISndSceneAccess
-
-| Own Members | Description |
-|------|------|
-| `CreateEntity(SndMetaData)` | Create entity (no hooks) |
-| `GetEntities()` | All alive entities |
-| `FindByName(name)` | Find entity by name |
-| `ProcessAll(delta)` | Frame update |
-| `RequestKillEntity(name)` | Mark pending kill |
-| `RemoveEntity(name)` | Remove + release engine resources (no hooks) |
-| `RemoveAllEntities()` | Clear collection (no hooks) |
-
-### IOwningSessionBindable
-
-| Member | Description |
-|------|------|
-| `SetOwningSession(ISessionRun session)` | Called by `SessionRun` at construction; binds the session to the host, after which every entity the host creates is automatically bound to the session's `ISndEntity.OwningSession` |
+> The `internal` interfaces `ISndSceneAccess`, `ISndSceneHost`, and `IOwningSessionBindable` are declared in Origo.Core.Kernel; their member tables live in [Origo.Core.Kernel/Abstractions/Scene](../../../Origo.Core.Kernel/Abstractions/Scene/README.en.md).
 
 ## Design Decisions
 

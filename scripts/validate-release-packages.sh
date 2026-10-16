@@ -10,14 +10,19 @@ VERSION="${2:-}"
 [[ -n "$VERSION" ]] || { echo "ERROR: usage: $0 <artifacts-dir> <version>" >&2; exit 2; }
 [[ -d "$ARTIFACTS_DIR" ]] || { echo "ERROR: artifacts directory not found: $ARTIFACTS_DIR" >&2; exit 2; }
 
-python3 - "$ARTIFACTS_DIR" "$VERSION" <<'PY'
+# The adapter package must depend on the GodotSharp version that matches the
+# Godot.NET.Sdk pin the adapter is built against. The pin parser lives in
+# download-godot.sh, so a Godot SDK bump cannot leave this expectation behind.
+GODOT_SDK_VERSION=$(bash "$ROOT/scripts/download-godot.sh" --print-version)
+
+python3 - "$ARTIFACTS_DIR" "$VERSION" "$GODOT_SDK_VERSION" <<'PY'
 import os
 import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
 
-artifacts_dir, version = sys.argv[1], sys.argv[2]
+artifacts_dir, version, godot_sdk_version = sys.argv[1], sys.argv[2], sys.argv[3]
 expected = {
     "Origo.Core.Contracts",
     "Origo.Core.Kernel",
@@ -73,7 +78,7 @@ pairing = {
     "Origo.ConsoleBridge": {"Origo.Core.Contracts": version},
     "Origo.Core": {"Origo.Core.Contracts": version, "Origo.Core.Kernel": version},
     "Origo.Core.Kernel": {"Origo.Core.Contracts": version},
-    "Origo.GodotAdapter": {"Origo.Core": version, "GodotSharp": "4.7.2"},
+    "Origo.GodotAdapter": {"Origo.Core": version, "GodotSharp": godot_sdk_version},
 }
 for package_id, requirements in pairing.items():
     if package_id not in packages:

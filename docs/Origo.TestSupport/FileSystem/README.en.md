@@ -22,7 +22,7 @@ Pure in-memory test double for `IFileSystem` with zero physical file system depe
 
 ### Why MemoryFileSystem lives in TestSupport rather than Core
 
-`MemoryFileSystem` has no production consumers; only test projects use it, either through `TestMemoryFileSystem` or directly. Per AGENTS §1.2, production assemblies should not carry internal implementations solely for test convenience, so the reference implementation lives in `Origo.TestSupport`. Core keeps only the `IFileSystem` abstraction and the path/data-source components needed by production code.
+`MemoryFileSystem` has no production consumers; only test projects use it, either through `TestMemoryFileSystem` or directly. Per the AGENTS.md early-development rule, production assemblies should not carry internal implementations solely for test convenience, so the reference implementation lives in `Origo.TestSupport`. Core keeps only the `IFileSystem` abstraction and the path/data-source components needed by production code.
 
 ---
 

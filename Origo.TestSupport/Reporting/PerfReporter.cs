@@ -21,9 +21,6 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
     private readonly TextWriter _output = output;
     private readonly ITestOutputHelper? _testOutput = testOutput;
 
-    /// <summary>Singleton reporter that writes to the process console.</summary>
-    public static PerfReporter ToConsole { get; } = new(Console.Out);
-
     /// <summary>Creates a reporter that writes to both the console and xUnit output.</summary>
     public static PerfReporter ForTest(ITestOutputHelper output) => new(Console.Out, output);
 
@@ -105,33 +102,6 @@ public class PerfReporter(TextWriter output, ITestOutputHelper? testOutput = nul
             WriteLine($"  Alloc ratio  : {allocRatio:F2}x vs baseline");
         }
 
-        WriteLine($"  {divider}");
-    }
-
-    /// <summary>Emits a two-sided throughput and allocation comparison.</summary>
-    public void Compare(string title, string nameA, int iterationsA, TimeSpan timeA, long allocA,
-        string nameB, int iterationsB, TimeSpan timeB, long allocB)
-    {
-        var divider = new string('-', 70);
-        var faster = timeA < timeB ? nameA : nameB;
-        var ratio = timeA < timeB
-            ? timeB.TotalMilliseconds / timeA.TotalMilliseconds
-            : timeA.TotalMilliseconds / timeB.TotalMilliseconds;
-
-        WriteLine();
-        WriteLine($"  === {title} ===");
-        WriteLine($"  {divider}");
-        WriteLine($"  Method                 Iterations   Time         Ops/s         Alloc");
-        WriteLine($"  {divider}");
-
-        EmitMetric("Compare", title, "A", iterationsA / timeA.TotalSeconds, allocA);
-        EmitMetric("Compare", title, "B", iterationsB / timeB.TotalSeconds, allocB);
-
-        PrintRow(nameA, iterationsA, timeA, allocA);
-        PrintRow(nameB, iterationsB, timeB, allocB);
-
-        WriteLine($"  {divider}");
-        WriteLine($"  Result: '{faster}' is {ratio:F2}x faster");
         WriteLine($"  {divider}");
     }
 

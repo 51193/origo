@@ -93,21 +93,12 @@ internal sealed class CoreHostKernelPort : IHostKernelPort
             options.ConsoleOutputChannel);
         sceneHost.BindWorld(runtime.SndWorld);
 
-        var context = new SndContext(new SndContextParameters(
+        var context = new SndContext(HostContextParameters.Create(
             runtime,
             dataSourceIo,
             metaAccess,
             pathResolver,
-            options.SaveRootPath,
-            options.InitialSaveRootPath,
-            options.EntryConfigPath)
-        {
-            AutoDiscoverStrategies = options.AutoDiscoverStrategies,
-            DiscoverySkipPrefixes = options.DiscoverySkipPrefixes,
-            SceneAliasMapPath = options.SceneAliasMapPath,
-            SndTemplateMapPath = options.SndTemplateMapPath,
-            ConfigureConverters = options.ConfigureConverters,
-        });
+            options));
         sceneHost.BindContext(context);
 
         return new OrigoHostBundle(runtime, context);

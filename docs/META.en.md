@@ -2,7 +2,7 @@
 
 > [↑ Back to Origo Manual](README.en.md)
 
-> **⚠️ Mandatory Development Loop: Every change must close the loop in order — ① Develop source → ② Extend/adapt tests → ③ Execute tests → ④ Fix source + re-test until all pass → ⑤ Changelog → ⑥ Documentation → ⑦ Commit → ⑧ post-commit `scripts/ci.sh` → ⑨ commit lint (also enforced by the local pre-push hook). Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects. Full rules in [AGENTS.md](../AGENTS.md).**
+> **⚠️ Mandatory Development Loop: every change must close the mandatory ordered loop owned by [AGENTS.md — Development Loop](../AGENTS.md#2-development-loop-mandatory-order); do not skip or rearrange its steps. Before modifying source code, you must read the documentation of its upstream, downstream, and related facilities. Never misdiagnose cross-module collaborative design as defects.**
 
 ## Documentation Positioning
 
@@ -214,6 +214,8 @@ docs/                            # Documentation root (inside the origo reposito
 ├── agents/                     # Matt Pocock skills configuration and manual entry
 ├── benchmarks/                 # Performance baselines and baseline.json
 ├── Origo.Core/                  # Mirrors the repo root Origo.Core/ directory structure
+├── Origo.Core.Contracts/        # Mirrors the repo root Origo.Core.Contracts/ directory structure
+├── Origo.Core.Kernel/           # Mirrors the repo root Origo.Core.Kernel/ directory structure
 ├── Origo.Core.Tests/            # Test capability docs grouped by capability
 ├── Origo.GodotAdapter/          # Mirrors the repo root Origo.GodotAdapter/
 ├── Origo.GodotAdapter.Tests/    # GodotAdapter test capability docs

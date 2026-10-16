@@ -55,6 +55,21 @@ ensuring Action strategy mount/unmount goes through the real `SndStrategyManager
 | `DefaultHooks_DoNotMutateEntityData` | Default hook implementations called sequentially | Existing entity data unchanged |
 | `Wire_MultipleCycles_ManagesSubscriptionsCorrectly` | AfterAdd after AfterSpawn | Subscription count stays 1, returns to 0 after BeforeRemove |
 
+## PlanExecutionStrategyBridgeTests Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Reference |
+|-------------|-----------------|-----------|
+| `PlanOnBridgeEntity_StaticLifecycleActionStrategy_ReusesInsteadOfThrowing` | Statically mounted action strategy is reused on a bridge entity; step_a and "executing" status set without throwing | Planning |
+| `PlanOnBridgeEntity_StepSequence_AdvancesAndCleansUpActions` | Step sequence advances step_a→step_b→completed and releases every dynamically mounted action strategy | Planning |
+
+### Error Path
+
+| Test Method | Triggered Error | Expected Behavior |
+|-------------|----------------|-------------------|
+| `PlanOnBridgeEntity_AfterFailedActionAdd_PlanTerminationIsIdempotent` | Action strategy AfterAdd hook fails during step mount | InvalidOperationException propagates, then action completion terminates the plan without removing the never-mounted strategy |
+
 ## Test Helper Strategies
 
 | Strategy Class | Defined In | Purpose |

@@ -24,7 +24,7 @@ Every change must follow this cycle (see the Development Loop section in `AGENTS
 4. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing.
 5. Update the English documentation when behavior, interfaces, or design intent changes.
 6. Commit source, tests, Changelog, and documentation together.
-7. After the commit, run `bash scripts/ci.sh` (lint-scripts + format + build/test + coverage gates + benchmarks + Godot integration); amend and rerun if it fails.
+7. After the commit, run `bash scripts/ci.sh` (lint-scripts + format + shell API baseline + build/test + coverage gates + benchmarks + Godot integration + shell package consumer smoke); amend and rerun if it fails.
 8. After the commit, run `bash scripts/lint-commits.sh`; the local pre-push hook repeats it and remote CI does not enforce commit lint.
 
 ## Dependency updates

@@ -4,7 +4,7 @@
 
 ## Facts and objective
 
-Investigation date: 2026-09-18; baseline: `cdba5e4`. This proposal does not change current rules. Independent file reading and `python scripts/validate-agent-docs.py` both confirm 223 lines and 16364 bytes in root `AGENTS.md`. The guard specifies `MAX_LINES = 300` and `MAX_BYTES = 16 * 1024`, leaving 20 bytes. It also requires 11 fixed subsection headings and particular commands and keywords; text-only compression remains constrained by that structure.
+Investigation date: 2026-09-18; baseline: `cdba5e4`. This proposal does not change current rules. Independent file reading and `python scripts/validate-agent-docs.py` both confirm 223 lines and 16364 bytes in root `AGENTS.md` at that baseline. The guard specifies `MAX_LINES = 300` and `MAX_BYTES = 16 * 1024`, leaving 20 bytes. It also requires 11 fixed subsection headings and particular commands and keywords; text-only compression remains constrained by that structure.
 
 This is not a 16 KiB Codex platform limit. [Official AGENTS documentation](https://developers.openai.com/codex/guides/agents-md/) describes instructions combined from repository root to the current working directory, with a default 32 KiB project-instruction budget. Nested instructions are not discovered simply because a file in that directory is being edited. Starting at the repository root does not guarantee a nested instruction file is active.
 
@@ -38,7 +38,7 @@ Full dependency-family rationale, release metadata checklists, internal test-acc
 | Formal release | Complete release-process authority | Version, analyzer tracking, workflows, docs | verify-release, release metadata, post-commit CI/lint, tag sequence |
 | Unfinished discovery/task recovery | Complete META buffer protocol; buffer root and relevant chapters | Baseline revalidation, facilities, history/commands | Ownership, status, failure, next action, final commit |
 
-This is a proposal, not a waiver. Current full-reading and completion rules still apply. In particular, current AGENTS §0 requires full release-process reading. Routing it only to release tasks requires coordinated edits to AGENTS, the English META, release-process, and the instruction guard. A skill cannot override them.
+This is a proposal, not a waiver. Current full-reading and completion rules still apply. In particular, the current AGENTS.md pre-work gate requires full release-process reading. Routing it only to release tasks requires coordinated edits to AGENTS, the English META, release-process, and the instruction guard. A skill cannot override them.
 
 General Changelog categories and BREAKING decisions should be routed separately from formal release operations; ordinary source changes can still require Changelog rules. META cannot simply become optional either: docs writes, builds, and buffer operations each have required authoritative sections. Keep its complete authority and route precisely to sections instead of duplicating drifting summaries.
 

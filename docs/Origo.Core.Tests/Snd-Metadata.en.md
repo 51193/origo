@@ -92,7 +92,6 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | `TypedDataFactory_TryExtract_FromDefault_ReturnsFalse` | TryExtract from default returns false | snd-entity-model: TypedData |
 | `FromObject_RegisteredType_PreservesValue` | Implicit conversion stores registered types | snd-entity-model: TypedData |
 | `FromObject_UnregisteredType_UsesRefSlot` | Unregistered types stored in ref slot | snd-entity-model: TypedData |
-| `FromObject_NullValue_PreservesType` | null value preserves type information | snd-entity-model: TypedData |
 | `AllRegisteredTypes_AreCovered` | All 13 registered types can construct non-null TypedData | snd-entity-model: TypedData |
 | `TypedDataTypeMap_GetKindForType_Correct` | Registered types return non-zero Kind; unregistered returns 0 | snd-entity-model: TypedData |
 | `RegisterKind_Manual_CanBeRetrieved` | After RegisterKind manual registration, KindTypeMap can retrieve it | snd-entity-model: TypedData |
@@ -171,6 +170,11 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 | `AddObserverBinding_BlankTargetOrIndex_Throws` | Blank target / blank observer index / empty observer list | ArgumentException |
 | `AddObserverBinding_NullIndices_Throws` | Null observerIndices | ArgumentNullException |
 | `AddObserverBinding_DuplicateIndex_Throws` | Duplicate observer index for the same target | ArgumentException |
+| `SetNode_WhitespaceKey_Throws` | Whitespace-only logical node key | ArgumentException |
+| `SetNode_NullValue_Throws` | null node resource id | ArgumentNullException |
+| `SetNode_WhitespaceValue_Throws` | Whitespace-only node resource id | ArgumentException |
+| `SetString_NullValue_Throws` | null string data value | ArgumentNullException |
+| `SetBytes_NullValue_Throws` | null byte array data value | ArgumentNullException |
 
 ## TypedDataIntegrationTests Details
 
@@ -180,7 +184,6 @@ The test infrastructure uses the `TypedDataTestContext` collection fixture to re
 |-------------|------------------|---------------------|
 | `Entity_SetData_GetData_RoundTrip_AllRegisteredTypes` | Entity SetData/GetData round-trip supports all registered types | snd-entity-model: TypedData |
 | `Entity_SetData_GetData_RoundTrip_UnregisteredReferenceType` | Entity SetData/GetData round-trips an unregistered reference type without losing instance identity | snd-entity-model: TypedData |
-| `Entity_TryGetData_Found_ReturnsTrue` | TryGetData returns true and value when key is found | snd-entity-model: TypedData |
 | `Entity_SetData_DifferentTypes_SameKey` | Setting different types on the same key sequentially; later value overwrites the previous | snd-entity-model: TypedData |
 | `Direct_Observer_Subscribe_And_Notify` | DataObserverManager subscription and notification: oldValue/newValue correctly passed | snd-entity-model: TypedData |
 | `Blackboard_Set_TryGet_RoundTrip_AllTypes` | Blackboard stores all registered types and reads them back correctly | snd-entity-model: TypedData |

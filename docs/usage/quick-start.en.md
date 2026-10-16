@@ -164,33 +164,15 @@ public override void _Ready()
 
 ## Runtime Flow
 
-```
-OrigoAutoHost._Ready()
-  → Create GodotFileSystem, GodotLogger
-  → Create GodotSndManager
-  → Register TypeStringMapping (BCL + Godot types) + DataSourceConverters
-  → Create PersistentBlackboard → LoadFromDisk
-  → Create ConsoleInputBuffer + ConsoleOutputChannel
-  → Create OrigoRuntime (containing SndWorld + SystemRun + OrigoConsole)
-  → BindRuntimeDependencies → SndManager
+The entry node creates the whole runtime stack for you — runtime, scene host,
+console channels, SND context — and then runs the core bootstrap sequence.
+The ordered startup steps, the failure behaviour, and the difference between
+the Core host and the Godot adapter host are owned by
+[Origo.GodotAdapter Startup Flow](../Origo.GodotAdapter/README.en.md#startup-flow).
 
-OrigoDefaultEntry._Ready()
-  → Register adapter-layer command handlers (press_button, tree_debug, camera_view)
-  → Create SndContext
-  → Context = sndContext (exposed to presentation)
-  → SndManager.BindContext(context)
-  → ConfigureSaveMetadataContributors(context)
-  → SndContext.Bootstrap()
-      → DiscoverAndRegisterStrategies
-      → SealStrategyRegistration (validate Before/After and freeze registration)
-      → LoadSceneAliases + LoadTemplates
-      → RequestLoadMainMenuEntrySave → Start game
-
-Per frame: _Process → IOrigoFrameDriver.DriveFrame(delta)
-  → Snd.ProcessAll(delta)          # Entity frame processing
-  → FlushEndOfFrameDeferred()      # Business queue → KillPendingEntities → System queue
-  → Core-internal: Console.ProcessPending()  # Console command processing
-```
+Per frame, `_Process` calls `IOrigoFrameDriver.DriveFrame(delta)`: SND entities
+are processed, the end-of-frame deferred queues are flushed (business queue →
+pending kills → system queue), and pending console commands are pumped.
 
 ## Next Steps
 

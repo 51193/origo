@@ -20,6 +20,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "scripts" / "validate-release-packages.sh"
 VERSION = "1.2.3"
+# The adapter package must depend on the GodotSharp version matching the
+# Godot.NET.Sdk pin; the fixture asks the same pin parser the validator uses so
+# a Godot SDK bump cannot leave this test behind.
+GODOT_SDK_VERSION = subprocess.run(
+    ["bash", str(ROOT / "scripts" / "download-godot.sh"), "--print-version"],
+    text=True,
+    capture_output=True,
+    check=True,
+).stdout.strip()
 PACKAGE_IDS = (
     "Origo.Core.Contracts",
     "Origo.Core.Kernel",
@@ -93,7 +102,7 @@ def write_valid_packages(directory: Path) -> None:
     write_package(
         directory,
         "Origo.GodotAdapter",
-        dependencies=(("Origo.Core", VERSION), ("GodotSharp", "4.7.2")),
+        dependencies=(("Origo.Core", VERSION), ("GodotSharp", GODOT_SDK_VERSION)),
     )
     write_package(
         directory,
@@ -188,6 +197,18 @@ def main() -> int:
                             ("Origo.Core.Kernel", VERSION),
                         ),
                         extra_entries=("lib/net10.0/Origo.Core.Kernel.dll",),
+                    ),
+                ),
+            ),
+            (
+                "GodotSharp version mismatch",
+                f"Origo.GodotAdapter: dependency GodotSharp version 0.0.1 != {GODOT_SDK_VERSION}",
+                lambda case: (
+                    (case / f"Origo.GodotAdapter.{VERSION}.nupkg").unlink(),
+                    write_package(
+                        case,
+                        "Origo.GodotAdapter",
+                        dependencies=(("Origo.Core", VERSION), ("GodotSharp", "0.0.1")),
                     ),
                 ),
             ),

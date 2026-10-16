@@ -4,11 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-> See [AGENTS.md](AGENTS.md) for the development loop and [docs/release-process.en.md](docs/release-process.en.md) for Changelog and release rules. Changes are recorded only after passing the full loop (source -> tests -> run/fix/retest -> changelog -> docs sync -> commit -> post-commit `scripts/ci.sh` -> post-commit `scripts/lint-commits.sh`).
+> See [AGENTS.md](AGENTS.md) for the development loop and [docs/release-process.en.md](docs/release-process.en.md) for Changelog and release rules. Changes are recorded only after passing the full loop (source -> tests -> run/fix/retest -> changelog -> documentation -> commit -> post-commit `scripts/ci.sh` -> post-commit `scripts/lint-commits.sh`).
 
 ---
 
 ## [Unreleased]
+
+### Removed
+
+- **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
+  only the Any CPU configurations; no script, workflow, or project selected
+  those platforms. Build with `dotnet build Origo.sln` and drop
+  `-p:Platform=x64` / `-p:Platform=x86`, which now fail with MSB4126 instead of
+  resolving to Any CPU.
+
+### Changed
+
+- **Package consumer smoke delegates package assertions to the release validator** —
+  `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its
+  physical path before comparing it with `project.assets.json` and replaces its
+  remaining early-exit `find`/`grep` and `echo`/`grep` pipelines with pipe-free
+  checks, so the macOS `/var` temp-path alias no longer turns a valid isolated
+  restore into a failure. The packed-feed assertions (five-package set,
+  analyzer asset, Godot SDK pin) live in `scripts/validate-release-packages.sh`,
+  which the smoke runs against the same feed. The smoke self-test pins physical-
+  path resolution and first-file lookup behavior.
 
 ## [0.1.0] - 2026-10-10
 

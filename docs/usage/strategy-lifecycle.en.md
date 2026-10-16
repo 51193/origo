@@ -163,14 +163,6 @@ public sealed class CharacterCoreStrategy : LifecycleStrategyBase
     {
         entity.OwningSession.FindByName("CharacterManager")?.InvokeStrategy("character.unregister", entity.Name);
     }
-
-    // Special hook: sync engine state on save
-    public override void BeforeSave(ISndEntity entity, ISndContext ctx)
-    {
-        var node = entity.GetNode("root")?.GetNativeNode();
-        if (node is Node3D n)
-            entity.SetData("transform", n.GlobalTransform);
-    }
 }
 
 // Observer strategy: mark death when hp reaches zero
@@ -187,6 +179,8 @@ public sealed class HpDeathObserver : ObserverStrategyBase
     }
 }
 ```
+
+The lifecycle example above omits the special `BeforeSave` hook that syncs engine state on save; its code and rationale live in [BeforeSave for Deferred Sync](#5-beforesave-for-deferred-sync).
 
 ## Common Mistakes
 

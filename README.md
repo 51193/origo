@@ -166,6 +166,7 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 | Use the console | [Console Commands](docs/usage/console-commands.en.md) |
 | Reference for AI agents | [Agent Reference](docs/usage/agent-reference.en.md) |
 | Prepare a release / update Changelog | [Release & Changelog process](docs/release-process.en.md) |
+| See every module, usage, test, and architecture entry | [Manual index](docs/README.en.md#project-module-index) |
 
 ## Development
 
@@ -173,7 +174,7 @@ Development workflow and agent rules: **[`AGENTS.md`](AGENTS.md)**.
 bash scripts/check.sh quick --project Origo.Core.Tests/Origo.Core.Tests.csproj --filter 'FullyQualifiedName~Save'
 bash scripts/check.sh affected  # Local checks selected from the evaluated project graph
 bash scripts/test.sh            # Full build + test + coverage gates before commit
-bash scripts/ci.sh              # Full local pipeline; the final gate (lint-scripts + format + test + benchmarks + Godot)
+bash scripts/ci.sh              # Full local pipeline; the final gate (lint-scripts + format + API baseline + test + benchmarks + Godot + consumer smoke)
 bash scripts/format.sh          # Format check only
 ```
 
@@ -185,6 +186,8 @@ bash scripts/format.sh          # Format check only
 | `Origo.SourceGeneration` | Roslyn incremental source generator for TypedData |
 | `Origo.ConsoleBridge` | TCP remote console bridge |
 | `Origo.GodotAdapter` | Godot 4 adapter: file system, logging, serialization, bootstrap |
+
+This entry list is a subset; the full module, usage, test, architecture, and benchmark index is [docs/README.en.md § Project Module Index](docs/README.en.md#project-module-index).
 
 | Test project | Coverage gate |
 |---|---|

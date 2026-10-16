@@ -38,9 +38,6 @@ internal static class ConsoleCommandHelper
         };
     }
 
-    public static void SetDataWithTypeInference(ISndEntity entity, string key, string raw) =>
-        ValueInference.SetData(entity, key, raw);
-
     public static bool TrySetDataPreservingExistingType(
         ISndEntity entity, string key, string raw, out string? errorMessage)
     {
@@ -58,7 +55,7 @@ internal static class ConsoleCommandHelper
             return false;
         }
 
-        SetDataWithTypeInference(entity, key, raw);
+        ValueInference.SetData(entity, key, raw);
         errorMessage = null;
         return true;
     }
@@ -97,7 +94,4 @@ internal static class ConsoleCommandHelper
 
         return false;
     }
-
-    public static void SetBlackboardWithTypeInference(IBlackboard bb, string key, string raw) =>
-        ValueInference.SetBlackboard(bb, key, raw);
 }

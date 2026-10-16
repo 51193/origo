@@ -8,7 +8,7 @@ notices and license terms are listed below.
 - **Component**: FastNoiseLite (C# source version)
 - **Source**: [Auburn/FastNoiseLite](https://github.com/Auburn/FastNoiseLite)
 - **Upstream version**: `1.1.1` (as marked in the vendored source header)
-- **Local path**: `Origo.Core/Addons/FastNoiseLite/FastNoiseLite.cs`
+- **Local path**: `Origo.Core.Kernel/Addons/FastNoiseLite/FastNoiseLite.cs`
 - **License**: MIT
 - **Local license copy**: `licenses/LICENSE.FastNoiseLite`
 

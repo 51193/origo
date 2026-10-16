@@ -55,6 +55,9 @@ All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); 
 | `DeleteFile_ThrowsForPathTraversal` | `../escape.json` path traversal | ArgumentException |
 | `ReadObject_ThrowsForTypeMismatch` | JSON string node deserialized as int | Throws exception (Converter mismatch) |
 | `WriteFile_ThrowsForNullNode` | null DataSourceNode | ArgumentNullException |
+| `ReadFile_NullOrWhitespacePath_Throws` | null path / empty or whitespace path | ArgumentNullException for null; ArgumentException for empty/whitespace (paramName="path") |
+| `WriteFile_NullOrWhitespacePath_Throws` | null path / empty or whitespace path | ArgumentNullException for null; ArgumentException for empty/whitespace (paramName="path") |
+| `DeleteFile_NullOrWhitespacePath_Throws` | null path / empty or whitespace path | ArgumentNullException for null; ArgumentException for empty/whitespace (paramName="path") |
 
 ### Boundary Paths
 

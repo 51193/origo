@@ -101,6 +101,8 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 |-------------|----------------|-------------------|
 | `AddStrategy_WhenAfterAddThrows_RollsBackInsertionAndPoolReference` | Strategy AfterAdd hook throws InvalidOperationException | Strategy insertion rolled back, pool reference returned, subsequent Process does not execute this strategy |
 | `AddStrategy_SameIndexTwice_Throws` | Calling AddStrategy again on an already-mounted strategy index | InvalidOperationException ("already mounted") |
+| `AddStrategy_WhenAfterAddRemovesItselfThenThrows_PropagatesOriginalFailure` | AfterAdd removes the strategy itself and then throws | Original InvalidOperationException propagates unmasked |
+| `ProcessAll_ContainerModifiedDuringProcess_ThrowsInvalidOperation` | An entity spawns another entity during ProcessAll | InvalidOperationException (contains "modified during ProcessAll") |
 
 ### Boundary Paths
 
@@ -165,6 +167,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `Mount_WhenGetStrategyThrows_PropagatesOriginalError` | Observer strategy acquisition fails | Original InvalidOperationException propagates (contains index name) |
 | `Unmount_WhenOnUnmountedThrows_PoolReferenceStillReleased` | OnUnmounted hook throws InvalidOperationException | Exception propagates and the strategy is still returned to the pool (LogPoolLeaks emits no leak warning) |
 | `FullCleanup_NullTargetEntity_ThrowsInvalidOperation` | FullCleanup with null TargetEntity | InvalidOperationException (message contains "TargetEntity") |
+| `SessionDestroy_WhenOnUnmountedThrows_PoolReferenceStillReleased` | Session destruction tears down a binding whose OnUnmounted hook throws | InvalidOperationException propagates, but the strategy's pool reference is still released (no refCount leak warning) |
 
 ### Boundary Paths
 

@@ -4,7 +4,6 @@ using System.Threading;
 using Origo.Core.Abstractions.Entity;
 using Origo.Core.DataSource;
 using Origo.Core.Runtime.Lifecycle;
-using Origo.Core.Save;
 using Origo.Core.Snd;
 using Origo.Core.Snd.Metadata;
 using Origo.Core.Snd.Strategy;
@@ -188,12 +187,6 @@ public class SessionManagerTests
         Assert.Contains("entity_synced", ProcessSpyStrategy.ProcessCalls);
         Assert.DoesNotContain("entity_stored", ProcessSpyStrategy.ProcessCalls);
     }
-
-    // ── Background level IDs in progress blackboard ───────────────────
-
-    [Fact]
-    public void SessionTopology_WellKnownKey_Exists() =>
-        Assert.Equal("origo.session_topology", WellKnownKeys.SessionTopology);
 
     // ── levelId conflict detection ────────────────────────────────────
 

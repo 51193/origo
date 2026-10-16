@@ -50,6 +50,7 @@ Validates TypeStringMapping's CLR type ↔ stable string identifier bidirectiona
 | `TypeStringMapping_GetNameByType_UnregisteredType_Throws` | Unregistered type | InvalidOperationException |
 | `TypeStringMapping_RegisterType_NullName_Throws` | null name | ArgumentNullException |
 | `TypeStringMapping_GetTypeByName_NullName_Throws` | null name | ArgumentNullException |
+| `TypeStringMapping_GetTypeByName_BlankName_Throws` | Empty or whitespace name | ArgumentException |
 | `TypeStringMapping_GetNameByType_NullType_Throws` | null type | ArgumentNullException |
 
 ## JsonAndMappingsTests Details
@@ -73,6 +74,8 @@ Validates TypeStringMapping's CLR type ↔ stable string identifier bidirectiona
 | `SndMappings_ResolveTemplate_BeforeLoadTemplates_Throws` | ResolveTemplate before LoadTemplates has been called | InvalidOperationException |
 | `SndMappings_ResolveTemplate_AfterLoadTemplatesWithEmptyMap_Throws` | ResolveTemplate after loading empty template map | InvalidOperationException (contains "empty") |
 | `SndMappings_ResolveTemplate_InvalidJson_Throws` | Template points to a JSON file with invalid syntax | Throws exception |
+| `SndMappings_ReloadFailure_KeepsPreviousSceneAliases` | Reloading a missing scene alias map file | FileNotFoundException; the previously loaded alias still resolves |
+| `SndMappings_ReloadFailure_KeepsPreviousTemplates` | Reloading a missing template map file | FileNotFoundException; the previously loaded template still resolves |
 
 ### Boundary Paths
 

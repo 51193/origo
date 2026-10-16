@@ -304,6 +304,8 @@ input queue (polling dequeue, FIFO, trim, clear), `IConsoleInputSource` interfac
 |-------------|----------------|-------------------|
 | `SpawnTemplateCommandHandler_MixNamedAndPositional_ReturnsError` | Mixed positional and named args | returns false + error containing "mix" |
 | `SpawnTemplateCommandHandler_NamedMissingName_ReturnsError` | Named args missing name | returns false + error containing "name" |
+| `SpawnTemplateCommandHandler_UnknownTemplate_ReturnsErrorInsteadOfThrowing` | Unknown template alias with templates loaded | returns false + error containing the alias |
+| `SpawnTemplateCommandHandler_TemplatesNotLoaded_ReturnsErrorInsteadOfThrowing` | Template lookup before any template map is loaded | returns false + error containing "template" |
 
 ## PersistenceCommandHandlerTests Details
 

@@ -3,15 +3,13 @@
 > [↑ Back to Abstractions](../README.en.md) · [↔ Implementation: Snd/Entity](../../Snd/Entity/README.en.md)
 
 ## Overview
-Framework-internal SND entity lifecycle contract. `IEntityLifecycle` is an `internal` interface defined separately for framework/adapter-layer shared implementation. The public entity role interfaces following ISP (`ISndEntity` composed of the data, node, passive-strategy, active-strategy, and observer-strategy capabilities) live in [Origo.Core.Contracts/Abstractions/Entity](../../../Origo.Core.Contracts/Abstractions/Entity/README.en.md).
+Framework-internal SND entity lifecycle contract. `IEntityLifecycle` is an `internal` interface defined separately for framework/adapter-layer shared implementation. The public entity role interfaces following ISP (`ISndDataAccess`, `ISndNodeAccess`, `ISndStrategyAccess`, `ISndActiveStrategyAccess`, `ISndObserverStrategyAccess`, composed by `ISndEntity`) live in [Origo.Core.Contracts/Abstractions/Entity](../../../Origo.Core.Contracts/Abstractions/Entity/README.en.md).
 
 ## Included Files
 
 | File | Responsibility |
 |------|------|
 | `IEntityLifecycle.cs` | `internal` framework-internal lifecycle: phased recovery/hook/teardown methods. Implemented by `SndEntity` (kernel in-memory entity) and adapter-layer entities (bridging to an inner `SndEntity`); adapter and test projects access it via `InternalsVisibleTo` |
-
-> The public entity role interfaces (`ISndDataAccess`, `ISndNodeAccess`, `ISndStrategyAccess`, `ISndActiveStrategyAccess`, `ISndObserverStrategyAccess`, `ISndEntity`) live in [Origo.Core.Contracts/Abstractions/Entity](../../../Origo.Core.Contracts/Abstractions/Entity/README.en.md).
 
 ## Interface Details
 

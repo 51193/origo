@@ -52,7 +52,7 @@ assignees: ""
 - [ ] `scripts/test.sh`, post-commit `scripts/ci.sh`, and
       `scripts/lint-commits.sh` pass when the task is implemented.
 - [ ] No compatibility shim or evolution marker is introduced
-      (`AGENTS.md §1.2`).
+      (`AGENTS.md`, early-development rule).
 
 ## Evidence / verification
 

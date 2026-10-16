@@ -14,7 +14,7 @@ without reading through source code.
 
 - Test documents are grouped by **capability under test**, one document describes tests for one capability
 - If one source directory contains multiple independent capabilities, split into multiple documents
-  (e.g., `Save/` split into `Save-Storage.md`, `Save-Serialization.md`, `Save-Meta.md`)
+  (e.g., `Save/` split into `Save-Storage.en.md`, `Save-Serialization.en.md`, `Save-Meta.en.md`)
 - If multiple test files together verify the same capability, merge into one document with sections
 
 ### Bottom-Up
@@ -179,6 +179,12 @@ but must observe the following whitelist principle:
     drive host methods directly. This is the same white-list category as constructing the host directly
     (e.g. `MemorySndSceneHostTests`); only the host-acquisition path differs. Precedent:
     `BackgroundSessionTests.FullMemorySndSceneHost_LoadFromMetaList_ClearsAndLoads`.
+
+11. **Core/adapter host option projection contract**: `HostContextParametersTests` may call the internal
+    projection factory directly to verify that both shell option records map every distinct input to the
+    matching `SndContextParameters` value. The factory is the only shared Core-to-kernel projection point;
+    no public host interface exposes the complete parameter set, and exercising the full startup paths
+    would couple this isolated mapping contract to unrelated file, discovery, and bootstrap behavior.
 
 **Recorded namespace deviation**: `Origo.GodotAdapter.Integration.Tests` uses
 `Origo.GodotAdapter.Integration.Tests.Runner` / `.TestSupport` sub-namespaces for its `Runner/`

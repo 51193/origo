@@ -10,7 +10,7 @@ Console command extensions for the Godot adapter layer. An adapter-layer command
 
 | File | Responsibility |
 |------|------|
-| `CommandHandlerBase.cs` | Adapter-layer command handler base class, holds an `IOrigoRuntime` reference, validates argument count |
+| `CommandHandlerBase.cs` | Adapter-layer command handler base class, holds an `IOrigoRuntime` reference, validates argument count, and resolves named Godot entities for commands that require them |
 | `PressButtonCommandHandler.cs` | Godot-specific command: finds and emits Button.Pressed signal by entity + path |
 | `TreeDebugCommandHandler.cs` | Godot-specific command: prints the complete Godot node tree of an entity (including dynamically created child nodes) |
 | `CameraViewCommandHandler.cs` | Godot-specific command: displays screen coordinates and depth of all entity nodes from the active camera's perspective |
@@ -29,10 +29,9 @@ press_button <entity> <path>
 ```
 
 Flow:
-1. `Runtime.SessionManager.ForegroundSession?.FindByName(entity)` finds the entity
-2. Checks if the entity is of type `GodotSndEntity`
-3. Uses `godotEntity.GetNodeOrNull<Button>(path)` to find the Button node
-4. `button.EmitSignal(BaseButton.SignalName.Pressed)` simulates the press
+1. `TryResolveGodotEntity` in `CommandHandlerBase` finds the foreground-session entity and verifies that it is a `GodotSndEntity`
+2. Uses `godotEntity.GetNodeOrNull<Button>(path)` to find the Button node
+3. `button.EmitSignal(BaseButton.SignalName.Pressed)` simulates the press
 
 ### TreeDebugCommandHandler
 
@@ -41,10 +40,9 @@ tree_debug <entity>
 ```
 
 Flow:
-1. `Runtime.SessionManager.ForegroundSession?.FindByName(entity)` finds the entity
-2. Checks if the entity is of type `GodotSndEntity`
-3. Recursively traverses the entity's Godot node tree, printing `[Type] "Name"` for each node
-4. Outputs the full node tree for debugging path resolution issues
+1. `TryResolveGodotEntity` in `CommandHandlerBase` finds the foreground-session entity and verifies that it is a `GodotSndEntity`
+2. Recursively traverses the entity's Godot node tree, printing `[Type] "Name"` for each node
+3. Outputs the full node tree for debugging path resolution issues
 
 ### CameraViewCommandHandler
 
@@ -69,9 +67,9 @@ Flow:
 
 Core `ConsoleCommandHandlerBase` and adapter commands both need stable runtime access for sessions, entities, and the world. The adapter layer base class provides a consistent `Runtime` property access pattern, avoiding repeated injection boilerplate in every Godot command handler, and registration goes through `IOrigoRuntime.RegisterConsoleCommandHandler`.
 
-### Why PressButton needs Godot entity type checking
+### Why entity lookup and Godot type checking are shared
 
-`Runtime.SessionManager.ForegroundSession?.FindByName` returns the abstract `ISndEntity` interface, but `GetNodeOrNull<Button>` is a method on `Godot.Node`. Runtime checks ensure type safety — if the entity is a pure in-memory entity (e.g., `StubSndEntity`), a clear error message is given early rather than a NullReferenceException.
+`ForegroundSession.FindByName` returns the abstract `ISndEntity` interface, but both `press_button` and `tree_debug` need Godot node access. `CommandHandlerBase.TryResolveGodotEntity` owns the shared lookup and type check, so a missing entity or a pure in-memory entity (for example, `StubSndEntity`) produces the same clear error before either command accesses Godot nodes.
 
 ---
 [↑ Back to Origo.GodotAdapter](../README.en.md)

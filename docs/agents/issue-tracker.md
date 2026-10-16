@@ -3,8 +3,8 @@
 Published Origo issues live in GitHub Issues at `51193/origo`. Every
 GitHub issue, open or closed, has a local Markdown counterpart at
 `.scratch/issues/<number>.md`. The GitHub number is the stable identity;
-use the explicit `-R 51193/origo` option with every `gh` command because
-this clone has both `origin` and `upstream`.
+use the explicit `-R 51193/origo` option with every `gh` command so the
+target repository never depends on the clone's remote configuration.
 
 ## Authority and synchronization
 

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Origo.Core.Abstractions.Logging;
 using Origo.Core.DataSource;
 using Origo.Core.Logging;
@@ -93,9 +92,7 @@ internal static class SaveStorageFacade
 
             // Framework-reserved keys (the origo. namespace, e.g. the format
             // version) are internal bookkeeping and are not display metadata.
-            var displayMeta = rawMeta
-                .Where(kv => !kv.Key.StartsWith(WellKnownKeys.FrameworkMetaKeyPrefix, StringComparison.Ordinal))
-                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
+            var displayMeta = SavePayloadReader.StripFrameworkMetaKeys(rawMeta)!;
 
             list.Add(new SaveMetaDataEntry { SaveId = id, MetaData = displayMeta });
         }

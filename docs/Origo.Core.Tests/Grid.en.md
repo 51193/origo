@@ -39,6 +39,8 @@ Validates single-axis/dual-axis coordinate conversion (GridToWorld / WorldToGrid
 | `GridToWorld_NonPositiveGridSize_Throws` | `gridSize <= 0` | `ArgumentOutOfRangeException` (fail-fast) |
 | `WorldToGrid_NonPositiveCellSize_Throws` | `cellSize <= 0` | `ArgumentOutOfRangeException` (fail-fast) |
 | `WorldToGrid_NonPositiveGridSize_Throws` | `gridSize <= 0` | `ArgumentOutOfRangeException` (fail-fast) |
+| `GridToWorld_NonFiniteCellSize_Throws` | `cellSize` is NaN or ±Infinity | `ArgumentOutOfRangeException` (fail-fast) |
+| `WorldToGrid_NonFiniteCellSize_Throws` | `cellSize` is NaN or ±Infinity | `ArgumentOutOfRangeException` (fail-fast) |
 
 ## GridPosTests Details
 
@@ -114,6 +116,12 @@ Validates single-axis/dual-axis coordinate conversion (GridToWorld / WorldToGrid
 | `ParseCoords_JsonElement_NumberKind_ReturnsNull` | JsonElement of number kind (42) | `null` |
 | `ParseCoords_JsonElement_TrueKind_ReturnsNull` | JsonElement of boolean kind (true) | `null` |
 | `ParseCoords_JsonElement_NullKind_ReturnsNull` | JsonElement of null kind | `null` |
+
+### Boundary Path
+
+| Test Method | Boundary Condition | Expected Behavior |
+|-------------|-------------------|-------------------|
+| `ParseCoords_IsCultureInvariant` | Ambient culture de-DE (dot thousands separator) | `"10,20"` still parses to (10, 20); `"1.000,5"` returns `null` |
 
 ## Known Coverage Gaps
 
