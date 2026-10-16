@@ -20,15 +20,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **Package consumer smoke delegates package assertions to the release validator** —
-  `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its
-  physical path before comparing it with `project.assets.json` and replaces its
-  remaining early-exit `find`/`grep` and `echo`/`grep` pipelines with pipe-free
-  checks, so the macOS `/var` temp-path alias no longer turns a valid isolated
-  restore into a failure. The packed-feed assertions (five-package set,
-  analyzer asset, Godot SDK pin) live in `scripts/validate-release-packages.sh`,
-  which the smoke runs against the same feed. The smoke self-test pins physical-
-  path resolution and first-file lookup behavior.
+- **Package consumer smoke delegates its package assertions to the release validator** —
+  `scripts/package-consumer-smoke.sh` no longer queries the packed archive
+  itself: the five-package set, analyzer asset, and Godot SDK pin are asserted
+  by `scripts/validate-release-packages.sh`, which the smoke runs against the
+  same feed, so the smoke no longer needs `unzip` for its own checks. Its
+  self-test now pins physical-path resolution and first-file lookup only.
+
+### Fixed
+
+- **The Godot download reports a missing `unzip` before downloading** —
+  `scripts/download-godot.sh` checks the extraction dependency up front, so a
+  cold engine cache without `unzip` fails with that message instead of a bare
+  "command not found" inside the extraction.
+  `scripts/test-download-godot-deps.sh` pins the cold-cache failure, that the
+  check precedes the download, and the warm cache path, and runs from
+  `scripts/lint-scripts.sh`.
 
 ## [0.1.0] - 2026-10-10
 
