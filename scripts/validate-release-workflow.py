@@ -20,16 +20,22 @@ the snapshot workflow ever pushes a branch again, or the write-back loses its
 condition, every weekly run starts failing against those rules instead.
 
 The guard fails closed on text it cannot resolve: comments are stripped with
-shell quoting rules so a `#` inside a string never hides code, a command whose
-name is a variable or an expansion is rejected instead of skipped, a step that
-runs another file cannot hide a push in the snapshot workflow (the release
-workflow runs repository scripts by design, so its branch pushes are caught by
-the write-back condition), and the version-stamp checks prove that the
-substitution writes back what it substituted, through the loop's own bindings.
-Two limits remain: a push moved into a third-party action (`uses:`) or into
-inline code that itself spawns `git` is outside the inspected shell text, and a
-refspec must be written out as `refs/tags/...` rather than through a variable,
-because a variable could name a branch.
+shell quoting rules so a `#` inside a string or a parameter expansion never
+hides code, `[[ ... ]]` tests are not mistaken for commands, a command whose
+name is a variable or an expansion is rejected instead of skipped, so is a
+command whose own program can execute its arguments (`eval`, `sed`, `awk`,
+`perl`, `xargs`), a step that runs another file cannot hide a push in the
+snapshot workflow (a relative or absolute path, a quoted path, and a `make`
+target all count; the release workflow runs repository scripts by design, so
+its branch pushes are caught by the write-back condition), and the
+version-stamp checks require the substitution to write back what it
+substituted, through the loop's own bindings, and to fail on a missing
+element. Limits that remain: a push moved into a third-party action (`uses:`)
+or into inline code that itself spawns `git` is outside the inspected shell
+text; a refspec must be written out as `refs/tags/...` rather than through a
+variable, because a variable could name a branch; and a rewrite that hoists the
+XML pattern or extracts the substitution into a helper has to extend this
+guard.
 
 Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
 build before these invariants fail CI.
@@ -212,11 +218,15 @@ BUMP_TARGET = re.compile(r"""["']Directory\.Build\.props["']""")
 WRITE_OP = re.compile(r"""open\([^)]*["'][wa]|write_text\(|\.write\(""")
 STAMP_LOOP = re.compile(r"for\s+(\w+)\s*,\s*(\w+)\s+in\s*\(")
 STAMP_ELEMENTS = ("Version", "AssemblyVersion", "FileVersion")
-STAMP_ASSIGNMENT = re.compile(r"(\w+)\s*,\s*count\s*=\s*re\.subn\(")
-STAMP_COUNT_CHECK = re.compile(
-    r"if\s*\(?\s*count\s*(?:!=|==|<=|>=|<|>)\s*\d+\s*\)?\s*:"
-    r"[\s\S]{0,300}?(?:raise|SystemExit|exit\()"
-)
+STAMP_ASSIGNMENT = re.compile(r"(\w+)\s*,\s*(\w+)\s*=\s*re\.subn\(")
+
+
+def count_check(accumulator: str) -> re.Pattern[str]:
+    """Match an `if <accumulator> ...:` check that really fails the step."""
+    return re.compile(
+        rf"if\s*\(?\s*{re.escape(accumulator)}\s*(?:!=|==|<=|>=|<|>)\s*\d+\s*\)?\s*:"
+        r"[\s\S]{0,300}?\braise\b"
+    )
 
 
 def element_entry(element: str) -> re.Pattern[str]:
@@ -234,8 +244,20 @@ def xml_substitution(element_binding: str) -> re.Pattern[str]:
 
 
 def replacement_binding_use(binding: str) -> re.Pattern[str]:
-    """Match a substitution that passes the loop's replacement binding on."""
-    return re.compile(rf"re\.subn\(.{{0,400}}?{re.escape(binding)}", re.S)
+    """Match a substitution that passes the loop's replacement binding on.
+
+    The binding has to appear as the substitution's argument (or as the lambda
+    default bound to it), not merely somewhere in the call text, so a fixed
+    value such as `replacement_fixed` cannot satisfy the check.
+    """
+    name = rf"{re.escape(binding)}(?![\w])"
+    return re.compile(
+        rf"re\.subn\(.{{0,400}}?(?:value\s*=\s*{name}|,\s*{name}\s*[,)]|"
+        rf"{name}\s*[,)])",
+        re.S,
+    )
+
+
 SHELL_SEPARATOR = re.compile(r"&&|\|\||[;\n|&]")
 GROUPING = "(){}"
 EMBEDDED_COMMAND = re.compile(r"\bgit\b[^\n]*\bpush\b")
@@ -244,10 +266,13 @@ GIT_PUSH_CANDIDATE = re.compile(r"\bgit\b.*\bpush\b", re.S)
 PUSH_WORD = re.compile(r"\bpush\b")
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # Commands that never execute their arguments, so a `git push` among their
-# arguments is text rather than a command.
+# arguments is text rather than a command. `sed` and `awk` stay out: their own
+# programs can execute commands.
 NON_EXECUTING_COMMANDS = frozenset(
-    {"echo", "printf", "true", "false", ":", "cat", "grep", "sed", "awk", "ls", "test", "["}
+    {"echo", "printf", "true", "false", ":", "cat", "grep", "ls", "test", "["}
 )
+# Commands whose arguments are a program or command text the guard cannot read.
+ARGUMENT_EXECUTING_COMMANDS = frozenset({"eval", "sed", "awk", "perl", "xargs"})
 # Shell keywords and separators that keep a command position open.
 SHELL_KEYWORDS = frozenset(
     {
@@ -258,9 +283,13 @@ SHELL_KEYWORDS = frozenset(
 )
 # Push options that can publish branches regardless of the refspecs given.
 UNSAFE_PUSH_OPTIONS = frozenset({"--all", "--mirror", "--branches"})
-# A step that runs another file moves the push out of the validated text.
+# A step that runs another file moves the push out of the validated text. A
+# quoted path and a `make` target count: both run code the guard cannot read.
 DELEGATED_SCRIPT = re.compile(
-    r"(?:^|[\s;&|(){}])(?:bash|sh|zsh|dash|source|python3?|\.)\s+(?!-)([\w./-]+\.(?:sh|py))"
+    r"""(?:^|[\s;&|(){}])(?:bash|sh|zsh|dash|source|python3?|\.)\s+(?!-)"""
+    r"""["']?([\w./$-]*/[\w./$-]+|[\w./$-]+\.(?:sh|py))"""
+    r"""|(?:^|[\s;&|(){}])make\s+(?!-)([\w.-]+)"""
+    r"""|(?:^|[\s;&|(){}])((?:\.{1,2}/|/)[\w./$-]+)"""
 )
 # Keywords and assignments that may precede the command word of a fragment.
 LEADING_COMMAND_PREFIX = re.compile(
@@ -275,12 +304,14 @@ def strip_comments(script: str) -> str:
     """Drop shell comments while keeping quoted text and code intact.
 
     A `#` starts a comment only at the start of a shell word and outside
-    quotes, so a `#` inside a string (or a `$(...)` command inside double
-    quotes) is preserved for the checks below. Removing those characters would
-    delete executable text and let a push pass unvalidated.
+    quotes, so a `#` inside a string, inside a parameter expansion such as
+    `${LINE%% #*}` (where `#` removes a prefix), or after a `)` stays in the
+    inspected text. Deleting those characters would remove executable text and
+    let a push pass unvalidated.
     """
     body: list[str] = []
     quote: str | None = None
+    expansion = 0
     index = 0
     length = len(script)
     while index < length:
@@ -303,6 +334,19 @@ def strip_comments(script: str) -> str:
             body.append(char)
             index += 1
             body.append(script[index])
+            index += 1
+            continue
+        if char == "$" and index + 1 < length and script[index + 1] == "{":
+            expansion += 1
+            body.append("${")
+            index += 2
+            continue
+        if expansion:
+            body.append(char)
+            if char == "{":
+                expansion += 1
+            elif char == "}":
+                expansion -= 1
             index += 1
             continue
         if char == "#":
@@ -395,6 +439,19 @@ def _iter_fragment_pushes(fragment: str, depth: int = 0) -> Iterator[list[str]]:
         yield from _iter_fragment_pushes(token, depth + 1)
 
 
+def normalized_fragments(script: str) -> Iterator[str]:
+    """Yield the shell fragments of a step script, without `[[ ... ]]` tests.
+
+    A test expression is not a command, and splitting one on `||` or `|`
+    produces operand fragments that look like variable commands; masking the
+    whole `[[ ... ]]` span keeps those out of the fragment checks. Command
+    substitution inside a test is still inspected by the character scan.
+    """
+    normalized_script = re.sub(r"\\\r?\n", " ", script)
+    normalized_script = re.sub(r"\[\[[\s\S]*?\]\]", " ", normalized_script)
+    yield from SHELL_SEPARATOR.split(normalized_script)
+
+
 def push_arguments(script: str) -> Iterator[list[str]]:
     """Yield the argument list of every `git push` in a step script.
 
@@ -402,8 +459,7 @@ def push_arguments(script: str) -> Iterator[list[str]]:
     wherever it sits: after `&&`, behind a `bash -c` wrapper, inside a loop
     body, or on its own line.
     """
-    normalized_script = re.sub(r"\\\r?\n", " ", script)
-    for fragment in SHELL_SEPARATOR.split(normalized_script):
+    for fragment in normalized_fragments(script):
         yield from _iter_fragment_pushes(fragment)
 
 
@@ -431,6 +487,11 @@ def unanalyzable_push_reason(fragment: str) -> str | None:
         return None
     if command in NON_EXECUTING_COMMANDS:
         return None
+    if command in ARGUMENT_EXECUTING_COMMANDS and mentions_push:
+        return (
+            f"runs {command!r}, whose own program can execute the git/push text "
+            "in its arguments"
+        )
     if command != "git" and mentions_push and (
         "git" in command or command.startswith("$") or "`" in command
     ):
@@ -456,8 +517,7 @@ def unanalyzable_push_reason(fragment: str) -> str | None:
 
 def unanalyzable_push_reasons(script: str) -> Iterator[str]:
     """Yield one reason per fragment whose push text cannot be validated."""
-    normalized_script = re.sub(r"\\\r?\n", " ", script)
-    for fragment in SHELL_SEPARATOR.split(normalized_script):
+    for fragment in normalized_fragments(script):
         reason = unanalyzable_push_reason(fragment)
         if reason:
             yield reason
@@ -471,7 +531,7 @@ def unresolved_command_reason(fragment: str) -> str | None:
     The text is inspected without tokenizing it, so unrelated Python or quoted
     content in other fragments cannot turn into a parse failure.
     """
-    text = fragment.strip()
+    text = fragment.strip().lstrip("\"'")
     while True:
         prefix = LEADING_COMMAND_PREFIX.match(text)
         if not prefix:
@@ -489,8 +549,7 @@ def unresolved_command_reason(fragment: str) -> str | None:
 
 def unresolved_command_reasons(script: str) -> Iterator[str]:
     """Yield one reason per fragment whose command name cannot be resolved."""
-    normalized_script = re.sub(r"\\\r?\n", " ", script)
-    for fragment in SHELL_SEPARATOR.split(normalized_script):
+    for fragment in normalized_fragments(script):
         reason = unresolved_command_reason(fragment)
         if reason:
             yield reason
@@ -499,7 +558,9 @@ def unresolved_command_reasons(script: str) -> Iterator[str]:
 def delegated_script(script: str) -> str | None:
     """Return the file a step runs, when it moves execution out of the workflow."""
     match = DELEGATED_SCRIPT.search(script)
-    return match.group(1) if match else None
+    if not match:
+        return None
+    return match.group(1) or match.group(2) or match.group(3)
 
 
 def contains_push_in_command_substitution(script: str) -> bool:
@@ -640,11 +701,11 @@ def check_stamp_rewrite(
     assignment = STAMP_ASSIGNMENT.search(script)
     if assignment is None:
         errors.append(
-            f"{relative} must assign the substitution result (`value, count = "
+            f"{relative} must assign the substitution result (`content, count = "
             "re.subn(...)`) so the rewritten content is the value written back."
         )
         return
-    target = assignment.group(1)
+    target, accumulator = assignment.group(1), assignment.group(2)
     write = re.search(rf"(?:\.write|write_text)\(\s*{re.escape(target)}\s*\)", script)
     if write is None:
         errors.append(
@@ -659,10 +720,11 @@ def check_stamp_rewrite(
             f"{relative} overwrites {target!r} after substituting it, so the "
             "version stamps written back are not the substituted values."
         )
-    if not STAMP_COUNT_CHECK.search(script):
+    if not count_check(accumulator).search(script):
         errors.append(
-            f"{relative} must fail on a missing version element (an `if count "
-            "...` check followed by a raise), so a partial rewrite cannot pass."
+            f"{relative} must fail on a missing version element (an `if "
+            f"{accumulator} ...` check followed by a raise), so a partial "
+            "rewrite cannot pass."
         )
 
 
@@ -815,10 +877,14 @@ def check_release_writeback_is_conditional(workflow: dict, errors: list[str]) ->
             if not branch_push and not unresolved:
                 continue
             if job_name != "release":
+                problem = (
+                    "pushes a branch"
+                    if branch_push
+                    else "contains a command or push the guard cannot resolve"
+                )
                 errors.append(
-                    f"release workflow job {job_name!r} step {name!r} pushes a "
-                    "branch or contains a push the guard cannot resolve; only "
-                    "the release job may write a branch, and only behind "
+                    f"release workflow job {job_name!r} step {name!r} {problem}; "
+                    "only the release job may write a branch, and only behind "
                     f"{WRITE_BACK_CONDITION!r}."
                 )
                 continue
@@ -829,11 +895,16 @@ def check_release_writeback_is_conditional(workflow: dict, errors: list[str]) ->
             ):
                 normalized_condition = normalized_condition[3:-2].strip()
             if normalized_condition != WRITE_BACK_CONDITION:
+                problem = (
+                    "pushes a branch"
+                    if branch_push
+                    else "contains a command or push the guard cannot resolve"
+                )
                 errors.append(
-                    f"release step {index} ({name!r}) pushes a branch and its "
-                    "condition must be exactly "
-                    f"{WRITE_BACK_CONDITION!r}, so no other expression can make "
-                    "the version write-back unconditional."
+                    f"release step {index} ({name!r}) {problem} and its condition "
+                    "must be exactly "
+                    f"{WRITE_BACK_CONDITION!r}, so nothing else can run "
+                    "unconditionally next to the version write-back."
                 )
 
 

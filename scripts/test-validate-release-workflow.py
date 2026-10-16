@@ -310,6 +310,70 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
         )
         self.assert_reports(errors, "refs/heads/main")
 
+    def test_parameter_expansion_does_not_hide_a_push(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE,
+                'LINE="a # b"; CLEAN=${LINE%% #*}; git push origin refs/heads/main',
+            )
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_quoted_variable_command_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'GIT=git; "$GIT" push origin refs/heads/main')
+        )
+        self.assert_reports(errors, "cannot resolve")
+
+    def test_sed_program_executing_a_push_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE, "sed -n '1e git push origin refs/heads/main' /dev/null"
+            )
+        )
+        self.assert_reports(errors, "can execute")
+
+    def test_quoted_delegated_script_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, 'bash "$PWD/scripts/push-main.sh"')
+        )
+        self.assert_reports(errors, "cannot be validated")
+
+    def test_direct_path_execution_is_rejected(self) -> None:
+        errors = self.errors_for(self.mutate(PUSH_LINE, "./scripts/publish-main.sh"))
+        self.assert_reports(errors, "cannot be validated")
+
+    def test_make_target_is_rejected(self) -> None:
+        errors = self.errors_for(self.mutate(PUSH_LINE, "make publish-main"))
+        self.assert_reports(errors, "cannot be validated")
+
+    def test_match_check_without_a_raise_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                "if count != 1:\n                  raise SystemExit(",
+                "if count != 1:\n                  print(",
+            )
+        )
+        self.assert_reports(errors, "followed by a raise")
+
+    def test_renamed_accumulator_is_accepted(self) -> None:
+        mutated = self.mutate("content, count = re.subn(", "content, matches = re.subn(")
+        mutated = mutated.replace("if count != 1:", "if matches != 1:", 1)
+        mutated = mutated.replace("found {count}", "found {matches}", 1)
+        self.assertEqual([], self.errors_for(mutated))
+
+    def test_fixed_replacement_identifier_is_rejected(self) -> None:
+        mutated = self.mutate(
+            "for element, replacement in (",
+            'replacement_fixed = "9.9.9"\n          for element, replacement in (',
+        )
+        mutated = mutated.replace(
+            "lambda match, value=replacement:",
+            "lambda match, value=replacement_fixed:",
+            1,
+        )
+        self.assert_reports(self.errors_for(mutated), "replacement binding")
+
     def test_prose_mention_of_git_push_is_accepted(self) -> None:
         mutated = self.mutate(
             DISPATCH_STEP,
@@ -422,6 +486,16 @@ class ReleaseWritebackGuardTests(GuardFixtureCase):
             "    steps:\n"
             "      - name: push main\n"
             "        run: result=$(git push origin HEAD:main)\n"
+        )
+        self.assert_reports(self.errors_for(text), "only the release job")
+
+    def test_quoted_variable_command_in_a_new_job_is_rejected(self) -> None:
+        text = self.workflow + (
+            "\n  publish-main:\n"
+            "    runs-on: ubuntu-latest\n"
+            "    steps:\n"
+            "      - name: push main\n"
+            '        run: GIT=git; "$GIT" push origin HEAD:main\n'
         )
         self.assert_reports(self.errors_for(text), "only the release job")
 
