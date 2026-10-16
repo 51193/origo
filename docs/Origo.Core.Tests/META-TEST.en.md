@@ -186,6 +186,16 @@ but must observe the following whitelist principle:
     no public host interface exposes the complete parameter set, and exercising the full startup paths
     would couple this isolated mapping contract to unrelated file, discovery, and bootstrap behavior.
 
+## Dead-Code Gate
+
+The repository build fails on unused private members: `Directory.Build.props`
+sets `EnforceCodeStyleInBuild`, `.editorconfig` raises `IDE0051` and `IDE0052`
+to errors, and warnings are errors. A test double whose per-instance state is
+the premise of its test must therefore expose that state through a member the
+test actually asserts (for example a read-only property whose value the test
+checks after a lifecycle call). Suppressing the analyzer in a test double is a
+last resort and needs a comment stating why the member must exist.
+
 **Recorded namespace deviation**: `Origo.GodotAdapter.Integration.Tests` uses
 `Origo.GodotAdapter.Integration.Tests.Runner` / `.TestSupport` sub-namespaces for its `Runner/`
 (lightweight test runner, `[GlobalClass]` Godot node) and `TestSupport/` (integration test fixtures)

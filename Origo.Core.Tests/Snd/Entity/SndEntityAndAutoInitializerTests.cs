@@ -221,27 +221,6 @@ public class SndEntityAndAutoInitializerTests
     }
 }
 
-[StrategyIndex(IndexConst)]
-public sealed class AutoInitStrategyA : LifecycleStrategyBase
-{
-    public const string IndexConst = "auto.init.a";
-}
-
-[StrategyIndex(IndexConst)]
-public sealed class AutoInitStrategyB : LifecycleStrategyBase
-{
-    public const string IndexConst = "auto.init.b";
-}
-
-[StrategyIndex(IndexConst)]
-public abstract class StatefulAutoInitStrategy : LifecycleStrategyBase
-{
-    public const string IndexConst = "auto.init.stateful";
-    private int _counter;
-
-    public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _counter++;
-}
-
 internal sealed class StubSessionRun : ISessionRun, IDisposable
 {
     private readonly ISndSceneHost _host;

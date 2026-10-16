@@ -68,7 +68,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 
 | Test Method | Triggered Error | Expected Behavior |
 |------------|-----------------|-------------------|
-| `SndWorld_RegisterStrategy_WithStatefulInstanceField_Throws` | Registering strategy with instance fields | InvalidOperationException (contains "invalid instance members") |
+| `SndWorld_RegisterStrategy_WithStatefulInstanceField_Throws` | Registering strategy with instance fields | InvalidOperationException naming the offending field (`_counter`); the counter advanced by Process proves the field is mutable instance state |
 | `SndWorld_RegisterStrategy_WithWritableInstanceProperty_Throws` | Registering strategy with writable instance properties | InvalidOperationException (contains "invalid instance members") |
 | `SndWorld_RegisterTypeMappings_NullCallback_Throws` | null callback | ArgumentNullException |
 
