@@ -44,7 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   which the smoke runs against the same feed. The smoke self-test pins physical-
   path resolution and first-file lookup behavior.
 
-- **Weekly snapshot workflow guard fails closed on unsafe shell changes** — the tracked workflow validator rejects branch pushes hidden in command substitutions, in variable or expansion command names, behind a quoted `#`, or in another file the step runs, along with malformed push syntax, branch-capable push options, stamp names without matching XML substitutions, and weakened release write-back conditions. It proves that the version rewrite writes back what it substitutes, with the replacement binding of the loop and one match per element, and it requires every branch push anywhere in the release workflow to keep the exact version-sync condition.
+- **Weekly snapshot workflow guard fails closed on unsafe shell changes** — the tracked workflow validator rejects branch pushes hidden in command substitutions, in variable or expansion command names, behind a quoted `#`, or in another file the step runs, along with malformed push syntax, branch-capable push options, stamp names without matching XML substitutions, and weakened release write-back conditions. It proves that the version rewrite writes back what it substitutes, through the loop's own bindings and a match-count check, and it requires every branch push in any release job to keep the exact version-sync condition.
 
 ## [0.1.0] - 2026-10-10
 

@@ -22,12 +22,14 @@ condition, every weekly run starts failing against those rules instead.
 The guard fails closed on text it cannot resolve: comments are stripped with
 shell quoting rules so a `#` inside a string never hides code, a command whose
 name is a variable or an expansion is rejected instead of skipped, a step that
-runs another file cannot hide a push, and the version-stamp checks require the
-substitution to feed the value that is written back with the loop's replacement
-binding. Two limits remain: a push moved into a third-party action (`uses:`)
-or into inline code that itself spawns `git` is outside the inspected shell
-text, and a refspec must be written out as `refs/tags/...` rather than through
-a variable, because a variable could name a branch.
+runs another file cannot hide a push in the snapshot workflow (the release
+workflow runs repository scripts by design, so its branch pushes are caught by
+the write-back condition), and the version-stamp checks prove that the
+substitution writes back what it substituted, through the loop's own bindings.
+Two limits remain: a push moved into a third-party action (`uses:`) or into
+inline code that itself spawns `git` is outside the inspected shell text, and a
+refspec must be written out as `refs/tags/...` rather than through a variable,
+because a variable could name a branch.
 
 Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
 build before these invariants fail CI.
@@ -208,18 +210,32 @@ def main() -> int:
 SUBSTITUTION = re.compile(r"\bre\.subn?\(|\.replace\(|\bsubn?\(")
 BUMP_TARGET = re.compile(r"""["']Directory\.Build\.props["']""")
 WRITE_OP = re.compile(r"""open\([^)]*["'][wa]|write_text\(|\.write\(""")
-STAMP_MAPPINGS = re.compile(
-    r'for element, replacement in \(\s*\("Version", version\),\s*'
-    r'\("AssemblyVersion", assembly_version\),\s*'
-    r'\("FileVersion", assembly_version\),\s*\)',
-    re.S,
-)
-MATCHING_XML_SUBSTITUTION = re.compile(
-    r"""re\.subn\(\s*rf["']\(<\{element\}>\)\[\^<\]\+\(</\{element\}>\)["']"""
-)
+STAMP_LOOP = re.compile(r"for\s+(\w+)\s*,\s*(\w+)\s+in\s*\(")
+STAMP_ELEMENTS = ("Version", "AssemblyVersion", "FileVersion")
 STAMP_ASSIGNMENT = re.compile(r"(\w+)\s*,\s*count\s*=\s*re\.subn\(")
-STAMP_REPLACEMENT_BINDING = re.compile(r"re\.subn\(.{0,400}?replacement", re.S)
-STAMP_COUNT_CHECK = re.compile(r"\bcount\s*(?:!=|==|<=|>=|<|>)\s*\d")
+STAMP_COUNT_CHECK = re.compile(
+    r"if\s*\(?\s*count\s*(?:!=|==|<=|>=|<|>)\s*\d+\s*\)?\s*:"
+    r"[\s\S]{0,300}?(?:raise|SystemExit|exit\()"
+)
+
+
+def element_entry(element: str) -> re.Pattern[str]:
+    """Match one `("Element", expression)` entry of the replacement loop."""
+    return re.compile(rf"""\(\s*["']{re.escape(element)}["']\s*,\s*\w+\s*\)""")
+
+
+def xml_substitution(element_binding: str) -> re.Pattern[str]:
+    """Match the XML-pattern substitution that uses a loop binding."""
+    binding = re.escape(element_binding)
+    return re.compile(
+        rf"""re\.subn\(\s*rf?["']\(<\{{\s*{binding}\s*\}}>\)\[\^<\]\+"""
+        rf"""\(</\{{\s*{binding}\s*\}}>\)["']"""
+    )
+
+
+def replacement_binding_use(binding: str) -> re.Pattern[str]:
+    """Match a substitution that passes the loop's replacement binding on."""
+    return re.compile(rf"re\.subn\(.{{0,400}}?{re.escape(binding)}", re.S)
 SHELL_SEPARATOR = re.compile(r"&&|\|\||[;\n|&]")
 GROUPING = "(){}"
 EMBEDDED_COMMAND = re.compile(r"\bgit\b[^\n]*\bpush\b")
@@ -291,7 +307,11 @@ def strip_comments(script: str) -> str:
             continue
         if char == "#":
             previous = body[-1] if body else "\n"
-            if previous in " \t\n;|&(){}":
+            # Bash starts a comment only at the beginning of a word: after
+            # whitespace or a command separator. A `#` inside `${#name}` or
+            # after a `)` closes nothing, so it must stay in the inspected
+            # text instead of deleting the rest of the line.
+            if previous in " \t\n;&|":
                 while index < length and script[index] != "\n":
                     index += 1
                 continue
@@ -567,7 +587,7 @@ def check_stamp_rewrite(
         for _, script in steps
         if BUMP_TARGET.search(script) and WRITE_OP.search(script)
     ]
-    stamping = [script for script in candidates if STAMP_MAPPINGS.search(script)]
+    stamping = [script for script in candidates if STAMP_LOOP.search(script)]
     if stamping:
         candidates = stamping
     if len(candidates) != 1:
@@ -585,15 +605,37 @@ def check_stamp_rewrite(
             "the version elements, so the tagged commit would not match its tag."
         )
         return
-    if not STAMP_MAPPINGS.search(script) or not MATCHING_XML_SUBSTITUTION.search(
-        script
-    ):
+
+    loop = STAMP_LOOP.search(script)
+    if loop is None:
         errors.append(
-            f"{relative} must substitute Version, AssemblyVersion, and "
-            "FileVersion into their matching XML elements, so the tagged "
-            "commit already matches its tag."
+            f"{relative} must loop over the Version, AssemblyVersion, and "
+            "FileVersion replacements instead of naming them."
         )
         return
+    element_binding, replacement_binding = loop.group(1), loop.group(2)
+
+    missing = [
+        element
+        for element in STAMP_ELEMENTS
+        if not element_entry(element).search(script)
+    ]
+    if missing:
+        errors.append(
+            f"{relative} must map {', '.join(missing)} to a replacement in "
+            "that loop, so every version element is rewritten."
+        )
+    if not xml_substitution(element_binding).search(script):
+        errors.append(
+            f"{relative} must substitute each element with the matching XML "
+            f"element pattern using the loop binding {element_binding!r}, so "
+            "the file keeps one value per element."
+        )
+    if not replacement_binding_use(replacement_binding).search(script):
+        errors.append(
+            f"{relative} must substitute the loop's replacement binding "
+            f"{replacement_binding!r} into each element, not a fixed value."
+        )
 
     assignment = STAMP_ASSIGNMENT.search(script)
     if assignment is None:
@@ -603,21 +645,24 @@ def check_stamp_rewrite(
         )
         return
     target = assignment.group(1)
-    if not re.search(rf"(?:\.write|write_text)\(\s*{re.escape(target)}\s*\)", script):
+    write = re.search(rf"(?:\.write|write_text)\(\s*{re.escape(target)}\s*\)", script)
+    if write is None:
         errors.append(
             f"{relative} substitutes into {target!r} but writes a different "
             "value to Directory.Build.props, so the tagged commit would keep "
             "its old version stamps."
         )
-    if not STAMP_REPLACEMENT_BINDING.search(script):
+    elif re.search(
+        rf"\b{re.escape(target)}\s*=(?!=)", script[assignment.end() : write.start()]
+    ):
         errors.append(
-            f"{relative} must substitute the loop's replacement binding into "
-            "Version, AssemblyVersion, and FileVersion, not a fixed value."
+            f"{relative} overwrites {target!r} after substituting it, so the "
+            "version stamps written back are not the substituted values."
         )
     if not STAMP_COUNT_CHECK.search(script):
         errors.append(
-            f"{relative} must require exactly one match for each version "
-            "element, so a missing element cannot pass silently."
+            f"{relative} must fail on a missing version element (an `if count "
+            "...` check followed by a raise), so a partial rewrite cannot pass."
         )
 
 
@@ -754,20 +799,27 @@ def check_release_writeback_is_conditional(workflow: dict, errors: list[str]) ->
             try:
                 pushes = list(push_arguments(script))
                 unresolved = list(unanalyzable_push_reasons(script))
+                unresolved.extend(unresolved_command_reasons(script))
             except ValueError as exc:
                 errors.append(
                     f"release workflow job {job_name!r} step {name!r} contains "
                     f"malformed shell; refusing to validate its git pushes ({exc})."
                 )
                 continue
+            if contains_push_in_command_substitution(script):
+                unresolved.append(
+                    "contains a git push inside command substitution, which the "
+                    "guard refuses to evaluate"
+                )
             branch_push = any(unsafe_push_reasons(arguments) for arguments in pushes)
             if not branch_push and not unresolved:
                 continue
             if job_name != "release":
                 errors.append(
                     f"release workflow job {job_name!r} step {name!r} pushes a "
-                    "branch; only the release job may write a branch, and only "
-                    f"behind {WRITE_BACK_CONDITION!r}."
+                    "branch or contains a push the guard cannot resolve; only "
+                    "the release job may write a branch, and only behind "
+                    f"{WRITE_BACK_CONDITION!r}."
                 )
                 continue
             condition = str(step.get("if") or "")

@@ -16,6 +16,9 @@ from __future__ import annotations
 import importlib.util
 import pathlib
 import re
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -265,7 +268,47 @@ class WeeklySnapshotGuardTests(GuardFixtureCase):
 
     def test_missing_match_count_check_is_rejected(self) -> None:
         errors = self.errors_for(self.mutate("if count != 1:", "if False:"))
-        self.assert_reports(errors, "exactly one match")
+        self.assert_reports(errors, "missing version element")
+
+    def test_unrelated_count_mention_does_not_satisfy_the_match_check(self) -> None:
+        mutated = self.mutate("if count != 1:", "if False:")
+        mutated = mutated.replace(
+            DISPATCH_STEP,
+            "      - name: reminder\n"
+            '        run: echo "reminder, count != 1 for each element"\n\n'
+            f"{DISPATCH_STEP}",
+            1,
+        )
+        self.assertNotEqual(self.workflow, mutated, "reminder fixture did not apply")
+        self.assert_reports(self.errors_for(mutated), "missing version element")
+
+    def test_reassigned_substitution_result_is_rejected(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                '          with open(path, "w", encoding="utf-8") as handle:',
+                '          content = "9.9.9"\n'
+                '          with open(path, "w", encoding="utf-8") as handle:',
+            )
+        )
+        self.assert_reports(errors, "overwrites")
+
+    def test_single_quoted_element_names_are_accepted(self) -> None:
+        errors = self.errors_for(self.mutate('("Version", version)', "('Version', version)"))
+        self.assertEqual([], errors)
+
+    def test_shape_of_parameter_expansion_does_not_hide_a_push(self) -> None:
+        errors = self.errors_for(
+            self.mutate(
+                PUSH_LINE, "n=3; echo ${#n}; git push origin refs/heads/main"
+            )
+        )
+        self.assert_reports(errors, "refs/heads/main")
+
+    def test_hash_after_a_closing_paren_does_not_hide_a_push(self) -> None:
+        errors = self.errors_for(
+            self.mutate(PUSH_LINE, "echo $(date)#x; git push origin refs/heads/main")
+        )
+        self.assert_reports(errors, "refs/heads/main")
 
     def test_prose_mention_of_git_push_is_accepted(self) -> None:
         mutated = self.mutate(
@@ -364,6 +407,24 @@ class ReleaseWritebackGuardTests(GuardFixtureCase):
         self.assertNotEqual(self.workflow, mutated, "expansion fixture did not apply")
         self.assert_reports(self.errors_for(mutated), GUARD.WRITE_BACK_CONDITION)
 
+    def test_writeback_condition_cannot_be_bypassed_by_substitution(self) -> None:
+        mutated = self.mutate(WRITE_BACK_IF, "if: always()")
+        mutated = mutated.replace(
+            "git push --atomic", 'echo "pushing: $(git push --atomic)" ; true', 1
+        )
+        self.assertNotEqual(self.workflow, mutated, "substitution fixture did not apply")
+        self.assert_reports(self.errors_for(mutated), GUARD.WRITE_BACK_CONDITION)
+
+    def test_branch_push_in_substitution_in_a_new_job_is_rejected(self) -> None:
+        text = self.workflow + (
+            "\n  publish-main:\n"
+            "    runs-on: ubuntu-latest\n"
+            "    steps:\n"
+            "      - name: push main\n"
+            "        run: result=$(git push origin HEAD:main)\n"
+        )
+        self.assert_reports(self.errors_for(text), "only the release job")
+
     def test_malformed_shell_reports_a_guard_error(self) -> None:
         mutated = self.mutate("git push --atomic", 'git push origin "unclosed')
         self.assert_reports(self.errors_for(mutated), "malformed shell")
@@ -373,6 +434,59 @@ class ReleaseWritebackGuardTests(GuardFixtureCase):
         errors: list[str] = []
         GUARD.check_release_stamp_sync(yaml.safe_load(mutated), errors)
         self.assert_reports(errors, "writes a different value")
+
+
+class GuardEntryPointTests(unittest.TestCase):
+    """Run the guard as a process so its wiring, not only its functions, is pinned."""
+
+    def run_guard(self, weekly: str, release: str) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            (root / "scripts").mkdir()
+            (root / "scripts" / GUARD_PATH.name).write_text(
+                GUARD_PATH.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            workflows = root / ".github" / "workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "weekly-build.yml").write_text(weekly, encoding="utf-8")
+            (workflows / "release.yml").write_text(release, encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(root / "scripts" / GUARD_PATH.name)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            return completed.returncode, completed.stdout + completed.stderr
+
+    def tracked_workflows(self) -> tuple[str, str]:
+        return (
+            WORKFLOW_PATH.read_text(encoding="utf-8"),
+            RELEASE_WORKFLOW_PATH.read_text(encoding="utf-8"),
+        )
+
+    def test_entry_point_accepts_the_tracked_workflows(self) -> None:
+        status, output = self.run_guard(*self.tracked_workflows())
+        self.assertEqual(0, status, output)
+
+    def test_entry_point_rejects_a_broken_release_sync_step(self) -> None:
+        weekly, release = self.tracked_workflows()
+        release = release.replace("content, count = re.subn(", "discard, count = re.subn(", 1)
+        status, output = self.run_guard(weekly, release)
+        self.assertNotEqual(0, status, output)
+        self.assertIn("writes a different value", output)
+
+    def test_entry_point_rejects_a_workflow_without_a_stamp_rewrite(self) -> None:
+        weekly = (
+            "jobs:\n"
+            "  tag:\n"
+            "    steps:\n"
+            "      - name: tag only\n"
+            '        run: git push origin "refs/tags/${TAG}"\n'
+        )
+        _, release = self.tracked_workflows()
+        status, output = self.run_guard(weekly, release)
+        self.assertNotEqual(0, status, output)
+        self.assertIn("found 0", output)
 
 
 if __name__ == "__main__":
