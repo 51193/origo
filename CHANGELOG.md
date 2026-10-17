@@ -18,6 +18,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `-p:Platform=x64` / `-p:Platform=x86`, which now fail with MSB4126 instead of
   resolving to Any CPU.
 
+### Fixed
+
+- **The SDK bootstrap detects and repairs a stale repository-local SDK** —
+  `scripts/dotnet-env.sh` now selects the same root order as
+  `scripts/install-dotnet.sh` (and falls back to the dotnet on PATH when no
+  root is installed) and validates the selected SDK against `global.json`
+  before exporting anything, failing with the required version, the selected
+  path, the installed SDKs, and the repair command instead of letting the host
+  suggest an edit to `global.json`. A repository-local SDK that no longer satisfies the pin
+  now fails every gate script with that message instead of a raw SDK-resolution
+  error. `scripts/install-dotnet.sh` installs into that same root (an explicit
+  `DOTNET_INSTALL_DIR`, then an existing repository-local `.dotnet/`, then
+  `$HOME/.dotnet`), refreshes rather than abandons a stale local SDK, checks for
+  `curl`, and verifies the installed SDK before reporting success; the root
+  `./dotnet` wrapper applies the same selection. `scripts/test-dotnet-env.sh`
+  pins the stale, satisfying, system-fallback, installer-target, and wrapper
+  cases and runs from `scripts/lint-scripts.sh`.
+
 ### Changed
 
 - **Package consumer smoke delegates package assertions to the release validator** —
