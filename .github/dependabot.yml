@@ -1,3 +1,17 @@
+# Godot.NET.Sdk is an MSBuild project SDK reference
+# (<Project Sdk="Godot.NET.Sdk/x.y.z">), not a NuGet PackageReference.
+# Dependabot's NuGet ecosystem does not update MSBuild SDK references
+# (https://github.com/dependabot/dependabot-core/issues/8615, tracked as of
+# 2026-10 by https://github.com/dependabot/dependabot-core/pull/15745), so this pin is
+# the documented exception to AGENTS.md §1.9's grouping rule: bump it manually
+# in all three projects:
+#   Origo.GodotAdapter/Origo.GodotAdapter.csproj (authority)
+#   Origo.GodotAdapter.Integration.Tests/Origo.GodotAdapter.Integration.Tests.csproj
+#   tools/ShellPackageConsumer/OrigoShellPackageConsumer.csproj
+# scripts/godot-test.sh, scripts/package-consumer-smoke.sh, and
+# scripts/validate-release-packages.sh fail when the pins or the adapter's
+# GodotSharp dependency drift.
+#
 # Dependabot generates the commit subject and body itself; it only supports
 # configuring a message prefix, not a full template. Every ecosystem below
 # sets the chore(deps) prefix so generated subjects are Conventional Commits.

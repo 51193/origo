@@ -190,6 +190,8 @@ manual sibling worktrees use `<repo>--<type>--<creator>--<MMDD>--<purpose>`.
 Creator and purpose are lowercase; creation identity/date remain stable after
 handoff, and meaningless numeric suffixes are forbidden. `main`, `master`,
 `dependabot/**`, and tags are exempt; `codex/**` and `deepseek/**` are not.
+Pull request branches from forks are exempt in CI because the base repository
+does not own their names; same-repository pull request branches stay validated.
 Use `bash scripts/work-identity.sh validate` or `new`; creator resolution is
 explicit `--creator`, local `origo.githubUser`, then authenticated `gh api user`.
 
