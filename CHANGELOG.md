@@ -10,6 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
+  only the Any CPU configurations; no script, workflow, or project selected
+  those platforms. Build with `dotnet build Origo.sln` and drop
+  `-p:Platform=x64` / `-p:Platform=x86`, which now fail with MSB4126 instead of
+  resolving to Any CPU.
+
 ### Changed
 
 - **The build fails on unused private members** — `Directory.Build.props` enables
@@ -20,16 +28,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   orphaned `PerfReporter` helper, unused benchmark constants, an unreferenced
   test strategy, and unreferenced fixtures; two test doubles whose per-instance
   state is the premise of their test now expose that state and assert it.
-
-### Removed
-
-- **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
-  only the Any CPU configurations; no script, workflow, or project selected
-  those platforms. Build with `dotnet build Origo.sln` and drop
-  `-p:Platform=x64` / `-p:Platform=x86`, which now fail with MSB4126 instead of
-  resolving to Any CPU.
-
-### Changed
 
 - **Package consumer smoke delegates package assertions to the release validator** —
   `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its

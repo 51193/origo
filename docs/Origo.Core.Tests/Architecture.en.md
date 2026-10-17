@@ -8,7 +8,7 @@
 
 Verifies Origo's architectural constraints: Core assembly does not reference Godot (layer isolation),
 ISndContext is a pure composition interface (Interface Segregation Principle), strategies are validated
-as stateless via reflection at registration (rejects instance fields and writable properties), and private-field naming is checked for both Core and Origo.TestSupport.
+as stateless via reflection at registration (rejects instance fields and writable properties), private-field naming is checked for both Core and Origo.TestSupport, and the build settings that make the IDE dead-code analyzers run are pinned.
 
 ## Test File List
 
@@ -16,6 +16,7 @@ as stateless via reflection at registration (rejects instance fields and writabl
 |------|-------------------|
 | `CoreArchitectureGuardrailTests.cs` | Layer isolation, interface composition, shell API classification completeness, Contracts/Kernel dependency direction, consumers can complete full workflow through pure interfaces |
 | `AutoInitializerGuardTests.cs` | Strategy statelessness validation: instance fields rejected, static fields allowed, missing StrategyIndex throws |
+| `BuildGateGuardTests.cs` | Build configuration that makes the dead-code analyzers real: `EnforceCodeStyleInBuild`, warnings as errors, and the `IDE0051`/`IDE0052` severities |
 
 ## CoreArchitectureGuardrailTests Test Details
 
@@ -86,6 +87,15 @@ as stateless via reflection at registration (rejects instance fields and writabl
 |------------|-------------------|-------------------|
 | `DiscoverAndRegisterStrategies_WithBroadSkipPrefixes_ReturnsZero` | Skip all assemblies (Origo prefix) | Registers 0 strategies |
 | `DiscoverAndRegisterStrategies_SkippingTestAssembly_DoesNotRegisterFromSkippedAssembly` | Skip the test assembly itself | Registers 0 strategies |
+
+## BuildGateGuardTests Test Details
+
+### Happy Path
+
+| Test Method | Verified Behavior | Doc Reference |
+|------------|-------------------|---------------|
+| `BuildProperties_EnableCodeStyleAnalyzers_AndTreatWarningsAsErrors` | `Directory.Build.props` keeps `EnforceCodeStyleInBuild` and `TreatWarningsAsErrors` enabled, so the IDE analyzers run during the build and a warning fails it | AGENTS.md: Consistent Code Format |
+| `EditorConfig_MakesDeadCodeAnalyzersErrors` | `.editorconfig` keeps `IDE0051` (unused private member) and `IDE0052` (unread private member) at error severity | AGENTS.md: Consistent Code Format |
 
 ## Known Coverage Gaps
 
