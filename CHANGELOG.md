@@ -23,11 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **The build fails on unused private members** — `Directory.Build.props` enables
   `EnforceCodeStyleInBuild` and `.editorconfig` raises `IDE0051` / `IDE0052` to
   errors, so an unused or unread private member now fails `dotnet build`, the
-  `scripts/format.sh` analyzer pass, and CI instead of passing silently. The
-  cleanup this uncovered removed a write-only logger field in `SndWorld`, an
-  orphaned `PerfReporter` helper, unused benchmark constants, an unreferenced
-  test strategy, and unreferenced fixtures; two test doubles whose per-instance
-  state is the premise of their test now expose that state and assert it.
+  `scripts/format.sh` analyzer pass, and CI instead of passing silently.
 
 - **Package consumer smoke delegates package assertions to the release validator** —
   `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its

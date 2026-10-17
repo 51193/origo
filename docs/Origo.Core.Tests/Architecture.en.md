@@ -94,8 +94,8 @@ as stateless via reflection at registration (rejects instance fields and writabl
 
 | Test Method | Verified Behavior | Doc Reference |
 |------------|-------------------|---------------|
-| `BuildProperties_EnableCodeStyleAnalyzers_AndTreatWarningsAsErrors` | `Directory.Build.props` keeps `EnforceCodeStyleInBuild` and `TreatWarningsAsErrors` enabled, so the IDE analyzers run during the build and a warning fails it | AGENTS.md: Consistent Code Format |
-| `EditorConfig_MakesDeadCodeAnalyzersErrors` | `.editorconfig` keeps `IDE0051` (unused private member) and `IDE0052` (unread private member) at error severity | AGENTS.md: Consistent Code Format |
+| `BuildProperties_EnableCodeStyleAnalyzers_AndTreatWarningsAsErrors` | `Directory.Build.props` keeps `EnforceCodeStyleInBuild` and `TreatWarningsAsErrors` enabled, so the IDE analyzers run during the build and a warning fails it | META-TEST: Dead-Code Gate |
+| `EditorConfig_MakesDeadCodeAnalyzersErrors` | `.editorconfig` keeps `IDE0051` (unused private member) and `IDE0052` (unread private member) at error severity | META-TEST: Dead-Code Gate |
 
 ## Known Coverage Gaps
 
