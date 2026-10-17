@@ -20,6 +20,14 @@ public class AutoInitializerGuardTests
         var ex = Assert.Throws<InvalidOperationException>(() =>
             world.RegisterStrategy(() => new StatefulFieldAutoInitStrategy()));
         Assert.Contains("invalid instance members", ex.Message, StringComparison.Ordinal);
+        // The guard must reject this strategy for its instance field, not for any other shape violation.
+        Assert.Contains("_counter", ex.Message, StringComparison.Ordinal);
+
+        // The rejected type really carries mutable per-instance state: the counter
+        // advanced by the lifecycle hook is what makes the pooled strategy stateful.
+        var strategy = new StatefulFieldAutoInitStrategy();
+        strategy.Process(new StubSndEntity("e"), 0.016, NullSndContext.Instance);
+        Assert.Equal(1, strategy.Counter);
     }
 
     [Fact]
@@ -66,6 +74,8 @@ public class AutoInitializerGuardTests
     {
         public const string IndexConst = "auto.init.stateful.local";
         private int _counter;
+
+        public int Counter => _counter;
 
         public override void Process(ISndEntity entity, double delta, ISndContext ctx) => _counter++;
     }

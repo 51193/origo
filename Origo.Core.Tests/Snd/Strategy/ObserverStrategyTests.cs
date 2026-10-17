@@ -43,6 +43,15 @@ public class ObserverStrategyTests : IDisposable
         var ex = Assert.Throws<InvalidOperationException>(() =>
             world.RegisterStrategy(() => new StatefulObserver()));
         Assert.Contains("invalid instance members", ex.Message, StringComparison.Ordinal);
+        // The guard must reject this observer for its instance field, not for any other shape violation.
+        Assert.Contains("_counter", ex.Message, StringComparison.Ordinal);
+
+        // Pooled observers really are stateful when they carry an instance field:
+        // the counter advanced by OnMounted is the mutable state the guard rejects.
+        var (entity, ctx, _) = SetupWithTopology();
+        var strategy = new StatefulObserver();
+        strategy.OnMounted(entity, ctx, entity);
+        Assert.Equal(1, strategy.Counter);
     }
 
     [Fact]
@@ -780,26 +789,6 @@ public class ObserverStrategyTests : IDisposable
 
     // ── Helpers ────────────────────────────────────────────────────────
 
-    private static FullMemorySndSceneHost CreateHost(Action<SndWorld> configureWorld)
-    {
-        var logger = new TestLogger();
-        var host = new FullMemorySndSceneHost(logger);
-        var world = TestFactory.CreateSndWorld(logger: logger);
-        configureWorld(world);
-        host.BindWorld(world);
-        var fs = new TestMemoryFileSystem();
-        fs.SeedFile("res://entry/entry.json", "{ \"levels\": { \"main_menu\": { \"snd_scene\": \"res://levels/main_menu.json\" } }, \"main_menu_level\": \"main_menu\" }");
-        fs.SeedFile("res://levels/main_menu.json", "[]"); ;
-        var runtime = TestFactory.CreateRuntime(logger, new TestSndSceneHost());
-        var io = TestFactory.CreateIoGateway(fs);
-        var metaAccess = TestFactory.CreateFileMetaAccess(fs);
-        var pathResolver = TestFactory.CreatePathResolver(fs);
-        var ctx = new SndContext(new SndContextParameters(runtime, io, metaAccess, pathResolver, "root", "res://initial",
-            "res://entry/entry.json"));
-        host.BindContext(ctx);
-        return host;
-    }
-
     private static (SndEntity entity, SndContext ctx) Setup()
     {
         var (entity, ctx, _) = SetupWithTopology();
@@ -967,10 +956,14 @@ public class ObserverStrategyTests : IDisposable
 
     private sealed class StatefulObserver : ObserverStrategyBase
     {
-        // _counter 实例字段有意保留：验证注册有实例字段的观察者被 SndStrategyPool 拒绝
-#pragma warning disable CS0169, IDE0044
+        // Instance field retained on purpose: registering a pooled observer that
+        // carries mutable per-instance state must be rejected, and the test reads
+        // the counter back to prove the field really is mutable state.
         private int _counter;
-#pragma warning restore CS0169, IDE0044
+
+        public int Counter => _counter;
+
+        public override void OnMounted(ISndEntity entity, ISndContext ctx, ISndEntity target) => _counter++;
     }
 
     private sealed class UnannotatedObserver : ObserverStrategyBase

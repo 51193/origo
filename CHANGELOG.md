@@ -20,6 +20,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **The build fails on unused private members** — `Directory.Build.props` enables
+  `EnforceCodeStyleInBuild` and `.editorconfig` raises `IDE0051` / `IDE0052` to
+  errors, so an unused or unread private member now fails `dotnet build`, the
+  `scripts/format.sh` analyzer pass, and CI instead of passing silently.
+
 - **Package consumer smoke delegates package assertions to the release validator** —
   `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its
   physical path before comparing it with `project.assets.json` and replaces its
