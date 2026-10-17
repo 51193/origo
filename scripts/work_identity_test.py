@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -13,6 +14,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import work_identity  # noqa: E402
+
+FORK_PR_ENV = "ORIGO_FORK_PR"
+
+
+def environment_without_fork_flag() -> dict[str, str]:
+    """Drops the CI fork marker so local command tests stay deterministic."""
+    return {key: value for key, value in os.environ.items() if key != FORK_PR_ENV}
 
 
 class WorkIdentityTests(unittest.TestCase):
@@ -84,9 +92,36 @@ class WorkIdentityTests(unittest.TestCase):
             check=False,
             capture_output=True,
             text=True,
+            env=environment_without_fork_flag(),
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("branch", result.stderr.lower())
+
+    def test_fork_pull_request_branch_is_not_rejected(self) -> None:
+        env = environment_without_fork_flag() | {FORK_PR_ENV: "true"}
+        result = subprocess.run(
+            ["bash", str(ROOT / "scripts/work-identity.sh"), "validate", "--branch", "fix-typo"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("fork pull request", result.stdout)
+
+    def test_repository_branch_is_still_rejected_without_fork_flag(self) -> None:
+        env = environment_without_fork_flag() | {FORK_PR_ENV: "false"}
+        result = subprocess.run(
+            ["bash", str(ROOT / "scripts/work-identity.sh"), "validate", "--branch", "fix-typo"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("invalid branch identity", result.stderr.lower())
 
     def test_new_command_creates_named_worktree(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

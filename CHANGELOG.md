@@ -10,6 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Superseded CI runs are cancelled per ref** — the CI workflow now uses a
+  workflow-level concurrency group, so a newer run for the same ref cancels the
+  older one. The release and weekly workflows keep their own non-cancelling
+  groups.
+
 ### Removed
 
 - **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
@@ -29,6 +36,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   analyzer asset, Godot SDK pin) live in `scripts/validate-release-packages.sh`,
   which the smoke runs against the same feed. The smoke self-test pins physical-
   path resolution and first-file lookup behavior.
+
+### Fixed
+
+- **Fork pull requests pass the branch-identity check** — `scripts/lint-scripts.sh`
+  validated the source branch name of every pull request, so a fork branch such
+  as `fix-typo` failed CI even though its name is outside the repository
+  owners' control. The CI job now marks fork pull requests, and
+  `scripts/work-identity.sh validate` skips the naming rule for them while
+  same-repository pull request branches stay validated.
 
 ## [0.1.0] - 2026-10-10
 

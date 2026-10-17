@@ -184,6 +184,13 @@ def _current_branch(repository: Path) -> str | None:
 
 
 def command_validate(branch: str | None, repository: Path) -> int:
+    if os.environ.get("ORIGO_FORK_PR") == "true":
+        supplied = branch or os.environ.get("ORIGO_BRANCH_NAME") or "detached checkout"
+        print(
+            "Branch identity: skipped for fork pull request "
+            f"({supplied}); branch names are not repository-owned"
+        )
+        return 0
     actual = branch or os.environ.get("ORIGO_BRANCH_NAME") or _current_branch(repository)
     if not actual:
         print("ERROR: cannot determine branch name from this detached checkout; pass --branch or set ORIGO_BRANCH_NAME.", file=sys.stderr)

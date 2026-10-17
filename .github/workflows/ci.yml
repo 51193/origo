@@ -6,11 +6,20 @@ on:
   pull_request:
     branches: [main]
 
+# A newer run for the same ref replaces the older one; the release and weekly
+# workflows keep their own non-cancelling groups.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-scripts:
     runs-on: ubuntu-latest
     env:
       ORIGO_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      # Fork pull request branches are outside the repository owners' control;
+      # only same-repository branches are validated against the naming rule.
+      ORIGO_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
     steps:
       - uses: actions/checkout@v7
 
@@ -93,7 +102,6 @@ jobs:
           key: godot-${{ runner.os }}-${{ hashFiles('Origo.GodotAdapter/Origo.GodotAdapter.csproj') }}
 
       - name: Install Godot headless dependencies
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libxcursor1 libxinerama1 libxrandr2 libasound2t64 libpulse0 libgl1 libfontconfig1
