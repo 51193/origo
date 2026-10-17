@@ -36,7 +36,7 @@ Performance baseline data and design trade-off analysis for the Origo framework,
 bash scripts/benchmark.sh
 ```
 
-This script runs three benchmark suites sequentially (all marked `[Trait("Category","Benchmark")]`, excluded from `test.sh`) and verifies that every `BENCH` metric key is unique within a run before comparing baselines; duplicate keys fail immediately:
+This script runs three benchmark suites sequentially (all marked `[Trait("Category","Benchmark")]`, excluded from `test.sh`, and run with a detailed console logger) and verifies that every `BENCH` metric key is unique within a run before comparing baselines; duplicate keys fail immediately:
 
 - **SG Pure Micro-Benchmarks** — `Origo.SourceGeneration.Tests`
 - **Core Benchmarks** — `Origo.Core.Tests` (TypedData real-world simulation + entity lifecycle + Observer topology + DataSourceNode + Blackboard + Save + concurrent queue + random + Strategy performance)

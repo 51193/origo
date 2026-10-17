@@ -20,7 +20,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `ObserverStrategyTests.cs` | Observer registration & statelessness enforcement; Mount/Unmount lifecycle and parameter correctness; data change notifications (correct key/non-observed key/after unmount) and old/new values; multi-key observation; serialization (ObserverIndices population/empty bindings/grouping); Dead/Quit release and OnUnmounted; attribute reflection extraction; cross-entity mount rejection; null/empty/unknown parameter defenses; RecoverBindings fault tolerance; Has/Remove topology queries; Teardown/KillPending/ClearAll cleanup paths |
 | `StrategyOrderingTests.cs` | Complete registry projection, dynamic mutation, save/load/quit/death, startup sealing, invalid declarations and cycle diagnostics |
 | `StrategyOrderingIntegrationTests.cs` | Real simulation host: Ordinal order, reentrant insertion in BeforeRemove, and rejection of late registration; verified red → green |
-| `StrategyPoolTypeSafetyAndExtensionTests.cs` | Strategy pool type-branch safety (generic GetStrategy type mismatch does not leak ref count), StackStateMachine two-phase acquisition failure rollback, third-domain base class extension, RecoverStrategiesOnly rejects non-Lifecycle strategies |
+| `StrategyPoolTypeSafetyAndExtensionTests.cs` | Strategy pool type-branch safety (generic GetStrategy type mismatch does not leak ref count), StackStateMachine two-phase acquisition failure rollback, abstract strategy type registration rejection, RecoverStrategiesOnly rejects non-Lifecycle strategies |
 | `SndStrategyPoolLeakDetectionTests.cs` | Strategy pool leak detection: refcounts return to zero on normal release / mid-failure teardown; LogPoolLeaks emits no residual warnings |
 | `SndStrategyPerformanceTests.cs` | Strategy pool Get/Release throughput, Process strategy count scaling, TriggerAll ToArray allocation (marked `[Trait("Category","Benchmark")]`, run by `scripts/benchmark.sh`) |
 
@@ -287,11 +287,10 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `AcyclicLeaf` | StrategyOrderingTests.cs | Acyclic node with no outgoing edges; verifies the cycle search completes its branch and reports only the closed path |
 | `SelfReference` / `BlankReference` / `NullReference` | StrategyOrderingTests.cs | Invalid-registration cases: self reference, blank target, and null array |
 | `OrderingAlpha` / `OrderingZulu` / `OrderingRemover` | StrategyOrderingIntegrationTests.cs | Real simulation host verifying Ordinal fallback order and identity-based removal under reentrant insertion in BeforeRemove |
-| `ExtensionDomainStrategyBase` (abstract) | StrategyPoolTypeSafetyAndExtensionTests.cs | Third-domain abstract base class extending LifecycleStrategyBase; defines ProbeValue() abstract method |
-| `ExtensionDomainConcreteStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | Concrete implementation of ExtensionDomainStrategyBase; ProbeValue() returns "ok" |
 | `PoolEntityStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | LifecycleStrategyBase empty implementation for generic branch safety tests |
 | `PoolStateMachineStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | StateMachineStrategyBase empty implementation for StackStateMachine tests |
 | `PoolActiveStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | ActiveStrategyBase empty implementation for RecoverStrategiesOnly rejection test |
+| `AbstractPoolStrategy` (abstract) | StrategyPoolTypeSafetyAndExtensionTests.cs | Abstract `LifecycleStrategyBase` decorated with `[StrategyIndex("pool.abstract")]`; verifies `Register` rejects abstract strategy types |
 | `PerfPoolStrategy` | SndStrategyPerformanceTests.cs | LifecycleStrategyBase empty implementation for strategy pool Get/Release performance measurement |
 | `PerfProcessBase` (abstract) | SndStrategyPerformanceTests.cs | Abstract LifecycleStrategy with empty Process method; performance strategies 1–20 all inherit this base |
 | `PerfProcess1Strategy` ~ `PerfProcess20Strategy` | SndStrategyPerformanceTests.cs | 20 identically-named Process empty-implementation strategies for Process strategy count scaling and TriggerAll allocation measurement |
