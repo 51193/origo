@@ -37,6 +37,7 @@ Validates the full workflows of SndContext as the central orchestrator of the SN
 | `RequestSaveGame_IncrementsThenDecrementsPendingCount` | Save request increments then decrements pending count | ISndDeferredActions |
 | `RequestSaveGameAuto_WithExplicitId_UsesIt` | RequestSaveGameAuto uses the provided ID | ISndSaveOperations |
 | `RequestSaveGameAuto_WithNullId_GeneratesTimestamp` | Generates a timestamp when no ID is provided | ISndSaveOperations |
+| `RequestSaveGameAuto_RepeatedCallsInOneFrame_ProduceDistinctIds` | Repeated auto-saves within one millisecond receive distinct ids | ISndSaveOperations |
 | `RequestLoadGame_LoadsSaveAndRestoresProgress` | After LoadGame, ProgressBlackboard and ForegroundSession are available | ISndSaveOperations |
 | `RequestLoadGame_IncrementsThenDecrementsPendingCount` | Pending count changes for Load requests | ISndDeferredActions |
 | `SetContinueTarget_MakesHasContinueDataTrue` | After setting Continue target, HasContinueData returns true | ISndLifecycleOperations |

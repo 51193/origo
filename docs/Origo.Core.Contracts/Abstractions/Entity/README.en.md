@@ -36,7 +36,7 @@ Defines the abstract interface system for SND entities following ISP. Five capab
 | Member | Description |
 |------|------|
 | `GetNode(name)` | Get node handle by name |
-| `GetNodeNames()` | Enumerate all mounted node names |
+| `GetNodeNames()` | Returns a snapshot of the mounted node names; later changes do not affect it |
 
 ### ISndStrategyAccess
 

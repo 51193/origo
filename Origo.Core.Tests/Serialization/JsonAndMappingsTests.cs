@@ -109,6 +109,7 @@ public class JsonAndMappingsTests
             () => mappings.LoadSceneAliases(io, "maps/scenes.json", logger));
 
         Assert.Contains("null value", ex.Message);
+        Assert.Contains("maps/scenes.json", ex.Message);
         Assert.Contains("hero", ex.Message);
     }
 
@@ -126,6 +127,7 @@ public class JsonAndMappingsTests
             () => mappings.LoadTemplates(io, "maps/templates.json", registry, logger));
 
         Assert.Contains("null value", ex.Message);
+        Assert.Contains("maps/templates.json", ex.Message);
         Assert.Contains("hero_template", ex.Message);
     }
 

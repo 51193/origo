@@ -39,7 +39,7 @@ Defines the frame-driven and stable host/runtime abstractions. `IOrigoFrameDrive
 |--------|-------------|
 | `ConverterRegistry` | Typed data-source converter registry |
 | `DataSourceIo` | Data-source I/O gateway |
-| `GetRegisteredStrategyIndices()` | Returns all registered strategy indices |
+| `GetRegisteredStrategyIndices()` | Returns a snapshot of all registered strategy indices; later changes do not affect it |
 | `IsStrategyRegistered(index)` | Returns whether a strategy index is registered |
 | `RegisterStrategy<TStrategy>(factory)` | Registers a strategy factory; fails after Bootstrap freezes registration |
 | `RegisterTypeMappings(registerMappings)` | Adds stable type-name mappings |

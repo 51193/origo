@@ -62,8 +62,6 @@ Validates TypeStringMapping's CLR type ↔ stable string identifier bidirectiona
 | `SndMetaData_RoundTripPreservesTypedData` | SndMetaData via registry.Write → JSON encode → decode → Read round-trip preserves name/nodes/strategies/TypedData | Serialization |
 | `SndMappings_LoadSceneAliases_DuplicateKey_LastWins` | Duplicate key in scene alias map; latter overwrites former | Serialization |
 | `SndMappings_LoadSceneAliasesAndTemplates_ResolveExpectedValues` | After loading scene aliases and templates, resolve correctly; template resolution uses cache and does not re-read files | Serialization |
-| `SndMappings_LoadSceneAliases_NullValue_Throws` | Scene alias map has a null value (`{"hero": null}`) | `InvalidOperationException` naming the file and key; no silent empty-string alias |
-| `SndMappings_LoadTemplates_NullValue_Throws` | Template alias map has a null value (`{"hero_template": null}`) | `InvalidOperationException` naming the file and key; no silent empty-string template path |
 | `SndMappings_ResolveMetaListFromJsonArray_SupportsTemplateAndInlineMix` | JSON array mixing templateKey references and inline definitions resolved to meta list | Serialization |
 | `Blackboard_SerializeAll_ReturnsDetachedCopy` | SerializeAll returns a detached copy; modifying the copy does not affect the blackboard original | Serialization |
 | `JsonCodec_DecodeJsonArrayRoot_ReadsElements` | Top-level JSON array decoded to Array node; elements readable by index | Serialization |
@@ -76,6 +74,8 @@ Validates TypeStringMapping's CLR type ↔ stable string identifier bidirectiona
 | `SndMappings_ResolveTemplate_BeforeLoadTemplates_Throws` | ResolveTemplate before LoadTemplates has been called | InvalidOperationException |
 | `SndMappings_ResolveTemplate_AfterLoadTemplatesWithEmptyMap_Throws` | ResolveTemplate after loading empty template map | InvalidOperationException (contains "empty") |
 | `SndMappings_ResolveTemplate_InvalidJson_Throws` | Template points to a JSON file with invalid syntax | Throws exception |
+| `SndMappings_LoadSceneAliases_NullValue_Throws` | Scene alias map has a null value (`{"hero": null}`) | `InvalidOperationException` naming the file and key; no silent empty-string alias |
+| `SndMappings_LoadTemplates_NullValue_Throws` | Template alias map has a null value (`{"hero_template": null}`) | `InvalidOperationException` naming the file and key; no silent empty-string template path |
 | `SndMappings_ReloadFailure_KeepsPreviousSceneAliases` | Reloading a missing scene alias map file | FileNotFoundException; the previously loaded alias still resolves |
 | `SndMappings_ReloadFailure_KeepsPreviousTemplates` | Reloading a missing template map file | FileNotFoundException; the previously loaded template still resolves |
 
