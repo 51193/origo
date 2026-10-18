@@ -275,6 +275,119 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("must not read github.ref_name", stderr)
 
+    def test_mixed_read_and_create_step_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Mixed\n"
+            "        run: |\n"
+            "          gh api -X GET repos/51193/origo/releases/latest > /dev/null\n"
+            '          gh api repos/51193/origo/releases -f tag_name="${{ github.ref_name }}"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_mixed_update_and_create_step_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Mixed\n"
+            "        run: |\n"
+            "          gh api -X PUT repos/51193/origo/releases/123 -f draft=false\n"
+            '          gh api repos/51193/origo/releases -f tag_name="${{ github.ref_name }}"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_shell_comment_mentioning_get_does_not_disable_detection(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Mixed\n"
+            "        run: |\n"
+            '          echo "use -X GET for reads"\n'
+            '          gh api repos/51193/origo/releases -f tag_name="${{ github.ref_name }}"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_release_create_with_leading_flags_is_allowed(self):
+        for flags in ("--draft ", "--repo 51193/origo ", "--notes \"notes\" "):
+            with self.subTest(flags=flags):
+                text = self.mutated(
+                    "      - name: Create GitHub Release",
+                    "      - name: Create release\n"
+                    "        env:\n"
+                    "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+                    f'        run: gh release create {flags}"$TAG"\n'
+                    "      - name: Create GitHub Release",
+                )
+                code, _, stderr = self.run_guard(text)
+                self.assertEqual(code, 0, stderr)
+
+    def test_release_create_tag_suffix_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Create release\n"
+            '        run: gh release create "${{ steps.resolve-tag.outputs.tag }}-beta"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("tag_name/first argument", stderr)
+
+    def test_no_space_tag_expression_in_tag_name_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Create release\n"
+            "        run: gh api repos/51193/origo/releases "
+            "-f tag_name=\"${{steps.resolve-tag.outputs.tag}}\"\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_curl_fail_flag_is_not_creation(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Read release\n"
+            "        run: curl -f https://api.github.com/repos/51193/origo/releases/latest\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_curl_json_creation_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: curl --json '{\"tag_name\": \"${{ github.ref_name }}\"}' "
+            "https://api.github.com/repos/51193/origo/releases\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_helper_with_sudo_wrapper_is_allowed(self):
+        text = self.mutated(
+            '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+            '          sudo python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_helper_with_dot_slash_is_allowed(self):
+        text = self.mutated(
+            '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+            '          python3 ./scripts/write-version-stamp.py "$TAG_VERSION"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
     def test_version_step_must_use_the_resolved_tag(self):
         text = self.mutated(
             '          TAG: ${{ steps.resolve-tag.outputs.tag }}\n'

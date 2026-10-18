@@ -15,6 +15,9 @@ tested directly.
 
 Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
 build before these invariants fail CI.
+
+The release-creation scan is a tripwire for the reviewed workflow shape, not a
+sandbox: commands assembled through variables or heredocs are out of reach.
 """
 
 from __future__ import annotations
@@ -55,6 +58,9 @@ _VERSION_CALL = re.compile(
 )
 _RELEASE_CREATE = re.compile(r"\bgh\s+release\s+create\b")
 _API_POST_FLAGS = re.compile(r"(?:^|\s)(?:-f|--raw-field|-F|--field|--input)\b")
+_TAG_EXPR = r"\$\{\{\s*steps\.resolve-tag\.outputs\.tag\s*\}\}"
+_VALUE_FLAGS = {"--repo", "-R", "--notes", "--notes-file", "--title", "--target",
+                "--discussion-category"}
 
 
 def _references_wrong_ref(text: str) -> bool:
@@ -69,38 +75,59 @@ def _env_references_wrong_ref(env: object) -> bool:
 
 def _calls_version_helper(run: str) -> bool:
     """True when a non-comment line really invokes the helper."""
+    pattern = re.compile(
+        r"^(?:sudo\s+)?(?:env\s+(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*)?"
+        r"python3\s+(?:-\S+\s+)*(?:\./|\$PWD/)?scripts/write-version-stamp\.py(?:\s|$)"
+    )
     for line in run.splitlines():
         stripped = line.strip()
         if stripped.startswith("#"):
             continue
-        if _VERSION_CALL.match(stripped):
+        if pattern.match(stripped):
             return True
     return False
 
 
-def _creates_release(command: str) -> bool:
-    """Detect release creation, including gh api's implicit POST."""
-    if _RELEASE_CREATE.search(command):
-        return True
-    lowered = command.lower()
-    if "createrelease" in lowered:
+def _command_segments(run: str) -> list[str]:
+    """Split a step into the commands the shell would run separately."""
+    text = run.replace("\\\n", " ").replace("\\\r", " ")
+    segments: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        for part in re.split(r"&&|\|\||;", stripped):
+            part = _normalize_command(part)
+            if part:
+                segments.append(part)
+    return segments
+
+
+def _segment_creates_release(segment: str) -> bool:
+    """Detect release creation within one command segment."""
+    lowered = segment.lower()
+    if _RELEASE_CREATE.search(segment) or "createrelease" in lowered:
         return True
     if "/releases" not in lowered:
         return False
-    if re.search(r"(?:-x|--request|-X|--method)\s+(?:get|put|patch)\b", command, re.IGNORECASE):
+    if re.search(r"(?:-x|--request|-X|--method)\s+(?:get|put|patch)\b", segment, re.IGNORECASE):
         return False
-    if re.search(r"(?:-x|--request|-X|--method)\s+post\b", command, re.IGNORECASE):
+    if re.search(r"(?:-x|--request|-X|--method)\s+post\b", segment, re.IGNORECASE):
         return True
-    if _API_POST_FLAGS.search(command):
+    if re.match(r"gh\s+api\b", segment) and _API_POST_FLAGS.search(segment):
         return True
-    if re.search(r"(?:^|\s)(?:-d|--data)\b", command):
+    if re.match(r"curl\b", segment) and re.search(r"(?:^|\s)(?:-d|--data|--json)\b", segment):
+        return True
+    if re.search(r"(?:^|\s)--post-(?:data|file)\b", segment):
+        return True
+    if re.match(r"https?\s+post\b", segment, re.IGNORECASE):
         return True
     return False
 
 
 def _tag_token_is_resolved(token: str, env: object) -> bool:
     token = token.strip("\"'")
-    if "steps.resolve-tag.outputs.tag" in token:
+    if re.fullmatch(_TAG_EXPR, token):
         return True
     match = re.fullmatch(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", token)
     if match and isinstance(env, dict) and env.get(match.group(1)) == RESOLVED_TAG:
@@ -108,26 +135,38 @@ def _tag_token_is_resolved(token: str, env: object) -> bool:
     return False
 
 
-def _release_uses_resolved_tag(command: str, env: object) -> bool:
-    match = _RELEASE_CREATE.search(command)
-    if match:
-        rest = command[match.end():].strip()
-        if rest.startswith('"${{') or rest.startswith("${{"):
-            return "steps.resolve-tag.outputs.tag" in rest
-        token = rest.split()[0] if rest else ""
-        return _tag_token_is_resolved(token, env)
-    if re.search(r"tag_name[\"']?\s*[=:]\s*[\"']?" + re.escape(RESOLVED_TAG), command):
+def _release_tag_argument_ok(segment: str, env: object) -> bool:
+    match = _RELEASE_CREATE.search(segment)
+    if not match:
+        return False
+    tokens = segment[match.end():].split()
+    index = 0
+    while index < len(tokens) and tokens[index].startswith("-"):
+        index += 2 if tokens[index] in _VALUE_FLAGS else 1
+    if index >= len(tokens):
+        return False
+    rest = " ".join(tokens[index:])
+    if re.match(r"[\"']?" + _TAG_EXPR + r"(?:\"|\'|\s|$)", rest):
+        return True
+    return _tag_token_is_resolved(tokens[index], env)
+
+
+def _release_tag_name_ok(segment: str, env: object) -> bool:
+    field = re.search(r"tag_name[\"']?\s*[=:]\s*[\"']?", segment)
+    if not field:
+        return False
+    rest = segment[field.end():]
+    if re.match(_TAG_EXPR, rest):
         return True
     if isinstance(env, dict):
-        for name, value in env.items():
-            if value != RESOLVED_TAG:
-                continue
-            if re.search(rf"tag_name[\"']?\s*[=:]\s*[\"']?\$\{{{name}\}}", command):
-                return True
-            if re.search(rf"tag_name[\"']?\s*[=:]\s*[\"']?\${name}\b", command):
-                return True
+        match = re.match(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", rest)
+        if match and env.get(match.group(1)) == RESOLVED_TAG:
+            return True
     return False
 
+
+def _release_uses_resolved_tag(segment: str, env: object) -> bool:
+    return _release_tag_argument_ok(segment, env) or _release_tag_name_ok(segment, env)
 
 
 def event_mapping(workflow: dict) -> dict:
@@ -251,22 +290,33 @@ def main() -> int:
         for index, step in enumerate(release_steps):
             if not isinstance(step, dict):
                 continue
-            command = _normalize_command(str(step.get("run") or ""))
-            if not _creates_release(command):
+            segments = [
+                segment
+                for segment in _command_segments(str(step.get("run") or ""))
+                if _segment_creates_release(segment)
+            ]
+            if not segments:
                 continue
             env = step.get("env")
-            if _references_wrong_ref(command) or _env_references_wrong_ref(env):
+            if _env_references_wrong_ref(env):
                 errors.append(
                     f"release.steps[{index}] creates a release from github.ref_name/"
                     "github.head_ref; pass the resolved tag instead."
                 )
                 continue
-            if not _release_uses_resolved_tag(command, env):
-                errors.append(
-                    f"release.steps[{index}] creates a release without the "
-                    "resolved tag as its tag_name/first argument; pass "
-                    f"{RESOLVED_TAG} explicitly."
-                )
+            for segment in segments:
+                if _references_wrong_ref(segment):
+                    errors.append(
+                        f"release.steps[{index}] creates a release from "
+                        "github.ref_name/github.head_ref; pass the resolved tag "
+                        "instead."
+                    )
+                elif not _release_uses_resolved_tag(segment, env):
+                    errors.append(
+                        f"release.steps[{index}] creates a release without the "
+                        "resolved tag as its tag_name/first argument; pass "
+                        f"{RESOLVED_TAG} explicitly."
+                    )
 
         for dependency in ("shellcheck", "python3-yaml"):
             if not any(dependency in command for command in run_commands):
