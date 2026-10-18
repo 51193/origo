@@ -132,6 +132,149 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("must call scripts/write-version-stamp.py", stderr)
 
+    def test_gh_api_field_creation_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: gh api repos/51193/origo/releases -f tag_name=\"${{ github.ref_name }}\"\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_curl_data_creation_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: curl -d '{\"tag_name\": \"${{ github.ref_name }}\"}' "
+            "https://api.github.com/repos/51193/origo/releases\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_readonly_release_listing_with_redirect_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: List releases\n"
+            "        run: gh api repos/51193/origo/releases/latest > release-output.json\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_release_update_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Update release\n"
+            "        run: gh api -X PUT repos/51193/origo/releases/123 -f draft=false\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_gh_api_field_creation_with_env_tag_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Create release\n"
+            "        env:\n"
+            "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+            '        run: gh api repos/51193/origo/releases -f tag_name="$TAG"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_release_create_must_bind_the_tag_argument(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        env:\n"
+            "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+            '        run: gh release create main --notes "tag=$TAG"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("tag_name/first argument", stderr)
+
+    def test_release_create_with_env_tag_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Create release\n"
+            "        env:\n"
+            "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+            '        run: gh release create "$TAG" --generate-notes\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_version_step_echoing_the_helper_is_rejected(self):
+        text = self.mutated(
+            '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+            '          echo python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must call scripts/write-version-stamp.py", stderr)
+
+    def test_version_step_commenting_the_helper_is_rejected(self):
+        text = self.mutated(
+            '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+            '          # python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must call scripts/write-version-stamp.py", stderr)
+
+    def test_no_space_ref_expression_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        env:\n"
+            "          WRONG: ${{github.ref_name}}\n"
+            '        run: gh release create "${WRONG}"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_graphql_createrelease_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            '        run: gh api graphql -f query="createRelease"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("resolved tag", stderr)
+
+    def test_explicit_post_release_creation_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: gh api -X POST repos/51193/origo/releases "
+            "-f tag_name=\"${{ github.ref_name }}\"\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_version_step_run_referencing_ref_name_is_rejected(self):
+        text = self.mutated(
+            '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+            '          python3 scripts/write-version-stamp.py "${{ github.ref_name }}"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must not read github.ref_name", stderr)
+
     def test_version_step_must_use_the_resolved_tag(self):
         text = self.mutated(
             '          TAG: ${{ steps.resolve-tag.outputs.tag }}\n'

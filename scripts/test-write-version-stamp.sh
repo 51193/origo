@@ -80,11 +80,15 @@ if python3 "$ROOT/scripts/write-version-stamp.py" "0.3.0" 2>/dev/null; then
 fi
 
 # The helper takes exactly one version argument.
-if python3 "$ROOT/scripts/write-version-stamp.py" 2>/dev/null; then
+write_props
+if python3 "$ROOT/scripts/write-version-stamp.py" 2>"$FIXTURE/argv.err"; then
     FAIL "missing version argument was accepted"
 fi
-if python3 "$ROOT/scripts/write-version-stamp.py" "0.1.0" "0.2.0" 2>/dev/null; then
+grep -q "expected exactly one version argument" "$FIXTURE/argv.err" || FAIL "missing-argument message"
+write_props
+if python3 "$ROOT/scripts/write-version-stamp.py" "0.1.0" "0.2.0" 2>"$FIXTURE/argv.err"; then
     FAIL "extra version argument was accepted"
 fi
+grep -q "expected exactly one version argument" "$FIXTURE/argv.err" || FAIL "extra-argument message"
 
 echo "write-version-stamp: OK"

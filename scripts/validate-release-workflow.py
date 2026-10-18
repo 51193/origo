@@ -49,14 +49,84 @@ def _normalize_command(command: str) -> str:
     return " ".join(command.replace("\\\n", " ").replace("\\\r", " ").split())
 
 
+_WRONG_REF = re.compile(r"\$\{\{\s*github\.(?:ref_name|head_ref)\s*\}\}")
+_VERSION_CALL = re.compile(
+    r"^python3\s+(?:-\S+\s+)*scripts/write-version-stamp\.py(?:\s|$)"
+)
+_RELEASE_CREATE = re.compile(r"\bgh\s+release\s+create\b")
+_API_POST_FLAGS = re.compile(r"(?:^|\s)(?:-f|--raw-field|-F|--field|--input)\b")
+
+
 def _references_wrong_ref(text: str) -> bool:
-    return "${{ github.ref_name }}" in text or "${{ github.head_ref }}" in text
+    return _WRONG_REF.search(text) is not None
 
 
 def _env_references_wrong_ref(env: object) -> bool:
     if not isinstance(env, dict):
         return False
     return any(_references_wrong_ref(str(value)) for value in env.values())
+
+
+def _calls_version_helper(run: str) -> bool:
+    """True when a non-comment line really invokes the helper."""
+    for line in run.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if _VERSION_CALL.match(stripped):
+            return True
+    return False
+
+
+def _creates_release(command: str) -> bool:
+    """Detect release creation, including gh api's implicit POST."""
+    if _RELEASE_CREATE.search(command):
+        return True
+    lowered = command.lower()
+    if "createrelease" in lowered:
+        return True
+    if "/releases" not in lowered:
+        return False
+    if re.search(r"(?:-x|--request|-X|--method)\s+(?:get|put|patch)\b", command, re.IGNORECASE):
+        return False
+    if re.search(r"(?:-x|--request|-X|--method)\s+post\b", command, re.IGNORECASE):
+        return True
+    if _API_POST_FLAGS.search(command):
+        return True
+    if re.search(r"(?:^|\s)(?:-d|--data)\b", command):
+        return True
+    return False
+
+
+def _tag_token_is_resolved(token: str, env: object) -> bool:
+    token = token.strip("\"'")
+    if "steps.resolve-tag.outputs.tag" in token:
+        return True
+    match = re.fullmatch(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", token)
+    if match and isinstance(env, dict) and env.get(match.group(1)) == RESOLVED_TAG:
+        return True
+    return False
+
+
+def _release_uses_resolved_tag(command: str, env: object) -> bool:
+    match = _RELEASE_CREATE.search(command)
+    if match:
+        rest = command[match.end():].strip()
+        if rest.startswith('"${{') or rest.startswith("${{"):
+            return "steps.resolve-tag.outputs.tag" in rest
+        token = rest.split()[0] if rest else ""
+        return _tag_token_is_resolved(token, env)
+    if re.search(r"tag_name[\"']?\s*[=:]\s*[\"']?" + re.escape(RESOLVED_TAG), command):
+        return True
+    if isinstance(env, dict):
+        for name, value in env.items():
+            if value != RESOLVED_TAG:
+                continue
+            if re.search(rf"tag_name[\"']?\s*[=:]\s*[\"']?\$\{{{name}\}}", command):
+                return True
+            if re.search(rf"tag_name[\"']?\s*[=:]\s*[\"']?\${name}\b", command):
+                return True
+    return False
 
 
 
@@ -149,15 +219,12 @@ def main() -> int:
                     "release job must pass ORIGO_BRANCH_NAME as "
                     f"{RESOLVED_TAG_REF} when linting a detached release checkout."
                 )
-        version_pattern = re.compile(
-            r"python3[^\n]*\s+scripts/write-version-stamp\.py(?:\s|$)"
-        )
         version_step = next(
             (
                 step
                 for step in release_steps
                 if isinstance(step, dict)
-                and version_pattern.search(str(step.get("run") or ""))
+                and _calls_version_helper(str(step.get("run") or ""))
             ),
             None,
         )
@@ -185,13 +252,7 @@ def main() -> int:
             if not isinstance(step, dict):
                 continue
             command = _normalize_command(str(step.get("run") or ""))
-            lowered = command.lower()
-            creates_release = (
-                "release create" in lowered
-                or "createrelease" in lowered
-                or ("/releases" in lowered and ("post" in lowered or "put" in lowered))
-            )
-            if not creates_release:
+            if not _creates_release(command):
                 continue
             env = step.get("env")
             if _references_wrong_ref(command) or _env_references_wrong_ref(env):
@@ -200,19 +261,10 @@ def main() -> int:
                     "github.head_ref; pass the resolved tag instead."
                 )
                 continue
-            env_tag_names = (
-                {name for name, value in env.items() if value == RESOLVED_TAG}
-                if isinstance(env, dict)
-                else set()
-            )
-            uses_env_tag = any(
-                f"${{{name}}}" in command or f"${name}" in command
-                for name in env_tag_names
-            )
-            if RESOLVED_TAG not in command and not uses_env_tag:
+            if not _release_uses_resolved_tag(command, env):
                 errors.append(
                     f"release.steps[{index}] creates a release without the "
-                    "resolved tag; pass "
+                    "resolved tag as its tag_name/first argument; pass "
                     f"{RESOLVED_TAG} explicitly."
                 )
 
