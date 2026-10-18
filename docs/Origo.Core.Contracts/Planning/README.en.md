@@ -83,7 +83,7 @@ Ensures a certain resident strategy is mounted on the entity, supporting templat
 entity.EnsureReplaceableStrategy("character.path_impl", "character.pathfind.astar");
 ```
 
-- Reads the current value of `implKey` as a configuration override; falls back to `defaultStrategyIndex` when not set
+- Reads the current value of `implKey` as a configuration override; when it holds a non-blank value the index is preserved and nothing is mounted (the configurer mounts that strategy), otherwise `defaultStrategyIndex` is mounted
 - Uses `implKey` as a dedup marker; repeated calls have no side effects
 - Corresponds to the "Replaceable Implementation" pattern in the design patterns documentation
 

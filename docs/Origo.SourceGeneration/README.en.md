@@ -18,7 +18,7 @@
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — `TypedDataFactory<T>` Create/TryExtract branch generation (type mapping `TypedDataTypeMap` and Kind allocation live in HomeGeneration.cs) |
 | `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-008) |
 | `AnalyzerReleases.Shipped.md` | Analyzer release tracking (rules shipped in 0.0.9: `ORIGOSG001`-`ORIGOSG007`) |
-| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (rules for the next release, currently empty) |
+| `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (rules for the next release; `ORIGOSG008` is currently unshipped) |
 | `pipeline.en.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |
 
 ## Dual-Mode Architecture

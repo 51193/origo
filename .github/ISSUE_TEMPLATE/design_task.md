@@ -14,6 +14,7 @@ assignees: ""
 ## Status / gate
 
 - **State:** blocked-design / waiting-signal
+- **Triage:** needs-triage / needs-info / ready-for-agent / ready-for-human / wontfix
 - **Decision owner:** @51193
 - **Blocked by:** #...
 - **Re-evaluation signal:** <!-- The observable condition that turns this into ready work. -->

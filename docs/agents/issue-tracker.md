@@ -11,8 +11,8 @@ target repository never depends on the clone's remote configuration.
 ## Authority and synchronization
 
 GitHub is authoritative for the published title, body, open/closed state,
-labels, and comments. Local files provide a complete working copy and
-space to stage changes. Keep the local `GitHub-Updated-At` value from the
+labels, and comments. When a skill keeps local files, they provide a working
+copy and space to stage changes. Keep the local `GitHub-Updated-At` value from the
 last fetch. Before publishing local edits, compare it with the current
 remote value; reconcile concurrent changes before writing. After a
 GitHub write, refresh the counterpart. Do not silently replace a local
@@ -28,7 +28,7 @@ file marked `Sync: pending`.
   title and body are reviewable, create with `gh issue create -R
   51193/origo --title "..." --body-file <file>`, then move the draft to
   `.scratch/issues/<number>.md` and record the returned URL.
-- **Update**: edit the local counterpart first and mark `Sync: pending`.
+- **Update**: when a local counterpart exists, edit it first and mark `Sync: pending`.
   Compare the remote `updatedAt`, apply the change with `gh issue edit
   <number> -R 51193/origo` or `gh issue comment <number> -R 51193/origo
   --body-file <file>`, then refresh the local file and clear pending.
@@ -68,4 +68,4 @@ in the map body and put `Part of #<map>` in each child. Use
 `task`. Prefer native issue dependencies; otherwise record
 `Blocked by: #<n>, #<n>` in the child body. Claim by assignment, resolve
 with an answer comment and close, then update the map's decisions.
-Maintain a local counterpart for every map and child issue.
+Keep local counterparts in sync when the workflow uses them.

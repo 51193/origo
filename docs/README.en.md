@@ -39,7 +39,7 @@ Root (this file)
   │
   ├── I need to know "what capabilities are covered by tests"
   │   ├── Origo.Core.Tests/README.en.md → view Core tests by capability
-  │   ├── Origo.GodotAdapter.Tests/README.en.md → adapter layer 7 capability documents
+  │   ├── Origo.GodotAdapter.Tests/README.en.md → adapter layer capability documents
   │   ├── Origo.ConsoleBridge.Tests/README.en.md → TCP bridge tests
   │   └── Origo.SourceGeneration.Tests/README.en.md → source generator tests
   │

@@ -28,6 +28,7 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 | `EnsureStrategy_DataKeyExistsButEmpty_StillSetsAndReturnsTrue` | When the data key exists but the value is an empty string, still overwrites and returns true | Snd README: ActiveStrategyExtensions |
 | `EnsureStrategy_RealRuntime_MountsAndRunsLifecycleStrategy` | In a real runtime with the strategy pool registered, the first EnsureStrategy actually mounts the LifecycleStrategy and fires AfterAdd; a second call does not mount again; Process runs after DriveFrame | Snd README: ActiveStrategyExtensions |
 | `EnsureReplaceableStrategy_RealRuntime_MountsDefaultStrategy` | In a real runtime with no configuration, EnsureReplaceableStrategy actually mounts defaultStrategyIndex and it executes | Snd README: EnsureReplaceableStrategy |
+| `EnsureReplaceableStrategy_RealRuntime_ConfiguredOverride_DoesNotMountDefault` | In a real runtime with a configured override, no strategy is mounted (AfterAdd never runs) and the configured index is preserved | Snd README: EnsureReplaceableStrategy |
 
 ### Error Paths
 

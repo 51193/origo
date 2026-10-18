@@ -6,7 +6,7 @@
 
 ## Behavior Under Test Overview
 
-The capability table mirrors `ISndFileAccess` one-to-one; `Snd-ArchiveFileAccess.en.md` keeps the same parallel structure for `ISndArchiveFileAccess`.
+Related: [`Snd-ArchiveFileAccess.en.md`](Snd-ArchiveFileAccess.en.md) covers the parallel `ISndArchiveFileAccess` surface.
 
 Validates the full behavior of `ISndFileAccess` on `SndContext`: DataSourceNode file read/write round-trips, strongly-typed object read/write round-trips (including custom types with a registered converter), file existence checks, overwrite semantics, Map format parsing, nested JSON parsing, error paths (non-existent files, null paths, invalid JSON), and boundary paths (empty objects, Null nodes, Boolean values).
 

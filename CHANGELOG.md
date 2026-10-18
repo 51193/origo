@@ -30,6 +30,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   which the smoke runs against the same feed. The smoke self-test pins physical-
   path resolution and first-file lookup behavior.
 
+- **`ORIGOSG008` for null `SndInlineTypes` elements** — a null placeholder in
+  the attribute now fails the build with an actionable error instead of
+  silently renumbering the types after it; the rule is tracked as unshipped
+  until the next release.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added
