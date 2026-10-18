@@ -3,20 +3,19 @@
 > [↑ Back to Origo.Core.Kernel](../README.en.md) · [↔ Frame-driver contract: Origo.Core.Contracts/Abstractions/Runtime](../../Origo.Core.Contracts/Abstractions/Runtime/README.en.md)
 
 ## Overview
-Concrete implementation of the `IScheduler` interface. Provides a simple scheduler based on `ConcurrentActionQueue`, plus a thread-safe deferred execution queue. The host environment is responsible for calling `Tick` at the right time to execute queued actions.
+Deferred scheduling implementation: an `ActionScheduler` over the thread-safe `ConcurrentActionQueue`. The host environment is responsible for calling `Tick` at the right time to execute queued actions.
 
 ## Included Files
 
 | File | Responsibility |
 |------|------|
-| `IScheduler.cs` | Internal scheduling queue contract: Enqueue / Tick / Clear |
-| `ActionScheduler.cs` | Internal `IScheduler` implementation wrapping `ConcurrentActionQueue` |
+| `ActionScheduler.cs` | Internal scheduler wrapping `ConcurrentActionQueue` (Enqueue / Tick / Clear) |
 | `ConcurrentActionQueue.cs` | Thread-safe deferred execution queue with batch drain and reentrancy protection |
 
 ## Implementation Details
 
 ### ActionScheduler
-Thin wrapper adapting `ConcurrentActionQueue` to `IScheduler`:
+Thin wrapper over `ConcurrentActionQueue`:
 - `Enqueue(action)` → enqueue
 - `Tick()` → `ExecuteAll()`, returns count executed this frame
 - `Clear()` → clear queue
@@ -31,15 +30,6 @@ Core implementation using `List<Action>` + `lock`:
 
 ### Why snapshot-style drain rather than drain-while-executing
 Drain-while-executing (e.g. `while(Dequeue()) invoke()`) requires holding the lock continuously and cannot enqueue new actions during execution. Snapshot-style first copies all pending actions out of the lock region, releases the lock, then invokes them one by one — reducing lock contention while allowing actions to enqueue new actions internally.
-
-### Why IScheduler is kernel-internal
-
-`IScheduler` is the kernel-internal scheduling queue contract; its only
-implementation is `internal sealed ActionScheduler`. It does not enter the
-consumer compilation surface and is available only to the `Origo.Core`
-runtime construction and test assemblies through `InternalsVisibleTo`.
-External code uses scheduling through higher-level APIs such as
-`SndContext.EnqueueBusinessDeferred`.
 
 ### Why ActionScheduler is internal
 The scheduler is used only inside runtime construction. External code uses the scheduling capability indirectly through upper-level APIs (such as `SndContext`'s `EnqueueBusinessDeferred`) and does not interact with `ActionScheduler` directly.

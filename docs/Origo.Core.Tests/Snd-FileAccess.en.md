@@ -6,6 +6,8 @@
 
 ## Behavior Under Test Overview
 
+The capability table mirrors `ISndFileAccess` one-to-one; `Snd-ArchiveFileAccess.en.md` keeps the same parallel structure for `ISndArchiveFileAccess`.
+
 Validates the full behavior of `ISndFileAccess` on `SndContext`: DataSourceNode file read/write round-trips, strongly-typed object read/write round-trips (including custom types with a registered converter), file existence checks, overwrite semantics, Map format parsing, nested JSON parsing, error paths (non-existent files, null paths, invalid JSON), and boundary paths (empty objects, Null nodes, Boolean values).
 
 All file I/O uses the shared `TestMemoryFileSystem` (in-memory implementation); no real disk operations are involved.

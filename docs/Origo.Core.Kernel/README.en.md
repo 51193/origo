@@ -21,7 +21,7 @@ Kernel compile assets never enter the Core shell consumer compilation surface.
 | [Snd](Snd/README.en.md) | SND implementation | Context/world, entity aggregate, scene host, strategy pool/managers, and observer topology |
 | [StateMachine](StateMachine/README.en.md) | State-machine implementation | Stack machine and persistence models |
 | [Ports](Ports/README.en.md) | Kernel-shell ports | Internal host-construction ports exposed to shell assemblies via `InternalsVisibleTo` |
-| [Scheduling](Scheduling/README.en.md) | Deferred scheduling implementation | `IScheduler` + `ActionScheduler` + `ConcurrentActionQueue` |
+| [Scheduling](Scheduling/README.en.md) | Deferred scheduling implementation | `ActionScheduler` + `ConcurrentActionQueue` |
 | [Addons](Addons/README.en.md) | Vendored third-party libraries | FastNoiseLite noise implementation |
 
 ## Files at This Level

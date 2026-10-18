@@ -44,7 +44,7 @@ SystemRun (constructed and held by SndContext)
 
 Each layer container holds its layer's core object references and public access points:
 - `SndContext` is the global/progress-level aggregator: constructs `SystemRun` and creates/destroys `ProgressRun` on every progress lifecycle transition (load/save/level switch)
-- `SystemRuntime` holds `SndWorld` forwarding, `ConverterRegistry`, `AdapterSceneHost`, and the scheduler (the scheduler instance is actually held by `OrigoRuntime` and injected via `IScheduler`)
+- `SystemRuntime` holds `SndWorld` forwarding, `ConverterRegistry`, `AdapterSceneHost`, and the scheduler (the scheduler instance is held directly by `OrigoRuntime` as an `ActionScheduler`)
 - `ProgressRuntime` holds `Logger`, `StorageService`, `SndWorld`, `AdapterSceneHost`, `StateMachineContext`, `SndContext`, `SavePathPolicy` (the progress blackboard and state machine container are held layer-wise by `SessionManager`/`ProgressRun`; SaveContext is a transient object created on demand)
 - `SessionManagerRuntime` holds `SndWorld`, `SndContext`, `ProgressBlackboard` and other runtime dependencies (`ISessionManager` is held by `ProgressRun`)
 - `SessionManager` reads and stores `AdapterSceneHost` at construction for creating foreground sessions

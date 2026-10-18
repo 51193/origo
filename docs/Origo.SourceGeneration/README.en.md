@@ -16,7 +16,7 @@
 | `TypedDataGenerator.AdapterGeneration.cs` | partial — Adapter mode code generation (Godot engine type extension methods) |
 | `TypedDataGenerator.HomeGeneration.cs` | partial — Home mode code generation (Core BCL type extension methods) |
 | `TypedDataGenerator.FactoryGeneration.cs` | partial — `TypedDataFactory<T>` Create/TryExtract branch generation (type mapping `TypedDataTypeMap` and Kind allocation live in HomeGeneration.cs) |
-| `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-007) |
+| `TypedDataGenerator.Diagnostics.cs` | partial — Diagnostics definitions (ORIGOSG001-008) |
 | `AnalyzerReleases.Shipped.md` | Analyzer release tracking (rules shipped in 0.0.9: `ORIGOSG001`-`ORIGOSG007`) |
 | `AnalyzerReleases.Unshipped.md` | Analyzer release tracking (rules for the next release, currently empty) |
 | `pipeline.en.md` | Full-pipeline performance analysis: complete reasoning and benchmark notes from boxing problems to compile-time optimization |
@@ -90,6 +90,7 @@ Diagnostic messages carry the corresponding `SndInlineTypesAttribute` syntax loc
 | `ORIGOSG005` | Error | Multiple registered types produce the same generated identifier (KindName): same-named types from different namespaces, generic instantiations whose names collapse to one identifier, and the same type registered more than once with different kind values (re-registering the same type with the same kind is idempotent and silently deduplicated, matching the runtime `RegisterKind` semantics). The reserved identifiers `Null` and the Home inline kind names are rejected too — `KindMap` always emits the sentinel `Null = 0` (and value types would also collide with the handwritten `IsNull` property), so a type named `Null` reports ORIGOSG005 and is dropped; an adapter-layer **custom type whose sanitized name equals a Home inline kind name** (e.g. the user's own `Int32`) would generate a public extension method that consumers bind to instead of the Home instance accessor (silent semantic divergence), also ORIGOSG005. Generated accessor identifiers derive from the type name; any identifier collision would emit uncompilable duplicate members or divergent semantics. |
 | `ORIGOSG006` | Error | A registered type's sanitized KindName **is not a valid C# identifier** (e.g. pointer types, whose `Name` contains `*` and sanitizes to `Int32*`), so the generated accessor identifiers could not compile; such registrations report ORIGOSG006 and are dropped. |
 | `ORIGOSG007` | Error | A non-home assembly declares `SndInlineTypes` adapter registrations but is not in Origo.Core.Contracts's `InternalsVisibleTo` whitelist. Adapter-mode generated code needs `TypedData._kind/_ref` and the internal registration APIs; only Origo.GodotAdapter is currently whitelisted. The generator reports ORIGOSG007 and emits no source instead of a wall of CS0122/CS0117 errors. |
+| `ORIGOSG008` | Error | The `SndInlineTypes` attribute contains a null element. A null placeholder does not reserve a kind value, so every type after it would silently receive a lower kind than its declared position; the generator reports ORIGOSG008 and emits no source. |
 
 ## Registration Mechanism
 

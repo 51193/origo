@@ -43,7 +43,7 @@ Validates extension method behavior on `ISndEntity`: lazy strategy mounting and 
 |-------------|------------------|---------------------|
 | `EnsureReplaceableStrategy_NoConfig_UsesDefault` | No configuration uses defaultStrategyIndex, returns true | Snd README: EnsureReplaceableStrategy |
 | `EnsureReplaceableStrategy_CalledAgain_ReturnsFalse` | Second call returns false (idempotent) | Snd README: EnsureReplaceableStrategy |
-| `EnsureReplaceableStrategy_ConfiguredOverride_UsesOverride` | When custom strategy index is configured, preserves it and returns false | Snd README: EnsureReplaceableStrategy |
+| `EnsureReplaceableStrategy_ConfiguredOverride_PreservesIndex` | A configured custom strategy index is preserved unchanged and the call returns false (mounting it is the configurer's responsibility) | Snd README: EnsureReplaceableStrategy |
 | `EnsureReplaceableStrategy_EmptyOverride_UsesDefault` | When configured value is empty string, overwrites with defaultStrategyIndex, returns true | Snd README: EnsureReplaceableStrategy |
 | `EnsureReplaceableStrategy_DifferentDefault_CalledAgain_ReturnsFalse` | First call mounted with A as default; second call with B as default still returns false and value stays A | Snd README: EnsureReplaceableStrategy |
 
