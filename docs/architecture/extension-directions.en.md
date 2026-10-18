@@ -8,7 +8,7 @@ Before reading this page, understand the current baseline: [Architecture Overvie
 
 ## Direction Index
 
-| Direction | State | Tracking issue | Notes |
+| Direction | Gate | Tracking issue | Notes |
 |-----------|-------|----------------|-------|
 | Unified tree namespace | blocked-design | [#44](https://github.com/51193/origo/issues/44) | Restricted tree root, content/metadata boundary, and remote async I/O are undecided |
 | Entity-level concurrency | waiting-signal | [#45](https://github.com/51193/origo/issues/45) | Waiting for a profiling signal; in-entity strategy order stays serial |
