@@ -30,7 +30,7 @@ public interface IBlackboard
     /// <summary>Removes all entries from the blackboard.</summary>
     void Clear();
 
-    /// <summary>Enumerates all currently stored keys.</summary>
+    /// <summary>Returns a snapshot of all currently stored keys; later mutations do not change it.</summary>
     IReadOnlyCollection<string> GetKeys();
 
     /// <summary>

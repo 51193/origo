@@ -30,6 +30,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   which the smoke runs against the same feed. The smoke self-test pins physical-
   path resolution and first-file lookup behavior.
 
+### Fixed
+
+- **Auto-save ids and alias maps stay unambiguous** — repeated
+  `RequestSaveGameAuto` calls within one millisecond now receive distinct ids; a
+  null value in a scene or template alias map throws with the offending key
+  instead of silently becoming an empty string; and the key collections returned
+  by the blackboard, node, and strategy lookups are snapshots, so enumerating
+  them cannot break when the underlying collection mutates.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added

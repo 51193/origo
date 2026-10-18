@@ -45,7 +45,14 @@ internal sealed class SndMappings
         using var node = dataSourceIo.ReadTree(mapFilePath);
         var loaded = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
-            loaded[key] = node[key].AsString();
+        {
+            var valueNode = node[key];
+            if (valueNode.IsNull)
+                throw new InvalidOperationException(
+                    $"Scene alias map '{mapFilePath}' has a null value for key '{key}'; " +
+                    "remove the key or give it a string value.");
+            loaded[key] = valueNode.AsString();
+        }
 
         _sceneAliases.Clear();
         foreach (var (key, value) in loaded)
@@ -96,7 +103,14 @@ internal sealed class SndMappings
         using var node = dataSourceIo.ReadTree(mapFilePath);
         var loaded = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in node.Keys)
-            loaded[key] = node[key].AsString();
+        {
+            var valueNode = node[key];
+            if (valueNode.IsNull)
+                throw new InvalidOperationException(
+                    $"Template alias map '{mapFilePath}' has a null value for key '{key}'; " +
+                    "remove the key or give it a string value.");
+            loaded[key] = valueNode.AsString();
+        }
 
         var sndMetaConverter = registry.Get<SndMetaData>();
         var resolver = new SndTemplateResolver(dataSourceIo, sndMetaConverter, loaded);
