@@ -11,10 +11,9 @@ Matt Pocock's engineering skills use these five state roles. The
 | `ready-for-human` | `ready-for-human` | Human implementation needed |
 | `wontfix` | `wontfix` | Will not be actioned |
 
-The design-task template keeps `State` for its design gate
-(`blocked-design` / `waiting-signal`) and a separate `Triage` line for these
-five roles; they are different axes and both are updated when a skill moves an
-issue.
+The design-task template uses `State` for these five roles and a separate
+`Gate` line for the design gate (`blocked-design` / `waiting-signal`); they
+are different axes and both are updated when a skill moves an issue.
 
 When a skill changes a role, update the GitHub label and the local
 counterpart together when a local counterpart exists. Existing issue category

@@ -45,7 +45,6 @@
 | `Adapter_BCLTypeItself_WithReservedKindName_IsAllowed` | Registering BCL `string` itself at kind 128 emits `AsString` with no diagnostics or compile errors | Origo.SourceGeneration |
 | `Attribute_DefaultStartKind_StartsAtOne` | Without `StartKind`, numbering starts at 1 (Int32=1, String=2, matching `RegisterKind`) | Origo.SourceGeneration |
 | `Attribute_NoTypes_ProducesNoOutput` | Only `StartKind` (128) specified with no type arguments | Produces no sources, no diagnostics, no compile errors |
-| `Attribute_NullArrayElement_ReportsORIGOSG008_AndEmitsNoSources` | Type arguments contain a null element | Reports `ORIGOSG008` (Error) and emits no sources; a null placeholder would renumber the following types |
 | `Home_WithoutString_GeneratesCompilableCode` | Home mode without `string` registered (int/float only) | Zero compile errors, does not generate `KindMap.String`/`IsString`/`AsString`/`TryGetString` |
 | `Incremental_SameInputTwice_GenerationStepIsCached` | Two new Compilation instances with identical sources (modeling every editor keystroke) | Second run's SourceOutput steps all skip regeneration with Cached reason |
 | `Incremental_SameInputTwice_TrackedStepsPresent` | Same input run twice | Incremental pipeline retains TrackedSteps (non-empty), observable step execution/caching reasons |
@@ -57,6 +56,7 @@
 | `Home_UnsupportedValueType_ReportsORIGOSG002_ButStillGeneratesValidTypes` | Home group registers uninlinable value type (`decimal`) | Reports `ORIGOSG002` (Error), excludes only the unsupported type, `int` still generated normally with merged compilation zero errors |
 | `Adapter_SystemPrimitive_ReportsORIGOSG001` | Adapter group registers system primitive type (`int`) | Reports `ORIGOSG001` (Error), excludes the primitive, does not produce inline accessors for it |
 | `Adapter_WithoutFriendAccess_ReportsORIGOSG007_AndEmitsNoSources` | Adapter assembly not listed in `Origo.Core.Contracts` `InternalsVisibleTo` | Reports `ORIGOSG007` (Error) and emits no generated sources, zero compile errors |
+| `Attribute_NullArrayElement_ReportsORIGOSG008_AndEmitsNoSources` | Type arguments contain a null element | Reports `ORIGOSG008` (Error) and emits no sources; a null placeholder would renumber the following types |
 | `KindPastByteRange_ReportsORIGOSG003_IncludingWrapToNonZero` | `StartKind` offset causes Kind to exceed byte range (256/257, 257 wraps to 1 causing collision) | Reports `ORIGOSG003` (Error), excludes out-of-range types, in-range type (`Byte=255`) still generated |
 | `OverlappingStartKindRanges_ReportORIGOSG004_AndDropCollidingTypes` | Two groups assign same Kind 1 to different types (`int`/`long`) | Reports `ORIGOSG004` (Error), excludes the two colliding types |
 | `HomeAndAdapterCoexistence_HomeWins_NonSystemTypesRejected` | Same compilation has both Home attribute (system primitive types) and Adapter attribute (non-system value types) | Home mode takes effect, system types generated normally, non-system value types report `ORIGOSG002` (Error) |

@@ -15,14 +15,14 @@ labels, and comments. When a skill keeps local files, they provide a working
 copy and space to stage changes. Keep the local `GitHub-Updated-At` value from the
 last fetch. Before publishing local edits, compare it with the current
 remote value; reconcile concurrent changes before writing. After a
-GitHub write, refresh the counterpart. Do not silently replace a local
+GitHub write, refresh the counterpart when one exists. Do not silently replace a local
 file marked `Sync: pending`.
 
 - **Fetch/list**: `gh issue list -R 51193/origo --state all --limit 500
   --json number,title,state,labels,updatedAt,url`; use `gh issue view
   <number> -R 51193/origo --json
   number,title,body,state,labels,comments,updatedAt,url` for full detail.
-  Refresh local counterparts, including closed issues. A local issue
+  Refresh local counterparts that exist, including closed issues. A local issue
   without a GitHub number is a draft, not a published issue.
 - **Create**: draft under `.scratch/issues/drafts/<slug>.md`. Once the
   title and body are reviewable, create with `gh issue create -R
@@ -35,9 +35,9 @@ file marked `Sync: pending`.
 - **Triage**: use the roles in `docs/agents/triage-labels.md`. Apply
   labels with `gh issue edit <number> -R 51193/origo --add-label "..."`
   or `--remove-label "..."`, then update the local label list and
-  `Status:` field.
+  `Status:` field when a counterpart exists.
 - **Close**: `gh issue close <number> -R 51193/origo`, then refresh the
-  local counterpart.
+  local counterpart when it exists.
 
 Local issue files stay in a dedicated `.scratch/issues/` subtree.
 They are local working data and are excluded from commits. The separate
@@ -51,12 +51,12 @@ purpose; it is not an issue tracker.
 ## When a skill says "publish to the issue tracker"
 
 Create or update the GitHub issue in `51193/origo` and synchronize its
-local counterpart. For offline work, keep a draft or pending file and
+local counterpart when one exists. For offline work, keep a draft or pending file and
 report that publication remains outstanding.
 
 ## When a skill says "fetch the relevant ticket"
 
-Read the GitHub issue and its local counterpart. Refresh the local copy
+Read the GitHub issue and, when present, its local counterpart. Refresh the local copy
 if the remote changed and no local update is pending.
 
 ## Wayfinding operations
