@@ -112,46 +112,7 @@ jobs:
         if: steps.check.outputs.new_version != ''
         shell: bash
         run: |
-          python3 - "${{ steps.check.outputs.new_version }}" <<'PY'
-          import re
-          import sys
-
-          version = sys.argv[1]
-
-          # AssemblyVersion/FileVersion are four numeric parts and cannot carry
-          # the -nightly suffix, so they follow the numeric base of the snapshot
-          # version. Keeping all three stamps in step means the release pipeline
-          # has nothing to rewrite and never has to move main or the tag.
-          numeric = re.split(r"[-+]", version, maxsplit=1)[0]
-          parts = numeric.split(".")
-          if not parts or not all(part.isdigit() for part in parts) or len(parts) > 4:
-              raise SystemExit(
-                  f"ERROR: snapshot version '{version}' has no usable numeric form."
-              )
-          assembly_version = ".".join((parts + ["0"] * 4)[:4])
-
-          path = "Directory.Build.props"
-          with open(path, encoding="utf-8") as handle:
-              content = handle.read()
-
-          for element, replacement in (
-              ("Version", version),
-              ("AssemblyVersion", assembly_version),
-              ("FileVersion", assembly_version),
-          ):
-              content, count = re.subn(
-                  rf"(<{element}>)[^<]+(</{element}>)",
-                  lambda match, value=replacement: f"{match.group(1)}{value}{match.group(2)}",
-                  content,
-              )
-              if count != 1:
-                  raise SystemExit(
-                      f"ERROR: expected exactly one <{element}> element in {path}, found {count}."
-                  )
-
-          with open(path, "w", encoding="utf-8") as handle:
-              handle.write(content)
-          PY
+          python3 scripts/write-version-stamp.py "${{ steps.check.outputs.new_version }}"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

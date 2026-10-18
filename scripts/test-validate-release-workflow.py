@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Regression tests for scripts/validate-release-workflow.py.
+
+The fixtures are derived from the real release workflow, so every new guard
+rule is pinned against the document it protects. Run from
+scripts/lint-scripts.sh.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import importlib.util
+import io
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+MODULE_PATH = ROOT / "scripts" / "validate-release-workflow.py"
+_SPEC = importlib.util.spec_from_file_location("validate_release_workflow", MODULE_PATH)
+assert _SPEC is not None and _SPEC.loader is not None
+guard = importlib.util.module_from_spec(_SPEC)
+sys.modules["validate_release_workflow"] = guard
+_SPEC.loader.exec_module(guard)
+
+WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
+
+
+class ReleaseWorkflowGuardTests(unittest.TestCase):
+    def run_guard(self, text: str) -> tuple[int, str, str]:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflow = root / ".github" / "workflows" / "release.yml"
+            workflow.parent.mkdir(parents=True)
+            workflow.write_text(text, encoding="utf-8")
+            old_root, old_workflow = guard.ROOT, guard.WORKFLOW
+            guard.ROOT, guard.WORKFLOW = root, workflow
+            try:
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    code = guard.main()
+                return code, stdout.getvalue(), stderr.getvalue()
+            finally:
+                guard.ROOT, guard.WORKFLOW = old_root, old_workflow
+
+    def mutated(self, old: str, new: str) -> str:
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn(old, text, f"fixture anchor not found: {old!r}")
+        return text.replace(old, new, 1)
+
+    def test_current_workflow_passes(self):
+        code, stdout, stderr = self.run_guard(WORKFLOW.read_text(encoding="utf-8"))
+        self.assertEqual(code, 0, stderr)
+        self.assertIn("Release-workflow guard: OK", stdout)
+
+    def test_dynamic_uses_reference_is_rejected(self):
+        text = self.mutated(
+            "      - uses: actions/checkout@v7",
+            "      - uses: ${{ env.CHECKOUT_ACTION }}",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("dynamic action reference", stderr)
+
+    def test_unapproved_action_in_release_job_is_rejected(self):
+        text = self.mutated(
+            "        uses: softprops/action-gh-release@v3",
+            "        uses: some/third-party-release-action@v1",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("unapproved action", stderr)
+
+    def test_release_create_from_ref_name_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        env:\n"
+            "          TAG: ${{ github.ref_name }}\n"
+            '        run: gh release create "${{ github.ref_name }}" --generate-notes\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_version_step_must_use_the_resolved_tag(self):
+        text = self.mutated(
+            '          TAG: ${{ steps.resolve-tag.outputs.tag }}\n'
+            "        run: |\n"
+            "          set -euo pipefail\n"
+            "          # The release workflow builds from a tag checkout.",
+            '          TAG: ${{ github.ref_name }}\n'
+            "        run: |\n"
+            "          set -euo pipefail\n"
+            "          # The release workflow builds from a tag checkout.",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("version-stamp step must receive", stderr)
+
+    def test_missing_version_helper_is_rejected(self):
+        text = self.mutated(
+            '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+            "          echo synced",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("write-version-stamp.py", stderr)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard the release workflow's dispatch-safe tag and Boolean-input contract.
+"""Guard the release workflow's dispatch-safe tag, action, and Boolean contract.
 
 `workflow_dispatch` runs from `main`, so `github.ref_name` is the branch name
 rather than the requested release tag. The workflow resolves the real tag into
@@ -29,6 +29,14 @@ WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 RELEASE_ACTION = "softprops/action-gh-release"
 RESOLVED_TAG = "${{ steps.resolve-tag.outputs.tag }}"
 RESOLVED_TAG_REF = f"refs/tags/{RESOLVED_TAG}"
+# Only these actions may run in the publishing job; a new action needs a
+# deliberate review and an entry here.
+RELEASE_JOB_ACTIONS = {
+    "actions/checkout",
+    "actions/setup-dotnet",
+    "actions/cache",
+    RELEASE_ACTION,
+}
 
 
 def fail(message: str) -> None:
@@ -68,7 +76,19 @@ def main() -> int:
         for index, step in enumerate(job.get("steps") or []):
             if not isinstance(step, dict):
                 continue
-            action = str(step.get("uses") or "").split("@", 1)[0]
+            uses_value = step.get("uses")
+            uses_text = str(uses_value) if uses_value is not None else ""
+            if "${{" in uses_text:
+                errors.append(
+                    f"{job_name}.steps[{index}] uses a dynamic action reference "
+                    f"('{uses_text}'); pin the action so this guard can review it."
+                )
+            action = uses_text.split("@", 1)[0]
+            if job_name == "release" and action and action not in RELEASE_JOB_ACTIONS:
+                errors.append(
+                    f"{job_name}.steps[{index}] uses unapproved action '{action}'; "
+                    "add it to RELEASE_JOB_ACTIONS only after review."
+                )
             if action != RELEASE_ACTION:
                 continue
             with_section = step.get("with")
@@ -112,6 +132,55 @@ def main() -> int:
                     "release job must pass ORIGO_BRANCH_NAME as "
                     f"{RESOLVED_TAG_REF} when linting a detached release checkout."
                 )
+        version_step = next(
+            (
+                step
+                for step in release_steps
+                if isinstance(step, dict)
+                and "scripts/write-version-stamp.py" in str(step.get("run") or "")
+            ),
+            None,
+        )
+        if version_step is None:
+            errors.append(
+                "release job must sync version stamps through "
+                "scripts/write-version-stamp.py so the release and weekly "
+                "workflows share one validated implementation."
+            )
+        else:
+            version_env = version_step.get("env")
+            if not isinstance(version_env, dict) or version_env.get("TAG") != RESOLVED_TAG:
+                errors.append(
+                    "the version-stamp step must receive "
+                    f"TAG={RESOLVED_TAG} so it rewrites the dispatched tag, "
+                    "not github.ref_name."
+                )
+
+        for index, step in enumerate(release_steps):
+            if not isinstance(step, dict):
+                continue
+            command = str(step.get("run") or "")
+            creates_release = "release create" in command or "/releases" in command
+            if not creates_release:
+                continue
+            uses_wrong_ref = (
+                "${{ github.ref_name }}" in command
+                or "${{ github.head_ref }}" in command
+            )
+            env = step.get("env")
+            tag_from_env = isinstance(env, dict) and RESOLVED_TAG in env.values()
+            if uses_wrong_ref:
+                errors.append(
+                    f"release.steps[{index}] creates a release from github.ref_name/"
+                    "github.head_ref; pass the resolved tag instead."
+                )
+            elif RESOLVED_TAG not in command and not tag_from_env:
+                errors.append(
+                    f"release.steps[{index}] creates a release without the "
+                    "resolved tag; pass "
+                    f"{RESOLVED_TAG} explicitly."
+                )
+
         for dependency in ("shellcheck", "python3-yaml"):
             if not any(dependency in command for command in run_commands):
                 errors.append(

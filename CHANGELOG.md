@@ -20,6 +20,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Release workflow guard and version-stamp helper** — the release and weekly
+  workflows now share `scripts/write-version-stamp.py` instead of duplicating
+  the rewrite, and the release-workflow guard rejects dynamic `uses:`
+  references, actions outside the release job's reviewed allowlist, and
+  release-creation commands that do not use the resolved tag.
+
 - **Package consumer smoke delegates package assertions to the release validator** —
   `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its
   physical path before comparing it with `project.assets.json` and replaces its
