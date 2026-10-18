@@ -86,6 +86,52 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("github.ref_name", stderr)
 
+    def test_release_create_env_mixed_ref_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        env:\n"
+            "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+            "          WRONG: ${{ github.ref_name }}\n"
+            '        run: gh release create "${WRONG}"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_release_create_multiline_command_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: |\n"
+            "          gh release \\\n"
+            '            create "${{ github.ref_name }}"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_readonly_release_api_call_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: List releases\n"
+            "        run: gh api repos/51193/origo/releases/latest\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_version_step_must_call_the_helper(self):
+        text = self.mutated(
+            '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+            "          echo scripts/write-version-stamp.py",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must call scripts/write-version-stamp.py", stderr)
+
     def test_version_step_must_use_the_resolved_tag(self):
         text = self.mutated(
             '          TAG: ${{ steps.resolve-tag.outputs.tag }}\n'

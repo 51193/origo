@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Guard the release workflow's dispatch-safe tag, action, and Boolean contract.
+"""Guard the release workflow's dispatch-safe tag, action, version-stamp,
+and Boolean contract.
 
 `workflow_dispatch` runs from `main`, so `github.ref_name` is the branch name
 rather than the requested release tag. The workflow resolves the real tag into
@@ -41,6 +42,22 @@ RELEASE_JOB_ACTIONS = {
 
 def fail(message: str) -> None:
     print(f"ERROR: {message}", file=sys.stderr)
+
+
+def _normalize_command(command: str) -> str:
+    """Collapse shell line continuations and whitespace for keyword scans."""
+    return " ".join(command.replace("\\\n", " ").replace("\\\r", " ").split())
+
+
+def _references_wrong_ref(text: str) -> bool:
+    return "${{ github.ref_name }}" in text or "${{ github.head_ref }}" in text
+
+
+def _env_references_wrong_ref(env: object) -> bool:
+    if not isinstance(env, dict):
+        return False
+    return any(_references_wrong_ref(str(value)) for value in env.values())
+
 
 
 def event_mapping(workflow: dict) -> dict:
@@ -132,22 +149,25 @@ def main() -> int:
                     "release job must pass ORIGO_BRANCH_NAME as "
                     f"{RESOLVED_TAG_REF} when linting a detached release checkout."
                 )
+        version_pattern = re.compile(
+            r"python3[^\n]*\s+scripts/write-version-stamp\.py(?:\s|$)"
+        )
         version_step = next(
             (
                 step
                 for step in release_steps
                 if isinstance(step, dict)
-                and "scripts/write-version-stamp.py" in str(step.get("run") or "")
+                and version_pattern.search(str(step.get("run") or ""))
             ),
             None,
         )
         if version_step is None:
             errors.append(
-                "release job must sync version stamps through "
-                "scripts/write-version-stamp.py so the release and weekly "
-                "workflows share one validated implementation."
+                "release job must call scripts/write-version-stamp.py so the "
+                "release and weekly workflows share one validated implementation."
             )
         else:
+            version_run = str(version_step.get("run") or "")
             version_env = version_step.get("env")
             if not isinstance(version_env, dict) or version_env.get("TAG") != RESOLVED_TAG:
                 errors.append(
@@ -155,26 +175,41 @@ def main() -> int:
                     f"TAG={RESOLVED_TAG} so it rewrites the dispatched tag, "
                     "not github.ref_name."
                 )
+            if _references_wrong_ref(version_run) or _env_references_wrong_ref(version_env):
+                errors.append(
+                    "the version-stamp step must not read github.ref_name or "
+                    "github.head_ref; use the resolved tag."
+                )
 
         for index, step in enumerate(release_steps):
             if not isinstance(step, dict):
                 continue
-            command = str(step.get("run") or "")
-            creates_release = "release create" in command or "/releases" in command
+            command = _normalize_command(str(step.get("run") or ""))
+            lowered = command.lower()
+            creates_release = (
+                "release create" in lowered
+                or "createrelease" in lowered
+                or ("/releases" in lowered and ("post" in lowered or "put" in lowered))
+            )
             if not creates_release:
                 continue
-            uses_wrong_ref = (
-                "${{ github.ref_name }}" in command
-                or "${{ github.head_ref }}" in command
-            )
             env = step.get("env")
-            tag_from_env = isinstance(env, dict) and RESOLVED_TAG in env.values()
-            if uses_wrong_ref:
+            if _references_wrong_ref(command) or _env_references_wrong_ref(env):
                 errors.append(
                     f"release.steps[{index}] creates a release from github.ref_name/"
                     "github.head_ref; pass the resolved tag instead."
                 )
-            elif RESOLVED_TAG not in command and not tag_from_env:
+                continue
+            env_tag_names = (
+                {name for name, value in env.items() if value == RESOLVED_TAG}
+                if isinstance(env, dict)
+                else set()
+            )
+            uses_env_tag = any(
+                f"${{{name}}}" in command or f"${name}" in command
+                for name in env_tag_names
+            )
+            if RESOLVED_TAG not in command and not uses_env_tag:
                 errors.append(
                     f"release.steps[{index}] creates a release without the "
                     "resolved tag; pass "

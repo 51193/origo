@@ -79,4 +79,12 @@ if python3 "$ROOT/scripts/write-version-stamp.py" "0.3.0" 2>/dev/null; then
     FAIL "duplicate <Version> was accepted"
 fi
 
+# The helper takes exactly one version argument.
+if python3 "$ROOT/scripts/write-version-stamp.py" 2>/dev/null; then
+    FAIL "missing version argument was accepted"
+fi
+if python3 "$ROOT/scripts/write-version-stamp.py" "0.1.0" "0.2.0" 2>/dev/null; then
+    FAIL "extra version argument was accepted"
+fi
+
 echo "write-version-stamp: OK"
