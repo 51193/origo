@@ -210,8 +210,6 @@ Validates the full behavior of SND entities: StubSndEntity data CRUD, AfterLoad 
 | `ThrowingAfterLoadStrategy` | SndEntityAfterLoadTests | AfterLoad throws InvalidOperationException to verify exception propagation |
 | `LifecycleStrategy` | SndEntityAndAutoInitializerTests | AsyncLocal event collector covering all lifecycle hooks (AfterSpawn/AfterAdd/BeforeRemove/BeforeSave/BeforeQuit) |
 | `StubSessionRun` | SndEntityAndAutoInitializerTests | ISessionRun stub implementation, delegating Spawn/FindByName/GetEntities to ISndSceneHost |
-| `AutoInitStrategyA` / `AutoInitStrategyB` | SndEntityAndAutoInitializerTests | Minimal LifecycleStrategyBase strategies, only declaring StrategyIndex, no behavior override |
-| `StatefulAutoInitStrategy` | SndEntityAndAutoInitializerTests | Strategy with instance field (_counter), used to test framework guard against non-stateless strategies |
 | `TrackingStrategy` | SndEntityOwningSessionTests | Records AfterSpawn events via constructor-injected List<string> |
 | `StubSessionRun` | SndEntityOwningSessionTests | Minimal ISndSessionRun stub; all operations throw NotSupportedException |
 

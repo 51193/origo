@@ -156,7 +156,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
-| `ObserverStrategy_StatelessEnforcement` | Registering observer strategy with instance field (_counter) | InvalidOperationException ("invalid instance members") |
+| `ObserverStrategy_StatelessEnforcement` | Registering observer strategy with instance field (_counter) | InvalidOperationException ("invalid instance members", naming `_counter`); the counter advanced by OnMounted proves the field is mutable instance state |
 | `ObserverStrategy_MissingAttribute_Throws` | Registering observer without [StrategyIndex] | InvalidOperationException |
 | `Mount_WhenOnMountedThrows_RollsBackAndReturnsToPool` | OnMounted throws InvalidOperationException | Data subscriptions rolled back; subsequent SetData does not trigger callback; strategy returned to pool |
 | `MountObserverStrategy_WithDifferentTargetName_Throws` | Mounting with target name different from own entity name | InvalidOperationException ("Cross-entity") |
@@ -275,7 +275,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `MemoryObserver` | ObserverStrategyTests.cs | Records OnMounted/OnUnmounted calls (MountCall contains Entity + Target); AsyncLocal list isolated |
 | `ThrowOnMountObserver` | ObserverStrategyTests.cs | OnMounted throws InvalidOperationException; verifies rollback and confirms subsequent SetData does not trigger |
 | `ThrowOnUnmountObserver` | ObserverStrategyTests.cs | OnUnmounted throws InvalidOperationException; verifies the failed unmount still returns the pool reference |
-| `StatefulObserver` | ObserverStrategyTests.cs | Observer with instance field _counter; verifies registration rejection |
+| `StatefulObserver` | ObserverStrategyTests.cs | Observer with instance field _counter advanced by OnMounted; verifies registration rejection and that the counter is readable mutable state |
 | `UnannotatedObserver` | ObserverStrategyTests.cs | Observer without [StrategyIndex] attribute; verifies registration rejection |
 | `Probe` (abstract) | StrategyOrderingTests.cs | Abstract base recording all eight lifecycle hook events for Producer / Bridge / Consumer |
 | `Producer` / `Bridge` / `Consumer` | StrategyOrderingTests.cs | Verify A → B → C projection, deduplication, and Ordinal fallback using duplicate Before, equivalent After, and an unmounted intermediate |

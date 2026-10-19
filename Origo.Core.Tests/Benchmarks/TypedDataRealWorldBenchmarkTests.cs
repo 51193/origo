@@ -11,7 +11,6 @@ namespace Origo.Core.Tests;
 public class TypedDataRealWorldBenchmarkTests(ITestOutputHelper output)
 {
     private const int _dictSize = 1024;
-    private const int _dictMask = _dictSize - 1;
     private const int _sampleCount = 128;
     private const int _sampleMask = _sampleCount - 1;
 
