@@ -23,6 +23,7 @@ sandbox: commands assembled through variables or heredocs are out of reach.
 from __future__ import annotations
 
 import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -59,8 +60,8 @@ _VERSION_CALL = re.compile(
 _RELEASE_CREATE = re.compile(r"\bgh\s+release\s+create\b")
 _API_POST_FLAGS = re.compile(r"(?:^|\s)(?:-f|--raw-field|-F|--field|--input)\b")
 _TAG_EXPR = r"\$\{\{\s*steps\.resolve-tag\.outputs\.tag\s*\}\}"
-_VALUE_FLAGS = {"--repo", "-R", "--notes", "--notes-file", "--title", "--target",
-                "--discussion-category"}
+_VALUE_FLAGS = {"--repo", "-R", "--notes", "-n", "--notes-file", "-F", "--title", "-t",
+                "--target", "--discussion-category", "--notes-start-tag"}
 
 
 def _references_wrong_ref(text: str) -> bool:
@@ -76,16 +77,60 @@ def _env_references_wrong_ref(env: object) -> bool:
 def _calls_version_helper(run: str) -> bool:
     """True when a non-comment line really invokes the helper."""
     pattern = re.compile(
-        r"^(?:sudo\s+)?(?:env\s+(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*)?"
-        r"python3\s+(?:-\S+\s+)*(?:\./|\$PWD/)?scripts/write-version-stamp\.py(?:\s|$)"
+        r"^(?:sudo\s+(?:-\S+\s+)*)?(?:env\s+)?"
+        r"(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*"
+        r"python3\s+(?:-\S+\s+)*(?:\./|\"\$PWD/\"|\$PWD/)?"
+        r"scripts/write-version-stamp\.py(?:\s|$)"
     )
     for line in run.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("#"):
-            continue
-        if pattern.match(stripped):
+        if pattern.match(_strip_comment(line).strip()):
             return True
     return False
+
+
+def _strip_comment(line: str) -> str:
+    """Drop an unquoted shell comment, keeping # inside quotes."""
+    quote: str | None = None
+    for index, char in enumerate(line):
+        if quote:
+            if char == quote:
+                quote = None
+        elif char in "'\"":
+            quote = char
+        elif char == "#" and (index == 0 or line[index - 1].isspace()):
+            return line[:index]
+    return line
+
+
+def _split_outside_quotes(text: str) -> list[str]:
+    parts: list[str] = []
+    current: list[str] = []
+    quote: str | None = None
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if quote:
+            current.append(char)
+            if char == quote:
+                quote = None
+            index += 1
+        elif char in "'\"":
+            quote = char
+            current.append(char)
+            index += 1
+        elif text.startswith("&&", index) or text.startswith("||", index):
+            parts.append("".join(current))
+            current = []
+            index += 2
+        elif char == ";":
+            parts.append("".join(current))
+            current = []
+            index += 1
+        else:
+            current.append(char)
+            index += 1
+    parts.append("".join(current))
+    return [part.strip() for part in parts if part.strip()]
 
 
 def _command_segments(run: str) -> list[str]:
@@ -93,76 +138,100 @@ def _command_segments(run: str) -> list[str]:
     text = run.replace("\\\n", " ").replace("\\\r", " ")
     segments: list[str] = []
     for line in text.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
+        line = _strip_comment(line).strip()
+        if not line:
             continue
-        for part in re.split(r"&&|\|\||;", stripped):
-            part = _normalize_command(part)
-            if part:
-                segments.append(part)
+        for part in _split_outside_quotes(line):
+            normalized = _normalize_command(part)
+            if normalized:
+                segments.append(normalized)
     return segments
+
+
+_PREFIX = re.compile(
+    r"^(?:(?:[A-Za-z_][A-Za-z0-9_]*=\S+)\s+|sudo\s+(?:-\S+\s+)*|"
+    r"env\s+(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*|command\s+|exec\s+)*"
+)
+
+
+def _strip_prefixes(segment: str) -> str:
+    return _PREFIX.sub("", segment).strip()
 
 
 def _segment_creates_release(segment: str) -> bool:
     """Detect release creation within one command segment."""
-    lowered = segment.lower()
-    if _RELEASE_CREATE.search(segment) or "createrelease" in lowered:
+    core = _strip_prefixes(segment)
+    lowered = core.lower()
+    if _RELEASE_CREATE.search(core) or "createrelease" in lowered:
         return True
     if "/releases" not in lowered:
         return False
-    if re.search(r"(?:-x|--request|-X|--method)\s+(?:get|put|patch)\b", segment, re.IGNORECASE):
+    if re.search(r"(?:-x|--request|-X|--method)\s+(?:get|put|patch)\b", core, re.IGNORECASE):
         return False
-    if re.search(r"(?:-x|--request|-X|--method)\s+post\b", segment, re.IGNORECASE):
+    if re.search(r"(?:-x|--request|-X|--method)\s+post\b", core, re.IGNORECASE):
         return True
-    if re.match(r"gh\s+api\b", segment) and _API_POST_FLAGS.search(segment):
+    if re.match(r"gh\s+api\b", core) and _API_POST_FLAGS.search(core):
         return True
-    if re.match(r"curl\b", segment) and re.search(r"(?:^|\s)(?:-d|--data|--json)\b", segment):
+    if re.match(r"curl\b", core) and re.search(r"(?:^|\s)(?:-d|--data|--json)\b", core):
         return True
-    if re.search(r"(?:^|\s)--post-(?:data|file)\b", segment):
+    if re.search(r"(?:^|\s)--post-(?:data|file)\b", core):
         return True
-    if re.match(r"https?\s+post\b", segment, re.IGNORECASE):
+    if re.match(r"https?\s+post\b", core, re.IGNORECASE):
         return True
     return False
 
 
-def _tag_token_is_resolved(token: str, env: object) -> bool:
-    token = token.strip("\"'")
-    if re.fullmatch(_TAG_EXPR, token):
-        return True
-    match = re.fullmatch(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", token)
-    if match and isinstance(env, dict) and env.get(match.group(1)) == RESOLVED_TAG:
-        return True
+def _tag_value_is_resolved(value: str, env: object) -> bool:
+    value = value.strip().strip("\"',")
+    candidates = [value]
+    if value.endswith("}"):
+        candidates.append(value[:-1])
+    for candidate in candidates:
+        if re.fullmatch(_TAG_EXPR, candidate):
+            return True
+        match = re.fullmatch(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", candidate)
+        if match and isinstance(env, dict) and env.get(match.group(1)) == RESOLVED_TAG:
+            return True
     return False
 
 
 def _release_tag_argument_ok(segment: str, env: object) -> bool:
-    match = _RELEASE_CREATE.search(segment)
+    core = _strip_prefixes(segment)
+    match = _RELEASE_CREATE.search(core)
     if not match:
         return False
-    tokens = segment[match.end():].split()
-    index = 0
-    while index < len(tokens) and tokens[index].startswith("-"):
-        index += 2 if tokens[index] in _VALUE_FLAGS else 1
-    if index >= len(tokens):
+    try:
+        tokens = shlex.split(core[match.end():])
+    except ValueError:
         return False
-    rest = " ".join(tokens[index:])
-    if re.match(r"[\"']?" + _TAG_EXPR + r"(?:\"|\'|\s|$)", rest):
-        return True
-    return _tag_token_is_resolved(tokens[index], env)
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token in _VALUE_FLAGS:
+            index += 2
+            continue
+        if token.startswith("-"):
+            index += 1
+            continue
+        return _tag_value_is_resolved(token, env)
+    return False
 
 
 def _release_tag_name_ok(segment: str, env: object) -> bool:
-    field = re.search(r"tag_name[\"']?\s*[=:]\s*[\"']?", segment)
-    if not field:
+    core = _strip_prefixes(segment)
+    try:
+        tokens = shlex.split(core)
+    except ValueError:
         return False
-    rest = segment[field.end():]
-    if re.match(_TAG_EXPR, rest):
-        return True
-    if isinstance(env, dict):
-        match = re.match(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", rest)
-        if match and env.get(match.group(1)) == RESOLVED_TAG:
-            return True
-    return False
+    values: list[str] = []
+    for token in tokens:
+        if token.startswith("-"):
+            continue
+        for match in re.finditer(r"tag_?name\s*[=:]\s*([^,]+)", token, re.IGNORECASE):
+            values.append(match.group(1).strip())
+    if not values:
+        return False
+    return all(_tag_value_is_resolved(value, env) for value in values)
 
 
 def _release_uses_resolved_tag(segment: str, env: object) -> bool:

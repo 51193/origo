@@ -147,7 +147,8 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         text = self.mutated(
             "      - name: Create GitHub Release",
             "      - name: Sneaky release\n"
-            "        run: curl -d '{\"tag_name\": \"${{ github.ref_name }}\"}' "
+            "        run: |\n"
+            "          curl -d '{\"tag_name\": \"${{ github.ref_name }}\"}' "
             "https://api.github.com/repos/51193/origo/releases\n"
             "      - name: Create GitHub Release",
         )
@@ -364,7 +365,8 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         text = self.mutated(
             "      - name: Create GitHub Release",
             "      - name: Sneaky release\n"
-            "        run: curl --json '{\"tag_name\": \"${{ github.ref_name }}\"}' "
+            "        run: |\n"
+            "          curl --json '{\"tag_name\": \"${{ github.ref_name }}\"}' "
             "https://api.github.com/repos/51193/origo/releases\n"
             "      - name: Create GitHub Release",
         )
@@ -384,6 +386,116 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         text = self.mutated(
             '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
             '          python3 ./scripts/write-version-stamp.py "$TAG_VERSION"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_env_prefix_creation_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: GH_TOKEN=x gh api repos/51193/origo/releases "
+            "-f tag_name=\"${{ github.ref_name }}\"\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_sudo_prefix_creation_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: sudo gh api repos/51193/origo/releases "
+            "-f tag_name=\"${{ github.ref_name }}\"\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_inline_comment_does_not_disable_detection(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: gh api repos/51193/origo/releases "
+            "-f tag_name=\"${{ github.ref_name }}\"  # -X GET\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("github.ref_name", stderr)
+
+    def test_tag_name_suffix_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: gh api repos/51193/origo/releases "
+            "-f tag_name=\"${{ steps.resolve-tag.outputs.tag }}-beta\"\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("resolved tag", stderr)
+
+    def test_duplicate_tag_name_with_wrong_last_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        env:\n"
+            "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+            '        run: gh api repos/51193/origo/releases -f tag_name="$TAG" '
+            "-f tag_name=main\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("resolved tag", stderr)
+
+    def test_multi_word_flag_value_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Create release\n"
+            "        env:\n"
+            "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+            '        run: gh release create --notes "two words" "$TAG"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_short_notes_flag_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Create release\n"
+            "        env:\n"
+            "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+            '        run: gh release create -n "notes" "$TAG"\n'
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_graphql_tagname_is_rejected(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Sneaky release\n"
+            "        run: |\n"
+            "          gh api graphql -f query=\"mutation { createRelease(tagName: \\\"main\\\") }\"\n"
+            "      - name: Create GitHub Release",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("resolved tag", stderr)
+
+    def test_quoted_semicolon_in_notes_is_allowed(self):
+        text = self.mutated(
+            "      - name: Create GitHub Release",
+            "      - name: Create release\n"
+            "        env:\n"
+            "          TAG: ${{ steps.resolve-tag.outputs.tag }}\n"
+            '        run: gh release create --notes "a;b" "$TAG"\n'
+            "      - name: Create GitHub Release",
         )
         code, _, stderr = self.run_guard(text)
         self.assertEqual(code, 0, stderr)
