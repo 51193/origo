@@ -9,9 +9,6 @@ namespace Origo.Core.Tests;
 [Trait("Category", "Benchmark")]
 public class ConcurrentActionQueueBenchmarkTests(ITestOutputHelper output)
 {
-    private const int _warmupRounds = 1;
-    private const int _timedRounds = 5;
-
     private readonly PerfReporter _perf = PerfReporter.ForTest(output);
 
     [Fact]

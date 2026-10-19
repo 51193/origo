@@ -131,7 +131,10 @@ Origo.GodotAdapter.Integration.Tests/
 
 ## Version Management
 
-- **`Godot.NET.Sdk` NuGet version**: Automatically tracked by dependabot (NuGet ecosystem)
+- **`Godot.NET.Sdk` MSBuild SDK reference**: Not updated by Dependabot's NuGet ecosystem
+  (a `<Project Sdk="...">` reference is not a `PackageReference`); bump it together with the
+  adapter and consumer pins. `scripts/godot-test.sh`, `scripts/package-consumer-smoke.sh`, and
+  `scripts/validate-release-packages.sh` fail when the pins drift
 - **Godot engine binary**: CI script auto-downloads matching binary after parsing SDK version from `.csproj`,
   no separate version tracking file needed
 

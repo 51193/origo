@@ -103,5 +103,6 @@ bash scripts/test-verify-release.sh
 bash scripts/test-find-previous-api-baseline.sh
 bash scripts/test-package-consumer-smoke-lib.sh
 bash scripts/test-pre-push-hook.sh
+bash scripts/test-dotnet-env.sh
 
 echo "Script lint: OK"

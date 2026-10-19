@@ -89,6 +89,23 @@ public class EnsureStrategyTests
     }
 
     [Fact]
+    public void EnsureReplaceableStrategy_RealRuntime_ConfiguredOverride_DoesNotMountDefault()
+    {
+        var harness = GameplaySimulationHarness.Create()
+            .WithStrategy(() => new RealEnsureProbeStrategy())
+            .Build();
+        var entity = harness.SpawnEntity("hero", []);
+        entity.SetData("character.path_impl", "character.override");
+
+        var mounted = entity.EnsureReplaceableStrategy("character.path_impl", _realProbeIndex);
+
+        Assert.False(mounted);
+        Assert.Equal("character.override", harness.GetEntityData<string>("hero", "character.path_impl"));
+        var (found, _) = entity.TryGetData<int>("ensure_probe.after_add_count");
+        Assert.False(found);
+    }
+
+    [Fact]
     public void EnsureReplaceableStrategy_RealRuntime_MountsDefaultStrategy()
     {
         var harness = GameplaySimulationHarness.Create()

@@ -14,10 +14,6 @@ namespace Origo.Core.Tests;
 [Trait("Category", "Benchmark")]
 public class EntityLifecycleBenchmarkTests(ITestOutputHelper output)
 {
-    private const int _warmupRounds = 1;
-    private const int _timedRounds = 5;
-    private static readonly TimeSpan _perBenchmarkCap = TimeSpan.FromSeconds(10);
-
     private readonly PerfReporter _perf = PerfReporter.ForTest(output);
 
     [Fact]

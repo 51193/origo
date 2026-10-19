@@ -8,16 +8,19 @@ Before reading this page, understand the current baseline: [Architecture Overvie
 
 ## Direction Index
 
-| Direction | State | Tracking issue | Notes |
+| Direction | Gate | Tracking issue | Notes |
 |-----------|-------|----------------|-------|
 | Unified tree namespace | blocked-design | [#44](https://github.com/51193/origo/issues/44) | Restricted tree root, content/metadata boundary, and remote async I/O are undecided |
 | Entity-level concurrency | waiting-signal | [#45](https://github.com/51193/origo/issues/45) | Waiting for a profiling signal; in-entity strategy order stays serial |
 | Multiple ActiveStrategy implementations per index | blocked-design | [#46](https://github.com/51193/origo/issues/46) | Contract identity, per-entity binding, and recovery semantics are undecided |
+| Structured console protocol | blocked-design | [#47](https://github.com/51193/origo/issues/47) | JSON Lines responses, request correlation, and opt-in default startup are undecided |
+| Strategy diagnostics and logical clock | blocked-design | [#48](https://github.com/51193/origo/issues/48) | A diagnostic surface beyond the current `ISndContext` capabilities is undecided |
+| Third-party TypedData adapter registration | blocked-design | [#49](https://github.com/51193/origo/issues/49) | Registering inline types without joining the `InternalsVisibleTo` allowlist is undecided |
 
 ## Maintenance Rules
 
 - A deferred direction is tracked only by its GitHub issue; this page keeps a one-line index and current state.
-- When an issue is implemented, cancelled, or split, update this page in the same change and keep both languages aligned.
+- When an issue is implemented, cancelled, or split, update this page in the same change.
 - The full trade-off lives in the issue body and the historical version at the frozen commit; do not copy long ideas back into module READMEs.
 
 ## Related Documents
