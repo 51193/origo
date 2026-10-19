@@ -16,16 +16,17 @@ tested directly.
 Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
 build before these invariants fail CI.
 
-Release creation belongs to the reviewed action, never to a run step: a
-release-job run step that mentions /releases, release create, or createRelease
-is rejected unless the preceding line is the reviewed "# guard: read-only"
-marker. Commands assembled through variables or heredocs are out of scope.
+The release-creation rule is a run-text tripwire, not a security boundary: it
+rejects literal /releases, release create, and createRelease occurrences in a
+release-job run step, with an exact "# guard: read-only" waiver on the
+immediately preceding line for genuinely read-only calls. Scripts, tag trees,
+env/with values, variables, heredocs, and quoted or dynamically constructed
+commands are outside its reach.
 """
 
 from __future__ import annotations
 
 import re
-import shlex
 import sys
 from pathlib import Path
 
@@ -72,8 +73,8 @@ def _calls_version_helper(run: str) -> bool:
     pattern = re.compile(
         r"^(?:sudo\s+(?:-\S+\s+)*)?(?:env\s+)?"
         r"(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*"
-        r"python3\s+(?:-\S+\s+)*(?:\./|\"\$PWD/\"|\$PWD/)?"
-        r"scripts/write-version-stamp\.py(?:\s|$)"
+        r"python3\s+(?:-\S+\s+)*(?:\./|\"\$PWD/|\$PWD/)?"
+        r"scripts/write-version-stamp\.py(?:\"|\s|$)"
     )
     for line in run.splitlines():
         stripped = line.strip()
@@ -87,26 +88,23 @@ def _calls_version_helper(run: str) -> bool:
 def _release_creation_line_conflicts(run: str) -> list[int]:
     """Return offending line numbers where a run step touches releases.
 
-    Release creation belongs to the reviewed release action, never to a run
-    step, so any ``/releases`` use is rejected unless the preceding line is the
-    reviewed ``# guard: read-only`` marker. This intentionally avoids guessing
-    shell syntax.
+    Only literal run text is scanned; a read-only call is waived by an exact
+    ``# guard: read-only`` line immediately above it. This intentionally avoids
+    parsing shell syntax.
     """
     offenders: list[int] = []
     read_only = False
-    for number, line in enumerate(run.splitlines(), start=1):
-        stripped = line.strip()
+    joined = run.replace("\\\n", " ").replace("\\\r", " ")
+    for number, raw_line in enumerate(joined.splitlines(), start=1):
+        stripped = raw_line.strip()
         if stripped.startswith("#"):
-            if "guard: read-only" in stripped:
-                read_only = True
+            read_only = stripped == "# guard: read-only"
             continue
-        lowered = stripped.lower()
-        if "release create" in lowered or "createrelease" in lowered or "/releases" in lowered:
-            if not read_only:
-                offenders.append(number)
-            read_only = False
-        else:
-            read_only = False
+        lowered = _normalize_command(stripped).lower()
+        is_creation = "release create" in lowered or "createrelease" in lowered
+        if is_creation or ("/releases" in lowered and not read_only):
+            offenders.append(number)
+        read_only = False
     return offenders
 
 

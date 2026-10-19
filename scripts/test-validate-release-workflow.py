@@ -164,6 +164,85 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("must call scripts/write-version-stamp.py", stderr)
 
+    def test_release_action_tag_name_is_checked(self):
+        text = self.mutated(
+            "          tag_name: ${{ steps.resolve-tag.outputs.tag }}",
+            "          tag_name: main",
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("must set", stderr)
+
+    def test_marker_does_not_waive_creation(self):
+        text = self.insert_before_release_action(
+            "      - name: Sneaky\n"
+            "        run: |\n"
+            "          # guard: read-only\n"
+            "          gh release create main\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("touches releases in a run step", stderr)
+
+    def test_marker_only_applies_to_the_next_line(self):
+        text = self.insert_before_release_action(
+            "      - name: Sneaky\n"
+            "        run: |\n"
+            "          # guard: read-only\n"
+            "          # a normal comment\n"
+            "          gh api repos/51193/origo/releases -f tag_name=main\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("touches releases in a run step", stderr)
+
+    def test_marker_substring_is_not_a_waiver(self):
+        text = self.insert_before_release_action(
+            "      - name: Read releases\n"
+            "        run: |\n"
+            "          # not guard: read-only\n"
+            "          gh api repos/51193/origo/releases/latest\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("guard: read-only", stderr)
+
+    def test_line_continuation_creation_is_rejected(self):
+        text = self.insert_before_release_action(
+            "      - name: Sneaky\n"
+            "        run: |\n"
+            "          gh release \\\n"
+            "            create main\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("touches releases in a run step", stderr)
+
+    def test_double_space_creation_is_rejected(self):
+        text = self.insert_before_release_action(
+            "      - name: Sneaky\n"
+            "        run: gh release  create main\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("touches releases in a run step", stderr)
+
+    def test_helper_with_quoted_pwd_is_allowed(self):
+        text = self.mutated(
+            '          python3 scripts/write-version-stamp.py "$TAG_VERSION"',
+            '          python3 "$PWD/scripts/write-version-stamp.py" "$TAG_VERSION"',
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
+    def test_release_edit_with_tag_flag_is_allowed(self):
+        text = self.insert_before_release_action(
+            "      - name: Edit release\n"
+            "        run: gh release edit main --tag va.b.c\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 0, stderr)
+
     def test_version_step_must_use_the_resolved_tag(self):
         text = self.mutated(
             '          TAG: ${{ steps.resolve-tag.outputs.tag }}\n'
