@@ -10,96 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Changed
-
-- **Superseded CI runs are cancelled per ref** — the CI workflow now uses a
-  workflow-level concurrency group, so a newer run for the same ref cancels the
-  older one. The release and weekly workflows keep their own non-cancelling
-  groups.
-
-- **The build fails on unused private members** — `Directory.Build.props` enables
-  `EnforceCodeStyleInBuild` and `.editorconfig` raises `IDE0051` / `IDE0052` to
-  errors, so an unused or unread private member now fails `dotnet build`, the
-  `scripts/format.sh` analyzer pass, and CI instead of passing silently.
-
-- **Release workflow guard and version-stamp helper** — the release and weekly
-  workflows now share `scripts/write-version-stamp.py` instead of duplicating
-  the rewrite, and the release-workflow guard rejects dynamic `uses:`
-  references, actions outside the release job's reviewed allowlist, and any
-  release creation in a run step (read-only `/releases` calls need an explicit
-  `# guard: read-only` line immediately above); the version-stamp step must
-  call the shared helper with the resolved tag. The guard is a run-text
-  tripwire: scripts, tag trees, `env`/`with` values, and dynamically
-  constructed commands are outside its reach.
-
-- **Package consumer smoke delegates its package assertions to the release validator** —
-  `scripts/package-consumer-smoke.sh` no longer queries the packed archive
-  itself: the five-package set, analyzer asset, and Godot SDK pin are asserted
-  by `scripts/validate-release-packages.sh`, which the smoke runs against the
-  same feed, so the smoke no longer needs `unzip` for its own checks. Its
-  self-test now pins physical-path resolution and first-file lookup only.
-
-### Removed
-
-- **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
-  only the Any CPU configurations; no script, workflow, or project selected
-  those platforms. Build with `dotnet build Origo.sln` and drop
-  `-p:Platform=x64` / `-p:Platform=x86`, which now fail with MSB4126 instead of
-  resolving to Any CPU.
-
-### Fixed
-
-- **The SDK bootstrap detects and repairs a stale repository-local SDK** —
-  `scripts/dotnet-env.sh` now selects the same root order as
-  `scripts/install-dotnet.sh` (and falls back to the dotnet on PATH when no
-  root is installed) and validates the selected SDK against `global.json`
-  before exporting anything, failing with the required version, the selected
-  path, the installed SDKs, and the repair command instead of letting the host
-  suggest an edit to `global.json`. A repository-local SDK that no longer satisfies the pin
-  now fails every gate script with that message instead of a raw SDK-resolution
-  error. `scripts/install-dotnet.sh` installs into that same root (an explicit
-  `DOTNET_INSTALL_DIR`, then an existing repository-local `.dotnet/`, then
-  `$HOME/.dotnet`), refreshes rather than abandons a stale local SDK, checks for
-  `curl`, and verifies the installed SDK before reporting success; the root
-  `./dotnet` wrapper applies the same selection. `scripts/test-dotnet-env.sh`
-  pins the stale, satisfying, system-fallback, installer-target, and wrapper
-  cases and runs from `scripts/lint-scripts.sh`.
-
-- **The Godot download reports a missing `unzip` before downloading** —
-  `scripts/download-godot.sh` checks the extraction dependency up front, so a
-  cold engine cache without `unzip` fails with that message instead of a bare
-  "command not found" inside the extraction.
-  `scripts/test-download-godot-deps.sh` pins the cold-cache failure, that the
-  check precedes the download, and the warm cache path, and runs from
-  `scripts/lint-scripts.sh`.
-
-- **Fork pull requests pass the branch-identity check** — `scripts/lint-scripts.sh`
-  validated the source branch name of every pull request, so a fork branch such
-  as `fix-typo` failed CI even though its name is outside the repository
-  owners' control. The CI job now marks fork pull requests, and
-  `scripts/work-identity.sh validate` skips the naming rule for them while
-  same-repository pull request branches stay validated.
-
-- **`ORIGOSG008` for null `SndInlineTypes` elements** — a null placeholder in
-  the attribute now fails the build with an actionable error instead of
-  silently renumbering the types after it; the rule is tracked as unshipped
-  until the next release.
-
-- **Auto-save ids and alias maps stay unambiguous** — repeated
-  `RequestSaveGameAuto` calls within one millisecond now receive distinct ids; a
-  null value in a scene or template alias map throws with the offending key
-  instead of silently becoming an empty string; and the key collections returned
-  by the blackboard, node, and strategy lookups are snapshots, so enumerating
-  them cannot break when the underlying collection mutates.
-
-## [0.1.0] - 2026-10-10
+## [0.1.0] - 2026-10-19
 
 ### Added
 
 - **Stable custom console command registration** — `IOrigoRuntime.RegisterConsoleCommandHandler` exposes the documented tooling extension path for `IConsoleCommandHandler` implementations. Core and adapter hosts register through the same shell contract, registration fails fast when either console channel is missing, and adapter built-in handlers now use the same path.
 
 - **Shell-only package consumer smoke** — `scripts/package-consumer-smoke.sh` packs the shell/kernel packages into a fresh local feed, restores the tracked `Origo.Core` + `Origo.GodotAdapter` consumer fixture without project references, builds with warnings as errors, rejects kernel compile-asset leakage with a CS0246 negative probe, verifies the Contracts analyzer asset and kernel runtime assembly, and starts `OrigoDefaultEntry` headlessly. The smoke runs in the normal CI Godot job and local `scripts/ci.sh`; version pins and the launch flow are documented in `docs/usage/shell-package-consumer.en.md`.
-- **Shell API baseline gate** — `scripts/api-inventory.sh` builds the shell projects in Release, runs the tracked Roslyn inventory in `tools/ApiInventoryTool`, and verifies `shell-api-baseline.json`; unapproved shell API additions, removals, or signature changes fail through `scripts/ci.sh`, the normal CI matrix, and the Release workflow until the baseline is updated in the same reviewed change. Previous-package validation runs from `ORIGO_PREVIOUS_API_BASELINE` once a released baseline exists; the first 0.1.0 release states that behavior explicitly.
+- **Shell API baseline gate** — `scripts/api-inventory.sh` builds the shell projects in Release, runs the tracked Roslyn inventory in `tools/ApiInventoryTool`, and verifies `shell-api-baseline.json`; unapproved shell API additions, removals, or signature changes fail through `scripts/ci.sh`, the normal CI matrix, and the Release workflow until the baseline is updated in the same reviewed change. Previous-package validation auto-extracts the newest formal tag's baseline when `ORIGO_PREVIOUS_API_BASELINE` is unset; setting the variable overrides the automatic extraction.
 - **Matt Pocock engineering skills integration** — GitHub Issues in `51193/origo` and optional local Markdown counterparts under `.scratch/issues/` share issue numbers; five default triage states and the existing English domain-documentation route are configured in `docs/agents/`, with `AGENTS.md` retaining authority.
 - **Core shell/kernel package split** — `Origo.Core.Contracts` now carries the stable consumer surface (interfaces, pure data, metadata, strategy base classes, data-source contracts, logging abstractions, and shared pure helpers), `Origo.Core.Kernel` carries the runtime/SND/save/data-source/console implementations and internal `Origo.Core.Kernel.Ports`, and `Origo.Core` is the consumer shell package. The shell host facade `OrigoHost` / `OrigoHostOptions` and the stable `IOrigoRuntime` / `ISndWorldAccess` interfaces let a consumer compile and run a Core workflow while kernel compile assets stay out of the consumer restore graph.
 - **Save slot deletion** — `ISndSaveOperations.DeleteSave` and `ISaveStorageService.DeleteSave` remove an inactive save snapshot together with any interrupted-snapshot `.tmp`/`.bak` remnants; the active save, the continue target, and running or pending persistence workflows are rejected.
@@ -142,9 +60,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Dependabot-authored commits are exempt from commit-message lint** — Dependabot supports only a commit-message prefix, not a custom message template, and its generated body lines exceed 72 characters. `.github/dependabot.yml` sets the `chore(deps)` prefix for every ecosystem, and `scripts/lint-commits.sh` skips Dependabot-authored commits so dependency PRs pass CI as proposed; human-authored commits keep the full subject and body gate.
 - **Commit-message lint runs before local pushes** — the tracked `.githooks/pre-push` hook checks every pushed branch range with `scripts/lint-commits.sh` after one-time `core.hooksPath` setup, and the redundant GitHub Actions commit-lint workflow is removed so invalid messages fail before upload instead of after remote CI starts.
 
+- **Superseded CI runs are cancelled per ref** — the CI workflow now uses a
+  workflow-level concurrency group, so a newer run for the same ref cancels the
+  older one. The release and weekly workflows keep their own non-cancelling
+  groups.
+
+- **The build fails on unused private members** — `Directory.Build.props` enables
+  `EnforceCodeStyleInBuild` and `.editorconfig` raises `IDE0051` / `IDE0052` to
+  errors, so an unused or unread private member now fails `dotnet build`, the
+  `scripts/format.sh` analyzer pass, and CI instead of passing silently.
+
+- **Release workflow guard and version-stamp helper** — the release and weekly
+  workflows now share `scripts/write-version-stamp.py` instead of duplicating
+  the rewrite, and the release-workflow guard rejects dynamic `uses:`
+  references, actions outside the release job's reviewed allowlist, and any
+  release creation in a run step (read-only `/releases` calls need an explicit
+  `# guard: read-only` line immediately above); the version-stamp step must
+  call the shared helper with the resolved tag. The guard is a run-text
+  tripwire: scripts, tag trees, `env`/`with` values, and dynamically
+  constructed commands are outside its reach.
+
+- **Package consumer smoke delegates its package assertions to the release validator** —
+  `scripts/package-consumer-smoke.sh` no longer queries the packed archive
+  itself: the five-package set, analyzer asset, and Godot SDK pin are asserted
+  by `scripts/validate-release-packages.sh`, which the smoke runs against the
+  same feed, so the smoke no longer needs `unzip` for its own checks. Its
+  self-test now pins physical-path resolution and first-file lookup only.
+
 ### Removed
 
 - **BREAKING: DocSyncTool and its synchronization contract** — removed the obsolete documentation generator, validator, revision metadata, generated navigation hubs, bilingual Chinese content, CI/release gates, and dedicated tests. Documentation is now maintained as English Markdown alongside the source tree.
+
+- **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
+  only the Any CPU configurations; no script, workflow, or project selected
+  those platforms. Build with `dotnet build Origo.sln` and drop
+  `-p:Platform=x64` / `-p:Platform=x86`, which now fail with MSB4126 instead of
+  resolving to Any CPU.
 
 ### Fixed
 
@@ -181,6 +132,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`SessionRun.Dispose` commits its disposed state when host cleanup throws** — a throwing `RemoveAllEntities` no longer leaves the run permanently stuck between `_disposing` and `_disposed`; subsequent access fails with `ObjectDisposedException` as documented.
 - **`SndArchetypeLoader.TryLoad` disposes its source node** — the `DataSourceNode` returned by `ISndFileAccess.ReadFile` is now released after its attributes are copied.
 - **Godot package consumer smoke on macOS** — cached `.app` binaries are discovered below the bundle root, the headless test preserves the caller's NuGet cache when redirecting `HOME`, and temporary consumer projects are restored and built from their own directory so generated C# script paths remain valid `res://` paths.
+
+- **The SDK bootstrap detects and repairs a stale repository-local SDK** —
+  `scripts/dotnet-env.sh` now selects the same root order as
+  `scripts/install-dotnet.sh` (and falls back to the dotnet on PATH when no
+  root is installed) and validates the selected SDK against `global.json`
+  before exporting anything, failing with the required version, the selected
+  path, the installed SDKs, and the repair command instead of letting the host
+  suggest an edit to `global.json`. A repository-local SDK that no longer satisfies the pin
+  now fails every gate script with that message instead of a raw SDK-resolution
+  error. `scripts/install-dotnet.sh` installs into that same root (an explicit
+  `DOTNET_INSTALL_DIR`, then an existing repository-local `.dotnet/`, then
+  `$HOME/.dotnet`), refreshes rather than abandons a stale local SDK, checks for
+  `curl`, and verifies the installed SDK before reporting success; the root
+  `./dotnet` wrapper applies the same selection. `scripts/test-dotnet-env.sh`
+  pins the stale, satisfying, system-fallback, installer-target, and wrapper
+  cases and runs from `scripts/lint-scripts.sh`.
+
+- **The Godot download reports a missing `unzip` before downloading** —
+  `scripts/download-godot.sh` checks the extraction dependency up front, so a
+  cold engine cache without `unzip` fails with that message instead of a bare
+  "command not found" inside the extraction.
+  `scripts/test-download-godot-deps.sh` pins the cold-cache failure, that the
+  check precedes the download, and the warm cache path, and runs from
+  `scripts/lint-scripts.sh`.
+
+- **Fork pull requests pass the branch-identity check** — `scripts/lint-scripts.sh`
+  validated the source branch name of every pull request, so a fork branch such
+  as `fix-typo` failed CI even though its name is outside the repository
+  owners' control. The CI job now marks fork pull requests, and
+  `scripts/work-identity.sh validate` skips the naming rule for them while
+  same-repository pull request branches stay validated.
+
+- **`ORIGOSG008` for null `SndInlineTypes` elements** — a null placeholder in
+  the attribute now fails the build with an actionable error instead of
+  silently renumbering the types after it; the rule ships with 0.1.0.
+
+- **Auto-save ids and alias maps stay unambiguous** — repeated
+  `RequestSaveGameAuto` calls within one millisecond now receive distinct ids; a
+  null value in a scene or template alias map throws with the offending key
+  instead of silently becoming an empty string; and the key collections returned
+  by the blackboard, node, and strategy lookups are snapshots, so enumerating
+  them cannot break when the underlying collection mutates.
 
 ## [0.0.9] - 2026-09-03
 
