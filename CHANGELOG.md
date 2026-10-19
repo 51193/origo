@@ -10,6 +10,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Weekly snapshots push only their tag** — the weekly build no longer pushes
+  its version-bump commit to `main`; it tags that commit and pushes only
+  `refs/tags/<tag>`. The tagged commit already carries the snapshot version
+  stamps, so the release pipeline finds nothing to rewrite, branch protection
+  cannot reject a snapshot, and `main` keeps its own `<Version>`. The
+  release-workflow guard rejects any weekly step that pushes a branch ref or
+  adds a second push.
+
 ## [0.1.0] - 2026-10-19
 
 ### Added

@@ -22,6 +22,12 @@ release-job run step, with an exact "# guard: read-only" waiver on the
 immediately preceding line for genuinely read-only calls. Scripts, tag trees,
 env/with values, variables, heredocs, and quoted or dynamically constructed
 commands are outside its reach.
+
+The weekly-snapshot rule is structural for its bump step: every non-comment
+line must be one of the known version-stamp/tag commands, and the only allowed
+push is the exact tag refspec ``git push origin "refs/tags/${TAG}"``. A branch
+push, a second push, an unapproved action, or an obfuscated command therefore
+fails the guard. This is a regression tripwire, not a security boundary.
 """
 
 from __future__ import annotations
@@ -34,6 +40,25 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
+WEEKLY_WORKFLOW = ROOT / ".github" / "workflows" / "weekly-build.yml"
+WEEKLY_BUMP_STEP = "Bump version, commit, and tag"
+WEEKLY_TAG_PUSH = 'git push origin "refs/tags/${TAG}"'
+WEEKLY_TAG_ASSIGNMENT = 'TAG="${{ steps.check.outputs.tag }}"'
+# The weekly bump step may only run these commands. A new command needs a
+# deliberate review and an entry here; in particular, a branch push is absent.
+WEEKLY_BUMP_PREFIXES = (
+    "python3 scripts/write-version-stamp.py ",
+    "git config ",
+    "git add ",
+    "git commit -m ",
+    "git tag -a ",
+)
+# A command separator could append a hidden push to an allowed prefix.
+WEEKLY_LINE_SEPARATORS = (";", "&&", "||", "|", "&")
+WEEKLY_SUBSTITUTIONS = ("$(", "`", "<(")
+# Only this action may run in the weekly workflow; a new action could move refs
+# outside the inspected shell text.
+WEEKLY_ALLOWED_ACTIONS = {"actions/checkout"}
 RELEASE_ACTION = "softprops/action-gh-release"
 RESOLVED_TAG = "${{ steps.resolve-tag.outputs.tag }}"
 RESOLVED_TAG_REF = f"refs/tags/{RESOLVED_TAG}"
@@ -115,6 +140,86 @@ def _release_creation_line_conflicts(run: str) -> list[int]:
     return offenders
 
 
+def _weekly_snapshot_errors(workflow: dict) -> list[str]:
+    """Validate the weekly bump step's tag-only push and action allowlist."""
+    errors: list[str] = []
+    bump_seen = False
+    tag_pushes = 0
+    for job_name, job in (workflow.get("jobs") or {}).items():
+        if not isinstance(job, dict):
+            continue
+        if job.get("uses"):
+            errors.append(
+                f"weekly job '{job_name}' is a reusable workflow; only the "
+                "reviewed inline weekly job is allowed."
+            )
+        for index, step in enumerate(job.get("steps") or []):
+            if not isinstance(step, dict):
+                continue
+            uses_text = str(step.get("uses") or "")
+            if uses_text:
+                action = uses_text.split("@", 1)[0]
+                if action not in WEEKLY_ALLOWED_ACTIONS:
+                    errors.append(
+                        f"weekly {job_name}.steps[{index}] uses unapproved "
+                        f"action '{action}'; only actions/checkout may run."
+                    )
+            run = str(step.get("run") or "")
+            if not run:
+                continue
+            joined = run.replace("\\\n", "").replace("\\\r", "")
+            if step.get("name") == WEEKLY_BUMP_STEP:
+                bump_seen = True
+                for number, raw_line in enumerate(joined.splitlines(), start=1):
+                    line = raw_line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    if line == WEEKLY_TAG_PUSH:
+                        tag_pushes += 1
+                        continue
+                    if line == WEEKLY_TAG_ASSIGNMENT:
+                        continue
+                    if any(separator in line for separator in WEEKLY_LINE_SEPARATORS):
+                        errors.append(
+                            f"weekly bump step line {number} contains a shell "
+                            f"separator and can hide a second command: {line!r}"
+                        )
+                        continue
+                    if any(token in line for token in WEEKLY_SUBSTITUTIONS):
+                        errors.append(
+                            f"weekly bump step line {number} contains command "
+                            f"or process substitution: {line!r}"
+                        )
+                        continue
+                    if line.startswith(WEEKLY_BUMP_PREFIXES):
+                        continue
+                    errors.append(
+                        f"weekly bump step line {number} is not an allowed "
+                        f"command: {line!r}; only the tag push "
+                        f"{WEEKLY_TAG_PUSH!r} may move a ref."
+                    )
+            else:
+                for number, raw_line in enumerate(joined.splitlines(), start=1):
+                    line = raw_line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    if "push" in line.lower():
+                        errors.append(
+                            f"weekly step '{step.get('name', index)}' line "
+                            f"{number} pushes outside the bump step: {line!r}"
+                        )
+    if not bump_seen:
+        errors.append(
+            f"weekly workflow must define the '{WEEKLY_BUMP_STEP}' step."
+        )
+    if tag_pushes != 1:
+        errors.append(
+            "weekly bump step must contain exactly one tag push "
+            f"{WEEKLY_TAG_PUSH!r}; found {tag_pushes}."
+        )
+    return errors
+
+
 def event_mapping(workflow: dict) -> dict:
     """Return the workflow's `on:` mapping despite YAML 1.1 parsing `on` as True."""
     for key in ("on", True):
@@ -140,7 +245,21 @@ def main() -> int:
         fail(f"{WORKFLOW.relative_to(ROOT)} must contain a workflow mapping.")
         return 1
 
+    if not WEEKLY_WORKFLOW.is_file():
+        fail(f"weekly workflow is missing: {WEEKLY_WORKFLOW.relative_to(ROOT)}")
+        return 1
+    weekly_text = WEEKLY_WORKFLOW.read_text(encoding="utf-8")
+    try:
+        weekly_workflow = yaml.safe_load(weekly_text)
+    except yaml.YAMLError as exc:
+        fail(f"{WEEKLY_WORKFLOW.relative_to(ROOT)} is not valid YAML: {exc}")
+        return 1
+    if not isinstance(weekly_workflow, dict):
+        fail(f"{WEEKLY_WORKFLOW.relative_to(ROOT)} must contain a workflow mapping.")
+        return 1
+
     errors: list[str] = []
+    errors.extend(_weekly_snapshot_errors(weekly_workflow))
 
     for job_name, job in (workflow.get("jobs") or {}).items():
         if not isinstance(job, dict):
@@ -302,7 +421,7 @@ def main() -> int:
 
     if errors:
         print(
-            f"Release-workflow guard FAILED ({WORKFLOW.relative_to(ROOT)}):",
+            "Release and weekly-snapshot workflow guard FAILED:",
             file=sys.stderr,
         )
         for error in errors:
@@ -310,6 +429,7 @@ def main() -> int:
         return 1
 
     print("Release-workflow guard: OK")
+    print("Weekly-snapshot guard: OK")
     return 0
 
 

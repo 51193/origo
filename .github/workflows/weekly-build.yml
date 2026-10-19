@@ -32,9 +32,10 @@ jobs:
         id: check
         shell: bash
         run: |
-          # The step below commits to main, so only main may run this workflow:
-          # a manual dispatch from a feature branch would otherwise push that
-          # branch's history to main.
+          # The step below tags a commit and pushes only that tag; only main
+          # may run this workflow so the snapshot describes main's history and
+          # a manual dispatch from a feature branch cannot publish unreleased
+          # work under a release tag.
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
             echo "ERROR: weekly-build only runs on refs/heads/main (got '${GITHUB_REF:-unset}')." >&2
             exit 1
@@ -122,9 +123,10 @@ jobs:
           TAG="${{ steps.check.outputs.tag }}"
           git tag -a "$TAG" -m "Weekly snapshot ${{ steps.check.outputs.new_version }}"
 
-          # main first: the release pipeline only writes its release commit back
-          # when the tag sits on the current main tip.
-          git push origin HEAD:main
+          # Only the tag is pushed. The commit already carries the version
+          # stamps of the tag, so the release pipeline finds nothing to rewrite
+          # and never creates a release commit, which means branch rules that
+          # require a pull request cannot block a snapshot.
           git push origin "refs/tags/${TAG}"
 
       - name: Dispatch the release pipeline for the snapshot tag
