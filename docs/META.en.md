@@ -245,17 +245,24 @@ repository instead of editing `global.json` to match the machine:
    Never downgrade the request or edit `global.json` to match an
    already-installed SDK.
 2. Run `bash scripts/install-dotnet.sh`. It parses `global.json` and installs the
-   exact SDK through the official `dotnet-install.sh`, preferring the default
-   install root (`$HOME/.dotnet`) so a normal login shell resolves plain
-   `dotnet` without per-session exports.
+   exact SDK through the official `dotnet-install.sh` into the SDK root the
+   scripts use: an explicit `DOTNET_INSTALL_DIR` wins, an existing
+   repository-local `.dotnet/` is refreshed in place, and otherwise the default
+   install root (`$HOME/.dotnet`) is used so a normal login shell resolves plain
+   `dotnet` without per-session exports. The installed SDK is verified against
+   `global.json` before the script reports success.
 3. When the default install root is read-only, the script falls back to the
    repository-local `.dotnet/`; use the tracked `./dotnet` wrapper. The wrapper
-   sets the child-process environment internally and exports nothing into the
-   caller shell.
-4. Repository scripts source `scripts/dotnet-env.sh`, which prefers `.dotnet/`
-   when present and otherwise falls back to the system `dotnet`. Do not add
-   `PATH` / `DOTNET_ROOT` / `NUGET_PACKAGES` exports to shell profiles or
-   per-session workflows as a substitute for the install script.
+   applies the same selection and validation as the scripts and exports nothing
+   into the caller shell.
+4. Repository scripts source `scripts/dotnet-env.sh`, which selects that same
+   SDK root (falling back to the `dotnet` on PATH when no root is installed)
+   and validates it against `global.json` before exporting anything; a
+   stale selection fails with the required version, the selected path, the
+   installed SDKs, and the install command instead of suggesting an edit to
+   `global.json`. Do not add `PATH` / `DOTNET_ROOT` / `NUGET_PACKAGES` exports to
+   shell profiles or per-session workflows as a substitute for the install
+   script.
 5. The Godot engine binary is separate: `scripts/download-godot.sh` reads the
    `Godot.NET.Sdk` version from `Origo.GodotAdapter/Origo.GodotAdapter.csproj`
    and caches the matching engine under `.godot_binary/`.
