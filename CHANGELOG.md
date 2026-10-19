@@ -17,6 +17,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   older one. The release and weekly workflows keep their own non-cancelling
   groups.
 
+- **The build fails on unused private members** — `Directory.Build.props` enables
+  `EnforceCodeStyleInBuild` and `.editorconfig` raises `IDE0051` / `IDE0052` to
+  errors, so an unused or unread private member now fails `dotnet build`, the
+  `scripts/format.sh` analyzer pass, and CI instead of passing silently.
+
+- **Release workflow guard and version-stamp helper** — the release and weekly
+  workflows now share `scripts/write-version-stamp.py` instead of duplicating
+  the rewrite, and the release-workflow guard rejects dynamic `uses:`
+  references, actions outside the release job's reviewed allowlist, and any
+  release creation in a run step (read-only `/releases` calls need an explicit
+  `# guard: read-only` line immediately above); the version-stamp step must
+  call the shared helper with the resolved tag. The guard is a run-text
+  tripwire: scripts, tag trees, `env`/`with` values, and dynamically
+  constructed commands are outside its reach.
+
+- **Package consumer smoke delegates its package assertions to the release validator** —
+  `scripts/package-consumer-smoke.sh` no longer queries the packed archive
+  itself: the five-package set, analyzer asset, and Godot SDK pin are asserted
+  by `scripts/validate-release-packages.sh`, which the smoke runs against the
+  same feed, so the smoke no longer needs `unzip` for its own checks. Its
+  self-test now pins physical-path resolution and first-file lookup only.
+
 ### Removed
 
 - **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
@@ -43,33 +65,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   pins the stale, satisfying, system-fallback, installer-target, and wrapper
   cases and runs from `scripts/lint-scripts.sh`.
 
-### Changed
-
-- **The build fails on unused private members** — `Directory.Build.props` enables
-  `EnforceCodeStyleInBuild` and `.editorconfig` raises `IDE0051` / `IDE0052` to
-  errors, so an unused or unread private member now fails `dotnet build`, the
-  `scripts/format.sh` analyzer pass, and CI instead of passing silently.
-- **Release workflow guard and version-stamp helper** — the release and weekly
-  workflows now share `scripts/write-version-stamp.py` instead of duplicating
-  the rewrite, and the release-workflow guard rejects dynamic `uses:`
-  references, actions outside the release job's reviewed allowlist, and any
-  release creation in a run step (read-only `/releases` calls need an explicit
-  `# guard: read-only` line immediately above); the version-stamp step must
-  call the shared helper with the resolved tag. The guard is a run-text
-  tripwire: scripts, tag trees, `env`/`with` values, and dynamically
-  constructed commands are outside its reach.
-
-- **Package consumer smoke delegates package assertions to the release validator** —
-  `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its
-  physical path before comparing it with `project.assets.json` and replaces its
-  remaining early-exit `find`/`grep` and `echo`/`grep` pipelines with pipe-free
-  checks, so the macOS `/var` temp-path alias no longer turns a valid isolated
-  restore into a failure. The packed-feed assertions (five-package set,
-  analyzer asset, Godot SDK pin) live in `scripts/validate-release-packages.sh`,
-  which the smoke runs against the same feed. The smoke self-test pins physical-
-  path resolution and first-file lookup behavior.
-
-### Fixed
+- **The Godot download reports a missing `unzip` before downloading** —
+  `scripts/download-godot.sh` checks the extraction dependency up front, so a
+  cold engine cache without `unzip` fails with that message instead of a bare
+  "command not found" inside the extraction.
+  `scripts/test-download-godot-deps.sh` pins the cold-cache failure, that the
+  check precedes the download, and the warm cache path, and runs from
+  `scripts/lint-scripts.sh`.
 
 - **Fork pull requests pass the branch-identity check** — `scripts/lint-scripts.sh`
   validated the source branch name of every pull request, so a fork branch such
@@ -77,10 +79,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   owners' control. The CI job now marks fork pull requests, and
   `scripts/work-identity.sh validate` skips the naming rule for them while
   same-repository pull request branches stay validated.
+
 - **`ORIGOSG008` for null `SndInlineTypes` elements** — a null placeholder in
   the attribute now fails the build with an actionable error instead of
   silently renumbering the types after it; the rule is tracked as unshipped
   until the next release.
+
 - **Auto-save ids and alias maps stay unambiguous** — repeated
   `RequestSaveGameAuto` calls within one millisecond now receive distinct ids; a
   null value in a scene or template alias map throws with the offending key

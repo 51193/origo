@@ -18,7 +18,7 @@ public class InventoryBuilderTests
                 """
                 namespace Sample { public interface IZ { int Z { get; } } public class A { public void M() { } } }
                 """);
-            var second = TestAssemblyEmitter.Emit(secondDirectory, "Sample.Api2",
+            var second = TestAssemblyEmitter.Emit(secondDirectory, "Sample.Api",
                 """
                 namespace Sample { public class A { public void M() { } } public interface IZ { int Z { get; } } }
                 """);
@@ -28,15 +28,18 @@ public class InventoryBuilderTests
                 [directory],
                 []);
             var secondResult = InventoryBuilder.Build(
-                [new AssemblyInput("Sample.Api2", second)],
+                [new AssemblyInput("Sample.Api", second)],
                 [secondDirectory],
                 []);
 
             Assert.True(firstResult.Succeeded, string.Join('\n', firstResult.Errors));
             Assert.True(secondResult.Succeeded, string.Join('\n', secondResult.Errors));
+            // The same assembly compiled with the declarations in the opposite
+            // order must serialize byte-identically: the inventory is ordered by
+            // assembly name and ordinal API lines, not by declaration order.
             Assert.Equal(
                 InventoryJson.Serialize(firstResult.Document!),
-                InventoryJson.Serialize(firstResult.Document!));
+                InventoryJson.Serialize(secondResult.Document!));
             Assert.Equal(
                 firstResult.Document!.Assemblies[0].Api,
                 secondResult.Document!.Assemblies[0].Api);

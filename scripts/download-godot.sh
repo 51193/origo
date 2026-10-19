@@ -86,6 +86,13 @@ if [[ -d "$EXTRACT_DIR" ]]; then
     fi
 fi
 
+# The cache is cold, so the archive has to be unpacked below: report a missing
+# unzip before the download instead of failing mid-extraction.
+if ! command -v unzip &> /dev/null; then
+    echo "ERROR: unzip is required to extract $ARCHIVE; install unzip or warm the cache at $EXTRACT_DIR." >&2
+    exit 1
+fi
+
 echo "Downloading Godot $VERSION for $PLATFORM..." >&2
 echo "URL: $DOWNLOAD_URL" >&2
 

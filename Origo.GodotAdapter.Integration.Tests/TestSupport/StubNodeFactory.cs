@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Godot;
 using Origo.Core.Abstractions.Node;
 using Origo.GodotAdapter.Snd;
