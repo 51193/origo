@@ -254,6 +254,7 @@ full SessionManager API (create/find/destroy/enumerate/ProcessAll/KillPending), 
 | `SaveBackgroundSession_ThenSwitch_ThenReloadFromSnapshot_EntitiesPreserved` | Full round-trip: save→switch→snapshot→reload, entities preserved | session-model |
 | `SwitchForeground_ToBackgroundSessionLevel_ReloadsFromCurrent` | Switch to a saved background-held level, reloads from disk | session-model |
 | `RequestSaveGameAuto_ThenRequestSwitchForeground_EntitiesLoadRegardlessOfFlushOrder` | Save and Switch correctly orchestrated in deferred queue | session-model: Level Switch |
+| `RequestSaveGameAuto_RepeatedCallsInOneFrame_ProduceDistinctIds` | Repeated auto-saves within one millisecond receive distinct ids | ISndSaveOperations |
 | `SwitchForeground_AutoPersistsOldForegroundSessionToCurrent` | Old foreground auto-persisted on switch | session-model |
 | `SwitchForeground_BackgroundSessionEntitiesUntouched` | Background entities unaffected after switch | session-model |
 | `SwitchForeground_BackgroundSessionTickStatePreserved` | Background syncProcess flag preserved after switch | session-model |

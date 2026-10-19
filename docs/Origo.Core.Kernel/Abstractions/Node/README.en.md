@@ -22,7 +22,7 @@ reclamation, and metadata export. Consumer/adapter-facing `INodeFactory` and
 | Member | Description |
 |------|-------------|
 | `GetNode(name)` | Get node handle by name |
-| `GetNodeNames()` | Enumerate mounted node names |
+| `GetNodeNames()` | Returns a snapshot of the mounted node names; later changes do not affect it |
 | `Recover(NodeMetaData)` | Recover node from metadata |
 | `Release()` | Reclaim all nodes |
 | `SerializeMetaData()` | Export node metadata |

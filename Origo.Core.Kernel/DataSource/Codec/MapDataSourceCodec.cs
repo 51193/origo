@@ -16,7 +16,7 @@ internal sealed class MapDataSourceCodec(ILogger? logger = null) : IDataSourceCo
 
     public DataSourceNode Decode(string rawText)
     {
-        var pairs = KeyValueFileParser.Parse(rawText, "<map>", true, _logger, allowEmptyValues: true);
+        var pairs = KeyValueFileParser.Parse(rawText, "<map>", _logger);
         var node = DataSourceNode.CreateObject();
         foreach (var (key, value) in pairs)
             node.Add(key, DataSourceNode.CreateString(value));

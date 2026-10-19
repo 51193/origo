@@ -72,6 +72,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the attribute now fails the build with an actionable error instead of
   silently renumbering the types after it; the rule is tracked as unshipped
   until the next release.
+- **Auto-save ids and alias maps stay unambiguous** — repeated
+  `RequestSaveGameAuto` calls within one millisecond now receive distinct ids; a
+  null value in a scene or template alias map throws with the offending key
+  instead of silently becoming an empty string; and the key collections returned
+  by the blackboard, node, and strategy lookups are snapshots, so enumerating
+  them cannot break when the underlying collection mutates.
 
 ## [0.1.0] - 2026-10-10
 

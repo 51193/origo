@@ -97,6 +97,41 @@ public class JsonAndMappingsTests
     }
 
     [Fact]
+    public void SndMappings_LoadSceneAliases_NullValue_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("maps/scenes.json", """{"hero": null}""");
+        var io = TestFactory.CreateIoGateway(fs);
+        var mappings = new SndMappings();
+        var logger = new TestLogger();
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => mappings.LoadSceneAliases(io, "maps/scenes.json", logger));
+
+        Assert.Contains("null value", ex.Message);
+        Assert.Contains("maps/scenes.json", ex.Message);
+        Assert.Contains("hero", ex.Message);
+    }
+
+    [Fact]
+    public void SndMappings_LoadTemplates_NullValue_Throws()
+    {
+        var fs = new TestMemoryFileSystem();
+        fs.SeedFile("maps/templates.json", """{"hero_template": null}""");
+        var io = TestFactory.CreateIoGateway(fs);
+        var registry = TestFactory.CreateRegistry(new TypeStringMapping());
+        var mappings = new SndMappings();
+        var logger = new TestLogger();
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => mappings.LoadTemplates(io, "maps/templates.json", registry, logger));
+
+        Assert.Contains("null value", ex.Message);
+        Assert.Contains("maps/templates.json", ex.Message);
+        Assert.Contains("hero_template", ex.Message);
+    }
+
+    [Fact]
     public void SndMappings_LoadSceneAliasesAndTemplates_ResolveExpectedValues()
     {
         var fs = new TestMemoryFileSystem();

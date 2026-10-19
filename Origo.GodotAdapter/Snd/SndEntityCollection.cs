@@ -39,7 +39,7 @@ internal interface ISndEntityFacade : ISndEntity
 ///     creation, RemoveChild/Free) is delegated to injected callbacks so
 ///     this class stays testable without a Godot runtime.
 /// </summary>
-internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
+internal sealed class SndEntityCollection<T>
     where T : class, ISndEntity, ISndEntityFacade
 {
     private readonly List<T> _entities = [];
@@ -58,9 +58,6 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
     ///     hosting scene manager when a session binds itself.
     /// </summary>
     public ISessionRun? OwningSession { get; set; }
-
-    /// <inheritdoc/>
-    public int Count => _entities.Count;
 
     public IReadOnlyList<SndMetaData> BuildMetaList()
     {
@@ -246,12 +243,4 @@ internal sealed class SndEntityCollection<T> : IReadOnlyCollection<ISndEntity>
         }
     }
 
-    /// <inheritdoc/>
-    public IEnumerator<ISndEntity> GetEnumerator()
-    {
-        for (var i = 0; i < _entities.Count; i++)
-            yield return _entities[i];
-    }
-
-    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 }

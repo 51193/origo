@@ -22,8 +22,7 @@ recursive depth protection (max re-entrant drain depth), concurrent enqueue safe
 
 | Test Method | Verified Behavior | Reference |
 |-------------|-----------------|-----------|
-| `ConcurrentActionQueue_Enqueue_IncreasesCount` | Count increments after Enqueue | Scheduling |
-| `ConcurrentActionQueue_ExecuteAll_RunsAllActions` | ExecuteAll executes all enqueued actions, Count returns to 0 | Scheduling |
+| `ConcurrentActionQueue_ExecuteAll_RunsAllActions` | ExecuteAll executes all enqueued actions; a second ExecuteAll returns 0 | Scheduling |
 | `ConcurrentActionQueue_ExecuteAll_ActionThatReenqueues` | Actions re-enqueued during ExecuteAll are executed in the same call | Scheduling |
 | `ConcurrentActionQueue_ExecuteAll_PropagatesException` | Exception from single action propagates | Scheduling |
 
@@ -41,7 +40,7 @@ recursive depth protection (max re-entrant drain depth), concurrent enqueue safe
 | Test Method | Boundary Condition | Expected Behavior |
 |-------------|-------------------|-------------------|
 | `ConcurrentActionQueue_ExecuteAll_EmptyQueue_ReturnsZero` | ExecuteAll on empty queue | Returns 0 |
-| `ConcurrentActionQueue_Clear_EmptiesQueue` | Count=0 after Clear | Count returns to 0 |
+| `ConcurrentActionQueue_Clear_DiscardsPendingActions` | Pending actions with discard callbacks are cleared without executing | Both discard callbacks run and ExecuteAll returns 0 |
 
 ## ConcurrentActionQueueConcurrencyTests Details
 

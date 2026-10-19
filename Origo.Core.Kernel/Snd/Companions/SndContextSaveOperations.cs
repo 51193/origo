@@ -15,6 +15,8 @@ namespace Origo.Core.Snd.Companions;
 /// </summary>
 internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOperations
 {
+    private long _lastAutoSaveId;
+
     /// <inheritdoc/>
     public void RegisterSaveMetaContributor(ISaveMetaContributor contributor)
     {
@@ -97,11 +99,17 @@ internal sealed class SndContextSaveOperations(SndContext owner) : ISndSaveOpera
     public string RequestSaveGameAuto(string? newSaveId = null)
     {
         var effectiveNewSaveId = string.IsNullOrWhiteSpace(newSaveId)
-            ? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                .ToString(CultureInfo.InvariantCulture)
+            ? NextAutoSaveId()
             : newSaveId;
         RequestSaveGame(effectiveNewSaveId);
         return effectiveNewSaveId;
+    }
+
+    private string NextAutoSaveId()
+    {
+        var candidate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _lastAutoSaveId = candidate > _lastAutoSaveId ? candidate : _lastAutoSaveId + 1;
+        return _lastAutoSaveId.ToString(CultureInfo.InvariantCulture);
     }
 
     /// <inheritdoc/>

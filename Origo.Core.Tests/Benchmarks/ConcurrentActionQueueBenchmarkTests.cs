@@ -80,8 +80,7 @@ public class ConcurrentActionQueueBenchmarkTests(ITestOutputHelper output)
             sw.Stop();
             var totalAlloc = GC.GetAllocatedBytesForCurrentThread() - allocBefore;
 
-            Assert.Equal(size, queue.Count);
-            queue.Clear();
+            Assert.Equal(size, queue.ExecuteAll());
 
             rows.Add(($"{size} enqueues", size, sw.Elapsed, totalAlloc));
         }

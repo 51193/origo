@@ -7,15 +7,6 @@ namespace Origo.Core.Tests;
 public class ConcurrentActionQueueTests
 {
     [Fact]
-    public void ConcurrentActionQueue_Enqueue_IncreasesCount()
-    {
-        var queue = new ConcurrentActionQueue(new TestLogger());
-        queue.Enqueue(() => { });
-        queue.Enqueue(() => { });
-        Assert.Equal(2, queue.Count);
-    }
-
-    [Fact]
     public void ConcurrentActionQueue_ExecuteAll_RunsAllActions()
     {
         var queue = new ConcurrentActionQueue(new TestLogger());
@@ -26,7 +17,7 @@ public class ConcurrentActionQueueTests
         var executed = queue.ExecuteAll();
         Assert.Equal(3, executed);
         Assert.Equal(3, callCount);
-        Assert.Equal(0, queue.Count);
+        Assert.Equal(0, queue.ExecuteAll());
     }
 
     [Fact]
@@ -37,13 +28,17 @@ public class ConcurrentActionQueueTests
     }
 
     [Fact]
-    public void ConcurrentActionQueue_Clear_EmptiesQueue()
+    public void ConcurrentActionQueue_Clear_DiscardsPendingActions()
     {
         var queue = new ConcurrentActionQueue(new TestLogger());
-        queue.Enqueue(() => { });
-        queue.Enqueue(() => { });
+        var discarded = 0;
+        queue.Enqueue(() => { }, () => discarded++);
+        queue.Enqueue(() => { }, () => discarded++);
+
         queue.Clear();
-        Assert.Equal(0, queue.Count);
+
+        Assert.Equal(2, discarded);
+        Assert.Equal(0, queue.ExecuteAll());
     }
 
     [Fact]
