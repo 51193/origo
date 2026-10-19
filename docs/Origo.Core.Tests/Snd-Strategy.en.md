@@ -20,7 +20,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `ObserverStrategyTests.cs` | Observer registration & statelessness enforcement; Mount/Unmount lifecycle and parameter correctness; data change notifications (correct key/non-observed key/after unmount) and old/new values; multi-key observation; serialization (ObserverIndices population/empty bindings/grouping); Dead/Quit release and OnUnmounted; attribute reflection extraction; cross-entity mount rejection; null/empty/unknown parameter defenses; RecoverBindings fault tolerance; Has/Remove topology queries; Teardown/KillPending/ClearAll cleanup paths |
 | `StrategyOrderingTests.cs` | Complete registry projection, dynamic mutation, save/load/quit/death, startup sealing, invalid declarations and cycle diagnostics |
 | `StrategyOrderingIntegrationTests.cs` | Real simulation host: Ordinal order, reentrant insertion in BeforeRemove, and rejection of late registration; verified red → green |
-| `StrategyPoolTypeSafetyAndExtensionTests.cs` | Strategy pool type-branch safety (generic GetStrategy type mismatch does not leak ref count), StackStateMachine two-phase acquisition failure rollback, third-domain base class extension, RecoverStrategiesOnly rejects non-Lifecycle strategies |
+| `StrategyPoolTypeSafetyAndExtensionTests.cs` | Strategy pool type-branch safety (generic GetStrategy type mismatch does not leak ref count), StackStateMachine two-phase acquisition failure rollback, abstract strategy type registration rejection, RecoverStrategiesOnly rejects non-Lifecycle strategies |
 | `SndStrategyPoolLeakDetectionTests.cs` | Strategy pool leak detection: refcounts return to zero on normal release / mid-failure teardown; LogPoolLeaks emits no residual warnings |
 | `SndStrategyPerformanceTests.cs` | Strategy pool Get/Release throughput, Process strategy count scaling, TriggerAll ToArray allocation (marked `[Trait("Category","Benchmark")]`, run by `scripts/benchmark.sh`) |
 
@@ -156,7 +156,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 
 | Test Method | Error Triggered | Expected Behavior |
 |-------------|----------------|-------------------|
-| `ObserverStrategy_StatelessEnforcement` | Registering observer strategy with instance field (_counter) | InvalidOperationException ("invalid instance members") |
+| `ObserverStrategy_StatelessEnforcement` | Registering observer strategy with instance field (_counter) | InvalidOperationException ("invalid instance members", naming `_counter`); the counter advanced by OnMounted proves the field is mutable instance state |
 | `ObserverStrategy_MissingAttribute_Throws` | Registering observer without [StrategyIndex] | InvalidOperationException |
 | `Mount_WhenOnMountedThrows_RollsBackAndReturnsToPool` | OnMounted throws InvalidOperationException | Data subscriptions rolled back; subsequent SetData does not trigger callback; strategy returned to pool |
 | `MountObserverStrategy_WithDifferentTargetName_Throws` | Mounting with target name different from own entity name | InvalidOperationException ("Cross-entity") |
@@ -275,7 +275,7 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `MemoryObserver` | ObserverStrategyTests.cs | Records OnMounted/OnUnmounted calls (MountCall contains Entity + Target); AsyncLocal list isolated |
 | `ThrowOnMountObserver` | ObserverStrategyTests.cs | OnMounted throws InvalidOperationException; verifies rollback and confirms subsequent SetData does not trigger |
 | `ThrowOnUnmountObserver` | ObserverStrategyTests.cs | OnUnmounted throws InvalidOperationException; verifies the failed unmount still returns the pool reference |
-| `StatefulObserver` | ObserverStrategyTests.cs | Observer with instance field _counter; verifies registration rejection |
+| `StatefulObserver` | ObserverStrategyTests.cs | Observer with instance field _counter advanced by OnMounted; verifies registration rejection and that the counter is readable mutable state |
 | `UnannotatedObserver` | ObserverStrategyTests.cs | Observer without [StrategyIndex] attribute; verifies registration rejection |
 | `Probe` (abstract) | StrategyOrderingTests.cs | Abstract base recording all eight lifecycle hook events for Producer / Bridge / Consumer |
 | `Producer` / `Bridge` / `Consumer` | StrategyOrderingTests.cs | Verify A → B → C projection, deduplication, and Ordinal fallback using duplicate Before, equivalent After, and an unmounted intermediate |
@@ -287,11 +287,10 @@ The three performance tests in `SndStrategyPerformanceTests` use `Stopwatch` + `
 | `AcyclicLeaf` | StrategyOrderingTests.cs | Acyclic node with no outgoing edges; verifies the cycle search completes its branch and reports only the closed path |
 | `SelfReference` / `BlankReference` / `NullReference` | StrategyOrderingTests.cs | Invalid-registration cases: self reference, blank target, and null array |
 | `OrderingAlpha` / `OrderingZulu` / `OrderingRemover` | StrategyOrderingIntegrationTests.cs | Real simulation host verifying Ordinal fallback order and identity-based removal under reentrant insertion in BeforeRemove |
-| `ExtensionDomainStrategyBase` (abstract) | StrategyPoolTypeSafetyAndExtensionTests.cs | Third-domain abstract base class extending LifecycleStrategyBase; defines ProbeValue() abstract method |
-| `ExtensionDomainConcreteStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | Concrete implementation of ExtensionDomainStrategyBase; ProbeValue() returns "ok" |
 | `PoolEntityStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | LifecycleStrategyBase empty implementation for generic branch safety tests |
 | `PoolStateMachineStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | StateMachineStrategyBase empty implementation for StackStateMachine tests |
 | `PoolActiveStrategy` | StrategyPoolTypeSafetyAndExtensionTests.cs | ActiveStrategyBase empty implementation for RecoverStrategiesOnly rejection test |
+| `AbstractPoolStrategy` (abstract) | StrategyPoolTypeSafetyAndExtensionTests.cs | Abstract `LifecycleStrategyBase` decorated with `[StrategyIndex("pool.abstract")]`; verifies `Register` rejects abstract strategy types |
 | `PerfPoolStrategy` | SndStrategyPerformanceTests.cs | LifecycleStrategyBase empty implementation for strategy pool Get/Release performance measurement |
 | `PerfProcessBase` (abstract) | SndStrategyPerformanceTests.cs | Abstract LifecycleStrategy with empty Process method; performance strategies 1–20 all inherit this base |
 | `PerfProcess1Strategy` ~ `PerfProcess20Strategy` | SndStrategyPerformanceTests.cs | 20 identically-named Process empty-implementation strategies for Process strategy count scaling and TriggerAll allocation measurement |

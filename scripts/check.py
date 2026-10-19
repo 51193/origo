@@ -28,14 +28,6 @@ FULL_PATHS = {
     "Directory.Packages.props",
     "global.json",
     "Origo.sln",
-    "scripts/ci.sh",
-    "scripts/test.sh",
-    "scripts/check.py",
-    "scripts/check.sh",
-    "scripts/benchmark.sh",
-    "scripts/godot-test.sh",
-    "scripts/dotnet-env.sh",
-    "scripts/install-dotnet.sh",
     "AGENTS.md",
 }
 DOC_PREFIXES = ("docs/",)

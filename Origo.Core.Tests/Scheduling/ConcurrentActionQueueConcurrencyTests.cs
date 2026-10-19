@@ -29,7 +29,7 @@ public class ConcurrentActionQueueConcurrencyTests
         var executed = queue.ExecuteAll();
         Assert.Equal(workerCount * actionsPerWorker, executed);
         Assert.Equal(workerCount * actionsPerWorker, executedCount);
-        Assert.Equal(0, queue.Count);
+        Assert.Equal(0, queue.ExecuteAll());
     }
 
     [Fact]
@@ -81,7 +81,6 @@ public class ConcurrentActionQueueConcurrencyTests
 
         Assert.Equal(0, queue.ExecuteAll());
         Assert.Equal(0, queue.ExecuteAll());
-        Assert.Equal(0, queue.Count);
     }
 
     [Fact]
@@ -97,6 +96,5 @@ public class ConcurrentActionQueueConcurrencyTests
 
         Assert.Equal(0, executed);
         Assert.Equal(0, callCount);
-        Assert.Equal(0, queue.Count);
     }
 }

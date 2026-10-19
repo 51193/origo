@@ -45,7 +45,7 @@ public sealed class Blackboard : IBlackboard
     public void Clear() => _data.Clear();
 
     /// <inheritdoc />
-    public IReadOnlyCollection<string> GetKeys() => _data.Keys;
+    public IReadOnlyCollection<string> GetKeys() => [.. _data.Keys];
 
     /// <inheritdoc />
     public IReadOnlyDictionary<string, TypedData> SerializeAll() =>

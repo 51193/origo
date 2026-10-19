@@ -10,6 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Superseded CI runs are cancelled per ref** — the CI workflow now uses a
+  workflow-level concurrency group, so a newer run for the same ref cancels the
+  older one. The release and weekly workflows keep their own non-cancelling
+  groups.
+
 ### Removed
 
 - **BREAKING: `Origo.sln` x64/x86 solution platforms** — the solution declares
@@ -18,8 +25,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `-p:Platform=x64` / `-p:Platform=x86`, which now fail with MSB4126 instead of
   resolving to Any CPU.
 
+### Fixed
+
+- **The SDK bootstrap detects and repairs a stale repository-local SDK** —
+  `scripts/dotnet-env.sh` now selects the same root order as
+  `scripts/install-dotnet.sh` (and falls back to the dotnet on PATH when no
+  root is installed) and validates the selected SDK against `global.json`
+  before exporting anything, failing with the required version, the selected
+  path, the installed SDKs, and the repair command instead of letting the host
+  suggest an edit to `global.json`. A repository-local SDK that no longer satisfies the pin
+  now fails every gate script with that message instead of a raw SDK-resolution
+  error. `scripts/install-dotnet.sh` installs into that same root (an explicit
+  `DOTNET_INSTALL_DIR`, then an existing repository-local `.dotnet/`, then
+  `$HOME/.dotnet`), refreshes rather than abandons a stale local SDK, checks for
+  `curl`, and verifies the installed SDK before reporting success; the root
+  `./dotnet` wrapper applies the same selection. `scripts/test-dotnet-env.sh`
+  pins the stale, satisfying, system-fallback, installer-target, and wrapper
+  cases and runs from `scripts/lint-scripts.sh`.
+
 ### Changed
 
+- **The build fails on unused private members** — `Directory.Build.props` enables
+  `EnforceCodeStyleInBuild` and `.editorconfig` raises `IDE0051` / `IDE0052` to
+  errors, so an unused or unread private member now fails `dotnet build`, the
+  `scripts/format.sh` analyzer pass, and CI instead of passing silently.
 - **Release workflow guard and version-stamp helper** — the release and weekly
   workflows now share `scripts/write-version-stamp.py` instead of duplicating
   the rewrite, and the release-workflow guard rejects dynamic `uses:`
@@ -40,6 +69,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   which the smoke runs against the same feed. The smoke self-test pins physical-
   path resolution and first-file lookup behavior.
 
+### Fixed
+
+- **Fork pull requests pass the branch-identity check** — `scripts/lint-scripts.sh`
+  validated the source branch name of every pull request, so a fork branch such
+  as `fix-typo` failed CI even though its name is outside the repository
+  owners' control. The CI job now marks fork pull requests, and
+  `scripts/work-identity.sh validate` skips the naming rule for them while
+  same-repository pull request branches stay validated.
+- **`ORIGOSG008` for null `SndInlineTypes` elements** — a null placeholder in
+  the attribute now fails the build with an actionable error instead of
+  silently renumbering the types after it; the rule is tracked as unshipped
+  until the next release.
+- **Auto-save ids and alias maps stay unambiguous** — repeated
+  `RequestSaveGameAuto` calls within one millisecond now receive distinct ids; a
+  null value in a scene or template alias map throws with the offending key
+  instead of silently becoming an empty string; and the key collections returned
+  by the blackboard, node, and strategy lookups are snapshots, so enumerating
+  them cannot break when the underlying collection mutates.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added
@@ -48,7 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Shell-only package consumer smoke** — `scripts/package-consumer-smoke.sh` packs the shell/kernel packages into a fresh local feed, restores the tracked `Origo.Core` + `Origo.GodotAdapter` consumer fixture without project references, builds with warnings as errors, rejects kernel compile-asset leakage with a CS0246 negative probe, verifies the Contracts analyzer asset and kernel runtime assembly, and starts `OrigoDefaultEntry` headlessly. The smoke runs in the normal CI Godot job and local `scripts/ci.sh`; version pins and the launch flow are documented in `docs/usage/shell-package-consumer.en.md`.
 - **Shell API baseline gate** — `scripts/api-inventory.sh` builds the shell projects in Release, runs the tracked Roslyn inventory in `tools/ApiInventoryTool`, and verifies `shell-api-baseline.json`; unapproved shell API additions, removals, or signature changes fail through `scripts/ci.sh`, the normal CI matrix, and the Release workflow until the baseline is updated in the same reviewed change. Previous-package validation runs from `ORIGO_PREVIOUS_API_BASELINE` once a released baseline exists; the first 0.1.0 release states that behavior explicitly.
-- **Matt Pocock engineering skills integration** — GitHub Issues in `51193/origo` and local Markdown counterparts under `.scratch/issues/` share issue numbers; five default triage states and the existing English domain-documentation route are configured in `docs/agents/`, with `AGENTS.md` retaining authority.
+- **Matt Pocock engineering skills integration** — GitHub Issues in `51193/origo` and optional local Markdown counterparts under `.scratch/issues/` share issue numbers; five default triage states and the existing English domain-documentation route are configured in `docs/agents/`, with `AGENTS.md` retaining authority.
 - **Core shell/kernel package split** — `Origo.Core.Contracts` now carries the stable consumer surface (interfaces, pure data, metadata, strategy base classes, data-source contracts, logging abstractions, and shared pure helpers), `Origo.Core.Kernel` carries the runtime/SND/save/data-source/console implementations and internal `Origo.Core.Kernel.Ports`, and `Origo.Core` is the consumer shell package. The shell host facade `OrigoHost` / `OrigoHostOptions` and the stable `IOrigoRuntime` / `ISndWorldAccess` interfaces let a consumer compile and run a Core workflow while kernel compile assets stay out of the consumer restore graph.
 - **Save slot deletion** — `ISndSaveOperations.DeleteSave` and `ISaveStorageService.DeleteSave` remove an inactive save snapshot together with any interrupted-snapshot `.tmp`/`.bak` remnants; the active save, the continue target, and running or pending persistence workflows are rejected.
 - **Persistence console commands** — a Core `SndContext` registers `list_saves`, `save`, `load`, `delete_save`, and `switch_level` handlers on the runtime console. `save`/`load`/`switch_level` queue through the existing frame-driven `ISndSaveOperations` path; `list_saves` prints display metadata; `delete_save` completes synchronously after its safety guards pass.
@@ -79,7 +127,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **BREAKING: lifecycle strategies use `Before` / `After` ordering constraints** — `StrategyIndexAttribute.Priority` and `DefaultPriority` are removed. Startup registration validates all references and cycles, then freezes the complete graph. Entities project that order onto mounted strategies, retaining transitive relationships; unconstrained topological candidates use index Ordinal order. Process and batch lifecycle hooks follow the same direction.
 
-- **Agent instruction system slimmed and corrected** — `AGENTS.md` is now a compact every-turn gate/router (234 lines, within the 16 KB budget) instead of a 742-line manual. Release/Changelog rules live in `docs/release-process.en.md`, red-first regression details in `docs/Origo.Core.Tests/META-TEST.en.md`, and `_origo_local/` is documented as a single-book buffer whose root README holds status. The development loop commits before the post-commit `scripts/ci.sh` and `scripts/lint-commits.sh`; the pre-tag checklist covers `verify-release.sh`, analyzer release tracking, and docs version stamps; any `.cs` add/rename/delete under `SourceMirrorRoots` requires the corresponding mirror README file-list update. Added `scripts/validate-agent-docs.py` and an `origin/main` fallback in `scripts/lint-commits.sh`; the language directive follows the user's current language.
+- **Agent instruction system slimmed and corrected** — `AGENTS.md` is now a compact every-turn gate/router (234 lines, within the 16 KB budget) instead of a 741-line manual. Release/Changelog rules live in `docs/release-process.en.md`, red-first regression details in `docs/Origo.Core.Tests/META-TEST.en.md`, and `_origo_local/` is documented as a single-book buffer whose root README holds status. The development loop commits before the post-commit `scripts/ci.sh` and `scripts/lint-commits.sh`; the pre-tag checklist covers `verify-release.sh`, analyzer release tracking, and docs version stamps; any `.cs` add/rename/delete requires the corresponding mirror README file-list update whether it is part of the documented module surface. Added `scripts/validate-agent-docs.py` and an `origin/main` fallback in `scripts/lint-commits.sh`; the language directive follows the user's current language.
 - **`GodotPackedSceneNodeFactory` validates its inputs up front** — the constructor now rejects a null parent, and `Create` rejects null or blank logical names in addition to Godot-prohibited node-name characters, all before loading or instantiating anything; framework validation can no longer drift from engine rules.
 - **`StackStateMachine.Push` now rolls back when the push hook throws** — the stack value is pushed only as part of the hook dispatch attempt; if `OnPushRuntime` throws, the value is removed and the exception propagates, leaving the stack unchanged.
 - **`SndMetaFluentBuilder.SetNode` rejects blank node names and resource IDs** — null or whitespace keys/values now fail at the fluent call site instead of being accepted into metadata and failing later during entity recovery or node lookup.
@@ -96,7 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **Shell package consumer smoke is pipefail-safe and macOS path-safe** — `scripts/package-consumer-smoke.sh` now queries the Contracts analyzer entry directly instead of piping `unzip` into `grep -q`, resolves the run-owned NuGet cache to its physical path before comparing it with `project.assets.json`, and replaces its remaining early-exit `find`/`grep` and `echo`/`grep` pipelines with pipe-free checks. The macOS `/var` temp-path alias no longer turns a valid isolated restore into a failure, and a matching analyzer entry can no longer be reported missing through SIGPIPE. `scripts/test-package-consumer-smoke-lib.sh` runs from `scripts/lint-scripts.sh` to pin the archive query, physical-path resolution, and first-file lookup behavior.
+- **Shell package consumer smoke is pipefail-safe and macOS path-safe** — `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its physical path before comparing it with `project.assets.json` and uses pipe-free checks for its file-presence and early-exit queries, so the macOS `/var` temp-path alias no longer turns a valid isolated restore into a failure. `scripts/test-package-consumer-smoke-lib.sh` runs from `scripts/lint-scripts.sh` to pin physical-path resolution and first-file lookup behavior.
 
 - **Release API baseline comparison excludes the release being validated** — `scripts/find-previous-api-baseline.sh` now skips the release tag passed through `ORIGO_CURRENT_RELEASE_TAG` by the Release workflow, so a version-sync commit created after the tag cannot make the current release its own previous baseline. The helper fixture and release-workflow guard cover the case.
 

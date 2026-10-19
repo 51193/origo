@@ -44,6 +44,12 @@ csharp_style_prefer_not_pattern = true:info
 # so it must be enabled explicitly.
 dotnet_diagnostic.CA1062.severity = error
 
+# Dead-code gate: an unused private member fails the build (the build
+# already treats warnings as errors). EnforceCodeStyleInBuild in
+# Directory.Build.props makes these IDE analyzers run during build.
+dotnet_diagnostic.IDE0051.severity = error
+dotnet_diagnostic.IDE0052.severity = error
+
 # Test projects and test support: flat namespace for cross-directory type access.
 # Intentional design — see docs/Origo.Core.Tests/META-TEST.en.md
 # (and the recorded Integration.Tests Runner/TestSupport deviation there).

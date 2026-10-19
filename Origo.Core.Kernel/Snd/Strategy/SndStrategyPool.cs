@@ -63,7 +63,7 @@ internal sealed class SndStrategyPool
 
     internal bool IsRegistered(string index) => _factories.ContainsKey(index);
 
-    internal IReadOnlyCollection<string> EnumerateRegisteredIndices() => _factories.Keys;
+    internal IReadOnlyCollection<string> EnumerateRegisteredIndices() => [.. _factories.Keys];
 
     public TBase GetStrategy<TBase>(string index) where TBase : BaseStrategy
     {

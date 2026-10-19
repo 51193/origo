@@ -36,7 +36,11 @@ public interface ISndSaveOperations
     /// <summary>Request to save to a specific slot.</summary>
     void RequestSaveGame(string newSaveId);
 
-    /// <summary>Auto-save, returning the actual saveId used.</summary>
+    /// <summary>
+    ///     Auto-save, returning the actual saveId used. Generated ids are unique
+    ///     per operations instance; multiple contexts sharing one save root must
+    ///     pass explicit ids.
+    /// </summary>
     string RequestSaveGameAuto(string? newSaveId = null);
 
     /// <summary>Set the continue target save.</summary>

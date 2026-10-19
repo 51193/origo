@@ -39,15 +39,19 @@ public class EntityStrategyExtensionsTests
     }
 
     [Fact]
-    public void EnsureReplaceableStrategy_ConfiguredOverride_UsesOverride()
+    public void EnsureReplaceableStrategy_ConfiguredOverride_PreservesIndex()
     {
         var entity = new StubSndEntity("e");
         entity.SetData(_implKey, _overrideIndex);
 
         var result = entity.EnsureReplaceableStrategy(_implKey, _defaultIndex);
 
-        // Already set, so EnsureStrategy inside will see value and return false
+        // The configured index is owned by whoever set it; this call neither
+        // mounts nor rewrites it.
         Assert.False(result);
+        var (found, value) = entity.TryGetData<string>(_implKey);
+        Assert.True(found);
+        Assert.Equal(_overrideIndex, value);
     }
 
     [Fact]

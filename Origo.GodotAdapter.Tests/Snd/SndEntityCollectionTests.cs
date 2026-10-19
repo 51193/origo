@@ -99,7 +99,7 @@ public class SndEntityCollectionTests
 
         var fake = Assert.IsType<FakeSndEntity>(entity);
         Assert.Equal("e1", fake.StableName);
-        Assert.Single(collection);
+        Assert.Single(collection.GetEntities());
         Assert.Single(fake.Recovered);
     }
 
@@ -118,7 +118,7 @@ public class SndEntityCollectionTests
 
         var ex = Assert.Throws<InvalidOperationException>(() => collection2.CreateEntity(Meta("boom")));
         Assert.Contains("recover failed", ex.Message);
-        Assert.Empty(collection2);
+        Assert.Empty(collection2.GetEntities());
         Assert.Equal(1, failing.DetachCount);
     }
 
@@ -141,7 +141,7 @@ public class SndEntityCollectionTests
 
         collection.RecoverFromMetaList([Meta("a"), Meta("b"), Meta("c")]);
 
-        Assert.Equal(3, collection.Count);
+        Assert.Equal(3, collection.GetEntities().Count);
         Assert.NotNull(collection.FindByName("a"));
         Assert.NotNull(collection.FindByName("c"));
     }
@@ -156,7 +156,7 @@ public class SndEntityCollectionTests
 
         Assert.Throws<InvalidOperationException>(() =>
             collection2.RecoverFromMetaList([Meta("a"), Meta("b"), Meta("boom")]));
-        Assert.Empty(collection2);
+        Assert.Empty(collection2.GetEntities());
         Assert.Equal(1, failing.DetachCount);
     }
 
@@ -196,7 +196,7 @@ public class SndEntityCollectionTests
         Assert.Equal(2, ex.InnerExceptions.Count);
         Assert.Contains(ex.InnerExceptions, e => e.Message == "recover failed");
         Assert.Contains(ex.InnerExceptions, e => e.Message == "rollback failed");
-        Assert.Empty(collection2);
+        Assert.Empty(collection2.GetEntities());
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public class SndEntityCollectionTests
         Assert.Contains(ex.InnerExceptions, e => e.Message == "recover failed");
         Assert.Contains(ex.InnerExceptions, e => e.Message == "engine detach failed");
         Assert.Contains(ex.InnerExceptions, e => e.Message == "callback failed");
-        Assert.Empty(collection2);
+        Assert.Empty(collection2.GetEntities());
         Assert.Equal(1, recovered.RollbackAcquiredResourcesCount);
         Assert.Equal(1, recovered.DetachCount);
         Assert.Equal(1, failing.DetachCount);
@@ -273,7 +273,7 @@ public class SndEntityCollectionTests
 
         collection.RemoveEntity("e1");
 
-        Assert.Empty(collection);
+        Assert.Empty(collection.GetEntities());
         Assert.Equal(["e1"], detached);
     }
 
@@ -347,7 +347,7 @@ public class SndEntityCollectionTests
 
         collection.RemoveAllEntities();
 
-        Assert.Empty(collection);
+        Assert.Empty(collection.GetEntities());
         Assert.Equal(["b", "a"], detached);
     }
 
@@ -376,7 +376,7 @@ public class SndEntityCollectionTests
         Assert.Equal(2, entities.Count);
 
         var names = new List<string>();
-        foreach (var entity in collection)
+        foreach (var entity in collection.GetEntities())
             names.Add(entity.Name);
         Assert.Equal(["a", "b"], names);
     }
@@ -398,7 +398,7 @@ public class SndEntityCollectionTests
         var before = snapshot.ToList();
         collection.CreateEntity(Meta("b"));
         Assert.Single(before);
-        Assert.Equal(2, collection.Count);
+        Assert.Equal(2, collection.GetEntities().Count);
     }
 }
 

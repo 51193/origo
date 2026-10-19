@@ -84,4 +84,15 @@ public sealed partial class TypedDataGenerator
         category: "Origo.SourceGeneration",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor _nullInlineType = new(
+        id: "ORIGOSG008",
+        title: "Null element in SndInlineTypes",
+        messageFormat:
+        "The SndInlineTypes attribute contains a null element. List every inline type explicitly: "
+        + "a null placeholder does not reserve a kind value, so the types after it would be "
+        + "renumbered silently.",
+        category: "Origo.SourceGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

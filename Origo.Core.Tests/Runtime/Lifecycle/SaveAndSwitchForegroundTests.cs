@@ -109,6 +109,18 @@ public class SaveAndSwitchForegroundTests
         Assert.Contains("sim2=other_sim=false", topology);
     }
 
+    [Fact]
+    public void RequestSaveGameAuto_RepeatedCallsInOneFrame_ProduceDistinctIds()
+    {
+        var (ctx, _) = CreateForegroundContext();
+
+        var ids = new HashSet<string>();
+        for (var i = 0; i < 50; i++)
+            ids.Add(ctx.Save.RequestSaveGameAuto());
+
+        Assert.Equal(50, ids.Count);
+    }
+
     // ── Disk consistency ────────────────────────────────────────────────
 
     [Fact]

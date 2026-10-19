@@ -22,7 +22,7 @@ The stable public abstraction layer of Origo.Core. All interfaces are defined in
 
 ```
 IBlackboard  IConsole*  IFileSystem  ILogger  INode*  (Contracts)
-IOrigoFrameDriver (Contracts)  IScheduler (Kernel)
+IOrigoFrameDriver (Contracts)
 
 ISessionManager  ISessionRun → IStateMachineContainer
 

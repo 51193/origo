@@ -6,7 +6,7 @@
 
 ## Behavior Overview
 
-Validates the DataSourceNode tree model and its encode/decode, conversion, and hashing capabilities: node factory (Map/Array/Text/Number/Bool/Null), strongly-typed value accessors (AsString/AsChar plus the generic As<T>: As<int>/As<long>/As<float>/As<double>/As<byte>/As<sbyte>/As<short>/As<ushort>/As<uint>/As<ulong>/As<decimal>), object/array access (indexer, TryGetValue, ContainsKey, Keys, Count, Elements), Builder chained Add, lazy expansion (expander not called before access, expand only once, expansion failure keeps Lazy with retry), JSON codec round-trip (complex nested tree/top-level array/empty object/empty array, nested objects lazy, primitives not lazy), Map codec (comments/empty lines skipped, colons in values, skip null values, empty value, line without colon throws), `DataSourceConverterRegistry` (register/get, generic and runtime-typed read/write, unregistered type throws, null write, type hierarchy fallback), complete round-trip for 14 primitive types + 14 array types + domain types (TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary), `TypeStringMapping` type name registration, `IDisposable` recursive disposal with deep-tree stack overflow prevention, `ComputeSha256Hash` canonical hashing, and strict/lenient parse behavior of `KeyValueFileParser`.
+Validates the DataSourceNode tree model and its encode/decode, conversion, and hashing capabilities: node factory (Map/Array/Text/Number/Bool/Null), strongly-typed value accessors (AsString/AsChar plus the generic As<T>: As<int>/As<long>/As<float>/As<double>/As<byte>/As<sbyte>/As<short>/As<ushort>/As<uint>/As<ulong>/As<decimal>), object/array access (indexer, TryGetValue, ContainsKey, Keys, Count, Elements), Builder chained Add, lazy expansion (expander not called before access, expand only once, expansion failure keeps Lazy with retry), JSON codec round-trip (complex nested tree/top-level array/empty object/empty array, nested objects lazy, primitives not lazy), Map codec (comments/empty lines skipped, colons in values, skip null values, empty value, line without colon throws), `DataSourceConverterRegistry` (register/get, generic and runtime-typed read/write, unregistered type throws, null write, type hierarchy fallback), complete round-trip for 14 primitive types + 14 array types + domain types (TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary), `TypeStringMapping` type name registration, `IDisposable` recursive disposal with deep-tree stack overflow prevention, `ComputeSha256Hash` canonical hashing, and the strict parse behavior of `KeyValueFileParser` (malformed lines and empty keys throw, empty values are valid, duplicate keys warn and the last value wins).
 
 ## Test File List
 
@@ -17,7 +17,7 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 | `DataSourceConverterTests.cs` | ConverterRegistry registration and read/write, complete round-trip for 14 primitive types + 14 array types + 5 domain types (TypedData/SndMetaData/BlackboardData/StateMachineContainerPayload/StringDictionary), TypeStringMapping extension |
 | `DataSourceTests.cs` | Remaining items: IDisposable recursive disposal with deep-tree stack overflow prevention, new accessor methods, TypeStringMapping new type registration, DataSourceConverterRegistry type hierarchy fallback, ReadOnlyDictionary round-trip |
 | `DataSourceNodeSha256Tests.cs` | DataSourceNode `ComputeSha256Hash` canonical hash computation |
-| `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` key-value file parsing (strict/lenient mode, comments, duplicate keys, null/empty content) |
+| `KeyValueFileParserTests.cs` | `KeyValueFileParser.Parse` key-value file parsing (strict parsing, comments, duplicate keys, empty keys/values, null/empty content) |
 | `CorruptObserverIndicesStrictReadTests.cs` (in Save/) | Verifies: when `observer_indices` contains a non-object element, **multiple target keys**, or an **empty object** (corrupted save), `LoadFromPayload` throws `InvalidOperationException` (containing "observer_indices") instead of silently dropping bindings |
 
 ## DataSourceTests Details
@@ -269,8 +269,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 
 | Test Method | Triggered Error | Expected Behavior |
 |-------------|----------------|-------------------|
-| `KeyValueFileParser_Parse_StrictMode_ThrowsOnInvalidLine` | Strict mode encounters line without colon | FormatException |
-| `KeyValueFileParser_Parse_StrictMode_ThrowsOnEmptyKeyOrValue` | Strict mode encounters empty key (`: value`) | FormatException |
+| `KeyValueFileParser_Parse_ThrowsOnInvalidLine` | Line without colon | FormatException |
+| `KeyValueFileParser_Parse_ThrowsOnEmptyKey` | Empty key (`: value`) | FormatException |
 | `KeyValueFileParser_Parse_ThrowsOnNullLogger` | logger parameter is null | ArgumentNullException |
 
 ### Boundary Path
@@ -279,10 +279,8 @@ Validates the DataSourceNode tree model and its encode/decode, conversion, and h
 |-------------|-------------------|-------------------|
 | `KeyValueFileParser_Parse_EmptyContent_ReturnsEmpty` | Empty string content | Returns empty dict |
 | `KeyValueFileParser_Parse_NullContent_ReturnsEmpty` | null content | Returns empty dict |
-| `KeyValueFileParser_Parse_LenientMode_LogsWarningOnInvalidLine` | Lenient mode encounters line without colon | Does not throw, returns empty and logs warning |
-| `KeyValueFileParser_Parse_LenientMode_LogsWarningOnEmptyKey` | Lenient mode encounters empty key | Does not throw, returns empty and logs warning |
 | `KeyValueFileParser_Parse_DuplicateKey_LogsWarning` | Duplicate key | Later value overwrites earlier, logs warning |
-| `KeyValueFileParser_Parse_StrictMode_DuplicateKey_LastWinsAndWarns` | Strict mode encounters a duplicate key | Later value overwrites earlier and a warning is logged; duplicate keys are structurally valid and do not throw |
+| `KeyValueFileParser_Parse_DuplicateKey_LastWinsAndWarns` | Duplicate key | Later value overwrites earlier and a warning is logged; duplicate keys are structurally valid and do not throw |
 
 ## Test Helper Strategies
 

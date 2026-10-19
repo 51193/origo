@@ -19,7 +19,7 @@ Defines the generic key-value blackboard interface `IBlackboard`, providing glob
 | `SetValue<T>(string key, T value)` | Write a key-value pair, preserving full type information; a null of an unregistered reference type throws `ArgumentNullException` (null of a registered reference kind such as `string` remains supported) |
 | `TryGet<T>(string key)` | Safe read: returns a `(found, value)` tuple |
 | `Clear()` | Clear all key-value entries |
-| `GetKeys()` | Enumerate all key names |
+| `GetKeys()` | Returns a snapshot of the stored key names; later changes do not affect it |
 | `SerializeAll()` | Export all entries as a `TypedData` dictionary for persistence |
 | `DeserializeAll(...)` | Restore all entries from a persistence dictionary, replacing current contents |
 

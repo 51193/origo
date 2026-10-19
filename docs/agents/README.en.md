@@ -6,7 +6,7 @@ This directory connects Matt Pocock's engineering skills to Origo. The skills re
 
 | Configuration | Responsibility |
 |---------------|----------------|
-| [issue-tracker.md](issue-tracker.md) | GitHub Issues at `51193/origo` and one local counterpart per issue under `.scratch/issues/`, matched by number |
+| [issue-tracker.md](issue-tracker.md) | GitHub Issues at `51193/origo` and optional local counterparts under `.scratch/issues/`, matched by number |
 | [triage-labels.md](triage-labels.md) | Names of five triage states in GitHub labels and local `Status:` fields |
 | [domain.md](domain.md) | Single-context reading and recording paths using the English manual and `docs/architecture/` |
 
