@@ -49,6 +49,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `EnforceCodeStyleInBuild` and `.editorconfig` raises `IDE0051` / `IDE0052` to
   errors, so an unused or unread private member now fails `dotnet build`, the
   `scripts/format.sh` analyzer pass, and CI instead of passing silently.
+- **Release workflow guard and version-stamp helper** — the release and weekly
+  workflows now share `scripts/write-version-stamp.py` instead of duplicating
+  the rewrite, and the release-workflow guard rejects dynamic `uses:`
+  references, actions outside the release job's reviewed allowlist, and any
+  release creation in a run step (read-only `/releases` calls need an explicit
+  `# guard: read-only` line immediately above); the version-stamp step must
+  call the shared helper with the resolved tag. The guard is a run-text
+  tripwire: scripts, tag trees, `env`/`with` values, and dynamically
+  constructed commands are outside its reach.
 
 - **Package consumer smoke delegates package assertions to the release validator** —
   `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its

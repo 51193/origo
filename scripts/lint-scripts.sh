@@ -85,6 +85,7 @@ if command -v python3 >/dev/null 2>&1; then
     fi
     if python3 -c "import yaml" >/dev/null 2>&1; then
         python3 scripts/validate-release-workflow.py
+        PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-validate-release-workflow.py
     else
         echo "WARNING: PyYAML is not installed; skipping release-workflow guard."
     fi
@@ -92,6 +93,7 @@ if command -v python3 >/dev/null 2>&1; then
     PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_test.py
     python3 scripts/validate-agent-docs.py
     python3 scripts/test-validate-release-packages.py
+    bash scripts/test-write-version-stamp.sh
 elif [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
     echo "ERROR: python3 is required to run the release-workflow, release-package, and agent-doc guards." >&2
     exit 1
