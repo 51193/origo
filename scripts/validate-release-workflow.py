@@ -94,7 +94,7 @@ def _release_creation_line_conflicts(run: str) -> list[int]:
     """
     offenders: list[int] = []
     read_only = False
-    joined = run.replace("\\\n", " ").replace("\\\r", " ")
+    joined = run.replace("\\\n", "").replace("\\\r", "")
     for number, raw_line in enumerate(joined.splitlines(), start=1):
         stripped = raw_line.strip()
         if stripped.startswith("#"):
@@ -102,7 +102,14 @@ def _release_creation_line_conflicts(run: str) -> list[int]:
             continue
         lowered = _normalize_command(stripped).lower()
         is_creation = "release create" in lowered or "createrelease" in lowered
-        if is_creation or ("/releases" in lowered and not read_only):
+        writes = bool(
+            re.search(
+                r"(?:^|\s)(?:-f|--raw-field|-F|--field|--input|-d|--data|--json|"
+                r"--post-data|-X\s+POST|--method\s+POST)\b",
+                lowered,
+            )
+        )
+        if is_creation or ("/releases" in lowered and not (read_only and not writes)):
             offenders.append(number)
         read_only = False
     return offenders

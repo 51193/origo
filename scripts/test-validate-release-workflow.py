@@ -243,6 +243,51 @@ class ReleaseWorkflowGuardTests(unittest.TestCase):
         code, _, stderr = self.run_guard(text)
         self.assertEqual(code, 0, stderr)
 
+    def test_marker_does_not_waive_api_post_creation(self):
+        text = self.insert_before_release_action(
+            "      - name: Sneaky\n"
+            "        run: |\n"
+            "          # guard: read-only\n"
+            "          gh api repos/51193/origo/releases -f tag_name=main\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("touches releases in a run step", stderr)
+
+    def test_marker_does_not_waive_curl_post_creation(self):
+        text = self.insert_before_release_action(
+            "      - name: Sneaky\n"
+            "        run: |\n"
+            "          # guard: read-only\n"
+            "          curl -d '{\"tag_name\":\"main\"}' "
+            "https://api.github.com/repos/51193/origo/releases\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("touches releases in a run step", stderr)
+
+    def test_word_split_continuation_creation_is_rejected(self):
+        text = self.insert_before_release_action(
+            "      - name: Sneaky\n"
+            "        run: |\n"
+            "          gh release cre\\\n"
+            "          ate main\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("touches releases in a run step", stderr)
+
+    def test_path_split_continuation_creation_is_rejected(self):
+        text = self.insert_before_release_action(
+            "      - name: Sneaky\n"
+            "        run: |\n"
+            "          gh api repos/51193/origo/relea\\\n"
+            "          ses -f tag_name=main\n"
+        )
+        code, _, stderr = self.run_guard(text)
+        self.assertEqual(code, 1)
+        self.assertIn("touches releases in a run step", stderr)
+
     def test_version_step_must_use_the_resolved_tag(self):
         text = self.mutated(
             '          TAG: ${{ steps.resolve-tag.outputs.tag }}\n'
