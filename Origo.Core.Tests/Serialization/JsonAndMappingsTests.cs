@@ -191,8 +191,10 @@ public class JsonAndMappingsTests
         Assert.Equal(2, metas.Count);
         Assert.Equal("EnemyA", metas[0].Name);
         Assert.Equal(8, Assert.IsType<int>(TypedDataObjectConverter.ToObject(metas[0].DataMetaData!.Pairs["damage"])));
+        Assert.Equal(new[] { _strategyAi }, metas[0].StrategyMetaData!.LifecycleIndices);
         Assert.Equal("Npc", metas[1].Name);
         Assert.Equal("Calm", Assert.IsType<string>(TypedDataObjectConverter.ToObject(metas[1].DataMetaData!.Pairs["mood"])));
+        Assert.Equal(new[] { _strategyTalk }, metas[1].StrategyMetaData!.LifecycleIndices);
     }
 
     [Fact]

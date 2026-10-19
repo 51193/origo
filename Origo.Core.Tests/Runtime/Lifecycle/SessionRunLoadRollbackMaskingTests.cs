@@ -30,7 +30,6 @@ public class SessionRunLoadRollbackMaskingTests
     private const string UnmountBoomIdx = "rollback.unmount_boom";
     private const string DummyPopIdx = "rollback.dummy_pop";
     private const string GoodObserverIdx = "rollback.good_observer";
-    private const string MissingObserverIdx = "rollback.missing_observer";
 
     [Fact]
     public void LoadFromPayload_WhenFlushFails_OriginalExceptionSurvivesCleanupFailure()
