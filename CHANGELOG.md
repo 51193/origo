@@ -23,9 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Release workflow guard and version-stamp helper** — the release and weekly
   workflows now share `scripts/write-version-stamp.py` instead of duplicating
   the rewrite, and the release-workflow guard rejects dynamic `uses:`
-  references, actions outside the release job's reviewed allowlist, and
-  release-creation commands that do not use the resolved tag; the version-stamp
-  step must call the shared helper with the resolved tag.
+  references, actions outside the release job's reviewed allowlist, and any
+  release creation in a run step (read-only `/releases` calls need an explicit
+  `# guard: read-only` line); the version-stamp step must call the shared
+  helper with the resolved tag.
 
 - **Package consumer smoke delegates package assertions to the release validator** —
   `scripts/package-consumer-smoke.sh` resolves the run-owned NuGet cache to its

@@ -16,8 +16,10 @@ tested directly.
 Run from `scripts/lint-scripts.sh` so a release run cannot reach the package
 build before these invariants fail CI.
 
-The release-creation scan is a tripwire for the reviewed workflow shape, not a
-sandbox: commands assembled through variables or heredocs are out of reach.
+Release creation belongs to the reviewed action, never to a run step: a
+release-job run step that mentions /releases, release create, or createRelease
+is rejected unless the preceding line is the reviewed "# guard: read-only"
+marker. Commands assembled through variables or heredocs are out of scope.
 """
 
 from __future__ import annotations
@@ -53,19 +55,10 @@ def _normalize_command(command: str) -> str:
     return " ".join(command.replace("\\\n", " ").replace("\\\r", " ").split())
 
 
-_WRONG_REF = re.compile(r"\$\{\{\s*github\.(?:ref_name|head_ref)\s*\}\}")
-_VERSION_CALL = re.compile(
-    r"^python3\s+(?:-\S+\s+)*scripts/write-version-stamp\.py(?:\s|$)"
-)
-_RELEASE_CREATE = re.compile(r"\bgh\s+release\s+create\b")
-_API_POST_FLAGS = re.compile(r"(?:^|\s)(?:-f|--raw-field|-F|--field|--input)\b")
-_TAG_EXPR = r"\$\{\{\s*steps\.resolve-tag\.outputs\.tag\s*\}\}"
-_VALUE_FLAGS = {"--repo", "-R", "--notes", "-n", "--notes-file", "-F", "--title", "-t",
-                "--target", "--discussion-category", "--notes-start-tag"}
 
 
 def _references_wrong_ref(text: str) -> bool:
-    return _WRONG_REF.search(text) is not None
+    return re.search(r"\$\{\{\s*github\.(?:ref_name|head_ref)\s*\}\}", text) is not None
 
 
 def _env_references_wrong_ref(env: object) -> bool:
@@ -83,159 +76,38 @@ def _calls_version_helper(run: str) -> bool:
         r"scripts/write-version-stamp\.py(?:\s|$)"
     )
     for line in run.splitlines():
-        if pattern.match(_strip_comment(line).strip()):
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if pattern.match(stripped):
             return True
     return False
 
 
-def _strip_comment(line: str) -> str:
-    """Drop an unquoted shell comment, keeping # inside quotes."""
-    quote: str | None = None
-    for index, char in enumerate(line):
-        if quote:
-            if char == quote:
-                quote = None
-        elif char in "'\"":
-            quote = char
-        elif char == "#" and (index == 0 or line[index - 1].isspace()):
-            return line[:index]
-    return line
+def _release_creation_line_conflicts(run: str) -> list[int]:
+    """Return offending line numbers where a run step touches releases.
 
-
-def _split_outside_quotes(text: str) -> list[str]:
-    parts: list[str] = []
-    current: list[str] = []
-    quote: str | None = None
-    index = 0
-    while index < len(text):
-        char = text[index]
-        if quote:
-            current.append(char)
-            if char == quote:
-                quote = None
-            index += 1
-        elif char in "'\"":
-            quote = char
-            current.append(char)
-            index += 1
-        elif text.startswith("&&", index) or text.startswith("||", index):
-            parts.append("".join(current))
-            current = []
-            index += 2
-        elif char == ";":
-            parts.append("".join(current))
-            current = []
-            index += 1
+    Release creation belongs to the reviewed release action, never to a run
+    step, so any ``/releases`` use is rejected unless the preceding line is the
+    reviewed ``# guard: read-only`` marker. This intentionally avoids guessing
+    shell syntax.
+    """
+    offenders: list[int] = []
+    read_only = False
+    for number, line in enumerate(run.splitlines(), start=1):
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            if "guard: read-only" in stripped:
+                read_only = True
+            continue
+        lowered = stripped.lower()
+        if "release create" in lowered or "createrelease" in lowered or "/releases" in lowered:
+            if not read_only:
+                offenders.append(number)
+            read_only = False
         else:
-            current.append(char)
-            index += 1
-    parts.append("".join(current))
-    return [part.strip() for part in parts if part.strip()]
-
-
-def _command_segments(run: str) -> list[str]:
-    """Split a step into the commands the shell would run separately."""
-    text = run.replace("\\\n", " ").replace("\\\r", " ")
-    segments: list[str] = []
-    for line in text.splitlines():
-        line = _strip_comment(line).strip()
-        if not line:
-            continue
-        for part in _split_outside_quotes(line):
-            normalized = _normalize_command(part)
-            if normalized:
-                segments.append(normalized)
-    return segments
-
-
-_PREFIX = re.compile(
-    r"^(?:(?:[A-Za-z_][A-Za-z0-9_]*=\S+)\s+|sudo\s+(?:-\S+\s+)*|"
-    r"env\s+(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*|command\s+|exec\s+)*"
-)
-
-
-def _strip_prefixes(segment: str) -> str:
-    return _PREFIX.sub("", segment).strip()
-
-
-def _segment_creates_release(segment: str) -> bool:
-    """Detect release creation within one command segment."""
-    core = _strip_prefixes(segment)
-    lowered = core.lower()
-    if _RELEASE_CREATE.search(core) or "createrelease" in lowered:
-        return True
-    if "/releases" not in lowered:
-        return False
-    if re.search(r"(?:-x|--request|-X|--method)\s+(?:get|put|patch)\b", core, re.IGNORECASE):
-        return False
-    if re.search(r"(?:-x|--request|-X|--method)\s+post\b", core, re.IGNORECASE):
-        return True
-    if re.match(r"gh\s+api\b", core) and _API_POST_FLAGS.search(core):
-        return True
-    if re.match(r"curl\b", core) and re.search(r"(?:^|\s)(?:-d|--data|--json)\b", core):
-        return True
-    if re.search(r"(?:^|\s)--post-(?:data|file)\b", core):
-        return True
-    if re.match(r"https?\s+post\b", core, re.IGNORECASE):
-        return True
-    return False
-
-
-def _tag_value_is_resolved(value: str, env: object) -> bool:
-    value = value.strip().strip("\"',")
-    candidates = [value]
-    if value.endswith("}"):
-        candidates.append(value[:-1])
-    for candidate in candidates:
-        if re.fullmatch(_TAG_EXPR, candidate):
-            return True
-        match = re.fullmatch(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", candidate)
-        if match and isinstance(env, dict) and env.get(match.group(1)) == RESOLVED_TAG:
-            return True
-    return False
-
-
-def _release_tag_argument_ok(segment: str, env: object) -> bool:
-    core = _strip_prefixes(segment)
-    match = _RELEASE_CREATE.search(core)
-    if not match:
-        return False
-    try:
-        tokens = shlex.split(core[match.end():])
-    except ValueError:
-        return False
-    index = 0
-    while index < len(tokens):
-        token = tokens[index]
-        if token in _VALUE_FLAGS:
-            index += 2
-            continue
-        if token.startswith("-"):
-            index += 1
-            continue
-        return _tag_value_is_resolved(token, env)
-    return False
-
-
-def _release_tag_name_ok(segment: str, env: object) -> bool:
-    core = _strip_prefixes(segment)
-    try:
-        tokens = shlex.split(core)
-    except ValueError:
-        return False
-    values: list[str] = []
-    for token in tokens:
-        if token.startswith("-"):
-            continue
-        for match in re.finditer(r"tag_?name\s*[=:]\s*([^,]+)", token, re.IGNORECASE):
-            values.append(match.group(1).strip())
-    if not values:
-        return False
-    return all(_tag_value_is_resolved(value, env) for value in values)
-
-
-def _release_uses_resolved_tag(segment: str, env: object) -> bool:
-    return _release_tag_argument_ok(segment, env) or _release_tag_name_ok(segment, env)
+            read_only = False
+    return offenders
 
 
 def event_mapping(workflow: dict) -> dict:
@@ -359,33 +231,14 @@ def main() -> int:
         for index, step in enumerate(release_steps):
             if not isinstance(step, dict):
                 continue
-            segments = [
-                segment
-                for segment in _command_segments(str(step.get("run") or ""))
-                if _segment_creates_release(segment)
-            ]
-            if not segments:
-                continue
-            env = step.get("env")
-            if _env_references_wrong_ref(env):
+            offenders = _release_creation_line_conflicts(str(step.get("run") or ""))
+            if offenders:
                 errors.append(
-                    f"release.steps[{index}] creates a release from github.ref_name/"
-                    "github.head_ref; pass the resolved tag instead."
+                    f"release.steps[{index}] touches releases in a run step "
+                    f"(lines {offenders}); create the release through "
+                    f"{RELEASE_ACTION} and mark a genuinely read-only /releases "
+                    "call with a preceding '# guard: read-only' line."
                 )
-                continue
-            for segment in segments:
-                if _references_wrong_ref(segment):
-                    errors.append(
-                        f"release.steps[{index}] creates a release from "
-                        "github.ref_name/github.head_ref; pass the resolved tag "
-                        "instead."
-                    )
-                elif not _release_uses_resolved_tag(segment, env):
-                    errors.append(
-                        f"release.steps[{index}] creates a release without the "
-                        "resolved tag as its tag_name/first argument; pass "
-                        f"{RESOLVED_TAG} explicitly."
-                    )
 
         for dependency in ("shellcheck", "python3-yaml"):
             if not any(dependency in command for command in run_commands):
